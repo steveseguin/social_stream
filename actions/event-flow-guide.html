@@ -261,6 +261,9 @@
                 <div class="panel">
                     <strong>Event Flow</strong> is a node-based editor. Each line carries a message payload plus a boolean state (<em>true</em> = continue, <em>false</em> = stop). Use <strong>sources</strong> to inject events, <strong>logic nodes</strong> to filter decisions, and <strong>actions</strong> to make things happen (send chat, control overlays, relay messages, etc.).
                 </div>
+                <div class="callout">
+                    Need to remember participants, check later eligibility, run a unique-user draw, or clear one named list? Open the <a href="user-memory-guide.html">User Memory guide</a> for the shared-state model, screenshots, and an importable example.
+                </div>
                 <h3 id="what-is-event-flow">What is this editor?</h3>
                 <p>The Event Flow editor is the “advanced automation” layer for Social Stream Ninja. It sits above the simple popup switches and lets you script your own routing logic. Use it when you need to:</p>
                 <ul>
@@ -303,6 +306,15 @@
                         <li>Scroll to the “Flow Actions” card. Use the <em>[copy link]</em> button or click the URL inside the card.</li>
                         <li>The link looks like <code>https://socialstream.ninja/actions.html?session=YOURSESSION</code>. Paste it into an OBS Browser Source (1920×1080 suggested) or open it in any overlay browser.</li>
                     </ol>
+                </div>
+                <div class="panel">
+                    <strong>Using local media in the standalone app:</strong>
+                    <ol>
+                        <li>In a Play Audio Clip or Display Media Overlay action, click <em>Choose Local File</em>.</li>
+                        <li>Click <em>Copy Local Flow Actions URL for OBS</em> and use that generated localhost URL instead of the hosted Flow Actions URL.</li>
+                        <li>Keep SSApp running. If a selected file moves, return to the action and click <em>Relink</em>.</li>
+                    </ol>
+                    <p>The Chrome extension cannot serve disk files by itself. Use Upload or a hosted URL when no desktop companion is available. See the <a href="../docs/media-hosting-event-flow.html" target="_blank" rel="noopener">Media Files for Event Flow guide</a> for the full setup.</p>
                 </div>
                 <p>Once loaded, that overlay can:</p>
                 <ul>
@@ -434,6 +446,10 @@ Event Payload ─▶ State Check (isAlertMuted)
             <section>
                 <h2>4. Preventing Echoes, Loops, and Relay Feedback</h2>
                 <p>Relaying chat between surfaces is powerful but can echo infinitely if you listen to your own output. Follow these safeguards:</p>
+                <div class="callout tip">
+                    <strong>YouTube Shorts destination note:</strong><br>
+                    Incoming triggers and outgoing Relay Chat destinations both distinguish <code>youtube</code> from <code>youtubeshorts</code>. Use two relay actions when a message should reach both variants. See <a href="../docs/source-types-guide.html#youtube-shorts-event-flow">YouTube Shorts and Event Flow</a>.
+                </div>
                 <div class="callout.danger">
                     <strong>Turn on "No Reflections" in Relay Chat.</strong><br>
                     When you use the Relay Chat action node, enable the <em>No Reflections</em> (sometimes labeled <em>No Echo</em>) filter. That flag marks outgoing messages so the relay ignores anything it previously injected. Without it, each relayed line re-enters the flow and triggers new relays.
@@ -477,6 +493,8 @@ Event Payload ─▶ State Check (isAlertMuted)
                     <li><strong>Do I have to use AND for every pair of filters?</strong> No. Many nodes include multiple checks (for example, the basic Message Filter supports keyword + role). Use AND only for advanced combinations or when merging signals from different nodes.</li>
                     <li><strong>How do true/false values reach the NOT node?</strong> Any node with a green output emits <code>true</code> by default. When a condition fails, it emits <code>false</code>. Connect that wire into NOT to invert the result.</li>
                     <li><strong>Can a node emit a payload even if it returns false?</strong> Yes. The payload still travels through the false output; it is up to you to decide where that branch should go.</li>
+					<li><strong>How do I match TikTok Team members?</strong> Choose <em>TikTok Team Member</em> in the User Role node. It recognizes TikTok Fan Club/team levels and badges on the incoming message and does not depend on Main Chat Overlay settings.</li>
+					<li><strong>Can each Speak Text node use a different voice?</strong> Yes. Enter a provider-supported voice name or ID in <em>Voice Override</em>, or leave it blank to use the Flow Actions TTS default.</li>
                 </ul>
             </section>
 
@@ -494,7 +512,7 @@ Event Payload ─▶ State Check (isAlertMuted)
                         <tr><td><code>{message}</code></td><td><code>{chatmessage}</code></td><td>Chat message text</td><td>Hello everyone!</td></tr>
                         <tr><td><code>{source}</code></td><td>—</td><td>Platform name (capitalized)</td><td>Twitch, YouTube</td></tr>
                         <tr><td><code>{type}</code></td><td>—</td><td>Platform name (raw)</td><td>twitch, youtube</td></tr>
-                        <tr><td><code>{donation}</code></td><td><code>{hasDonation}</code></td><td>Donation/tip amount</td><td>$5.00, 500 bits</td></tr>
+                        <tr><td><code>{donation}</code></td><td><code>{hasDonation}</code></td><td>Donation/tip display label</td><td>$5.00, 500 bits</td></tr>
                     </tbody>
                 </table>
 
@@ -505,7 +523,7 @@ Event Payload ─▶ State Check (isAlertMuted)
                     </thead>
                     <tbody>
                         <tr><td><code>{displayname}</code></td><td>Display name (alternate field)</td><td>CoolViewer123</td></tr>
-                        <tr><td><code>{donationAmount}</code></td><td>Numeric donation value</td><td>5.00</td></tr>
+                        <tr><td><code>{donoValue}</code></td><td>Numeric donation value when known; Event Flow derives threshold values from normalized <code>hasDonation</code> labels such as value, <code>$</code>value, value + unit, or compact unit/value. Unknown named virtual units use 100 units = $0.01 USD. <code>{donationAmount}</code> is a legacy alias</td><td>5.00</td></tr>
                         <tr><td><code>{event}</code></td><td>Event type identifier</td><td>cheer, raid, new_follower</td></tr>
                         <tr><td><code>{membership}</code></td><td>Membership state</td><td>MEMBERSHIP, new_sponsor</td></tr>
                         <tr><td><code>{subtitle}</code></td><td>Additional context</td><td>Member for 3 months</td></tr>
@@ -653,7 +671,7 @@ Event Payload ─▶ State Check (isAlertMuted)
                         <tr><td><code>message.userid</code></td><td>string</td><td>Platform user ID</td><td><code>"12345678"</code></td></tr>
                         <tr><td><code>message.type</code></td><td>string</td><td>Source platform (lowercase)</td><td><code>"twitch"</code>, <code>"youtube"</code>, <code>"kick"</code></td></tr>
                         <tr><td><code>message.hasDonation</code></td><td>string</td><td>Formatted donation string if present</td><td><code>"$5.00"</code>, <code>"500 bits"</code></td></tr>
-                        <tr><td><code>message.donationAmount</code></td><td>number&nbsp;/&nbsp;string</td><td>Numeric donation value</td><td><code>5</code></td></tr>
+                        <tr><td><code>message.donoValue</code></td><td>number&nbsp;/&nbsp;string</td><td>Numeric donation value when the source can provide one. Event Flow falls back to <code>currency.js</code> conversion of normalized <code>hasDonation</code> labels for threshold comparisons, including 100 unknown named units = $0.01 USD. It does not parse <code>chatmessage</code> prose for donation values.</td><td><code>5</code></td></tr>
                         <tr><td><code>message.event</code></td><td>string</td><td>Event type identifier</td><td><code>"new_follower"</code>, <code>"cheer"</code>, <code>"raid"</code></td></tr>
                         <tr><td><code>message.membership</code></td><td>string</td><td>Membership state when applicable</td><td><code>"MEMBERSHIP"</code></td></tr>
                         <tr><td><code>message.subtitle</code></td><td>string</td><td>Secondary context line</td><td><code>"Member for 3 months"</code></td></tr>
@@ -707,7 +725,9 @@ return (message.chatmessage || '').toLowerCase().includes('!hello');</div>
                 <div class="snippet-block">
                     <div class="snippet-label">Donation above a threshold</div>
                     <div class="snippet-desc">Fire only when a donation meets or exceeds a minimum amount.</div>
-                    <div class="code-js">const amount = parseFloat(message.donationAmount || message.hasDonation || 0);
+                    <div class="code-js">const amount = message.donoValue !== undefined && message.donoValue !== null && message.donoValue !== ''
+  ? Number(message.donoValue)
+  : (typeof convertToUSD === 'function' ? convertToUSD(message.hasDonation || '', message.type || '') : Number(String(message.hasDonation || '').replace(/[^0-9.]/g, '') || 0));
 return amount >= 5;</div>
                 </div>
 
@@ -768,7 +788,7 @@ return { modified: true, message };</div>
                 <div class="snippet-block">
                     <div class="snippet-label">Format a donation announcement</div>
                     <div class="snippet-desc">Rewrite the chatmessage into a consistent announcement string when a donation is present.</div>
-                    <div class="code-js">const amount = parseFloat(message.donationAmount || 0);
+                    <div class="code-js">const amount = parseFloat(message.donoValue || 0);
 if (amount > 0) {
     const note = (message.chatmessage || '').trim();
     message.chatmessage = `💰 ${message.chatname} donated $${amount.toFixed(2)}!`
@@ -784,7 +804,7 @@ return { modified: false, message };</div>
                     <div class="code-js">message.meta = message.meta || {};
 
 // Assign a donation tier so the next node can use {meta} to decide overlay colour
-const amount = parseFloat(message.donationAmount || 0);
+const amount = parseFloat(message.donoValue || 0);
 message.meta.donationTier = amount >= 20 ? 'gold' : amount >= 5 ? 'silver' : 'bronze';
 
 return { modified: true, message };</div>

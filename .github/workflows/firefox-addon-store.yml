@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - manifest.json
+      - scripts/prepare-firefox.sh
+      - scripts/amo-metadata.json
+      - .github/workflows/firefox-addon-store.yml
   workflow_dispatch:
     inputs:
       channel:
@@ -22,6 +25,7 @@ env:
   ARTIFACTS_DIR: web-ext-artifacts
   FIREFOX_BRANCH: firefox
   FIREFOX_FILE_NAME: social-stream-ninja.xpi
+  WEB_EXT_VERSION: 10.3.0
 
 jobs:
   submit-firefox-addon:
@@ -35,7 +39,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Read manifest version
         id: manifest
@@ -47,12 +51,14 @@ jobs:
       - name: Prepare Firefox build
         run: |
           set -euo pipefail
-          chmod +x scripts/prepare-chrome-web-store.sh
           chmod +x scripts/prepare-firefox.sh
           ./scripts/prepare-firefox.sh
 
       - name: Install web-ext CLI
-        run: npm install --global web-ext@8
+        run: npm install --global "web-ext@${WEB_EXT_VERSION}"
+
+      - name: Validate Firefox build
+        run: web-ext lint --source-dir "$FIREFOX_BUILD_DIR" --self-hosted
 
       - name: Submit to Firefox Add-ons Store
         id: submit

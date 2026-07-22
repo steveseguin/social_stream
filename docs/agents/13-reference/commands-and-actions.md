@@ -48,6 +48,7 @@ Public docs currently name these built-in or page-specific viewer commands:
 | `!cycle` | Lets viewers change OBS scenes. | OBS remote/cycle support must be enabled and permitted. |
 | `!say` | Default command trigger for TTS when `ttscommand` is used. | TTS page/provider and command settings must be enabled. |
 | `!pass` | Forwards TTS to remote automation when `passtts` is enabled. | `passtts`; optionally `passttsmod` for moderator-only use. |
+| `!wlstop`, `!wlremove`, `!wlreset`, `!wlpick`, `!wlhighlight` | Optional waitlist control commands. | Waitlist mode and waitlist control commands enabled; user must be mod, host, or privileged/admin. |
 | `!join` | Battle/game join command in older battle docs and some current mini-games. | Exact game page/workflow active; use `07-overlays-and-pages/game-pages.md` for current game commands. |
 | Game-specific commands/input | Mini-game commands such as `!drop`, `!dig B5`, color/team commands, phrase guesses, beat words, emoji, or paint commands. | Exact `games.html` or `games/*.html` page active on the same session. |
 | `!say` in battle/game context | Sends an in-game chat message in older battle docs. | Battle/game page active; source-check `battle.html` before using as a current mini-game pattern. |

@@ -16,7 +16,7 @@ Expected files:
 - `tokenizer_config.json`
 - `preprocessor_config.json`
 - `special_tokens_map.json`
-- `chat_template.json` (if available)
+- `chat_template.jinja` (if available)
 - `onnx/embed_tokens_q4.onnx`
 - `onnx/embed_tokens_q4.onnx_data`
 - `onnx/decoder_model_merged_q4.onnx`
@@ -27,3 +27,5 @@ Expected files:
 Use `scripts/setup-local-qwen35-browser.ps1` to fetch these files from your self-hosted asset origin into this folder.
 
 The local browser providers are configured for self-hosted assets only. Do not point them at Hugging Face.
+
+This quantized export requires WebGPU. Its block-quantized operators are not available in the current WASM backend.

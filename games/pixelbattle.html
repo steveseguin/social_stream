@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pixel Battle - Social Stream Ninja</title>
-    <link rel="icon" href="./favicon.ico" />
+    <link rel="icon" href="../favicon.ico" />
     <style>
         /* Hide scrollbars */
         ::-webkit-scrollbar {
@@ -353,7 +353,8 @@
             artists: new Map(),
             collaborations: 0,
             canvasProgress: 0,
-            lastPaintTime: new Map()
+            lastPaintTime: new Map(),
+            paintedCells: new Set()
         };
 
         // Color palette
@@ -461,7 +462,13 @@
             const gridX = Math.floor(x / gameState.gridSize);
             const gridY = Math.floor(y / gameState.gridSize);
             
-            paintPixel(gridX, gridY, gameState.selectedColor, 'Manual');
+            if (gameState.currentTool === 'erase') {
+                erasePixel(gridX, gridY);
+            } else if (gameState.currentTool === 'fill') {
+                fillArea(gridX, gridY, gameState.selectedColor, 'Manual');
+            } else {
+                paintPixel(gridX, gridY, gameState.selectedColor, 'Manual');
+            }
         }
 
         // Paint pixel
@@ -478,8 +485,8 @@
             gameState.ctx.fillStyle = color;
             gameState.ctx.fillRect(pixelX + 1, pixelY + 1, gameState.gridSize - 2, gameState.gridSize - 2);
             
-            // Update stats
-            gameState.pixelsPainted++;
+            // Update stats (only count unique cells)
+            gameState.paintedCells.add(`${x},${y}`);
             
             // Track artist
             const currentCount = gameState.artists.get(artist) || 0;
@@ -495,25 +502,126 @@
             return true;
         }
 
+        // Erase pixel
+        function erasePixel(x, y) {
+            if (x < 0 || x >= Math.floor(gameState.canvasWidth / gameState.gridSize) ||
+                y < 0 || y >= Math.floor(gameState.canvasHeight / gameState.gridSize)) {
+                return false;
+            }
+            
+            const pixelX = x * gameState.gridSize;
+            const pixelY = y * gameState.gridSize;
+            
+            gameState.ctx.fillStyle = '#ffffff';
+            gameState.ctx.fillRect(pixelX + 1, pixelY + 1, gameState.gridSize - 2, gameState.gridSize - 2);
+            
+            gameState.paintedCells.delete(`${x},${y}`);
+            
+            updateDisplay();
+            return true;
+        }
+
+        // Get the color of a grid cell from a full-canvas ImageData snapshot
+        function getCellColorFromBuffer(buffer, x, y) {
+            const cx = x * gameState.gridSize + Math.floor(gameState.gridSize / 2);
+            const cy = y * gameState.gridSize + Math.floor(gameState.gridSize / 2);
+            const i = (cy * buffer.width + cx) * 4;
+            return buffer.data[i] + ',' + buffer.data[i + 1] + ',' + buffer.data[i + 2];
+        }
+
+        function hexToRgbString(hex) {
+            const value = parseInt(hex.slice(1), 16);
+            return ((value >> 16) & 255) + ',' + ((value >> 8) & 255) + ',' + (value & 255);
+        }
+
+        // Flood fill starting at a cell
+        function fillArea(x, y, color, artist) {
+            const cols = Math.floor(gameState.canvasWidth / gameState.gridSize);
+            const rows = Math.floor(gameState.canvasHeight / gameState.gridSize);
+            
+            if (x < 0 || x >= cols || y < 0 || y >= rows) return;
+
+            // One readback for the whole fill instead of one per visited cell
+            const buffer = gameState.ctx.getImageData(0, 0, gameState.canvasWidth, gameState.canvasHeight);
+            const targetColor = getCellColorFromBuffer(buffer, x, y);
+            const replacementColor = hexToRgbString(color);
+            if (targetColor === replacementColor) return;
+
+            const queue = [[x, y]];
+            const visited = new Set();
+            const now = Date.now();
+            let filled = 0;
+
+            gameState.ctx.fillStyle = color;
+
+            while (queue.length > 0) {
+                const cell = queue.shift();
+                const cx = cell[0];
+                const cy = cell[1];
+                const cellKey = cx + ',' + cy;
+
+                if (visited.has(cellKey)) continue;
+                visited.add(cellKey);
+
+                if (cx < 0 || cx >= cols || cy < 0 || cy >= rows) continue;
+                if (getCellColorFromBuffer(buffer, cx, cy) !== targetColor) continue;
+
+                gameState.ctx.fillRect(cx * gameState.gridSize + 1, cy * gameState.gridSize + 1, gameState.gridSize - 2, gameState.gridSize - 2);
+                gameState.paintedCells.add(cellKey);
+                gameState.lastPaintTime.set(cellKey + ':' + artist, now);
+                filled++;
+
+                queue.push([cx + 1, cy]);
+                queue.push([cx - 1, cy]);
+                queue.push([cx, cy + 1]);
+                queue.push([cx, cy - 1]);
+            }
+
+            if (!filled) return;
+
+            gameState.artists.set(artist, (gameState.artists.get(artist) || 0) + filled);
+
+            // One collaboration check and one effect for the whole fill, not per cell
+            checkCollaboration(x, y, artist);
+            createPaintEffect(x * gameState.gridSize + gameState.gridSize/2, y * gameState.gridSize + gameState.gridSize/2, color);
+            updateDisplay();
+        }
+
         // Check for collaboration
         function checkCollaboration(x, y, artist) {
             const now = Date.now();
-            const recentPaints = Array.from(gameState.lastPaintTime.entries())
-                .filter(([_, time]) => now - time < 5000); // Last 5 seconds
+            
+            // Prune entries older than the cooldown window
+            gameState.lastPaintTime.forEach((time, key) => {
+                if (now - time > 10000) {
+                    gameState.lastPaintTime.delete(key);
+                }
+            });
             
             // Check adjacent pixels for recent activity by different artists
             for (let dx = -1; dx <= 1; dx++) {
                 for (let dy = -1; dy <= 1; dy++) {
                     if (dx === 0 && dy === 0) continue;
                     
-                    const checkKey = `${x + dx},${y + dy}`;
-                    const recentPaint = recentPaints.find(([key, _]) => key.startsWith(checkKey));
+                    const checkX = x + dx;
+                    const checkY = y + dy;
+                    let collabFound = false;
                     
-                    if (recentPaint && !recentPaint[0].includes(artist)) {
-                        gameState.collaborations++;
-                        createCollaborationBurst(x * gameState.gridSize, y * gameState.gridSize);
-                        break;
-                    }
+                    gameState.lastPaintTime.forEach((time, key) => {
+                        if (collabFound) return;
+                        const keyParts = key.split(':');
+                        const coords = keyParts[0].split(',');
+                        const keyArtist = keyParts.slice(1).join(':');
+                        
+                        if (parseInt(coords[0]) === checkX && parseInt(coords[1]) === checkY &&
+                            keyArtist !== artist && now - time < 5000) {
+                            gameState.collaborations++;
+                            createCollaborationBurst(x * gameState.gridSize, y * gameState.gridSize);
+                            collabFound = true;
+                        }
+                    });
+                    
+                    if (collabFound) break;
                 }
             }
             
@@ -616,6 +724,7 @@
             drawGrid();
             
             gameState.pixelsPainted = 0;
+            gameState.paintedCells.clear();
             gameState.artists.clear();
             gameState.collaborations = 0;
             updateDisplay();
@@ -643,6 +752,7 @@
 
         // Update display
         function updateDisplay() {
+            gameState.pixelsPainted = gameState.paintedCells.size;
             document.getElementById('pixels-painted').textContent = gameState.pixelsPainted;
             document.getElementById('active-artists').textContent = gameState.artists.size;
             document.getElementById('collaborations').textContent = gameState.collaborations;
@@ -720,27 +830,29 @@
             }
         }
 
-        // Setup iframe communication
-        const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
-        iframe.style.width = "0px";
-        iframe.style.height = "0px";
-        iframe.style.position = "fixed";
-        iframe.style.left = "-100px";
-        iframe.style.top = "-100px";
-        iframe.id = "frame1";
-        document.body.appendChild(iframe);
-        
-        // Listen for messages
-        window.addEventListener("message", function(e) {
-            if (e.source !== iframe.contentWindow) return;
+        // Setup iframe communication (skip when using WebSocket mode)
+        if (!urlParams.has('server')) {
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
             
-            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
-                if ("overlayNinja" in e.data.dataReceived) {
-                    processData(e.data.dataReceived.overlayNinja);
+            // Listen for messages
+            window.addEventListener("message", function(e) {
+                if (e.source !== iframe.contentWindow) return;
+                
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
                 }
-            }
-        });
+            });
+        }
         
         // Handle WebSocket connection
         if (urlParams.has('server')) {

@@ -65,15 +65,6 @@
             50% { transform: rotate(1deg); }
         }
         
-        .falling {
-            animation: fall 1s ease-in forwards;
-        }
-        
-        @keyframes fall {
-            from { transform: translateY(-100vh) rotate(0deg); }
-            to { transform: translateY(0) rotate(360deg); }
-        }
-        
         #ground {
             position: absolute;
             bottom: 0;
@@ -254,6 +245,7 @@
     let combo = 0;
     let lastDropper = null;
     let dropCooldown = false;
+    let collapsing = false;
     
     // Physics settings
     const BLOCK_SIZE = 60;
@@ -272,20 +264,22 @@
         constructor(emoji, x, dropper) {
             this.emoji = emoji;
             this.x = x;
-            this.y = -100;
+            this.y = window.innerHeight;
             this.velocity = 0;
             this.rotation = 0;
             this.settled = false;
+            this.toppled = false;
             this.dropper = dropper;
             this.element = this.createElement();
         }
         
         createElement() {
             const div = document.createElement('div');
-            div.className = 'emoji-block falling';
+            div.className = 'emoji-block';
             div.textContent = this.emoji;
             div.style.left = this.x + 'px';
-            div.style.bottom = '100vh';
+            div.style.bottom = (this.y + 100) + 'px';
+            div.style.transition = 'none';
             document.getElementById('tower-area').appendChild(div);
             return div;
         }
@@ -295,34 +289,36 @@
             
             // Apply gravity
             this.velocity += GRAVITY;
-            this.y += this.velocity;
+            this.y -= this.velocity;
             
             // Apply wind
             this.x += windStrength * windDirection * 0.1;
             
-            // Check collision with ground or other blocks
-            const groundY = 0;
-            let landingY = groundY;
-            
-            // Check collision with other blocks
-            for (const block of towerBlocks) {
-                if (block === this || !block.settled) continue;
+            if (!this.toppled) {
+                // Check collision with ground or other blocks
+                const groundY = 0;
+                let landingY = groundY;
                 
-                const blockTop = block.y + BLOCK_SIZE;
-                if (Math.abs(this.x - block.x) < BLOCK_SIZE * 0.8 && this.y <= blockTop) {
-                    landingY = Math.max(landingY, blockTop);
+                // Check collision with other blocks
+                for (const block of towerBlocks) {
+                    if (block === this || !block.settled) continue;
+                    
+                    const blockTop = block.y + BLOCK_SIZE;
+                    if (Math.abs(this.x - block.x) < BLOCK_SIZE * 0.8 && this.y <= blockTop) {
+                        landingY = Math.max(landingY, blockTop);
+                    }
                 }
-            }
-            
-            if (this.y <= landingY) {
-                this.y = landingY;
-                this.velocity = 0;
-                this.settled = true;
-                this.element.classList.remove('falling');
                 
-                // Check if block is stable
-                if (!this.checkStability()) {
-                    this.topple();
+                if (this.y <= landingY) {
+                    this.y = landingY;
+                    this.velocity = 0;
+                    this.settled = true;
+                    this.element.style.transition = '';
+                    
+                    // Check if block is stable
+                    if (!this.checkStability()) {
+                        this.topple();
+                    }
                 }
             }
             
@@ -349,12 +345,14 @@
         }
         
         topple() {
+            if (this.toppled) return;
+            this.toppled = true;
             this.settled = false;
             this.rotation = (Math.random() - 0.5) * 180;
             this.velocity = -5;
             
             // Trigger tower collapse if this was a key block
-            const blocksAbove = towerBlocks.filter(b => b.y > this.y);
+            const blocksAbove = towerBlocks.filter(b => b.settled && b.y > this.y);
             if (blocksAbove.length > 2) {
                 setTimeout(() => collapseTower(), 100);
             }
@@ -448,7 +446,6 @@
         
         // Move current emoji horizontally
         const currentEmojiElement = document.getElementById('current-emoji');
-        const currentX = parseFloat(currentEmojiElement.style.left || '50%');
         const movement = Math.sin(Date.now() * 0.001) * 100;
         currentEmojiElement.style.left = `calc(50% + ${movement}px)`;
     }
@@ -460,11 +457,15 @@
             windDirection = Math.random() > 0.5 ? 1 : -1;
             
             const windNames = ['Calm', 'Light Breeze', 'Moderate Wind', 'Strong Wind'];
-            document.getElementById('wind-strength').textContent = windNames[Math.floor(windStrength)];
+            const windIndex = Math.min(windNames.length - 1, Math.floor(windStrength / 3 * windNames.length));
+            document.getElementById('wind-strength').textContent = windNames[windIndex];
         }
     }
     
     function collapseTower() {
+        if (collapsing) return;
+        collapsing = true;
+        
         // Make all blocks fall
         towerBlocks.forEach((block, index) => {
             setTimeout(() => {
@@ -481,6 +482,9 @@
             towerBlocks = [];
             towerHeight = 0;
             combo = 0;
+            contributors.clear();
+            updateContributors();
+            collapsing = false;
             document.getElementById('tower-area').innerHTML = '';
             sendResponse('🏗️ New tower started! Type !drop to build!');
         }, 2000);
@@ -563,14 +567,16 @@
     }
     
     // Game loop
-    setInterval(() => {
+    function gameLoop() {
         updateTower();
         updateWind();
-    }, 1000 / 60); // 60 FPS
+        requestAnimationFrame(gameLoop);
+    }
+    gameLoop();
     
     // Setup iframe communication
     const iframe = document.createElement("iframe");
-    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
     iframe.style.width = "0px";
     iframe.style.height = "0px";
     iframe.style.position = "fixed";

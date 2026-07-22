@@ -146,7 +146,7 @@
         .message {
             margin: 5px 0;
             padding: 5px;
-            border-left: 3px solid #4CAF50;
+            border: 1px solid #666;
             padding-left: 10px;
         }
 
@@ -282,6 +282,7 @@ You can't handle the truth</textarea>
         let socketserver = null;
         let iframe = null;
         let connectedPeers = {};
+        let pendingRoundTimeout = null;
 
         // Save settings to localStorage
         function saveSettings() {
@@ -363,7 +364,7 @@ You can't handle the truth</textarea>
         function setupIframe() {
             iframe = document.createElement("iframe");
             // Use push mode for bidirectional communication (like dock.html)
-            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${sessionId}`;
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${encodeURIComponent(sessionId)}`;
             iframe.style.width = "0px";
             iframe.style.height = "0px";
             iframe.style.position = "fixed";
@@ -445,7 +446,8 @@ You can't handle the truth</textarea>
         // Process incoming data
         function processData(data) {
             if (!data || !gameState.isActive) return;
-            
+            if (data.content && typeof data.content === 'object') data = data.content;
+
             // Check if it's a chat message
             if (data.chatmessage && data.chatname) {
                 // Skip bot messages
@@ -572,7 +574,7 @@ You can't handle the truth</textarea>
             gameState.phrases = input
                 .split('\n')
                 .map(line => line.trim())
-                .filter(line => line.length > 0);
+                .filter(line => line.length > 0 && normalizeText(line).length > 0);
             
             addMessage(`Loaded ${gameState.phrases.length} phrases`);
         }
@@ -609,8 +611,9 @@ You can't handle the truth</textarea>
 
         // Calculate match percentage
         function calculateMatch(guess, target) {
-            const guessWords = guess.split(/\s+/);
-            const targetWords = target.split(/\s+/);
+            const guessWords = guess.split(/\s+/).filter(word => word.length > 0);
+            const targetWords = target.split(/\s+/).filter(word => word.length > 0);
+            if (guessWords.length === 0 || targetWords.length === 0) return 0;
             let matches = 0;
 
             for (const gWord of guessWords) {
@@ -658,6 +661,8 @@ You can't handle the truth</textarea>
 
         // Start new round
         function startRound() {
+            if (!gameState.isActive) return;
+
             const phrase = getNextPhrase();
             if (!phrase) {
                 updateStatus('No phrases available!');
@@ -666,6 +671,10 @@ You can't handle the truth</textarea>
 
             gameState.currentPhrase = phrase;
             gameState.normalizedPhrase = normalizeText(phrase);
+            if (!gameState.normalizedPhrase) {
+                startRound();
+                return;
+            }
             gameState.maskPercent = config.initialMask;
             gameState.winner = null;
             gameState.roundStartTime = Date.now();
@@ -709,7 +718,8 @@ You can't handle the truth</textarea>
                 updateStatus('Round ended - no winner');
             }
 
-            setTimeout(() => {
+            pendingRoundTimeout = setTimeout(() => {
+                pendingRoundTimeout = null;
                 display.classList.remove('winner-announcement');
                 if (gameState.isActive) {
                     startRound();
@@ -785,14 +795,18 @@ You can't handle the truth</textarea>
             document.getElementById('gameToggle').textContent = 'Stop Game';
             
             sendResponse('🎮 Phrase Guessing Game started! Get ready to guess the phrases!');
-            setTimeout(startRound, 2000);
+            pendingRoundTimeout = setTimeout(startRound, 2000);
         }
 
         function stopGame() {
             gameState.isActive = false;
             clearInterval(gameState.revealTimer);
+            clearTimeout(pendingRoundTimeout);
+            pendingRoundTimeout = null;
             document.getElementById('gameToggle').textContent = 'Start Game';
-            document.getElementById('phraseDisplay').textContent = 'Game stopped';
+            const stoppedDisplay = document.getElementById('phraseDisplay');
+            stoppedDisplay.classList.remove('winner-announcement');
+            stoppedDisplay.textContent = 'Game stopped';
             
             sendResponse('🛑 Game stopped. Thanks for playing!');
             updateStatus('Game stopped');
@@ -802,9 +816,11 @@ You can't handle the truth</textarea>
             if (!gameState.isActive) return;
             
             clearInterval(gameState.revealTimer);
+            clearTimeout(pendingRoundTimeout);
+            document.getElementById('phraseDisplay').classList.remove('winner-announcement');
             sendResponse(`⏭️ Skipping phrase. It was: "${gameState.currentPhrase}"`);
             
-            setTimeout(startRound, 2000);
+            pendingRoundTimeout = setTimeout(startRound, 2000);
         }
 
         function resetGame() {

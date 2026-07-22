@@ -4,7 +4,7 @@ Use the Event Flow Editor to listen for Kick reward redemptions, and keep the Fl
 
 ## Overview
 
-Kick calls these channel rewards/redemptions. In Social Stream Ninja they come through as a reward event, so the Event Flow trigger to use is Channel Point Redemption.
+Kick calls these channel rewards/redemptions. In Social Stream Ninja they come through as a reward event, so the Event Flow trigger to use is `Channel Point Redemption`.
 
 This is not configured in the Points System page unless you want SSN's own loyalty points commands. Kick reward redemptions should be handled in Event Flow.
 
@@ -93,8 +93,9 @@ In the Event Flow Editor test panel:
 
 1. Set `Source Platform` to `Kick`.
 2. Set `Username` to anything.
-3. Set `Message` to `redeemed Sound Alert`.
-4. Run the test.
+3. Set `Message` to the Kick reward name, such as `Sound Alert`.
+4. Set `Event Type` to `reward - Channel point/reward redemption`.
+5. Run the test.
 
 ![Event Flow test panel with Kick source and redeemed Sound Alert test message](images/kick-channel-points-event-flow/event-flow-test-panel.png)
 
@@ -106,4 +107,4 @@ If the flow has a reward name filter, the test message must include that reward 
 - Kick redemptions do not trigger: the Kick bridge page is not signed in, not connected, or was closed.
 - Only chat works: the normal Kick chatroom is open, but the bridge source is not.
 - The wrong reward triggers: set `Reward Name` in the Channel Point Redemption trigger.
-- Local media does not play: use a reachable URL or the upload button in the Event Flow action properties.
+- Local media does not play: a hosted `actions.html` page cannot read a local disk path. Use a reachable URL, or follow the [Event Flow media hosting guide](media-hosting-event-flow.html) to run both Flow Actions and the media locally.

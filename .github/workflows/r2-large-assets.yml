@@ -46,12 +46,12 @@ jobs:
 
             - name: Plan large asset sync
               if: inputs.mode == 'plan'
-              run: npm run r2:large-assets:plan
+              run: node scripts/sync-large-assets-r2.cjs
 
             - name: Verify large asset URLs
               if: inputs.mode == 'verify'
-              run: npm run r2:large-assets:verify
+              run: node scripts/sync-large-assets-r2.cjs --verify
 
             - name: Upload missing large assets
               if: inputs.mode == 'upload'
-              run: npm run r2:large-assets:upload
+              run: node scripts/sync-large-assets-r2.cjs --upload

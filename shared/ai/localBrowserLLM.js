@@ -8,7 +8,7 @@
     function createWorkerClient(options) {
         var settings = options || {};
         var workerPath = settings.workerPath || 'local-browser-model-worker.js';
-        var initTimeoutMs = Number.isFinite(settings.initTimeoutMs) ? settings.initTimeoutMs : 420000;
+        var initTimeoutMs = Number.isFinite(settings.initTimeoutMs) ? settings.initTimeoutMs : 1800000;
         var generateTimeoutMs = Number.isFinite(settings.generateTimeoutMs) ? settings.generateTimeoutMs : 300000;
         var disposeTimeoutMs = Number.isFinite(settings.disposeTimeoutMs) ? settings.disposeTimeoutMs : 120000;
         var onStatus = typeof settings.onStatus === 'function' ? settings.onStatus : function () {};
@@ -25,6 +25,10 @@
         function isRecoverableWebGPUError(error) {
             var message = String((error && error.message) || error || '').toLowerCase();
             return message.includes('webgpu') || message.includes('no available backend found');
+        }
+
+        function configRequiresWebGPU(config) {
+            return !!(config && config.runtime && config.runtime.requiresWebGPU);
         }
 
         function createWorker() {
@@ -158,7 +162,7 @@
             try {
                 await request('init', initPayload, initTimeoutMs);
             } catch (error) {
-                if (String(initPayload.device || '').toLowerCase() === 'wasm' || !isRecoverableWebGPUError(error)) {
+                if (configRequiresWebGPU(initPayload) || String(initPayload.device || '').toLowerCase() === 'wasm' || !isRecoverableWebGPUError(error)) {
                     terminateWorker();
                     throw error;
                 }
@@ -186,7 +190,7 @@
                 return await request('generate', requestPayload, generateTimeoutMs);
             } catch (error) {
                 currentDevice = String((activeConfig && activeConfig.device) || requestPayload.device || requestOverrides.device || '').toLowerCase();
-                if (currentDevice === 'wasm' || !isRecoverableWebGPUError(error)) {
+                if (configRequiresWebGPU(activeConfig) || currentDevice === 'wasm' || !isRecoverableWebGPUError(error)) {
                     throw error;
                 }
 

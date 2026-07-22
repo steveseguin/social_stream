@@ -1,6 +1,13 @@
 (function () {
     var settings = {};
 
+    chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response) {
+        if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) { return; }
+        if (response && "settings" in response) {
+            settings = response.settings;
+        }
+    });
+
     function escapeHtml(unsafe) {
         if (settings.textonlymode) {
             return unsafe;
@@ -90,8 +97,8 @@
             chatmessage: chatMessage,
             textonly: settings.textonlymode || false,
             type: "chaturbate",
-            event: event,
-            private: private
+            event: event ? "notice" : "",
+            private: !!private
         };
 
         console.log("Processed chat data:", data);

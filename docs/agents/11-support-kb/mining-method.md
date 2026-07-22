@@ -4,7 +4,7 @@ Status: heavy extraction pass started.
 
 ## Purpose
 
-This file explains how future agents should mine `C:\Users\steve\Code\stevesbot` for Social Stream Ninja documentation without re-processing the same files, leaking unrelated/private data, or promoting stale support advice into current docs.
+This file explains how future agents should mine `<stevesbot repo>` for Social Stream Ninja documentation without re-processing the same files, leaking unrelated/private data, or promoting stale support advice into current docs.
 
 The support archive is evidence of real user problems. Current `social_stream` and `ssapp` source files remain the source of truth for how SSN works today.
 
@@ -12,7 +12,7 @@ For the latest SSN-filtered topic-count pass from curated QA exports, use `suppo
 
 ## Safety Boundary
 
-Write only inside `C:\Users\steve\Code\social_stream\docs\agents`.
+Write only inside `docs/agents`.
 
 Read support data in this order:
 
@@ -96,12 +96,12 @@ Observed schemas:
 
 ## Query Recipes
 
-Use these patterns from `C:\Users\steve\Code\ssapp` or any shell where `sqlite3.exe` resolves:
+Use these patterns from `<ssapp repo>` or any shell where `sqlite3.exe` resolves:
 
 ```powershell
-sqlite3.exe C:\Users\steve\Code\stevesbot\data\sqlite\knowledge.sqlite ".schema mined_threads"
-sqlite3.exe C:\Users\steve\Code\stevesbot\data\sqlite\knowledge.sqlite "select count(*) from mined_threads;"
-sqlite3.exe C:\Users\steve\Code\stevesbot\data\sqlite\stevesbot.sqlite "select product_id, count(*) from support_records group by product_id order by count(*) desc;"
+sqlite3.exe <stevesbot repo>/data/sqlite/knowledge.sqlite ".schema mined_threads"
+sqlite3.exe <stevesbot repo>/data/sqlite/knowledge.sqlite "select count(*) from mined_threads;"
+sqlite3.exe <stevesbot repo>/data/sqlite/stevesbot.sqlite "select product_id, count(*) from support_records group by product_id order by count(*) desc;"
 ```
 
 Product-filtered term count:

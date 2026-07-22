@@ -917,7 +917,7 @@ Example auction update:
 { "type": "whatnot", "event": "auction_update", "meta": { "status": "winning", "statusText": "Ava is Winning!", "bidder": "Ava", "title": "500 Spot Silver Slab Mega Set - #191", "category": "Coins, U.S. currency", "price": 88, "priceText": "$88", "bids": 7, "bidsText": "7 Bids", "timer": "00:19", "shipping": "Shipping + Taxes are extra" } }
 
 === BUILDING RULES ===
-1a. Message-body rule: `data.chatmessage` is SSN's renderable HTML unless `data.textonly === true`. Put it in a dedicated message element with `innerHTML` when not text-only, and `textContent` when text-only; escape all other fields normally.
+1a. Message-body rule: `data.chatmessage` is SSN's renderable HTML unless `data.textonly === true`. Put it in a dedicated message element with `innerHTML` when not text-only, and `textContent` when text-only; escape all other fields normally. Constrain both message-body `img` and inline `svg` elements to emote/icon dimensions.
 1. ALWAYS escape untrusted strings before inserting as HTML. Use textContent where possible. NEVER build inline HTML event handlers (onerror=, onclick=, etc.) inside a JS string — the escaping gets tangled and produces syntax errors. Instead, create the element, then `el.addEventListener("error", ...)` or `el.onerror = function () { ... }`. Same rule for inline `style="..."` built from dynamic values with quotes: prefer element.style.color = .... Build DOM with createElement + appendChild in ONE pass — don't rewrite .outerHTML on a node that's already in the tree, don't wipe the row with `.innerHTML = ""` mid-function, and never call insertBefore(newNode, refNode) unless refNode is already a child of the parent you're inserting into. Plan the node tree before you start creating elements.
 2. Filter by data.type / data.event early so the overlay stays focused on its job.
 3. When the user wants "chat", skip messages where data.event is set (unless they also ask for events).
@@ -1010,7 +1010,7 @@ If the user asks a question that does not require a file change, answer normally
 		.body { min-width: 0; }
 		.name { font-weight: 700; color: var(--name); }
 		.text { margin-top: 2px; word-wrap: break-word; }
-		.text img { max-height: 1.35em; vertical-align: middle; }
+		.text img, .text svg { max-width: 3.4em; max-height: 1.35em; vertical-align: middle; }
 		.platform { font-size: 10px; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-left: 6px; letter-spacing: 0.05em; }
 		@keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
 		.row.fade-out { animation: fadeOut 300ms ease-in forwards; }
@@ -1379,7 +1379,7 @@ If the user asks a question that does not require a file change, answer normally
 		.chat { position: fixed; right: 24px; bottom: 24px; width: 320px; max-height: 50vh; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
 		.chat .row { background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 10px; font-size: 13px; opacity: 0; transform: translateY(8px); animation: slideIn 220ms ease-out forwards; }
 		.chat .name { font-weight: 700; color: #79d6ac; margin-right: 6px; }
-		.chat .message img { max-height: 1.35em; vertical-align: middle; }
+		.chat .message img, .chat .message svg { max-width: 3.4em; max-height: 1.35em; vertical-align: middle; }
 		@keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
 	</style>
 </head>
@@ -2332,6 +2332,7 @@ If the user asks a question that does not require a file change, answer normally
 			var urlParams = new URLSearchParams(location.search);
 			bridgeRoomID = urlParams.get("session") || "";
 			bridgePassword = urlParams.get("password") || "false";
+			// This bridge is the editor's upstream AI/control path, not an overlay chat-feed receiver.
 			if (!bridgeRoomID) {
 				setStatus("No session in URL. You can still build, preview, and export overlays. Add ?session=YOUR_ID to ask the AI.", "warn");
 				return;

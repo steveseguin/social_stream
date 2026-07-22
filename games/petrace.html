@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pet Racing - Social Stream Ninja</title>
-    <link rel="icon" href="./favicon.ico" />
+    <link rel="icon" href="../favicon.ico" />
     <link rel="preload" href="../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin>
     <style>
         /* Hide scrollbars */
@@ -53,13 +53,6 @@
             border-top: 5px solid #1e272e;
             border-bottom: 5px solid #1e272e;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        
-        .lane {
-            position: absolute;
-            width: 100%;
-            height: 80px;
-            border-bottom: 2px dashed rgba(255, 255, 255, 0.2);
         }
         
         .pet {
@@ -225,18 +218,6 @@
             font-size: 18px;
         }
         
-        .pet-stats {
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 10px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 2px 4px;
-            border-radius: 3px;
-            color: white;
-        }
-        
         .floating-points {
             position: absolute;
             font-size: 32px;
@@ -331,7 +312,6 @@
     let racers = new Map();
     let raceCountdown = null;
     let raceStartTime = null;
-    let recentWinners = []; // Store recent winners for leaderboard
     
     // URL parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -479,7 +459,7 @@
             document.getElementById('race-status').textContent = 'Need at least 2 racers!';
             document.getElementById('race-timer').textContent = 'Type !join to race';
             
-            resetRace();
+            resetRace(false);
             return;
         }
         
@@ -515,14 +495,6 @@
         const second = results[1];
         const third = results[2];
         
-        // Add to recent winners
-        recentWinners.unshift({
-            username: winner.username,
-            pet: winner.type,
-            time: new Date().toLocaleTimeString()
-        });
-        if (recentWinners.length > 5) recentWinners.pop();
-        
         // Display winner
         const winnerDiv = document.getElementById('winner-announcement');
         let winnerHtml = `
@@ -555,7 +527,7 @@
         }, 5000);
     }
     
-    function resetRace() {
+    function resetRace(updateStatus) {
         racers.forEach(racer => racer.remove());
         racers.clear();
         raceInProgress = false;
@@ -564,8 +536,10 @@
             raceCountdown = null;
         }
         updateBettingBoard();
-        document.getElementById('race-status').textContent = '🏁 Ready for next race!';
-        document.getElementById('race-timer').textContent = 'Type !join to race';
+        if (updateStatus !== false) {
+            document.getElementById('race-status').textContent = '🏁 Ready for next race!';
+            document.getElementById('race-timer').textContent = 'Type !join to race';
+        }
     }
     
     function createFloatingPoints(element, text) {
@@ -579,7 +553,7 @@
         setTimeout(() => points.remove(), 2000);
     }
     
-    function processJoinRace(username, petType, userType) {
+    function processJoinRace(username, petType) {
         if (raceInProgress) {
             sendChatResponse(`@${username}, a race is already in progress! Wait for the next one.`);
             return;
@@ -664,31 +638,33 @@
 
         if (command === '!join') {
             const petType = parts[1]; // Optional pet type
-            processJoinRace(stripHtml(data.chatname), petType, data.type);
+            processJoinRace(stripHtml(data.chatname), petType);
         }
     }
     
-    // Setup iframe communication
-    const iframe = document.createElement("iframe");
-    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
-    iframe.style.width = "0px";
-    iframe.style.height = "0px";
-    iframe.style.position = "fixed";
-    iframe.style.left = "-100px";
-    iframe.style.top = "-100px";
-    iframe.id = "frame1";
-    document.body.appendChild(iframe);
-    
-    // Listen for messages
-    window.addEventListener("message", function(e) {
-        if (e.source !== iframe.contentWindow) return;
+    // Setup iframe communication (skip when using WebSocket mode)
+    if (!urlParams.has('server')) {
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
         
-        if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
-            if ("overlayNinja" in e.data.dataReceived) {
-                processData(e.data.dataReceived.overlayNinja);
+        // Listen for messages
+        window.addEventListener("message", function(e) {
+            if (e.source !== iframe.contentWindow) return;
+            
+            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
             }
-        }
-    });
+        });
+    }
     
     // Handle WebSocket connection if server parameters are provided
     if (urlParams.has('server')) {
@@ -735,12 +711,12 @@
     if (urlParams.has('demo')) {
         setTimeout(() => {
             // Add demo racers
-            processJoinRace('DemoPlayer1', 'dog', 'youtube');
+            processJoinRace('DemoPlayer1', 'dog');
             setTimeout(() => {
-                processJoinRace('DemoPlayer2', 'rabbit', 'twitch');
+                processJoinRace('DemoPlayer2', 'rabbit');
             }, 2000);
             setTimeout(() => {
-                processJoinRace('DemoPlayer3', 'turtle', 'youtube');
+                processJoinRace('DemoPlayer3', 'turtle');
             }, 4000);
         }, 1000);
     }

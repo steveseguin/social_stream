@@ -181,6 +181,9 @@ https://io.socialstream.ninja/SESSION_ID/sendChat/null/Hello?channel=2
 | `getQueueSize` | Request queue size | `{"action":"getQueueSize","get":"queue-1"}` |
 | `autoShow` | Toggle/set auto-show mode | `{"action":"autoShow","value":"toggle"}` |
 | `feature` | Feature next unfeatured message | `{"action":"feature"}` |
+| `pin` | Pin an existing dock message by `mid`, or pin a full message object. Requires `dock.html` open. | `{"action":"pin","value":"MESSAGE_MID"}` |
+| `unpin` | Unpin an existing dock message by `mid`. Requires `dock.html` open. | `{"action":"unpin","value":"MESSAGE_MID"}` |
+| `nextPinned` | Feature the first pinned dock message. | `{"action":"nextPinned"}` |
 | `blockUser` | Block a user by source/user | `{"action":"blockUser","value":{"chatname":"name","type":"twitch"}}` |
 | `extContent` | Inject external content into processing | `{"action":"extContent","value":"{\"chatname\":\"User\",\"chatmessage\":\"Hello\"}"}` |
 | `getChatSources` | Ask for active source list | `{"action":"getChatSources","get":"sources-1"}` |
@@ -205,10 +208,15 @@ Waitlist/giveaway controls:
 
 - `removefromwaitlist`
 - `highlightwaitlist`
+- `stopentries`
+- `startentries`
+- `openentries`
+- `resumeentries`
 - `resetwaitlist`
 - `downloadwaitlist`
 - `selectwinner`
 - `waitlistmessage`
+- `setwaitlistmessage`
 
 Timer controls:
 
@@ -331,7 +339,9 @@ Supported webhook paths in `api.md`:
 
 Security rule: keep session IDs and webhook URLs private. The API docs say webhook URLs do not use signature verification.
 
-Duplication warning from `api.md`: do not enable both `&server` dock behavior and remote API control for webhook display unless the workflow intentionally handles duplicate donation alerts.
+Normal webhook path from `api.md`: enable remote API control so `background.js` normalizes the webhook, then use normal generated dock/overlay links. The `server`, `server2`, and `server3` link toggles are not required for donation webhooks.
+
+Stripe, Ko-Fi, Buy Me a Coffee, and Fourthwall normalization preserves the provider's event identifier as `meta.webhookId`. The background suppresses repeated normalized processing by provider and ID. Old and unversioned Dock links keep immediate raw parsing; modern direct-server links briefly wait for the normalized background message, then use raw parsing only as a compatibility fallback when that message does not arrive.
 
 ## StreamDeck And Companion
 

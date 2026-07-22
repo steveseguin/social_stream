@@ -26,21 +26,21 @@
                 <a id="auth-link" class="auth-button">Sign in with YouTube</a>
                 <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Custom YouTube project active</div>
                 <div id="yt-access-selector" class="auth-method-selector">
-                    <label class="auth-method-label">YouTube access:</label>
-                    <div class="auth-method-options">
-                        <label class="auth-method-option">
-                            <input type="radio" name="yt-access-level" value="readonly" checked>
-                            <span>Read only</span>
+                    <label class="auth-method-label">YouTube access</label>
+                    <div class="auth-method-options yt-access-options">
+                        <label class="auth-method-option yt-access-option">
+                            <input type="radio" name="yt-access-level" value="admin" checked>
+                            <span class="yt-access-copy"><strong>Write</strong><small>Send chat · Moderate · Edit</small></span>
                         </label>
-                        <label class="auth-method-option">
-                            <input type="radio" name="yt-access-level" value="admin">
-                            <span>Write access</span>
+                        <label class="auth-method-option yt-access-option">
+                            <input type="radio" name="yt-access-level" value="readonly">
+                            <span class="yt-access-copy"><strong>Read only</strong><small>View chat</small></span>
                         </label>
                     </div>
-                    <div class="credentials-note" style="margin-top:8px;">Write access is needed to send chat, moderate chat, ban users, or edit stream details. Google may show broad YouTube management permissions, including video deletion, because YouTube does not provide a chat-only write scope.</div>
+                    <div class="credentials-note yt-access-note"><strong>Write</strong> is recommended. Google's consent screen will show broad YouTube permissions, as no chat-only scope exists.</div>
                 </div>
                 <div id="auth-method-selector" class="auth-method-selector hidden">
-                    <label class="auth-method-label">Sign-in method:</label>
+                    <label class="auth-method-label">Sign-in method</label>
                     <div class="auth-method-options">
                         <label class="auth-method-option">
                             <input type="radio" name="yt-auth-method" value="external" checked>
@@ -99,6 +99,14 @@
 										<span>Target:</span>
 										<span id="current-channel" class="target-text">No target</span>
 									</div>
+									<div class="header-source-type">
+										<span>Type:</span>
+										<span id="youtube-source-type-value" class="source-type-value">youtube</span>
+										<div class="source-type-buttons" aria-label="YouTube source type">
+											<button type="button" id="youtube-type-standard" class="source-type-button">YouTube</button>
+											<button type="button" id="youtube-type-shorts" class="source-type-button">Shorts</button>
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -143,6 +151,7 @@
                         <input type="text" id="input-text" placeholder="Send Message">
                         <button id="sendmessage" class="auth-button">Send</button>
                     </div>
+                    <div id="write-access-note" class="credentials-note hidden">Sign out and sign in with Write access to send chat, moderate chat, or edit stream details.</div>
                 </div>
             </div>
         </div>
@@ -195,7 +204,7 @@
                 <h4>Recent Events</h4>
                 <div id="events-list"></div>
             </div>
-            <div class="recent-events" style="margin-top:15px;">
+            <div class="recent-events" id="advanced-controls-panel" style="margin-top:15px;">
                 <h4>Advanced Controls</h4>
                 <div style="display:grid; gap:8px;">
                     <label class="auth-method-option" style="display:flex;">
@@ -253,11 +262,11 @@ try {
      * This integration uses the YouTube Data API which has limitations compared to scraping the live chat directly.
      * 
      * Key Limitations:
-     * - Badge images (member badges, moderator badges, etc.) are not available through the API
-     * - We use text emoji fallbacks: 👑 (owner), 🛡️ (moderator), ⭐ (member)
+     * - Badge images (member badges, moderator badges, etc.) are not available through the official API
+     * - We enrich member messages from YouTube's rich chat response when available and otherwise use text emoji fallbacks
      * - Channel-specific emotes (like :_ted2:, :_ted:, etc.) are not available through the API
      * - Super sticker images are not available, only the alt text description
-     * - For actual badge images, custom emotes, and sticker images, use the YouTube scraping mode in Social Stream instead
+     * - Rich chat enrichment is best-effort because it is separate from the official liveChatMessages response
      * 
      * The badge format matches youtube.js for consistency:
      * {"type": "img", "src": badgeUrl} when images are available
@@ -275,6 +284,8 @@ try {
     var LEGACY_AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
     var DEFAULT_YT_CLIENT_ID = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
     var YT_ACCESS_LEVEL_KEY = 'youtubeOAuthAccessLevel';
+    var YT_TOKEN_ACCESS_LEVEL_KEY = 'youtubeOAuthTokenAccessLevel';
+    var YT_PENDING_ACCESS_LEVEL_KEY = 'youtubeOAuthPendingAccessLevel';
     var YT_AUTH_SOURCE_KEY = 'youtubeOAuthSource';
     var YT_AUTH_SOURCE_HOSTED = 'default_hosted';
     var YT_AUTH_SOURCE_CUSTOM = 'custom_ssapp';
@@ -287,7 +298,8 @@ try {
 	}
 
 	function getYouTubeAccessLevel() {
-		return normalizeYouTubeAccessLevel(localStorage.getItem(YT_ACCESS_LEVEL_KEY));
+		const stored = localStorage.getItem(YT_ACCESS_LEVEL_KEY);
+		return stored === null ? 'admin' : normalizeYouTubeAccessLevel(stored);
 	}
 
 	function setYouTubeAccessLevel(value) {
@@ -296,6 +308,45 @@ try {
 
 	function getYouTubeOAuthScopes() {
 		return getYouTubeAccessLevel() === 'admin' ? YT_ADMIN_SCOPES : YT_READONLY_SCOPES;
+	}
+
+	function getYouTubeTokenAccessLevel() {
+		const stored = localStorage.getItem(YT_TOKEN_ACCESS_LEVEL_KEY);
+		if (stored !== null) {
+			return normalizeYouTubeAccessLevel(stored);
+		}
+
+		// Tokens saved before access-level metadata was introduced inherit the
+		// user's saved OAuth choice. New tokens are always labelled explicitly.
+		if (!localStorage.getItem('youtubeOAuthToken') && !localStorage.getItem('youtubeRefreshToken')) {
+			return null;
+		}
+
+		const migrated = getYouTubeAccessLevel();
+		localStorage.setItem(YT_TOKEN_ACCESS_LEVEL_KEY, migrated);
+		return migrated;
+	}
+
+	function hasYouTubeWriteAccess() {
+		return getYouTubeTokenAccessLevel() === 'admin';
+	}
+
+	function getWriteAccessRequiredMessage() {
+		return 'Write access required — sign in again to chat, moderate, or edit.';
+	}
+
+	function setPendingYouTubeTokenAccessLevel(value) {
+		localStorage.setItem(YT_PENDING_ACCESS_LEVEL_KEY, normalizeYouTubeAccessLevel(value));
+	}
+
+	function clearPendingYouTubeTokenAccessLevel() {
+		localStorage.removeItem(YT_PENDING_ACCESS_LEVEL_KEY);
+	}
+
+	function consumePendingYouTubeTokenAccessLevel() {
+		const stored = localStorage.getItem(YT_PENDING_ACCESS_LEVEL_KEY);
+		clearPendingYouTubeTokenAccessLevel();
+		return stored === null ? null : normalizeYouTubeAccessLevel(stored);
 	}
     function getRuntimeParams() {
         return {
@@ -394,6 +445,115 @@ try {
     }
     refreshClientOverrides();
     var redirectURI = window.location.href.split("/youtube")[0]+"/youtube.html";
+	const YT_SHORTS_MODE_SESSION_KEY = "youtubeRedirectShorts";
+
+	function rememberYouTubeShortsMode(enabled) {
+		try {
+			if (enabled) {
+				sessionStorage.setItem(YT_SHORTS_MODE_SESSION_KEY, "true");
+			} else {
+				sessionStorage.removeItem(YT_SHORTS_MODE_SESSION_KEY);
+			}
+		} catch (_) {}
+	}
+
+	function hasRememberedYouTubeShortsMode() {
+		try {
+			return sessionStorage.getItem(YT_SHORTS_MODE_SESSION_KEY) === "true";
+		} catch (_) {
+			return false;
+		}
+	}
+
+	function isYouTubeOAuthCallbackUrl() {
+		return urlParams.has("code") || hashParams.has("access_token");
+	}
+
+	function getInitialYouTubeShortsMode() {
+		if (containsShorts(window.location.href)) {
+			rememberYouTubeShortsMode(true);
+			return true;
+		}
+		if (isYouTubeOAuthCallbackUrl() && hasRememberedYouTubeShortsMode()) {
+			return true;
+		}
+		rememberYouTubeShortsMode(false);
+		return false;
+	}
+
+	function getPostAuthRedirectUrl() {
+		if (!youtubeShorts) {
+			return redirectURI;
+		}
+		return redirectURI + (redirectURI.indexOf("?") === -1 ? "?shorts" : "&shorts");
+	}
+
+	function getYouTubeSourceType() {
+		return youtubeShorts ? "youtubeshorts" : "youtube";
+	}
+
+	function updateYouTubeShortsUrl(enabled) {
+		try {
+			const currentUrl = new URL(window.location.href);
+			if (enabled) {
+				currentUrl.searchParams.set("shorts", "1");
+			} else {
+				currentUrl.searchParams.delete("shorts");
+			}
+			window.history.replaceState({}, document.title, currentUrl.toString());
+		} catch (_) {}
+	}
+
+	function updateYouTubeSourceTypeControl() {
+		const sourceType = getYouTubeSourceType();
+		const value = document.getElementById("youtube-source-type-value");
+		const standardButton = document.getElementById("youtube-type-standard");
+		const shortsButton = document.getElementById("youtube-type-shorts");
+		if (value) {
+			value.textContent = sourceType;
+			value.title = sourceType;
+		}
+		if (standardButton) {
+			standardButton.classList.toggle("active", !youtubeShorts);
+			standardButton.setAttribute("aria-pressed", youtubeShorts ? "false" : "true");
+		}
+		if (shortsButton) {
+			shortsButton.classList.toggle("active", youtubeShorts);
+			shortsButton.setAttribute("aria-pressed", youtubeShorts ? "true" : "false");
+		}
+	}
+
+	function setYouTubeShortsMode(enabled, options = {}) {
+		const nextValue = !!enabled;
+		const changed = youtubeShorts !== nextValue;
+		youtubeShorts = nextValue;
+		rememberYouTubeShortsMode(youtubeShorts);
+		updateYouTubeShortsUrl(youtubeShorts);
+		updateYouTubeSourceTypeControl();
+		if (changed && !options.silent) {
+			addYouTubeStatusEvent("Source type set to " + getYouTubeSourceType());
+		}
+	}
+
+	function initYouTubeSourceTypeControl() {
+		const standardButton = document.getElementById("youtube-type-standard");
+		const shortsButton = document.getElementById("youtube-type-shorts");
+		updateYouTubeSourceTypeControl();
+		if (standardButton) {
+			const standardHandler = function() {
+				setYouTubeShortsMode(false);
+			};
+			standardButton.addEventListener("click", standardHandler);
+			registerCleanup(() => standardButton.removeEventListener("click", standardHandler));
+		}
+		if (shortsButton) {
+			const shortsHandler = function() {
+				setYouTubeShortsMode(true);
+			};
+			shortsButton.addEventListener("click", shortsHandler);
+			registerCleanup(() => shortsButton.removeEventListener("click", shortsHandler));
+		}
+	}
     var username = "";
     var channel = '';
     var videoId = '';
@@ -406,6 +566,9 @@ try {
 	let recentSubscriberPollingGeneration = 0;
     let fetchTimeout; // Track fetch timeout to clear on disconnect
     let lastKnownViewers = null;
+	var lastKnownLikes = null;
+	var lastLikesEmitTime = 0;
+	const YT_LIKES_HEARTBEAT_MS = 90 * 1000;
 	var viewerCountFallbackVideoId = '';
 	var viewerCountMissingPolls = 0;
 	var viewerCountFallbackLastAttempt = 0;
@@ -512,9 +675,18 @@ try {
 	var richMessageById = new Map();
 	var richMessageByFallbackKey = new Map();
 	var richMessageCacheOrder = [];
+	var richBadgesByAuthorChannelId = new Map();
+	var richBadgeAuthorCacheOrder = [];
+	var richBadgeImagePreloads = new Map();
+	var preloadedRichBadgeUrls = new Set();
+	var preloadedRichBadgeUrlOrder = [];
 	const MAX_RICH_MESSAGE_CACHE = 500;
+	const MAX_RICH_BADGE_AUTHOR_CACHE = 500;
+	const MAX_PRELOADED_RICH_BADGE_URLS = 500;
 	const RICH_CHAT_MIN_FETCH_INTERVAL_MS = 1000;
 	const CHANNEL_EMOJI_RICH_RETRY_DELAYS_MS = [600, 1400, 3000, 5000, 8000, 12000, 20000, 30000, 45000, 60000];
+	const RICH_BADGE_RETRY_DELAYS_MS = [100, 500, 1200];
+	const RICH_BADGE_SYNC_WAIT_MS = 700;
 	
 	
 	// BTTV/7TV/FFZ emote support
@@ -1271,6 +1443,9 @@ function enableBackgroundKeepAlive() {
 		if (!richMessage || (!richMessage.id && !(richMessage.fallbackKeys && richMessage.fallbackKeys.length))) {
 			return;
 		}
+		if (richMessage.authorChannelId && Array.isArray(richMessage.badges) && richMessage.badges.length) {
+			rememberRichBadgesForAuthor(richMessage.authorChannelId, richMessage.badges);
+		}
 		if (richMessage.id) {
 			richMessageById.set(richMessage.id, richMessage);
 		}
@@ -1308,6 +1483,66 @@ function enableBackgroundKeepAlive() {
 		richMessageById.clear();
 		richMessageByFallbackKey.clear();
 		richMessageCacheOrder = [];
+		richBadgesByAuthorChannelId.clear();
+		richBadgeAuthorCacheOrder = [];
+	}
+
+	function preloadRichBadgeImages(badges) {
+		if (!Array.isArray(badges) || typeof Image !== 'function') {
+			return;
+		}
+		badges.forEach(function(badge) {
+			const url = badge && badge.type === 'img' && badge.src ? String(badge.src) : '';
+			if (!url || preloadedRichBadgeUrls.has(url)) {
+				return;
+			}
+			preloadedRichBadgeUrls.add(url);
+			preloadedRichBadgeUrlOrder.push(url);
+			while (preloadedRichBadgeUrlOrder.length > MAX_PRELOADED_RICH_BADGE_URLS) {
+				const oldUrl = preloadedRichBadgeUrlOrder.shift();
+				if (oldUrl) {
+					preloadedRichBadgeUrls.delete(oldUrl);
+				}
+			}
+			try {
+				const image = new Image();
+				richBadgeImagePreloads.set(url, image);
+				const release = function() {
+					if (richBadgeImagePreloads.get(url) === image) {
+						richBadgeImagePreloads.delete(url);
+					}
+					image.onload = null;
+					image.onerror = null;
+				};
+				image.onload = release;
+				image.onerror = release;
+				image.src = url;
+			} catch (_) {
+				richBadgeImagePreloads.delete(url);
+			}
+		});
+	}
+
+	function rememberRichBadgesForAuthor(authorChannelId, badges) {
+		const authorKey = String(authorChannelId || '').trim();
+		if (!authorKey || !Array.isArray(badges) || !badges.length) {
+			return;
+		}
+		const cachedBadges = badges.map(function(badge) {
+			return badge && typeof badge === 'object' ? Object.assign({}, badge) : badge;
+		}).filter(Boolean);
+		if (!cachedBadges.length) {
+			return;
+		}
+		preloadRichBadgeImages(cachedBadges);
+		richBadgesByAuthorChannelId.set(authorKey, cachedBadges);
+		richBadgeAuthorCacheOrder.push({ authorKey: authorKey, value: cachedBadges });
+		while (richBadgeAuthorCacheOrder.length > MAX_RICH_BADGE_AUTHOR_CACHE) {
+			const old = richBadgeAuthorCacheOrder.shift();
+			if (old && richBadgesByAuthorChannelId.get(old.authorKey) === old.value) {
+				richBadgesByAuthorChannelId.delete(old.authorKey);
+			}
+		}
 	}
 
 	function buildRichBadges(authorBadges) {
@@ -1333,6 +1568,7 @@ function enableBackgroundKeepAlive() {
 				label: renderer.tooltip || (renderer.accessibility && renderer.accessibility.accessibilityData ? renderer.accessibility.accessibilityData.label : '')
 			});
 		});
+		preloadRichBadgeImages(badges);
 		return badges;
 	}
 
@@ -1672,6 +1908,26 @@ function enableBackgroundKeepAlive() {
 			}
 		}
 		return null;
+	}
+
+	function getRichBadgesForMessageData(messageData) {
+		if (!messageData) {
+			return [];
+		}
+		const richMessage = getRichMessageForMessageData(messageData);
+		if (richMessage && Array.isArray(richMessage.badges) && richMessage.badges.length) {
+			preloadRichBadgeImages(richMessage.badges);
+			return richMessage.badges.slice();
+		}
+		if (messageData.isChatSponsor) {
+			const authorKey = String(messageData.authorChannelId || '').trim();
+			const cachedBadges = authorKey ? richBadgesByAuthorChannelId.get(authorKey) : null;
+			if (Array.isArray(cachedBadges) && cachedBadges.length) {
+				preloadRichBadgeImages(cachedBadges);
+				return cachedBadges.slice();
+			}
+		}
+		return [];
 	}
 
 	function renderChatBadgesForPage(badges) {
@@ -2080,7 +2336,7 @@ function enableBackgroundKeepAlive() {
 			chatimg: summary.thumbnail,
 			hasDonation: "",
 			membership: "",
-			type: "youtube",
+			type: getYouTubeSourceType(),
 			event: "new_follower",
 			textonly: settings.textonlymode || false,
 			meta: {
@@ -2117,7 +2373,7 @@ function enableBackgroundKeepAlive() {
 			chatimg: first.thumbnail,
 			hasDonation: "",
 			membership: "",
-			type: "youtube",
+			type: getYouTubeSourceType(),
 			event: "new_follower",
 			textonly: settings.textonlymode || false,
 			meta: {
@@ -2986,18 +3242,25 @@ function enableBackgroundKeepAlive() {
 		}
 		return null;
 	}
-	function setStoredToken(token, expiresIn = 3600, refresh = null, authSource = null) {
+	function setStoredToken(token, expiresIn = 3600, refresh = null, authSource = null, tokenAccessLevel = null) {
 		const expiryTime = new Date().getTime() + (expiresIn * 1000);
 		localStorage.setItem('youtubeOAuthToken', token);
 		localStorage.setItem('youtubeOAuthExpiry', expiryTime.toString());
 		if (refresh) {
 			localStorage.setItem('youtubeRefreshToken', refresh);
 		}
+		if (tokenAccessLevel === null || typeof tokenAccessLevel === 'undefined' || tokenAccessLevel === '') {
+			localStorage.removeItem(YT_TOKEN_ACCESS_LEVEL_KEY);
+		} else {
+			localStorage.setItem(YT_TOKEN_ACCESS_LEVEL_KEY, normalizeYouTubeAccessLevel(tokenAccessLevel));
+		}
 		setStoredAuthSource(authSource || YT_AUTH_SOURCE_HOSTED);
 	}function clearStoredToken() {
 		localStorage.removeItem('youtubeOAuthToken');
 		localStorage.removeItem('youtubeOAuthExpiry');
 		localStorage.removeItem('youtubeRefreshToken');
+		localStorage.removeItem(YT_TOKEN_ACCESS_LEVEL_KEY);
+		localStorage.removeItem(YT_PENDING_ACCESS_LEVEL_KEY);
 		localStorage.removeItem(YT_AUTH_SOURCE_KEY);
 		localStorage.removeItem('youtubeChannel');
         localStorage.removeItem('youtubeVideoId');
@@ -3061,6 +3324,38 @@ function enableBackgroundKeepAlive() {
                 panel.appendChild(button);
             }
             panel.classList.remove('hidden');
+        } catch (_) {}
+    }
+    function syncWriteAccessControls() {
+        try {
+            const canWrite = hasYouTubeWriteAccess();
+            const message = getWriteAccessRequiredMessage();
+            const note = document.getElementById('write-access-note');
+            if (note) {
+                note.textContent = message;
+                note.classList.toggle('hidden', canWrite || !isSocketInterfaceVisible());
+            }
+            const input = document.getElementById('input-text');
+            if (input) {
+                input.disabled = !canWrite;
+                input.placeholder = canWrite ? 'Send Message' : 'Write access needed to send chat';
+                input.title = canWrite ? '' : message;
+            }
+            const sendButton = document.getElementById('sendmessage');
+            if (sendButton) {
+                sendButton.disabled = !canWrite;
+                sendButton.title = canWrite ? '' : message;
+            }
+            const advancedPanel = document.getElementById('advanced-controls-panel');
+            if (advancedPanel) {
+                advancedPanel.classList.toggle('hidden', !canWrite || !isSocketInterfaceVisible());
+            }
+            ['sync-delete-messages', 'sync-block-users', 'stream-title', 'stream-description', 'stream-category', 'update-stream-info'].forEach(function(id) {
+                const element = document.getElementById(id);
+                if (!element) return;
+                element.disabled = !canWrite;
+                element.title = canWrite ? '' : message;
+            });
         } catch (_) {}
     }
     function syncAuthMethodSelectorVisibility() {
@@ -3142,6 +3437,7 @@ function enableBackgroundKeepAlive() {
         const quotaBanner = document.getElementById('quota-warning');
         if (quotaBanner) quotaBanner.classList.toggle('hidden', !quotaWarningActive);
         renderSignedInStatusPanel();
+        syncWriteAccessControls();
         syncAuthMethodSelectorVisibility();
     }
     function showSocketInterface() {
@@ -3154,6 +3450,7 @@ function enableBackgroundKeepAlive() {
         const quotaBanner = document.getElementById('quota-warning');
         if (quotaBanner) quotaBanner.classList.add('hidden');
         syncSignedInCredentialsVisibility();
+        syncWriteAccessControls();
     }
 	function handleVisibilityChange() {
 		const wasVisible = isPageVisible;
@@ -3706,6 +4003,10 @@ function enableBackgroundKeepAlive() {
 			hasUnresolvedYouTubeChannelEmojiShortcut(messageData.plainTextMessage || '');
 	}
 
+	function messageDataNeedsRichBadgeResolution(messageData) {
+		return !!(messageData && messageData.isChatSponsor && !getRichBadgesForMessageData(messageData).length);
+	}
+
 	function processQueuedMessageData(messageData) {
 		processMessage(messageData);
 
@@ -3718,10 +4019,18 @@ function enableBackgroundKeepAlive() {
 		}
 	}
 
+	function continueQueuedMessageAfterRichEmojiResolution(messageData) {
+		if (messageDataNeedsRichBadgeResolution(messageData)) {
+			queueMessageAfterRichBadgeRetry(messageData);
+			return;
+		}
+		processQueuedMessageData(messageData);
+	}
+
 	function queueMessageAfterRichEmojiRetry(messageData, attempt = 0) {
 		const delay = CHANNEL_EMOJI_RICH_RETRY_DELAYS_MS[attempt];
 		if (typeof delay !== 'number') {
-			processQueuedMessageData(messageData);
+			continueQueuedMessageAfterRichEmojiResolution(messageData);
 			return;
 		}
 		setTrackedTimeout(async function() {
@@ -3733,6 +4042,34 @@ function enableBackgroundKeepAlive() {
 			}
 			if (messageDataNeedsRichChannelEmojiResolution(messageData)) {
 				queueMessageAfterRichEmojiRetry(messageData, attempt + 1);
+				return;
+			}
+			continueQueuedMessageAfterRichEmojiResolution(messageData);
+		}, delay, !isPageVisible);
+	}
+
+	function queueMessageAfterRichBadgeRetry(messageData, attempt = 0) {
+		const delay = RICH_BADGE_RETRY_DELAYS_MS[attempt];
+		if (typeof delay !== 'number') {
+			processQueuedMessageData(messageData);
+			return;
+		}
+		setTrackedTimeout(async function() {
+			const richChatVideoId = (currentStream && currentStream.id) || videoId;
+			if (richChatVideoId) {
+				const syncPromise = syncYouTubeRichChatData(richChatVideoId).catch(function(error) {
+					console.log('YouTube rich badge retry failed:', error && error.message ? error.message : error);
+					return false;
+				});
+				await Promise.race([
+					syncPromise,
+					new Promise(function(resolve) {
+						setTrackedTimeout(function() { resolve(false); }, RICH_BADGE_SYNC_WAIT_MS, !isPageVisible);
+					})
+				]);
+			}
+			if (messageDataNeedsRichBadgeResolution(messageData)) {
+				queueMessageAfterRichBadgeRetry(messageData, attempt + 1);
 				return;
 			}
 			processQueuedMessageData(messageData);
@@ -4271,11 +4608,13 @@ function enableBackgroundKeepAlive() {
 		});
 		if (tokens.access_token) {
 			const expiresIn = tokens.expires_in ? parseInt(tokens.expires_in) : 3600;
-			setStoredToken(tokens.access_token, expiresIn);
-            window.history.replaceState({}, document.title, redirectURI);
+			setStoredToken(tokens.access_token, expiresIn, null, null, consumePendingYouTubeTokenAccessLevel() || getYouTubeAccessLevel());
+			clearExpectedOAuthState();
+            window.history.replaceState({}, document.title, getPostAuthRedirectUrl());
 			verifyAndUseToken(tokens.access_token);
 		} else {
 			console.error('No access token found in URL fragment');
+			clearExpectedOAuthState();
 			showAuthButton();
 		}
 	}
@@ -4301,6 +4640,7 @@ function enableBackgroundKeepAlive() {
 		return tokenRefreshPromise;
 	}
 	function setExpectedOAuthState(state) {
+		setPendingYouTubeTokenAccessLevel(getYouTubeAccessLevel());
 		try {
 			sessionStorage.youtubeOAuthState = state;
 		} catch (_) {}
@@ -4327,6 +4667,7 @@ function enableBackgroundKeepAlive() {
 		try {
 			localStorage.removeItem('youtubeOAuthState');
 		} catch (_) {}
+		clearPendingYouTubeTokenAccessLevel();
 	}
 	function getPostSignInQuotaMessage() {
 		if (getStoredAuthSource() === YT_AUTH_SOURCE_CUSTOM) {
@@ -4429,7 +4770,7 @@ function enableBackgroundKeepAlive() {
 			if (!data || !data.access_token) {
 				throw new Error('Token refresh response did not include access_token.');
 			}
-			setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshTokenValue, authSource);
+			setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshTokenValue, authSource, localStorage.getItem(YT_TOKEN_ACCESS_LEVEL_KEY));
 			setTimeout(() => { verifyAndUseToken(data.access_token); }, 500);
 			return true;
 		} catch (error) {
@@ -4444,11 +4785,13 @@ function enableBackgroundKeepAlive() {
 		const expectedState = getExpectedOAuthState();
 		if (!expectedState || state !== expectedState) {
 			console.error('State mismatch - possible CSRF attack', { expectedState, receivedState: state });
+			clearExpectedOAuthState();
 			showOAuthFailure('State mismatch during YouTube sign-in. Please try again and avoid switching to a different browser tab/window during authentication.');
 			return;
 		}
 		if (!code) {
 			console.error('No authorization code supplied.');
+			clearExpectedOAuthState();
 			showOAuthFailure('No authorization code was returned by Google. Please try signing in again.');
 			return;
 		}
@@ -4481,12 +4824,13 @@ function enableBackgroundKeepAlive() {
 			if (!data.access_token) {
 				throw new Error('Token exchange response did not include access_token.');
 			}
-			setStoredToken(data.access_token, data.expires_in, data.refresh_token, authSource);
+			setStoredToken(data.access_token, data.expires_in, data.refresh_token, authSource, consumePendingYouTubeTokenAccessLevel() || getYouTubeAccessLevel());
 			clearExpectedOAuthState();
-			window.history.replaceState({}, document.title, redirectURI);
+			window.history.replaceState({}, document.title, getPostAuthRedirectUrl());
 			verifyAndUseToken(data.access_token);
 		} catch (error) {
 			console.error('Error exchanging code for tokens:', error);
+			clearExpectedOAuthState();
 			const errorMessage = error && error.message ? error.message : 'unknown error';
 			showOAuthFailure(`YouTube sign-in failed after permission grant: ${errorMessage}`);
 		}
@@ -4529,12 +4873,14 @@ function enableBackgroundKeepAlive() {
 			});
 			if (!result || !result.code) {
 				console.error('YouTube OAuth did not return a code.');
+				clearExpectedOAuthState();
 				showAuthButton();
 				return;
 			}
 			await exchangeCodeForTokens(result.code, result.state || state, result.redirectUri);
 		} catch (error) {
 			console.error('External YouTube OAuth failed:', error);
+			clearExpectedOAuthState();
 			showAuthButton();
 		}
 	}
@@ -4573,6 +4919,10 @@ function enableBackgroundKeepAlive() {
 	function handleSendMessage(event) {
 		event.preventDefault();
 		if (handleSendMessage.isSending) return;
+		if (!hasYouTubeWriteAccess()) {
+			reportOutboundChatFailure(getWriteAccessRequiredMessage());
+			return;
+		}
 		const inputElement = document.querySelector('#input-text');
 		if (!inputElement) return;
 		var msg = inputElement.value.trim();
@@ -4820,6 +5170,10 @@ function enableBackgroundKeepAlive() {
 				queueMessageAfterRichEmojiRetry(messageData);
 				return;
 			}
+			if (messageDataNeedsRichBadgeResolution(messageData)) {
+				queueMessageAfterRichBadgeRetry(messageData);
+				return;
+			}
 			processQueuedMessageData(messageData);
 		}
 	
@@ -4856,7 +5210,7 @@ function enableBackgroundKeepAlive() {
 	
     async function sendChatMessage(message) {
 		const token = getStoredToken();
-		if (!token || !liveChatId) return null;
+		if (!token || !liveChatId || !hasYouTubeWriteAccess()) return null;
 		try {
 			const baseUrl = 'https://www.googleapis.com/youtube/v3/liveChat/messages';
 			const url = `${baseUrl}?part=snippet,authorDetails`;
@@ -4975,7 +5329,7 @@ function enableBackgroundKeepAlive() {
 	async function updateCurrentVideoMetadata(payload = {}) {
 		const token = getStoredToken();
 		const targetVideoId = (currentStream && currentStream.id) || videoId;
-		if (!token || !targetVideoId) {
+		if (!token || !targetVideoId || !hasYouTubeWriteAccess()) {
 			return false;
 		}
 		const existingVideo = await fetchCurrentVideoSnippet(targetVideoId);
@@ -5027,7 +5381,7 @@ function enableBackgroundKeepAlive() {
 
 	async function deleteLiveChatMessage(messageId) {
 		const token = getStoredToken();
-		if (!token || !messageId) {
+		if (!token || !messageId || !hasYouTubeWriteAccess()) {
 			return false;
 		}
 		try {
@@ -5054,7 +5408,7 @@ function enableBackgroundKeepAlive() {
 		const messageId = resolveYouTubeDeleteMessageId(payload);
 		const messageContext = lookupChatMessage(messageId);
 		const channelId = payload.userid || payload.userId || messageContext?.authorChannelId || '';
-		if (!token || !liveChatId || !channelId) {
+		if (!token || !liveChatId || !channelId || !hasYouTubeWriteAccess()) {
 			return false;
 		}
 		try {
@@ -5217,7 +5571,7 @@ function enableBackgroundKeepAlive() {
 						shouldEmitViewerUpdate = true;
 					}
                 }
-                if (stats.statistics && stats.statistics.likeCount) {
+                if (stats.statistics && stats.statistics.likeCount !== undefined) {
                     updateStats('likes_update', { meta: stats.statistics.likeCount });
                 }
             }
@@ -5237,8 +5591,13 @@ function enableBackgroundKeepAlive() {
         );
     }
 
+	function isYouTubeLikeCountEnabled() {
+		const currentSettings = settings && typeof settings === 'object' ? settings : {};
+		return Boolean(currentSettings.captureyoutubelikes);
+	}
+
     function shouldPollStreamStats() {
-        return isViewerTrackingEnabled();
+		return isViewerTrackingEnabled() || isYouTubeLikeCountEnabled();
     }
 
     function stopStreamStatsPolling() {
@@ -5250,7 +5609,14 @@ function enableBackgroundKeepAlive() {
 
     function syncStreamStatsPolling() {
         stopStreamStatsPolling();
-        if (!currentStream || !currentStream.id || !liveChatId || !shouldPollStreamStats()) {
+		if (!isYouTubeLikeCountEnabled()) {
+			lastKnownLikes = null;
+			lastLikesEmitTime = 0;
+		}
+        if (!currentStream || !currentStream.id || !shouldPollStreamStats()) {
+			return;
+		}
+		if (!liveChatId && !isYouTubeLikeCountEnabled()) {
             return;
         }
         getStreamStats();
@@ -5303,6 +5669,8 @@ function enableBackgroundKeepAlive() {
 		fetchTimeout = null;
 		liveChatPollingActive = false;
 		lastKnownViewers = null;
+		lastKnownLikes = null;
+		lastLikesEmitTime = 0;
 		resetViewerCountFallbackState(null);
 		
 		// Track disconnection time and video ID
@@ -5390,7 +5758,10 @@ function enableBackgroundKeepAlive() {
 				}
 				if (stats.viewCount) {
 					if (isViewerTrackingEnabled()) {
-						pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'view_update', meta: stats.viewCount }));
+						const viewCount = Number.parseInt(stats.viewCount, 10);
+						if (Number.isFinite(viewCount) && viewCount >= 0) {
+							pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'view_update', meta: viewCount }));
+						}
 					}
 				}
 			}
@@ -5545,7 +5916,7 @@ function enableBackgroundKeepAlive() {
 					const viewerCount = document.getElementById('viewer-count');
 					if (viewerCount) viewerCount.textContent = '-';
                 }
-                if (streamInfoToUse.statistics && streamInfoToUse.statistics.likeCount) {
+                if (streamInfoToUse.statistics && streamInfoToUse.statistics.likeCount !== undefined) {
                     updateStats('likes_update', { meta: streamInfoToUse.statistics.likeCount });
                 } else {
                      document.getElementById('likes-count').textContent = 'N/A';
@@ -5596,7 +5967,7 @@ function enableBackgroundKeepAlive() {
             stopStreamStatsPolling();
             if (channelStatsInterval) clearInterval(channelStatsInterval);
             
-            // Stream stats (viewers & likes) - poll only when viewer tracking is enabled
+            // Stream stats (viewers and opt-in likes)
             syncStreamStatsPolling();
             
             // Channel stats (subscribers) - every 30 minutes
@@ -5649,10 +6020,7 @@ function enableBackgroundKeepAlive() {
 		return hasShortsParam || hasShortsPath;
 	}
 	
-	var youtubeShorts = false;
-	if (containsShorts(window.location.href)){
-		youtubeShorts = true;
-	}
+	var youtubeShorts = getInitialYouTubeShortsMode();
 
 	function processMessage(messageData, options = {}) {
 		const { suppressRelay = false } = options;
@@ -5663,7 +6031,7 @@ function enableBackgroundKeepAlive() {
 			}
 			
 			const richMessage = getRichMessageForMessageData(messageData);
-			const richBadges = richMessage && Array.isArray(richMessage.badges) ? richMessage.badges.slice() : [];
+			const richBadges = getRichBadgesForMessageData(messageData);
 			let chatbadges = [];
 			let nameColor = '';
 			
@@ -5850,7 +6218,7 @@ function enableBackgroundKeepAlive() {
 				hasDonation: superChatData.amount,
 				membership: "",
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
-				event: "donation",
+				event: "superchat",
 				textonly: settings.textonlymode || false
 			}));
 		} catch (e) {
@@ -5863,6 +6231,7 @@ function enableBackgroundKeepAlive() {
 			const jewelAmount = Number(giftData.jewelsAmount);
 			const hasJewels = Number.isFinite(jewelAmount) && jewelAmount > 0;
 			const jewelText = hasJewels ? `${jewelAmount} Jewels` : "";
+			const donationText = jewelText || "1 YouTube Gift";
 			const fallbackMessage = jewelText
 				? `${getTranslation("youtube-gift-sent-message", "sent a gift")}: ${giftLabel} (${jewelText})`
 				: `${getTranslation("youtube-gift-sent-message", "sent a gift")}: ${giftLabel}`;
@@ -5893,26 +6262,13 @@ function enableBackgroundKeepAlive() {
 				}
 			}
 
-			const estimatedRevenueUsd = hasJewels ? jewelAmount / 200 : null;
-			const metaGift = {
-				eventType: "jeweldonation"
-			};
-			if (giftData.messageId) metaGift.messageId = String(giftData.messageId);
+			const metaGift = {};
 			if (giftData.giftName) metaGift.giftName = String(giftData.giftName);
 			if (giftData.altText) metaGift.altText = String(giftData.altText);
 			if (hasJewels) {
 				metaGift.jewelsAmount = jewelAmount;
-				metaGift.estimatedRubyRevenueUsd = estimatedRevenueUsd;
 			}
 			if (giftData.giftUrl) metaGift.giftUrl = String(giftData.giftUrl);
-			if (giftData.language) metaGift.language = String(giftData.language);
-			if (giftData.giftDuration && (Number.isFinite(giftData.giftDuration.seconds) || Number.isFinite(giftData.giftDuration.nanos))) {
-				metaGift.giftDuration = {};
-				if (Number.isFinite(giftData.giftDuration.seconds)) metaGift.giftDuration.seconds = giftData.giftDuration.seconds;
-				if (Number.isFinite(giftData.giftDuration.nanos)) metaGift.giftDuration.nanos = giftData.giftDuration.nanos;
-			}
-			if (typeof giftData.hasVisualEffect === "boolean") metaGift.hasVisualEffect = giftData.hasVisualEffect;
-			if (giftData.comboCount !== null && giftData.comboCount !== undefined && Number.isFinite(Number(giftData.comboCount))) metaGift.comboCount = Number(giftData.comboCount);
 
 			const payload = {
 				chatname: escapeHtml(giftData.authorName),
@@ -5920,21 +6276,18 @@ function enableBackgroundKeepAlive() {
 				userid: giftData.authorChannelId,
 				backgroundColor: "",
 				textColor: "#111",
-				chatmessage: escapeHtml(displayMessage),
+				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: giftData.profileImageUrl || "",
-				hasDonation: jewelText,
+				hasDonation: donationText,
 				membership: "",
 				subtitle: giftLabel,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "jeweldonation",
-				textonly: false,
+				textonly: settings.textonlymode || false,
 				meta: { youtubeGift: metaGift }
 			};
 			if (giftData.giftUrl) {
 				payload.contentimg = giftData.giftUrl;
-			}
-			if (estimatedRevenueUsd !== null) {
-				payload.donoValue = estimatedRevenueUsd;
 			}
 			pushMessage(applySourceIdentity(payload));
 		} catch (e) {
@@ -6104,14 +6457,14 @@ function enableBackgroundKeepAlive() {
 				nameColor: !settings.nosubcolor ? "#107516" : "",
 				backgroundColor: "",
 				textColor: "",
-				chatmessage: escapeHtml(displayMessage),
+				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: giftData.profileImageUrl || "",
 				hasDonation: "",
 				membership: "gift_recipient",
 				subtitle: giftData.memberLevelName,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "giftredemption",
-				textonly: false
+				textonly: settings.textonlymode || false
 			}));
 		} catch (e) {
 			console.error('Error processing gift redemption:', e);
@@ -6159,14 +6512,14 @@ function enableBackgroundKeepAlive() {
 				nameColor: "",
 				backgroundColor: "",
 				textColor: "",
-				chatmessage: escapeHtml(displayMessage),
+				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: giftData.profileImageUrl || "",
 				hasDonation: "",
 				membership: "gift_giver",
 				subtitle: levelDescriptor,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "giftpurchase",
-				textonly: false
+				textonly: settings.textonlymode || false
 			}));
 		} catch (e) {
 			console.error('Error processing gift purchase:', e);
@@ -6208,14 +6561,14 @@ function enableBackgroundKeepAlive() {
 				nameColor: !settings.nosubcolor ? "#107516" : "",
 				backgroundColor: "",
 				textColor: "",
-				chatmessage: escapeHtml(displayMessage),
+				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: sponsorData.profileImageUrl || "",
 				hasDonation: "",
 				membership: "new_sponsor",
 				subtitle: sponsorData.memberLevelName,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "sponsorship",
-				textonly: false
+				textonly: settings.textonlymode || false
 			}));
 		} catch (e) {
 			console.error('Error processing new sponsorship:', e);
@@ -6275,14 +6628,14 @@ function enableBackgroundKeepAlive() {
 				nameColor: !settings.nosubcolor ? "#107516" : "",
 				backgroundColor: "",
 				textColor: "",
-				chatmessage: escapeHtml(displayMessage),
+				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: milestoneData.profileImageUrl || "",
 				hasDonation: "",
 				membership: "member_milestone",
 				subtitle: levelDescriptor,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "membermilestone",
-				textonly: false
+				textonly: settings.textonlymode || false
 			}));
 		} catch (e) {
 			console.error('Error processing member milestone:', e);
@@ -6337,13 +6690,13 @@ function enableBackgroundKeepAlive() {
 				userid: stickerData.authorChannelId,
 				backgroundColor: "",
 				textColor: "#111",
-				chatmessage: escapeHtml(stickerMessage), // Just the message, no emoji prefix
+				chatmessage: settings.textonlymode ? stickerMessage : escapeHtml(stickerMessage), // Just the message, no emoji prefix
 				chatimg: stickerData.profileImageUrl || "",
 				hasDonation: stickerData.amount,
 				membership: "",
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "supersticker",
-				textonly: false
+				textonly: settings.textonlymode || false
 			}));
 		} catch (e) {
 			console.error('Error processing super sticker:', e);
@@ -6362,8 +6715,16 @@ function enableBackgroundKeepAlive() {
 				document.getElementById('subscriber-count').textContent = data.meta;
 				break;
 			case 'likes_update':
-				document.getElementById('likes-count').textContent = data.meta;
-				//pushMessage({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'likes_update', meta: data.meta });
+				var likeCount = normalizeViewerCount(data.meta);
+				document.getElementById('likes-count').textContent = likeCount !== null ? likeCount : '-';
+				if (isYouTubeLikeCountEnabled() && likeCount !== null) {
+					var now = Date.now();
+					if (likeCount !== lastKnownLikes || now - lastLikesEmitTime >= YT_LIKES_HEARTBEAT_MS) {
+						lastKnownLikes = likeCount;
+						lastLikesEmitTime = now;
+						pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'likes_update', meta: likeCount }));
+					}
+				}
 				break;
 		}
 	}
@@ -6473,6 +6834,7 @@ function enableBackgroundKeepAlive() {
 			registerCleanup(() => signOutButton.removeEventListener('click', signOut));
 		}
 		const advancedControlSettings = loadAdvancedControlSettings();
+		initYouTubeSourceTypeControl();
 		const syncDeleteMessages = document.getElementById('sync-delete-messages');
 		const syncBlockUsers = document.getElementById('sync-block-users');
 		const hideMetrics = document.getElementById('hide-metrics');
@@ -6526,6 +6888,10 @@ function enableBackgroundKeepAlive() {
 		const updateStreamInfoButton = document.getElementById('update-stream-info');
 		if (updateStreamInfoButton) {
 			const updateStreamInfoHandler = function() {
+				if (!hasYouTubeWriteAccess()) {
+					addEvent(getWriteAccessRequiredMessage());
+					return;
+				}
 				updateCurrentVideoMetadata({
 					title: document.getElementById('stream-title')?.value || '',
 					description: (document.getElementById('stream-description')?.value || '').trim(),
@@ -6567,6 +6933,7 @@ function enableBackgroundKeepAlive() {
 				const changeHandler = function() {
 					if (radio.checked) {
 						setYouTubeAccessLevel(radio.value);
+						syncWriteAccessControls();
 					}
 				};
 				radio.addEventListener('change', changeHandler);
@@ -6724,6 +7091,10 @@ function enableBackgroundKeepAlive() {
 				reportOutboundChatFailure('YouTube host chat was not sent: no active live chat is connected.');
 				return;
 			}
+			if (!hasYouTubeWriteAccess()) {
+				reportOutboundChatFailure(getWriteAccessRequiredMessage());
+				return;
+			}
 			sendChatMessage(e.detail.message).catch(error => {
 				console.error('Failed to send extension message:', error);
 				reportOutboundChatFailure('YouTube host chat failed to send: ' + (error && error.message ? error.message : error));
@@ -6745,6 +7116,10 @@ function enableBackgroundKeepAlive() {
 				if (!controls.syncDeleteMessages) {
 					return;
 				}
+				if (!hasYouTubeWriteAccess()) {
+					addEvent(getWriteAccessRequiredMessage());
+					return;
+				}
 				const messageId = resolveYouTubeDeleteMessageId(payload);
 				if (!messageId) {
 					addEvent('Skipped dock delete: missing native YouTube message ID');
@@ -6762,6 +7137,10 @@ function enableBackgroundKeepAlive() {
 			}
 			if (detail.control === 'blockUser') {
 				if (!controls.syncBlockUsers) {
+					return;
+				}
+				if (!hasYouTubeWriteAccess()) {
+					addEvent(getWriteAccessRequiredMessage());
 					return;
 				}
 				banLiveChatAuthor(payload).then((ok) => {

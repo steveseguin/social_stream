@@ -272,6 +272,44 @@
     <script>
         // URL parameters
         const urlParams = new URLSearchParams(window.location.search);
+        const SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+        // Transport migration guard: only pages with full server parity may skip the legacy bridge.
+        var TRANSPORT_CAPABILITIES = {
+            serverFeed: true,
+            serverTargeted: false,
+            upstreamCommands: false,
+            customChannel: false,
+            legacyBridgeRequired: false,
+            exclusiveServerParams: { server: true, server2: true, server3: false }
+        };
+        function versionAtLeast(value, minimum) {
+            const a = String(value || "").split(".");
+            const b = String(minimum || "").split(".");
+            const len = Math.max(a.length, b.length);
+            for (let i = 0; i < len; i++) {
+                const av = parseInt(a[i], 10) || 0;
+                const bv = parseInt(b[i], 10) || 0;
+                if (av > bv) return true;
+                if (av < bv) return false;
+            }
+            return true;
+        }
+        // Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+        function hasExclusiveServerTransport(caps) {
+            var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+            return (params.server === true && urlParams.has("server")) ||
+                (params.server2 !== false && urlParams.has("server2")) ||
+                (params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+        }
+        function useServerOnlyTransport() {
+            var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+            return hasExclusiveServerTransport(caps) &&
+                versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+                caps.serverFeed === true &&
+                caps.legacyBridgeRequired !== true &&
+                caps.upstreamCommands !== true &&
+                caps.customChannel !== true;
+        }
         const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
         const password = urlParams.get('password') || 'false';
         const lanonly = urlParams.has('lanonly') ? '&lanonly' : '';
@@ -427,7 +465,49 @@
         }
         
         // Handle incoming messages (compatible with Social Stream format)
+        // Cross-transport dedupe: in server mode the same feed message can arrive over both
+        // the websocket relay and the VDO.Ninja bridge; render only the first copy.
+        var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
+        var recentTransportDeliveries = new Map();
+        function isDuplicateTransportDelivery(data) {
+            if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) {
+                return false;
+            }
+            if (!data || typeof data !== "object") {
+                return false;
+            }
+            if (data.id === undefined || data.id === null) {
+                return false;
+            }
+            if ("action" in data || "get" in data || "callback" in data || "mid" in data) {
+                return false;
+            }
+            if (!(data.chatname || data.chatmessage || data.chatimg || data.hasDonation || data.membership || data.event || data.contentimg)) {
+                return false;
+            }
+            var key =
+                String(data.id) +
+                "|" + (data.type || "") +
+                "|" + (data.chatname || "") +
+                "|" + String(data.chatmessage || "").slice(0, 100) +
+                "|" + (data.hasDonation || "") +
+                "|" + (data.event || "");
+            var now = Date.now();
+            recentTransportDeliveries.forEach(function (seenAt, seenKey) {
+                if (now - seenAt > CROSS_TRANSPORT_DEDUPE_TTL_MS) {
+                    recentTransportDeliveries.delete(seenKey);
+                }
+            });
+            if (recentTransportDeliveries.has(key)) {
+                return true;
+            }
+            recentTransportDeliveries.set(key, now);
+            return false;
+        }
         function processData(data) {
+            if (isDuplicateTransportDelivery(data)) {
+                return;
+            }
             if (!gameState.isActive) return;
             
             // Handle different data formats from Social Stream
@@ -545,30 +625,33 @@
         }
         
         // Setup iframe communication (same as petrace.html)
-        const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}${lanonly}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
-        iframe.style.width = "0px";
-        iframe.style.height = "0px";
-        iframe.style.position = "fixed";
-        iframe.style.left = "-100px";
-        iframe.style.top = "-100px";
-        iframe.id = "frame1";
-        document.body.appendChild(iframe);
-        
-        // Listen for messages
-        window.addEventListener("message", function(e) {
-            if (e.source !== iframe.contentWindow) return;
+        if (!useServerOnlyTransport()) {
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}${lanonly}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
+
+            // Listen for messages
+            window.addEventListener("message", function(e) {
+                if (e.source !== iframe.contentWindow) return;
             
-            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
-                if ("overlayNinja" in e.data.dataReceived) {
-                    processData(e.data.dataReceived.overlayNinja);
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
                 }
-            }
-        });
+            });
+        }
         
         // Handle WebSocket connection if server parameters are provided
         if (urlParams.has('server')) {
-            const socketserver = new WebSocket(urlParams.get('server'));
+            const serverURL = urlParams.get('server') || (urlParams.has('localserver') ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja');
+            const socketserver = new WebSocket(serverURL);
             socketserver.onopen = function() {
                 socketserver.send(JSON.stringify({ join: sessionId.split(",")[0], out: 2, in: 1 }));
             };

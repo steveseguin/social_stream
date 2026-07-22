@@ -25,7 +25,7 @@ URL PARAMETERS:
   noicon            hide the small source platform icon
   time              show a clock timestamp per message
   bg                add a subtle translucent background behind each row
-  ultra             super dense rows, smaller icons/media, narrow default column
+  ultra             super dense rows, smaller icons/media
   reverse           newest messages at top instead of bottom
   server / server2  connect via WebSocket instead of (or in addition to) WebRTC
   localserver       use ws://127.0.0.1:3000
@@ -124,14 +124,14 @@ html, body {
 .reverse-mode .message.hidden { transform: translateY(14px); }
 
 .avatar {
-    width: 16px;
-    height: 16px;
+    width: 1em;
+    height: 1em;
     border-radius: 50%;
     background-size: cover;
     background-position: center;
     display: inline-block;
-    vertical-align: -3px;
-    margin-right: 3px;
+    vertical-align: -0.18em;
+    margin-right: 0.2em;
     flex-shrink: 0;
 }
 .badge {
@@ -210,7 +210,7 @@ body.ultra {
     font-size: 13px;
 }
 body.ultra #chat-container {
-    max-width: 330px;
+    max-width: none;
     padding: 2px 5px;
 }
 body.ultra .message {
@@ -223,10 +223,10 @@ body.ultra.with-bg .message {
     padding: 1px 4px;
 }
 body.ultra .avatar {
-    width: 12px;
-    height: 12px;
-    margin-right: 2px;
-    vertical-align: -2px;
+    width: 0.85em;
+    height: 0.85em;
+    margin-right: 0.15em;
+    vertical-align: -0.15em;
 }
 body.ultra .badge {
     width: 0.75em;
@@ -280,6 +280,44 @@ body.ultra .content-img {
 </div>
 <script>
     var urlParams = new URLSearchParams(window.location.search);
+    var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+    // Transport migration guard: only pages with full server parity may skip the legacy bridge.
+    var TRANSPORT_CAPABILITIES = {
+        serverFeed: true,
+        serverTargeted: false,
+        upstreamCommands: false,
+        customChannel: false,
+        legacyBridgeRequired: false,
+        exclusiveServerParams: { server: false, server2: true, server3: false }
+    };
+    function versionAtLeast(value, minimum) {
+        var a = String(value || "").split(".");
+        var b = String(minimum || "").split(".");
+        var len = Math.max(a.length, b.length);
+        for (var i = 0; i < len; i++) {
+            var av = parseInt(a[i], 10) || 0;
+            var bv = parseInt(b[i], 10) || 0;
+            if (av > bv) return true;
+            if (av < bv) return false;
+        }
+        return true;
+    }
+    // Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+    function hasExclusiveServerTransport(caps) {
+        var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+        return (params.server === true && urlParams.has("server")) ||
+            (params.server2 !== false && urlParams.has("server2")) ||
+            (params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+    }
+    function useServerOnlyTransport() {
+        var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+        return hasExclusiveServerTransport(caps) &&
+            versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+            caps.serverFeed === true &&
+            caps.legacyBridgeRequired !== true &&
+            caps.upstreamCommands !== true &&
+            caps.customChannel !== true;
+    }
     var roomID = urlParams.has("session") ? urlParams.get("session") : "iWWnKL28tQ";
     var password = urlParams.has("password") ? urlParams.get("password") : "false";
     var featuredMode = false;
@@ -298,7 +336,10 @@ body.ultra .content-img {
     }
     if (urlParams.has("font")) {
         var fs = parseInt(urlParams.get("font"), 10);
-        if (!isNaN(fs) && fs > 0) { document.documentElement.style.fontSize = fs + "px"; }
+        if (!isNaN(fs) && fs > 0) {
+            document.documentElement.style.fontSize = fs + "px";
+            document.body.style.fontSize = fs + "px";
+        }
     }
     if (urlParams.has("fontfamily")) {
         var ff = (urlParams.get("fontfamily") || "").trim();
@@ -573,7 +614,49 @@ body.ultra .content-img {
         return html;
     }
 
+    // Cross-transport dedupe: in server mode the same feed message can arrive over both
+    // the websocket relay and the VDO.Ninja bridge; render only the first copy.
+    var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
+    var recentTransportDeliveries = new Map();
+    function isDuplicateTransportDelivery(data) {
+        if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) {
+            return false;
+        }
+        if (!data || typeof data !== "object") {
+            return false;
+        }
+        if (data.id === undefined || data.id === null) {
+            return false;
+        }
+        if ("action" in data || "get" in data || "callback" in data || "mid" in data) {
+            return false;
+        }
+        if (!(data.chatname || data.chatmessage || data.chatimg || data.hasDonation || data.membership || data.event || data.contentimg)) {
+            return false;
+        }
+        var key =
+            String(data.id) +
+            "|" + (data.type || "") +
+            "|" + (data.chatname || "") +
+            "|" + String(data.chatmessage || "").slice(0, 100) +
+            "|" + (data.hasDonation || "") +
+            "|" + (data.event || "");
+        var now = Date.now();
+        recentTransportDeliveries.forEach(function (seenAt, seenKey) {
+            if (now - seenAt > CROSS_TRANSPORT_DEDUPE_TTL_MS) {
+                recentTransportDeliveries.delete(seenKey);
+            }
+        });
+        if (recentTransportDeliveries.has(key)) {
+            return true;
+        }
+        recentTransportDeliveries.set(key, now);
+        return false;
+    }
     function addMessageToOverlay(data) {
+        if (isDuplicateTransportDelivery(data)) {
+            return;
+        }
         if (handleControlPayload(data)) { return; }
         if (!data || typeof data !== "object") { return; }
         if (isMessageBlocked(data)) { return; }
@@ -644,20 +727,22 @@ body.ultra .content-img {
     }
 
     // --- WebRTC bridge (hidden VDO.Ninja iframe) ---
-    var iframe = document.createElement("iframe");
-    if (featuredMode) {
-        iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + "&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
-    } else {
-        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + "&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
-    }
-    iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
-    document.body.appendChild(iframe);
-    window.addEventListener("message", function (e) {
-        if (e.source != iframe.contentWindow) return;
-        if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja) {
-            addMessageToOverlay(e.data.dataReceived.overlayNinja);
+    if (!useServerOnlyTransport()) {
+        var iframe = document.createElement("iframe");
+        if (featuredMode) {
+            iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(password) + "&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
+        } else {
+            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + "&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
         }
-    });
+        iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+        document.body.appendChild(iframe);
+        window.addEventListener("message", function (e) {
+            if (e.source != iframe.contentWindow) return;
+            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja) {
+                addMessageToOverlay(e.data.dataReceived.overlayNinja);
+            }
+        });
+    }
 
     // --- optional WebSocket ---
     var conCon = 1;

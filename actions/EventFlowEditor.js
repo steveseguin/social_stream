@@ -195,11 +195,11 @@ const FLOW_TEMPLATES = {
         description: 'Special alert for donations over $10',
         nodes: [
             { id: 'trigger_1', type: 'trigger', triggerType: 'hasDonation', x: 50, y: 50, config: {} },
-            { id: 'trigger_2', type: 'trigger', triggerType: 'compareProperty', x: 320, y: 50, config: { property: 'donationAmount', operator: 'gte', value: 10 } },
+            { id: 'trigger_2', type: 'trigger', triggerType: 'compareProperty', x: 320, y: 50, config: { property: 'donoValue', operator: 'gte', value: 10 } },
             { id: 'logic_1', type: 'logic', logicType: 'AND', x: 185, y: 230, config: {} },
             { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 50, y: 410, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } },
-            { id: 'action_2', type: 'action', actionType: 'showText', x: 320, y: 410, config: { text: '🎉 BIG DONATION! {username} donated ${donationAmount}!', x: 20, y: 30, width: 60, fontSize: 48, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FFD700', backgroundColor: 'rgba(139,0,0,0.9)', padding: 30, borderRadius: 15, animation: 'bounceIn', animationDuration: 500, duration: 10000 } },
-            { id: 'action_3', type: 'action', actionType: 'ttsSpeak', x: 320, y: 590, config: { text: 'Wow! {username} just donated ${donationAmount}! Thank you so much!', voice: '', rate: 1, pitch: 1, volume: 1 } }
+            { id: 'action_2', type: 'action', actionType: 'showText', x: 320, y: 410, config: { text: '🎉 BIG DONATION! {username} donated {hasDonation}!', x: 20, y: 30, width: 60, fontSize: 48, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FFD700', backgroundColor: 'rgba(139,0,0,0.9)', padding: 30, borderRadius: 15, animation: 'bounceIn', animationDuration: 500, duration: 10000 } },
+            { id: 'action_3', type: 'action', actionType: 'ttsSpeak', x: 320, y: 590, config: { text: 'Wow! {username} just donated {hasDonation}! Thank you so much!', voice: '', rate: 1, pitch: 1, volume: 1 } }
         ],
         connections: [
             { from: 'trigger_1', to: 'logic_1' },
@@ -248,7 +248,7 @@ class EventFlowEditor {
                     { id: 'eventNewSubscriber', name: '⭐ New Subscriber' },
                     { id: 'eventResub', name: '🔄 Resub/Renewal' },
                     { id: 'eventGiftSub', name: '🎁 Gift Sub' },
-                    { id: 'eventDonation', name: '💰 Donation/Super Chat' },
+                    { id: 'eventDonation', name: '💰 Specific Donation Event' },
                     { id: 'eventRaid', name: '🚀 Raid' },
                     { id: 'eventCheer', name: '💎 Cheer/Bits' },
                     { id: 'eventOther', name: '📋 Other Event...' },
@@ -305,6 +305,7 @@ class EventFlowEditor {
                     { id: 'fromChannelName', name: '📺 From Channel Name' },
                     { id: 'fromUser', name: '👤 From User' },
                     { id: 'userRole', name: '👑 User Role' },
+                    { id: 'userMemoryContains', name: '🧠 User Is Remembered' },
                     { id: 'channelPointRedemption', name: '🎁 Channel Point Redemption' }
                 ]
             },
@@ -359,6 +360,7 @@ class EventFlowEditor {
                     { id: 'removeText', name: '✂️ Remove Text' },
                     { id: 'setProperty', name: '🎨 Set Property' },
                     { id: 'featureMessage', name: '🌟 Feature Message' },
+                    { id: 'pinMessage', name: 'Pin Message' },
                     { id: 'sendMessage', name: '💬 Send Message' },
                     { id: 'relay', name: '📢 Relay Chat' },
                     { id: 'reflectionFilter', name: '🪞 Reflection Filter' }
@@ -443,6 +445,17 @@ class EventFlowEditor {
                 ]
             },
             {
+                id: 'user-memory',
+                name: '🧠 User Memory',
+                expanded: true,
+                actions: [
+                    { id: 'rememberUser', name: '🧠 Remember User' },
+                    { id: 'forgetUser', name: '👋 Forget User' },
+                    { id: 'clearUserMemory', name: '🧹 Clear All Users' },
+                    { id: 'pickRandomUser', name: '🎟️ Pick Random User' }
+                ]
+            },
+            {
                 id: 'state',
                 name: '🔧 State Control',
                 expanded: false,
@@ -480,10 +493,33 @@ class EventFlowEditor {
         this.stateNodeTypes = [
             { id: 'GATE', name: '🚦 On/Off Switch', type: 'state', stateType: 'GATE' },
             { id: 'COUNTER', name: '🔢 Counter', type: 'state', stateType: 'COUNTER' },
-            { id: 'THROTTLE', name: '⏲️ Rate Limiter', type: 'state', stateType: 'THROTTLE' }
+            { id: 'THROTTLE', name: '⏲️ Rate Limiter', type: 'state', stateType: 'THROTTLE' },
+            { id: 'USER_MEMORY', name: '🧠 User Memory', type: 'state', stateType: 'USER_MEMORY' }
         ];
 
+        this.userMemoryUnsubscribe = this.eventFlowSystem && typeof this.eventFlowSystem.subscribeUserMemory === 'function'
+            ? this.eventFlowSystem.subscribeUserMemory(snapshot => this.handleUserMemoryStateUpdate(snapshot))
+            : null;
+        if (this.eventFlowSystem && typeof this.eventFlowSystem.requestUserMemorySnapshots === 'function') {
+            this.eventFlowSystem.requestUserMemorySnapshots();
+        }
+
         this.init(); // init() will call createEditorLayout()
+    }
+
+    handleUserMemoryStateUpdate(snapshot) {
+        if (!snapshot || !this.currentFlow || !Array.isArray(this.currentFlow.nodes)) return;
+        const currentFlowId = String(this.currentFlow.id || 'draft');
+        if (String(snapshot.flowId || 'draft') !== currentFlowId) return;
+
+        const memoryNode = this.currentFlow.nodes.find(node => node.id === snapshot.nodeId && node.type === 'state' && node.stateType === 'USER_MEMORY');
+        if (!memoryNode) return;
+
+        this.renderNodeOnCanvas(memoryNode.id);
+        const countElement = document.getElementById('user-memory-current-count');
+        if (countElement && this.selectedNode === memoryNode.id) {
+            countElement.textContent = String(snapshot.count || 0);
+        }
     }
 
     // Helper method to escape HTML special characters to prevent XSS
@@ -495,6 +531,89 @@ class EventFlowEditor {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
+    }
+
+    getLocalMediaApi() {
+        if (window.ninjafy && window.ninjafy.localMedia) return window.ninjafy.localMedia;
+        if (window.ssappLocalMedia) return window.ssappLocalMedia;
+        return null;
+    }
+
+    renderLocalMediaSource(node, options) {
+        const config = node.config || {};
+        const isLocal = config.sourceType === 'local' && !!config.localAssetId;
+        const label = options.label;
+        const inputId = options.inputId;
+        const configKey = options.configKey;
+        const uploadButtonId = options.uploadButtonId;
+        const localName = this.escapeHtml(config.localAssetName || 'Selected local file');
+        const localType = this.escapeHtml(config.localMediaType || options.mediaType || 'media');
+
+        if (!isLocal) {
+            return `<div class="property-group">
+                <label class="property-label">${label}</label>
+                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <input type="url" class="property-input" id="${inputId}" value="${this.escapeHtml(config[configKey] || '')}" style="flex: 1; min-width: 160px;">
+                    <button type="button" id="${uploadButtonId}" style="padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Upload</button>
+                    <button type="button" id="chooseLocalMediaBtn" style="padding: 5px 10px; border: 1px solid #667eea; border-radius: 4px; cursor: pointer;">Choose Local File</button>
+                </div>
+            </div>`;
+        }
+
+        return `<div class="property-group">
+            <label class="property-label">${label}</label>
+            <div style="border: 1px solid rgba(102,126,234,0.55); border-radius: 6px; padding: 9px;">
+                <div><strong>${localName}</strong> <span style="opacity: 0.7;">(${localType})</span></div>
+                <div id="localMediaStatus" class="property-help" style="margin: 5px 0;">Checking local file…</div>
+                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <button type="button" id="chooseLocalMediaBtn">Relink</button>
+                    <button type="button" id="previewLocalMediaBtn">Preview</button>
+                    <button type="button" id="revealLocalMediaBtn">Reveal in Folder</button>
+                    <button type="button" id="changeLocalMediaPortBtn">Change Server Port</button>
+                    <button type="button" id="useMediaUrlBtn">Use URL Instead</button>
+                </div>
+            </div>
+            <button type="button" id="copyLocalFlowActionsUrlBtn" style="margin-top: 7px; width: 100%;">Copy Local Flow Actions URL for OBS</button>
+        </div>`;
+    }
+
+    getCurrentFlowActionsSearch() {
+        const link = document.getElementById('flowactionslink');
+        try {
+            if (link && link.href) return new URL(link.href, window.location.href).search;
+        } catch (_) { }
+        return window.location.search || '';
+    }
+
+    getCurrentSessionId() {
+        const input = document.getElementById('sessionid');
+        if (input && input.value) return input.value;
+        try {
+            if (typeof lastResponse !== 'undefined' && lastResponse && lastResponse.streamID) return lastResponse.streamID;
+        } catch (_) { }
+        return '';
+    }
+
+    async refreshLocalMediaStatus(node) {
+        const statusElement = document.getElementById('localMediaStatus');
+        if (!statusElement || !node.config || !node.config.localAssetId) return;
+        const api = this.getLocalMediaApi();
+        if (!api) {
+            statusElement.textContent = 'Local files require the Social Stream standalone app or a future Media Bridge.';
+            return;
+        }
+        try {
+            const [asset, server] = await Promise.all([api.get(node.config.localAssetId), api.status()]);
+            if (!asset || asset.status === 'missing') {
+                statusElement.textContent = 'File missing — use Relink to choose its new location.';
+            } else if (!server || !server.running) {
+                statusElement.textContent = `File available; local server is offline${server && server.lastError ? `: ${server.lastError}` : '.'}`;
+            } else {
+                statusElement.textContent = `Available — local server running on port ${server.port}.`;
+            }
+        } catch (error) {
+            statusElement.textContent = `Unable to check local media: ${error && error.message ? error.message : error}`;
+        }
     }
 
     // Helper to render source filter for event triggers
@@ -530,6 +649,21 @@ class EventFlowEditor {
                 <div class="property-help">Leave all unchecked to match any source. Events matched: <code>${eventTypes}</code></div>
             </div>
         `;
+    }
+
+    renderUserMemoryTargetField(node, helpText = '') {
+        const memories = this.currentFlow?.nodes?.filter(candidate => candidate.type === 'state' && candidate.stateType === 'USER_MEMORY') || [];
+        return `
+            <div class="property-group user-memory-target-field">
+                <label class="property-label">Target User Memory</label>
+                <select class="property-input" id="prop-targetNodeId">
+                    <option value="">Select User Memory...</option>
+                    ${memories.map(memory => `<option value="${this.escapeHtml(memory.id)}" ${node.config?.targetNodeId === memory.id ? 'selected' : ''}>${this.escapeHtml(memory.config?.name || memory.label || 'User Memory')}</option>`).join('')}
+                </select>
+                ${memories.length
+                    ? `<div class="property-help">${this.escapeHtml(helpText || 'Select the shared User Memory state object. The dashed purple link shows this relationship on the canvas.')}</div>`
+                    : '<div class="property-help" style="color: #ff6b6b;">Add a User Memory from State Nodes first.</div>'}
+            </div>`;
     }
 
     init() {
@@ -845,6 +979,7 @@ class EventFlowEditor {
                 <div class="node-help-buttons">
                     <button class="btn btn-ghost" data-guide-link="event-flow">📘 Event Flow Guide</button>
                     <button class="btn btn-ghost" data-guide-link="state-nodes">🎮 State Nodes Guide</button>
+                    <button class="btn btn-ghost" data-guide-link="user-memory">🧠 User Memory Guide</button>
                     <button class="btn btn-ghost" data-guide-link="event-reference">📖 Event Reference</button>
                 </div>
             </div>
@@ -887,6 +1022,11 @@ class EventFlowEditor {
                 extensionPath: 'actions/state-nodes-guide.html',
                 rootPath: 'actions/state-nodes-guide.html',
                 actionsPath: 'state-nodes-guide.html'
+            },
+            'user-memory': {
+                extensionPath: 'actions/user-memory-guide.html',
+                rootPath: 'actions/user-memory-guide.html',
+                actionsPath: 'user-memory-guide.html'
             },
             'event-flow-about': {
                 extensionPath: 'actions/event-flow-guide.html',
@@ -1673,6 +1813,8 @@ class EventFlowEditor {
         if (!this.currentFlow || !this.currentFlow.nodes) return;
         this.currentFlow.nodes.forEach(node => this.renderNode(node));
         this.currentFlow.connections.forEach(connection => this.renderConnection(connection));
+        this.renderStateReferences();
+        this.highlightStateReferenceGroup(this.selectedNode);
     }
 
 	renderNode(node) {
@@ -1698,6 +1840,7 @@ class EventFlowEditor {
 
 		let inputPointsHTML = '';
 		let outputPointsHTML = '';
+		let stateReferencePointsHTML = '';
 
 		if (node.type === 'trigger') {
 			// Triggers that don't have a message get async output
@@ -1740,6 +1883,9 @@ class EventFlowEditor {
 			inputPointsHTML = `<div class="${pointClasses}" data-point-type="input" data-logic-type="${node.logicType}"></div>`;
 			outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>';
 		} else if (node.type === 'state') {
+			if (node.stateType === 'USER_MEMORY') {
+				stateReferencePointsHTML = '<div class="state-reference-point target" data-state-reference-type="target" title="Link User Memory actions and checks here"></div>';
+			} else {
 			// State nodes have input and output points
 			inputPointsHTML = '<div class="connection-point input" data-point-type="input"></div>';
 			
@@ -1752,6 +1898,11 @@ class EventFlowEditor {
 				// Gate, Semaphore, Latch, Throttle can pass messages through synchronously
 				outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>';
 			}
+			}
+		}
+
+		if (this.isUserMemoryReferenceNode(node)) {
+			stateReferencePointsHTML += '<div class="state-reference-point source" data-state-reference-type="source" title="Drag to a User Memory state node"></div>';
 		}
 
 		nodeEl.innerHTML = `
@@ -1762,6 +1913,7 @@ class EventFlowEditor {
 			<div class="node-body">${this.escapeHtml(this.getNodeDescription(node))}</div>
 			${inputPointsHTML}
 			${outputPointsHTML}
+			${stateReferencePointsHTML}
 		`;
 		canvas.appendChild(nodeEl);
 
@@ -1769,6 +1921,12 @@ class EventFlowEditor {
 		nodeEl.addEventListener('mousedown', (e) => {
 			if (e.target.classList.contains('node-delete')) {
 				this.deleteNode(node.id);
+				return;
+			}
+			if (e.target.classList.contains('state-reference-point')) {
+				if (e.target.dataset.stateReferenceType === 'source') {
+					this.startStateReference(node.id, e);
+				}
 				return;
 			}
 			if (e.target.classList.contains('connection-point')) {
@@ -1780,7 +1938,7 @@ class EventFlowEditor {
 			}
 			this.selectNode(node.id);
 
-			if (!e.target.classList.contains('connection-point') && !e.target.classList.contains('node-delete')) {
+			if (!e.target.classList.contains('connection-point') && !e.target.classList.contains('state-reference-point') && !e.target.classList.contains('node-delete')) {
 				this.draggedNode = node.id;
 				const rect = nodeEl.getBoundingClientRect();
 				this.dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -1815,6 +1973,26 @@ class EventFlowEditor {
         }
         const typeDef = typesArray.find(t => t.id === node[subtypeField]);
         return typeDef ? typeDef.name : 'Unknown Node';
+    }
+
+    getUserMemoryNodeName(targetNodeId) {
+        if (!targetNodeId || !this.currentFlow || !Array.isArray(this.currentFlow.nodes)) return 'Not linked';
+        const target = this.currentFlow.nodes.find(node => node.id === targetNodeId && node.type === 'state' && node.stateType === 'USER_MEMORY');
+        return target ? (target.config?.name || target.label || 'User Memory') : 'Missing memory';
+    }
+
+    isUserMemoryReferenceNode(node) {
+        if (!node) return false;
+        if (node.type === 'trigger' && node.triggerType === 'userMemoryContains') return true;
+        if (node.type !== 'action') return false;
+        return ['rememberUser', 'forgetUser', 'clearUserMemory', 'pickRandomUser', 'resetStateNode'].includes(node.actionType);
+    }
+
+    getUserMemoryReferenceTargetId(node) {
+        if (!this.isUserMemoryReferenceNode(node)) return '';
+        const targetNodeId = node.config?.targetNodeId || '';
+        const target = this.currentFlow?.nodes?.find(candidate => candidate.id === targetNodeId);
+        return target && target.type === 'state' && target.stateType === 'USER_MEMORY' ? targetNodeId : '';
     }
 
     // Check if a connection comes after a terminal action (message won't be returned)
@@ -1871,7 +2049,11 @@ class EventFlowEditor {
                 case 'fromSource': return `Source: ${node.config.source === '*' ? 'Any' : (node.config.source || 'Any')}`;
                 case 'fromChannelName': return `Channel: ${node.config.channelName || 'Any'}`;
                 case 'fromUser': return `User: ${node.config.username || 'Any'}`;
-                case 'userRole': return `Role: ${node.config.role || 'Any'}`;
+                case 'userRole': {
+                    const roleLabels = { tiktokTeamMember: 'TikTok Team Member' };
+                    return `Role: ${roleLabels[node.config.role] || node.config.role || 'Any'}`;
+                }
+                case 'userMemoryContains': return `Checks: ${this.getUserMemoryNodeName(node.config.targetNodeId)}`;
                 case 'hasDonation': return 'Has donation';
                 case 'channelPointRedemption': {
                     const rewardName = node.config.rewardName || '';
@@ -1884,7 +2066,7 @@ class EventFlowEditor {
                     return 'Any event';
                 }
                 case 'compareProperty': {
-                    const prop = node.config.property || 'donationAmount';
+                    const prop = node.config.property || 'donoValue';
                     const op = node.config.operator || 'gt';
                     const val = node.config.value ?? 0;
                     const opSymbols = { gt: '>', lt: '<', eq: '=', gte: '>=', lte: '<=', ne: '!=' };
@@ -1936,7 +2118,7 @@ class EventFlowEditor {
                 case 'eventDonation': {
                     const sources = node.config.sources?.length ? node.config.sources.join(', ') : 'All';
                     const minAmt = node.config.minAmount > 0 ? ` ≥$${node.config.minAmount}` : '';
-                    return `Donation${minAmt} (${sources})`;
+                    return `Donation event${minAmt} (${sources})`;
                 }
                 case 'eventRaid': {
                     const sources = node.config.sources?.length ? node.config.sources.join(', ') : 'All';
@@ -1989,6 +2171,11 @@ class EventFlowEditor {
                     return `${prop} = ${shortValue}`;
                 }
                 case 'featureMessage': return 'Feature in dock/overlay';
+                case 'pinMessage': {
+                    const modeMap = { pin: 'Pin', unpin: 'Unpin', nextPinned: 'Show next pinned' };
+                    const pinConfig = node.config || {};
+                    return modeMap[pinConfig.mode] || modeMap.pin;
+                }
                 case 'sendMessage': return `Send to: ${node.config.destination || 'All'}`;
                 case 'relay': return `Relay to: ${node.config.destination || 'All'}`;
                 case 'reflectionFilter': {
@@ -2048,11 +2235,17 @@ class EventFlowEditor {
                 }
                 // Media & Layer actions
                 case 'playTenorGiphy': {
+					if (node.config.sourceType === 'local' && node.config.localAssetName) {
+						return `${node.config.localAssetName} (${node.config.duration ?? 10000}ms)`;
+					}
                     const url = node.config.mediaUrl || '';
                     const duration = node.config.duration ?? 10000;
                     const shortUrl = url.length > 25 ? url.substring(0, 25) + '...' : url;
                     return `${shortUrl} (${duration}ms)`;
                 }
+				case 'playAudioClip':
+					if (node.config.sourceType === 'local' && node.config.localAssetName) return node.config.localAssetName;
+					return node.config.audioUrl || 'No audio selected';
                 case 'showAvatar': {
                     const duration = node.config.duration || 5000;
                     const pos = `${node.config.x ?? 5}%,${node.config.y ?? 5}%`;
@@ -2084,6 +2277,14 @@ class EventFlowEditor {
                 case 'ttsSkip': return 'Skip current TTS';
                 case 'ttsClear': return 'Clear TTS queue';
                 case 'ttsVolume': return `TTS Volume: ${node.config.volume ?? 100}%`;
+                case 'rememberUser': return `Remember in: ${this.getUserMemoryNodeName(node.config.targetNodeId)}`;
+                case 'forgetUser': return `Forget from: ${this.getUserMemoryNodeName(node.config.targetNodeId)}`;
+                case 'clearUserMemory': return `Clear: ${this.getUserMemoryNodeName(node.config.targetNodeId)}`;
+                case 'pickRandomUser': return `Pick from: ${this.getUserMemoryNodeName(node.config.targetNodeId)}${node.config.removeSelected ? ' (remove winner)' : ''}`;
+                case 'resetStateNode': {
+                    const target = this.currentFlow?.nodes?.find(candidate => candidate.id === node.config.targetNodeId && candidate.type === 'state');
+                    return `Reset: ${target ? (target.config?.name || target.label || target.stateType) : 'Not linked'}`;
+                }
                 default: return `${this.getNodeTitle(node)}`;
             }
         } else if (node.type === 'logic') { // NEW
@@ -2107,6 +2308,16 @@ class EventFlowEditor {
                     const name = node.config?.name || 'Counter';
                     const target = node.config?.targetCount || 5;
                     return `${name}: Triggers at ${target}`;
+                }
+                case 'USER_MEMORY': {
+                    const name = node.config?.name || 'User Memory';
+                    const summary = this.eventFlowSystem && typeof this.eventFlowSystem.getUserMemorySummary === 'function'
+                        ? this.eventFlowSystem.getUserMemorySummary(node.id, this.currentFlow)
+                        : null;
+                    const count = summary ? summary.count : 0;
+                    const persistence = node.config?.persistence === 'persistent' ? 'Saved' : 'Session';
+                    const reset = node.config?.resetAfterMs > 0 ? `reset after ${Math.round(node.config.resetAfterMs / 1000)}s idle` : 'manual reset';
+                    return `${name} • ${count} user${count === 1 ? '' : 's'} • ${persistence} • ${reset}`;
                 }
                 case 'USERPOOL': {
                     const name = node.config?.poolName || 'default';
@@ -2214,6 +2425,117 @@ class EventFlowEditor {
         canvas.insertBefore(svgEl, canvas.firstChild);
     }
 
+    renderStateReferences() {
+        const canvas = document.getElementById('flow-canvas');
+        if (!canvas || !this.currentFlow || !Array.isArray(this.currentFlow.nodes)) return;
+        canvas.querySelectorAll('svg.state-reference').forEach(reference => reference.remove());
+
+        this.currentFlow.nodes.forEach(node => {
+            const targetNodeId = this.getUserMemoryReferenceTargetId(node);
+            if (targetNodeId) this.renderStateReference(node.id, targetNodeId);
+        });
+    }
+
+    renderStateReference(sourceNodeId, targetNodeId) {
+        const canvas = document.getElementById('flow-canvas');
+        if (!canvas) return;
+        const sourceNodeEl = canvas.querySelector(`.node[data-id="${sourceNodeId}"]`);
+        const targetNodeEl = canvas.querySelector(`.node[data-id="${targetNodeId}"]`);
+        const sourcePoint = sourceNodeEl?.querySelector('.state-reference-point.source');
+        const targetPoint = targetNodeEl?.querySelector('.state-reference-point.target');
+        if (!sourcePoint || !targetPoint) return;
+
+        const canvasRect = canvas.getBoundingClientRect();
+        const sourceRect = sourcePoint.getBoundingClientRect();
+        const targetRect = targetPoint.getBoundingClientRect();
+        const startX = sourceRect.left + sourceRect.width / 2 - canvasRect.left + canvas.scrollLeft;
+        const startY = sourceRect.top + sourceRect.height / 2 - canvasRect.top + canvas.scrollTop;
+        const endX = targetRect.left + targetRect.width / 2 - canvasRect.left + canvas.scrollLeft;
+        const endY = targetRect.top + targetRect.height / 2 - canvasRect.top + canvas.scrollTop;
+        const controlOffset = Math.max(70, Math.abs(endX - startX) * 0.35);
+        const direction = endX >= startX ? 1 : -1;
+        const pathData = `M ${startX},${startY} C ${startX + controlOffset * direction},${startY} ${endX - controlOffset * direction},${endY} ${endX},${endY}`;
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'state-reference');
+        svg.dataset.source = sourceNodeId;
+        svg.dataset.target = targetNodeId;
+        Object.assign(svg.style, {
+            position: 'absolute',
+            left: '0',
+            top: '0',
+            width: `${canvas.scrollWidth}px`,
+            height: `${canvas.scrollHeight}px`,
+            pointerEvents: 'none'
+        });
+
+        const clickPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        clickPath.setAttribute('d', pathData);
+        clickPath.setAttribute('stroke', 'transparent');
+        clickPath.setAttribute('stroke-width', '24');
+        clickPath.setAttribute('fill', 'none');
+        clickPath.style.cursor = 'pointer';
+        clickPath.style.pointerEvents = 'stroke';
+
+        const visiblePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        visiblePath.setAttribute('d', pathData);
+        visiblePath.setAttribute('stroke', '#c084fc');
+        visiblePath.setAttribute('stroke-width', '3');
+        visiblePath.setAttribute('stroke-dasharray', '7,6');
+        visiblePath.setAttribute('fill', 'none');
+        visiblePath.style.pointerEvents = 'none';
+
+        clickPath.addEventListener('mouseenter', () => {
+            visiblePath.setAttribute('stroke', 'var(--alert-color)');
+            visiblePath.setAttribute('stroke-width', '4');
+        });
+        clickPath.addEventListener('mouseleave', () => {
+            visiblePath.setAttribute('stroke', '#c084fc');
+            visiblePath.setAttribute('stroke-width', '3');
+        });
+        clickPath.addEventListener('click', event => {
+            event.stopPropagation();
+            if (confirm('Unlink this node from the User Memory?')) {
+                this.deleteStateReference(sourceNodeId);
+            }
+        });
+
+        svg.appendChild(clickPath);
+        svg.appendChild(visiblePath);
+        canvas.insertBefore(svg, canvas.firstChild);
+    }
+
+    deleteStateReference(sourceNodeId) {
+        const sourceNode = this.currentFlow?.nodes?.find(node => node.id === sourceNodeId);
+        if (!sourceNode || !sourceNode.config) return;
+        sourceNode.config.targetNodeId = '';
+        this.markUnsavedChanges(true);
+        this.renderFlow();
+        if (this.selectedNode === sourceNodeId) this.showNodeProperties(sourceNode);
+    }
+
+    highlightStateReferenceGroup(nodeId) {
+        const canvas = document.getElementById('flow-canvas');
+        if (!canvas || !this.currentFlow || !Array.isArray(this.currentFlow.nodes)) return;
+        canvas.querySelectorAll('.node.state-related').forEach(node => node.classList.remove('state-related'));
+        canvas.querySelectorAll('svg.state-reference.state-related').forEach(reference => reference.classList.remove('state-related'));
+        if (!nodeId) return;
+
+        const selected = this.currentFlow.nodes.find(node => node.id === nodeId);
+        if (!selected) return;
+        const memoryId = selected.type === 'state' && selected.stateType === 'USER_MEMORY'
+            ? selected.id
+            : this.getUserMemoryReferenceTargetId(selected);
+        if (!memoryId) return;
+
+        canvas.querySelector(`.node[data-id="${memoryId}"]`)?.classList.add('state-related');
+        this.currentFlow.nodes.forEach(node => {
+            if (this.getUserMemoryReferenceTargetId(node) !== memoryId) return;
+            canvas.querySelector(`.node[data-id="${node.id}"]`)?.classList.add('state-related');
+            canvas.querySelector(`svg.state-reference[data-source="${node.id}"][data-target="${memoryId}"]`)?.classList.add('state-related');
+        });
+    }
+
     handleNodeDragStart(e, nodeType, nodeSubtype) { // Added nodeType and nodeSubtype parameters
         e.dataTransfer.setData('text/plain', JSON.stringify({
             type: nodeType, // Use the passed nodeType
@@ -2302,7 +2624,55 @@ class EventFlowEditor {
 		
 		return testResult;
 	}
-	
+
+	parseTestDonationAmount(rawValue, fallback) {
+		const raw = String(rawValue || '').replace(/,/g, '');
+		const match = raw.match(/[+-]?(?:\d+\.?\d*|\.\d+)/);
+		if (!match) return fallback;
+		const parsed = parseFloat(match[0]);
+		return isFinite(parsed) && parsed > 0 ? parsed : fallback;
+	}
+
+	buildTestDonationPayload(source, rawValue) {
+		const platform = String(source || '').toLowerCase();
+
+		if (platform === 'twitch') {
+			const bits = Math.max(1, Math.round(this.parseTestDonationAmount(rawValue, 100)));
+			return { hasDonation: bits + ' bits' };
+		}
+
+		if (platform === 'facebook') {
+			const stars = Math.max(1, Math.round(this.parseTestDonationAmount(rawValue, 100)));
+			return {
+				hasDonation: stars + ' Stars',
+				donoValue: stars / 100
+			};
+		}
+
+		if (platform === 'kick') {
+			const kicks = Math.max(1, Math.round(this.parseTestDonationAmount(rawValue, 10)));
+			return { hasDonation: kicks + (kicks === 1 ? ' KICK' : ' KICKs') };
+		}
+
+		if (platform === 'tiktok') {
+			const coins = Math.max(1, Math.round(this.parseTestDonationAmount(rawValue, 100)));
+			return { hasDonation: coins + ' coins' };
+		}
+
+		const amount = this.parseTestDonationAmount(rawValue, 10);
+		const payload = {
+			hasDonation: '$' + amount.toFixed(2) + ' CAD',
+			donoValue: amount
+		};
+
+		if (platform === 'youtube' || platform === 'youtubeshorts') {
+			payload.event = 'superchat';
+			delete payload.donoValue;
+		}
+
+		return payload;
+	}
+
 	initTestPanel() {
 		const testOverlay = document.getElementById('test-overlay');
 		const testPanel = document.getElementById('test-panel');
@@ -2359,22 +2729,27 @@ class EventFlowEditor {
 				this.unsavedChanges ? 'block' : 'none';
 			
 			// Create test message from form inputs
+			const isDonation = document.getElementById('test-donation').checked;
+			const source = document.getElementById('test-source').value;
+			const donationPayload = isDonation ? this.buildTestDonationPayload(source, document.getElementById('test-donation-amount').value) : {};
 			const testMessage = {
-				type: document.getElementById('test-source').value,
+				type: source,
 				chatname: document.getElementById('test-username').value,
 				userid: document.getElementById('test-username').value.toLowerCase(),
 				chatmessage: document.getElementById('test-message').value,
 				mod: document.getElementById('test-mod').checked,
 				vip: document.getElementById('test-vip').checked,
 				admin: document.getElementById('test-admin').checked,
-				hasDonation: document.getElementById('test-donation').checked,
 				// Add other required properties
 				timestamp: Date.now(),
 			};
+			Object.assign(testMessage, donationPayload);
 
 			const eventType = document.getElementById('test-event')?.value || document.getElementById('test-event-custom')?.value?.trim() || '';
 			if (eventType) {
 				testMessage.event = eventType;
+			} else if (donationPayload.event) {
+				testMessage.event = donationPayload.event;
 			}
 
 			// Apply first-time chatter flag
@@ -2391,11 +2766,6 @@ class EventFlowEditor {
 				const ts = Math.max(0, Date.now() - (amount * windowMs));
 				testMessage.lastactivity = ts;
 				testMessage.lastActivity = ts; // support either casing
-			}
-			
-			// Add donation amount if donation checkbox is checked
-			if (testMessage.hasDonation) {
-				testMessage.donationAmount = document.getElementById('test-donation-amount').value;
 			}
 			
 			// Run the test
@@ -2428,7 +2798,7 @@ class EventFlowEditor {
 			eventNewSubscriber: 'new_subscriber',
 			eventResub: 'resub',
 			eventGiftSub: 'subscription_gift',
-			eventDonation: 'donation',
+			eventDonation: 'superchat',
 			eventRaid: 'raid',
 			eventCheer: 'cheer'
 		};
@@ -2509,6 +2879,7 @@ class EventFlowEditor {
                 case 'fromChannelName': node.config = { channelName: '' }; break;
                 case 'fromUser': node.config = { username: 'user' }; break;
                 case 'userRole': node.config = { role: 'mod' }; break;
+                case 'userMemoryContains': node.config = { targetNodeId: '' }; break;
                 case 'hasDonation': node.config = {}; break;
                 case 'channelPointRedemption': node.config = { rewardName: '' }; break;
                 case 'eventType': node.config = { eventType: 'reward' }; break;
@@ -2528,7 +2899,7 @@ class EventFlowEditor {
                 case 'obsRecordingStopped': node.config = {}; break;
                 case 'obsSceneChanged': node.config = {}; break;
                 case 'obsReplaybufferSaved': node.config = {}; break;
-                case 'compareProperty': node.config = { property: 'donationAmount', operator: 'gt', value: 0 }; break;
+                case 'compareProperty': node.config = { property: 'donoValue', operator: 'gt', value: 0 }; break;
                 case 'randomChance': node.config = { probability: 0.1, cooldownMs: 0, maxPerMinute: 0, requireMessage: true }; break;
                 case 'timeInterval': node.config = { interval: 60 }; break;
                 case 'timeOfDay': node.config = { times: ['12:00'] }; break;
@@ -2561,6 +2932,8 @@ class EventFlowEditor {
 					node.config = { property: 'nameColor', value: '#FF0000' }; break;
                 case 'featureMessage':
                     node.config = {}; break;
+                case 'pinMessage':
+                    node.config = { mode: 'pin', messageId: '{id}', target: '' }; break;
                 case 'sendMessage':
 					node.config = { destination: 'reply', template: 'Thank you {username}!', timeout: 0, sanitizeMode: 'safe' }; break;
                 case 'relay':
@@ -2642,6 +3015,18 @@ class EventFlowEditor {
 				case 'checkCounter':
 					node.config = { targetNodeId: '' };
 					break;
+				case 'rememberUser':
+					node.config = { targetNodeId: '', reason: '' };
+					break;
+				case 'forgetUser':
+					node.config = { targetNodeId: '' };
+					break;
+				case 'clearUserMemory':
+					node.config = { targetNodeId: '' };
+					break;
+				case 'pickRandomUser':
+					node.config = { targetNodeId: '', removeSelected: false };
+					break;
             }
         } else if (type === 'logic') { // NEW
             node.logicType = subtype; // subtype will be 'AND', 'OR', 'NOT', 'RANDOM'
@@ -2678,6 +3063,9 @@ class EventFlowEditor {
                 case 'COUNTER':
                     node.config = { name: 'Counter 1', initialCount: 0, targetCount: 5, resetOnTarget: true, mode: 'INCREMENT' };
                     break;
+                case 'USER_MEMORY':
+                    node.config = { name: 'User Memory 1', persistence: 'session', resetAfterMs: 0, resetOnStreamStart: false, resetOnStreamStop: false };
+                    break;
                 case 'USERPOOL':
                     node.config = { poolName: 'default', maxUsers: 10, requireEntry: true, entryKeyword: '!enter', resetOnFull: false, resetAfterMs: 0, allowReentry: false, scope: 'global' };
                     break;
@@ -2696,6 +3084,16 @@ class EventFlowEditor {
 
     deleteNode(nodeId) {
         if (!this.currentFlow) return;
+        const nodeToDelete = this.currentFlow.nodes.find(node => node.id === nodeId);
+        if (nodeToDelete && nodeToDelete.type === 'state' && nodeToDelete.stateType === 'USER_MEMORY') {
+            const linkedNodes = this.currentFlow.nodes.filter(node => node.config?.targetNodeId === nodeId);
+            if (linkedNodes.length && !confirm(`This User Memory is linked to ${linkedNodes.length} other node${linkedNodes.length === 1 ? '' : 's'}. Delete it and unlink them?`)) {
+                return;
+            }
+            linkedNodes.forEach(node => {
+                node.config.targetNodeId = '';
+            });
+        }
         this.currentFlow.nodes = this.currentFlow.nodes.filter(node => node.id !== nodeId);
         this.currentFlow.connections = this.currentFlow.connections.filter(
             conn => conn.from !== nodeId && conn.to !== nodeId
@@ -2715,6 +3113,95 @@ class EventFlowEditor {
         this.markUnsavedChanges(true);
         this.renderFlow();
     }
+
+    startStateReference(nodeId, event) {
+        if (!this.currentFlow) return;
+        this.draggedStateReference = { source: nodeId, tempLine: null };
+        const canvas = document.getElementById('flow-canvas');
+        const sourceRect = event.target.getBoundingClientRect();
+        this.draggedStateReference.tempLine = this.createTemporaryStateReferenceLine(
+            canvas,
+            sourceRect.left + sourceRect.width / 2,
+            sourceRect.top + sourceRect.height / 2,
+            event.clientX,
+            event.clientY
+        );
+        document.addEventListener('mousemove', this.handleStateReferenceDragMove);
+        document.addEventListener('mouseup', this.handleStateReferenceDragEnd);
+        event.stopPropagation();
+    }
+
+    createTemporaryStateReferenceLine(canvas, x1, y1, x2, y2) {
+        let svg = canvas.querySelector('svg.temp-state-reference');
+        if (!svg) {
+            svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'temp-state-reference');
+            Object.assign(svg.style, {
+                position: 'absolute',
+                left: '0',
+                top: '0',
+                width: `${canvas.scrollWidth}px`,
+                height: `${canvas.scrollHeight}px`,
+                pointerEvents: 'none',
+                zIndex: '100'
+            });
+            canvas.appendChild(svg);
+        }
+
+        const canvasRect = canvas.getBoundingClientRect();
+        const startX = x1 - canvasRect.left + canvas.scrollLeft;
+        const startY = y1 - canvasRect.top + canvas.scrollTop;
+        const endX = x2 - canvasRect.left + canvas.scrollLeft;
+        const endY = y2 - canvasRect.top + canvas.scrollTop;
+        const controlOffset = Math.max(60, Math.abs(endX - startX) * 0.35);
+        const direction = endX >= startX ? 1 : -1;
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${startX},${startY} C ${startX + controlOffset * direction},${startY} ${endX - controlOffset * direction},${endY} ${endX},${endY}`);
+        path.setAttribute('stroke', '#c084fc');
+        path.setAttribute('stroke-width', '3');
+        path.setAttribute('stroke-dasharray', '7,6');
+        path.setAttribute('fill', 'none');
+        svg.innerHTML = '';
+        svg.appendChild(path);
+        return svg;
+    }
+
+    handleStateReferenceDragMove = event => {
+        if (!this.draggedStateReference) return;
+        const canvas = document.getElementById('flow-canvas');
+        const sourcePoint = canvas.querySelector(`.node[data-id="${this.draggedStateReference.source}"] .state-reference-point.source`);
+        if (!sourcePoint) return;
+        const sourceRect = sourcePoint.getBoundingClientRect();
+        this.createTemporaryStateReferenceLine(
+            canvas,
+            sourceRect.left + sourceRect.width / 2,
+            sourceRect.top + sourceRect.height / 2,
+            event.clientX,
+            event.clientY
+        );
+    };
+
+    handleStateReferenceDragEnd = event => {
+        document.removeEventListener('mousemove', this.handleStateReferenceDragMove);
+        document.removeEventListener('mouseup', this.handleStateReferenceDragEnd);
+        if (!this.draggedStateReference) return;
+        if (this.draggedStateReference.tempLine) this.draggedStateReference.tempLine.remove();
+
+        const targetElement = document.elementFromPoint(event.clientX, event.clientY);
+        if (targetElement && targetElement.classList.contains('state-reference-point') && targetElement.dataset.stateReferenceType === 'target') {
+            const targetNodeElement = targetElement.closest('.node');
+            const sourceNode = this.currentFlow.nodes.find(node => node.id === this.draggedStateReference.source);
+            const targetNode = targetNodeElement && this.currentFlow.nodes.find(node => node.id === targetNodeElement.dataset.id);
+            if (sourceNode && targetNode && targetNode.type === 'state' && targetNode.stateType === 'USER_MEMORY') {
+                sourceNode.config = sourceNode.config || {};
+                sourceNode.config.targetNodeId = targetNode.id;
+                this.markUnsavedChanges(true);
+                this.renderFlow();
+                if (this.selectedNode === sourceNode.id) this.showNodeProperties(sourceNode);
+            }
+        }
+        this.draggedStateReference = null;
+    };
 
     startConnection(nodeId, connPointType, event) {
         if (!this.currentFlow || connPointType !== 'output') return; // Only drag from output
@@ -2845,6 +3332,7 @@ class EventFlowEditor {
         }
         const nodeEl = document.querySelector(`.node[data-id="${nodeId}"]`);
         if (nodeEl) nodeEl.classList.add('selected');
+        this.highlightStateReferenceGroup(nodeId);
         const nodeData = this.currentFlow.nodes.find(n => n.id === nodeId);
         if (!nodeData) {
              document.getElementById('node-properties-content').innerHTML = '<p>Error: Node data not found.</p>';
@@ -3032,9 +3520,23 @@ class EventFlowEditor {
 				html += `<div class="property-group"><label class="property-label">Username</label><input type="text" class="property-input" id="prop-username" value="${node.config.username || ''}"></div>`;
 				break;
 			case 'userRole':
+				const userRoles = [
+					{ value: 'mod', label: 'Moderator' },
+					{ value: 'vip', label: 'VIP' },
+					{ value: 'admin', label: 'Admin' },
+					{ value: 'subscriber', label: 'Subscriber' },
+					{ value: 'member', label: 'Member' },
+					{ value: 'follower', label: 'Follower' },
+					{ value: 'tiktokTeamMember', label: 'TikTok Team Member' }
+				];
 				html += `<div class="property-group"><label class="property-label">User Role</label><select class="property-input" id="prop-role">
-						   ${['mod', 'vip', 'admin', 'subscriber', 'member', 'follower'].map(r => `<option value="${r}" ${node.config.role === r ? 'selected' : ''}>${r.charAt(0).toUpperCase() + r.slice(1)}</option>`).join('')}
-						 </select></div>`;
+						   ${userRoles.map(role => `<option value="${role.value}" ${node.config.role === role.value ? 'selected' : ''}>${role.label}</option>`).join('')}
+						 </select></div>
+						 <div class="property-help">TikTok Team Member matches Fan Club/team levels and badges supplied with a TikTok message.</div>`;
+				break;
+			case 'userMemoryContains':
+				html += this.renderUserMemoryTargetField(node, 'Outputs true when the current event belongs to a user stored in this memory.');
+				html += `<div class="property-help">Use this like any other trigger: connect it to AND/OR gates or directly to an action.</div>`;
 				break;
 			case 'hasDonation': // Trigger type
 				html += `<p class="property-help">Fires if the message includes donation information.</p>`;
@@ -3156,25 +3658,25 @@ class EventFlowEditor {
 				break;
 
 			case 'eventDonation':
-				html += this.renderEventSourceFilter(node, 'donation,cheer,supersticker');
+				html += this.renderEventSourceFilter(node, 'superchat,donation,cheer,supersticker,jeweldonation');
 				html += `
 					<div class="property-group">
 						<label class="property-label">Minimum Amount (optional)</label>
 						<input type="number" class="property-input" id="prop-minAmount"
 							value="${node.config.minAmount || 0}" min="0" step="0.01">
-						<div class="property-help">Set to 0 to trigger on any donation amount</div>
+						<div class="property-help">Set to 0 to trigger on any matched event amount</div>
 					</div>
 					<div class="property-group" style="background: #fff8e1; color: #333; padding: 10px; border-radius: 4px;">
-						<strong>💰 Donation / Super Chat</strong><br>
-						Triggers on donations, Super Chats, Super Stickers, etc.<br><br>
+						<strong>💰 Specific Donation Event</strong><br>
+						Matches specific event names: <code>superchat</code>, legacy <code>donation</code>, <code>cheer</code>, <code>supersticker</code>, and <code>jeweldonation</code>.<br>
+						For normal value-only tips or donations with no event name, use <strong>Has Donation</strong> instead.<br><br>
 						<strong>⚡ Supported platforms:</strong><br>
-						• <strong>YouTube:</strong> Super Chat, Super Stickers (WebSocket mode)<br>
+						• <strong>YouTube:</strong> Super Chat, Super Stickers, Jewels/Gifts<br>
 						• <strong>Twitch:</strong> Cheers/Bits (WebSocket mode)<br>
-						• <strong>TikTok:</strong> Coin gifts (many events)<br>
 						• <strong>Kick:</strong> Donations (WebSocket mode)<br>
 						• <strong>Many others:</strong> Streamlabs, Ko-fi integrations, etc.<br><br>
 						<div style="background: #ffecb3; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
-							⚠️ <strong>YouTube/Twitch/Kick require WebSocket mode</strong> for monetary events.
+								⚠️ <strong>Twitch/Kick require WebSocket mode</strong> for monetary events.
 						</div>
 								<a href="${eventReferenceCrossPlatformUrl}" data-guide-link="event-reference-cross-platform" style="color: #f57f17;">📖 Event Reference Documentation</a>
 					</div>`;
@@ -3279,6 +3781,7 @@ class EventFlowEditor {
 					{ value: 'stream_online', label: 'Stream Online' },
 					{ value: 'stream_offline', label: 'Stream Offline' },
 					{ value: 'viewer_update', label: 'Viewer Count Update' },
+					{ value: 'likes_update', label: 'Video Like Count Update (YouTube)' },
 					{ value: 'follower_update', label: 'Follower Count Update' },
 					{ value: 'subscriber_update', label: 'Subscriber Count Update' },
 					{ value: 'ad_break', label: 'Ad Break (Twitch)' }
@@ -3332,7 +3835,8 @@ class EventFlowEditor {
 
 			case 'compareProperty':
 				const commonProperties = [
-					{ value: 'donationAmount', label: 'Donation Amount' },
+					{ value: 'donoValue', label: 'Donation Value' },
+					{ value: 'donationAmount', label: 'Donation Amount (legacy)' },
 					{ value: 'type', label: 'Source Type' },
 					{ value: 'event', label: 'Event Name' },
 					{ value: 'sourceName', label: 'Channel Name' },
@@ -3381,7 +3885,7 @@ class EventFlowEditor {
 					</div>
 					<div class="property-group" style="background: #e3f2fd; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>💡 Examples:</strong><br>
-						• donationAmount > 50 (tips over $50)<br>
+						• donoValue > 50 (tips over $50)<br>
 						• karma < 0.3 (low karma users)<br>
 						• memberMonths >= 12 (1 year+ members)
 					</div>`;
@@ -3756,7 +4260,7 @@ class EventFlowEditor {
 					<div class="property-group">
 						<label class="property-label">Property Name</label>
 						<input type="text" class="property-input" id="prop-propertyName" 
-							value="${node.config.propertyName || 'amount'}" placeholder="e.g., amount, donationAmount">
+							value="${node.config.propertyName || 'amount'}" placeholder="e.g., amount, donoValue">
 						<div class="property-help">Message property to accumulate</div>
 					</div>
 					
@@ -4019,6 +4523,30 @@ class EventFlowEditor {
                     <div class="property-help">Use with a trigger like “Message Starts With” or “Channel Points” to auto-feature specific messages.</div>
                 </div>`;
                 break;
+            case 'pinMessage': {
+                const pinConfig = node.config || {};
+                const pinMode = pinConfig.mode || 'pin';
+                html += `<div class="property-group">
+                            <label class="property-label">Dock Pin Action</label>
+                            <select class="property-input" id="prop-mode">
+                                <option value="pin" ${pinMode === 'pin' ? 'selected' : ''}>Pin triggering message</option>
+                                <option value="unpin" ${pinMode === 'unpin' ? 'selected' : ''}>Unpin message by ID</option>
+                                <option value="nextPinned" ${pinMode === 'nextPinned' ? 'selected' : ''}>Feature next pinned message</option>
+                            </select>
+                            <div class="property-help">Pins the incoming dock row, unpins an existing dock row, or shows the next pinned row.</div>
+                        </div>
+                        <div class="property-group" id="pin-message-id-group" style="${pinMode === 'nextPinned' ? 'display:none;' : ''}">
+                            <label class="property-label">Message ID</label>
+                            <input type="text" class="property-input" id="prop-messageId" value="${this.escapeHtml(pinConfig.messageId || '{id}')}">
+                            <div class="property-help">Use <code>{id}</code> for the triggering message, or a template/custom ID for delayed actions.</div>
+                        </div>
+                        <div class="property-group">
+                            <label class="property-label">Dock Label (optional)</label>
+                            <input type="text" class="property-input" id="prop-target" value="${this.escapeHtml(pinConfig.target || '')}" placeholder="moderator-dock">
+                            <div class="property-help">Leave blank for all docks. Set this only for a custom-labeled dock.</div>
+                        </div>`;
+                break;
+            }
             case 'sendMessage':
 				// Send Message allows sending generated messages (e.g., thank you messages, announcements)
 				const sendDestinations = [
@@ -4351,20 +4879,58 @@ class EventFlowEditor {
 				</div>
 				<p class="property-help">💡 <strong>Simple counter:</strong> Counts up by 1 each time a message passes. Triggers at your target number. Example: "Every 5th !hello"</p>`;
 				break;
+
+			case 'USER_MEMORY': {
+				const memorySummary = this.eventFlowSystem && typeof this.eventFlowSystem.getUserMemorySummary === 'function'
+					? this.eventFlowSystem.getUserMemorySummary(node.id, this.currentFlow)
+					: null;
+				const memoryCount = memorySummary ? memorySummary.count : 0;
+				html += `
+					<div class="property-group user-memory-summary">
+						<strong>Current users: <span id="user-memory-current-count">${memoryCount}</span></strong>
+						<div class="property-help">This node is the shared state object. Dashed purple links show every check or action that uses it.</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Memory Name</label>
+						<input type="text" class="property-input" id="prop-name" value="${this.escapeHtml(node.config?.name || 'User Memory 1')}" placeholder="e.g., Heart Me Eligible">
+					</div>
+					<div class="property-group">
+						<label class="property-label">Persistence</label>
+						<select class="property-input" id="prop-persistence">
+							<option value="session" ${node.config?.persistence !== 'persistent' ? 'selected' : ''}>This app session</option>
+							<option value="persistent" ${node.config?.persistence === 'persistent' ? 'selected' : ''}>Save across restarts</option>
+						</select>
+						<div class="property-help">Session memory starts empty after Social Stream restarts. Saved memory remains until cleared.</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Clear After Inactivity (seconds)</label>
+						<input type="number" class="property-input" id="prop-resetAfterMs" value="${Math.max(0, Number(node.config?.resetAfterMs) || 0) / 1000}" min="0" step="1">
+						<div class="property-help">0 keeps users until another reset rule or action clears this memory.</div>
+					</div>
+					<div class="property-group">
+						<label><input type="checkbox" class="property-input" id="prop-resetOnStreamStart" ${node.config?.resetOnStreamStart ? 'checked' : ''}> Clear on stream start</label>
+					</div>
+					<div class="property-group">
+						<label><input type="checkbox" class="property-input" id="prop-resetOnStreamStop" ${node.config?.resetOnStreamStop ? 'checked' : ''}> Clear on stream stop</label>
+					</div>
+					<button type="button" class="btn" id="clear-user-memory-now" style="width: 100%; margin-top: 6px;">Clear All Users Now</button>
+					<div class="property-help" style="margin-top: 8px;">Remembered identities use platform + user ID, with the displayed username as a fallback.</div>
+					<button type="button" class="btn btn-ghost" data-guide-link="user-memory" style="width: 100%; margin-top: 12px;">Open User Memory Guide</button>`;
+				break;
+			}
 				case 'playTenorGiphy': // This is node.actionType if node.type is 'action'
-					html += `<div class="property-group">
-							 <label class="property-label">Media URL (TENOR/GIPHY)</label>
-							 <div style="display: flex; gap: 5px;">
-								 <input type="url" class="property-input" id="prop-mediaUrl" value="${node.config.mediaUrl || ''}" style="flex: 1;">
-								 <button type="button" id="uploadMediaBtn" style="padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Upload</button>
-							 </div>
-							 <div class="property-help">Direct URL to the GIF or video. For GIPHY, use the embed link or direct GIF link.</div>
-						 </div>
+					html += `${this.renderLocalMediaSource(node, {
+						label: 'Media URL or Local File',
+						inputId: 'prop-mediaUrl',
+						configKey: 'mediaUrl',
+						uploadButtonId: 'uploadMediaBtn'
+					})}
 						 <div class="property-group">
 							 <label class="property-label">Media Type</label>
 							 <select class="property-input" id="prop-mediaType">
 								 <option value="iframe" ${node.config.mediaType === 'iframe' ? 'selected' : ''}>Video/Embed (iframe)</option>
 								 <option value="image" ${node.config.mediaType === 'image' ? 'selected' : ''}>Image (direct GIF/image link)</option>
+								 <option value="video" ${node.config.mediaType === 'video' ? 'selected' : ''}>Local/direct video</option>
 							 </select>
 						 </div>
 						 <div class="property-group">
@@ -5047,6 +5613,12 @@ class EventFlowEditor {
 						<div class="property-help">The text that will be spoken aloud</div>
 					</div>
 					<div class="property-group">
+						<label class="property-label">Voice Override (optional)</label>
+						<input type="text" class="property-input" id="prop-voice"
+							value="${this.escapeHtml(node.config.voice || '')}" placeholder="Use Flow Actions default voice">
+						<div class="property-help">Enter a voice name or ID supported by the active Flow Actions TTS provider. Leave blank to use its configured default.</div>
+					</div>
+					<div class="property-group">
 						<label class="property-label">
 							<input type="checkbox" class="property-input" id="prop-useMessageText"
 								${node.config.useMessageText ? 'checked' : ''}>
@@ -5169,6 +5741,33 @@ class EventFlowEditor {
 				<p class="property-help">Sends a MIDI Control Change message to the selected output device.</p>`;
 				this.populateMIDIOutputDevices('prop-deviceId', node.config.deviceId);
 				break;
+
+			case 'rememberUser':
+				html += this.renderUserMemoryTargetField(node, 'Adds the current event user if they are not already present; repeat participation updates their count.');
+				html += `
+					<div class="property-group">
+						<label class="property-label">Reason or Activity (optional)</label>
+						<input type="text" class="property-input" id="prop-reason" value="${this.escapeHtml(node.config.reason || '')}" placeholder="e.g., Heart Me gift, liked stream">
+						<div class="property-help">Supports template variables such as {event}, {message}, and {donation}.</div>
+					</div>`;
+				break;
+
+			case 'forgetUser':
+				html += this.renderUserMemoryTargetField(node, 'Removes only the current event user from the selected memory.');
+				break;
+
+			case 'clearUserMemory':
+				html += this.renderUserMemoryTargetField(node, 'Clears every user from this memory object without affecting other memories or state nodes.');
+				break;
+
+			case 'pickRandomUser':
+				html += this.renderUserMemoryTargetField(node, 'Selects one unique remembered user using secure randomness when available.');
+				html += `
+					<div class="property-group">
+						<label><input type="checkbox" class="property-input" id="prop-removeSelected" ${node.config.removeSelected ? 'checked' : ''}> Remove selected user after the draw</label>
+					</div>
+					<div class="property-help">Downstream templates can use {selectedUser}, {selectedUserId}, {selectedUserSource}, {selectedUserParticipationCount}, and {userMemoryCount}.</div>`;
+				break;
 				
 			case 'setGateState':
 				html += `
@@ -5283,13 +5882,13 @@ class EventFlowEditor {
 				break;
 				
 			case 'playAudioClip':
-				html += `<div class="property-group">
-							 <label class="property-label">Audio File URL</label>
-							 <div style="display: flex; gap: 5px;">
-								 <input type="url" class="property-input" id="prop-audioUrl" value="${node.config.audioUrl || ''}" style="flex: 1;">
-								 <button type="button" id="uploadAudioBtn" style="padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Upload</button>
-							 </div>
-						 </div>
+				html += `${this.renderLocalMediaSource(node, {
+						label: 'Audio URL or Local File',
+						inputId: 'prop-audioUrl',
+						configKey: 'audioUrl',
+						uploadButtonId: 'uploadAudioBtn',
+						mediaType: 'audio'
+					})}
 						 <div class="property-group">
 							<label class="property-label">Volume (0.0 to 1.0)</label>
 							<input type="number" class="property-input" id="prop-volume" value="${node.config.volume ?? 1.0}" min="0" max="1" step="0.1">
@@ -5317,12 +5916,18 @@ class EventFlowEditor {
                 if (nodeType === 'trigger') nodeData.triggerType = newSubtype;
                 else if (nodeType === 'action') nodeData.actionType = newSubtype;
                 else if (nodeType === 'logic') nodeData.logicType = newSubtype;
+                else if (nodeType === 'state') nodeData.stateType = newSubtype;
                 
                 nodeData.config = {}; // Reset config when subtype changes
-                // TODO: Populate with default config for newSubtype if applicable
+                if (nodeType === 'state') {
+                    if (newSubtype === 'GATE') nodeData.config = { name: 'Gate 1', defaultState: 'ALLOW', autoResetMs: 0 };
+                    else if (newSubtype === 'COUNTER') nodeData.config = { name: 'Counter 1', initialCount: 0, targetCount: 5, resetOnTarget: true, mode: 'INCREMENT' };
+                    else if (newSubtype === 'THROTTLE') nodeData.config = { messagesPerSecond: 1, burstSize: 1, dropStrategy: 'DROP_NEWEST' };
+                    else if (newSubtype === 'USER_MEMORY') nodeData.config = { name: 'User Memory 1', persistence: 'session', resetAfterMs: 0, resetOnStreamStart: false, resetOnStreamStop: false };
+                }
                 this.markUnsavedChanges(true);
                 this.showNodeProperties(nodeData); // Rerender properties for the new subtype
-                this.renderNodeOnCanvas(nodeData.id); // Rerender the node itself on canvas
+                this.renderFlow();
             });
         }
 
@@ -5405,6 +6010,25 @@ class EventFlowEditor {
             });
         }
 
+        const pinModeSelect = document.getElementById('prop-mode');
+        const pinMessageIdGroup = document.getElementById('pin-message-id-group');
+        if (pinModeSelect && pinMessageIdGroup && nodeData.actionType === 'pinMessage') {
+            pinModeSelect.addEventListener('change', (e) => {
+                pinMessageIdGroup.style.display = e.target.value === 'nextPinned' ? 'none' : '';
+                if (nodeData && nodeData.config) {
+                    nodeData.config.mode = e.target.value;
+                }
+                this.markUnsavedChanges(true);
+                this.renderNodeOnCanvas(nodeData.id);
+                if (propId === 'targetNodeId') {
+                    this.renderStateReferences();
+                    this.highlightStateReferenceGroup(nodeData.id);
+                } else if (nodeData.type === 'state' && nodeData.stateType === 'USER_MEMORY' && propId === 'name') {
+                    this.renderFlow();
+                }
+            });
+        }
+
         // Special handling for sanitizeMode dropdown (Send Message node)
         const sanitizeModeSelect = document.getElementById('prop-sanitizeMode');
         if (sanitizeModeSelect) {
@@ -5415,10 +6039,14 @@ class EventFlowEditor {
                 }
                 if (nodeData && nodeData.config) {
                     nodeData.config.sanitizeMode = e.target.value;
-                }
-                this.markUnsavedChanges(true);
-                this.renderNodeOnCanvas(nodeData.id);
-            });
+                    }
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                    if (propId === 'targetNodeId') {
+                        this.renderStateReferences();
+                        this.highlightStateReferenceGroup(nodeData.id);
+                    }
+                });
         }
 
         // Special handling for compareProperty - show/hide custom property input
@@ -5717,6 +6345,36 @@ class EventFlowEditor {
             updateMutualExclusion();
         }
 
+        // Special handling for User Memory state nodes
+        if (nodeData.type === 'state' && nodeData.stateType === 'USER_MEMORY') {
+            const resetAfterInput = document.getElementById('prop-resetAfterMs');
+            if (resetAfterInput) {
+                resetAfterInput.addEventListener('input', event => {
+                    const seconds = Math.max(0, parseFloat(event.target.value) || 0);
+                    nodeData.config.resetAfterMs = seconds * 1000;
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+
+            const clearButton = document.getElementById('clear-user-memory-now');
+            if (clearButton) {
+                clearButton.addEventListener('click', async event => {
+                    event.preventDefault();
+                    const memoryName = nodeData.config?.name || 'this User Memory';
+                    if (!confirm(`Clear every remembered user from "${memoryName}"?`)) return;
+                    if (!this.eventFlowSystem || typeof this.eventFlowSystem.clearUserMemory !== 'function') return;
+                    const clearResult = await this.eventFlowSystem.clearUserMemory(nodeData.id, this.currentFlow, 'editor');
+                    if (clearResult && clearResult.success) {
+                        this.showNotification(`Cleared ${clearResult.clearedCount} user${clearResult.clearedCount === 1 ? '' : 's'} from ${memoryName}.`, 'success');
+                        this.renderNodeOnCanvas(nodeData.id);
+                    } else {
+                        this.showNotification(clearResult?.error || 'Unable to clear User Memory.', 'error');
+                    }
+                });
+            }
+        }
+
         // Special handling for counter trigger
         if (nodeData.triggerType === 'counter' || nodeData.type === 'trigger' && this.selectedNode?.triggerType === 'counter') {
             const countTypeSelect = document.getElementById('prop-countType');
@@ -5966,6 +6624,123 @@ class EventFlowEditor {
                 openNodeMediaUpload('uploadAudio', 'prop-audioUrl', 'audioUrl');
             });
         }
+
+        const localMediaApi = this.getLocalMediaApi();
+        const chooseLocalMediaBtn = document.getElementById('chooseLocalMediaBtn');
+        if (chooseLocalMediaBtn) {
+            chooseLocalMediaBtn.addEventListener('click', async () => {
+                if (!localMediaApi) {
+                    this.showNotification('Local files require the Social Stream standalone app or Media Bridge.', 'warning');
+                    return;
+                }
+                const isAudio = nodeData.actionType === 'playAudioClip';
+                try {
+                    const result = await localMediaApi.select({
+                        assetId: nodeData.config.sourceType === 'local' ? nodeData.config.localAssetId : '',
+                        mediaType: isAudio ? 'audio' : '',
+                        allowedMediaTypes: isAudio ? ['audio'] : ['image', 'video']
+                    });
+                    if (!result || !result.success || !result.asset) return;
+                    nodeData.config.sourceType = 'local';
+                    nodeData.config.localAssetId = result.asset.id;
+                    nodeData.config.localAssetName = result.asset.displayName || result.asset.fileName;
+                    nodeData.config.localMediaType = result.asset.mediaType;
+                    if (!isAudio) nodeData.config.mediaType = result.asset.mediaType;
+                    this.markUnsavedChanges(true);
+                    this.showNodeProperties(nodeData);
+                    this.renderNodeOnCanvas(nodeData.id);
+                } catch (error) {
+                    this.showNotification(`Unable to select local media: ${error && error.message ? error.message : error}`, 'error');
+                }
+            });
+        }
+
+        const useMediaUrlBtn = document.getElementById('useMediaUrlBtn');
+        if (useMediaUrlBtn) {
+            useMediaUrlBtn.addEventListener('click', () => {
+                nodeData.config.sourceType = 'url';
+                delete nodeData.config.localAssetId;
+                delete nodeData.config.localAssetName;
+                delete nodeData.config.localMediaType;
+                this.markUnsavedChanges(true);
+                this.showNodeProperties(nodeData);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
+        }
+
+        const previewLocalMediaBtn = document.getElementById('previewLocalMediaBtn');
+        if (previewLocalMediaBtn) {
+            previewLocalMediaBtn.addEventListener('click', async () => {
+                if (!localMediaApi || !nodeData.config.localAssetId) return;
+                try {
+                    await localMediaApi.start();
+                    const result = await localMediaApi.getMediaUrl(nodeData.config.localAssetId);
+                    if (result && result.url) window.open(result.url, '_blank');
+                } catch (error) {
+                    this.showNotification(`Unable to preview local media: ${error && error.message ? error.message : error}`, 'error');
+                }
+            });
+        }
+
+        const revealLocalMediaBtn = document.getElementById('revealLocalMediaBtn');
+        if (revealLocalMediaBtn) {
+            revealLocalMediaBtn.addEventListener('click', async () => {
+                if (!localMediaApi || !nodeData.config.localAssetId) return;
+                try {
+                    await localMediaApi.reveal(nodeData.config.localAssetId);
+                } catch (error) {
+                    this.showNotification(`Unable to reveal local media: ${error && error.message ? error.message : error}`, 'error');
+                }
+            });
+        }
+
+        const copyLocalFlowActionsUrlBtn = document.getElementById('copyLocalFlowActionsUrlBtn');
+        if (copyLocalFlowActionsUrlBtn) {
+            copyLocalFlowActionsUrlBtn.addEventListener('click', async () => {
+                if (!localMediaApi) return;
+                try {
+                    await localMediaApi.start();
+                    const result = await localMediaApi.getFlowActionsUrl({
+                        sessionId: this.getCurrentSessionId(),
+                        search: this.getCurrentFlowActionsSearch(),
+                        localserver: new URLSearchParams(window.location.search).has('localserver')
+                    });
+                    if (!result || !result.url) throw new Error('The local Flow Actions URL was unavailable.');
+                    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                        await navigator.clipboard.writeText(result.url);
+                        this.showNotification('Local Flow Actions URL copied. Paste it into an OBS Browser Source.', 'success');
+                    } else {
+                        window.prompt('Copy this Local Flow Actions URL into OBS:', result.url);
+                    }
+                } catch (error) {
+                    this.showNotification(`Unable to copy the local Flow Actions URL: ${error && error.message ? error.message : error}`, 'error');
+                }
+            });
+        }
+
+        const changeLocalMediaPortBtn = document.getElementById('changeLocalMediaPortBtn');
+        if (changeLocalMediaPortBtn) {
+            changeLocalMediaPortBtn.addEventListener('click', async () => {
+                if (!localMediaApi || typeof localMediaApi.setPort !== 'function') return;
+                try {
+                    const status = await localMediaApi.status();
+                    const rawPort = window.prompt('Local media server port (1024–65535):', String(status && status.port ? status.port : 3001));
+                    if (rawPort === null) return;
+                    const port = Number.parseInt(rawPort, 10);
+                    if (!Number.isInteger(port) || port < 1024 || port > 65535) {
+                        this.showNotification('Choose a port from 1024 through 65535.', 'warning');
+                        return;
+                    }
+                    await localMediaApi.setPort(port);
+                    this.showNotification('Local media port updated. Copy the Local Flow Actions URL into OBS again.', 'success');
+                    this.refreshLocalMediaStatus(nodeData);
+                } catch (error) {
+                    this.showNotification(`Unable to change the local media port: ${error && error.message ? error.message : error}`, 'error');
+                }
+            });
+        }
+
+        this.refreshLocalMediaStatus(nodeData);
     }
     
     renderNodeOnCanvas(nodeId) {
@@ -5976,7 +6751,7 @@ class EventFlowEditor {
             const titleEl = existingNodeEl.querySelector('.node-title');
             if (titleEl) titleEl.textContent = this.getNodeTitle(nodeData);
             const bodyEl = existingNodeEl.querySelector('.node-body');
-            if (bodyEl) bodyEl.innerHTML = this.getNodeDescription(nodeData);
+            if (bodyEl) bodyEl.textContent = this.getNodeDescription(nodeData);
         }
     }
 
@@ -6015,6 +6790,8 @@ class EventFlowEditor {
                 this.renderConnection(conn);
             }
         });
+        this.renderStateReferences();
+        this.highlightStateReferenceGroup(this.selectedNode);
     }
 
     handleNodeDragEnd = () => {

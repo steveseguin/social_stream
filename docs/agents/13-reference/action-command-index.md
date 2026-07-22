@@ -1,6 +1,6 @@
 # Action And Command Index
 
-Status: heavy lookup pass from `api.md`, `docs/commands.html`, `background.js`, `dock.html`, `featured.html`, `poll.html`, `timer.html`, and Event Flow source on 2026-06-24.
+Status: heavy lookup pass from `api.md`, `docs/commands.html`, `background.js`, `dock.html`, `featured.html`, `poll.html`, `timer.html`, and Event Flow source, updated on 2026-07-21.
 
 Use this page when the user asks "what command/action do I send?" The narrative page `commands-and-actions.md` explains the command systems; this page is the lookup table. For source-checked handler caveats, use `command-action-source-trace.md`. For accepted-by-relay versus acted-on-by-target validation, use `api-command-validation-matrix.md`.
 
@@ -49,6 +49,9 @@ These are documented in `api.md` and/or `docs/commands.html`.
 | `getQueueSize` | Dock | optional `get` callback token | Request current queue size. | `api.md`, `dock.html` |
 | `autoShow` | Dock | `toggle`, boolean, or state-like value | Toggle or set automatic featuring. | `api.md`, `dock.html`, `docs/commands.html` |
 | `feature` | Dock | optional content context | Feature next unfeatured/current message. | `api.md`, `dock.html` |
+| `pin` | Dock | message `mid` string/number, array of IDs, or full message object | Pin a message at the top of the dock. Dock must be open. | `api.md`, `dock.html`, `docs/commands.html` |
+| `unpin` | Dock | message `mid` string/number or array of IDs | Remove a pinned message from the pinned area. Dock must be open. | `api.md`, `dock.html`, `docs/commands.html` |
+| `nextPinned` | Dock | none | Feature the first pinned message. Dock must be open. | `api.md`, `dock.html`, `docs/commands.html` |
 | `getChatSources` | Extension/app | none | Request active source list where supported. | `api.md`, `background.js` |
 | `toggleVIPUser` | Dock/background user tools | object with `chatname`, `type` | Toggle VIP state for a user. | `api.md`, `dock.html`, `background.js` |
 | `getUserHistory` | Dock/background user tools | object with `chatname`, `type` | Request user history. | `api.md`, `dock.html`, `background.js` |
@@ -74,10 +77,14 @@ Source: `api.md`. Verify current relay behavior against server/page settings bef
 | Action | Value Shape | Purpose | Verify In |
 | --- | --- | --- | --- |
 | `waitlistmessage` | string | Set waitlist title/message. | `api.md`, `waitlist.html`, `background.js` |
+| `setwaitlistmessage` | string | Alias for setting waitlist title/message. | `api.md`, `waitlist.html`, `background.js` |
 | `removefromwaitlist` | index/id-like value | Remove an entry. | `api.md`, `background.js` |
 | `highlightwaitlist` | index/id-like value | Highlight an entry. | `api.md`, `background.js` |
 | `resetwaitlist` | none | Reset waitlist. | `api.md`, `background.js` |
 | `stopentries` | none | Stop accepting new entries. | `api.md`, `background.js` |
+| `startentries` | none | Resume accepting entries. | `api.md`, `background.js` |
+| `openentries` | none | Alias for resuming entries. | `api.md`, `background.js` |
+| `resumeentries` | none | Alias for resuming entries. | `api.md`, `background.js` |
 | `downloadwaitlist` | none | Trigger waitlist download. | `api.md`, `background.js` |
 | `selectwinner` | value/index/count | Select winner. | `api.md`, `background.js` |
 | `drawmode` | boolean or `toggle` | Toggle/set draw mode. | `api.md`, `background.js` |
@@ -135,7 +142,7 @@ These are implemented in `background.js`; verify target pages before recommendin
 | `feature` | `dock.html` | Feature message. |
 | `toggleTTS` | `featured.html`, `dock.html` | Toggle TTS. |
 | `tts` | `featured.html`, `dock.html` | Alias/path for TTS state/action. |
-| `nextPinned` | `dock.html` | Observed dock action for pinned-message navigation. Source-check before public recipe. |
+| `nextPinned` | `dock.html` | Feature the first pinned message. |
 
 ## Background/Internal Runtime Actions
 
@@ -183,7 +190,7 @@ These are Event Flow node `actionType` values from `actions/EventFlowSystem.js` 
 | --- | --- |
 | Message control | `blockMessage`, `returnMessage`, `continueAsync`, `reflectionFilter`, `modifyMessage`, `setProperty`, `featureMessage`, `addPrefix`, `addSuffix`, `findReplace`, `removeText` |
 | Send/relay/external | `sendMessage`, `relay`, `webhook`, `customJs` |
-| Points/state | `addPoints`, `spendPoints`, `setGateState`, `resetStateNode`, `setCounter`, `incrementCounter`, `checkCounter` |
+| Points/state | `addPoints`, `spendPoints`, `setGateState`, `resetStateNode`, `setCounter`, `incrementCounter`, `checkCounter`, `rememberUser`, `forgetUser`, `clearUserMemory`, `pickRandomUser` |
 | Media/visual | `playTenorGiphy`, `showAvatar`, `showText`, `clearLayer`, `triggerOBSScene`, `playAudioClip`, `delay` |
 | OBS | `obsChangeScene`, `obsToggleSource`, `obsSetSourceFilter`, `obsMuteSource`, `obsStartRecording`, `obsStopRecording`, `obsStartStreaming`, `obsStopStreaming`, `obsReplayBuffer` |
 | Spotify | `spotifySkip`, `spotifyPrevious`, `spotifyPause`, `spotifyResume`, `spotifyVolume`, `spotifyQueue`, `spotifyToggle`, `spotifyNowPlaying`, `spotifyShuffle`, `spotifyRepeat` |
@@ -196,10 +203,12 @@ Event Flow custom JS has context restrictions. MV3 extension contexts disable di
 
 Common trigger types observed in Event Flow source:
 
-- Message triggers: `anyMessage`, `messageContains`, `messageStartsWith`, `messageEndsWith`, `messageEquals`, `messageRegex`, `messageLength`, `wordCount`, `containsEmoji`, `containsLink`, `fromSource`, `fromChannelName`, `fromUser`, `userRole`, `hasDonation`, `channelPointRedemption`, `messageProperties`.
+- Message and user triggers: `anyMessage`, `messageContains`, `messageStartsWith`, `messageEndsWith`, `messageEquals`, `messageRegex`, `messageLength`, `wordCount`, `containsEmoji`, `containsLink`, `fromSource`, `fromChannelName`, `fromUser`, `userRole`, `hasDonation`, `channelPointRedemption`, `messageProperties`, `userMemoryContains`.
 - Event triggers: `eventType`, `eventNewFollower`, `eventNewSubscriber`, `eventResub`, `eventGiftSub`, `eventDonation`, `eventRaid`, `eventCheer`, `eventOther`, `eventCustom`.
 - OBS triggers: `obsStreamStarted`, `obsStreamStopped`, `obsRecordingStarted`, `obsRecordingStopped`, `obsSceneChanged`, `obsReplaybufferSaved`.
 - Logic/time/input triggers: `compareProperty`, `randomChance`, `timeInterval`, `timeOfDay`, `midiNoteOn`, `midiNoteOff`, `midiCC`, `customJs`, `counter`, `userPool`, `accumulator`.
+
+Current Event Flow state node types are `GATE`, `COUNTER`, `THROTTLE`, and `USER_MEMORY`. User Memory operations reference the selected memory by node ID; the editor renders that shared-state relationship as a dashed purple link rather than a normal execution wire.
 
 ## Answer Checklist
 

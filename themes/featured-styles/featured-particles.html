@@ -658,7 +658,7 @@
         // Create iframe
         function createIframe() {
             const iframe = document.createElement('iframe');
-            iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+            iframe.src = `https://vdo.socialstream.ninja/?ln&password=${encodeURIComponent(password)}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
             iframe.style.cssText = 'width:0;height:0;position:fixed;left:-100px;top:-100px;';
             iframe.id = 'vdoninja';
             iframe.allow = 'microphone';
@@ -748,7 +748,7 @@
 
                 const username = document.createElement('span');
                 username.className = 'username';
-                username.innerHTML = content.chatname || 'Anonymous';
+                username.textContent = content.chatname || 'Anonymous';
                 if (content.nameColor && style !== 'snow' && style !== 'matrix') {
                     username.style.color = content.nameColor;
                 }
@@ -784,7 +784,8 @@
                 if (content.chatmessage) {
                     const text = document.createElement('div');
                     text.className = 'text';
-                    text.innerHTML = content.chatmessage;
+                    if (content.textonly === true) text.textContent = content.chatmessage;
+                    else text.innerHTML = content.chatmessage;
                     contentDiv.appendChild(text);
                 }
 

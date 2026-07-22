@@ -12,6 +12,7 @@ var _createPiperPhonemize, _modelConfig, _ort, _ortSession, _progressCallback, _
 const trimTrailingSlash = (value) => typeof value === "string" ? value.replace(/\/+$/, "") : "";
 const DEFAULT_REMOTE_PIPER_BASE = "https://largefiles.socialstream.ninja/piper";
 const HF_BASE = trimTrailingSlash(typeof globalThis !== "undefined" && globalThis.SSN_PIPER_REMOTE_BASE ? globalThis.SSN_PIPER_REMOTE_BASE : DEFAULT_REMOTE_PIPER_BASE);
+const HUGGING_FACE_PIPER_BASE = "https://huggingface.co/rhasspy/piper-voices/resolve/main";
 const ONNX_BASE = new URL("../transformersjs/ort/", import.meta.url).href;
 const WASM_BASE = new URL("./piper_phonemize", import.meta.url).href;
 const LOCAL_PIPER_BASE = trimTrailingSlash(new URL("./piper-voices/", import.meta.url).href);
@@ -166,6 +167,7 @@ function getVoiceAssetCandidates(voiceId, suffix = "") {
     `${LOCAL_PIPER_BASE}/${filename}`,
     `${LOCAL_PIPER_BASE}/${voiceId}/${filename}`,
     `${HF_BASE}/${path}${suffix}`,
+    HF_BASE === HUGGING_FACE_PIPER_BASE ? "" : `${HUGGING_FACE_PIPER_BASE}/${path}${suffix}`,
     `${HF_BASE}/${voiceId}/${filename}`,
     `${HF_BASE}/${filename}`
   ]);

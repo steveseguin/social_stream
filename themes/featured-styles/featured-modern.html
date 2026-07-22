@@ -489,10 +489,10 @@
 
 			if (pseudodock) {
 				// Connect as dock to receive direct messages
-				iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
+				iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
 			} else {
 				// Standard overlay connection
-				iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
+				iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(password) + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
 			}
 			
 			iframe.style.width = "0px";
@@ -612,7 +612,7 @@
                 
                 if (content.chatname) {
                     const name = document.createElement('span');
-                    name.innerHTML = content.chatname;
+                    name.textContent = content.chatname;
                     if (content.nameColor) {
                         name.style.color = content.nameColor;
                     }
@@ -654,7 +654,8 @@
                 if (content.chatmessage) {
                     const text = document.createElement('div');
                     text.className = 'text';
-                    text.innerHTML = content.chatmessage;
+                    if (content.textonly === true) text.textContent = content.chatmessage;
+                    else text.innerHTML = content.chatmessage;
                     if (content.textColor) {
                         text.style.color = content.textColor;
                     }

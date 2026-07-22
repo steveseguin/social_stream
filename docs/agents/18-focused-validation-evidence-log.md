@@ -1,6 +1,6 @@
 # Focused Validation Evidence Log
 
-Status: focused validation evidence entries updated on 2026-06-24.
+Status: focused validation evidence entries updated on 2026-07-05.
 
 ## Purpose
 
@@ -139,7 +139,7 @@ Product surface: static metadata validation only. The checker evaluated generate
 
 What this supports:
 
-- `shared/config/settingsDefinitions.js` currently exposes 327 settings across 54 categories.
+- `shared/config/settingsDefinitions.js` currently exposes 333 settings across 55 categories.
 - The checked setting definitions have no duplicate object-key tokens, missing generated category references, or missing required `type`/`category`/`description` fields.
 - `shared/config/urlParameters.js` currently exposes 255 generated URL parameter items across 23 sections and 2 groups.
 - The checked URL parameter items have no missing required `key`/`displayName`/`aliases`/`description` fields.
@@ -399,11 +399,11 @@ Follow-up:
 
 ### Event Flow Focused Node Tests
 
-Validation date: 2026-06-24
+Validation date: 2026-07-05
 
 Validator: Codex
 
-Area: Event Flow system internals, custom JS boundaries, compare-property triggers, template variables, counters, OBS system triggers, and play-media duration payloads
+Area: Event Flow system internals, custom JS boundaries, compare-property triggers, donation label currency conversion, template variables, counters, OBS system triggers, and play-media duration payloads
 
 Evidence label: `focused-node-test`; not runtime-tested
 
@@ -419,7 +419,7 @@ node tests/eventflow-play-media-duration.test.js
 Results:
 
 - `eventflow-customjs.test.js`: `23 passed, 0 failed`
-- `eventflow-compare-property.test.js`: `18 passed, 0 failed`
+- `eventflow-compare-property.test.js`: `39 passed, 0 failed`
 - `eventflow-template-vars.test.js`: `6 passed, 0 failed`
 - `eventflow-play-media-duration.test.js`: `2 passed, 0 failed`
 
@@ -441,7 +441,11 @@ Observed result:
 - Custom JS triggers returned expected booleans in the allowed context.
 - Custom JS syntax errors failed the node without failing the whole test run.
 - Custom JS actions could mutate the message in the allowed context and were blocked when eval was disabled.
-- `compareProperty` supported string equality and numeric comparisons.
+- `compareProperty` supported string equality, numeric comparisons, and donation label conversion via `currency.js`.
+- Donation thresholds treated YouTube Super Chat labels as monetary values, Twitch bits as converted USD-equivalent values, and YouTube Jewels/Gifts as converted support values rather than raw visible counts.
+- Unknown named virtual units used the shared fallback of 100 units = $0.01 USD.
+- Unknown value-plus-unit labels that contain fiat or platform-token substrings did not override known virtual-unit conversion or the unknown-unit fallback.
+- `eventDonation` matched `jeweldonation`, and its minimum amount filter used the converted support value.
 - Digit-prefixed strings were treated as strings for exact matching rather than by numeric prefix only.
 - OBS system payloads matched OBS-specific triggers and did not trigger `anyMessage`.
 - Template rendering included dynamic top-level fields and derived `counterRemaining`.
@@ -471,6 +475,121 @@ Follow-up:
 - Runtime-validate Event Flow editor UI and Flow Actions overlay behavior before calling flows browser-validated.
 - Validate OBS actions against OBS WebSocket v5 and/or OBS Browser Source access before making OBS control claims.
 - Run targeted tests for webhook, relay, TTS, Spotify, MIDI, points, and send-message actions before promoting those action families.
+
+### Event Flow User Memory Focused And SSApp Electron E2E Tests
+
+Validation date: 2026-07-21
+
+Validator: Codex
+
+Area: Event Flow User Memory state, participant eligibility, unique-user drawing, scoped resets, persistence, editor rendering, and real SSApp restart behavior
+
+Evidence labels: `focused-node-test` and `ssapp-electron-e2e`
+
+Commands run:
+
+```powershell
+# From social_stream
+node tests/eventflow-user-memory.test.js
+
+# From ssapp
+npm run test:eventflow-user-memory:e2e
+```
+
+Results:
+
+- `eventflow-user-memory.test.js`: passed.
+- `test:eventflow-user-memory:e2e`: passed with output `PASS User Memory editor, runtime, persistence, draw, and reset`.
+
+Product surfaces:
+
+- The focused Node test loads the real `actions/EventFlowSystem.js` and statically checks the matching editor source.
+- The E2E test launches the real SSApp Electron application against the Social Stream source with an isolated user-data profile, connects to that Electron runtime, and drives the Event Flow editor UI and Test Flow panel.
+- A separate manual Electron pass imported the shipped example through SSApp's native file chooser and exercised the same workflow before the repeatable harness was added.
+
+Observed result:
+
+- Users were keyed by platform and stable user ID, with username fallback, and anonymous aggregate events were ignored.
+- Repeated participation updated one user's participation count without adding duplicate draw entries.
+- Two User Memory nodes stayed independent; forget, clear, and generic reset affected only their selected target.
+- Random draw exposed the selected-user fields and optionally removed the winner.
+- Inactivity, stream-start, and stream-stop resets affected only memories configured for that reset.
+- Saved User Memory state reloaded from IndexedDB while session-only state did not become a saved collection.
+- A remembered TikTok participant passed a later command eligibility check while an unremembered participant did not.
+- The imported example rendered 14 nodes and four dashed shared-state references in the Event Flow editor.
+- Test Flow admitted Alice after `!enter`, rejected Bob's eligibility check before entry, admitted Bob after entry, rejected draw/reset commands from an ordinary viewer, drew and removed one winner for a moderator, and cleared the selected list for a moderator.
+- After selecting saved persistence and adding an entrant, the E2E test stopped and relaunched SSApp with the same profile, confirmed the entrant remained eligible, then cleared that memory from its properties and restarted again to confirm the cleared user did not return.
+- Four guide screenshots were captured as cropped element views from the actual SSApp Event Flow editor and visually reviewed before use: shared-state links, memory settings, reset controls, and draw output.
+
+What was not tested:
+
+- Live TikTok, Twitch, YouTube, or other platform event delivery.
+- Whether a particular TikTok capture path names a Heart Me gift consistently across all source/capture modes.
+- A live production giveaway, long-running high-volume memory, concurrent app instances, or crash recovery during a pending write.
+- OBS Browser Source behavior or downstream overlay rendering of draw results.
+
+Docs updated:
+
+- `actions/user-memory-guide.html`
+- `actions/state-nodes-guide.html`
+- `actions/STATE_NODES_EXPLANATION.md`
+- `09-api-and-integrations/event-flow-editor.md`
+- `13-reference/action-command-index.md`
+
+Follow-up:
+
+- Validate representative live platform payloads before publishing exact per-platform participation recipes as universal.
+- Exercise large participant sets and concurrent-window synchronization separately if hard scale guarantees are needed.
+
+### Map Overlay Focused Browser Smoke Test
+
+Validation date: 2026-07-05
+
+Validator: Codex
+
+Area: `map.html` base-map styling URL options and popup-style live setting payloads
+
+Evidence label: `focused-browser-smoke`; not OBS/runtime-tested
+
+Command run:
+
+```powershell
+@'
+# Inline Playwright smoke with a temporary local static server.
+# Loaded map.html with mapopacity/mapfill/transparent/hidegrid.
+# Loaded a session-labeled map and dispatched a popup-style setting/value message for mapopacity.
+'@ | node -
+```
+
+Result: passed with output `map smoke passed`.
+
+Product surface: Headless Chromium against local `map.html` through a temporary `127.0.0.1` static server. The test used packaged `thirdparty` map data and synthetic message dispatch. It did not use OBS, the live Chrome extension background, VDO.Ninja signaling, production hosted pages, or real chat traffic.
+
+Observed result:
+
+- Local map datasets loaded and rendered 177 country paths.
+- `mapopacity=100` made base land solid.
+- `mapfill=2d7dd2` tinted base land blue.
+- Bare `transparent` produced a transparent page background.
+- Bare `hidegrid` hid the grid surface after its CSS transition completed.
+- A popup-style `{ setting: "mapopacity", value: "25" }` payload delivered through the iframe bridge path updated base land fill alpha to 25%.
+
+What was not tested:
+
+- OBS Browser Source compositing.
+- Real popup-to-background-to-overlay routing.
+- Live VDO.Ninja or websocket transport.
+- Real chat/vote traffic.
+- All map style presets, regions, state/city modes, or hosted production deployment.
+
+Docs updated:
+
+- `07-overlays-and-pages/live-display-utilities.md`
+
+Follow-up:
+
+- Runtime-validate the popup control against a real extension session before calling the map popup workflow fully runtime-tested.
+- Validate OBS transparency with an OBS Browser Source before making OBS-specific display claims.
 
 ### Twitch Provider Subgift Focused Node Test
 

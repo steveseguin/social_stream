@@ -226,6 +226,14 @@ function runInterceptOAuthFlow({ authUrl, redirectUri, state }) {
                 const error = urlParts.searchParams.get('error');
 
                 if (code) {
+					if (!state || !returnedState || returnedState !== state) {
+						fail(createOAuthError(
+							'STATE_MISMATCH',
+							'State mismatch - possible CSRF attack',
+							{ expectedState: state || null, receivedState: returnedState || null }
+						));
+						return;
+					}
                     complete({
                         success: true,
                         code,

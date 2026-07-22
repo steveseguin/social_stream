@@ -3,24 +3,33 @@
 	
 	var isExtensionOn = true;
 function toDataURL(url, callback) {
+	  var completed = false;
+	  function finish(value) {
+		if (completed) return;
+		completed = true;
+		callback(value);
+	  }
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function() {
 		  
 		var blob = xhr.response;
     
-		if (blob.size > (55 * 1024)) {
-		  callback(url); // Image size is larger than 25kb.
+		if (!blob || blob.size > (55 * 1024)) {
+		  finish(url); // Image size is larger than 55kb or unavailable.
 		  return;
 		}
 
 		var reader = new FileReader();
-		
-		
-		reader.onloadend = function() {
-		  callback(reader.result);
-		}
+		reader.onload = function() {
+		  finish(reader.result);
+		};
+		reader.onerror = function() { finish(url); };
+		reader.onabort = function() { finish(url); };
 		reader.readAsDataURL(xhr.response);
 	  };
+	  xhr.onerror = function() { finish(url); };
+	  xhr.onabort = function() { finish(url); };
+	  xhr.ontimeout = function() { finish(url); };
 	  xhr.open('GET', url);
 	  xhr.responseType = 'blob';
 	  xhr.send();

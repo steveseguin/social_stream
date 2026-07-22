@@ -60,7 +60,7 @@
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent)+" ";
 			} else if (node.nodeType === 1){
-				if (!settings.textonlymode){
+				if (!isTextOnlyMode()){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
 					}
@@ -82,6 +82,411 @@
 	
 	var processedMessages = new Set();
 	var processedEvents = new Set();
+	var historyPollTimer = null;
+	var currentHistoryChannel = "";
+	var historyFallbackMisses = 0;
+	var historyPublishedMessages = false;
+	var historyPollStartedAt = 0;
+	var recentMessageContent = {};
+	var historyChannelCache = {};
+	var historyChannelPending = {};
+
+	function isTextOnlyMode(){
+		var setting = settings.textonlymode;
+		if (setting && typeof setting === "object"){
+			return setting.setting === true;
+		}
+		return setting === true;
+	}
+
+	function rememberMessageKey(key){
+		key = String(key || "").replace(/\s+/g, " ").trim();
+		if (!key || processedMessages.has(key)){
+			return false;
+		}
+		processedMessages.add(key);
+		if (processedMessages.size > 300){
+			processedMessages.delete(processedMessages.values().next().value);
+		}
+		return true;
+	}
+
+	function normalizeMessageTextForKey(value){
+		value = String(value || "");
+		value = value.replace(/<[^>]*>/g, " ");
+		value = value.replace(/&nbsp;/gi, " ");
+		value = value.replace(/&amp;/gi, "&");
+		value = value.replace(/&lt;/gi, "<");
+		value = value.replace(/&gt;/gi, ">");
+		value = value.replace(/&quot;/gi, '"');
+		value = value.replace(/&#039;/g, "'");
+		return value.replace(/\s+/g, " ").trim().toLowerCase();
+	}
+
+	function getMessageContentKey(channel, name, text){
+		name = normalizeMessageTextForKey(name);
+		text = normalizeMessageTextForKey(text);
+		channel = normalizeVeloraChannel(channel || currentHistoryChannel || getVeloraHistoryChannel());
+		if (!name || !text){
+			return "";
+		}
+		return "content|\u00b6|" + channel + "|\u00b6|" + name + "|\u00b6|" + text;
+	}
+
+	function getApiMessageKey(msg, channel){
+		return msg.id
+			? "api-id|\u00b6|" + channel + "|\u00b6|" + msg.id
+			: "api-chat|\u00b6|" + channel + "|\u00b6|" + msg.timestamp + "|\u00b6|" + msg.name + "|\u00b6|" + msg.text;
+	}
+
+	function rememberRecentMessageContent(key){
+		var now = Date.now();
+		var keys;
+		var i;
+		key = String(key || "");
+		if (!key){
+			return true;
+		}
+		keys = Object.keys(recentMessageContent);
+		for (i = 0; i < keys.length; i++){
+			if ((now - recentMessageContent[keys[i]]) > 12000){
+				delete recentMessageContent[keys[i]];
+			}
+		}
+		if (recentMessageContent[key]){
+			return false;
+		}
+		recentMessageContent[key] = now;
+		keys = Object.keys(recentMessageContent);
+		while (keys.length > 300){
+			delete recentMessageContent[keys.shift()];
+		}
+		return true;
+	}
+
+	function normalizeVeloraChannel(value){
+		value = String(value || "").trim().replace(/^@+/, "").replace(/^\/+|\/+$/g, "");
+		if (!value || /^(dashboard|developer|directory|login|logout|settings|support|terms|privacy)$/i.test(value)){
+			return "";
+		}
+		return value;
+	}
+
+	function looksLikeVeloraId(value){
+		return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || ""));
+	}
+
+	function getVeloraChannelIdFromResponse(data){
+		if (!data || typeof data !== "object"){
+			return "";
+		}
+		return getObjectValue(data, ["id", "userId", "user_id", "channelId", "channel_id"]) ||
+			getObjectValue(data.user || data.channel || {}, ["id", "userId", "user_id", "channelId", "channel_id"]) ||
+			getObjectValue(data.data || {}, ["id", "userId", "user_id", "channelId", "channel_id"]);
+	}
+
+	function getVeloraChannelIdFromStreamResponse(data){
+		if (!data || typeof data !== "object"){
+			return "";
+		}
+		return getObjectValue(data, ["userId", "user_id", "channelId", "channel_id"]) ||
+			getObjectValue(data.user || data.channel || {}, ["id", "userId", "user_id", "channelId", "channel_id"]) ||
+			getObjectValue(data.data || {}, ["userId", "user_id", "channelId", "channel_id"]) ||
+			getVeloraChannelIdFromResponse(data);
+	}
+
+	function fetchVeloraJson(url){
+		return fetch(url, {
+			cache: "no-store",
+			headers: {
+				"Accept": "application/json"
+			}
+		}).then(function(response){
+			if (!response.ok){
+				throw new Error("HTTP " + response.status);
+			}
+			return response.json();
+		});
+	}
+
+	function resolveVeloraHistoryChannel(channel){
+		var cacheKey = normalizeVeloraChannel(channel).toLowerCase();
+		if (!cacheKey){
+			return Promise.resolve("");
+		}
+		if (looksLikeVeloraId(cacheKey)){
+			return Promise.resolve(cacheKey);
+		}
+		if (historyChannelCache[cacheKey]){
+			return Promise.resolve(historyChannelCache[cacheKey]);
+		}
+		if (historyChannelPending[cacheKey]){
+			return historyChannelPending[cacheKey];
+		}
+		historyChannelPending[cacheKey] = fetchVeloraJson("https://api.velora.tv/api/users/" + encodeURIComponent(channel))
+			.then(function(data){
+				return getVeloraChannelIdFromResponse(data) || "";
+			}).catch(function(){
+				return fetchVeloraJson("https://api.velora.tv/api/streams/user/" + encodeURIComponent(channel))
+					.then(function(data){
+						return getVeloraChannelIdFromStreamResponse(data) || "";
+					});
+			}).then(function(resolved){
+				historyChannelCache[cacheKey] = normalizeVeloraChannel(resolved) || channel;
+				delete historyChannelPending[cacheKey];
+				return historyChannelCache[cacheKey];
+			}).catch(function(){
+				delete historyChannelPending[cacheKey];
+				return channel;
+			});
+		return historyChannelPending[cacheKey];
+	}
+
+	function getRuntimeParam(key){
+		try {
+			var search = new URLSearchParams(window.location.search || "");
+			var hash = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
+			return search.get(key) || hash.get(key) || "";
+		} catch(e){
+		}
+		return "";
+	}
+
+	function getVeloraHistoryChannel(){
+		var channel = normalizeVeloraChannel(getRuntimeParam("channel") || getRuntimeParam("username") || getRuntimeParam("user"));
+		if (channel){
+			return channel;
+		}
+		try {
+			var parts = (window.location.pathname || "").split("/").filter(Boolean);
+			if (parts[0] === "dashboard" && parts[1] === "stream" && parts[2] === "popout"){
+				return normalizeVeloraChannel(parts[3] || "");
+			}
+			return normalizeVeloraChannel(parts[0] || "");
+		} catch(e){
+		}
+		return "";
+	}
+
+	function getObjectValue(obj, keys){
+		if (!obj){ return ""; }
+		for (var i = 0; i < keys.length; i++){
+			var key = keys[i];
+			if (obj[key] !== undefined && obj[key] !== null && obj[key] !== ""){
+				return obj[key];
+			}
+		}
+		return "";
+	}
+
+	function normalizeVeloraBadges(badges){
+		var badgeList = [];
+		if (!Array.isArray(badges)){
+			return badgeList;
+		}
+		badges.forEach(function(badge){
+			var badgeUrl = "";
+			if (!badge){ return; }
+			if (typeof badge === "string"){
+				if (/^https?:\/\//i.test(badge)){
+					badgeUrl = badge;
+				}
+			} else if (typeof badge === "object"){
+				badgeUrl = getObjectValue(badge, ["url", "imageUrl", "imageURL", "image", "icon", "src", "badgeUrl", "staticAssetUrl"]);
+			}
+			if (badgeUrl){
+				badgeList.push(String(badgeUrl));
+			}
+		});
+		return badgeList;
+	}
+
+	function getVeloraMessageText(raw){
+		var text = getObjectValue(raw, ["text", "message", "content", "body"]);
+		if (text && typeof text === "object"){
+			text = getObjectValue(text, ["text", "message", "content", "body"]);
+		}
+		return text === undefined || text === null ? "" : String(text);
+	}
+
+	function normalizeVeloraApiMessage(raw, channel){
+		var user;
+		var card;
+		var text;
+		var cardName;
+		if (!raw || typeof raw !== "object"){
+			return null;
+		}
+		user = raw.user || raw.sender || {};
+		card = raw.card || null;
+		text = getVeloraMessageText(raw);
+		cardName = card ? getObjectValue(card, ["name", "title"]) : "";
+		if (raw.isSystem && !text && !cardName){
+			return null;
+		}
+		return {
+			id: getObjectValue(raw, ["messageId", "message_id", "id", "_id", "uuid"]),
+			name: getObjectValue(raw, ["displayName", "display_name", "username", "name"]) || getObjectValue(user, ["displayName", "display_name", "username", "name"]),
+			userId: getObjectValue(raw, ["userId", "user_id"]) || getObjectValue(user, ["id", "userId", "user_id"]),
+			text: text || (cardName ? "[" + cardName + "]" : ""),
+			timestamp: getObjectValue(raw, ["timestamp", "createdAt", "created_at", "sentAt", "sent_at"]),
+			badges: normalizeVeloraBadges(raw.badges || user.badges || []),
+			avatar: getObjectValue(raw, ["avatarUrl", "avatar_url", "profileImageUrl"]) || getObjectValue(user, ["avatarUrl", "avatar_url", "profileImageUrl", "image"]),
+			color: getObjectValue(raw, ["color", "accentColor", "accent_color"]) || getObjectValue(user, ["color", "accentColor", "accent_color"]),
+			card: card,
+			isSubscriber: !!(raw.isSubscriber || raw.is_subscriber || user.isSubscriber || user.is_subscriber),
+			subscriberMonths: getObjectValue(raw, ["subscriberMonths", "subscriber_months"]) || getObjectValue(user, ["subscriberMonths", "subscriber_months"]),
+			channel: channel
+		};
+	}
+
+	function getHistoryMessagesFromResponse(data){
+		if (Array.isArray(data)){
+			return data;
+		}
+		if (!data || typeof data !== "object"){
+			return [];
+		}
+		if (Array.isArray(data.messages)){
+			return data.messages;
+		}
+		if (Array.isArray(data.data)){
+			return data.data;
+		}
+		if (data.message && typeof data.message === "object"){
+			return [data.message];
+		}
+		return [];
+	}
+
+	function getVeloraTimestampValue(message){
+		try {
+			var stamp = getObjectValue(message, ["timestamp", "createdAt", "created_at", "sentAt", "sent_at"]);
+			var value = Date.parse(stamp);
+			return isNaN(value) ? 0 : value;
+		} catch(e){
+		}
+		return 0;
+	}
+
+	function processApiMessage(raw, channel){
+		var msg = normalizeVeloraApiMessage(raw, channel);
+		var msgKey;
+		var contentKey;
+		var data;
+		var textOnly = isTextOnlyMode();
+		if (!msg || !msg.name || !msg.text){
+			return;
+		}
+		msgKey = getApiMessageKey(msg, channel);
+		if (!rememberMessageKey(msgKey)){
+			return;
+		}
+		contentKey = getMessageContentKey(channel, msg.name, msg.text);
+		if (contentKey && !rememberRecentMessageContent(contentKey)){
+			return;
+		}
+		data = makeBaseData();
+		data.chatname = escapeHtml(msg.name);
+		data.chatbadges = msg.badges;
+		data.nameColor = msg.color || "";
+		data.chatmessage = textOnly ? msg.text : escapeHtml(msg.text);
+		data.chatimg = msg.avatar || "";
+		data.membership = msg.isSubscriber ? (msg.subscriberMonths ? msg.subscriberMonths + " month subscriber" : "Subscriber") : "";
+		data.textonly = textOnly;
+		if (msg.card){
+			data.contentimg = getObjectValue(msg.card, ["imageUrl", "thumbnailUrl", "image", "thumbnail"]) || "";
+		}
+		pushMessage(data);
+		historyPublishedMessages = true;
+	}
+
+	function seedApiMessage(raw, channel){
+		var msg = normalizeVeloraApiMessage(raw, channel);
+		var contentKey;
+		if (!msg || !msg.name || !msg.text){
+			return;
+		}
+		rememberMessageKey(getApiMessageKey(msg, channel));
+		contentKey = getMessageContentKey(channel, msg.name, msg.text);
+		if (contentKey){
+			rememberRecentMessageContent(contentKey);
+		}
+	}
+
+	function pollVeloraChatHistory(){
+		var channel;
+		if (!isExtensionOn){
+			return;
+		}
+		channel = getVeloraHistoryChannel();
+		if (!channel){
+			return;
+		}
+		if (channel !== currentHistoryChannel){
+			currentHistoryChannel = channel;
+			historyPublishedMessages = false;
+			historyPollStartedAt = Date.now();
+		}
+		resolveVeloraHistoryChannel(channel).then(function(resolvedChannel){
+			var pollChannel = resolvedChannel || channel;
+			return fetchVeloraJson("https://api.velora.tv/api/chat/channels/" + encodeURIComponent(pollChannel) + "/history?limit=50").then(function(data){
+				var messages = getHistoryMessagesFromResponse(data).slice();
+				var initialBatch = !historyPublishedMessages;
+				if (messages.length > 1 && getVeloraTimestampValue(messages[0]) > getVeloraTimestampValue(messages[messages.length - 1])){
+					messages.reverse();
+				}
+				messages.forEach(function(message){
+					var timestampValue = getVeloraTimestampValue(message);
+					if ((timestampValue && timestampValue < historyPollStartedAt) || (initialBatch && !timestampValue)){
+						seedApiMessage(message, channel);
+						return;
+					}
+					processApiMessage(message, channel);
+				});
+				if (initialBatch){
+					historyPublishedMessages = true;
+				}
+			});
+		}).catch(function(){
+		});
+	}
+
+	function startHistoryPolling(){
+		if (historyPollTimer){
+			return;
+		}
+		historyPublishedMessages = false;
+		historyPollStartedAt = Date.now();
+		pollVeloraChatHistory();
+		historyPollTimer = setInterval(pollVeloraChatHistory, 3000);
+	}
+
+	function stopHistoryPolling(){
+		if (historyPollTimer){
+			clearInterval(historyPollTimer);
+			historyPollTimer = null;
+		}
+		historyPollStartedAt = 0;
+	}
+
+	function getChatInput(){
+		try {
+			var selectors = [
+				'[aria-label="Chat message input"][contenteditable="true"][role="textbox"]',
+				'[aria-label="Chat message input"][contenteditable="true"]',
+				'[role="textbox"][contenteditable="true"][data-placeholder]'
+			];
+			for (var i = 0; i < selectors.length; i++){
+				var inputs = document.querySelectorAll(selectors[i]);
+				if (inputs && inputs.length){
+					return inputs[inputs.length - 1];
+				}
+			}
+		} catch(e){
+		}
+		return null;
+	}
 
 	function getChatMessageRoot(ele){
 		if (!ele || !ele.isConnected || !ele.querySelector){ return null; }
@@ -203,14 +608,16 @@
 		}
 		
 		var msgKey = "chat|\u00b6|" + timeText + "|\u00b6|" + name + "|\u00b6|" + msg;
-		if (processedMessages.has(msgKey)){
+		var contentKey = getMessageContentKey(getVeloraHistoryChannel(), name, msg);
+		if (!rememberMessageKey(msgKey)){
 			row.skip = true;
 			root.skip = true;
 			return;
 		}
-		processedMessages.add(msgKey);
-		if (processedMessages.size > 200){
-			processedMessages.delete(processedMessages.values().next().value);
+		if (contentKey && !rememberRecentMessageContent(contentKey)){
+			row.skip = true;
+			root.skip = true;
+			return;
 		}
 		
 		row.skip = true;
@@ -228,7 +635,7 @@
 		data.hasDonation = donation;
 		data.membership = "";
 		data.contentimg = "";
-		data.textonly = settings.textonlymode || false;
+		data.textonly = isTextOnlyMode();
 		data.type = "velora";
 		
 		
@@ -245,7 +652,7 @@
 			hasDonation: "",
 			membership: "",
 			contentimg: "",
-			textonly: settings.textonlymode || false,
+			textonly: isTextOnlyMode(),
 			type: "velora"
 		};
 	}
@@ -359,6 +766,22 @@
 		pushMessage(data);
 	}
 
+	function scanExistingChat(container){
+		if (!container || !container.querySelectorAll){ return; }
+		try {
+			container.querySelectorAll(".chat-message-content").forEach(function(chatNode){
+				processMessage(chatNode);
+			});
+		} catch(e){
+		}
+		try {
+			container.querySelectorAll(".mx-1.my-1\\.5, [class*='mx-1'][class*='my-1.5'], .flex.items-baseline").forEach(function(eventNode){
+				processEventNode(eventNode);
+			});
+		} catch(e){
+		}
+	}
+
 	function pushMessage(data){
 		try{
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
@@ -442,9 +865,9 @@
 				
 				if ("getSource" == request){sendResponse("velora");	return;	}
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					let cc = document.querySelectorAll('[aria-label="Chat message input"][contenteditable="true"][data-placeholder][spellcheck="false"][role="textbox"]');
-					if(cc.length){
-						cc[cc.length-1].focus();
+					var chatInput = getChatInput();
+					if(chatInput && chatInput.focus){
+						chatInput.focus();
 					}
 					sendResponse(true);
 					return;
@@ -452,10 +875,7 @@
 				if (typeof request === "object"){
 					if ("state" in request) {
 						isExtensionOn = request.state;
-						
-						if (!checking){
-							startCheck();
-						}
+						startCheck();
 					
 					}
 					
@@ -527,6 +947,85 @@
 	
 	console.log("social stream injected");
 
+	function isVeloraPopoutRoute(){
+		try {
+			return /\/dashboard\/stream\/popout(?:\/|$)/i.test(window.location.pathname || "");
+		} catch(e){
+		}
+		return false;
+	}
+
+	function findPopoutChatScroller(){
+		if (!isVeloraPopoutRoute()){
+			return null;
+		}
+		try {
+			var containers = document.querySelectorAll(".overflow-y-auto, [class*='overflow-y-auto']");
+			var best = null;
+			var bestScore = 0;
+			for (var i = 0; i < containers.length; i++){
+				var container = containers[i];
+				var score = 0;
+				var text = "";
+				var className = "";
+				try {
+					text = (container.textContent || "").replace(/\s+/g, " ").trim();
+					className = String(container.className || "");
+				} catch(e){
+				}
+				if (container.querySelector && container.querySelector(".chat-message-content")){ score += 100; }
+				if (/No messages yet|Connecting to chat|New messages/i.test(text)){ score += 45; }
+				if (/Activity will appear here|transactions|followers|subscribers/i.test(text)){ score -= 30; }
+				if (className.indexOf("px-1") !== -1 && className.indexOf("pb-1") !== -1){ score += 30; }
+				if (className.indexOf("scrollbar-thumb-white/10") !== -1){ score += 25; }
+				if (className.indexOf("scrollbar-thin") !== -1){ score += 5; }
+				if (score > bestScore){
+					bestScore = score;
+					best = container;
+				}
+			}
+			if (best && bestScore > 0){
+				return best;
+			}
+			return document.body || null;
+		} catch(e){
+		}
+		return null;
+	}
+
+	function findScrollerNearInput(input){
+		if (!input){ return null; }
+		var node = input;
+		var fallback = null;
+		var depth = 0;
+		while (node && depth < 10){
+			try {
+				if (node.querySelectorAll){
+					var containers = node.querySelectorAll(".overflow-y-auto, [class*='overflow-y-auto']");
+					for (var i = 0; i < containers.length; i++){
+						var container = containers[i];
+						if (!container || container === input){ continue; }
+						if (container.contains && container.contains(input)){ continue; }
+						if (!fallback){ fallback = container; }
+						var text = (container.textContent || "").replace(/\s+/g, " ").trim();
+						var className = "";
+						try {
+							className = String(container.className || "");
+						} catch(e){
+						}
+						if (container.querySelector(".chat-message-content") || /No messages yet|Connecting to chat|New messages/i.test(text) || className.indexOf("scrollbar-thin") !== -1){
+							return container;
+						}
+					}
+				}
+			} catch(e){
+			}
+			node = node.parentElement;
+			depth++;
+		}
+		return fallback;
+	}
+
 	function findChatContainer(){
 		try {
 			var root = document.querySelector(".chat-message-content");
@@ -539,19 +1038,17 @@
 		} catch(e){
 		}
 		try {
-			var input = document.querySelector('[aria-label="Chat message input"][contenteditable="true"][data-placeholder][spellcheck="false"][role="textbox"]');
-			if (!input || !input.closest){
-				return null;
+			var input = getChatInput();
+			var inputContainer = findScrollerNearInput(input);
+			if (inputContainer){
+				return inputContainer;
 			}
-			var aside = input.closest("aside");
-			if (!aside || !aside.querySelectorAll){
-				return null;
-			}
-			var containers = aside.querySelectorAll(".overflow-y-auto");
-			for (var i = 0; i < containers.length; i++){
-				if (containers[i].querySelector(".chat-message-content")){
-					return containers[i];
-				}
+		} catch(e){
+		}
+		try {
+			var popoutContainer = findPopoutChatScroller();
+			if (popoutContainer){
+				return popoutContainer;
 			}
 		} catch(e){
 		}
@@ -572,13 +1069,21 @@
 			observerTarget = null;
 		}
 		if (!isExtensionOn){
+			stopHistoryPolling();
 			return;
 		}
+		historyFallbackMisses = 0;
+		startHistoryPolling();
 		checking = setInterval(function(){
 			try {
 				var container = findChatContainer();
 				
-				if (!container){ return; }
+				if (!container){
+					historyFallbackMisses++;
+					return;
+				}
+				var skipInitialScan = false;
+				historyFallbackMisses = 0;
 				
 				if (observerTarget !== container){
 					observerTarget = container;
@@ -586,10 +1091,13 @@
 
 					console.log("CONNECTED chat detected");
 
-					setTimeout(function(){
+					setTimeout(function(skipScan){
 						dataIndex = 0;
 						onElementInserted(container, true);
-					},1000);
+						if (!skipScan){
+							scanExistingChat(container);
+						}
+					},1000, skipInitialScan);
 				}
 				checkViewers();
 			} catch(e){}

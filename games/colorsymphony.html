@@ -348,7 +348,8 @@
             colorDiversity: 0,
             activeColors: new Map(),
             recentNotes: [],
-            harmonyStreak: 0
+            harmonyStreak: 0,
+            lastColor: null
         };
 
         // Color definitions
@@ -388,16 +389,16 @@
                     foundColors.push(word);
                 }
                 // Color variations
-                else if (word.includes('red') && !foundColors.includes('red')) foundColors.push('red');
-                else if (word.includes('blue') && !foundColors.includes('blue')) foundColors.push('blue');
-                else if (word.includes('green') && !foundColors.includes('green')) foundColors.push('green');
-                else if (word.includes('yellow') && !foundColors.includes('yellow')) foundColors.push('yellow');
-                else if (word.includes('purple') && !foundColors.includes('purple')) foundColors.push('purple');
-                else if (word.includes('orange') && !foundColors.includes('orange')) foundColors.push('orange');
-                else if (word.includes('pink') && !foundColors.includes('pink')) foundColors.push('pink');
-                else if (word.includes('white') && !foundColors.includes('white')) foundColors.push('white');
-                else if (word.includes('black') && !foundColors.includes('black')) foundColors.push('black');
-                else if (word.includes('cyan') && !foundColors.includes('cyan')) foundColors.push('cyan');
+                else if (/^reds?$/.test(word) && !foundColors.includes('red')) foundColors.push('red');
+                else if (/^blues?$/.test(word) && !foundColors.includes('blue')) foundColors.push('blue');
+                else if (/^greens?$/.test(word) && !foundColors.includes('green')) foundColors.push('green');
+                else if (/^yellows?$/.test(word) && !foundColors.includes('yellow')) foundColors.push('yellow');
+                else if (/^purples?$/.test(word) && !foundColors.includes('purple')) foundColors.push('purple');
+                else if (/^oranges?$/.test(word) && !foundColors.includes('orange')) foundColors.push('orange');
+                else if (/^pinks?$/.test(word) && !foundColors.includes('pink')) foundColors.push('pink');
+                else if (/^whites?$/.test(word) && !foundColors.includes('white')) foundColors.push('white');
+                else if (/^blacks?$/.test(word) && !foundColors.includes('black')) foundColors.push('black');
+                else if (/^cyans?$/.test(word) && !foundColors.includes('cyan')) foundColors.push('cyan');
             });
             
             return foundColors;
@@ -532,8 +533,8 @@
                     colorDiv.title = `${color}: ${count} notes`;
                     paletteDisplay.appendChild(colorDiv);
                     
-                    // Brief activation animation
-                    if (count === gameState.activeColors.get(color)) {
+                    // Brief activation animation for the most recently played color
+                    if (color === gameState.lastColor) {
                         colorDiv.classList.add('palette-active');
                         setTimeout(() => colorDiv.classList.remove('palette-active'), 500);
                     }
@@ -600,6 +601,7 @@
                 // Track color usage
                 const currentCount = gameState.activeColors.get(color) || 0;
                 gameState.activeColors.set(color, currentCount + 1);
+                gameState.lastColor = color;
                 
                 // Create visual effects
                 createColorWave(color, username);
@@ -621,7 +623,7 @@
 
         // Setup iframe communication
         const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
         iframe.style.width = "0px";
         iframe.style.height = "0px";
         iframe.style.position = "fixed";

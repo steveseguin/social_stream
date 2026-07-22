@@ -1479,7 +1479,7 @@
             iframe.style.top = "-100px";
             iframe.id = "frame1";
             iframe.allow = "midi;microphone;";
-            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + "&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
+            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + "&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
             document.body.appendChild(iframe);
 
             window.addEventListener("message", function (e) {

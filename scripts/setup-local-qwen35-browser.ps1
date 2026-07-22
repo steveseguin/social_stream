@@ -1,10 +1,10 @@
 ﻿param(
-    [string]$TargetDir = "thirdparty/models/qwen3.5-0.8b-onnx"
+    [string]$TargetDir = "thirdparty/models/qwen3.5-0.8b-onnx-opt"
 )
 
 $ErrorActionPreference = "Stop"
 
-$modelBase = "https://largefiles.socialstream.ninja/qwen3.5-0.8b-onnx"
+$modelBase = "https://largefiles.socialstream.ninja/qwen3.5-0.8b-onnx-opt"
 $requiredFiles = @(
     "config.json",
     "generation_config.json",

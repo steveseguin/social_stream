@@ -1011,6 +1011,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Removes all emojis from messages"
           },
           {
+            "key": "stripnameemoji",
+            "displayName": "stripnameemoji",
+            "aliases": [
+              "stripnameemoji"
+            ],
+            "values": "boolean",
+            "description": "Removes all emojis from usernames"
+          },
+          {
             "key": "striphtml",
             "displayName": "striphtml or strip",
             "aliases": [
@@ -1028,6 +1037,42 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Removes links from messages"
+          },
+          {
+            "key": "allowbotlinks",
+            "displayName": "allowbotlinks",
+            "aliases": [
+              "allowbotlinks"
+            ],
+            "values": "boolean",
+            "description": "With striplinks, keeps links visible for bot messages"
+          },
+          {
+            "key": "allowhostlinks",
+            "displayName": "allowhostlinks",
+            "aliases": [
+              "allowhostlinks"
+            ],
+            "values": "boolean",
+            "description": "With striplinks, keeps links visible for host messages"
+          },
+          {
+            "key": "allowmodlinks",
+            "displayName": "allowmodlinks",
+            "aliases": [
+              "allowmodlinks"
+            ],
+            "values": "boolean",
+            "description": "With striplinks, keeps links visible for mod messages"
+          },
+          {
+            "key": "allowviplinks",
+            "displayName": "allowviplinks",
+            "aliases": [
+              "allowviplinks"
+            ],
+            "values": "boolean",
+            "description": "With striplinks, keeps links visible for VIP messages"
           },
           {
             "key": "activelinks",
@@ -2530,6 +2575,311 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Shows channel icon"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Tip Jar & Goal Meter Parameters (`tipjar.html`)",
+    "slug": "tip-jar-goal-meter-parameters-tipjar-html",
+    "description": "",
+    "sections": [
+      {
+        "title": "General Parameters",
+        "slug": "general-parameters",
+        "description": "",
+        "items": [
+          {
+            "key": "style",
+            "displayName": "style",
+            "aliases": [
+              "style"
+            ],
+            "values": "jar, meter, bar, compact, vertical, minimal, text",
+            "description": "Selects the tip jar display style. bar is the fluid goal bar; compact/vertical are simple square-edged bars for corners; text is a one-line readout"
+          },
+          {
+            "key": "goal",
+            "displayName": "goal",
+            "aliases": [
+              "goal"
+            ],
+            "values": "number",
+            "description": "Sets the target amount for the bar or jar"
+          },
+          {
+            "key": "title",
+            "displayName": "title",
+            "aliases": [
+              "title"
+            ],
+            "values": "string",
+            "description": "Sets the visible goal title (e.g. Star Goal, SuperChat Goal)"
+          },
+          {
+            "key": "tipjartype",
+            "displayName": "tipjartype",
+            "aliases": [
+              "tipjartype"
+            ],
+            "values": "usd, stars, bits, coins, diamonds, kicks, jewels, tokens, hearts, gold",
+            "description": "Counts only that donation unit/type. When set, the jar uses the raw unit count instead of converting to USD"
+          },
+          {
+            "key": "tipjarunit",
+            "displayName": "tipjarunit or donationtype",
+            "aliases": [
+              "tipjarunit",
+              "donationtype"
+            ],
+            "values": "same as tipjartype",
+            "description": "Alias for tipjartype"
+          },
+          {
+            "key": "tipjarunitlabel",
+            "displayName": "tipjarunitlabel",
+            "aliases": [
+              "tipjarunitlabel"
+            ],
+            "values": "string",
+            "description": "Overrides the displayed unit label for a filtered unit bar"
+          },
+          {
+            "key": "tipjarsource",
+            "displayName": "tipjarsource",
+            "aliases": [
+              "tipjarsource"
+            ],
+            "values": "source type such as facebook, youtube, twitch, kick, tiktok, stripe, kofi, bmac, fourthwall",
+            "description": "Counts only donations from that source while preserving the normal USD conversion unless tipjartype is also set"
+          },
+          {
+            "key": "donationsource",
+            "displayName": "donationsource",
+            "aliases": [
+              "donationsource"
+            ],
+            "values": "same as tipjarsource",
+            "description": "Alias for tipjarsource"
+          },
+          {
+            "key": "persistent",
+            "displayName": "persistent",
+            "aliases": [
+              "persistent"
+            ],
+            "values": "boolean",
+            "description": "Keeps the current amount between sessions. Filtered bars use separate saved totals"
+          },
+          {
+            "key": "controls",
+            "displayName": "controls",
+            "aliases": [
+              "controls"
+            ],
+            "values": "boolean",
+            "description": "Shows reset/history/export controls"
+          },
+          {
+            "key": "sound",
+            "displayName": "sound",
+            "aliases": [
+              "sound"
+            ],
+            "values": "boolean",
+            "description": "Plays a sound on accepted donations"
+          },
+          {
+            "key": "hype",
+            "displayName": "hype",
+            "aliases": [
+              "hype"
+            ],
+            "values": "boolean",
+            "description": "Enables hype cup scoring mode"
+          },
+          {
+            "key": "levelsize",
+            "displayName": "levelsize or increment",
+            "aliases": [
+              "levelsize",
+              "increment"
+            ],
+            "values": "number",
+            "description": "Turns the goal into repeating bands/levels of this size (e.g. 1000 stars or 50 dollars). The bar fills, celebrates, and rolls into the next level instead of stopping"
+          },
+          {
+            "key": "rollinggoal",
+            "displayName": "rollinggoal or cumulativegoal",
+            "aliases": [
+              "rollinggoal",
+              "cumulativegoal"
+            ],
+            "values": "boolean or number",
+            "description": "Keeps the displayed amount cumulative and advances the target to the next goal step after each completion. Example: goal=50&rollinggoal displays $60 / $100 after a $60 total"
+          },
+          {
+            "key": "goalstep",
+            "displayName": "goalstep or goalincrement",
+            "aliases": [
+              "goalstep",
+              "goalincrement"
+            ],
+            "values": "number",
+            "description": "Optional step size for rollinggoal; defaults to goal"
+          },
+          {
+            "key": "fillstart",
+            "displayName": "fillstart or barcolorstart",
+            "aliases": [
+              "fillstart",
+              "barcolorstart"
+            ],
+            "values": "CSS color",
+            "description": "Fill color when empty/low (default #2196F3 blue). Applies to bar/compact/vertical, and recolors the meter fill"
+          },
+          {
+            "key": "fillend",
+            "displayName": "fillend or barcolorend",
+            "aliases": [
+              "fillend",
+              "barcolorend"
+            ],
+            "values": "CSS color",
+            "description": "Fill color when full (default #f44336 red). Applies to bar/compact/vertical, and recolors the meter fill"
+          },
+          {
+            "key": "fillmode",
+            "displayName": "fillmode",
+            "aliases": [
+              "fillmode"
+            ],
+            "values": "progress, gradient, solid",
+            "description": "bar fill behavior. progress (default) shifts the whole bar from start→end color as it fills; gradient reveals a fixed start→end gradient; solid uses only the start color"
+          },
+          {
+            "key": "barheight",
+            "displayName": "barheight",
+            "aliases": [
+              "barheight"
+            ],
+            "values": "number",
+            "description": "Track height (px) for bar/compact/vertical styles"
+          },
+          {
+            "key": "bartextsize",
+            "displayName": "bartextsize or barfontsize",
+            "aliases": [
+              "bartextsize",
+              "barfontsize"
+            ],
+            "values": "number",
+            "description": "Text size in px for the centered bar style amount text"
+          },
+          {
+            "key": "barradius",
+            "displayName": "barradius",
+            "aliases": [
+              "barradius"
+            ],
+            "values": "number or CSS length",
+            "description": "Corner radius for bar tracks. Use 0 for square corner-overlay edges"
+          },
+          {
+            "key": "noliquid",
+            "displayName": "noliquid",
+            "aliases": [
+              "noliquid"
+            ],
+            "values": "boolean",
+            "description": "Disables the flowing-liquid animation on the bar style"
+          },
+          {
+            "key": "theme",
+            "displayName": "theme",
+            "aliases": [
+              "theme"
+            ],
+            "values": "default, neon, gold",
+            "description": "Visual theme for the meter/bar"
+          },
+          {
+            "key": "celebration",
+            "displayName": "celebration",
+            "aliases": [
+              "celebration"
+            ],
+            "values": "hearts, confetti, fireworks, none",
+            "description": "Effect played on milestones/level-ups"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Credits Roll Parameters (`credits.html`)",
+    "slug": "credits-roll-parameters-credits-html",
+    "description": "",
+    "sections": [
+      {
+        "title": "General Parameters",
+        "slug": "general-parameters",
+        "description": "",
+        "items": [
+          {
+            "key": "loop",
+            "displayName": "loop",
+            "aliases": [
+              "loop"
+            ],
+            "values": "boolean",
+            "description": "Restarts the credits animation when it reaches the end"
+          },
+          {
+            "key": "persistcredits",
+            "displayName": "persistcredits",
+            "aliases": [
+              "persistcredits"
+            ],
+            "values": "boolean",
+            "description": "Saves the collected credits list in the overlay's local storage so refreshes/source toggles keep the current stream's supporters until reset"
+          },
+          {
+            "key": "onlysupporters",
+            "displayName": "onlysupporters",
+            "aliases": [
+              "onlysupporters"
+            ],
+            "values": "boolean",
+            "description": "Only includes donors and members/subscribers; excludes regular chat-only participants"
+          },
+          {
+            "key": "onlydonors",
+            "displayName": "onlydonors",
+            "aliases": [
+              "onlydonors"
+            ],
+            "values": "boolean",
+            "description": "Only includes users with donation payloads"
+          },
+          {
+            "key": "donationpriority",
+            "displayName": "donationpriority",
+            "aliases": [
+              "donationpriority"
+            ],
+            "values": "boolean",
+            "description": "Groups/sorts donors first, then members, then participants"
+          },
+          {
+            "key": "showamounts",
+            "displayName": "showamounts",
+            "aliases": [
+              "showamounts"
+            ],
+            "values": "boolean",
+            "description": "Shows donation totals next to donors"
           }
         ]
       }

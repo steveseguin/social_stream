@@ -25,6 +25,7 @@ const SETTINGS_CATEGORIES = Object.freeze({
   'must_enable_the_trigger_to_use': { label: "Must enable the trigger to use", order: 47 },
   'other_customization_options': { label: "Other customization options", order: 48 },
   'configure_select_a_winner_draw_mode': { label: "Configure select-a-winner draw mode", order: 57 },
+  'chat_control_commands': { label: "Chat control commands", order: 58 },
   'poll_settings': { label: "Poll Settings", order: 64 },
   'top_bar_settings': { label: "Top Bar Settings", order: 71 },
   'custom_gif_commands_settings': { label: "Custom GIF Commands Settings", order: 116 },
@@ -96,7 +97,12 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "autoLiveYoutube": {
     type: "boolean",
     category: "miscellaneous_options_for_sites",
-    description: "Instead of Top Chat, which is default, auto-select Live Chat; Youtube Live chat pop out."
+    description: "Deprecated. YouTube Live Chat is now selected automatically unless disableAutoLiveYoutube is enabled."
+  },
+  "disableAutoLiveYoutube": {
+    type: "boolean",
+    category: "miscellaneous_options_for_sites",
+    description: "Do not automatically select Live Chat in the YouTube chat popout."
   },
   "disableYoutubeAutoScroll": {
     type: "boolean",
@@ -131,7 +137,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "bedrockmodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "Bedrock model identifier to request (for example anthropic.claude-v2)."
+    description: "Bedrock model identifier to request (for example anthropic.claude-sonnet-5)."
   },
   "beepvolume": {
     type: "number",
@@ -203,6 +209,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "custom_injection",
     description: "Allow 'liked' stream events in TikTok (high volume)"
   },
+  "captureyoutubelikes": {
+    type: "boolean",
+    category: "youtube_api",
+    description: "Send the current YouTube video like count to the dashboard (polled every 30 seconds)"
+  },
   "chatbotHistoryTotal": {
     type: "number",
     category: "chat_bot",
@@ -226,7 +237,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "chatgptmodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "Model slug to request from OpenAI (for example gpt-4o-mini)."
+    description: "Model slug to request from OpenAI (for example gpt-5.4-mini)."
   },
   "chatwebhookpost": {
     type: "boolean",
@@ -496,7 +507,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "deepseekmodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "DeepSeek model name to request (e.g., deepseek-chat)."
+    description: "DeepSeek model name to request (e.g., deepseek-v4-flash)."
   },
   "defaultavatar": {
     type: "text",
@@ -776,7 +787,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "groqmodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "Model slug provided by Groq (for example llama-3.1-8b-instant)."
+    description: "Model slug provided by Groq (for example openai/gpt-oss-120b)."
   },
   "h2r": {
     type: "boolean",
@@ -807,6 +818,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     type: "boolean",
     category: "assign_roles_classes_to_certain_users",
     description: "When enabled, filter out messages for listed bots."
+  },
+  "hideViewerCountSources": {
+    type: "text",
+    category: "other_filters",
+    description: "Selected source types to exclude from viewer-count totals while leaving chat capture enabled."
   },
   "stripatext": {
     type: "boolean",
@@ -1171,7 +1187,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "openroutermodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "Model identifier from the OpenRouter catalog (e.g., openai/gpt-4o)."
+    description: "Model identifier from the OpenRouter catalog (e.g., openai/gpt-5.4-mini)."
   },
   "overlayPreset": {
     type: "select",
@@ -1423,6 +1439,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "printer_control",
     description: "See documentation on socialstream.ninja for details."
   },
+  "server2additivedelivery": {
+    type: "boolean",
+    category: "printer_control",
+    description: "Temporary experimental option to also send API-routed chat through normal dock/overlay connections."
+  },
   "soundvolume": {
     type: "number",
     category: "other_customization_options",
@@ -1632,6 +1653,36 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     type: "boolean",
     category: "other_customization_options",
     description: "Allow removed users to join the waitlist again."
+  },
+  "waitlistcommandhighlight": {
+    type: "text",
+    category: "chat_control_commands",
+    description: "Chat command to highlight the top or numbered waitlist entry."
+  },
+  "waitlistcommandremove": {
+    type: "text",
+    category: "chat_control_commands",
+    description: "Chat command to remove the top or numbered waitlist entry."
+  },
+  "waitlistcommandreset": {
+    type: "text",
+    category: "chat_control_commands",
+    description: "Chat command to reset the waitlist."
+  },
+  "waitlistcommandselect": {
+    type: "text",
+    category: "chat_control_commands",
+    description: "Chat command to select one or more names."
+  },
+  "waitlistcommandstop": {
+    type: "text",
+    category: "chat_control_commands",
+    description: "Chat command to stop new waitlist entries."
+  },
+  "waitlistcontrolcommands": {
+    type: "boolean",
+    category: "chat_control_commands",
+    description: "Enable mod/host/admin chat commands for waitlist controls."
   },
   "waitlistmode": {
     type: "boolean",

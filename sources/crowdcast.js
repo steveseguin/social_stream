@@ -192,7 +192,7 @@ function toDataURL(url, callback) {
 						try {
 							var ele = xxx[i];
 							
-							if (ele.NodeType==8){
+							if (!ele || ele.nodeType !== 1){
 								continue;
 							}
 							if (ele && ele.className && ele.classList.contains("message")) {

@@ -21,7 +21,7 @@ For the focused source-window lifecycle and app-vs-extension parity matrix, use 
 - `ssapp/tiktok/connection-manager.js`
 - `ssapp/tests/electron/*`
 
-Do not use `ssapp/resources/social_stream_fallback` as source documentation material during normal extraction. The project instructions say Social Stream source edits and runtime source-of-truth work belong in `C:\Users\steve\Code\social_stream`; the fallback folder is disposable build/update output.
+Do not use `ssapp/resources/social_stream_fallback` as source documentation material during normal extraction. The project instructions say Social Stream source edits and runtime source-of-truth work belong in `<social_stream repo>`; the fallback folder is disposable build/update output.
 
 ## Runtime Shape
 

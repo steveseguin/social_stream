@@ -394,11 +394,6 @@
             element.style.top = pos.y + 'px';
             element.style.left = '-100px';
             
-            // Random rotation and scaling
-            const rotation = Math.random() * 360;
-            const scale = 0.5 + Math.random() * 1;
-            element.style.transform = `rotate(${rotation}deg) scale(${scale})`;
-            
             document.getElementById('game-container').appendChild(element);
             gameState.activeElements++;
             
@@ -583,7 +578,7 @@
 
         // Update display
         function updateDisplay() {
-            document.getElementById('msg-rate').textContent = gameState.messagesPerSecond.toFixed(1);
+            document.getElementById('msg-rate').textContent = gameState.messagesPerSecond;
             document.getElementById('chaos-events').textContent = gameState.chaosEvents;
             document.getElementById('shake-count').textContent = gameState.shakeCount;
             document.getElementById('max-chaos').textContent = gameState.maxChaos.toFixed(0);
@@ -677,7 +672,7 @@
 
         // Setup iframe communication
         const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
         iframe.style.width = "0px";
         iframe.style.height = "0px";
         iframe.style.position = "fixed";

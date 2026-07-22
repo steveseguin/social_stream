@@ -957,19 +957,22 @@
 	setInterval(function(){
 		try {
 			if (observedContainer && !observedContainer.isConnected) {
+				var disconnectedContainer = observedContainer;
 				try {
 					if (observer) {
 						observer.disconnect();
 					}
 				} catch(e) {}
+				disconnectedContainer.marked = false;
 				observedContainer = null;
+				observer = null;
 			}
 			checkXNotLiveReload();
 			var container = resolveChatContainer();
 			if (!container) {
 				container = findElementByAttributeAndChildren("[tabIndex='0']",["textarea[inputmode='text']"]);
 			}
-			if (container && !container.marked){
+			if (container && container !== observedContainer && !container.marked){
 				container.marked=true;
 				setTimeout(function(container){
 					console.log("Social Stream started");

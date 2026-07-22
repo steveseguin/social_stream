@@ -4,6 +4,17 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Not Found - Social Stream Ninja</title>
+	<script>
+		(function () {
+			const match = window.location.pathname.match(/^\/resources\/social_stream_fallback\/(main|beta)\/(.+\.html)$/i);
+			if (!match) return;
+			const branch = match[1].toLowerCase();
+			const relativePath = match[2].replace(/^\/+/, "");
+			if (!relativePath || relativePath.includes("..") || !/^[a-z0-9._/-]+\.html$/i.test(relativePath)) return;
+			const branchPrefix = branch === "beta" ? "/beta/" : "/";
+			window.location.replace(branchPrefix + relativePath + window.location.search + window.location.hash);
+		})();
+	</script>
 	<style>
 		body {
 			font-family: Arial, sans-serif;

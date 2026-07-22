@@ -75,10 +75,10 @@ Run these with `node tests/<file>.test.js` unless an npm alias exists.
 
 | Test File | Area | What It Checks |
 | --- | --- | --- |
-| `eventflow-customjs.test.js` | Event Flow custom JS | Eval enablement detection for app-like contexts, extension blocking, trigger/action execution, syntax-error behavior. Passed on 2026-06-24; see `../18-focused-validation-evidence-log.md`. |
-| `eventflow-compare-property.test.js` | Event Flow compare triggers | Property comparison behavior inside `actions/EventFlowSystem.js`. Passed on 2026-06-24; see `../18-focused-validation-evidence-log.md`. |
-| `eventflow-template-vars.test.js` | Event Flow template variables | Template/counter variable substitution and message mutation behavior. Passed on 2026-06-24; see `../18-focused-validation-evidence-log.md`. |
-| `eventflow-play-media-duration.test.js` | Event Flow media action | Overlay payload duration behavior for play-media actions. Passed on 2026-06-24; see `../18-focused-validation-evidence-log.md`. |
+| `eventflow-customjs.test.js` | Event Flow custom JS | Eval enablement detection for app-like contexts, extension blocking, trigger/action execution, syntax-error behavior. Passed on 2026-07-05; see `../18-focused-validation-evidence-log.md`. |
+| `eventflow-compare-property.test.js` | Event Flow compare triggers | Property comparison behavior and donation label currency conversion inside `actions/EventFlowSystem.js`. Passed on 2026-07-05; see `../18-focused-validation-evidence-log.md`. |
+| `eventflow-template-vars.test.js` | Event Flow template variables | Template/counter variable substitution and message mutation behavior. Passed on 2026-07-05; see `../18-focused-validation-evidence-log.md`. |
+| `eventflow-play-media-duration.test.js` | Event Flow media action | Overlay payload duration behavior for play-media actions. Passed on 2026-07-05; see `../18-focused-validation-evidence-log.md`. |
 | `twitch-chatClient-subgift.test.js` | Twitch provider core | Direct and anonymous subgift membership payload shaping. Passed on 2026-06-24; see `../18-focused-validation-evidence-log.md`. |
 | `profanity-filter.test.js` | Moderation/profanity | Profanity helper behavior. Passed on 2026-06-24 with 743 bad words and 18467 generated variations; see `../18-focused-validation-evidence-log.md`. |
 | `moderation-regressions.test.js` | AI moderation | Local moderation context, stateless worker calls, WebGPU fallback expectations, sanitizer allowance checks. Passed on 2026-06-24; see `../18-focused-validation-evidence-log.md`. |

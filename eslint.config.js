@@ -29,7 +29,8 @@ module.exports = [
             "docs/js/**/*.js",
             "lite/**/*.js",
             "providers/**/*.js",
-            "shared/**/*.js"
+            "shared/**/*.js",
+            "ssn-streamdeck/plugin/ninja.socialstream.streamdeck.sdPlugin/bin/**/*.js"
         ],
         languageOptions: {
             ecmaVersion: "latest",

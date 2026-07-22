@@ -208,7 +208,7 @@ function findWorkerMessages(log, type) {
     const workerLog = await page.evaluate(() => window.__ssnWorkerLog.slice());
     const initMessage = findWorkerMessages(workerLog, 'init')[0];
     assert(!!initMessage, 'Local Qwen init was not sent.');
-    assert(initMessage.data.modelId === 'qwen3.5-0.8b-onnx', `Local Qwen should fall back to the self-hosted model id when the bundled files are incomplete, received: ${initMessage.data.modelId}`);
+    assert(initMessage.data.modelId === 'qwen3.5-0.8b-onnx-opt', `Local Qwen should fall back to the optimized self-hosted model id when the bundled files are incomplete, received: ${initMessage.data.modelId}`);
     const overrideValue = await page.$eval('#modelOverride', (el) => el.value);
     assert(overrideValue === '', `Expected stale local bundled override to be cleared after fallback, received: ${overrideValue}`);
 

@@ -6,9 +6,9 @@ Use this page to find exact popup setting keys quickly. For UI behavior, storage
 
 ## Counts
 
-- Total setting keys: 327
-- Categories: 54
-- Types: boolean=170, text=98, select=10, number=49
+- Total setting keys: 333
+- Categories: 55
+- Types: boolean=171, text=103, select=10, number=49
 
 ## Focused Validation Note
 
@@ -160,20 +160,20 @@ Category key: `configure_llm_api`. Settings: 36.
 | `aiAutoTranslateTimeout` | number | Maximum time in milliseconds to wait for each AI translation request. Defaults to 10000. |
 | `aiProvider` | select | Choose which LLM provider powers the chat bot and automation features. |
 | `bedrockAccessKey` | text | AWS access key used when authenticating to Bedrock. |
-| `bedrockmodel` | text | Bedrock model identifier to request (for example anthropic.claude-v2). |
+| `bedrockmodel` | text | Bedrock model identifier to request (for example anthropic.claude-sonnet-5). |
 | `bedrockRegion` | text | AWS region where your Bedrock deployment runs, such as us-east-1. |
 | `bedrockSecretKey` | text | AWS secret key paired with the Bedrock access key. |
 | `chatgptApiKey` | text | OpenAI API key used when the ChatGPT provider is selected. |
-| `chatgptmodel` | text | Model slug to request from OpenAI (for example gpt-4o-mini). |
+| `chatgptmodel` | text | Model slug to request from OpenAI (for example gpt-5.4-mini). |
 | `customAIApiKey` | text | API key for your custom OpenAI-compatible endpoint (optional). |
 | `customAIEndpoint` | text | Base URL for the custom OpenAI-compatible API to call. |
 | `customAIModel` | text | Model identifier exposed by the custom OpenAI-compatible service. |
 | `deepseekApiKey` | text | DeepSeek API key used when that provider is active. |
-| `deepseekmodel` | text | DeepSeek model name to request (e.g., deepseek-chat). |
+| `deepseekmodel` | text | DeepSeek model name to request (e.g., deepseek-v4-flash). |
 | `geminiApiKey` | text | Google AI Studio API key required for Gemini access. |
 | `geminimodel` | text | Gemini model identifier to call (for example gemini-2.5-flash). |
 | `groqApiKey` | text | Groq API key used when leveraging Groq-hosted models. |
-| `groqmodel` | text | Model slug provided by Groq (for example llama-3.1-8b-instant). |
+| `groqmodel` | text | Model slug provided by Groq (for example openai/gpt-oss-120b). |
 | `hostedLLMEndpoint` | text | Optional endpoint override for the SSN Hosted Trial LLM. |
 | `hostedLLMModel` | text | Optional model override for the SSN Hosted Trial LLM. |
 | `hostedLLMToken` | text | Optional token override for the SSN Hosted Trial LLM. |
@@ -184,7 +184,7 @@ Category key: `configure_llm_api`. Settings: 36.
 | `ollamaKeepAlive` | number | Time to keep the model in memory; -1 unlimited. In minutes |
 | `ollamamodel` | text | Ollama model tag to load (for example gemma3:1b). |
 | `openrouterApiKey` | text | OpenRouter API key for routing hosted model calls. |
-| `openroutermodel` | text | Model identifier from the OpenRouter catalog (e.g., openai/gpt-4o). |
+| `openroutermodel` | text | Model identifier from the OpenRouter catalog (e.g., openai/gpt-5.4-mini). |
 | `xaiApiKey` | text | xAI (Grok) API key for authenticated requests. |
 | `xaimodel` | text | Model slug to call via the xAI API. |
 
@@ -274,6 +274,19 @@ Category key: `must_enable_the_trigger_to_use`. Settings: 5.
 | `ticker` | boolean | Enable to Select the ticker source file |
 | `waitlistmode` | boolean | Enable the waitlist/queue overlay and listen for the join command. |
 | `wordcloud` | boolean | Enable the word cloud overlay trigger. |
+
+## Chat control commands
+
+Category key: `chat_control_commands`. Settings: 6.
+
+| Key | Type | Short Description |
+| --- | --- | --- |
+| `waitlistcontrolcommands` | boolean | Enable mod/host/admin chat commands for waitlist controls. |
+| `waitlistcommandhighlight` | text | Chat command to highlight the top or numbered waitlist entry. |
+| `waitlistcommandremove` | text | Chat command to remove the top or numbered waitlist entry. |
+| `waitlistcommandreset` | text | Chat command to reset the waitlist. |
+| `waitlistcommandselect` | text | Chat command to select one or more names. |
+| `waitlistcommandstop` | text | Chat command to stop new waitlist entries. |
 
 ## Other customization options
 

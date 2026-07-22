@@ -29,7 +29,7 @@
             <div class="editor-title">Event Flow Editor</div>
 			<div style="font-size:66%;max-width:50%;">The Flow Editor lets you create custom and complex triggers and action workflows. Have fun with your stream!<br>
 			<span style="margin-top: 5px; display: inline-block;">⚡ For media playback and OBS actions, add the Actions Overlay to your stream (available via settings menu)</span><br>
-			<span style="margin-top: 5px; display: inline-block;">📘 <a href="event-flow-guide.html" target="_blank" style="color: #4ecdc4;">Event Flow Guide</a> · 📖 <a href="../docs/event-reference.html" target="_blank" style="color: #4ecdc4;">Event Reference</a></span></div>
+			<span style="margin-top: 5px; display: inline-block;">📘 <a href="event-flow-guide.html" target="_blank" style="color: #4ecdc4;">Event Flow Guide</a> · 🧠 <a href="user-memory-guide.html" target="_blank" style="color: #4ecdc4;">User Memory Guide</a> · 📖 <a href="../docs/event-reference.html" target="_blank" style="color: #4ecdc4;">Event Reference</a></span></div>
             <div class="editor-actions">
                 <button id="open-test-panel" class="btn">🧪 Test Flow</button>
             </div>
@@ -79,8 +79,11 @@
                 <option value="new_subscriber">new_subscriber - New subscriber/member</option>
                 <option value="resub">resub - Resub/renewal</option>
                 <option value="subscription_gift">subscription_gift - Gift sub</option>
-                <option value="donation">donation - Donation/Super Chat</option>
+                <option value="reward">reward - Channel point/reward redemption</option>
+                <option value="superchat">superchat - YouTube Super Chat</option>
+                <option value="donation">donation - Legacy donation event</option>
                 <option value="cheer">cheer - Bits/Cheer</option>
+                <option value="jeweldonation">jeweldonation - YouTube Jewels/Gifts</option>
                 <option value="raid">raid - Raid</option>
             </select>
             <input type="text" id="test-event-custom" placeholder="Custom event, e.g. sponsorship" style="margin-top: 8px;">
@@ -110,8 +113,8 @@
         </div>
         
         <div id="donation-amount" class="test-group" style="display: none;">
-            <label for="test-donation-amount">Donation Amount:</label>
-            <input type="text" id="test-donation-amount" value="$5.00">
+            <label for="test-donation-amount">Donation / Value:</label>
+            <input type="text" id="test-donation-amount" placeholder="$10.00 CAD, 100 bits">
         </div>
 
         <div class="test-options">

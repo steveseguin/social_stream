@@ -40,7 +40,7 @@ Messages within the SSN system generally follow a JSON object structure. Key fie
 
 ### Event Types
 
-The system captures various events beyond simple chat messages, such as follows, subscriptions, viewer count updates, donations, etc.. These often have an `event` field in the message structure.
+The system captures various events beyond simple chat messages, such as follows, subscriptions, viewer count updates, donations, etc. These often have an `event` field in the message structure.
 
 ## 3. Overlays and Customization
 
@@ -109,7 +109,7 @@ SSN offers multiple ways for external applications or AI to interact with it.
 2.  **Processing (Extension):** `background.js` processes messages, applies bot actions (`applyBotActions`), filters, adds metadata.
 3.  **Distribution (Extension):** `sendToDestinations` sends messages via P2P (`sendDataP2P`) or WebSocket server (if configured) to docks, overlays, and potentially external APIs (POST/PUT/H2R/Singular).
 4.  **Dock Interaction:** Dock (`dock.html`) receives messages, displays them, allows user interaction (clicking, queuing, pinning).
-5.  **Dock Actions:** Dock sends commands back to the Extension (via P2P or server) to feature messages, block users, send replies, etc..
+5.  **Dock Actions:** Dock sends commands back to the Extension (via P2P or server) to feature messages, block users, send replies, etc.
 6.  **Overlay Display:** Overlays (`featured.html`, etc.) receive featured content or specific data (like waitlist updates) and display it.
 7.  **API Interaction:** External applications/AI can send commands via WebSocket/HTTP to control the system or ingest messages.
 
@@ -118,7 +118,7 @@ SSN offers multiple ways for external applications or AI to interact with it.
 -   Allows messages from one platform to be automatically re-posted to others.
 -   Enabled via settings like `relayall` (relays all messages - **NOT RECOMMENDED** due to spam potential) or `relaydonos` (relays only donation messages).
 -   The `relaytargets` setting allows specifying which source types (e.g., `twitch,youtube`) should receive relayed messages.
--   Messages identified as "reflections" (echos of relayed messages) are typically filtered out by the receiving end to prevent loops.
+-   Messages identified as "reflections" (echoes of relayed messages) are typically filtered out by the receiving end to prevent loops.
 
 ## 6. Text-to-Speech (TTS)
 

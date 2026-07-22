@@ -1,166 +1,118 @@
 #!/bin/bash
-# Prepare Firefox Add-on build
-# This script:
-#   - Starts from the Chrome Web Store build (filtered content)
-#   - Transforms manifest.json for Firefox compatibility
-#   - Removes TTS model files to stay under 200MB limit
-#   - Fixes known JavaScript syntax errors
+# Prepare a Firefox Add-on build from the extension sources.
 
 set -euo pipefail
 
-BUILD_DIR="firefox-build"
-CWS_BUILD_DIR="cws-build"
+BUILD_DIR="${FIREFOX_BUILD_DIR:-firefox-build}"
 
 echo "=== Preparing Firefox Add-on Build ==="
 
-# First, run the Chrome Web Store preparation if it hasn't been run
-if [[ ! -d "$CWS_BUILD_DIR" ]]; then
-    echo "Running Chrome Web Store preparation first..."
-    chmod +x scripts/prepare-chrome-web-store.sh
-    ./scripts/prepare-chrome-web-store.sh
-fi
-
-# Clean and create Firefox build directory
+# Stage the extension directly. The old Chrome Web Store preparation script was
+# intentionally removed, so Firefox must not depend on its generated output.
 rm -rf "$BUILD_DIR"
-cp -r "$CWS_BUILD_DIR" "$BUILD_DIR"
+mkdir -p "$BUILD_DIR"
 
-echo "Removing TTS model files (Firefox has 200MB limit)..."
-# Remove Piper TTS voice models
-rm -rf "$BUILD_DIR/thirdparty/piper/piper-voices"
-# Remove Kitten TTS models
-rm -rf "$BUILD_DIR/thirdparty/kitten-tts"
-# Remove standalone ONNX model files
-rm -f "$BUILD_DIR/thirdparty/"*.onnx
+rsync -a \
+    --exclude='.git/' \
+    --exclude='.github/' \
+    --exclude='.gitignore' \
+    --exclude='.gitattributes' \
+    --exclude='.githooks/' \
+    --exclude='.agents/' \
+    --exclude='.claude/' \
+    --exclude='.codex*/' \
+    --include='docs/' \
+    --include='docs/css/' \
+    --include='docs/js/' \
+    --include='docs/images/' \
+    --include='docs/images/guides/' \
+    --include='docs/images/kick-channel-points-event-flow/' \
+    --include='docs/event-reference.html' \
+    --include='docs/media-hosting-event-flow.html' \
+    --include='docs/source-types-guide.html' \
+    --include='docs/css/event-reference.css' \
+    --include='docs/css/guides.css' \
+    --include='docs/css/styles.css' \
+    --include='docs/js/main.js' \
+    --include='docs/images/guides/guide-event-flow-overview.png' \
+    --include='docs/images/guides/guide-standalone-source-modes.png' \
+    --include='docs/images/kick-channel-points-event-flow/event-flow-media-action-values.png' \
+    --exclude='docs/***' \
+    --exclude='lite/' \
+    --exclude='tests/' \
+    --exclude='scripts/' \
+    --exclude='node_modules/' \
+    --exclude='tmp/' \
+    --exclude='artifacts/' \
+    --exclude='local-tts-bridge/' \
+    --exclude='ssn-streamdeck/' \
+    --exclude='electron_app_reference/' \
+    --exclude='cws-build/' \
+    --exclude='firefox-build/' \
+    --exclude='web-ext-artifacts/' \
+    --exclude='thirdparty/models/' \
+    --exclude='thirdparty/piper/piper-voices/' \
+    --exclude='thirdparty/kitten-tts/' \
+    --exclude='thirdparty/*.onnx' \
+    --exclude='*.md' \
+    --exclude='package.json' \
+    --exclude='package-lock.json' \
+    --exclude='eslint.config.js' \
+    --exclude='.prettierrc' \
+    --exclude='.htmlhintrc' \
+    ./ "$BUILD_DIR/"
 
 echo "Transforming manifest.json for Firefox compatibility..."
 
-# Firefox MV3 uses background.scripts instead of service_worker
-# Also need to add data_collection_permissions and remove unsupported permissions
 jq '
-# Transform background from service_worker to scripts (Firefox MV3)
+# Firefox MV3 uses an event page rather than an extension service worker.
 .background = {
     "scripts": [.background.service_worker]
 } |
 
-# Fix typo in content_scripts (runs_at -> run_at)
-.content_scripts = (.content_scripts | map(if has("runs_at") then .run_at = .runs_at | del(.runs_at) else . end)) |
-
-# Add data_collection_permissions (required for Firefox 140+)
-# "none" means the extension does not collect/transmit personal data
+# Firefox 140+ provides the built-in data-consent prompt used by this build.
+.browser_specific_settings.gecko.strict_min_version = "142.0" |
 .browser_specific_settings.gecko.data_collection_permissions = {
-    "required": ["none"],
+    "required": ["personallyIdentifyingInfo", "authenticationInfo", "personalCommunications", "websiteContent"],
     "optional": []
 } |
 
-# Remove permissions not supported by Firefox
+# Fix legacy content-script key spelling if it appears.
+.content_scripts = (.content_scripts | map(if has("runs_at") then .run_at = .runs_at | del(.runs_at) else . end)) |
+
+# These Chrome APIs are not implemented by Firefox. Runtime code already
+# feature-detects tabCapture; debugger-backed automation remains unavailable.
 .permissions = [.permissions[] | select(. != "debugger" and . != "tabCapture")]
 ' "$BUILD_DIR/manifest.json" > "$BUILD_DIR/manifest.json.tmp"
 
 mv "$BUILD_DIR/manifest.json.tmp" "$BUILD_DIR/manifest.json"
 
-echo "Fixing JavaScript syntax errors for Firefox validation..."
-
-# Fix bilibilicom.js line 214 - invalid assignment to querySelector result
-# Original: document.querySelector("iframe").contentWindow.document.body.querySelector('#chat-items')=true;
-# Fixed: document.querySelector("iframe").contentWindow.document.body.querySelector('#chat-items').marked=true;
+# Fix the known parser error in this legacy source without changing Chrome's
+# source file. This can be removed once the shared source is corrected.
 if [[ -f "$BUILD_DIR/sources/bilibilicom.js" ]]; then
     sed -i "s/querySelector('#chat-items')=true;/querySelector('#chat-items').marked=true;/g" "$BUILD_DIR/sources/bilibilicom.js"
-    echo "  Fixed: sources/bilibilicom.js (invalid assignment)"
 fi
 
-echo "Adding Firefox messaging compatibility shim to background.js and service_worker.js..."
-# Firefox MV3 handles async message responses differently than Chrome.
-# In Chrome, 'return true' keeps the message channel open for async sendResponse.
-# In Firefox MV3 with background scripts, we need to return a Promise instead.
-# This shim wraps chrome.runtime.onMessage.addListener to handle this difference.
-FIREFOX_SHIM='// Firefox MV3 messaging compatibility shim
-// Firefox returns the raw return value (true/Promise) to the caller instead of waiting for sendResponse
-// This shim ensures async responses work correctly
-(function() {
-    const isFirefox = typeof browser !== "undefined" && browser.runtime && browser.runtime.id;
-    if (!isFirefox) {
-        return;
-    }
+echo "Validating generated manifest and required entry points..."
+jq empty "$BUILD_DIR/manifest.json"
 
-    console.log("[Firefox Shim] Applying messaging compatibility fix");
-    const wrapAddListener = function(target) {
-        if (!target || !target.onMessage || !target.onMessage.addListener) {
-            console.warn("[Firefox Shim] onMessage not available", target);
-            return;
-        }
+required_files=(
+    "manifest.json"
+    "service_worker.js"
+    "background.html"
+    "background.js"
+    "popup.html"
+    "popup.js"
+    "settings/options.html"
+)
 
-        const original = target.onMessage.addListener.bind(target.onMessage);
-        target.onMessage.addListener = function(listener) {
-            original(function(request, sender, sendResponse) {
-                let responded = false;
-                const wrappedSendResponse = function(response) {
-                    responded = true;
-                    sendResponse(response);
-                };
-                const result = listener(request, sender, wrappedSendResponse);
-                // If result is a Promise, return it for Firefox async handling
-                if (result && typeof result.then === "function") {
-                    return result.then(function(val) {
-                        // If sendResponse was called, return undefined to let it handle response
-                        // Otherwise return the resolved value
-                        return responded ? undefined : val;
-                    });
-                }
-                // Keep channel open if sendResponse might be called later
-                if (result === true) {
-                    return new Promise(function() {});
-                }
-                return result;
-            });
-        };
-    };
+for file in "${required_files[@]}"; do
+    if [[ ! -f "$BUILD_DIR/$file" ]]; then
+        echo "ERROR: Required Firefox package file is missing: $file" >&2
+        exit 1
+    fi
+done
 
-    if (typeof browser !== "undefined" && browser.runtime) {
-        wrapAddListener(browser.runtime);
-    }
-    if (typeof chrome !== "undefined" && chrome.runtime && chrome !== browser) {
-        wrapAddListener(chrome.runtime);
-    }
-})();
-'
-
-# Prepend the shim to background.js
-if [[ -f "$BUILD_DIR/background.js" ]]; then
-    echo "$FIREFOX_SHIM" | cat - "$BUILD_DIR/background.js" > "$BUILD_DIR/background.js.tmp"
-    mv "$BUILD_DIR/background.js.tmp" "$BUILD_DIR/background.js"
-    echo "  Fixed: background.js (Firefox messaging compatibility)"
-fi
-
-# Prepend the shim to service_worker.js (used as Firefox MV3 background script)
-if [[ -f "$BUILD_DIR/service_worker.js" ]]; then
-    echo "$FIREFOX_SHIM" | cat - "$BUILD_DIR/service_worker.js" > "$BUILD_DIR/service_worker.js.tmp"
-    mv "$BUILD_DIR/service_worker.js.tmp" "$BUILD_DIR/service_worker.js"
-    echo "  Fixed: service_worker.js (Firefox messaging compatibility)"
-fi
-
-echo "Validating transformed manifest.json..."
-if ! jq empty "$BUILD_DIR/manifest.json" 2>/dev/null; then
-    echo "ERROR: Generated manifest.json is invalid!" >&2
-    exit 1
-fi
-
-# Calculate build size
 BUILD_SIZE=$(du -sm "$BUILD_DIR" | cut -f1)
-echo ""
-echo "=== Firefox Build Summary ==="
-echo "Build size: ${BUILD_SIZE}MB (Firefox limit: 200MB)"
-if (( BUILD_SIZE > 200 )); then
-    echo "WARNING: Build size exceeds 200MB limit!" >&2
-fi
-echo ""
-echo "Manifest transformations:"
-echo "  - Changed background.service_worker to background.scripts"
-echo "  - Added browser_specific_settings.gecko.data_collection_permissions"
-echo "  - Removed unsupported permissions: debugger, tabCapture"
-echo ""
-echo "Removed TTS models:"
-echo "  - thirdparty/piper/piper-voices/"
-echo "  - thirdparty/kitten-tts/"
-echo "  - thirdparty/*.onnx"
-echo ""
+echo "Firefox build size (uncompressed): ${BUILD_SIZE}MB"
 echo "Firefox Add-on build ready in: $BUILD_DIR/"

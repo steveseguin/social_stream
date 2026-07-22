@@ -17,7 +17,7 @@ Status: heavy extraction pass started from manifest/source patterns. This is a d
 - `custom_sample.js`
 - `sample_wss_source.html`
 - `docs/agents/13-reference/customization-path-decision-matrix.md`
-- `C:\Users\steve\Code\ssapp\AGENTS.md`
+- `<ssapp repo>/AGENTS.md`
 
 ## Before Adding A Source
 
@@ -123,16 +123,16 @@ Important fields:
 - `chatmessage`: message body. Sanitized HTML is allowed only when `textonly` is false.
 - `chatimg`: avatar URL or small data URI.
 - `type`: lowercase source identifier.
-- `textonly`: true means render as plain text.
+- `textonly`: applies only to `chatmessage`; true means render `chatmessage` as plain text, false means `chatmessage` may contain sanitized/renderable HTML. Do not use it to describe `chatname`, `membership`, `hasDonation`, or other normal text fields.
 - `hasDonation`: donation/gift/bits amount label.
 - `membership`: member/subscription state.
 - `subtitle`: short secondary membership/donation detail.
-- `event`: normalized event name when this is not a normal chat message.
-- `meta`: structured extra details for event/UI/integration consumers.
+- `event`: normalized event name when this is not a normal chat message. Do not set `event: "donation"` just because a normal chat/tip row has `hasDonation`.
+- `meta`: structured extra details for event/UI/integration consumers only when that data is actually needed and no existing field already represents it.
 - `id`: stable-enough unique message ID for deletion/dedup/routing.
 - `userid`: platform user ID when available.
 
-Do not create new top-level fields casually. Prefer `meta` for source-specific details unless existing overlays need a top-level value.
+Do not create new top-level fields casually. Use existing fields first; put source-specific details in `meta` only when they need to be transmitted and are not already sufficiently handled.
 
 ## Event Support
 
@@ -142,6 +142,7 @@ Confirmed rules from current docs:
 
 - To hide events in dock/featured pages, users can use `&hideevents`, `&hideallevents`, or `&filterevents=...`.
 - Donation-style messages should still populate `hasDonation` even if `event` is blank or source-specific.
+- Normal chat/tip rows with donations should usually leave `event` blank; `hasDonation` is the donation signal.
 - YouTube, Twitch, and Kick need WebSocket mode for many richer stream events.
 - DOM capture is usually enough for chat and limited system events, but not always enough for follows, raids, subscriptions, or detailed gifts.
 
@@ -188,7 +189,7 @@ Match the existing hosted/local/beta pattern for the closest source.
 
 ## Standalone App Compatibility
 
-Per `ssapp` project instructions, Social Stream source edits belong in `C:\Users\steve\Code\social_stream`. The standalone app loads Social Stream source files remotely from that repo at startup. Do not make source changes in `ssapp/resources/social_stream_fallback` during normal work; that folder is a rebuilt fallback bundle.
+Per `ssapp` project instructions, Social Stream source edits belong in `<social_stream repo>`. The standalone app loads Social Stream source files remotely from that repo at startup. Do not make source changes in `ssapp/resources/social_stream_fallback` during normal work; that folder is a rebuilt fallback bundle.
 
 When adding a source, consider:
 

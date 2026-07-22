@@ -8,6 +8,15 @@ http://127.0.0.1:8124/v1/audio/speech
 
 It has no npm dependencies.
 
+## The Same-Computer Rule
+
+`127.0.0.1` and `localhost` mean "this same computer." If OBS is running on a different computer than your TTS server, do not point OBS at `127.0.0.1` for the server. Either:
+
+- run this bridge on the OBS computer and point `SSN_TTS_TARGET` at the TTS server's LAN IP, or
+- expose the bridge/server on your LAN and use that LAN IP from OBS.
+
+The simplest setup is usually: OBS -> bridge on the OBS computer -> TTS server.
+
 ## How SSN Calls It
 
 SSN sends the same OpenAI-compatible JSON body it would send to OpenAI:
@@ -35,10 +44,17 @@ $env:SSN_TTS_TARGET="http://127.0.0.1:8000/v1/audio/speech"
 node server.cjs
 ```
 
-SSN URL:
+SSN URL when the bridge is running on the OBS computer:
 
 ```text
 dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&voiceopenai=nova&openaiformat=wav
+```
+
+If your TTS server is on another computer, keep the SSN URL pointed at the local bridge, but set the bridge target to the server's LAN IP:
+
+```powershell
+$env:SSN_TTS_TARGET="http://192.168.x.x:8880/v1/audio/speech"
+node server.cjs
 ```
 
 Tested with SSN `dock.html` and `featured.html`:

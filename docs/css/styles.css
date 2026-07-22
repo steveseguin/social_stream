@@ -74,6 +74,8 @@ html.dark-mode {
 html {
     font-size: 62.5%; /* 10px = 1rem */
     scroll-behavior: smooth;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 body {
@@ -82,6 +84,7 @@ body {
     line-height: 1.6;
     color: var(--text-primary);
     background-color: var(--background-light);
+    max-width: 100%;
     overflow-x: hidden;
 }
 
@@ -380,6 +383,7 @@ nav a:hover::after, nav a.active::after {
 
 .hero-buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 2rem;
     justify-content: center;
 }
@@ -720,10 +724,13 @@ footer {
     font-family: var(--font-mono);
     font-size: 1.4rem;
     position: relative;
+    max-width: 100%;
 }
 
 .code-block-wrapper {
     display: flex;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .code-block pre {
@@ -733,6 +740,7 @@ footer {
     line-height: 1.5;
     user-select: text;
     cursor: text;
+    max-width: 100%;
     overflow-x: auto;
 }
 
@@ -743,6 +751,15 @@ code {
     font-family: var(--font-mono);
     font-size: 1.4rem;
     padding: 0rem 0.5rem;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+pre code {
+    display: block;
+    background: none;
+    border: none;
+    padding: 0;
 }
 
 
@@ -804,13 +821,14 @@ code {
     nav {
         position: fixed;
         top: 8rem;
-        right: -30rem;
-        width: 30rem;
+        right: 0;
+        width: min(30rem, calc(100vw - 4rem));
         height: 100vh;
         background-color: var(--background-light);
         padding: 4rem 2rem;
         box-shadow: var(--shadow-lg);
-        transition: right var(--transition-speed) ease;
+        transform: translateX(100%);
+        transition: transform var(--transition-speed) ease;
         z-index: 100;
     }
 
@@ -819,7 +837,7 @@ code {
     }
 
     nav.active {
-        right: 0;
+        transform: translateX(0);
     }
 
     nav ul {

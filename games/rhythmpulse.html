@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rhythm Pulse - Social Stream Ninja</title>
-    <link rel="icon" href="./favicon.ico" />
+    <link rel="icon" href="../favicon.ico" />
     <link rel="preload" href="../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
     <style>
         /* Hide scrollbars */
@@ -210,7 +210,7 @@
         }
         
         .drum-pad {
-            display: inline-block;
+            display: flex;
             width: 60px;
             height: 60px;
             margin: 5px;
@@ -218,7 +218,6 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
             cursor: pointer;
             transition: all 0.2s ease;
-            display: flex;
             align-items: center;
             justify-content: center;
             font-size: 24px;
@@ -649,9 +648,7 @@
                 });
                 return;
             }
-            if (drumSounds[soundType]) {
-                drumSounds[soundType](audioContext.currentTime);
-            }
+            drumSounds[soundType](audioContext.currentTime);
         }
 
         // Sound/beat keywords
@@ -739,7 +736,7 @@
             });
 
             // Calculate intensity based on message length and caps
-            analysis.intensity = Math.min(3, 1 + (text.length / 20) + (text === text.toUpperCase() ? 1 : 0));
+            analysis.intensity = Math.min(3, 1 + (text.length / 20) + (/[a-z]/i.test(text) && text === text.toUpperCase() ? 1 : 0));
 
             return analysis;
         }
@@ -780,7 +777,7 @@
             particle.textContent = note;
             particle.style.left = x + '%';
             particle.style.top = y + '%';
-            particle.style.color = '#' + Math.floor(Math.random()*16777215).toString(16);
+            particle.style.color = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6,'0');
             
             document.getElementById('rhythm-stage').appendChild(particle);
             
@@ -831,9 +828,9 @@
             const bpm = Math.round(60000 / avgInterval);
             
             // Smooth BPM changes
-            gameState.currentBPM = Math.round((gameState.currentBPM * 0.7) + (bpm * 0.3));
+            gameState.currentBPM = Math.max(60, Math.min(200, Math.round((gameState.currentBPM * 0.7) + (bpm * 0.3))));
             
-            return Math.max(60, Math.min(200, gameState.currentBPM));
+            return gameState.currentBPM;
         }
 
         // Determine genre from BPM
@@ -983,7 +980,7 @@
 
         // Setup iframe communication
         const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
         iframe.style.width = "0px";
         iframe.style.height = "0px";
         iframe.style.position = "fixed";
@@ -1049,7 +1046,7 @@
             const demoBeatWords = Object.keys(beatKeywords);
             const demoMusicians = ['BeatMaster', 'DrumBot', 'RhythmKing', 'BassQueen', 'SyncLord'];
             
-            setInterval(() => {
+            function demoBeat() {
                 const beat = demoBeatWords[Math.floor(Math.random() * demoBeatWords.length)];
                 const musician = demoMusicians[Math.floor(Math.random() * demoMusicians.length)];
                 const emojis = ['🎵', '🎶', '🥁', '🔊', '💥'];
@@ -1067,7 +1064,9 @@
                     chatname: musician,
                     chatmessage: messages[Math.floor(Math.random() * messages.length)]
                 });
-            }, 600 + Math.random() * 800);
+                setTimeout(demoBeat, 600 + Math.random() * 800);
+            }
+            setTimeout(demoBeat, 600 + Math.random() * 800);
         }
         
         // Drum pad click handlers
@@ -1090,6 +1089,9 @@
         initFrequencyBars();
         updateDisplay();
         initAudio();
+        
+        // Keep decaying BPM/sync display even when chat goes idle
+        setInterval(updateDisplay, 1000);
         
         // Fade out instructions after 30 seconds
         setTimeout(() => {

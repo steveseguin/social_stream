@@ -166,6 +166,11 @@ function normalizeVideoId(value) {
   const trimmed = value.trim();
   const match = trimmed.match(/\/videos\/(\d+)/) || trimmed.match(/video_id=(\d+)/);
   if (match) return match[1];
+  try {
+    const parsed = new URL(trimmed);
+    const watchId = parsed.searchParams.get('v');
+    if (watchId && /^\d+$/.test(watchId)) return watchId;
+  } catch (err) {}
   return trimmed;
 }
 

@@ -769,7 +769,7 @@
         // Create VDO.Ninja iframe
         function createIframe() {
             const iframe = document.createElement('iframe');
-			iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
+			iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(password) + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
             iframe.style.width = '0px';
             iframe.style.height = '0px';
             iframe.style.position = 'fixed';
@@ -882,7 +882,7 @@
                 if (content.chatname) {
                     const username = document.createElement('div');
                     username.className = 'username';
-                    username.innerHTML = content.chatname;
+                    username.textContent = content.chatname;
                     if (content.nameColor && style !== 'comic') {
                         username.style.color = content.nameColor;
                     }
@@ -922,7 +922,8 @@
                     
                     // For typewriter effect, we can still use HTML
                     if (style === 'typewriter') {
-                        text.innerHTML = content.chatmessage;
+                        if (content.textonly === true) text.textContent = content.chatmessage;
+                        else text.innerHTML = content.chatmessage;
                         // Add a typewriter cursor effect
                         const cursor = document.createElement('span');
                         cursor.className = 'typewriter-cursor';
@@ -936,7 +937,8 @@
                             }
                         }, 3000);
                     } else {
-                        text.innerHTML = content.chatmessage;
+                        if (content.textonly === true) text.textContent = content.chatmessage;
+                        else text.innerHTML = content.chatmessage;
                     }
                     
                     contentDiv.appendChild(text);

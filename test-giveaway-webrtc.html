@@ -181,11 +181,11 @@
         }
         
         function openGiveaway() {
-            window.open(`giveaway.html?session=${roomID}&password=${password}`, '_blank');
+            window.open(`giveaway.html?session=${roomID}&password=${encodeURIComponent(password)}`, '_blank');
         }
         
         function openOBS() {
-            window.open(`giveaway-obs-entries.html?session=${roomID}&password=${password}`, '_blank');
+            window.open(`giveaway-obs-entries.html?session=${roomID}&password=${encodeURIComponent(password)}`, '_blank');
         }
         
         // Initialize

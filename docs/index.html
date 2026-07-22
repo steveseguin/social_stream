@@ -4,8 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Social Stream Ninja Docs</title>
-  <meta name="description" content="Client-side Markdown documentation viewer for Social Stream Ninja.">
+  <meta name="description" content="Social Stream Ninja documentation, guides, knowledge base, support workflows, and AI agent notes.">
   <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+  <script>
+    // Honor the sitewide theme toggle stored by the other docs pages.
+    (function() {
+      var saved = localStorage.getItem('darkMode');
+      if (saved === 'true') {
+        document.documentElement.classList.add('dark-mode');
+      } else if (saved === 'false') {
+        document.documentElement.classList.add('light-mode');
+      }
+    })();
+  </script>
   <script defer src="../thirdparty/marked.umd.min.js"></script>
   <style>
     :root {
@@ -36,6 +47,32 @@
         --code-bg: #0f172a;
         --shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
       }
+    }
+
+    :root.dark-mode {
+      --bg: #10141b;
+      --panel: #171d26;
+      --panel-soft: #202938;
+      --text: #edf2f7;
+      --muted: #a8b4c4;
+      --line: #2d3748;
+      --accent: #2dd4bf;
+      --accent-strong: #5eead4;
+      --code-bg: #0f172a;
+      --shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    :root.light-mode {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel-soft: #eef3f8;
+      --text: #18212f;
+      --muted: #59687c;
+      --line: #d8e0ea;
+      --accent: #0f766e;
+      --accent-strong: #0b5f59;
+      --code-bg: #eef2f7;
+      --shadow: 0 12px 30px rgba(22, 34, 51, 0.12);
     }
 
     * {
@@ -328,6 +365,52 @@
       border-radius: 8px;
     }
 
+    .landing-intro {
+      max-width: 760px;
+      margin-bottom: 24px;
+    }
+
+    .landing-intro p {
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .landing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin: 22px 0;
+    }
+
+    .landing-card {
+      display: block;
+      min-height: 132px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
+      padding: 16px;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .landing-card:hover {
+      border-color: var(--accent);
+      text-decoration: none;
+    }
+
+    .landing-card strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--accent-strong);
+      font-size: 17px;
+    }
+
+    .landing-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
     .mobile-toggle {
       display: none;
     }
@@ -372,15 +455,18 @@
   <div class="app">
     <aside class="sidebar" id="sidebar">
       <div class="brand">
-        <img src="../media/logo.png" alt="Social Stream Ninja logo">
+        <img src="../icons/logo.svg" alt="Social Stream Ninja logo">
         <div>
           <strong>Social Stream Ninja</strong>
-          <span>Markdown docs viewer</span>
+          <span>Guides, support notes, and agent references</span>
         </div>
       </div>
       <input class="search" id="search" type="search" placeholder="Filter docs" autocomplete="off">
       <div class="nav-actions">
         <a class="button" href="../index.html">Home</a>
+        <a class="button" href="guides.html">Guides</a>
+        <a class="button" href="knowledge-base.html">Knowledge Base</a>
+        <a class="button" href="support.html">Support</a>
         <a class="button" href="https://github.com/steveseguin/social_stream" target="_blank" rel="noopener">GitHub</a>
       </div>
       <nav class="sidebar-content" id="sidebarContent" aria-label="Documentation navigation">Loading sitemap...</nav>
@@ -400,7 +486,7 @@
   </div>
 
   <script>
-    const DEFAULT_FILE = "agents/99-agent-index.md";
+    const DEFAULT_FILE = "agents/common-guides.md";
     const SITEMAP_FILE = "agents/SITEMAP.md";
     const state = { currentFile: DEFAULT_FILE };
 
@@ -424,10 +510,22 @@
       return index === -1 ? "" : value.slice(index);
     }
 
+    function splitLocalLink(path) {
+      const value = String(path || "");
+      const hash = getHash(value);
+      const withoutHash = hash ? value.slice(0, -hash.length) : value;
+      const queryIndex = withoutHash.indexOf("?");
+      return {
+        path: queryIndex === -1 ? withoutHash : withoutHash.slice(0, queryIndex),
+        query: queryIndex === -1 ? "" : withoutHash.slice(queryIndex),
+        hash
+      };
+    }
+
     function normalizeDocPath(path, baseFile) {
       if (!path) return DEFAULT_FILE;
       if (/^(https?:|mailto:|tel:)/i.test(path)) return path;
-      const cleaned = String(path).replace(/\\/g, "/");
+      const cleaned = splitLocalLink(path).path.replace(/\\/g, "/");
       const baseDir = baseFile && baseFile.includes("/") ? baseFile.split("/").slice(0, -1).join("/") + "/" : "";
       const url = new URL(cleaned, "https://docs.local/" + baseDir);
       const normalized = decodeURIComponent(url.pathname).replace(/^\/+/, "");
@@ -436,9 +534,58 @@
       return normalized;
     }
 
+    function resolveViewerLink(path, baseFile) {
+      if (!path || /^(https?:|mailto:|tel:)/i.test(path)) return null;
+      const parts = splitLocalLink(path);
+      const cleaned = parts.path.replace(/\\/g, "/");
+      const baseDir = baseFile && baseFile.includes("/") ? baseFile.split("/").slice(0, -1).join("/") + "/" : "";
+      const url = new URL(cleaned, "https://docs.local/docs/" + baseDir);
+      const pathname = decodeURIComponent(url.pathname);
+      if (pathname.startsWith("/docs/")) {
+        const docsPath = pathname.slice("/docs/".length);
+        if (!docsPath || docsPath.split("/").includes("..")) return null;
+        const normalized = docsPath.endsWith("/") ? docsPath + "index.md" : docsPath;
+        return {
+          docPath: normalized,
+          href: normalized + parts.query + parts.hash
+        };
+      }
+      return {
+        docPath: "",
+        href: ".." + pathname + parts.query + parts.hash
+      };
+    }
+
     function fileFromLocation() {
       const params = new URLSearchParams(window.location.search);
       return normalizeDocPath(params.get("file") || DEFAULT_FILE);
+    }
+
+    function hasRequestedFile() {
+      return new URLSearchParams(window.location.search).has("file");
+    }
+
+    function renderDocsHome() {
+      state.currentFile = "";
+      elements.content.className = "content";
+      elements.currentPath.textContent = "Docs home";
+      elements.rawLink.style.display = "none";
+      elements.content.innerHTML = `
+        <div class="landing-intro">
+          <h1>Social Stream Ninja Docs</h1>
+          <p>Start with the public guides for setup and troubleshooting. Use the advanced support library when you need deeper notes for support workflows or AI agents.</p>
+        </div>
+        <div class="landing-grid">
+          <a class="landing-card" href="guides.html"><strong>Guide Directory</strong><span>Searchable guide tree for OBS, platforms, AI, TTS, overlays, and automation.</span></a>
+          <a class="landing-card" href="knowledge-base.html"><strong>Knowledge Base</strong><span>Short fixes for blank overlays, wrong sessions, OBS audio, bots, YouTube, and TikTok.</span></a>
+          <a class="landing-card" href="obs-quick-start.html"><strong>OBS Quick Start</strong><span>Session, dock URL, overlay URL, and first browser source setup.</span></a>
+          <a class="landing-card" href="obs-troubleshooting.html"><strong>OBS Troubleshooting</strong><span>Decision tree for blank overlays, dock checks, sessions, and silent TTS.</span></a>
+          <a class="landing-card" href="platform-setup-picker.html"><strong>Platform Setup Picker</strong><span>Choose browser chat, popout chat, source page, desktop app, or API mode.</span></a>
+          <a class="landing-card" href="tts-setup-guide.html"><strong>TTS Setup Guide</strong><span>OBS-safe voice setup, provider choices, Kokoro notes, and audio routing.</span></a>
+          <a class="landing-card" href="ai-modes-guide.html"><strong>AI Modes</strong><span>Chat bot, cohost, moderation, RAG, overlay builder, and prompt routing basics.</span></a>
+          <a class="landing-card" href="?file=agents/common-guides.md"><strong>Advanced Support Library</strong><span>Detailed Markdown notes for support work, maintainers, and AI agents.</span></a>
+        </div>
+      `;
     }
 
     function updateUrl(path) {
@@ -562,13 +709,16 @@
           link.rel = "noopener";
           return;
         }
-        const target = normalizeDocPath(href, state.currentFile);
-        if (target.endsWith(".md")) {
-          link.href = `?file=${encodeURIComponent(stripHash(target))}${getHash(href)}`;
+        const target = resolveViewerLink(href, state.currentFile);
+        if (!target) return;
+        if (target.docPath.endsWith(".md")) {
+          link.href = `?file=${encodeURIComponent(stripHash(target.docPath))}${getHash(href)}`;
           link.addEventListener("click", event => {
             event.preventDefault();
-            loadDoc(target + getHash(href), true);
+            loadDoc(target.docPath + getHash(href), true);
           });
+        } else {
+          link.href = target.href;
         }
       });
     }
@@ -594,6 +744,7 @@
       elements.content.textContent = "Loading documentation...";
       elements.currentPath.textContent = cleanPath;
       elements.rawLink.href = cleanPath;
+      elements.rawLink.style.display = "";
       setActiveLink(cleanPath);
       if (push) updateUrl(cleanPath + hash);
       try {
@@ -662,11 +813,21 @@
       }
     });
 
-    window.addEventListener("popstate", () => loadDoc(fileFromLocation(), false));
+    window.addEventListener("popstate", () => {
+      if (hasRequestedFile()) {
+        loadDoc(fileFromLocation(), false);
+      } else {
+        renderDocsHome();
+      }
+    });
 
     document.addEventListener("DOMContentLoaded", async () => {
       await loadSitemap();
-      loadDoc(fileFromLocation() + window.location.hash, false);
+      if (hasRequestedFile()) {
+        loadDoc(fileFromLocation() + window.location.hash, false);
+      } else {
+        renderDocsHome();
+      }
     });
   </script>
 </body>

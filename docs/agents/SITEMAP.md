@@ -7,6 +7,7 @@ Use this as the static navigation source for `docs/index.html` and as a grep-fre
 ## Start Here
 
 - [Agent Brief](AGENT.md) - scope, write boundary, source priority, navigation, and validation rules.
+- [Common Guides And Support Routing](common-guides.md) - public guide shortcuts plus first-stop agent support routes.
 - [Master Agent Index](99-agent-index.md) - broad coverage summary and suggested next passes.
 - [Objective Coverage And Readiness Audit](15-objective-coverage-and-readiness-audit.md) - what is covered, what is answer-ready, and what still needs proof.
 - [Validation And Refresh Roadmap](14-validation-and-refresh-roadmap.md) - remaining source-check, browser, app, OBS, and support-history validation queue.
@@ -31,6 +32,7 @@ Use this as the static navigation source for `docs/index.html` and as a grep-fre
 
 ## Folder Sitemaps
 
+- [Standalone App Deep Docs](04-standalone-app/SITEMAP.md) - Electron main-process lifecycle, SSN loading/injection, IPC reference, control API + MCP, packaging/state.
 - [Overlays And Pages](07-overlays-and-pages/SITEMAP.md) - dock, featured, overlays, games, themes, alerts, and helper pages.
 - [Platform Sources](08-platform-sources/SITEMAP.md) - supported sites, source files, manifest rows, platform capability, and source families.
 - [API And Integrations](09-api-and-integrations/SITEMAP.md) - WebSocket/HTTP API, AI, TTS, OBS, StreamDeck, Event Flow, and Streamer.bot.
@@ -39,3 +41,9 @@ Use this as the static navigation source for `docs/index.html` and as a grep-fre
 - [Development](12-development/SITEMAP.md) - source development, repo map, shared code, testing, providers, and release boundaries.
 - [Reference](13-reference/SITEMAP.md) - commands, URL options, settings, features, costs, customization, privacy, glossary, and recipes.
 - [Templates](_templates/SITEMAP.md) - reusable documentation templates.
+
+## Other AI-Facing Areas
+
+- [Issues Tracker](issues/README.md) - bugs found during documentation passes, one file per issue, tracked for later fixing.
+- [Control Social Stream Skill](../skills/control-social-stream/SKILL.md) - operational skill for driving the standalone app via its localhost control API / MCP server; implementation details in [Control API And MCP](04-standalone-app/control-api-and-mcp.md).
+- [Generated Function And Event Catalogs](../md/) - auto-generated symbol/event dumps (`functions-ssapp*`, `functions-social*`, `events-*`); names only, no semantics — use the agents docs for behavior.

@@ -1,8 +1,8 @@
-const { chromium } = require('playwright');
-const { startStaticServer } = require('./playwright-static-server.cjs');
+const { chromium } = require("playwright");
+const { startStaticServer } = require("./playwright-static-server.cjs");
 
 const ROOT = process.cwd();
-const HOST = '127.0.0.1';
+const HOST = "127.0.0.1";
 const PORT = 4177;
 
 const FAKE_LOCAL_BROWSER_WORKER = `
@@ -47,275 +47,335 @@ self.onmessage = (event) => {
 `;
 
 function assert(condition, message) {
-  if (!condition) {
-    throw new Error(message);
-  }
+	if (!condition) {
+		throw new Error(message);
+	}
 }
 
 async function setupContext(context) {
-  const blockedExternalRequests = [];
+	const blockedExternalRequests = [];
 
-  await context.route('**/*', async (route) => {
-    const requestUrl = new URL(route.request().url());
-    const isHttp = requestUrl.protocol === 'http:' || requestUrl.protocol === 'https:';
-    const isLocal = requestUrl.hostname === HOST || requestUrl.hostname === 'localhost';
+	await context.route("**/*", async route => {
+		const requestUrl = new URL(route.request().url());
+		const isHttp = requestUrl.protocol === "http:" || requestUrl.protocol === "https:";
+		const isLocal = requestUrl.hostname === HOST || requestUrl.hostname === "localhost";
 
-    if (requestUrl.pathname.endsWith('/local-browser-model-worker.js')) {
-      await route.fulfill({
-        status: 200,
-        contentType: 'text/javascript; charset=utf-8',
-        headers: {
-          'Cross-Origin-Opener-Policy': 'same-origin',
-          'Cross-Origin-Embedder-Policy': 'require-corp',
-          'Cross-Origin-Resource-Policy': 'same-origin'
-        },
-        body: FAKE_LOCAL_BROWSER_WORKER
-      });
-      return;
-    }
+		if (requestUrl.pathname.endsWith("/local-browser-model-worker.js")) {
+			await route.fulfill({
+				status: 200,
+				contentType: "text/javascript; charset=utf-8",
+				headers: {
+					"Cross-Origin-Opener-Policy": "same-origin",
+					"Cross-Origin-Embedder-Policy": "require-corp",
+					"Cross-Origin-Resource-Policy": "same-origin"
+				},
+				body: FAKE_LOCAL_BROWSER_WORKER
+			});
+			return;
+		}
 
-    if (isHttp && !isLocal) {
-      blockedExternalRequests.push(route.request().url());
-      await route.abort();
-      return;
-    }
+		if (isHttp && !isLocal) {
+			blockedExternalRequests.push(route.request().url());
+			await route.abort();
+			return;
+		}
 
-    await route.continue();
-  });
+		await route.continue();
+	});
 
-  return blockedExternalRequests;
+	return blockedExternalRequests;
 }
 
 async function addInitScript(page) {
-  await page.addInitScript(() => {
-    function sanitize(value, depth = 0) {
-      if (depth > 5) return '[max-depth]';
-      if (typeof value === 'string') {
-        if (value.startsWith('data:')) {
-          return {
-            kind: 'data-url',
-            length: value.length,
-            prefix: value.slice(0, 24)
-          };
-        }
-        return value.length > 300 ? value.slice(0, 300) : value;
-      }
-      if (Array.isArray(value)) {
-        return value.map((entry) => sanitize(entry, depth + 1));
-      }
-      if (value && typeof value === 'object') {
-        const output = {};
-        Object.keys(value).forEach((key) => {
-          output[key] = sanitize(value[key], depth + 1);
-        });
-        return output;
-      }
-      return value;
-    }
+	await page.addInitScript(() => {
+		function sanitize(value, depth = 0) {
+			if (depth > 5) return "[max-depth]";
+			if (typeof value === "string") {
+				if (value.startsWith("data:")) {
+					return {
+						kind: "data-url",
+						length: value.length,
+						prefix: value.slice(0, 24)
+					};
+				}
+				return value.length > 300 ? value.slice(0, 300) : value;
+			}
+			if (Array.isArray(value)) {
+				return value.map(entry => sanitize(entry, depth + 1));
+			}
+			if (value && typeof value === "object") {
+				const output = {};
+				Object.keys(value).forEach(key => {
+					output[key] = sanitize(value[key], depth + 1);
+				});
+				return output;
+			}
+			return value;
+		}
 
-    window.__ssnWorkerLog = [];
-    window.__ssnWorkerIds = 0;
+		window.__ssnWorkerLog = [];
+		window.__ssnWorkerIds = 0;
+		window.__fakeAudioResources = [];
 
-    const NativeWorker = window.Worker;
-    window.Worker = class extends NativeWorker {
-      constructor(url, options) {
-        super(url, options);
-        this.__workerId = ++window.__ssnWorkerIds;
-        window.__ssnWorkerLog.push({
-          event: 'construct',
-          workerId: this.__workerId,
-          url: String(url)
-        });
-        this.addEventListener('message', (event) => {
-          window.__ssnWorkerLog.push({
-            event: 'message',
-            workerId: this.__workerId,
-            data: sanitize(event.data)
-          });
-        });
-      }
+		const NativeWorker = window.Worker;
+		window.Worker = class extends NativeWorker {
+			constructor(url, options) {
+				super(url, options);
+				this.__workerId = ++window.__ssnWorkerIds;
+				window.__ssnWorkerLog.push({
+					event: "construct",
+					workerId: this.__workerId,
+					url: String(url)
+				});
+				this.addEventListener("message", event => {
+					window.__ssnWorkerLog.push({
+						event: "message",
+						workerId: this.__workerId,
+						data: sanitize(event.data)
+					});
+				});
+			}
 
-      postMessage(message, transfer) {
-        window.__ssnWorkerLog.push({
-          event: 'postMessage',
-          workerId: this.__workerId,
-          data: sanitize(message)
-        });
-        return super.postMessage(message, transfer);
-      }
+			postMessage(message, transfer) {
+				window.__ssnWorkerLog.push({
+					event: "postMessage",
+					workerId: this.__workerId,
+					data: sanitize(message)
+				});
+				return super.postMessage(message, transfer);
+			}
 
-      terminate() {
-        window.__ssnWorkerLog.push({
-          event: 'terminate',
-          workerId: this.__workerId
-        });
-        return super.terminate();
-      }
-    };
+			terminate() {
+				window.__ssnWorkerLog.push({
+					event: "terminate",
+					workerId: this.__workerId
+				});
+				return super.terminate();
+			}
+		};
 
-    const fakeEnumerateDevices = async () => ([
-      { deviceId: 'fake-camera', kind: 'videoinput', label: 'Fake Camera', groupId: 'fake-video' },
-      { deviceId: 'fake-mic', kind: 'audioinput', label: 'Fake Microphone', groupId: 'fake-audio' }
-    ]);
+		const fakeEnumerateDevices = async () => [
+			{ deviceId: "fake-camera", kind: "videoinput", label: "Fake Camera", groupId: "fake-video" },
+			{ deviceId: "fake-mic", kind: "audioinput", label: "Fake Microphone", groupId: "fake-audio" }
+		];
 
-    const fakeGetUserMedia = async (constraints = {}) => {
-      const stream = new MediaStream();
+		const fakeGetUserMedia = async (constraints = {}) => {
+			const stream = new MediaStream();
 
-      if (constraints.video) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 640;
-        canvas.height = 360;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#122033';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '28px sans-serif';
-        ctx.fillText('Fake Camera', 24, 56);
-        const canvasStream = canvas.captureStream ? canvas.captureStream(4) : new MediaStream();
-        canvasStream.getVideoTracks().forEach((track) => stream.addTrack(track));
-      }
+			if (constraints.video) {
+				const canvas = document.createElement("canvas");
+				canvas.width = 640;
+				canvas.height = 360;
+				const ctx = canvas.getContext("2d");
+				ctx.fillStyle = "#122033";
+				ctx.fillRect(0, 0, canvas.width, canvas.height);
+				ctx.fillStyle = "#ffffff";
+				ctx.font = "28px sans-serif";
+				ctx.fillText("Fake Camera", 24, 56);
+				const canvasStream = canvas.captureStream ? canvas.captureStream(4) : new MediaStream();
+				canvasStream.getVideoTracks().forEach(track => stream.addTrack(track));
+			}
 
-      return stream;
-    };
+			if (constraints.audio) {
+				const AudioContext = window.AudioContext || window.webkitAudioContext;
+				const audioContext = new AudioContext();
+				const oscillator = audioContext.createOscillator();
+				const gain = audioContext.createGain();
+				const destination = audioContext.createMediaStreamDestination();
+				gain.gain.value = 0;
+				oscillator.connect(gain);
+				gain.connect(destination);
+				oscillator.start();
+				destination.stream.getAudioTracks().forEach(track => stream.addTrack(track));
+				window.__fakeAudioResources.push({ audioContext, oscillator, gain, destination });
+			}
 
-    Object.defineProperty(navigator, 'mediaDevices', {
-      configurable: true,
-      value: {
-        enumerateDevices: fakeEnumerateDevices,
-        getUserMedia: fakeGetUserMedia,
-        getDisplayMedia: fakeGetUserMedia,
-        addEventListener() {},
-        removeEventListener() {}
-      }
-    });
+			return stream;
+		};
 
-    window.__lastRecognition = null;
+		Object.defineProperty(navigator, "mediaDevices", {
+			configurable: true,
+			value: {
+				enumerateDevices: fakeEnumerateDevices,
+				getUserMedia: fakeGetUserMedia,
+				getDisplayMedia: fakeGetUserMedia,
+				addEventListener() {},
+				removeEventListener() {}
+			}
+		});
 
-    class FakeSpeechRecognition {
-      constructor() {
-        window.__lastRecognition = this;
-        this.continuous = true;
-        this.interimResults = true;
-        this.maxAlternatives = 1;
-        this.lang = 'en-US';
-        this.onstart = null;
-        this.onend = null;
-        this.onerror = null;
-        this.onresult = null;
-      }
+		window.__lastRecognition = null;
 
-      start() {
-        setTimeout(() => this.onstart && this.onstart(), 0);
-      }
+		class FakeSpeechRecognition {
+			constructor() {
+				window.__lastRecognition = this;
+				this.continuous = true;
+				this.interimResults = true;
+				this.maxAlternatives = 1;
+				this.lang = "en-US";
+				this.onstart = null;
+				this.onend = null;
+				this.onerror = null;
+				this.onresult = null;
+			}
 
-      stop() {
-        setTimeout(() => this.onend && this.onend(), 0);
-      }
-    }
+			start() {
+				setTimeout(() => this.onstart && this.onstart(), 0);
+			}
 
-    window.SpeechRecognition = FakeSpeechRecognition;
-    window.webkitSpeechRecognition = FakeSpeechRecognition;
-  });
+			stop() {
+				setTimeout(() => this.onend && this.onend(), 0);
+			}
+		}
+
+		window.SpeechRecognition = FakeSpeechRecognition;
+		window.webkitSpeechRecognition = FakeSpeechRecognition;
+	});
 }
 
 function findWorkerMessages(log, type, predicate) {
-  return log.filter((entry) => {
-    if (entry.event !== 'postMessage') return false;
-    if (!entry.data || entry.data.type !== type) return false;
-    return typeof predicate === 'function' ? predicate(entry) : true;
-  });
+	return log.filter(entry => {
+		if (entry.event !== "postMessage") return false;
+		if (!entry.data || entry.data.type !== type) return false;
+		return typeof predicate === "function" ? predicate(entry) : true;
+	});
 }
 
 (async () => {
-  const server = await startStaticServer({ root: ROOT, host: HOST, port: PORT });
+	const server = await startStaticServer({ root: ROOT, host: HOST, port: PORT });
 
-  try {
-    const browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext();
-    const blockedExternalRequests = await setupContext(context);
-    const page = await context.newPage();
+	try {
+		const browser = await chromium.launch({ headless: true });
+		const context = await browser.newContext();
+		const blockedExternalRequests = await setupContext(context);
+		const page = await context.newPage();
 
-    page.on('console', (msg) => {
-      console.log('PAGE_CONSOLE:', msg.type(), msg.text());
-    });
-    page.on('pageerror', (error) => {
-      console.log('PAGE_ERROR:', error.message);
-    });
+		page.on("console", msg => {
+			console.log("PAGE_CONSOLE:", msg.type(), msg.text());
+		});
+		page.on("pageerror", error => {
+			console.log("PAGE_ERROR:", error.message);
+		});
 
-    await addInitScript(page);
-    await page.goto(`http://${HOST}:${PORT}/cohost.html`, { waitUntil: 'domcontentloaded' });
+		await addInitScript(page);
+		await page.goto(`http://${HOST}:${PORT}/cohost.html`, { waitUntil: "domcontentloaded" });
 
-    await page.waitForSelector('#providerSelect');
-    await page.evaluate(() => {
-      localStorage.setItem('responseType_localqwen', 'text');
-    });
-    await page.waitForFunction(() => Array.from(document.querySelectorAll('#providerSelect option')).some((option) => option.value === 'localgemma'));
-    await page.selectOption('#providerSelect', 'localqwen');
-    await page.waitForFunction(() => document.getElementById('videoSource').disabled === false);
-    await page.waitForFunction(() => document.getElementById('audioSource').disabled === false);
-    await page.waitForFunction(() => document.getElementById('apiKey').disabled === true);
-    await page.selectOption('#videoSource', 'fake-camera');
-    await page.selectOption('#audioSource', 'fake-mic');
+		await page.waitForSelector("#providerSelect");
+		await page.evaluate(() => {
+			localStorage.setItem("responseType_localqwen", "text");
+		});
+		await page.waitForFunction(() => Array.from(document.querySelectorAll("#providerSelect option")).some(option => option.value === "localgemma"));
+		await page.selectOption("#providerSelect", "localqwen");
+		await page.waitForFunction(() => document.getElementById("videoSource").disabled === false);
+		await page.waitForFunction(() => document.getElementById("audioSource").disabled === false);
+		await page.waitForFunction(() => document.getElementById("apiKey").disabled === true);
+		await page.selectOption("#videoSource", "fake-camera");
+		await page.selectOption("#audioSource", "fake-mic");
 
-    await page.click('#startButton');
-    await page.waitForFunction(() => document.getElementById('startButton').dataset.started === 'true');
-    await page.evaluate(() => {
-      if (window.__lastRecognition && typeof window.__lastRecognition.onstart === 'function') {
-        window.__lastRecognition.onstart();
-      }
-    });
-    await page.waitForFunction(() => document.getElementById('voiceStatusLine').textContent.includes('Listening'));
-    await page.waitForFunction(() => document.getElementById('responses').textContent.includes('AI:Hi, introduce yourself in a sentence for me. Be friendly to me. [images:0]'));
-    await page.waitForFunction(() => !document.getElementById('sendButton').disabled && document.getElementById('sendButton').textContent.trim() === 'Send');
+		await page.click("#startButton");
+		await page.waitForFunction(() => document.getElementById("startButton").dataset.started === "true");
+		await page.waitForFunction(() => !!window.__lastRecognition);
+		await page.evaluate(() => {
+			if (window.__lastRecognition && typeof window.__lastRecognition.onstart === "function") {
+				window.__lastRecognition.onstart();
+			}
+		});
+		await page.waitForFunction(() => document.getElementById("voiceStatusLine").textContent.includes("Listening"));
+		await page.waitForFunction(() => document.getElementById("responses").textContent.includes("AI:Hi, introduce yourself in a sentence for me. Be friendly to me. [images:"));
+		await page.waitForFunction(() => !document.getElementById("sendButton").disabled && document.getElementById("sendButton").textContent.trim() === "Send");
 
-    await page.fill('.message-input', 'Confirm the local qwen 0.8B model is active.');
-    await page.press('.message-input', 'Enter');
-    await page.waitForFunction(() => document.getElementById('responses').textContent.includes('AI:Confirm the local qwen 0.8B model is active. [images:0]'));
+		await page.fill(".message-input", "Confirm the local qwen 0.8B model is active.");
+		await page.press(".message-input", "Enter");
+		await page.waitForFunction(() => document.getElementById("responses").textContent.includes("AI:Confirm the local qwen 0.8B model is active. [images:"));
+		await page.fill(".message-input", "Give one brief follow-up sentence.");
+		await page.press(".message-input", "Enter");
+		await page.waitForFunction(() => document.getElementById("responses").textContent.includes("AI:Give one brief follow-up sentence. [images:0]"));
 
-    const state = await page.evaluate(() => ({
-      workerLog: window.__ssnWorkerLog.slice(),
-      diagProvider: document.getElementById('diagProvider').textContent.trim(),
-      diagEvent: document.getElementById('diagEvent').textContent.trim(),
-      responses: document.getElementById('responses').textContent,
-      videoDisabled: document.getElementById('videoSource').disabled,
-      audioDisabled: document.getElementById('audioSource').disabled,
-      videoValue: document.getElementById('videoSource').value,
-      voiceStatus: document.getElementById('voiceStatusLine').textContent.trim(),
-      voiceHeard: document.getElementById('voiceHeardSummary').textContent.trim()
-    }));
+		const state = await page.evaluate(() => ({
+			workerLog: window.__ssnWorkerLog.slice(),
+			diagProvider: document.getElementById("diagProvider").textContent.trim(),
+			diagEvent: document.getElementById("diagEvent").textContent.trim(),
+			responses: document.getElementById("responses").textContent,
+			videoDisabled: document.getElementById("videoSource").disabled,
+			audioDisabled: document.getElementById("audioSource").disabled,
+			videoValue: document.getElementById("videoSource").value,
+			voiceStatus: document.getElementById("voiceStatusLine").textContent.trim(),
+			voiceHeard: document.getElementById("voiceHeardSummary").textContent.trim()
+		}));
 
-    const initMessage = findWorkerMessages(state.workerLog, 'init', (entry) => String(entry.data.modelId || '').includes('qwen3.5-0.8b-onnx'))[0];
-    assert(!!initMessage, 'Local Qwen 0.8B init was not sent.');
-    assert(initMessage.data.runtime && initMessage.data.runtime.modelClass === 'Qwen3_5ForCausalLM', 'Local Qwen 0.8B init did not use the Qwen runtime.');
-    assert(initMessage.data.runtime && initMessage.data.runtime.dtype && initMessage.data.runtime.dtype.embed_tokens === 'q4', 'Local Qwen 0.8B init did not use the q4 runtime.');
+		const initMessage = findWorkerMessages(state.workerLog, "init", entry => String(entry.data.modelId || "").includes("qwen3.5-0.8b-onnx"))[0];
+		assert(!!initMessage, "Local Qwen 0.8B init was not sent.");
+		assert(initMessage.data.runtime && initMessage.data.runtime.modelClass === "Qwen3_5ForConditionalGeneration", "Local Qwen 0.8B init did not use the multimodal Qwen runtime.");
+		assert(initMessage.data.runtime && initMessage.data.runtime.dtype && initMessage.data.runtime.dtype.embed_tokens === "q4", "Local Qwen 0.8B init did not use the q4 runtime.");
 
-    const generateMessages = findWorkerMessages(state.workerLog, 'generate');
-    assert(generateMessages.length >= 2, 'Local Qwen 0.8B did not generate for greeting and manual prompt.');
-    assert(generateMessages.every((entry) => entry.data.providerKey === 'localqwen'), 'Local Qwen 0.8B generate calls did not preserve the provider key.');
-    assert(generateMessages.every((entry) => String(entry.data.modelId || '').includes('qwen3.5-0.8b-onnx')), 'Local Qwen 0.8B generate calls did not preserve the model id.');
-    assert(generateMessages.every((entry) => Array.isArray(entry.data.images) && entry.data.images.length === 0), 'Local Qwen 0.8B should not attach vision frames.');
-    assert(!state.videoDisabled && !state.audioDisabled, 'Local Qwen 0.8B should leave capture selectors available.');
-    assert(state.videoValue === 'fake-camera', 'Local Qwen 0.8B should preserve the selected camera for the stream.');
-    assert(state.diagProvider.toLowerCase().includes('qwen'), 'Diagnostics did not report Local Qwen.');
-    assert(state.diagEvent.includes('generate.done'), 'Local Qwen 0.8B diagnostics did not report completion.');
-    assert(state.responses.includes('[images:0]'), 'Local Qwen 0.8B response did not complete through the UI.');
-    assert(state.voiceStatus.includes('|') && /text response|browser tts/i.test(state.voiceStatus), 'Visible speech status summary did not stay populated.');
-    assert(state.voiceHeard && state.voiceHeard !== '-', 'Visible heard summary did not update.');
+		const generateMessages = findWorkerMessages(state.workerLog, "generate");
+		assert(generateMessages.length >= 3, "Local Qwen 0.8B did not generate for greeting and both manual prompts.");
+		assert(
+			generateMessages.every(entry => entry.data.providerKey === "localqwen"),
+			"Local Qwen 0.8B generate calls did not preserve the provider key."
+		);
+		assert(
+			generateMessages.every(entry => String(entry.data.modelId || "").includes("qwen3.5-0.8b-onnx")),
+			"Local Qwen 0.8B generate calls did not preserve the model id."
+		);
+		assert(
+			generateMessages.every(entry => Array.isArray(entry.data.images) && entry.data.images.length <= 1),
+			"Local Qwen 0.8B sent an invalid frame payload."
+		);
+		const attachedFrameCount = generateMessages.reduce((total, entry) => total + entry.data.images.length, 0);
+		assert(attachedFrameCount <= 2, "Local Qwen 0.8B attached more frames than the startup transition can explain.");
+		assert(generateMessages.at(-1).data.images.length === 0, "Local Qwen 0.8B resent a stabilized static camera frame.");
+		assert(!state.videoDisabled && !state.audioDisabled, "Local Qwen 0.8B should leave capture selectors available.");
+		assert(state.videoValue === "fake-camera", "Local Qwen 0.8B should preserve the selected camera for the stream.");
+		assert(state.diagProvider.toLowerCase().includes("qwen"), "Diagnostics did not report Local Qwen.");
+		assert(state.diagEvent.includes("generate.done"), "Local Qwen 0.8B diagnostics did not report completion.");
+		assert(state.responses.includes("[images:"), "Local Qwen 0.8B response did not complete through the UI.");
+		assert(state.voiceStatus.includes("|") && /text response|browser tts/i.test(state.voiceStatus), "Visible speech status summary did not stay populated.");
+		assert(state.voiceHeard && state.voiceHeard !== "-", "Visible heard summary did not update.");
 
-    await page.click('#startButton');
-    await page.waitForFunction(() => document.getElementById('startButton').dataset.started === 'false');
+		await page.click("#startButton");
+		await page.waitForFunction(() => document.getElementById("startButton").dataset.started === "false");
 
-    const finalWorkerLog = await page.evaluate(() => window.__ssnWorkerLog.slice());
-    const terminateCount = finalWorkerLog.filter((entry) => entry.event === 'terminate').length;
-    assert(terminateCount >= 1, 'Stopping Local Qwen 0.8B did not terminate the worker.');
-    assert(blockedExternalRequests.length === 0, `External requests were attempted: ${blockedExternalRequests.join(', ')}`);
+		await page.selectOption("#providerSelect", "localqwen2b");
+		await page.waitForFunction(() => document.getElementById("apiKey").disabled === true);
+		await page.click("#startButton");
+		await page.waitForFunction(() => document.getElementById("startButton").dataset.started === "true");
+		await page.waitForFunction(() => window.__ssnWorkerLog.some(entry => entry.event === "postMessage" && entry.data?.type === "generate" && entry.data?.providerKey === "localqwen2b"));
+		await page.waitForFunction(() => !document.getElementById("sendButton").disabled && document.getElementById("sendButton").textContent.trim() === "Send");
+		await page.fill(".message-input", "Confirm the local qwen 2B quality model is active.");
+		await page.press(".message-input", "Enter");
+		await page.waitForFunction(() => document.getElementById("responses").textContent.includes("AI:Confirm the local qwen 2B quality model is active. [images:"));
+		await page.waitForFunction(() => document.getElementById("diagEvent").textContent.includes("localbrowser.localqwen2b.generate.done"));
 
-    console.log('PASS cohost local qwen 0.8b e2e');
-    await browser.close();
-  } finally {
-    server.close();
-  }
-})().catch((error) => {
-  console.error(error && error.stack ? error.stack : error);
-  process.exit(1);
+		const qwen2bState = await page.evaluate(() => ({
+			workerLog: window.__ssnWorkerLog.slice(),
+			diagProvider: document.getElementById("diagProvider").textContent.trim(),
+			diagEvent: document.getElementById("diagEvent").textContent.trim()
+		}));
+		const qwen2bInit = findWorkerMessages(qwen2bState.workerLog, "init", entry => entry.data.providerKey === "localqwen2b")[0];
+		assert(!!qwen2bInit, "Local Qwen 2B init was not sent.");
+		assert(qwen2bInit.data.modelId === "qwen3.5-2b-onnx-opt", "Local Qwen 2B did not use its optimized model id.");
+		assert(qwen2bInit.data.runtime?.modelClass === "Qwen3_5ForConditionalGeneration", "Local Qwen 2B did not use the multimodal Qwen runtime.");
+		assert(qwen2bInit.data.runtime?.generation?.text?.doSample === false, "Local Qwen 2B did not preserve its deterministic quality profile.");
+		const qwen2bGenerateMessages = findWorkerMessages(qwen2bState.workerLog, "generate", entry => entry.data.providerKey === "localqwen2b");
+		assert(qwen2bGenerateMessages.length >= 2, "Local Qwen 2B did not generate for greeting and manual prompt.");
+		assert(qwen2bState.diagProvider.includes("2B"), "Diagnostics did not report Local Qwen 2B.");
+		assert(qwen2bState.diagEvent.includes("generate.done"), "Local Qwen 2B diagnostics did not report completion.");
+
+		await page.click("#startButton");
+		await page.waitForFunction(() => document.getElementById("startButton").dataset.started === "false");
+
+		const finalWorkerLog = await page.evaluate(() => window.__ssnWorkerLog.slice());
+		const terminateCount = finalWorkerLog.filter(entry => entry.event === "terminate").length;
+		assert(terminateCount >= 2, "Switching and stopping local Qwen models did not terminate both workers.");
+		assert(blockedExternalRequests.length === 0, `External requests were attempted: ${blockedExternalRequests.join(", ")}`);
+
+		console.log("PASS cohost local qwen 0.8B/2B e2e");
+		await browser.close();
+	} finally {
+		server.close();
+	}
+})().catch(error => {
+	console.error(error && error.stack ? error.stack : error);
+	process.exit(1);
 });

@@ -75,7 +75,8 @@ window.addEventListener('unhandledrejection', (event) => {
 		
 		var name="";
 		try {
-			name = ele.querySelector("main>button>div>p.font-bold").textContent.trim();
+			var nameElement = ele.querySelector("main>button>div>p.font-bold, p.font-bold");
+			name = nameElement.textContent.trim();
 			name = escapeHtml(name);
 		} catch(e){
 		}
@@ -110,6 +111,10 @@ window.addEventListener('unhandledrejection', (event) => {
 			msg = getAllContentNodes(ele.children[ele.children.length-1]);
 		} catch(e){
 		}
+
+		if (!name || !msg){
+			return;
+		}
 		
 		
 		var data = {};
@@ -133,6 +138,28 @@ window.addEventListener('unhandledrejection', (event) => {
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
 		} catch(e){
 		}
+	}
+
+	var lastViewerCount = null;
+
+	function checkViewerCount(){
+		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode)){
+			return;
+		}
+
+		var viewerTab = document.querySelector("button[role='tab'][aria-controls*='content-live-viewers']");
+		if (!viewerTab){
+			return;
+		}
+
+		var countElement = viewerTab.querySelector("div");
+		var viewerCount = parseInt((countElement ? countElement.textContent : viewerTab.textContent).replace(/[^\d]/g, ""), 10);
+		if (isNaN(viewerCount) || viewerCount === lastViewerCount){
+			return;
+		}
+
+		lastViewerCount = viewerCount;
+		pushMessage({ type: "favorited", event: "viewer_update", meta: viewerCount });
 	}
 	
 	var settings = {};
@@ -209,6 +236,8 @@ window.addEventListener('unhandledrejection', (event) => {
 
 	setInterval(function(){
 		try {
+			checkViewerCount();
+
 			if (!document.querySelector('body').marked){
 				document.querySelector('body').marked=true;
 				console.log("CONNECTED chat detected");

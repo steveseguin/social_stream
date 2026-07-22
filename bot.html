@@ -659,7 +659,13 @@
 		.zero-width-emote-centered {
 		  vertical-align: top;
 		}
-		</style>
+			span.hl-badge svg {
+				width: 100% !important;
+				height: 100% !important;
+				max-width: 100% !important;
+				max-height: 100% !important;
+			}
+</style>
 	</head>
 	<body>
 		<div id="output" class="output"></div>
@@ -1098,12 +1104,50 @@
 			}
 			
 			
+			function removeHtmlTagsFromPlainTextField(value) {
+				return String(value || "")
+					.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
+					.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
+					.replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, "")
+					.replace(/<template\b[^>]*>[\s\S]*?<\/template>/gi, "")
+					.replace(/<[^>]*>/g, "");
+			}
+
 			function stripHtmlFunction(html) {
+				html = String(html == null ? "" : html);
+				try {
+					if (typeof DOMParser !== "undefined") {
+						let doc = new DOMParser().parseFromString(html, "text/html");
+						if (doc && doc.body) {
+							doc.body.querySelectorAll("script,style,noscript,template").forEach(function (node) {
+								node.remove();
+							});
+							return removeHtmlTagsFromPlainTextField(doc.body.textContent || "");
+						}
+					}
+				} catch (e) {}
 				let tmp = document.createElement("DIV");
 				tmp.innerHTML = html;
-				return tmp.textContent || tmp.innerText || "";
+				return removeHtmlTagsFromPlainTextField(tmp.textContent || tmp.innerText || "");
 			}
-			
+
+			function sanitizePlainTextAlertFields(data) {
+				if (!data) {
+					return;
+				}
+				["hasDonation", "donation", "membership", "hasMembership", "subtitle", "title"].forEach(function (field) {
+					if (typeof data[field] === "string") {
+						data[field] = stripHtmlFunction(data[field]);
+					}
+				});
+			}
+
+			function plainTextToHtml(value) {
+				let span = document.createElement("span");
+				span.textContent = value == null ? "" : String(value);
+				return span.innerHTML;
+			}
+
 			function upscaleImages(data) {
 				// for third party APIs
 				let chatimg = "";
@@ -1363,13 +1407,13 @@
 				scale = parseFloat(scale);
 				if (scale < 1) {
 					if (centering) {
-						document.body.style.transform = "scale(" + scale + "), 0%)";
+						document.body.style.transform = "scale(" + scale + ")";
 					} else {
 						document.body.style.transform = "scale(" + scale + ")";
 					}
 				} else {
 					if (centering) {
-						document.body.style.transform = "scale(" + scale + ") translate(-" + -1 * (scale * 50.0 - 50) + "%, 0%)";
+						document.body.style.transform = "scale(" + scale + ") translate(" + -1 * (scale * 50.0 - 50) + "%, 0%)";
 					} else {
 						document.body.style.transform = "scale(" + scale + ") translate(" + -1 * (50 - 50 / scale) + "%, 0%)";
 					}
@@ -1433,6 +1477,17 @@
 				timeoutDelay = parseInt(urlParams.get("showtime"));
 				if (isNaN(timeoutDelay)) { timeoutDelay = 20000; }
 			}
+
+			var hideAfterTTS = urlParams.has("hideaftertts");
+			var autoHideByLength = urlParams.has("autohide") || urlParams.has("autotime");
+			var minimumAutoHideDelay = parseInt(urlParams.get("mintime"), 10);
+			if (isNaN(minimumAutoHideDelay) || minimumAutoHideDelay < 0) { minimumAutoHideDelay = 4000; }
+			var maximumAutoHideDelay = parseInt(urlParams.get("maxtime"), 10);
+			if (isNaN(maximumAutoHideDelay) || maximumAutoHideDelay < minimumAutoHideDelay) { maximumAutoHideDelay = 30000; }
+			var hideAfterTTSDelay = parseInt(urlParams.get("hidedelay"), 10);
+			if (isNaN(hideAfterTTSDelay) || hideAfterTTSDelay < 0) { hideAfterTTSDelay = 500; }
+			var hideAfterTTSFallback = parseInt(urlParams.get("ttstimeout"), 10);
+			if (isNaN(hideAfterTTSFallback) || hideAfterTTSFallback < 1000) { hideAfterTTSFallback = 120000; }
 
 			var borderRadius = 0;
 			if (urlParams.has("rounded")) {
@@ -1829,7 +1884,7 @@
 			function RecvDataWindow() {
 				var iframe = document.createElement("iframe");
 
-				iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + lanonly + "&push&notmobile&label=bot&view=" + roomID + "&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
+				iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + lanonly + "&push&notmobile&label=bot&view=" + roomID + "&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
 
 				iframe.style.width = "0px";
 				iframe.style.height = "0px";
@@ -1874,6 +1929,7 @@
 				});
 			}
 
+			// Transport migration: this page already chooses socket OR iframe; do not start the iframe when a server socket is active.
 			if (!socketserver) {
 				RecvDataWindow(); // only load the iframe if not connecting via wss
 			}
@@ -1903,7 +1959,118 @@
 			}
 
 			var iframeTimeout = null;
-			var lastMessageId = null
+			var lastMessageId = null;
+			var botDisplayToken = 0;
+			var ttsCompletionTimer = null;
+
+			function getBotMessageText(contents) {
+			  var raw = contents && contents.chatmessage ? String(contents.chatmessage) : "";
+			  if (!raw) return "";
+			  // Text-only messages are literal text (deliberately left un-escaped upstream); never parse them as HTML.
+			  if (contents && contents.textonly) {
+				return raw.replace(/\s+/g, " ").trim();
+			  }
+			  // HTML mode: strip tags for the word-count estimate using an inert <template> so no
+			  // <img>/<script> in the (sanitized) markup can load resources or run on a live element.
+			  var text = "";
+			  try {
+				var tpl = document.createElement("template");
+				tpl.innerHTML = raw;
+				text = (tpl.content && tpl.content.textContent) || "";
+			  } catch (e) {
+				text = raw.replace(/<[^>]*>/g, " ");
+			  }
+			  return text.replace(/\s+/g, " ").trim();
+			}
+
+			function getBotAutoHideDelay(contents) {
+			  var text = getBotMessageText(contents);
+			  var wordCount = text ? text.split(/\s+/).length : 0;
+			  var estimatedDelay = 1500 + (wordCount * 350);
+			  return Math.max(minimumAutoHideDelay, Math.min(maximumAutoHideDelay, estimatedDelay));
+			}
+
+			function botTTSIsActive() {
+			  try {
+				if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) return true;
+				if (typeof TTS !== "undefined" && TTS.premiumQueueActive) return true;
+				if (typeof TTS !== "undefined" && TTS.audio && !TTS.audio.paused && !TTS.audio.ended) return true;
+			  } catch (e) {}
+			  return false;
+			}
+
+			function clearBotOverlay(options) {
+			  options = options || {};
+			  botDisplayToken += 1;
+			  lastMessageId = null;
+			  if (timeoutTimer) {
+				timeoutTimer.clear();
+				timeoutTimer = null;
+			  }
+			  if (ttsCompletionTimer) {
+				ttsCompletionTimer.clear();
+				ttsCompletionTimer = null;
+			  }
+			  if (nextComment) {
+				nextComment.clear();
+				nextComment = null;
+			  }
+			  if (options.clearQueue) {
+				queue = [];
+				if (queueTimer) {
+				  queueTimer.clear();
+				  queueTimer = null;
+				}
+			  }
+			  document.getElementById("output").classList.add(transitionType);
+			  if (options.advanceQueue) checkqueue(true);
+
+			  if (isIFrame) {
+				clearTimeout(iframeTimeout);
+				iframeTimeout = createReliableTimer(function () {
+				  parent.postMessage({ resizeWindow: { height: "0px" } }, "*");
+				}, 300);
+			  }
+			  sendToDisk(false);
+			  return true;
+			}
+
+			function hideBotOverlayForToken(displayToken, advanceQueue) {
+			  if (displayToken !== botDisplayToken) return false;
+			  clearBotOverlay({ advanceQueue: !!advanceQueue });
+			  return true;
+			}
+
+			function waitForBotTTSToFinish(displayToken, contents) {
+			  var startedAt = Date.now();
+			  var sawPlayback = botTTSIsActive();
+			  var startupGrace = 2500;
+
+			  function checkPlayback() {
+				if (displayToken !== botDisplayToken) return;
+				var active = botTTSIsActive();
+				if (active) sawPlayback = true;
+				if (sawPlayback && !active) {
+				  timeoutTimer = createReliableTimer(function () {
+					hideBotOverlayForToken(displayToken, true);
+				  }, hideAfterTTSDelay);
+				  return;
+				}
+				if (!sawPlayback && Date.now() - startedAt >= startupGrace) {
+				  timeoutTimer = createReliableTimer(function () {
+					hideBotOverlayForToken(displayToken, true);
+				  }, getBotAutoHideDelay(contents));
+				  return;
+				}
+				if (Date.now() - startedAt >= hideAfterTTSFallback) {
+				  hideBotOverlayForToken(displayToken, true);
+				  return;
+				}
+				ttsCompletionTimer = createReliableTimer(checkPlayback, 100);
+			  }
+
+			  ttsCompletionTimer = createReliableTimer(checkPlayback, 100);
+			}
 
 			function processData(data) {
 			  if (pseudodock) {
@@ -1989,31 +2156,12 @@
 				
 				return true;
 			  } else if (data && ("contents" in data)) { // clear
-				lastMessageId = null;
-				if (timeoutTimer) {
-				  timeoutTimer.clear();
-				  timeoutTimer = null;
-				}
-				document.getElementById("output").classList.add(transitionType);
-				if (nextComment) {
-				  nextComment.clear();
-				  nextComment = null;
-				}
-				
-				checkqueue(true);
-
-				if (isIFrame) {
-				  clearTimeout(iframeTimeout);
-				  iframeTimeout = createReliableTimer(function () {
-					parent.postMessage({ resizeWindow: { height: "0px" } }, "*");
-				  }, 300);
-				}
-
-				sendToDisk(data.contents);
-				return true;
+				return clearBotOverlay({ advanceQueue: true });
 			  } else if (data.action) {
 				console.log(data);
-				if (data.action === "toggleTTS" || data.action === "tts") {
+				if (data.action === "clearBotOverlay") {
+				  return clearBotOverlay({ clearQueue: true });
+				} else if (data.action === "toggleTTS" || data.action === "tts") {
 				  if ("value" in data) {
 					if (data.value == "toggle") {
 					  TTS.toggle();
@@ -2063,10 +2211,15 @@
 			
 			function showmessage(contents) {
 			  try {
+				var displayToken = ++botDisplayToken;
 				// Clear any existing timers first to prevent memory leaks
 				if (timeoutTimer) {
 				  timeoutTimer.clear();
 				  timeoutTimer = null;
+				}
+				if (ttsCompletionTimer) {
+				  ttsCompletionTimer.clear();
+				  ttsCompletionTimer = null;
 				}
 				
 				if (nextComment) {
@@ -2166,6 +2319,8 @@
 					  data.chatname = data.chatname.toString();
 					}
 
+					sanitizePlainTextAlertFields(data);
+
 					var memebershipHTML = "";
 
 					if (data.hasMembership) {
@@ -2174,7 +2329,7 @@
 					  }
 					  // doesn't have subtitles; shouldn't at least.
 					  data.membership = data.hasMembership.toString();
-					  memebershipHTML = data.membership;
+					  memebershipHTML = plainTextToHtml(data.membership);
 					} else if (data.membership) {
 					  if (data.membership === true) {
 						data.membership = getTranslation("membership", "Membership");
@@ -2183,12 +2338,12 @@
 					  }
 					  
 					  if (data.subtitle) {
-						memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+						memebershipHTML = '<div class="donation membership"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase()) + "</div><div class='subtitle'>" + plainTextToHtml(data.subtitle) + "</div></div>";
 					  } else {
-						memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div></div>";
+						memebershipHTML = '<div class="donation membership"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase()) + "</div></div>";
 					  }
 					} else if (data.subtitle) {
-					  memebershipHTML = '<div class="donation membership"><div class="subtitle">' + data.subtitle + "</div></div>";
+					  memebershipHTML = '<div class="donation membership"><div class="subtitle">' + plainTextToHtml(data.subtitle) + "</div></div>";
 					} else {
 					  data.membership = "";
 					}
@@ -2206,7 +2361,7 @@
 						if ("title" in data) {
 						  donationTitle = data.title;
 						}
-						donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+						donationHTML = '<div class="donation"><div class="donation-title">'+ plainTextToHtml(donationTitle) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + "</div></div>";
 						
 					  } else if ((data.type == "youtube") || (data.type == "youtubeshorts")) {
 						let donationTitle = getTranslation("donation", "DONATION");
@@ -2214,16 +2369,16 @@
 						  donationTitle = data.title;
 						}
 						if (memebershipHTML) {
-						  donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
+						  donationHTML = '<div class="donation">' + plainTextToHtml(data.hasDonation) + "</div>";
 						} else {
-						  donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+						  donationHTML = '<div class="donation"><div class="donation-title">'+ plainTextToHtml(donationTitle) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + "</div></div>";
 						}
 						
 					  } else if (data.title) {
-						donationHTML = '<div class="donation"><div class="donation-title">'+ data.title +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+						donationHTML = '<div class="donation"><div class="donation-title">'+ plainTextToHtml(data.title) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + "</div></div>";
 						
 					  } else {
-						donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
+						donationHTML = '<div class="donation">' + plainTextToHtml(data.hasDonation) + "</div>";
 					  }
 					} else {
 					  data.hasDonation = "";
@@ -2305,6 +2460,7 @@
 					}
 
 					var renderChatMessageAsText = !!(data.textonly && !largeImage);
+					// Trusted relay HTML: chatname/chatmessage are sanitized upstream in background.js before rendering here.
 					var renderedChatMessage = renderChatMessageAsText ? "" : data.chatmessage;
 
 					if (stacking) {
@@ -2420,20 +2576,16 @@
 					  TTS.speechMeta(data, true); // Add true as the second parameter to force speech
 					}
 
-					if (timeoutDelay) {
+					if (hideAfterTTS && TTS.speech) {
+					  waitForBotTTSToFinish(displayToken, data);
+					} else if (autoHideByLength || timeoutDelay) {
 					  if (timeoutTimer) {
 						timeoutTimer.clear();
 						timeoutTimer = null;
 					  }
 					  timeoutTimer = createReliableTimer(function () {
-						lastMessageId = null;
-						document.getElementById("output").classList.add(transitionType);
-						if (nextComment) {
-						  nextComment.clear();
-						  nextComment = null;
-						}
-						checkqueue(true);
-					  }, timeoutDelay);
+						hideBotOverlayForToken(displayToken, true);
+					  }, autoHideByLength ? getBotAutoHideDelay(data) : timeoutDelay);
 					}
 				  },
 				  500, // give time for the previous featured message to go fade/drop away

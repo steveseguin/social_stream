@@ -92,7 +92,8 @@ body, html {
     margin: 8px 0;
 }
 
-.text img {
+.text img,
+.text svg {
     max-width: 80px;
     max-height: 20px;
     vertical-align: bottom;
@@ -624,6 +625,45 @@ body.light-mode .meta-value.badge {
 <script type="text/javascript" src="currency.js"></script>
 <script>
     var urlParams = new URLSearchParams(window.location.search);
+    var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+    // Transport migration guard: only pages with full server parity may skip the legacy bridge.
+    var TRANSPORT_CAPABILITIES = {
+        serverFeed: true,
+        serverTargeted: false,
+        upstreamCommands: false,
+        customChannel: false,
+        legacyBridgeRequired: true,
+        legacyBridgeReason: "Event feature/clear clicks still use iframe connectedPeers for targeted overlay delivery.",
+        exclusiveServerParams: { server: false, server2: true, server3: false }
+    };
+    function versionAtLeast(value, minimum) {
+        var a = String(value || "").split(".");
+        var b = String(minimum || "").split(".");
+        var len = Math.max(a.length, b.length);
+        for (var i = 0; i < len; i++) {
+            var av = parseInt(a[i], 10) || 0;
+            var bv = parseInt(b[i], 10) || 0;
+            if (av > bv) return true;
+            if (av < bv) return false;
+        }
+        return true;
+    }
+    // Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+    function hasExclusiveServerTransport(caps) {
+        var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+        return (params.server === true && urlParams.has("server")) ||
+            (params.server2 !== false && urlParams.has("server2")) ||
+            (params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+    }
+    function useServerOnlyTransport() {
+        var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+        return hasExclusiveServerTransport(caps) &&
+            versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+            caps.serverFeed === true &&
+            caps.legacyBridgeRequired !== true &&
+            caps.upstreamCommands !== true &&
+            caps.customChannel !== true;
+    }
     var roomID = false;
     
     if (urlParams.has("session")){
@@ -700,7 +740,7 @@ body.light-mode .meta-value.badge {
 		return trimmed;
 	}
 
-    var password = "false";
+    var password = urlParams.get("password") || urlParams.get("pass") || urlParams.get("pw") || "false";
     var featuredMode = false;
     
     const chatContainer = document.getElementById('chat-container');
@@ -1869,7 +1909,49 @@ body.light-mode .meta-value.badge {
 		};
 	}
 
+    // Cross-transport dedupe: in server mode the same feed message can arrive over both
+    // the websocket relay and the VDO.Ninja bridge; render only the first copy.
+    var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
+    var recentTransportDeliveries = new Map();
+    function isDuplicateTransportDelivery(data) {
+    	if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) {
+    		return false;
+    	}
+    	if (!data || typeof data !== "object") {
+    		return false;
+    	}
+    	if (data.id === undefined || data.id === null) {
+    		return false;
+    	}
+    	if ("action" in data || "get" in data || "callback" in data || "mid" in data) {
+    		return false;
+    	}
+    	if (!(data.chatname || data.chatmessage || data.chatimg || data.hasDonation || data.membership || data.event || data.contentimg)) {
+    		return false;
+    	}
+    	var key =
+    		String(data.id) +
+    		"|" + (data.type || "") +
+    		"|" + (data.chatname || "") +
+    		"|" + String(data.chatmessage || "").slice(0, 100) +
+    		"|" + (data.hasDonation || "") +
+    		"|" + (data.event || "");
+    	var now = Date.now();
+    	recentTransportDeliveries.forEach(function (seenAt, seenKey) {
+    		if (now - seenAt > CROSS_TRANSPORT_DEDUPE_TTL_MS) {
+    			recentTransportDeliveries.delete(seenKey);
+    		}
+    	});
+    	if (recentTransportDeliveries.has(key)) {
+    		return true;
+    	}
+    	recentTransportDeliveries.set(key, now);
+    	return false;
+    }
     function addMessageToOverlay(data) {
+		if (isDuplicateTransportDelivery(data)) {
+			return;
+		}
 		if (data && String(data.type || '').toLowerCase() === 'obs') {
 			return;
 		}
@@ -1970,21 +2052,79 @@ body.light-mode .meta-value.badge {
 			} catch(e){console.error(e);}
 		}
 		
-		messageDiv.innerHTML = `
-			<div class="message-header">
-				<div class="message-meta">
-					${eventSpecificText ? `<div class="event-specific ${eventTypeClass || ''}">${eventSpecificText}</div>` : ''}
-					${eventTypeText ? `<div class="event-type">${eventTypeText}</div>` : ''}
-					<div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${displayName}</div>
-					${data.sourceicon ? `<img src="${data.sourceicon}" alt="${data.type}" class="source-icon">` : ''}
-				</div>
-			</div>
-			
-			<div class="text">${display.message || ''}</div>
-			${data.hasDonation ? `<div class="donation">💰 ${data.hasDonation}</div>` : ''}
-			${usdValue > 0 ? `<div class="usd-value">$${usdValue.toFixed(2)} USD</div>` : ''}
-			${hideTimestamps ? '' : `<div class="timestamp">${timeString}</div>`}
-		`;
+		messageDiv.textContent = '';
+
+		const header = document.createElement('div');
+		header.className = 'message-header';
+		const meta = document.createElement('div');
+		meta.className = 'message-meta';
+
+		if (eventSpecificText) {
+			const eventSpecific = document.createElement('div');
+			eventSpecific.className = 'event-specific';
+			if (eventTypeClass) {
+				eventSpecific.classList.add(eventTypeClass);
+			}
+			eventSpecific.textContent = eventSpecificText;
+			meta.appendChild(eventSpecific);
+		}
+
+		if (eventTypeText) {
+			const eventType = document.createElement('div');
+			eventType.className = 'event-type';
+			eventType.textContent = eventTypeText;
+			meta.appendChild(eventType);
+		}
+
+		const nameNode = document.createElement('div');
+		nameNode.className = 'name';
+		if (data.nameColor) {
+			nameNode.style.textShadow = '0 0 3px ' + data.nameColor;
+		}
+		nameNode.textContent = displayName;
+		meta.appendChild(nameNode);
+
+		if (data.sourceicon) {
+			const sourceIcon = document.createElement('img');
+			sourceIcon.src = data.sourceicon;
+			sourceIcon.alt = data.type || '';
+			sourceIcon.className = 'source-icon';
+			meta.appendChild(sourceIcon);
+		}
+
+		header.appendChild(meta);
+		messageDiv.appendChild(header);
+
+		const textNode = document.createElement('div');
+		textNode.className = 'text';
+		if (data.textonly === true) {
+			textNode.textContent = display.message || '';
+		} else {
+			// Renderable HTML mode is sanitized upstream in background.js.
+			textNode.innerHTML = display.message || '';
+		}
+		messageDiv.appendChild(textNode);
+
+		if (data.hasDonation) {
+			const donationNode = document.createElement('div');
+			donationNode.className = 'donation';
+			donationNode.textContent = '\uD83D\uDCB0 ' + data.hasDonation;
+			messageDiv.appendChild(donationNode);
+		}
+
+		if (usdValue > 0) {
+			const usdNode = document.createElement('div');
+			usdNode.className = 'usd-value';
+			usdNode.textContent = '$' + usdValue.toFixed(2) + ' USD';
+			messageDiv.appendChild(usdNode);
+		}
+
+		if (!hideTimestamps) {
+			const timestampNode = document.createElement('div');
+			timestampNode.className = 'timestamp';
+			timestampNode.textContent = timeString;
+			messageDiv.appendChild(timestampNode);
+		}
 
 		const metaDetailsNode = hideMetaPanels ? null : createMetaDetailsNode(data);
 		if (metaDetailsNode) {
@@ -2110,12 +2250,13 @@ body.light-mode .meta-value.badge {
         }
     }
 
-    var iframe = document.createElement("iframe"); // Keep iframe global
-	if (roomID){
+    var iframe = null; // Keep iframe global
+	if (roomID && !useServerOnlyTransport()){
+        iframe = document.createElement("iframe");
 		if (featuredMode){ // featuredMode is false by default in events.html
-			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${encodeURIComponent(password)}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
 		} else { // This is the path typically taken by events.html
-			iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
+			iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+encodeURIComponent(password)+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID;
 		}
 		iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
 	

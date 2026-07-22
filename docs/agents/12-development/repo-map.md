@@ -18,7 +18,7 @@ This page tells agents where SSN code lives and which repository should be chang
 
 ## Repository Roles
 
-`C:\Users\steve\Code\social_stream`
+`<social_stream repo>`
 
 - Primary Social Stream Ninja source of truth.
 - Chrome extension source.
@@ -30,13 +30,13 @@ This page tells agents where SSN code lives and which repository should be chang
 - Public docs under `docs/` plus root docs such as `README.md`, `api.md`, and `parameters.md`.
 - The only place this documentation project writes: `docs/agents/`.
 
-`C:\Users\steve\Code\ssapp`
+`<ssapp repo>`
 
 - Electron standalone app wrapper.
 - App-specific main/preload/renderer/state code.
 - App-specific platform handlers and IPC/security code.
 - Build/package/release artifact generation for the desktop app.
-- Loads Social Stream source from `C:\Users\steve\Code\social_stream` during development.
+- Loads Social Stream source from `<social_stream repo>` during development.
 
 ## Source Of Truth Rule
 

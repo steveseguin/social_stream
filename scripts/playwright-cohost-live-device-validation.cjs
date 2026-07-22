@@ -4,7 +4,8 @@ const { startStaticServer } = require('./playwright-static-server.cjs');
 const ROOT = process.cwd();
 const HOST = '127.0.0.1';
 const PORT = 4210;
-const CUSTOM_ENDPOINT = process.env.SSN_CUSTOM_OAI_ENDPOINT || 'http://10.0.0.36:11434/v1';
+const CUSTOM_ENDPOINT = process.env.SSN_CUSTOM_OAI_ENDPOINT || 'https://llm.socialstream.ninja/v1';
+const CUSTOM_API_KEY = process.env.SSN_CUSTOM_OAI_API_KEY || (CUSTOM_ENDPOINT.includes('llm.socialstream.ninja') ? 'test_token' : '');
 
 function assert(condition, message) {
   if (!condition) {
@@ -135,6 +136,9 @@ async function validateLocalQwen(page, selection) {
   assert(finalState.previewWidth > 0 && finalState.previewHeight > 0, 'Local Qwen should keep the camera preview live.');
   assert(finalState.diagError === '-', 'Local Qwen should not report a diagnostic error.');
   assert(finalState.replies.length >= 2, 'Local Qwen should answer both the greeting and the manual prompt.');
+  assert(finalState.replies.every((reply) => !/ChatGPT|Alibaba Cloud/i.test(reply)), 'Local Qwen should identify itself as the local AI co-host.');
+  assert(finalState.replies.every((reply) => !/(?:what would you like to chat about|how about that|how can I (?:help you|be of service)(?: today| further| with (?:that|this))?)\?\s*$/i.test(reply)), 'Local Qwen should remove generic trailing questions.');
+  assert(finalState.replies.every((reply) => !/\bmy name is (?!co-?host\b)/i.test(reply) && !/\?\s*$/.test(reply)), 'Local Qwen introductions should not invent a name or end with a question.');
   return {
     earlyState,
     sendingState,
@@ -146,29 +150,60 @@ async function validateLocalGemma(page, selection) {
   await stopIfRunning(page);
   await page.selectOption('#providerSelect', 'localgemma');
   await applyDeviceSelection(page, selection);
+  await page.evaluate(() => {
+    window.__liveGemmaGeneratePayloads = [];
+    const originalRequestWorker = LocalBrowserPublisher.prototype.requestWorker;
+    LocalBrowserPublisher.prototype.requestWorker = function (type, payload) {
+      if (type === 'generate') {
+        window.__liveGemmaGeneratePayloads.push({
+          prompt: String(payload?.prompt || ''),
+          imageCount: Array.isArray(payload?.images) ? payload.images.length : 0
+        });
+      }
+      return originalRequestWorker.apply(this, arguments);
+    };
+  });
   await page.click('#startButton');
-  await page.waitForTimeout(6000);
+  await page.waitForFunction(() => document.getElementById('startButton').dataset.started === 'true', null, { timeout: 240000 });
+  await waitForPreview(page, 30000);
+  await ensureMuted(page, 'muteMic', true);
+  await page.waitForFunction(() => document.querySelectorAll('#responses .assistant-message').length >= 1, null, { timeout: 240000 });
+  await page.waitForFunction(() => !document.getElementById('sendButton').disabled && document.getElementById('sendButton').textContent.trim() === 'Send', null, { timeout: 240000 });
+
+  const assistantCount = await page.locator('#responses .assistant-message').count();
+  await page.fill('.message-input', 'Describe what you see on camera in one short sentence.');
+  await page.click('#sendButton');
+  await page.waitForFunction((count) => document.querySelectorAll('#responses .assistant-message').length > count, assistantCount, { timeout: 240000 });
+  await page.waitForFunction(() => !document.getElementById('sendButton').disabled && document.getElementById('sendButton').textContent.trim() === 'Send', null, { timeout: 240000 });
+  await page.waitForFunction(() => document.getElementById('diagEvent').textContent.includes('localbrowser.localgemma.generate.done'), null, { timeout: 240000 });
 
   const state = await page.evaluate(() => ({
     started: document.getElementById('startButton').dataset.started,
     actionLine: document.getElementById('actionStatusLine').textContent.trim(),
     actionDetail: document.getElementById('actionStatusDetail').textContent.trim(),
     diagState: document.getElementById('diagState').textContent.trim(),
-    diagError: document.getElementById('diagError').textContent.trim()
+    diagEvent: document.getElementById('diagEvent').textContent.trim(),
+    diagError: document.getElementById('diagError').textContent.trim(),
+    previewWidth: document.getElementById('preview').videoWidth,
+    previewHeight: document.getElementById('preview').videoHeight,
+    generatePayloads: window.__liveGemmaGeneratePayloads || [],
+    replies: Array.from(document.querySelectorAll('#responses .assistant-message')).map((node) => node.textContent.trim()).slice(-2)
   }));
 
-  if (state.started === 'true') {
-    return { mode: 'started', state };
-  }
-
-  assert(state.diagState.toLowerCase() === 'error', 'Local Gemma should surface an error when the assets are not available.');
-  assert(/thirdparty\/models\/gemma4-e2b-it-onnx|browser\/cors access/i.test(state.diagError), 'Local Gemma should explain how to fix its missing asset access.');
-  return { mode: 'error', state };
+  assert(state.diagState.toLowerCase() === 'connected', 'Local Gemma should stay connected after generation.');
+  assert(state.diagError === '-', 'Local Gemma should not report a diagnostic error.');
+  assert(state.previewWidth > 0 && state.previewHeight > 0, 'Local Gemma should keep the selected camera preview available.');
+  assert(state.generatePayloads.length >= 2, 'Local Gemma should generate both greeting and manual responses.');
+  assert(state.generatePayloads.some((payload) => payload.imageCount === 1), 'Multimodal Local Gemma should attach a camera frame.');
+  assert(state.replies.length >= 2, 'Local Gemma should answer both the greeting and the manual prompt.');
+  return { mode: 'multimodal', state };
 }
 
 async function validateCustomOpenAI(page, selection) {
   await stopIfRunning(page);
   await page.selectOption('#providerSelect', 'customopenai');
+  await page.fill('#apiKey', CUSTOM_API_KEY);
+  await page.dispatchEvent('#apiKey', 'input');
   await page.fill('#customEndpoint', CUSTOM_ENDPOINT);
   await page.dispatchEvent('#customEndpoint', 'change');
   await page.waitForFunction(() => document.getElementById('customEndpointInfo').textContent.includes('Loaded'), null, { timeout: 60000 });
@@ -223,7 +258,9 @@ async function validateCustomOpenAI(page, selection) {
     const gemini = await validateGeminiMissingKey(page);
     const localQwen = await validateLocalQwen(page, selection);
     const localGemma = await validateLocalGemma(page, selection);
-    const customOpenAI = await validateCustomOpenAI(page, selection);
+    const customOpenAI = process.env.SSN_SKIP_CUSTOM_OAI === '1'
+      ? { mode: 'skipped', reason: 'SSN_SKIP_CUSTOM_OAI=1' }
+      : await validateCustomOpenAI(page, selection);
 
     console.log(JSON.stringify({
       devices: {

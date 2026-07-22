@@ -201,6 +201,7 @@
     let wordChain = ['HELLO'];
     let usedWords = new Set(['HELLO']);
     let scores = new Map();
+    let roundScores = new Map();
     let timeLeft = 60;
     let gameActive = true;
     let currentTheme = 'General';
@@ -337,6 +338,7 @@
         
         // Update score
         scores.set(username, (scores.get(username) || 0) + points);
+        roundScores.set(username, (roundScores.get(username) || 0) + points);
         
         // Update display
         document.getElementById('word-display').textContent = currentWord;
@@ -383,6 +385,7 @@
         // Reset game state
         wordChain = [currentWord];
         usedWords = new Set([currentWord]);
+        roundScores = new Map();
         timeLeft = 60;
         gameActive = true;
         comboMultiplier = 1;
@@ -418,8 +421,8 @@
     function endRound() {
         gameActive = false;
         
-        // Find winner
-        const winner = Array.from(scores.entries())
+        // Find round winner
+        const winner = Array.from(roundScores.entries())
             .sort((a, b) => b[1] - a[1])[0];
         
         if (winner) {
@@ -449,11 +452,11 @@
     }
     
     function processData(data) {
-        if (data.content) {
+        if (data && data.content) {
             data = data.content;
         }
         
-        if (!data.chatmessage || !data.chatname) return;
+        if (!data || !data.chatmessage || !data.chatname) return;
 
         let message = data.chatmessage;
         if (!data.textonly) {
@@ -461,8 +464,9 @@
         }
         message = message.trim();
 
-        // Check if it's a valid word attempt
-        if (message.length >= 3 && /^[a-zA-Z]+$/.test(message)) {
+        // Check if it's a plausible word attempt (starts with the required letter)
+        if (gameActive && message.length >= 3 && /^[a-zA-Z]+$/.test(message) &&
+            message[0].toUpperCase() === currentWord[currentWord.length - 1]) {
             processWord(stripHtml(data.chatname), message);
         }
     }
@@ -472,7 +476,7 @@
     
     // Setup iframe communication
     const iframe = document.createElement("iframe");
-    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
     iframe.style.width = "0px";
     iframe.style.height = "0px";
     iframe.style.position = "fixed";

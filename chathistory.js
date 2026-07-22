@@ -107,6 +107,47 @@ function initDatabase() {
     });
 }
 
+function removeHtmlTagsFromPlainText(value) {
+    return String(value || '')
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, '')
+        .replace(/<template\b[^>]*>[\s\S]*?<\/template>/gi, '')
+        .replace(/<[^>]*>/g, '');
+}
+
+function stripHtmlToPlainText(value) {
+    const text = String(value == null ? '' : value);
+    try {
+        if (typeof DOMParser !== 'undefined') {
+            const doc = new DOMParser().parseFromString(text, 'text/html');
+            if (doc && doc.body) {
+                doc.body.querySelectorAll('script,style,noscript,template').forEach(node => node.remove());
+                return removeHtmlTagsFromPlainText(doc.body.textContent || '');
+            }
+        }
+    } catch (e) {}
+    return removeHtmlTagsFromPlainText(text);
+}
+
+function escapeHtml(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function formatTsvField(value) {
+    const normalized = String(value || '').replace(/\t/g, ' ').replace(/\r?\n/g, ' ');
+    return /^\s*[=+\-@]/.test(normalized) ? `'${normalized}` : normalized;
+}
+
+function safePlainText(value) {
+    return escapeHtml(stripHtmlToPlainText(value));
+}
+
 function debounceFilters() {
     if (filterDebounceHandle) {
         clearTimeout(filterDebounceHandle);
@@ -366,6 +407,9 @@ function renderMessages() {
         return;
     }
 
+    // Stored relay HTML comes from the background.js path where non-text-only chat fields are sanitized
+    // before persistence. Text-only messages are deliberately stored raw (see background.js), so their
+    // chatmessage must be escaped here — matching how the live overlays (featured/dock) render text-only.
     const html = messages.map(message => `
         <div class="message-wrapper" id="message-${message.id}">
             <div class="message">
@@ -376,10 +420,10 @@ function renderMessages() {
                         ${message.type ? `<img src="https://socialstream.ninja/sources/images/${message.type}.png" alt="${message.type}" class="type-image" data-error-hide="self">` : ''}
                         <span class="timestamp">${formatTimestamp(message.timestamp)}</span>
                     </div>
-                    <p class="message-text">${message.chatmessage || ''}</p>
+                    <p class="message-text">${message.textonly ? escapeHtml(message.chatmessage || '') : (message.chatmessage || '')}</p>
                     ${message.contentimg ? `<img src="${message.contentimg}" alt="Content" class="content-image" data-error-hide="self">` : ''}
-                    ${message.hasDonation ? `<p class="donation">Donation: ${message.hasDonation}</p>` : ''}
-                    ${(message.membership || message.hasMembership) ? `<p class="membership">Membership: ${message.membership || message.hasMembership}</p>` : ''}
+                    ${message.hasDonation ? `<p class="donation">Donation: ${safePlainText(message.hasDonation)}</p>` : ''}
+                    ${(message.membership || message.hasMembership) ? `<p class="membership">Membership: ${safePlainText(message.membership || message.hasMembership)}</p>` : ''}
                 </div>
             </div>
         </div>
@@ -575,7 +619,15 @@ function exportMessages(format) {
                     break;
                 case 'tsv':
                     content = 'ID\tTimestamp\tUsername\tUserID\tType\tMessage\tDonation\n' +
-                        sorted.map(m => `${m.id}\t${m.timestamp}\t${m.chatname}\t${m.userid || ''}\t${m.type}\t${m.chatmessage}\t${m.hasDonation || ''}`).join('\n');
+                        sorted.map(m => [
+                            formatTsvField(m.id),
+                            formatTsvField(m.timestamp),
+                            formatTsvField(m.chatname),
+                            formatTsvField(m.userid),
+                            formatTsvField(m.type),
+                            formatTsvField(m.chatmessage),
+                            formatTsvField(m.hasDonation)
+                        ].join('\t')).join('\n');
                     break;
                 case 'html':
                     content = `

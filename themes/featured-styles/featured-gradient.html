@@ -475,7 +475,7 @@
         function createIframe() {
             var iframe = document.createElement("iframe");
             
-            iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
+            iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(password) + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
             
             iframe.style.width = "0px";
             iframe.style.height = "0px";
@@ -594,7 +594,7 @@
                 if (content.chatname) {
                     const name = document.createElement('span');
                     name.className = 'username';
-                    name.innerHTML = content.chatname;
+                    name.textContent = content.chatname;
                     header.appendChild(name);
                 }
 
@@ -633,7 +633,8 @@
                 if (content.chatmessage) {
                     const text = document.createElement('div');
                     text.className = 'text';
-                    text.innerHTML = content.chatmessage;
+                    if (content.textonly === true) text.textContent = content.chatmessage;
+                    else text.innerHTML = content.chatmessage;
                     if (content.textColor) {
                         text.style.color = content.textColor;
                     }

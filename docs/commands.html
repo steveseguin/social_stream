@@ -213,7 +213,8 @@
 					</ul>
 					<p>See the <a href="../api.md">full API documentation</a> for detailed setup guides and code samples.</p>
 				</div>
-			
+			</div>
+
 			<div class="command-card">
 				<h3>API Endpoints and Connection Methods</h3>
 				
@@ -314,6 +315,61 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 								<td><code>extContent</code></td>
 								<td>Sends external content as a chat message</td>
 								<td><code>https://io.socialstream.ninja/SESSIONID/extContent/null/{"chatname":"User","chatmessage":"Hello"}</code></td>
+							</tr>
+							<tr>
+								<td><code>pin</code></td>
+								<td>Pins an existing dock message by message ID, or pins a full message object. Requires <code>dock.html</code> open on the same session.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/pin/null/MESSAGE_MID</code></td>
+							</tr>
+							<tr>
+								<td><code>unpin</code></td>
+								<td>Unpins an existing dock message by message ID. Use the target field/path segment for a labeled dock.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/unpin/null/MESSAGE_MID</code></td>
+							</tr>
+							<tr>
+								<td><code>nextPinned</code></td>
+								<td>Features the first pinned dock message.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/nextPinned</code></td>
+							</tr>
+							<tr>
+								<td><code>removefromwaitlist</code></td>
+								<td>Removes the first active waitlist entry, or the numbered active entry in <code>value</code></td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/removefromwaitlist/null/1</code></td>
+							</tr>
+							<tr>
+								<td><code>highlightwaitlist</code></td>
+								<td>Highlights the first active waitlist entry, or the numbered active entry in <code>value</code></td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/highlightwaitlist/null/1</code></td>
+							</tr>
+							<tr>
+								<td><code>stopentries</code> / <code>startentries</code></td>
+								<td>Stops or resumes new waitlist entries without clearing the existing list. <code>openentries</code> and <code>resumeentries</code> are aliases for <code>startentries</code>.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/stopentries</code></td>
+							</tr>
+							<tr>
+								<td><code>selectwinner</code></td>
+								<td>Selects one or more random waitlist/draw winners</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/selectwinner/null/1</code></td>
+							</tr>
+							<tr>
+								<td><code>downloadwaitlist</code></td>
+								<td>Downloads the current waitlist as a TSV file from the running Social Stream page/app</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/downloadwaitlist</code></td>
+							</tr>
+							<tr>
+								<td><code>drawmode</code></td>
+								<td>Turns draw mode on/off, or toggles it when <code>value</code> is <code>toggle</code></td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/drawmode/null/toggle</code></td>
+							</tr>
+							<tr>
+								<td><code>waitlistmessage</code></td>
+								<td>Sets the waitlist or draw title message shown on the waitlist page</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/waitlistmessage/null/Type%20!join%20to%20enter</code></td>
+							</tr>
+							<tr>
+								<td><code>resetwaitlist</code></td>
+								<td>Clears the waitlist and reopens entries</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/resetwaitlist</code></td>
 							</tr>
 						</tbody>
 					</table>
@@ -821,6 +877,7 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 							<p>Turn on the features you want around the bot:</p>
 							<ul>
 								<li>Enable TTS for bot replies and choose a provider</li>
+								<li>Choose fixed, message-length, or after-TTS auto-hide behavior for <code>/bot.html</code>; use <code>clearBotOverlay</code> for manual clearing</li>
 								<li>Enable RAG and upload documents for knowledge-aware answers</li>
 								<li>Enable the censor bot for moderation or strict block mode</li>
 								<li>Open <code>/bot.html</code>, <code>/chatbot.html</code>, or <code>/cohost.html</code> in OBS or a browser as needed</li>
@@ -833,9 +890,9 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 					<h4>Detailed Documentation</h4>
 					<p>For complete setup instructions and deeper TTS coverage, use these guides:</p>
 					<div class="doc-links">
-						<a href="https://socialstream.ninja/ai" class="btn btn-primary" target="_blank">
+						<a href="chatbot-basics-guide.html" class="btn btn-primary">
 							<i class="fas fa-file-alt"></i>
-							<span>Complete AI Integration Guide</span>
+							<span>AI Chat Bot Setup Guide</span>
 						</a>
 						<a href="local-tts.html" class="btn btn-secondary">
 							<i class="fas fa-volume-up"></i>
@@ -845,9 +902,9 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 							<i class="fas fa-robot"></i>
 							<span>Twitch Bot Account Replies</span>
 						</a>
-						<a href="https://github.com/steveseguin/social_stream/blob/master/ai.md" class="btn btn-secondary" target="_blank">
-							<i class="fab fa-github"></i>
-							<span>AI Setup Documentation on GitHub</span>
+						<a href="https://ollama.com/download" class="btn btn-secondary" target="_blank" rel="noopener">
+							<i class="fas fa-download"></i>
+							<span>Official Ollama Download</span>
 						</a>
 					</div>
 				</div>
@@ -1058,7 +1115,7 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
         
         <div class="command-card">
             <h3>Creating Custom Overlays</h3>
-            <p>You can create completely custom chat overlays from scratch to match your stream's unique style and functino. Social Stream Ninja provides a flexible foundation that you can build upon.</p>
+            <p>You can create completely custom chat overlays from scratch to match your stream's unique style and function. Social Stream Ninja provides a flexible foundation that you can build upon.</p>
             
             <div class="overlay-options">
                 <div class="overlay-option">
@@ -1095,7 +1152,8 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
                 </ol>
             </div>
 		</div>
-				
+    </div>
+
 	</section>
 	
 	

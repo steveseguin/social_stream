@@ -387,6 +387,7 @@ body {
 					hideshortmessages: { description: "Hides messages shorter than specified length", type: "number" },
 					noemojisonly: { description: "Filters out messages containing only emojis", type: "boolean" },
 					stripemoji: { description: "Removes all emojis from messages", type: "boolean" },
+					stripnameemoji: { description: "Removes all emojis from usernames", type: "boolean" },
 					striphtml: { description: "Removes HTML formatting from messages", type: "boolean" },
 					striplinks: { description: "Removes links from messages", type: "boolean" },
 					activelinks: { description: "Makes URLs clickable", type: "boolean" },
@@ -532,9 +533,9 @@ body {
                 if (details.type === 'boolean') {
                     return `
                         <label class="switch">
-                            <input type="checkbox" class="param-value" 
+                            <input type="checkbox" class="param-value"
                                    data-param-key="${this.escapeHtml(key)}"
-                                   ${value === 'true' ? 'checked' : ''}>
+                                   ${this.isBooleanParamEnabled(value) ? 'checked' : ''}>
                             <span class="slider round"></span>
                         </label>`;
                 } else if (details.type === 'number' || details.type === 'float') {
@@ -609,7 +610,17 @@ body {
 
                         const valueInput = paramItem.querySelector('.param-value');
                         valueInput.addEventListener('input', (e) => {
-                            let newValue = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+                            if (e.target.type === 'checkbox') {
+                                if (e.target.checked) {
+                                    this.currentParams.set(key, 'true');
+                                } else {
+                                    this.currentParams.delete(key);
+                                }
+                                this.updateUrlInput();
+                                return;
+                            }
+
+                            let newValue = e.target.value;
                             if (this.validateParamValue(key, newValue)) {
                                 this.currentParams.set(key, newValue.toString());
                                 this.updateUrlInput();
@@ -839,6 +850,10 @@ body {
                     }
                 }
                 return { type: 'string', description: 'Custom parameter' };
+            }
+
+            isBooleanParamEnabled(value) {
+                return !/^(false|0|off|no)$/i.test(String(value == null ? '' : value).trim());
             }
 
             validateParamValue(param, value) {

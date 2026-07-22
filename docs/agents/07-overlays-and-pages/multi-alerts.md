@@ -22,8 +22,8 @@ On 2026-06-24, `node scripts/playwright-multi-alerts-overlay-e2e.cjs` was run fr
 
 ```text
 frame.waitForFunction: Timeout 30000ms exceeded.
-    at waitForPreviewFrame (C:\Users\steve\Code\social_stream\scripts\playwright-multi-alerts-overlay-e2e.cjs:212:15)
-    at async C:\Users\steve\Code\social_stream\scripts\playwright-multi-alerts-overlay-e2e.cjs:439:24
+    at waitForPreviewFrame (<social_stream repo>/scripts/playwright-multi-alerts-overlay-e2e.cjs:212:15)
+    at async <social_stream repo>/scripts/playwright-multi-alerts-overlay-e2e.cjs:439:24
 ```
 
 The failure happened while waiting for the popup preview iframe to expose `window.__multiAlertsOverlay.getSettings`. Do not use that run as evidence that multi-alert rendering, queueing, audio, filters, or server modes are validated.
@@ -81,13 +81,15 @@ Examples:
 
 - Follow: `new_follower`, `follow`, `followed`.
 - Subscription: `new_subscriber`, `subscription_gift`, `resub`, `sponsorship`, `giftpurchase`, `giftredemption`, `membermilestone`, plus older aliases such as `subscription`, `membership`, `new_member`, and `membership_upgrade`.
-- Donation/gift: `donation`, `gift`, `gift_sent`, `gift_message`, `live_gift`, `tiktok_gift`, `supersticker`, `tip`, `support`, and related aliases.
+- Donation/gift: `donation`, `superchat`, `supersticker`, `jeweldonation`, `gift`, `gift_sent`, `gift_message`, `live_gift`, `tiktok_gift`, `tip`, `support`, and related aliases.
 - Bits: `cheer`, `bits`.
 - Raid: `raid`, `host`, `hosting`, `redirect`.
 - Auction: `auction_update`.
 - Hype train: `hype_train`.
 
 Count/status events such as `viewer_update`, `viewer_updates`, `follower_update`, `subscriber_update`, `stream_status`, and ad-break events are not treated as normal alert cards.
+
+`superchat` stays a donation-category alert for layout/sound settings, but the rendered card keeps `data-event-key="superchat"` and an `event-superchat` class so custom CSS or future logic can treat it separately from generic `donation`.
 
 ## Important Payload Fields
 
@@ -152,7 +154,12 @@ Category styles:
 - `auctionstyle`
 - `hypestyle`
 
-Default style is `twitch`. HTML/CSS also defines `classic`, `twitch`, and `minimal` themes.
+Default style is `twitch`. HTML/CSS defines `twitch`, `classic`, `minimal`, and `solid` themes. `solid` is a flat preset: opaque card, no blur/glow/accent stripe, 7px default corner radius.
+
+Category accent colors (optional overrides; hex like `ff2d5e` or any CSS color):
+
+- `accent`: overrides the accent color for every category.
+- `followaccent`, `subaccent`, `donoaccent`, `bitsaccent`, `raidaccent`, `auctionaccent`, `hypeaccent`: per-category overrides that beat `accent`.
 
 Category disable/enable:
 
@@ -198,6 +205,14 @@ Layout/display:
 - `chroma`
 - `transparent` or `transparency`
 - `embedded`
+
+Opt-in style overrides (added 2026-07-03; absent params keep the stock look of every preset):
+
+- `flat`: solid card fills; removes translucent gradients, backdrop blur, glow, and drop shadows on all presets.
+- `radius`: corner radius in px for cards and media boxes, clamped 0 to 48 (`radius=7`). Non-numeric values fall back to 7.
+- `cardbg`: card background color; implies a solid card fill (`cardbg=18122b`). Pairs well with `flat`.
+- `textcolor`: main text color; the muted text color is derived at 85% alpha when a hex value is given.
+- `animation`: entrance/exit animation. One of `slidedown` (enters from the top edge, no fade), `slideup`, `pop`, or `none`. Unknown values, or `fade`, keep the default fade-and-rise.
 
 Source filters:
 

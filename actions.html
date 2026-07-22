@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
     <title>Actions Overlay - Social Stream Ninja</title>
     <script src="thirdparty/obs-websocket.min.js"></script>
     <script type="text/javascript" src="tts.js"></script>
@@ -321,6 +322,59 @@
         })(window);
 
         var urlParams = new URLSearchParams(window.location.search);
+
+        function resolveLocalMediaUrl(assetId) {
+            if (!assetId || !['127.0.0.1', 'localhost'].includes(window.location.hostname)) return '';
+            try {
+                return new URL('media/' + encodeURIComponent(assetId), new URL('.', window.location.href)).href;
+            } catch (error) {
+                console.error('[Local Media] Failed to resolve asset URL:', error);
+                return '';
+            }
+        }
+
+        function showLocalMediaDiagnostic(assetName) {
+            statusMessage.textContent = `Local media${assetName ? ` "${assetName}"` : ''} requires the Local Flow Actions URL from the Social Stream desktop app.`;
+            statusMessage.style.display = 'block';
+        }
+        var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+        // Transport migration guard: only pages with full server parity may skip the legacy bridge.
+        var TRANSPORT_CAPABILITIES = {
+            serverFeed: false,
+            serverTargeted: false,
+            upstreamCommands: false,
+            customChannel: true,
+            legacyBridgeRequired: true,
+            legacyBridgeReason: "Flow Actions uses channel 6 and sendTargetP2P('actions') is still bridge-only."
+        };
+        function versionAtLeast(value, minimum) {
+            var a = String(value || "").split(".");
+            var b = String(minimum || "").split(".");
+            var len = Math.max(a.length, b.length);
+            for (var i = 0; i < len; i++) {
+                var av = parseInt(a[i], 10) || 0;
+                var bv = parseInt(b[i], 10) || 0;
+                if (av > bv) return true;
+                if (av < bv) return false;
+            }
+            return true;
+        }
+        // Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+        function hasExclusiveServerTransport(caps) {
+            var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+            return (params.server === true && urlParams.has("server")) ||
+                (params.server2 !== false && urlParams.has("server2")) ||
+                (params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+        }
+        function useServerOnlyTransport() {
+            var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+            return hasExclusiveServerTransport(caps) &&
+                versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+                caps.serverFeed === true &&
+                caps.legacyBridgeRequired !== true &&
+                caps.upstreamCommands !== true &&
+                caps.customChannel !== true;
+        }
         var iframe = null;
         var connectedPeers = {};
         var roomID = "test";
@@ -1242,18 +1296,19 @@
                 setupSocket();
             }
             
-            // Create iframe for receiving WebRTC data channel messages
-            iframe = document.createElement("iframe");
-            iframe.connectedPeers = connectedPeers;
-            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password +
-                "&solo&view=" + roomID + "&novideo&noaudio&label=actions&cleanoutput&room=" + roomID;
-            iframe.style.width = "0px";
-            iframe.style.height = "0px";
-            iframe.style.position = "fixed";
-            iframe.style.left = "-100px";
-            iframe.style.top = "-100px";
-            iframe.id = "frame1";
-            document.body.appendChild(iframe);
+            if (!useServerOnlyTransport()) {
+                iframe = document.createElement("iframe");
+                iframe.connectedPeers = connectedPeers;
+                iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) +
+                    "&solo&view=" + roomID + "&novideo&noaudio&label=actions&cleanoutput&room=" + roomID;
+                iframe.style.width = "0px";
+                iframe.style.height = "0px";
+                iframe.style.position = "fixed";
+                iframe.style.left = "-100px";
+                iframe.style.top = "-100px";
+                iframe.id = "frame1";
+                document.body.appendChild(iframe);
+            }
             
             console.log("Actions page initialized with session ID:", roomID);
 
@@ -1328,7 +1383,11 @@
 
             switch (payload.actionType) {
                 case 'play_media':
-                    if (payload.url) {
+                    {
+                        const mediaUrl = payload.sourceType === 'local'
+                            ? resolveLocalMediaUrl(payload.localAssetId)
+                            : payload.url;
+                    if (mediaUrl) {
                         const opts = {
                             width: payload.width,
                             height: payload.height,
@@ -1339,10 +1398,13 @@
                             useLayer: payload.useLayer,
                             clearFirst: payload.clearFirst
                         };
-                        playMediaFullscreen(payload.url, payload.mediaType || 'iframe', payload.duration ?? defaultDuration, opts);
+						playMediaFullscreen(mediaUrl, payload.mediaType || 'iframe', payload.duration ?? defaultDuration, opts);
+					} else if (payload.sourceType === 'local') {
+						showLocalMediaDiagnostic(payload.localAssetName);
                     } else {
                         console.warn("Play media action received without a URL.");
                     }
+					}
                     break;
                     
                 case 'obs_scene_change':
@@ -1362,11 +1424,18 @@
                     break;
                     
                 case 'play_audio':
-                    if (payload.audioUrl) {
-                        playAudio(payload.audioUrl, payload.volume);
+					{
+						const audioUrl = payload.sourceType === 'local'
+							? resolveLocalMediaUrl(payload.localAssetId)
+							: payload.audioUrl;
+                    if (audioUrl) {
+						playAudio(audioUrl, payload.volume);
+					} else if (payload.sourceType === 'local') {
+						showLocalMediaDiagnostic(payload.localAssetName);
                     } else {
                         console.warn("Play audio action received without an audio URL.");
                     }
+					}
                     break;
                     
                 // OBS Browser Source API Actions
@@ -1691,7 +1760,7 @@
                         if (payload.allow === false || payload.allow === 'false' || payload.allow === 'off' || payload.allow === 0 || payload.allow === '0') {
                             allowForce = false;
                         }
-                        TTS.speak(payload.text, allowForce);
+                        TTS.speak(payload.text, allowForce, { voice: payload.voice });
                         console.log("[TTS] Speaking:", payload.text, "(force:", allowForce + ")");
                     } else if (!payload.text) {
                         console.warn("[TTS] No text provided for TTS action");
@@ -1804,6 +1873,14 @@
 					mediaElement.style.maxWidth = '95%';
 					mediaElement.style.maxHeight = '95%';
 					mediaElement.style.objectFit = 'contain';
+				} else if (mediaType === 'video') {
+					mediaElement = document.createElement('video');
+					mediaElement.src = url;
+					mediaElement.autoplay = true;
+					mediaElement.playsInline = true;
+					mediaElement.style.maxWidth = '95%';
+					mediaElement.style.maxHeight = '95%';
+					mediaElement.style.objectFit = 'contain';
 				} else {
 					mediaElement = document.createElement('iframe');
 					mediaElement.src = url;
@@ -1850,7 +1927,15 @@
 				mediaElement.style.objectFit = 'contain';
 				mediaElement.style.maxWidth = '100%'; // override global css
 				mediaElement.style.maxHeight = '100%';
-			} else { // Default to iframe for videos/embeds
+			} else if (mediaType === 'video') {
+				mediaElement = document.createElement('video');
+				mediaElement.src = url;
+				mediaElement.autoplay = true;
+				mediaElement.playsInline = true;
+				mediaElement.style.width = '100%';
+				mediaElement.style.height = '100%';
+				mediaElement.style.objectFit = 'contain';
+			} else { // Default to iframe for embeds
 				mediaElement = document.createElement('iframe');
 				mediaElement.src = url;
 				mediaElement.setAttribute('allow', 'autoplay; fullscreen');

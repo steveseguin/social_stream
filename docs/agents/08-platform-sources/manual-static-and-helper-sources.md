@@ -28,7 +28,6 @@ Many of these files are not routeable live chat parsers. Some add manual capture
 - `sources/whatnot.js`
 - `sources/autoreload.js`
 - `sources/capturevideo.js`
-- `sources/grabvideo.js`
 
 ## Routing Rule
 
@@ -36,7 +35,7 @@ Many of these files are not routeable live chat parsers. Some add manual capture
 | --- | --- | --- |
 | `sources/static/*` | Static/manual page helpers or optional platform extras. | Do not assume automatic live chat capture unless the file sends SSN payloads and exposes a routeable source. |
 | `sources/inject/*` | Main-world WebSocket interceptors consumed by a paired content script. | Do not treat them as standalone source integrations. |
-| `sources/capturevideo.js` / `grabvideo.js` | VDO.Ninja media publishing helpers/SDK experiments. | Do not treat them as chat capture files. |
+| `sources/capturevideo.js` | VDO.Ninja media publishing helper. | Do not treat it as a chat capture file. |
 | `sources/autoreload.js` | Personal/easter-egg reload helper. | Do not present it as a normal supported platform feature. |
 
 For normal platform capture, route to the platform doc, `source-file-processing-matrix.md`, and the exact source file.
@@ -67,7 +66,6 @@ These files are injected into the page's main JavaScript world because content s
 | File | Role | Settings/State | Support Notes |
 | --- | --- | --- | --- |
 | `sources/capturevideo.js` | Discord-channel VDO.Ninja auto-publisher. When `vdoninjadiscord` is enabled, it scans `video` elements, publishes them into a random `autopublish_*` VDO.Ninja room, adds view/copy indicators, and maintains a group scene link. It uses `captureStream` where available and has fallback media/canvas handling. | Setting `vdoninjadiscord`; random in-page room ID; Chrome storage/settings messages. | This is a media sharing helper, not chat capture. Failures are usually browser media API, Discord DOM, autoplay/audio, or VDO.Ninja connection issues. |
-| `sources/grabvideo.js` | Standalone `VDONinjaSDK` implementation with `connect`, `joinRoom`, `publish`, `view`, and `disconnect` methods for VDO.Ninja/custom signaling modes. | SDK configuration, signaling URL, ICE/TURN config, encryption mode, room/stream IDs. | Treat as a helper library/experiment unless a caller imports it. It is not listed as a manifest content script. |
 | `sources/autoreload.js` | Reload helper for URLs matching `https://*/*autoreloadwithsocialstream`. It reloads incomplete pages or pages where a Best Buy add-to-cart button is still disabled, and alerts when the button appears enabled. | URL marker only; runs regardless of extension enabled state. | This is explicitly an easter-egg/personal helper in source comments. Do not present it as general SSN platform support. |
 
 ## Support Answer Patterns

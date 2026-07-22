@@ -95,8 +95,10 @@ async function remoteHead(asset) {
 
 function upload(asset) {
 	if (asset.bytes > maxWranglerUploadBytes) {
-		console.log("upload-skip-too-large", asset.objectKey, `(${formatMb(asset.mb)} > ${maxWranglerUploadMb} MiB wrangler limit)`);
-		return false;
+		throw new Error(
+			`Cannot upload ${asset.objectKey} with Wrangler: ${formatMb(asset.mb)} exceeds the ${maxWranglerUploadMb} MiB limit. ` +
+			"Use the R2 S3 API or rclone multipart upload instead."
+		);
 	}
 	const objectPath = bucketName + "/" + asset.objectKey;
 	const result = spawnSync("npx", ["--yes", "wrangler", "r2", "object", "put", objectPath, "--file", asset.fullPath, "--remote"], {
@@ -108,7 +110,6 @@ function upload(asset) {
 	if (result.status !== 0) {
 		throw new Error("Upload failed for " + asset.path);
 	}
-	return true;
 }
 
 async function main() {
@@ -165,9 +166,8 @@ async function main() {
 		}
 
 		if (shouldUpload) {
-			if (upload(asset)) {
-				console.log("uploaded", asset.objectKey);
-			}
+			upload(asset);
+			console.log("uploaded", asset.objectKey);
 		}
 	}
 }

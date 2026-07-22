@@ -11,7 +11,7 @@ var isExtensionOn = false;
 var iframe = null;
 // Optional: Use VDONinjaSDK instead of iframe transport to reduce memory
 var ninjaBridge = null;
-var useNinjaSDK = false; // toggled via URL param &sdk, or can be wired to settings in future
+var useNinjaSDK = false; // toggled via URL params &sdk/&beta, or can be wired to settings in future
 
 var settings = {};
 var messageTimeout = {};
@@ -51,6 +51,38 @@ function getCachedCommaList(value, lowerCase = false, keepEmpty = false) {
 	trimSettingCache(settingCommaListCache);
 	settingCommaListCache.set(cacheKey, entries);
 	return entries;
+}
+
+function normalizeSourceType(sourceType) {
+	return String(sourceType || "")
+		.trim()
+		.toLowerCase();
+}
+
+function isViewerCountSourceHidden(sourceType) {
+	const normalizedType = normalizeSourceType(sourceType);
+	if (!normalizedType) {
+		return false;
+	}
+	const hiddenSources = getCachedCommaList(getSettingTextValue("hideViewerCountSources"), true);
+	return hiddenSources.some(source => source && (normalizedType === source || normalizedType.startsWith(source + "-")));
+}
+
+function filterViewerCountSnapshotMeta(meta) {
+	if (!meta || typeof meta !== "object" || Array.isArray(meta)) {
+		return meta;
+	}
+	const filtered = {};
+	Object.keys(meta).forEach(type => {
+		if (!checkIfAllowed(type) && !isSSAPP) {
+			return;
+		}
+		if (isViewerCountSourceHidden(type)) {
+			return;
+		}
+		filtered[type] = meta[type];
+	});
+	return filtered;
 }
 
 function getCachedRoleList(value) {
@@ -470,6 +502,10 @@ async function restoreBrowserHandle(key, mode = "readwrite") {
 
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
+function isTruthyUrlFlag(name) {
+	return urlParams.has(name) && !/^(0|false|off|no)$/i.test(urlParams.get(name) || "1");
+}
+var forceNinjaSDKFromUrl = isTruthyUrlFlag("sdk") || isTruthyUrlFlag("beta");
 var lastUseNinjaSDK = undefined; // track effective SDK usage across settings loads
 // initial default (may be recalculated when settings load)
 useNinjaSDK = false;
@@ -1595,7 +1631,7 @@ function loadSettings(item, resave = false) {
 	// Recompute effective SDK usage on settings load
 	try {
 		const settingsSDK = settings?.sdk?.setting === true || settings?.sdk === true || settings?.usesdk?.setting === true;
-		const effective = !!settingsSDK;
+		const effective = !!(forceNinjaSDKFromUrl || settingsSDK);
 		if (lastUseNinjaSDK === undefined) {
 			lastUseNinjaSDK = effective;
 		} else if (effective !== lastUseNinjaSDK) {
@@ -2432,11 +2468,16 @@ async function bringBackgroundPageToFrontForPicker() {
 
 		const backgroundTabs = await new Promise((resolve, reject) => {
 			try {
-				chrome.tabs.query({ url: backgroundUrl }, function (tabs) {
+				chrome.tabs.query({}, function (tabs) {
 					if (chrome.runtime.lastError) {
 						reject(chrome.runtime.lastError);
 					} else {
-						resolve(tabs || []);
+						resolve(
+							(tabs || []).filter(tab => {
+								const tabUrl = tab && (tab.url || tab.pendingUrl || "");
+								return tabUrl === backgroundUrl || tabUrl.startsWith(backgroundUrl + "?") || tabUrl.startsWith(backgroundUrl + "#");
+							})
+						);
 					}
 				});
 			} catch (err) {
@@ -4581,7 +4622,7 @@ async function processIncomingMessage(message, sender = null) {
 	return message;
 }
 
-chrome.runtime.onMessage.addListener(async function (request, sender, sendResponseReal) {
+async function handleRuntimeMessage(request, sender, sendResponseReal) {
 	var response = {};
 	var alreadySet = false;
 
@@ -4639,6 +4680,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode() });
 		} else if (request.cmd && request.cmd === "getOnOffState") {
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode() });
+		} else if (request.cmd && request.cmd === "getDockTransportHealth") {
+			sendResponse({ state: isExtensionOn, dockTransportHealth: getDockTransportHealth() });
 		} else if (request.cmd && request.cmd === "getSettings") {
 			ensureHandleStatusCache();
 			let responseData;
@@ -4762,10 +4805,19 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				return true; // Keep message channel open for async response
 			}
 
-			chrome.storage.local.set({
-				settings: settings
-			});
-			chrome.runtime.lastError;
+			chrome.storage.local.set(
+				{
+					settings: settings
+				},
+				function () {
+					const storageError = chrome.runtime.lastError;
+					sendResponse({
+						state: isExtensionOn,
+						saved: !storageError,
+						error: storageError ? storageError.message : undefined
+					});
+				}
+			);
 
 			// If SDK setting changed, reinitialize transport if extension is ON
 			try {
@@ -4775,8 +4827,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} catch (e) {
 				console.warn(e);
 			}
-
-			sendResponse({ state: isExtensionOn });
 
 			if (request.setting === "beepreturning" && request.value && !isSSAPP && !returningBeepHintShown) {
 				messagePopup({
@@ -4875,6 +4925,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "youtubeAudioPicker") {
 				pushSettingChange();
 			}
+			if (request.setting == "ignorepartibacklog") {
+				pushSettingChange();
+			}
 			if (request.setting == "vdoninjadiscord") {
 				pushSettingChange();
 			}
@@ -4896,7 +4949,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "twichadannounce") {
 				pushSettingChange();
 			}
-			if (request.setting == "autoLiveYoutube") {
+			if (request.setting == "disableAutoLiveYoutube") {
 				pushSettingChange();
 			}
 			if (request.setting == "relaytargets") {
@@ -5034,6 +5087,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "capturelikeevent") {
 				pushSettingChange();
 			}
+			if (request.setting == "captureyoutubelikes") {
+				pushSettingChange();
+			}
 			if (request.setting == "bttv") {
 				if (settings.bttv) {
 					clearAllWithPrefix("uid2bttv2.twitch:");
@@ -5095,6 +5151,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 			if (request.setting == "showviewercount") {
 				pushSettingChange();
+			}
+			if (request.setting == "hideViewerCountSources") {
+				publishViewerCountsFromMetaStore();
 			}
 
 			if (request.setting == "waitlistmode") {
@@ -5986,6 +6045,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "resetwaitlist") {
 			resetWaitlist();
 			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "resetleaderboard") {
+			broadcastLeaderboardReset();
+			sendResponse({ state: isExtensionOn, success: true });
 		} else if (request.cmd && request.cmd === "resettipjar") {
 			sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
 			sendResponse({ state: isExtensionOn });
@@ -6002,6 +6064,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "stopentries") {
 			toggleEntries(false);
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && (request.cmd === "startentries" || request.cmd === "openentries" || request.cmd === "resumeentries")) {
+			toggleEntries(true);
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && (request.cmd === "waitlistmessage" || request.cmd === "setwaitlistmessage")) {
+			setWaitlistMessage(request.value);
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "removefromwaitlist") {
 			removeWaitlist(parseInt(request.value) || 0);
@@ -6056,6 +6124,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn });
 			try {
 				sendTargetP2P({ action: "clearAlerts" }, "alerts");
+			} catch (e) {
+				console.error(e);
+			}
+		} else if (request.cmd && request.cmd === "clearBotOverlay") {
+			sendResponse({ state: isExtensionOn });
+			try {
+				sendTargetP2P({ action: "clearBotOverlay" }, "bot");
 			} catch (e) {
 				console.error(e);
 			}
@@ -6499,7 +6574,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 	} catch (e) {
 		console.warn(e);
 	}
-	return true; // Keep message channel open for async responses
+	return true;
+}
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponseReal) {
+	handleRuntimeMessage(request, sender, sendResponseReal).catch(error => console.warn(error));
+	return true; // Keep message channel open for async responses on Chrome 80+
 });
 
 const randomDigits = () => {
@@ -6619,9 +6699,61 @@ function ajax(object2send, url, ajaxType = "PUT", type = "application/json; char
 const metaDataStore = new Map(); // Using Map instead of {} for better cleanup
 let cleanUpLastTabs;
 
+function buildViewerCountsFromMetaStore() {
+	var counts = {};
+	for (const [tid, metaEntry] of metaDataStore) {
+		if (metaEntry.viewer_update && metaEntry.viewer_update.type) {
+			// Skip viewer counts from sites that are not opted-in or are viewer-count hidden.
+			if (!checkIfAllowed(metaEntry.viewer_update.type) || isViewerCountSourceHidden(metaEntry.viewer_update.type)) {
+				continue;
+			}
+
+			let count = parseInt(metaEntry.viewer_update.meta) || 0;
+
+			// Pump the numbers if enabled
+			if (settings.pumpTheNumbers) {
+				count = Math.round(count * 1.75);
+			}
+
+			counts[metaEntry.viewer_update.type] = (counts[metaEntry.viewer_update.type] || 0) + count;
+		}
+	}
+	return counts;
+}
+
+function publishViewerCountsFromMetaStore() {
+	var counts = buildViewerCountsFromMetaStore();
+	if (settings.hypemode) {
+		updateViewerCount({ event: "viewer_updates", meta: counts }); // updateViewerCount already calls combineHypeData and sends
+	}
+
+	var viewerUpdateEvent = { event: "viewer_updates", meta: counts };
+	sendDataP2P(viewerUpdateEvent);
+	sendTargetP2P(viewerUpdateEvent, "meta");
+	sendTargetP2P(viewerUpdateEvent, "aioverlay");
+}
+
+function hasTargetedMetaPayload(message) {
+	if (!message || typeof message !== "object" || !Object.prototype.hasOwnProperty.call(message, "meta")) {
+		return false;
+	}
+	if (message.meta && typeof message.meta === "object" && !Array.isArray(message.meta)) {
+		const metaKeys = Object.keys(message.meta);
+		if (metaKeys.length === 1 && metaKeys[0] === "webhookId") {
+			return false;
+		}
+	}
+	return true;
+}
+
 async function sendToDestinations(message) {
 	if (typeof message == "object") {
 		if (message.suppressRelay) {
+			return true;
+		}
+
+		const isTwitchAdEvent = message.type === "twitch" && ["ad_break", "ad_request", "ad_schedule"].includes(message.event);
+		if (isTwitchAdEvent && !settings.twichadannounce) {
 			return true;
 		}
 
@@ -6705,6 +6837,15 @@ async function sendToDestinations(message) {
 			}
 		}
 
+		if (message.event === "viewer_updates" && message.meta && typeof message.meta === "object") {
+			message = Object.assign({}, message, {
+				meta: filterViewerCountSnapshotMeta(message.meta)
+			});
+		}
+		if (message.event === "viewer_update" && !message.tid && isViewerCountSourceHidden(message.type)) {
+			return true;
+		}
+
 		if (message.event && message.tid && "meta" in message) {
 			if (["viewer_update", "follower_update"].includes(message.event)) {
 				let tabData = metaDataStore.get(message.tid);
@@ -6733,32 +6874,7 @@ async function sendToDestinations(message) {
 				}
 
 				if (message.event === "viewer_update") {
-					var viewerCounts = {};
-					for (const [tid, metaEntry] of metaDataStore) {
-						if (metaEntry.viewer_update && metaEntry.viewer_update.type) {
-							// Skip viewer counts from sites that are not opted-in
-							if (!checkIfAllowed(metaEntry.viewer_update.type)) {
-								continue;
-							}
-
-							let count = parseInt(metaEntry.viewer_update.meta) || 0;
-
-							// Pump the numbers if enabled
-							if (settings.pumpTheNumbers) {
-								count = Math.round(count * 1.75);
-							}
-
-							viewerCounts[metaEntry.viewer_update.type] = (viewerCounts[metaEntry.viewer_update.type] || 0) + count;
-						}
-					}
-					if (settings.hypemode) {
-						updateViewerCount({ event: "viewer_updates", meta: viewerCounts }); // updateViewerCount already calls combineHypeData and sends
-					}
-
-					var viewerUpdateEvent = { event: "viewer_updates", meta: viewerCounts };
-					sendDataP2P(viewerUpdateEvent);
-					sendTargetP2P(viewerUpdateEvent, "meta");
-					sendTargetP2P(viewerUpdateEvent, "aioverlay");
+					publishViewerCountsFromMetaStore();
 				}
 
 				return true;
@@ -6807,7 +6923,7 @@ async function sendToDestinations(message) {
 		console.error(e);
 	}
 	try {
-		if (message && typeof message === "object" && Object.prototype.hasOwnProperty.call(message, "meta")) {
+		if (hasTargetedMetaPayload(message)) {
 			sendTargetP2P(message, "meta");
 			sendTargetP2P(message, "aioverlay");
 		}
@@ -9187,6 +9303,230 @@ function getDockTransportHealth() {
 	};
 }
 
+function getStreamDeckRemoteControlRouter() {
+	return typeof window !== "undefined" ? window.StreamDeckRemoteControl : null;
+}
+
+async function getStreamDeckCapabilities() {
+	const router = getStreamDeckRemoteControlRouter();
+	if (!router || typeof router.buildCapabilities !== "function") {
+		return {
+			type: "capabilities",
+			version: 1,
+			runtime: isSSAPP ? "electron" : "web",
+			ssapp: { available: false },
+			ssn: { actions: {} }
+		};
+	}
+
+	let ssapp = { available: false };
+	if (isSSAPP && ipcRenderer && typeof ipcRenderer.invoke === "function") {
+		try {
+			const response = await ipcRenderer.invoke("ssapp:background-command", {
+				cmd: "streamDeckSourceCommand",
+				action: "getCapabilities"
+			});
+			if (response && response.ok === true && response.payload && response.payload.available === true) {
+				ssapp = response.payload;
+				if (!ssapp.version && typeof ipcRenderer.sendSync === "function") {
+					try {
+						ssapp.version = ipcRenderer.sendSync("getVersion") || null;
+					} catch (error) {}
+				}
+				if (typeof ssapp.bridgeVersion !== "number") {
+					ssapp.bridgeVersion = 1;
+				}
+			}
+		} catch (error) {
+			console.warn("[StreamDeck] SSApp capability provider unavailable", error?.message || error);
+		}
+	}
+
+	return router.buildCapabilities({
+		runtime: isSSAPP ? "electron" : "web",
+		ssapp
+	});
+}
+
+function sendStreamDeckCallback(socket, request, result) {
+	if (!request || !request.get || !socket || socket.readyState !== WebSocket.OPEN) {
+		return false;
+	}
+	socket.send(
+		JSON.stringify({
+			callback: {
+				get: request.get,
+				result
+			}
+		})
+	);
+	return true;
+}
+
+function sendStreamDeckCommandResult(socket, request, result) {
+	if (!socket || socket.readyState !== WebSocket.OPEN) {
+		return false;
+	}
+	if (sendStreamDeckCallback(socket, request, result)) {
+		return true;
+	}
+	socket.send(
+		JSON.stringify({
+			type: "commandResult",
+			action: request && request.action ? request.action : null,
+			result
+		})
+	);
+	return true;
+}
+
+const recentInboundWebhookDeliveries = new Map();
+function normalizeInboundWebhookId(value) {
+	if (value === undefined || value === null || value === "") {
+		return "";
+	}
+	return String(value).trim();
+}
+
+function getInboundWebhookDeliveryId(provider, payload) {
+	if (!payload || typeof payload !== "object") {
+		return "";
+	}
+	if (provider === "stripe") {
+		return normalizeInboundWebhookId(payload.id || (payload.data && payload.data.object && payload.data.object.id));
+	}
+	if (provider === "kofi") {
+		return normalizeInboundWebhookId(payload.message_id);
+	}
+	if (provider === "bmac") {
+		return normalizeInboundWebhookId(payload.event_id || payload.id || (payload.data && (payload.data.id || payload.data.transaction_id || payload.data.support_id)));
+	}
+	if (provider === "fourthwall") {
+		return normalizeInboundWebhookId(payload.id || (payload.data && payload.data.id));
+	}
+	return "";
+}
+
+function setInboundWebhookMeta(message, webhookId) {
+	if (!message || !webhookId) {
+		return message;
+	}
+	message.meta = Object.assign({}, message.meta || {}, { webhookId: String(webhookId) });
+	return message;
+}
+
+function isDuplicateInboundWebhook(provider, webhookId) {
+	if (!webhookId) {
+		return false;
+	}
+	const now = Date.now();
+	const maxAge = 15 * 60 * 1000;
+	const key = String(provider || "webhook") + ":" + String(webhookId);
+	recentInboundWebhookDeliveries.forEach((seenAt, seenKey) => {
+		if (now - seenAt > maxAge) {
+			recentInboundWebhookDeliveries.delete(seenKey);
+		}
+	});
+	if (recentInboundWebhookDeliveries.has(key)) {
+		return true;
+	}
+	recentInboundWebhookDeliveries.set(key, now);
+	return false;
+}
+
+// The io HTTP bridge holds the webhook sender's HTTP response open until a client
+// answers the callback pid (or its 5s timeout fires); ack before processing so
+// senders like Ko-fi get a fast response and don't time out and retry the delivery.
+function ackInboundWebhookDelivery(socket, data) {
+	if (!data || !data.get) {
+		return;
+	}
+	try {
+		if (socket && socket.readyState === WebSocket.OPEN) {
+			socket.send(JSON.stringify({ callback: { get: data.get, result: true } }));
+		}
+	} catch (e) {}
+	data.get = false;
+}
+
+const STREAM_DECK_SOURCE_RESPONSE_FIELDS = ["id", "target", "tabId", "username", "videoId", "connectionMode", "activeConnectionMode", "status", "isVisible", "isMuted", "autoActivate", "groupId"];
+
+function sanitizeStreamDeckSourceResponse(source) {
+	if (!source || typeof source !== "object" || Array.isArray(source)) {
+		return source;
+	}
+	const sanitized = {};
+	for (const field of STREAM_DECK_SOURCE_RESPONSE_FIELDS) {
+		if (Object.prototype.hasOwnProperty.call(source, field)) {
+			sanitized[field] = source[field];
+		}
+	}
+	return sanitized;
+}
+
+function sanitizeStreamDeckSsappPayload(value, parentKey = "") {
+	if (Array.isArray(value)) {
+		if (parentKey === "sources") {
+			return value.map(sanitizeStreamDeckSourceResponse);
+		}
+		return value.map(item => sanitizeStreamDeckSsappPayload(item));
+	}
+	if (!value || typeof value !== "object") {
+		return value;
+	}
+	if (parentKey === "source") {
+		return sanitizeStreamDeckSourceResponse(value);
+	}
+	const sanitized = {};
+	for (const [key, child] of Object.entries(value)) {
+		sanitized[key] = sanitizeStreamDeckSsappPayload(child, key);
+	}
+	return sanitized;
+}
+
+async function handleStreamDeckSsappRequest(request) {
+	const router = getStreamDeckRemoteControlRouter();
+	if (!router) {
+		return {
+			ok: false,
+			request: request && request.get ? request.get : null,
+			error: {
+				code: "UNSUPPORTED_ACTION",
+				message: "Stream Deck remote control router is unavailable."
+			}
+		};
+	}
+
+	const normalizedAction = router.normalizeAction(request.action);
+	const capabilities = await getStreamDeckCapabilities();
+	if (!capabilities || !capabilities.ssapp || capabilities.ssapp.available !== true) {
+		return router.makeError(request, "SSAPP_UNAVAILABLE", "SSApp source controls are unavailable in this runtime.");
+	}
+	if (!router.isSsappActionSupported(normalizedAction, capabilities)) {
+		return router.makeError(request, "UNSUPPORTED_ACTION", "SSApp action is not supported by the advertised capabilities.");
+	}
+
+	try {
+		const response = await ipcRenderer.invoke("ssapp:background-command", {
+			cmd: "streamDeckSourceCommand",
+			request: {
+				...request,
+				action: normalizedAction
+			}
+		});
+
+		if (response && response.ok === false) {
+			const error = response.error && typeof response.error === "object" ? response.error : {};
+			return router.makeError(request, error.code || response.code || "UNSUPPORTED_ACTION", error.message || response.message || "SSApp command failed.");
+		}
+
+		const payload = response && "payload" in response ? response.payload : response;
+		return router.makeResponse(request, sanitizeStreamDeckSsappPayload(payload));
+	} catch (error) {
+		return router.makeError(request, "SSAPP_UNAVAILABLE", error?.message || "SSApp command bridge failed.");
+	}
+}
+
 function setupSocket() {
 	if (!settings.socketserver) {
 		return;
@@ -9280,6 +9620,22 @@ function setupSocket() {
 				data.target = "";
 			}
 
+			const streamDeckRouter = getStreamDeckRemoteControlRouter();
+			if (streamDeckRouter && streamDeckRouter.isCapabilityRequest(data)) {
+				const capabilities = await getStreamDeckCapabilities();
+				if (data.get) {
+					sendStreamDeckCallback(socketserver, data, capabilities);
+				} else if (socketserver && socketserver.readyState === WebSocket.OPEN) {
+					socketserver.send(JSON.stringify(capabilities));
+				}
+				return;
+			}
+			if (streamDeckRouter && streamDeckRouter.isSsappRequest(data)) {
+				const result = await handleStreamDeckSsappRequest(data);
+				sendStreamDeckCommandResult(socketserver, data, result);
+				return;
+			}
+
 			if (data.action && data.action === "eventFlowEvent" && data.value) {
 				resp = await processEventFlowBridgeEvent(data.value);
 			} else if (data.action && data.action === "sendChat" && data.value) {
@@ -9288,6 +9644,11 @@ function setupSocket() {
 				if (data.target) {
 					outgoingMessage.destination = data.target;
 				}
+				const requestedTabId = "tabId" in data ? data.tabId : data.tid;
+				const normalizedTabId = normalizeRelayTabId(requestedTabId);
+				if (normalizedTabId !== null) {
+					outgoingMessage.tid = normalizedTabId;
+				}
 				outgoingMessage.outgoingOrigin = "host";
 				resp = sendMessageToTabs(outgoingMessage, false, null, false, false, false);
 			} else if (data.action && data.action === "sendEncodedChat" && data.value) {
@@ -9295,6 +9656,11 @@ function setupSocket() {
 				outgoingMessage.response = decodeURIComponent(data.value);
 				if (data.target) {
 					outgoingMessage.destination = decodeURIComponent(data.target);
+				}
+				const requestedTabId = "tabId" in data ? data.tabId : data.tid;
+				const normalizedTabId = normalizeRelayTabId(requestedTabId);
+				if (normalizedTabId !== null) {
+					outgoingMessage.tid = normalizedTabId;
 				}
 				outgoingMessage.outgoingOrigin = "host";
 				resp = sendMessageToTabs(outgoingMessage, false, null, false, false, false);
@@ -9347,8 +9713,14 @@ function setupSocket() {
 			} else if (data.action && data.action === "resetwaitlist") {
 				resetWaitlist();
 				resp = true;
+			} else if (data.action && data.action === "resetleaderboard") {
+				broadcastLeaderboardReset();
+				resp = true;
 			} else if (data.action && data.action === "resettipjar") {
 				sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
+				resp = true;
+			} else if (data.action && data.action === "clearBotOverlay") {
+				sendTargetP2P({ action: "clearBotOverlay" }, "bot");
 				resp = true;
 			} else if (data.action && data.action === "settipjaramount") {
 				sendTargetP2P(
@@ -9444,6 +9816,12 @@ function setupSocket() {
 				toggleEntries(false);
 				resp = true;
 				//sendResponse({ state: isExtensionOn });
+			} else if (data.action && (data.action === "startentries" || data.action === "openentries" || data.action === "resumeentries")) {
+				toggleEntries(true);
+				resp = true;
+			} else if (data.action && (data.action === "waitlistmessage" || data.action === "setwaitlistmessage")) {
+				setWaitlistMessage(data.value);
+				resp = true;
 			} else if (data.action && data.action === "downloadwaitlist") {
 				downloadWaitlist();
 				resp = true;
@@ -9519,7 +9897,7 @@ function setupSocket() {
 				resp = { emoteonlymode: enable };
 			} else if (data.action) {
 				try {
-					if (data.target && data.target.toLowerCase !== "null") {
+					if (data.target && String(data.target).toLowerCase() !== "null") {
 						sendTargetP2P(data, data.target);
 					} else {
 						sendDataP2P(data);
@@ -9529,6 +9907,7 @@ function setupSocket() {
 					console.error(e);
 				}
 			} else if ("stripe" in data) {
+				ackInboundWebhookDelivery(socketserver, data);
 				try {
 					if (data.stripe.type !== "checkout.session.completed") {
 						return false;
@@ -9536,6 +9915,10 @@ function setupSocket() {
 
 					console.log(data.stripe);
 
+					const stripeWebhookId = getInboundWebhookDeliveryId("stripe", data.stripe);
+					if (isDuplicateInboundWebhook("stripe", stripeWebhookId)) {
+						return false;
+					}
 					relayIncomingWebhook("stripe", data.stripe);
 
 					var message = {};
@@ -9660,6 +10043,7 @@ function setupSocket() {
 					message.membership = "";
 					message.contentimg = "";
 					message.type = "stripe";
+					setInboundWebhookMeta(message, stripeWebhookId);
 
 					data = message; // replace inbound stripe message with new message
 
@@ -9674,6 +10058,7 @@ function setupSocket() {
 							}
 
 							if (data) {
+								setInboundWebhookMeta(data, stripeWebhookId);
 								resp = await sendToDestinations(data);
 							}
 						}
@@ -9685,18 +10070,24 @@ function setupSocket() {
 					return;
 				}
 			} else if ("kofi" in data) {
+				ackInboundWebhookDelivery(socketserver, data);
 				try {
 					if (!data.kofi.data) {
 						return false;
 					}
 
-					relayIncomingWebhook("kofi", data.kofi);
 					try {
 						var kofi = JSON.parse(decodeURIComponent(data.kofi.data).replace(/\+/g, " "));
 					} catch (e) {
 						console.error(e);
 						return;
 					}
+
+					const kofiWebhookId = getInboundWebhookDeliveryId("kofi", kofi);
+					if (isDuplicateInboundWebhook("kofi", kofiWebhookId)) {
+						return false;
+					}
+					relayIncomingWebhook("kofi", data.kofi);
 
 					if (kofi.type !== "Donation") {
 						return false;
@@ -9732,6 +10123,7 @@ function setupSocket() {
 					kofiMessage.membership = "";
 					kofiMessage.contentimg = "";
 					kofiMessage.type = "kofi";
+					setInboundWebhookMeta(kofiMessage, kofiWebhookId);
 
 					data = kofiMessage; // replace inbound stripe message with new message
 
@@ -9746,6 +10138,7 @@ function setupSocket() {
 							}
 
 							if (data) {
+								setInboundWebhookMeta(data, kofiWebhookId);
 								resp = await sendToDestinations(data);
 							}
 						}
@@ -9757,12 +10150,17 @@ function setupSocket() {
 					return;
 				}
 			} else if ("bmac" in data) {
+				ackInboundWebhookDelivery(socketserver, data);
 				// Buy Me a Coffe New Membership and Donation detection
 				try {
 					if (!data.bmac) {
 						return false;
 					} else {
 						const bmac = data.bmac;
+						const bmacWebhookId = getInboundWebhookDeliveryId("bmac", bmac);
+						if (isDuplicateInboundWebhook("bmac", bmacWebhookId)) {
+							return false;
+						}
 						relayIncomingWebhook("bmac", data.bmac);
 						const bmacMessage = {};
 						if (bmac.type === "membership.started") {
@@ -9802,6 +10200,7 @@ function setupSocket() {
 						bmacMessage.chatimg = "";
 						bmacMessage.membership = "";
 						bmacMessage.type = "bmac";
+						setInboundWebhookMeta(bmacMessage, bmacWebhookId);
 						data = bmacMessage; // replace inbound stripe message with new message
 
 						try {
@@ -9815,6 +10214,7 @@ function setupSocket() {
 								}
 
 								if (data) {
+									setInboundWebhookMeta(data, bmacWebhookId);
 									resp = await sendToDestinations(data);
 								}
 							}
@@ -9826,12 +10226,17 @@ function setupSocket() {
 					return;
 				}
 			} else if ("fourthwall" in data) {
+				ackInboundWebhookDelivery(socketserver, data);
 				// Dorthwall
 				try {
 					if (!data.fourthwall.data || data.fourthwall.type !== "ORDER_PLACED") {
 						return false;
 					}
 
+					const fourthwallWebhookId = getInboundWebhookDeliveryId("fourthwall", data.fourthwall);
+					if (isDuplicateInboundWebhook("fourthwall", fourthwallWebhookId)) {
+						return false;
+					}
 					relayIncomingWebhook("fourthwall", data.fourthwall);
 
 					const fourthwallData = data.fourthwall.data;
@@ -9880,6 +10285,7 @@ function setupSocket() {
 					fourthwallMessage.membership = "";
 					fourthwallMessage.contentimg = "";
 					fourthwallMessage.type = "fourthwall";
+					setInboundWebhookMeta(fourthwallMessage, fourthwallWebhookId);
 
 					data = fourthwallMessage; // replace inbound fourthwall message with new message
 
@@ -9894,6 +10300,7 @@ function setupSocket() {
 							}
 
 							if (data) {
+								setInboundWebhookMeta(data, fourthwallWebhookId);
 								resp = await sendToDestinations(data);
 							}
 						}
@@ -10841,13 +11248,21 @@ async function openchat(target = null, force = false) {
 function sendDataP2P(data, UUID = false) {
 	// function to send data to the DOCk via the VDO.Ninja API
 
+	// TODO after 2026-09-01: make the server2 dock send additive by default.
+	// Overlay links generated from 3.52.0+ are prepared to use socket-only
+	// receive mode only when their TRANSPORT_CAPABILITIES opt in. Until then,
+	// this temporary setting lets users test additive delivery early.
 	if (!UUID && settings.server2 && socketserverDock && socketserverDock.readyState === 1) {
 		try {
-			if (data.out) {
-				delete data.out;
+			var server2Payload = data;
+			if (server2Payload && typeof server2Payload === "object" && server2Payload.out) {
+				server2Payload = Object.assign({}, server2Payload);
+				delete server2Payload.out;
 			}
-			socketserverDock.send(JSON.stringify(data));
-			return;
+			socketserverDock.send(JSON.stringify(server2Payload));
+			if (!getSettingFlag("server2additivedelivery")) {
+				return;
+			}
 		} catch (e) {
 			console.error(e);
 			// lets try to send it via P2P as a backup option
@@ -10998,7 +11413,7 @@ function updateViewerCount(data) {
 		// Process each platform's viewer count
 		Object.keys(data.meta).forEach(type => {
 			// Skip viewer counts from sites that are not opted-in
-			if (!checkIfAllowed(type)) {
+			if (!checkIfAllowed(type) || isViewerCountSourceHidden(type)) {
 				return;
 			}
 			viewerCounts[type] = parseInt(data.meta[type]) || 0;
@@ -11011,7 +11426,7 @@ function updateViewerCount(data) {
 	// Handle legacy single viewer_update format
 	else if (data.type && "meta" in data) {
 		// Skip viewer counts from sites that are not opted-in
-		if (!checkIfAllowed(data.type)) {
+		if (!checkIfAllowed(data.type) || isViewerCountSourceHidden(data.type)) {
 			return;
 		}
 		const sourceKey = data.tid ? `${data.type}-${data.tid}` : data.type;
@@ -11093,7 +11508,7 @@ function combineHypeData() {
 
 	for (const sourceType in viewerCounts) {
 		// Skip sources that are not opted-in
-		if (!checkIfAllowed(sourceType)) {
+		if (!checkIfAllowed(sourceType) || isViewerCountSourceHidden(sourceType)) {
 			continue;
 		}
 		// Include all sources that have viewer data, even if 0
@@ -11236,17 +11651,32 @@ function sendAiOverlayCommand(input = {}, defaults = {}) {
 	return payload;
 }
 
-function sendTargetP2P(data, target) {
-	// function to send data to the DOCk via the VDO.Ninja API
+async function trySendTargetP2P(data, target) {
+	// function to send data to a labelled page via the VDO.Ninja API
 	if (ninjaBridge && ninjaBridge.isReady()) {
 		try {
-			ninjaBridge.sendToLabel(data, target);
-			return;
+			var sdkPeers = typeof ninjaBridge.getPeers === "function" ? ninjaBridge.getPeers() : null;
+			var hasSdkTarget = !sdkPeers;
+			if (sdkPeers) {
+				for (var sdkUUID in sdkPeers) {
+					if (sdkPeers[sdkUUID] === target) {
+						hasSdkTarget = true;
+						break;
+					}
+				}
+			}
+			if (hasSdkTarget) {
+				var sdkResult = await ninjaBridge.sendToLabel(data, target);
+				if (sdkResult !== false) {
+					return true;
+				}
+			}
 		} catch (e) {
 			console.warn("SDK sendTargetP2P failed", e);
 		}
 	}
 
+	var sent = false;
 	if (iframe) {
 		var keys = Object.keys(connectedPeers);
 		for (var i = 0; i < keys.length; i++) {
@@ -11255,9 +11685,52 @@ function sendTargetP2P(data, target) {
 				var label = connectedPeers[UUID];
 				if (label === target) {
 					iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+					sent = true;
 				}
 			} catch (e) {}
 		}
+	}
+	return sent;
+}
+
+async function sendTargetP2P(data, target, options) {
+	options = options || {};
+	var retry = typeof options.retry === "boolean" ? options.retry : target === "actions";
+	var timeoutMs = Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : 10000;
+	var intervalMs = Number(options.intervalMs) > 0 ? Number(options.intervalMs) : 500;
+	var expiresAt = Date.now() + timeoutMs;
+
+	do {
+		if (await trySendTargetP2P(data, target)) {
+			return true;
+		}
+		if (!retry || Date.now() >= expiresAt) {
+			break;
+		}
+		await new Promise(function (resolve) {
+			setTimeout(resolve, intervalMs);
+		});
+	} while (Date.now() < expiresAt);
+
+	if (retry) {
+		console.warn("No connected P2P target found for label:", target);
+	}
+	return false;
+}
+
+function broadcastLeaderboardReset() {
+	var payload = { action: "resetleaderboard" };
+	try {
+		sendTargetP2P(payload, "dock");
+	} catch (e) {
+		console.error(e);
+	}
+	try {
+		if (settings.server2 && socketserverDock && socketserverDock.readyState === WebSocket.OPEN) {
+			socketserverDock.send(JSON.stringify(payload));
+		}
+	} catch (e) {
+		console.error(e);
 	}
 }
 
@@ -11763,6 +12236,95 @@ function extractWaitlistMessage(chatMessage = "", trigger = "") {
 	}
 }
 
+function getWaitlistControlCommand(settingKey, fallback) {
+	try {
+		const entry = settings && settings[settingKey];
+		if (entry && entry.textsetting !== undefined && entry.textsetting !== null && entry.textsetting.toString().trim()) {
+			return entry.textsetting.toString().trim();
+		}
+	} catch (e) {}
+	return fallback;
+}
+
+function getWaitlistControlValue(chatMessage, commandString, fallback) {
+	try {
+		const matchedCommand = getMatchedCommandAlias(commandString, chatMessage, "startsWithToken");
+		if (!matchedCommand) {
+			return fallback;
+		}
+		const rest = String(chatMessage || "")
+			.trim()
+			.slice(matchedCommand.length)
+			.trim();
+		const value = parseInt(rest, 10);
+		if (Number.isFinite(value) && value > 0) {
+			return value;
+		}
+	} catch (e) {}
+	return fallback;
+}
+
+function processWaitlistControlCommand(data) {
+	try {
+		if (!getSettingFlag("waitlistcontrolcommands") || !data || !data.chatmessage || data.bot || data.reflection || data.replay || data.history || data.reload) {
+			return false;
+		}
+		if (!(data.mod || data.host || data.admin)) {
+			return false;
+		}
+
+		const message = data.chatmessage;
+		const commands = [
+			{
+				setting: "waitlistcommandstop",
+				fallback: "!wlstop",
+				action: function () {
+					toggleEntries(false);
+				}
+			},
+			{
+				setting: "waitlistcommandremove",
+				fallback: "!wlremove",
+				action: function (command) {
+					removeWaitlist(getWaitlistControlValue(message, command, 0));
+				}
+			},
+			{
+				setting: "waitlistcommandreset",
+				fallback: "!wlreset",
+				action: function () {
+					resetWaitlist();
+				}
+			},
+			{
+				setting: "waitlistcommandselect",
+				fallback: "!wlpick",
+				action: function (command) {
+					selectRandomWaitlist(getWaitlistControlValue(message, command, 1));
+				}
+			},
+			{
+				setting: "waitlistcommandhighlight",
+				fallback: "!wlhighlight",
+				action: function (command) {
+					highlightWaitlist(getWaitlistControlValue(message, command, 0));
+				}
+			}
+		];
+
+		for (var i = 0; i < commands.length; i++) {
+			const command = getWaitlistControlCommand(commands[i].setting, commands[i].fallback);
+			if (command && commandAliasMatches(command, message, "startsWithToken")) {
+				commands[i].action(command);
+				return true;
+			}
+		}
+	} catch (e) {
+		console.error(e);
+	}
+	return false;
+}
+
 function forgetWaitlistUser(entry) {
 	try {
 		if (!entry || !entry.type || !entry.chatname || !waitListUsers[entry.type]) {
@@ -12072,6 +12634,13 @@ function toggleEntries(state = false) {
 	allowNewEntries = state;
 	sendWaitlistConfig();
 }
+function setWaitlistMessage(value = "") {
+	const message = value === undefined || value === null ? "" : String(value);
+	settings.customwaitlistmessagetoggle = true;
+	settings.customwaitlistmessage = { textsetting: message };
+	chrome.storage.local.set({ settings: settings });
+	sendWaitlistConfig(null, true);
+}
 function objectArrayToCSV(data, delimiter = ",") {
 	if (!data || !Array.isArray(data) || data.length === 0) {
 		return "";
@@ -12307,15 +12876,15 @@ async function initTransport(roomStreamID, pass = false) {
 	// Re-evaluate effective SDK flag each init, based on flexible truthy parsing
 	try {
 		const raw = settings && (settings.sdk !== undefined ? settings.sdk : settings.usesdk);
-		let flag = false;
+		let flag = !!forceNinjaSDKFromUrl;
 		if (typeof raw === "boolean") {
-			flag = raw;
+			flag = flag || raw;
 		} else if (raw && typeof raw === "object") {
 			// supports { setting: true/"true"/1 }
 			const v = raw.setting;
-			flag = v === true || v === 1 || (typeof v === "string" && /^(1|true|on|yes)$/i.test(v));
+			flag = flag || v === true || v === 1 || (typeof v === "string" && /^(1|true|on|yes)$/i.test(v));
 		} else if (typeof raw === "string") {
-			flag = /^(1|true|on|yes)$/i.test(raw);
+			flag = flag || /^(1|true|on|yes)$/i.test(raw);
 		} else if (raw === 1) {
 			flag = true;
 		}
@@ -12442,7 +13011,8 @@ async function initTransport(roomStreamID, pass = false) {
 				bindNinjaBridgeTransportTracking(ninjaBridge);
 			}
 			try {
-				// Receive overlay messages via SDK (support both event names and wrapper passthrough)
+				// NinjaBridge normalizes both SDK event shapes into one event. Listening
+				// directly to the SDK as well would process each P2P message twice.
 				const handleSDKData = ev => {
 					try {
 						const detail = ev.detail || {};
@@ -12471,8 +13041,6 @@ async function initTransport(roomStreamID, pass = false) {
 						console.warn(e);
 					}
 				};
-				ninjaBridge.vdo.addEventListener("data", handleSDKData);
-				ninjaBridge.vdo.addEventListener("dataReceived", handleSDKData);
 				ninjaBridge.addEventListener("data", handleSDKData);
 			} catch (e) {
 				console.warn(e);
@@ -12510,13 +13078,13 @@ async function initTransport(roomStreamID, pass = false) {
 		if (!pass) {
 			pass = "false";
 		}
-		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + pass + lanonly + "&room=" + roomStreamID + "&push=" + roomStreamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(pass) + lanonly + "&room=" + roomStreamID + "&push=" + roomStreamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
 	} else {
 		iframe = document.createElement("iframe");
 		if (!pass) {
 			pass = "false";
 		}
-		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + pass + lanonly + "&room=" + roomStreamID + "&push=" + roomStreamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(pass) + lanonly + "&room=" + roomStreamID + "&push=" + roomStreamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
 		document.body.appendChild(iframe);
 	}
 }
@@ -12829,6 +13397,8 @@ async function processIncomingRequest(request, UUID = false) {
 	} else if ("action" in request) {
 		if (request.action === "openChat") {
 			openchat(request.value || null);
+		} else if (request.action === "clearBotOverlay") {
+			sendTargetP2P({ action: "clearBotOverlay" }, "bot");
 		} else if (request.action === "aiOverlay" || request.action === "cohostOverlay") {
 			sendAiOverlayCommand(request, {
 				meta: {
@@ -13086,6 +13656,16 @@ async function processIncomingRequest(request, UUID = false) {
 		} else if (request.action === "getAiPromptOverlays" && UUID) {
 			const overlayStore = await getAiPromptOverlays();
 			sendDataP2PChunked({ aiPromptOverlays: { target: request.target || null, value: overlayStore } }, UUID);
+		} else if (request.action === "chatbotStop" && UUID) {
+			const activeController = privateChatbotControllers[UUID];
+			if (activeController) {
+				try {
+					activeController.abort();
+				} catch (e) {}
+				delete privateChatbotControllers[UUID];
+			}
+		} else if (request.action === "chatbotCapabilities" && UUID) {
+			sendDataP2P({ chatbotCapabilities: { target: request.target || null, value: getPrivateChatbotCapabilities() } }, UUID);
 		} else if (request.value && "target" in request && UUID && request.action === "chatbot") {
 			// target is the callback ID
 			if (isExtensionOn && settings.allowChatBot) {
@@ -13098,6 +13678,10 @@ async function processIncomingRequest(request, UUID = false) {
 						sendDataP2P({ chatbotChunk: { value: chunk, target: request.target } }, UUID);
 					};
 					const sendChatbotFinal = fullResponse => {
+						if (fullResponse && typeof fullResponse === "object") {
+							// aborted requests can resolve with an object instead of text
+							fullResponse = fullResponse.response || fullResponse.value || "";
+						}
 						const responseText = fullResponse == null ? "" : String(fullResponse);
 						if (streamedChunks > 0) {
 							sendDataP2P({ chatbotResponse: { value: "", target: request.target } }, UUID);
@@ -13120,12 +13704,19 @@ async function processIncomingRequest(request, UUID = false) {
 					}
 					let model = request.model || null;
 					const controller = new AbortController();
+					privateChatbotControllers[UUID] = controller;
 
 					callLLMAPI(prompt, model, sendChatbotChunk, controller, UUID, request.images || null)
 						.then(fullResponse => {
+							if (privateChatbotControllers[UUID] === controller) {
+								delete privateChatbotControllers[UUID];
+							}
 							sendChatbotFinal(fullResponse);
 						})
 						.catch(error => {
+							if (privateChatbotControllers[UUID] === controller) {
+								delete privateChatbotControllers[UUID];
+							}
 							let payload;
 							if (typeof LLMServiceError !== "undefined" && error instanceof LLMServiceError) {
 								payload = {
@@ -13158,6 +13749,76 @@ async function processIncomingRequest(request, UUID = false) {
 			}
 		}
 	}
+}
+
+const privateChatbotControllers = {};
+
+function getPrivateChatbotCapabilities() {
+	// Describes the currently configured LLM to the private chatbot page.
+	// imageInput: true = vision known to work, false = never sent to the model, "maybe" = model-dependent.
+	const enabled = !!(isExtensionOn && settings?.allowChatBot);
+	if (!enabled) {
+		return { enabled: false, imageInput: false };
+	}
+	const provider = settings?.aiProvider?.optionsetting || "ollama";
+	let model = "";
+	let imageInput = "maybe";
+	switch (provider) {
+		case "ollama":
+			model = settings?.ollamamodel?.textsetting || "";
+			imageInput = /vision|llava|moondream|minicpm|bakllava|gemma3|qwen2\.5vl|qwen2-vl|qwen-vl|pixtral|llama4|internvl/i.test(model) ? true : "maybe";
+			break;
+		case "localgemma":
+		case "localqwen":
+			try {
+				const localBrowserSettings = typeof getLocalBrowserProviderSettings === "function" ? getLocalBrowserProviderSettings(provider, settings || {}) : null;
+				model = localBrowserSettings?.modelId || "";
+				imageInput = localBrowserSettings ? !!localBrowserSettings.supportsVision : "maybe";
+			} catch (e) {}
+			break;
+		case "chatgpt":
+			model = settings?.chatgptmodel?.textsetting || "gpt-5.4-mini";
+			imageInput = true;
+			break;
+		case "gemini":
+			model = settings?.geminimodel?.textsetting || "gemini-2.5-flash";
+			imageInput = true;
+			break;
+		case "deepseek":
+			model = settings?.deepseekmodel?.textsetting || "deepseek-v4-flash";
+			imageInput = false;
+			break;
+		case "xai":
+			model = settings?.xaimodel?.textsetting || "grok-4.3";
+			imageInput = /grok-4|vision|image/i.test(model) ? true : false;
+			break;
+		case "bedrock":
+			model = settings?.bedrockmodel?.textsetting || "anthropic.claude-sonnet-5";
+			imageInput = false; // the Bedrock request path is text-only
+			break;
+		case "openrouter":
+			model = settings?.openroutermodel?.textsetting || "openai/gpt-5.4-mini";
+			imageInput = /gpt-[45]|gpt-5|gemini|claude|grok|vision|llava|pixtral/i.test(model) ? true : "maybe";
+			break;
+		case "groq":
+			model = settings?.groqmodel?.textsetting || "openai/gpt-oss-120b";
+			imageInput = /llama-4|vision|pixtral/i.test(model) ? true : false;
+			break;
+		case "opencode":
+			try {
+				model = typeof getOpenCodeZenSelectedModel === "function" ? getOpenCodeZenSelectedModel(settings || {}, null) : "";
+			} catch (e) {}
+			break;
+		case "custom":
+			model = settings?.customAIModel?.textsetting || "";
+			break;
+	}
+	return {
+		enabled,
+		provider,
+		model: model || "",
+		imageInput
+	};
 }
 
 function fowardOBSCommand(data) {
@@ -13505,6 +14166,9 @@ function checkIfAllowed(sitename) {
 				return false;
 			}
 			if (sitename.startsWith("https://chat.openai.com/")) {
+				return false;
+			}
+			if (sitename.startsWith("https://chatgpt.com/")) {
 				return false;
 			}
 		} catch (e) {}
@@ -13911,6 +14575,30 @@ function claimPublishedUrl(published, url) {
 	return true;
 }
 
+function isYouTubeShortsRelayUrl(url) {
+	if (!url) {
+		return false;
+	}
+	try {
+		const parsedUrl = new URL(url);
+		return parsedUrl.pathname.toLowerCase().includes("/shorts") || parsedUrl.searchParams.has("shorts");
+	} catch (e) {
+		const normalizedUrl = String(url).toLowerCase();
+		return normalizedUrl.includes("/shorts") || /[?&]shorts(?:[=&]|$)/.test(normalizedUrl);
+	}
+}
+
+function getExactYouTubeRelaySourceType(tab, sourceType) {
+	const exactSourceType = String(sourceType || "").toLowerCase();
+	if (exactSourceType === "youtubeshorts") {
+		return "youtubeshorts";
+	}
+	if (normalizeSourceControlPlatform(exactSourceType) !== "youtube") {
+		return exactSourceType;
+	}
+	return isYouTubeShortsRelayUrl(tab && tab.url) ? "youtubeshorts" : "youtube";
+}
+
 async function matchesRelayDestination(tab, destination, mode = "sourceType", sourceType = false) {
 	if (!destination) {
 		return true;
@@ -13921,7 +14609,8 @@ async function matchesRelayDestination(tab, destination, mode = "sourceType", so
 	if (mode === "url") {
 		return urlMatchesDestination(tab.url, destination);
 	}
-	const normalizedDestination = normalizeSourceControlPlatform(destination.toLowerCase());
+	const exactDestination = String(destination).toLowerCase();
+	const normalizedDestination = normalizeSourceControlPlatform(exactDestination);
 	if (!sourceType) {
 		if (!tab.id) {
 			return false;
@@ -13930,6 +14619,10 @@ async function matchesRelayDestination(tab, destination, mode = "sourceType", so
 		if (!sourceType) {
 			return false;
 		}
+	}
+
+	if (exactDestination === "youtube" || exactDestination === "youtubeshorts") {
+		return getExactYouTubeRelaySourceType(tab, sourceType) === exactDestination;
 	}
 
 	return normalizeSourceControlPlatform(sourceType) === normalizedDestination;
@@ -16550,6 +17243,14 @@ async function applyBotActions(data, tab = false) {
 		if (settings.defaultavatar.textsetting && !data.chatimg) {
 			data.chatimg = settings.defaultavatar.textsetting;
 		}
+	}
+
+	try {
+		if (settings.waitlistmode && processWaitlistControlCommand(data)) {
+			return null;
+		}
+	} catch (e) {
+		console.error(e);
 	}
 
 	try {

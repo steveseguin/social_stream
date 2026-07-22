@@ -180,8 +180,8 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - ebay.com live (no pop out; just the watch page)
 - sessions.us - the meeting video chat; not popped out.(You can specify your own name, rather than "You", via the host/bot section in the extension menu)
 - jaco.live (https://jaco.live/golive)
-- X Live video chat (aka, was Twitter) (open the chat pop out; ie: https://x.com/XXXXXXXXXX/chat and make sure chat permissions are enabled 
-- X static feed posts -- you will need to click "Enable Overlay" in the lower right of X  to have X posts be supported. Manually click then to select which post.
+- X Live video chat (aka, was Twitter) (open the chat pop out; ie: https://x.com/XXXXXXXXXX/chat and make sure chat permissions are enabled)
+- X static feed posts -- you will need to click "Enable Overlay" in the lower right of X  to have X posts be supported. Manually click them to select which post.
 - younow.com - ( just open the video as normal with chat on the side; there's no pop out chat, so the link is just https://www.younow.com/USERNAME )
 - shareplay.tv (pop out chat, ie: https://www.shareplay.tv/chat/usernamehere/9fd3a9ee-a915-4f8b-b23d-xxxxxxxxxxx)
 - truffle.vip (https://chat.truffle.vip/chat/*)
@@ -192,8 +192,9 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - chzzk.naver.com (pop out the chat)
 - demo.openstreamingplatform.com (pop out chat)
 - wave.video
+- worldswave.com (open the live stream page or the chat-only popout URL)
 - verticalpixelzone.com (no pop out; open the page with chat)
-- beamstream.gg (open https://beamstream.gg/USERNAME/chat to user. *note the /chat added at the end)
+- beamstream.gg (open https://beamstream.gg/USERNAME/chat to use. *note the /chat added at the end)
 - zap.stream (no pop out)
 - pump.fun (open https://pump.fun/coin/COIN_ID while chat is visible)
 - whop.com (no pop out; open the channel page)
@@ -203,6 +204,8 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - bigo.tv (no pop out)
 - circle.so (and community domains like community.talkinghealthtech.com or members.firstinfam.com)
 - sooplive.com (pop out the chat to use; supports https://play.sooplive.com/*?vtype=chat)
+- flextv.co.kr (open the live channel page with chat visible)
+- sealteamsloth.com (open the pop-out chat: https://sealteamsloth.com/popout-chat/*)
 - on24.com ( Q&A - questions supported)
 - meetme
 - moonbeam.stream (no pop out)
@@ -284,7 +287,7 @@ Once extracted into a folder, you can go here to load it: chrome://extensions/
 
 ![image](https://user-images.githubusercontent.com/2575698/142858940-62d88048-5254-4f27-be71-4d99ea5947ab.png)
 
-Ensure you have Developer Mode enabled; then you can just load the extension via the load unpacked button and selecting the folder you extracted the fiels to.
+Ensure you have Developer Mode enabled; then you can just load the extension via the load unpacked button and selecting the folder you extracted the files to.
 
 ![image](https://user-images.githubusercontent.com/2575698/142857907-80428c61-c192-4bff-a1dc-b1a674f9cc4a.png)
 
@@ -294,9 +297,9 @@ Please note also that you will need to manually update the extension to access n
 
 #### Seeing an error message about Manifest Version 2?
 
-If you see the browser say there is an "Error", specifically a manifest v2 warning, you can safely ignore it. It is not actually an error and will not impact the function of the extension at present. If it worries you, please note that both a manifest version 3 version of the extension is available for download or via the Chrome webstore; there is also a standalone desktop app version. Manifest version 2 just happens to remain the most tried and test version at the moment.
+If you see the browser say there is an "Error", specifically a manifest v2 warning, you can safely ignore it. It is not actually an error and will not impact the function of the extension at present. If it worries you, please note that a manifest version 3 version of the extension is available for download or via the Chrome webstore; there is also a standalone desktop app version. Manifest version 2 just happens to remain the most tried and tested version at the moment.
 
-While Google will eventually kill manifest version 2 extensions, it's possible to keep them alive until at least June 2025, as noted in <a href="https://www.reddit.com/r/chrome/comments/1dln9ev/tutorial_extend_manifest_v2/">this guide here</a>. I will depreciate version 2 when the times come, and while manifest version 3 is more restrictive, it should still work. If you download the v3 version from the Webstore, please note that I will only update it every couple weeks, due to review restrictions by Google. You can download version 3 all directly from Github, under the v3 branch.
+While Google will eventually kill manifest version 2 extensions, it's possible to keep them alive until at least June 2025, as noted in <a href="https://www.reddit.com/r/chrome/comments/1dln9ev/tutorial_extend_manifest_v2/">this guide here</a>. I will deprecate version 2 when the time comes, and while manifest version 3 is more restrictive, it should still work. If you download the v3 version from the Webstore, please note that I will only update it every couple weeks, due to review restrictions by Google. You can also download version 3 directly from GitHub, under the v3 branch.
 
 ### Browser Extension Stores
 
@@ -318,7 +321,7 @@ You can download the newest version here: https://github.com/steveseguin/social_
 
 Please note: DO NOT Uninstall the extension if you want to update it. This will delete all your settings.  Replace the files, and reload the extension or browser instead.  If you MUST uninstall, you can export your settings to disk and reload them after you have reinstalled.  
 
-New app integrations do not auto-update; just the overlay and dock page will auto-update. It's suggeseted you update every now and then manually, or whenever you encounter a bug.  I'll try to resolve this issue down the road, perhaps with a standalone desktop app eventually.
+New app integrations do not auto-update; just the overlay and dock page will auto-update. It's suggested you update every now and then manually, or whenever you encounter a bug.  I'll try to resolve this issue down the road, perhaps with a standalone desktop app eventually.
 
 And for a video that covers two ways to update the extension: https://youtu.be/Zql6Q5H2Eqw?t=612
 
@@ -357,9 +360,9 @@ Then, press the Social Stream Ninja chrome extension button and ENABLE streaming
 
 ![image](https://user-images.githubusercontent.com/2575698/142856707-0a6bc4bd-51b4-4cd0-9fa3-ef5a1adfcbf7.png)
 
-##### Please note:  If the Extension's icon is RED, then it means it is still off and wil not work.  You have to click "Enable extension", and the icon must change to the color green.
+##### Please note:  If the Extension's icon is RED, then it means it is still off and will not work.  You have to click "Enable extension", and the icon must change to the color green.
 
-Next, using the provided two links, you can manage the Social Stream Ninja of chat messages and view selected chat messages as overlays.
+Next, using the provided two links, you can manage the dock of chat messages and view selected chat messages as overlays.
 
 ![image](https://user-images.githubusercontent.com/2575698/142935393-4ca90418-a645-45e3-8e37-f4884e16457a.png)
 
@@ -377,16 +380,16 @@ A good resolution for the overlay is either 1280x600 or 1920x600; you can specif
 
 ![image](https://user-images.githubusercontent.com/2575698/142855680-74f6055d-7b79-4e9a-ae7d-909c7f677a24.png)
 
-If using the automated chat response options, like auto-hi, you must ensure the Youtube/Twitch/Facebook chat input options are enabled and that you are able to send a chat message. Manually entering a chat message into the pop-out window or into the Facebook live chat area first can help ensure things are working are intended, else automated message may not be sent.
+If using the automated chat response options, like auto-hi, you must ensure the Youtube/Twitch/Facebook chat input options are enabled and that you are able to send a chat message. Manually entering a chat message into the pop-out window or into the Facebook live chat area first can help ensure things are working as intended, else automated messages may not be sent.
 
  ##### Note: If things do not work,
  
 - Toggle the extension on and off, and reload the pop-out chat window.  Ideally the pop-out chat should be visible on screen, as even just a few pixels shown will allow the pop-out chat to work at full-power.  Chrome otherwise may throttle performance.
 - Open a new dock / overlay link if things still do not work, as the session ID may have changed.
 - Ensure that VDO.Ninja works with your browser, as if not, webRTC may be disabled and so this Social Stream Ninja extension will not work also.
-- If using Facebook live chat, please sure you are viewing the page as a "viewer", not as a publisher, and that you are connected to WiFi or Ethernet, and not mobile LTE/4G/5G.
+- If using Facebook live chat, please make sure you are viewing the page as a "viewer", not as a publisher, and that you are connected to WiFi or Ethernet, and not mobile LTE/4G/5G.
 - The auto-responder requires you to be signed in to the social endpoint and that you have access to chat; ensure you accept any disclaimer and try issuing a test message first.
-- Try using the extension in Incognito mode or try disabling all other browser extensions, then reloading the browser, and trying again.  Many extension types will conflict with Socialstream, causing certain functions to fail.
+- Try using the extension in Incognito mode or try disabling all other browser extensions, then reloading the browser, and trying again.  Many extension types will conflict with Social Stream Ninja, causing certain functions to fail.
 
 ### Customize
 
@@ -394,7 +397,7 @@ There are quite a few toggles available to customize functions and styles, but t
 
 To customize the dock, you can use the following options:
 
-- &lightmode (Enables the dark-mode for the chat stream)
+- &lightmode (Enables the light-mode for the chat stream)
 - &scale=2 (doubles size/resolution of all elements)
 - &notime (hides the date in the chat stream)
 - &hidesource (hides the youtube/twitch/fb icons from the stream)
@@ -412,7 +415,7 @@ To customize the featured chat overlay, the following URL parameters are availab
 
 For managing multiple URLs and their parameters, for the main dock (streaming overlay) page, you can try this tool out: [https://socialstream.ninja/urleditor.html](https://socialstream.ninja/urleditor.html)
 
-To customize the color, font-size and styling, you can edit the CSS, in either the OBS browser source style-sheet section, or by editing the and using the featured.html file. See below:
+To customize the color, font-size and styling, you can edit the CSS, in either the OBS browser source style-sheet section, or by editing the featured.html file. See below:
 
 If you want a step-by-step walkthrough for self-hosting fonts and applying them to `dock.html` or `featured.html` (with CSS examples for OBS and URL parameters), see [docs/custom-fonts.html](docs/custom-fonts.html).
 
@@ -490,7 +493,7 @@ For the base64 css option, you can create the base64 encoding using `btoa(encode
 The above will return the base64 encoded string required. Special non-latin characters are supported with this approach; not just latin characters.
 
 Example of what it might look like:
-https://socialstream.ninja/?64css=JTIzbWFpbm1lbnUlN0JiYWNrZ3JvdW5kLWNvbG9yJTNBJTIwcGluayUzQiUyMCVFMiU5RCVBNA
+https://socialstream.ninja/?b64css=JTIzbWFpbm1lbnUlN0JiYWNrZ3JvdW5kLWNvbG9yJTNBJTIwcGluayUzQiUyMCVFMiU5RCVBNA
 
 ### Pre-styled templates / themes
 
@@ -530,7 +533,7 @@ Included in the code is the `custom_sample.js` file, which you can rename to cus
 
 Social Stream Ninja ships with a shared profanity list baked directly into `libs/objects.js` (the legacy vocabulary merged with the MIT-licensed MauriceButler corpus — 743 normalized entries at the moment). Because the list now lives beside the core library again, every surface (extension, Electron, Lite embeds) gets the same data without needing to fetch `shared/data/badwords.json`.
 
-- Toggle `🤬🚫 Replace common swear words with asterixis` (`blacklist`) to redact matches inside messages.
+- Toggle `🤬🚫 Replace common swear words with asterisks` (`blacklist`) to redact matches inside messages.
 - Toggle `🤬🚫 Block messages that contain swear words` (`blacklistblockmessages`) when you need offending messages dropped before they are relayed anywhere else.
 - Upload `badwords.txt` (one entry per line) from `popup.html` to augment or replace the packaged list, and use the Delete button to revert to the shared defaults.
 - Usernames can be scrubbed separately via `👤🚫 Replace common bad words in user names` (`blacklistname`).
@@ -627,7 +630,7 @@ You can also target specific docks with your API requests by assigning a target 
 
 For example, to set a dock with the target name of "NAMEHERE", we'd do: `https://socialstream.ninja/dock.html?session=XXXXXXXXXXXXX&server&sync&label=NAMEHERE`.  From there, we can target it with the API format like this: `https://io.socialstream.ninja/XXXXXXXXXXXXX/nextInQueue/NAMEHERE/null`.  This all may be needed because if you have multiple docks connected to the API interface, you may not want to trigger the same command multiple times in all cases.
 
-##### General technical concept of the API logic iteslf
+##### General technical concept of the API logic itself
 
 The public API for Social Stream Ninja is based on the same API server logic that VDO.Ninja uses, which is mentioned here: https://github.com/steveseguin/Companion-Ninja.
 
@@ -653,7 +656,7 @@ There's a niche advanced command for the GET API, where if you publish with the 
 ###### Websocket API
 If using the Websocket API, this accepts JSON-based commands
 
-connect to: wss://io.socialstream.ninja:443, which will by default have you'll join channel 1, I believe. For something more advanecd, try wss://io.socialstream.ninja/join/SESSIONIDHERE/CHANNELINBOUND/CHANNELOUTBOUND
+connect to: wss://io.socialstream.ninja:443, which by default will have you join channel 1, I believe. For something more advanced, try wss://io.socialstream.ninja/join/SESSIONIDHERE/CHANNELINBOUND/CHANNELOUTBOUND
 
 On connection, send: {"join": $sessionID }, where $sessionID is your session ID.
 
@@ -703,16 +706,16 @@ title | string | An alternative name given for a donation event; CHEERS / DONATI
 subtitle | string | For added detail of a membership event, like number of months they have been a member.
 moderator | boolean | Whether they are a moderator in chat or not
 event | string or boolean | Whether this message should be treated as an event, and possible, what type of event it is
-admin | boolean | Whether they are a "priviledged" user or not
+admin | boolean | Whether they are a "privileged" user or not
 bot | boolean | Whether the user is a bot / host or not
 question | boolean | Whether the message is a certified question or not
-userid | string | Some form of unique user ID / username for the source type. Useful if the display name isn't unique or if needing the user ID external API needs, like user blocking
+userid | string | Some form of unique user ID / username for the source type. Useful if the display name isn't unique or if an external API needs the user ID, like for user blocking
 karma | float | 1.0 is a happy message; 0.0 is negative message, so 0.1 is likely bad. AI generated
 id | integer | This is maintained mostly internally, but it's an internal message ID value
 private | boolean | whether this is a private/direct message; typically won't be made public by default
 nameColor | string | Manually specify the color of a display name by passing a color value
-textColor | string | Manually specify the background color of a featured message
-backgroundColor | string | Manually specify the color of a featured message's main text color
+textColor | string | Manually specify the color of a featured message's main text color
+backgroundColor | string | Manually specify the background color of a featured message
 
 #### Remote server API support (publish messages to third parties)
 
@@ -730,7 +733,7 @@ This parameter is added to the dock page to use.
 
 ##### H2R
 
-`&h2r=XXXXXXX` will send selected messages (via the dock page) to a local H2R server using its POST data structure. The target address will be: `"http://127.0.0.1:4001/data/XXXXXXX`
+`&h2r=XXXXXXX` will send selected messages (via the dock page) to a local H2R server using its POST data structure. The target address will be: `"http://127.0.0.1:4001/data/XXXXXXX"`
 
 You can manually set a custom H2R URL though with `&h2rurl` though, which will override the default one.
 
@@ -764,7 +767,7 @@ If you create a Stripe payment link (eg: https://donate.stripe.com/YYYYYYYYYYYY)
 
 To get started, after creating a Stripe payment link, create a Stripe webhook that listens for the event `checkout.session.completed`. Have the webhook point to: `https://io.socialstream.ninja/XXXXXX/stripe`, where XXXXXX is your Social Stream Ninja session ID. You don't need to worry about the verification signatures or API tokens in Stripe since we won't be verifying the payments. Of course, keep your session ID private as a result, else someone will be able to spoof fake donations to your end point.
 
-If you wish to ask the payer for a name, include a custom field called "Display Name" or "Username" when creating your Stripe payment link. You can also include a field called "Message", which will allow the payer an opportunity to leave a custom message. The donation amount and current type should be dervived from the payment automatically, but some rare exotic currencies may not always show up with the right decimal place -- just keep that in mind.
+If you wish to ask the payer for a name, include a custom field called "Display Name" or "Username" when creating your Stripe payment link. You can also include a field called "Message", which will allow the payer an opportunity to leave a custom message. The donation amount and currency type should be derived from the payment automatically, but some rare exotic currencies may not always show up with the right decimal place -- just keep that in mind.
 
 Lastly, to allow these events to show up in the Social Stream Ninja dock, add &server to the dock URL; this will have the dock start listening for incoming messages from the webhook/api server. You can always test that the workflow is working using Stripe's "Test mode"; just spam 424242.. etc for the credit card number, expiration, cvc, etc, when using the test mode, rather than a valid credit card.
 
@@ -774,7 +777,7 @@ Lastly, to allow these events to show up in the Social Stream Ninja dock, add &s
 
 ##### Ko-Fi webhook donation support
 
-This is very simliar to the Stripe support method, as seen above.
+This is very similar to the Stripe support method, as seen above.
 
 To setup, sign into your Ko-Fi account, go to https://ko-fi.com/manage/webhooks
 
@@ -790,7 +793,7 @@ You can then press the Send Single Donation Test button.
 
 ![image](https://github.com/steveseguin/social_stream/assets/2575698/73ba4b80-c599-45f6-85df-6ff629a3e6a5)
 
-Please note, do not share your Social Stream Ninja session ID with others as they will be able to create fake donations to Social Stream Ninjas via posting to the API.
+Please note, do not share your Social Stream Ninja session ID with others as they will be able to create fake donations to Social Stream Ninja via posting to the API.
 
 ##### BuyMeACoffee webhook support
 
@@ -879,7 +882,7 @@ The `voice` parameter works with partial matching, so you can use terms like "si
 
 #### Premium TTS Options
 
-Unlike the system TTS (free), all premium TTS options are fully supported by both the Social Stream Ninja app and OBS browser sources with direct audio capture capabilities. These options provide superior language support and much easier integration.
+Unlike the system TTS (free), browser/provider TTS options are designed to play through the page, which makes OBS capture much easier when "Control audio via OBS" is enabled. Self-hosted local endpoints also work, but the endpoint still needs to be reachable from the page that is playing TTS; see the Local AI TTS Guide for localhost, CORS, and OBS browser-source setup notes.
 
 ##### Kokoro Premium FREE TTS
 Social Stream Ninja now includes Kokoro TTS, a high-quality browser-based text-to-speech solution that runs directly in the browser. Benefits include:
@@ -1061,20 +1064,20 @@ In Brave, this can be enabled via `brave://flags/#file-system-access-api` ; open
 
 - For discord, slack, and telegram not working, for security reasons, you need to enable the TOGGLE switch in the settings to enable.
 
-- Make sure your session ID matches the dock.html page and the value inside the extension; if they don't match, things work work
+- Make sure your session ID matches the dock.html page and the value inside the extension; if they don't match, things won't work
 
 - To set the Session ID to your own value, go to Extensions settings to set it. On Chrome: Settings -> Extensions -> Social Stream Ninja -> Details -> Extension options.  
 
-- Try refreshing the chat page if things stop working; sometimes refreshing the page will retrigger the code and bypass any errors. This is particularly try if you install or refresh the extension after the chat page has already been loaded.
+- Try refreshing the chat page if things stop working; sometimes refreshing the page will retrigger the code and bypass any errors. This is particularly true if you install or refresh the extension after the chat page has already been loaded.
 
 
 ### Requesting a site
 
-You can make a request here on Github as an issue ticket, or join the Discord server at https://discord.socialstream.ninja and request there.
+You can make a request here on GitHub as an issue ticket, or join the Discord server at https://discord.socialstream.ninja and request there.
 
-Not all requested sites can or will be supported. Steve generally will add support for publicly accessible social chat sites that have a significantly-large community; it's ultimately up to the decretion of Steve though on what he wants to add or has time to add. Code contributions from others that add new site integration or features are normally welcomed, but sites/features that may violate Canadian laws, fail to meet quality standards, or for any other reason, may possibly not be merged or accepted. In these cases you may need to self-host or fork the repo, maintaining your own copy with said changes instead.
+Not all requested sites can or will be supported. Steve generally will add support for publicly accessible social chat sites that have a significantly-large community; it's ultimately up to the discretion of Steve though on what he wants to add or has time to add. Code contributions from others that add new site integration or features are normally welcomed, but sites/features that may violate Canadian laws, fail to meet quality standards, or for any other reason, may possibly not be merged or accepted. In these cases you may need to self-host or fork the repo, maintaining your own copy with said changes instead.
 
-There is no guarentee that a site that gets added will continue to be supported over time. Steve also doesn't accept payment for adding an integration or for support.
+There is no guarantee that a site that gets added will continue to be supported over time. Steve also doesn't accept payment for adding an integration or for support.
 
 ### Adding sites yourself
 
@@ -1098,13 +1101,13 @@ Adding a Social Stream Ninja page as an OBS custom dock will not work in providi
 
 There are some options built into Social Stream Ninja to control OBS scenes/streaming state, and those will be expanded over time. Guests can change scenes with the `!cycle` option, when enabled, for example. 
 
-Given that Social Stream Ninja uses VDO.Ninja as its transport engine, you also can use VDO.Ninja [remote control software[(https://vdo.ninja/examples/obsremote) to have dedicated remote control pages that can work in conjuction with Social Stream Ninja. `&remote=XXXX` can be used on either VDO.Ninja or Social Stream Ninja's dock.html page to enable VDO.Ninja-based remote control when loaded in OBS with the right permissions; refer to the VDO.Ninja documentation on this. This is all pretty complicated though, requiring just the right URL parameters, but it's possible.
+Given that Social Stream Ninja uses VDO.Ninja as its transport engine, you also can use VDO.Ninja [remote control software](https://vdo.ninja/examples/obsremote) to have dedicated remote control pages that can work in conjunction with Social Stream Ninja. `&remote=XXXX` can be used on either VDO.Ninja or Social Stream Ninja's dock.html page to enable VDO.Ninja-based remote control when loaded in OBS with the right permissions; refer to the VDO.Ninja documentation on this. This is all pretty complicated though, requiring just the right URL parameters, but it's possible.
 
 ### Support
 
 You can find me on discord over at https://discord.socialstream.ninja or [https://discord.gg/7U4ERn9y](https://discord.gg/vFU8AuwNf3), offering free support in channel #chat.overlay-support 
 
-Feedback and feature requests are welcomed.  Please also make a Github issue if you're not a fan of Discord, but still need to report a bug or feature request.
+Feedback and feature requests are welcomed.  Please also make a GitHub issue if you're not a fan of Discord, but still need to report a bug or feature request.
 
 ## License
 This project is licensed under the GPLv3.0 License - see the [LICENSE](LICENSE) file for details.
@@ -1127,7 +1130,7 @@ If you still wish to send a donation to Steve, it is considered a gift, with no 
 
 ## Icons and Media
 
-I do not claim rights of all the icons or images distributed. While I (or contributors) made some of the icons and images, trademarks and logos of third party companies/services are the rights of those respectivitive entities. Use them according to the terms that those entities may offer them under.
+I do not claim rights of all the icons or images distributed. While I (or contributors) made some of the icons and images, trademarks and logos of third party companies/services are the rights of those respective entities. Use them according to the terms that those entities may offer them under.
 
 Some icons used are licensed as attribution-required:
 

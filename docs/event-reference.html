@@ -16,7 +16,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Reference - Social Stream Ninja</title>
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/events.css">
+    <link rel="stylesheet" href="css/event-reference.css">
     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
     <meta name="description" content="Canonical reference for Social Stream Ninja event payloads across YouTube, Twitch, TikTok, Kick, Facebook, and Rumble.">
 </head>
@@ -25,7 +25,8 @@
         <div class="container">
             <div class="logo">
                 <a href="../index.html">
-                    <img src="../media/logo.png" alt="Social Stream Ninja logo">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja logo">
+                    <span>Social Stream Ninja</span>
                 </a>
             </div>
             <nav>
@@ -33,13 +34,12 @@
                     <li><a href="../index.html">Home</a></li>
                     <li><a href="../docs/features.html">Features</a></li>
                     <li><a href="../docs/download.html">Download</a></li>
-                    <li><a href="../docs/guides.html">Guides</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
                     <li><a href="../docs/commands.html">Commands &amp; API</a></li>
                     <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
                     <li><a href="../docs/templates.html">Templates</a></li>
                     <li><a href="../docs/services.html">Hire</a></li>
                     <li><a href="../docs/support.html">Support</a></li>
-                    <li><a href="event-reference.html" class="active">Event Reference</a></li>
                 </ul>
             </nav>
             <div class="header-controls">
@@ -68,11 +68,61 @@
         </div>
     </header>
 
-    <main>
+    <main id="event-reference">
         <div class="events-container">
             <section class="section-intro">
                 <h1>Live Event Reference</h1>
                 <p>This page documents the canonical event payloads that Social Stream Ninja emits for major platforms. Use it as a shared source of truth when wiring new sources, troubleshooting integrations, or aligning UI labels.</p>
+                <div class="reference-index" role="navigation" aria-labelledby="reference-index-title">
+                    <h2 id="reference-index-title">On This Page</h2>
+                    <p>Jump to the shared field rules, a platform implementation, or the compatibility notes near the end.</p>
+                    <div class="reference-index-groups">
+                        <div class="reference-index-group">
+                            <h3>Reference</h3>
+                            <ul>
+                                <li><a href="#quick-availability">Quick availability</a></li>
+                                <li><a href="#field-overview">Field overview</a></li>
+                                <li><a href="#meta-conventions">Meta conventions</a></li>
+                                <li><a href="#platform-coverage">Platform coverage</a></li>
+                                <li><a href="#cross-platform">Cross-platform alignment</a></li>
+                                <li><a href="#repository-audit">Repository audit</a></li>
+                                <li><a href="#deprecated-events">Deprecated names</a></li>
+                                <li><a href="#using-reference">Using this reference</a></li>
+                            </ul>
+                        </div>
+                        <div class="reference-index-group">
+                            <h3>Platforms and Sources</h3>
+                            <ul>
+                                <li><a href="#youtube-dom">YouTube DOM</a></li>
+                                <li><a href="#youtube-ws">YouTube API</a></li>
+                                <li><a href="#twitch-dom">Twitch DOM</a></li>
+                                <li><a href="#twitch-ws">Twitch EventSub</a></li>
+                                <li><a href="#obs-flow-actions">OBS</a></li>
+                                <li><a href="#streamlabs-alertbox">Streamlabs</a></li>
+                                <li><a href="#tiktok">TikTok</a></li>
+                                <li><a href="#whatnot">Whatnot</a></li>
+                                <li><a href="#ebay">eBay Live</a></li>
+                                <li><a href="#kick-dom">Kick DOM</a></li>
+                                <li><a href="#kick-ws">Kick WebSocket</a></li>
+                                <li><a href="#vpzone-ws">VPZone</a></li>
+                                <li><a href="#joystick-ws">Joystick</a></li>
+                                <li><a href="#facebook">Facebook</a></li>
+                                <li><a href="#onlinechurch">Online Church</a></li>
+                                <li><a href="#shareplay">SharePlay</a></li>
+                                <li><a href="#streamplace">Streamplace</a></li>
+                                <li><a href="#worldswave">WorldsWave</a></li>
+                                <li><a href="#flextv">FLEX TV</a></li>
+                                <li><a href="#sealteamsloth">Seal Team Sloth</a></li>
+                                <li><a href="#meetme-dom">MeetMe</a></li>
+                                <li><a href="#velora">Velora</a></li>
+                                <li><a href="#parti">Parti</a></li>
+                                <li><a href="#chzzk">CHZZK</a></li>
+                                <li><a href="#rumble-dom">Rumble DOM</a></li>
+                                <li><a href="#rumble-ws">Rumble API</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
                 <div class="alert-note">
                     <strong>Important:</strong> Stream events (follows, memberships, milestones, viewer counts, etc.) are always captured and forwarded. To hide all events in dock or featured overlays, add <code>&amp;hideevents</code> (dock also accepts <code>&amp;hideallevents</code>). To hide selected events, use <code>&amp;filterevents=subscription_gift,new_follower,gifted</code>. Donation-style items always pass through the dock filter regardless of settings.
                 </div>
@@ -82,9 +132,12 @@
                 <div class="alert-note alert-tip">
                     <strong>Building Automations?</strong> Check out the <a href="../actions/event-flow-guide.html">Event Flow Guide</a> to learn how to use these event payloads in custom triggers, alerts, and workflows. The guide includes a <a href="../actions/event-flow-guide.html#template-variables">Template Variables Reference</a> for text formatting.
                 </div>
+                <div class="alert-note alert-info">
+                    <strong>Payload shape:</strong> Donation-style chat rows should use <code>hasDonation</code> and optional <code>donoValue</code>. Do not set <code>event: "donation"</code> just because a normal chat/tip row has value; use specific event names only for real platform actions or paid item types, such as <code>superchat</code>, <code>supersticker</code>, <code>gift</code>, or <code>jeweldonation</code>. Use <code>meta</code> only for additional structured data that consumers actually need and that existing fields do not already cover.
+                </div>
             </section>
 
-            <section class="section-summary">
+            <section class="section-summary" id="quick-availability">
                 <h2>Quick Feature Availability</h2>
                 <p>Use this table to see which alert types each capture method currently delivers. Detailed payload notes follow below.</p>
                 <p class="field-highlights">The dedicated Multi-Stream Alert Box groups live events into five shared alert categories: <code>Follow</code>, <code>Subscription/Member</code>, <code>Donation</code>, <code>Bits/Cheers</code>, and <code>Raid/Host</code>. It derives those categories from the existing <code>event</code>, <code>membership</code>, <code>subtitle</code>, <code>hasDonation</code>, and <code>meta</code> fields documented here; no separate payload format is required.</p>
@@ -126,6 +179,20 @@
                             <td>Follow cards (when TikTok shows them)</td>
                             <td>Gifts converted to coin totals</td>
                             <td>Viewer count, join alerts, and like storms</td>
+                        </tr>
+                        <tr>
+                            <td><strong>YouNow</strong></td>
+                            <td>&mdash;</td>
+                            <td>Fan and audience activity</td>
+                            <td>&mdash;</td>
+                            <td>Viewer count from the live audience panel</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Favorited Studio</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Viewer count from the live viewers tab</td>
                         </tr>
                         <tr>
                             <td><strong>Whatnot</strong></td>
@@ -197,12 +264,47 @@
                             <td>&mdash;</td>
                             <td>Viewer count plus chat names, colors, badges, replies, and links</td>
                         </tr>
+                        <tr>
+                            <td><strong>WorldsWave</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Rendered live chat plus opt-in viewer count updates</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CHZZK</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Visible cheese donation rows</td>
+                            <td>Chat rows, badge images, emotes, and viewer count polls</td>
+                        </tr>
+                        <tr>
+                            <td><strong>BEAM</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Chat rows and viewer count polls when the chat-only page exposes a viewer counter</td>
+                        </tr>
+						<tr>
+							<td><strong>Seal Team Sloth</strong></td>
+							<td>&mdash;</td>
+							<td>&mdash;</td>
+							<td>&mdash;</td>
+							<td>Rendered pop-out chat rows plus <code>viewer_update</code> polls when viewer counts are enabled</td>
+						</tr>
+                        <tr>
+                            <td><strong>FLEX TV</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Rendered chat rows with names, author colors, badge images, and member metadata</td>
+                        </tr>
                     </tbody>
                 </table>
                 <p class="field-highlights">*YouTube subscriber alerts have a 4-hour API delay and only show subscribers with public subscription lists. This is a YouTube API limitation that also affects Streamlabs and other apps.</p>
             </section>
 
-            <section class="field-overview">
+            <section class="field-overview" id="field-overview">
                 <h2>Field Overview</h2>
                 <table class="field-table">
                     <thead>
@@ -216,12 +318,22 @@
                         <tr>
                             <td><code>data.type</code></td>
                             <td>string</td>
-                            <td>Source identifier used by overlays, filters, and Event Flow. Instagram keeps live chat as <code>instagramlive</code> and non-live comments as <code>instagram</code>.</td>
+                            <td>Source identifier used by overlays, filters, and Event Flow. Instagram keeps live chat as <code>instagramlive</code> and non-live comments as <code>instagram</code>. See the <a href="source-types-guide.html">Source Types Guide</a> for variants, generic sources, and outbound routing.</td>
                         </tr>
                         <tr>
                             <td><code>data.event</code></td>
                             <td>string | boolean</td>
                             <td>Identifier for system activity (for example <code>viewer_update</code>, <code>subscription_gift</code>, <code>giftpurchase</code>). Regular chat should leave this empty/false so overlays can distinguish system notices from conversational text.</td>
+                        </tr>
+                        <tr>
+                            <td><code>data.chatmessage</code></td>
+                            <td>string</td>
+                            <td>Message body. It may contain sanitized/renderable HTML only when <code>data.textonly</code> is false.</td>
+                        </tr>
+                        <tr>
+                            <td><code>data.textonly</code></td>
+                            <td>boolean</td>
+                            <td>Applies only to <code>data.chatmessage</code>. <code>true</code> means render <code>chatmessage</code> as plain text; <code>false</code> means <code>chatmessage</code> may contain sanitized/renderable HTML. Other normal fields are expected to be plain text, except media fields such as <code>chatimg</code> and <code>contentimg</code>.</td>
                         </tr>
                         <tr>
                             <td><code>data.membership</code></td>
@@ -236,7 +348,7 @@
                         <tr>
                             <td><code>data.hasDonation</code></td>
                             <td>string</td>
-                            <td>Monetary or virtual gift amount (<code>$5.00</code>, <code>5 Gifted</code>, <code>300 coins</code>). Populate even when <code>data.event</code> is blank so donation overlays can detect it.</td>
+                            <td>Monetary or virtual gift amount (<code>$5.00</code>, <code>500 bits</code>, <code>300 coins</code>). Populate even when <code>data.event</code> is blank so donation overlays can detect it.</td>
                         </tr>
                         <tr>
                             <td><code>data.meta</code></td>
@@ -257,26 +369,28 @@
                 </table>
             </section>
 
-            <section class="meta-guidance">
+            <section class="meta-guidance" id="meta-conventions">
                 <h2>Meta Conventions</h2>
                 <p>To keep dashboards and automations aligned, follow these conventions when extending <code>data.meta</code>:</p>
                 <ul>
-                    <li><code>viewer_update</code>, <code>follower_update</code>, and <code>subscriber_update</code> use a plain integer <code>meta</code> value. The background script aggregates them into <code>viewer_updates</code> with an object keyed by <code>data.type</code>.</li>
+                    <li><code>viewer_update</code>, <code>follower_update</code>, <code>subscriber_update</code>, and <code>likes_update</code> use a plain integer <code>meta</code> value. The background script aggregates viewer counts into <code>viewer_updates</code> with an object keyed by <code>data.type</code>.</li>
                     <li><code>video_stats</code> uses a structured <code>meta</code> object for external encoder/server health, including <code>provider</code>, <code>label</code>, <code>online</code>, <code>bitrateKbps</code>, <code>rttMs</code>, <code>bufferMs</code>, packet loss/drop counters, and optional codec details.</li>
                     <li>Donation-style events include a descriptive object: for example <code>{ amount, currency, supporter }</code> for Kick, <code>{ bits }</code> for Twitch cheers, <code>{ supporter, eventType }</code> for YouTube memberships.</li>
+                    <li>Normalized Stripe, Ko-fi, Buy Me a Coffee, and Fourthwall webhook messages include provider-scoped <code>meta.webhookId</code>, copied from the provider's stable event identifier, so downstream pages can suppress retry and mixed-transport duplicates.</li>
                     <li>Raids and hosts pass <code>{ fromId, fromLogin, viewers }</code> so overlays can display both streamer name and audience size.</li>
                     <li>Reward redemptions expose <code>{ rewardId, cost, alias }</code> alongside the prepared chat message.</li>
                     <li><code>user_banned</code> is metadata-only for moderation widgets. It intentionally omits <code>chatname</code> and <code>chatmessage</code>; use <code>meta.username</code>, <code>meta.displayName</code>, <code>meta.avatarUrl</code>, and <code>meta.profileUrl</code>.</li>
                     <li>Chat transports that support source-control delete sync should expose the platform-native chat identifier as <code>meta.messageId</code> instead of relying on the dock's internal <code>data-mid</code> value.</li>
                     <li>SSApp source identity metadata may add <code>meta.ssnAccountRole</code>, <code>meta.ssnSourceId</code>, and <code>meta.ssnSession</code> when a source is assigned a non-normal account role.</li>
                     <li>Event Flow can request a highlight by setting <code>meta.featured = true</code> on the chat payload, which auto-features the message in dock/featured overlays.</li>
+                    <li>Event Flow can request dock pinning by setting <code>meta.pinned = true</code>; optional <code>meta.pinnedTarget</code> limits that pin to a dock with the matching <code>label</code>.</li>
                     <li>AI stage overlay commands use <code>{ action: "aiOverlay", target, meta }</code> or dock-controlled co-host playout uses <code>{ action: "cohostOverlay", target, meta }</code>; keep all command details such as <code>command</code>, <code>text</code>, <code>emotion</code>, <code>avatar</code>, and <code>tts</code> inside <code>meta</code>.</li>
                     <li>If a platform exposes multiple counters together, prefer a structured object with explicit keys (<code>meta.viewer_count</code>, <code>meta.follower_count</code>) instead of overloading strings.</li>
                     <li>Commerce overlays should use snapshot objects under <code>meta</code> (for example <code>auction_update</code> and <code>commerce_update</code>) and avoid ad-hoc top-level fields.</li>
                 </ul>
             </section>
 
-            <section class="platforms">
+            <section class="platforms" id="platform-coverage">
                 <h2>Platform Coverage</h2>
 
                 <article class="platform-card" id="youtube-dom">
@@ -304,7 +418,7 @@
                             <tr>
                                 <td class="membership-event"><code>giftpurchase</code></td>
                                 <td>Gift bundle purchase banner (<code>ytd-sponsorships-live-chat-gift-purchase</code>).</td>
-                                <td><code>hasDonation</code> set to “N Gifted”; <code>donoValue</code> approximates USD (5 × quantity); <code>membership</code> becomes “SPONSORSHIP”.</td>
+                                <td><code>membership</code> becomes <code>gift_giver</code>; <code>subtitle</code> carries the gift count when known; no <code>hasDonation</code> or <code>donoValue</code>.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>giftredemption</code></td>
@@ -322,14 +436,9 @@
                                 <td><code>subtitle</code> captures new tier label; <code>membership</code> remains “MEMBERSHIP”.</td>
                             </tr>
                             <tr>
-                                <td class="donation-event"><code>jeweldonation</code></td>
-                                <td>YouTube Gifts powered by Jewels (<code>yt-gift-message-view-model</code>).</td>
-                                <td>Parses jewel count into <code>hasDonation</code> ("500 Jewels") when present; if YouTube hides the count, <code>hasDonation</code> carries the gift name and <code>donoValue</code> is omitted. Gift images use <code>contentimg</code>, and gift details are mirrored under <code>meta.youtubeGift</code>.</td>
-                            </tr>
-                            <tr>
-                                <td class="donation-event"><code>donation</code></td>
-                                <td>Super Chats, Super Stickers, donation announcement cards.</td>
-                                <td><code>hasDonation</code> carries site-formatted amount; when no message is present the text fallback triggers <code>thankyou</code>.</td>
+                                <td class="donation-event"><code>superchat</code>, <code>supersticker</code>, <code>jeweldonation</code></td>
+                                <td>Super Chats, Super Stickers, donation announcement cards, and YouTube Gifts powered by Jewels (<code>yt-gift-message-view-model</code>).</td>
+                                <td><code>hasDonation</code> carries the value; <code>event</code> identifies the YouTube paid item type. YouTube Gifts use <code>N Jewels</code> when present, or <code>1 YouTube Gift</code> when YouTube hides the count. Gift images use <code>contentimg</code>, gift labels use <code>subtitle</code>, and minimal gift details are mirrored under <code>meta.youtubeGift</code>.</td>
                             </tr>
                             <tr>
                                 <td class="donation-event"><code>thankyou</code></td>
@@ -371,9 +480,9 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="donation-event"><code>donation</code></td>
+                                <td class="donation-event"><code>superchat</code></td>
                                 <td>Super Chat entries from the Data API backlog or stream polling.</td>
-                                <td><code>hasDonation</code> preserves site amount (currency + value); badges/avatars come from API metadata.</td>
+                                <td><code>hasDonation</code> preserves site amount (currency + value); <code>event</code> is <code>superchat</code>. Older WebSocket builds used <code>event: "donation"</code> for this row, so consumers may keep accepting that as a legacy alias.</td>
                             </tr>
                             <tr>
                                 <td class="donation-event"><code>supersticker</code></td>
@@ -383,7 +492,7 @@
                             <tr>
                                 <td class="donation-event"><code>jeweldonation</code></td>
                                 <td>YouTube <code>giftEvent</code> messages when viewers redeem Jewels for Gifts.</td>
-                                <td><code>hasDonation</code> holds “N Jewels”; <code>donoValue</code> estimates Ruby revenue in USD; <code>contentimg</code> uses the gift asset URL when exposed; <code>meta.youtubeGift</code> carries <code>giftName</code>, <code>jewelsAmount</code>, <code>giftUrl</code>, visual-effect/combo fields, and estimated Ruby revenue.</td>
+                                <td><code>hasDonation</code> holds <code>N Jewels</code>, or <code>1 YouTube Gift</code> when YouTube hides the count; <code>contentimg</code> uses the gift asset URL when exposed; <code>subtitle</code> carries the gift label; <code>meta.youtubeGift</code> carries extra gift details.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>sponsorship</code></td>
@@ -398,7 +507,7 @@
                             <tr>
                                 <td class="membership-event"><code>giftpurchase</code></td>
                                 <td>Gift bundles purchased via the API.</td>
-                                <td><code>membership</code> set to <code>gift_giver</code>; <code>subtitle</code> lists count/tier; <code>meta</code> mirrors membership mapping.</td>
+                                <td><code>membership</code> set to <code>gift_giver</code>; <code>subtitle</code> lists count/tier; no <code>hasDonation</code> or <code>donoValue</code>.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>giftredemption</code></td>
@@ -408,12 +517,17 @@
                             <tr>
                                 <td class="membership-event"><code>membermilestone</code></td>
                                 <td>Milestone chats (<code>memberMonth</code> or <code>displayMessage</code> present).</td>
-                                <td><code>membership</code> <code>member_milestone</code>; <code>subtitle</code> summarises months + tier; <code>meta</code> captures the raw milestone mapping.</td>
+                                <td><code>membership</code> <code>member_milestone</code>; <code>subtitle</code> summarizes months + tier; <code>meta</code> captures the raw milestone mapping.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>Streaming stats (concurrent viewers) when viewer reporting is enabled.</td>
                                 <td><code>meta</code> is integer count; mirrors DOM scripting so downstream consumers can merge both flows.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>likes_update</code></td>
+                                <td>Official video statistics poll when <strong>Show YouTube video like count in dashboard</strong> is enabled.</td>
+                                <td><code>meta</code> is the current video like-count integer. It emits when the count changes and periodically while unchanged so dashboard state stays fresh.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>subscriber_update</code></td>
@@ -483,7 +597,7 @@
                             <tr><td><code>giftpurchase</code></td><td><code>gift_giver</code></td><td>Gifted memberships to channel</td></tr>
                             <tr><td><code>giftredemption</code></td><td><code>gift_recipient</code></td><td>Received a gifted membership</td></tr>
                             <tr><td><code>membermilestone</code></td><td><code>member_milestone</code></td><td>Membership anniversary chat</td></tr>
-                            <tr><td><code>donation</code></td><td>&mdash;</td><td>Super Chat</td></tr>
+                            <tr><td><code>superchat</code></td><td>&mdash;</td><td>Super Chat</td></tr>
                             <tr><td><code>supersticker</code></td><td>&mdash;</td><td>Super Sticker</td></tr>
                             <tr><td><code>user_banned</code></td><td>&mdash;</td><td>Metadata-only ban/timeout event</td></tr>
                             <tr><td><code>new_follower</code></td><td>&mdash;</td><td>New subscriber (up to 4hr delay)</td></tr>
@@ -555,6 +669,7 @@
                         <li>OAuth scopes: <code>chat:read</code>, <code>chat:edit</code>, <code>bits:read</code>, <code>moderator:read:followers</code>, <code>channel:read:subscriptions</code>, <code>channel:read:hype_train</code>, <code>channel:moderate</code>, <code>moderator:manage:banned_users</code>, <code>moderator:manage:chat_messages</code>, <code>channel:read:redemptions</code>, <code>channel:read:ads</code>, <code>channel:manage:ads</code>. Broadcaster tokens unlock subscriber/follower counts.</li>
                         <li>Events delivered by EventSub, plus Helix polling for viewer/follower/subscriber totals.</li>
                         <li><strong>WebSocket mode provides real-time</strong> follower alerts, subscription events, raids, cheers, channel point redemptions, and hype train metadata.</li>
+                        <li>Shared Chat rows use Twitch IRC <code>source-room-id</code> to populate <code>sourceName</code>/<code>sourceImg</code> with the originating channel when it differs from the connected channel.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -583,7 +698,7 @@
                             <tr>
                                 <td class="membership-event"><code>subscription_gift</code></td>
                                 <td><code>channel.subscription.gift</code> or USERNOTICE <code>msg-id=subgift</code>.</td>
-                                <td><code>meta</code> exposes gifted total and tier; <code>chatmessage</code> summarises the action.</td>
+                                <td><code>meta</code> exposes gifted total and tier; <code>chatmessage</code> summarizes the action.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>reward</code></td>
@@ -637,7 +752,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Dedupe logic uses message IDs; ensure downstream consumers honour <code>data.id</code>.</p>
+                    <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Dedupe logic uses message IDs; ensure downstream consumers honor <code>data.id</code>.</p>
 
                     <h4>Twitch Hype Train Metadata</h4>
                     <p class="field-highlights"><code>hype_train</code> is metadata-only and does not include <code>chatname</code> or <code>chatmessage</code>. Dashboards should update an existing train display by <code>meta.id</code> instead of appending each progress update as chat. The Meta Data Bar (<code>meta.html</code>) renders these events as a top progress bar.</p>
@@ -757,8 +872,6 @@
                     </table>
                 </article>
 
-                <article class="platform-card" id="tiktok">
-                    
                 <article class="platform-card" id="streamlabs-alertbox">
                     <h3>Streamlabs Alert Box</h3>
                     <p class="source-note">Implementation: <code>sources/streamlabs.js</code> (alert-box DOM); optional socket bridge at <code>sources/websocket/streamlabs.html</code></p>
@@ -785,7 +898,7 @@
                             <tr>
                                 <td class="donation-event"><code>cheer</code></td>
                                 <td>Twitch bit/cheer alerts.</td>
-                                <td><code>hasDonation</code> becomes “100 bits” and <code>donoValue</code> captures the bit count.</td>
+                                <td><code>hasDonation</code> becomes “100 bits” and <code>donoValue</code> captures the USD value.</td>
                             </tr>
                             <tr>
                                 <td><code>subscription</code></td>
@@ -819,8 +932,8 @@
                             </tr>
                             <tr>
                                 <td><code>superchat</code></td>
-                                <td>Super Chat style alerts emitted by Streamlabs.</td>
-                                <td>Donation fields populated similarly to <code>donation</code>.</td>
+                                <td>Super Chat style alerts from YouTube or supported alert integrations.</td>
+                                <td><code>hasDonation</code> carries the amount; consumers may keep accepting legacy <code>donation</code> aliases.</td>
                             </tr>
                             <tr>
                                 <td><code>sponsor</code></td>
@@ -831,8 +944,8 @@
                     </table>
                 </article>
 
-
-<h3>TikTok Live &ndash; DOM Capture and TikFinity Feed</h3>
+                <article class="platform-card" id="tiktok">
+                    <h3>TikTok Live &ndash; DOM Capture and TikFinity Feed</h3>
                     <p class="source-note">Implementation: <code>sources/tiktok.js</code> for native TikTok pages and <code>sources/tikfinity.js</code> for TikFinity's activity-feed widget/iframe. SSApp still has a native TikTok integration with the widest event coverage (see SSApp docs).</p>
                     <ul class="requirements">
                         <li>Works on the broadcaster's live page. Gift/like/follow banners only populate when the session is authenticated.</li>
@@ -1067,7 +1180,7 @@
                             <tr>
                                 <td class="membership-event"><code>resub</code></td>
                                 <td><code>channel.subscription.renewal</code>.</td>
-                                <td><code>meta.duration</code> (months) and <code>meta.plan</code> available; <code>subtitle</code> summarises streak.</td>
+                                <td><code>meta.duration</code> (months) and <code>meta.plan</code> available; <code>subtitle</code> summarizes streak.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>subscription_gift</code></td>
@@ -1371,6 +1484,93 @@
                     </table>
                 </article>
 
+                <article class="platform-card" id="worldswave">
+                    <h3>WorldsWave</h3>
+                    <p class="source-note">Implementation: <code>sources/worldswave.js</code></p>
+                    <ul class="requirements">
+                        <li>Supports WorldsWave live pages and chat-only URLs such as <code>https://worldswave.com/kn_livecmd.php?cmd=viewStream&amp;streamId=STREAM_ID&amp;chatonly=1</code>.</li>
+                        <li>Existing chat history is skipped when capture attaches; test with a new message.</li>
+                        <li>Viewer counts require <strong>Show viewer count</strong> or hype mode. Gifts, tips, and send-back are not normalized by this source yet.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>A new rendered WorldsWave chat row appears.</td>
+                                <td>Standard chat payload with <code>type: "worldswave"</code>, sender name, avatar, optional user ID and name color, plus sanitized inline message images when text-only mode is disabled.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>The visible live viewer total changes while viewer-count capture or hype mode is enabled.</td>
+                                <td><code>meta</code> is the integer viewer count; compact values such as <code>1.2K</code> are normalized.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="flextv">
+                    <h3>FLEX TV</h3>
+                    <p class="source-note">Implementation: <code>sources/flextv.js</code></p>
+                    <ul class="requirements">
+                        <li>Reads the rendered chat panel on <code>https://www.flextv.co.kr/channels/*/live</code> pages.</li>
+                        <li>The chat panel must be visible. Existing chat history is skipped when the source attaches, so test with a new chat row.</li>
+                        <li>No viewer count, donation, or send-back path is documented for this source yet.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>New visible FLEX TV <code>.chat-item</code> rows appear in the live chat feed.</td>
+                                <td>Standard chat payload with <code>type: "flextv"</code>, <code>chatname</code>, <code>chatmessage</code>, <code>nameColor</code>, badge images in <code>chatbadges</code>, and FLEX member details under <code>meta</code> when exposed by <code>data-member</code>.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="sealteamsloth">
+                    <h3>Seal Team Sloth</h3>
+                    <p class="source-note">Implementation: <code>sources/sealteamsloth.js</code></p>
+                    <ul class="requirements">
+                        <li>Reads the rendered pop-out chat on <code>https://sealteamsloth.com/popout-chat/*</code> pages.</li>
+                        <li>Viewer counts require <strong>Show viewer count</strong> or hype mode.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>A new rendered Seal Team Sloth chat row appears.</td>
+                                <td>Standard chat payload with <code>type: "sealteamsloth"</code>, sender name, avatar, and message content.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>The visible live viewer total changes while viewer-count capture or hype mode is enabled.</td>
+                                <td><code>meta</code> is the integer viewer count; compact values such as <code>1.2K</code> are normalized.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
                 <article class="platform-card" id="meetme-dom">
                     <h3>MeetMe - DOM and WebSocket Capture</h3>
                     <p class="source-note">Implementation: <code>sources/meetme.js</code></p>
@@ -1443,6 +1643,7 @@
                     <p class="source-note">Implementation: <code>sources/velora.js</code> and <code>sources/websocket/velora.js</code></p>
                     <ul class="requirements">
                         <li>Standard mode reads the visible chat DOM; WebSocket mode uses the Velora Events API with OAuth.</li>
+                        <li>Supported Standard mode URLs include <code>https://velora.tv/*</code>, <code>https://velora.tv/dashboard/stream/popout?panels=chat%2Cactivity&amp;channel=CHANNEL&amp;layout=vertical</code>, and <code>https://velora.tv/dashboard/stream/popout/CHANNEL/obs-chat</code>.</li>
                         <li>Volts and channel point style cards are emitted as event payloads when exposed by the DOM or Events API.</li>
                     </ul>
                     <table class="event-table">
@@ -1484,10 +1685,10 @@
                 </article>
 
                 <article class="platform-card" id="parti">
-                    <h3>Parti - Popout Chat Capture</h3>
+                    <h3>Parti - Profile / Popout Chat Capture</h3>
                     <p class="source-note">Implementation: <code>sources/parti.js</code></p>
                     <ul class="requirements">
-                        <li>Requires the popout URL shape <code>https://parti.com/popout-chat?id=*</code>.</li>
+                        <li>Supports profile URLs like <code>https://parti.com/USERNAME</code> and popout URLs like <code>https://parti.com/popout-chat?id=USER_ID</code>.</li>
                         <li>Viewer counts use Parti's livestream heartbeat endpoint when viewer-count capture or hype mode is enabled.</li>
                     </ul>
                     <table class="event-table">
@@ -1501,7 +1702,7 @@
                         <tbody>
                             <tr>
                                 <td><code>message</code></td>
-                                <td>Visible Parti chat rows appear in the popout chat stream.</td>
+                                <td>Visible Parti chat rows appear in the profile or popout chat stream.</td>
                                 <td>Standard chat payload; <code>nameColor</code> preserves Parti's rendered author color and <code>chatmessage</code> preserves inline content unless text-only mode is enabled.</td>
                             </tr>
                             <tr>
@@ -1513,6 +1714,41 @@
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>The Parti heartbeat returns a live viewer count.</td>
                                 <td><code>meta</code> is the integer viewer count; the page reuses one heartbeat token per source window to avoid inflating counts.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="chzzk">
+                    <h3>CHZZK - Popout Chat Capture</h3>
+                    <p class="source-note">Implementation: <code>sources/chzzk.js</code></p>
+                    <ul class="requirements">
+                        <li>Supports <code>https://chzzk.naver.com/live/*/chat</code> and <code>https://chzzk.naver.com/iframe/live/*/chat</code>.</li>
+                        <li>Viewer counts use CHZZK's live-status polling endpoint when viewer-count capture or hype mode is enabled.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>Visible CHZZK chat rows appear in the popout chat stream.</td>
+                                <td>Standard chat payload with <code>type: "chzzk"</code>, <code>nameColor</code>, badge image URLs in <code>chatbadges</code>, and rendered emotes in <code>chatmessage</code> unless text-only mode is enabled.</td>
+                            </tr>
+                            <tr>
+                                <td class="donation-event"><code>donation</code></td>
+                                <td>Visible CHZZK cheese donation rows appear in chat.</td>
+                                <td><code>hasDonation</code> carries the displayed cheese amount. These rows do not set <code>data.event</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>The live-status poll returns a viewer count.</td>
+                                <td><code>meta</code> is the integer viewer count.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1662,7 +1898,7 @@
                         </tr>
                         <tr>
                             <td><strong>Donation/tip</strong></td>
-                            <td><code>donation</code> (Super Chat), <code>jeweldonation</code> (Gifts)</td>
+                            <td><code>superchat</code>, <code>supersticker</code>, <code>jeweldonation</code> with <code>hasDonation</code></td>
                             <td><code>cheer</code> (bits)</td>
                             <td><code>donation</code></td>
                         </tr>
@@ -1716,7 +1952,7 @@
                     <li><strong>YouTube uses <code>sponsorship</code></strong> for new members, while Twitch and Kick use <code>new_subscriber</code>. Consider checking both when building cross-platform triggers.</li>
                     <li><strong><code>resub</code> is consistent</strong> across all three platforms for renewals.</li>
                     <li><strong>Gift events differ:</strong> YouTube uses <code>giftpurchase</code>/<code>giftredemption</code>, while Twitch and Kick use <code>subscription_gift</code>.</li>
-                    <li><strong>Donations vary by platform:</strong> YouTube has Super Chats (<code>donation</code>) and Gifts (<code>jeweldonation</code>), Twitch has bits (<code>cheer</code>), and Kick has tips (<code>donation</code>).</li>
+                    <li><strong>Donations vary by platform:</strong> YouTube uses specific paid event names such as <code>superchat</code>, <code>supersticker</code>, and <code>jeweldonation</code> with <code>hasDonation</code>; Twitch has bits (<code>cheer</code>); Kick has tips (<code>donation</code>).</li>
                     <li><strong><code>new_follower</code> is now consistent</strong> across all three platforms, but YouTube has a 4-hour API delay and only shows subscribers with public subscription lists.</li>
                 </ul>
             </section>
@@ -1778,8 +2014,8 @@
                         </tr>
                         <tr>
                             <td>YouTube: Standard vs Websocket</td>
-                            <td>Shared: <code>sponsorship</code>, <code>resub</code>, <code>giftpurchase</code>, <code>giftredemption</code>, <code>donation</code>, <code>jeweldonation</code>, <code>viewer_update</code>. Standard-only: <code>thankyou</code>, <code>redirect</code>. Websocket-only: <code>supersticker</code>, <code>membermilestone</code>, <code>new_follower</code>, <code>subscriber_update</code>, <code>view_update</code>.</td>
-                            <td>Core event names are aligned across both; YouTube gifts/donations use shared event paths in both modes (<code>donation</code>, <code>jeweldonation</code>, <code>giftpurchase</code>, <code>giftredemption</code>), with WebSocket mode adding extras like <code>supersticker</code>, <code>membermilestone</code>, <code>new_follower</code>.</td>
+                            <td>Shared: <code>superchat</code>, <code>supersticker</code>, <code>jeweldonation</code>, <code>sponsorship</code>, <code>resub</code>, <code>giftpurchase</code>, <code>giftredemption</code>, <code>viewer_update</code>. Standard-only: <code>thankyou</code>, <code>redirect</code>. Websocket-only: <code>membermilestone</code>, <code>new_follower</code>, <code>subscriber_update</code>, <code>view_update</code>, <code>likes_update</code> (opt-in).</td>
+                            <td>Core member/event names are aligned across both; Super Chat, Super Sticker, and Jewels use <code>hasDonation</code>, while membership gift purchases/redemptions do not.</td>
                         </tr>
                         <tr>
                             <td>All surfaces</td>
@@ -1790,7 +2026,7 @@
                 </table>
             </section>
 
-            <section class="deprecated-events">
+            <section class="deprecated-events" id="deprecated-events">
                 <h2>Deprecated Event Names</h2>
                 <p>The following event names were replaced during the event-naming unification. Sources no longer emit them, but downstream pages (dock, featured, events, leaderboard, multi-alerts) still accept them for backward compatibility with older extension versions. <strong>Do not use these in new code.</strong></p>
                 <table class="field-table">
@@ -1826,7 +2062,7 @@
                 </table>
             </section>
 
-            <section class="usage-notes">
+            <section class="usage-notes" id="using-reference">
                 <h2>Using This Reference</h2>
                 <ul>
                     <li>When adding a new event, reuse existing vocabulary (<code>subscription_gift</code>, <code>viewer_update</code>, etc.) whenever possible. If a deviation is unavoidable, document it here along with the rationale.</li>
@@ -1836,6 +2072,7 @@
                     <li>Stream events are always captured. To hide all events in dock or featured overlays, add <code>&amp;hideevents</code> (dock also accepts <code>&amp;hideallevents</code>). To hide selected events, use <code>&amp;filterevents=subscription_gift,new_follower,gifted</code>.</li>
                     <li>For YouTube, Twitch, and Kick, enable <strong>WebSocket mode</strong> in extension settings for full event support (followers, subscriptions, raids, etc.). Gift/donation capture for YouTube (including gifts and super chats) is available in both Standard and WebSocket modes; websocket adds additional event types.</li>
                 </ul>
+                <p class="back-to-top"><a href="#event-reference">Back to top</a></p>
             </section>
         </div>
     </main>

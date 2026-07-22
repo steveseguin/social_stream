@@ -278,11 +278,46 @@
 
 			#actionStatusSummary,
 			#voiceStatusSummary,
-			#liveChatStatusSummary {
+			#liveChatStatusSummary,
+			#geminiSessionPanel {
 				background: #181818;
 				border: 1px solid #2a2a2a;
 				border-radius: 10px;
 				padding: 10px 12px;
+			}
+
+			.gemini-session-panel {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+			}
+
+			.gemini-progress-row {
+				display: grid;
+				grid-template-columns: 110px 1fr 92px;
+				align-items: center;
+				gap: 8px;
+			}
+
+			.gemini-progress-row span {
+				min-width: 0;
+			}
+
+			.gemini-progress-row progress {
+				width: 100%;
+				height: 10px;
+				accent-color: #22c55e;
+			}
+
+			.gemini-session-actions {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 8px;
+			}
+
+			.gemini-session-actions button {
+				padding: 7px 10px;
+				font-size: 12px;
 			}
 
 			.live-chat-actions {
@@ -451,6 +486,8 @@
 				border-top: 1px solid #333;
 				display: flex;
 				gap: 12px;
+				position: relative;
+				z-index: 1001;
 			}
 
 			.message-input {
@@ -462,13 +499,6 @@
 				width: auto;
 				padding: 0 24px;
 				background: #404eed;
-			}
-
-			.github-link {
-				position: fixed;
-				bottom: 20px;
-				left: 20px;
-				z-index: 100;
 			}
 
 			#clearHistoryButton {
@@ -1314,6 +1344,24 @@
 						<input type="password" id="apiKey" placeholder="Enter Gemini API Key" size="15" class="api-key" />
 						<div class="api-key-info" id="apikeyinfo">Get your free Gemini API key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</div>
 					</div>
+					<div id="geminiSessionPanel" class="api-key-info gemini-session-panel" style="display: none">
+						<div><strong>Gemini Live:</strong> Google closes Live websocket connections around every 10 minutes. SSN will automatically resume when Google provides a resume handle.</div>
+						<div class="gemini-progress-row">
+							<span>Reconnect</span>
+							<progress id="geminiReconnectProgress" max="100" value="0"></progress>
+							<span id="geminiReconnectText">waiting</span>
+						</div>
+						<div class="gemini-progress-row">
+							<span>Context</span>
+							<progress id="geminiContextProgress" max="100" value="0"></progress>
+							<span id="geminiContextText">auto</span>
+						</div>
+						<div id="geminiSessionStatus">Context compression is automatic; resetting context starts fresh.</div>
+						<div class="gemini-session-actions">
+							<button id="geminiReconnectNow" type="button" title="Reconnect now using the latest Gemini resume handle">Reconnect now</button>
+							<button id="geminiResetContext" type="button" title="Start a fresh Gemini session and clear the resume handle">Reset context</button>
+						</div>
+					</div>
 					<div class="api-key-container" id="customEndpointContainer" style="display: none; width: 100%">
 						<input type="text" id="customEndpoint" placeholder="Custom OpenAI-compatible endpoint (eg: http://127.0.0.1:1234/v1)" class="api-key" style="flex: 1" />
 						<button id="customModelsRefresh" type="button" style="white-space: nowrap">Refresh Models</button>
@@ -1401,11 +1449,6 @@
 				</div>
 			</div>
 		</div>
-		<a href="https://github.com/steveseguin/social_stream" class="github-link" target="_blank" rel="noopener noreferrer" title="View Source on GitHub">
-			<svg width="24" height="24" viewBox="0 0 24 24" fill="#e0e0e0">
-				<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-			</svg>
-		</a>
 		<div id="puppet-container"></div>
 		<script type="text/javascript" src="./shared/ai/browserModelCatalog.js"></script>
 		<script type="text/javascript" src="tts.js"></script>
@@ -1424,7 +1467,7 @@
 			}
 
 			function sendCohostOverlayPayload(payload) {
-				if (!shouldMirrorCohostOverlay()) return;
+				if (!shouldMirrorCohostOverlay() || !payload) return;
 				const meta = Object.assign({
 					source: "cohost",
 					tts: false
@@ -1446,6 +1489,10 @@
 				const now = Date.now();
 				const elapsed = now - cohostOverlayLastSent;
 				if (elapsed >= waitMs) {
+					if (cohostOverlaySendTimer) {
+						clearTimeout(cohostOverlaySendTimer);
+						cohostOverlaySendTimer = null;
+					}
 					cohostOverlayLastSent = now;
 					const nextPayload = cohostOverlayPendingPayload;
 					cohostOverlayPendingPayload = null;
@@ -1458,7 +1505,7 @@
 					cohostOverlayLastSent = Date.now();
 					const nextPayload = cohostOverlayPendingPayload;
 					cohostOverlayPendingPayload = null;
-					sendCohostOverlayPayload(nextPayload);
+					if (nextPayload) sendCohostOverlayPayload(nextPayload);
 				}, waitMs - elapsed);
 			}
 
@@ -1470,6 +1517,7 @@
 					text: value,
 					emotion: window.avatar?.currentEmotion || "happy",
 					talking: !final && !!window.avatar?.isTalking,
+					tts: !!final,
 					final: !!final
 				}, final ? 0 : 350);
 			}
@@ -1717,8 +1765,14 @@
 				}
 			}
 			const GEMINI_DEFAULT_LIVE_MODEL = "models/gemini-2.5-flash-native-audio-preview-12-2025";
+			const GEMINI_LIVE_CONNECTION_LIMIT_MS = 10 * 60 * 1000;
+			const GEMINI_GOAWAY_RECONNECT_GRACE_MS = 5000;
+			const GEMINI_CONTEXT_TRIGGER_TOKENS = 20000;
+			const GEMINI_CONTEXT_TARGET_TOKENS = 10000;
+			const GEMINI_AUDIO_TOKENS_PER_SECOND = 25;
+			const GEMINI_VIDEO_TOKENS_PER_SECOND = 258;
 			const LOCAL_BROWSER_DEFAULT_REMOTE_HOST = "https://largefiles.socialstream.ninja/";
-			const LOCAL_BROWSER_WORKER_PATH = "local-browser-model-worker.js";
+			const LOCAL_BROWSER_WORKER_PATH = "local-browser-model-worker.js?v=18";
 			const CUSTOM_OPENAI_DEFAULT_ENDPOINT = "http://127.0.0.1:1234/v1";
 			const CUSTOM_OPENAI_DEFAULT_MODEL = "";
 			const CONFIGURED_LLM_BRIDGE_CHUNK_SIZE = 12000;
@@ -1747,7 +1801,23 @@
 			function createLocalBrowserWorker() {
 				const workerUrl = resolveLocalBrowserWorkerUrl();
 				if (window.location.protocol === "file:") {
-					const bootstrapSource = `import ${JSON.stringify(workerUrl)};`;
+					const bootstrapSource = `const pendingMessages = [];
+					const queueMessage = event => pendingMessages.push(event.data);
+					self.addEventListener("message", queueMessage);
+					import(${JSON.stringify(workerUrl)}).then(() => {
+						self.removeEventListener("message", queueMessage);
+						for (const data of pendingMessages) {
+							self.dispatchEvent(new MessageEvent("message", { data }));
+						}
+					}).catch(error => {
+						self.removeEventListener("message", queueMessage);
+						self.postMessage({
+							type: "status",
+							state: "error",
+							message: error && (error.stack || error.message) ? String(error.stack || error.message) : String(error)
+						});
+						setTimeout(() => { throw error; });
+					});`;
 					const bootstrapUrl = URL.createObjectURL(
 						new Blob([bootstrapSource], {
 							type: "text/javascript"
@@ -1789,7 +1859,10 @@
 				const providerKey = String(providerConfig?.key || "")
 					.trim()
 					.toLowerCase();
-				if (providerKey === "localqwen") {
+				if (providerKey === "localgemma") {
+					return ["config.json", "generation_config.json", "tokenizer.json", "tokenizer_config.json", "preprocessor_config.json", "onnx/embed_tokens_q4.onnx", "onnx/embed_tokens_q4.onnx_data", "onnx/decoder_model_merged_q4.onnx", "onnx/decoder_model_merged_q4.onnx_data", "onnx/vision_encoder_q4.onnx", "onnx/vision_encoder_q4.onnx_data", "onnx/audio_encoder_q4.onnx", "onnx/audio_encoder_q4.onnx_data"];
+				}
+				if (providerKey.startsWith("localqwen")) {
 					return ["config.json", "generation_config.json", "tokenizer.json", "tokenizer_config.json", "preprocessor_config.json", "onnx/embed_tokens_q4.onnx", "onnx/embed_tokens_q4.onnx_data", "onnx/decoder_model_merged_q4.onnx", "onnx/decoder_model_merged_q4.onnx_data", "onnx/vision_encoder_q4.onnx", "onnx/vision_encoder_q4.onnx_data"];
 				}
 				return ["config.json"];
@@ -1923,33 +1996,70 @@
 						remoteHost: LOCAL_BROWSER_DEFAULT_REMOTE_HOST,
 						runtime: {
 							modelClass: "Gemma4ForConditionalGeneration",
+							requiresWebGPU: true,
 							dtype: {
-								model: "q4",
+								embed_tokens: "q4",
 								decoder_model_merged: "q4",
 								vision_encoder: "q4",
 								audio_encoder: "q4"
+							},
+							generation: {
+								text: { temperature: 1.0, topP: 0.95, topK: 64 },
+								vision: { temperature: 1.0, topP: 0.95, topK: 64 }
 							}
 						},
 						supportsVision: true,
 						defaultPrompt: "You are a concise, friendly social chat co-host. You can reference visible context when it helps, but do not narrate the scene unless asked."
 					};
 				}
+				if (providerKey === "localqwen2b") {
+					return {
+						key: "localqwen2b",
+						label: "Local Qwen 3.5 2B (Browser, quality)",
+						providerLabel: "Local Qwen 3.5 2B (Browser, quality)",
+						modelId: "qwen3.5-2b-onnx-opt",
+						localPath: "thirdparty/models/qwen3.5-2b-onnx-opt",
+						remoteHost: LOCAL_BROWSER_DEFAULT_REMOTE_HOST,
+						runtime: {
+							modelClass: "Qwen3_5ForConditionalGeneration",
+							requiresWebGPU: true,
+							dtype: {
+								embed_tokens: "q4",
+								decoder_model_merged: "q4",
+								model: "q4",
+								vision_encoder: "q4"
+							},
+							generation: {
+								text: { doSample: false, repetitionPenalty: 1.0, noRepeatNgramSize: 4 },
+								vision: { doSample: false, repetitionPenalty: 1.0, noRepeatNgramSize: 4 }
+							}
+						},
+						supportsVision: true,
+						defaultPrompt: "You are a concise, friendly social chat co-host. Remember recent turns and respond directly without repeating yourself."
+					};
+				}
 				return {
 					key: "localqwen",
 					label: "Local Qwen 3.5 (Browser)",
 					providerLabel: "Local Qwen 3.5 (Browser)",
-					modelId: "qwen3.5-0.8b-onnx",
-					localPath: "thirdparty/models/qwen3.5-0.8b-onnx",
+					modelId: "qwen3.5-0.8b-onnx-opt",
+					localPath: "thirdparty/models/qwen3.5-0.8b-onnx-opt",
 					remoteHost: LOCAL_BROWSER_DEFAULT_REMOTE_HOST,
 					runtime: {
-						modelClass: "Qwen3_5ForCausalLM",
+						modelClass: "Qwen3_5ForConditionalGeneration",
+						requiresWebGPU: true,
 						dtype: {
 							embed_tokens: "q4",
 							decoder_model_merged: "q4",
-							model: "q4"
+							model: "q4",
+							vision_encoder: "q4"
+						},
+						generation: {
+							text: { temperature: 0.6, topP: 0.95, topK: 20 },
+							vision: { temperature: 0.7, topP: 0.8, topK: 20 }
 						}
 					},
-					supportsVision: false,
+					supportsVision: true,
 					defaultPrompt: "You are a concise, friendly social chat co-host. Keep answers short, natural, and practical."
 				};
 			}
@@ -1958,9 +2068,12 @@
 				return cloneLocalBrowserConfig(config || buildLocalBrowserFallbackConfig(providerKey));
 			}
 			const LOCAL_QWEN_CONFIG = getLocalBrowserProviderConfig("localqwen");
+			const LOCAL_QWEN_2B_CONFIG = getLocalBrowserProviderConfig("localqwen2b");
 			const LOCAL_GEMMA_CONFIG = getLocalBrowserProviderConfig("localgemma");
 			const LOCAL_QWEN_DEFAULT_MODEL = LOCAL_QWEN_CONFIG.modelId;
 			const LOCAL_QWEN_DEFAULT_REMOTE_HOST = LOCAL_QWEN_CONFIG.remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
+			const LOCAL_QWEN_2B_DEFAULT_MODEL = LOCAL_QWEN_2B_CONFIG.modelId;
+			const LOCAL_QWEN_2B_DEFAULT_REMOTE_HOST = LOCAL_QWEN_2B_CONFIG.remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
 			const LOCAL_GEMMA_DEFAULT_MODEL = LOCAL_GEMMA_CONFIG.modelId;
 			const LOCAL_GEMMA_DEFAULT_REMOTE_HOST = LOCAL_GEMMA_CONFIG.remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
 			const LOCAL_BROWSER_BUNDLED_MODEL_CHECKS = new Map();
@@ -2018,6 +2131,20 @@
 				outputPreview: "-",
 				updated: Date.now()
 			};
+			const geminiSessionUiState = {
+				visible: false,
+				connected: false,
+				connectionStartedAt: 0,
+				goAwayDeadline: 0,
+				hasResumeHandle: false,
+				resumable: false,
+				compressionEnabled: false,
+				contextTokens: 0,
+				contextTriggerTokens: GEMINI_CONTEXT_TRIGGER_TOKENS,
+				contextTargetTokens: GEMINI_CONTEXT_TARGET_TOKENS,
+				status: "Gemini session resumption is ready when the stream starts.",
+				updated: Date.now()
+			};
 			function formatDiagnosticsTime(timestamp) {
 				if (!timestamp) return "-";
 				try {
@@ -2025,6 +2152,81 @@
 				} catch (e) {
 					return "-";
 				}
+			}
+			function formatGeminiDuration(ms) {
+				const safeMs = Math.max(0, Number(ms) || 0);
+				const totalSeconds = Math.ceil(safeMs / 1000);
+				const minutes = Math.floor(totalSeconds / 60);
+				const seconds = totalSeconds % 60;
+				return minutes + ":" + String(seconds).padStart(2, "0");
+			}
+			function formatGeminiTokenLabel(tokens) {
+				const safeTokens = Math.max(0, Math.round(Number(tokens) || 0));
+				if (safeTokens >= 1000) {
+					return Math.round(safeTokens / 1000) + "k";
+				}
+				return String(safeTokens);
+			}
+			function renderGeminiSessionStatus() {
+				const panel = document.getElementById("geminiSessionPanel");
+				if (!panel) return;
+				panel.style.display = geminiSessionUiState.visible ? "flex" : "none";
+				const reconnectProgress = document.getElementById("geminiReconnectProgress");
+				const reconnectText = document.getElementById("geminiReconnectText");
+				const contextProgress = document.getElementById("geminiContextProgress");
+				const contextText = document.getElementById("geminiContextText");
+				const statusText = document.getElementById("geminiSessionStatus");
+				const reconnectButton = document.getElementById("geminiReconnectNow");
+				const resetButton = document.getElementById("geminiResetContext");
+				const now = Date.now();
+				let reconnectPercent = 0;
+				let reconnectLabel = geminiSessionUiState.connected ? "starting" : "idle";
+				if (geminiSessionUiState.connected && geminiSessionUiState.goAwayDeadline > now) {
+					const remaining = geminiSessionUiState.goAwayDeadline - now;
+					reconnectPercent = Math.max(0, Math.min(100, 100 - (remaining / GEMINI_LIVE_CONNECTION_LIMIT_MS) * 100));
+					reconnectLabel = formatGeminiDuration(remaining);
+				} else if (geminiSessionUiState.connected && geminiSessionUiState.connectionStartedAt) {
+					const elapsed = now - geminiSessionUiState.connectionStartedAt;
+					const remaining = Math.max(0, GEMINI_LIVE_CONNECTION_LIMIT_MS - elapsed);
+					reconnectPercent = Math.max(0, Math.min(100, (elapsed / GEMINI_LIVE_CONNECTION_LIMIT_MS) * 100));
+					reconnectLabel = formatGeminiDuration(remaining);
+				} else if (geminiSessionUiState.hasResumeHandle) {
+					reconnectLabel = "resume ready";
+				}
+				if (reconnectProgress) reconnectProgress.value = reconnectPercent;
+				if (reconnectText) reconnectText.textContent = reconnectLabel;
+				const triggerTokens = geminiSessionUiState.contextTriggerTokens || GEMINI_CONTEXT_TRIGGER_TOKENS;
+				const contextTokens = Math.max(0, Number(geminiSessionUiState.contextTokens) || 0);
+				const contextPercent = Math.max(0, Math.min(100, (contextTokens / triggerTokens) * 100));
+				if (contextProgress) contextProgress.value = contextPercent;
+				if (contextText) {
+					contextText.textContent = formatGeminiTokenLabel(contextTokens) + "/" + formatGeminiTokenLabel(triggerTokens);
+				}
+				if (statusText) {
+					const resumeText = geminiSessionUiState.hasResumeHandle ? "Resume handle ready." : "Waiting for resume handle.";
+					const compressionText = geminiSessionUiState.compressionEnabled ? "Context compression is automatic and estimated here." : "Context compression not confirmed.";
+					statusText.textContent = geminiSessionUiState.status || resumeText + " " + compressionText;
+				}
+				let activeGemini = false;
+				try {
+					activeGemini = typeof publisher !== "undefined" && publisher instanceof GoogleLivePublisher;
+				} catch (_error) {
+					activeGemini = false;
+				}
+				if (reconnectButton) reconnectButton.disabled = !activeGemini;
+				if (resetButton) resetButton.disabled = !activeGemini;
+			}
+			function updateGeminiSessionStatus(patch = {}) {
+				Object.assign(geminiSessionUiState, patch);
+				geminiSessionUiState.updated = Date.now();
+				renderGeminiSessionStatus();
+			}
+			function syncGeminiProviderPanel(providerName) {
+				const visible = providerName === "gemini";
+				updateGeminiSessionStatus({
+					visible,
+					status: visible ? geminiSessionUiState.status || "Gemini session resumption is ready when the stream starts." : geminiSessionUiState.status
+				});
 			}
 			function normalizeVoicePreview(text) {
 				const normalized = String(text || "")
@@ -2374,6 +2576,7 @@
 					return;
 				}
 				if (startCohostLiveChatSocket(params.room)) return;
+				// Transport migration: server params use the websocket above; this iframe is only the non-server live-chat fallback.
 				setCohostLiveChatStatus("connecting bridge", "session " + params.room);
 				const frame = document.createElement("iframe");
 				frame.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(params.password) + "&push&notmobile&label=cohost&view=" + encodeURIComponent(params.room) + "&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + encodeURIComponent(params.room);
@@ -2447,6 +2650,11 @@
 							line: "Restarting stream...",
 							detail: "Rebuilding the active stream and provider connection."
 						};
+					case "reconnecting":
+						return {
+							line: "Reconnecting...",
+							detail: "Resuming the provider connection."
+						};
 					case "stopped":
 						return {
 							line: "Stopped",
@@ -2490,6 +2698,7 @@
 				document.getElementById("diagError").textContent = diagnosticsState.lastError || "-";
 				document.getElementById("diagUpdated").textContent = formatDiagnosticsTime(diagnosticsState.updated);
 				renderCohostLiveChatStatus();
+				renderGeminiSessionStatus();
 				renderActionStatusSummary();
 				syncSendButtonAvailability();
 			}
@@ -2537,6 +2746,18 @@
 					voice: {
 						...voiceTelemetryState,
 						updatedIso: new Date(voiceTelemetryState.updated).toISOString()
+					},
+					gemini: {
+						visible: geminiSessionUiState.visible,
+						connected: geminiSessionUiState.connected,
+						hasResumeHandle: geminiSessionUiState.hasResumeHandle,
+						resumable: geminiSessionUiState.resumable,
+						compressionEnabled: geminiSessionUiState.compressionEnabled,
+						contextTokens: Math.round(geminiSessionUiState.contextTokens || 0),
+						contextTriggerTokens: geminiSessionUiState.contextTriggerTokens,
+						contextTargetTokens: geminiSessionUiState.contextTargetTokens,
+						status: geminiSessionUiState.status,
+						updatedIso: new Date(geminiSessionUiState.updated).toISOString()
 					},
 					liveChat: {
 						...cohostLiveChatState,
@@ -2661,8 +2882,14 @@
 					this.responseActive = false;
 					this.currentResponseText = "";
 					this.promptQueue = Promise.resolve();
+					this.pendingSpeechPrompt = "";
+					this.speechDrainPromise = null;
+					this.recentSpeechPrompts = new Map();
 					this.lastSpeechPromptText = "";
 					this.lastSpeechPromptAt = 0;
+					this.lastAttachedFrameSignature = null;
+					this.latestCapturedFrameSignature = null;
+					this.lastAttachedFrameAt = 0;
 					this.pendingGreeting = true;
 					this.lastActivityTime = Date.now();
 					this.reconnectAttempts = 0;
@@ -2701,11 +2928,9 @@
 							const fallbackEvent = `${this.providerLabel} using self-hosted ${defaultModelId} after skipping missing bundled files`;
 							this.modelOverride = "";
 							this.model = defaultModelId;
-							if (requestedLocalPath && requestedLocalPath === bundledLocalPath) {
-								saveModelOverride(this.providerKey, "");
-								if (providerSelect?.value === this.providerKey && modelOverrideInput) {
-									modelOverrideInput.value = "";
-								}
+							saveModelOverride(this.providerKey, "");
+							if (providerSelect?.value === this.providerKey && modelOverrideInput) {
+								modelOverrideInput.value = "";
 							}
 							updateDiagnostics({
 								model: defaultModelId,
@@ -2728,7 +2953,7 @@
 					};
 				}
 				getVoiceInputMode() {
-					return this.providerConfig.supportsVision ? "Browser STT + optional image frame" : "Browser STT -> text prompt";
+					return getCohostVoiceInputMode(this.providerConfig.supportsVision);
 				}
 				setupVideoProcessing() {
 					return Promise.resolve();
@@ -2797,12 +3022,34 @@
 						return Promise.resolve();
 					}
 					if (source === "speech") {
-						const now = Date.now();
-						if (prompt === this.lastSpeechPromptText && now - this.lastSpeechPromptAt < 2500) {
-							return Promise.resolve();
+						this.pendingSpeechPrompt = prompt;
+						if (this.speechDrainPromise) {
+							return this.speechDrainPromise;
 						}
-						this.lastSpeechPromptText = prompt;
-						this.lastSpeechPromptAt = now;
+						const drainSpeech = async () => {
+							while (this.pendingSpeechPrompt && !this.stopped && this.isConnected()) {
+								const speechPrompt = this.pendingSpeechPrompt;
+								this.pendingSpeechPrompt = "";
+								const now = Date.now();
+								const normalizedSpeechPrompt = speechPrompt.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+								for (const [recentPrompt, timestamp] of this.recentSpeechPrompts.entries()) {
+									if (now - timestamp > 60000) this.recentSpeechPrompts.delete(recentPrompt);
+								}
+								if (normalizedSpeechPrompt && this.recentSpeechPrompts.has(normalizedSpeechPrompt)) {
+									continue;
+								}
+								if (normalizedSpeechPrompt) this.recentSpeechPrompts.set(normalizedSpeechPrompt, now);
+								this.lastSpeechPromptText = speechPrompt;
+								this.lastSpeechPromptAt = now;
+								await this.sendPromptNow(speechPrompt, "speech");
+							}
+						};
+						const speechRun = this.promptQueue.then(drainSpeech, drainSpeech);
+						this.speechDrainPromise = speechRun.finally(() => {
+							this.speechDrainPromise = null;
+						});
+						this.promptQueue = this.speechDrainPromise.catch(() => {});
+						return this.speechDrainPromise;
 					}
 					const run = () => {
 						if (this.isNonManualPromptSource(source) && (this.stopped || !this.isConnected())) {
@@ -3196,12 +3443,18 @@
 					}
 				}
 				async setupSpeechRecognition() {
-					const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-					if (!SpeechRecognition) {
-						showError("Speech recognition is not supported in this browser. Try using Chrome.");
+					try {
+						this.recognition = await createCohostSpeechRecognition();
+					} catch (error) {
+						showError("Local speech recognition failed to initialize: " + (error?.message || error));
+						updateVoiceTelemetry({ inputState: "Local Whisper unavailable" });
 						return;
 					}
-					this.recognition = new SpeechRecognition();
+					if (!this.recognition) {
+						showError(DESKTOP_LOCAL_STT_AVAILABLE ? "Select a microphone to use local Whisper." : "Speech recognition is not supported in this browser. Try using Chrome.");
+						return;
+					}
+					attachCohostSpeechStatus(this.recognition);
 					this.recognition.continuous = true;
 					this.recognition.interimResults = true;
 					this.recognition.maxAlternatives = 1;
@@ -3211,7 +3464,7 @@
 						this.recognitionStartPending = false;
 						avatar.setEmotion("listening", false);
 						updateVoiceTelemetry({
-							inputState: "Listening",
+							inputState: DESKTOP_LOCAL_STT_AVAILABLE ? "Listening (Desktop Whisper)" : "Listening",
 							inputPreview: "-"
 						});
 					};
@@ -3298,7 +3551,7 @@
 					}
 				}
 				startRecognitionSafely(delayMs = 0) {
-					if (this.stopped || !this.recognition || micMuted || this.isRecognizing || this.recognitionStartPending) {
+					if (this.stopped || this.ttsActive || !this.recognition || micMuted || this.isRecognizing || this.recognitionStartPending) {
 						return;
 					}
 					if (this.recognitionRestartTimer) {
@@ -3308,7 +3561,7 @@
 					this.recognitionStartPending = true;
 					const attemptStart = () => {
 						this.recognitionRestartTimer = null;
-						if (this.stopped || !this.recognition || micMuted || this.isRecognizing) {
+						if (this.stopped || this.ttsActive || !this.recognition || micMuted || this.isRecognizing) {
 							this.recognitionStartPending = false;
 							return;
 						}
@@ -3386,7 +3639,7 @@
 								runtime: cloneLocalBrowserConfig(this.providerConfig.runtime || {}),
 								remoteHost: this.remoteHost
 							},
-							420000
+							1800000
 						);
 					} catch (error) {
 						const baseMessage = error?.message || String(error || "");
@@ -3422,7 +3675,9 @@
 				async start() {
 					this.stopped = false;
 					await this.connect();
-					await this.setupSpeechRecognition();
+					if (hasCohostSpeechInput(this.stream)) {
+						await this.setupSpeechRecognition();
+					}
 					if (this.pendingGreeting) {
 						this.pendingGreeting = false;
 						this.sendPrompt("Hi, introduce yourself in a sentence for me. Be friendly to me.", "greeting").catch(err => {
@@ -3462,7 +3717,8 @@
 					});
 					try {
 						const hasLiveVideo = this.providerConfig.supportsVision && document.getElementById("videoSource")?.value !== "none" && this.stream.getVideoTracks().some(track => track.readyState === "live" && track.enabled);
-						const imageDataUrl = hasLiveVideo ? this.captureFrameDataUrl() : "";
+						const capturedFrame = hasLiveVideo ? this.captureFrameDataUrl() : "";
+						const imageDataUrl = capturedFrame && this.shouldAttachCapturedFrame(prompt) ? capturedFrame : "";
 						const result = await this.requestWorker(
 							"generate",
 							{
@@ -3471,9 +3727,6 @@
 								runtime: cloneLocalBrowserConfig(this.providerConfig.runtime || {}),
 								prompt,
 								systemPrompt: systemPromptValue,
-								maxNewTokens: 220,
-								temperature: 0.65,
-								topP: 0.92,
 								images: imageDataUrl ? [imageDataUrl] : []
 							},
 							300000
@@ -3529,7 +3782,37 @@
 					const ctx = canvas.getContext("2d");
 					if (!ctx) return "";
 					ctx.drawImage(preview, 0, 0, width, height);
+					const signatureCanvas = document.createElement("canvas");
+					signatureCanvas.width = 16;
+					signatureCanvas.height = 9;
+					const signatureContext = signatureCanvas.getContext("2d", { willReadFrequently: true });
+					if (signatureContext) {
+						signatureContext.drawImage(preview, 0, 0, signatureCanvas.width, signatureCanvas.height);
+						const pixels = signatureContext.getImageData(0, 0, signatureCanvas.width, signatureCanvas.height).data;
+						this.latestCapturedFrameSignature = [];
+						for (let index = 0; index < pixels.length; index += 4) {
+							this.latestCapturedFrameSignature.push(Math.round((pixels[index] * 0.299 + pixels[index + 1] * 0.587 + pixels[index + 2] * 0.114) / 16));
+						}
+					}
 					return canvas.toDataURL("image/jpeg", 0.8);
+				}
+				shouldAttachCapturedFrame(prompt) {
+					const signature = this.latestCapturedFrameSignature;
+					const asksAboutVisuals = /\b(?:see|look|camera|image|picture|photo|screen|visual|show|wearing|holding|behind|foreground|background|read this)\b/i.test(prompt || "");
+					let changed = !this.lastAttachedFrameSignature || !signature || signature.length !== this.lastAttachedFrameSignature.length;
+					if (!changed && signature) {
+						let totalDifference = 0;
+						for (let index = 0; index < signature.length; index += 1) {
+							totalDifference += Math.abs(signature[index] - this.lastAttachedFrameSignature[index]);
+						}
+						changed = totalDifference / signature.length >= 0.75;
+					}
+					if (!asksAboutVisuals && !changed && Date.now() - this.lastAttachedFrameAt < 60000) {
+						return false;
+					}
+					this.lastAttachedFrameSignature = signature ? signature.slice() : null;
+					this.lastAttachedFrameAt = Date.now();
+					return true;
 				}
 				isConnected() {
 					return this.connected && !!this.worker;
@@ -3539,7 +3822,9 @@
 					this.stop();
 					this.stopped = false;
 					await this.connect();
-					await this.setupSpeechRecognition();
+					if (hasCohostSpeechInput(this.stream)) {
+						await this.setupSpeechRecognition();
+					}
 					return true;
 				}
 				stop() {
@@ -3548,6 +3833,8 @@
 					this.finalizeResponse();
 					this.resetPendingRequests();
 					this.promptQueue = Promise.resolve();
+					this.pendingSpeechPrompt = "";
+					this.recentSpeechPrompts.clear();
 					this.lastSpeechPromptText = "";
 					this.lastSpeechPromptAt = 0;
 					this.resumeRecognitionAfterSpeech = false;
@@ -3939,6 +4226,455 @@
 				if (!cohostLiveChatFrame || event.source !== cohostLiveChatFrame.contentWindow) return;
 				handleCohostLiveChatPayload(event.data);
 			});
+			const DESKTOP_LOCAL_STT_AVAILABLE = !!(
+				window.ninjafy &&
+				typeof window.ninjafy.getSttCapabilities === "function" &&
+				typeof window.ninjafy.transcribeAudio === "function"
+			);
+			const DESKTOP_WHISPER_SAMPLE_RATE = 16000;
+
+			function getCohostVoiceInputMode(supportsVision = false) {
+				if (DESKTOP_LOCAL_STT_AVAILABLE) {
+					return supportsVision ? "Desktop Whisper + optional image frame" : "Desktop Whisper -> text prompt";
+				}
+				return supportsVision ? "Browser STT + optional image frame" : "Browser STT -> text prompt";
+			}
+
+			function getCohostSpeechToTextNotice() {
+				if (DESKTOP_LOCAL_STT_AVAILABLE) {
+					return "Speech-to-text uses local Whisper with the selected microphone. The first use downloads about 42 MB; later use is offline.";
+				}
+				if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) {
+					return "Voice input is unavailable in this browser. Open this page in Chrome for Chrome Speech Recognition, or use typed chat instead.";
+				}
+				return "Chrome Speech Recognition uses the system-default microphone, not the selected stream device. It may require microphone permission and an internet connection; voice input is not available in every browser.";
+			}
+
+			function getLiveDesktopSpeechInputStream() {
+				if (typeof speechInputStream === "undefined" || !speechInputStream) return null;
+				const liveTrack = speechInputStream.getAudioTracks().find(track => track.readyState === "live");
+				return liveTrack ? speechInputStream : null;
+			}
+
+			function hasCohostSpeechInput(fallbackStream) {
+				if (DESKTOP_LOCAL_STT_AVAILABLE) return !!getLiveDesktopSpeechInputStream();
+				return !!(fallbackStream && fallbackStream.getAudioTracks().some(track => track.readyState === "live"));
+			}
+
+			function resampleMonoAudio(input, inputRate, outputRate) {
+				if (!input || !input.length) return new Float32Array(0);
+				if (!Number.isFinite(inputRate) || inputRate <= 0 || inputRate === outputRate) {
+					return new Float32Array(input);
+				}
+				const outputLength = Math.max(1, Math.round((input.length * outputRate) / inputRate));
+				const output = new Float32Array(outputLength);
+				const ratio = inputRate / outputRate;
+				for (let index = 0; index < outputLength; index++) {
+					const position = index * ratio;
+					const leftIndex = Math.floor(position);
+					const rightIndex = Math.min(input.length - 1, leftIndex + 1);
+					const fraction = position - leftIndex;
+					output[index] = input[leftIndex] * (1 - fraction) + input[rightIndex] * fraction;
+				}
+				return output;
+			}
+
+			class DesktopWhisperRecognition {
+				constructor(inputStream, capabilities = {}) {
+					this.inputStream = inputStream;
+					this.capabilities = capabilities;
+					this.continuous = true;
+					this.interimResults = true;
+					this.maxAlternatives = 1;
+					this.lang = "en-US";
+					this.onstart = null;
+					this.onresult = null;
+					this.onerror = null;
+					this.onend = null;
+					this.onstatus = null;
+					this.audioContext = null;
+					this.sourceNode = null;
+					this.captureNode = null;
+					this.keepAliveContext = null;
+					this.keepAliveSource = null;
+					this.keepAliveAnalyser = null;
+					this.keepAliveSamples = null;
+					this.keepAliveTimer = null;
+					this.statusSubscriptionId = "";
+					this.captureStarting = false;
+					this.capturing = false;
+					this.generation = 0;
+					this.noiseFloor = 0.003;
+					this.preRollChunks = [];
+					this.preRollSampleCount = 0;
+					this.speechStartChunks = 0;
+					this.speaking = false;
+					this.utteranceChunks = [];
+					this.utteranceSampleCount = 0;
+					this.voicedSampleCount = 0;
+					this.silentSampleCount = 0;
+					this.pendingTranscriptions = 0;
+					this.transcriptionChain = Promise.resolve();
+				}
+
+				start() {
+					if (this.captureStarting || this.capturing) {
+						const error = new Error("Desktop Whisper recognition is already running.");
+						error.name = "InvalidStateError";
+						throw error;
+					}
+					this.generation += 1;
+					const generation = this.generation;
+					this.captureStarting = true;
+					this.startCapture(generation).catch(error => {
+						if (generation !== this.generation) return;
+						this.captureStarting = false;
+						this.emitError(error);
+						this.closeCapture(true);
+					});
+				}
+
+				async startCapture(generation) {
+					const track = this.inputStream && this.inputStream.getAudioTracks().find(item => item.readyState === "live");
+					if (!track) throw new Error("The selected microphone is no longer available.");
+					const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+					if (!AudioContextClass) {
+						throw new Error("This Desktop build does not support local microphone processing.");
+					}
+					// Capture at the device/context-native rate; forcing a 16 kHz context
+					// can produce silent MediaStream input in Electron. Audio is resampled
+					// to Whisper's 16 kHz requirement after voice activity detection.
+					this.audioContext = new AudioContextClass();
+					if (this.audioContext.state === "suspended") {
+						await this.audioContext.resume();
+					}
+					if (generation !== this.generation) {
+						this.closeCapture(false);
+						return;
+					}
+					this.sourceNode = this.audioContext.createMediaStreamSource(this.inputStream);
+					this.captureNode = this.audioContext.createScriptProcessor(2048, 1, 1);
+					this.captureNode.onaudioprocess = event => {
+						const samples = event.inputBuffer && event.inputBuffer.numberOfChannels
+							? event.inputBuffer.getChannelData(0)
+							: null;
+						if (samples) this.handleAudioChunk(new Float32Array(samples));
+						if (event.outputBuffer) {
+							for (let channel = 0; channel < event.outputBuffer.numberOfChannels; channel++) {
+								event.outputBuffer.getChannelData(channel).fill(0);
+							}
+						}
+					};
+					this.sourceNode.connect(this.captureNode);
+					// ScriptProcessor is used only inside SSApp. Its silent connected
+					// output keeps Electron pulling the microphone without monitoring it.
+					this.captureNode.connect(this.audioContext.destination);
+					// Some Electron audio configurations stop an otherwise healthy input
+					// graph after its first render quantum. Reading the same track from a
+					// separate analyser context keeps the capture device active without
+					// sending microphone audio to an output device.
+					this.keepAliveContext = new AudioContextClass();
+					if (this.keepAliveContext.state === "suspended") {
+						await this.keepAliveContext.resume();
+					}
+					if (generation !== this.generation) {
+						this.closeCapture(false);
+						return;
+					}
+					this.keepAliveSource = this.keepAliveContext.createMediaStreamSource(this.inputStream);
+					this.keepAliveAnalyser = this.keepAliveContext.createAnalyser();
+					this.keepAliveAnalyser.fftSize = 2048;
+					this.keepAliveSamples = new Float32Array(this.keepAliveAnalyser.fftSize);
+					this.keepAliveSource.connect(this.keepAliveAnalyser);
+					this.keepAliveTimer = setInterval(() => {
+						if (this.keepAliveAnalyser && this.keepAliveSamples) {
+							this.keepAliveAnalyser.getFloatTimeDomainData(this.keepAliveSamples);
+						}
+					}, 50);
+					if (typeof window.ninjafy.onSttStatus === "function") {
+						this.statusSubscriptionId = window.ninjafy.onSttStatus(status => this.handleBridgeStatus(status)) || "";
+					}
+					this.captureStarting = false;
+					this.capturing = true;
+					this.emitStatus("listening", "Listening (Desktop Whisper)");
+					setTimeout(() => {
+						if (generation === this.generation && this.capturing && typeof this.onstart === "function") {
+							this.onstart();
+						}
+					}, 0);
+				}
+
+				handleAudioChunk(value) {
+					if (!this.capturing || !value) return;
+					const chunk = value instanceof Float32Array ? value : value instanceof ArrayBuffer ? new Float32Array(value) : null;
+					if (!chunk || !chunk.length) return;
+					let sumSquares = 0;
+					let peak = 0;
+					for (let index = 0; index < chunk.length; index++) {
+						const sample = Number.isFinite(chunk[index]) ? chunk[index] : 0;
+						sumSquares += sample * sample;
+						peak = Math.max(peak, Math.abs(sample));
+					}
+					const rms = Math.sqrt(sumSquares / chunk.length);
+					const startThreshold = Math.max(0.007, Math.min(0.04, this.noiseFloor * 3.2));
+					const endThreshold = Math.max(0.005, startThreshold * 0.7);
+					const hasVoice = rms >= startThreshold || peak >= startThreshold * 3;
+
+					if (!this.speaking) {
+						if (!hasVoice) {
+							this.noiseFloor = Math.max(0.001, Math.min(0.02, this.noiseFloor * 0.97 + rms * 0.03));
+						}
+						this.pushPreRoll(chunk);
+						if (hasVoice) {
+							this.speechStartChunks += 1;
+							if (this.speechStartChunks >= 2) this.beginUtterance();
+						} else {
+							this.speechStartChunks = 0;
+						}
+						return;
+					}
+
+					this.utteranceChunks.push(chunk);
+					this.utteranceSampleCount += chunk.length;
+					if (rms >= endThreshold || peak >= endThreshold * 3) {
+						this.voicedSampleCount += chunk.length;
+						this.silentSampleCount = 0;
+					} else {
+						this.silentSampleCount += chunk.length;
+					}
+					const sampleRate = this.audioContext ? this.audioContext.sampleRate : DESKTOP_WHISPER_SAMPLE_RATE;
+					if (this.silentSampleCount >= sampleRate * 0.7 || this.utteranceSampleCount >= sampleRate * 15) {
+						this.finalizeUtterance();
+					}
+				}
+
+				pushPreRoll(chunk) {
+					this.preRollChunks.push(chunk);
+					this.preRollSampleCount += chunk.length;
+					const sampleRate = this.audioContext ? this.audioContext.sampleRate : DESKTOP_WHISPER_SAMPLE_RATE;
+					const maxSamples = Math.round(sampleRate * 0.35);
+					while (this.preRollSampleCount > maxSamples && this.preRollChunks.length > 1) {
+						this.preRollSampleCount -= this.preRollChunks.shift().length;
+					}
+				}
+
+				beginUtterance() {
+					this.speaking = true;
+					this.utteranceChunks = this.preRollChunks.slice();
+					this.utteranceSampleCount = this.preRollSampleCount;
+					this.voicedSampleCount = this.speechStartChunks * (this.preRollChunks[this.preRollChunks.length - 1]?.length || 0);
+					this.silentSampleCount = 0;
+					this.preRollChunks = [];
+					this.preRollSampleCount = 0;
+					this.speechStartChunks = 0;
+					this.emitStatus("speech", "Speech detected");
+				}
+
+				finalizeUtterance() {
+					const chunks = this.utteranceChunks;
+					const totalSamples = this.utteranceSampleCount;
+					const voicedSamples = this.voicedSampleCount;
+					const trailingSilence = this.silentSampleCount;
+					this.speaking = false;
+					this.utteranceChunks = [];
+					this.utteranceSampleCount = 0;
+					this.voicedSampleCount = 0;
+					this.silentSampleCount = 0;
+					const inputRate = this.audioContext ? this.audioContext.sampleRate : DESKTOP_WHISPER_SAMPLE_RATE;
+					if (!chunks.length || voicedSamples < inputRate * 0.16 || totalSamples < inputRate * 0.35) {
+						this.emitStatus("listening", "Listening (Desktop Whisper)");
+						return;
+					}
+					let audio = new Float32Array(totalSamples);
+					let offset = 0;
+					for (const chunk of chunks) {
+						audio.set(chunk, offset);
+						offset += chunk.length;
+					}
+					const keepTrailingSamples = Math.round(inputRate * 0.25);
+					if (trailingSilence > keepTrailingSamples && audio.length > trailingSilence - keepTrailingSamples) {
+						audio = audio.slice(0, audio.length - (trailingSilence - keepTrailingSamples));
+					}
+					const resampled = resampleMonoAudio(audio, inputRate, DESKTOP_WHISPER_SAMPLE_RATE);
+					this.queueTranscription(resampled, this.generation);
+				}
+
+				queueTranscription(audio, generation) {
+					if (!audio.length || generation !== this.generation) return;
+					if (this.pendingTranscriptions >= 2) {
+						this.emitStatus("busy", "Local Whisper is catching up; speech segment skipped");
+						return;
+					}
+					this.pendingTranscriptions += 1;
+					this.transcriptionChain = this.transcriptionChain
+						.then(() => this.transcribeSegment(audio, generation))
+						.catch(() => {})
+						.finally(() => {
+							this.pendingTranscriptions = Math.max(0, this.pendingTranscriptions - 1);
+						});
+				}
+
+				async transcribeSegment(audio, generation) {
+					if (generation !== this.generation || !this.capturing) return;
+					this.emitStatus("transcribing", this.capabilities.modelCached ? "Transcribing locally" : "Loading local Whisper (first use downloads about 42 MB)");
+					try {
+						const result = await window.ninjafy.transcribeAudio(audio.buffer, {
+							sampleRate: DESKTOP_WHISPER_SAMPLE_RATE
+						});
+						if (generation !== this.generation || !this.capturing) return;
+						this.capabilities.modelCached = true;
+						const transcript = String(result && result.text ? result.text : "")
+							.replace(/\s+/g, " ")
+							.trim();
+						if (transcript && typeof this.onresult === "function") {
+							const alternative = { transcript, confidence: 1 };
+							const recognitionResult = [alternative];
+							recognitionResult.isFinal = true;
+							this.onresult({ resultIndex: 0, results: [recognitionResult] });
+						}
+						this.emitStatus("listening", "Listening (Desktop Whisper)");
+					} catch (error) {
+						if (generation !== this.generation) return;
+						this.emitError(error);
+						this.closeCapture(true);
+					}
+				}
+
+				handleBridgeStatus(status) {
+					if (!this.capturing || !status || typeof status !== "object") return;
+					const phase = String(status.phase || "");
+					if (phase === "download" && Number.isFinite(status.progress)) {
+						this.emitStatus(phase, `Downloading local Whisper ${Math.round(status.progress)}%`, status);
+					} else if (phase === "model-download-needed") {
+						this.emitStatus(phase, "Preparing local Whisper download", status);
+					} else if (phase === "model-loading") {
+						this.emitStatus(phase, "Loading local Whisper", status);
+					} else if (phase === "model-ready") {
+						this.capabilities.modelCached = true;
+						this.emitStatus(phase, "Local Whisper ready", status);
+					} else if (phase === "queued") {
+						this.emitStatus(phase, "Waiting for local Whisper", status);
+					} else if (phase === "transcribing") {
+						this.emitStatus(phase, "Transcribing locally", status);
+					}
+				}
+
+				emitStatus(phase, label, detail = {}) {
+					if (typeof this.onstatus === "function") {
+						this.onstatus({ phase, label, ...detail });
+					}
+				}
+
+				emitError(error) {
+					const message = String(error && error.message ? error.message : error || "Local Whisper failed");
+					let errorCode = "service-not-allowed";
+					if (/network|fetch|download/i.test(message)) errorCode = "network";
+					if (/permission|forbidden|microphone/i.test(message)) errorCode = "not-allowed";
+					if (typeof this.onerror === "function") this.onerror({ error: errorCode, message });
+				}
+
+				stop() {
+					if (!this.captureStarting && !this.capturing) return;
+					this.generation += 1;
+					this.closeCapture(true);
+				}
+
+				abort() {
+					this.stop();
+				}
+
+				closeCapture(fireEnd) {
+					const wasActive = this.captureStarting || this.capturing;
+					this.captureStarting = false;
+					this.capturing = false;
+					this.speaking = false;
+					this.preRollChunks = [];
+					this.preRollSampleCount = 0;
+					this.speechStartChunks = 0;
+					this.utteranceChunks = [];
+					this.utteranceSampleCount = 0;
+					this.voicedSampleCount = 0;
+					this.silentSampleCount = 0;
+					if (this.statusSubscriptionId && typeof window.ninjafy.offSttStatus === "function") {
+						window.ninjafy.offSttStatus(this.statusSubscriptionId);
+					}
+					this.statusSubscriptionId = "";
+					if (this.captureNode) {
+						this.captureNode.onaudioprocess = null;
+						try {
+							this.captureNode.disconnect();
+						} catch (_error) {}
+						this.captureNode = null;
+					}
+					if (this.sourceNode) {
+						try {
+							this.sourceNode.disconnect();
+						} catch (_error) {}
+						this.sourceNode = null;
+					}
+					if (this.keepAliveTimer) {
+						clearInterval(this.keepAliveTimer);
+						this.keepAliveTimer = null;
+					}
+					if (this.keepAliveSource) {
+						try {
+							this.keepAliveSource.disconnect();
+						} catch (_error) {}
+						this.keepAliveSource = null;
+					}
+					if (this.keepAliveAnalyser) {
+						try {
+							this.keepAliveAnalyser.disconnect();
+						} catch (_error) {}
+						this.keepAliveAnalyser = null;
+					}
+					this.keepAliveSamples = null;
+					if (this.keepAliveContext) {
+						try {
+							Promise.resolve(this.keepAliveContext.close()).catch(() => {});
+						} catch (_error) {}
+						this.keepAliveContext = null;
+					}
+					if (this.audioContext) {
+						try {
+							Promise.resolve(this.audioContext.close()).catch(() => {});
+						} catch (_error) {}
+						this.audioContext = null;
+					}
+					if (fireEnd && wasActive) {
+						setTimeout(() => {
+							if (typeof this.onend === "function") this.onend();
+						}, 0);
+					}
+				}
+			}
+
+			async function createCohostSpeechRecognition() {
+				if (DESKTOP_LOCAL_STT_AVAILABLE) {
+					const inputStream = getLiveDesktopSpeechInputStream();
+					if (!inputStream) return null;
+					const capabilities = await window.ninjafy.getSttCapabilities();
+					if (!capabilities || capabilities.available !== true) {
+						throw new Error("Local Whisper is unavailable in this Desktop build.");
+					}
+					return new DesktopWhisperRecognition(inputStream, capabilities);
+				}
+				const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+				return SpeechRecognition ? new SpeechRecognition() : null;
+			}
+
+			function attachCohostSpeechStatus(recognition) {
+				if (!recognition || !(recognition instanceof DesktopWhisperRecognition)) return;
+				recognition.onstatus = status => {
+					const label = String(status && status.label ? status.label : "Listening (Desktop Whisper)");
+					const phase = String(status && status.phase ? status.phase : "listening");
+					updateVoiceTelemetry({ inputState: label });
+					updateDiagnostics({
+						lastEvent: `stt.${phase}`,
+						lastError: "-"
+					});
+				};
+			}
 			class OpenAICompatiblePublisher {
 				constructor(stream, apiKey, modelOverride = "", endpointOverride = "") {
 					this.stream = stream;
@@ -4399,12 +5135,18 @@
 					}
 				}
 				async setupSpeechRecognition() {
-					const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-					if (!SpeechRecognition) {
-						showError("Speech recognition is not supported in this browser. Try using Chrome.");
+					try {
+						this.recognition = await createCohostSpeechRecognition();
+					} catch (error) {
+						showError("Local speech recognition failed to initialize: " + (error?.message || error));
+						updateVoiceTelemetry({ inputState: "Local Whisper unavailable" });
 						return;
 					}
-					this.recognition = new SpeechRecognition();
+					if (!this.recognition) {
+						showError(DESKTOP_LOCAL_STT_AVAILABLE ? "Select a microphone to use local Whisper." : "Speech recognition is not supported in this browser. Try using Chrome.");
+						return;
+					}
+					attachCohostSpeechStatus(this.recognition);
 					this.recognition.continuous = true;
 					this.recognition.interimResults = true;
 					this.recognition.maxAlternatives = 1;
@@ -4413,7 +5155,7 @@
 						this.isRecognizing = true;
 						avatar.setEmotion("listening", false);
 						updateVoiceTelemetry({
-							inputState: "Listening",
+							inputState: DESKTOP_LOCAL_STT_AVAILABLE ? "Listening (Desktop Whisper)" : "Listening",
 							inputPreview: "-"
 						});
 					};
@@ -4465,15 +5207,26 @@
 						}
 					};
 					this.recognition.onerror = event => {
-						if (event.error !== "not-allowed" && this.isRecognizing && !micMuted) {
+						this.isRecognizing = false;
+						if (this.ttsActive) return;
+						const message = event.message || event.error || "Speech recognition failed";
+						updateVoiceTelemetry({
+							inputState: event.error === "not-allowed" ? "Permission blocked" : "Speech recognition error"
+						});
+						updateDiagnostics({
+							lastEvent: "stt.error",
+							lastError: message
+						});
+						if (event.error !== "no-speech" && event.error !== "aborted") {
+							showError("Speech recognition error: " + message);
+						}
+						if (event.error !== "not-allowed" && event.error !== "aborted" && !this.stopped && !micMuted) {
 							this.restartRecognition();
-						} else {
-							this.isRecognizing = false;
 						}
 					};
 					this.recognition.onend = () => {
 						this.isRecognizing = false;
-						if (!this.stopped && !micMuted) {
+						if (!this.ttsActive && !this.stopped && !micMuted) {
 							this.restartRecognition();
 						}
 					};
@@ -4482,9 +5235,9 @@
 					}
 				}
 				restartRecognition() {
-					if (this.stopped || !this.recognition || micMuted) return;
+					if (this.stopped || this.ttsActive || !this.recognition || micMuted) return;
 					setTimeout(() => {
-						if (!this.isRecognizing && !this.stopped && !micMuted) {
+						if (!this.isRecognizing && !this.ttsActive && !this.stopped && !micMuted) {
 							try {
 								this.recognition.start();
 							} catch (_e) {
@@ -4505,14 +5258,14 @@
 						lastError: "-"
 					});
 					resetVoiceTelemetry({
-						inputMode: "Browser STT -> text prompt",
+						inputMode: getCohostVoiceInputMode(false),
 						outputState: this.shouldUseBrowserTts() ? getCohostTtsProviderLabel() + " ready" : "Text response only"
 					});
 				}
 				async start() {
 					this.stopped = false;
 					await this.connect();
-					if (this.stream.getAudioTracks().length > 0) {
+					if (hasCohostSpeechInput(this.stream)) {
 						await this.setupSpeechRecognition();
 					}
 					if (this.pendingGreeting) {
@@ -4609,7 +5362,7 @@
 					this.stop();
 					this.stopped = false;
 					await this.connect();
-					if (this.stream.getAudioTracks().length > 0) {
+					if (hasCohostSpeechInput(this.stream)) {
 						await this.setupSpeechRecognition();
 					}
 					return true;
@@ -4620,7 +5373,7 @@
 					this.cancelBrowserTts();
 					this.finalizeResponse();
 					resetVoiceTelemetry({
-						inputMode: "Browser STT -> text prompt",
+						inputMode: getCohostVoiceInputMode(false),
 						outputState: this.shouldUseBrowserTts() ? getCohostTtsProviderLabel() + " ready" : "Text response only"
 					});
 					if (this.recognition) {
@@ -4759,7 +5512,7 @@
 						lastError: "-"
 					});
 					resetVoiceTelemetry({
-						inputMode: "Browser STT + optional image frame",
+						inputMode: getCohostVoiceInputMode(true),
 						outputState: this.shouldUseBrowserTts() ? getCohostTtsProviderLabel() + " ready" : "Text response only"
 					});
 					setConfiguredLLMInfo("Connected through the SSN session bridge. Uses the LLM provider configured in the popup.", false);
@@ -4767,7 +5520,7 @@
 				async start() {
 					this.stopped = false;
 					await this.connect();
-					if (this.stream.getAudioTracks().length > 0) {
+					if (hasCohostSpeechInput(this.stream)) {
 						await this.setupSpeechRecognition();
 					}
 					if (this.pendingGreeting) {
@@ -4854,7 +5607,7 @@
 					this.stop();
 					this.stopped = false;
 					await this.connect();
-					if (this.stream.getAudioTracks().length > 0) {
+					if (hasCohostSpeechInput(this.stream)) {
 						await this.setupSpeechRecognition();
 					}
 					return true;
@@ -4862,7 +5615,7 @@
 				stop() {
 					super.stop();
 					resetVoiceTelemetry({
-						inputMode: "Browser STT + optional image frame",
+						inputMode: getCohostVoiceInputMode(true),
 						outputState: this.shouldUseBrowserTts() ? getCohostTtsProviderLabel() + " ready" : "Text response only"
 					});
 				}
@@ -5123,7 +5876,7 @@
 									lastEvent: "ws.open"
 								});
 								resetVoiceTelemetry({
-									inputMode: "Browser STT -> text prompt",
+									inputMode: getCohostVoiceInputMode(false),
 									outputState: responseTypeValue === "audio" ? "Provider audio ready" : "Text response only"
 								});
 								resolve();
@@ -5181,13 +5934,18 @@
 					systemPrompt.disabled = false;
 				}
 				async setupSpeechRecognition() {
-					const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-					if (!SpeechRecognition) {
-						console.error("Speech recognition not supported in this browser");
-						showError("Speech recognition is not supported in your browser. Try using Chrome.");
+					try {
+						this.recognition = await createCohostSpeechRecognition();
+					} catch (error) {
+						showError("Local speech recognition failed to initialize: " + (error?.message || error));
+						updateVoiceTelemetry({ inputState: "Local Whisper unavailable" });
 						return;
 					}
-					this.recognition = new SpeechRecognition();
+					if (!this.recognition) {
+						showError(DESKTOP_LOCAL_STT_AVAILABLE ? "Select a microphone to use local Whisper." : "Speech recognition is not supported in your browser. Try using Chrome.");
+						return;
+					}
+					attachCohostSpeechStatus(this.recognition);
 					this.recognition.continuous = true;
 					this.recognition.interimResults = true;
 					this.recognition.maxAlternatives = 1;
@@ -5197,7 +5955,7 @@
 						this.isRecognizing = true;
 						avatar.setEmotion("listening", false);
 						updateVoiceTelemetry({
-							inputState: "Listening",
+							inputState: DESKTOP_LOCAL_STT_AVAILABLE ? "Listening (Desktop Whisper)" : "Listening",
 							inputPreview: "-"
 						});
 					};
@@ -5244,12 +6002,17 @@
 						}
 					};
 					this.recognition.onerror = event => {
-						console.error("Speech recognition error:", event.error);
+						const message = event.message || event.error || "Speech recognition failed";
+						console.error("Speech recognition error:", message);
 						if (event.error === "no-speech") {
 							console.log("No speech detected");
 						} else {
-							showError(`Speech recognition error: ${event.error}`);
+							showError(`Speech recognition error: ${message}`);
 						}
+						updateDiagnostics({
+							lastEvent: "stt.error",
+							lastError: message
+						});
 						if (event.error !== "not-allowed" && this.isRecognizing && !micMuted) {
 							this.restartRecognition();
 						} else {
@@ -5276,9 +6039,9 @@
 					}
 				}
 				restartRecognition() {
-					if (this.stopped || !this.recognition || micMuted) return;
+					if (this.stopped || this.ttsActive || !this.recognition || micMuted) return;
 					setTimeout(() => {
-						if (!this.isRecognizing && !this.stopped && !micMuted) {
+						if (!this.isRecognizing && !this.ttsActive && !this.stopped && !micMuted) {
 							try {
 								this.recognition.start();
 							} catch (_e) {
@@ -5360,7 +6123,7 @@
 							this.responseTimeout = null;
 						}
 						await this.connect();
-						if (this.stream.getAudioTracks().length > 0) {
+						if (hasCohostSpeechInput(this.stream)) {
 							await this.setupSpeechRecognition();
 						} else {
 							console.log("No audio tracks available, skipping speech recognition");
@@ -5415,7 +6178,7 @@
 					this.currentResponseText = "";
 					clearTimeout(this.recognitionTimeout);
 					resetVoiceTelemetry({
-						inputMode: "Browser STT -> text prompt",
+						inputMode: getCohostVoiceInputMode(false),
 						outputState: document.getElementById("responseType")?.value === "audio" ? "Provider audio ready" : "Text response only"
 					});
 					updateDiagnostics({
@@ -5455,6 +6218,15 @@
 					this.reconnectTimeout = null;
 					this.pingInterval = null;
 					this.lastHeartbeatResponse = Date.now();
+					this.sessionResumptionHandle = "";
+					this.sessionResumable = false;
+					this.expectedReconnectSocket = null;
+					this.goAwayReconnectTimeout = null;
+					this.geminiStatusInterval = null;
+					this.connectionStartedAt = 0;
+					this.contextEstimateStartedAt = Date.now();
+					this.contextEstimateBaseTokens = 0;
+					this.lastUsageTokenCount = 0;
 					this.conversationHistory = [];
 					this.responseActive = false;
 					this.pendingAudioResponse = false;
@@ -5605,6 +6377,127 @@
 
 					console.log("Conversation history cleared");
 				}
+				parseGoogleDurationMs(value) {
+					if (typeof value === "number" && isFinite(value)) {
+						return value > 1000 ? value : value * 1000;
+					}
+					if (typeof value === "string") {
+						const match = value.match(/^(-?\d+(?:\.\d+)?)s$/);
+						if (match) {
+							return Math.max(0, parseFloat(match[1]) * 1000);
+						}
+						const numeric = parseFloat(value);
+						if (isFinite(numeric)) {
+							return numeric > 1000 ? numeric : numeric * 1000;
+						}
+						return 0;
+					}
+					if (value && typeof value === "object") {
+						const seconds = Number(value.seconds || value.sec || 0);
+						const nanos = Number(value.nanos || value.nanoseconds || 0);
+						return Math.max(0, seconds * 1000 + nanos / 1000000);
+					}
+					return 0;
+				}
+				getRealtimeInputTokenRate() {
+					let rate = 0;
+					if (this.stream && this.stream.getAudioTracks && this.stream.getAudioTracks().some(track => track.readyState !== "ended")) {
+						rate += GEMINI_AUDIO_TOKENS_PER_SECOND;
+					}
+					if (this.stream && this.stream.getVideoTracks && this.stream.getVideoTracks().some(track => track.readyState !== "ended")) {
+						rate += GEMINI_VIDEO_TOKENS_PER_SECOND;
+					}
+					return rate;
+				}
+				getEstimatedContextTokens() {
+					const elapsedSeconds = Math.max(0, (Date.now() - this.contextEstimateStartedAt) / 1000);
+					return this.contextEstimateBaseTokens + elapsedSeconds * this.getRealtimeInputTokenRate();
+				}
+				resetContextEstimate(tokens) {
+					this.contextEstimateBaseTokens = Math.max(0, Number(tokens) || 0);
+					this.contextEstimateStartedAt = Date.now();
+					this.lastUsageTokenCount = this.contextEstimateBaseTokens;
+					this.updateGeminiSessionPanel();
+				}
+				updateGeminiSessionPanel(extra = {}) {
+					updateGeminiSessionStatus({
+						visible: typeof providerSelect !== "undefined" ? providerSelect.value === "gemini" : true,
+						connected: this.isConnected(),
+						connectionStartedAt: this.connectionStartedAt,
+						hasResumeHandle: !!this.sessionResumptionHandle,
+						resumable: this.sessionResumable,
+						compressionEnabled: true,
+						contextTokens: this.getEstimatedContextTokens(),
+						contextTriggerTokens: GEMINI_CONTEXT_TRIGGER_TOKENS,
+						contextTargetTokens: GEMINI_CONTEXT_TARGET_TOKENS,
+						status: this.sessionResumptionHandle ? "Resume handle ready. Context compression is automatic and estimated here." : "Waiting for Gemini to provide a resume handle. Context compression is automatic and estimated here.",
+						...extra
+					});
+				}
+				startGeminiStatusUpdates() {
+					if (this.geminiStatusInterval) {
+						clearInterval(this.geminiStatusInterval);
+					}
+					this.updateGeminiSessionPanel();
+					this.geminiStatusInterval = setInterval(() => {
+						this.updateGeminiSessionPanel();
+					}, 1000);
+				}
+				stopGeminiStatusUpdates() {
+					if (this.geminiStatusInterval) {
+						clearInterval(this.geminiStatusInterval);
+						this.geminiStatusInterval = null;
+					}
+				}
+				handleSessionResumptionUpdate(update) {
+					if (!update || typeof update !== "object") return;
+					this.sessionResumable = !!update.resumable;
+					const newHandle = update.newHandle || update.new_handle || update.handle || "";
+					if (update.resumable && newHandle) {
+						this.sessionResumptionHandle = newHandle;
+						updateDiagnostics({
+							state: "connected",
+							connected: "yes",
+							lastEvent: "gemini.resume.handle.updated",
+							lastError: "-"
+						});
+						this.updateGeminiSessionPanel({
+							hasResumeHandle: true,
+							resumable: true,
+							status: "Resume handle ready. SSN can resume this Gemini session across Google's reconnect."
+						});
+					} else {
+						this.updateGeminiSessionPanel({
+							resumable: this.sessionResumable,
+							status: this.sessionResumptionHandle ? "Gemini session is temporarily not resumable during this turn; latest handle is retained." : "Waiting for Gemini to provide a resumable session handle."
+						});
+					}
+				}
+				handleGoAway(goAway) {
+					const timeLeftMs = this.parseGoogleDurationMs(goAway && (goAway.timeLeft || goAway.time_left));
+					const reconnectDelay = Math.max(0, timeLeftMs - GEMINI_GOAWAY_RECONNECT_GRACE_MS);
+					if (this.goAwayReconnectTimeout) {
+						clearTimeout(this.goAwayReconnectTimeout);
+					}
+					updateDiagnostics({
+						state: "connected",
+						connected: "yes",
+						lastEvent: "gemini.goAway",
+						lastError: "-"
+					});
+					this.updateGeminiSessionPanel({
+						goAwayDeadline: timeLeftMs ? Date.now() + timeLeftMs : 0,
+						status: this.sessionResumptionHandle ? "Google will close this connection soon; SSN will resume automatically." : "Google will close this connection soon, but no resume handle has arrived yet."
+					});
+					this.goAwayReconnectTimeout = setTimeout(() => {
+						this.goAwayReconnectTimeout = null;
+						if (!this.stopped && this.isConnected()) {
+							this.reconnect().catch(error => {
+								console.error("Failed to reconnect after Gemini goAway:", error);
+							});
+						}
+					}, reconnectDelay);
+				}
 				handleConnectionFailure() {
 					this.stop();
 					const startButton = document.getElementById("startButton");
@@ -5655,6 +6548,27 @@
 						// Update counts for reconnection logic
 						this.inactivityReconnectAttempts = 0;
 						this.reconnectAttempts = 0; // Reset reconnect attempts on successful message
+
+						const sessionResumptionUpdate = response.sessionResumptionUpdate || response.session_resumption_update;
+						const goAway = response.goAway || response.go_away;
+						const usageMetadata = response.usageMetadata || response.usage_metadata;
+
+						if (sessionResumptionUpdate) {
+							this.handleSessionResumptionUpdate(sessionResumptionUpdate);
+						}
+
+						if (goAway) {
+							this.handleGoAway(goAway);
+						}
+
+						const totalTokenCount = usageMetadata && (usageMetadata.totalTokenCount || usageMetadata.total_token_count);
+						const parsedTokenCount = typeof totalTokenCount === "number" ? totalTokenCount : parseInt(totalTokenCount, 10);
+						if (isFinite(parsedTokenCount)) {
+							this.lastUsageTokenCount = parsedTokenCount;
+							this.contextEstimateBaseTokens = this.lastUsageTokenCount;
+							this.contextEstimateStartedAt = Date.now();
+							this.updateGeminiSessionPanel();
+						}
 
 						// Process based on message type
 						if (response.setupComplete) {
@@ -5716,6 +6630,12 @@
 								connected: "yes",
 								lastEvent: "response.turn.complete"
 							});
+							if (this.getEstimatedContextTokens() >= GEMINI_CONTEXT_TRIGGER_TOKENS) {
+								this.resetContextEstimate(GEMINI_CONTEXT_TARGET_TOKENS);
+								this.updateGeminiSessionPanel({
+									status: "Context compression should run automatically around this point; progress is estimated."
+								});
+							}
 						}
 
 						// Handle ANY response from server as a valid heartbeat response
@@ -5937,6 +6857,17 @@
 							return;
 						}
 
+						if (this.expectedReconnectSocket && (!event.target || this.expectedReconnectSocket === event.target)) {
+							this.expectedReconnectSocket = null;
+							updateDiagnostics({
+								state: "reconnecting",
+								connected: "no",
+								lastEvent: `ws.close.reconnect:${event.code}`,
+								lastError: "-"
+							});
+							return;
+						}
+
 						if (event.code === 1007) {
 							// Handle invalid JSON payload error specially
 							if (event.reason && event.reason.includes("Invalid JSON payload")) {
@@ -6010,6 +6941,12 @@
 							"open",
 							() => {
 								clearTimeout(connectionTimeout);
+								this.connectionStartedAt = Date.now();
+								this.updateGeminiSessionPanel({
+									goAwayDeadline: 0,
+									status: this.sessionResumptionHandle ? "Reconnected to Gemini with the latest resume handle." : "Connected to a new Gemini session; waiting for resume handle."
+								});
+								this.startGeminiStatusUpdates();
 								this.startHeartbeat();
 								const systemPrompt = document.getElementById("systemPrompt");
 								const setupMessage = {
@@ -6037,6 +6974,14 @@
 													}
 												}
 											})
+										},
+										// Google Live API: {} starts a fresh resumable session; reconnects send { handle }. See https://ai.google.dev/api/live
+										sessionResumption: this.sessionResumptionHandle ? { handle: this.sessionResumptionHandle } : {},
+										contextWindowCompression: {
+											triggerTokens: GEMINI_CONTEXT_TRIGGER_TOKENS,
+											slidingWindow: {
+												targetTokens: GEMINI_CONTEXT_TARGET_TOKENS
+											}
 										}
 									}
 								};
@@ -6150,6 +7095,7 @@
 						lastEvent: "reconnect.start"
 					});
 					if (this.ws) {
+						this.expectedReconnectSocket = this.ws;
 						try {
 							this.ws.close();
 						} catch (e) {
@@ -6157,6 +7103,8 @@
 						}
 						this.ws = null;
 					}
+					this.contextEstimateBaseTokens = this.getEstimatedContextTokens();
+					this.contextEstimateStartedAt = Date.now();
 					this.clearAllTimers();
 					this._reconnectPromise = (async () => {
 						try {
@@ -6185,6 +7133,26 @@
 					})();
 					return this._reconnectPromise;
 				}
+				async resetSessionContext() {
+					this.sessionResumptionHandle = "";
+					this.sessionResumable = false;
+					this.resetContextEstimate(0);
+					updateDiagnostics({
+						state: "reconnecting",
+						connected: "no",
+						lastEvent: "gemini.context.reset",
+						lastError: "-"
+					});
+					this.updateGeminiSessionPanel({
+						hasResumeHandle: false,
+						resumable: false,
+						status: "Starting a fresh Gemini session with cleared context."
+					});
+					if (this.stopped) {
+						return false;
+					}
+					return this.reconnect();
+				}
 				clearAllTimers() {
 					if (this.pingInterval) {
 						clearInterval(this.pingInterval);
@@ -6198,6 +7166,11 @@
 						clearInterval(this.keepaliveInterval);
 						this.keepaliveInterval = null;
 					}
+					if (this.goAwayReconnectTimeout) {
+						clearTimeout(this.goAwayReconnectTimeout);
+						this.goAwayReconnectTimeout = null;
+					}
+					this.stopGeminiStatusUpdates();
 					if (this.reconnectTimeout) {
 						clearTimeout(this.reconnectTimeout);
 						this.reconnectTimeout = null;
@@ -6302,6 +7275,18 @@
 					this.responseActive = false;
 					this.clearAllTimers();
 					this._reconnectPromise = null;
+					this.sessionResumptionHandle = "";
+					this.sessionResumable = false;
+					this.expectedReconnectSocket = null;
+					this.connectionStartedAt = 0;
+					this.resetContextEstimate(0);
+					this.updateGeminiSessionPanel({
+						connected: false,
+						goAwayDeadline: 0,
+						hasResumeHandle: false,
+						resumable: false,
+						status: "Gemini stream stopped. A new start will create a fresh session."
+					});
 					if (this.ws) {
 						try {
 							this.ws.close();
@@ -6575,6 +7560,110 @@
 				}
 			});
 			let stream = null;
+			let speechInputStream = null;
+			let mixedAudioResources = null;
+			function stopMixedAudioResources() {
+				if (!mixedAudioResources) return;
+				const resources = mixedAudioResources;
+				mixedAudioResources = null;
+				[resources.systemSource, resources.micSource, resources.systemGain, resources.micGain].forEach(node => {
+					if (!node) return;
+					try {
+						node.disconnect();
+					} catch (_error) {}
+				});
+				const tracks = [].concat(resources.systemTracks || [], resources.micTracks || [], resources.mixedTrack || []);
+				tracks.forEach((track, index) => {
+					if (!track || tracks.indexOf(track) !== index) return;
+					try {
+						track.stop();
+					} catch (_error) {}
+				});
+				if (resources.context) {
+					try {
+						Promise.resolve(resources.context.close()).catch(() => {});
+					} catch (_error) {}
+				}
+			}
+			function stopSpeechInputStream() {
+				if (!speechInputStream) return;
+				speechInputStream.getTracks().forEach(track => track.stop());
+				speechInputStream = null;
+			}
+			function preserveSpeechInputTrack(track) {
+				stopSpeechInputStream();
+				if (!track || track.readyState !== "live") return;
+				try {
+					// Keep Whisper on the original raw microphone track. Cloned capture
+					// tracks can be silent in Electron, and the outgoing track may later
+					// be replaced with a system-audio mix.
+					speechInputStream = new MediaStream([track]);
+				} catch (error) {
+					console.warn("Unable to preserve the selected microphone for local Whisper:", error);
+				}
+			}
+			function setGainEnabled(gainNode, enabled) {
+				if (!gainNode || !gainNode.gain) return false;
+				try {
+					gainNode.gain.setValueAtTime(enabled ? 1 : 0, gainNode.context.currentTime);
+				} catch (_error) {
+					gainNode.gain.value = enabled ? 1 : 0;
+				}
+				return true;
+			}
+			function setTrackEnabled(track, enabled) {
+				if (!track || track.readyState !== "live") return false;
+				track.enabled = enabled;
+				return true;
+			}
+			function applyMicrophoneMutedState(muted) {
+				const enabled = !muted;
+				let changed = false;
+				if (mixedAudioResources) {
+					changed = setGainEnabled(mixedAudioResources.micGain, enabled) || changed;
+					(mixedAudioResources.micTracks || []).forEach(track => {
+						changed = setTrackEnabled(track, enabled) || changed;
+					});
+				}
+				if (speechInputStream) {
+					speechInputStream.getAudioTracks().forEach(track => {
+						changed = setTrackEnabled(track, enabled) || changed;
+					});
+				}
+				if (stream) {
+					stream.getAudioTracks().forEach(track => {
+						if (mixedAudioResources && track === mixedAudioResources.mixedTrack) return;
+						if (track.label && track.label.toLowerCase().includes("system")) return;
+						changed = setTrackEnabled(track, enabled) || changed;
+					});
+				}
+				return changed;
+			}
+			function applySystemAudioMutedState(muted) {
+				const enabled = !muted;
+				let changed = false;
+				if (mixedAudioResources) {
+					changed = setGainEnabled(mixedAudioResources.systemGain, enabled) || changed;
+					(mixedAudioResources.systemTracks || []).forEach(track => {
+						changed = setTrackEnabled(track, enabled) || changed;
+					});
+				}
+				if (stream) {
+					stream.getAudioTracks().forEach(track => {
+						if (mixedAudioResources && track === mixedAudioResources.mixedTrack) return;
+						if (!track.label || !track.label.toLowerCase().includes("system")) return;
+						changed = setTrackEnabled(track, enabled) || changed;
+					});
+				}
+				return changed;
+			}
+			function syncMuteButtonState(button, muted, mutedTitle, activeTitle) {
+				button.classList.toggle("muted", muted);
+				button.setAttribute("aria-pressed", muted ? "true" : "false");
+				const title = muted ? activeTitle : mutedTitle;
+				button.title = title;
+				button.setAttribute("aria-label", title);
+			}
 			const videoSelect = document.getElementById("videoSource");
 			const audioSelect = document.getElementById("audioSource");
 			const preview = document.getElementById("preview");
@@ -6592,6 +7681,8 @@
 			const configuredLLMTestContainer = document.getElementById("configuredLLMTestContainer");
 			const configuredLLMTestButton = document.getElementById("configuredLLMTest");
 			const ttsProviderSelect = document.getElementById("ttsProviderSelect");
+			const geminiReconnectNowButton = document.getElementById("geminiReconnectNow");
+			const geminiResetContextButton = document.getElementById("geminiResetContext");
 			let customModelList = [];
 			let customModelsLoading = false;
 			let customModelsQueuedRefresh = false;
@@ -6976,7 +8067,7 @@
 			}
 
 			function isRealtimeProvider(providerName) {
-				return providerName === "chatgpt" || providerName === "xai" || providerName === "localqwen" || providerName === "localgemma" || providerName === "customopenai" || providerName === "configuredllm";
+				return providerName === "chatgpt" || providerName === "xai" || providerName === "localqwen" || providerName === "localqwen2b" || providerName === "localgemma" || providerName === "customopenai" || providerName === "configuredllm";
 			}
 
 			function createPublisherForProvider(providerName, activeStream, apiKey) {
@@ -6984,7 +8075,7 @@
 				if (providerName === "gemini") {
 					return new GoogleLivePublisher(activeStream, apiKey, effectiveModel);
 				}
-				if (providerName === "localqwen" || providerName === "localgemma") {
+				if (providerName === "localqwen" || providerName === "localqwen2b" || providerName === "localgemma") {
 					return new LocalBrowserPublisher(activeStream, providerName, effectiveModel);
 				}
 				if (providerName === "customopenai") {
@@ -7053,6 +8144,8 @@
 							stream.getTracks().forEach(track => track.stop());
 							stream = null;
 						}
+						stopSpeechInputStream();
+						stopMixedAudioResources();
 						if (currentAudioIndicator) {
 							currentAudioIndicator.remove();
 							currentAudioIndicator = null;
@@ -7061,9 +8154,9 @@
 						micMuted = false;
 						audioMuted = false;
 						videoMuted = false;
-						muteMicButton.classList.remove("muted");
+						syncMuteButtonState(muteMicButton, false, "Mute microphone", "Unmute microphone");
 						muteMicButton.querySelector(".mic-icon").classList.remove("muted");
-						muteAudioButton.classList.remove("muted");
+						syncMuteButtonState(muteAudioButton, false, "Mute system audio", "Unmute system audio");
 						muteAudioButton.querySelector(".speaker-icon").classList.remove("muted");
 						muteVideoButton.classList.remove("muted");
 						muteVideoButton.querySelector(".video-icon").classList.remove("muted");
@@ -7126,6 +8219,8 @@
 						stream.getTracks().forEach(track => track.stop());
 						stream = null;
 					}
+					stopSpeechInputStream();
+					stopMixedAudioResources();
 					if (preview.srcObject) {
 						preview.srcObject.getTracks().forEach(track => track.stop());
 						preview.srcObject = null;
@@ -7346,60 +8441,53 @@
 				muteVideoButton.querySelector(".video-icon").classList.toggle("muted");
 			});
 			muteMicButton.addEventListener("click", () => {
-				if (isRealtimeProvider(providerSelect.value) && publisher && publisher.recognition) {
-					if (!micMuted) {
-						publisher.recognition.stop();
-						publisher.isRecognizing = false;
-					} else {
-						if (!publisher.isRecognizing) {
-							try {
-								publisher.recognition.start();
-								publisher.isRecognizing = true;
-							} catch (err) {
-								console.error("Failed to restart speech recognition:", err);
-								setTimeout(() => {
-									publisher.restartRecognition();
-								}, 300);
-							}
-						}
-					}
-					micMuted = !micMuted;
-					muteMicButton.classList.toggle("muted");
-					muteMicButton.querySelector(".mic-icon").classList.toggle("muted");
-					return;
-				}
 				if (!stream) {
 					showError("Start the stream before muting microphone");
 					return;
 				}
-				let microphoneTracks = stream.getAudioTracks().filter(track => track.kind === "audio" && (!track.label || !track.label.toLowerCase().includes("system")));
-				if (microphoneTracks.length === 0) {
+				const nextMuted = !micMuted;
+				micMuted = nextMuted;
+				const recognition = isRealtimeProvider(providerSelect.value) && publisher ? publisher.recognition : null;
+				const changed = applyMicrophoneMutedState(micMuted);
+				if (!changed && !recognition) {
+					micMuted = !nextMuted;
 					console.warn("No microphone tracks found to mute/unmute");
 					return;
 				}
-				microphoneTracks.forEach(track => {
-					track.enabled = micMuted;
-				});
-				micMuted = !micMuted;
-				muteMicButton.classList.toggle("muted");
-				muteMicButton.querySelector(".mic-icon").classList.toggle("muted");
+				if (recognition) {
+					if (micMuted) {
+						try {
+							recognition.stop();
+						} catch (_error) {}
+						publisher.isRecognizing = false;
+					} else if (publisher.ttsActive) {
+						publisher.resumeRecognitionAfterSpeech = true;
+					} else if (!publisher.isRecognizing) {
+						try {
+							recognition.start();
+							publisher.isRecognizing = true;
+						} catch (err) {
+							console.error("Failed to restart speech recognition:", err);
+							setTimeout(() => publisher.restartRecognition(), 300);
+						}
+					}
+				}
+				syncMuteButtonState(muteMicButton, micMuted, "Mute microphone", "Unmute microphone");
+				muteMicButton.querySelector(".mic-icon").classList.toggle("muted", micMuted);
 			});
 			muteAudioButton.addEventListener("click", () => {
 				if (!stream) {
 					showError("Start the stream before muting audio");
 					return;
 				}
-				let systemTracks = stream.getAudioTracks().filter(track => track.kind === "audio" && track.label && track.label.toLowerCase().includes("system"));
-				if (systemTracks.length === 0) {
+				const nextMuted = !audioMuted;
+				if (!applySystemAudioMutedState(nextMuted)) {
 					console.warn("No system audio tracks found to mute/unmute");
 					return;
 				}
-				systemTracks.forEach(track => {
-					track.enabled = audioMuted;
-				});
-				audioMuted = !audioMuted;
-				muteAudioButton.classList.toggle("muted");
-				muteAudioButton.querySelector(".speaker-icon").classList.toggle("muted");
+				audioMuted = nextMuted;
+				syncMuteButtonState(muteAudioButton, audioMuted, "Mute system audio", "Unmute system audio");
+				muteAudioButton.querySelector(".speaker-icon").classList.toggle("muted", audioMuted);
 			});
 			let audioContext;
 			function shouldUseExactDeviceId(deviceId) {
@@ -7453,6 +8541,8 @@
 			}
 			async function getStream() {
 				try {
+					stopSpeechInputStream();
+					stopMixedAudioResources();
 					if (preview.srcObject) {
 						preview.srcObject.getTracks().forEach(track => track.stop());
 						preview.srcObject = null;
@@ -7529,7 +8619,8 @@
 						try {
 							const audioConstraint = {
 								echoCancellation: true,
-								noiseSuppression: true
+								noiseSuppression: true,
+								autoGainControl: true
 							};
 							if (shouldUseExactDeviceId(audioSelect.value)) {
 								audioConstraint.deviceId = { exact: audioSelect.value };
@@ -7537,6 +8628,7 @@
 							micStream = await navigator.mediaDevices.getUserMedia({
 								audio: audioConstraint
 							});
+							if (DESKTOP_LOCAL_STT_AVAILABLE) preserveSpeechInputTrack(micStream.getAudioTracks()[0]);
 							outputStream.getAudioTracks().forEach(track => {
 								outputStream.removeTrack(track);
 								track.stop();
@@ -7546,15 +8638,32 @@
 								const dest = ctx.createMediaStreamDestination();
 								const systemSource = ctx.createMediaStreamSource(videoStream);
 								const micSource = ctx.createMediaStreamSource(micStream);
-								systemSource.connect(dest);
-								micSource.connect(dest);
+								const systemGain = ctx.createGain();
+								const micGain = ctx.createGain();
+								setGainEnabled(systemGain, !audioMuted);
+								setGainEnabled(micGain, !micMuted);
+								systemSource.connect(systemGain);
+								micSource.connect(micGain);
+								systemGain.connect(dest);
+								micGain.connect(dest);
+								if (ctx.state === "suspended") await ctx.resume();
 								const mixedTrack = dest.stream.getAudioTracks()[0];
 								if (mixedTrack) {
-									mixedTrack.label = "Mixed Audio (System + Microphone)";
 									outputStream.addTrack(mixedTrack);
+									mixedAudioResources = {
+										context: ctx,
+										destination: dest,
+										systemSource,
+										micSource,
+										systemGain,
+										micGain,
+										systemTracks: videoStream.getAudioTracks().slice(),
+										micTracks: micStream.getAudioTracks().slice(),
+										mixedTrack
+									};
+								} else {
+									await ctx.close();
 								}
-								videoStream.getAudioTracks().forEach(track => track.stop());
-								micStream.getAudioTracks().forEach(track => track.stop());
 							} else {
 								const audioTrack = micStream.getAudioTracks()[0];
 								if (audioTrack) {
@@ -7569,11 +8678,13 @@
 									micStream = await navigator.mediaDevices.getUserMedia({
 										audio: {
 											echoCancellation: true,
-											noiseSuppression: true
+											noiseSuppression: true,
+											autoGainControl: true
 										}
 									});
 									const fallbackTrack = micStream.getAudioTracks()[0];
 									if (fallbackTrack) {
+										if (DESKTOP_LOCAL_STT_AVAILABLE) preserveSpeechInputTrack(fallbackTrack);
 										updateSelectedDeviceFromTrack(audioSelect, "selectedAudioId", fallbackTrack, true);
 										outputStream.getAudioTracks().forEach(track => {
 											outputStream.removeTrack(track);
@@ -7623,6 +8734,7 @@
 					}
 					return outputStream;
 				} catch (err) {
+					stopMixedAudioResources();
 					showError("Failed to get stream: " + err.message);
 					throw err;
 				}
@@ -7638,6 +8750,18 @@
 						const oldStream = stream;
 						stream = newStream;
 						publisher.stream = newStream;
+						if (typeof publisher.setupSpeechRecognition === "function") {
+							if (publisher.recognition) {
+								try {
+									publisher.recognition.stop();
+								} catch (_error) {}
+							}
+							publisher.recognition = null;
+							publisher.isRecognizing = false;
+							if (hasCohostSpeechInput(stream)) {
+								await publisher.setupSpeechRecognition();
+							}
+						}
 						if (typeof publisher.setupAudioProcessing === "function" && stream.getAudioTracks().length > 0) {
 							await publisher.setupAudioProcessing();
 						}
@@ -7653,19 +8777,8 @@
 					if (stream.getAudioTracks().length > 0) {
 						setupAudioIndicator(stream);
 					}
-					if (previousMicMuted || previousAudioMuted) {
-						const audioTracks = stream.getAudioTracks();
-						audioTracks.forEach(track => {
-							if (track.kind === "audio" && track.label) {
-								if (previousMicMuted && !track.label.toLowerCase().includes("system")) {
-									track.enabled = false;
-								}
-								if (previousAudioMuted && track.label.toLowerCase().includes("system")) {
-									track.enabled = false;
-								}
-							}
-						});
-					}
+					applyMicrophoneMutedState(previousMicMuted);
+					applySystemAudioMutedState(previousAudioMuted);
 					if (videoMuted) {
 						stream.getVideoTracks().forEach(track => {
 							track.enabled = false;
@@ -7682,6 +8795,8 @@
 						stream.getTracks().forEach(track => track.stop());
 						stream = null;
 					}
+					stopSpeechInputStream();
+					stopMixedAudioResources();
 					if (preview.srcObject) {
 						preview.srcObject.getTracks().forEach(track => track.stop());
 						preview.srcObject = null;
@@ -7689,9 +8804,9 @@
 					micMuted = false;
 					audioMuted = false;
 					videoMuted = false;
-					muteMicButton.classList.remove("muted");
+					syncMuteButtonState(muteMicButton, false, "Mute microphone", "Unmute microphone");
 					muteMicButton.querySelector(".mic-icon").classList.remove("muted");
-					muteAudioButton.classList.remove("muted");
+					syncMuteButtonState(muteAudioButton, false, "Mute system audio", "Unmute system audio");
 					muteAudioButton.querySelector(".speaker-icon").classList.remove("muted");
 					muteVideoButton.classList.remove("muted");
 					muteVideoButton.querySelector(".video-icon").classList.remove("muted");
@@ -7722,25 +8837,42 @@
 					errorDisplay.textContent = "";
 				}, 5000);
 			}
+			getDevices();
 			if (!navigator.mediaDevices?.getUserMedia) {
 				showError("getUserMedia not supported");
 			} else {
 				let deviceInitialized = false;
+				const probeMediaPermission = async (constraints, label, timeoutMs = 5000) => {
+					let timedOut = false;
+					const request = navigator.mediaDevices.getUserMedia(constraints).catch(err => {
+						console.log(`${label} permission check failed:`, err.message);
+						return null;
+					});
+					let timeoutId = null;
+					const timeout = new Promise(resolve => {
+						timeoutId = setTimeout(() => {
+							timedOut = true;
+							resolve(null);
+						}, timeoutMs);
+					});
+					const mediaStream = await Promise.race([request, timeout]);
+					if (!timedOut && timeoutId) clearTimeout(timeoutId);
+					if (timedOut) {
+						console.warn(`${label} permission check timed out; continuing device discovery.`);
+						request.then(lateStream => lateStream?.getTracks().forEach(track => track.stop()));
+					}
+					return mediaStream;
+				};
 				const initializeDevices = async () => {
 					if (deviceInitialized) return;
 					deviceInitialized = true;
 					try {
-						const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false }).catch(err => {
-							console.log("Audio permission check failed:", err.message);
-							return null;
-						});
+						await getDevices();
+						const audioStream = await probeMediaPermission({ audio: true, video: false }, "Audio");
 						if (audioStream) {
 							audioStream.getTracks().forEach(track => track.stop());
 						}
-						const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true }).catch(err => {
-							console.log("Video permission check failed:", err.message);
-							return null;
-						});
+						const videoStream = await probeMediaPermission({ audio: false, video: true }, "Video");
 						if (videoStream) {
 							videoStream.getTracks().forEach(track => track.stop());
 						}
@@ -7767,6 +8899,34 @@
 			if (liveChatReconnectButton) {
 				liveChatReconnectButton.addEventListener("click", function () {
 					startCohostLiveChatBridge();
+				});
+			}
+			if (geminiReconnectNowButton) {
+				geminiReconnectNowButton.addEventListener("click", function () {
+					if (!(publisher instanceof GoogleLivePublisher)) {
+						showError("Start Google Gemini Live before reconnecting it.");
+						return;
+					}
+					updateGeminiSessionStatus({ status: "Manual Gemini reconnect requested." });
+					publisher.reconnect().catch(error => {
+						console.error("Manual Gemini reconnect failed:", error);
+						showError("Gemini reconnect failed: " + (error.message || error));
+					});
+				});
+			}
+			if (geminiResetContextButton) {
+				geminiResetContextButton.addEventListener("click", function () {
+					if (!(publisher instanceof GoogleLivePublisher)) {
+						showError("Start Google Gemini Live before resetting context.");
+						return;
+					}
+					if (!window.confirm("Reset Gemini context and start a fresh session? The co-host will forget prior session context.")) {
+						return;
+					}
+					publisher.resetSessionContext().catch(error => {
+						console.error("Gemini context reset failed:", error);
+						showError("Gemini context reset failed: " + (error.message || error));
+					});
 				});
 			}
 			applyCohostLiveChatMode(liveChatModeSelect ? liveChatModeSelect.value : getStoredCohostLiveChatMode(), false);
@@ -7940,6 +9100,7 @@
 			providerSelect.innerHTML = `
     <option value="gemini">Google Gemini Live</option>
     <option value="localqwen">Local Qwen 3.5 0.8B (Browser)</option>
+    <option value="localqwen2b">Local Qwen 3.5 2B (Browser, quality)</option>
     <option value="localgemma">Local Gemma 4 E2B (Browser, self-hosted)</option>
     <option value="configuredllm">SSN Configured LLM</option>
     <option value="customopenai">OpenAI-Compatible (Custom)</option>
@@ -7961,13 +9122,25 @@
 					supportsAudioResponse: true
 				},
 				localqwen: {
-					label: "Local Qwen 3.5 0.8B (Browser)",
+					label: "Local Qwen 3.5 0.8B (Browser, fast)",
 					apiKeyPlaceholder: "No API key required",
 					apiKeyInfoHtml: "Uses your self-hosted model files (default: largefiles.socialstream.ninja) and local browser runtime. No third-party AI API key is used.",
 					defaultModel: LOCAL_QWEN_DEFAULT_MODEL,
 					modelPlaceholder: `Optional model id/path (default ${LOCAL_QWEN_DEFAULT_MODEL} on ${LOCAL_QWEN_DEFAULT_REMOTE_HOST})`,
 					disableCaptureSelection: false,
-					deviceNotice: COHOST_TTS_AVAILABLE ? "Speech-to-text uses your browser/system default microphone. If Audio Response is selected, Local Qwen replies are spoken with the selected TTS engine. Camera or screen capture can stay enabled for the stream, but Local Qwen stays text-only and does not inspect frames." : "Speech-to-text uses your browser/system default microphone. Camera or screen capture can stay enabled for the stream, but Local Qwen stays text-only and does not inspect frames.",
+					deviceNotice: getCohostSpeechToTextNotice() + " If camera or screen capture is enabled, Local Qwen attaches a frame so the co-host can reference what it sees." + (COHOST_TTS_AVAILABLE ? " Audio responses use the selected TTS engine." : ""),
+					requiresApiKey: false,
+					supportsAudioResponse: COHOST_TTS_AVAILABLE,
+					usesBrowserTts: true
+				},
+				localqwen2b: {
+					label: "Local Qwen 3.5 2B (Browser, quality)",
+					apiKeyPlaceholder: "No API key required",
+					apiKeyInfoHtml: "Uses the larger Qwen 2B multimodal model hosted on largefiles.socialstream.ninja for better conversation quality. The first download is about 1.77 GB; later loads use the browser cache.",
+					defaultModel: LOCAL_QWEN_2B_DEFAULT_MODEL,
+					modelPlaceholder: `Optional model id/path (default ${LOCAL_QWEN_2B_DEFAULT_MODEL} on ${LOCAL_QWEN_2B_DEFAULT_REMOTE_HOST})`,
+					disableCaptureSelection: false,
+					deviceNotice: getCohostSpeechToTextNotice() + " If camera or screen capture is enabled, Local Qwen attaches a meaningfully changed frame so the co-host can reference what it sees." + (COHOST_TTS_AVAILABLE ? " Audio responses use the selected TTS engine." : ""),
 					requiresApiKey: false,
 					supportsAudioResponse: COHOST_TTS_AVAILABLE,
 					usesBrowserTts: true
@@ -7975,11 +9148,11 @@
 				localgemma: {
 					label: "Local Gemma 4 E2B (Browser, self-hosted)",
 					apiKeyPlaceholder: "No API key required",
-					apiKeyInfoHtml: "Requires Gemma 4 model files mirrored on your own asset host; the SSN largefiles host does not currently include Gemma assets. No third-party AI API key is used.",
+					apiKeyInfoHtml: "Uses the Gemma 4 model files hosted on largefiles.socialstream.ninja by default, or an optional self-hosted mirror. No third-party AI API key is used.",
 					defaultModel: LOCAL_GEMMA_DEFAULT_MODEL,
-					modelPlaceholder: `Optional model id/path (default folder ${LOCAL_GEMMA_DEFAULT_MODEL}; set host to your Gemma mirror)`,
+					modelPlaceholder: `Optional model id/path (default ${LOCAL_GEMMA_DEFAULT_MODEL} on ${LOCAL_GEMMA_DEFAULT_REMOTE_HOST})`,
 					disableCaptureSelection: false,
-					deviceNotice: COHOST_TTS_AVAILABLE ? "Speech-to-text uses your browser/system default microphone. If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees. Audio responses use the selected TTS engine." : "Speech-to-text uses your browser/system default microphone. If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees.",
+					deviceNotice: getCohostSpeechToTextNotice() + " If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees." + (COHOST_TTS_AVAILABLE ? " Audio responses use the selected TTS engine." : ""),
 					requiresApiKey: false,
 					supportsAudioResponse: COHOST_TTS_AVAILABLE,
 					usesBrowserTts: true
@@ -7991,7 +9164,7 @@
 					defaultModel: CUSTOM_OPENAI_DEFAULT_MODEL,
 					modelPlaceholder: "Optional model override or select a model from the endpoint",
 					disableCaptureSelection: false,
-					deviceNotice: COHOST_TTS_AVAILABLE ? "Speech-to-text runs in-browser. If camera/screen is enabled, a frame is attached for multimodal models. Audio responses use the selected TTS engine." : "Speech-to-text runs in-browser. If camera/screen is enabled, a frame is attached for multimodal models.",
+					deviceNotice: getCohostSpeechToTextNotice() + " If camera/screen is enabled, a frame is attached for multimodal models." + (COHOST_TTS_AVAILABLE ? " Audio responses use the selected TTS engine." : ""),
 					requiresApiKey: false,
 					acceptsOptionalApiKey: true,
 					supportsAudioResponse: COHOST_TTS_AVAILABLE,
@@ -8004,7 +9177,7 @@
 					defaultModel: "",
 					modelPlaceholder: "Optional model override passed to the configured LLM provider",
 					disableCaptureSelection: false,
-					deviceNotice: COHOST_TTS_AVAILABLE ? "Speech-to-text runs in-browser. If camera/screen is enabled, a frame is sent through the SSN LLM bridge for multimodal providers. Audio responses use the selected TTS engine." : "Speech-to-text runs in-browser. If camera/screen is enabled, a frame is sent through the SSN LLM bridge for multimodal providers.",
+					deviceNotice: getCohostSpeechToTextNotice() + " If camera/screen is enabled, a frame is sent through the SSN LLM bridge for multimodal providers." + (COHOST_TTS_AVAILABLE ? " Audio responses use the selected TTS engine." : ""),
 					requiresApiKey: false,
 					supportsAudioResponse: COHOST_TTS_AVAILABLE,
 					usesBrowserTts: true
@@ -8026,8 +9199,9 @@
 			};
 			const defaultPrompts = {
 				gemini: "You are a friendly social chat assistant that can see and hear the user. Avoid describing what you see unless asked.",
-				localqwen: "You are a concise, friendly social chat co-host. Keep answers short, natural, and practical.",
-				localgemma: "You are a concise, friendly social chat co-host. You can use visible context when it helps, but do not narrate the scene unless asked.",
+				localqwen: "You are a concise, friendly social chat co-host in an ongoing conversation. Remember recent turns, respond directly to what the user just said, and do not repeatedly greet them or ask what they want to discuss. Treat the camera as background context unless the user asks about it.",
+				localqwen2b: "You are a concise, friendly social chat co-host in an ongoing conversation. Remember recent turns, respond directly to what the user just said, and do not repeat earlier answers or repeatedly ask what they want to discuss. Treat the camera as background context unless the user asks about it.",
+				localgemma: "You are a concise, friendly social chat co-host in an ongoing conversation. Remember recent turns, respond directly to what the user just said, and do not repeatedly greet them or ask what they want to discuss. Treat the camera as background context unless the user asks about it.",
 				customopenai: "You are a concise, friendly social chat co-host. Keep answers practical and conversational.",
 				configuredllm: "You are a concise, friendly social chat co-host. Use visible context when it is attached and helpful. Keep answers practical and conversational.",
 				chatgpt: "You are a friendly and helpful social chat assistant.",
@@ -8087,29 +9261,30 @@
 							outputState: responseTypeValue === "audio" ? "Native audio response" : "Text response only"
 						};
 					case "localqwen":
+					case "localqwen2b":
 						return {
-							inputMode: "Browser STT -> text prompt",
+							inputMode: getCohostVoiceInputMode(false),
 							outputState: getBrowserTtsOutputState(responseTypeValue)
 						};
 					case "localgemma":
 						return {
-							inputMode: "Browser STT + optional image frame",
+							inputMode: getCohostVoiceInputMode(true),
 							outputState: getBrowserTtsOutputState(responseTypeValue)
 						};
 					case "customopenai":
 						return {
-							inputMode: "Browser STT -> text prompt",
+							inputMode: getCohostVoiceInputMode(false),
 							outputState: getBrowserTtsOutputState(responseTypeValue)
 						};
 					case "configuredllm":
 						return {
-							inputMode: "Browser STT + optional image frame",
+							inputMode: getCohostVoiceInputMode(true),
 							outputState: getBrowserTtsOutputState(responseTypeValue)
 						};
 					case "chatgpt":
 					case "xai":
 						return {
-							inputMode: "Browser STT -> text prompt",
+							inputMode: getCohostVoiceInputMode(false),
 							outputState: responseTypeValue === "audio" ? "Provider audio ready" : "Text response only"
 						};
 					default:
@@ -8188,8 +9363,9 @@
 						localStorage.setItem("selectedAudioId", audioSelect.value);
 					}
 				}
-				if (config.deviceNotice) {
-					updateRealtimeDeviceNotice(config.deviceNotice);
+				const deviceNotice = DESKTOP_LOCAL_STT_AVAILABLE && (providerName === "chatgpt" || providerName === "xai") ? getCohostSpeechToTextNotice() + " Audio responses still come from the selected realtime provider." : config.deviceNotice;
+				if (deviceNotice) {
+					updateRealtimeDeviceNotice(deviceNotice);
 				} else {
 					removeRealtimeDeviceNotice();
 				}
@@ -8205,6 +9381,7 @@
 				if (configuredLLMTestContainer) {
 					configuredLLMTestContainer.style.display = isConfiguredLLMProvider ? "flex" : "none";
 				}
+				syncGeminiProviderPanel(providerName);
 				if (isCustomOpenAIProvider) {
 					const endpointValue = getEffectiveCustomEndpoint(providerName);
 					customEndpointInput.value = endpointValue;

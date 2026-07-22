@@ -1,6 +1,6 @@
 # All URL Parameters for Social Stream Ninja
 
-This completes the comprehensive list of URL parameters available for your live streaming chat overlay system. Each parameter can be added to the URL using standard query string format:
+This is a comprehensive list of the URL parameters available for your live streaming chat overlay system. Each parameter can be added to the URL using standard query string format:
 
 ```
 ?parameter1=value&parameter2=value
@@ -126,6 +126,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `trimname` | number | Trims usernames longer than specified characters |
 | `hidenames` | boolean | Hides usernames completely |
 | `firstnamesonly` or `firstname` or `firstnames` | boolean | Shows only first names of users |
+| `youtubechannelname` or `youtubechanneltitle` | boolean | Featured Chat only: resolves YouTube WebSocket author channel IDs to channel titles before showing featured messages |
 | `hidesource` | boolean | Hides the source platform icons (YouTube, Twitch, etc.) |
 | `noavatar` or `noavatars` | boolean | Hides user avatars |
 | `nobadges` or `hidebadges` | boolean | Hides user badges |
@@ -152,8 +153,13 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `hideshortmessages` | number | Hides messages shorter than specified length |
 | `noemojisonly` | boolean | Filters out messages containing only emojis |
 | `stripemoji` | boolean | Removes all emojis from messages |
+| `stripnameemoji` | boolean | Removes all emojis from usernames |
 | `striphtml` or `strip` | boolean | Removes HTML formatting from messages |
 | `striplinks` | boolean | Removes links from messages |
+| `allowbotlinks` | boolean | With `striplinks`, keeps links visible for bot messages |
+| `allowhostlinks` | boolean | With `striplinks`, keeps links visible for host messages |
+| `allowmodlinks` | boolean | With `striplinks`, keeps links visible for mod messages |
+| `allowviplinks` | boolean | With `striplinks`, keeps links visible for VIP messages |
 | `activelinks` | boolean | Makes URLs clickable |
 | `shortlink` | boolean | Shortens displayed links |
 | `onlytwitch` | boolean | Shows only Twitch messages |

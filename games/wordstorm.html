@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Word Storm - Social Stream Ninja</title>
-    <link rel="icon" href="./favicon.ico" />
+    <link rel="icon" href="../favicon.ico" />
     <style>
         /* Hide scrollbars */
         ::-webkit-scrollbar {
@@ -294,7 +294,6 @@
         let gameState = {
             words: new Map(),
             activeWords: [],
-            totalWords: 0,
             popularWords: 0,
             comboCount: 0,
             stormLevel: 0,
@@ -317,7 +316,7 @@
             'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
             'will', 'would', 'could', 'should', 'may', 'might', 'can', 'shall', 'must',
             'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
-            'my', 'your', 'his', 'her', 'its', 'our', 'their', 'this', 'that', 'these', 'those'
+            'my', 'your', 'his', 'its', 'our', 'their', 'this', 'that', 'these', 'those'
         ]);
 
         function stripHtml(html) {
@@ -380,17 +379,19 @@
                 wordToRemove = gameState.activeWords[0];
             }
             
-            // Remove the word
+            // Remove the word from tracking immediately so repeat calls pick another word
             if (wordToRemove) {
+                gameState.activeWords = gameState.activeWords.filter(w => w !== wordToRemove);
                 const bubble = document.getElementById(`word-${wordToRemove}`);
                 if (bubble) {
                     bubble.style.animation = 'word-spawn 0.3s ease-in reverse';
                     setTimeout(() => {
                         bubble.remove();
                         gameState.words.delete(wordToRemove);
-                        gameState.activeWords = gameState.activeWords.filter(w => w !== wordToRemove);
                         updateDisplay();
                     }, 300);
+                } else {
+                    gameState.words.delete(wordToRemove);
                 }
             }
         }
@@ -432,9 +433,9 @@
                 }, 800);
             }
             
-            // Update appearance based on frequency
+            // Update appearance based on frequency (preserve spawn animation class)
             bubble.style.background = getWordColor(frequency);
-            bubble.className = `word-bubble ${getWordSize(frequency)}`;
+            bubble.className = `word-bubble ${getWordSize(frequency)}` + (bubble.classList.contains('word-new') ? ' word-new' : '');
             
             if (frequency >= 5) {
                 bubble.classList.add('word-popular');
@@ -651,8 +652,6 @@
                 if (currentCount === 0) {
                     checkCombos(word);
                 }
-                
-                gameState.totalWords++;
             });
 
             updateDisplay();
@@ -660,7 +659,7 @@
 
         // Setup iframe communication
         const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
         iframe.style.width = "0px";
         iframe.style.height = "0px";
         iframe.style.position = "fixed";

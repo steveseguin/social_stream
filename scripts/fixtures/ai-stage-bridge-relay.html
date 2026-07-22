@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<body>
+<script>
+(function () {
+	var params = new URLSearchParams(location.search);
+	var room = params.get("room") || params.get("view") || "default";
+	var channel = new BroadcastChannel("ssn-ai-stage-" + room);
+
+	function deliver(payload) {
+		parent.postMessage({ dataReceived: { overlayNinja: payload } }, "*");
+	}
+
+	function respondToChatbot(payload) {
+		var response = "Paired bridge response for the OBS stage.";
+		deliver({ chatbotChunk: { target: payload.target, value: response.slice(0, 21) } });
+		deliver({ chatbotChunk: { target: payload.target, value: response.slice(21) } });
+		deliver({ chatbotResponse: { target: payload.target, value: "" } });
+	}
+
+	channel.onmessage = function (event) {
+		deliver(event.data);
+	};
+
+	window.addEventListener("message", function (event) {
+		var payload = event.data && event.data.sendData && event.data.sendData.overlayNinja;
+		if (!payload) return;
+		if (payload.action === "chatbot") {
+			respondToChatbot(payload);
+			return;
+		}
+		if (payload.action === "getAiPromptOverlays") {
+			deliver({ aiPromptOverlays: { target: payload.target, value: { version: 1, activeOverlay: "", order: [], overlays: {} } } });
+			return;
+		}
+		if (payload.action === "cohostToolStatus") {
+			deliver({ cohostToolStatus: { target: payload.target, value: { tools: {} }, tools: {} } });
+			return;
+		}
+		channel.postMessage(payload);
+	});
+}());
+</script>
+</body>
+</html>

@@ -64,7 +64,9 @@ function toDataURL(url, callback) {
 	
 	
 	function processMessage(ele){
-		
+		if (!ele || ele.nodeType !== 1 || !ele.querySelector) {
+			return;
+		}
 		console.log(ele);
 		var chatimg = ""; // boo!
 		
@@ -95,6 +97,9 @@ function toDataURL(url, callback) {
 		data.hasDonation = "";
 		data.membership = "";
 		data.contentimg = "";
+		if (!name || !msg) {
+			return;
+		}
 		data.textonly = settings.textonlymode || false;
 		data.type = "floatplane";
 		

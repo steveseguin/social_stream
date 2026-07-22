@@ -1074,11 +1074,10 @@
 		if (ele.querySelector("[class*='DivTopGiverContainer']")) {
 			return;
 		}
-		if (checkNextSiblingsForAttribute(ele, "data-skip")) {
+		if (checkNextSiblingsForAttribute(ele, "data-tiktok-initial")) {
 			ele.dataset.skip = ++msgCount;
 			return;
 		}
-		ele.dataset.skip = ++msgCount;
 		const eventHints = deriveEventHints(ele);
 		var ital = false;
 		if (ele.dataset.e2e && (ele.dataset.e2e == "social-message")) {
@@ -1343,6 +1342,7 @@
 		} else if (chatmessage) {
 			chatmessage = chatmessage.trim();
 		}
+		ele.dataset.skip = ++msgCount;
 		let normalizedMessage = chatmessage ? chatmessage.toLowerCase() : "";
 		if (chatmessage == "Moderator") {
 			return;
@@ -1487,7 +1487,7 @@
 		if (ele.dataset.skip) {
 			return;
 		}
-		if (checkNextSiblingsForAttribute(ele, "data-skip")) {
+		if (checkNextSiblingsForAttribute(ele, "data-tiktok-initial")) {
 			ele.dataset.skip = ++msgCount;
 			return;
 		}
@@ -2137,6 +2137,20 @@
 		}
 		return target2 || null;
 	}
+
+	function findTikTokChatMessageForMutationNode(node) {
+		if (!node || node.nodeType !== 1) {
+			return null;
+		}
+		if (node.dataset && node.dataset.e2e === "chat-message") {
+			return node;
+		}
+		var nestedMessage = node.querySelector && node.querySelector('[data-e2e="chat-message"]');
+		if (nestedMessage) {
+			return nestedMessage;
+		}
+		return node.closest ? node.closest('[data-e2e="chat-message"]') : null;
+	}
 	
 	function start() {
 		if (!isExtensionOn) {
@@ -2284,7 +2298,7 @@
 									}
 								}
 							} else {
-								let msg = (node.dataset && node.dataset.e2e === "chat-message") ? node : (node.querySelector && node.querySelector('[data-e2e="chat-message"]'));
+								let msg = findTikTokChatMessageForMutationNode(node);
 								if (msg) {
 									setTimeout(processMessage, 10, msg);
 								} else {
@@ -2305,36 +2319,34 @@
 				}
 			}
 		});
-		const currentTargetForTimeout = target;
-		setTimeout(function() {
-			if (observer && observer instanceof MutationObserver && currentTargetForTimeout && currentTargetForTimeout.isConnected && isExtensionOn) {
-				if (currentTargetForTimeout.children) {
-					Array.from(currentTargetForTimeout.children).forEach(ele => {
-						if (ele && ele.dataset && ele.isConnected) {
-							ele.dataset.skip = ++msgCount;
-						}
-					});
-				}
-				document.querySelectorAll('[data-e2e="chat-message"]').forEach(ele => {
-					ele.dataset.skip = ++msgCount;
+		if (observer && observer instanceof MutationObserver && target && target.isConnected && isExtensionOn) {
+			if (target.children) {
+				Array.from(target.children).forEach(ele => {
+					if (ele && ele.dataset && ele.isConnected) {
+						ele.dataset.skip = ++msgCount;
+						ele.dataset.tiktokInitial = "true";
+					}
 				});
-				observer.observe(currentTargetForTimeout, {
-					childList: true,
-					subtree: subtree
-				});
-				observedDomElementForObserver1 = currentTargetForTimeout;
-				markTikTokStandardConnected();
-				////console.log("Main observer is now observing.", currentTargetForTimeout);
-			} else {
-				if (observer instanceof MutationObserver) {
-					observer.disconnect();
-				}
-				observer = false;
-				observedDomElementForObserver1 = null;
-				////console.log("Main observer NOT started or target/state became invalid before observe.", currentTargetForTimeout);
 			}
-
-		}, 2000);
+			document.querySelectorAll('[data-e2e="chat-message"]').forEach(ele => {
+				ele.dataset.skip = ++msgCount;
+				ele.dataset.tiktokInitial = "true";
+			});
+			observer.observe(target, {
+				childList: true,
+				subtree: subtree
+			});
+			observedDomElementForObserver1 = target;
+			markTikTokStandardConnected();
+			////console.log("Main observer is now observing.", target);
+		} else {
+			if (observer instanceof MutationObserver) {
+				observer.disconnect();
+			}
+			observer = false;
+			observedDomElementForObserver1 = null;
+			////console.log("Main observer NOT started or target/state became invalid before observe.", target);
+		}
 	}
 
 	function start2(other = false) {

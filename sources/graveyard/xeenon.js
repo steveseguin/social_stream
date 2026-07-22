@@ -1,66 +1,48 @@
 (function () {
-	
-	var isExtensionOn = true;
-function toDataURL(blobUrl, callback) {
-		var xhr = new XMLHttpRequest;
-		xhr.responseType = 'blob';
 
-		xhr.onload = function() {
-		   var recoveredBlob = xhr.response;
-
-		   var reader = new FileReader;
-
-		   reader.onload = function() {
-			 callback(reader.result);
-		   };
-
-		   reader.readAsDataURL(recoveredBlob);
-		};
-		
-		xhr.onerror = function() {callback(blobUrl);}
-
-		xhr.open('GET', blobUrl);
-		xhr.send();
-	};
-
-	function escapeHtml(unsafe){
+	var isExtensionOn = false;
+	async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlutin.com/timeout-fetch-request/
 		try {
-			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
-				return unsafe;
-			}
-			return unsafe
-				 .replace(/&/g, "&amp;")
-				 .replace(/</g, "&lt;")
-				 .replace(/>/g, "&gt;")
-				 .replace(/"/g, "&quot;")
-				 .replace(/'/g, "&#039;") || "";
+			const controller = new AbortController();
+			const timeout_id = setTimeout(() => controller.abort(), timeout);
+			const response = await fetch(URL, {...{timeout:timeout}, signal: controller.signal});
+			clearTimeout(timeout_id);
+			return response;
 		} catch(e){
-			return "";
+			errorlog(e);
+			return await fetch(URL); // iOS 11.x/12.0
 		}
 	}
 
-	function getAllContentNodes(element) { // takes an element.
+
+	function escapeHtml(unsafe){ // success is when goofs be trying to hack me
+		return unsafe
+			 .replace(/&/g, "&amp;")
+			 .replace(/</g, "&lt;")
+			 .replace(/>/g, "&gt;")
+			 .replace(/"/g, "&quot;")
+			 .replace(/'/g, "&#039;") || "";
+	}
+	function getAllContentNodes(element) {
 		var resp = "";
-		
-		if (!element){return resp;}
-		
+
 		if (!element.childNodes || !element.childNodes.length){
-			if (element.textContent){
+			if (element.nodeType===3){
 				return escapeHtml(element.textContent) || "";
-			} else {
-				return "";
 			}
 		}
-		
+
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
+				if (!node.classList.contains("comment-see-more")){
+					resp += getAllContentNodes(node)
+				}
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
-						node.src.startsWith('http') || (node.src = node.src + "");
+						node.src = node.src+"";
 					}
 					resp += node.outerHTML;
 				}
@@ -68,112 +50,65 @@ function toDataURL(blobUrl, callback) {
 		});
 		return resp;
 	}
-	
-	function processMessage(ele){
-		if (ele && ele.marked){
-		  return;
-		} else {
-		  ele.marked = true;
-		}
-		
-		//console.log(ele);
 
-		var nameColor = "";
-        var name = "";
-		var chatimg = "";
-		
-		try {
-			name = ele.querySelector("[class^='chat-message_profileName']").innerText;
-			name = name.split(":")[0];
-			name = name.trim();
-			name = escapeHtml(name);
-			
-			//nameColor = ele.querySelector(".chat__message__username").style.color;
-		} catch(e){
-			//console.log(e);
-		}
-		
-		if (!name){
-			return;
-		}
-		
-		try {
-			chatimg = ele.querySelector("img[class^='profile-image_profile__']").src;
-		} catch(e){
-			//console.log(e);
-		}
-		
 
-		var msg = "";
+	var lastMessage = "";
+	var lastUser  = "";
+
+	async function processMessage(ele) {
+
+	  var chatsticker = false;
+	  var chatmessage = "";
+
+	  try {
 		try {
-			var content = ele.querySelectorAll("[class^='chat-message_message'] div")[1];
-			msg = getAllContentNodes(content);
-			msg = msg.trim();
-			
-		} catch(e){
-			//console.log(e);
-			return;
-		}
-		var hasDono = "";
-		
-		if (msg){
-			try {
-				if (content.querySelector("[class^='chat-message_highlight__']")){
-					var dono = msg.split("Credits")[0];
-					dono = dono.split("Sent")[1];
-					dono = parseFloat(dono);
-					if (dono){
-						hasDono = dono+" credits";
-					}
-				}
-			} catch(e){
-				//console.log(e);
-			}
-		} else {
-			try {
-				msg = ele.querySelector("[class^='chat-message_attachment__']>img").outerHTML;
-			} catch(e){
-				
-			}
-		}
-		
-		
-		var data = {};
-		data.chatname = name;
-		data.chatbadges = "";
-		data.backgroundColor = "";
-		data.textColor = "";
-		data.nameColor = nameColor;
-		data.chatmessage = msg;
-		data.chatimg = chatimg;
-		data.hasDonation = hasDono;
-		data.hasMembership = "";
-		data.contentimg = "";
-		data.textonly = settings.textonlymode || false;
-		data.type = "xeenon";
-		data.sourceImg = "";
-		
-		console.log(data);
-		
-		pushMessage(data);
-		
+		  var chatname = getAllContentNodes(ele.querySelector("[class^='chat-message_profileName']"));
+		  chatname = chatname.trim();
+		} catch(e) {}
+	  } catch(e) {
+		return;
+	  }
+
+	  if (!chatname) { return; }
+
+	  try {
+		chatmessage = getAllContentNodes(ele.querySelector("[class^='chat-message_messageBody']"));
+		chatmessage = chatmessage.trim();
+	  } catch(e) {}
+
+	  if (!chatmessage) {
+		return;
+	  }
+	  var hasDonation = '';
+	  var chatimg = ele.querySelector("[class^='profile-image_profile'][src]") || "";
+	  if (chatimg){
+		  chatimg = chatimg.src;
+	  }
+
+	  var data = {};
+	  data.chatname = chatname;
+	  data.chatmessage = chatmessage;
+	  data.chatimg = chatimg;
+	  data.hasDonation = hasDonation;
+	  data.membership = "";
+	  data.textonly = settings.textonlymode || false;
+	  data.type = "xeenon";
+
+
+	  try {
+		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+	  } catch(e){
+		  //
+	  }
 	}
-	
-	
-	function pushMessage(data){
-		try{
-			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
-		} catch(e){
-			//console.log(e);
-		}
-	}
-	
+
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
-				if ("getSource" == request){sendResponse("xeenon");	return;	}
-				if ("focusChat" == request){ // doesn't support/have chat
-					sendResponse(false);
+				if ("getSource" == request){sendResponse("xeenon");return;	}
+				if ("focusChat" == request){
+					document.querySelector('#input').focus();
+					sendResponse(true);
 					return;
 				}
 				if (typeof request === "object"){
@@ -183,16 +118,17 @@ function toDataURL(blobUrl, callback) {
 						return;
 					}
 				}
+				// twitch doesn't capture avatars already.
 			} catch(e){}
 			sendResponse(false);
 		}
 	);
-	
+
 	var settings = {};
 	// settings.textonlymode
 	// settings.captureevents
-	
-	
+
+
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) { return; }
 		response = response || {};
@@ -203,40 +139,117 @@ function toDataURL(blobUrl, callback) {
 
 	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
+
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (mutation.addedNodes[i].className.startsWith("chat-message_container__")){
-								processMessage(mutation.addedNodes[i]);
-							}
+							if (mutation.addedNodes[i].ignore){continue;}
+							mutation.addedNodes[i].ignore=true;
+							processMessage(mutation.addedNodes[i]);
+
 						} catch(e){}
 					}
 				}
 			});
 		};
-		if (!target){return;}
-		var config = { childList: true, subtree: true };
+
+		var config = { childList: true, subtree: false };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
-
 	}
-	console.log("social stream injected");
 
-	setInterval(function(){
-		try {
-			if (document.querySelector('[class^="messages_messages__"]')){
-				if (!document.querySelector('[class^="messages_messages__"]').marked){
-					document.querySelector('[class^="messages_messages__"]').marked=true;
-					
-					document.querySelectorAll("[class^='chat-message_container__']").forEach(ele =>{
-						processMessage(ele);
-					});
-					onElementInserted(document.querySelector('[class^="messages_messages__"]'));
+	console.log("Social Stream injected");
+
+	var checkReady = setInterval(function(){
+
+		var mainChat = document.querySelector("[class^='chat_messages']");
+		if (mainChat){ // just in case
+			console.log("Social Stream Start");
+			clearInterval(checkReady);
+
+			setTimeout(function(){
+				var clear = document.querySelectorAll("[class^='chat_messages']");
+				for (var i = 0;i<clear.length;i++){
+					clear[i].ignore = true; // don't let already loaded messages to re-load.
 				}
+				console.log("Social Stream ready to go");
+				onElementInserted( document.querySelector("[class^='chat_messages']"));
+			},2500);
+			checkViewers();
+		}
+	},1000);
+
+	function checkViewers(){
+		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
+			try {
+				let viewerSpan = document.querySelector("[class^='stat-block_stat']");
+				if (viewerSpan && viewerSpan.textContent){
+					let views = viewerSpan.textContent.toUpperCase();
+					let multiplier = 1;
+					if (views.includes("K")){
+						multiplier = 1000;
+						views = views.replace("K","");
+					} else if (views.includes("M")){
+						multiplier = 1000000;
+						views = views.replace("M","");
+					}
+					views = views.split(" ")[0];
+					if (views == parseFloat(views)){
+						views = parseFloat(views) * multiplier;
+						chrome.runtime.sendMessage(
+							chrome.runtime.id,
+							({message:{
+									type: 'xeenon',
+									event: 'viewer_update',
+									meta: views
+								}
+							}),
+							function (e) {}
+						);
+					}
+				}
+			} catch (e) {
 			}
-		} catch(e){}
-	},2000);
+		}
+	}
+
+	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
+	try {
+		var receiveChannelCallback = function(event){
+			remoteConnection.datachannel = event.channel;
+			remoteConnection.datachannel.onmessage = function(e){};;
+			remoteConnection.datachannel.onopen = function(e){};;
+			remoteConnection.datachannel.onclose = function(e){};;
+			setInterval(function(){
+				if (document.hidden){ // only poke ourselves if tab is hidden, to reduce cpu a tiny bit.
+					remoteConnection.datachannel.send("KEEPALIVE")
+				}
+			}, 800);
+		}
+		var errorHandle = function(e){}
+		var localConnection = new RTCPeerConnection();
+		var remoteConnection = new RTCPeerConnection();
+		localConnection.onicecandidate = (e) => !e.candidate ||	remoteConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.onicecandidate = (e) => !e.candidate || localConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.ondatachannel = receiveChannelCallback;
+		localConnection.sendChannel = localConnection.createDataChannel("sendChannel");
+		localConnection.sendChannel.onopen = function(e){localConnection.sendChannel.send("CONNECTED");};
+		localConnection.sendChannel.onclose =  function(e){};
+		localConnection.sendChannel.onmessage = function(e){};
+		localConnection.createOffer()
+			.then((offer) => localConnection.setLocalDescription(offer))
+			.then(() => remoteConnection.setRemoteDescription(localConnection.localDescription))
+			.then(() => remoteConnection.createAnswer())
+			.then((answer) => remoteConnection.setLocalDescription(answer))
+			.then(() =>	{
+				localConnection.setRemoteDescription(remoteConnection.localDescription);
+				console.log("KEEP ALIVE TRICk ENABLED");
+			})
+			.catch(errorHandle);
+	} catch(e){
+		console.log(e);
+	}
 
 })();

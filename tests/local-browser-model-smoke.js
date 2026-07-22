@@ -68,7 +68,7 @@
 
         try {
             await client.connect('localqwen', {
-                modelOverride: 'qwen3.5-0.8b-onnx',
+                modelOverride: 'qwen3.5-0.8b-onnx-opt',
                 remoteHost: 'https://largefiles.socialstream.ninja/'
             });
             pushLog('connect', 'ok');
@@ -82,7 +82,7 @@
                 topP: 0.9,
                 images: []
             }, {
-                modelOverride: 'qwen3.5-0.8b-onnx',
+                modelOverride: 'qwen3.5-0.8b-onnx-opt',
                 remoteHost: 'https://largefiles.socialstream.ninja/'
             });
 

@@ -1,7 +1,7 @@
 
 # Adding you own self-hosted AI bot to Social Stream Ninja
 
-In this guide we will do a VERY basic setup of the Llama3 LLM, using Ollama, on Windows. It should work well on a variety of systems, including modern Nvidia GPUs and newer MacOS systems.
+In this guide we will do a VERY basic setup of the Gemma3 LLM, using Ollama, on Windows. It should work well on a variety of systems, including modern Nvidia GPUs and newer macOS systems.
 
 ## Installing Ollama
 
@@ -13,25 +13,25 @@ https://ollama.com
 
 There's many choices available; go to https://ollama.com/library for a list of options.
 
-Social Stream Ninja targets Gemma3:1B by default, but you can specify the model to use the Social Stream Ninja menu. For now though, let's just use `gemma3:1b`
+Social Stream Ninja targets Gemma3:1B by default, but you can specify the model to use in the Social Stream Ninja menu. For now though, let's just use `gemma3:1b`
 
-To install the model, lets open Command Prompt (or Terminal)
+To install the model, let's open Command Prompt (or Terminal)
 `> ollama pull gemma3:1b`
 
 ![image](https://github.com/user-attachments/assets/4852506e-7761-47d1-99ce-8b2b01f34bac)
 
-Once it finishes install the model, you should have the model installed, and the option to list available installed models should confirm it.
+Once it finishes installing the model, the option to list available installed models should confirm it.
 
 ![image](https://github.com/user-attachments/assets/b7eee74f-b2f4-47c0-8f55-80d239a3c3b2)
 
 
-If you need to remove it, you can run `ollama rm llama3`. 
+If you need to remove it, you can run `ollama rm gemma3:1b`. 
 
 ![image](https://github.com/user-attachments/assets/235ec0fb-aa70-4206-8b8d-98dbe173a096)
 
-It will be available for API access by default at `http://localhost:11434`, which if you open via the browser, it shoudl save Ollama is running. However, there are still issues with CORS we need to deal with if using the Chrome extension. That is, by default, Ollama won't listen to requests made by a Chrome extension.
+It will be available for API access by default at `http://localhost:11434`, which if you open via the browser, it should say Ollama is running. However, there are still issues with CORS we need to deal with if using the Chrome extension. That is, by default, Ollama won't listen to requests made by a Chrome extension.
 
-To get around this CORS issue, for windows, you can try close Ollama.exe from the taskbar, and then run the following:
+To get around this CORS issue, for Windows, you can try closing Ollama.exe from the taskbar, and then run the following:
 ```
 ollama serve stop
 taskkill /F /IM ollama.exe
@@ -39,13 +39,13 @@ set OLLAMA_ORIGINS=chrome-extension://*
 ollama serve
 ```
 
-To make this CORS permission permanant on Windows, you need to add OLLAMA_ORIGINS=chrome-extension://* to the Windows user enviromental system variables. Then start/restart ollma; `ollama serve`.
+To make this CORS permission permanent on Windows, you need to add OLLAMA_ORIGINS=chrome-extension://* to the Windows user environment system variables. Then start/restart ollama; `ollama serve`.
 
 ![image](https://github.com/user-attachments/assets/065d69a6-2773-4ddd-a290-1b57660955af)
 
 This allows us to access Ollama from our Social Stream Ninja extension.
 
-I don't believe you need to worry about CORS if using the Social Stream Ninja standalone app, HOWEVER, if you are using the standalone app, and are running into issues, you can set the `OLLAMA_ORIGINS` to `*`.  If you're comfortable, you can set do this via the "Edit the system environment variables" in Windows, instead of via command line. Be sure to close and re-open Ollama if you do this however. Below is how I have it setup, and it works with both extension AND standalone app.
+I don't believe you need to worry about CORS if using the Social Stream Ninja standalone app, HOWEVER, if you are using the standalone app, and are running into issues, you can set the `OLLAMA_ORIGINS` to `*`.  If you're comfortable, you can do this via the "Edit the system environment variables" in Windows, instead of via command line. Be sure to close and re-open Ollama if you do this however. Below is how I have it setup, and it works with both extension AND standalone app.
 
 ![image](https://github.com/user-attachments/assets/7587ed12-aa85-498c-8cd4-25fdb56a6543)
 
@@ -53,7 +53,7 @@ If you want to access Ollama directly via the dock.html page, with custom.js com
 
 ## Using
 
-To use the AI Chat bot mode, just make sure the toggle is on, and that you have Ollama /w Llama3 installed/running locally, and you should be good to go now.
+To use the AI Chat bot mode, just make sure the toggle is on, and that you have Ollama with gemma3:1b installed/running locally, and you should be good to go now.
 
 ![image](https://github.com/user-attachments/assets/63f1f98f-adff-4faf-8d39-206d5a76d5af)
 

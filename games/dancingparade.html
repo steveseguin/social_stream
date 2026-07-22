@@ -200,7 +200,7 @@
 <body>
     <div id="parade-container">
         <div id="parade-track"></div>
-        <div id="dance-battle-zone"></div>
+        <div id="dance-battle-zone" class="dance-battle-zone"></div>
         
         <div id="parade-info">
             <div>🎉 Dancing Parade</div>
@@ -215,6 +215,7 @@
     <script>
     // Game state
     const dancers = new Map();
+    const MAX_DANCERS = 30;
     const availableCharacters = ['🕺', '💃', '🦜', '🦄', '🐸', '🤖', '👻', '🦋', '🐙', '🦊'];
     const danceEmotes = ['🎵', '🎶', '🎤', '🎸', '🥁', '🎹', '🎺', '🎷'];
     let congaLineActive = false;
@@ -330,6 +331,12 @@
             return;
         }
         
+        if (dancers.size >= MAX_DANCERS) {
+            const oldestUsername = dancers.keys().next().value;
+            dancers.get(oldestUsername).remove();
+            dancers.delete(oldestUsername);
+        }
+        
         // Pick random character
         const character = availableCharacters[Math.floor(Math.random() * availableCharacters.length)];
         const dancer = new Dancer(username, character);
@@ -410,7 +417,7 @@
         
         if (nearbyDancers.length > 0) {
             // Start dance battle
-            const battleZone = document.querySelector('.dance-battle-zone');
+            const battleZone = document.getElementById('dance-battle-zone');
             battleZone.style.left = dancer.position + 'px';
             battleZone.style.display = 'block';
             
@@ -456,12 +463,12 @@
     }
     
     function stripHtml(html) {
-        const tmp = document.createElement('div');
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || '';
+        return new DOMParser().parseFromString(String(html), 'text/html').body.textContent || '';
     }
 
     function processData(data) {
+        if (!data || typeof data !== 'object') return;
+
         if (data.content) {
             data = data.content;
         }
@@ -511,7 +518,7 @@
     
     // Setup iframe communication
     const iframe = document.createElement("iframe");
-    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
     iframe.style.width = "0px";
     iframe.style.height = "0px";
     iframe.style.position = "fixed";

@@ -6,7 +6,7 @@ Status: heavy extraction pass from `ssapp/main.js`, `ssapp/preload.js`, `ssapp/s
 
 Document how standalone app source windows behave, why they can differ from the Chrome extension, and what agents should check before saying a source is "broken in the app."
 
-For Social Stream feature behavior, use `C:\Users\steve\Code\social_stream` as source of truth. For Electron shell behavior, source windows, app auth, local source loading, and state repair, use `C:\Users\steve\Code\ssapp`.
+For Social Stream feature behavior, use `<social_stream repo>` as source of truth. For Electron shell behavior, source windows, app auth, local source loading, and state repair, use `<ssapp repo>`.
 
 ## Source Anchors
 
@@ -203,7 +203,7 @@ Check whether the source or group has auto-activate enabled, whether a saved sou
 Use:
 
 ```text
-Check `--filesource`, saved local source path, ZIP import, beta/stable branch, prefer-local-assets, and any cache/fallback warning. Source edits belong in `C:\Users\steve\Code\social_stream`, not the app fallback mirror.
+Check `--filesource`, saved local source path, ZIP import, beta/stable branch, prefer-local-assets, and any cache/fallback warning. Source edits belong in `<social_stream repo>`, not the app fallback mirror.
 ```
 
 ### "Login works in browser but not app."

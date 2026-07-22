@@ -683,7 +683,7 @@ document.addEventListener('DOMContentLoaded', function() {
             instructions: `
                 <ul>
                     <li>Pop out the chat</li>
-                    <li>URL: https://chzzk.naver.com/live/*/chat</li>
+                    <li>URL: https://chzzk.naver.com/live/*/chat or https://chzzk.naver.com/iframe/live/*/chat</li>
                 </ul>
             `
         },
@@ -1129,8 +1129,8 @@ document.addEventListener('DOMContentLoaded', function() {
 			type: 'popout',
 			instructions: `
 				<ul>
-					<li>URL: https://parti.com/popout-chat?id=*</li>
-					<li>Pop out chat required</li>
+					<li>URL: https://parti.com/USERNAME or https://parti.com/popout-chat?id=USER_ID</li>
+					<li>Profile chat and popout chat are supported</li>
 				</ul>
 			`
 		},
@@ -1144,6 +1144,19 @@ document.addEventListener('DOMContentLoaded', function() {
 					<li>URL: https://wave.video/*</li>
 				</ul>
 			`
+		},
+		{
+			name: 'WorldsWave',
+			icon: 'worldswave.png',
+			description: 'Social media and live streaming platform.',
+			type: 'popout',
+			instructions: `
+				<ul>
+					<li>Open the live stream page with chat visible, or use the chat-only popout</li>
+					<li>Popout URL: https://worldswave.com/kn_livecmd.php?cmd=viewStream&amp;streamId=STREAM_ID&amp;chatonly=1</li>
+				</ul>
+			`,
+			notes: 'Captures new rendered chat messages. Viewer counts require Show viewer count or Hype Mode.'
 		},
 		{
 			name: 'WebinarGeek',
@@ -1205,6 +1218,19 @@ document.addEventListener('DOMContentLoaded', function() {
 			`
 		},
 		{
+			name: 'FLEX TV',
+			icon: 'flextv.png',
+			description: 'Korean live streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://www.flextv.co.kr/channels/*/live</li>
+					<li>Open the live page with the chat panel visible</li>
+				</ul>
+			`,
+			notes: 'Chat capture is based on the rendered chat panel and starts with new messages after Social Stream attaches.'
+		},
+		{
 			name: 'Beamstream',
 			icon: 'beamstream.png',
 			description: 'Live streaming platform.',
@@ -1215,6 +1241,19 @@ document.addEventListener('DOMContentLoaded', function() {
 					<li>Open https://beamstream.gg/USERNAME/chat (*note the /chat added at the end)</li>
 				</ul>
 			`
+		},
+		{
+			name: 'Seal Team Sloth',
+			icon: 'sealteamsloth.png',
+			description: 'Live streaming platform.',
+			type: 'popout',
+			instructions: `
+				<ul>
+					<li>URL: https://sealteamsloth.com/popout-chat/USERNAME</li>
+					<li>Open the streamer's pop-out chat while signed in</li>
+				</ul>
+			`,
+			notes: 'Captures new chat messages, emotes, avatars, name colors, user/message IDs, and optional viewer-count updates.'
 		},
 		{
 			name: 'CI.ME',
@@ -1369,18 +1408,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			notes: 'Also works with loco.com domains'
 		},
 		{
-			name: 'ON24',
-			icon: 'on24.png',
-			description: 'Webinar and virtual event platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>URL: https://*.on24.com/view/*</li>
-					<li>Q&A questions supported</li>
-				</ul>
-			`
-		},
-		{
 			name: 'Arena Social',
 			icon: 'arenasocial.png',
 			description: 'Social streaming platform.',
@@ -1452,18 +1479,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			notes: 'Also works with: https://manage.wix.com/dashboard/*/live-video/* and embedded widgets at https://editor.wixapps.net/render/prod/modals/wix-vod-widget/*'
 		},
 		{
-			name: 'Xeenon',
-			icon: 'xeenon.png',
-			description: 'Live streaming on Xeenon dashboard.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>URL: https://xeenon.xyz/dashboard</li>
-					<li>Pop out not supported</li>
-				</ul>
-			`
-		},
-		{
 			name: 'Retake.tv',
 			icon: 'retake.png',
 			description: 'Web3 live streaming platform.',
@@ -1495,7 +1510,9 @@ document.addEventListener('DOMContentLoaded', function() {
 			instructions: `
 				<ul>
 					<li>URL: https://velora.tv/*</li>
-					<li>No pop out needed</li>
+					<li>Dashboard popout is supported: https://velora.tv/dashboard/stream/popout?panels=chat%2Cactivity&amp;channel=CHANNEL&amp;layout=vertical</li>
+					<li>OBS chat popout is supported: https://velora.tv/dashboard/stream/popout/CHANNEL/obs-chat</li>
+					<li>Login URL: https://velora.tv/login</li>
 				</ul>
 			`
 		},
@@ -1737,7 +1754,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Open site modal
     function openSiteModal(site) {
         // Set modal content
-        document.getElementById('modalIcon').src = `../sources/images/${site.icon}`;
+        const modalIcon = document.getElementById('modalIcon');
+        modalIcon.onerror = function() { this.onerror = null; this.src = '../sources/images/generic.png'; };
+        modalIcon.src = `../sources/images/${site.icon}`;
         document.getElementById('modalTitle').textContent = site.name;
         document.getElementById('modalDescription').textContent = site.description;
         document.getElementById('modalInstructions').innerHTML = site.instructions;

@@ -26,7 +26,7 @@ For complete install-surface details, use `02-installation-and-surfaces.md`. For
 - `README.md`
 - `docs/download.html`
 - `docs/ssapp.html`
-- `C:\Users\steve\Code\ssapp\RELEASE.md`
+- `<ssapp repo>/RELEASE.md`
 
 ## Short Answer
 

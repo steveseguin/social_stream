@@ -14,7 +14,7 @@ For the repeatable refresh workflow, SQLite query pack, raw archive gate, and re
 
 Source used:
 
-- `C:\Users\steve\Code\stevesbot\data\exports\qa\qa-export-2026-06-21T09-00-01.json`
+- `<stevesbot repo>/data/exports/qa/qa-export-2026-06-21T09-00-01.json`
 
 Export metadata:
 

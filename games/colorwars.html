@@ -273,9 +273,7 @@
     }
 
     function stripHtml(html) {
-        const tmp = document.createElement('div');
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || '';
+        return new DOMParser().parseFromString(String(html), 'text/html').body.textContent || '';
     }
 
     // Initialize grid
@@ -424,9 +422,10 @@
     }
     
     function updateScores() {
-        const totalCells = grid.length * grid[0].length;
         const counts = { red: 0, blue: 0, yellow: 0, green: 0 };
-        
+        if (!grid.length || !grid[0]) return counts;
+        const totalCells = grid.length * grid[0].length;
+
         for (let y = 0; y < grid.length; y++) {
             for (let x = 0; x < grid[y].length; x++) {
                 if (grid[y][x]) {
@@ -525,15 +524,23 @@
         gameActive = false;
         
         const scores = updateScores();
-        const winner = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
+        const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+        const winner = sorted[0];
+        const isTie = winner[1] === sorted[1][1];
         
         const winnerOverlay = document.getElementById('winner-overlay');
         const winnerText = document.getElementById('winner-text');
-        winnerText.textContent = `${winner[0].toUpperCase()} TEAM WINS!`;
-        winnerText.style.color = teams[winner[0]].color;
+        if (isTie) {
+            winnerText.textContent = "IT'S A TIE!";
+            winnerText.style.color = '#FFD700';
+        } else {
+            winnerText.textContent = `${winner[0].toUpperCase()} TEAM WINS!`;
+            winnerText.style.color = teams[winner[0]].color;
+        }
         winnerOverlay.style.display = 'flex';
         
         // Celebration particles
+        const celebrationColor = isTie ? '#FFD700' : teams[winner[0]].color;
         for (let i = 0; i < 100; i++) {
             setTimeout(() => {
                 particles.push({
@@ -541,7 +548,7 @@
                     y: canvas.height + 10,
                     vx: (Math.random() - 0.5) * 10,
                     vy: -Math.random() * 20 - 10,
-                    color: teams[winner[0]].color,
+                    color: celebrationColor,
                     life: 1
                 });
             }, i * 20);
@@ -604,6 +611,8 @@
     }
     
     function processData(data) {
+        if (!data || typeof data !== 'object') return;
+        
         if (data.content) {
             data = data.content;
         }
@@ -638,7 +647,7 @@
     
     // Setup iframe communication
     const iframe = document.createElement("iframe");
-    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
     iframe.style.width = "0px";
     iframe.style.height = "0px";
     iframe.style.position = "fixed";

@@ -50,7 +50,7 @@ This is the most common and straightforward method for overlay pages. Your custo
     // &view=roomID ensures it only receives data. &label=dock receives normal live chat/events.
     // Custom labels only receive targeted messages.
     // &noaudio &novideo &cleanoutput are typical for data-only VDO.Ninja clients.
-    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
 
     // Listen for messages from the iframe
     window.addEventListener('message', function(event) {
@@ -161,7 +161,7 @@ function processIncomingSSNMessage(data) {
 }
 ```
 
-This method is more common for tools that interact with SSN rather than purely visual overlays, but it's an option. The `dock.html` uses a similar WebSocket connection for its primary communication.
+This method is more common for tools that interact with SSN rather than purely visual overlays, but it's an option. `dock.html` uses a similar WebSocket connection for its primary communication.
 
 ## 5\. Receiving and Processing Messages
 
@@ -343,7 +343,7 @@ How you display messages is entirely up to your HTML and CSS design.
         const label = urlParams.get("label") || "dock"; // Use dock for the normal live feed
 
         const iframe = document.getElementById('ssn_bridge');
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
 
         window.addEventListener('message', function(event) {
             if (event.source !== iframe.contentWindow) { return; }
@@ -471,7 +471,7 @@ The `background.js` listens for messages from the VDO.Ninja iframe. When it rece
 
 Remember that SSN overlays are highly customizable via URL parameters. Your custom page can also implement its own URL parameters for styling and behavior.
 
-\*\*Common SSN URL Parameters your custom page might want to *respect* or *replicate*: \*\*
+**Common SSN URL Parameters your custom page might want to *respect* or *replicate*:**
 
   - `&session=STREAM_ID`: **Required** for connection.
   - `&password=PASSWORD`: Optional.
@@ -538,7 +538,7 @@ This example shows an overlay that only displays new follower and subscriber eve
         const label = urlParams.get("label") || "dock";
 
         const iframe = document.getElementById('ssn_bridge');
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
 
         const notificationContainer = document.getElementById('event-notification-container');
 
