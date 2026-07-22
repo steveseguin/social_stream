@@ -4,7 +4,7 @@ Always call `get_capabilities` or `GET /api/v1/capabilities`. Its command list i
 
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |
-| 1.1.4 / MCP 1.0.1 | 0.4.5 | Rejects inactive-only `updateSource` fields for running sources and directs live mute/visibility changes through their dedicated commands |
+| 1.1.4 / MCP 1.0.1 | 0.4.6 | Rejects inactive-only `updateSource` fields for running sources and directs live mute/visibility changes through their dedicated commands |
 | 1.1.3 / MCP 1.0.1 | 0.4.4 | Omits stored source URLs, which may contain access tokens, from normalized source/status responses and exposes the active numeric `tabId` instead |
 | 1.1.2 / MCP 1.0.1 | 0.4.2 | Keeps username-generated URLs consistent during full-form source updates and correctly ignores MCP JSON-RPC notifications |
 | 1.1.1 | 0.4.2 | Rejects connection-mode updates that are unsupported by the selected source platform |
@@ -15,7 +15,7 @@ Always call `get_capabilities` or `GET /api/v1/capabilities`. Its command list i
 
 ### 2026-07-22
 
-- Documented active-source update safeguards and dedicated live mute/visibility commands (API 1.1.4, minimum SSApp 0.4.5).
+- Documented active-source update safeguards and dedicated live mute/visibility commands (API 1.1.4, minimum SSApp 0.4.6).
 
 ### 2026-07-19
 
