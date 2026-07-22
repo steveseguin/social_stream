@@ -171,7 +171,7 @@ async function validateLocalGemma(page, selection) {
   await page.waitForFunction(() => !document.getElementById('sendButton').disabled && document.getElementById('sendButton').textContent.trim() === 'Send', null, { timeout: 240000 });
 
   const assistantCount = await page.locator('#responses .assistant-message').count();
-  await page.fill('.message-input', 'Confirm in one short sentence that text-only Gemma is active.');
+  await page.fill('.message-input', 'Describe what you see on camera in one short sentence.');
   await page.click('#sendButton');
   await page.waitForFunction((count) => document.querySelectorAll('#responses .assistant-message').length > count, assistantCount, { timeout: 240000 });
   await page.waitForFunction(() => !document.getElementById('sendButton').disabled && document.getElementById('sendButton').textContent.trim() === 'Send', null, { timeout: 240000 });
@@ -194,9 +194,9 @@ async function validateLocalGemma(page, selection) {
   assert(state.diagError === '-', 'Local Gemma should not report a diagnostic error.');
   assert(state.previewWidth > 0 && state.previewHeight > 0, 'Local Gemma should keep the selected camera preview available.');
   assert(state.generatePayloads.length >= 2, 'Local Gemma should generate both greeting and manual responses.');
-  assert(state.generatePayloads.every((payload) => payload.imageCount === 0), 'Text-only Local Gemma should never attach a camera frame.');
+  assert(state.generatePayloads.some((payload) => payload.imageCount === 1), 'Multimodal Local Gemma should attach a camera frame.');
   assert(state.replies.length >= 2, 'Local Gemma should answer both the greeting and the manual prompt.');
-  return { mode: 'text-only', state };
+  return { mode: 'multimodal', state };
 }
 
 async function validateCustomOpenAI(page, selection) {

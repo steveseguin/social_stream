@@ -1,6 +1,6 @@
 # Event Flow Editor
 
-Status: heavy extraction pass plus focused Node and SSApp Electron E2E evidence updated on 2026-07-21.
+Status: intense extraction pass on 2026-07-22 (execution engine, persistence, entry points, defect audit) on top of the 2026-07-21 heavy pass with focused Node and SSApp Electron E2E evidence. Known defects tracked in `../issues/ISSUE-007` through `ISSUE-014`.
 
 ## Purpose
 
@@ -91,13 +91,89 @@ Do not put arbitrary custom data at the top level unless current code expects it
 
 ## User Entry Points
 
-- Event Flow editor page: `actions/` in the web repo.
+- Event Flow editor page: `actions/` in the web repo (`actions/index.html`, standalone tab; loads `EventFlowSystem.js` + `EventFlowEditor.js` via `actions/loader.js:15-20`).
+- Embedded editor: `background.html#editor` (embedded `#editor` div, `background.html:746-886`; toggled by `dashboard.js showEditorView()`, `:283-298`). Opened from the popup (`popup.js:9893-9902` → `openEventFlowEditor()` `:292-309`) or via the MV3 `openEventFlowEditor` message (`service_worker.js:540-574`).
+- URL params: `?ssapp` (postMessage-to-parent mode + enables custom JS eval, `EventFlowEditor.js:480-481`, `EventFlowSystem.js:152`), `?localserver` (local-media copy URL, `EventFlowEditor.js:6706`). `?session` etc. are not editor params — they are passed through to the Flow Actions overlay link (`EventFlowEditor.js:580-595`).
 - Event Flow guide: `actions/event-flow-guide.html`.
 - State node guide: `actions/state-nodes-guide.html`.
 - User Memory guide: `actions/user-memory-guide.html`.
 - Flow Actions overlay: `actions.html?session=YOUR_SESSION`.
 
 Media, audio, text overlay, and OBS actions need a rendering/control surface. In normal streaming use, that surface is the Flow Actions overlay running as a browser tab or OBS Browser Source. If the overlay is closed, those actions can appear to do nothing even though the flow itself is firing.
+
+Editor-surface caveat: the standalone `actions/index.html` tab and the embedded background editor share IndexedDB but not in-memory state — saves in the standalone tab do not reach the running background instance until background.html reloads (ISSUE-009), and relay/send/OBS actions fail silently from its test panel.
+
+## Execution Engine
+
+`EventFlowSystem.processMessage(message)` (`EventFlowSystem.js:1689-1743`):
+
+1. Drops null payloads; runs stream-start/stop user-memory resets; drops meta-only payloads (`meta` present, no chatname/chatmessage/hasDonation/contentimg, not OBS — `:1642-1656`, `:1699-1702`).
+2. Iterates `this.flows` **sequentially in saved `order`**; each flow's modified message feeds the next. `blocked` → return null and stop all flows; `returnNow` → stop remaining flows but keep the message.
+
+`evaluateFlow(flow, message)` (`:1745-1988`) runs three passes per flow:
+
+- **Pass 1**: all trigger nodes evaluated (awaited each) into `nodeActivationStates` (`:1756-1762`). No per-trigger error isolation — one throwing trigger rejects the whole flow (see ISSUE-007, ISSUE-010).
+- **Pass 2**: iterative logic/state resolution to fixpoint, `maxIterations = nodes.length + 5` (`:1766-1819`). State nodes may replace the message. Cyclic logic graphs simply never evaluate.
+- **Pass 3**: actions whose inputs are `=== true` run via recursive `executeActionChain`, deduped by an `executedActions` set (`:1827-1833`). Downstream actions sorted by priority: state-control (0) → normal (50) → `delay` (100) (`:1933-1956`). `continueAsync` spawns a `setTimeout(0)` async sub-chain (`:1868-1927`).
+
+Schedulers and hardware:
+
+- 1 s tick evaluates flows containing `timeInterval`/`timeOfDay` with a **null message** (`:177-218`; started at `background.js:18585`). Flows mixing time triggers with message-dependent triggers currently break — ISSUE-007.
+- MIDI listeners bind on flow load/save and synthesize `{type:'midi', midiData}` messages (`:291-389`).
+
+Rate limits and loop guards: only per-node `THROTTLE` and `randomChance.maxPerMinute` — there is **no global rate limit** on webhook/TTS/OBS/send actions. Relay loops are guarded by `reflection:true` tagging + `reflectionFilter` + OBS bridge 2 s dedupe (`background.js:13343-13364`). The `delay` action **awaits inline and stalls the whole message pipeline** (`:3913-3918`) — use `returnMessage`/`continueAsync` before it.
+
+Errors: regex/customJs/eventCustom are wrapped per node; other trigger exceptions propagate and are caught at the background call sites (e.g. `background.js:4613-4615`), so the message passes through unmodified. Webhook failures land in `webhookError`/`webhookStatus` fields; `blockOnFailure` optionally blocks.
+
+## Persistence And Flow Records
+
+- IndexedDB `eventFlowDB` v2: stores `flowSettings` (keyPath `id`) and `userMemoryState` (`EventFlowSystem.js:5-7`, `:1359-1380`).
+- Flow record: `{id, name, description, active, order, nodes, connections}`; node: `{id, type: trigger|logic|state|action, triggerType|logicType|stateType|actionType, label?, x, y, config:{}}`; connection: `{from, to}`.
+- Load normalizes `active !== false` default and renumbers `order` (`:1442-1543`). `enableAllFlows` exists (`:1414-1421`) but has no editor UI.
+- Export: single flow JSON + `{exportDate, version:'1.0.0', exportedBy}` (`EventFlowEditor.js:1564-1600`); all-flows export wraps in `{flows[]}` (`:1602-1639`). Import strips metadata, clears `id`, dedupes names with ` (n)` (`:1702-1740`). No schema validation or migration beyond the static version string.
+- Deleting a flow cleans its state nodes and persisted user memories (`:1589-1620`, `:1168-1222`, `:633-657`).
+- Cross-surface sync after save: SSApp → postMessage `eventFlowRequest/reloadFlows`; otherwise tries `window.parent.eventFlowSystem.reloadFlows()` (`EventFlowEditor.js:1455-1476`). User Memory syncs live via BroadcastChannel `social-stream-event-flow-state:eventFlowDB` (`EventFlowSystem.js:427-458`) — flow definitions do not (ISSUE-009).
+
+## Trigger Surface (What Can Fire Flows)
+
+Entry points into `processMessage` from `background.js`:
+
+| Source | Ref |
+| --- | --- |
+| Main chat pipeline `processIncomingMessage` (after `applyBotActions`, before `sendToDestinations`) | `background.js:4486`, `:4611-4618` |
+| `extContent` websocket bridge | `background.js:9687-9701` |
+| Stripe / Ko-fi / BMAC / Fourthwall webhooks | `background.js:10055`, `:10135`, `:10211`, `:10297` |
+| Fake/test messages | `background.js:18524` |
+| OBS bridge `action:'eventFlowEvent'` (P2P + dock), 2 s dedupe | `background.js:9640`, `:13335-13381`; `dock.html:3479-3509` |
+| MIDI hardware | `EventFlowSystem.js:379-389` |
+| 1 s scheduler ticks (null message) | `EventFlowSystem.js:197-218` |
+
+Condition-readable fields: any top-level field via `compareProperty`/`messageProperties`/`customJs`; specials include `chatmessage` (HTML-stripped into `message.textContent`, `:2076-2087`), `type`, `sourceName`, `userid`, `chatname`, `event`, `hasDonation`, `donoValue`, `donationAmount`, `meta.viewers`, `bits`, `membership`, role booleans, `karma`, `chatbadges`, `rewardTitle`/`rewardName`, `containsBadWords` (set by background for `CHECK_BAD_WORDS`).
+
+Template variables are not a fixed list: `replaceTemplateVars` (`:2979-3042`) exposes any top-level message key plus derived `counterRemaining`.
+
+## Implemented But Not In The Editor Palette
+
+Code exists but no palette entry (imported flow JSON can still reference them):
+
+- Triggers: `counter`, `userPool`, `accumulator` (`:2493-2772`) — `userPool`/`accumulator` are broken (ISSUE-010).
+- State nodes: `QUEUE`, `SEMAPHORE`, `LATCH`, `SEQUENCER` (`:1100-1308`).
+- Action: `triggerOBSScene` (`:3869`; editor UI case at `EventFlowEditor.js:5200` but no palette button).
+
+## Known Defects (see `../issues/`)
+
+| Issue | Impact |
+| --- | --- |
+| ISSUE-007 | Flows mixing time triggers with message triggers silently never fire on schedule |
+| ISSUE-008 | `timeOfDay` breaks after any editor edit (string vs array config) |
+| ISSUE-009 | Standalone editor tab saves don't reach the running background instance |
+| ISSUE-010 | `userPool`/`accumulator` triggers throw (imported flows only) |
+| ISSUE-011 | MIDI send actions ignore channel/duration/velocity |
+| ISSUE-012 | `eventOther` offers meta-only events (`viewer_update` etc.) that can never fire |
+| ISSUE-013 | RANDOM gate probability 0 becomes 50%; send/relay timeout 0 becomes 1000 ms despite help text |
+| ISSUE-014 | GATE autoReset always resets to BLOCK |
+
+Additional caveats: THROTTLE's editor UI exposes `burstSize`/`dropStrategy` fields the evaluator never reads (`EventFlowEditor.js:4834-4844` vs `EventFlowSystem.js:1271-1290`). `eventCustom.customCondition` uses `new Function` without the CSP guard, so it always fails closed in the extension (`:2311-2321`).
 
 ## Trigger Families
 
@@ -187,9 +263,12 @@ Message actions:
 - `removeText`
 - `setProperty`
 - `featureMessage`
+- `pinMessage`
 - `sendMessage`
 - `relay`
 - `reflectionFilter`
+
+`pinMessage` (`EventFlowSystem.js:3288-3350`) sets `meta.pinned`/`pinnedTarget` and sends dock `pin`/`unpin`/`nextPinned` via P2P; config: `mode`, `messageId` (`{id}` template), `target` (dock label).
 
 Integration actions:
 
@@ -241,6 +320,21 @@ TTS actions:
 - `ttsVolume`
 
 `ttsSpeak.config.voice` is an optional per-utterance voice name or provider voice ID. Empty or missing values use the configured Flow Actions TTS voice. The override is preserved while premium-provider speech waits in the queue and does not mutate the configured default.
+
+## Action Behavior Notes
+
+Line-level details from the 2026-07-22 pass (`EventFlowSystem.js:3134-4467`):
+
+- `sendMessage` (`:3411-3498`): `destination` reply/all/all-except-source/platform/custom; `sanitizeMode` safe/preserveUrls/raw; sets `reflection:true`; reply needs `message.tid`.
+- `relay` (`:3500-3576`): always excludes the source, skips reflections, needs `chatmessage`.
+- `webhook` (`:3578-3654`): sync mode writes `webhookResponse/webhookResponseText/webhookStatus/webhookError` onto the message; async is fire-and-forget; `headers`/`timeout` exist in code but not the editor UI.
+- `addPoints`/`spendPoints` (`:3656-3708`): keyed by `chatname`+`type`; spend failure blocks the message and stamps `pointsSpendError`; add stamps `pointsTotal`.
+- `setProperty` (`:3250-3272`): sets any top-level field; template vars in values.
+- `modifyMessage` (`:3236`): replaces `chatmessage`.
+- `featureMessage` (`:3274`): sets `meta.featured=true`.
+- Overlay/media/TTS/OBS actions emit `{overlayNinja:{actionType,...}}` via `sendTargetP2P(...,'actions')` (fallback `sendMessageToTabs` with `targetPage:'actions'`); pin targets `'dock'`; Spotify routes `chrome.runtime.sendMessage({spotifyAction})` → `background.js handleSpotifyAction` (`:11997`).
+- `delay` (`:3913-3918`): awaits inline — stalls the entire message pipeline. Put `returnMessage` or `continueAsync` before it.
+- State actions stamp template-consumable fields: `counterValue/Target/Remaining` (`checkCounter`), `userMemory*` (`rememberUser`/`forgetUser`/`clearUserMemory`), `selectedUser*` (`pickRandomUser`).
 
 MIDI actions:
 
@@ -447,7 +541,8 @@ Custom JS does not run:
 
 ## Remaining Extraction Targets
 
-- Line-level review of every trigger evaluator in `EventFlowSystem.js`.
-- Line-level review of every action executor, especially relay, webhook, points, Spotify, TTS, MIDI, and OBS actions.
 - Cross-check `STATE_NODES_EXPLANATION.md` against current code because some older notes appear stale compared with current editor/test behavior.
 - Add support-derived examples for common automation recipes.
+- Runtime-validate scheduler behavior after ISSUE-007 is fixed (time triggers in mixed flows).
+
+Completed in the 2026-07-22 intense pass: line-level review of trigger evaluators and action executors (see Execution Engine, Trigger Surface, and Known Defects above).

@@ -37,9 +37,11 @@ function assert(condition, message) {
 		await page.waitForSelector("#providerSelect");
 		await page.selectOption("#providerSelect", "localgemma");
 		await page.selectOption("#responseType", "text");
-		if (await page.locator("#videoSource option[value='none']").count()) {
-			await page.selectOption("#videoSource", "none");
-		}
+		await page.waitForFunction(() => Array.from(document.querySelectorAll("#videoSource option")).some(option => option.value !== "none"), null, {
+			timeout: 30000
+		});
+		const videoDeviceId = await page.$eval("#videoSource", select => Array.from(select.options).find(option => option.value !== "none")?.value || "");
+		await page.selectOption("#videoSource", videoDeviceId);
 
 		const startedAt = Date.now();
 		await page.click("#startButton");
@@ -69,7 +71,7 @@ function assert(condition, message) {
 		const readyMs = Date.now() - startedAt;
 
 		const assistantCount = await page.locator("#responses .assistant-message").count();
-		const prompt = "Briefly confirm that this browser cohost test is working.";
+		const prompt = "Briefly describe what you see on camera.";
 		await page.fill(".message-input", prompt);
 		await page.press(".message-input", "Enter");
 		await page.waitForFunction(
@@ -86,11 +88,13 @@ function assert(condition, message) {
 			diagState: document.getElementById("diagState")?.textContent.trim() || "",
 			diagError: document.getElementById("diagError")?.textContent.trim() || "",
 			videoDisabled: document.getElementById("videoSource")?.disabled,
+			videoValue: document.getElementById("videoSource")?.value || "",
 			response: Array.from(document.querySelectorAll("#responses .assistant-message")).at(-1)?.textContent.trim() || ""
 		}));
 
 		assert(state.diagProvider.toLowerCase().includes("gemma"), `Unexpected provider diagnostics: ${state.diagProvider}`);
 		assert(!state.diagError || state.diagError === "-", `Gemma cohost diagnostics reported an error: ${state.diagError}`);
+		assert(state.videoDisabled === false && state.videoValue !== "none", "Gemma multimodal capture was not enabled.");
 		console.log("GEMMA_COHOST_LIVE_RESULT:", JSON.stringify({ readyMs, ...state }));
 		console.log("PASS live Local Gemma cohost Chrome test");
 	} finally {

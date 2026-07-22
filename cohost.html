@@ -1772,7 +1772,7 @@
 			const GEMINI_AUDIO_TOKENS_PER_SECOND = 25;
 			const GEMINI_VIDEO_TOKENS_PER_SECOND = 258;
 			const LOCAL_BROWSER_DEFAULT_REMOTE_HOST = "https://largefiles.socialstream.ninja/";
-			const LOCAL_BROWSER_WORKER_PATH = "local-browser-model-worker.js?v=17";
+			const LOCAL_BROWSER_WORKER_PATH = "local-browser-model-worker.js?v=18";
 			const CUSTOM_OPENAI_DEFAULT_ENDPOINT = "http://127.0.0.1:1234/v1";
 			const CUSTOM_OPENAI_DEFAULT_MODEL = "";
 			const CONFIGURED_LLM_BRIDGE_CHUNK_SIZE = 12000;
@@ -1859,6 +1859,9 @@
 				const providerKey = String(providerConfig?.key || "")
 					.trim()
 					.toLowerCase();
+				if (providerKey === "localgemma") {
+					return ["config.json", "generation_config.json", "tokenizer.json", "tokenizer_config.json", "preprocessor_config.json", "onnx/embed_tokens_q4.onnx", "onnx/embed_tokens_q4.onnx_data", "onnx/decoder_model_merged_q4.onnx", "onnx/decoder_model_merged_q4.onnx_data", "onnx/vision_encoder_q4.onnx", "onnx/vision_encoder_q4.onnx_data", "onnx/audio_encoder_q4.onnx", "onnx/audio_encoder_q4.onnx_data"];
+				}
 				if (providerKey.startsWith("localqwen")) {
 					return ["config.json", "generation_config.json", "tokenizer.json", "tokenizer_config.json", "preprocessor_config.json", "onnx/embed_tokens_q4.onnx", "onnx/embed_tokens_q4.onnx_data", "onnx/decoder_model_merged_q4.onnx", "onnx/decoder_model_merged_q4.onnx_data", "onnx/vision_encoder_q4.onnx", "onnx/vision_encoder_q4.onnx_data"];
 				}
@@ -1986,24 +1989,27 @@
 				if (providerKey === "localgemma") {
 					return {
 						key: "localgemma",
-						label: "Local Gemma 4 E2B (Browser, text-only)",
-						providerLabel: "Local Gemma 4 (Browser, text-only)",
+						label: "Local Gemma 4 E2B (Browser, self-hosted)",
+						providerLabel: "Local Gemma 4 (Browser, self-hosted)",
 						modelId: "gemma4-e2b-it-onnx",
 						localPath: "thirdparty/models/gemma4-e2b-it-onnx",
 						remoteHost: LOCAL_BROWSER_DEFAULT_REMOTE_HOST,
 						runtime: {
-							modelClass: "Gemma4ForCausalLM",
+							modelClass: "Gemma4ForConditionalGeneration",
 							requiresWebGPU: true,
 							dtype: {
 								embed_tokens: "q4",
-								decoder_model_merged: "q4"
+								decoder_model_merged: "q4",
+								vision_encoder: "q4",
+								audio_encoder: "q4"
 							},
 							generation: {
-								text: { temperature: 1.0, topP: 0.95, topK: 64 }
+								text: { temperature: 1.0, topP: 0.95, topK: 64 },
+								vision: { temperature: 1.0, topP: 0.95, topK: 64 }
 							}
 						},
-						supportsVision: false,
-						defaultPrompt: "You are a concise, friendly social chat co-host. Keep answers short, natural, and relevant to the ongoing conversation."
+						supportsVision: true,
+						defaultPrompt: "You are a concise, friendly social chat co-host. You can reference visible context when it helps, but do not narrate the scene unless asked."
 					};
 				}
 				if (providerKey === "localqwen2b") {
@@ -9095,7 +9101,7 @@
     <option value="gemini">Google Gemini Live</option>
     <option value="localqwen">Local Qwen 3.5 0.8B (Browser)</option>
     <option value="localqwen2b">Local Qwen 3.5 2B (Browser, quality)</option>
-    <option value="localgemma">Local Gemma 4 E2B (Browser, text-only)</option>
+    <option value="localgemma">Local Gemma 4 E2B (Browser, self-hosted)</option>
     <option value="configuredllm">SSN Configured LLM</option>
     <option value="customopenai">OpenAI-Compatible (Custom)</option>
     <option value="chatgpt">OpenAI Realtime</option>

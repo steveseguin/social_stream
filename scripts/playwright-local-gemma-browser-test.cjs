@@ -29,7 +29,7 @@ const MODEL_PATH_TEMPLATE = "{model}/";
 
 		const result = await page.evaluate(
 			async ({ modelId, modelHost, modelPathTemplate }) => {
-				const worker = new Worker("/local-browser-model-worker.js?v=17", { type: "module" });
+				const worker = new Worker("/local-browser-model-worker.js?v=18", { type: "module" });
 				const pending = new Map();
 				const events = [];
 				let counter = 0;
@@ -70,17 +70,32 @@ const MODEL_PATH_TEMPLATE = "{model}/";
 				}
 
 				const runtime = {
-					modelClass: "Gemma4ForCausalLM",
+					modelClass: "Gemma4ForConditionalGeneration",
 					requiresWebGPU: true,
 					dtype: {
 						embed_tokens: "q4",
-						decoder_model_merged: "q4"
+						decoder_model_merged: "q4",
+						vision_encoder: "q4",
+						audio_encoder: "q4"
+					},
+					generation: {
+						text: { temperature: 1.0, topP: 0.95, topK: 64 },
+						vision: { temperature: 1.0, topP: 0.95, topK: 64 }
 					}
 				};
+				const canvas = document.createElement("canvas");
+				canvas.width = 64;
+				canvas.height = 64;
+				const context = canvas.getContext("2d");
+				context.fillStyle = "#1255cc";
+				context.fillRect(0, 0, 64, 64);
+				context.fillStyle = "#ffffff";
+				context.fillRect(16, 16, 32, 32);
+				const imageDataUrl = canvas.toDataURL("image/png");
 				const initStartedAt = performance.now();
 				const init = await request("init", {
 					providerKey: "localgemma",
-					providerLabel: "Local Gemma 4 Text-only",
+					providerLabel: "Local Gemma 4 Multimodal",
 					modelId,
 					device: "webgpu",
 					remoteHost: modelHost,
@@ -94,8 +109,9 @@ const MODEL_PATH_TEMPLATE = "{model}/";
 					{
 						providerKey: "localgemma",
 						modelId,
-						prompt: "Reply in one short sentence confirming that the Gemma browser test works.",
-						systemPrompt: "Answer directly and concisely.",
+						prompt: "Describe the colors and simple shape in this image in one short sentence.",
+						systemPrompt: "Use the attached image and answer directly and concisely.",
+						images: [imageDataUrl],
 						maxNewTokens: 32,
 						maxTime: 60,
 						runtime
@@ -110,10 +126,10 @@ const MODEL_PATH_TEMPLATE = "{model}/";
 			{ modelId: MODEL_ID, modelHost: MODEL_HOST, modelPathTemplate: MODEL_PATH_TEMPLATE }
 		);
 
-		console.log("GEMMA_TEXT_ONLY_RESULT:", JSON.stringify(result));
-		if (result.init.device !== "webgpu") throw new Error(`Gemma text-only did not initialize on WebGPU: ${JSON.stringify(result.init)}`);
-		if (!String(result.generation.text || "").trim()) throw new Error("Gemma text-only returned no text.");
-		console.log("PASS Gemma 4 text-only ONNX WebGPU test");
+		console.log("GEMMA_MULTIMODAL_RESULT:", JSON.stringify(result));
+		if (result.init.device !== "webgpu") throw new Error(`Gemma multimodal did not initialize on WebGPU: ${JSON.stringify(result.init)}`);
+		if (!String(result.generation.text || "").trim()) throw new Error("Gemma multimodal returned no text for an image prompt.");
+		console.log("PASS Gemma 4 multimodal ONNX WebGPU test");
 	} finally {
 		if (browser) await browser.close().catch(() => {});
 		server.close();

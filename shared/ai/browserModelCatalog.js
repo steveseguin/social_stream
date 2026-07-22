@@ -6,27 +6,30 @@
     var LOCAL_BROWSER_MODELS = {
         localgemma: {
             key: 'localgemma',
-            label: 'Local Gemma 4 E2B (Browser, text-only)',
-            providerLabel: 'Local Gemma 4 (Browser, text-only)',
+            label: 'Local Gemma 4 E2B (Browser, self-hosted)',
+            providerLabel: 'Local Gemma 4 (Browser, self-hosted)',
             modelId: 'gemma4-e2b-it-onnx',
             localPath: 'thirdparty/models/gemma4-e2b-it-onnx',
             remoteHost: DEFAULT_REMOTE_HOST,
             remotePathTemplate: '{model}/',
             runtime: {
-                modelClass: 'Gemma4ForCausalLM',
+                modelClass: 'Gemma4ForConditionalGeneration',
                 requiresWebGPU: true,
                 dtype: {
                     embed_tokens: 'q4',
-                    decoder_model_merged: 'q4'
+                    decoder_model_merged: 'q4',
+                    vision_encoder: 'q4',
+                    audio_encoder: 'q4'
                 },
                 generation: {
-                    text: { temperature: 1.0, topP: 0.95, topK: 64 }
+                    text: { temperature: 1.0, topP: 0.95, topK: 64 },
+                    vision: { temperature: 1.0, topP: 0.95, topK: 64 }
                 }
             },
-            supportsVision: false,
-            prefersCaptureSelection: false,
+            supportsVision: true,
+            prefersCaptureSelection: true,
             requiresApiKey: false,
-            defaultPrompt: 'You are a concise, friendly social chat co-host. Keep answers short, natural, and relevant to the ongoing conversation.'
+            defaultPrompt: 'You are a concise, friendly social chat co-host. You can reference visible context when it helps, but do not narrate the scene unless asked.'
         },
         // TODO(2026-07-31): Re-audit R2 and remove the legacy qwen3.5-0.8b-onnx/ prefix once older saved model overrides no longer need it.
         localqwen: {

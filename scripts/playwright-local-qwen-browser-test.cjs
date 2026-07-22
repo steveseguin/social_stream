@@ -106,7 +106,7 @@ function assert(condition, message) {
 		async function runWorkerModel(spec, options = {}) {
 			return await page.evaluate(
 				async ({ spec, modelHost, initOnly }) => {
-					const worker = new Worker("/local-browser-model-worker.js?v=17", { type: "module" });
+					const worker = new Worker("/local-browser-model-worker.js?v=18", { type: "module" });
 					const pending = new Map();
 					const statusEvents = [];
 					const tokenText = new Map();

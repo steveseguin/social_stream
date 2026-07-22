@@ -48,4 +48,29 @@ assert.ok(
 );
 assert.ok(!ttsJs.includes("if (TTS.volume)"));
 
+const serialAssignments = [
+  ...ttsJs.matchAll(/TTS\.premiumSerial\s*=\s*0\s*;/g),
+];
+assert.strictEqual(
+  serialAssignments.length,
+  1,
+  "premiumSerial must be initialized exactly once",
+);
+
+const stateStart = ttsJs.indexOf("TTS.premiumQueueActive = false;");
+const functionStart = ttsJs.indexOf("TTS.finishedAudio = function");
+assert.ok(
+  serialAssignments[0].index > stateStart &&
+    serialAssignments[0].index < functionStart,
+  "premiumSerial must be initialized with the other TTS state",
+);
+
+const cleanupStart = ttsJs.indexOf("function cleanup(success) {");
+const nextFunction = ttsJs.indexOf("TTS.queuePremiumTTS", cleanupStart);
+assert.ok(cleanupStart >= 0 && nextFunction > cleanupStart);
+assert.ok(
+  !ttsJs.slice(cleanupStart, nextFunction).includes("TTS.premiumSerial = 0"),
+  "playback cleanup must not reset the request serial",
+);
+
 console.log("PASS TTS volume control");

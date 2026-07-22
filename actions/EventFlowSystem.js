@@ -1647,6 +1647,12 @@ class EventFlowSystem {
 		return !hasChatFields;
 	}
 
+	isCounterEventPayload(message) {
+		if (!this.isMetaOnlyPayload(message)) return false;
+		const eventType = String(message.event || '').trim().toLowerCase();
+		return ['viewer_update', 'likes_update', 'follower_update', 'subscriber_update'].includes(eventType);
+	}
+
 	isObsEventPayload(message) {
 		return !!(message && typeof message === 'object' && (message.type || '').toLowerCase() === 'obs' && message.event);
 	}
@@ -1696,8 +1702,9 @@ class EventFlowSystem {
         // Automatic User Memory resets happen before flows evaluate the stream event.
         await this.resetUserMemoriesForEvent(message);
         
-		// Ignore meta-only payloads (e.g., viewer/follower count updates) so they never trigger flows
-		if (this.isMetaOnlyPayload(message)) {
+		// Counter payloads may continue only to explicit matching event triggers.
+		// Other meta-only traffic remains excluded from Event Flow.
+		if (this.isMetaOnlyPayload(message) && !this.isCounterEventPayload(message)) {
 			return message;
 		}
 		
@@ -2068,8 +2075,9 @@ class EventFlowSystem {
         // console.log(`[EvaluateTrigger] Node: ${triggerNode.id}, Type: ${triggerType}, Config: ${JSON.stringify(config)}, Message: ${message.chatmessage}`);
         let match = false;
 		
-		// Skip meta-only payloads so metric updates can't trigger flows
-		if (this.isMetaOnlyPayload(message)){
+		// Known counters may match only an explicit Event Type trigger. This keeps
+		// them out of Any Message and other generic chat-oriented triggers.
+		if (this.isMetaOnlyPayload(message) && (triggerType !== 'eventOther' || !this.isCounterEventPayload(message))){
 			return false;
 		}
 		

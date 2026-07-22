@@ -310,9 +310,25 @@ try {
 		return getYouTubeAccessLevel() === 'admin' ? YT_ADMIN_SCOPES : YT_READONLY_SCOPES;
 	}
 
+	function getYouTubeTokenAccessLevel() {
+		const stored = localStorage.getItem(YT_TOKEN_ACCESS_LEVEL_KEY);
+		if (stored !== null) {
+			return normalizeYouTubeAccessLevel(stored);
+		}
+
+		// Tokens saved before access-level metadata was introduced inherit the
+		// user's saved OAuth choice. New tokens are always labelled explicitly.
+		if (!localStorage.getItem('youtubeOAuthToken') && !localStorage.getItem('youtubeRefreshToken')) {
+			return null;
+		}
+
+		const migrated = getYouTubeAccessLevel();
+		localStorage.setItem(YT_TOKEN_ACCESS_LEVEL_KEY, migrated);
+		return migrated;
+	}
+
 	function hasYouTubeWriteAccess() {
-		const tokenAccessLevel = localStorage.getItem(YT_TOKEN_ACCESS_LEVEL_KEY);
-		return tokenAccessLevel !== null && normalizeYouTubeAccessLevel(tokenAccessLevel) === 'admin';
+		return getYouTubeTokenAccessLevel() === 'admin';
 	}
 
 	function getWriteAccessRequiredMessage() {

@@ -124,6 +124,7 @@ TTS.voiceGender = false;
 TTS.audio = false;
 TTS.premiumQueueTTS = [];
 TTS.premiumQueueActive = false;
+TTS.premiumSerial = 0;
 TTS.browserKokoroStreamActive = false;
 TTS.browserKokoroSkipRequested = false;
 TTS.resolveCurrentAudioPlayback = null;
@@ -583,8 +584,7 @@ TTS.playAudioBlobAndWait = async function(audioBlob) {
             if (settled) return;
             settled = true;
             if (TTS.resolveCurrentAudioPlayback === cleanup) {
-TTS.resolveCurrentAudioPlayback = null;
-TTS.premiumSerial = 0;
+                TTS.resolveCurrentAudioPlayback = null;
             }
             if (timeoutId) {
                 clearTimeout(timeoutId);

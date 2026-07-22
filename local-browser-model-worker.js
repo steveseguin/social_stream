@@ -51,7 +51,7 @@ const LEGACY_RUNTIME_DEFAULTS = {
     Gemma4ForConditionalGeneration: {
         requiresWebGPU: true,
         dtype: {
-            model: 'q4',
+            embed_tokens: 'q4',
             decoder_model_merged: 'q4',
             vision_encoder: 'q4',
             audio_encoder: 'q4'
@@ -601,7 +601,7 @@ function inferModelClassName(message, runtime = {}) {
         .trim()
         .toLowerCase();
     if (providerKey === 'localgemma') {
-        return 'Gemma4ForCausalLM';
+        return 'Gemma4ForConditionalGeneration';
     }
     if (providerKey.startsWith('localqwen')) {
         return 'Qwen3_5ForConditionalGeneration';
@@ -611,7 +611,7 @@ function inferModelClassName(message, runtime = {}) {
         .trim()
         .toLowerCase();
     if (modelId.includes('gemma')) {
-        return 'Gemma4ForCausalLM';
+        return 'Gemma4ForConditionalGeneration';
     }
     if (modelId.includes('qwen')) {
         return 'Qwen3_5ForConditionalGeneration';

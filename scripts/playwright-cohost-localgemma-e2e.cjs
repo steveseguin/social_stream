@@ -301,9 +301,9 @@ function findWorkerMessages(log, type, predicate) {
     await page.waitForFunction(() => document.getElementById('responses').textContent.includes('AI:Hi, introduce yourself in a sentence for me. Be friendly to me.'));
     await page.waitForFunction(() => !document.getElementById('sendButton').disabled && document.getElementById('sendButton').textContent.trim() === 'Send');
 
-    await page.fill('.message-input', 'Describe the visible scene briefly.');
+    await page.fill('.message-input', 'Describe what you see on camera briefly.');
     await page.press('.message-input', 'Enter');
-    await page.waitForFunction(() => document.getElementById('responses').textContent.includes('AI:Describe the visible scene briefly.'));
+    await page.waitForFunction(() => document.getElementById('responses').textContent.includes('AI:Describe what you see on camera briefly.'));
 
     const gemmaState = await page.evaluate(() => ({
       workerLog: window.__ssnWorkerLog.slice(),
@@ -314,15 +314,17 @@ function findWorkerMessages(log, type, predicate) {
 
     const gemmaInit = findWorkerMessages(gemmaState.workerLog, 'init', (entry) => entry.data.modelId === 'gemma4-e2b-it-onnx')[0];
     assert(!!gemmaInit, 'Local Gemma init was not sent to the worker.');
-    assert(gemmaInit.data.runtime && gemmaInit.data.runtime.modelClass === 'Gemma4ForCausalLM', 'Local Gemma init did not use the text-only Gemma4 runtime.');
+    assert(gemmaInit.data.runtime && gemmaInit.data.runtime.modelClass === 'Gemma4ForConditionalGeneration', 'Local Gemma init did not use the multimodal Gemma4 runtime.');
+    assert(gemmaInit.data.runtime.dtype && gemmaInit.data.runtime.dtype.vision_encoder === 'q4', 'Local Gemma init did not request the q4 vision encoder.');
+    assert(gemmaInit.data.runtime.dtype && gemmaInit.data.runtime.dtype.audio_encoder === 'q4', 'Local Gemma init did not request the q4 audio encoder.');
     assert(gemmaInit.data.remoteHost === 'https://largefiles.socialstream.ninja/', 'Local Gemma init did not use the self-hosted default origin.');
 
-    const gemmaManualGenerate = findWorkerMessages(gemmaState.workerLog, 'generate', (entry) => entry.data.prompt === 'Describe the visible scene briefly.')[0];
+    const gemmaManualGenerate = findWorkerMessages(gemmaState.workerLog, 'generate', (entry) => entry.data.prompt === 'Describe what you see on camera briefly.')[0];
     assert(!!gemmaManualGenerate, 'Local Gemma manual generate was not sent.');
-    assert(!gemmaManualGenerate.data.images || gemmaManualGenerate.data.images.length === 0, 'Text-only Local Gemma unexpectedly attached a vision frame.');
+    assert(Array.isArray(gemmaManualGenerate.data.images) && gemmaManualGenerate.data.images.length === 1, 'Local Gemma did not attach a vision frame.');
     assert(gemmaState.diagProvider.toLowerCase().includes('gemma'), 'Diagnostics did not report Local Gemma.');
     assert(gemmaState.diagEvent.includes('generate.done'), 'Local Gemma diagnostics did not report completion.');
-    assert(!gemmaState.responses.includes('[vision:'), 'Local Gemma response unexpectedly included vision context.');
+    assert(gemmaState.responses.includes('[vision:1]'), 'Local Gemma response did not complete with vision context.');
 
     await page.click('#startButton');
     await page.waitForFunction(() => document.getElementById('startButton').dataset.started === 'false');

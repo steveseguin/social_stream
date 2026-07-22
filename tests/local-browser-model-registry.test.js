@@ -26,9 +26,11 @@ try {
 	assert(!!localGemma, "localgemma config exists");
 	assert(!!localQwen, "localqwen config exists");
 	assert(!!localQwen2b, "localqwen2b config exists");
-	assert(localGemma.supportsVision === false, "localgemma is marked text-only");
-	assert(localGemma.runtime?.modelClass === "Gemma4ForCausalLM", "localgemma uses the text-only Gemma4 runtime");
+	assert(localGemma.supportsVision === true, "localgemma is marked vision-capable");
+	assert(localGemma.runtime?.modelClass === "Gemma4ForConditionalGeneration", "localgemma uses the multimodal Gemma4 runtime");
 	assert(localGemma.runtime?.dtype?.embed_tokens === "q4", "localgemma defaults to q4 quantization");
+	assert(localGemma.runtime?.dtype?.vision_encoder === "q4", "localgemma loads its q4 vision encoder");
+	assert(localGemma.runtime?.dtype?.audio_encoder === "q4", "localgemma loads its q4 audio encoder");
 	assert(String(localGemma.remoteHost || "").includes("socialstream.ninja"), "localgemma default host is self-hosted");
 	assert(catalogJs.includes("TODO(2026-07-31)") && catalogJs.includes("qwen3.5-0.8b-onnx/"), "catalog retains the dated legacy R2 cleanup reminder");
 	assert(localQwen.supportsVision === true, "localqwen is marked vision-capable");
@@ -51,7 +53,7 @@ try {
 		remoteHost: "https://assets.example.com/models"
 	});
 	assert(workerInit.remoteHost === "https://assets.example.com/models/", "worker init normalizes remote host");
-	assert(workerInit.runtime?.modelClass === "Gemma4ForCausalLM", "worker init preserves the text-only Gemma4 runtime");
+	assert(workerInit.runtime?.modelClass === "Gemma4ForConditionalGeneration", "worker init preserves the multimodal Gemma4 runtime");
 	const qwenInit = catalog.buildWorkerInit("localqwen", {});
 	assert(qwenInit.runtime?.modelClass === "Qwen3_5ForConditionalGeneration", "worker init preserves Qwen runtime");
 	assert(qwenInit.runtime?.dtype?.embed_tokens === "q4", "worker init preserves Qwen q4 defaults");
@@ -62,10 +64,14 @@ try {
 	assert(popupHtml.includes('value="localqwen"'), "popup exposes localqwen provider");
 	assert(popupHtml.includes('value="localqwen2b"'), "popup exposes localqwen2b provider");
 	assert(cohostHtml.includes('value="localgemma"'), "cohost exposes localgemma provider");
+	assert(!cohostHtml.includes('Local Gemma 4 E2B (Browser, text-only)'), "cohost no longer labels localgemma as text-only");
+	assert(cohostHtml.includes('"onnx/vision_encoder_q4.onnx_data"'), "cohost validates bundled Gemma vision weights");
+	assert(cohostHtml.includes('"onnx/audio_encoder_q4.onnx_data"'), "cohost validates bundled Gemma audio weights");
 	assert(cohostHtml.includes('value="localqwen"'), "cohost exposes localqwen provider");
 	assert(cohostHtml.includes('value="localqwen2b"'), "cohost exposes localqwen2b provider");
 	assert(fs.existsSync(path.join(__dirname, "..", "local-browser-model-worker.js")), "generic local browser worker exists");
 	assert(/if \(providerKey\.startsWith\(["']localqwen["']\)\)/.test(workerJs), "worker preserves Qwen provider class inference");
+	assert(/if \(providerKey === ["']localgemma["']\) \{\s*return ["']Gemma4ForConditionalGeneration["'];/.test(workerJs), "worker infers the multimodal Gemma runtime");
 	assert(/embed_tokens:\s*["']q4["']/.test(workerJs), "worker preserves localqwen q4 defaults");
 	assert(workerJs.includes("const MAX_TURNS = 24;"), "worker retains 24 recent conversation turns");
 	assert(workerJs.includes("const MAX_HISTORY_CHARACTERS = 12000;"), "worker bounds recent conversation by size");

@@ -330,6 +330,107 @@ async function runTests() {
         );
     }
 
+    console.log('\n[6] explicit counter events reach only matching Event Type triggers');
+    {
+        const EFS = loadEventFlowSystem({ ssapp: true });
+        const sys = new EFS();
+        const likesPayload = { type: 'youtube', event: 'likes_update', meta: 42 };
+        const likesNode = {
+            id: 'counter1',
+            triggerType: 'eventOther',
+            config: { eventType: 'likes_update' }
+        };
+        const viewersNode = {
+            id: 'counter2',
+            triggerType: 'eventOther',
+            config: { eventType: 'viewer_update' }
+        };
+        const anyMessageNode = {
+            id: 'counter3',
+            triggerType: 'anyMessage',
+            config: {}
+        };
+
+        assert(
+            sys.isCounterEventPayload(likesPayload) === true,
+            'likes_update is recognized as an explicit counter event'
+        );
+        assert(
+            await sys.evaluateTrigger(likesNode, likesPayload) === true,
+            'matching Event Type trigger receives likes_update'
+        );
+        assert(
+            await sys.evaluateTrigger(viewersNode, likesPayload) === false,
+            'non-matching Event Type trigger rejects likes_update'
+        );
+        assert(
+            await sys.evaluateTrigger(anyMessageNode, likesPayload) === false,
+            'counter events do not activate Any Message'
+        );
+        assert(
+            sys.isCounterEventPayload({ event: 'viewer_updates', meta: { youtube: 10 } }) === false,
+            'unrecognized meta-only events remain excluded'
+        );
+
+        let evaluatedFlows = 0;
+        sys.flows = [{ id: 'counter-flow', active: true, nodes: [], connections: [] }];
+        sys.evaluateFlow = async (_flow, message) => {
+            evaluatedFlows++;
+            return { modified: false, message, blocked: false };
+        };
+
+        await sys.processMessage(likesPayload);
+        assert(
+            evaluatedFlows === 1,
+            'processMessage allows a recognized counter event into Event Flow'
+        );
+
+        evaluatedFlows = 0;
+        await sys.processMessage({ event: 'viewer_updates', meta: { youtube: 10 } });
+        assert(
+            evaluatedFlows === 0,
+            'processMessage still skips unrelated meta-only traffic'
+        );
+    }
+
+    console.log('\n[7] Firefox build includes Event Flow guide documentation');
+    {
+        const guideHtml = fs.readFileSync(
+            path.join(__dirname, '..', 'actions', 'event-flow-guide.html'),
+            'utf8'
+        );
+        const prepareFirefox = fs.readFileSync(
+            path.join(__dirname, '..', 'scripts', 'prepare-firefox.sh'),
+            'utf8'
+        );
+        const expectedLinks = [
+            '../docs/media-hosting-event-flow.html',
+            '../docs/source-types-guide.html#youtube-shorts-event-flow'
+        ];
+
+        for (const href of expectedLinks) {
+            assert(
+                guideHtml.includes(`href="${href}"`),
+                `guide links to packaged documentation: ${href}`
+            );
+        }
+
+        const requiredBuildAssets = [
+            'docs/media-hosting-event-flow.html',
+            'docs/source-types-guide.html',
+            'docs/css/guides.css',
+            'docs/images/guides/guide-event-flow-overview.png',
+            'docs/images/guides/guide-standalone-source-modes.png',
+            'docs/images/kick-channel-points-event-flow/event-flow-media-action-values.png'
+        ];
+        for (const asset of requiredBuildAssets) {
+            assert(
+                prepareFirefox.includes(`--include='${asset}'`),
+                `Firefox build includes ${asset}`
+            );
+        }
+    }
+
     console.log(`\n${'-'.repeat(50)}`);
     console.log(`Results: ${passed} passed, ${failed} failed`);
     if (failed > 0) {
