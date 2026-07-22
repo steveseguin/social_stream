@@ -10967,9 +10967,10 @@
 							data.chatname = stripHtmlFunction(data.chatname);
 						}
 						if (stripNameEmojis) {
+							var emojiFallbackName = data.chatname; // post-striphtml, so the fallback can't restore stripped HTML
 							data.chatname = stripEmojisFromText(data.chatname);
 							if (!data.chatname.trim()) {
-								data.chatname = rawName;
+								data.chatname = emojiFallbackName;
 							}
 						}
 						data.chatname = data.chatname.trim();

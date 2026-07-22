@@ -801,6 +801,16 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Shows only first names of users"
           },
           {
+            "key": "youtubechannelname",
+            "displayName": "youtubechannelname or youtubechanneltitle",
+            "aliases": [
+              "youtubechannelname",
+              "youtubechanneltitle"
+            ],
+            "values": "boolean",
+            "description": "Featured Chat only: resolves YouTube WebSocket author channel IDs to channel titles before showing featured messages"
+          },
+          {
             "key": "hidesource",
             "displayName": "hidesource",
             "aliases": [
@@ -999,6 +1009,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Removes all emojis from messages"
+          },
+          {
+            "key": "stripnameemoji",
+            "displayName": "stripnameemoji",
+            "aliases": [
+              "stripnameemoji"
+            ],
+            "values": "boolean",
+            "description": "Removes all emojis from usernames"
           },
           {
             "key": "striphtml",
