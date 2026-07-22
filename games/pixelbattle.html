@@ -521,12 +521,12 @@
             return true;
         }
 
-        // Get the current color of a grid cell
-        function getCellColor(x, y) {
+        // Get the color of a grid cell from a full-canvas ImageData snapshot
+        function getCellColorFromBuffer(buffer, x, y) {
             const cx = x * gameState.gridSize + Math.floor(gameState.gridSize / 2);
             const cy = y * gameState.gridSize + Math.floor(gameState.gridSize / 2);
-            const data = gameState.ctx.getImageData(cx, cy, 1, 1).data;
-            return data[0] + ',' + data[1] + ',' + data[2];
+            const i = (cy * buffer.width + cx) * 4;
+            return buffer.data[i] + ',' + buffer.data[i + 1] + ',' + buffer.data[i + 2];
         }
 
         function hexToRgbString(hex) {
@@ -540,33 +540,51 @@
             const rows = Math.floor(gameState.canvasHeight / gameState.gridSize);
             
             if (x < 0 || x >= cols || y < 0 || y >= rows) return;
-            
-            const targetColor = getCellColor(x, y);
+
+            // One readback for the whole fill instead of one per visited cell
+            const buffer = gameState.ctx.getImageData(0, 0, gameState.canvasWidth, gameState.canvasHeight);
+            const targetColor = getCellColorFromBuffer(buffer, x, y);
             const replacementColor = hexToRgbString(color);
             if (targetColor === replacementColor) return;
-            
+
             const queue = [[x, y]];
             const visited = new Set();
-            
+            const now = Date.now();
+            let filled = 0;
+
+            gameState.ctx.fillStyle = color;
+
             while (queue.length > 0) {
                 const cell = queue.shift();
                 const cx = cell[0];
                 const cy = cell[1];
                 const cellKey = cx + ',' + cy;
-                
+
                 if (visited.has(cellKey)) continue;
                 visited.add(cellKey);
-                
+
                 if (cx < 0 || cx >= cols || cy < 0 || cy >= rows) continue;
-                if (getCellColor(cx, cy) !== targetColor) continue;
-                
-                paintPixel(cx, cy, color, artist);
-                
+                if (getCellColorFromBuffer(buffer, cx, cy) !== targetColor) continue;
+
+                gameState.ctx.fillRect(cx * gameState.gridSize + 1, cy * gameState.gridSize + 1, gameState.gridSize - 2, gameState.gridSize - 2);
+                gameState.paintedCells.add(cellKey);
+                gameState.lastPaintTime.set(cellKey + ':' + artist, now);
+                filled++;
+
                 queue.push([cx + 1, cy]);
                 queue.push([cx - 1, cy]);
                 queue.push([cx, cy + 1]);
                 queue.push([cx, cy - 1]);
             }
+
+            if (!filled) return;
+
+            gameState.artists.set(artist, (gameState.artists.get(artist) || 0) + filled);
+
+            // One collaboration check and one effect for the whole fill, not per cell
+            checkCollaboration(x, y, artist);
+            createPaintEffect(x * gameState.gridSize + gameState.gridSize/2, y * gameState.gridSize + gameState.gridSize/2, color);
+            updateDisplay();
         }
 
         // Check for collaboration

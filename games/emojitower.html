@@ -65,15 +65,6 @@
             50% { transform: rotate(1deg); }
         }
         
-        .falling {
-            animation: fall 1s ease-in forwards;
-        }
-        
-        @keyframes fall {
-            from { transform: translateY(-100vh) rotate(0deg); }
-            to { transform: translateY(0) rotate(360deg); }
-        }
-        
         #ground {
             position: absolute;
             bottom: 0;
@@ -322,7 +313,6 @@
                     this.y = landingY;
                     this.velocity = 0;
                     this.settled = true;
-                    this.element.classList.remove('falling');
                     this.element.style.transition = '';
                     
                     // Check if block is stable

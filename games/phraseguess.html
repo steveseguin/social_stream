@@ -283,7 +283,6 @@ You can't handle the truth</textarea>
         let iframe = null;
         let connectedPeers = {};
         let pendingRoundTimeout = null;
-        let intentionalClose = false;
 
         // Save settings to localStorage
         function saveSettings() {
@@ -439,7 +438,6 @@ You can't handle the truth</textarea>
 
             socketserver.onclose = function() {
                 updateStatus('Disconnected');
-                if (intentionalClose) return;
                 // Try to reconnect after 5 seconds
                 setTimeout(connectWebSocket, 5000);
             };
@@ -720,7 +718,8 @@ You can't handle the truth</textarea>
                 updateStatus('Round ended - no winner');
             }
 
-            setTimeout(() => {
+            pendingRoundTimeout = setTimeout(() => {
+                pendingRoundTimeout = null;
                 display.classList.remove('winner-announcement');
                 if (gameState.isActive) {
                     startRound();
@@ -805,7 +804,9 @@ You can't handle the truth</textarea>
             clearTimeout(pendingRoundTimeout);
             pendingRoundTimeout = null;
             document.getElementById('gameToggle').textContent = 'Start Game';
-            document.getElementById('phraseDisplay').textContent = 'Game stopped';
+            const stoppedDisplay = document.getElementById('phraseDisplay');
+            stoppedDisplay.classList.remove('winner-announcement');
+            stoppedDisplay.textContent = 'Game stopped';
             
             sendResponse('🛑 Game stopped. Thanks for playing!');
             updateStatus('Game stopped');
@@ -816,6 +817,7 @@ You can't handle the truth</textarea>
             
             clearInterval(gameState.revealTimer);
             clearTimeout(pendingRoundTimeout);
+            document.getElementById('phraseDisplay').classList.remove('winner-announcement');
             sendResponse(`⏭️ Skipping phrase. It was: "${gameState.currentPhrase}"`);
             
             pendingRoundTimeout = setTimeout(startRound, 2000);

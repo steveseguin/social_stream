@@ -4808,7 +4808,7 @@ function enableBackgroundKeepAlive() {
 			if (!data.access_token) {
 				throw new Error('Token exchange response did not include access_token.');
 			}
-			setStoredToken(data.access_token, data.expires_in, data.refresh_token, authSource, consumePendingYouTubeTokenAccessLevel());
+			setStoredToken(data.access_token, data.expires_in, data.refresh_token, authSource, consumePendingYouTubeTokenAccessLevel() || getYouTubeAccessLevel());
 			clearExpectedOAuthState();
 			window.history.replaceState({}, document.title, getPostAuthRedirectUrl());
 			verifyAndUseToken(data.access_token);

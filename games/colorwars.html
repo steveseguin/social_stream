@@ -524,8 +524,9 @@
         gameActive = false;
         
         const scores = updateScores();
-        const winner = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
-        const isTie = winner[1] === 0;
+        const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+        const winner = sorted[0];
+        const isTie = winner[1] === sorted[1][1];
         
         const winnerOverlay = document.getElementById('winner-overlay');
         const winnerText = document.getElementById('winner-text');
