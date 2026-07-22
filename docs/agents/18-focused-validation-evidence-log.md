@@ -476,6 +476,71 @@ Follow-up:
 - Validate OBS actions against OBS WebSocket v5 and/or OBS Browser Source access before making OBS control claims.
 - Run targeted tests for webhook, relay, TTS, Spotify, MIDI, points, and send-message actions before promoting those action families.
 
+### Event Flow User Memory Focused And SSApp Electron E2E Tests
+
+Validation date: 2026-07-21
+
+Validator: Codex
+
+Area: Event Flow User Memory state, participant eligibility, unique-user drawing, scoped resets, persistence, editor rendering, and real SSApp restart behavior
+
+Evidence labels: `focused-node-test` and `ssapp-electron-e2e`
+
+Commands run:
+
+```powershell
+# From social_stream
+node tests/eventflow-user-memory.test.js
+
+# From ssapp
+npm run test:eventflow-user-memory:e2e
+```
+
+Results:
+
+- `eventflow-user-memory.test.js`: passed.
+- `test:eventflow-user-memory:e2e`: passed with output `PASS User Memory editor, runtime, persistence, draw, and reset`.
+
+Product surfaces:
+
+- The focused Node test loads the real `actions/EventFlowSystem.js` and statically checks the matching editor source.
+- The E2E test launches the real SSApp Electron application against the Social Stream source with an isolated user-data profile, connects to that Electron runtime, and drives the Event Flow editor UI and Test Flow panel.
+- A separate manual Electron pass imported the shipped example through SSApp's native file chooser and exercised the same workflow before the repeatable harness was added.
+
+Observed result:
+
+- Users were keyed by platform and stable user ID, with username fallback, and anonymous aggregate events were ignored.
+- Repeated participation updated one user's participation count without adding duplicate draw entries.
+- Two User Memory nodes stayed independent; forget, clear, and generic reset affected only their selected target.
+- Random draw exposed the selected-user fields and optionally removed the winner.
+- Inactivity, stream-start, and stream-stop resets affected only memories configured for that reset.
+- Saved User Memory state reloaded from IndexedDB while session-only state did not become a saved collection.
+- A remembered TikTok participant passed a later command eligibility check while an unremembered participant did not.
+- The imported example rendered 14 nodes and four dashed shared-state references in the Event Flow editor.
+- Test Flow admitted Alice after `!enter`, rejected Bob's eligibility check before entry, admitted Bob after entry, rejected draw/reset commands from an ordinary viewer, drew and removed one winner for a moderator, and cleared the selected list for a moderator.
+- After selecting saved persistence and adding an entrant, the E2E test stopped and relaunched SSApp with the same profile, confirmed the entrant remained eligible, then cleared that memory from its properties and restarted again to confirm the cleared user did not return.
+- Four guide screenshots were captured as cropped element views from the actual SSApp Event Flow editor and visually reviewed before use: shared-state links, memory settings, reset controls, and draw output.
+
+What was not tested:
+
+- Live TikTok, Twitch, YouTube, or other platform event delivery.
+- Whether a particular TikTok capture path names a Heart Me gift consistently across all source/capture modes.
+- A live production giveaway, long-running high-volume memory, concurrent app instances, or crash recovery during a pending write.
+- OBS Browser Source behavior or downstream overlay rendering of draw results.
+
+Docs updated:
+
+- `actions/user-memory-guide.html`
+- `actions/state-nodes-guide.html`
+- `actions/STATE_NODES_EXPLANATION.md`
+- `09-api-and-integrations/event-flow-editor.md`
+- `13-reference/action-command-index.md`
+
+Follow-up:
+
+- Validate representative live platform payloads before publishing exact per-platform participation recipes as universal.
+- Exercise large participant sets and concurrent-window synchronization separately if hard scale guarantees are needed.
+
 ### Map Overlay Focused Browser Smoke Test
 
 Validation date: 2026-07-05

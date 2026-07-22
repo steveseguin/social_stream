@@ -1,6 +1,6 @@
 {
   "name": "User Memory: Participation + Prize Draw",
-  "description": "Remembers unique !enter users, checks later ? messages, picks a random entrant, and clears only this draw's memory.",
+  "description": "Remembers unique !enter users, checks later ? messages, and gives moderators protected draw/reset commands for this memory only.",
   "active": true,
   "nodes": [
     {
@@ -84,12 +84,21 @@
       "type": "action",
       "actionType": "pickRandomUser",
       "label": "Pick random entrant",
-      "x": 260,
+      "x": 450,
       "y": 560,
       "config": {
         "targetNodeId": "state_prize_draw",
         "removeSelected": true
       }
+    },
+    {
+      "id": "logic_draw_authorized",
+      "type": "logic",
+      "logicType": "AND",
+      "label": "Draw command and moderator",
+      "x": 260,
+      "y": 560,
+      "config": {}
     },
     {
       "id": "trigger_reset_draw",
@@ -107,10 +116,30 @@
       "type": "action",
       "actionType": "clearUserMemory",
       "label": "Clear all draw entrants",
-      "x": 260,
+      "x": 450,
       "y": 730,
       "config": {
         "targetNodeId": "state_prize_draw"
+      }
+    },
+    {
+      "id": "logic_reset_authorized",
+      "type": "logic",
+      "logicType": "AND",
+      "label": "Reset command and moderator",
+      "x": 260,
+      "y": 730,
+      "config": {}
+    },
+    {
+      "id": "trigger_moderator",
+      "type": "trigger",
+      "triggerType": "userRole",
+      "label": "User is a moderator",
+      "x": 20,
+      "y": 900,
+      "config": {
+        "role": "mod"
       }
     },
     {
@@ -148,13 +177,29 @@
     },
     {
       "from": "trigger_draw",
+      "to": "logic_draw_authorized"
+    },
+    {
+      "from": "trigger_moderator",
+      "to": "logic_draw_authorized"
+    },
+    {
+      "from": "logic_draw_authorized",
       "to": "action_pick_winner"
     },
     {
       "from": "trigger_reset_draw",
+      "to": "logic_reset_authorized"
+    },
+    {
+      "from": "trigger_moderator",
+      "to": "logic_reset_authorized"
+    },
+    {
+      "from": "logic_reset_authorized",
       "to": "action_clear_draw"
     }
   ],
-  "version": "1.0.0",
+  "version": "1.1.0",
   "exportedBy": "Social Stream Event Flow System"
 }

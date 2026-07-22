@@ -1,6 +1,6 @@
 # Event Flow Editor
 
-Status: heavy extraction pass plus focused Node-test evidence updated on 2026-07-05.
+Status: heavy extraction pass plus focused Node and SSApp Electron E2E evidence updated on 2026-07-21.
 
 ## Purpose
 
@@ -12,13 +12,17 @@ Event Flow is SSN's visual automation layer. It lets users connect source trigge
 - `social_stream/actions/EventFlowSystem.js`
 - `social_stream/actions/event-flow-guide.html`
 - `social_stream/actions/state-nodes-guide.html`
+- `social_stream/actions/user-memory-guide.html`
 - `social_stream/actions/STATE_NODES_EXPLANATION.md`
 - `social_stream/actions/examples/kick-channel-points-action-flow.json`
+- `social_stream/actions/examples/user-memory-participation-draw.json`
 - `social_stream/docs/kick-channel-points-event-flow.md`
 - `social_stream/tests/eventflow-customjs.test.js`
 - `social_stream/tests/eventflow-compare-property.test.js`
 - `social_stream/tests/eventflow-template-vars.test.js`
 - `social_stream/tests/eventflow-play-media-duration.test.js`
+- `social_stream/tests/eventflow-user-memory.test.js`
+- `ssapp/tests/electron/eventflow-user-memory-e2e.js`
 
 ## Focused Validation Evidence
 
@@ -46,6 +50,24 @@ What it does not support: Event Flow editor UI behavior, flow save/import/export
 
 Full evidence entry: `../18-focused-validation-evidence-log.md`.
 
+### User Memory validation
+
+On 2026-07-21, the focused User Memory Node test and the real SSApp Electron E2E test passed:
+
+```powershell
+# From social_stream
+node tests/eventflow-user-memory.test.js
+
+# From ssapp
+npm run test:eventflow-user-memory:e2e
+```
+
+The Node test covers identity normalization, per-platform separation, deduplication, participation counts, independent memory objects, targeted forget/clear/reset, random draw/removal outputs, inactivity and stream reset scope, persistent-store reload, anonymous-event rejection, and the TikTok-eligibility-plus-later-command pattern.
+
+The Electron test launches SSApp with an isolated profile and the real Social Stream source. It verifies the imported example renders 14 nodes and four dashed shared-state references; tests eligible and ineligible users through the editor's Test Flow panel; confirms ordinary viewers cannot run the moderator-protected draw/reset commands; draws and removes a winner; clears the selected memory; switches it to saved persistence; restarts SSApp; confirms the entrant reloads; clears it from the memory properties; and restarts again to prove the persistent clear holds. A separate manual pass also imported the example with SSApp's native file chooser.
+
+Evidence labels: `focused-node-test` and `ssapp-electron-e2e`. This does not validate live TikTok/Twitch/YouTube payload delivery or a production broadcast.
+
 ## Donation Value Semantics
 
 Event Flow treats `hasDonation` as the paid-support display label and `donoValue` as the exact numeric value when a source provides one. Threshold logic for `eventDonation`, `compareProperty` on `donoValue`/`donationAmount`, and numeric `hasDonation` comparisons uses the exact `donoValue` first, then legacy `donationAmount`, then `currency.js` conversion of `hasDonation` with the source `type`.
@@ -72,6 +94,7 @@ Do not put arbitrary custom data at the top level unless current code expects it
 - Event Flow editor page: `actions/` in the web repo.
 - Event Flow guide: `actions/event-flow-guide.html`.
 - State node guide: `actions/state-nodes-guide.html`.
+- User Memory guide: `actions/user-memory-guide.html`.
 - Flow Actions overlay: `actions.html?session=YOUR_SESSION`.
 
 Media, audio, text overlay, and OBS actions need a rendering/control surface. In normal streaming use, that surface is the Flow Actions overlay running as a browser tab or OBS Browser Source. If the overlay is closed, those actions can appear to do nothing even though the flow itself is firing.
@@ -129,6 +152,7 @@ User and source triggers:
 - `fromUser`
 - `userRole`
 - `channelPointRedemption`
+- `userMemoryContains`
 
 `userRole` supports `tiktokTeamMember`, which matches positive TikTok team/fan levels or `fans_badge` / `grade_badge` data on an incoming TikTok message. This check is independent of dock-overlay URL settings.
 
@@ -230,6 +254,10 @@ State control actions:
 - `setCounter`
 - `incrementCounter`
 - `checkCounter`
+- `rememberUser`
+- `forgetUser`
+- `clearUserMemory`
+- `pickRandomUser`
 
 ## Logic Nodes
 
@@ -250,6 +278,7 @@ Current state node types:
 - `GATE`: on/off switch that can allow or block downstream flow.
 - `COUNTER`: count-based state for thresholds and cooldown-like workflows.
 - `THROTTLE`: rate limiter.
+- `USER_MEMORY`: named, isolated collection of unique users for eligibility, participation tracking, and draws.
 
 Common setup rule: add the state node first, give it a stable name or ID, then point the matching action node at that state node. If an action references the wrong node ID/name, it has nothing useful to update.
 
@@ -260,6 +289,14 @@ State actions:
 - `setCounter`: sets a counter value.
 - `incrementCounter`: increments a counter value.
 - `checkCounter`: copies counter details onto the message for later templates.
+- `rememberUser`: adds or updates the current user's entry in the selected memory.
+- `forgetUser`: removes the current user from the selected memory.
+- `clearUserMemory`: clears every user from the selected memory only.
+- `pickRandomUser`: selects a unique user and can optionally remove the winner.
+
+`userMemoryContains` checks whether the current event's user is in the selected User Memory. User identity is keyed by platform plus user ID, with username fields as fallbacks. Events without a usable identity are ignored. Repeated participation updates one entry's participation count rather than creating duplicate draw entries.
+
+User Memory is a shared resource rather than an execution step. Solid teal wires continue to show event execution, while dashed purple side links show which User Memory an operation targets. The operation stores the target node ID, and the same target can also be selected from its properties dropdown. Each memory independently controls session-versus-saved persistence, inactivity reset, stream-start reset, stream-stop reset, and manual clearing. `resetStateNode` clears only the targeted memory when its target is `USER_MEMORY`.
 
 Tests confirm `checkCounter` exposes:
 

@@ -1,6 +1,6 @@
 # Action And Command Index
 
-Status: heavy lookup pass from `api.md`, `docs/commands.html`, `background.js`, `dock.html`, `featured.html`, `poll.html`, `timer.html`, and Event Flow source on 2026-06-24.
+Status: heavy lookup pass from `api.md`, `docs/commands.html`, `background.js`, `dock.html`, `featured.html`, `poll.html`, `timer.html`, and Event Flow source, updated on 2026-07-21.
 
 Use this page when the user asks "what command/action do I send?" The narrative page `commands-and-actions.md` explains the command systems; this page is the lookup table. For source-checked handler caveats, use `command-action-source-trace.md`. For accepted-by-relay versus acted-on-by-target validation, use `api-command-validation-matrix.md`.
 
@@ -190,7 +190,7 @@ These are Event Flow node `actionType` values from `actions/EventFlowSystem.js` 
 | --- | --- |
 | Message control | `blockMessage`, `returnMessage`, `continueAsync`, `reflectionFilter`, `modifyMessage`, `setProperty`, `featureMessage`, `addPrefix`, `addSuffix`, `findReplace`, `removeText` |
 | Send/relay/external | `sendMessage`, `relay`, `webhook`, `customJs` |
-| Points/state | `addPoints`, `spendPoints`, `setGateState`, `resetStateNode`, `setCounter`, `incrementCounter`, `checkCounter` |
+| Points/state | `addPoints`, `spendPoints`, `setGateState`, `resetStateNode`, `setCounter`, `incrementCounter`, `checkCounter`, `rememberUser`, `forgetUser`, `clearUserMemory`, `pickRandomUser` |
 | Media/visual | `playTenorGiphy`, `showAvatar`, `showText`, `clearLayer`, `triggerOBSScene`, `playAudioClip`, `delay` |
 | OBS | `obsChangeScene`, `obsToggleSource`, `obsSetSourceFilter`, `obsMuteSource`, `obsStartRecording`, `obsStopRecording`, `obsStartStreaming`, `obsStopStreaming`, `obsReplayBuffer` |
 | Spotify | `spotifySkip`, `spotifyPrevious`, `spotifyPause`, `spotifyResume`, `spotifyVolume`, `spotifyQueue`, `spotifyToggle`, `spotifyNowPlaying`, `spotifyShuffle`, `spotifyRepeat` |
@@ -203,10 +203,12 @@ Event Flow custom JS has context restrictions. MV3 extension contexts disable di
 
 Common trigger types observed in Event Flow source:
 
-- Message triggers: `anyMessage`, `messageContains`, `messageStartsWith`, `messageEndsWith`, `messageEquals`, `messageRegex`, `messageLength`, `wordCount`, `containsEmoji`, `containsLink`, `fromSource`, `fromChannelName`, `fromUser`, `userRole`, `hasDonation`, `channelPointRedemption`, `messageProperties`.
+- Message and user triggers: `anyMessage`, `messageContains`, `messageStartsWith`, `messageEndsWith`, `messageEquals`, `messageRegex`, `messageLength`, `wordCount`, `containsEmoji`, `containsLink`, `fromSource`, `fromChannelName`, `fromUser`, `userRole`, `hasDonation`, `channelPointRedemption`, `messageProperties`, `userMemoryContains`.
 - Event triggers: `eventType`, `eventNewFollower`, `eventNewSubscriber`, `eventResub`, `eventGiftSub`, `eventDonation`, `eventRaid`, `eventCheer`, `eventOther`, `eventCustom`.
 - OBS triggers: `obsStreamStarted`, `obsStreamStopped`, `obsRecordingStarted`, `obsRecordingStopped`, `obsSceneChanged`, `obsReplaybufferSaved`.
 - Logic/time/input triggers: `compareProperty`, `randomChance`, `timeInterval`, `timeOfDay`, `midiNoteOn`, `midiNoteOff`, `midiCC`, `customJs`, `counter`, `userPool`, `accumulator`.
+
+Current Event Flow state node types are `GATE`, `COUNTER`, `THROTTLE`, and `USER_MEMORY`. User Memory operations reference the selected memory by node ID; the editor renders that shared-state relationship as a dashed purple link rather than a normal execution wire.
 
 ## Answer Checklist
 

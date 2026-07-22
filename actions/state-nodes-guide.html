@@ -186,12 +186,13 @@
         <header>
             <div class="badge">Event Flow System</div>
             <h1>State Nodes Playbook</h1>
-            <p>State nodes give Social Stream Ninja memory. Use them to build cooldowns, toggles, counters, and throttles that keep automations predictable. This guide breaks the topic into focused mini-guides with examples and troubleshooting tips.</p>
+            <p>State nodes give Social Stream Ninja memory. Use them to build cooldowns, toggles, counters, throttles, participant lists, and prize draws that keep automations predictable.</p>
             <nav>
                 <a href="#overview">Overview</a>
                 <a href="#switch">On/Off Switch</a>
                 <a href="#counter">Counter</a>
                 <a href="#throttle">Rate Limiter</a>
+                <a href="#user-memory">User Memory</a>
                 <a href="#recipes">Problem Kits</a>
                 <a href="#troubleshooting">Troubleshooting</a>
             </nav>
@@ -199,27 +200,28 @@
         <div class="content">
             <section id="overview">
                 <h2>01 · Quick Orientation</h2>
-                <p>Every State node has two halves:</p>
+                <p>State tools have an object that owns the value and operations that read or change it:</p>
                 <div class="grid">
                     <div class="card">
                         <h4>State Node</h4>
                         <ul>
                             <li>Lives on the canvas.</li>
-                            <li>Holds the value (ON/OFF, count, timestamps).</li>
-                            <li>Runs for every message that enters the node.</li>
+                            <li>Holds the value (ON/OFF, count, timestamps, or users).</li>
+                            <li>Gate, Counter, and Rate Limiter can run in the normal event path.</li>
+                            <li>User Memory is a shared hub referenced by other nodes.</li>
                         </ul>
                     </div>
                     <div class="card">
                         <h4>State Action</h4>
                         <ul>
                             <li>Placed downstream.</li>
-                            <li>Changes the stored value (set ON, add +1, reset, etc.).</li>
+                            <li>Reads or changes the stored value (set ON, add +1, remember, draw, reset, etc.).</li>
                             <li>Can live anywhere in the flow—just pick the matching node name.</li>
                         </ul>
                     </div>
                 </div>
                 <div class="panel info">
-                    <strong>Remember:</strong> Add the State node first, give it a unique name, then wire the matching action node. Without the base node, Set/Increment/Reset actions have nothing to talk to.
+                    <strong>Remember:</strong> Add the State node first, give it a unique name, then select it from each matching operation. Without the base node, state actions have nothing to update.
                 </div>
             </section>
 
@@ -316,8 +318,42 @@ Any Message ─▶ Counter (name: hype5) ─▶ Condition (value % 5 === 0?) ─
                 </div>
             </section>
 
+            <section id="user-memory">
+                <h2>05 · User Memory</h2>
+                <p>User Memory owns one named list of unique people. Remember users when they participate, check that list on later messages, remove a person, choose a random winner, or clear only that list.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Best for</h4>
+                        <ul>
+                            <li>Gift-based or badge-based eligibility.</li>
+                            <li>Remembering viewers who liked, entered, or participated.</li>
+                            <li>Unique-entry prize draws.</li>
+                            <li>Separate lists for separate campaigns.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Operations</h4>
+                        <ul>
+                            <li><code>Remember User</code> and <code>Forget User</code>.</li>
+                            <li><code>User Is Remembered</code>.</li>
+                            <li><code>Pick Random User</code>.</li>
+                            <li><code>Clear All Users</code> or <code>Reset State Node</code>.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="diagram">
+Participation Trigger ──▶ Remember User ······▶ User Memory: Entrants
+Draw Command ───────────▶ Pick Random User ···▶ User Memory: Entrants
+Reset Command ──────────▶ Clear All Users ·····▶ User Memory: Entrants
+                </div>
+                <p>Solid teal wires carry events. Dashed purple links show which shared memory an operation uses. Each User Memory has its own count, persistence mode, and reset policy, so clearing one list does not affect another.</p>
+                <div class="panel success">
+                    See the dedicated <a href="user-memory-guide.html">User Memory guide</a> for reviewed screenshots, a downloadable draw flow, TikTok eligibility, participation examples, and reset details.
+                </div>
+            </section>
+
             <section id="recipes">
-                <h2>05 · Problem Kits</h2>
+                <h2>06 · Problem Kits</h2>
                 <p>Pick a scenario and follow the steps.</p>
                 <div class="grid">
                     <div class="card">
@@ -362,7 +398,7 @@ Redeem Reward ─▶ Counter ticketsSold
             </section>
 
             <section id="troubleshooting">
-                <h2>06 · Troubleshooting & FAQ</h2>
+                <h2>07 · Troubleshooting & FAQ</h2>
                 <table>
                     <thead>
                         <tr>
@@ -388,6 +424,11 @@ Redeem Reward ─▶ Counter ticketsSold
                             <td>Relax the limit and drop a Reset State Node action before retesting.</td>
                         </tr>
                         <tr>
+                            <td>A User Memory operation has no dashed link.</td>
+                            <td>No target memory is selected.</td>
+                            <td>Choose the named memory in the operation's properties or drag its purple side connector onto the memory.</td>
+                        </tr>
+                        <tr>
                             <td>Guide buttons don’t open.</td>
                             <td>Running inside the extension without web_accessible resources updated.</td>
                             <td>Ensure <code>actions/state-nodes-guide.html</code> ships via manifest and reload the extension.</td>
@@ -404,7 +445,7 @@ Redeem Reward ─▶ Counter ticketsSold
             </section>
 
             <section>
-                <h2>07 · Next Steps</h2>
+                <h2>08 · Next Steps</h2>
                 <p>Combine state nodes with the rest of the Event Flow toolkit:</p>
                 <ul>
                     <li>Use logic gates (AND/OR/NOT) before a switch to decide who can toggle it.</li>
