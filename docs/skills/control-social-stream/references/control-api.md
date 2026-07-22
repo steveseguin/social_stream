@@ -58,6 +58,8 @@ Controllable settings are returned by `getCapabilities`. The initial set is `bet
 
 Connection-mode changes are validated against the source platform's advertised `connectionModes`; a globally known mode is not necessarily valid for every platform.
 
+As of API 1.1.4, `updateSource` rejects URL, username, video ID, connection mode, visibility, mute state, reply-only state, account role, and custom-session changes while a source has live connection handles. Stop the source first, or use `setSourceMute` and `setSourceVisibility` for those two supported live changes. `autoActivate` can still be changed while a source is active because it applies to future app starts.
+
 App actions `reloadApp` and `shutdownApp` require `{"confirm":true}`.
 
 ## Examples

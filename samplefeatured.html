@@ -399,9 +399,11 @@ Development Notes:
                 };
 
                 if (allin === 2) {
-                    message.in = 2;
-                } else if (allin === 1) {
                     message.in = 1;
+                } else if (allin === 1) {
+                    message.in = 4;
+                } else {
+                    message.in = 2;
                 }
 
                 socket.send(JSON.stringify(message));

@@ -604,7 +604,7 @@ The featured.html page is designed to display featured content, typically used f
 The featured.html page can be configured to connect to the WebSocket server in three different ways:
 
 1. Default (server): Connects to `wss://io.socialstream.ninja`, joins the room, and sets output to channel 3 and input to channel 2.
-2. Server2: Sets output to channel 3 and input to default channel.
+2. Server2: Sets output to channel 3 and input to channel 4.
 3. Server3: Sets output to channel 3 and input to channel 1.
 
 In all cases, channel 3 is reserved for output from the featured.html page.

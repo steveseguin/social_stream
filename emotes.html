@@ -590,8 +590,8 @@
 
 	// Optional: Extension server relay (server2/server3)
 	(function setupExtensionSocket(){
-		if (!(urlParams.has('server2') || urlParams.has('server3'))) return;
-		let serverURL = urlParams.has('server2') ? (urlParams.get('server2') || 'wss://io.socialstream.ninja/extension') : (urlParams.get('server3') || 'wss://io.socialstream.ninja/extension');
+		if (!urlParams.has('server3')) return;
+		let serverURL = urlParams.get('server3') || 'wss://io.socialstream.ninja/extension';
 		let socket = null; let attempts = 1;
 		function connect(){
 			if (socket){ socket.onclose=null; try{socket.close();}catch(e){} }

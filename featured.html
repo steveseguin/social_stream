@@ -2409,8 +2409,8 @@
 				socketserver.onopen = function () {
 					conCon = 1;
 					if (allin == 1) {
-						socketserver.send(JSON.stringify({ join: roomID, out: 3 }));
-						console.log("output channel: 3, input channel: default");
+						socketserver.send(JSON.stringify({ join: roomID, out: 3, in: 4 }));
+						console.log("output channel: 3, input channel: 4");
 					} else if (allin == 2) {
 						socketserver.send(JSON.stringify({ join: roomID, out: 3, in: 1 }));
 						console.log("output channel: 3, input channel: 1");

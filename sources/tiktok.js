@@ -1487,7 +1487,7 @@
 		if (ele.dataset.skip) {
 			return;
 		}
-		if (checkNextSiblingsForAttribute(ele, "data-tiktok-initial")) {
+		if (checkNextSiblingsForAttribute(ele, "data-skip")) {
 			ele.dataset.skip = ++msgCount;
 			return;
 		}
