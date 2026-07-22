@@ -186,4 +186,17 @@ assert.strictEqual(
 assert.strictEqual(runLegacyRedirect("/resources/social_stream_fallback/main/../featured.html", "?session=test"), "");
 assert.strictEqual(runLegacyRedirect("/unrelated/missing.html", "?session=test"), "");
 
+assert.ok(
+  read("featured.html").includes("JSON.stringify({ join: roomID, out: 3, in: 4 })"),
+  "featured server2 must receive the extension feed on channel 4"
+);
+assert.ok(
+  /allin === 1\)\s*\{\s*message\.in = 4;/.test(read("samplefeatured.html")),
+  "samplefeatured server2 must receive the extension feed on channel 4"
+);
+assert.ok(
+  read("emotes.html").includes("if (!urlParams.has('server3')) return;"),
+  "emotes server2 must not start a second extension socket"
+);
+
 console.log("Overlay link regression tests passed");

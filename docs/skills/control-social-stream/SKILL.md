@@ -35,7 +35,7 @@ Prefer the supplied MCP server when the agent supports MCP. Otherwise use `scrip
 ## Safety
 
 - Treat `removeSource`, bulk stop/restart, `reloadApp`, and `shutdownApp` as destructive or disruptive.
-- Stop an active source before changing its URL, username, video ID, or connection mode.
+- Stop an active source before using `updateSource` to change its URL, username, video ID, connection mode, visibility, mute state, reply-only state, account role, or custom session. Use `setSourceMute` and `setSourceVisibility` for live mute and visibility changes.
 - Never guess source IDs; list sources first.
 - Do not retry a mutation blindly after a timeout. Read status to determine whether it succeeded.
 - Do not request or expose sign-in cookies, API keys, filesystem paths, or arbitrary renderer execution.
