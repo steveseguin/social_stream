@@ -490,6 +490,8 @@ Event Payload ─▶ State Check (isAlertMuted)
                     <li><strong>Do I have to use AND for every pair of filters?</strong> No. Many nodes include multiple checks (for example, the basic Message Filter supports keyword + role). Use AND only for advanced combinations or when merging signals from different nodes.</li>
                     <li><strong>How do true/false values reach the NOT node?</strong> Any node with a green output emits <code>true</code> by default. When a condition fails, it emits <code>false</code>. Connect that wire into NOT to invert the result.</li>
                     <li><strong>Can a node emit a payload even if it returns false?</strong> Yes. The payload still travels through the false output; it is up to you to decide where that branch should go.</li>
+					<li><strong>How do I match TikTok Team members?</strong> Choose <em>TikTok Team Member</em> in the User Role node. It recognizes TikTok Fan Club/team levels and badges on the incoming message and does not depend on Main Chat Overlay settings.</li>
+					<li><strong>Can each Speak Text node use a different voice?</strong> Yes. Enter a provider-supported voice name or ID in <em>Voice Override</em>, or leave it blank to use the Flow Actions TTS default.</li>
                 </ul>
             </section>
 

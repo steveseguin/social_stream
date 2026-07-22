@@ -60,7 +60,13 @@ jobs:
         run: npm install --global "web-ext@${WEB_EXT_VERSION}"
 
       - name: Validate Firefox build
-        run: web-ext lint --source-dir "$WEB_EXT_SOURCE_DIR" --self-hosted
+        run: |
+          set -euo pipefail
+          lint_args=()
+          if [[ "$WEB_EXT_CHANNEL" == "unlisted" ]]; then
+            lint_args+=(--self-hosted)
+          fi
+          web-ext lint --source-dir "$WEB_EXT_SOURCE_DIR" "${lint_args[@]}"
 
       - name: Submit add-on to AMO
         id: submit

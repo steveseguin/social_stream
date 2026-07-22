@@ -130,6 +130,8 @@ User and source triggers:
 - `userRole`
 - `channelPointRedemption`
 
+`userRole` supports `tiktokTeamMember`, which matches positive TikTok team/fan levels or `fans_badge` / `grade_badge` data on an incoming TikTok message. This check is independent of dock-overlay URL settings.
+
 Timing and random triggers:
 
 - `randomChance`
@@ -213,6 +215,8 @@ TTS actions:
 - `ttsSkip`
 - `ttsClear`
 - `ttsVolume`
+
+`ttsSpeak.config.voice` is an optional per-utterance voice name or provider voice ID. Empty or missing values use the configured Flow Actions TTS voice. The override is preserved while premium-provider speech waits in the queue and does not mutate the configured default.
 
 MIDI actions:
 

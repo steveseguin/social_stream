@@ -1084,6 +1084,37 @@ class EventFlowSystem {
 	hasChatLikeFields(message) {
 		return !!(message && (message.chatname || message.chatmessage || message.hasDonation || message.contentimg));
 	}
+
+	isTikTokTeamMember(message) {
+		if (!message || String(message.type || '').toLowerCase() !== 'tiktok') return false;
+
+		const meta = message.meta && typeof message.meta === 'object' && !Array.isArray(message.meta)
+			? message.meta
+			: {};
+		const levelCandidates = [
+			meta.memberLevel,
+			meta.teamMemberLevel,
+			meta.fanLevel,
+			message.memberLevel,
+			message.teamMemberLevel,
+			message.fanLevel
+		];
+		if (levelCandidates.some(level => Number(level) > 0)) return true;
+
+		const badges = Array.isArray(message.chatbadges)
+			? message.chatbadges
+			: (message.chatbadges ? [message.chatbadges] : []);
+		return badges.some(badge => {
+			if (typeof badge === 'string') {
+				return /(?:fans?_badge|grade_badge)/i.test(badge);
+			}
+			try {
+				return /(?:fans?_badge|grade_badge)/i.test(JSON.stringify(badge));
+			} catch (e) {
+				return false;
+			}
+		});
+	}
     
     async processMessage(message) {
         
@@ -1579,6 +1610,9 @@ class EventFlowSystem {
                 return match;
                 
             case 'userRole':
+                if (config && config.role === 'tiktokTeamMember') {
+                    return this.isTikTokTeamMember(message);
+                }
                 match = message && config && message[config.role] === true; 
               ////console.log(`[EvaluateTrigger - userRole] Config Role: "${config.role}", Message Role Value: ${message[config.role]}, Match: ${match}`);
                 return match;
@@ -3538,6 +3572,7 @@ class EventFlowSystem {
                         overlayNinja: {
                             actionType: 'tts',
                             text: ttsText,
+                            voice: typeof config.voice === 'string' ? config.voice.trim() : '',
                             force: config.force || false
                         }
                     }, 'actions');

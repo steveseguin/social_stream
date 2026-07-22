@@ -1955,7 +1955,10 @@ class EventFlowEditor {
                 case 'fromSource': return `Source: ${node.config.source === '*' ? 'Any' : (node.config.source || 'Any')}`;
                 case 'fromChannelName': return `Channel: ${node.config.channelName || 'Any'}`;
                 case 'fromUser': return `User: ${node.config.username || 'Any'}`;
-                case 'userRole': return `Role: ${node.config.role || 'Any'}`;
+                case 'userRole': {
+                    const roleLabels = { tiktokTeamMember: 'TikTok Team Member' };
+                    return `Role: ${roleLabels[node.config.role] || node.config.role || 'Any'}`;
+                }
                 case 'hasDonation': return 'Has donation';
                 case 'channelPointRedemption': {
                     const rewardName = node.config.rewardName || '';
@@ -3177,9 +3180,19 @@ class EventFlowEditor {
 				html += `<div class="property-group"><label class="property-label">Username</label><input type="text" class="property-input" id="prop-username" value="${node.config.username || ''}"></div>`;
 				break;
 			case 'userRole':
+				const userRoles = [
+					{ value: 'mod', label: 'Moderator' },
+					{ value: 'vip', label: 'VIP' },
+					{ value: 'admin', label: 'Admin' },
+					{ value: 'subscriber', label: 'Subscriber' },
+					{ value: 'member', label: 'Member' },
+					{ value: 'follower', label: 'Follower' },
+					{ value: 'tiktokTeamMember', label: 'TikTok Team Member' }
+				];
 				html += `<div class="property-group"><label class="property-label">User Role</label><select class="property-input" id="prop-role">
-						   ${['mod', 'vip', 'admin', 'subscriber', 'member', 'follower'].map(r => `<option value="${r}" ${node.config.role === r ? 'selected' : ''}>${r.charAt(0).toUpperCase() + r.slice(1)}</option>`).join('')}
-						 </select></div>`;
+						   ${userRoles.map(role => `<option value="${role.value}" ${node.config.role === role.value ? 'selected' : ''}>${role.label}</option>`).join('')}
+						 </select></div>
+						 <div class="property-help">TikTok Team Member matches Fan Club/team levels and badges supplied with a TikTok message.</div>`;
 				break;
 			case 'hasDonation': // Trigger type
 				html += `<p class="property-help">Fires if the message includes donation information.</p>`;
@@ -5215,6 +5228,12 @@ class EventFlowEditor {
 						<label class="property-label">Text to Speak</label>
 						<textarea class="property-input" id="prop-text" rows="3" placeholder="Enter text to speak...">${node.config.text || ''}</textarea>
 						<div class="property-help">The text that will be spoken aloud</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Voice Override (optional)</label>
+						<input type="text" class="property-input" id="prop-voice"
+							value="${this.escapeHtml(node.config.voice || '')}" placeholder="Use Flow Actions default voice">
+						<div class="property-help">Enter a voice name or ID supported by the active Flow Actions TTS provider. Leave blank to use its configured default.</div>
 					</div>
 					<div class="property-group">
 						<label class="property-label">

@@ -2495,7 +2495,7 @@
             const iframe = document.createElement("iframe");
             const filename = "tipjar";
             iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" +
-                (password || "false") + "&solo&view=" + roomID + "&novideo&noaudio&label=" +
+                encodeURIComponent(password || "false") + "&solo&view=" + roomID + "&novideo&noaudio&label=" +
                 filename + "&cleanoutput&room=" + roomID;
             iframe.style.width = "0px";
             iframe.style.height = "0px";

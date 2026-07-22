@@ -1760,7 +1760,7 @@
                         if (payload.allow === false || payload.allow === 'false' || payload.allow === 'off' || payload.allow === 0 || payload.allow === '0') {
                             allowForce = false;
                         }
-                        TTS.speak(payload.text, allowForce);
+                        TTS.speak(payload.text, allowForce, { voice: payload.voice });
                         console.log("[TTS] Speaking:", payload.text, "(force:", allowForce + ")");
                     } else if (!payload.text) {
                         console.warn("[TTS] No text provided for TTS action");
