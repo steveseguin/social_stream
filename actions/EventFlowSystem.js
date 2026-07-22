@@ -4,6 +4,7 @@ class EventFlowSystem {
         this.db = null;
         this.dbName = options.dbName || 'eventFlowDB';
         this.storeName = options.storeName || 'flowSettings';
+        this.userMemoryStoreName = options.userMemoryStoreName || 'userMemoryState';
         this.pointsSystem = options.pointsSystem || null;
         // Prefer helpers from background.js when available so both surfaces share behavior
         this.sendMessageToTabs = options.sendMessageToTabs || window.sendMessageToTabs || null;
@@ -39,9 +40,19 @@ class EventFlowSystem {
 		// State node management for flow control
 		this.nodeStates = new Map(); // Persistent state storage for state nodes
 		this.stateTimers = new Map(); // Timeout management for auto-resets
-		this.messageQueues = new Map(); // Queue storage for queue nodes
-		this.semaphoreStates = new Map(); // Track concurrent operations for semaphore nodes
+        this.messageQueues = new Map(); // Queue storage for queue nodes
+        this.semaphoreStates = new Map(); // Track concurrent operations for semaphore nodes
         this.throttleStates = new Map(); // Track rate limiting for throttle nodes
+
+        // Named User Memory state. Each USER_MEMORY node owns an isolated set of users.
+        this.userMemoryStates = new Map();
+        this.userMemoryResetTimers = new Map();
+        this.userMemorySaveTimers = new Map();
+        this.userMemoryBroadcastTimers = new Map();
+        this.userMemoryListeners = new Set();
+        this.userMemoryInstanceId = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        this.userMemoryChannel = null;
+        this.setupUserMemorySync();
         
         // Reflection control (per Event Flow) for "allow-first" windows
         this.reflectionSeen = new Map();
@@ -413,11 +424,547 @@ class EventFlowSystem {
         }
     }
     
+    setupUserMemorySync() {
+        if (typeof BroadcastChannel === 'undefined') return;
+
+        try {
+            this.userMemoryChannel = new BroadcastChannel(`social-stream-event-flow-state:${this.dbName}`);
+            this.userMemoryChannel.onmessage = event => {
+                const data = event && event.data;
+                if (!data || data.sourceInstanceId === this.userMemoryInstanceId) return;
+
+                if (data.kind === 'request-user-memory-state') {
+                    this.userMemoryStates.forEach(state => {
+                        this.userMemoryChannel.postMessage({
+                            kind: 'user-memory-state',
+                            sourceInstanceId: this.userMemoryInstanceId,
+                            targetInstanceId: data.sourceInstanceId,
+                            snapshot: this.serializeUserMemoryState(state)
+                        });
+                    });
+                    return;
+                }
+
+                if (data.kind !== 'user-memory-state') return;
+                if (data.targetInstanceId && data.targetInstanceId !== this.userMemoryInstanceId) return;
+                this.applyUserMemorySnapshot(data.snapshot);
+            };
+
+            setTimeout(() => this.requestUserMemorySnapshots(), 0);
+        } catch (error) {
+            this.userMemoryChannel = null;
+            console.warn('[UserMemory] State synchronization is unavailable:', error && error.message ? error.message : error);
+        }
+    }
+
+    requestUserMemorySnapshots() {
+        if (!this.userMemoryChannel) return;
+        try {
+            this.userMemoryChannel.postMessage({
+                kind: 'request-user-memory-state',
+                sourceInstanceId: this.userMemoryInstanceId
+            });
+        } catch (error) {
+            console.warn('[UserMemory] Unable to request state snapshots:', error && error.message ? error.message : error);
+        }
+    }
+
+    subscribeUserMemory(listener) {
+        if (typeof listener !== 'function') return () => {};
+        this.userMemoryListeners.add(listener);
+        return () => this.userMemoryListeners.delete(listener);
+    }
+
+    notifyUserMemoryListeners(state, reason) {
+        const snapshot = this.serializeUserMemoryState(state);
+        this.userMemoryListeners.forEach(listener => {
+            try {
+                listener(snapshot, reason || 'update');
+            } catch (error) {
+                console.warn('[UserMemory] State listener failed:', error && error.message ? error.message : error);
+            }
+        });
+    }
+
+    getUserMemoryStateKey(flowOrId, nodeId) {
+        const flowId = typeof flowOrId === 'object' && flowOrId
+            ? flowOrId.id
+            : flowOrId;
+        return `${flowId || 'draft'}::${nodeId}`;
+    }
+
+    resolveUserMemoryTarget(targetNodeId, flow = null) {
+        if (!targetNodeId) return null;
+
+        if (flow && Array.isArray(flow.nodes)) {
+            const node = flow.nodes.find(candidate => candidate.id === targetNodeId && candidate.type === 'state' && candidate.stateType === 'USER_MEMORY');
+            if (node) {
+                return { node, flow, flowId: flow.id || 'draft' };
+            }
+        }
+
+        for (const candidateFlow of this.flows || []) {
+            if (!candidateFlow || !Array.isArray(candidateFlow.nodes)) continue;
+            const node = candidateFlow.nodes.find(candidate => candidate.id === targetNodeId && candidate.type === 'state' && candidate.stateType === 'USER_MEMORY');
+            if (node) {
+                return { node, flow: candidateFlow, flowId: candidateFlow.id || 'draft' };
+            }
+        }
+
+        return null;
+    }
+
+    createUserMemoryState(target) {
+        const config = target.node.config || {};
+        return {
+            id: this.getUserMemoryStateKey(target.flowId, target.node.id),
+            flowId: target.flowId,
+            nodeId: target.node.id,
+            name: config.name || 'User Memory',
+            persistence: config.persistence === 'persistent' ? 'persistent' : 'session',
+            resetAfterMs: Math.max(0, Number(config.resetAfterMs) || 0),
+            entries: new Map(),
+            lastActivity: 0,
+            lastResetAt: 0,
+            updatedAt: 0,
+            loaded: config.persistence !== 'persistent',
+            loadPromise: null
+        };
+    }
+
+    serializeUserMemoryState(state) {
+        if (!state) return null;
+        return {
+            id: state.id,
+            flowId: state.flowId,
+            nodeId: state.nodeId,
+            name: state.name || 'User Memory',
+            persistence: state.persistence === 'persistent' ? 'persistent' : 'session',
+            resetAfterMs: Math.max(0, Number(state.resetAfterMs) || 0),
+            entries: Array.from(state.entries instanceof Map ? state.entries.values() : []),
+            count: state.entries instanceof Map ? state.entries.size : 0,
+            lastActivity: Number(state.lastActivity) || 0,
+            lastResetAt: Number(state.lastResetAt) || 0,
+            updatedAt: Number(state.updatedAt) || 0
+        };
+    }
+
+    applyUserMemorySnapshot(snapshot) {
+        if (!snapshot || !snapshot.id || !snapshot.nodeId) return null;
+
+        let state = this.userMemoryStates.get(snapshot.id);
+        if (state && Number(state.updatedAt) > Number(snapshot.updatedAt || 0)) {
+            return state;
+        }
+
+        if (!state) {
+            state = {
+                id: snapshot.id,
+                flowId: snapshot.flowId || 'draft',
+                nodeId: snapshot.nodeId,
+                entries: new Map(),
+                loaded: true,
+                loadPromise: null
+            };
+            this.userMemoryStates.set(snapshot.id, state);
+        }
+
+        const entries = new Map();
+        if (Array.isArray(snapshot.entries)) {
+            snapshot.entries.forEach(entry => {
+                if (!entry || !entry.key) return;
+                entries.set(String(entry.key), { ...entry, key: String(entry.key) });
+            });
+        }
+
+        state.flowId = snapshot.flowId || state.flowId || 'draft';
+        state.nodeId = snapshot.nodeId;
+        state.name = snapshot.name || state.name || 'User Memory';
+        state.persistence = snapshot.persistence === 'persistent' ? 'persistent' : 'session';
+        state.resetAfterMs = Math.max(0, Number(snapshot.resetAfterMs) || 0);
+        state.entries = entries;
+        state.lastActivity = Number(snapshot.lastActivity) || 0;
+        state.lastResetAt = Number(snapshot.lastResetAt) || 0;
+        state.updatedAt = Number(snapshot.updatedAt) || 0;
+        state.loaded = true;
+
+        this.scheduleUserMemoryReset(state);
+        this.notifyUserMemoryListeners(state, 'sync');
+        return state;
+    }
+
+    async loadPersistentUserMemoryState(state) {
+        try {
+            const db = await this.ensureDB();
+            if (!db || !db.objectStoreNames || !db.objectStoreNames.contains(this.userMemoryStoreName)) return null;
+
+            return await new Promise(resolve => {
+                const transaction = db.transaction(this.userMemoryStoreName, 'readonly');
+                const request = transaction.objectStore(this.userMemoryStoreName).get(state.id);
+                request.onsuccess = () => resolve(request.result || null);
+                request.onerror = () => resolve(null);
+            });
+        } catch (error) {
+            console.warn('[UserMemory] Unable to load saved state:', error && error.message ? error.message : error);
+            return null;
+        }
+    }
+
+    async savePersistentUserMemoryState(state) {
+        if (!state || state.persistence !== 'persistent') return;
+
+        try {
+            const db = await this.ensureDB();
+            if (!db || !db.objectStoreNames || !db.objectStoreNames.contains(this.userMemoryStoreName)) return;
+            const record = this.serializeUserMemoryState(state);
+
+            await new Promise(resolve => {
+                const transaction = db.transaction(this.userMemoryStoreName, 'readwrite');
+                transaction.objectStore(this.userMemoryStoreName).put(record);
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = () => resolve();
+                transaction.onabort = () => resolve();
+            });
+        } catch (error) {
+            console.warn('[UserMemory] Unable to save state:', error && error.message ? error.message : error);
+        }
+    }
+
+    async deletePersistentUserMemoriesForFlow(flowId) {
+        if (!flowId) return;
+        try {
+            const db = await this.ensureDB();
+            if (!db || !db.objectStoreNames || !db.objectStoreNames.contains(this.userMemoryStoreName)) return;
+            await new Promise(resolve => {
+                const transaction = db.transaction(this.userMemoryStoreName, 'readwrite');
+                const store = transaction.objectStore(this.userMemoryStoreName);
+                const request = store.openCursor();
+                request.onsuccess = event => {
+                    const cursor = event.target.result;
+                    if (!cursor) return;
+                    if (cursor.value && String(cursor.value.flowId) === String(flowId)) {
+                        cursor.delete();
+                    }
+                    cursor.continue();
+                };
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = () => resolve();
+                transaction.onabort = () => resolve();
+            });
+        } catch (error) {
+            console.warn('[UserMemory] Unable to remove saved flow state:', error && error.message ? error.message : error);
+        }
+    }
+
+    queueUserMemorySave(state) {
+        if (!state || state.persistence !== 'persistent') return;
+        if (this.userMemorySaveTimers.has(state.id)) {
+            clearTimeout(this.userMemorySaveTimers.get(state.id));
+        }
+        const timer = setTimeout(() => {
+            this.userMemorySaveTimers.delete(state.id);
+            this.savePersistentUserMemoryState(state);
+        }, 150);
+        this.userMemorySaveTimers.set(state.id, timer);
+    }
+
+    queueUserMemoryBroadcast(state) {
+        if (!this.userMemoryChannel || !state) return;
+        if (this.userMemoryBroadcastTimers.has(state.id)) {
+            clearTimeout(this.userMemoryBroadcastTimers.get(state.id));
+        }
+        const timer = setTimeout(() => {
+            this.userMemoryBroadcastTimers.delete(state.id);
+            try {
+                this.userMemoryChannel.postMessage({
+                    kind: 'user-memory-state',
+                    sourceInstanceId: this.userMemoryInstanceId,
+                    snapshot: this.serializeUserMemoryState(state)
+                });
+            } catch (error) {
+                console.warn('[UserMemory] Unable to synchronize state:', error && error.message ? error.message : error);
+            }
+        }, 30);
+        this.userMemoryBroadcastTimers.set(state.id, timer);
+    }
+
+    commitUserMemoryState(state, reason) {
+        if (!state) return;
+        state.updatedAt = Date.now();
+        this.scheduleUserMemoryReset(state);
+        this.queueUserMemorySave(state);
+        this.queueUserMemoryBroadcast(state);
+        this.notifyUserMemoryListeners(state, reason || 'update');
+    }
+
+    scheduleUserMemoryReset(state) {
+        if (!state) return;
+        if (this.userMemoryResetTimers.has(state.id)) {
+            clearTimeout(this.userMemoryResetTimers.get(state.id));
+            this.userMemoryResetTimers.delete(state.id);
+        }
+
+        const resetAfterMs = Math.max(0, Number(state.resetAfterMs) || 0);
+        if (!resetAfterMs || !state.lastActivity) return;
+
+        const remaining = Math.max(0, resetAfterMs - (Date.now() - state.lastActivity));
+        const timer = setTimeout(() => {
+            this.userMemoryResetTimers.delete(state.id);
+            this.clearUserMemoryState(state, 'inactivity');
+        }, remaining);
+        this.userMemoryResetTimers.set(state.id, timer);
+    }
+
+    async ensureUserMemoryState(target) {
+        if (!target || !target.node) return null;
+        const key = this.getUserMemoryStateKey(target.flowId, target.node.id);
+        let state = this.userMemoryStates.get(key);
+        if (!state) {
+            state = this.createUserMemoryState(target);
+            this.userMemoryStates.set(key, state);
+        }
+
+        const config = target.node.config || {};
+        state.name = config.name || state.name || 'User Memory';
+        state.persistence = config.persistence === 'persistent' ? 'persistent' : 'session';
+        state.resetAfterMs = Math.max(0, Number(config.resetAfterMs) || 0);
+
+        if (state.persistence === 'persistent' && !state.loaded) {
+            if (!state.loadPromise) {
+                state.loadPromise = this.loadPersistentUserMemoryState(state).then(record => {
+                    if (record && Number(record.updatedAt || 0) >= Number(state.updatedAt || 0)) {
+                        this.applyUserMemorySnapshot(record);
+                    }
+                    const current = this.userMemoryStates.get(key) || state;
+                    current.loaded = true;
+                    current.loadPromise = null;
+                    return current;
+                });
+            }
+            state = await state.loadPromise;
+        } else {
+            state.loaded = true;
+        }
+
+        if (state.resetAfterMs > 0 && state.lastActivity && Date.now() - state.lastActivity >= state.resetAfterMs) {
+            await this.clearUserMemoryState(state, 'inactivity');
+        } else {
+            this.scheduleUserMemoryReset(state);
+        }
+
+        return state;
+    }
+
+    normalizeUserMemoryEntry(message) {
+        if (!message || typeof message !== 'object') return null;
+        const meta = message.meta && typeof message.meta === 'object' && !Array.isArray(message.meta) ? message.meta : {};
+        const displayName = String(message.chatname || message.displayname || message.username || '').trim();
+        const rawUserId = message.userid ?? message.username ?? meta.uniqueId ?? meta.userId ?? meta.userid ?? displayName;
+        const normalizedUserId = String(rawUserId || '').trim().replace(/^@/, '').toLowerCase();
+        if (!normalizedUserId) return null;
+
+        const source = String(message.type || message.platform || 'unknown').trim().toLowerCase() || 'unknown';
+        return {
+            key: `${source}:${normalizedUserId}`,
+            userid: String(rawUserId || '').trim(),
+            chatname: displayName || String(rawUserId || '').trim(),
+            type: source,
+            chatimg: String(message.chatimg || ''),
+            event: typeof message.event === 'string' ? message.event : '',
+            firstSeenAt: Date.now(),
+            lastSeenAt: Date.now(),
+            participationCount: 1,
+            reason: ''
+        };
+    }
+
+    async rememberUserInMemory(targetNodeId, message, flow = null, reason = '') {
+        const target = this.resolveUserMemoryTarget(targetNodeId, flow);
+        if (!target) return { success: false, error: 'User Memory target not found' };
+        const entry = this.normalizeUserMemoryEntry(message);
+        if (!entry) return { success: false, error: 'The event does not include a user identity' };
+
+        const state = await this.ensureUserMemoryState(target);
+        const existing = state.entries.get(entry.key);
+        const now = Date.now();
+        const cleanReason = String(reason || '').trim().slice(0, 500);
+
+        if (existing) {
+            state.entries.set(entry.key, {
+                ...existing,
+                chatname: entry.chatname || existing.chatname,
+                userid: entry.userid || existing.userid,
+                chatimg: entry.chatimg || existing.chatimg,
+                event: entry.event || existing.event,
+                lastSeenAt: now,
+                participationCount: (Number(existing.participationCount) || 1) + 1,
+                reason: cleanReason || existing.reason || ''
+            });
+        } else {
+            state.entries.set(entry.key, {
+                ...entry,
+                firstSeenAt: now,
+                lastSeenAt: now,
+                reason: cleanReason
+            });
+        }
+
+        state.lastActivity = now;
+        this.commitUserMemoryState(state, existing ? 'remember-again' : 'remember');
+        const storedEntry = state.entries.get(entry.key);
+        return {
+            success: true,
+            added: !existing,
+            entry: { ...storedEntry },
+            count: state.entries.size,
+            name: state.name
+        };
+    }
+
+    async forgetUserFromMemory(targetNodeId, message, flow = null) {
+        const target = this.resolveUserMemoryTarget(targetNodeId, flow);
+        if (!target) return { success: false, error: 'User Memory target not found' };
+        const entry = this.normalizeUserMemoryEntry(message);
+        if (!entry) return { success: false, error: 'The event does not include a user identity' };
+
+        const state = await this.ensureUserMemoryState(target);
+        const removed = state.entries.delete(entry.key);
+        if (removed) {
+            state.lastActivity = Date.now();
+            this.commitUserMemoryState(state, 'forget');
+        }
+        return { success: true, removed, count: state.entries.size, name: state.name };
+    }
+
+    async clearUserMemoryState(state, reason = 'clear') {
+        if (!state) return { success: false, error: 'User Memory state not found' };
+        const clearedCount = state.entries instanceof Map ? state.entries.size : 0;
+        if (!(state.entries instanceof Map)) state.entries = new Map();
+        state.entries.clear();
+        state.lastActivity = 0;
+        state.lastResetAt = Date.now();
+        this.commitUserMemoryState(state, reason);
+        return { success: true, clearedCount, count: 0, name: state.name };
+    }
+
+    async clearUserMemory(targetNodeId, flow = null, reason = 'clear') {
+        const target = this.resolveUserMemoryTarget(targetNodeId, flow);
+        if (!target) return { success: false, error: 'User Memory target not found' };
+        const state = await this.ensureUserMemoryState(target);
+        return this.clearUserMemoryState(state, reason);
+    }
+
+    async isUserRemembered(targetNodeId, message, flow = null) {
+        const target = this.resolveUserMemoryTarget(targetNodeId, flow);
+        if (!target) return false;
+        const entry = this.normalizeUserMemoryEntry(message);
+        if (!entry) return false;
+        const state = await this.ensureUserMemoryState(target);
+        return state.entries.has(entry.key);
+    }
+
+    getSecureRandomIndex(length) {
+        const size = Math.max(0, Math.floor(Number(length) || 0));
+        if (!size) return -1;
+
+        try {
+            const cryptoApi = typeof crypto !== 'undefined' && crypto && typeof crypto.getRandomValues === 'function'
+                ? crypto
+                : (typeof window !== 'undefined' && window.crypto && typeof window.crypto.getRandomValues === 'function' ? window.crypto : null);
+            if (cryptoApi) {
+                const range = 0x100000000;
+                const limit = range - (range % size);
+                const values = new Uint32Array(1);
+                do {
+                    cryptoApi.getRandomValues(values);
+                } while (values[0] >= limit);
+                return values[0] % size;
+            }
+        } catch (error) {}
+
+        return Math.floor(Math.random() * size);
+    }
+
+    async pickRandomUserFromMemory(targetNodeId, flow = null, removeSelected = false) {
+        const target = this.resolveUserMemoryTarget(targetNodeId, flow);
+        if (!target) return { success: false, error: 'User Memory target not found' };
+        const state = await this.ensureUserMemoryState(target);
+        const entries = Array.from(state.entries.values());
+        if (!entries.length) {
+            return { success: false, empty: true, error: 'User Memory is empty', count: 0, name: state.name };
+        }
+
+        const selected = entries[this.getSecureRandomIndex(entries.length)];
+        if (removeSelected && selected) {
+            state.entries.delete(selected.key);
+            state.lastActivity = Date.now();
+            this.commitUserMemoryState(state, 'pick-and-remove');
+        }
+
+        return {
+            success: true,
+            entry: { ...selected },
+            removed: !!removeSelected,
+            count: state.entries.size,
+            name: state.name
+        };
+    }
+
+    getUserMemorySummary(targetNodeId, flow = null) {
+        const target = this.resolveUserMemoryTarget(targetNodeId, flow);
+        if (!target) return null;
+        const key = this.getUserMemoryStateKey(target.flowId, target.node.id);
+        const state = this.userMemoryStates.get(key);
+        if (!state) {
+            return {
+                id: key,
+                flowId: target.flowId,
+                nodeId: target.node.id,
+                name: target.node.config?.name || 'User Memory',
+                count: 0,
+                loaded: target.node.config?.persistence !== 'persistent'
+            };
+        }
+        return { ...this.serializeUserMemoryState(state), loaded: state.loaded !== false };
+    }
+
+    async resetUserMemoriesForEvent(message) {
+        const eventType = String(message && message.event || '').toLowerCase();
+        const isStart = eventType === 'stream_started' || eventType === 'stream_online';
+        const isStop = eventType === 'stream_stopped' || eventType === 'stream_offline';
+        if (!isStart && !isStop) return;
+
+        const resets = [];
+        for (const flow of this.flows || []) {
+            if (!flow || !Array.isArray(flow.nodes)) continue;
+            for (const node of flow.nodes) {
+                if (!node || node.type !== 'state' || node.stateType !== 'USER_MEMORY') continue;
+                const config = node.config || {};
+                if ((isStart && config.resetOnStreamStart) || (isStop && config.resetOnStreamStop)) {
+                    resets.push(this.clearUserMemory(node.id, flow, isStart ? 'stream-start' : 'stream-stop'));
+                }
+            }
+        }
+        await Promise.all(resets);
+    }
+
     // Evaluate state nodes (Gate, Queue, Semaphore, etc.)
-    async evaluateStateNode(node, message, inputActive) {
+    async evaluateStateNode(node, message, inputActive, flow = null) {
         const nodeId = node.id;
         const stateType = node.stateType;
         const config = node.config || {};
+
+        // USER_MEMORY is a shared state resource. It is queried through the
+        // User Is Remembered trigger and changed by User Memory actions.
+        if (stateType === 'USER_MEMORY') {
+            const target = {
+                node,
+                flow,
+                flowId: flow && flow.id ? flow.id : 'draft'
+            };
+            await this.ensureUserMemoryState(target);
+            return { active: false, passMessage: false, modifiedMessage: null };
+        }
         
         // Initialize state if it doesn't exist
         if (!this.nodeStates.has(nodeId)) {
@@ -654,6 +1201,24 @@ class EventFlowSystem {
                 this.throttleStates.delete(nodeId);
             }
         });
+
+        const memoryPrefix = `${flowId || 'draft'}::`;
+        this.userMemoryStates.forEach((state, stateId) => {
+            if (!stateId.startsWith(memoryPrefix)) return;
+            if (this.userMemoryResetTimers.has(stateId)) {
+                clearTimeout(this.userMemoryResetTimers.get(stateId));
+                this.userMemoryResetTimers.delete(stateId);
+            }
+            if (this.userMemorySaveTimers.has(stateId)) {
+                clearTimeout(this.userMemorySaveTimers.get(stateId));
+                this.userMemorySaveTimers.delete(stateId);
+            }
+            if (this.userMemoryBroadcastTimers.has(stateId)) {
+                clearTimeout(this.userMemoryBroadcastTimers.get(stateId));
+                this.userMemoryBroadcastTimers.delete(stateId);
+            }
+            this.userMemoryStates.delete(stateId);
+        });
     }
     
     // Simplified implementations for other state nodes (to be expanded)
@@ -793,12 +1358,15 @@ class EventFlowSystem {
     
     async initDatabase() {
         return new Promise((resolve, reject) => {
-            const request = indexedDB.open(this.dbName, 1);
+            const request = indexedDB.open(this.dbName, 2);
             
             request.onupgradeneeded = event => {
                 const db = event.target.result;
                 if (!db.objectStoreNames.contains(this.storeName)) {
                     db.createObjectStore(this.storeName, { keyPath: 'id' });
+                }
+                if (!db.objectStoreNames.contains(this.userMemoryStoreName)) {
+                    db.createObjectStore(this.userMemoryStoreName, { keyPath: 'id' });
                 }
             };
             
@@ -1028,6 +1596,8 @@ class EventFlowSystem {
             
             request.onsuccess = () => {
                 this.flows = this.flows.filter(flow => flow.id !== flowId);
+                this.cleanupStateNodes(flowId);
+                this.deletePersistentUserMemoriesForFlow(flowId);
                 // Re-order remaining flows
                 this.flows.sort((a, b) => (a.order || 0) - (b.order || 0));
                 this.flows.forEach((flow, index) => {
@@ -1122,6 +1692,9 @@ class EventFlowSystem {
             ////console.log("[RELAY DEBUG - ProcessMessage] Message is null/undefined at start.");
             return message;
         }
+
+        // Automatic User Memory resets happen before flows evaluate the stream event.
+        await this.resetUserMemoriesForEvent(message);
         
 		// Ignore meta-only payloads (e.g., viewer/follower count updates) so they never trigger flows
 		if (this.isMetaOnlyPayload(message)) {
@@ -1183,7 +1756,7 @@ class EventFlowSystem {
         for (const node of flow.nodes) {
             if (node.type === 'trigger') {
               //console.log(`[EvaluateFlow "${flow.name}"] Evaluating Trigger Node ID: ${node.id}, Type: ${node.triggerType}`);
-                nodeActivationStates[node.id] = await this.evaluateTrigger(node, message);
+                nodeActivationStates[node.id] = await this.evaluateTrigger(node, message, flow);
               //console.log(`[EvaluateFlow "${flow.name}"] Trigger Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
             }
         }
@@ -1224,7 +1797,7 @@ class EventFlowSystem {
                     if (allInputsEvaluated) {
                         const inputActive = inputNodeIds.some(inputId => nodeActivationStates[inputId] === true);
                       //console.log(`[EvaluateFlow "${flow.name}"] Evaluating State Node ID: ${node.id} (${node.stateType}) with input active: ${inputActive}`);
-                        const result = await this.evaluateStateNode(node, message, inputActive);
+                        const result = await this.evaluateStateNode(node, message, inputActive, flow);
                         
                         // State nodes return an object with activation and pass-through info
                         nodeActivationStates[node.id] = result.active;
@@ -1271,7 +1844,7 @@ class EventFlowSystem {
             
             // Execute this action
             executedActions.add(actionId);
-            const actionResult = await this.executeAction(node, overallResult.message);
+            const actionResult = await this.executeAction(node, overallResult.message, flow);
             
             if (actionResult) {
                 // Handle returnNow - mark message for immediate return
@@ -1312,7 +1885,7 @@ class EventFlowSystem {
                                 if (!asyncNode || asyncNode.type !== 'action') return;
 
                                 asyncExecutedActions.add(asyncActionId);
-                                const asyncResult = await this.executeAction(asyncNode, asyncMessage);
+                                const asyncResult = await this.executeAction(asyncNode, asyncMessage, flow);
 
                                 // Handle action results - mirror synchronous behavior
                                 if (asyncResult) {
@@ -1365,6 +1938,10 @@ class EventFlowSystem {
                     case 'setCounter':
                     case 'incrementCounter':
                     case 'checkCounter':
+                    case 'rememberUser':
+                    case 'forgetUser':
+                    case 'clearUserMemory':
+                    case 'pickRandomUser':
                         return 0; // control/state updates first
                     case 'delay':
                         return 100; // run after immediate controls
@@ -1486,7 +2063,7 @@ class EventFlowSystem {
         return rewardPatterns.some(pattern => pattern.test(text));
     }
     
-    async evaluateTrigger(triggerNode, message) {
+    async evaluateTrigger(triggerNode, message, flow = null) {
         const { triggerType, config } = triggerNode;
         // console.log(`[EvaluateTrigger] Node: ${triggerNode.id}, Type: ${triggerType}, Config: ${JSON.stringify(config)}, Message: ${message.chatmessage}`);
         let match = false;
@@ -1608,6 +2185,9 @@ class EventFlowSystem {
                 match = config && typeof config.username === 'string' && identifier === config.username.toLowerCase();
               ////console.log(`[EvaluateTrigger - fromUser] Config Username: "${config.username}", Message Identifier: "${identifier}", Match: ${match}`);
                 return match;
+
+            case 'userMemoryContains':
+                return this.isUserRemembered(config && config.targetNodeId, message, flow);
                 
             case 'userRole':
                 if (config && config.role === 'tiktokTeamMember') {
@@ -2353,7 +2933,7 @@ class EventFlowSystem {
             
             // Process action node
             if (node.type === 'action') {
-                const actionResult = await this.executeAction(node, currentMessage);
+                const actionResult = await this.executeAction(node, currentMessage, flow);
                 
                 if (actionResult) {
                     if (actionResult.blocked) {
@@ -2551,7 +3131,7 @@ class EventFlowSystem {
 		return text.trim();
 	}
     
-    async executeAction(actionNode, message) {
+    async executeAction(actionNode, message, flow = null) {
         const { actionType, config } = actionNode;
         //console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);
         let result = { modified: false, message, blocked: false };
@@ -3662,6 +4242,86 @@ class EventFlowSystem {
                     }
                 }
                 break;
+
+            case 'rememberUser': {
+                const reason = this.replaceTemplateVars(config.reason || '', message || {});
+                const memoryResult = await this.rememberUserInMemory(config.targetNodeId, message, flow, reason);
+                if (!memoryResult.success) {
+                    console.warn(`[UserMemory] Remember User skipped: ${memoryResult.error}`);
+                    break;
+                }
+                result.message = {
+                    ...(message || {}),
+                    userMemoryName: memoryResult.name,
+                    userMemoryCount: memoryResult.count,
+                    userMemoryAdded: memoryResult.added,
+                    userMemoryEntryCount: memoryResult.entry.participationCount
+                };
+                result.modified = true;
+                break;
+            }
+
+            case 'forgetUser': {
+                const memoryResult = await this.forgetUserFromMemory(config.targetNodeId, message, flow);
+                if (!memoryResult.success) {
+                    console.warn(`[UserMemory] Forget User skipped: ${memoryResult.error}`);
+                    break;
+                }
+                result.message = {
+                    ...(message || {}),
+                    userMemoryName: memoryResult.name,
+                    userMemoryCount: memoryResult.count,
+                    userMemoryRemoved: memoryResult.removed
+                };
+                result.modified = true;
+                break;
+            }
+
+            case 'clearUserMemory': {
+                const memoryResult = await this.clearUserMemory(config.targetNodeId, flow, 'action');
+                if (!memoryResult.success) {
+                    console.warn(`[UserMemory] Clear User Memory skipped: ${memoryResult.error}`);
+                    break;
+                }
+                result.message = {
+                    ...(message || {}),
+                    userMemoryName: memoryResult.name,
+                    userMemoryCount: 0,
+                    userMemoryCleared: true,
+                    userMemoryClearedCount: memoryResult.clearedCount
+                };
+                result.modified = true;
+                break;
+            }
+
+            case 'pickRandomUser': {
+                const memoryResult = await this.pickRandomUserFromMemory(config.targetNodeId, flow, config.removeSelected === true);
+                if (!memoryResult.success) {
+                    result.message = {
+                        ...(message || {}),
+                        userMemoryName: memoryResult.name || '',
+                        userMemoryCount: memoryResult.count || 0,
+                        userMemoryEmpty: memoryResult.empty === true
+                    };
+                    result.modified = true;
+                    break;
+                }
+                result.message = {
+                    ...(message || {}),
+                    userMemoryName: memoryResult.name,
+                    userMemoryCount: memoryResult.count,
+                    userMemoryPicked: true,
+                    selectedUser: memoryResult.entry.chatname || memoryResult.entry.userid || '',
+                    selectedUserId: memoryResult.entry.userid || '',
+                    selectedUserSource: memoryResult.entry.type || '',
+                    selectedUserAvatar: memoryResult.entry.chatimg || '',
+                    selectedUserParticipationCount: memoryResult.entry.participationCount || 1,
+                    selectedUserReason: memoryResult.entry.reason || '',
+                    selectedUserRemoved: memoryResult.removed
+                };
+                result.modified = true;
+                break;
+            }
                 
             case 'setGateState':
                 // Set the state of a gate node (ALLOW or BLOCK)
@@ -3678,16 +4338,24 @@ class EventFlowSystem {
                 // Reset any state node to its initial state
                 if (config.targetNodeId) {
                     // Find the node to get its type
-                    const allFlows = this.flows || [];
+                    const allFlows = flow ? [flow, ...(this.flows || []).filter(candidate => candidate !== flow)] : (this.flows || []);
                     let targetNode = null;
+                    let targetFlow = null;
                     
-                    for (const flow of allFlows) {
-                        targetNode = flow.nodes?.find(n => n.id === config.targetNodeId);
-                        if (targetNode) break;
+                    for (const candidateFlow of allFlows) {
+                        targetNode = candidateFlow.nodes?.find(n => n.id === config.targetNodeId);
+                        if (targetNode) {
+                            targetFlow = candidateFlow;
+                            break;
+                        }
                     }
                     
                     if (targetNode && targetNode.type === 'state') {
-                        this.initializeStateNode(config.targetNodeId, targetNode.stateType, targetNode.config || {});
+                        if (targetNode.stateType === 'USER_MEMORY') {
+                            await this.clearUserMemory(config.targetNodeId, targetFlow, 'reset-state-node');
+                        } else {
+                            this.initializeStateNode(config.targetNodeId, targetNode.stateType, targetNode.config || {});
+                        }
                         console.log(`[ResetStateNode] State node ${config.targetNodeId} reset`);
                     }
                 }

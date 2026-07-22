@@ -305,6 +305,7 @@ class EventFlowEditor {
                     { id: 'fromChannelName', name: '📺 From Channel Name' },
                     { id: 'fromUser', name: '👤 From User' },
                     { id: 'userRole', name: '👑 User Role' },
+                    { id: 'userMemoryContains', name: '🧠 User Is Remembered' },
                     { id: 'channelPointRedemption', name: '🎁 Channel Point Redemption' }
                 ]
             },
@@ -444,6 +445,17 @@ class EventFlowEditor {
                 ]
             },
             {
+                id: 'user-memory',
+                name: '🧠 User Memory',
+                expanded: true,
+                actions: [
+                    { id: 'rememberUser', name: '🧠 Remember User' },
+                    { id: 'forgetUser', name: '👋 Forget User' },
+                    { id: 'clearUserMemory', name: '🧹 Clear All Users' },
+                    { id: 'pickRandomUser', name: '🎟️ Pick Random User' }
+                ]
+            },
+            {
                 id: 'state',
                 name: '🔧 State Control',
                 expanded: false,
@@ -481,10 +493,33 @@ class EventFlowEditor {
         this.stateNodeTypes = [
             { id: 'GATE', name: '🚦 On/Off Switch', type: 'state', stateType: 'GATE' },
             { id: 'COUNTER', name: '🔢 Counter', type: 'state', stateType: 'COUNTER' },
-            { id: 'THROTTLE', name: '⏲️ Rate Limiter', type: 'state', stateType: 'THROTTLE' }
+            { id: 'THROTTLE', name: '⏲️ Rate Limiter', type: 'state', stateType: 'THROTTLE' },
+            { id: 'USER_MEMORY', name: '🧠 User Memory', type: 'state', stateType: 'USER_MEMORY' }
         ];
 
+        this.userMemoryUnsubscribe = this.eventFlowSystem && typeof this.eventFlowSystem.subscribeUserMemory === 'function'
+            ? this.eventFlowSystem.subscribeUserMemory(snapshot => this.handleUserMemoryStateUpdate(snapshot))
+            : null;
+        if (this.eventFlowSystem && typeof this.eventFlowSystem.requestUserMemorySnapshots === 'function') {
+            this.eventFlowSystem.requestUserMemorySnapshots();
+        }
+
         this.init(); // init() will call createEditorLayout()
+    }
+
+    handleUserMemoryStateUpdate(snapshot) {
+        if (!snapshot || !this.currentFlow || !Array.isArray(this.currentFlow.nodes)) return;
+        const currentFlowId = String(this.currentFlow.id || 'draft');
+        if (String(snapshot.flowId || 'draft') !== currentFlowId) return;
+
+        const memoryNode = this.currentFlow.nodes.find(node => node.id === snapshot.nodeId && node.type === 'state' && node.stateType === 'USER_MEMORY');
+        if (!memoryNode) return;
+
+        this.renderNodeOnCanvas(memoryNode.id);
+        const countElement = document.getElementById('user-memory-current-count');
+        if (countElement && this.selectedNode === memoryNode.id) {
+            countElement.textContent = String(snapshot.count || 0);
+        }
     }
 
     // Helper method to escape HTML special characters to prevent XSS
@@ -614,6 +649,21 @@ class EventFlowEditor {
                 <div class="property-help">Leave all unchecked to match any source. Events matched: <code>${eventTypes}</code></div>
             </div>
         `;
+    }
+
+    renderUserMemoryTargetField(node, helpText = '') {
+        const memories = this.currentFlow?.nodes?.filter(candidate => candidate.type === 'state' && candidate.stateType === 'USER_MEMORY') || [];
+        return `
+            <div class="property-group user-memory-target-field">
+                <label class="property-label">Target User Memory</label>
+                <select class="property-input" id="prop-targetNodeId">
+                    <option value="">Select User Memory...</option>
+                    ${memories.map(memory => `<option value="${this.escapeHtml(memory.id)}" ${node.config?.targetNodeId === memory.id ? 'selected' : ''}>${this.escapeHtml(memory.config?.name || memory.label || 'User Memory')}</option>`).join('')}
+                </select>
+                ${memories.length
+                    ? `<div class="property-help">${this.escapeHtml(helpText || 'Select the shared User Memory state object. The dashed purple link shows this relationship on the canvas.')}</div>`
+                    : '<div class="property-help" style="color: #ff6b6b;">Add a User Memory from State Nodes first.</div>'}
+            </div>`;
     }
 
     init() {
@@ -929,6 +979,7 @@ class EventFlowEditor {
                 <div class="node-help-buttons">
                     <button class="btn btn-ghost" data-guide-link="event-flow">📘 Event Flow Guide</button>
                     <button class="btn btn-ghost" data-guide-link="state-nodes">🎮 State Nodes Guide</button>
+                    <button class="btn btn-ghost" data-guide-link="user-memory">🧠 User Memory Guide</button>
                     <button class="btn btn-ghost" data-guide-link="event-reference">📖 Event Reference</button>
                 </div>
             </div>
@@ -971,6 +1022,11 @@ class EventFlowEditor {
                 extensionPath: 'actions/state-nodes-guide.html',
                 rootPath: 'actions/state-nodes-guide.html',
                 actionsPath: 'state-nodes-guide.html'
+            },
+            'user-memory': {
+                extensionPath: 'actions/user-memory-guide.html',
+                rootPath: 'actions/user-memory-guide.html',
+                actionsPath: 'user-memory-guide.html'
             },
             'event-flow-about': {
                 extensionPath: 'actions/event-flow-guide.html',
@@ -1757,6 +1813,8 @@ class EventFlowEditor {
         if (!this.currentFlow || !this.currentFlow.nodes) return;
         this.currentFlow.nodes.forEach(node => this.renderNode(node));
         this.currentFlow.connections.forEach(connection => this.renderConnection(connection));
+        this.renderStateReferences();
+        this.highlightStateReferenceGroup(this.selectedNode);
     }
 
 	renderNode(node) {
@@ -1782,6 +1840,7 @@ class EventFlowEditor {
 
 		let inputPointsHTML = '';
 		let outputPointsHTML = '';
+		let stateReferencePointsHTML = '';
 
 		if (node.type === 'trigger') {
 			// Triggers that don't have a message get async output
@@ -1824,6 +1883,9 @@ class EventFlowEditor {
 			inputPointsHTML = `<div class="${pointClasses}" data-point-type="input" data-logic-type="${node.logicType}"></div>`;
 			outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>';
 		} else if (node.type === 'state') {
+			if (node.stateType === 'USER_MEMORY') {
+				stateReferencePointsHTML = '<div class="state-reference-point target" data-state-reference-type="target" title="Link User Memory actions and checks here"></div>';
+			} else {
 			// State nodes have input and output points
 			inputPointsHTML = '<div class="connection-point input" data-point-type="input"></div>';
 			
@@ -1836,6 +1898,11 @@ class EventFlowEditor {
 				// Gate, Semaphore, Latch, Throttle can pass messages through synchronously
 				outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>';
 			}
+			}
+		}
+
+		if (this.isUserMemoryReferenceNode(node)) {
+			stateReferencePointsHTML += '<div class="state-reference-point source" data-state-reference-type="source" title="Drag to a User Memory state node"></div>';
 		}
 
 		nodeEl.innerHTML = `
@@ -1846,6 +1913,7 @@ class EventFlowEditor {
 			<div class="node-body">${this.escapeHtml(this.getNodeDescription(node))}</div>
 			${inputPointsHTML}
 			${outputPointsHTML}
+			${stateReferencePointsHTML}
 		`;
 		canvas.appendChild(nodeEl);
 
@@ -1853,6 +1921,12 @@ class EventFlowEditor {
 		nodeEl.addEventListener('mousedown', (e) => {
 			if (e.target.classList.contains('node-delete')) {
 				this.deleteNode(node.id);
+				return;
+			}
+			if (e.target.classList.contains('state-reference-point')) {
+				if (e.target.dataset.stateReferenceType === 'source') {
+					this.startStateReference(node.id, e);
+				}
 				return;
 			}
 			if (e.target.classList.contains('connection-point')) {
@@ -1864,7 +1938,7 @@ class EventFlowEditor {
 			}
 			this.selectNode(node.id);
 
-			if (!e.target.classList.contains('connection-point') && !e.target.classList.contains('node-delete')) {
+			if (!e.target.classList.contains('connection-point') && !e.target.classList.contains('state-reference-point') && !e.target.classList.contains('node-delete')) {
 				this.draggedNode = node.id;
 				const rect = nodeEl.getBoundingClientRect();
 				this.dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -1899,6 +1973,26 @@ class EventFlowEditor {
         }
         const typeDef = typesArray.find(t => t.id === node[subtypeField]);
         return typeDef ? typeDef.name : 'Unknown Node';
+    }
+
+    getUserMemoryNodeName(targetNodeId) {
+        if (!targetNodeId || !this.currentFlow || !Array.isArray(this.currentFlow.nodes)) return 'Not linked';
+        const target = this.currentFlow.nodes.find(node => node.id === targetNodeId && node.type === 'state' && node.stateType === 'USER_MEMORY');
+        return target ? (target.config?.name || target.label || 'User Memory') : 'Missing memory';
+    }
+
+    isUserMemoryReferenceNode(node) {
+        if (!node) return false;
+        if (node.type === 'trigger' && node.triggerType === 'userMemoryContains') return true;
+        if (node.type !== 'action') return false;
+        return ['rememberUser', 'forgetUser', 'clearUserMemory', 'pickRandomUser', 'resetStateNode'].includes(node.actionType);
+    }
+
+    getUserMemoryReferenceTargetId(node) {
+        if (!this.isUserMemoryReferenceNode(node)) return '';
+        const targetNodeId = node.config?.targetNodeId || '';
+        const target = this.currentFlow?.nodes?.find(candidate => candidate.id === targetNodeId);
+        return target && target.type === 'state' && target.stateType === 'USER_MEMORY' ? targetNodeId : '';
     }
 
     // Check if a connection comes after a terminal action (message won't be returned)
@@ -1959,6 +2053,7 @@ class EventFlowEditor {
                     const roleLabels = { tiktokTeamMember: 'TikTok Team Member' };
                     return `Role: ${roleLabels[node.config.role] || node.config.role || 'Any'}`;
                 }
+                case 'userMemoryContains': return `Checks: ${this.getUserMemoryNodeName(node.config.targetNodeId)}`;
                 case 'hasDonation': return 'Has donation';
                 case 'channelPointRedemption': {
                     const rewardName = node.config.rewardName || '';
@@ -2182,6 +2277,14 @@ class EventFlowEditor {
                 case 'ttsSkip': return 'Skip current TTS';
                 case 'ttsClear': return 'Clear TTS queue';
                 case 'ttsVolume': return `TTS Volume: ${node.config.volume ?? 100}%`;
+                case 'rememberUser': return `Remember in: ${this.getUserMemoryNodeName(node.config.targetNodeId)}`;
+                case 'forgetUser': return `Forget from: ${this.getUserMemoryNodeName(node.config.targetNodeId)}`;
+                case 'clearUserMemory': return `Clear: ${this.getUserMemoryNodeName(node.config.targetNodeId)}`;
+                case 'pickRandomUser': return `Pick from: ${this.getUserMemoryNodeName(node.config.targetNodeId)}${node.config.removeSelected ? ' (remove winner)' : ''}`;
+                case 'resetStateNode': {
+                    const target = this.currentFlow?.nodes?.find(candidate => candidate.id === node.config.targetNodeId && candidate.type === 'state');
+                    return `Reset: ${target ? (target.config?.name || target.label || target.stateType) : 'Not linked'}`;
+                }
                 default: return `${this.getNodeTitle(node)}`;
             }
         } else if (node.type === 'logic') { // NEW
@@ -2205,6 +2308,16 @@ class EventFlowEditor {
                     const name = node.config?.name || 'Counter';
                     const target = node.config?.targetCount || 5;
                     return `${name}: Triggers at ${target}`;
+                }
+                case 'USER_MEMORY': {
+                    const name = node.config?.name || 'User Memory';
+                    const summary = this.eventFlowSystem && typeof this.eventFlowSystem.getUserMemorySummary === 'function'
+                        ? this.eventFlowSystem.getUserMemorySummary(node.id, this.currentFlow)
+                        : null;
+                    const count = summary ? summary.count : 0;
+                    const persistence = node.config?.persistence === 'persistent' ? 'Saved' : 'Session';
+                    const reset = node.config?.resetAfterMs > 0 ? `reset after ${Math.round(node.config.resetAfterMs / 1000)}s idle` : 'manual reset';
+                    return `${name} • ${count} user${count === 1 ? '' : 's'} • ${persistence} • ${reset}`;
                 }
                 case 'USERPOOL': {
                     const name = node.config?.poolName || 'default';
@@ -2310,6 +2423,117 @@ class EventFlowEditor {
         svgEl.appendChild(clickPath); // Add invisible click area first
         svgEl.appendChild(path); // Add visible path on top
         canvas.insertBefore(svgEl, canvas.firstChild);
+    }
+
+    renderStateReferences() {
+        const canvas = document.getElementById('flow-canvas');
+        if (!canvas || !this.currentFlow || !Array.isArray(this.currentFlow.nodes)) return;
+        canvas.querySelectorAll('svg.state-reference').forEach(reference => reference.remove());
+
+        this.currentFlow.nodes.forEach(node => {
+            const targetNodeId = this.getUserMemoryReferenceTargetId(node);
+            if (targetNodeId) this.renderStateReference(node.id, targetNodeId);
+        });
+    }
+
+    renderStateReference(sourceNodeId, targetNodeId) {
+        const canvas = document.getElementById('flow-canvas');
+        if (!canvas) return;
+        const sourceNodeEl = canvas.querySelector(`.node[data-id="${sourceNodeId}"]`);
+        const targetNodeEl = canvas.querySelector(`.node[data-id="${targetNodeId}"]`);
+        const sourcePoint = sourceNodeEl?.querySelector('.state-reference-point.source');
+        const targetPoint = targetNodeEl?.querySelector('.state-reference-point.target');
+        if (!sourcePoint || !targetPoint) return;
+
+        const canvasRect = canvas.getBoundingClientRect();
+        const sourceRect = sourcePoint.getBoundingClientRect();
+        const targetRect = targetPoint.getBoundingClientRect();
+        const startX = sourceRect.left + sourceRect.width / 2 - canvasRect.left + canvas.scrollLeft;
+        const startY = sourceRect.top + sourceRect.height / 2 - canvasRect.top + canvas.scrollTop;
+        const endX = targetRect.left + targetRect.width / 2 - canvasRect.left + canvas.scrollLeft;
+        const endY = targetRect.top + targetRect.height / 2 - canvasRect.top + canvas.scrollTop;
+        const controlOffset = Math.max(70, Math.abs(endX - startX) * 0.35);
+        const direction = endX >= startX ? 1 : -1;
+        const pathData = `M ${startX},${startY} C ${startX + controlOffset * direction},${startY} ${endX - controlOffset * direction},${endY} ${endX},${endY}`;
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'state-reference');
+        svg.dataset.source = sourceNodeId;
+        svg.dataset.target = targetNodeId;
+        Object.assign(svg.style, {
+            position: 'absolute',
+            left: '0',
+            top: '0',
+            width: `${canvas.scrollWidth}px`,
+            height: `${canvas.scrollHeight}px`,
+            pointerEvents: 'none'
+        });
+
+        const clickPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        clickPath.setAttribute('d', pathData);
+        clickPath.setAttribute('stroke', 'transparent');
+        clickPath.setAttribute('stroke-width', '24');
+        clickPath.setAttribute('fill', 'none');
+        clickPath.style.cursor = 'pointer';
+        clickPath.style.pointerEvents = 'stroke';
+
+        const visiblePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        visiblePath.setAttribute('d', pathData);
+        visiblePath.setAttribute('stroke', '#c084fc');
+        visiblePath.setAttribute('stroke-width', '3');
+        visiblePath.setAttribute('stroke-dasharray', '7,6');
+        visiblePath.setAttribute('fill', 'none');
+        visiblePath.style.pointerEvents = 'none';
+
+        clickPath.addEventListener('mouseenter', () => {
+            visiblePath.setAttribute('stroke', 'var(--alert-color)');
+            visiblePath.setAttribute('stroke-width', '4');
+        });
+        clickPath.addEventListener('mouseleave', () => {
+            visiblePath.setAttribute('stroke', '#c084fc');
+            visiblePath.setAttribute('stroke-width', '3');
+        });
+        clickPath.addEventListener('click', event => {
+            event.stopPropagation();
+            if (confirm('Unlink this node from the User Memory?')) {
+                this.deleteStateReference(sourceNodeId);
+            }
+        });
+
+        svg.appendChild(clickPath);
+        svg.appendChild(visiblePath);
+        canvas.insertBefore(svg, canvas.firstChild);
+    }
+
+    deleteStateReference(sourceNodeId) {
+        const sourceNode = this.currentFlow?.nodes?.find(node => node.id === sourceNodeId);
+        if (!sourceNode || !sourceNode.config) return;
+        sourceNode.config.targetNodeId = '';
+        this.markUnsavedChanges(true);
+        this.renderFlow();
+        if (this.selectedNode === sourceNodeId) this.showNodeProperties(sourceNode);
+    }
+
+    highlightStateReferenceGroup(nodeId) {
+        const canvas = document.getElementById('flow-canvas');
+        if (!canvas || !this.currentFlow || !Array.isArray(this.currentFlow.nodes)) return;
+        canvas.querySelectorAll('.node.state-related').forEach(node => node.classList.remove('state-related'));
+        canvas.querySelectorAll('svg.state-reference.state-related').forEach(reference => reference.classList.remove('state-related'));
+        if (!nodeId) return;
+
+        const selected = this.currentFlow.nodes.find(node => node.id === nodeId);
+        if (!selected) return;
+        const memoryId = selected.type === 'state' && selected.stateType === 'USER_MEMORY'
+            ? selected.id
+            : this.getUserMemoryReferenceTargetId(selected);
+        if (!memoryId) return;
+
+        canvas.querySelector(`.node[data-id="${memoryId}"]`)?.classList.add('state-related');
+        this.currentFlow.nodes.forEach(node => {
+            if (this.getUserMemoryReferenceTargetId(node) !== memoryId) return;
+            canvas.querySelector(`.node[data-id="${node.id}"]`)?.classList.add('state-related');
+            canvas.querySelector(`svg.state-reference[data-source="${node.id}"][data-target="${memoryId}"]`)?.classList.add('state-related');
+        });
     }
 
     handleNodeDragStart(e, nodeType, nodeSubtype) { // Added nodeType and nodeSubtype parameters
@@ -2655,6 +2879,7 @@ class EventFlowEditor {
                 case 'fromChannelName': node.config = { channelName: '' }; break;
                 case 'fromUser': node.config = { username: 'user' }; break;
                 case 'userRole': node.config = { role: 'mod' }; break;
+                case 'userMemoryContains': node.config = { targetNodeId: '' }; break;
                 case 'hasDonation': node.config = {}; break;
                 case 'channelPointRedemption': node.config = { rewardName: '' }; break;
                 case 'eventType': node.config = { eventType: 'reward' }; break;
@@ -2790,6 +3015,18 @@ class EventFlowEditor {
 				case 'checkCounter':
 					node.config = { targetNodeId: '' };
 					break;
+				case 'rememberUser':
+					node.config = { targetNodeId: '', reason: '' };
+					break;
+				case 'forgetUser':
+					node.config = { targetNodeId: '' };
+					break;
+				case 'clearUserMemory':
+					node.config = { targetNodeId: '' };
+					break;
+				case 'pickRandomUser':
+					node.config = { targetNodeId: '', removeSelected: false };
+					break;
             }
         } else if (type === 'logic') { // NEW
             node.logicType = subtype; // subtype will be 'AND', 'OR', 'NOT', 'RANDOM'
@@ -2826,6 +3063,9 @@ class EventFlowEditor {
                 case 'COUNTER':
                     node.config = { name: 'Counter 1', initialCount: 0, targetCount: 5, resetOnTarget: true, mode: 'INCREMENT' };
                     break;
+                case 'USER_MEMORY':
+                    node.config = { name: 'User Memory 1', persistence: 'session', resetAfterMs: 0, resetOnStreamStart: false, resetOnStreamStop: false };
+                    break;
                 case 'USERPOOL':
                     node.config = { poolName: 'default', maxUsers: 10, requireEntry: true, entryKeyword: '!enter', resetOnFull: false, resetAfterMs: 0, allowReentry: false, scope: 'global' };
                     break;
@@ -2844,6 +3084,16 @@ class EventFlowEditor {
 
     deleteNode(nodeId) {
         if (!this.currentFlow) return;
+        const nodeToDelete = this.currentFlow.nodes.find(node => node.id === nodeId);
+        if (nodeToDelete && nodeToDelete.type === 'state' && nodeToDelete.stateType === 'USER_MEMORY') {
+            const linkedNodes = this.currentFlow.nodes.filter(node => node.config?.targetNodeId === nodeId);
+            if (linkedNodes.length && !confirm(`This User Memory is linked to ${linkedNodes.length} other node${linkedNodes.length === 1 ? '' : 's'}. Delete it and unlink them?`)) {
+                return;
+            }
+            linkedNodes.forEach(node => {
+                node.config.targetNodeId = '';
+            });
+        }
         this.currentFlow.nodes = this.currentFlow.nodes.filter(node => node.id !== nodeId);
         this.currentFlow.connections = this.currentFlow.connections.filter(
             conn => conn.from !== nodeId && conn.to !== nodeId
@@ -2863,6 +3113,95 @@ class EventFlowEditor {
         this.markUnsavedChanges(true);
         this.renderFlow();
     }
+
+    startStateReference(nodeId, event) {
+        if (!this.currentFlow) return;
+        this.draggedStateReference = { source: nodeId, tempLine: null };
+        const canvas = document.getElementById('flow-canvas');
+        const sourceRect = event.target.getBoundingClientRect();
+        this.draggedStateReference.tempLine = this.createTemporaryStateReferenceLine(
+            canvas,
+            sourceRect.left + sourceRect.width / 2,
+            sourceRect.top + sourceRect.height / 2,
+            event.clientX,
+            event.clientY
+        );
+        document.addEventListener('mousemove', this.handleStateReferenceDragMove);
+        document.addEventListener('mouseup', this.handleStateReferenceDragEnd);
+        event.stopPropagation();
+    }
+
+    createTemporaryStateReferenceLine(canvas, x1, y1, x2, y2) {
+        let svg = canvas.querySelector('svg.temp-state-reference');
+        if (!svg) {
+            svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'temp-state-reference');
+            Object.assign(svg.style, {
+                position: 'absolute',
+                left: '0',
+                top: '0',
+                width: `${canvas.scrollWidth}px`,
+                height: `${canvas.scrollHeight}px`,
+                pointerEvents: 'none',
+                zIndex: '100'
+            });
+            canvas.appendChild(svg);
+        }
+
+        const canvasRect = canvas.getBoundingClientRect();
+        const startX = x1 - canvasRect.left + canvas.scrollLeft;
+        const startY = y1 - canvasRect.top + canvas.scrollTop;
+        const endX = x2 - canvasRect.left + canvas.scrollLeft;
+        const endY = y2 - canvasRect.top + canvas.scrollTop;
+        const controlOffset = Math.max(60, Math.abs(endX - startX) * 0.35);
+        const direction = endX >= startX ? 1 : -1;
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${startX},${startY} C ${startX + controlOffset * direction},${startY} ${endX - controlOffset * direction},${endY} ${endX},${endY}`);
+        path.setAttribute('stroke', '#c084fc');
+        path.setAttribute('stroke-width', '3');
+        path.setAttribute('stroke-dasharray', '7,6');
+        path.setAttribute('fill', 'none');
+        svg.innerHTML = '';
+        svg.appendChild(path);
+        return svg;
+    }
+
+    handleStateReferenceDragMove = event => {
+        if (!this.draggedStateReference) return;
+        const canvas = document.getElementById('flow-canvas');
+        const sourcePoint = canvas.querySelector(`.node[data-id="${this.draggedStateReference.source}"] .state-reference-point.source`);
+        if (!sourcePoint) return;
+        const sourceRect = sourcePoint.getBoundingClientRect();
+        this.createTemporaryStateReferenceLine(
+            canvas,
+            sourceRect.left + sourceRect.width / 2,
+            sourceRect.top + sourceRect.height / 2,
+            event.clientX,
+            event.clientY
+        );
+    };
+
+    handleStateReferenceDragEnd = event => {
+        document.removeEventListener('mousemove', this.handleStateReferenceDragMove);
+        document.removeEventListener('mouseup', this.handleStateReferenceDragEnd);
+        if (!this.draggedStateReference) return;
+        if (this.draggedStateReference.tempLine) this.draggedStateReference.tempLine.remove();
+
+        const targetElement = document.elementFromPoint(event.clientX, event.clientY);
+        if (targetElement && targetElement.classList.contains('state-reference-point') && targetElement.dataset.stateReferenceType === 'target') {
+            const targetNodeElement = targetElement.closest('.node');
+            const sourceNode = this.currentFlow.nodes.find(node => node.id === this.draggedStateReference.source);
+            const targetNode = targetNodeElement && this.currentFlow.nodes.find(node => node.id === targetNodeElement.dataset.id);
+            if (sourceNode && targetNode && targetNode.type === 'state' && targetNode.stateType === 'USER_MEMORY') {
+                sourceNode.config = sourceNode.config || {};
+                sourceNode.config.targetNodeId = targetNode.id;
+                this.markUnsavedChanges(true);
+                this.renderFlow();
+                if (this.selectedNode === sourceNode.id) this.showNodeProperties(sourceNode);
+            }
+        }
+        this.draggedStateReference = null;
+    };
 
     startConnection(nodeId, connPointType, event) {
         if (!this.currentFlow || connPointType !== 'output') return; // Only drag from output
@@ -2993,6 +3332,7 @@ class EventFlowEditor {
         }
         const nodeEl = document.querySelector(`.node[data-id="${nodeId}"]`);
         if (nodeEl) nodeEl.classList.add('selected');
+        this.highlightStateReferenceGroup(nodeId);
         const nodeData = this.currentFlow.nodes.find(n => n.id === nodeId);
         if (!nodeData) {
              document.getElementById('node-properties-content').innerHTML = '<p>Error: Node data not found.</p>';
@@ -3193,6 +3533,10 @@ class EventFlowEditor {
 						   ${userRoles.map(role => `<option value="${role.value}" ${node.config.role === role.value ? 'selected' : ''}>${role.label}</option>`).join('')}
 						 </select></div>
 						 <div class="property-help">TikTok Team Member matches Fan Club/team levels and badges supplied with a TikTok message.</div>`;
+				break;
+			case 'userMemoryContains':
+				html += this.renderUserMemoryTargetField(node, 'Outputs true when the current event belongs to a user stored in this memory.');
+				html += `<div class="property-help">Use this like any other trigger: connect it to AND/OR gates or directly to an action.</div>`;
 				break;
 			case 'hasDonation': // Trigger type
 				html += `<p class="property-help">Fires if the message includes donation information.</p>`;
@@ -4535,6 +4879,45 @@ class EventFlowEditor {
 				</div>
 				<p class="property-help">💡 <strong>Simple counter:</strong> Counts up by 1 each time a message passes. Triggers at your target number. Example: "Every 5th !hello"</p>`;
 				break;
+
+			case 'USER_MEMORY': {
+				const memorySummary = this.eventFlowSystem && typeof this.eventFlowSystem.getUserMemorySummary === 'function'
+					? this.eventFlowSystem.getUserMemorySummary(node.id, this.currentFlow)
+					: null;
+				const memoryCount = memorySummary ? memorySummary.count : 0;
+				html += `
+					<div class="property-group user-memory-summary">
+						<strong>Current users: <span id="user-memory-current-count">${memoryCount}</span></strong>
+						<div class="property-help">This node is the shared state object. Dashed purple links show every check or action that uses it.</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Memory Name</label>
+						<input type="text" class="property-input" id="prop-name" value="${this.escapeHtml(node.config?.name || 'User Memory 1')}" placeholder="e.g., Heart Me Eligible">
+					</div>
+					<div class="property-group">
+						<label class="property-label">Persistence</label>
+						<select class="property-input" id="prop-persistence">
+							<option value="session" ${node.config?.persistence !== 'persistent' ? 'selected' : ''}>This app session</option>
+							<option value="persistent" ${node.config?.persistence === 'persistent' ? 'selected' : ''}>Save across restarts</option>
+						</select>
+						<div class="property-help">Session memory starts empty after Social Stream restarts. Saved memory remains until cleared.</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Clear After Inactivity (seconds)</label>
+						<input type="number" class="property-input" id="prop-resetAfterMs" value="${Math.max(0, Number(node.config?.resetAfterMs) || 0) / 1000}" min="0" step="1">
+						<div class="property-help">0 keeps users until another reset rule or action clears this memory.</div>
+					</div>
+					<div class="property-group">
+						<label><input type="checkbox" class="property-input" id="prop-resetOnStreamStart" ${node.config?.resetOnStreamStart ? 'checked' : ''}> Clear on stream start</label>
+					</div>
+					<div class="property-group">
+						<label><input type="checkbox" class="property-input" id="prop-resetOnStreamStop" ${node.config?.resetOnStreamStop ? 'checked' : ''}> Clear on stream stop</label>
+					</div>
+					<button type="button" class="btn" id="clear-user-memory-now" style="width: 100%; margin-top: 6px;">Clear All Users Now</button>
+					<div class="property-help" style="margin-top: 8px;">Remembered identities use platform + user ID, with the displayed username as a fallback.</div>
+					<button type="button" class="btn btn-ghost" data-guide-link="user-memory" style="width: 100%; margin-top: 12px;">Open User Memory Guide</button>`;
+				break;
+			}
 				case 'playTenorGiphy': // This is node.actionType if node.type is 'action'
 					html += `${this.renderLocalMediaSource(node, {
 						label: 'Media URL or Local File',
@@ -5358,6 +5741,33 @@ class EventFlowEditor {
 				<p class="property-help">Sends a MIDI Control Change message to the selected output device.</p>`;
 				this.populateMIDIOutputDevices('prop-deviceId', node.config.deviceId);
 				break;
+
+			case 'rememberUser':
+				html += this.renderUserMemoryTargetField(node, 'Adds the current event user if they are not already present; repeat participation updates their count.');
+				html += `
+					<div class="property-group">
+						<label class="property-label">Reason or Activity (optional)</label>
+						<input type="text" class="property-input" id="prop-reason" value="${this.escapeHtml(node.config.reason || '')}" placeholder="e.g., Heart Me gift, liked stream">
+						<div class="property-help">Supports template variables such as {event}, {message}, and {donation}.</div>
+					</div>`;
+				break;
+
+			case 'forgetUser':
+				html += this.renderUserMemoryTargetField(node, 'Removes only the current event user from the selected memory.');
+				break;
+
+			case 'clearUserMemory':
+				html += this.renderUserMemoryTargetField(node, 'Clears every user from this memory object without affecting other memories or state nodes.');
+				break;
+
+			case 'pickRandomUser':
+				html += this.renderUserMemoryTargetField(node, 'Selects one unique remembered user using secure randomness when available.');
+				html += `
+					<div class="property-group">
+						<label><input type="checkbox" class="property-input" id="prop-removeSelected" ${node.config.removeSelected ? 'checked' : ''}> Remove selected user after the draw</label>
+					</div>
+					<div class="property-help">Downstream templates can use {selectedUser}, {selectedUserId}, {selectedUserSource}, {selectedUserParticipationCount}, and {userMemoryCount}.</div>`;
+				break;
 				
 			case 'setGateState':
 				html += `
@@ -5506,12 +5916,18 @@ class EventFlowEditor {
                 if (nodeType === 'trigger') nodeData.triggerType = newSubtype;
                 else if (nodeType === 'action') nodeData.actionType = newSubtype;
                 else if (nodeType === 'logic') nodeData.logicType = newSubtype;
+                else if (nodeType === 'state') nodeData.stateType = newSubtype;
                 
                 nodeData.config = {}; // Reset config when subtype changes
-                // TODO: Populate with default config for newSubtype if applicable
+                if (nodeType === 'state') {
+                    if (newSubtype === 'GATE') nodeData.config = { name: 'Gate 1', defaultState: 'ALLOW', autoResetMs: 0 };
+                    else if (newSubtype === 'COUNTER') nodeData.config = { name: 'Counter 1', initialCount: 0, targetCount: 5, resetOnTarget: true, mode: 'INCREMENT' };
+                    else if (newSubtype === 'THROTTLE') nodeData.config = { messagesPerSecond: 1, burstSize: 1, dropStrategy: 'DROP_NEWEST' };
+                    else if (newSubtype === 'USER_MEMORY') nodeData.config = { name: 'User Memory 1', persistence: 'session', resetAfterMs: 0, resetOnStreamStart: false, resetOnStreamStop: false };
+                }
                 this.markUnsavedChanges(true);
                 this.showNodeProperties(nodeData); // Rerender properties for the new subtype
-                this.renderNodeOnCanvas(nodeData.id); // Rerender the node itself on canvas
+                this.renderFlow();
             });
         }
 
@@ -5604,6 +6020,12 @@ class EventFlowEditor {
                 }
                 this.markUnsavedChanges(true);
                 this.renderNodeOnCanvas(nodeData.id);
+                if (propId === 'targetNodeId') {
+                    this.renderStateReferences();
+                    this.highlightStateReferenceGroup(nodeData.id);
+                } else if (nodeData.type === 'state' && nodeData.stateType === 'USER_MEMORY' && propId === 'name') {
+                    this.renderFlow();
+                }
             });
         }
 
@@ -5617,10 +6039,14 @@ class EventFlowEditor {
                 }
                 if (nodeData && nodeData.config) {
                     nodeData.config.sanitizeMode = e.target.value;
-                }
-                this.markUnsavedChanges(true);
-                this.renderNodeOnCanvas(nodeData.id);
-            });
+                    }
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                    if (propId === 'targetNodeId') {
+                        this.renderStateReferences();
+                        this.highlightStateReferenceGroup(nodeData.id);
+                    }
+                });
         }
 
         // Special handling for compareProperty - show/hide custom property input
@@ -5917,6 +6343,36 @@ class EventFlowEditor {
 
             // Initialize mutual exclusion state on load
             updateMutualExclusion();
+        }
+
+        // Special handling for User Memory state nodes
+        if (nodeData.type === 'state' && nodeData.stateType === 'USER_MEMORY') {
+            const resetAfterInput = document.getElementById('prop-resetAfterMs');
+            if (resetAfterInput) {
+                resetAfterInput.addEventListener('input', event => {
+                    const seconds = Math.max(0, parseFloat(event.target.value) || 0);
+                    nodeData.config.resetAfterMs = seconds * 1000;
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+
+            const clearButton = document.getElementById('clear-user-memory-now');
+            if (clearButton) {
+                clearButton.addEventListener('click', async event => {
+                    event.preventDefault();
+                    const memoryName = nodeData.config?.name || 'this User Memory';
+                    if (!confirm(`Clear every remembered user from "${memoryName}"?`)) return;
+                    if (!this.eventFlowSystem || typeof this.eventFlowSystem.clearUserMemory !== 'function') return;
+                    const clearResult = await this.eventFlowSystem.clearUserMemory(nodeData.id, this.currentFlow, 'editor');
+                    if (clearResult && clearResult.success) {
+                        this.showNotification(`Cleared ${clearResult.clearedCount} user${clearResult.clearedCount === 1 ? '' : 's'} from ${memoryName}.`, 'success');
+                        this.renderNodeOnCanvas(nodeData.id);
+                    } else {
+                        this.showNotification(clearResult?.error || 'Unable to clear User Memory.', 'error');
+                    }
+                });
+            }
         }
 
         // Special handling for counter trigger
@@ -6295,7 +6751,7 @@ class EventFlowEditor {
             const titleEl = existingNodeEl.querySelector('.node-title');
             if (titleEl) titleEl.textContent = this.getNodeTitle(nodeData);
             const bodyEl = existingNodeEl.querySelector('.node-body');
-            if (bodyEl) bodyEl.innerHTML = this.getNodeDescription(nodeData);
+            if (bodyEl) bodyEl.textContent = this.getNodeDescription(nodeData);
         }
     }
 
@@ -6334,6 +6790,8 @@ class EventFlowEditor {
                 this.renderConnection(conn);
             }
         });
+        this.renderStateReferences();
+        this.highlightStateReferenceGroup(this.selectedNode);
     }
 
     handleNodeDragEnd = () => {

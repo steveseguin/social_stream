@@ -107,6 +107,7 @@ try {
 		if (window.speechSynthesis.onvoiceschanged !== undefined) {
             window.speechSynthesis.onvoiceschanged = function() {
                 TTS.voices = window.speechSynthesis.getVoices();
+                TTS.voice = false;
                 //console.log("Voices loaded:", TTS.voices.length);
             };
         }
@@ -161,25 +162,85 @@ TTS.getVoiceOverride = function(options) {
     return TTS.normalizeSpeakOptions(options).voice || "";
 };
 
-TTS.findSystemVoice = function(voiceName) {
+TTS.normalizeSystemVoiceIdentifier = function(value) {
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+};
+
+TTS.pickBestSystemVoice = function(voices, language) {
+    if (!voices || !voices.length) return null;
+    var requestedLanguage = String(language || "").toLowerCase();
+    var requestedLanguageBase = requestedLanguage.split("-")[0];
+    return voices.slice().sort(function(a, b) {
+        var aLanguage = String(a.lang || "").toLowerCase();
+        var bLanguage = String(b.lang || "").toLowerCase();
+        var aRank = requestedLanguage && aLanguage === requestedLanguage ? 0 :
+            (requestedLanguageBase && aLanguage.split("-")[0] === requestedLanguageBase ? 1 : 2);
+        var bRank = requestedLanguage && bLanguage === requestedLanguage ? 0 :
+            (requestedLanguageBase && bLanguage.split("-")[0] === requestedLanguageBase ? 1 : 2);
+        if (aRank !== bRank) return aRank - bRank;
+        if (a.name.length !== b.name.length) return a.name.length - b.name.length;
+        if (!!a.default !== !!b.default) return a.default ? -1 : 1;
+        return 0;
+    })[0];
+};
+
+TTS.findSystemVoice = function(voiceName, language) {
     if (!voiceName || !window.speechSynthesis) return null;
     if (!TTS.voices || !TTS.voices.length) {
         TTS.voices = window.speechSynthesis.getVoices();
     }
 
-    var normalizedName = String(voiceName).trim().toLowerCase();
-    var exactMatch = null;
-    var partialMatch = null;
-    (TTS.voices || []).forEach(function(voice) {
-        if (!voice || !voice.name) return;
-        var candidateName = voice.name.toLowerCase();
-        if (!exactMatch && candidateName === normalizedName) {
-            exactMatch = voice;
-        } else if (!partialMatch && candidateName.includes(normalizedName)) {
-            partialMatch = voice;
-        }
+    var requestedName = String(voiceName).trim();
+    var requestedLower = requestedName.toLowerCase();
+    var requestedNormalized = TTS.normalizeSystemVoiceIdentifier(requestedName);
+    var voices = (TTS.voices || []).filter(function(voice) {
+        return voice && voice.name;
     });
-    return exactMatch || partialMatch;
+
+    var matches = voices.filter(function(voice) {
+        return voice.name.toLowerCase() === requestedLower || String(voice.voiceURI || "").toLowerCase() === requestedLower;
+    });
+    if (matches.length) return TTS.pickBestSystemVoice(matches, language);
+
+    if (requestedNormalized) {
+        matches = voices.filter(function(voice) {
+            return TTS.normalizeSystemVoiceIdentifier(voice.name) === requestedNormalized ||
+                TTS.normalizeSystemVoiceIdentifier(voice.voiceURI) === requestedNormalized;
+        });
+        if (matches.length) return TTS.pickBestSystemVoice(matches, language);
+    }
+
+    matches = voices.filter(function(voice) {
+        return voice.name.toLowerCase().includes(requestedLower);
+    });
+    return TTS.pickBestSystemVoice(matches, language);
+};
+
+TTS.findFallbackSystemVoice = function(language) {
+    if (!window.speechSynthesis) return null;
+    if (!TTS.voices || !TTS.voices.length) {
+        TTS.voices = window.speechSynthesis.getVoices();
+    }
+
+    var voices = (TTS.voices || []).filter(function(voice) {
+        return voice && voice.name && !voice.name.includes("Siri");
+    });
+    var requestedLanguage = String(language || "").toLowerCase();
+    var exactLanguageVoice = voices.find(function(voice) {
+        return String(voice.lang || "").toLowerCase() === requestedLanguage;
+    });
+    if (exactLanguageVoice) return exactLanguageVoice;
+
+    var requestedLanguageBase = requestedLanguage.split("-")[0];
+    var baseLanguageVoice = voices.find(function(voice) {
+        return requestedLanguageBase && String(voice.lang || "").toLowerCase().split("-")[0] === requestedLanguageBase;
+    });
+    if (baseLanguageVoice) return baseLanguageVoice;
+
+    return voices.find(function(voice) { return voice.default; }) || voices[0] || null;
 };
 
 // Provider settings
@@ -1447,27 +1508,7 @@ TTS.speak = function(text, allow = false, options = {}) {
                 TTS.voices = window.speechSynthesis.getVoices();
             }
         }
-        if (TTS.voices) {
-            TTS.voices.forEach(vce => {
-                if (vce.name && TTS.voiceName && vce.name.toLowerCase().includes(TTS.voiceName.toLowerCase())) {
-                    if (vce.lang && vce.lang.toLowerCase() == TTS.speechLang.toLowerCase()) {
-                        TTS.voice = vce;
-                    } else if (!TTS.voice && vce.lang && vce.lang.split("-")[0].toLowerCase() == TTS.speechLang.split("-")[0].toLowerCase()) {
-                        TTS.voice = vce;
-                    }
-                } else if (vce.name && vce.name.includes("Siri")) {
-                    // SIRI sucks and breaks a lot, so lets skip if possible.
-                    return;
-                } else if (!TTS.voice && vce.lang && vce.lang.toLowerCase() == TTS.speechLang.toLowerCase()) {
-                    TTS.voice = vce;
-                } else if (!TTS.voice && vce.lang && vce.lang.split("-")[0].toLowerCase() == TTS.speechLang.split("-")[0].toLowerCase()) {
-                    TTS.voice = vce;
-                }
-            });
-        }
-        if (!TTS.voice && TTS.voices?.length) {
-            TTS.voice = TTS.voices.shift(); // take the first/default voice
-        }
+        TTS.voice = TTS.findSystemVoice(TTS.voiceName, TTS.speechLang) || TTS.findFallbackSystemVoice(TTS.speechLang);
         if (TTS.voice) {
             if (TTS.voice.lang && TTS.voice.lang.split("-")[0].toLowerCase() != "en") {
                 TTS.English = false;
@@ -1476,7 +1517,7 @@ TTS.speak = function(text, allow = false, options = {}) {
     }
 
     const voiceOverride = TTS.getVoiceOverride(options);
-    const speechVoice = (voiceOverride && TTS.findSystemVoice(voiceOverride)) || TTS.voice;
+    const speechVoice = (voiceOverride && TTS.findSystemVoice(voiceOverride, TTS.speechLang)) || TTS.voice;
     
     if (!window.SpeechSynthesisUtterance) {
         return;

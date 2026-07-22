@@ -1041,11 +1041,31 @@ function setupLazyFontDropdowns() {
     });
 }
 
-function createUniqueVoiceIdentifiers(voices) {
-    // Helper to get a clean voice name for use in parameters
-    const getCleanVoiceName = (name) => name.replace(/[^a-zA-Z0-9\s]/g, '').trim().replaceAll(' ', '_');
+function normalizePopupSystemVoiceIdentifier(value) {
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+}
 
-    // Group voices by language
+function getLegacyPopupSystemVoiceIdentifiers(voiceName, voicesInLang) {
+    const identifiers = [];
+    const words = voiceName.split(" ").filter(word => word.length > 0);
+
+    for (let i = 0; i < words.length; i++) {
+        const potentialIdentifier = words[i];
+        if (voicesInLang.filter(voice => voice.name.includes(potentialIdentifier)).length === 1) {
+            identifiers.push(potentialIdentifier);
+            break;
+        }
+    }
+
+    identifiers.push(voiceName.replace(/[^a-zA-Z0-9\s]/g, "").trim().replaceAll(" ", "_"));
+    identifiers.push(voiceName.replace(/[^a-zA-Z0-9]/g, ""));
+    return Array.from(new Set(identifiers.filter(Boolean)));
+}
+
+function createUniqueVoiceIdentifiers(voices) {
     const voicesByLang = voices.reduce((acc, voiceObj) => {
         if (!acc[voiceObj.lang]) {
             acc[voiceObj.lang] = [];
@@ -1054,38 +1074,75 @@ function createUniqueVoiceIdentifiers(voices) {
         return acc;
     }, {});
 
-    // Assign unique identifiers within each language group
-    for (const lang in voicesByLang) {
+    const voiceDescriptors = [];
+    Object.keys(voicesByLang).forEach(lang => {
         const voicesInLang = voicesByLang[lang];
-
         voicesInLang.forEach(voiceObj => {
-            let uniquePart = '';
-
-            // Attempt to find a unique word within the voice name for this language
-            const words = voiceObj.name.split(' ').filter(word => word.length > 0);
-            for (let i = 0; i < words.length; i++) {
-                const potentialIdentifier = words[i];
-                if (voicesInLang.filter(v => v.name.includes(potentialIdentifier)).length === 1) {
-                    uniquePart = potentialIdentifier;
-                    break;
-                }
-            }
-
-            // Fallback to a cleaned full name if no unique word is found
-            if (!uniquePart) {
-                uniquePart = getCleanVoiceName(voiceObj.name);
-            }
-
-            // Construct the code using separate lang and voice parameters
-            voiceObj.code = `lang=${voiceObj.lang}&voice=${encodeURIComponent(uniquePart)}`;
-            voiceObj.lang = voiceObj.lang; // Ensure lang is explicitly available
-            voiceObj.name = voiceObj.name; // Ensure name is explicitly available
-            voiceObj.voiceId = uniquePart; // Store just the voice identifier separately
+            voiceDescriptors.push({
+                voice: voiceObj,
+                name: voiceObj.name,
+                lang: voiceObj.lang,
+                default: !!voiceObj.default,
+                localService: !!voiceObj.localService,
+                voiceURI: voiceObj.voiceURI || "",
+                code: `lang=${voiceObj.lang}&voice=${encodeURIComponent(voiceObj.name)}`,
+                voiceId: voiceObj.name,
+                legacyVoiceIds: getLegacyPopupSystemVoiceIdentifiers(voiceObj.name, voicesInLang),
+            });
         });
+    });
+    return voiceDescriptors;
+}
+
+function resolvePopupSystemVoice(voices, selection, language) {
+    if (!voices || !voices.length || !selection) return null;
+
+    let requestedName = String(selection);
+    let requestedLanguage = language || "";
+    if (requestedName.includes("=")) {
+        try {
+            const params = new URLSearchParams(requestedName);
+            requestedName = params.get("voice") || requestedName;
+            requestedLanguage = params.get("lang") || requestedLanguage;
+        } catch (_) { }
     }
 
-    // Flatten the grouped voices back into a single array
-    return Object.values(voicesByLang).flat();
+    requestedName = requestedName.trim();
+    if (!requestedName) return null;
+
+    const requestedLower = requestedName.toLowerCase();
+    const requestedNormalized = normalizePopupSystemVoiceIdentifier(requestedName);
+    const requestedLangLower = requestedLanguage.toLowerCase();
+    const requestedLangBase = requestedLangLower.split("-")[0];
+    const pickBestMatch = matches => {
+        if (!matches.length) return null;
+        return matches.slice().sort((a, b) => {
+            const aLang = String(a.lang || "").toLowerCase();
+            const bLang = String(b.lang || "").toLowerCase();
+            const aRank = requestedLangLower && aLang === requestedLangLower ? 0 :
+                (requestedLangBase && aLang.split("-")[0] === requestedLangBase ? 1 : 2);
+            const bRank = requestedLangLower && bLang === requestedLangLower ? 0 :
+                (requestedLangBase && bLang.split("-")[0] === requestedLangBase ? 1 : 2);
+            if (aRank !== bRank) return aRank - bRank;
+            if (a.name.length !== b.name.length) return a.name.length - b.name.length;
+            if (a.default !== b.default) return a.default ? -1 : 1;
+            return 0;
+        })[0];
+    };
+
+    let matches = voices.filter(voice => String(voice.name || "").toLowerCase() === requestedLower);
+    if (matches.length) return pickBestMatch(matches);
+
+    matches = voices.filter(voice => (voice.legacyVoiceIds || []).some(identifier => identifier.toLowerCase() === requestedLower));
+    if (matches.length) return pickBestMatch(matches);
+
+    if (requestedNormalized) {
+        matches = voices.filter(voice => normalizePopupSystemVoiceIdentifier(voice.name) === requestedNormalized);
+        if (matches.length) return pickBestMatch(matches);
+    }
+
+    matches = voices.filter(voice => String(voice.name || "").toLowerCase().includes(requestedLower));
+    return pickBestMatch(matches);
 }
 
 var popupSpeechVoiceCache = null;
@@ -1110,6 +1167,16 @@ function getPopupSpeechVoices() {
 function populateSystemVoiceDropdown(dropdown, voices) {
     if (!dropdown || !voices || !voices.length) return;
     const currentValue = dropdown.value;
+    const selectedVoice = resolvePopupSystemVoice(voices, currentValue);
+
+    if (selectedVoice) {
+        Array.from(dropdown.options).forEach(option => {
+            if (option.dataset.lazyStoredValue === "true") {
+                option.remove();
+            }
+        });
+    }
+
     const existingValues = new Set(Array.from(dropdown.options).map(option => option.value));
 
     voices.forEach(voice => {
@@ -1126,7 +1193,9 @@ function populateSystemVoiceDropdown(dropdown, voices) {
         }
     });
 
-    if (currentValue) {
+    if (selectedVoice) {
+        dropdown.value = selectedVoice.code;
+    } else if (currentValue) {
         dropdown.value = currentValue;
     }
 }
@@ -5593,7 +5662,7 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
                         targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voice');
                         // Add new parameters
                         targetElement.raw = updateURL(`lang=${langValue}`, targetElement.raw);
-                        targetElement.raw = updateURL(`voice=${voiceValue}`, targetElement.raw);
+                        targetElement.raw = updateURL(`voice=${encodeURIComponent(voiceValue)}`, targetElement.raw);
                     } else if (keyOnly === 'speechifylang') {
                         // Remove existing parameter first
                         targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voicespeechify');
@@ -5972,7 +6041,7 @@ function handleOptionParam(ele, targetId, paramType, sync) {
                 } else if (paramValue === 'lang' || paramValue === 'systemlang') {
                     // System TTS uses generic lang and voice
                     targetElement.raw = updateURL(`lang=${langValue}`, targetElement.raw);
-                    targetElement.raw = updateURL(`voice=${voiceValue}`, targetElement.raw);
+                    targetElement.raw = updateURL(`voice=${encodeURIComponent(voiceValue)}`, targetElement.raw);
                 } else if (paramValue.endsWith('lang')) {
                     // Generic handling for other *lang parameters
                     const prefix = paramValue.slice(0, -4);
@@ -8787,10 +8856,13 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     
     testTTS(section = "") {
         const testPhrase = "The quick brown fox jumps over the lazy dog";
+        const provider = this.getProviderSelect(section)?.value || "system";
+        if (provider === "system") {
+            populateSystemVoiceDropdowns();
+        }
         const serviceName = this.getServiceName(section);
         
         // Check if the provider supports testing
-        const provider = this.getProviderSelect(section)?.value || "system";
         if (this.premiumQueueActive) {
             this.showFeedback("A TTS test is already running. Cancel it before starting another test.", 'warning', section, 0);
             return;
@@ -8910,10 +8982,11 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         utterance.volume = settings.volume;
         utterance.pitch = settings.system.pitch;
         
-        if (this.voices && settings.system.voice) {
-            const matchingVoice = this.voices.find(v => v.name === settings.system.voice);
+        const voices = this.voices && this.voices.length ? this.voices : populateSystemVoiceDropdowns();
+        if (voices && settings.system.voice) {
+            const matchingVoice = resolvePopupSystemVoice(voices, settings.system.voice, settings.system.lang);
             if (matchingVoice) {
-                utterance.voice = matchingVoice;
+                utterance.voice = matchingVoice.voice || matchingVoice;
             }
         }
         
