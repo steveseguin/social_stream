@@ -9434,6 +9434,21 @@ function isDuplicateInboundWebhook(provider, webhookId) {
 	return false;
 }
 
+// The io HTTP bridge holds the webhook sender's HTTP response open until a client
+// answers the callback pid (or its 5s timeout fires); ack before processing so
+// senders like Ko-fi get a fast response and don't time out and retry the delivery.
+function ackInboundWebhookDelivery(socket, data) {
+	if (!data || !data.get) {
+		return;
+	}
+	try {
+		if (socket && socket.readyState === WebSocket.OPEN) {
+			socket.send(JSON.stringify({ callback: { get: data.get, result: true } }));
+		}
+	} catch (e) {}
+	data.get = false;
+}
+
 const STREAM_DECK_SOURCE_RESPONSE_FIELDS = ["id", "target", "tabId", "username", "videoId", "connectionMode", "activeConnectionMode", "status", "isVisible", "isMuted", "autoActivate", "groupId"];
 
 function sanitizeStreamDeckSourceResponse(source) {
@@ -9892,6 +9907,7 @@ function setupSocket() {
 					console.error(e);
 				}
 			} else if ("stripe" in data) {
+				ackInboundWebhookDelivery(socketserver, data);
 				try {
 					if (data.stripe.type !== "checkout.session.completed") {
 						return false;
@@ -10054,6 +10070,7 @@ function setupSocket() {
 					return;
 				}
 			} else if ("kofi" in data) {
+				ackInboundWebhookDelivery(socketserver, data);
 				try {
 					if (!data.kofi.data) {
 						return false;
@@ -10133,6 +10150,7 @@ function setupSocket() {
 					return;
 				}
 			} else if ("bmac" in data) {
+				ackInboundWebhookDelivery(socketserver, data);
 				// Buy Me a Coffe New Membership and Donation detection
 				try {
 					if (!data.bmac) {
@@ -10208,6 +10226,7 @@ function setupSocket() {
 					return;
 				}
 			} else if ("fourthwall" in data) {
+				ackInboundWebhookDelivery(socketserver, data);
 				// Dorthwall
 				try {
 					if (!data.fourthwall.data || data.fourthwall.type !== "ORDER_PLACED") {
