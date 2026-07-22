@@ -833,6 +833,47 @@ try {
     }
 } catch(e) {}
 
+
+// Cross-transport dedupe: in server mode the same feed message can arrive over both
+// the websocket relay and the VDO.Ninja bridge; count only the first copy.
+var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
+var recentTransportDeliveries = new Map();
+function isDuplicateTransportDelivery(data) {
+    if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) {
+        return false;
+    }
+    if (!data || typeof data !== "object") {
+        return false;
+    }
+    if (data.id === undefined || data.id === null) {
+        return false;
+    }
+    if ("action" in data || "get" in data || "callback" in data || "mid" in data) {
+        return false;
+    }
+    if (!(data.chatname || data.chatmessage || data.chatimg || data.hasDonation || data.membership || data.event || data.contentimg)) {
+        return false;
+    }
+    var key =
+        String(data.id) +
+        "|" + (data.type || "") +
+        "|" + (data.chatname || "") +
+        "|" + String(data.chatmessage || "").slice(0, 100) +
+        "|" + (data.hasDonation || "") +
+        "|" + (data.event || "");
+    var now = Date.now();
+    recentTransportDeliveries.forEach(function (seenAt, seenKey) {
+        if (now - seenAt > CROSS_TRANSPORT_DEDUPE_TTL_MS) {
+            recentTransportDeliveries.delete(seenKey);
+        }
+    });
+    if (recentTransportDeliveries.has(key)) {
+        return true;
+    }
+    recentTransportDeliveries.set(key, now);
+    return false;
+}
+
 function setupSocket() {
     socketserver.onclose = function() {
         setTimeout(function() {
@@ -854,7 +895,9 @@ function setupSocket() {
         var resp = false
         if (event.data) {
             var data = JSON.parse(event.data);
-            processInput(data);
+            if (!isDuplicateTransportDelivery(data)) {
+                processInput(data);
+            }
             if (data.get) {
                 var ret = {};
                 ret.callback = {};
@@ -1451,6 +1494,9 @@ if (!useServerOnlyTransport()) {
         if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
             if ("overlayNinja" in e.data.dataReceived) {
                 var data = e.data.dataReceived.overlayNinja;
+                if (isDuplicateTransportDelivery(data)) {
+                    return;
+                }
             
             // Handle new viewer_updates format by caching aggregated counts (incl. zeros)
             if (data.event === "viewer_updates" && data.meta && typeof data.meta === "object") {
