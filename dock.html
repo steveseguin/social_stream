@@ -6596,13 +6596,15 @@
 					} else if (data.type && data.event == "likes_update"){
 						let likeCount = parseInt(data.meta, 10);
 						if (isNaN(likeCount) || likeCount < 0) return true;
-						let ele = topBarElement.querySelector("[data-youtube-like-count]");
+						let likeType = String(data.type).toLowerCase();
+						if (likeType == "youtubeshorts") likeType = "youtube";
+						let ele = topBarElement.querySelector(dataAttributeSelector("data-like-count", likeType));
 						if (!ele){
 							ele = document.createElement("div");
-							ele.dataset.youtubeLikeCount = "true";
+							ele.dataset.likeCount = likeType;
 							ele.classList.add("viewerIcons");
-							ele.title = "YouTube video likes";
-							ele.style.backgroundImage = "url(./sources/images/youtube.png)";
+							ele.title = (likeType == "youtube" ? "YouTube video" : likeType == "tiktok" ? "TikTok LIVE" : likeType) + " likes";
+							ele.style.backgroundImage = "url(./sources/images/"+likeType+".png)";
 							topBarElement.prepend(ele);
 						}
 						ele.innerText = "♥ " + likeCount;

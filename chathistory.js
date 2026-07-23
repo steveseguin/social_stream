@@ -33,6 +33,7 @@ const messageDateTo = document.getElementById('message-date-to');
 const donationFilter = document.getElementById('donation-filter');
 const membershipFilter = document.getElementById('membership-filter');
 const clearFiltersButton = document.getElementById('clear-filters');
+const clearHistoryButton = document.getElementById('clear-history');
 
 const filters = {
     search: '',
@@ -704,6 +705,53 @@ function clearFilters() {
     debounceFilters();
 }
 
+function clearHistoryDirectly() {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).clear();
+        tx.oncomplete = () => resolve({ ok: true });
+        tx.onerror = () => reject(tx.error || new Error('Failed to clear saved message history'));
+        tx.onabort = () => reject(tx.error || new Error('Saved message history clear was aborted'));
+    });
+}
+
+function requestHistoryClear() {
+    if (typeof chrome === 'undefined' || !chrome.runtime || typeof chrome.runtime.sendMessage !== 'function') {
+        return clearHistoryDirectly();
+    }
+    return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({ type: 'toBackground', data: { action: 'clearHistory', value: { confirm: true } } }, response => {
+            const runtimeError = chrome.runtime.lastError;
+            if (runtimeError) {
+                reject(new Error(runtimeError.message));
+                return;
+            }
+            resolve(response || { ok: false, error: 'No response from the extension.' });
+        });
+    });
+}
+
+async function clearSavedHistory() {
+    if (!window.confirm('Permanently delete all saved message history? This also resets first-time chatter and last-activity history.')) {
+        return;
+    }
+    clearHistoryButton.disabled = true;
+    clearHistoryButton.textContent = 'Deleting...';
+    try {
+        const result = await requestHistoryClear();
+        if (!result || result.ok !== true) {
+            throw new Error(result && result.error ? result.error : 'Failed to clear saved message history.');
+        }
+        await resetAndLoadMessages();
+        clearHistoryButton.textContent = 'History Deleted';
+    } catch (error) {
+        window.alert(error && error.message ? error.message : 'Failed to clear saved message history.');
+        clearHistoryButton.textContent = 'Delete All History';
+    } finally {
+        clearHistoryButton.disabled = false;
+    }
+}
+
 // Event listeners for filters
 searchInput.addEventListener('input', () => {
     filters.search = searchInput.value.trim().toLowerCase();
@@ -746,6 +794,7 @@ membershipFilter.addEventListener('change', () => {
 });
 
 clearFiltersButton.addEventListener('click', clearFilters);
+clearHistoryButton.addEventListener('click', clearSavedHistory);
 
 messagesContainer.addEventListener('scroll', () => {
     const { scrollTop, scrollHeight, clientHeight } = messagesContainer;

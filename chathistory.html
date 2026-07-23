@@ -112,6 +112,17 @@
             border: none;
             cursor: pointer;
         }
+        #clear-history {
+            padding: 5px 10px;
+            background-color: #b3261e;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #clear-history:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
         select, input[type="date"], input[type="text"] {
             padding: 4px;
         }
@@ -185,12 +196,13 @@
                     <span class="filter-label">To:</span>
                     <input type="date" id="date-filter-to">
                 </div>
-                
+
                 <button id="export-button">Download</button>
+                <button id="clear-history" type="button">Delete All History</button>
             </div>
         </div>
     </div>
     <div id="messages-container"></div>
-    <script type="text/javascript" src="./chathistory.js?v=1"></script>
+    <script type="text/javascript" src="./chathistory.js?v=2"></script>
 </body>
 </html>

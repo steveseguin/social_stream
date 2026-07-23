@@ -92,7 +92,8 @@ SSN offers multiple ways for external applications or AI to interact with it.
     -   `sendEncodedChat`: Sends a URL-encoded message.
     -   `extContent`: Ingests a fully formed message object (useful for external sources). `{"action": "extContent", "value": "{JSON message object}"}`
 -   **Control Commands:**
-    -   `clear`, `clearAll`, `clearOverlay`: Clears messages from dock/overlay.
+    -   `clearDock` (`clear`/`clearAll` aliases), `clearOverlay`: Clears messages from the dock or overlay.
+    -   `clearHistory`: Permanently deletes saved message history when explicitly confirmed.
     -   `nextInQueue`: Advances the message queue.
     -   `autoShow`: Toggles auto-featuring messages.
     -   `toggleTTS`: Toggles text-to-speech.

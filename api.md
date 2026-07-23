@@ -305,7 +305,10 @@ When a message is sent, it goes to the specified output channel. Those who have 
    - Reset open leaderboard overlays: `{"action": "resetleaderboard"}`
 
 7. **Clear Messages**
-   - All: `{"action": "clear"}` or `{"action": "clearAll"}`
+   - Dock: `{"action": "clearDock"}` (`clear` and `clearAll` remain supported aliases)
+   - A dock with `&sync` also clears its synced docks. Without `&sync`, only the targeted dock clears.
+   - Target a labeled dock with `{"action": "clearDock", "target": "producer"}` and `&label=producer` on that dock URL.
+   - Permanently delete saved history: `{"action": "clearHistory", "value": {"confirm": true}}`
    - Overlay: `{"action": "clearOverlay"}`
 
 8. **Queue Operations**
@@ -783,18 +786,19 @@ The dock page processes incoming WebSocket messages using the `processInput` fun
 
 The dock page responds to various API actions, including:
 
-1. `clear` or `clearAll`: Clears all messages except pinned ones
-2. `clearOverlay`: Clears the overlay without affecting the dock
-3. `clearBotOverlay`: Clears the Primary Chat Bot's `bot.html` overlay without stopping active TTS
-4. `nextInQueue`: Moves to the next message in the queue
-5. `getQueueSize`: Returns the current queue size
-6. `autoShow`: Controls automatic message display
-7. `content`: Processes and displays new content
-8. `feature`: Features the next unfeatured message
-9. `pin`: Pins an existing dock message by `mid`, or pins a full message object.
-10. `unpin`: Unpins an existing dock message by `mid`.
-11. `nextPinned`: Features the first pinned message.
-12. `toggleTTS` or `tts`: Controls Text-to-Speech functionality
+1. `clearDock` (`clear` and `clearAll` are aliases): Clears dock messages except pinned ones; `&sync` propagates the clear.
+2. `clearHistory`: Permanently deletes the local message database when `value.confirm` is `true` or `value` is `"confirm"`.
+3. `clearOverlay`: Clears the overlay without affecting the dock
+4. `clearBotOverlay`: Clears the Primary Chat Bot's `bot.html` overlay without stopping active TTS
+5. `nextInQueue`: Moves to the next message in the queue
+6. `getQueueSize`: Returns the current queue size
+7. `autoShow`: Controls automatic message display
+8. `content`: Processes and displays new content
+9. `feature`: Features the next unfeatured message
+10. `pin`: Pins an existing dock message by `mid`, or pins a full message object.
+11. `unpin`: Unpins an existing dock message by `mid`.
+12. `nextPinned`: Features the first pinned message.
+13. `toggleTTS` or `tts`: Controls Text-to-Speech functionality
 
 ### Example API Usage
 

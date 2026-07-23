@@ -176,7 +176,8 @@ https://io.socialstream.ninja/SESSION_ID/sendChat/null/Hello?channel=2
 | `sendChat` | Send a chat response/message | `{"action":"sendChat","value":"Hello"}` |
 | `sendEncodedChat` | Send URL-encoded chat text | `/SESSION/sendEncodedChat/null/Hello%20World` |
 | `clearOverlay` | Clear featured overlay | `/SESSION/clearOverlay` |
-| `clear` / `clearAll` | Clear dock messages, except pinned behavior may vary by page | `{"action":"clear"}` |
+| `clearDock` (`clear` / `clearAll` aliases) | Clear dock messages; a targeted dock propagates when it has `&sync` | `{"action":"clearDock","target":"producer"}` |
+| `clearHistory` | Permanently delete saved history; confirmation is required | `{"action":"clearHistory","value":{"confirm":true}}` |
 | `nextInQueue` | Feature the next queued message | `/SESSION/nextInQueue` |
 | `getQueueSize` | Request queue size | `{"action":"getQueueSize","get":"queue-1"}` |
 | `autoShow` | Toggle/set auto-show mode | `{"action":"autoShow","value":"toggle"}` |

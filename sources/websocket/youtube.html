@@ -5593,7 +5593,7 @@ function enableBackgroundKeepAlive() {
 
 	function isYouTubeLikeCountEnabled() {
 		const currentSettings = settings && typeof settings === 'object' ? settings : {};
-		return Boolean(currentSettings.captureyoutubelikes);
+		return Boolean(currentSettings.captureliketotals || currentSettings.captureyoutubelikes);
 	}
 
     function shouldPollStreamStats() {
