@@ -2919,7 +2919,8 @@
 		<div id="chatInput_parent" class="popInModal hidden">
 			<input id="chatInput" class="modalTextInput" type="text" placeholder="Send message...">
 			<button id="chatInputButton" class="imgButton imgSmallButton" style="background-image: url(./icons/send_confirm.png)" title="💬 Send this message"></button>
-			<button id="chatClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png)" title="🗑️ Clear all messages"></button>
+			<button id="chatClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png)" title="🗑️ Clear dock messages; &amp;sync also clears synced docks"></button>
+			<button id="chatHistoryClearButton" class="imgButton imgSmallButton" title="Permanently delete saved message history">🗄️</button>
 
 			<button id="getChatSources" class="imgButton imgSmallButton" title="Change destination to send messages to. Default is all.">🌐</button>
 
@@ -3439,6 +3440,7 @@
 			var waitingForRecentHistory = false;
 			var historyReturnSyncPending = false;
 			var historyReturnSyncTimedOut = false;
+			var historyViewCleared = false;
 			var prependMode = false;
 			var body = document.body;
 			var html = document.documentElement;
@@ -7785,6 +7787,10 @@
 					  }
 					};
 				} else if (data.recentHistory) {
+					if (historyViewCleared) {
+						waitingForRecentHistory = false;
+						return true;
+					}
 					waitingForRecentHistory = false;
 					if (historyFlushTimer) {
 						clearTimeout(historyFlushTimer);
@@ -7816,6 +7822,10 @@
 						jumptoBottom2();
 					},1000);
 				} else if (data.historyBefore) {
+					if (historyViewCleared) {
+						isLoadingHistory = false;
+						return true;
+					}
 					if (!historyBrowsing) {
 						isLoadingHistory = false;
 						return;
@@ -8324,19 +8334,23 @@
 					}
 					//console.log(data);
 
-					if (data.action == "clear" || data.action == "clearAll") {
+					if (data.action == "clear" || data.action == "clearAll" || data.action == "clearDock") {
 						// clears all except pinned messages
-						getById("output").innerHTML = "";
-						resetHorizontalTicker();
-						autoShowQueue = [];
-						selectedQueue = [];
-						odd = false;
+						clearAll(true);
 						if (data.ctrl) {
 							getById("pinned").innerHTML = "";
 						}
-						sendDataP2P(false);
-						updateQueueButton();
-						TTS.clearQueue();
+						return true;
+					} else if (data.action == "historyCleared") {
+						if (data.ok === false) {
+							showDockActionNotice(data.error || "Saved message history could not be cleared.");
+							getById("chatHistoryClearButton").disabled = false;
+							return true;
+						}
+						clearAll(true);
+						historyMissedLiveBuffer = [];
+						getById("chatHistoryClearButton").disabled = false;
+						showDockActionNotice("Saved message history cleared.");
 						return true;
 					} else if (data.action == "resetleaderboard") {
 						return true;
@@ -12734,6 +12748,7 @@
 				const input = getById("chatInput");
 				const chatInputButton = getById("chatInputButton");
 				const chatClearButton = getById("chatClearButton");
+				const chatHistoryClearButton = getById("chatHistoryClearButton");
 				const getChatSourcesButton = getById("getChatSources");
 				const chatInputCloseButton = getById("chatInputCloseButton");
 				const chatInputLockButton = getById("chatInputLockButton");
@@ -12835,6 +12850,19 @@
 					clearAll(true);
 				});
 
+				chatHistoryClearButton.addEventListener("click", function(event) {
+					event.preventDefault();
+					event.stopPropagation();
+					if (!window.confirm("Permanently delete all saved message history? This also resets first-time chatter and last-activity history.")) {
+						return;
+					}
+					chatHistoryClearButton.disabled = true;
+					send2Extension({ action: "clearHistory", value: { confirm: true } });
+					setTimeout(function() {
+						chatHistoryClearButton.disabled = false;
+					}, 10000);
+				});
+
 				chatInputCloseButton.addEventListener("click", function(event) {
 					event.preventDefault();
 					event.stopPropagation();
@@ -12868,11 +12896,24 @@
 				autoShowQueue = [];
 				selectedQueue = [];
 				odd = false;
+				if (historyMode) {
+					historyViewCleared = true;
+					historyBrowsing = false;
+					isLoadingHistory = false;
+					waitingForRecentHistory = false;
+					historyReturnSyncPending = false;
+					historyReturnSyncTimedOut = false;
+					reachedOldest = true;
+					if (historyFlushTimer) {
+						clearTimeout(historyFlushTimer);
+						historyFlushTimer = null;
+					}
+				}
 				sendDataP2P(false);
 				updateQueueButton();
 				TTS.clearQueue();
-				if (relay){
-					syncDataAny({ "clearAll": true }, false, true);
+				if (relay && syncDocks){
+					syncDataAny({ "clearAll": true });
 				}
 			}
 

@@ -4671,7 +4671,11 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		const senderTabId = hasSenderTabId ? senderTab.id : null;
 		const senderTabUrl = senderTab && typeof senderTab.url === "string" ? senderTab.url : "";
 
-		if (request.cmd && request.cmd === "setOnOffState") {
+		if (request.action === "clearHistory") {
+			const clearHistoryResult = await clearSavedMessageHistory(request.value);
+			sendResponse(clearHistoryResult);
+			return response;
+		} else if (request.cmd && request.cmd === "setOnOffState") {
 			// toggle the IFRAME (stream to the remote dock) on or off
 			isExtensionOn = request.data.value;
 			persistSession({ state: isExtensionOn });
@@ -9378,6 +9382,41 @@ function sendStreamDeckCommandResult(socket, request, result) {
 		})
 	);
 	return true;
+}
+
+function isClearHistoryConfirmed(value) {
+	if (value === true || value === "confirm") {
+		return true;
+	}
+	return !!(value && typeof value === "object" && value.confirm === true);
+}
+
+async function clearSavedMessageHistory(value) {
+	if (!isClearHistoryConfirmed(value)) {
+		return {
+			ok: false,
+			error: "Confirmation required. Pass value.confirm=true or value=confirm."
+		};
+	}
+	if (typeof messageStoreDB === "undefined" || !messageStoreDB || typeof messageStoreDB.clearMessages !== "function") {
+		return {
+			ok: false,
+			error: "The local message database is unavailable."
+		};
+	}
+	try {
+		const deleted = await messageStoreDB.clearMessages();
+		return {
+			ok: true,
+			deleted
+		};
+	} catch (error) {
+		console.error("Failed to clear saved message history:", error);
+		return {
+			ok: false,
+			error: error && error.message ? error.message : "Failed to clear saved message history."
+		};
+	}
 }
 
 const recentInboundWebhookDeliveries = new Map();

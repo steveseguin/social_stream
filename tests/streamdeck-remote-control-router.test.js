@@ -9,6 +9,8 @@ const unavailable = router.buildCapabilities({
 assert.equal(unavailable.runtime, "web");
 assert.equal(unavailable.ssapp.available, false);
 assert.equal(unavailable.ssn.actions.pin, true);
+assert.equal(unavailable.ssn.actions.clearDock, true);
+assert.equal(unavailable.ssn.actions.clearHistory, true);
 assert.equal(unavailable.ssn.actions.removefromwaitlist, true);
 assert.equal(unavailable.ssn.actions.resetleaderboard, true);
 assert.equal(unavailable.ssn.actions.startentries, true);

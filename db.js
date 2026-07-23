@@ -480,6 +480,30 @@ class MessageStoreDB {
         this.cache.userMessages.clear();
         this.cache.lastUpdate = 0;
     }
+
+    async clearMessages() {
+        const db = await this.ensureDB();
+
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            let deleted = 0;
+
+            const countRequest = store.count();
+            countRequest.onsuccess = () => {
+                deleted = countRequest.result || 0;
+                store.clear();
+            };
+
+            tx.oncomplete = () => {
+                this.clearCache();
+                this.clearExistenceCache();
+                resolve(deleted);
+            };
+            tx.onerror = () => reject(tx.error || new Error('Failed to clear message history'));
+            tx.onabort = () => reject(tx.error || new Error('Message history clear was aborted'));
+        });
+    }
 }
 
 // Compatibility function for getMessagesBeforeDB

@@ -77,7 +77,7 @@ Known limits:
 | `themes/rainbowpuke/index.html` | 8 | `chroma`, `font`, `fontfamily`, `hidebots`, `localserver`, `server`, `server2`, `session` |
 | `themes/sampleoverlay_reverse.html` | 7 | `deleteonlylast`, `limit`, `localserver`, `server`, `server2`, `session`, `showtime` |
 | `themes/spiritoverlay.html` | 6 | `fadeout`, `limit`, `localserver`, `server`, `server2`, `session` |
-| `themes/t3nk3y/index.html` | 10 | `chroma`, `font`, `fontfamily`, `gaming`, `hidebots`, `localserver`, `server`, `server2`, `session`, `showtime` |
+| `themes/t3nk3y/index.html` | 11 | `chroma`, `font`, `fontfamily`, `gaming`, `hidebots`, `localserver`, `reverse`, `server`, `server2`, `session`, `showtime` |
 
 ## Game Pages
 
