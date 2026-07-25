@@ -816,6 +816,11 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     await loadOverlay(overlayPage, tiktokGiftUrl);
     await overlayPage.evaluate(() => {
       window.__multiAlertsOverlay.clear({ clearQueue: true, preserveCooldown: false });
+      window.__tiktokGiftTtsCalls = [];
+      TTS.speech = true;
+      TTS.speak = function (text) {
+        window.__tiktokGiftTtsCalls.push(String(text));
+      };
       window.__multiAlertsOverlay.sendPayload({
         event: 'gift',
         type: 'tiktok',
@@ -827,7 +832,10 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
         meta: {
           count: 1,
           recipientName: 'OtherViewer',
-          topGifterRank: 2
+          topGifterRank: 2,
+          tiktokGiftStreakId: 'gift-streak-test',
+          tiktokGiftCount: 1,
+          tiktokGiftQuietMs: 500
         }
       });
       window.__multiAlertsOverlay.sendPayload({
@@ -841,7 +849,10 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
         meta: {
           count: 2,
           recipientName: 'OtherViewer',
-          topGifterRank: 2
+          topGifterRank: 2,
+          tiktokGiftStreakId: 'gift-streak-test',
+          tiktokGiftCount: 2,
+          tiktokGiftQuietMs: 500
         }
       });
     });
@@ -849,6 +860,8 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     const tiktokGiftSnapshot = await overlayPage.evaluate(() => ({
       titleText: document.querySelector('.alert-title') ? document.querySelector('.alert-title').textContent : '',
       subtitleText: document.querySelector('.alert-subtitle') ? document.querySelector('.alert-subtitle').textContent : '',
+      amountText: document.querySelector('.alert-amount') ? document.querySelector('.alert-amount').textContent : '',
+      ttsCalls: window.__tiktokGiftTtsCalls.slice(),
       state: window.__multiAlertsOverlay.getState()
     }));
     assert(tiktokGiftSnapshot.state.currentCategory === 'donation', 'TikTok gift should render as a donation alert.');
@@ -856,7 +869,13 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     assert(tiktokGiftSnapshot.subtitleText.includes('Rose'), 'TikTok gift subtitle should include the gift title.');
     assert(tiktokGiftSnapshot.subtitleText.includes('OtherViewer'), 'TikTok gift subtitle should include the recipient.');
     assert(tiktokGiftSnapshot.subtitleText.includes('Top gifter #2'), 'TikTok gift subtitle should include top gifter rank.');
+    assert(tiktokGiftSnapshot.amountText.includes('10 diamonds'), 'TikTok gift alert should update to the latest streak total.');
+    assert(tiktokGiftSnapshot.ttsCalls.length === 0, 'TikTok gift TTS should wait for the streak to settle.');
     assert(tiktokGiftSnapshot.state.queueLength === 0, 'TikTok combo updates should not queue duplicate gift alerts.');
+    await overlayPage.waitForTimeout(550);
+    const tiktokGiftTtsCalls = await overlayPage.evaluate(() => window.__tiktokGiftTtsCalls.slice());
+    assert(tiktokGiftTtsCalls.length === 1, 'TikTok gift streak should be read exactly once.');
+    assert(tiktokGiftTtsCalls[0].includes('10 diamonds'), 'TikTok gift TTS should read the final streak total.');
     await overlayPage.waitForTimeout(2100);
     const tiktokClearedState = await overlayPage.evaluate(() => window.__multiAlertsOverlay.getState());
     assert(tiktokClearedState.hasAlert === false, 'TikTok gift alert should auto-dismiss.');

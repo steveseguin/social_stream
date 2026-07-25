@@ -146,9 +146,10 @@
 		}
 	}
 
-	var pendingGiftMessages = new Map();
-	var TIKTOK_GIFT_QUIET_MS = 4500;
+	var trackedTikTokGiftStreaks = new Map();
+	var TIKTOK_GIFT_STREAK_QUIET_MS = 4500;
 	var TIKTOK_GIFT_DUPLICATE_WINDOW_MS = 500;
+	var tikTokGiftStreakSequence = 0;
 
 	function getTikTokGiftUpdateIdentity(data, ele) {
 		if (!data || data.type !== "tiktok" || !data.hasDonation || !data.chatmessage) {
@@ -184,63 +185,57 @@
 		};
 	}
 
-	function flushPendingTikTokGiftMessage(key) {
-		var pending = pendingGiftMessages.get(key);
-		if (!pending) {
-			return;
-		}
-		if (pending.timer) {
-			clearTimeout(pending.timer);
-		}
-		pendingGiftMessages.delete(key);
-		pushMessage(pending.data, pending.target);
-	}
-
-	function queueTikTokGiftMessage(data, target, ele) {
+	function markTikTokGiftUpdate(data, ele) {
 		var identity = getTikTokGiftUpdateIdentity(data, ele);
 		if (!identity) {
-			pushMessage(data, target);
-			return;
+			return true;
 		}
 
 		var now = Date.now();
-		var pending = pendingGiftMessages.get(identity.key);
-		if (pending) {
+		var tracked = trackedTikTokGiftStreaks.get(identity.key);
+		if (tracked) {
 			var isSameRender =
-				identity.quantity === pending.quantity &&
-				(identity.hasStableIndex || (now - pending.updatedAt) <= TIKTOK_GIFT_DUPLICATE_WINDOW_MS);
+				identity.quantity === tracked.quantity &&
+				(identity.hasStableIndex || (now - tracked.updatedAt) <= TIKTOK_GIFT_DUPLICATE_WINDOW_MS);
 			if (isSameRender) {
-				pending.updatedAt = now;
-				return;
+				return false;
 			}
-			if (identity.quantity <= pending.quantity) {
-				flushPendingTikTokGiftMessage(identity.key);
-				pending = null;
+			if (identity.quantity <= tracked.quantity) {
+				if (tracked.timer) {
+					clearTimeout(tracked.timer);
+				}
+				tracked = null;
 			}
 		}
 
-		if (!pending) {
-			pending = {
-				data: data,
-				target: target,
+		if (!tracked) {
+			tracked = {
+				id: "tiktok-gift-" + (++tikTokGiftStreakSequence),
 				quantity: identity.quantity,
 				updatedAt: now,
 				timer: null
 			};
-			pendingGiftMessages.set(identity.key, pending);
+			trackedTikTokGiftStreaks.set(identity.key, tracked);
 		} else {
-			pending.data = data;
-			pending.target = target;
-			pending.quantity = identity.quantity;
-			pending.updatedAt = now;
-			if (pending.timer) {
-				clearTimeout(pending.timer);
+			tracked.quantity = identity.quantity;
+			tracked.updatedAt = now;
+			if (tracked.timer) {
+				clearTimeout(tracked.timer);
 			}
 		}
 
-		pending.timer = setTimeout(function() {
-			flushPendingTikTokGiftMessage(identity.key);
-		}, TIKTOK_GIFT_QUIET_MS);
+		tracked.timer = setTimeout(function() {
+			if (trackedTikTokGiftStreaks.get(identity.key) === tracked) {
+				trackedTikTokGiftStreaks.delete(identity.key);
+			}
+		}, TIKTOK_GIFT_STREAK_QUIET_MS);
+
+		data.meta = Object.assign({}, data.meta || {}, {
+			tiktokGiftStreakId: tracked.id,
+			tiktokGiftCount: identity.quantity,
+			tiktokGiftQuietMs: TIKTOK_GIFT_STREAK_QUIET_MS
+		});
+		return true;
 	}
 
 	function sendMetaEvent(eventName, meta) {
@@ -1574,7 +1569,9 @@
 		addTikTokEventMeta(data, memberLevel);
 		addTikTokTopViewerMeta(data);
 		lastMessageTime = Date.now();
-		queueTikTokGiftMessage(data, reactionsOnlyLikeEvent ? "reactions" : "", ele);
+		if (markTikTokGiftUpdate(data, ele)) {
+			pushMessage(data, reactionsOnlyLikeEvent ? "reactions" : "");
+		}
 	}
 
 	function processEvent(ele) {
@@ -1792,7 +1789,9 @@
 		addTikTokEventMeta(data, cachedMemberLevel);
 		addTikTokTopViewerMeta(data);
 		lastMessageTime = Date.now();
-		queueTikTokGiftMessage(data, reactionsOnlyLikeEvent ? "reactions" : "", ele);
+		if (markTikTokGiftUpdate(data, ele)) {
+			pushMessage(data, reactionsOnlyLikeEvent ? "reactions" : "");
+		}
 	}
 	var bigDUPE = false;
 	let observedDomElementForObserver1 = null;
@@ -2539,12 +2538,12 @@
 			clearInterval(messageLog._cleanupInterval);
 			messageLog._cleanupInterval = null;
 		}
-		pendingGiftMessages.forEach(function(pending) {
-			if (pending && pending.timer) {
-				clearTimeout(pending.timer);
+		trackedTikTokGiftStreaks.forEach(function(tracked) {
+			if (tracked && tracked.timer) {
+				clearTimeout(tracked.timer);
 			}
 		});
-		pendingGiftMessages.clear();
+		trackedTikTokGiftStreaks.clear();
 		if (videosMuted) {
 			clearInterval(videosMuted);
 			videosMuted = null;
