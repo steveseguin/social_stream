@@ -86,6 +86,23 @@ function getChromeGoogleVoices() {
   ];
 }
 
+// Older popup builds stored accent-stripped voice ids (popup.js getLegacyPopup-
+// SystemVoiceIdentifiers), and those are baked into saved settings and shared
+// overlay links, so they still have to resolve.
+function getAccentedVoices() {
+  return [
+    { name: "Google US English", lang: "en-US", default: true },
+    { name: "Google français", lang: "fr-FR" },
+    { name: "Google español", lang: "es-ES" },
+    { name: "Google português do Brasil", lang: "pt-BR" },
+    { name: "Google 日本語", lang: "ja-JP" },
+    { name: "Amélie", lang: "fr-CA" },
+    { name: "Mónica", lang: "es-ES" },
+  ];
+}
+
+const legacyVoiceId = name => name.replace(/[^a-zA-Z0-9]/g, "");
+
 {
   const context = vm.createContext({ URLSearchParams, encodeURIComponent });
   vm.runInContext(
@@ -154,6 +171,65 @@ function getChromeGoogleVoices() {
   // No Google voice speaks Swedish, so fall back to the default voice rather than
   // to whichever matching name happens to be shortest.
   assert.strictEqual(context.TTS.findSystemVoice("Google", "sv-SE").name, "Google US English");
+}
+
+{
+  // Accent-stripped legacy ids must still reach their voice, without letting the
+  // accent-folding tier bring back the "Google" -> non-Latin collapse.
+  const voices = getAccentedVoices();
+  const context = vm.createContext({
+    TTS: { voices: null },
+    window: { speechSynthesis: { getVoices: () => voices } },
+  });
+  vm.runInContext(
+    sourceBetween(ttsJs, "TTS.normalizeSystemVoiceIdentifier", "// Provider settings"),
+    context
+  );
+
+  for (const [name, lang] of [
+    ["Google français", "fr-FR"],
+    ["Google español", "es-ES"],
+    ["Google português do Brasil", "pt-BR"],
+    ["Amélie", "fr-CA"],
+    ["Mónica", "es-ES"],
+  ]) {
+    assert.strictEqual(context.TTS.findSystemVoice(legacyVoiceId(name), lang).name, name);
+    // The full name still wins outright, and the legacy id resolves even when the
+    // link carries no matching language.
+    assert.strictEqual(context.TTS.findSystemVoice(name, lang).name, name);
+    assert.ok(context.TTS.findSystemVoice(legacyVoiceId(name), "en-US"));
+  }
+
+  assert.strictEqual(context.TTS.findSystemVoice("Google", "en-US").name, "Google US English");
+  assert.strictEqual(context.TTS.findSystemVoice("Google", "ja-JP").name, "Google 日本語");
+  assert.strictEqual(context.TTS.findSystemVoice("Google", "fr-FR").name, "Google français");
+}
+
+{
+  const voices = getAccentedVoices();
+  const context = vm.createContext({ URLSearchParams, encodeURIComponent });
+  vm.runInContext(
+    sourceBetween(
+      popupJs,
+      "function normalizePopupSystemVoiceIdentifier",
+      "var popupSpeechVoiceCache"
+    ),
+    context
+  );
+
+  const descriptors = context.createUniqueVoiceIdentifiers(voices);
+  for (const [name, lang] of [
+    ["Google français", "fr-FR"],
+    ["Amélie", "fr-CA"],
+    ["Mónica", "es-ES"],
+  ]) {
+    const selection = `lang=${lang}&voice=${legacyVoiceId(name)}`;
+    assert.strictEqual(context.resolvePopupSystemVoice(descriptors, selection).name, name);
+  }
+  assert.strictEqual(
+    context.resolvePopupSystemVoice(descriptors, "lang=en-US&voice=Google").name,
+    "Google US English"
+  );
 }
 
 {
