@@ -407,7 +407,7 @@ Category key: `miscellaneous_options_for_sites`. Settings: 11.
 
 ## Custom Injection
 
-Category key: `custom_injection`. Settings: 25.
+Category key: `custom_injection`. Settings: 26.
 
 | Key | Type | Short Description |
 | --- | --- | --- |
@@ -417,6 +417,7 @@ Category key: `custom_injection`. Settings: 25.
 | `bttv` | boolean | Enable BTTV emotes - YT/TW channels + globals |
 | `capturejoinedevent` | boolean | Capture 'joined' stream events from supported sources |
 | `capturelikeevent` | boolean | Allow 'liked' stream events in TikTok (high volume) |
+| `captureliketotals` | boolean | Send absolute platform like totals to the dock feed and custom consumers |
 | `delaykick` | boolean | Delay capturing messages from Kick to give time for messages to be deleted if needed; 3 extra seconds of delay |
 | `delaytwitch` | boolean | Delay capturing messages from Twitch to give time for messages to be deleted if needed; 3 extra seconds of delay |
 | `delayyoutube` | boolean | Delay capturing messages from Youtube to give time for messages to be deleted if needed; 3 extra seconds of delay |
@@ -662,10 +663,11 @@ Category key: `assign_roles_classes_to_certain_users`. Settings: 9.
 
 ## YouTube API
 
-Category key: `youtube_api`. Settings: 1.
+Category key: `youtube_api`. Settings: 2.
 
 | Key | Type | Short Description |
 | --- | --- | --- |
+| `captureyoutubelikes` | boolean | Legacy compatibility alias for `captureliketotals`. |
 | `youtubeapikey` | text | YouTube Data API key used for overlays that query YouTube. |
 
 ## Opened in new tab

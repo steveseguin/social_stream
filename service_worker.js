@@ -113,7 +113,13 @@ function isEnableRequest(message) {
 }
 
 function isBackgroundWriteRequest(message) {
-  if (!message || typeof message !== "object" || !message.cmd) {
+  if (!message || typeof message !== "object") {
+    return false;
+  }
+  if (message.action === "clearHistory") {
+    return true;
+  }
+  if (!message.cmd) {
     return false;
   }
 

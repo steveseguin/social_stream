@@ -209,10 +209,15 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "custom_injection",
     description: "Allow 'liked' stream events in TikTok (high volume)"
   },
+  "captureliketotals": {
+    type: "boolean",
+    category: "custom_injection",
+    description: "Send absolute platform like totals to the dock feed and custom consumers"
+  },
   "captureyoutubelikes": {
     type: "boolean",
     category: "youtube_api",
-    description: "Send the current YouTube video like count to the dashboard (polled every 30 seconds)"
+    description: "Legacy compatibility alias for captureliketotals"
   },
   "chatbotHistoryTotal": {
     type: "number",

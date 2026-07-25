@@ -151,7 +151,7 @@ Query or hash (`:599-620,6787-6792,7021`):
 
 DOM mode: `textonlymode`, `nosubcolor`, `customyoutubestate`, `limitedyoutubememberchat`, `memberchatonly`, `excludeReplyingTo`, `bttv`/`seventv`/`ffz`, `delayyoutube`, `youtubeLargerFont`, `showviewercount`, `hypemode`, `disableAutoLiveYoutube`, `disableYoutubeAutoScroll`, `disableYoutubeStaleReload`, `translation`, `customDonationThankYou`.
 
-WS/API page adds: `captureyoutubelikes` (likes_update opt-in, `:5578-5581`), `showsubscount` (`:5739`), `memberchatonly`/`limitedyoutubememberchat` (`:6013`, `:6120-6125`), `excludeReplyingTo` (`:2727-2730`), plus page-local advanced toggles in localStorage `youtubeAdvancedControls`: `syncDeleteMessages`/`syncBlockUsers`/`hideMetrics`/`subscriberAlertMessages` (default false), `groupSubscriberAlerts` (default **true**) (`:2587-2606`).
+WS/API page adds: `captureliketotals` (`likes_update` opt-in; legacy `captureyoutubelikes` is synchronized as a compatibility alias), `showsubscount` (`:5739`), `memberchatonly`/`limitedyoutubememberchat` (`:6013`, `:6120-6125`), `excludeReplyingTo` (`:2727-2730`), plus page-local advanced toggles in localStorage `youtubeAdvancedControls`: `syncDeleteMessages`/`syncBlockUsers`/`hideMetrics`/`subscriberAlertMessages` (default false), `groupSubscriberAlerts` (default **true**) (`:2587-2606`).
 
 ## Event And Payload Notes
 
@@ -172,7 +172,7 @@ Chat base (`:6128-6147`): `chatname, chatbadges, userid, nameColor, chatmessage,
 | `viewer_update` | `:6692-6697` | int meta; 30 s stats poll with SSN API fallback |
 | `subscriber_update` | `:5738-5741` | int meta; immediate + 30-min interval |
 | `view_update` | `:5743-5750` | int meta (channel viewCount) |
-| `likes_update` | `:6701-6711` | int meta, opt-in via `captureyoutubelikes`, 90 s heartbeat |
+| `likes_update` | `:6701-6711` | absolute int meta, opt-in via `captureliketotals` or legacy `captureyoutubelikes`, 90 s heartbeat |
 | `live_chat_ended` | `:5716-5723` | `meta.streamTitle?` |
 
 DOM-only events: `membershiprenewal` (ISSUE-017), `thankyou`, `redirect`, legacy `donation`. WS/API-only: `membermilestone`, `new_follower`, `user_banned`, `live_chat_ended`, `likes_update`, `view_update`, `subscriber_update`.

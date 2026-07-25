@@ -33,8 +33,10 @@
 	const SSN_ACTIONS = {
 		nextInQueue: true,
 		clearOverlay: true,
+		clearDock: true,
 		clear: true,
 		clearAll: true,
+		clearHistory: true,
 		getQueueSize: true,
 		sendChat: true,
 		sendEncodedChat: true,

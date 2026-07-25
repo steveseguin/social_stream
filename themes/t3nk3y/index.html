@@ -143,6 +143,20 @@ span:empty,
 	transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
+/* &reverse mode: newest messages at the bottom, stack anchored to the bottom edge */
+body.reverse #chat-container {
+	display: flex;
+	flex-direction: column-reverse;
+	top: auto;
+	bottom: 0;
+	padding-top: 0;
+	padding-bottom: 5px;
+}
+
+body.reverse .message-container {
+	transform: translateY(20px);
+}
+
 /* Enhanced gaming mode: punchier saturation + RGB glow on messages */
 body.gaming { filter: saturate(1.35) contrast(1.08); }
 body.gaming .message-container { text-shadow: 0 0 6px rgba(0,200,255,0.55), 0 0 10px rgba(255,0,180,0.35); }
@@ -204,6 +218,7 @@ body.gaming .message-container { text-shadow: 0 0 6px rgba(0,200,255,0.55), 0 0 
     // --- Common overlay tweaks (shared across themes) ---
     var hideBots = urlParams.has("hidebots");
     if (urlParams.has("gaming")) { document.body.classList.add("gaming"); }
+    if (urlParams.has("reverse")) { document.body.classList.add("reverse"); }
     if (urlParams.has("chroma")) {
         var _c = urlParams.get("chroma") || "";
         document.body.style.backgroundColor = _c.charAt(0) === "#" ? _c : "#" + _c;

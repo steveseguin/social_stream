@@ -26,9 +26,9 @@ async function loadScriptsInOrder() {
         './libs/objects.js?v=1',
         './libs/colours.js?v=1',
         './spotify.js?v=1',
-        './js/streamdeck-remote-control.js?v=1',
+        './js/streamdeck-remote-control.js?v=2',
         './background.js?v=4',
-        './db.js?v=1',
+        './db.js?v=2',
         './ai.js?v=2',
         './points.js?v=1',
         './pointsactions.js?v=1'

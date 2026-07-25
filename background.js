@@ -1523,6 +1523,38 @@ function pruneSettingsObjects(settingsObject) {
 	return changed;
 }
 
+function syncLikeTotalSettings(settingsObject, explicitValue) {
+	if (!settingsObject || typeof settingsObject !== "object") {
+		return false;
+	}
+
+	const settingKeys = ["captureliketotals", "captureyoutubelikes"];
+	const hasExplicitValue = typeof explicitValue === "boolean";
+	const enabled = hasExplicitValue
+		? explicitValue
+		: settingKeys.some(settingKey => {
+				const entry = settingsObject[settingKey];
+				return entry === true || !!(entry && typeof entry === "object" && entry.setting === true);
+			});
+	let changed = false;
+
+	for (const settingKey of settingKeys) {
+		const entry = settingsObject[settingKey];
+		const entryEnabled = entry === true || !!(entry && typeof entry === "object" && entry.setting === true);
+		if (enabled) {
+			if (!entryEnabled) {
+				settingsObject[settingKey] = { setting: true };
+				changed = true;
+			}
+		} else if (hasExplicitValue && settingKey in settingsObject) {
+			delete settingsObject[settingKey];
+			changed = true;
+		}
+	}
+
+	return changed;
+}
+
 function loadSettings(item, resave = false) {
 	log("loadSettings (or saving new settings)", item);
 	let reloadNeeded = false;
@@ -1600,6 +1632,9 @@ function loadSettings(item, resave = false) {
 		settings = item.settings;
 		// Temporary migration cleanup for stale imported false toggle objects. Stop pruning on every import after May 31st 2026.
 		normalizedSettings = pruneSettingsObjects(settings);
+		if (syncLikeTotalSettings(settings)) {
+			normalizedSettings = true;
+		}
 
 		Object.keys(patterns).forEach(pattern => {
 			settings[pattern] = findExistingEvents(pattern, { settings });
@@ -4671,7 +4706,18 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		const senderTabId = hasSenderTabId ? senderTab.id : null;
 		const senderTabUrl = senderTab && typeof senderTab.url === "string" ? senderTab.url : "";
 
-		if (request.cmd && request.cmd === "setOnOffState") {
+		if (request.action === "clearHistory") {
+			const clearHistoryResult = await clearSavedMessageHistory(request.value);
+			if (clearHistoryResult.ok) {
+				sendDataP2P({
+					action: "historyCleared",
+					ok: true,
+					deleted: clearHistoryResult.deleted || 0
+				});
+			}
+			sendResponse(clearHistoryResult);
+			return response;
+		} else if (request.cmd && request.cmd === "setOnOffState") {
 			// toggle the IFRAME (stream to the remote dock) on or off
 			isExtensionOn = request.data.value;
 			persistSession({ state: isExtensionOn });
@@ -4776,6 +4822,10 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				}
 			} else {
 				settings[request.setting] = request.value;
+			}
+
+			if (request.setting === "captureliketotals" || request.setting === "captureyoutubelikes") {
+				syncLikeTotalSettings(settings, !!request.value);
 			}
 
 			pruneSettingsObjects(settings);
@@ -5087,7 +5137,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (request.setting == "capturelikeevent") {
 				pushSettingChange();
 			}
-			if (request.setting == "captureyoutubelikes") {
+			if (request.setting == "captureliketotals" || request.setting == "captureyoutubelikes") {
 				pushSettingChange();
 			}
 			if (request.setting == "bttv") {
@@ -9380,6 +9430,41 @@ function sendStreamDeckCommandResult(socket, request, result) {
 	return true;
 }
 
+function isClearHistoryConfirmed(value) {
+	if (value === true || value === "confirm") {
+		return true;
+	}
+	return !!(value && typeof value === "object" && value.confirm === true);
+}
+
+async function clearSavedMessageHistory(value) {
+	if (!isClearHistoryConfirmed(value)) {
+		return {
+			ok: false,
+			error: "Confirmation required. Pass value.confirm=true or value=confirm."
+		};
+	}
+	if (typeof messageStoreDB === "undefined" || !messageStoreDB || typeof messageStoreDB.clearMessages !== "function") {
+		return {
+			ok: false,
+			error: "The local message database is unavailable."
+		};
+	}
+	try {
+		const deleted = await messageStoreDB.clearMessages();
+		return {
+			ok: true,
+			deleted
+		};
+	} catch (error) {
+		console.error("Failed to clear saved message history:", error);
+		return {
+			ok: false,
+			error: error && error.message ? error.message : "Failed to clear saved message history."
+		};
+	}
+}
+
 const recentInboundWebhookDeliveries = new Map();
 function normalizeInboundWebhookId(value) {
 	if (value === undefined || value === null || value === "") {
@@ -9668,6 +9753,27 @@ function setupSocket() {
 				let source = data.target.trim().toLowerCase() || "*";
 				let username = data.value.trim();
 				resp = blockUser({ chatname: username, type: source });
+			} else if (data.action && (data.action === "clearDock" || data.action === "clear" || data.action === "clearAll")) {
+				sendDataP2P(data);
+				resp = true;
+			} else if (data.action && data.action === "clearHistory") {
+				const clearHistoryResult = await clearSavedMessageHistory(data.value);
+				if (clearHistoryResult.ok) {
+					const historyClearedPayload = {
+						action: "historyCleared",
+						ok: true,
+						deleted: clearHistoryResult.deleted || 0
+					};
+					if (data.target) {
+						historyClearedPayload.target = data.target;
+					}
+					sendDataP2P(historyClearedPayload);
+				}
+				if (data.get) {
+					sendStreamDeckCallback(socketserver, data, clearHistoryResult);
+					data.get = false;
+				}
+				resp = clearHistoryResult.ok;
 			} else if (!data.action && data?.extContent) {
 				try {
 					if (!data.extContent.type) {

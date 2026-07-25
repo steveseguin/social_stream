@@ -156,7 +156,8 @@ Support checks:
 | Feature next queued message | `nextInQueue` |
 | Toggle automatic featuring | `autoShow` with value `toggle` |
 | Send text to chat | `sendEncodedChat` |
-| Clear dock messages | `clear` or `clearAll` |
+| Clear dock messages | `clearDock` (`clear` and `clearAll` remain aliases); use `target` with a dock `&label=` when needed |
+| Delete saved message history | `clearHistory` with `value: {"confirm":true}` |
 | Feature next unfeatured message | `feature` |
 | Toggle TTS | `toggleTTS` with value `toggle` |
 | Get queue size | `getQueueSize` with callback-capable client |

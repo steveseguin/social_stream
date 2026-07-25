@@ -274,7 +274,8 @@
             <h2>General Commands</h2>
             <div class="btn-group" role="group">
                 <button class="btn btn-secondary" onclick="sendCommand('clearOverlay')">Clear Overlay</button>
-                <button class="btn btn-secondary" onclick="sendCommand('clearAll')">Clear All Messages</button>
+                <button class="btn btn-secondary" onclick="sendCommand('clearDock')">Clear Dock Messages</button>
+                <button class="btn btn-danger" onclick="clearSavedHistory(this)">Delete Saved History</button>
                 <button class="btn btn-secondary" onclick="sendCommand('feature')">Feature Next Unfeatured</button>
                 <button class="btn btn-secondary" onclick="sendCommand('autoShow', 'toggle')">Toggle Auto-show</button>
                 <button class="btn btn-secondary" onclick="sendCommand('nextInQueue')">Next in Queue</button>
@@ -556,6 +557,12 @@
                 socket.close();
             }
         }
+
+		function clearSavedHistory(element) {
+			if (window.confirm('Permanently delete all saved message history? This also resets first-time chatter and last-activity history.')) {
+				sendCommand('clearHistory', { confirm: true }, null, element.closest('.btn-group'));
+			}
+		}
 
 		function sendCommand(action, value = null, channel = null, element = null) {
 			let message = {

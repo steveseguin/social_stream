@@ -2,31 +2,31 @@
 
 ## Current state
 
-- [x] Cross-transport dedupe is deployed on beta.
+- [x] Cross-transport dedupe is deployed to production.
 - [x] The socket-only gate is present but requires links with `v=3.52.0` or newer.
-- [ ] The guarded pages are deployed to production.
-- [ ] Production go-live time is recorded below.
+- [x] The guarded pages are deployed to production.
+- [x] Production go-live time is recorded below.
 - [ ] Version `3.52.0` is released.
 
-Production go-live (Day 0): `NOT STARTED`
+Production go-live (Day 0): `2026-07-22 05:55:43 UTC`
 
 The 30-day countdown starts only when the guarded pages go live on production. Do not bump the extension to `3.52.0` before the Day 30 readiness review passes.
 
 ## Phase 1: Production rollout - Day 0
 
-- [ ] Deploy the guarded page changes to production.
-- [ ] Record the exact production date and time above.
-- [ ] Confirm fresh production copies of representative pages contain the transport gate and dedupe guard.
-- [ ] Run `node scripts/transport-dedupe-regression.test.cjs` against the production commit.
-- [ ] Keep the extension version below `3.52.0`.
-- [ ] Keep additive delivery experimental; do not enable it by default.
+- [x] Deploy the guarded page changes to production.
+- [x] Record the exact production date and time above.
+- [x] Confirm fresh production copies of representative pages contain the transport gate and dedupe guard.
+- [x] Run `node scripts/transport-dedupe-regression.test.cjs` against the production commit.
+- [x] Keep the extension version below `3.52.0`.
+- [x] Keep additive delivery experimental; do not enable it by default.
 
 ## Phase 2: Cache and production soak - Days 1-30
 
 - [ ] Leave the `3.52.0` gate inactive for the full 30 days.
 - [ ] Monitor reports of duplicate or missing messages.
 - [ ] Test additive delivery with existing `v=3.50.5` links; they should remain dual-listen and render once.
-- [ ] Test links without `server2`; they should remain bridge-only.
+- [ ] Test links without `server`, `server2`, or `server3`; they should remain bridge-only.
 - [ ] Test representative chat overlays, emotes, events, hype, games, and the dock.
 - [ ] Do not treat an old saved OBS URL as updated merely because its cached page has refreshed.
 
@@ -39,7 +39,7 @@ All items must pass before releasing `3.52.0`:
 - [ ] The dedupe regression test passes.
 - [ ] Fresh and old saved links both render messages once during additive delivery.
 - [ ] No unresolved duplicate-message or dropped-message regression remains.
-- [ ] The socket-outage tradeoff is accepted: a socket-only overlay cannot receive the P2P fallback while its bridge is disconnected.
+- [ ] The socket-outage tradeoff is accepted: a socket-only overlay cannot fall back to P2P while its WebSocket is disconnected.
 
 ## Phase 4: Release `3.52.0`
 

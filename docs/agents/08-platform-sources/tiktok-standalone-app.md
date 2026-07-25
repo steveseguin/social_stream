@@ -237,6 +237,7 @@ Observed families from app code and tests:
 - Gifts and gift streaks.
 - Reactions/hidden gift tray style events where applicable.
 - Followed/shared/liked social events.
+- Opt-in cumulative like totals as throttled `likes_update` snapshots.
 - Joined events when capture is enabled.
 - `question_new`.
 - Emotes and stickers.
@@ -245,6 +246,8 @@ Observed families from app code and tests:
 Important behavior:
 
 - Liked events can be routed to the reactions target when capture-liked is disabled for the main stream.
+- `captureliketotals` enables authoritative cumulative totals independently of viewer-specific `liked` routing; legacy `captureyoutubelikes` remains an enablement alias.
+- The first known total sends immediately, burst changes are coalesced to at most one update every five seconds, unchanged state heartbeats about every 90 seconds, and confirmed stream end sends zero.
 - Follow/share events have dedupe behavior.
 - Liked events can intentionally pass through more often than other social rows.
 - Gift handling uses upstream IDs, streak identity, gift names, quantities, and `gift-mapping.json` when available.
