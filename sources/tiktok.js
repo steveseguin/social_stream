@@ -146,6 +146,103 @@
 		}
 	}
 
+	var pendingGiftMessages = new Map();
+	var TIKTOK_GIFT_QUIET_MS = 4500;
+	var TIKTOK_GIFT_DUPLICATE_WINDOW_MS = 500;
+
+	function getTikTokGiftUpdateIdentity(data, ele) {
+		if (!data || data.type !== "tiktok" || !data.hasDonation || !data.chatmessage) {
+			return null;
+		}
+
+		var container = document.createElement("div");
+		container.innerHTML = data.chatmessage;
+		var giftImage = container.querySelector("img[src]");
+		var giftImageSrc = giftImage ? (giftImage.getAttribute("src") || "") : "";
+		var giftIdMatch = giftImageSrc.match(/\/([a-f0-9]{32})(?:~|\.)/i);
+		var giftId = giftIdMatch ? giftIdMatch[1].toLowerCase() : giftImageSrc;
+		var visibleText = container.textContent || container.innerText || "";
+		var countMatch = visibleText.match(/[x\u00d7]\s*(\d+)/i);
+		var quantity = countMatch ? parseInt(countMatch[1], 10) : 0;
+		if (!giftId || !Number.isFinite(quantity) || quantity < 1) {
+			return null;
+		}
+
+		var indexValue = "";
+		try {
+			indexValue = ele && ele.dataset && ele.dataset.index
+				? ele.dataset.index
+				: (ele && ele.closest && ele.closest("[data-index]") && ele.closest("[data-index]").dataset.index) || "";
+		} catch (e) {}
+
+		var nameKey = normalizeTikTokNameKey(data.chatname || "unknown");
+		var stableIndexKey = indexValue ? "idx=" + indexValue : "";
+		return {
+			key: stableIndexKey || (nameKey + ":" + giftId),
+			quantity: quantity,
+			hasStableIndex: !!stableIndexKey
+		};
+	}
+
+	function flushPendingTikTokGiftMessage(key) {
+		var pending = pendingGiftMessages.get(key);
+		if (!pending) {
+			return;
+		}
+		if (pending.timer) {
+			clearTimeout(pending.timer);
+		}
+		pendingGiftMessages.delete(key);
+		pushMessage(pending.data, pending.target);
+	}
+
+	function queueTikTokGiftMessage(data, target, ele) {
+		var identity = getTikTokGiftUpdateIdentity(data, ele);
+		if (!identity) {
+			pushMessage(data, target);
+			return;
+		}
+
+		var now = Date.now();
+		var pending = pendingGiftMessages.get(identity.key);
+		if (pending) {
+			var isSameRender =
+				identity.quantity === pending.quantity &&
+				(identity.hasStableIndex || (now - pending.updatedAt) <= TIKTOK_GIFT_DUPLICATE_WINDOW_MS);
+			if (isSameRender) {
+				pending.updatedAt = now;
+				return;
+			}
+			if (identity.quantity <= pending.quantity) {
+				flushPendingTikTokGiftMessage(identity.key);
+				pending = null;
+			}
+		}
+
+		if (!pending) {
+			pending = {
+				data: data,
+				target: target,
+				quantity: identity.quantity,
+				updatedAt: now,
+				timer: null
+			};
+			pendingGiftMessages.set(identity.key, pending);
+		} else {
+			pending.data = data;
+			pending.target = target;
+			pending.quantity = identity.quantity;
+			pending.updatedAt = now;
+			if (pending.timer) {
+				clearTimeout(pending.timer);
+			}
+		}
+
+		pending.timer = setTimeout(function() {
+			flushPendingTikTokGiftMessage(identity.key);
+		}, TIKTOK_GIFT_QUIET_MS);
+	}
+
 	function sendMetaEvent(eventName, meta) {
 		if (!eventName || !meta) {
 			return;
@@ -1477,7 +1574,7 @@
 		addTikTokEventMeta(data, memberLevel);
 		addTikTokTopViewerMeta(data);
 		lastMessageTime = Date.now();
-		pushMessage(data, reactionsOnlyLikeEvent ? "reactions" : "");
+		queueTikTokGiftMessage(data, reactionsOnlyLikeEvent ? "reactions" : "", ele);
 	}
 
 	function processEvent(ele) {
@@ -1695,7 +1792,7 @@
 		addTikTokEventMeta(data, cachedMemberLevel);
 		addTikTokTopViewerMeta(data);
 		lastMessageTime = Date.now();
-		pushMessage(data, reactionsOnlyLikeEvent ? "reactions" : "");
+		queueTikTokGiftMessage(data, reactionsOnlyLikeEvent ? "reactions" : "", ele);
 	}
 	var bigDUPE = false;
 	let observedDomElementForObserver1 = null;
@@ -2442,6 +2539,12 @@
 			clearInterval(messageLog._cleanupInterval);
 			messageLog._cleanupInterval = null;
 		}
+		pendingGiftMessages.forEach(function(pending) {
+			if (pending && pending.timer) {
+				clearTimeout(pending.timer);
+			}
+		});
+		pendingGiftMessages.clear();
 		if (videosMuted) {
 			clearInterval(videosMuted);
 			videosMuted = null;

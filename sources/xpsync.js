@@ -44,8 +44,23 @@
 	// settings.textonlymode
 	// settings.captureevents
 
+	var processedIds = {};
+	var processedIdsQueue = [];
+
+	function markProcessed(id){
+		if (!id || processedIds[id]){return false;}
+		processedIds[id] = true;
+		processedIdsQueue.push(id);
+		if (processedIdsQueue.length > 500){
+			delete processedIds[processedIdsQueue.shift()];
+		}
+		return true;
+	}
+
 	function processMessage(ele){
+		if (!isExtensionOn){return;}
 		if (!ele || !ele.id || ele.id.indexOf("chat-") !== 0){return;}
+		if (!markProcessed(ele.id)){return;}
 
 		var content = ele.querySelector(":scope > div");
 		if (!content || !content.children.length){return;}
@@ -231,6 +246,12 @@
 
 		observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
+
+		try {
+			target.querySelectorAll(".chat-row[id^='chat-']").forEach(function(row){
+				markProcessed(row.id);
+			});
+		} catch(e){}
 	}
 
 	console.log("social stream injected");
@@ -243,9 +264,10 @@
 
 				console.log("CONNECTED chat detected");
 
-				setTimeout(function(){
-					onElementInserted(container);
-				}, 1000);
+				if (observer){
+					try { observer.disconnect(); } catch(e){}
+				}
+				onElementInserted(container);
 			}
 		} catch(e){}
 	}, 2000);
