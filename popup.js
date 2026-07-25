@@ -1045,7 +1045,21 @@ function normalizePopupSystemVoiceIdentifier(value) {
     return String(value || "")
         .trim()
         .toLowerCase()
-        .replace(/[^a-z0-9]/g, "");
+        .split("")
+        .filter(function(character) {
+            // Only ASCII separators and punctuation get dropped. Stripping every
+            // non-ASCII character collapsed CJK voice names down to a bare "google".
+            return /[a-z0-9]/.test(character) || character.charCodeAt(0) > 127;
+        })
+        .join("");
+}
+
+function popupSystemVoiceLanguageRank(voice, requestedLangLower, requestedLangBase) {
+    if (!requestedLangLower) return 2;
+    const voiceLang = String(voice && voice.lang || "").toLowerCase();
+    if (voiceLang === requestedLangLower) return 0;
+    if (requestedLangBase && voiceLang.split("-")[0] === requestedLangBase) return 1;
+    return 2;
 }
 
 function getLegacyPopupSystemVoiceIdentifiers(voiceName, voicesInLang) {
@@ -1117,15 +1131,11 @@ function resolvePopupSystemVoice(voices, selection, language) {
     const pickBestMatch = matches => {
         if (!matches.length) return null;
         return matches.slice().sort((a, b) => {
-            const aLang = String(a.lang || "").toLowerCase();
-            const bLang = String(b.lang || "").toLowerCase();
-            const aRank = requestedLangLower && aLang === requestedLangLower ? 0 :
-                (requestedLangBase && aLang.split("-")[0] === requestedLangBase ? 1 : 2);
-            const bRank = requestedLangLower && bLang === requestedLangLower ? 0 :
-                (requestedLangBase && bLang.split("-")[0] === requestedLangBase ? 1 : 2);
+            const aRank = popupSystemVoiceLanguageRank(a, requestedLangLower, requestedLangBase);
+            const bRank = popupSystemVoiceLanguageRank(b, requestedLangLower, requestedLangBase);
             if (aRank !== bRank) return aRank - bRank;
-            if (a.name.length !== b.name.length) return a.name.length - b.name.length;
             if (a.default !== b.default) return a.default ? -1 : 1;
+            if (a.name.length !== b.name.length) return a.name.length - b.name.length;
             return 0;
         })[0];
     };
@@ -1136,13 +1146,25 @@ function resolvePopupSystemVoice(voices, selection, language) {
     matches = voices.filter(voice => (voice.legacyVoiceIds || []).some(identifier => identifier.toLowerCase() === requestedLower));
     if (matches.length) return pickBestMatch(matches);
 
-    if (requestedNormalized) {
-        matches = voices.filter(voice => normalizePopupSystemVoiceIdentifier(voice.name) === requestedNormalized);
-        if (matches.length) return pickBestMatch(matches);
+    const normalizedMatches = requestedNormalized
+        ? voices.filter(voice => normalizePopupSystemVoiceIdentifier(voice.name) === requestedNormalized)
+        : [];
+    const partialMatches = voices.filter(voice => String(voice.name || "").toLowerCase().includes(requestedLower));
+
+    // Both of these are fuzzy name matches, so neither should win by ignoring the
+    // requested language. A partial match in the right language beats a normalized
+    // match in the wrong one.
+    const normalizedBest = pickBestMatch(normalizedMatches);
+    if (normalizedBest && popupSystemVoiceLanguageRank(normalizedBest, requestedLangLower, requestedLangBase) < 2) {
+        return normalizedBest;
     }
 
-    matches = voices.filter(voice => String(voice.name || "").toLowerCase().includes(requestedLower));
-    return pickBestMatch(matches);
+    const partialBest = pickBestMatch(partialMatches);
+    if (partialBest && popupSystemVoiceLanguageRank(partialBest, requestedLangLower, requestedLangBase) < 2) {
+        return partialBest;
+    }
+
+    return normalizedBest || partialBest;
 }
 
 var popupSpeechVoiceCache = null;

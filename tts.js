@@ -167,23 +167,33 @@ TTS.normalizeSystemVoiceIdentifier = function(value) {
     return String(value || "")
         .trim()
         .toLowerCase()
-        .replace(/[^a-z0-9]/g, "");
+        .split("")
+        .filter(function(character) {
+            // Only ASCII separators and punctuation get dropped. Stripping every
+            // non-ASCII character collapsed CJK voice names down to a bare "google".
+            return /[a-z0-9]/.test(character) || character.charCodeAt(0) > 127;
+        })
+        .join("");
+};
+
+TTS.systemVoiceLanguageRank = function(voice, language) {
+    var requestedLanguage = String(language || "").toLowerCase();
+    if (!requestedLanguage) return 2;
+    var voiceLanguage = String(voice && voice.lang || "").toLowerCase();
+    if (voiceLanguage === requestedLanguage) return 0;
+    var requestedLanguageBase = requestedLanguage.split("-")[0];
+    if (requestedLanguageBase && voiceLanguage.split("-")[0] === requestedLanguageBase) return 1;
+    return 2;
 };
 
 TTS.pickBestSystemVoice = function(voices, language) {
     if (!voices || !voices.length) return null;
-    var requestedLanguage = String(language || "").toLowerCase();
-    var requestedLanguageBase = requestedLanguage.split("-")[0];
     return voices.slice().sort(function(a, b) {
-        var aLanguage = String(a.lang || "").toLowerCase();
-        var bLanguage = String(b.lang || "").toLowerCase();
-        var aRank = requestedLanguage && aLanguage === requestedLanguage ? 0 :
-            (requestedLanguageBase && aLanguage.split("-")[0] === requestedLanguageBase ? 1 : 2);
-        var bRank = requestedLanguage && bLanguage === requestedLanguage ? 0 :
-            (requestedLanguageBase && bLanguage.split("-")[0] === requestedLanguageBase ? 1 : 2);
+        var aRank = TTS.systemVoiceLanguageRank(a, language);
+        var bRank = TTS.systemVoiceLanguageRank(b, language);
         if (aRank !== bRank) return aRank - bRank;
-        if (a.name.length !== b.name.length) return a.name.length - b.name.length;
         if (!!a.default !== !!b.default) return a.default ? -1 : 1;
+        if (a.name.length !== b.name.length) return a.name.length - b.name.length;
         return 0;
     })[0];
 };
@@ -206,18 +216,25 @@ TTS.findSystemVoice = function(voiceName, language) {
     });
     if (matches.length) return TTS.pickBestSystemVoice(matches, language);
 
-    if (requestedNormalized) {
-        matches = voices.filter(function(voice) {
-            return TTS.normalizeSystemVoiceIdentifier(voice.name) === requestedNormalized ||
-                TTS.normalizeSystemVoiceIdentifier(voice.voiceURI) === requestedNormalized;
-        });
-        if (matches.length) return TTS.pickBestSystemVoice(matches, language);
-    }
+    var normalizedMatches = requestedNormalized ? voices.filter(function(voice) {
+        return TTS.normalizeSystemVoiceIdentifier(voice.name) === requestedNormalized ||
+            TTS.normalizeSystemVoiceIdentifier(voice.voiceURI) === requestedNormalized;
+    }) : [];
 
-    matches = voices.filter(function(voice) {
+    var partialMatches = voices.filter(function(voice) {
         return voice.name.toLowerCase().includes(requestedLower);
     });
-    return TTS.pickBestSystemVoice(matches, language);
+
+    // Both of these are fuzzy name matches, so neither should win by ignoring the
+    // requested language. A partial match in the right language beats a normalized
+    // match in the wrong one.
+    var normalizedBest = TTS.pickBestSystemVoice(normalizedMatches, language);
+    if (normalizedBest && TTS.systemVoiceLanguageRank(normalizedBest, language) < 2) return normalizedBest;
+
+    var partialBest = TTS.pickBestSystemVoice(partialMatches, language);
+    if (partialBest && TTS.systemVoiceLanguageRank(partialBest, language) < 2) return partialBest;
+
+    return normalizedBest || partialBest;
 };
 
 TTS.findFallbackSystemVoice = function(language) {
