@@ -23,6 +23,7 @@ class SpotifyIntegration {
 		this._isElectronEnv = undefined;
 		this._electronIpc = null;
 		this.pendingElectronOAuth = null;
+		this.identityAuthInFlight = false;
 
 		// Managed queue for song requests - enables !revoke functionality
 		this.managedQueue = {
@@ -261,6 +262,73 @@ class SpotifyIntegration {
 			});
 		} catch (err) {
 			console.warn('Failed to send Spotify auth result to popup:', err);
+		}
+	}
+
+	async launchChromeIdentityFlow({ authUrl, redirectUri, state }) {
+		if (this.identityAuthInFlight) {
+			console.log('Spotify Chrome identity flow already running');
+			return;
+		}
+
+		this.identityAuthInFlight = true;
+
+		try {
+			const responseUrl = await chrome.identity.launchWebAuthFlow({
+				url: authUrl,
+				interactive: true
+			});
+
+			if (!responseUrl) {
+				throw new Error('Spotify authorization did not complete.');
+			}
+
+			const url = new URL(responseUrl);
+			const code = url.searchParams.get('code');
+			const returnedState = url.searchParams.get('state');
+			const errorParam = url.searchParams.get('error');
+
+			if (returnedState !== state) {
+				throw new Error('State mismatch in OAuth callback');
+			}
+
+			if (errorParam) {
+				throw new Error(`Spotify authorization failed: ${errorParam}`);
+			}
+
+			if (!code) {
+				throw new Error('Spotify authorization did not complete.');
+			}
+
+			const success = await this.handleAuthCallback(code, returnedState, redirectUri);
+			if (!success) {
+				throw new Error('Failed to process Spotify authorization response.');
+			}
+
+			const warning = this.consumeAuthWarning();
+			this.notifySpotifyAuthResult({
+				success: true,
+				warning,
+				message: warning
+					? `Connected to Spotify, but playback access is limited: ${warning}`
+					: 'Connected to Spotify!'
+			});
+		} catch (error) {
+			const normalized = this.normalizeOAuthError(error, {
+				runtime: 'extension',
+				redirectUriAttempted: redirectUri
+			});
+			console.error('Chrome identity Spotify auth error:', normalized.errorCode, normalized.error);
+			this.notifySpotifyAuthResult({
+				success: false,
+				errorCode: normalized.errorCode,
+				error: normalized.error,
+				message: normalized.message,
+				redirectUriAttempted: normalized.redirectUriAttempted,
+				expectedRedirectUris: normalized.expectedRedirectUris
+			});
+		} finally {
+			this.identityAuthInFlight = false;
 		}
 	}
 
@@ -1708,6 +1776,34 @@ class SpotifyIntegration {
 
 		this.pendingAuthState = state;
 		persistAuthState();
+
+		// Extension builds capture the callback automatically through chrome.identity;
+		// everything below is the fallback for runtimes without it.
+		if (typeof chrome !== 'undefined' && chrome.identity && chrome.identity.getRedirectURL && chrome.identity.launchWebAuthFlow) {
+			if (this.identityAuthInFlight) {
+				return {
+					success: false,
+					waitingForCallback: true,
+					message: 'Spotify login is already running. Please finish the existing authorization window.'
+				};
+			}
+
+			const identityRedirectUri = chrome.identity.getRedirectURL('spotify');
+			console.log('Chrome extension redirect URI:', identityRedirectUri);
+
+			this.launchChromeIdentityFlow({
+				authUrl: this.buildAuthUrl({ redirectUri: identityRedirectUri, scopes, state }),
+				redirectUri: identityRedirectUri,
+				state
+			});
+
+			return {
+				success: false,
+				waitingForCallback: true,
+				message: 'Please finish the Spotify login in the newly opened window. This popup will update after Spotify responds.',
+				redirectUriAttempted: identityRedirectUri
+			};
+		}
 
 		const hasElectronBridge = this.hasElectronBridge();
 		let preferredRedirectUri = hasElectronBridge ? this.electronRedirectUri : this.browserRedirectUri;
