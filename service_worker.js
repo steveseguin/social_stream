@@ -513,6 +513,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     log("SERVICE WORKER: ", message);
 
     if (message?.data?.cmd === 'spotifyAuth') {
+      // background.html already receives this broadcast directly; forwarding a second
+      // copy would start the OAuth flow twice and open two auth tabs.
+      if (backgroundPageTabIdLoaded) {
+        return false;
+      }
+
       // Fire-and-forget Spotify auth so the popup gets an immediate ack
       sendResponse({ success: false, waitingForCallback: true, message: 'Starting Spotify authorization…' });
       sendMessageToBackgroundPage(message, () => {});
