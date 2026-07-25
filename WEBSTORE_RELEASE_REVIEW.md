@@ -100,7 +100,7 @@ Add dated notes here as this branch is reviewed.
   - Piper phonemizer changed from fetch/rewrite/inline script injection to a packaged module import while preserving the ESM export used by the web TTS entry point.
 - Permissions reviewed:
   - Removed unused `identity` and redundant `activeTab`.
-  - Kept `tabs`, `scripting`, `tabCapture`, `debugger`, `webNavigation`, `notifications`, and `storage` because they are used by extension code.
+  - Kept `tabs`, `scripting`, `tabCapture`, `debugger`, `notifications`, and `storage` because they are used by extension code.
   - Kept broad `http://*/*` / `https://*/*` host permissions because `injectCustomSource` supports user-selected packaged source injection beyond static content-script matches.
 - Remote model/data hosts retained: `largefiles.socialstream.ninja` is used for ONNX/model/voice data, while WASM/JS runtime files are bundled locally. Tests confirm Hugging Face/CDN executable fallbacks are not present for the checked model paths.
 - Residual adult-name scan result: `sources/websocket/emotes.json` contains only a `joystick` / `:joystick:` emote name, not the removed provider integration.
@@ -276,3 +276,153 @@ Release status: use the R2 conservative artifact for Chrome Web Store upload.
 The remaining recommended manual check is loading the R2 zip unpacked in Chrome
 and smoke-testing popup open, background page startup, one supported content
 source, and one overlay URL before upload.
+
+### 2026-07-07 Purple Potassium Rejection Review
+
+- Chrome Web Store rejected version `3.50.3` for Use of Permissions:
+  `webNavigation` was requested but not used.
+- Confirmed source and all three 2026-07-06 package candidates declared
+  `webNavigation`.
+- Confirmed executable source has no `chrome.webNavigation` or
+  `browser.webNavigation` calls; only `manifest.json`, this review file, and
+  `docs/agents/03-extension-architecture.md` referenced the permission.
+- Removed `webNavigation` from `manifest.json`.
+- Corrected stale local documentation that still listed `webNavigation`,
+  `activeTab`, and `identity`.
+- Remaining requested API permissions were reviewed against executable usage:
+  - `storage`: `service_worker.js`, `background.js`, `popup.js`,
+    `settings/options.js`, and source adapters persist settings, state, tokens,
+    overlays, source hints, and capture options.
+  - `notifications`: `service_worker.js` and `background.js` surface background
+    startup/injection and runtime errors.
+  - `tabs`: `service_worker.js`, `background.js`, and `popup.js` create,
+    query, update, focus, and message the background/dashboard/source tabs.
+  - `scripting`: `service_worker.js` injects packaged source scripts selected
+    by the user from the popup into the active tab.
+  - `tabCapture`: `service_worker.js` and `sources/capturevideo.js` support
+    tab audio/video capture workflows.
+  - `debugger`: `background.js` attaches to tabs and sends input/runtime
+    commands for host/chat automation features.
+- No requested `identity`, `activeTab`, `webRequest`, `downloads`, `history`,
+  `cookies`, `alarms`, `contextMenus`, `sidePanel`, or `offscreen` permissions
+  are present in `manifest.json`.
+- Residual permission risk: broad `http://*/*` and `https://*/*` host access
+  remains. It is tied to user-selected packaged source injection and broad chat
+  platform support, but it should be explained clearly in reviewer notes because
+  it is still the highest-friction permission surface after this fix.
+- Host-permission shape note: the two broad host entries subsume the other 228
+  HTTP/HTTPS host entries. Removing only the specific entries would reduce
+  manifest noise but would not materially reduce granted host access while the
+  broad entries remain.
+- Built replacement upload artifact:
+  `C:\Users\steve\Code\webstore\social-stream-ninja-chrome-web-store-3.50.3-20260707-conservative-r3.zip`
+- R3 artifact verification:
+  - version: `3.50.3`
+  - permissions: `notifications`, `storage`, `debugger`, `tabs`, `scripting`,
+    `tabCapture`
+  - host permissions: `230`
+  - content scripts: `145`
+  - scanned package text files: no `webNavigation`, `chrome.webNavigation`, or
+    `browser.webNavigation` hits
+  - manifest file references: all present
+  - R3 differs from R2 only by `manifest.json` content
+
+### 2026-07-07 Expanded Policy And Permission Audit
+
+- Web policy sources checked:
+  - https://developer.chrome.com/docs/webstore/program-policies/policies
+  - https://developer.chrome.com/docs/webstore/program-policies/permissions
+  - https://developer.chrome.com/docs/webstore/program-policies/mv3-requirements
+  - https://developer.chrome.com/docs/webstore/program-policies/quality-guidelines
+  - https://developer.chrome.com/docs/extensions/develop/concepts/declare-permissions
+  - https://developer.chrome.com/docs/extensions/develop/concepts/permission-warnings
+  - https://developer.chrome.com/docs/extensions/develop/migrate/remote-hosted-code
+  - https://developer.chrome.com/docs/extensions/reference/api/tabs
+  - https://developer.chrome.com/docs/extensions/reference/permissions-list
+- Common rejection areas relevant to this package:
+  - unused or broader-than-needed permissions
+  - remotely hosted executable JavaScript/WASM or fetched code execution
+  - misleading or non-reproducible listing/UI claims
+  - privacy policy or Developer Dashboard data-use mismatch
+  - non-narrow single purpose or bundled unrelated functionality
+  - spammy notifications or messages sent without user confirmation
+  - adult/sexually explicit provider references
+  - broken features, crashes, or missing packaged files
+- Confirmed local ZIP status:
+  - `social-stream-ninja-chrome-web-store-3.50.3-20260706-slim.zip`,
+    `social-stream-ninja-chrome-web-store-3.50.3-20260706-conservative.zip`,
+    and `social-stream-ninja-chrome-web-store-3.50.3-20260706-conservative-r2.zip`
+    still declare rejected `webNavigation`; do not upload them.
+  - `social-stream-ninja-chrome-web-store-3.50.3-20260707-conservative-r3.zip`
+    has the corrected permission list, but was superseded by R4 cleanup below.
+- R3 declared API permissions all have executable evidence:
+  - `notifications`: `service_worker.js`, `background.js`
+  - `storage`: `service_worker.js`, `background.js`, `popup.js`,
+    `settings/options.js`, selected source/page helpers
+  - `debugger`: `background.js`
+  - `tabs`: `service_worker.js`, `background.js`, `popup.js`
+  - `scripting`: `service_worker.js`
+  - `tabCapture`: `service_worker.js`, `sources/capturevideo.js`
+- Permissions/code found elsewhere but not declared:
+  - `chrome.identity` appeared in `spotify.js` and a popup comment. Removed
+    those Web Store branch references and kept the hosted/manual OAuth callback
+    path, so `identity` should not be requested.
+  - `chrome.webRequest` appeared only inside a commented-out block in
+    `service_worker.js`; removed that dead block, so `webRequest` should not be
+    requested.
+  - `activeTab` string hits are variable/doc text, not permission usage; no
+    `activeTab` permission should be requested.
+  - Clipboard writes use the page `navigator.clipboard` API. No
+    `clipboardRead` or `clipboardWrite` extension permission is requested.
+- Additional R3 package scans:
+  - first-party package files: no remote/dynamic executable-code pattern hits
+  - package text scan: no removed adult-provider term hits, excluding the large
+    emote JSON data file
+
+### 2026-07-07 R4 Pre-Submit Cleanup
+
+- Removed remaining Web Store reviewer-noise from source:
+  - deleted the commented-out `chrome.webRequest` block from `service_worker.js`
+  - removed the undeclared `chrome.identity` Spotify OAuth branch from
+    `spotify.js`
+  - updated popup OAuth helper wording to avoid `chrome.identity`
+  - re-enabled the Spotify connect button after manual callback success/failure
+    so the no-Identity manual flow cannot leave the popup stuck
+  - removed obsolete `chromiumapp.org` Spotify redirect URI instructions from
+    `spotify.html`
+- Build to use after this cleanup and required version bump:
+  `C:\Users\steve\Code\webstore\social-stream-ninja-chrome-web-store-3.50.4-20260707-conservative-r1.zip`
+- SHA-256:
+  `08FA583CD30E57C05F7B07C709C794D618245F82225B009046A3BD73922A6556`
+- Do not upload any `3.50.3` package, including the previous R4 ZIP, because
+  the rejected draft was already version `3.50.3`.
+- `3.50.4` resubmission artifact verification:
+  - version: `3.50.4`
+  - permissions: `notifications`, `storage`, `debugger`, `tabs`, `scripting`,
+    `tabCapture`
+  - no first-party package hits for `webNavigation`, `chrome.webNavigation`,
+    `browser.webNavigation`, `chrome.identity`, `browser.identity`,
+    `chrome.webRequest`, `browser.webRequest`, or `chromiumapp.org`
+  - manifest file references: all present
+  - first-party package scan: no remote/dynamic executable-code pattern hits
+  - package text scan: no removed adult-provider term hits, excluding the large
+    emote JSON data file
+  - edited package files in the extracted `3.50.4` ZIP byte-match current
+    source for `manifest.json`, `popup.js`, `service_worker.js`,
+    `spotify.html`, and `spotify.js`
+  - `git diff --check`, `node --check spotify.js`,
+    `node --check service_worker.js`, and `node --check popup.js` passed
+  - targeted Node simulations passed for extension Spotify OAuth start and
+    manual callback state handling
+  - Playwright Chromium smoke passed against the final extracted `3.50.4` ZIP:
+    service worker started, `popup.html`, `spotify.html`,
+    `dock.html?session=smoketest`, and `featured.html?session=smoketest`
+    loaded with Chrome extension APIs; Spotify setup contained hosted, beta,
+    and loopback redirect instructions with no `chromiumapp.org` text
+  - Playwright Chromium injection smoke passed against the final extracted
+    `3.50.4` ZIP: a local `http://127.0.0.1` tab was found by
+    `chrome.tabs.query`, `service_worker.js` handled `injectCustomSource`, and
+    `chrome.scripting.executeScript` injected packaged `sources/generic.js`
+    successfully
+  - Additional checks passed: `npm run lint:js:background:strict`,
+    `npm run test:xss:sanitizer`, and `node tests/eventflow-customjs.test.js`

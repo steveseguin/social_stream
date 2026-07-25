@@ -635,16 +635,3 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     ensureBackgroundPageIsOpen();
   }
 });
-
-/* chrome.webRequest.onSendHeaders.addListener(
-  function(details) {
-    const authHeader = details.requestHeaders.find(
-      header => header.name.toLowerCase() === 'authorization'
-    );
-    if (authHeader) {
-      chrome.storage.local.set({'authToken': authHeader.value });
-    }
-  },
-  {urls: ["https://*.host.bsky.network/*"]},["requestHeaders"]
-);
- */

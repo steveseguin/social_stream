@@ -10813,7 +10813,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 		});
 		
-		// Manual callback helper (SSAPP primary, extension fallback when chrome.identity is unavailable)
+		// Manual callback helper for hosted and desktop OAuth callbacks.
 		const callbackDiv = document.createElement('div');
 		callbackDiv.style.marginTop = '10px';
 		callbackDiv.style.display = 'none';
@@ -10852,6 +10852,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					}).then(response => {
 						console.log("Manual callback result:", response);
 						if (response && response.success) {
+							spotifyAuthButton.disabled = false;
 							spotifyAuthStatus.style.display = 'inline';
 							spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect';
 						if (spotifySignOutButton) {
@@ -10862,6 +10863,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 							showSpotifyAuthToast('success', 'Spotify Connected', 'Spotify callback completed successfully.');
 							alert('Spotify connected successfully!');
 						} else {
+							spotifyAuthButton.disabled = false;
 							const errorCode = response?.errorCode || 'SPOTIFY_OAUTH_ERROR';
 							const errorMsg = getSpotifyAuthErrorMessage(response);
 							console.error(`Manual Spotify callback failed [${errorCode}]:`, errorMsg, response);

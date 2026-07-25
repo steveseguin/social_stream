@@ -37,8 +37,8 @@ Confirmed from `manifest.json`:
 - `background.service_worker` points to `service_worker.js`.
 - The extension action popup is `popup.html`.
 - The options page is `settings/options.html`.
-- Permissions include `webNavigation`, `notifications`, `storage`, `debugger`, `tabs`, `scripting`, `activeTab`, `tabCapture`, and `identity`.
-- Web-accessible resources expose provider cores, shared utilities, vendor scripts, browser model files, workers, and selected UI/runtime assets to extension pages or injected scripts.
+- Permissions include `notifications`, `storage`, `debugger`, `tabs`, `scripting`, and `tabCapture`.
+- Web-accessible resources expose provider cores, shared utilities, vendor scripts, and selected injected assets to extension pages or injected scripts.
 - Content scripts are mapped to many platform URL patterns. This manifest is the first source to check when a platform page is not being captured at all.
 - CSP is restrictive and extension-local: `script-src 'self' 'wasm-unsafe-eval'; object-src 'self'`.
 
