@@ -176,6 +176,16 @@ TTS.normalizeSystemVoiceIdentifier = function(value) {
         .join("");
 };
 
+TTS.foldSystemVoiceIdentifierToAscii = function(value) {
+    // Older popup builds baked accent-stripped identifiers ("Amlie", "Googlefranais")
+    // into saved settings and shared overlay links, so those still have to resolve.
+    // See getLegacyPopupSystemVoiceIdentifiers in popup.js.
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+};
+
 TTS.systemVoiceLanguageRank = function(voice, language) {
     var requestedLanguage = String(language || "").toLowerCase();
     if (!requestedLanguage) return 2;
@@ -225,16 +235,26 @@ TTS.findSystemVoice = function(voiceName, language) {
         return voice.name.toLowerCase().includes(requestedLower);
     });
 
-    // Both of these are fuzzy name matches, so neither should win by ignoring the
-    // requested language. A partial match in the right language beats a normalized
-    // match in the wrong one.
+    var requestedAscii = TTS.foldSystemVoiceIdentifierToAscii(requestedName);
+    var asciiMatches = requestedAscii ? voices.filter(function(voice) {
+        return TTS.foldSystemVoiceIdentifierToAscii(voice.name) === requestedAscii ||
+            TTS.foldSystemVoiceIdentifierToAscii(voice.voiceURI) === requestedAscii;
+    }) : [];
+
+    // These are all fuzzy name matches, so none of them should win by ignoring the
+    // requested language. A weaker match in the right language beats a stronger one
+    // in the wrong language. The accent-folded tier is last because it is the most
+    // collision-prone: it flattens every non-Latin name down to its Latin prefix.
     var normalizedBest = TTS.pickBestSystemVoice(normalizedMatches, language);
     if (normalizedBest && TTS.systemVoiceLanguageRank(normalizedBest, language) < 2) return normalizedBest;
 
     var partialBest = TTS.pickBestSystemVoice(partialMatches, language);
     if (partialBest && TTS.systemVoiceLanguageRank(partialBest, language) < 2) return partialBest;
 
-    return normalizedBest || partialBest;
+    var asciiBest = TTS.pickBestSystemVoice(asciiMatches, language);
+    if (asciiBest && TTS.systemVoiceLanguageRank(asciiBest, language) < 2) return asciiBest;
+
+    return normalizedBest || partialBest || asciiBest;
 };
 
 TTS.findFallbackSystemVoice = function(language) {
