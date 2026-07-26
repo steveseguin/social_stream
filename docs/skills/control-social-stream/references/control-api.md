@@ -3,7 +3,7 @@
 ## Connection
 
 - Origin: `http://127.0.0.1:17777` by default.
-- Authentication: `X-SSAPP-Token: TOKEN` header or `?token=TOKEN` query parameter.
+- Authentication: none. Loopback binding limits the interface to programs on the same machine.
 - Responses use JSON and include `ok: true` with `payload`, or `ok: false` with a structured `error`.
 - Responses include `ssappVersion`, `apiVersion`, and `requestId`. Use capabilities, not a guessed version comparison, to decide which commands are available.
 
@@ -13,10 +13,11 @@ CLI flags:
 --ssapp-control-api
 --ssapp-headless-control
 --ssapp-control-port=17777
---ssapp-control-token-file=C:\secure\ssapp-token.txt
 ```
 
-Equivalent environment variables are `SSAPP_CONTROL_API=1`, `SSAPP_HEADLESS_CONTROL=1`, `SSAPP_CONTROL_PORT`, `SSAPP_CONTROL_TOKEN_FILE`, and `SSAPP_CONTROL_TOKEN`. A direct CLI token remains available for advanced compatibility but is discouraged because other local processes can inspect command lines.
+Equivalent environment variables are `SSAPP_CONTROL_API=1`, `SSAPP_HEADLESS_CONTROL=1`, and
+`SSAPP_CONTROL_PORT`. `--ssapp-headless-control` only hides app windows; it does not enable
+the API. Pass both mode flags when a local agent needs to control a headless instance.
 
 ## Discovery and status
 
@@ -27,9 +28,9 @@ GET /api/v1/events
 GET /api/v1/operations/OPERATION_ID
 ```
 
-Status includes app version, session, headless/visibility state, local-media server state, and normalized sources. As of API 1.1.3, normalized sources deliberately omit the stored `url` because it may contain credentials; use the numeric `tabId` to address an active source window.
+Status includes app version, session, headless/visibility state, local-media server state, and normalized sources. `app.mainWindowVisible` reports the actual show/hide state; SSApp 0.4.7 and newer track it explicitly so a window hidden to the tray is not incorrectly reported as visible on Linux. As of API 1.1.3, normalized sources deliberately omit the stored `url` because it may contain credentials; use the numeric `tabId` to address an active source window.
 
-The events endpoint is an authenticated Server-Sent Events stream. It emits bounded, resumable status and operation events and accepts the standard `Last-Event-ID` header. Mutation responses include an operation ID that can be inspected independently.
+The events endpoint is a Server-Sent Events stream. It emits bounded, resumable status and operation events and accepts the standard `Last-Event-ID` header. Mutation responses include an operation ID that can be inspected independently.
 
 ## Commands
 
@@ -117,10 +118,19 @@ Gracefully stop a headless app:
 
 ## MCP
 
-SSApp ships a dependency-free stdio MCP adapter at `resources/ssapp-mcp.js`. Configure the MCP client to run it with Node and provide `SSAPP_CONTROL_URL` plus either `SSAPP_CONTROL_TOKEN_FILE` or `SSAPP_CONTROL_TOKEN` in the process environment. The adapter discovers capabilities at runtime, filters unavailable tools, and includes `ssappVersion` and `apiVersion` in every tool result.
+SSApp 0.4.7 and newer let the downloaded application run its dependency-free stdio MCP
+adapter with `--ssapp-mcp`. Enable **File > Local AI / Automation**, restart, then choose
+**Copy MCP Setup** to copy the exact executable path, platform arguments, and
+`SSAPP_CONTROL_URL` into the local agent's MCP configuration. A source checkout and separate
+Node installation are not required.
 
-Call `get_capabilities` first. Do not assume a tool described by a newer skill revision is present in an older running app.
+The adapter discovers capabilities at runtime, filters unavailable tools, and includes
+`ssappVersion` and `apiVersion` in every tool result. Linux configurations add
+`--ozone-platform=headless` so the lightweight adapter process does not need a second X
+display; the main capture application still needs a desktop session or Xvfb.
+
+Call `ssapp_get_capabilities` first. Do not assume a tool described by a newer skill revision is present in an older running app.
 
 ## Limits
 
-Headless means no visible Electron windows; Chromium still runs because capture sources require a browser runtime. The API binds only to loopback. It does not expose arbitrary JavaScript execution, secrets, cookies, unrestricted settings, or raw filesystem access.
+Headless means no visible Electron windows; Chromium still runs because capture sources require a browser runtime. The API binds only to loopback and is intended for same-machine agents, not remote cloud control. It does not expose arbitrary JavaScript execution, secrets, cookies, unrestricted settings, or raw filesystem access. Remote operators use Social Stream's existing WebRTC or WebSocket control path.

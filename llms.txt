@@ -1,0 +1,21 @@
+# Social Stream Ninja
+
+Social Stream Ninja aggregates live social chat. The standalone desktop app is called SSApp.
+
+## Local LLM control of the downloaded desktop app
+
+- Setup guide: https://socialstream.ninja/docs/llm-control-guide.html
+- Downloads: https://socialstream.ninja/docs/download.html#standalone
+- Agent skill package: https://socialstream.ninja/docs/skills/control-social-stream.zip
+- Agent skill instructions: https://socialstream.ninja/docs/skills/control-social-stream/SKILL.html
+- Control API reference: https://socialstream.ninja/docs/skills/control-social-stream/references/control-api.md
+- Compatibility log: https://socialstream.ninja/docs/skills/control-social-stream/references/version-log.md
+
+SSApp 0.4.7 and newer can be launched as a local stdio MCP server with `--ssapp-mcp`.
+Normal users should enable File > Local AI / Automation, restart SSApp, and choose Copy MCP
+Setup. The copied configuration uses the installed application directly; it does not require
+Node, Python, or a source checkout. MCP runtime capability discovery is authoritative.
+
+The localhost `/api/v1` and MCP adapter are only for an AI process on the same computer as
+SSApp. Remote users and Stream Deck use Social Stream's existing WebRTC or WebSocket session
+transport instead.
