@@ -3501,7 +3501,7 @@ async function processMessageWithOllama(data, idx=null) {
   
   const currentTime = Date.now();
   const botOverlayOnly = Boolean(settings.ollamaoverlayonly || data?.privateBotPrompt);
-  if (!reserveBotResponseSlot(data)) return;
+  if (!reserveBotResponseSlot(data)) return false;
   
   //console.log("starting processing");
   try {

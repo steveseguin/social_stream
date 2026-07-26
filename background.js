@@ -13542,7 +13542,7 @@ async function processIncomingRequest(request, UUID = false) {
 			openchat(request.value || null);
 		} else if (request.action === "askBot" && typeof request.value === "string" && request.value.trim()) {
 			if (isAiChatbotEnabled() && typeof processMessageWithOllama === "function") {
-				await processMessageWithOllama({
+				const privateBotResult = await processMessageWithOllama({
 					chatname: "Host",
 					chatmessage: request.value.trim(),
 					type: "socialstream",
@@ -13552,6 +13552,19 @@ async function processIncomingRequest(request, UUID = false) {
 					textonly: true,
 					privateBotPrompt: true
 				});
+				if (privateBotResult === false) {
+					sendDataP2P({
+						action: "privateBotStatus",
+						status: "busy",
+						message: "The AI bot is busy. Please try again in a moment."
+					}, UUID);
+				}
+			} else {
+				sendDataP2P({
+					action: "privateBotStatus",
+					status: "unavailable",
+					message: "Enable the AI chat bot before asking it privately."
+				}, UUID);
 			}
 		} else if (request.action === "clearBotOverlay") {
 			sendTargetP2P({ action: "clearBotOverlay" }, "bot");

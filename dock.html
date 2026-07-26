@@ -7685,6 +7685,15 @@
 					if (isOBSBrowserSource) {
 						return;
 					}
+					if (!data.tabsList.some(function(tab) {
+						return String(tab.id) === "BOT";
+					})) {
+						activeChatDestinations.delete("BOT");
+						if (!activeChatDestinations.size) {
+							getById("getChatSources").innerHTML = "🌐";
+							getById("getChatSources").title = "Sending to all end points";
+						}
+					}
 					if (document.getElementById("getChatSourcesButton")) {
 						clearTimeout(getById("getChatSourcesButton").setTimeout);
 					}
@@ -8357,6 +8366,9 @@
 						historyMissedLiveBuffer = [];
 						getById("chatHistoryClearButton").disabled = false;
 						showDockActionNotice("Saved message history cleared.");
+						return true;
+					} else if (data.action == "privateBotStatus") {
+						showDockActionNotice(data.message || "The AI bot could not process that request.");
 						return true;
 					} else if (data.action == "resetleaderboard") {
 						return true;
