@@ -1,6 +1,6 @@
 # Standalone App Control API And MCP Server
 
-Status: updated 2026-07-26 from `ssapp/main.js`, `ssapp/resources/electron-control-api.js` (API version 1.1.5), `ssapp/resources/ssapp-mcp.js` (MCP 1.0.2), `ssapp/index.html` (renderer bridge), and `docs/skills/control-social-stream/`. Source-backed; endpoints verified against the ssapp e2e tests (`tests/electron/llm-control-headless-e2e.js`, `ssapp-mcp-e2e.js`).
+Status: updated 2026-07-26 from `ssapp/bootstrap.js`, `ssapp/main.js`, `ssapp/resources/electron-control-api.js` (API version 1.1.5), `ssapp/resources/ssapp-mcp.js` (MCP 1.0.3), `ssapp/index.html` (renderer bridge), and `docs/skills/control-social-stream/`. Source-backed; endpoints verified against the ssapp e2e tests (`tests/electron/llm-control-headless-e2e.js`, `ssapp-mcp-launch-e2e.js`).
 
 ## Purpose
 
@@ -10,7 +10,8 @@ Use this page for how same-machine programs — scripts, local LLM agents, and M
 
 ```
 MCP client (Claude etc.)
-  └─ stdio JSON-RPC → ssapp/resources/ssapp-mcp.js  (adapter, no SDK)
+  └─ downloaded SSApp --ssapp-mcp
+       └─ bootstrap.js → resources/ssapp-mcp.js  (stdio adapter, no SDK)
                        └─ HTTP → 127.0.0.1:17777 control API
 Local scripts ─────────────HTTP──┘
                                    └─ main.js router → electron-control-api.js
@@ -68,8 +69,9 @@ Gated by `--remote-control` plus `SSAPP_REMOTE_CONTROL_TOKEN`: `/ping`, `/queue-
 
 ## MCP Server (`resources/ssapp-mcp.js`)
 
-- Dependency-free stdio MCP server (newline-delimited JSON-RPC 2.0, `:177-229`); Node stdlib only. Run with `npm run mcp` (`package.json:32`) or `node resources/ssapp-mcp.js`.
-- Protocol version `2025-06-18`, serverInfo `{name: 'social-stream-ninja', version: '1.0.2'}`. Capabilities: `tools` only (no resources/prompts).
+- Dependency-free stdio MCP server (newline-delimited JSON-RPC 2.0). Normal downloaded-app setup uses File → Local AI / Automation → Copy MCP Setup, which launches the installed executable with `--ssapp-mcp`. Development checkouts may still use `npm run mcp`.
+- `bootstrap.js` selects MCP mode before loading `main.js`, so the adapter does not acquire the normal app lock or create windows. Linux copied configurations also pass `--ozone-platform=headless`.
+- Protocol version `2025-06-18`, serverInfo `{name: 'social-stream-ninja', version: '1.0.3'}`. Capabilities: `tools` only (no resources/prompts); initialization includes the core safe operating workflow.
 - Config via `SSAPP_CONTROL_URL` when the local API uses a non-default port.
 - Methods: `initialize`, `tools/list`, `tools/call`; everything else → `-32601`.
 - 12 tools (`:14-53`), thin wrappers over the HTTP commands: `ssapp_get_status`, `ssapp_get_capabilities`, `ssapp_list_sources`, `ssapp_add_source`, `ssapp_update_source`, `ssapp_start_source`, `ssapp_stop_source`, `ssapp_reload_source`, `ssapp_remove_source`, `ssapp_get_settings`, `ssapp_update_settings`, `ssapp_shutdown`.
@@ -78,7 +80,7 @@ Gated by `--remote-control` plus `SSAPP_REMOTE_CONTROL_TOKEN`: `/ping`, `/queue-
 ## Companion Skill And Tests
 
 - `docs/skills/control-social-stream/` (this repo): SKILL.md plus the API and compatibility references.
-- ssapp's e2e test runs the MCP adapter and the versioned API against a real headless Electron app.
+- ssapp's e2e tests run the MCP adapter and versioned API against a real headless Electron app, and launch MCP through the same executable entry point shipped to users.
 - `ssapp/AGENTS.md:55-59` mandates the skill be updated whenever the API changes; version history lives in `docs/skills/control-social-stream/references/version-log.md`.
 
 ## Do Not Overclaim

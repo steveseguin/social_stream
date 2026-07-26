@@ -9,15 +9,17 @@ Use this page for app startup order, window types and their lifecycle, tray/head
 ## Source Anchors
 
 - `ssapp/main.js`
+- `ssapp/bootstrap.js`
 - `ssapp/preload.js`, `ssapp/preload-mock.js`, `ssapp/preload-kasada.js`
 - `ssapp/resources/electron-control-api.js`, `ssapp/resources/electron-local-media-server.js`
 - `ssapp/stt-worker.js`, `ssapp/tts-worker.js`, `ssapp/websocket-monitor.js`, `ssapp/error-reporter.js`
 
 ## Startup Sequence
 
-1. Single-instance lock at `ssapp/main.js:5200`; second instances are effectively ignored (`second-instance` handler at `main.js:14120`).
-2. Portable-mode userData redirect applied early (`main.js:73`, `main.js:14166-14172`; logic in `ssapp/resources/portable-data-paths.js:58-170`).
-3. `app.whenReady()` at `main.js:14913`:
+1. `bootstrap.js` dispatches `--ssapp-mcp` directly to the stdio adapter; every other launch loads `main.js` normally.
+2. Single-instance lock at `ssapp/main.js:5200`; second instances are effectively ignored (`second-instance` handler at `main.js:14120`).
+3. Portable-mode userData redirect applied early (`main.js:73`, `main.js:14166-14172`; logic in `ssapp/resources/portable-data-paths.js:58-170`).
+4. `app.whenReady()` at `main.js:14913`:
    - Loads cached state (`savedSync.json` recovery chain, see `packaging-updates-and-state.md`).
    - Resolves `--filesource` dev flag (`main.js:7283-7374`).
    - Starts the local media server (`resources/electron-local-media-server.js`).

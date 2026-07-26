@@ -12,11 +12,9 @@ Use SSApp's declarative control API. Do not use renderer execution or UI automat
 Prefer enabling **Local AI / Automation** from SSApp's File menu. The API listens only on
 `127.0.0.1` and does not require a token.
 
-For a visible command-line launch:
-
-```text
-SocialStream.exe --ssapp-control-api --ssapp-control-port=17777
-```
+For SSApp 0.4.7 and newer, choose **Copy MCP Setup** from the same menu after restart. Use
+that configuration when MCP tools are not already connected. It launches the downloaded app
+with `--ssapp-mcp`; do not require Node, Python, or a source checkout.
 
 Headless mode is separate. To hide windows and also allow a local agent, pass both
 `--ssapp-headless-control` and `--ssapp-control-api`. Headless mode alone does not open the
@@ -27,15 +25,15 @@ Deck use Social Stream's existing WebRTC or WebSocket transport instead.
 
 ## Control workflow
 
-1. Call `GET /api/v1/capabilities` before assuming a command exists. Record `ssappVersion` and `apiVersion`.
-2. Call `GET /api/v1/status` and identify sources by stable `id`.
+1. Call `ssapp_get_capabilities`, or `GET /api/v1/capabilities` when using HTTP directly, before assuming a command exists. Record `ssappVersion` and `apiVersion`.
+2. Call `ssapp_get_status`, or `GET /api/v1/status` over HTTP, and identify sources by stable `id`.
 3. Prefer a read command before a mutation.
 4. Invoke one mutation at a time and inspect its structured result.
 5. Re-read the affected source or settings after mutation.
 6. Use confirmation-required bulk, reload, and shutdown operations only when the user requested them.
 
-Prefer SSApp's supplied MCP server when the agent supports MCP. Otherwise call the loopback
-HTTP endpoints directly using [references/control-api.md](references/control-api.md). Read
+Prefer SSApp's MCP tools when the agent supports MCP. Otherwise call the loopback HTTP
+endpoints directly using [references/control-api.md](references/control-api.md). Read
 [references/version-log.md](references/version-log.md) for minimum-version compatibility.
 Runtime capabilities are authoritative.
 

@@ -118,13 +118,18 @@ Gracefully stop a headless app:
 
 ## MCP
 
-The SSApp source checkout includes a dependency-free stdio MCP adapter at
-`resources/ssapp-mcp.js`. Register it once in the local agent's MCP configuration and
-optionally provide `SSAPP_CONTROL_URL` when using a non-default local port. The adapter
-discovers capabilities at runtime, filters unavailable tools, and includes `ssappVersion`
-and `apiVersion` in every tool result.
+SSApp 0.4.7 and newer let the downloaded application run its dependency-free stdio MCP
+adapter with `--ssapp-mcp`. Enable **File > Local AI / Automation**, restart, then choose
+**Copy MCP Setup** to copy the exact executable path, platform arguments, and
+`SSAPP_CONTROL_URL` into the local agent's MCP configuration. A source checkout and separate
+Node installation are not required.
 
-Call `get_capabilities` first. Do not assume a tool described by a newer skill revision is present in an older running app.
+The adapter discovers capabilities at runtime, filters unavailable tools, and includes
+`ssappVersion` and `apiVersion` in every tool result. Linux configurations add
+`--ozone-platform=headless` so the lightweight adapter process does not need a second X
+display; the main capture application still needs a desktop session or Xvfb.
+
+Call `ssapp_get_capabilities` first. Do not assume a tool described by a newer skill revision is present in an older running app.
 
 ## Limits
 
