@@ -18,6 +18,7 @@
     })();
   </script>
   <script defer src="../thirdparty/marked.umd.min.js"></script>
+  <script defer src="js/copy-markdown.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&family=Roboto+Mono:wght@400;500&display=swap">
@@ -783,6 +784,7 @@
     const SEARCH_INDEX_FILE = "search-index.json";
     const state = {
       currentFile: DEFAULT_FILE,
+      currentMarkdown: "",
       searchIndex: null,
       searchIndexStatus: "loading",
       searchTerms: [],
@@ -891,6 +893,7 @@
 
     function renderDocsHome() {
       state.currentFile = "";
+      state.currentMarkdown = "";
       elements.content.className = "content";
       elements.currentPath.className = "toolbar-path";
       elements.currentPath.textContent = "Docs home";
@@ -1067,6 +1070,7 @@
       const cleanPath = stripHash(normalized);
       const hash = getHash(normalized);
       state.currentFile = cleanPath;
+      state.currentMarkdown = "";
       elements.content.className = "content loading";
       elements.content.textContent = "Loading documentation...";
       elements.currentPath.className = "toolbar-path is-path";
@@ -1079,6 +1083,7 @@
         const response = await fetch(cleanPath, { cache: "no-cache" });
         if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
         const markdown = await response.text();
+        state.currentMarkdown = markdown;
         elements.content.innerHTML = renderMarkdown(markdown);
         elements.content.className = "content";
         addHeadingLinks();
@@ -1092,6 +1097,7 @@
           window.scrollTo({ top: 0 });
         }
       } catch (error) {
+        state.currentMarkdown = "";
         elements.content.className = "content error";
         elements.content.innerHTML = `<h1>Unable to load document</h1><p>${escapeHtml(cleanPath)}</p><p>${escapeHtml(error.message)}</p>`;
       }
@@ -1446,6 +1452,21 @@
         setTimeout(() => { elements.copyLink.textContent = "Copy Link"; }, 1200);
       }
     });
+
+    window.SSN_COPY_MARKDOWN_SOURCE = function () {
+      if (!state.currentFile || !state.currentMarkdown) return null;
+      const heading = elements.content.querySelector("h1");
+      const indexedDocument = state.searchIndex && state.searchIndex.documents
+        ? state.searchIndex.documents.find(documentEntry => documentEntry.path === state.currentFile)
+        : null;
+      return {
+        title: heading ? heading.textContent.trim() : state.currentFile,
+        description: indexedDocument ? indexedDocument.description : "",
+        documentPath: state.currentFile,
+        source: window.location.href.split("#")[0],
+        markdown: state.currentMarkdown
+      };
+    };
 
     window.addEventListener("popstate", () => {
       if (hasRequestedFile()) {

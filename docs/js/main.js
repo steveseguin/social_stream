@@ -1,3 +1,18 @@
+// Load the shared documentation-to-Markdown exporter on every standard docs page.
+(function () {
+    if (document.querySelector('script[data-ssn-copy-markdown]')) {
+        return;
+    }
+    var copyMarkdownScript = document.createElement('script');
+    var mainScript = document.currentScript;
+    copyMarkdownScript.src = mainScript && mainScript.src
+        ? new URL('copy-markdown.js', mainScript.src).href
+        : 'js/copy-markdown.js';
+    copyMarkdownScript.async = true;
+    copyMarkdownScript.setAttribute('data-ssn-copy-markdown', '');
+    document.head.appendChild(copyMarkdownScript);
+})();
+
 // Mobile navigation toggle
 document.addEventListener('DOMContentLoaded', function() {
     const mobileNavToggle = document.querySelector('.mobile-nav-toggle');

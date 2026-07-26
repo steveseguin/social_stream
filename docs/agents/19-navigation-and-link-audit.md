@@ -89,7 +89,7 @@ The public HTML documentation now has a repeatable validator at `scripts/validat
 Current result:
 
 ```text
-Documentation link validation passed (1205 HTML links, 296 Markdown links, and 45 discoverable public pages checked).
+Documentation link validation passed (1209 HTML links, 296 Markdown links, and 45 discoverable public pages checked).
 ```
 
 The validation runs in `.github/workflows/validate_html.yml` alongside HTML validation and a complete docs search-index build. This pass also replaced legacy `guides.html` fragment URLs with their current section IDs and fixed the outdated online Control Social Stream skill link.
@@ -101,7 +101,7 @@ Second-pass result:
 ```text
 Public HTML external URLs checked: 76
 Markdown external assets checked: 2
-Local HTML links checked: 1205
+Local HTML links checked: 1209
 Local Markdown links checked: 296
 Public HTML pages reachable from another public page: 45
 Broken local targets or anchors: 0
@@ -115,6 +115,22 @@ The external pass used redirects plus GET checks for sites that reject or mis-ha
 - The Windows language-settings link uses Microsoft's current destination.
 
 The guide directory now exposes three existing pages that were otherwise difficult to discover: the desktop app walkthrough, settings/URL reference, and video-stats/bitrate guide. Prioritized missing public guides are recorded in `11-support-kb/public-docs-coverage.md`.
+
+## Copy Markdown Exports
+
+Every top-level public documentation page loads `docs/js/copy-markdown.js`. The generated export includes page metadata, complete link and embedded-resource URLs, hidden tab or mode content, and a short context note for AI assistants. Markdown documents opened in `docs/index.html?file=...` use their raw source instead of converting the rendered HTML back to Markdown.
+
+Page authors can add detailed context to the export without showing it in the rendered page:
+
+```html
+<template data-copy-markdown-extra>
+## Maintainer context for AI assistants
+
+- Add exact limitations, version notes, or troubleshooting details here.
+</template>
+```
+
+Use `data-copy-markdown-ignore` on page-only controls that should not be exported. A page can also mark one or more custom capture roots with `data-copy-markdown-root`; otherwise the exporter captures the page hero plus `main`, or the cleaned page body when no `main` exists.
 
 ## Cleanup Performed
 
