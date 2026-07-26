@@ -278,7 +278,7 @@ img {
 }
 
 .template-features span {
-    background-color: rgba(98, 0, 234, 0.1);
+    background-color: var(--accent-soft);
     color: var(--primary-color);
     padding: 0.4rem 1rem;
     border-radius: 2rem;
@@ -328,7 +328,7 @@ img {
 }
 
 .dropdown-link:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: var(--background-card);
     color: var(--primary-color);
 }
 
@@ -342,16 +342,16 @@ img {
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none; /* Firefox */
     }
-    
+
     .command-nav-links::-webkit-scrollbar {
         display: none; /* Chrome, Safari, Opera */
     }
-    
+
     .command-nav-link {
         flex: 0 0 auto;
         white-space: nowrap;
     }
-    
+
     .command-nav-dropdown-content {
         position: fixed;
         top: auto;
@@ -504,7 +504,8 @@ img {
 /* Channel System */
 .channel-system {
     margin-top: 2.5rem;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--background-card);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 1.5rem;
 }
@@ -549,17 +550,21 @@ img {
 .command-table td {
     padding: 1rem;
     text-align: left;
-    border-bottom: 1px solid var(--background-dark);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .command-table th {
-    background-color: rgba(0, 0, 0, 0.2);
-    color: var(--primary-color);
+    background-color: var(--background-card);
+    color: var(--text-secondary);
     font-weight: 600;
+    font-size: 1.25rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-strong);
 }
 
 .command-table tr:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--background-card);
 }
 
 /* sandbox */

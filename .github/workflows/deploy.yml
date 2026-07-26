@@ -45,6 +45,12 @@ jobs:
               if source.is_dir():
                   shutil.make_archive(str(skills / 'control-social-stream'), 'zip', skills, 'control-social-stream')
           PY
+          for checkout in main-content beta-content; do
+            generator="$checkout/scripts/build-docs-search-index.py"
+            if [ -f "$generator" ]; then
+              python3 "$generator" --docs-root "$checkout/docs" --output "$checkout/docs/search-index.json"
+            fi
+          done
           rsync -av --exclude='.git/' main-content/ gh-pages-content/
           rsync -av --exclude='.git/' beta-content/ gh-pages-content/beta/
           echo "Removing files larger than 25MB from deployment payload"

@@ -25,3 +25,9 @@ jobs:
 
     - name: Validate HTML files
       run: npx htmlhint "**/*.html" --config .htmlhintrc
+
+    - name: Validate documentation links
+      run: python3 scripts/validate-doc-links.py
+
+    - name: Validate documentation search index
+      run: python3 scripts/build-docs-search-index.py --docs-root docs --output /tmp/social-stream-docs-search-index.json
