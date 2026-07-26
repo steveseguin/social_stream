@@ -11,7 +11,7 @@ Status values: `open`, `in-progress`, `fixed`, `wontfix`.
 | [ISSUE-003](ISSUE-003-sendtiktokmessage-virtual-tab-id.md) | `sendTikTokMessage` IPC fails for virtual tab IDs | ssapp main.js | medium | open |
 | [ISSUE-004](ISSUE-004-tiktoksendresult-no-listener.md) | `tiktokSendResult` event has no renderer listener | ssapp main.js | medium | open |
 | [ISSUE-005](ISSUE-005-exec-arbitrary-js-endpoint.md) | Legacy `/exec` = arbitrary JS execution, contradicts docs | ssapp main.js + control-api.md | high | open |
-| [ISSUE-006](ISSUE-006-control-api-token-in-query-param.md) | Control API token accepted via `?token=` query param | ssapp main.js | medium | open |
+| [ISSUE-006](ISSUE-006-control-api-token-in-query-param.md) | Control API token accepted via `?token=` query param | ssapp main.js | medium | resolved in API 1.1.5 |
 | [ISSUE-007](ISSUE-007-eventflow-scheduler-null-message-crash.md) | Event Flow scheduler crashes flows mixing time + message triggers | actions/EventFlowSystem.js | high | open |
 | [ISSUE-008](ISSUE-008-eventflow-timeofday-editor-corrupts-config.md) | `timeOfDay` trigger breaks after any editor edit | actions/EventFlowEditor.js | medium | open |
 | [ISSUE-009](ISSUE-009-eventflow-standalone-editor-desync.md) | Standalone editor tab edits don't reach running background | actions/EventFlowEditor.js | medium | open |

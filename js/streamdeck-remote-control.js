@@ -18,17 +18,16 @@
 		startSource: ["sourceControls", "start"],
 		stopSource: ["sourceControls", "stop"],
 		restartSource: ["sourceControls", "restart"],
-		startAllSources: ["bulkControls", "startAll"],
-		stopAllSources: ["bulkControls", "stopAll"],
-		restartAllSources: ["bulkControls", "restartAll"],
 		setSourceVisibility: ["visibility", "set"],
 		toggleSourceVisibility: ["visibility", "toggle"],
 		setSourceMute: ["mute", "set"],
 		toggleSourceMute: ["mute", "toggle"],
-		setSourceConnectionMode: ["connectionMode", "set"],
-		getSettings: ["settings", "get"],
-		updateSettings: ["settings", "update"]
+		setSourceConnectionMode: ["connectionMode", "set"]
 	};
+
+	const REMOTE_ADD_SOURCE_FIELDS = new Set(["target", "username", "videoId", "url", "connectionMode", "isVisible", "isMuted", "autoActivate", "idempotencyKey"]);
+	const REMOTE_UPDATE_SOURCE_FIELDS = new Set(["url", "username", "videoId", "connectionMode", "isVisible", "isMuted", "autoActivate"]);
+	const CREDENTIAL_QUERY_FIELDS = new Set(["access_token", "token", "auth", "authorization", "password", "pass", "secret", "api_key", "apikey", "key", "cookie", "session", "code"]);
 
 	const SSN_ACTIONS = {
 		nextInQueue: true,
@@ -118,7 +117,9 @@
 			version: options.version || null,
 			apiVersion: options.apiVersion || null,
 			bridgeVersion: typeof options.bridgeVersion === "number" ? options.bridgeVersion : 1,
-			appControls: capabilityValue(options, "appControls", false),
+			// App-level lifecycle and settings remain local-only. Remote controllers operate
+			// public capture sources through Social Stream's existing transports.
+			appControls: false,
 			sourceControls: capabilityValue(options, "sourceControls", {
 				list: true,
 				get: true,
@@ -126,12 +127,7 @@
 				stop: true,
 				restart: true
 			}),
-			bulkControls: capabilityValue(options, "bulkControls", {
-				startAll: true,
-				stopAll: true,
-				restartAll: true,
-				filters: ["all", "target", "groupId", "status"]
-			}),
+			bulkControls: {},
 			visibility: capabilityValue(options, "visibility", {
 				get: true,
 				set: true,
@@ -151,9 +147,68 @@
 				get: true,
 				values: SOURCE_STATUS_VALUES.slice()
 			}),
-			settings: capabilityValue(options, "settings", false),
+			settings: false,
 			platforms: capabilityValue(options, "platforms", {})
 		};
+	}
+
+	function validatePublicSourceUrl(value) {
+		if (value === undefined || value === null || value === "") {
+			return null;
+		}
+		let parsed;
+		try {
+			parsed = new URL(String(value));
+		} catch (error) {
+			return "Source URL must be a valid HTTP(S) URL.";
+		}
+		if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+			return "Source URL must use HTTP(S).";
+		}
+		if (parsed.username || parsed.password) {
+			return "Remote source URLs cannot contain sign-in credentials.";
+		}
+		for (const key of parsed.searchParams.keys()) {
+			if (CREDENTIAL_QUERY_FIELDS.has(String(key).toLowerCase())) {
+				return "Remote source URLs cannot contain sign-in credentials.";
+			}
+		}
+		if (/(?:access_token|token|authorization|password|secret|api[_-]?key|cookie|session|code)=/i.test(parsed.hash || "")) {
+			return "Remote source URLs cannot contain sign-in credentials.";
+		}
+		return null;
+	}
+
+	function validateRemoteSsappRequest(request) {
+		if (!request || typeof request !== "object") {
+			return { ok: false, code: "INVALID_TARGET", message: "SSApp command request is required." };
+		}
+		const action = normalizeAction(request.action);
+		if (action === "addSource") {
+			const value = request.value;
+			if (!value || typeof value !== "object" || Array.isArray(value)) {
+				return { ok: false, code: "INVALID_TARGET", message: "Source details are required." };
+			}
+			for (const key of Object.keys(value)) {
+				if (!REMOTE_ADD_SOURCE_FIELDS.has(key)) {
+					return { ok: false, code: "UNSUPPORTED_FIELD", message: `Remote source creation does not support ${key}.` };
+				}
+			}
+			const urlError = validatePublicSourceUrl(value.url);
+			if (urlError) return { ok: false, code: "SIGN_IN_UNSUPPORTED", message: urlError };
+		}
+		if (action === "updateSource") {
+			const value = request.value;
+			const updates = value && typeof value === "object" && !Array.isArray(value) ? value.updates || value.settings || {} : {};
+			for (const key of Object.keys(updates)) {
+				if (!REMOTE_UPDATE_SOURCE_FIELDS.has(key)) {
+					return { ok: false, code: "UNSUPPORTED_FIELD", message: `Remote source updates do not support ${key}.` };
+				}
+			}
+			const urlError = validatePublicSourceUrl(updates.url);
+			if (urlError) return { ok: false, code: "SIGN_IN_UNSUPPORTED", message: urlError };
+		}
+		return { ok: true };
 	}
 
 	function buildCapabilities(options = {}) {
@@ -250,6 +305,7 @@
 		isCapabilityRequest,
 		isSsappRequest,
 		isSsappActionSupported,
+		validateRemoteSsappRequest,
 		makeResponse,
 		makeError
 	};

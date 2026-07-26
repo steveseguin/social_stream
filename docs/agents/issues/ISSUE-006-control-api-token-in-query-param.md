@@ -1,6 +1,6 @@
 # ISSUE-006: Control API token accepted via `?token=` query param
 
-- **Status**: open
+- **Status**: resolved by API 1.1.5 (2026-07-26)
 - **Severity**: medium
 - **Area**: ssapp repo, `main.js`
 - **Found**: 2026-07-22, during ssapp LLM/MCP documentation pass
@@ -22,3 +22,10 @@ Restrict query-token auth to `GET /api/v1/events` only (the SSE endpoint that ne
 ## Notes
 
 Tradeoff: SSE `EventSource` cannot set headers, so query auth must remain at least for `/api/v1/events`.
+
+## Resolution
+
+The product `/api/v1` interface is now an explicitly enabled, loopback-only local adapter and
+does not use tokens. Headless mode no longer enables it. The legacy renderer-execution test
+harness retains its separate environment-provided token and does not expose query-token
+authentication as a product feature.

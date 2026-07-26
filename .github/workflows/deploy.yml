@@ -35,6 +35,16 @@ jobs:
 
       - name: Prepare content
         run: |
+          python3 - <<'PY'
+          import shutil
+          from pathlib import Path
+
+          for checkout in ('main-content', 'beta-content'):
+              skills = Path(checkout) / 'docs' / 'skills'
+              source = skills / 'control-social-stream'
+              if source.is_dir():
+                  shutil.make_archive(str(skills / 'control-social-stream'), 'zip', skills, 'control-social-stream')
+          PY
           rsync -av --exclude='.git/' main-content/ gh-pages-content/
           rsync -av --exclude='.git/' beta-content/ gh-pages-content/beta/
           echo "Removing files larger than 25MB from deployment payload"

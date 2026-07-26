@@ -1,9 +1,10 @@
 # SSApp Control Compatibility and Version Log
 
-Always call `get_capabilities` or `GET /api/v1/capabilities`. Its command list is authoritative, including when development builds share an application version.
+Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command list is authoritative, including when development builds share an application version.
 
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |
+| 1.1.5 / MCP 1.0.3 | 0.4.7 | Adds downloaded-app `--ssapp-mcp` launch and copied setup while keeping the explicitly enabled tokenless API local and separate from headless mode |
 | 1.1.4 / MCP 1.0.1 | 0.4.6 | Rejects inactive-only `updateSource` fields for running sources and directs live mute/visibility changes through their dedicated commands |
 | 1.1.3 / MCP 1.0.1 | 0.4.4 | Omits stored source URLs, which may contain access tokens, from normalized source/status responses and exposes the active numeric `tabId` instead |
 | 1.1.2 / MCP 1.0.1 | 0.4.2 | Keeps username-generated URLs consistent during full-form source updates and correctly ignores MCP JSON-RPC notifications |
@@ -12,6 +13,20 @@ Always call `get_capabilities` or `GET /api/v1/capabilities`. Its command list i
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
 ## Skill revisions
+
+### 2026-07-26
+
+- Documented no-source MCP setup through the downloaded app's `--ssapp-mcp` mode and
+  **Copy MCP Setup** menu action (API 1.1.5 / MCP 1.0.3, minimum SSApp 0.4.7).
+- Added MCP handshake instructions so a connected agent receives the core workflow without
+  separately installing this skill.
+- Clarified that headless mode does not enable a control interface and that remote control remains on Social Stream's existing WebRTC/WebSocket path.
+- Limited that remote path to individual public-source operations; settings, app lifecycle,
+  bulk-all commands, credentials, sign-in, files, and arbitrary code remain unavailable.
+
+### 2026-07-25
+
+- Documented accurate `mainWindowVisible` reporting for tray-hidden Linux windows (API 1.1.4, minimum SSApp 0.4.7 for this correction).
 
 ### 2026-07-22
 
