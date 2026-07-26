@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/guides.css">
     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
-    <meta name="description" content="Understand which Social Stream Ninja events can trigger Multi Alerts, how event names are normalized, and how to troubleshoot missing follows, subscriptions, donations, cheers, raids, and Hype Trains.">
+    <meta name="description" content="See which YouTube, Twitch, and Kick events reach Social Stream Ninja alerts, Event Flow, TTS, goals, overlays, and API consumers.">
 </head>
 <body>
     <header>
@@ -93,6 +93,90 @@
             </div>
 
             <div class="guide-card">
+                <h2>Major Platform Events</h2>
+                <p>These are the current canonical event names when the selected source mode can deliver the activity.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Activity</th><th>YouTube</th><th>Twitch</th><th>Kick</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Activity">New member / subscriber</td>
+                            <td data-label="YouTube"><code>sponsorship</code></td>
+                            <td data-label="Twitch"><code>new_subscriber</code></td>
+                            <td data-label="Kick"><code>new_subscriber</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">Renewal</td>
+                            <td data-label="YouTube"><code>resub</code></td>
+                            <td data-label="Twitch"><code>resub</code></td>
+                            <td data-label="Kick"><code>resub</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">Gifted membership / subscription</td>
+                            <td data-label="YouTube"><code>giftpurchase</code>, <code>giftredemption</code></td>
+                            <td data-label="Twitch"><code>subscription_gift</code></td>
+                            <td data-label="Kick"><code>subscription_gift</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">Paid support</td>
+                            <td data-label="YouTube"><code>superchat</code>, <code>supersticker</code>, <code>jeweldonation</code></td>
+                            <td data-label="Twitch"><code>cheer</code>, or a row with <code>hasDonation</code></td>
+                            <td data-label="Kick"><code>donation</code> for supported KICKs/tip events</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">Follow / public subscriber alert</td>
+                            <td data-label="YouTube"><code>new_follower</code>; API-delayed and public subscriptions only</td>
+                            <td data-label="Twitch"><code>new_follower</code></td>
+                            <td data-label="Kick"><code>new_follower</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">Channel reward</td>
+                            <td data-label="YouTube">&mdash;</td>
+                            <td data-label="Twitch"><code>reward</code></td>
+                            <td data-label="Kick"><code>reward</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">Raid / host</td>
+                            <td data-label="YouTube">&mdash;</td>
+                            <td data-label="Twitch"><code>raid</code></td>
+                            <td data-label="Kick">Compatibility input only; not a current official Kick event subscription</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="warning-note">
+                    <p><strong>Kick raid note:</strong> Social Stream accepts a legacy raid/host-shaped payload for compatibility, but Kick's current official event catalog has no raid/host subscription. Do not make a Kick workflow depend on receiving one.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Standard Versus WebSocket Mode</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Platform</th><th>Standard Capture</th><th>WebSocket / API Capture</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Platform">YouTube</td>
+                            <td data-label="Standard Capture">Paid messages, memberships, membership gifts, viewer updates, and limited page-detected events.</td>
+                            <td data-label="WebSocket / API Capture">The shared paid/member events plus member milestones, recent public-subscriber alerts, and supported count updates.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Platform">Twitch</td>
+                            <td data-label="Standard Capture">Chat-rendered rewards, gifted-sub notices, viewer updates, and a few page-only notices.</td>
+                            <td data-label="WebSocket / API Capture">EventSub adds followers, subscriptions, renewals, cheers, raids, rewards, and supported count/status events when the account and scopes permit them.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Platform">Kick</td>
+                            <td data-label="Standard Capture">Chat plus lightweight page markers for gifts, rewards, and viewer updates.</td>
+                            <td data-label="WebSocket / API Capture">Official follow, subscription, gift, reward-redemption, KICKs, moderation, and live-status events when authenticated.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>WebSocket mode is normally the right choice for event-driven alerts. Standard capture remains useful when only rendered chat is needed or authentication is unavailable.</p>
+            </div>
+
+            <div class="guide-card">
                 <h2>Enable The Alert Types You Want</h2>
                 <p>Open the Multi Alerts options from Social Stream settings. Follows, subscriptions, donations, bits, and raids have their own enable, style, sound, and appearance controls. Auction and Hype Train alerts require their dedicated opt-in controls.</p>
                 <figure class="guide-figure">
@@ -117,6 +201,23 @@
             </div>
 
             <div class="guide-card">
+                <h2>Which Fields Each Tool Uses</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Tool</th><th>Compatibility Rule</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Tool">Multi Alerts</td><td data-label="Compatibility Rule">Classifies canonical <code>event</code> names, aliases, <code>hasDonation</code>, membership fields, and selected <code>meta</code> values into shared categories.</td></tr>
+                        <tr><td data-label="Tool">Event Flow</td><td data-label="Compatibility Rule">Match the exact <code>type</code>, <code>event</code>, and fields your source emits. Use the Test Message tool before relying on a live event.</td></tr>
+                        <tr><td data-label="Tool">TTS</td><td data-label="Compatibility Rule">Event rows are skipped by default unless they are donation-style. Add <code>&amp;readevents</code> when non-donation event messages should be spoken, then apply normal TTS filters.</td></tr>
+                        <tr><td data-label="Tool">Tip Jar / Goal Meter</td><td data-label="Compatibility Rule">Normal mode uses donation amounts. Hype mode can also score membership, renewal, and gifted-membership fields.</td></tr>
+                        <tr><td data-label="Tool">Custom overlay / API consumer</td><td data-label="Compatibility Rule">Use the canonical payload fields from the Event Reference. Accept documented aliases only for backward compatibility.</td></tr>
+                    </tbody>
+                </table>
+                <p>Use <a href="test-message-guide.html">Create Test Messages</a> to verify the expected event and <a href="event-flow-recipes.html">Event Flow Recipes</a> for working automation examples.</p>
+            </div>
+
+            <div class="guide-card">
                 <h2>Platform Setup Notes</h2>
                 <table class="guide-table guide-table-stack">
                     <thead>
@@ -124,7 +225,7 @@
                     </thead>
                     <tbody>
                         <tr><td data-label="Platform">Twitch</td><td data-label="First Check">Sign in with the broadcaster or permitted moderator and keep EventSub connected.</td><td data-label="Guide"><a href="twitch-eventsub-setup.html">Twitch EventSub setup</a></td></tr>
-                        <tr><td data-label="Platform">Kick</td><td data-label="First Check">Choose the source mode deliberately and complete authentication when the desired events require it.</td><td data-label="Guide"><a href="kick-setup-authentication.html">Kick setup and authentication</a></td></tr>
+                        <tr><td data-label="Platform">Kick</td><td data-label="First Check">Choose the source mode deliberately and complete authentication when the desired official events require it; do not expect an official raid event.</td><td data-label="Guide"><a href="kick-setup-authentication.html">Kick setup and authentication</a></td></tr>
                         <tr><td data-label="Platform">Other sources</td><td data-label="First Check">Confirm that the selected source actually emits the event type, not only chat messages.</td><td data-label="Guide"><a href="supported-sites.html">Supported sites</a></td></tr>
                     </tbody>
                 </table>
@@ -144,12 +245,15 @@
             </div>
 
             <template data-copy-markdown-extra>
-## Maintainer notes
+## Verified maintainer context
 
-- Multi Alerts currently normalizes follow, subscription, donation/gift, bits, raid, auction, and Hype Train aliases into seven alert categories.
-- Auction and Hype Train alerts are opt-in. Donation/bits alerts can be filtered by parsed cash value.
-- Donation-style chat rows should use `hasDonation` and optional `donoValue`; an `event` value is for an actual event payload.
+- Multi Alerts currently normalizes follow, subscription, donation/gift, bits, raid, auction, and Hype Train aliases into seven alert categories. Auction and Hype Train are opt-in.
+- Its current classifier accepts canonical names plus legacy aliases. A payload with `hasDonation` and no event is valid: bits/cheer wording routes it to Bits, while other amounts route it to Donation.
+- Count/status events such as `viewer_update`, `follower_update`, `subscriber_update`, and ad-break status intentionally do not become general alert cards.
+- Kick's current official subscribed event set includes chat, follows, new/renewed/gifted subscriptions, reward redemptions, KICKs gifts, bans, and livestream status. Kick currently has no official raid/host subscription; raid handling is compatibility-only.
+- TTS defaults to skipping non-donation rows with an `event` value. `readevents` disables that skip, while normal source/member/donation filters still apply.
 - The popup preview verifies overlay handling only. Platform capture still requires a live source, matching session, correct role/scopes, and a real event.
+- The current Multi Alerts end-to-end test passed category filtering, aliases, donation-only payloads, queueing, deduplication, preview controls, and server URL flags during this documentation review.
             </template>
         </div>
     </main>
