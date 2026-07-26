@@ -1555,6 +1555,31 @@ function syncLikeTotalSettings(settingsObject, explicitValue) {
 	return changed;
 }
 
+const AI_CHATBOT_SETTING_KEY = "aiChatbotEnabled";
+const LEGACY_AI_CHATBOT_SETTING_KEY = "ollama";
+
+function migrateAiChatbotEnabledSetting(settingsObject) {
+	if (!settingsObject || typeof settingsObject !== "object") {
+		return false;
+	}
+
+	const hasCanonicalSetting = Object.prototype.hasOwnProperty.call(settingsObject, AI_CHATBOT_SETTING_KEY);
+	const legacyEntry = settingsObject[LEGACY_AI_CHATBOT_SETTING_KEY];
+	const legacyEnabled = legacyEntry === true || !!(legacyEntry && typeof legacyEntry === "object" && legacyEntry.setting === true);
+	let changed = false;
+
+	if (!hasCanonicalSetting && legacyEnabled) {
+		settingsObject[AI_CHATBOT_SETTING_KEY] = { setting: true };
+		changed = true;
+	}
+	if (Object.prototype.hasOwnProperty.call(settingsObject, LEGACY_AI_CHATBOT_SETTING_KEY)) {
+		delete settingsObject[LEGACY_AI_CHATBOT_SETTING_KEY];
+		changed = true;
+	}
+
+	return changed;
+}
+
 function loadSettings(item, resave = false) {
 	log("loadSettings (or saving new settings)", item);
 	let reloadNeeded = false;
@@ -1630,8 +1655,13 @@ function loadSettings(item, resave = false) {
 
 	if (item && item.settings) {
 		settings = item.settings;
+		if (migrateAiChatbotEnabledSetting(settings)) {
+			normalizedSettings = true;
+		}
 		// Temporary migration cleanup for stale imported false toggle objects. Stop pruning on every import after May 31st 2026.
-		normalizedSettings = pruneSettingsObjects(settings);
+		if (pruneSettingsObjects(settings)) {
+			normalizedSettings = true;
+		}
 		if (syncLikeTotalSettings(settings)) {
 			normalizedSettings = true;
 		}
@@ -1878,6 +1908,10 @@ function isVideoStatsSettingKey(settingKey) {
 function getSettingFlag(settingKey) {
 	const entry = settings && settings[settingKey];
 	return entry === true || !!(entry && typeof entry === "object" && entry.setting === true);
+}
+
+function isAiChatbotEnabled() {
+	return getSettingFlag(AI_CHATBOT_SETTING_KEY) || getSettingFlag(LEGACY_AI_CHATBOT_SETTING_KEY);
 }
 
 function getPopupBeginnerMode() {
@@ -4781,6 +4815,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				sendResponse({ success: false, error: payload });
 			}
 		} else if (request.cmd && request.cmd === "saveSetting") {
+			if (request.setting === LEGACY_AI_CHATBOT_SETTING_KEY) {
+				request.setting = AI_CHATBOT_SETTING_KEY;
+			}
 			const typedSetting = typeof request.type === "string" && request.type !== "";
 			const existingSetting = settings[request.setting];
 			const isObjectSetting = existingSetting && typeof existingSetting === "object" && !Array.isArray(existingSetting);
@@ -13503,6 +13540,19 @@ async function processIncomingRequest(request, UUID = false) {
 	} else if ("action" in request) {
 		if (request.action === "openChat") {
 			openchat(request.value || null);
+		} else if (request.action === "askBot" && typeof request.value === "string" && request.value.trim()) {
+			if (isAiChatbotEnabled() && typeof processMessageWithOllama === "function") {
+				await processMessageWithOllama({
+					chatname: "Host",
+					chatmessage: request.value.trim(),
+					type: "socialstream",
+					tid: "BOT",
+					host: true,
+					mod: true,
+					textonly: true,
+					privateBotPrompt: true
+				});
+			}
 		} else if (request.action === "clearBotOverlay") {
 			sendTargetP2P({ action: "clearBotOverlay" }, "bot");
 		} else if (request.action === "aiOverlay" || request.action === "cohostOverlay") {
@@ -13675,6 +13725,16 @@ async function processIncomingRequest(request, UUID = false) {
 					ttsTab.favIconUrl = "./icons/tts_incoming_messages_on.png";
 
 					tabsList.push(ttsTab);
+
+					if (isAiChatbotEnabled()) {
+						let botTab = {};
+						botTab.url = "";
+						botTab.id = "BOT";
+						botTab.title = "Ask the AI bot privately";
+						botTab.favIconUrl = "./icons/bot.png";
+
+						tabsList.push(botTab);
+					}
 
 					sendDataP2P({ tabsList: tabsList }, UUID);
 				});
@@ -17459,7 +17519,7 @@ async function applyBotActions(data, tab = false) {
 				console.log(e); // ai.js file missing?
 			}
 		}
-		if (settings.ollama) {
+		if (isAiChatbotEnabled()) {
 			try {
 				if (settings.modLLMonly) {
 					if (data.mod) {

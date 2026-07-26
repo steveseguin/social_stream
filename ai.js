@@ -3500,6 +3500,7 @@ async function processMessageWithOllama(data, idx=null) {
   if (!data.tid) return;
   
   const currentTime = Date.now();
+  const botOverlayOnly = Boolean(settings.ollamaoverlayonly || data?.privateBotPrompt);
   if (!reserveBotResponseSlot(data)) return;
   
   //console.log("starting processing");
@@ -3515,7 +3516,7 @@ async function processMessageWithOllama(data, idx=null) {
       ollamaRateLimitPerTab = Math.max(0, parseInt(settings.ollamaRateLimitPerTab.numbersetting) || 0);
     }
 
-    if (data.type !== "stageten" && !settings.ollamaoverlayonly && data.tid && lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
+    if (data.type !== "stageten" && !botOverlayOnly && data.tid && lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
       const waitMs = Math.max(0, ollamaRateLimitPerTab - (currentTime - lastResponseTime[data.tid]));
       noteChatBotDecision('rate-limited', data, { waitMs });
       return;
@@ -3550,7 +3551,7 @@ async function processMessageWithOllama(data, idx=null) {
     }
 
     // Trigger words check
-    if (settings.bottriggerwords?.textsetting.trim()) { // bottriggerwords
+    if (!data?.privateBotPrompt && settings.bottriggerwords?.textsetting.trim()) { // bottriggerwords
       if (!checkTriggerWords(settings.bottriggerwords.textsetting, data.chatmessage)) {
         noteChatBotDecision('missing-trigger', data);
         return;
@@ -3584,7 +3585,7 @@ async function processMessageWithOllama(data, idx=null) {
       }
     }
 
-    if (!allowHostReflectionResponse) {
+    if (!allowHostReflectionResponse && !data?.privateBotPrompt) {
       const score = fastMessageSimilarity(cleanedText, lastSentMessage);
       if (score > 0.5) {
         noteChatBotDecision('too-similar-to-last-reply', data);
@@ -3643,7 +3644,7 @@ async function processMessageWithOllama(data, idx=null) {
       // }
 
       // Send to tabs if not overlay-only
-      if (!settings.ollamaoverlayonly) {
+      if (!botOverlayOnly) {
         const msg = {
           tid: data.tid,
           response: settings.noollamabotname ? response.trim() : (botname + ": " + response.trim()),

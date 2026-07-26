@@ -1074,7 +1074,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "custom_injection",
     description: "Remove links when sending messages to Tiktok from SocialStreamNinja"
   },
-  "ollama": {
+  "aiChatbotEnabled": {
     type: "boolean",
     category: "chat_bot",
     description: "Enable the LLM AI Bot responder."

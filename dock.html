@@ -12573,10 +12573,17 @@
 								return;
 							}
 						}
+						if (tid.includes("BOT")) {
+							send2Extension({ action: "askBot", value: data });
+							return;
+						}
 					} else if (tid === "TTS") {
 						if (data){
 							TTS.speak(data, true);
 						}
+						return;
+					} else if (tid === "BOT") {
+						send2Extension({ action: "askBot", value: data });
 						return;
 					}
 				}
