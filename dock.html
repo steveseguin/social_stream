@@ -11278,6 +11278,19 @@
 					}
 
 					var chatbadges = "";
+					var has7TVBadge = false;
+					if (typeof data.chatbadges == "string") {
+						has7TVBadge = data.chatbadges.toLowerCase().indexOf("cdn.7tv.app") !== -1;
+					} else if (Array.isArray(data.chatbadges)) {
+						for (var badgeIndex = 0; badgeIndex < data.chatbadges.length; badgeIndex++) {
+							var badgeEntry = data.chatbadges[badgeIndex];
+							var badgeUrl = typeof badgeEntry == "string" ? badgeEntry : badgeEntry && badgeEntry.src;
+							if (typeof badgeUrl == "string" && badgeUrl.toLowerCase().indexOf("cdn.7tv.app") !== -1) {
+								has7TVBadge = true;
+								break;
+							}
+						}
+					}
 					
 					if (giveVIPBadge && vip){
 						if (!data.chatbadges){
@@ -11475,6 +11488,10 @@
 						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + donationHTML+ "</div>" + addImage + "</div>");
 					} else {
 						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</div>" + addImage + donationHTML + "</div>");
+					}
+
+					if (has7TVBadge) {
+						node.classList.add("7tv");
 					}
 
 					if (filtering) {
