@@ -46,4 +46,4 @@ Use this as the static navigation source for `docs/index.html` and as a grep-fre
 
 - [Issues Tracker](issues/README.md) - bugs found during documentation passes, one file per issue, tracked for later fixing.
 - [Control Social Stream Skill](../skills/control-social-stream/SKILL.md) - operational skill for driving the standalone app via its localhost control API / MCP server; implementation details in [Control API And MCP](04-standalone-app/control-api-and-mcp.md).
-- [Generated Function And Event Catalogs](../md/) - auto-generated symbol/event dumps (`functions-ssapp*`, `functions-social*`, `events-*`); names only, no semantics — use the agents docs for behavior.
+- [Generated Function And Event Catalogs](11-support-kb/public-docs-coverage.md) - coverage notes for the locally generated `docs/md/` symbol/event dumps (`functions-ssapp*`, `functions-social*`, `events-*`); names only, no semantics — use the agents docs for behavior.
