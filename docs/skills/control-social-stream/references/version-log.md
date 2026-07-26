@@ -16,6 +16,8 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 
 ### 2026-07-26
 
+- Fixed the bundled Python helper so the explicitly enabled tokenless loopback API works
+  without requiring an unused token; optional token arguments remain compatible with older setups.
 - Fixed downloaded-app MCP stdio launch on Windows without requiring a separate Node
   installation (API 1.1.5 / MCP 1.0.4, minimum SSApp 0.4.7).
 - Documented no-source MCP setup through the downloaded app's `--ssapp-mcp` mode and
