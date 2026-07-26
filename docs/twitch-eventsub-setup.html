@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch Setup and EventSub - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Connect Twitch chat to Social Stream Ninja using normal page capture or the richer EventSub WebSocket source, with OAuth, scope, event, and troubleshooting notes.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo"><a href="../index.html"><img src="../icons/logo.svg" alt="Social Stream Ninja Logo"><span>Social Stream Ninja</span></a></div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands &amp; API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
+                </button>
+                <div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Twitch Setup and EventSub</h1>
+            <p>Use normal page capture for simple chat, or EventSub/WebSocket mode for follows, subs, bits, rewards, raids, Hype Trains, and channel controls.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Choose A Twitch Source Mode</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Mode</th><th>Best For</th><th>Important Difference</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Mode">Standard</td>
+                            <td data-label="Best For">Basic public chat capture from a Twitch chat or popout page.</td>
+                            <td data-label="Important Difference">Reads what the page exposes. It is simple, but does not provide the full EventSub event set.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Mode">WebSocket / EventSub</td>
+                            <td data-label="Best For">Follows, subscriptions, bits, rewards, raids, stream status, Hype Trains, moderation sync, sending chat, and channel details.</td>
+                            <td data-label="Important Difference">Requires Twitch OAuth. Events are enabled only when the signed-in account, channel role, channel eligibility, and granted scope allow them.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Desktop App Setup</h2>
+                <ol class="guide-steps">
+                    <li>Select <strong>Add source → Twitch</strong>.</li>
+                    <li>Enter the Twitch channel login used in its URL. For <code>twitch.tv/examplechannel</code>, enter <code>examplechannel</code>.</li>
+                    <li>Leave <strong>WebSocket</strong> selected for the richer EventSub source. Twitch currently defaults to this mode in the app.</li>
+                    <li>Select <strong>Activate source</strong>, then <strong>Sign in to Twitch</strong>.</li>
+                    <li>Authorize the requested permissions and keep the Twitch source window open.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="images/guides/twitch-eventsub-sign-in.png" alt="Twitch source sign-in screen with External browser and Local app sign-in methods" class="guide-image">
+                    <figcaption>The desktop source offers an external-browser OAuth flow and a local-app flow. External browser is usually the easiest when Twitch already works in your normal browser.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Browser Extension EventSub Setup</h2>
+                <ol class="guide-steps">
+                    <li>Install and enable the current Social Stream Ninja extension.</li>
+                    <li>Open the <a href="https://socialstream.ninja/sources/websocket/twitch.html?channel=examplechannel" target="_blank" rel="noopener">Twitch EventSub source page</a>.</li>
+                    <li>Replace <code>examplechannel</code> in the URL with the channel login you want to monitor.</li>
+                    <li>Select <strong>Sign in to Twitch</strong> and approve the requested access.</li>
+                    <li>Keep that page open. Confirm that its User and Channel fields are correct before testing alerts.</li>
+                </ol>
+                <pre><code>https://socialstream.ninja/sources/websocket/twitch.html?channel=CHANNEL_LOGIN</code></pre>
+                <p>For basic Standard capture instead, open the normal Twitch chat or popout chat page and keep chat visible.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>What Twitch Requests</h2>
+                <p>Social Stream asks for a user token with permissions needed by the controls and subscriptions it supports. Granting a scope does not make an account a broadcaster or moderator; Twitch still checks the account's role for the selected channel.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Permission Group</th><th>Used For</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Permission Group">Chat</td><td data-label="Used For">Read chat, send chat, and list chatters.</td></tr>
+                        <tr><td data-label="Permission Group">Followers and subscribers</td><td data-label="Used For">Follow events, subscriber events, gifted subscriptions, and resub messages.</td></tr>
+                        <tr><td data-label="Permission Group">Bits, rewards, and Hype Trains</td><td data-label="Used For">Cheers, custom Channel Points redemptions, and Hype Train status.</td></tr>
+                        <tr><td data-label="Permission Group">Moderation</td><td data-label="Used For">Message deletion, bans/timeouts, and block synchronization when the account may moderate the channel.</td></tr>
+                        <tr><td data-label="Permission Group">Channel management</td><td data-label="Used For">Read/update title and category, read/manage ads, and display channel metrics.</td></tr>
+                    </tbody>
+                </table>
+                <p>See Twitch's official <a href="https://dev.twitch.tv/docs/authentication/scopes/" target="_blank" rel="noopener">scope reference</a> and <a href="https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/" target="_blank" rel="noopener">EventSub subscription types</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Events The Current Source Handles</h2>
+                <ul class="guide-list">
+                    <li><strong>Follows:</strong> <code>new_follower</code>.</li>
+                    <li><strong>Subscriptions:</strong> <code>new_subscriber</code>, <code>resub</code>, and <code>subscription_gift</code>.</li>
+                    <li><strong>Bits:</strong> <code>cheer</code> with a donation value.</li>
+                    <li><strong>Channel Points:</strong> <code>reward</code>.</li>
+                    <li><strong>Raids:</strong> <code>raid</code>.</li>
+                    <li><strong>Stream and ad status:</strong> <code>stream_online</code>, <code>stream_offline</code>, and <code>ad_break</code>.</li>
+                    <li><strong>Hype Train:</strong> <code>hype_train</code> begin, progress, and end updates.</li>
+                    <li><strong>Moderation:</strong> ban and message-deletion updates when permitted.</li>
+                </ul>
+                <p>Twitch subscriber events require an eligible Affiliate/Partner channel and broadcaster access. Follow and moderation subscriptions require the signed-in user to be the broadcaster or an authorized moderator, depending on the event.</p>
+                <p>For downstream alert names and payload fields, use the <a href="events-alerts-compatibility.html">Events and Alerts Compatibility guide</a> and <a href="event-reference.html">Event Reference</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>First Checks When An Event Is Missing</h2>
+                <ol class="guide-steps">
+                    <li>Confirm the source page says the correct <strong>User</strong> and <strong>Channel</strong>.</li>
+                    <li>Keep the source page/window open and confirm its chat connection is active.</li>
+                    <li>If chat works but follows/subs/rewards do not, sign out and authorize again so the current scopes are granted.</li>
+                    <li>Verify that the signed-in account is the broadcaster or a permitted moderator for that channel.</li>
+                    <li>Check that the dock and alert overlay use the same Social Stream session ID.</li>
+                    <li>Use the popup's fake test message or Multi Alerts preview to separate capture problems from overlay problems.</li>
+                </ol>
+                <div class="guide-note">
+                    <p><strong>EventSub can deliver a notification more than once.</strong> Twitch documents at-least-once delivery. Social Stream includes duplicate protection, but custom API consumers should still deduplicate by event/message identity where possible. See the official <a href="https://dev.twitch.tv/docs/eventsub/" target="_blank" rel="noopener">EventSub overview</a>.</p>
+                </div>
+            </div>
+
+            <template data-copy-markdown-extra>
+## Verified maintainer context
+
+Current Twitch OAuth scopes requested by `sources/websocket/twitch.js`:
+
+`chat:read`, `chat:edit`, `bits:read`, `moderator:read:followers`, `moderator:read:chatters`, `channel:read:subscriptions`, `channel:read:hype_train`, `channel:moderate`, `moderator:manage:banned_users`, `moderator:manage:chat_messages`, `channel:manage:broadcast`, `channel:read:ads`, `channel:manage:ads`, `channel:read:redemptions`.
+
+Current EventSub subscription attempts, gated by role/scope/channel eligibility:
+
+`channel.follow` v2; `channel.subscribe`; `channel.subscription.gift`; `channel.subscription.message`; `channel.cheer`; `channel.ban`; `channel.channel_points_custom_reward_redemption.add`; `channel.raid`; `stream.online`; `stream.offline`; `channel.ad_break.begin`; and `channel.hype_train.begin`, `.progress`, `.end` v2.
+
+The current transport endpoint is Twitch EventSub WebSocket. Twitch requires a user access token when creating WebSocket subscriptions. The Twitch chat-client subscription-gift normalization regression test passed during this documentation review.
+            </template>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+    <script src="js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events and Alerts Compatibility - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Understand which Social Stream Ninja events can trigger Multi Alerts, how event names are normalized, and how to troubleshoot missing follows, subscriptions, donations, cheers, raids, and Hype Trains.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands &amp; API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
+                </button>
+                <div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Events and Alerts Compatibility</h1>
+            <p>Connect captured platform events to Multi Alerts without confusing normal chat, donations, and event payloads.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Start With The Event Source</h2>
+                <p>Multi Alerts displays events that Social Stream has already captured. It does not sign in to Twitch, Kick, YouTube, TikTok, or another platform by itself.</p>
+                <ol class="guide-steps">
+                    <li>Connect and activate the platform source that provides the event.</li>
+                    <li>Keep that source page or standalone-app source window active.</li>
+                    <li>Use the same Social Stream session ID in the source, popup, Dock, and Multi Alerts URL.</li>
+                    <li>Test the alert overlay from its options before debugging the platform connection.</li>
+                </ol>
+                <div class="guide-note">
+                    <p><strong>A successful preview proves the alert layout works.</strong> It does not prove the platform source has permission to receive that live event.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Multi Alerts Categories</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Category</th><th>Common Event Names</th><th>Notes</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Category">Follow</td><td data-label="Common Event Names"><code>new_follower</code>, <code>follow</code>, <code>followed</code></td><td data-label="Notes">Requires a source that captures follow events and the necessary platform permission.</td></tr>
+                        <tr><td data-label="Category">Subscription</td><td data-label="Common Event Names"><code>new_subscriber</code>, <code>resub</code>, <code>subscription_gift</code>, membership aliases</td><td data-label="Notes">Includes recurring, gifted, and membership-style events where supported.</td></tr>
+                        <tr><td data-label="Category">Donation / gift</td><td data-label="Common Event Names"><code>superchat</code>, <code>supersticker</code>, <code>gift</code>, <code>tip</code>, donation aliases</td><td data-label="Notes">A donation-style chat row may instead use <code>hasDonation</code> and <code>donoValue</code>.</td></tr>
+                        <tr><td data-label="Category">Bits</td><td data-label="Common Event Names"><code>cheer</code>, <code>bits</code></td><td data-label="Notes">The amount can be filtered with the minimum donation/cash option.</td></tr>
+                        <tr><td data-label="Category">Raid</td><td data-label="Common Event Names"><code>raid</code>, <code>host</code>, <code>redirect</code></td><td data-label="Notes">Availability and naming depend on the platform source.</td></tr>
+                        <tr><td data-label="Category">Auction</td><td data-label="Common Event Names"><code>auction_update</code></td><td data-label="Notes">Auction-win alerts are opt-in.</td></tr>
+                        <tr><td data-label="Category">Hype Train</td><td data-label="Common Event Names"><code>hype_train</code></td><td data-label="Notes">Hype Train alerts are opt-in and require eligible Twitch EventSub access.</td></tr>
+                    </tbody>
+                </table>
+                <p>Viewer counts, follower totals, stream status, and ad-break status are updates rather than normal alert cards. Use the <a href="event-reference.html">Event Reference</a> when building an API consumer or custom overlay.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Enable The Alert Types You Want</h2>
+                <p>Open the Multi Alerts options from Social Stream settings. Follows, subscriptions, donations, bits, and raids have their own enable, style, sound, and appearance controls. Auction and Hype Train alerts require their dedicated opt-in controls.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/multi-alert-types-options.png" alt="Social Stream Ninja Multi Alerts options showing separate alert-type controls for follows, subscriptions, donations, bits, raids, auction wins, and Hype Trains" class="guide-image">
+                    <figcaption>Configure each alert category independently. Enabling an alert does not grant the platform permission needed to capture it.</figcaption>
+                </figure>
+                <ul class="guide-list">
+                    <li>Use <strong>Queue alerts</strong> when several events may arrive together.</li>
+                    <li>Check source filters if events work in the Dock but not in Multi Alerts.</li>
+                    <li>Check minimum cash/donation filters when small tips or cheers are missing.</li>
+                    <li>Interact with the browser page once if custom alert audio is blocked by autoplay rules.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>Preview Before Going Live</h2>
+                <p>Use the preview controls to verify the selected category, text, amount, media, sound, animation, and queue behavior.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/multi-alerts-donation-preview.png" alt="Multi Alerts donation preview showing a styled donation card and preview controls" class="guide-image">
+                    <figcaption>A donation preview checks the overlay. Next, trigger or observe a real platform event to verify the source connection.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Platform Setup Notes</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Platform</th><th>First Check</th><th>Guide</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Platform">Twitch</td><td data-label="First Check">Sign in with the broadcaster or permitted moderator and keep EventSub connected.</td><td data-label="Guide"><a href="twitch-eventsub-setup.html">Twitch EventSub setup</a></td></tr>
+                        <tr><td data-label="Platform">Kick</td><td data-label="First Check">Choose the source mode deliberately and complete authentication when the desired events require it.</td><td data-label="Guide"><a href="kick-setup-authentication.html">Kick setup and authentication</a></td></tr>
+                        <tr><td data-label="Platform">Other sources</td><td data-label="First Check">Confirm that the selected source actually emits the event type, not only chat messages.</td><td data-label="Guide"><a href="supported-sites.html">Supported sites</a></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>When A Real Alert Is Missing</h2>
+                <ol class="guide-steps">
+                    <li>Confirm the source received the event in its own log, Dock, or API output.</li>
+                    <li>Confirm the source and Multi Alerts page use the same session ID and password.</li>
+                    <li>Confirm that category is enabled and not excluded by source or channel filters.</li>
+                    <li>Check minimum-value filters for donations and bits.</li>
+                    <li>For Twitch or Kick, sign in again if chat works but protected events do not.</li>
+                    <li>Keep the source window active long enough to observe a real event; a preview alone is not an end-to-end platform test.</li>
+                </ol>
+                <p>If multiple devices or connection modes are involved, review <a href="sessions-passwords-relay-modes.html">Sessions, Passwords, and Relay Modes</a>.</p>
+            </div>
+
+            <template data-copy-markdown-extra>
+## Maintainer notes
+
+- Multi Alerts currently normalizes follow, subscription, donation/gift, bits, raid, auction, and Hype Train aliases into seven alert categories.
+- Auction and Hype Train alerts are opt-in. Donation/bits alerts can be filtered by parsed cash value.
+- Donation-style chat rows should use `hasDonation` and optional `donoValue`; an `event` value is for an actual event payload.
+- The popup preview verifies overlay handling only. Platform capture still requires a live source, matching session, correct role/scopes, and a real event.
+            </template>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 License.</p></div></div>
+    </footer>
+    <script src="js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
