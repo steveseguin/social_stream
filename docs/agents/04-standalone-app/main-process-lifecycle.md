@@ -51,7 +51,7 @@ Support implication: startup side effects (media server, control API, workers) a
 
 | Service | Port/Entry | Notes |
 | --- | --- | --- |
-| Control API (HTTP) | `127.0.0.1:17777` default, `main.js:1887-1895`, listen `main.js:2554` | Token-authed. Details in `control-api-and-mcp.md`. |
+| Control API (HTTP) | `127.0.0.1:17777` default, explicit opt-in | Tokenless same-machine AI/automation adapter. Headless mode does not enable it. Details in `control-api-and-mcp.md`. |
 | WS relay server | port 3000, `main.js:5409-5604` | `ws`-based room relay mimicking the VDO.Ninja protocol (`/join/<room>/<in>/<out>`). Binds all interfaces, no auth — intentional for LAN overlays but worth knowing. Toggle via tray/menu (`main.js:17004-17011`). |
 | Local media server | `127.0.0.1:3001` default, `resources/electron-local-media-server.js:11-12,188,212` | Serves user-selected local media to pages; token-rotated URLs. |
 | STT worker | `stt-worker.js`, spawned `main.js:15189-15392` | Whisper via `@huggingface/transformers`; models in `userData/models/whisper` (`main.js:15213`). |

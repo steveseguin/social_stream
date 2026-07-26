@@ -15,7 +15,7 @@ Path convention: anchors prefixed `ssapp/...` refer to the separate ssapp reposi
 | [Main Process Lifecycle](main-process-lifecycle.md) | Startup order, window types, tray/headless modes, shutdown, single-instance behavior. |
 | [Social Stream Loading And Injection](social-stream-loading.md) | How the app resolves background/popup/source pages (remote → cache → fallback), injects content scripts, and emulates `chrome.runtime`. |
 | [IPC Reference](ipc-reference.md) | Channel names, direction, and purpose for the ~90 ipcMain channels. |
-| [Control API And MCP](control-api-and-mcp.md) | Localhost control HTTP API, MCP stdio server, token auth/lifecycle, SSE events, legacy `/exec` caveat. |
+| [Control API And MCP](control-api-and-mcp.md) | Opt-in same-machine HTTP API, MCP stdio server, SSE events, headless separation, and legacy `/exec` caveat. |
 | [Packaging, Updates, And State](packaging-updates-and-state.md) | electron-builder targets, code signing, no auto-updater, savedSync.json/electron-store schema, portable mode. |
 
 ## Related docs outside this folder
@@ -24,5 +24,5 @@ Path convention: anchors prefixed `ssapp/...` refer to the separate ssapp reposi
 - `../04-standalone-app-source-windows.md` - source-state vs source-window mental model and app-vs-extension parity.
 - `../08-platform-sources/tiktok-standalone-app.md` - TikTok connector modes, signing, fallbacks.
 - `../08-platform-sources/tiktok-app-event-payload-map.md` - TikTok app event → SSN payload field mapping.
-- `../../skills/control-social-stream/` - operational skill for driving the app via the control API (Python client + MCP).
+- `../../skills/control-social-stream/` - operational guidance and references for driving the app through its control API and MCP adapter.
 - `../issues/` - bugs found during documentation passes, including ssapp defects.

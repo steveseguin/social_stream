@@ -1,5 +1,12 @@
 # LLM Control and Headless SSApp Finalization Plan
 
+> **Superseded on 2026-07-26.** This document records the earlier token-authenticated,
+> HTTP-driven proposal and is retained only as history. The active design is
+> `ssn_app/docs/CONTROL_ARCHITECTURE_PLAN.md`: headless is only a launch mode, remote control
+> uses Social Stream's existing WebRTC/WebSocket transports, and the optional tokenless
+> `/api/v1` + MCP adapter is for same-machine AI tools only. Do not implement the token,
+> tunnelling, or cloud HTTP-control work described below.
+
 ## Problem Statement
 
 SSApp now has an initial authenticated localhost control API, headless CLI mode, source and settings commands, a public guide, and an AI skill. The current implementation proves the concept and passes isolated Electron tests, but it is not yet ready to be described as complete remote control of the standalone app.

@@ -1,6 +1,6 @@
 ---
 name: control-social-stream
-description: Control the Social Stream Ninja standalone Electron app through its authenticated localhost API. Use when an agent needs to launch SSApp visibly or headlessly, inspect app/source status, add or remove sources, start/stop/reload sources, or read and change supported settings.
+description: Control the Social Stream Ninja standalone Electron app through its opt-in localhost API. Use when a local agent needs to inspect app/source status, add or remove sources, start/stop/reload sources, or read and change supported settings.
 ---
 
 # Control Social Stream
@@ -9,17 +9,21 @@ Use SSApp's declarative control API. Do not use renderer execution or UI automat
 
 ## Start SSApp
 
-Prefer enabling **AI / LLM Control** from SSApp's File menu. SSApp generates and stores a random token, and the menu can copy the local connection details.
+Prefer enabling **Local AI / Automation** from SSApp's File menu. The API listens only on
+`127.0.0.1` and does not require a token.
 
-For unattended launches, put a random token in a user-protected file and pass only its path:
+For a visible command-line launch:
 
 ```text
-SocialStream.exe --ssapp-headless-control --ssapp-control-port=17777 --ssapp-control-token-file=C:\\secure\\ssapp-token.txt
+SocialStream.exe --ssapp-control-api --ssapp-control-port=17777
 ```
 
-Environment variables are also supported. Avoid command-line tokens because process listings and logs can expose them. For a visible unattended app, replace `--ssapp-headless-control` with `--ssapp-control-api`.
+Headless mode is separate. To hide windows and also allow a local agent, pass both
+`--ssapp-headless-control` and `--ssapp-control-api`. Headless mode alone does not open the
+API. Environment variables are also supported.
 
-Keep the server bound to `127.0.0.1`. Never publish the token or place the control port behind a public proxy.
+Do not use this localhost API as a cloud remote-control interface. Remote users and Stream
+Deck use Social Stream's existing WebRTC or WebSocket transport instead.
 
 ## Control workflow
 
@@ -30,7 +34,10 @@ Keep the server bound to `127.0.0.1`. Never publish the token or place the contr
 5. Re-read the affected source or settings after mutation.
 6. Use confirmation-required bulk, reload, and shutdown operations only when the user requested them.
 
-Prefer the supplied MCP server when the agent supports MCP. Otherwise use `scripts/ssapp_control.py`. Read [references/control-api.md](references/control-api.md) for schemas and examples and [references/version-log.md](references/version-log.md) for minimum-version compatibility. Runtime capabilities are authoritative.
+Prefer SSApp's supplied MCP server when the agent supports MCP. Otherwise call the loopback
+HTTP endpoints directly using [references/control-api.md](references/control-api.md). Read
+[references/version-log.md](references/version-log.md) for minimum-version compatibility.
+Runtime capabilities are authoritative.
 
 ## Safety
 

@@ -29,6 +29,7 @@ const available = router.buildCapabilities({
 		runtime: "electron",
 		version: "0.4.2",
 		sourceControls: { list: true, get: true, add: true, remove: true, update: true, start: true, stop: true, restart: true },
+		appControls: { status: true, reload: true, shutdown: true },
 		settings: { get: true, update: true }
 	}
 });
@@ -39,8 +40,29 @@ assert.equal(available.ssapp.bridgeVersion, 1);
 assert.equal(router.isSsappActionSupported("startSource", available), true);
 assert.equal(router.isSsappActionSupported("ssapp.stopSource", available), true);
 assert.equal(router.isSsappActionSupported("addSource", available), true);
-assert.equal(router.isSsappActionSupported("updateSettings", available), true);
+assert.equal(router.isSsappActionSupported("updateSettings", available), false);
+assert.equal(router.isSsappActionSupported("startAllSources", available), false);
+assert.equal(available.ssapp.appControls, false);
+assert.equal(available.ssapp.settings, false);
+assert.deepEqual(available.ssapp.bulkControls, {});
 assert.equal(router.isSsappActionSupported("unknownSourceAction", available), false);
+
+assert.deepEqual(router.validateRemoteSsappRequest({
+	action: "addSource",
+	value: { target: "youtube", videoId: "abcdefghijk", connectionMode: "classic" }
+}), { ok: true });
+assert.equal(router.validateRemoteSsappRequest({
+	action: "addSource",
+	value: { target: "youtube", url: "https://youtube.com/live_chat?v=abcdefghijk&access_token=secret" }
+}).code, "SIGN_IN_UNSUPPORTED");
+assert.equal(router.validateRemoteSsappRequest({
+	action: "addSource",
+	value: { target: "youtube", videoId: "abcdefghijk", customSession: "signed-in" }
+}).code, "UNSUPPORTED_FIELD");
+assert.equal(router.validateRemoteSsappRequest({
+	action: "updateSource",
+	value: { sourceId: "source-1", updates: { accountRole: "host" } }
+}).code, "UNSUPPORTED_FIELD");
 
 const partial = router.buildCapabilities({
 	runtime: "electron",

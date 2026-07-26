@@ -9413,6 +9413,28 @@ function sendStreamDeckCallback(socket, request, result) {
 	return true;
 }
 
+function buildStreamDeckCallbackPacket(request, result) {
+	if (!request || !request.get) {
+		return null;
+	}
+	return {
+		callback: {
+			get: request.get,
+			result
+		}
+	};
+}
+
+function buildStreamDeckCommandResultPacket(request, result) {
+	return (
+		buildStreamDeckCallbackPacket(request, result) || {
+			type: "commandResult",
+			action: request && request.action ? request.action : null,
+			result
+		}
+	);
+}
+
 function sendStreamDeckCommandResult(socket, request, result) {
 	if (!socket || socket.readyState !== WebSocket.OPEN) {
 		return false;
@@ -9420,13 +9442,7 @@ function sendStreamDeckCommandResult(socket, request, result) {
 	if (sendStreamDeckCallback(socket, request, result)) {
 		return true;
 	}
-	socket.send(
-		JSON.stringify({
-			type: "commandResult",
-			action: request && request.action ? request.action : null,
-			result
-		})
-	);
+	socket.send(JSON.stringify(buildStreamDeckCommandResultPacket(request, result)));
 	return true;
 }
 
@@ -9590,6 +9606,12 @@ async function handleStreamDeckSsappRequest(request) {
 	if (!router.isSsappActionSupported(normalizedAction, capabilities)) {
 		return router.makeError(request, "UNSUPPORTED_ACTION", "SSApp action is not supported by the advertised capabilities.");
 	}
+	if (typeof router.validateRemoteSsappRequest === "function") {
+		const validation = router.validateRemoteSsappRequest(request);
+		if (!validation.ok) {
+			return router.makeError(request, validation.code || "INVALID_TARGET", validation.message || "SSApp command is not available remotely.");
+		}
+	}
 
 	try {
 		const response = await ipcRenderer.invoke("ssapp:background-command", {
@@ -9610,6 +9632,37 @@ async function handleStreamDeckSsappRequest(request) {
 	} catch (error) {
 		return router.makeError(request, "SSAPP_UNAVAILABLE", error?.message || "SSApp command bridge failed.");
 	}
+}
+
+async function routeStreamDeckRemoteRequest(request) {
+	const router = getStreamDeckRemoteControlRouter();
+	if (!router || !request || typeof request !== "object") {
+		return null;
+	}
+	if (router.isCapabilityRequest(request)) {
+		return {
+			kind: "capabilities",
+			result: await getStreamDeckCapabilities()
+		};
+	}
+	if (router.isSsappRequest(request)) {
+		return {
+			kind: "command",
+			result: await handleStreamDeckSsappRequest(request)
+		};
+	}
+	return null;
+}
+
+function sendStreamDeckPeerResult(request, routed, UUID) {
+	if (!routed || !UUID) {
+		return false;
+	}
+	const packet = routed.kind === "capabilities" && !request.get
+		? routed.result
+		: buildStreamDeckCommandResultPacket(request, routed.result);
+	sendDataP2P(packet, UUID);
+	return true;
 }
 
 function setupSocket() {
@@ -9705,19 +9758,15 @@ function setupSocket() {
 				data.target = "";
 			}
 
-			const streamDeckRouter = getStreamDeckRemoteControlRouter();
-			if (streamDeckRouter && streamDeckRouter.isCapabilityRequest(data)) {
-				const capabilities = await getStreamDeckCapabilities();
-				if (data.get) {
-					sendStreamDeckCallback(socketserver, data, capabilities);
-				} else if (socketserver && socketserver.readyState === WebSocket.OPEN) {
-					socketserver.send(JSON.stringify(capabilities));
+			const streamDeckRoute = await routeStreamDeckRemoteRequest(data);
+			if (streamDeckRoute) {
+				if (streamDeckRoute.kind === "capabilities" && !data.get) {
+					if (socketserver && socketserver.readyState === WebSocket.OPEN) {
+						socketserver.send(JSON.stringify(streamDeckRoute.result));
+					}
+				} else {
+					sendStreamDeckCommandResult(socketserver, data, streamDeckRoute.result);
 				}
-				return;
-			}
-			if (streamDeckRouter && streamDeckRouter.isSsappRequest(data)) {
-				const result = await handleStreamDeckSsappRequest(data);
-				sendStreamDeckCommandResult(socketserver, data, result);
 				return;
 			}
 
@@ -13492,6 +13541,15 @@ async function processIncomingRequest(request, UUID = false) {
 	}
 	if (await handleBridgeChunkRequest(request, UUID)) {
 		return;
+	}
+
+	// WebRTC SDK and iframe traffic enters here, while server mode enters setupSocket().
+	// Route both through the same SSApp command implementation and answer the originating
+	// peer using the existing Social Stream P2P transport.
+	const streamDeckRoute = await routeStreamDeckRemoteRequest(request);
+	if (streamDeckRoute) {
+		sendStreamDeckPeerResult(request, streamDeckRoute, UUID);
+		return streamDeckRoute.result;
 	}
 
 	if ("response" in request) {

@@ -57,7 +57,7 @@ Support implication: "the app updated itself" claims are wrong. Version drift be
 
 - No silent/auto update exists; do not tell users to "wait for the app to update."
 - Unsigned Windows builds are a normal outcome when the cert is missing, not a build failure.
-- The electron-store token (`controlApi.token`) is plaintext on disk — treat it as a local secret (see `../issues/ISSUE-006-control-api-token-in-query-param.md`).
+- Old profiles may still contain an unused `controlApi.token` value from API versions before 1.1.5; current SSApp does not read it.
 
 ## Follow-Up Extraction Needs
 

@@ -15,7 +15,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control Social Stream Ninja with AI</title>
-    <meta name="description" content="Launch and control the Social Stream Ninja desktop app through its authenticated localhost API or an AI skill.">
+    <meta name="description" content="Control the Social Stream Ninja desktop app from a local AI tool through its opt-in localhost API or MCP adapter.">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/guides.css">
     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
@@ -71,7 +71,7 @@
     <section class="page-hero">
         <div class="container">
             <h1>Control Social Stream Ninja with AI</h1>
-            <p>Run the desktop app visibly or headlessly, then manage sources and supported settings through a private localhost API.</p>
+            <p>Let an AI tool on the same computer manage sources and supported settings through an opt-in localhost API.</p>
         </div>
     </section>
 
@@ -79,14 +79,14 @@
         <div class="container">
             <div class="guide-card">
                 <h2>Start the app</h2>
-                <p>For normal use, open <strong>File &gt; AI / LLM Control</strong> in SSApp and enable the API. SSApp creates and stores a random token; use <strong>Copy Control Connection</strong> to obtain the local connection details.</p>
-                <p>For unattended use, store a random token in a user-protected file. Headless mode keeps Electron windows hidden, but Chromium still runs so capture pages continue working.</p>
-                <pre><code>SocialStream.exe --ssapp-headless-control --ssapp-control-port=17777 --ssapp-control-token-file=C:\secure\ssapp-token.txt</code></pre>
-                <p>Use <code>--ssapp-control-api</code> instead to keep the normal app window visible. Environment variables are supported too. Avoid putting tokens directly on command lines.</p>
+                <p>For normal use, open <strong>File &gt; Local AI / Automation</strong> in SSApp and enable the API. Use <strong>Copy Local Connection</strong> to copy its localhost URL.</p>
+                <p>For a visible command-line launch:</p>
+                <pre><code>SocialStream.exe --ssapp-control-api --ssapp-control-port=17777</code></pre>
+                <p>Headless mode only hides Electron windows. If a local AI tool also needs the API, pass both <code>--ssapp-headless-control</code> and <code>--ssapp-control-api</code>. Headless mode alone does not open a control port.</p>
             </div>
             <div class="guide-card">
                 <h2>Connect an AI or script</h2>
-                <p>The server listens only on <code>127.0.0.1</code>. Send the token in <code>X-SSAPP-Token</code> and discover the available controls first.</p>
+                <p>The server listens only on <code>127.0.0.1</code> and does not require a token. Discover the available controls first.</p>
                 <pre><code>GET http://127.0.0.1:17777/api/v1/capabilities
 GET http://127.0.0.1:17777/api/v1/status
 GET http://127.0.0.1:17777/api/v1/events</code></pre>
@@ -109,12 +109,12 @@ GET http://127.0.0.1:17777/api/v1/events</code></pre>
             </div>
             <div class="guide-card">
                 <h2>Install the AI skill</h2>
-                <p>Download the <a href="skills/control-social-stream/SKILL.md">Control Social Stream skill</a> with its <a href="skills/control-social-stream/references/control-api.md">API reference</a>, <a href="skills/control-social-stream/references/version-log.md">version log</a>, and <a href="skills/control-social-stream/scripts/ssapp_control.py">Python client</a>. Add the skill folder to the skills directory used by your AI tool.</p>
-                <p>SSApp also ships a stdio MCP adapter at <code>resources/ssapp-mcp.js</code>. Configure an MCP client to run it with Node and provide <code>SSAPP_CONTROL_URL</code> plus <code>SSAPP_CONTROL_TOKEN_FILE</code>. The MCP server filters its tools using the running app's capabilities and reports the SSApp/API version in every result.</p>
+                <p>Download the whole <a href="skills/control-social-stream/SKILL.md">Control Social Stream skill</a> folder, including its <a href="skills/control-social-stream/references/control-api.md">API reference</a> and <a href="skills/control-social-stream/references/version-log.md">version log</a>. Add the folder to the skills directory used by your AI tool.</p>
+                <p>The SSApp source checkout includes a stdio MCP adapter at <code>resources/ssapp-mcp.js</code>. Register that Node command once in the local agent's MCP configuration; agents do not find it by scanning the server. The MCP client then discovers tools automatically, and the adapter filters them using the running app's capabilities. Set <code>SSAPP_CONTROL_URL</code> only when using a non-default local port.</p>
             </div>
             <div class="guide-card">
-                <h2>Security</h2>
-                <p>Never expose the control port to the Internet, publish the token, or place it behind a public proxy. The public API does not provide arbitrary JavaScript execution, cookies, sign-in secrets, unrestricted settings, or raw filesystem access.</p>
+                <h2>Local only</h2>
+                <p>This interface is for AI and automation running on the same computer as SSApp. Do not expose or tunnel it as a cloud remote-control API. Remote users and Stream Deck should use Social Stream's existing WebRTC or WebSocket connection. The local API does not provide arbitrary JavaScript execution, cookies, sign-in secrets, unrestricted settings, or raw filesystem access.</p>
             </div>
         </div>
     </main>
