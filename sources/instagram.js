@@ -260,9 +260,361 @@
 		return true;
 	}
 
+	// ---------- Instagram Live REST capture ----------
+	//
+	// Primary capture path for live chat: Instagram's own web API.
+	//   GET  /api/v1/live/{broadcast_id}/get_comment/?last_comment_ts={ts}
+	//   POST /api/v1/live/{broadcast_id}/heartbeat_and_get_viewer_count/
+	// Both work same-origin with the session cookie and return clean JSON
+	// (username, avatar, unique comment pk, viewer count). When this path is
+	// unavailable or failing, we fall back to the DOM parsing below.
+
+	var liveRestState = {
+		broadcastId: null,
+		lastCommentTs: 0,
+		lastViewerCount: null,
+		commentTimer: null,
+		viewerTimer: null,
+		failures: 0,
+		seenCommentIds: {},
+		seenCommentOrder: []
+	};
+
+	function getLiveBroadcastId(){
+		try {
+			var m = (window.location.search || "").match(/[?&]broadcast_id=(\d+)/);
+			if (m){ return m[1]; }
+			var scripts = document.querySelectorAll("script");
+			for (var i = 0; i < scripts.length; i++){
+				var text = scripts[i].textContent || "";
+				if (text.length > 2000000){ continue; }
+				var b = text.match(/"broadcast_id"\s*:\s*"?(\d{10,})"?/);
+				if (b){ return b[1]; }
+			}
+		} catch(e){}
+		return null;
+	}
+
+	function getIgCsrfToken(){
+		try {
+			var m = (document.cookie || "").match(/(?:^|;\s*)csrftoken=([^;]+)/);
+			return m ? decodeURIComponent(m[1]) : "";
+		} catch(e){}
+		return "";
+	}
+
+	function getIgUserId(){
+		try {
+			var m = (document.cookie || "").match(/(?:^|;\s*)ds_user_id=(\d+)/);
+			return m ? m[1] : "";
+		} catch(e){}
+		return "";
+	}
+
+	function igApiHeaders(){
+		return {
+			"X-IG-App-ID": "936619743392459",
+			"X-CSRFToken": getIgCsrfToken(),
+			"X-ASBD-ID": "359341",
+			"X-Requested-With": "XMLHttpRequest",
+			"Content-Type": "application/x-www-form-urlencoded"
+		};
+	}
+
+	function liveRestIsActive(){
+		return !!(liveRestState.broadcastId && liveRestState.commentTimer && liveRestState.failures < 3);
+	}
+
+	function markLiveRestFailure(){
+		liveRestState.failures++;
+		if (liveRestState.failures >= 3){ stopLiveRestPolling(); }
+	}
+
+	function stopLiveRestPolling(){
+		if (liveRestState.commentTimer){ clearInterval(liveRestState.commentTimer); liveRestState.commentTimer = null; }
+		if (liveRestState.viewerTimer){ clearInterval(liveRestState.viewerTimer); liveRestState.viewerTimer = null; }
+	}
+
+	function seenLiveRestComment(pk){
+		if (!pk){ return true; }
+		if (liveRestState.seenCommentIds[pk]){ return true; }
+		liveRestState.seenCommentIds[pk] = true;
+		liveRestState.seenCommentOrder.push(pk);
+		while (liveRestState.seenCommentOrder.length > 300){
+			var oldest = liveRestState.seenCommentOrder.shift();
+			delete liveRestState.seenCommentIds[oldest];
+		}
+		return false;
+	}
+
+	function emitLiveRestComment(comment){
+		try {
+			if (!comment || !comment.user){ return; }
+			if (seenLiveRestComment(comment.pk || comment.strong_id__)){ return; }
+			var chatname = ((comment.user.username || "") + "").trim();
+			var chatmessage = ((comment.text || "") + "").trim();
+			if (!chatname || !chatmessage){ return; }
+			var data = {};
+			data.chatname = escapeHtml(chatname);
+			data.chatbadges = "";
+			data.backgroundColor = "";
+			data.textColor = "";
+			data.chatmessage = escapeHtml(chatmessage);
+			data.chatimg = comment.user.profile_pic_url || "";
+			data.hasDonation = "";
+			data.membership = "";
+			data.contentimg = "";
+			data.event = false;
+			data.textonly = settings.textonlymode || false;
+			data.type = "instagramlive";
+			sendOut(data);
+		} catch(e){}
+	}
+
+	function pollLiveCommentsRest(){
+		if (!isExtensionOn || !liveRestState.broadcastId){ return; }
+		var url = "/api/v1/live/" + liveRestState.broadcastId + "/get_comment/";
+		if (liveRestState.lastCommentTs){
+			url += "?last_comment_ts=" + liveRestState.lastCommentTs;
+		}
+		fetch(url, { headers: igApiHeaders(), credentials: "same-origin" })
+			.then(function(resp){
+				if (!resp.ok){ throw new Error("status " + resp.status); }
+				return resp.json();
+			})
+			.then(function(json){
+				if (!json || json.status !== "ok"){ markLiveRestFailure(); return; }
+				liveRestState.failures = 0;
+				var comments = Array.isArray(json.comments) ? json.comments : [];
+				var systems = Array.isArray(json.system_comments) ? json.system_comments : [];
+				var all = comments.concat(systems);
+				all.sort(function(a, b){ return ((a && a.created_at) || 0) - ((b && b.created_at) || 0); });
+				all.forEach(emitLiveRestComment);
+				all.forEach(function(c){
+					if (c && c.created_at && c.created_at > liveRestState.lastCommentTs){
+						liveRestState.lastCommentTs = c.created_at;
+					}
+				});
+			})
+			.catch(function(){ markLiveRestFailure(); });
+	}
+
+	function pollLiveViewersRest(){
+		if (!isExtensionOn || !liveRestState.broadcastId){ return; }
+		if (!(settings.showviewercount || settings.hypemode)){ return; }
+		fetch("/api/v1/live/" + liveRestState.broadcastId + "/heartbeat_and_get_viewer_count/", {
+			method: "POST",
+			headers: igApiHeaders(),
+			credentials: "same-origin"
+		})
+			.then(function(resp){
+				if (!resp.ok){ throw new Error("status " + resp.status); }
+				return resp.json();
+			})
+			.then(function(json){
+				if (!json || json.status !== "ok"){ return; }
+				if (typeof json.viewer_count === "number" && json.viewer_count !== liveRestState.lastViewerCount){
+					liveRestState.lastViewerCount = json.viewer_count;
+					pushMessage({ type: "instagramlive", event: "viewer_update", meta: json.viewer_count });
+				}
+				if (json.broadcast_status && json.broadcast_status !== "live"){
+					pushMessage({ type: "instagramlive", event: "stream_offline" });
+					stopLiveRestPolling();
+				}
+			})
+			.catch(function(){});
+	}
+
+	function syncLiveRest(){
+		if (!isLivePage()){
+			if (liveRestState.broadcastId){
+				stopLiveRestPolling();
+				liveRestState.broadcastId = null;
+			}
+			return;
+		}
+		var id = getLiveBroadcastId();
+		if (!id){ return; }
+		if (liveRestState.broadcastId !== id){
+			stopLiveRestPolling();
+			liveRestState.broadcastId = id;
+			liveRestState.lastCommentTs = Math.floor(Date.now() / 1000);
+			liveRestState.lastViewerCount = null;
+			liveRestState.failures = 0;
+			liveRestState.commentTimer = setInterval(pollLiveCommentsRest, 2000);
+			liveRestState.viewerTimer = setInterval(pollLiveViewersRest, 5000);
+			pushMessage({ type: "instagramlive", event: "stream_online" });
+			pollLiveCommentsRest();
+			pollLiveViewersRest();
+		}
+	}
+
+	// ---------- Instagram notifications (news inbox) capture ----------
+	//
+	// Polls POST /api/v1/news/inbox/ for the account's own activity feed:
+	// follows, follow requests, likes, and comments on our posts. Stories are
+	// deduped by tuuid; the first poll only seeds the seen-set so we never
+	// replay backlog.
+
+	var notifInboxState = {
+		started: false,
+		seeded: false,
+		failures: 0,
+		seen: {},
+		seenOrder: []
+	};
+
+	function seenNotifStory(key){
+		if (!key){ return true; }
+		if (notifInboxState.seen[key]){ return true; }
+		notifInboxState.seen[key] = true;
+		notifInboxState.seenOrder.push(key);
+		while (notifInboxState.seenOrder.length > 400){
+			var oldest = notifInboxState.seenOrder.shift();
+			delete notifInboxState.seen[oldest];
+		}
+		return false;
+	}
+
+	function emitNotifStory(story){
+		try {
+			var args = story.args || {};
+			var key = args.tuuid || story.pk || story.ndid;
+			if (seenNotifStory(key)){ return; }
+			var notifName = (story.notif_name || "") + "";
+			var chatname = ((args.profile_name || "") + "").trim();
+			if (!chatname && args.links && args.links.length && args.links[0].username){
+				chatname = (args.links[0].username + "").trim();
+			}
+			var text = ((args.text || "") + "").trim();
+			if (!chatname){ return; }
+
+			var data = {};
+			data.chatname = escapeHtml(chatname);
+			data.chatbadges = "";
+			data.backgroundColor = "";
+			data.textColor = "";
+			data.chatimg = args.profile_image || "";
+			data.hasDonation = "";
+			data.membership = "";
+			data.contentimg = "";
+			data.textonly = settings.textonlymode || false;
+			data.type = "instagram";
+			data.chatmessage = escapeHtml(text);
+
+			if (/follow_request/i.test(notifName)){
+				data.event = "follow_request";
+			} else if (/follow/i.test(notifName) || story.story_type === 12){
+				data.event = "new_follower";
+			} else if (/comment_like/i.test(notifName)){
+				if (settings.capturelikeevent === false){ return; }
+				data.event = "liked";
+			} else if (/like/i.test(notifName)){
+				if (settings.capturelikeevent === false){ return; }
+				data.event = "liked";
+			} else if (/comment/i.test(notifName)){
+				data.event = false;
+			} else {
+				data.event = "notification";
+				data.meta = { notifName: notifName, storyType: story.story_type };
+			}
+			if (!data.chatmessage && !data.event){ return; }
+			sendOut(data);
+		} catch(e){}
+	}
+
+	// Inbox events are about OUR account, so they are suppressed while watching
+	// someone else's live (including lives inside the stories viewer); they
+	// would look like the broadcaster's events. Allowed on our own live and on
+	// all non-live pages. Ownership is resolved per profile and retried after
+	// failures.
+	var ownLiveStatus = null; // null = unknown/not in a live context, true = our live, false = someone else's
+	var ownLiveCheckedUser = null;
+	var ownLiveRetryAt = 0;
+
+	function checkOwnLive(){
+		var path = window.location.pathname || "";
+		var m = path.match(/^\/([^\/]+)\/live\/?/) || path.match(/^\/stories\/([^\/]+)\//);
+		if (!m){
+			ownLiveStatus = null;
+			ownLiveCheckedUser = null;
+			ownLiveRetryAt = 0;
+			return;
+		}
+		var user = m[1];
+		if (ownLiveCheckedUser === user && ownLiveStatus !== null){
+			if (!ownLiveRetryAt || Date.now() < ownLiveRetryAt){ return; }
+		}
+		ownLiveCheckedUser = user;
+		ownLiveStatus = null;
+		var myId = getIgUserId();
+		if (!myId){ ownLiveStatus = false; return; }
+		fetch("/api/v1/users/web_profile_info/?username=" + encodeURIComponent(user), { headers: igApiHeaders(), credentials: "same-origin" })
+			.then(function(resp){ return resp.ok ? resp.json() : null; })
+			.then(function(json){
+				var pk = json && json.data && json.data.user && (json.data.user.pk || json.data.user.id);
+				ownLiveStatus = !!(pk && String(pk) === String(myId));
+				ownLiveRetryAt = 0;
+			})
+			.catch(function(){
+				ownLiveStatus = false;
+				ownLiveRetryAt = Date.now() + 30000;
+			});
+	}
+
+	function pollNotifInbox(){
+		if (!isExtensionOn){ return; }
+		if (ownLiveCheckedUser && ownLiveStatus !== true){ return; }
+		fetch("/api/v1/news/inbox/", {
+			method: "POST",
+			headers: igApiHeaders(),
+			credentials: "same-origin",
+			body: ""
+		})
+			.then(function(resp){
+				if (!resp.ok){ throw new Error("status " + resp.status); }
+				return resp.json();
+			})
+			.then(function(json){
+				if (!json || json.status !== "ok"){
+					notifInboxState.failures++;
+					if (notifInboxState.failures >= 5){ clearInterval(notifInboxState.timer); notifInboxState.timer = null; }
+					return;
+				}
+				notifInboxState.failures = 0;
+				var stories = (Array.isArray(json.new_stories) ? json.new_stories : [])
+					.concat(Array.isArray(json.old_stories) ? json.old_stories : [])
+					.concat(Array.isArray(json.priority_stories) ? json.priority_stories : []);
+				if (!notifInboxState.seeded){
+					notifInboxState.seeded = true;
+					stories.forEach(function(story){
+						var args = story.args || {};
+						seenNotifStory(args.tuuid || story.pk || story.ndid);
+					});
+					return;
+				}
+				stories.sort(function(a, b){
+					return (((a.args || {}).timestamp) || 0) - (((b.args || {}).timestamp) || 0);
+				});
+				stories.forEach(emitNotifStory);
+			})
+			.catch(function(){
+				notifInboxState.failures++;
+				if (notifInboxState.failures >= 5){ clearInterval(notifInboxState.timer); notifInboxState.timer = null; }
+			});
+	}
+
+	function startNotifInboxPolling(){
+		if (notifInboxState.started){ return; }
+		if (!getIgUserId()){ return; }
+		notifInboxState.started = true;
+		pollNotifInbox();
+		notifInboxState.timer = setInterval(pollNotifInbox, 45000);
+	}
+
 	// ---------- Instagram Live ----------
 	//
-	// Parsing strategy avoids Instagram's obfuscated class names (which rotate).
+	// DOM fallback parsing strategy avoids Instagram's obfuscated class names (which rotate).
 	// We find comment rows by looking for profile-picture <img> elements inside
 	// a <section>, then walk up to the row container. The username comes from
 	// the visible username text, and the message is whatever text follows it in
@@ -1120,27 +1472,38 @@
 	console.log("LOADED SocialStream EXTENSION");
 
 		setTimeout(function(){
+			startNotifInboxPolling();
 			setInterval(function(){
 				try {
-					if (isExtensionOn){
-						if (isLivePage()){
-							processLiveComments();
-						} else {
-							maybeAutoOpenProfileLive();
-							processFeed();
+				if (isExtensionOn){
+					checkOwnLive();
+					if (isLivePage()){
+						syncLiveRest();
+						if (liveRestIsActive()){
 							if (liveObserver) {
 								liveObserver.disconnect();
 								liveObserver = null;
 							}
+						} else {
+							processLiveComments();
+						}
+					} else {
+						syncLiveRest();
+						maybeAutoOpenProfileLive();
+						processFeed();
+						if (liveObserver) {
+							liveObserver.disconnect();
+							liveObserver = null;
 						}
 					}
+				}
 				} catch(e){}
 
 				syncVideos();
 
-				if (isExtensionOn && (counter % 20 === 0)){
-					checkViewers();
-				}
+			if (isExtensionOn && (counter % 20 === 0) && !liveRestIsActive()){
+				checkViewers();
+			}
 				counter++;
 			}, 500);
 		}, 1500);

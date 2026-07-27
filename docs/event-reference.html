@@ -1353,6 +1353,68 @@
                     </table>
                 </article>
 
+                <article class="platform-card" id="instagram">
+                    <h3>Instagram &ndash; Live REST Capture and News Inbox</h3>
+                    <p class="source-note">Implementation: <code>sources/instagram.js</code> and <code>sources/instagramlive.js</code> (identical copies)</p>
+                    <ul class="requirements">
+                        <li>On live pages (<code>/&lt;user&gt;/live/?broadcast_id=...</code>), live chat comes from Instagram's own web API, polled same-origin with the session cookie: <code>GET /api/v1/live/{broadcast_id}/get_comment/?last_comment_ts={ts}</code> every ~2s, and <code>POST /api/v1/live/{broadcast_id}/heartbeat_and_get_viewer_count/</code> every ~5s when viewer counts are enabled. After 3 consecutive failures (or when no <code>broadcast_id</code> is discoverable) the source falls back to parsing the rendered chat DOM.</li>
+                        <li>The account's own activity feed is polled via <code>POST /api/v1/news/inbox/</code> every ~45s on any Instagram page. The first poll only seeds the dedupe set so backlog is never replayed; stories dedupe by <code>tuuid</code>.</li>
+                        <li>Required API headers (all static/derivable): <code>X-IG-App-ID: 936619743392459</code>, <code>X-CSRFToken</code> (from cookie), <code>X-ASBD-ID: 359341</code>, <code>X-Requested-With: XMLHttpRequest</code>, <code>Content-Type: application/x-www-form-urlencoded</code>.</li>
+                        <li>All activity-feed events use <code>type: "instagram"</code>; live chat stays <code>type: "instagramlive"</code>. The <code>capturelikeevent</code> setting gates <code>liked</code> events the same way it does for TikTok and MeetMe. Because inbox events belong to the signed-in account, they are suppressed while watching someone else's live (both <code>/&lt;user&gt;/live/</code> pages and lives in the stories viewer; ownership is resolved per profile and retried after lookup failures) and emitted on your own live and all non-live pages. Polling only runs when logged in.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code> (live)</td>
+                                <td>New entries in the <code>get_comment</code> response (<code>comments[]</code>/<code>system_comments[]</code>), or new DOM chat rows when REST is unavailable.</td>
+                                <td>Standard chat payload, <code>type: "instagramlive"</code>. REST provides exact <code>user.username</code>, <code>user.profile_pic_url</code>, and a unique <code>pk</code> used for dedupe.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td><code>heartbeat_and_get_viewer_count</code> reports a changed <code>viewer_count</code>, when viewer-count capture or hype mode is enabled.</td>
+                                <td><code>meta</code> integer viewer count. Polling stops when <code>broadcast_status</code> is no longer <code>"live"</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>stream_online</code> / <code>stream_offline</code></td>
+                                <td><code>stream_online</code> fires once when a REST broadcast session starts; <code>stream_offline</code> fires when the heartbeat reports a non-live <code>broadcast_status</code> (requires viewer-count capture or hype mode).</td>
+                                <td>Metadata-only events matching the shared stream-status vocabulary used by Twitch and Joystick.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>new_follower</code></td>
+                                <td>A news-inbox story with a follow-type <code>notif_name</code> (or <code>story_type 12</code>) appears.</td>
+                                <td><code>chatname</code> is the new follower, <code>chatimg</code> their profile image, <code>chatmessage</code> the inbox text (for example "x started following you.").</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>follow_request</code></td>
+                                <td>A <code>private_user_follow_request</code> story appears (private accounts receive requests instead of direct follows).</td>
+                                <td>Same shape as <code>new_follower</code>, kept distinct so automations can approve requests or greet differently.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>liked</code></td>
+                                <td>A news-inbox story with a like-type <code>notif_name</code> (including <code>comment_like</code>) appears.</td>
+                                <td>Shared like vocabulary with TikTok/MeetMe. <code>chatname</code> is the actor, <code>chatmessage</code> the inbox text (for example "x liked your photo.").</td>
+                            </tr>
+                            <tr>
+                                <td><code>message</code> (comment on own post)</td>
+                                <td>A news-inbox story with a comment-type <code>notif_name</code> appears.</td>
+                                <td>Plain chat row (<code>event: false</code>), <code>type: "instagram"</code>; <code>chatmessage</code> carries the inbox text including the comment excerpt.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>notification</code></td>
+                                <td>Any other news-inbox story type (mentions, tags, shopping, and so on).</td>
+                                <td>Generic catch-all; <code>meta.notifName</code> and <code>meta.storyType</code> preserve the raw story classification.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
                 <article class="platform-card" id="facebook">
                     <h3>Facebook Live</h3>
                     <p class="source-note">Implementation: <code>sources/facebook.js</code> (DOM scraping) and optional Graph API bridge at <code>sources/websocket/facebook.html</code></p>
