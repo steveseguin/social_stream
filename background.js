@@ -782,8 +782,9 @@ if (typeof chrome.runtime == "undefined") {
 		log("FROM MAINS SENDER", args);
 
 		if (args.length) {
-			if (args[0] && typeof args[0] === "object" && ("response" in args[0] || "action" in args[0])) {
-				Promise.resolve(processIncomingRequest(args[0])).catch(error => {
+			const incomingRequest = args[0] && args[0].overlayNinja ? args[0].overlayNinja : args[0];
+			if (incomingRequest && typeof incomingRequest === "object" && ("response" in incomingRequest || "action" in incomingRequest)) {
+				Promise.resolve(processIncomingRequest(incomingRequest)).catch(error => {
 					console.error("fromMainSender-processIncomingRequest failed", error);
 				});
 				return;
