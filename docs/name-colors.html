@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem('darkMode');
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Different Colors for Chat Names - Social Stream Ninja</title>
+    <meta name="description" content="Make chat names different colors in the Social Stream Ninja Dock, choose a color mode, and customize name colors with CSS.">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <style>
+        .guide-image {
+            display: block;
+            width: 100%;
+            max-width: 900px;
+            margin: 1.25rem auto 0;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .guide-figure {
+            margin: 1.5rem 0 0;
+        }
+
+        .guide-figure figcaption {
+            max-width: 900px;
+            margin: 0.7rem auto 0;
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        .menu-crop {
+            position: relative;
+            width: 100%;
+            max-width: 748px;
+            height: 0;
+            padding-top: 19.385%;
+            margin: 1.25rem auto 0;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .menu-crop img {
+            position: absolute;
+            top: -157%;
+            left: 0;
+            width: 100%;
+            height: auto;
+        }
+
+        .required-note {
+            margin: 1.25rem 0;
+            padding: 1rem 1.25rem;
+            border-left: 4px solid #1a73e8;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            background: rgba(26, 115, 232, 0.08);
+        }
+
+        .dark-mode .required-note {
+            background: rgba(26, 115, 232, 0.18);
+        }
+
+        .option-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .option-table th,
+        .option-table td {
+            padding: 0.8rem;
+            border: 1px solid var(--border-color);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .option-table th {
+            background: rgba(26, 115, 232, 0.08);
+        }
+
+        @media (max-width: 700px) {
+            .option-table,
+            .option-table tbody,
+            .option-table tr,
+            .option-table th,
+            .option-table td {
+                display: block;
+            }
+
+            .option-table thead {
+                display: none;
+            }
+
+            .option-table tr {
+                margin-bottom: 1rem;
+                border: 1px solid var(--border-color);
+            }
+
+            .option-table td {
+                border: 0;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .option-table td:last-child {
+                border-bottom: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="features.html">Features</a></li>
+                    <li><a href="download.html">Download</a></li>
+                    <li><a href="guides.html" class="active">Guides</a></li>
+                    <li><a href="commands.html">Commands &amp; API</a></li>
+                    <li><a href="supported-sites.html">Supported Sites</a></li>
+                    <li><a href="templates.html">Templates</a></li>
+                    <li><a href="services.html">Hire</a></li>
+                    <li><a href="support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <div class="mobile-nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Give Chat Names Different Colors</h1>
+            <p>Turn on one general color option, then allow the Dock to display those colors.</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <h3>Quick setup</h3>
+                    <div class="required-note">
+                        <strong>Both controls are required:</strong> choose a name-color option in <strong>Message - Styling</strong>, then turn on <strong>Color names if color info available</strong> in <strong>Message - Visibility</strong>.
+                    </div>
+                    <ol class="guide-steps">
+                        <li>Open the Social Stream Ninja extension or desktop app settings.</li>
+                        <li>Expand <strong>Message - Styling</strong>.</li>
+                        <li>Turn on <strong>Add a random color to uncolored names</strong>. This is the recommended choice because it keeps colors supplied by the chat platform and fills in missing ones.</li>
+                        <li>Expand <strong>Message - Visibility</strong>.</li>
+                        <li>Turn on <strong>Color names if color info available</strong>. This adds <code>&amp;color</code> to the Dock URL.</li>
+                        <li>Use the updated Dock link. Existing Dock or OBS browser-source URLs also work if you add <code>&amp;color</code> and refresh them.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <div class="menu-crop">
+                            <img src="images/guides/ssn-global-settings-export-menu.png" alt="Social Stream Ninja settings menu showing the Message Visibility and Message Styling sections next to each other">
+                        </div>
+                        <figcaption>Open <strong>Message - Styling</strong> for the general color choice and <strong>Message - Visibility</strong> for the Dock display toggle.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Choose the color behavior</h3>
+                    <p>Use one main color option at a time so the result is predictable.</p>
+                    <table class="option-table">
+                        <thead>
+                            <tr>
+                                <th>General setting</th>
+                                <th>Result</th>
+                                <th>Best for</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Add a random color to uncolored names</strong></td>
+                                <td>Keeps platform-provided name colors and assigns a consistent color when one is missing.</td>
+                                <td>Most users</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Override all name colors with a random color</strong></td>
+                                <td>Assigns every username a consistent generated color, replacing colors from the platform.</td>
+                                <td>A fully mixed-color chat</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Set username color to match the site's branding</strong></td>
+                                <td>Uses the platform color, such as YouTube red or Twitch purple. People on the same platform share a color.</td>
+                                <td>Quickly identifying platforms</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Lighten and desaturate name colors</strong></td>
+                                <td>Adjusts the selected or supplied colors so they are easier to read on dark backgrounds.</td>
+                                <td>Dark Dock themes</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Do not color names based on member status</strong></td>
+                                <td>Stops membership or subscriber status from choosing the name color.</td>
+                                <td>Keeping your chosen palette consistent</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p><strong>Max number of random colors</strong> controls the palette size. A smaller value repeats fewer colors. <strong>Seed value</strong> changes which generated color each name receives.</p>
+                    <figure class="guide-figure">
+                        <img src="images/guides/obs-dock-message-check.png" alt="Social Stream Ninja Dock showing chat rows from several sources with differently colored names" class="guide-image">
+                        <figcaption>After both settings are enabled, the Dock uses the <code>nameColor</code> supplied with each chat message.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="guide-card">
+                    <h3>If the names are still one color</h3>
+                    <ol class="guide-steps">
+                        <li>Confirm one color option is on under <strong>Message - Styling</strong>.</li>
+                        <li>Confirm <strong>Color names if color info available</strong> is on under <strong>Message - Visibility</strong>.</li>
+                        <li>Check that the Dock URL contains <code>&amp;color</code> or <code>&amp;colorednames</code>.</li>
+                        <li>Refresh any Dock tab or OBS Browser Source that was already open.</li>
+                        <li>Check your custom CSS for a rule that forces every <code>.hl-name</code> to the same color.</li>
+                    </ol>
+                </div>
+
+                <div class="guide-card">
+                    <h3>More control with CSS</h3>
+                    <p>Add CSS through the Dock settings, the <code>&amp;css=</code> or <code>&amp;b64css=</code> URL option, or OBS Browser Source custom CSS. Use <code>!important</code> when overriding a name color supplied by a platform.</p>
+
+                    <h4>Use one color for every name</h4>
+                    <div class="code-block"><pre>.hl-name {
+  color: #ffd166 !important;
+}</pre></div>
+
+                    <h4>Choose colors by platform</h4>
+                    <div class="code-block"><pre>.highlight-chat[data-source-type="youtube"] .hl-name {
+  color: #ff5a5f !important;
+}
+
+.highlight-chat[data-source-type="twitch"] .hl-name {
+  color: #b794f4 !important;
+}
+
+.highlight-chat[data-source-type="kick"] .hl-name {
+  color: #53fc18 !important;
+}</pre></div>
+
+                    <h4>Highlight moderators and VIPs</h4>
+                    <div class="code-block"><pre>.highlight-chat.mod .hl-name {
+  color: #5eead4 !important;
+}
+
+.highlight-chat.vip .hl-name {
+  color: #f472b6 !important;
+}</pre></div>
+
+                    <p>CSS can reliably target a platform or role, but the standard Dock does not add a username as a CSS class or attribute. For fixed per-person color rules, use the built-in generated colors or a <a href="customoverlays.md">custom overlay</a> that maps usernames to colors in JavaScript.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="../media/logo.png" alt="Social Stream Ninja logo">
+                    <span>Social Stream Ninja</span>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h4>Resources</h4>
+                        <ul>
+                            <li><a href="guides.html">Guides</a></li>
+                            <li><a href="settings.html">Settings Reference</a></li>
+                            <li><a href="overlay-customization-guide.html">Overlay Customization</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
