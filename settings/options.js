@@ -1,6 +1,6 @@
 function saveOptions(e) {
   e.preventDefault();
-  chrome.storage.sync.set({
+  chrome.storage.local.set({
 	streamID: document.querySelector("#streamID").value,
 	password: document.querySelector("#password").value,
   });
@@ -15,20 +15,20 @@ function generateStreamID(){
 	for (var i = 0; i < 10; i++){
 		text += possible.charAt(Math.floor(Math.random() * possible.length));
 	}
-	chrome.storage.sync.set({
+	chrome.storage.local.set({
 		streamID: text
 	});
 	return text;
 };
 function restoreOptions() {
   var properties = ["streamID", "password"];
-  chrome.storage.sync.get(properties, function(result){
+  chrome.storage.local.get(properties, function(result){
 	try{
 		if (result && result.streamID){
 			document.querySelector("#streamID").value = result.streamID;
 		} else{
 			document.querySelector("#streamID").value = generateStreamID();
-			chrome.storage.sync.set({
+			chrome.storage.local.set({
 				streamID: document.querySelector("#streamID").value
 			});
 		}
@@ -39,7 +39,7 @@ function restoreOptions() {
 			document.querySelector("#password").value = result.password;
 		} else {
 			document.querySelector("#password").value = "";
-			chrome.storage.sync.set({
+			chrome.storage.local.set({
 				password: document.querySelector("#password").value
 			});
 		}
