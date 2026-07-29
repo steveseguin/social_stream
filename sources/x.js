@@ -1,4 +1,16 @@
 (function () {
+
+	function isSupportedXLivePage() {
+		try {
+			var path = (window.location.pathname || "").toLowerCase();
+			var liveMatch = path.match(/^\/([^\/]+)\/(chat|live|livechat)\/?$/);
+			var reservedRoutes = ["i", "messages", "notifications", "bookmarks", "settings", "compose"];
+			return !!(liveMatch && (reservedRoutes.indexOf(liveMatch[1]) === -1)) ||
+				path.startsWith("/i/broadcasts/");
+		} catch(e) {
+			return false;
+		}
+	}
 	 
 	function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
@@ -532,6 +544,9 @@
 	}
 	
 	function processMessage(ele){
+		if (!isSupportedXLivePage()){
+			return;
+		}
 		
 		const row = getMessageRow(ele) || ele;
 		if (!row || row.skip){
@@ -663,6 +678,9 @@
 	}
 
 	function pushMessage(data){
+		if (!isSupportedXLivePage()){
+			return;
+		}
 		try{
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
 		} catch(e){
@@ -691,6 +709,10 @@
 			try{
 				if (isExtensionOn){
 					if ("getSource" == request){
+						if (!isSupportedXLivePage()) {
+							sendResponse(false);
+							return;
+						}
 						
 						if (settings.detweet) {
 							sendResponse("twitter");
@@ -701,6 +723,10 @@
 						
 					}
 					if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+						if (!isSupportedXLivePage()) {
+							sendResponse(false);
+							return;
+						}
 						let composer = getChatComposer(document);
 						if (composer && composer.focus){
 							composer.focus();
@@ -723,6 +749,38 @@
 
 	var lastURL =  "";
 	var observer = null;
+
+	function stopObservingXChat() {
+		if (observer) {
+			try {
+				observer.disconnect();
+			} catch(e) {}
+			observer = null;
+		}
+		if (observedContainer) {
+			observedContainer.marked = false;
+			observedContainer = null;
+		}
+		if (xNotLiveReloadTimer) {
+			clearTimeout(xNotLiveReloadTimer);
+			xNotLiveReloadTimer = null;
+		}
+	}
+
+	var lastXRoute = window.location.pathname || "";
+
+	function handleXRouteChange() {
+		var currentRoute = window.location.pathname || "";
+		if (currentRoute === lastXRoute) {
+			return;
+		}
+		lastXRoute = currentRoute;
+		stopObservingXChat();
+	}
+
+	window.addEventListener("popstate", handleXRouteChange);
+	window.addEventListener("hashchange", handleXRouteChange);
+	setInterval(handleXRouteChange, 250);
 	
 	
 	function findViewerSpan() {
@@ -734,6 +792,9 @@
 	}
 	
 	function checkViewers(){
+		if (!isSupportedXLivePage()){
+			return;
+		}
 		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
 			try {
 				let viewerSpan = findViewerSpan();
@@ -910,17 +971,58 @@
 		document.webkitHidden = false;
 	} catch(e){	}
 
+	var originalDocumentHasFocus = null;
 	try {
-		document.hasFocus = function () {return true;};
+		originalDocumentHasFocus = document.hasFocus.bind(document);
+	} catch(e) {}
+
+	function getNativeDocumentValue(propertyName, fallbackValue) {
+		try {
+			var prototype = Object.getPrototypeOf(document);
+			while (prototype) {
+				var descriptor = Object.getOwnPropertyDescriptor(prototype, propertyName);
+				if (descriptor && (typeof descriptor.get === "function")) {
+					return descriptor.get.call(document);
+				}
+				prototype = Object.getPrototypeOf(prototype);
+			}
+		} catch(e) {}
+		return fallbackValue;
+	}
+
+	function overrideDocumentVisibilityProperty(propertyName, liveValue, fallbackValue) {
+		try {
+			Object.defineProperty(document, propertyName, {
+				configurable: true,
+				get: function() {
+					if (isSupportedXLivePage()) {
+						return liveValue;
+					}
+					return getNativeDocumentValue(propertyName, fallbackValue);
+				}
+			});
+		} catch(e) {}
+	}
+
+	try {
+		document.hasFocus = function () {
+			if (isSupportedXLivePage()) {
+				return true;
+			}
+			return originalDocumentHasFocus ? originalDocumentHasFocus() : false;
+		};
 		window.onFocus = function () {return true;};
-		
-		Object.defineProperty(document, "mozHidden", { value : false});
-		Object.defineProperty(document, "msHidden", { value : false});
-		Object.defineProperty(document, "webkitHidden", { value : false});
-		Object.defineProperty(document, 'visibilityState', { get: function () { return "visible"; }, value: 'visible', writable: true});
-		Object.defineProperty(document, 'hidden', {value: false, writable: true});
+
+		overrideDocumentVisibilityProperty("mozHidden", false, getNativeDocumentValue("hidden", false));
+		overrideDocumentVisibilityProperty("msHidden", false, getNativeDocumentValue("hidden", false));
+		overrideDocumentVisibilityProperty("webkitHidden", false, getNativeDocumentValue("hidden", false));
+		overrideDocumentVisibilityProperty("visibilityState", "visible", "visible");
+		overrideDocumentVisibilityProperty("hidden", false, false);
 		
 		setInterval(function(){
+			if (!isSupportedXLivePage()) {
+				return;
+			}
 			console.log("set visibility");
 			window.onblur = null;
 			window.blurred = false;
@@ -934,6 +1036,9 @@
 
 	try {
 		document.onvisibilitychange = function(){
+			if (!isSupportedXLivePage()) {
+				return;
+			}
 			window.onFocus = function () {return true;};
 			
 		};
@@ -947,6 +1052,9 @@
 			"msvisibilitychange"]) {
 				try{
 					window.addEventListener(event_name, function(event) {
+						if (!isSupportedXLivePage()) {
+							return;
+						}
 						event.stopImmediatePropagation();
 						event.preventDefault();
 					}, true);
@@ -956,6 +1064,10 @@
 
 	setInterval(function(){
 		try {
+			if (!isSupportedXLivePage()) {
+				stopObservingXChat();
+				return;
+			}
 			if (observedContainer && !observedContainer.isConnected) {
 				var disconnectedContainer = observedContainer;
 				try {
