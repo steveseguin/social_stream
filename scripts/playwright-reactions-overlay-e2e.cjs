@@ -299,6 +299,9 @@ async function getOverlaySnapshot(page, payload, waitMs) {
     return {
       count: overlay.getStageCount(),
       history: overlay.getHistory(),
+      items: Array.from(document.querySelectorAll('.reaction')).map((item) => ({
+        imageCount: item.querySelectorAll('img').length
+      })),
       background: getComputedStyle(document.body).backgroundColor,
       config: overlay.getConfig()
     };
@@ -462,9 +465,10 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
 (async () => {
   const server = await startStaticServer({ root: ROOT, host: HOST, port: PORT });
   const blockedExternalRequests = [];
+  let browser;
 
   try {
-    const browser = await chromium.launch({ headless: true });
+    browser = await chromium.launch({ headless: true });
     const context = await browser.newContext();
 
     await context.route('**/*', async (route) => {
@@ -668,6 +672,17 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
     assert(Math.abs(imageScaleSnapshot.imageWidth - imageScaleSnapshot.itemWidth) <= 0.75, 'Inline image width ignored the scale-adjusted wrapper size.');
     assert(Math.abs(imageScaleSnapshot.imageHeight - imageScaleSnapshot.itemWidth) <= 0.75, 'Inline image height ignored the scale-adjusted wrapper size.');
 
+    const contentImageSnapshot = await getOverlaySnapshot(overlayPage, {
+      event: 'reaction',
+      type: 'youtube',
+      chatmessage: '🎉',
+      contentimg: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
+      textonly: true
+    }, 250);
+
+    assert(contentImageSnapshot.count > 0, 'Text-only YouTube reaction did not render its content image.');
+    assert(contentImageSnapshot.items.every((item) => item.imageCount === 1), 'Text-only YouTube reaction fell back to a generic icon.');
+
     const likeSnapshot = await getOverlaySnapshot(overlayPage, {
       event: 'liked',
       type: 'tiktok',
@@ -800,8 +815,6 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
     await runTikTokSourceLikeCaptureCheck(context, true, '');
     await runTikTokIncrementalChatCaptureCheck(context);
 
-    await browser.close();
-
     if (blockedExternalRequests.length === 0) {
       console.log('Reactions overlay test passed.');
     } else {
@@ -811,6 +824,9 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
     console.error(error && error.stack ? error.stack : error);
     process.exitCode = 1;
   } finally {
+    if (browser) {
+      await browser.close();
+    }
     server.close();
   }
 })();

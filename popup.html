@@ -846,6 +846,39 @@ p a {
 	cursor: copy!important;
 }
 
+.edit-link {
+    text-decoration: none;
+    color: var(--text-button-text);
+    font-size: 0.6rem;
+    cursor: pointer;
+}
+
+.link-edit-status {
+    display: none;
+    margin-top: 6px;
+    color: var(--color-accent);
+    font-size: 0.78rem;
+}
+
+.link-edit-status.visible {
+    display: block;
+}
+
+.edit-link-dialog-note {
+    display: block;
+    margin-top: 4px;
+    color: var(--options-group-text-color);
+    font-size: 0.78rem;
+    opacity: 0.8;
+}
+
+.edit-link-dialog-error {
+    min-height: 1.2em;
+    margin-top: 4px;
+    color: #ff7b7b;
+    font-size: 0.78rem;
+}
+
 #disableButton {
     appearance: none;
     position: sticky;
@@ -2223,12 +2256,14 @@ input:checked + .slider:before {
                     <span class="title-group"><span class="emoji" aria-hidden="true">💬</span>Main chat overlay & control dock </span>
 					<span class="heading-actions">
 						<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+						<a class="edit-link rounded_area" title="Load an existing Main Chat link for editing" data-edit-link="dock">[edit link]</a>
 						<a class="options-link rounded_area" href="#streaming-chat-options" title="Jump to dockable streaming chat link options."><span data-translate="options">[options]</span></a>
 						<label for="help-dock" class="help-link rounded_area" title="Click for detailed help">[?]</label>
 					</span>
                 </h2>
 				<small class="beginner-section-note">Use this as your main chat view, OBS overlay, or dock for controlling featured messages and TTS.</small>
                 <div id="dock" data-raw="" class="streaming_chat"></div>
+				<div id="dock-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 				<input type="checkbox" id="help-dock" class="link-help-toggle">
 				<div class="link-help-content">
 					<strong>Your all-in-one chat control center.</strong>

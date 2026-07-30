@@ -852,6 +852,369 @@ function copyToClipboard(event) {
 		console.error('Could not find element with raw URL to copy');
 	}
 }
+
+function normalizeEditableGeneratedLink(rawUrl, targetId) {
+	var trimmed = String(rawUrl || "").trim();
+	if (!trimmed) {
+		throw new Error("Paste an existing Main Chat link.");
+	}
+
+	var targetElement = document.getElementById(targetId);
+	var targetBase = targetElement && targetElement.raw ? targetElement.raw : baseURL;
+	var parsed;
+
+	try {
+		if (trimmed.charAt(0) === "?") {
+			parsed = new URL(trimmed, targetBase);
+		} else {
+			parsed = new URL(trimmed);
+		}
+	} catch (error) {
+		throw new Error("That does not look like a complete link.");
+	}
+
+	if (["http:", "https:", "file:"].indexOf(parsed.protocol) === -1) {
+		throw new Error("Only web or local file links can be edited.");
+	}
+
+	var expectedFile = targetId === "dock" ? "dock.html" : "";
+	var fileName = parsed.pathname.split("/").pop().toLowerCase();
+	if (!expectedFile || fileName !== expectedFile) {
+		throw new Error("Paste a Main Chat dock.html link here.");
+	}
+
+	if (!parsed.searchParams.get("session") && !parsed.searchParams.get("room")) {
+		throw new Error("That link is missing its session ID.");
+	}
+
+	return parsed;
+}
+
+function decodeImportedCssParamValue(encodedValue) {
+	try {
+		return decodeURIComponent(atob(String(encodedValue || "").replace(/ /g, "+")));
+	} catch (error) {
+		return null;
+	}
+}
+
+function getImportedParamCheckboxState(params, paramValue, allParamValues) {
+	var parts = String(paramValue || "").split("=");
+	var rawKey = parts.shift();
+	var expectedValue = parts.length ? parts.join("=") : null;
+	var effectiveKey = normalizeParamKey(rawKey);
+	var values = params.getAll(effectiveKey);
+
+	if (!values.length) {
+		return false;
+	}
+
+	if (expectedValue !== null) {
+		return values.indexOf(expectedValue) !== -1;
+	}
+
+	if (rawKey === "chromaalpha") {
+		return values.some(function(value) {
+			return /^(?:[0-9a-f]{4}|[0-9a-f]{8})$/i.test(String(value || "").replace("#", ""));
+		});
+	}
+
+	var hasFixedSibling = allParamValues.some(function(candidate) {
+		var candidateParts = String(candidate || "").split("=");
+		return candidateParts.length > 1 && normalizeParamKey(candidateParts[0]) === effectiveKey;
+	});
+
+	if (hasFixedSibling) {
+		return values.indexOf("") !== -1;
+	}
+
+	return true;
+}
+
+function findImportedOptionValue(selectElement, paramKey, params) {
+	if (paramKey === "ttsprovider" && !params.has(paramKey)) {
+		return { found: true, value: "system" };
+	}
+
+	var directValue = params.get(paramKey);
+	var options = Array.prototype.slice.call(selectElement.options || []);
+
+	if (directValue !== null) {
+		var exactOption = options.find(function(option) {
+			return option.value === directValue;
+		});
+		if (exactOption) {
+			return { found: true, value: exactOption.value };
+		}
+	}
+
+	for (var i = 0; i < options.length; i++) {
+		var option = options[i];
+		if (!option.value || option.value.indexOf("=") === -1) {
+			continue;
+		}
+
+		var optionParams = new URLSearchParams(option.value);
+		var matched = true;
+		var matchedCount = 0;
+		optionParams.forEach(function(value, key) {
+			matchedCount++;
+			if (params.get(key) !== value) {
+				matched = false;
+			}
+		});
+		if (matched && matchedCount) {
+			return { found: true, value: option.value };
+		}
+	}
+
+	if (directValue !== null) {
+		return { found: true, value: directValue };
+	}
+
+	return { found: false, value: "" };
+}
+
+function saveImportedLinkControl(element, type, setting, value) {
+	chrome.runtime.sendMessage({
+		cmd: "saveSetting",
+		type: type,
+		target: element.dataset.target || null,
+		setting: setting,
+		value: value
+	}, function() {});
+}
+
+function applyImportedGeneratedLink(targetId, parsedUrl) {
+	var targetMap = getTargetMap();
+	var paramNum = targetMap[targetId];
+	var targetElement = document.getElementById(targetId);
+	if (!paramNum || !targetElement) {
+		throw new Error("This link editor is not available.");
+	}
+
+	var params = parsedUrl.searchParams;
+	var paramType = "param" + paramNum;
+	var numberType = paramNum === 1 ? "numbersetting" : "numbersetting" + paramNum;
+	var textType = "textparam" + paramNum;
+	var optionType = "optionparam" + paramNum;
+	var checkboxSelector = "input[data-" + paramType + "]";
+	var checkboxes = Array.prototype.slice.call(document.querySelectorAll(checkboxSelector));
+	var allParamValues = checkboxes.map(function(element) {
+		return element.dataset[paramType];
+	});
+	var loadedControlCount = 0;
+
+	checkboxes.forEach(function(element) {
+		var nextChecked = getImportedParamCheckboxState(params, element.dataset[paramType], allParamValues);
+		if (nextChecked) {
+			loadedControlCount++;
+		}
+		if (element.checked !== nextChecked) {
+			element.checked = nextChecked;
+			saveImportedLinkControl(element, paramType, element.dataset[paramType], nextChecked);
+		}
+	});
+
+	var numberSelector = "[data-" + numberType + "]";
+	Array.prototype.slice.call(document.querySelectorAll(numberSelector)).forEach(function(element) {
+		var setting = element.dataset[numberType];
+		var effectiveKey = normalizeParamKey(setting);
+		var importedValue = null;
+
+		if (setting === "chromaalpha") {
+			var chromaValue = params.get("chroma");
+			if (chromaValue && /^(?:[0-9a-f]{4}|[0-9a-f]{8})$/i.test(chromaValue.replace("#", ""))) {
+				importedValue = getPercentFromChromaValue(chromaValue);
+			}
+		} else if (params.has(effectiveKey)) {
+			importedValue = params.get(effectiveKey);
+		}
+
+		if (importedValue === null || importedValue === undefined) {
+			return;
+		}
+
+		loadedControlCount++;
+		importedValue = String(importedValue);
+		if (element.value !== importedValue) {
+			element.value = importedValue;
+			saveImportedLinkControl(element, numberType, setting, importedValue);
+		}
+		updateRangeDisplay(element);
+	});
+
+	var textSelector = "[data-" + textType + "]";
+	Array.prototype.slice.call(document.querySelectorAll(textSelector)).forEach(function(element) {
+		var setting = element.dataset[textType];
+		var importedValue = null;
+		var found = false;
+
+		if (setting === "cssb64") {
+			["cssb64", "base64css", "b64css", "cssbase64"].some(function(alias) {
+				if (!params.has(alias)) {
+					return false;
+				}
+				var decoded = decodeImportedCssParamValue(params.get(alias));
+				if (decoded !== null) {
+					importedValue = decoded;
+					found = true;
+				}
+				return true;
+			});
+		} else if (params.has(setting)) {
+			importedValue = params.get(setting);
+			found = true;
+		}
+
+		if (!found) {
+			return;
+		}
+
+		loadedControlCount++;
+		if (element.value !== importedValue) {
+			element.value = importedValue;
+			saveImportedLinkControl(element, textType, setting, importedValue);
+		}
+		handleColorAndPalette(element);
+		if (commaTagInputs.indexOf(element.id) !== -1) {
+			refreshCommaTagInput(element.id);
+		} else if (userTypes.indexOf(element.id) !== -1) {
+			updateUsernameList(element.id);
+		}
+	});
+
+	var optionSelector = "[data-" + optionType + "]";
+	Array.prototype.slice.call(document.querySelectorAll(optionSelector)).forEach(function(element) {
+		var setting = element.dataset[optionType];
+		var imported = findImportedOptionValue(element, setting, params);
+		if (!imported.found) {
+			return;
+		}
+
+		loadedControlCount++;
+		if (element.value !== imported.value) {
+			ensureSelectValueOption(element, imported.value);
+			element.value = imported.value;
+			saveImportedLinkControl(element, optionType, setting, imported.value);
+
+			if (element.dataset.optionsetting) {
+				saveImportedLinkControl(element, "optionsetting", element.dataset.optionsetting, imported.value);
+			}
+		}
+		if (element.dataset.optionsetting) {
+			handleOptionSetting(element, false);
+		}
+	});
+
+	setGeneratedLink(targetElement, parsedUrl.href);
+	if (targetId === "dock") {
+		syncChatOverlayTemplateLinkFromDock();
+	}
+
+	return loadedControlCount;
+}
+
+function showImportedLinkStatus(targetId, loadedControlCount) {
+	var status = document.getElementById(targetId + "-edit-status");
+	if (!status) {
+		return;
+	}
+	status.textContent = "Existing link loaded (" + loadedControlCount + " options). Customize it below, then copy the updated link.";
+	status.classList.add("visible");
+}
+
+function openEditGeneratedLinkDialog(targetId) {
+	var modal = document.createElement("div");
+	modal.className = "arc-modal";
+	modal.setAttribute("role", "dialog");
+	modal.setAttribute("aria-modal", "true");
+	modal.setAttribute("aria-label", "Edit an existing Main Chat link");
+
+	var dialog = document.createElement("div");
+	dialog.className = "arc-dialog";
+
+	var title = document.createElement("p");
+	title.textContent = "Edit an existing Main Chat link";
+
+	var note = document.createElement("span");
+	note.className = "edit-link-dialog-note";
+	note.textContent = "Paste the old dock.html link. This replaces the current Main Chat customization controls; links already in OBS are not changed.";
+
+	var input = document.createElement("input");
+	input.type = "text";
+	input.className = "arc-input";
+	input.placeholder = "https://socialstream.ninja/dock.html?session=...";
+	input.autocomplete = "off";
+	input.setAttribute("aria-label", "Existing Main Chat link");
+	var currentLinkElement = document.getElementById(targetId);
+	input.value = currentLinkElement && currentLinkElement.raw ? currentLinkElement.raw : "";
+
+	var errorBox = document.createElement("div");
+	errorBox.className = "edit-link-dialog-error";
+	errorBox.setAttribute("role", "alert");
+
+	var buttonContainer = document.createElement("div");
+	buttonContainer.className = "arc-button-container";
+
+	var cancelButton = document.createElement("button");
+	cancelButton.type = "button";
+	cancelButton.textContent = "Cancel";
+	cancelButton.className = "arc-button arc-cancel-button";
+
+	var loadButton = document.createElement("button");
+	loadButton.type = "button";
+	loadButton.textContent = "Load link";
+	loadButton.className = "arc-button arc-ok-button";
+
+	function closeDialog() {
+		if (modal.parentNode) {
+			modal.parentNode.removeChild(modal);
+		}
+	}
+
+	cancelButton.onclick = closeDialog;
+	loadButton.onclick = function() {
+		try {
+			var parsedUrl = normalizeEditableGeneratedLink(input.value, targetId);
+			var loadedControlCount = applyImportedGeneratedLink(targetId, parsedUrl);
+			closeDialog();
+			showImportedLinkStatus(targetId, loadedControlCount);
+			showPopupToast("success", "Main Chat link loaded", "Customize it below, then copy the updated link.");
+		} catch (error) {
+			errorBox.textContent = error && error.message ? error.message : "The link could not be loaded.";
+			input.focus();
+		}
+	};
+
+	input.addEventListener("keydown", function(event) {
+		if (event.key === "Enter") {
+			event.preventDefault();
+			loadButton.click();
+		} else if (event.key === "Escape") {
+			closeDialog();
+		}
+	});
+
+	modal.addEventListener("click", function(event) {
+		if (event.target === modal) {
+			closeDialog();
+		}
+	});
+
+	buttonContainer.appendChild(cancelButton);
+	buttonContainer.appendChild(loadButton);
+	dialog.appendChild(title);
+	dialog.appendChild(note);
+	dialog.appendChild(input);
+	dialog.appendChild(errorBox);
+	dialog.appendChild(buttonContainer);
+	modal.appendChild(dialog);
+	document.body.appendChild(modal);
+	input.focus();
+	input.select();
+}
+
 var translation = {};
 
 function getTranslation(key, value=false){ 
@@ -10194,6 +10557,13 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	
 	document.querySelectorAll("[data-copy]").forEach(ele=>{
 		ele.onclick = copyToClipboard;
+	});
+
+	document.querySelectorAll("[data-edit-link]").forEach(function(element) {
+		element.onclick = function(event) {
+			event.preventDefault();
+			openEditGeneratedLinkDialog(element.dataset.editLink);
+		};
 	});
 
 	moveChatOverlayThemeOptions();

@@ -1927,6 +1927,10 @@
 	var youtubeChatObserver = null;
 	var youtubeDeletionObserver = null;
 	var youtubeChatStructureObserver = null;
+	var youtubeReactionObserver = null;
+	var youtubeReactionObserverTarget = null;
+	var youtubeGiftOverlayObserver = null;
+	var youtubeGiftOverlayObserverTarget = null;
 	var youtubeObservedItems = null;
 	var youtubeObservedItemsHost = null;
 	var youtubeChatHadMessages = false;
@@ -2140,6 +2144,299 @@
 			));
 		} catch (e) {}
 		return false;
+	}
+
+	function normalizeYouTubeEffectImageUrl(url) {
+		url = normalizeDonationText(url);
+		if (!url) {
+			return "";
+		}
+		if (url.indexOf("//") === 0) {
+			return "https:" + url;
+		}
+		return url;
+	}
+
+	function escapeYouTubeAttribute(value) {
+		return String(value || "").replace(/[&<>"']/g, function (character) {
+			return {
+				"&": "&amp;",
+				"<": "&lt;",
+				">": "&gt;",
+				'"': "&quot;",
+				"'": "&#039;"
+			}[character];
+		});
+	}
+
+	function sendYouTubeTargetedMessage(data, target) {
+		if (!youtubeSettingsLoaded || !isExtensionOn || !data || !target) {
+			return;
+		}
+		try {
+			chrome.runtime.sendMessage(
+				chrome.runtime.id,
+				{
+					message: data,
+					target: target
+				},
+				function () {}
+			);
+		} catch (e) {}
+	}
+
+	function getYouTubeGiftAssetKey(url) {
+		url = normalizeYouTubeEffectImageUrl(url);
+		if (!url) {
+			return "";
+		}
+		try {
+			var path = url.split("?")[0].split("=")[0];
+			var filename = path.split("/").pop() || "";
+			return filename.replace(/\.(?:png|jpe?g|gif|webp)$/i, "").toLowerCase();
+		} catch (e) {}
+		return "";
+	}
+
+	function getYouTubeRecentGiftDetails(authorName) {
+		var giftNodes = [];
+		var normalizedAuthor = normalizeDonationText(authorName).replace(/^@/, "").toLowerCase();
+		try {
+			giftNodes = document.querySelectorAll("yt-live-chat-item-list-renderer #items > yt-gift-message-view-model");
+		} catch (e) {
+			return null;
+		}
+		for (var i = giftNodes.length - 1; i >= 0; i--) {
+			var giftNode = giftNodes[i];
+			var nodeAuthor = getYouTubeGiftElementText(giftNode, "#author-name-v2, #author-name").replace(/^@/, "");
+			if (normalizedAuthor && nodeAuthor.toLowerCase() !== normalizedAuthor) {
+				continue;
+			}
+			var message = getYouTubeGiftElementText(giftNode, "#message-v2, #message");
+			var giftName = normalizeDonationText(message.replace(/^sent\s+/i, ""));
+			var image = null;
+			try {
+				image = giftNode.querySelector("#gift-image img[src]");
+			} catch (e) {}
+			return {
+				giftName: giftName,
+				giftUrl: image ? normalizeYouTubeEffectImageUrl(image.getAttribute("src") || image.src || "") : ""
+			};
+		}
+		return null;
+	}
+
+	function getYouTubeGiftAttribution(manager, animationUrl) {
+		var attributions = [];
+		var animationKey = getYouTubeGiftAssetKey(animationUrl);
+		try {
+			attributions = manager.querySelectorAll("ytls-gift-attribution-item-view-model");
+		} catch (e) {
+			return null;
+		}
+		if (!attributions.length) {
+			return null;
+		}
+		var selected = attributions[attributions.length - 1];
+		if (animationKey) {
+			for (var i = attributions.length - 1; i >= 0; i--) {
+				var candidateImage = attributions[i].querySelector(".ytlsGiftAttributionItemViewModelGiftImage[src]");
+				if (candidateImage && getYouTubeGiftAssetKey(candidateImage.getAttribute("src") || candidateImage.src || "") === animationKey) {
+					selected = attributions[i];
+					break;
+				}
+			}
+		}
+
+		var authorNode = selected.querySelector(".ytlsGiftAttributionItemViewModelAuthorName");
+		var avatarNode = selected.querySelector(".ytlsGiftAttributionItemViewModelAvatar img[src], avatar-view-model img[src]");
+		var giftImageNode = selected.querySelector(".ytlsGiftAttributionItemViewModelGiftImage[src]");
+		return {
+			authorName: normalizeDonationText(authorNode ? authorNode.innerText || authorNode.textContent || "" : "").replace(/^@/, ""),
+			avatarUrl: avatarNode ? normalizeYouTubeEffectImageUrl(avatarNode.getAttribute("src") || avatarNode.src || "") : "",
+			giftUrl: giftImageNode ? normalizeYouTubeEffectImageUrl(giftImageNode.getAttribute("src") || giftImageNode.src || "") : "",
+			description: normalizeDonationText(giftImageNode ? giftImageNode.getAttribute("alt") || "" : "")
+		};
+	}
+
+	function emitYouTubeGiftOverlay(overlayNode) {
+		if (!overlayNode || overlayNode.youtubeSocialStreamHandled) {
+			return;
+		}
+
+		var animationImage = null;
+		try {
+			animationImage = overlayNode.querySelector("img[src]");
+		} catch (e) {}
+		if (!animationImage) {
+			return;
+		}
+		var animationUrl = normalizeYouTubeEffectImageUrl(animationImage.getAttribute("src") || animationImage.src || "");
+		if (!animationUrl) {
+			return;
+		}
+		overlayNode.youtubeSocialStreamHandled = true;
+
+		var manager = null;
+		try {
+			manager = overlayNode.closest("ytls-widget-overlay-manager");
+		} catch (e) {}
+		var attribution = manager ? getYouTubeGiftAttribution(manager, animationUrl) : null;
+		var recentGift = getYouTubeRecentGiftDetails(attribution ? attribution.authorName : "");
+		var giftName = recentGift && recentGift.giftName ? recentGift.giftName : "";
+		var giftUrl = recentGift && recentGift.giftUrl ? recentGift.giftUrl : (attribution ? attribution.giftUrl : "");
+		var animationDescription = normalizeDonationText(animationImage.getAttribute("alt") || "");
+		var overlayWidget = null;
+		try {
+			overlayWidget = overlayNode.closest("ytls-interactivity-widget");
+		} catch (e) {}
+
+		var youtubeGiftMeta = {
+			animationUrl: animationUrl,
+			source: "dom_overlay"
+		};
+		if (giftName) {
+			youtubeGiftMeta.giftName = giftName;
+		}
+		if (giftUrl) {
+			youtubeGiftMeta.giftUrl = giftUrl;
+		}
+		if (animationDescription || (attribution && attribution.description)) {
+			youtubeGiftMeta.animationDescription = animationDescription || attribution.description;
+		}
+		if (overlayWidget && overlayWidget.id) {
+			youtubeGiftMeta.overlayId = overlayWidget.id;
+		}
+
+		sendYouTubeTargetedMessage({
+			chatname: attribution ? attribution.authorName : "",
+			chatmessage: "",
+			chatimg: attribution ? attribution.avatarUrl : "",
+			contentimg: animationUrl,
+			hasDonation: "1 YouTube Gift",
+			subtitle: giftName,
+			textonly: false,
+			type: youtubeShorts ? "youtubeshorts" : "youtube",
+			event: "jeweldonation",
+			meta: {
+				youtubeGift: youtubeGiftMeta
+			}
+		}, "gif");
+	}
+
+	function emitYouTubeReactionImage(imageNode) {
+		if (!imageNode || imageNode.youtubeSocialStreamHandled) {
+			return;
+		}
+		imageNode.youtubeSocialStreamHandled = true;
+		var imageUrl = normalizeYouTubeEffectImageUrl(imageNode.getAttribute("src") || imageNode.src || "");
+		if (!imageUrl) {
+			return;
+		}
+		var reactionType = normalizeDonationText(imageNode.getAttribute("alt") || "") || "emoji";
+		var chatmessage = reactionType;
+		if (!settings.textonlymode) {
+			chatmessage = '<img class="youtube-live-reaction" src="' + escapeYouTubeAttribute(imageUrl) + '" alt="' + escapeYouTubeAttribute(reactionType) + '">';
+		}
+		sendYouTubeTargetedMessage({
+			chatname: "YouTube Live",
+			chatmessage: chatmessage,
+			chatimg: "",
+			contentimg: imageUrl,
+			textonly: settings.textonlymode || false,
+			type: youtubeShorts ? "youtubeshorts" : "youtube",
+			event: "reaction",
+			meta: {
+				reactionType: reactionType,
+				reactionImage: imageUrl,
+				source: "youtube_live_reactions"
+			}
+		}, "reactions");
+	}
+
+	function processYouTubeEffectMutationNode(node) {
+		if (!node || node.nodeType !== 1) {
+			return;
+		}
+		try {
+			if (node.tagName === "YTLS-GIFT-OVERLAY-ITEM-VIEW-MODEL") {
+				emitYouTubeGiftOverlay(node);
+			}
+			var parentGiftOverlay = node.closest("ytls-gift-overlay-item-view-model");
+			if (parentGiftOverlay) {
+				emitYouTubeGiftOverlay(parentGiftOverlay);
+			}
+			node.querySelectorAll("ytls-gift-overlay-item-view-model").forEach(function (overlayNode) {
+				emitYouTubeGiftOverlay(overlayNode);
+			});
+		} catch (e) {}
+		try {
+			if (node.tagName === "IMG" && node.closest("yt-emoji-fountain-view-model #emoji-container")) {
+				emitYouTubeReactionImage(node);
+			}
+			node.querySelectorAll("yt-emoji-fountain-view-model #emoji-container img[src]").forEach(function (imageNode) {
+				emitYouTubeReactionImage(imageNode);
+			});
+		} catch (e) {}
+	}
+
+	function bindYouTubeSupplementalEffectObserver(target, type) {
+		if (!target) {
+			return null;
+		}
+		var selector = type === "gift" ? "ytls-gift-overlay-item-view-model" : "img[src]";
+		try {
+			target.querySelectorAll(selector).forEach(function (node) {
+				if (type !== "gift" || node.querySelector("img[src]")) {
+					node.youtubeSocialStreamHandled = true;
+				}
+			});
+		} catch (e) {}
+		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		var observer = new MutationObserver(function (mutations) {
+			mutations.forEach(function (mutation) {
+				if (mutation.type === "attributes") {
+					processYouTubeEffectMutationNode(mutation.target);
+				}
+				for (var i = 0; i < mutation.addedNodes.length; i++) {
+					processYouTubeEffectMutationNode(mutation.addedNodes[i]);
+				}
+			});
+		});
+		observer.observe(target, {
+			childList: true,
+			subtree: true,
+			attributes: true,
+			attributeFilter: ["src"]
+		});
+		return observer;
+	}
+
+	function observeYouTubeSupplementalEffects() {
+		if (!youtubeSettingsLoaded || !isExtensionOn) {
+			return;
+		}
+		var reactionTarget = document.querySelector("yt-emoji-fountain-view-model #emoji-container");
+		if (reactionTarget && reactionTarget !== youtubeReactionObserverTarget) {
+			try {
+				if (youtubeReactionObserver) {
+					youtubeReactionObserver.disconnect();
+				}
+			} catch (e) {}
+			youtubeReactionObserverTarget = reactionTarget;
+			youtubeReactionObserver = bindYouTubeSupplementalEffectObserver(reactionTarget, "reaction");
+		}
+
+		var giftTarget = document.querySelector("ytls-widget-overlay-manager");
+		if (giftTarget && giftTarget !== youtubeGiftOverlayObserverTarget) {
+			try {
+				if (youtubeGiftOverlayObserver) {
+					youtubeGiftOverlayObserver.disconnect();
+				}
+			} catch (e) {}
+			youtubeGiftOverlayObserverTarget = giftTarget;
+			youtubeGiftOverlayObserver = bindYouTubeSupplementalEffectObserver(giftTarget, "gift");
+		}
 	}
 
 	function updateYouTubeResourceActivity(now) {
@@ -2404,6 +2701,7 @@
 	}
 
 	const checkTimer = setInterval(function () {
+	  observeYouTubeSupplementalEffects();
 	  let ele = getYouTubeChatItemsElement();
 	  if (ele) {
 		maybeRefreshYouTubeChatObserver(ele);

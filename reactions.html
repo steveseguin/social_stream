@@ -515,13 +515,29 @@ body {
 		return "<span class='reaction-heart'>&#10024;</span>";
 	}
 
+	function escapeReactionAttribute(value) {
+		return String(value || "").replace(/[&<>"']/g, function(character) {
+			return {
+				"&": "&amp;",
+				"<": "&lt;",
+				">": "&gt;",
+				'"': "&quot;",
+				"'": "&#039;"
+			}[character];
+		});
+	}
+
 	function spawnSingleReaction(payload) {
 		var markup = typeof payload.chatmessage === "string" ? payload.chatmessage : "";
 		var total = getReleaseMultiplier();
 		var i;
 
 		if (!markup || markup.indexOf("<") === -1) {
-			markup = fallbackReactionMarkup(payload);
+			if (payload && typeof payload.contentimg === "string" && payload.contentimg) {
+				markup = "<img alt='reaction' src='" + escapeReactionAttribute(payload.contentimg) + "'>";
+			} else {
+				markup = fallbackReactionMarkup(payload);
+			}
 		}
 
 		for (i = 0; i < total; i++) {

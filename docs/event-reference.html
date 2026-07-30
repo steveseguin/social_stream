@@ -442,6 +442,16 @@
                                 <td><code>hasDonation</code> carries the value; <code>event</code> identifies the YouTube paid item type. YouTube Gifts use <code>N Jewels</code> when present, or <code>1 YouTube Gift</code> when YouTube hides the count. Gift images use <code>contentimg</code>, gift labels use <code>subtitle</code>, and minimal gift details are mirrored under <code>meta.youtubeGift</code>.</td>
                             </tr>
                             <tr>
+                                <td class="donation-event"><code>jeweldonation</code> gift effect</td>
+                                <td>YouTube displays an animated Jewel gift over live chat (<code>ytls-gift-overlay-item-view-model</code>).</td>
+                                <td>Sent directly to the dedicated GIF/media target so the animation can play without duplicating the normal gift row. <code>contentimg</code> carries the animated asset and <code>meta.youtubeGift.animationUrl</code>/<code>animationDescription</code> preserve the effect details.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>reaction</code></td>
+                                <td>A viewer reaction appears in YouTube's live emoji fountain.</td>
+                                <td>Sent directly to the dedicated reactions target. The anonymous emoji and image URL are preserved in <code>chatmessage</code>/<code>contentimg</code> and under <code>meta.reactionType</code>/<code>reactionImage</code>. Known live variants include ❤, 😄, 🎉, 😳, and 💯.</td>
+                            </tr>
+                            <tr>
                                 <td class="donation-event"><code>thankyou</code></td>
                                 <td>Fallback message when a donation amount exists but no chat text was supplied.</td>
                                 <td>Keeps <code>hasDonation</code> and auto-injects “Thank you for your donation!” for overlays.</td>
