@@ -119,6 +119,7 @@
 								<input type="text" id="channel-input" class="channel-input" placeholder="Enter channel name">
 								<input type="text" id="video-input" class="channel-input" placeholder="Enter video ID">
 								<button id="connect-button" class="connect-button" style="background-color: #2255dd;">Connect</button>
+								<button id="look-for-streams-button" class="connect-button hidden" style="background-color: #1a73e8;">Look for new streams</button>
 								<button id="change-button" class="connect-button" style="background-color: #882244;">Reset</button>
 								<button id="sign-out-button" class="sign-out-button">Sign Out</button>
 							</div>
@@ -586,6 +587,7 @@ try {
 	var currentStream = null;
 	var authenticatedChannelId = "";
 	var youtubeInitialTargetResolutionPending = true;
+	var youtubeUrlTargetSpecified = false;
 	var ownBroadcastLookupChannelId = "";
 	var ownBroadcastLookupPromise = null;
 	var activeYouTubeBroadcastMonitorLease = null;
@@ -608,6 +610,8 @@ try {
 	const YT_BROADCAST_MONITOR_HEARTBEAT_MS = 30 * 1000;
 	const YT_BROADCAST_MONITOR_CLAIM_SETTLE_MS = 75;
 	const YT_BROADCAST_MONITOR_INSTANCE_ID = "yt-broadcast-monitor-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+	const YT_OWN_BROADCAST_LAST_CHECK_PREFIX = "youtubeOwnBroadcastLastCheck.v1.";
+	const YT_OWN_BROADCAST_CHECK_COOLDOWN_MS = 30 * 1000;
     var pendingRelayMessages = [];
     const MAX_CACHED_CHAT_MESSAGES = 500;
     const LIVE_CHAT_MAX_RESULTS = 500;
@@ -4881,6 +4885,112 @@ function enableBackgroundKeepAlive() {
 		return ownBroadcastLookupPromise;
 	}
 
+	function hasYouTubeUrlSpecifiedTarget() {
+		return youtubeUrlTargetSpecified;
+	}
+
+	function hideLookForYouTubeStreamsButton() {
+		const button = document.getElementById('look-for-streams-button');
+		if (button) button.classList.add('hidden');
+	}
+
+	function updateLookForYouTubeStreamsButton() {
+		const button = document.getElementById('look-for-streams-button');
+		if (!button) return;
+		const shouldShow = !!(
+			getStoredToken() &&
+			authenticatedChannelId &&
+			!liveChatId &&
+			!streamStatsInterval &&
+			!isYouTubeAuthOnlyMode() &&
+			!hasYouTubeUrlSpecifiedTarget()
+		);
+		button.classList.toggle('hidden', !shouldShow);
+	}
+
+	function getYouTubeOwnBroadcastLastCheckKey(channelId) {
+		return YT_OWN_BROADCAST_LAST_CHECK_PREFIX + normalizeYouTubeSignInTargetValue(channelId);
+	}
+
+	function getYouTubeOwnBroadcastCheckCooldownRemaining(channelId) {
+		const normalizedChannelId = normalizeYouTubeSignInTargetValue(channelId);
+		if (!normalizedChannelId) return 0;
+		const lastCheck = Number(localStorage.getItem(getYouTubeOwnBroadcastLastCheckKey(normalizedChannelId))) || 0;
+		return Math.max(0, YT_OWN_BROADCAST_CHECK_COOLDOWN_MS - (Date.now() - lastCheck));
+	}
+
+	function markYouTubeOwnBroadcastCheck(channelId) {
+		const normalizedChannelId = normalizeYouTubeSignInTargetValue(channelId);
+		if (!normalizedChannelId) return;
+		localStorage.setItem(getYouTubeOwnBroadcastLastCheckKey(normalizedChannelId), String(Date.now()));
+	}
+
+	async function lookForOwnYouTubeStreams(forceRefresh, bypassCooldown) {
+		const token = getStoredToken();
+		if (!token || !authenticatedChannelId || isYouTubeAuthOnlyMode() || hasYouTubeUrlSpecifiedTarget()) {
+			updateLookForYouTubeStreamsButton();
+			return false;
+		}
+		const cooldownRemaining = bypassCooldown ? 0 : getYouTubeOwnBroadcastCheckCooldownRemaining(authenticatedChannelId);
+		if (cooldownRemaining > 0) {
+			const waitSeconds = Math.max(1, Math.ceil(cooldownRemaining / 1000));
+			updateHeaderInfo(username, 'Stream check available in ' + waitSeconds + 's');
+			document.getElementById('textarea').innerHTML = '<div>Live streams were checked recently. Try again in ' + waitSeconds + ' seconds.</div>';
+			updateLookForYouTubeStreamsButton();
+			return false;
+		}
+		markYouTubeOwnBroadcastCheck(authenticatedChannelId);
+		const button = document.getElementById('look-for-streams-button');
+		if (button) {
+			button.disabled = true;
+			button.textContent = 'Looking...';
+		}
+		hideLookForYouTubeStreamsButton();
+		updateHeaderInfo(username, 'Checking your live broadcasts...');
+		document.getElementById('textarea').innerHTML = '<div>Checking your channel for a live or upcoming stream...</div>';
+		if (forceRefresh) {
+			ownBroadcastLookupChannelId = "";
+			ownBroadcastLookupPromise = null;
+		}
+		try {
+			const ownBroadcastCandidates = await getOwnYouTubeBroadcastCandidatesOnce(token, authenticatedChannelId);
+			const anyOwnBroadcast = selectOwnYouTubeBroadcast(ownBroadcastCandidates, authenticatedChannelId);
+			const ownBroadcast = await selectAvailableOwnYouTubeBroadcast(ownBroadcastCandidates, authenticatedChannelId);
+			if (ownBroadcast && ownBroadcast.id) {
+				videoId = ownBroadcast.id;
+				channel = '';
+				await connect(videoId, {
+					monitorMode: 'auto',
+					preserveBroadcastMonitorLease: true
+				});
+				return true;
+			}
+			const noStreamStatus = anyOwnBroadcast
+				? 'Your live or upcoming streams are already monitored in another page.'
+				: 'No live or upcoming stream was found on your channel.';
+			updateHeaderInfo(username, anyOwnBroadcast ? 'Streams already monitored' : 'No live or upcoming stream');
+			document.getElementById('textarea').innerHTML = '<div>Signed in. ' + noStreamStatus + '</div>';
+			document.getElementById('viewer-count').textContent = '-';
+			document.getElementById('subscriber-count').textContent = '-';
+			document.getElementById('likes-count').textContent = '-';
+			return false;
+		} catch (error) {
+			console.error('Unable to check your YouTube broadcasts:', error);
+			updateHeaderInfo(username, 'Broadcast check failed');
+			document.getElementById('textarea').innerHTML = '<div>Signed in, but your live broadcasts could not be checked.</div>';
+			document.getElementById('viewer-count').textContent = '-';
+			document.getElementById('subscriber-count').textContent = '-';
+			document.getElementById('likes-count').textContent = '-';
+			return false;
+		} finally {
+			if (button) {
+				button.disabled = false;
+				button.textContent = 'Look for new streams';
+			}
+			updateLookForYouTubeStreamsButton();
+		}
+	}
+
 	function verifyAndUseToken(token) {
 		try {
 			getUserInfo(token).then(async userInfo => {
@@ -4925,37 +5035,7 @@ function enableBackgroundKeepAlive() {
 							sessionStorage.removeItem("youtubeRedirectChannel");
 						}
 					} else if (target.type === 'own' && allowOwnBroadcastLookup) {
-						updateHeaderInfo(username, 'Checking your live broadcasts...');
-						document.getElementById('textarea').innerHTML = '<div>Checking your channel for a live or upcoming stream...</div>';
-						try {
-							const ownBroadcastCandidates = await getOwnYouTubeBroadcastCandidatesOnce(token, authenticatedChannelId);
-							const anyOwnBroadcast = selectOwnYouTubeBroadcast(ownBroadcastCandidates, authenticatedChannelId);
-							const ownBroadcast = await selectAvailableOwnYouTubeBroadcast(ownBroadcastCandidates, authenticatedChannelId);
-							if (ownBroadcast && ownBroadcast.id) {
-								videoId = ownBroadcast.id;
-								channel = '';
-								await connect(videoId, {
-									monitorMode: 'auto',
-									preserveBroadcastMonitorLease: true
-								});
-							} else {
-								const noStreamStatus = anyOwnBroadcast
-									? 'Your live or upcoming streams are already monitored in another page.'
-									: 'No live or upcoming stream was found on your channel.';
-								updateHeaderInfo(username, anyOwnBroadcast ? 'Streams already monitored' : 'No live or upcoming stream');
-								document.getElementById('textarea').innerHTML = '<div>Signed in. ' + noStreamStatus + ' Enter a channel name or video ID to connect manually.</div>';
-								document.getElementById('viewer-count').textContent = '-';
-								document.getElementById('subscriber-count').textContent = '-';
-								document.getElementById('likes-count').textContent = '-';
-							}
-						} catch (error) {
-							console.error('Unable to check your YouTube broadcasts:', error);
-							updateHeaderInfo(username, 'Broadcast check failed');
-							document.getElementById('textarea').innerHTML = '<div>Signed in, but your live broadcasts could not be checked. Enter a channel name or video ID to connect manually.</div>';
-							document.getElementById('viewer-count').textContent = '-';
-							document.getElementById('subscriber-count').textContent = '-';
-							document.getElementById('likes-count').textContent = '-';
-						}
+						await lookForOwnYouTubeStreams(false, true);
 					} else {
 						updateHeaderInfo(username, target.type === 'none' ? 'Signed in' : 'No target specified');
 						document.getElementById('textarea').innerHTML = target.type === 'none'
@@ -4964,6 +5044,7 @@ function enableBackgroundKeepAlive() {
 						document.getElementById('viewer-count').textContent = '-';
 						document.getElementById('subscriber-count').textContent = '-';
 						document.getElementById('likes-count').textContent = '-';
+						updateLookForYouTubeStreamsButton();
 					}
 					showSocketInterface();
 				} else {
@@ -5294,6 +5375,7 @@ function enableBackgroundKeepAlive() {
     function signOut() {
         clearPolling();
         clearStoredToken();
+        hideLookForYouTubeStreamsButton();
         username = "";
         channel = '';
         videoId = '';
@@ -5370,6 +5452,7 @@ function enableBackgroundKeepAlive() {
 			document.getElementById('events-list').innerHTML = '';
 			connectButton.textContent = 'Connect';
 			connectButton.style.backgroundColor = '#2255dd';
+			updateLookForYouTubeStreamsButton();
 			return;
 		}
 		
@@ -6137,6 +6220,7 @@ function enableBackgroundKeepAlive() {
 			endedPayload.meta = { streamTitle: endedStreamTitle };
 		}
 		pushMessage(applySourceIdentity(endedPayload));
+		updateLookForYouTubeStreamsButton();
 	}
 	async function getChannelStats(channelIdForStats) {
 		const token = getStoredToken();
@@ -6177,6 +6261,7 @@ function enableBackgroundKeepAlive() {
 		}
 		const monitorMode = monitorOptions && monitorOptions.monitorMode === 'auto' ? 'auto' : 'explicit';
 		const preserveBroadcastMonitorLease = !!(monitorOptions && monitorOptions.preserveBroadcastMonitorLease);
+		hideLookForYouTubeStreamsButton();
 		clearPolling({ preserveBroadcastMonitorLease: preserveBroadcastMonitorLease });
 		initialBacklogProcessing = true;
 		initialBacklogTimestamp = null;
@@ -6196,6 +6281,7 @@ function enableBackgroundKeepAlive() {
 			document.getElementById('likes-count').textContent = '-';
 			document.getElementById('textarea').innerHTML = '<div>Please enter a YouTube channel name or video ID to connect.</div>';
 			releaseYouTubeBroadcastMonitorLease();
+			updateLookForYouTubeStreamsButton();
 			return;
 		}
 		if (videoIdToUse && monitorMode !== 'auto') {
@@ -6249,6 +6335,7 @@ function enableBackgroundKeepAlive() {
 					currentStream = { id: streamInfoToUse.id, title: streamTitleToUse, channelId: effectiveChannelIdToUse };
 					notifyVideoChange(streamInfoToUse.id, effectiveChannelIdToUse);
 					releaseYouTubeBroadcastMonitorLease();
+					updateLookForYouTubeStreamsButton();
 					return;
 				} else if (isVideoUpcoming) {
 					liveChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId;
@@ -6393,9 +6480,10 @@ function enableBackgroundKeepAlive() {
             refreshCurrentVideoMetadata().catch(error => {
                 console.warn('Failed to refresh current YouTube metadata fields:', error);
             });
-            console.log('Connection process complete for target:', channelDisplayNameToUse);
+			console.log('Connection process complete for target:', channelDisplayNameToUse);
 			const channelInput = document.getElementById('channel-input');
             if (channelInput.value && channelToUse) channelInput.value = '';
+			updateLookForYouTubeStreamsButton();
         } catch (error) {
 			releaseYouTubeBroadcastMonitorLease();
             console.error('Error connecting to YouTube:', error);
@@ -6412,6 +6500,7 @@ function enableBackgroundKeepAlive() {
             document.getElementById('viewer-count').textContent = '-';
             document.getElementById('subscriber-count').textContent = '-';
             document.getElementById('likes-count').textContent = '-';
+			updateLookForYouTubeStreamsButton();
         }
     }
 	
@@ -7213,6 +7302,12 @@ function enableBackgroundKeepAlive() {
 		
 		const urlVideoIdParam = urlParams.get("videoId") || urlParams.get("video_id") || urlParams.get("v") || hashParams.get("videoId");
 		const urlChannelParam = urlParams.get("channel") || urlParams.get("username") || urlParams.get("c") || hashParams.get("channel");
+		youtubeUrlTargetSpecified = !!(
+			urlVideoIdParam ||
+			urlChannelParam ||
+			sessionStorage.getItem("youtubeRedirectVideoId") ||
+			sessionStorage.getItem("youtubeRedirectChannel")
+		);
 		if (!authOnlyMode && (urlVideoIdParam || urlChannelParam)) {
 			sessionStorage.setItem("youtubeRedirectVideoId", urlVideoIdParam || "");
 			sessionStorage.setItem("youtubeRedirectChannel", urlChannelParam || "");
@@ -7405,6 +7500,14 @@ function enableBackgroundKeepAlive() {
 			connectButton.addEventListener('click', handleConnect);
 			registerCleanup(() => connectButton.removeEventListener('click', handleConnect));
 		}
+		const lookForStreamsButton = document.getElementById('look-for-streams-button');
+		if (lookForStreamsButton) {
+			const lookForStreamsHandler = function() {
+				lookForOwnYouTubeStreams(true, false);
+			};
+			lookForStreamsButton.addEventListener('click', lookForStreamsHandler);
+			registerCleanup(() => lookForStreamsButton.removeEventListener('click', lookForStreamsHandler));
+		}
 		const changeButton = document.getElementById('change-button');
 		if (changeButton) {
 			const changeHandler = function() {
@@ -7425,6 +7528,7 @@ function enableBackgroundKeepAlive() {
 					connectButton.textContent = 'Connect';
 					connectButton.style.backgroundColor = '#2255dd';
 				}
+				updateLookForYouTubeStreamsButton();
 			};
 			changeButton.addEventListener('click', changeHandler);
 			registerCleanup(() => changeButton.removeEventListener('click', changeHandler));

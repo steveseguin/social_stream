@@ -93,6 +93,8 @@ function createContext(instanceId) {
 			"const YT_BROADCAST_MONITOR_HEARTBEAT_MS = 30000;",
 			"const YT_BROADCAST_MONITOR_CLAIM_SETTLE_MS = 0;",
 			"const YT_BROADCAST_MONITOR_INSTANCE_ID = " + JSON.stringify(instanceId) + ";",
+			"const YT_OWN_BROADCAST_LAST_CHECK_PREFIX = 'youtubeOwnBroadcastLastCheck.v1.';",
+			"const YT_OWN_BROADCAST_CHECK_COOLDOWN_MS = 30000;",
 			helperSource
 		].join("\n"),
 		context
@@ -397,6 +399,16 @@ assert.strictEqual(context.consumeYouTubeInitialTargetResolution(), true);
 	context.readActiveYouTubeBroadcastMonitorLeases("UC-stale");
 	assert.strictEqual(sharedStorage.getItem(staleKey), null, "expired monitor leases must be cleaned up");
 
+	context.markYouTubeOwnBroadcastCheck("UC-cooldown");
+	const cooldownRemaining = context.getYouTubeOwnBroadcastCheckCooldownRemaining("UC-cooldown");
+	assert.ok(cooldownRemaining > 0 && cooldownRemaining <= 30000, "broadcast checks must start a 30-second cooldown");
+	assert.strictEqual(
+		context.getYouTubeOwnBroadcastCheckCooldownRemaining("UC-other-account"),
+		0,
+		"broadcast check cooldowns must be scoped to the signed-in channel"
+	);
+	sharedStorage.removeItem("youtubeOwnBroadcastLastCheck.v1.UC-cooldown");
+
 	assert.ok(
 		source.includes("const allowOwnBroadcastLookup = consumeYouTubeInitialTargetResolution();"),
 		"the page must consume auto-discovery during initial sign-in resolution"
@@ -404,6 +416,14 @@ assert.strictEqual(context.consumeYouTubeInitialTargetResolution(), true);
 	assert.ok(
 		source.includes("target.type === 'own' && allowOwnBroadcastLookup"),
 		"own-account discovery must be gated behind the initial no-target path"
+	);
+	assert.ok(
+		source.includes("lookForOwnYouTubeStreams(false, true)"),
+		"the initial page-load lookup must bypass the manual cooldown"
+	);
+	assert.ok(
+		source.includes("lookForOwnYouTubeStreams(true, false)"),
+		"manual lookups must enforce the 30-second cooldown"
 	);
 	assert.ok(
 		source.includes("clearPolling({ preserveBroadcastMonitorLease: preserveBroadcastMonitorLease });"),

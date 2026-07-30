@@ -7968,6 +7968,34 @@ function attachTipJarTestDonationButtons() {
     });
 }
 
+function attachReactionTestButton() {
+    var button = document.getElementById('test-reaction-button');
+    if (!button) {
+        return;
+    }
+    button.addEventListener('click', function() {
+        chrome.runtime.sendMessage({
+            message: {
+                chatname: 'YouTube Live',
+                chatmessage: '<span class="reaction-heart">👍</span>',
+                chatimg: '',
+                contentimg: '',
+                textonly: false,
+                platform: 'youtube',
+                type: 'youtube',
+                event: 'reaction',
+                meta: {
+                    reactionType: '👍',
+                    source: 'popup_test'
+                }
+            },
+            target: 'reactions'
+        }, function() {
+            log('ignore callback for this action');
+        });
+    });
+}
+
 function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
     const config = overlayPreviewConfigs[previewKey];
     if (!config) {
@@ -10581,6 +10609,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		{ id: 'multi-alert-preview-clear', descriptor: false }
 	]);
 	attachTipJarTestDonationButtons();
+	attachReactionTestButton();
 
 	var previewPlatformSelect = document.getElementById('multi-alert-preview-platform');
 	if (previewPlatformSelect) {

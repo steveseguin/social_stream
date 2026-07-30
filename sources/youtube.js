@@ -1967,8 +1967,16 @@
 		var style = document.createElement("style");
 		style.id = "ssn-youtube-chat-background-fix";
 		style.textContent = `
-			yt-live-chat-renderer {
-				background-color: var(--yt-live-chat-background-color, #ffffff) !important;
+			html,
+			body,
+			yt-live-chat-app,
+			yt-live-chat-renderer,
+			#input-panel > yt-live-chat-message-renderer,
+			yt-live-chat-goal-banner-view-model,
+			yt-live-chat-ticker-creator-goal-view-model,
+			yt-creator-goal-progress-flow-view-model,
+			yt-creator-goal-set-up-flow-view-model {
+				background-color: var(--yt-live-chat-background-color, #0f0f0f) !important;
 			}
 		`;
 		document.head.appendChild(style);

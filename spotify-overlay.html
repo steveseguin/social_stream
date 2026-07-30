@@ -167,6 +167,68 @@ body {
   gap: 6px;
 }
 
+.queue-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.show-queue #overlay {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+}
+
+.show-queue .queue-list {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.queue-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.queue-art {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.queue-details {
+  min-width: 0;
+}
+
+.queue-title,
+.queue-requester {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.queue-requester,
+.queue-time {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.queue-time {
+  min-width: 82px;
+  text-align: right;
+}
+
 .error-message {
   color: #ff5252;
   font-size: 0.85rem;
@@ -203,6 +265,9 @@ body {
 }
 .theme-glass .artist { color: #0b5c2c; }
 .theme-glass .bar { background: rgba(0, 0, 0, 0.12); }
+.theme-glass .queue-list { border-top-color: rgba(0, 0, 0, 0.16); }
+.theme-glass .queue-requester,
+.theme-glass .queue-time { color: #0b5c2c; }
 .theme-glass body { color: #0c1a12; }
 
 .theme-comic {
@@ -257,12 +322,18 @@ body {
   100% { transform: translateX(-50%); }
 }
 .theme-ticker .art { width: 72px; height: 72px; }
+.theme-ticker.show-queue #overlay {
+  grid-template-columns: 72px minmax(0, 1fr);
+}
 .theme-ticker .progress,
 .theme-ticker .meta .details {
   display: none;
 }
 
 .compact .art { width: 68px; height: 68px; }
+.compact.show-queue #overlay {
+  grid-template-columns: 68px minmax(0, 1fr);
+}
 .compact .title { font-size: 1rem; }
 .compact .bar { height: 6px; }
 
@@ -302,6 +373,7 @@ body {
 				<div class="ticker-track" id="tickerTrack"></div>
 			</div>
 		</div>
+		<div class="queue-list" id="queueList" hidden></div>
 	</div>
 	<span class="sr-only" id="ariaStatus" aria-live="polite"></span>
 	<script>
@@ -357,6 +429,7 @@ body {
 	const hideDevice = urlParams.has('hidedevice');
 	const hideStatus = urlParams.has('hidestatus');
 	const compact = urlParams.has('compact');
+	const showQueue = urlParams.has('showqueue');
 	const accent = urlParams.get('accent');
 	const theme = (urlParams.get('style') || urlParams.get('theme') || 'spotify').toLowerCase();
 	const tickerMode = theme === 'ticker' || urlParams.has('ticker');
@@ -371,7 +444,8 @@ body {
 		progressMs: 0,
 		durationMs: 0,
 		receivedAt: Date.now(),
-		device: null
+		device: null,
+		queue: []
 	};
 
 	const overlayEl = document.getElementById('overlay');
@@ -388,9 +462,11 @@ body {
 	const barEl = document.getElementById('bar');
 	const tickerLine = document.getElementById('tickerLine');
 	const tickerTrack = document.getElementById('tickerTrack');
+	const queueList = document.getElementById('queueList');
 	const ariaStatus = document.getElementById('ariaStatus');
 
 	document.body.classList.toggle('compact', compact);
+	document.body.classList.toggle('show-queue', showQueue);
 	document.body.classList.add(`theme-${theme}`);
 	if (accent) {
 		document.body.style.setProperty('--accent', accent);
@@ -404,6 +480,7 @@ body {
 	if (hideProgress) progressRow.style.display = 'none';
 	if (hideDevice) deviceEl.style.display = 'none';
 	if (hideStatus) statusEl.style.display = 'none';
+	queueList.hidden = !showQueue;
 
 	function formatMs(ms) {
 		if (!ms && ms !== 0) return '0:00';
@@ -431,6 +508,70 @@ body {
 		barEl.style.setProperty('--progress', `${pct}%`);
 		currentTimeEl.textContent = formatMs(clamped);
 		totalTimeEl.textContent = formatMs(durationMs);
+	}
+
+	function getRemainingTrackMs() {
+		if (!state.durationMs) return 0;
+		let elapsed = state.progressMs || 0;
+		if (state.status === 'playing' || state.isPlaying) {
+			elapsed += Date.now() - (state.receivedAt || Date.now());
+		}
+		return Math.max(0, state.durationMs - Math.min(state.durationMs, elapsed));
+	}
+
+	function updateQueueTimes() {
+		if (!showQueue) return;
+		const remainingMs = getRemainingTrackMs();
+		const timeEls = queueList.querySelectorAll('.queue-time');
+		Array.prototype.forEach.call(timeEls, function(timeEl) {
+			const offsetMs = parseInt(timeEl.getAttribute('data-offset-ms') || '0', 10) || 0;
+			timeEl.textContent = 'Starts in ' + formatMs(remainingMs + offsetMs);
+		});
+	}
+
+	function renderQueue() {
+		if (!showQueue) return;
+		queueList.textContent = '';
+		const queue = Array.isArray(state.queue) ? state.queue.slice(0, 5) : [];
+		queueList.hidden = queue.length === 0;
+		let offsetMs = 0;
+
+		queue.forEach(function(track) {
+			const row = document.createElement('div');
+			row.className = 'queue-row';
+
+			const art = document.createElement('img');
+			art.className = 'queue-art';
+			art.alt = '';
+			art.src = track.imageUrl || fallbackArt;
+
+			const details = document.createElement('div');
+			details.className = 'queue-details';
+			const title = document.createElement('div');
+			title.className = 'queue-title';
+			title.textContent = (track.name || 'Unknown track') + (track.artist ? ' - ' + track.artist : '');
+			details.appendChild(title);
+
+			if (track.requesterName && track.requesterName !== 'Unknown') {
+				const requester = document.createElement('div');
+				requester.className = 'queue-requester';
+				requester.textContent = 'Requested by ' + track.requesterName;
+				details.appendChild(requester);
+			}
+
+			const time = document.createElement('div');
+			time.className = 'queue-time';
+			time.setAttribute('data-offset-ms', String(offsetMs));
+
+			row.appendChild(art);
+			row.appendChild(details);
+			row.appendChild(time);
+			queueList.appendChild(row);
+
+			offsetMs += Math.max(0, Number(track.duration) || 0);
+		});
+
+		updateQueueTimes();
 	}
 
 	function render() {
@@ -489,6 +630,7 @@ body {
 		}
 
 		updateProgressBar();
+		renderQueue();
 		ariaStatus.textContent = `${track?.name || 'No track'} ${badge}`;
 	}
 
@@ -504,6 +646,7 @@ body {
 			progressMs: payload.progressMs || payload.progress || 0,
 			durationMs: payload.durationMs || payload.duration || payload.track?.duration || 0,
 			device: payload.device || null,
+			queue: Array.isArray(payload.queue) ? payload.queue : [],
 			receivedAt: payload.receivedAt || Date.now(),
 			message: payload.message || null
 		};
@@ -575,7 +718,10 @@ body {
 	render();
 
 	// Keep progress smooth while playing
-	setInterval(updateProgressBar, 500);
+	setInterval(function() {
+		updateProgressBar();
+		updateQueueTimes();
+	}, 500);
 })();
 	</script>
 </body>

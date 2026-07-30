@@ -510,6 +510,19 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
       var link = document.getElementById('reactionslink');
       return !!(link && link.href && link.href.indexOf('reactions.html?session=testsession') !== -1);
     });
+    const reactionsOptionsLabel = (await popupPage.textContent('label[for="wrapper-reactions-options"]')).trim();
+    assert(reactionsOptionsLabel.includes('Customize reactions overlay'), 'Reactions options still use the misleading enable label.');
+    await popupPage.click('#test-reaction-button');
+    const popupReactionRequests = await popupPage.evaluate(() => {
+      return window.__chromeMessages.filter((entry) => {
+        return entry && entry.message && entry.message.meta && entry.message.meta.source === 'popup_test';
+      });
+    });
+    assert(popupReactionRequests.length === 1, 'Popup test reaction was not sent exactly once.');
+    assert(popupReactionRequests[0].target === 'reactions', 'Popup test reaction was not targeted only to the reactions overlay.');
+    assert(popupReactionRequests[0].message.event === 'reaction', 'Popup test reaction used the wrong event.');
+    assert(popupReactionRequests[0].message.platform === 'youtube', 'Popup test reaction omitted its platform.');
+    assert(popupReactionRequests[0].message.chatmessage.includes('👍'), 'Popup test reaction lost its thumbs-up graphic.');
 
     const fallbackPopupPage = await context.newPage();
     await addPopupInitScript(fallbackPopupPage, `http://${HOST}:${PORT}`);

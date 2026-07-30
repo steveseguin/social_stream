@@ -10262,13 +10262,18 @@ input:checked + .slider:before {
 					</ul>
 				</div>
 				<div id="reactions" data-raw="" class="single_message"><a href="" id="reactionslink"></a></div>
+				<div style="margin: 8px 0 12px;">
+					<button type="button" id="test-reaction-button" class="glowingButton" style="width: 190px; margin-left: 0;" title="Open the Reactions Overlay link first, then send a test reaction.">
+						<span>Send test reaction</span>
+					</button>
+				</div>
 			</div>
 			<a href="" id="reactions-options"></a>
 
 			<div class="wrapper">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-reactions-options" />
-					<label class="collapsible-label" for="wrapper-reactions-options"><span>💖 Enable and customize</span></label>
+					<label class="collapsible-label" for="wrapper-reactions-options"><span>💖 Customize reactions overlay</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group reactions_overlay">
@@ -14592,6 +14597,7 @@ input:checked + .slider:before {
 					<p>Connect your Spotify account to show what song is playing as an overlay, or announce tracks to chat automatically.</p>
 					<ul>
 						<li>"Now Playing" overlay widget</li>
+						<li>Optional upcoming song-request queue</li>
 						<li>Auto-announce songs to chat</li>
 						<li>Chat commands for song info (!song, !np)</li>
 						<li>Customizable overlay appearance</li>
@@ -14687,6 +14693,16 @@ input:checked + .slider:before {
 									</label>
 									<span>Compact layout</span>
 								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param22="showqueue" />
+										<span class="slider round"></span>
+									</label>
+									<span>Show upcoming song-request queue</span>
+								</div>
+								<p style="font-size: 0.85em; color: var(--text-secondary); margin: 0 0 12px;">
+									Requires the managed song-request queue under Spotify Chat Commands.
+								</p>
 								<h3>Visibility toggles</h3>
 								<div>
 									<label class="switch">
