@@ -1957,6 +1957,23 @@
 	var youtubeStaleReloadWindowMs = 60 * 60 * 1000;
 	var youtubeStaleReloadMaxPerWindow = 60;
 
+	function applyYouTubeChatBackgroundFix() {
+		if (typeof window.__SSAPP_TAB_ID__ === "undefined") {
+			return;
+		}
+		if (!document.head || document.getElementById("ssn-youtube-chat-background-fix")) {
+			return;
+		}
+		var style = document.createElement("style");
+		style.id = "ssn-youtube-chat-background-fix";
+		style.textContent = `
+			yt-live-chat-renderer {
+				background-color: var(--yt-live-chat-background-color, #ffffff) !important;
+			}
+		`;
+		document.head.appendChild(style);
+	}
+
 	try {
 		if (performance && performance.setResourceTimingBufferSize) {
 			performance.setResourceTimingBufferSize(10000);
@@ -2701,6 +2718,7 @@
 	}
 
 	const checkTimer = setInterval(function () {
+	  applyYouTubeChatBackgroundFix();
 	  observeYouTubeSupplementalEffects();
 	  let ele = getYouTubeChatItemsElement();
 	  if (ele) {
