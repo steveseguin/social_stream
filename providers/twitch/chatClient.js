@@ -267,7 +267,12 @@ export function createTwitchChatClient(options = {}) {
       }
       try {
         if (typeof state.client.disconnect === 'function') {
-          state.client.disconnect();
+          const disconnectResult = state.client.disconnect();
+          if (disconnectResult && typeof disconnectResult.catch === 'function') {
+            disconnectResult.catch((err) => {
+              logDebug('Client disconnect failed', { error: err?.message || err });
+            });
+          }
         }
       } catch (err) {
         logDebug('Client disconnect failed', { error: err?.message || err });
@@ -316,15 +321,18 @@ export function createTwitchChatClient(options = {}) {
       const tokenResult = await opts.tokenProvider(connectOptions);
       if (tokenResult && typeof tokenResult === 'object') {
         return {
-          token: tokenResult.token || tokenResult.accessToken || null,
-          identity: tokenResult.identity || null
+          token: tokenResult.token || tokenResult.accessToken || state.token || null,
+          identity: tokenResult.identity || connectOptions.identity || state.identity || null
         };
       }
       if (typeof tokenResult === 'string') {
-        return { token: tokenResult, identity: null };
+        return { token: tokenResult, identity: connectOptions.identity || state.identity || null };
       }
     }
-    return { token: null, identity: connectOptions.identity || null };
+    return {
+      token: state.token || null,
+      identity: connectOptions.identity || state.identity || null
+    };
   }
 
   function bind(event, handler) {

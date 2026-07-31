@@ -349,8 +349,13 @@ try{
 	var TWITCH_TOKEN_CLIENT_ID_KEY = 'twitchOAuthClientId';
 	var TWITCH_HOSTED_AUTH_STORAGE_KEY = 'twitchUseHostedOAuth';
 	var TWITCH_TOKEN_VALIDATION_TRANSIENT_ERROR = 'transient_validation_error';
+	var TWITCH_TOKEN_REFRESH_RETRY_BASE_MS = 30000;
+	var TWITCH_TOKEN_REFRESH_RETRY_MAX_MS = 300000;
+	var TWITCH_TOKEN_REFRESH_TIMEOUT_MS = 10000;
 	var tokenRefreshTimer = null;
 	var tokenRefreshPromise = null;
+	var tokenRefreshRetryCount = 0;
+	var lastTokenRefreshFailure = null;
 
 	function createTransientTokenValidationError(status, message) {
 		return {
@@ -533,6 +538,8 @@ try{
 		}
 		if (refreshToken) {
 			localStorage.setItem(TWITCH_REFRESH_TOKEN_KEY, refreshToken);
+			tokenRefreshRetryCount = 0;
+			lastTokenRefreshFailure = null;
 		}
 		if (Array.isArray(tokenScope)) {
 			localStorage.setItem(TWITCH_TOKEN_SCOPE_KEY, tokenScope.join(' '));
@@ -549,6 +556,8 @@ try{
 			clearTimeout(tokenRefreshTimer);
 			tokenRefreshTimer = null;
 		}
+		tokenRefreshRetryCount = 0;
+		lastTokenRefreshFailure = null;
 		localStorage.removeItem('twitchOAuthToken');
 		localStorage.removeItem(TWITCH_REFRESH_TOKEN_KEY);
 		localStorage.removeItem(TWITCH_TOKEN_EXPIRY_KEY);
@@ -578,10 +587,34 @@ try{
 		}
 		const delay = Math.max(0, expiresAt - Date.now() - 60000);
 		tokenRefreshTimer = setTimeout(function() {
+			tokenRefreshTimer = null;
 			refreshAccessToken({ reason: 'scheduled' }).catch(function(error) {
 				console.warn('Scheduled Twitch token refresh failed:', error);
 			});
 		}, delay);
+	}
+	function scheduleTokenRefreshRetry() {
+		if (!getStoredRefreshToken()) {
+			return;
+		}
+		if (tokenRefreshTimer) {
+			clearTimeout(tokenRefreshTimer);
+		}
+		tokenRefreshRetryCount += 1;
+		const delay = Math.min(
+			TWITCH_TOKEN_REFRESH_RETRY_MAX_MS,
+			TWITCH_TOKEN_REFRESH_RETRY_BASE_MS * (2 ** Math.min(tokenRefreshRetryCount - 1, 4))
+		);
+		console.warn(`Retrying Twitch token refresh in ${Math.round(delay / 1000)} seconds.`);
+		tokenRefreshTimer = setTimeout(function() {
+			tokenRefreshTimer = null;
+			refreshAccessToken({ reason: 'retry' }).catch(function(error) {
+				console.warn('Retrying Twitch token refresh failed:', error);
+			});
+		}, delay);
+	}
+	function isPermanentTokenRefreshFailure(error) {
+		return error && (error.status === 400 || error.status === 401);
 	}
 	function base64UrlToJson(value) {
 		try {
@@ -729,9 +762,18 @@ try{
 		}
 		const refreshToken = getStoredRefreshToken();
 		if (!refreshToken) {
+			lastTokenRefreshFailure = {
+				permanent: true,
+				status: null,
+				message: 'No Twitch refresh token is available.'
+			};
 			return null;
 		}
 		tokenRefreshPromise = (async function() {
+			const controller = new AbortController();
+			const timeoutId = setTimeout(function() {
+				controller.abort();
+			}, TWITCH_TOKEN_REFRESH_TIMEOUT_MS);
 			try {
 				const response = await fetch(TWITCH_HOSTED_AUTH_BASE_URL + '/refresh', {
 					method: 'POST',
@@ -739,7 +781,8 @@ try{
 						'Accept': 'application/json',
 						'Content-Type': 'application/json'
 					},
-					body: JSON.stringify({ refresh_token: refreshToken })
+					body: JSON.stringify({ refresh_token: refreshToken }),
+					signal: controller.signal
 				});
 				const data = await response.json().catch(function() { return {}; });
 				if (!response.ok) {
@@ -751,12 +794,33 @@ try{
 				if (!data.access_token) {
 					throw new Error('Twitch refresh response did not include an access token.');
 				}
+				tokenRefreshRetryCount = 0;
+				lastTokenRefreshFailure = null;
 				setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshToken, data.scope, data.client_id || hostedClientId);
 				console.log('Twitch access token refreshed' + (options.reason ? ` (${options.reason})` : ''));
 				return data.access_token;
 			} catch (error) {
+				const currentRefreshToken = getStoredRefreshToken();
+				if (currentRefreshToken && currentRefreshToken !== refreshToken) {
+					console.log('Twitch token was refreshed by another source window; using the newer stored token.');
+					tokenRefreshRetryCount = 0;
+					lastTokenRefreshFailure = null;
+					scheduleStoredTokenRefresh();
+					return getStoredToken();
+				}
+				const permanent = isPermanentTokenRefreshFailure(error);
+				lastTokenRefreshFailure = {
+					permanent,
+					status: error && error.status ? error.status : null,
+					message: error && error.message ? error.message : String(error)
+				};
 				console.warn('Unable to refresh Twitch access token:', error);
+				if (!permanent) {
+					scheduleTokenRefreshRetry();
+				}
 				return null;
+			} finally {
+				clearTimeout(timeoutId);
 			}
 		})().finally(function() {
 			tokenRefreshPromise = null;
@@ -787,9 +851,21 @@ try{
 			}
 			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 		}
-		if (eventSocket && eventSocket.readyState === WebSocket.OPEN) {
-			eventSocket.close();
+		clearEventSubKeepaliveTimer();
+		if (reconnectTimeout) {
+			clearTimeout(reconnectTimeout);
+			reconnectTimeout = null;
 		}
+		const eventSockets = new Set([eventSocket, eventSubPreviousSocket].filter(Boolean));
+		setEventSubSocket(null);
+		eventSubPreviousSocket = null;
+		eventSessionId = null;
+		eventSubReconnectInProgress = false;
+		eventSockets.forEach(function(socket) {
+			try {
+				socket.close();
+			} catch (_) {}
+		});
 		
 		// Update UI
 		updateHeaderInfo(null, null);
@@ -1359,7 +1435,8 @@ async function ensureChatClientInstance() {
 	if (!chatClient) {
 		await modulesReady;
 		chatClient = createTwitchChatClient({
-			logger: console
+			logger: console,
+			tokenProvider: async () => getStoredToken()
 		});
 		resetChatClientHandlers();
 		const add = (event, handler) => {
@@ -1428,6 +1505,12 @@ async function ensureChatClientInstance() {
 						const refreshedToken = await refreshAccessToken({ reason: 'validation' });
 						if (refreshedToken) {
 							return validateToken(refreshedToken, { allowRefresh: false });
+						}
+						if (lastTokenRefreshFailure && !lastTokenRefreshFailure.permanent) {
+							return createTransientTokenValidationError(
+								lastTokenRefreshFailure.status,
+								lastTokenRefreshFailure.message
+							);
 						}
 					}
 					handleTokenExpiration();
@@ -1717,7 +1800,7 @@ async function ensureChatClientInstance() {
 		}
 
 		// Skip events that EventSub is already handling to prevent duplicates
-		if (payload.event === 'cheer' && activeSubscriptions.has('channel.cheer')) {
+		if (payload.event === 'cheer' && (activeSubscriptions.has('channel.cheer') || activeSubscriptions.has('channel.bits.use'))) {
 			return;
 		}
 		if (payload.event === 'new_subscriber' && activeSubscriptions.has('channel.subscribe')) {
@@ -2521,6 +2604,10 @@ async function ensureChatClientInstance() {
 			console.warn('Twitch API rejected the previous token; refreshed OAuth token and kept sign-in.');
 			return;
 		}
+		if (lastTokenRefreshFailure && !lastTokenRefreshFailure.permanent) {
+			console.warn('Twitch token refresh temporarily failed after an API auth error; keeping credentials for retry.');
+			return;
+		}
 		console.error('Twitch OAuth token failed validation after API auth error; clearing credentials.');
 		handleTokenExpiration();
 	}
@@ -3197,13 +3284,74 @@ async function ensureChatClientInstance() {
 	let eventSocket;
 	let eventSessionId;
 	let isDisconnecting = false;
-let reconnectTimeout = null;
-let currentChannelId = null;
-let activeSubscriptions = new Set();
-let eventSubRetryCount = 0;
-let MAX_RETRY_ATTEMPTS = 2;
-let hasPermissionError = [];
-let eventSubReconnectInProgress = false;
+	let reconnectTimeout = null;
+	let currentChannelId = null;
+	let activeSubscriptions = new Set();
+	let eventSubRetryCount = 0;
+	let hasPermissionError = [];
+	let eventSubReconnectInProgress = false;
+	let eventSubPreviousSocket = null;
+	let eventSubKeepaliveTimer = null;
+	let eventSubKeepaliveTimeoutSeconds = 10;
+	const EVENTSUB_RECONNECT_BASE_DELAY_MS = 1000;
+	const EVENTSUB_RECONNECT_MAX_DELAY_MS = 30000;
+	const EVENTSUB_KEEPALIVE_GRACE_MS = 5000;
+	const EVENTSUB_WELCOME_TIMEOUT_MS = 15000;
+
+	function setEventSubSocket(socket) {
+		eventSocket = socket || null;
+		try {
+			window.eventSocket = eventSocket;
+		} catch (_) {}
+	}
+
+	function clearEventSubKeepaliveTimer() {
+		if (eventSubKeepaliveTimer) {
+			clearTimeout(eventSubKeepaliveTimer);
+			eventSubKeepaliveTimer = null;
+		}
+	}
+
+	function armEventSubKeepaliveWatchdog(socket) {
+		clearEventSubKeepaliveTimer();
+		const timeoutSeconds = Number(eventSubKeepaliveTimeoutSeconds);
+		if (!socket || !Number.isFinite(timeoutSeconds) || timeoutSeconds <= 0) {
+			return;
+		}
+		eventSubKeepaliveTimer = setTimeout(function() {
+			if (isDisconnecting || socket !== eventSocket) {
+				return;
+			}
+			console.warn('EventSub keepalive timed out; reconnecting.');
+			setEventSubSocket(null);
+			eventSessionId = null;
+			eventSubReconnectInProgress = false;
+			activeSubscriptions.clear();
+			try {
+				socket.close();
+			} catch (_) {}
+			scheduleEventSubReconnect('keepalive timeout');
+		}, timeoutSeconds * 1000 + EVENTSUB_KEEPALIVE_GRACE_MS);
+	}
+
+	function scheduleEventSubReconnect(reason) {
+		if (isDisconnecting || reconnectTimeout) {
+			return;
+		}
+		const delay = Math.min(
+			EVENTSUB_RECONNECT_MAX_DELAY_MS,
+			EVENTSUB_RECONNECT_BASE_DELAY_MS * (2 ** Math.min(eventSubRetryCount, 5))
+		);
+		eventSubRetryCount += 1;
+		console.log(`EventSub reconnect scheduled in ${Math.round(delay / 1000)} seconds${reason ? ` (${reason})` : ''}.`);
+		reconnectTimeout = setTimeout(function() {
+			reconnectTimeout = null;
+			connectEventSub().catch(function(error) {
+				console.error('EventSub reconnect failed:', error);
+				scheduleEventSubReconnect('connection failed');
+			});
+		}, delay);
+	}
 
 async function cleanupCurrentConnection() {
 	isDisconnecting = true;
@@ -3213,6 +3361,7 @@ async function cleanupCurrentConnection() {
 			clearTimeout(reconnectTimeout);
 			reconnectTimeout = null;
 		}
+		clearEventSubKeepaliveTimer();
 
 		// Clear intervals
 		if (getViewerCountInterval) {
@@ -3242,12 +3391,18 @@ async function cleanupCurrentConnection() {
 			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 		}
 		
-		if (eventSocket) {
-			if (eventSocket.readyState === WebSocket.OPEN || eventSocket.readyState === WebSocket.CONNECTING) {
-				eventSocket.close();
+		const socketsToClose = new Set([eventSocket, eventSubPreviousSocket].filter(Boolean));
+		socketsToClose.forEach(function(socket) {
+			if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+				try {
+					socket.close();
+				} catch (_) {}
 			}
-			eventSocket = null;
-		}
+		});
+		setEventSubSocket(null);
+		eventSubPreviousSocket = null;
+		eventSessionId = null;
+		eventSubReconnectInProgress = false;
 
 		// Reset states
 		eventSubRetryCount = 0;
@@ -3271,29 +3426,85 @@ async function cleanupCurrentConnection() {
 	isDisconnecting = false;
 }
 
-	function initializeEventSubSocket(url) {
+	function initializeEventSubSocket(url, options = {}) {
+		const previousSocket = options.previousSocket || null;
 		const socket = new WebSocket(url);
+		let receivedWelcome = false;
+		const welcomeTimer = setTimeout(function() {
+			if (receivedWelcome || isDisconnecting || socket !== eventSocket) {
+				return;
+			}
+			console.warn('EventSub did not send a welcome message in time.');
+			if (previousSocket && previousSocket.readyState === WebSocket.OPEN) {
+				setEventSubSocket(previousSocket);
+				eventSubPreviousSocket = null;
+				eventSubReconnectInProgress = false;
+				armEventSubKeepaliveWatchdog(previousSocket);
+				try {
+					socket.close();
+				} catch (_) {}
+				return;
+			}
+			setEventSubSocket(null);
+			eventSessionId = null;
+			eventSubReconnectInProgress = false;
+			activeSubscriptions.clear();
+			try {
+				socket.close();
+			} catch (_) {}
+			scheduleEventSubReconnect('welcome timeout');
+		}, EVENTSUB_WELCOME_TIMEOUT_MS);
 
 		socket.onopen = () => {
 			console.log('EventSub WebSocket Connected');
-			eventSubRetryCount = 0;
-			eventSubReconnectInProgress = false;
 		};
 
 		socket.onmessage = async (event) => {
 			if (isDisconnecting) return;
 
-			const message = JSON.parse(event.data);
+			let message;
+			try {
+				message = JSON.parse(event.data);
+			} catch (error) {
+				console.warn('Ignoring malformed EventSub message:', error);
+				return;
+			}
 
-			switch (message.metadata.message_type) {
-				case 'session_welcome':
+			if (socket === eventSocket && receivedWelcome) {
+				armEventSubKeepaliveWatchdog(socket);
+			}
+
+			switch (message.metadata?.message_type) {
+				case 'session_welcome': {
+					if (socket !== eventSocket) return;
+					receivedWelcome = true;
+					clearTimeout(welcomeTimer);
 					eventSessionId = message.payload.session.id;
+					const keepaliveSeconds = Number(message.payload.session.keepalive_timeout_seconds);
+					if (Number.isFinite(keepaliveSeconds) && keepaliveSeconds > 0) {
+						eventSubKeepaliveTimeoutSeconds = keepaliveSeconds;
+					}
+					armEventSubKeepaliveWatchdog(socket);
+					eventSubRetryCount = 0;
+					eventSubReconnectInProgress = false;
 					console.log('EventSub session established:', eventSessionId);
 
-					if (currentChannelId) {
-						await createEventSubSubscriptions(currentChannelId);
+					if (previousSocket) {
+						if (eventSubPreviousSocket === previousSocket) {
+							eventSubPreviousSocket = null;
+						}
+						try {
+							previousSocket.onopen = previousSocket.onmessage = previousSocket.onerror = previousSocket.onclose = null;
+							previousSocket.close();
+						} catch (_) {}
+					} else {
+						activeSubscriptions.clear();
+						if (currentChannelId) {
+							await createEventSubSubscriptions(currentChannelId);
+						}
 					}
 					break;
+				}
 
 				case 'notification':
 					handleEventSubNotification(message.payload);
@@ -3302,30 +3513,27 @@ async function cleanupCurrentConnection() {
 				case 'session_keepalive':
 					break;
 
-				case 'session_reconnect':
-					if (!isDisconnecting) {
-						const reconnectUrl = message.payload?.session?.reconnect_url;
-						if (reconnectUrl) {
-							console.log('EventSub requested reconnect. Switching sockets...');
-							activeSubscriptions.clear();
-							hasPermissionError = [];
-							eventSessionId = null;
-							eventSubReconnectInProgress = true;
-							const previousSocket = eventSocket;
-							if (previousSocket && (previousSocket.readyState === WebSocket.OPEN || previousSocket.readyState === WebSocket.CONNECTING)) {
-								try {
-									previousSocket.onopen = previousSocket.onmessage = previousSocket.onerror = previousSocket.onclose = null;
-								} catch (e) {}
-								try {
-									previousSocket.close();
-								} catch (e) {}
-							}
-							eventSocket = initializeEventSubSocket(reconnectUrl);
-						} else {
-							console.warn('EventSub provided no reconnect URL; staying on current socket.');
-						}
+				case 'session_reconnect': {
+					if (socket !== eventSocket || eventSubReconnectInProgress) return;
+					const reconnectUrl = message.payload?.session?.reconnect_url;
+					if (!reconnectUrl) {
+						console.warn('EventSub provided no reconnect URL; staying on current socket.');
+						return;
+					}
+					console.log('EventSub requested reconnect. Opening the replacement socket...');
+					eventSubReconnectInProgress = true;
+					eventSubPreviousSocket = socket;
+					clearEventSubKeepaliveTimer();
+					try {
+						setEventSubSocket(initializeEventSubSocket(reconnectUrl, { previousSocket: socket }));
+					} catch (error) {
+						console.error('Unable to open EventSub replacement socket:', error);
+						eventSubPreviousSocket = null;
+						eventSubReconnectInProgress = false;
+						armEventSubKeepaliveWatchdog(socket);
 					}
 					break;
+				}
 			}
 		};
 
@@ -3336,46 +3544,46 @@ async function cleanupCurrentConnection() {
 		};
 
 		socket.onclose = () => {
+			clearTimeout(welcomeTimer);
 			if (isDisconnecting) return;
 
-			// Ignore closes from superseded sockets created during a reconnect hand-off.
 			if (socket !== eventSocket) {
-				return;
-			}
-
-			if (eventSubReconnectInProgress) {
-				// The reconnection attempt did not succeed (new socket closed before handshake).
-				console.warn('EventSub reconnect attempt failed; falling back to fresh connection.');
-				eventSubReconnectInProgress = false;
-				if (reconnectTimeout) {
-					clearTimeout(reconnectTimeout);
-					reconnectTimeout = null;
+				if (socket === eventSubPreviousSocket) {
+					eventSubPreviousSocket = null;
 				}
-				eventSocket = null;
-				reconnectTimeout = setTimeout(connectEventSub, 5000);
 				return;
 			}
 
-			if (!hasPermissionError.length && eventSubRetryCount < MAX_RETRY_ATTEMPTS) {
-				console.log(`EventSub WebSocket Closed - Retry attempt ${eventSubRetryCount + 1} of ${MAX_RETRY_ATTEMPTS}`);
-				eventSubRetryCount++;
-				reconnectTimeout = setTimeout(connectEventSub, 5000);
-			} else if (hasPermissionError.length) {
-				console.log('EventSub connection stopped: Permission errors detected');
+			clearEventSubKeepaliveTimer();
+			if (previousSocket && previousSocket.readyState === WebSocket.OPEN) {
+				console.warn('EventSub replacement socket closed before hand-off; keeping the original socket.');
+				setEventSubSocket(previousSocket);
+				eventSubPreviousSocket = null;
+				eventSubReconnectInProgress = false;
+				armEventSubKeepaliveWatchdog(previousSocket);
+				return;
 			}
+
+			setEventSubSocket(null);
+			eventSessionId = null;
+			eventSubReconnectInProgress = false;
+			activeSubscriptions.clear();
+			scheduleEventSubReconnect('socket closed');
 		};
 
 		return socket;
 	}
 
 	async function connectEventSub() {
-		if (isDisconnecting || hasPermissionError.length) return;
+		if (isDisconnecting) return;
 
 		if (eventSocket && (eventSocket.readyState === WebSocket.OPEN || eventSocket.readyState === WebSocket.CONNECTING)) {
 			return;
 		}
 
-		eventSocket = initializeEventSubSocket('wss://eventsub.wss.twitch.tv/ws');
+		eventSessionId = null;
+		activeSubscriptions.clear();
+		setEventSubSocket(initializeEventSubSocket('wss://eventsub.wss.twitch.tv/ws'));
 	}
 
 	async function createEventSubSubscriptions(broadcasterId) {
@@ -3444,10 +3652,10 @@ async function cleanupCurrentConnection() {
 				});
 			}
 
-			// Cheering
-			if (permissions.isBroadcaster && permissions.canReadBits && !activeSubscriptions.has('channel.cheer')) {
+			// Cheers and Power-ups
+			if (permissions.isBroadcaster && permissions.canReadBits && !activeSubscriptions.has('channel.bits.use')) {
 				subscriptionTypes.push({
-					type: 'channel.cheer',
+					type: 'channel.bits.use',
 					version: '1',
 					condition: {
 						broadcaster_user_id: broadcasterId
@@ -3623,12 +3831,103 @@ async function cleanupCurrentConnection() {
 		};
 	}
 
+	function getEventSubMessageText(message) {
+		if (typeof message === 'string') {
+			return message;
+		}
+		if (message && typeof message.text === 'string') {
+			return message.text;
+		}
+		return '';
+	}
+
+	function forwardEventSubCheer(event) {
+		pushMessage({
+			type: "twitch",
+			event: 'cheer',
+			chatname: event.user_name || 'Anonymous',
+			userid: event.user_id,
+			bits: event.bits,
+			chatmessage: getEventSubMessageText(event.message),
+			hasDonation: formatBitAmount(event.bits),
+			meta: { userId: event.user_id, bits: event.bits },
+			title: getTranslation("cheers", "CHEERS"),
+			textonly: settings.textonlymode || false
+		});
+		addEvent(`Cheer: ${event.user_name || 'Anonymous'} cheered ${event.bits} bits`);
+	}
+
+	function buildPowerUpMeta(event) {
+		const powerUp = {
+			type: event.type || 'power_up'
+		};
+		let title = '';
+
+		if (event.custom_power_up) {
+			title = event.custom_power_up.title || '';
+			powerUp.title = title;
+			powerUp.rewardId = event.custom_power_up.reward_id || '';
+		} else if (event.power_up) {
+			const powerUpType = event.power_up.type || '';
+			const labels = {
+				message_effect: 'Message Effect',
+				celebration: 'On-Screen Celebration',
+				gigantify_an_emote: 'Gigantify an Emote'
+			};
+			title = labels[powerUpType] || 'Power-up';
+			powerUp.powerUpType = powerUpType;
+			if (event.power_up.emote) {
+				powerUp.emote = {
+					id: event.power_up.emote.id || '',
+					name: event.power_up.emote.name || ''
+				};
+			}
+			if (event.power_up.message_effect_id) {
+				powerUp.messageEffectId = event.power_up.message_effect_id;
+			}
+		}
+
+		const messageText = getEventSubMessageText(event.message);
+		if (messageText) {
+			powerUp.messageText = messageText;
+		}
+
+		return {
+			title: title || 'Power-up',
+			powerUp
+		};
+	}
+
+	function forwardEventSubPowerUp(event) {
+		const details = buildPowerUpMeta(event);
+		const userName = event.user_name || 'Someone';
+		const bits = parseInt(event.bits, 10) || 0;
+		pushMessage({
+			type: 'twitch',
+			event: 'powerup',
+			chatname: userName,
+			userid: event.user_id,
+			chatmessage: '',
+			meta: {
+				userId: event.user_id,
+				userLogin: event.user_login || '',
+				bits,
+				powerUp: details.powerUp
+			},
+			textonly: settings.textonlymode || false
+		});
+		addEvent(`Power-up: ${userName} used ${details.title} (${formatBitAmount(bits)})`);
+	}
+
 	function handleEventSubNotification(payload) {
 		const event = payload.event;
 		const subscription = payload.subscription;
 		
 		// Skip non-donation events if hideevents is enabled.
-		const isDonationEvent = subscription && subscription.type === 'channel.cheer';
+		const isDonationEvent = subscription && (
+			subscription.type === 'channel.cheer' ||
+			(subscription.type === 'channel.bits.use' && event && event.type === 'cheer')
+		);
 		if (settings.hideevents && !isDonationEvent) {
 			return;
 		}
@@ -3728,20 +4027,14 @@ async function cleanupCurrentConnection() {
 				break;
 
 			case 'channel.cheer':
-				pushMessage({
-					type: "twitch", 
-					event: 'cheer',
-					chatname: event.user_name || 'Anonymous',
-					userid: event.user_id,
-					bits: event.bits,
-					chatmessage: event.message,
-					hasDonation: formatBitAmount(event.bits),
-					meta: { userId: event.user_id, bits: event.bits },
-					title: getTranslation("cheers", "CHEERS"),
-					textonly: settings.textonlymode || false
-				});
-				// Add to recent events
-				addEvent(`Cheer: ${event.user_name || 'Anonymous'} cheered ${event.bits} bits`);
+				forwardEventSubCheer(event);
+				break;
+			case 'channel.bits.use':
+				if (event.type === 'cheer') {
+					forwardEventSubCheer(event);
+				} else if (event.type === 'power_up' || event.type === 'custom_power_up') {
+					forwardEventSubPowerUp(event);
+				}
 				break;
 			case 'channel.channel_points_custom_reward_redemption.add':
 				const rewardTitle = event.reward.title;

@@ -171,7 +171,7 @@
                             <td><strong>Twitch &ndash; EventSub/Websocket</strong></td>
                             <td>Instant subs, resubs, and gifts</td>
                             <td>Instant follows + follower total</td>
-                            <td>Cheers and channel point redemptions</td>
+                            <td>Cheers, Power-ups, and channel point redemptions</td>
                             <td>Viewer/sub/follower totals, stream status, ad notices</td>
                         </tr>
                         <tr>
@@ -679,7 +679,7 @@
                     <ul class="requirements">
                         <li>OAuth scopes: <code>chat:read</code>, <code>chat:edit</code>, <code>bits:read</code>, <code>moderator:read:followers</code>, <code>moderator:read:chatters</code>, <code>channel:read:subscriptions</code>, <code>channel:read:hype_train</code>, <code>channel:moderate</code>, <code>moderator:manage:banned_users</code>, <code>moderator:manage:chat_messages</code>, <code>channel:manage:broadcast</code>, <code>channel:read:redemptions</code>, <code>channel:read:ads</code>, <code>channel:manage:ads</code>. Broadcaster tokens unlock subscriber/follower counts.</li>
                         <li>Events delivered by EventSub, plus Helix polling for viewer/follower/subscriber totals.</li>
-                        <li><strong>WebSocket mode provides real-time</strong> follower alerts, subscription events, raids, cheers, channel point redemptions, and hype train metadata.</li>
+                        <li><strong>WebSocket mode provides real-time</strong> follower alerts, subscription events, raids, cheers, Power-ups, channel point redemptions, and hype train metadata.</li>
                         <li>Shared Chat rows use Twitch IRC <code>source-room-id</code> to populate <code>sourceName</code>/<code>sourceImg</code> with the originating channel when it differs from the connected channel.</li>
                     </ul>
                     <table class="event-table">
@@ -693,8 +693,13 @@
                         <tbody>
                             <tr>
                                 <td class="donation-event"><code>cheer</code></td>
-                                <td>EventSub <code>channel.cheer</code> notifications.</td>
+                                <td>Cheer notifications from EventSub <code>channel.bits.use</code>.</td>
                                 <td><code>hasDonation</code> “N bits”; <code>meta.bits</code> numeric; <code>chatmessage</code> preserves raw message.</td>
+                            </tr>
+                            <tr>
+                                <td><code>powerup</code></td>
+                                <td>Built-in or custom Power-up notifications from EventSub <code>channel.bits.use</code>.</td>
+                                <td>Event-only payload with an empty <code>chatmessage</code> and no <code>hasDonation</code>, so it does not create a normal chat row. <code>meta.bits</code> is numeric and <code>meta.powerUp</code> preserves the Twitch subtype, title/reward id, effect details, and supplied message text when available.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>new_subscriber</code></td>
@@ -818,6 +823,7 @@
                             <tr><td><code>resub</code></td><td>Resubscription with message</td></tr>
                             <tr><td><code>subscription_gift</code></td><td>Gifted subs to channel</td></tr>
                             <tr><td><code>cheer</code></td><td>Bits cheered</td></tr>
+                            <tr><td><code>powerup</code></td><td>Built-in or custom Power-up used</td></tr>
                             <tr><td><code>reward</code></td><td>Channel point redemption</td></tr>
                             <tr><td><code>raid</code></td><td>Incoming raid</td></tr>
                             <tr><td><code>viewer_update</code></td><td>Concurrent viewer count</td></tr>
@@ -2083,7 +2089,7 @@
                     <tbody>
                         <tr>
                             <td>Twitch: Standard vs Websocket</td>
-                            <td>Shared: <code>reward</code>, <code>subscription_gift</code>, <code>viewer_update</code>. Standard-only: <code>giftpurchase</code>, <code>knock</code>, <code>community_highlight</code>. Websocket-only: <code>new_subscriber</code>, <code>resub</code>, <code>cheer</code>, <code>raid</code>, <code>new_follower</code>, <code>follower_update</code>, <code>subscriber_update</code>.</td>
+                            <td>Shared: <code>reward</code>, <code>subscription_gift</code>, <code>viewer_update</code>. Standard-only: <code>giftpurchase</code>, <code>knock</code>, <code>community_highlight</code>. Websocket-only: <code>new_subscriber</code>, <code>resub</code>, <code>cheer</code>, <code>powerup</code>, <code>raid</code>, <code>new_follower</code>, <code>follower_update</code>, <code>subscriber_update</code>.</td>
                             <td><code>channel_points</code> is now a deprecated legacy alias for Twitch reward redemptions; new integrations should key off <code>reward</code>.</td>
                         </tr>
                         <tr>
