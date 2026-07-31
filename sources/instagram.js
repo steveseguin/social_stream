@@ -11,9 +11,11 @@
 	var profileImageInflight = {};
 	var liveObserver = null;
 
-	function pushMessage(data) {
+	function pushMessage(data, target) {
 		try {
-			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+			var payload = { "message": data };
+			if (target){ payload.target = target; }
+			chrome.runtime.sendMessage(chrome.runtime.id, payload, function(e){});
 		} catch(e){}
 	}
 
@@ -230,7 +232,7 @@
 		return isNearBottom || hasUnprocessedSiblingAfter;
 	}
 
-	function sendOut(data, sourceElement){
+	function sendOut(data, sourceElement, target){
 		var key = (data.chatname || "") + "::" + (data.chatmessage || "") + "::" + (data.contentimg || "");
 		var allowDuplicate = (data.type === "instagramlive") && sourceElement && allowLiveRowDuplicate(sourceElement);
 		if (dupCheck.includes(key) && !allowDuplicate){ return false; }
@@ -243,19 +245,19 @@
 				if (data.chatimg){
 					toDataURL(data.chatimg, function(dataUrl2){
 						data.chatimg = dataUrl2 || data.chatimg;
-						pushMessage(data);
+						pushMessage(data, target);
 					}, 6, true);
 				} else {
-					pushMessage(data);
+					pushMessage(data, target);
 				}
 			});
 		} else if (data.chatimg){
 			toDataURL(data.chatimg, function(dataUrl){
 				data.chatimg = dataUrl || data.chatimg;
-				pushMessage(data);
+				pushMessage(data, target);
 			}, 6, true);
 		} else {
-			pushMessage(data);
+			pushMessage(data, target);
 		}
 		return true;
 	}
@@ -459,10 +461,29 @@
 	var notifInboxState = {
 		started: false,
 		seeded: false,
+		polling: false,
 		failures: 0,
 		seen: {},
 		seenOrder: []
 	};
+	var notifInboxClaimantId = Date.now() + "-" + Math.random().toString(36).slice(2);
+
+	function claimNotifInboxPolling(callback){
+		try {
+			chrome.runtime.sendMessage(chrome.runtime.id, {
+				cmd: "claimInstagramInboxPoller",
+				claimantId: notifInboxClaimantId
+			}, function(response){
+				if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError){
+					callback(false);
+					return;
+				}
+				callback(!!(response && response.granted));
+			});
+		} catch(e){
+			callback(false);
+		}
+	}
 
 	function seenNotifStory(key){
 		if (!key){ return true; }
@@ -488,7 +509,6 @@
 			}
 			var text = ((args.text || "") + "").trim();
 			if (!chatname){ return; }
-
 			var data = {};
 			data.chatname = escapeHtml(chatname);
 			data.chatbadges = "";
@@ -507,10 +527,8 @@
 			} else if (/follow/i.test(notifName) || story.story_type === 12){
 				data.event = "new_follower";
 			} else if (/comment_like/i.test(notifName)){
-				if (settings.capturelikeevent === false){ return; }
 				data.event = "liked";
 			} else if (/like/i.test(notifName)){
-				if (settings.capturelikeevent === false){ return; }
 				data.event = "liked";
 			} else if (/comment/i.test(notifName)){
 				data.event = false;
@@ -565,43 +583,54 @@
 	function pollNotifInbox(){
 		if (!isExtensionOn){ return; }
 		if (ownLiveCheckedUser && ownLiveStatus !== true){ return; }
-		fetch("/api/v1/news/inbox/", {
-			method: "POST",
-			headers: igApiHeaders(),
-			credentials: "same-origin",
-			body: ""
-		})
-			.then(function(resp){
-				if (!resp.ok){ throw new Error("status " + resp.status); }
-				return resp.json();
+		if (notifInboxState.polling){ return; }
+		notifInboxState.polling = true;
+		claimNotifInboxPolling(function(granted){
+			if (!granted){
+				notifInboxState.polling = false;
+				return;
+			}
+			fetch("/api/v1/news/inbox/", {
+				method: "POST",
+				headers: igApiHeaders(),
+				credentials: "same-origin",
+				body: ""
 			})
-			.then(function(json){
-				if (!json || json.status !== "ok"){
+				.then(function(resp){
+					if (!resp.ok){ throw new Error("status " + resp.status); }
+					return resp.json();
+				})
+				.then(function(json){
+					if (!json || json.status !== "ok"){
+						notifInboxState.failures++;
+						if (notifInboxState.failures >= 5){ clearInterval(notifInboxState.timer); notifInboxState.timer = null; }
+						return;
+					}
+					notifInboxState.failures = 0;
+					var stories = (Array.isArray(json.new_stories) ? json.new_stories : [])
+						.concat(Array.isArray(json.old_stories) ? json.old_stories : [])
+						.concat(Array.isArray(json.priority_stories) ? json.priority_stories : []);
+					if (!notifInboxState.seeded){
+						notifInboxState.seeded = true;
+						stories.forEach(function(story){
+							var args = story.args || {};
+							seenNotifStory(args.tuuid || story.pk || story.ndid);
+						});
+						return;
+					}
+					stories.sort(function(a, b){
+						return (((a.args || {}).timestamp) || 0) - (((b.args || {}).timestamp) || 0);
+					});
+					stories.forEach(emitNotifStory);
+				})
+				.catch(function(){
 					notifInboxState.failures++;
 					if (notifInboxState.failures >= 5){ clearInterval(notifInboxState.timer); notifInboxState.timer = null; }
-					return;
-				}
-				notifInboxState.failures = 0;
-				var stories = (Array.isArray(json.new_stories) ? json.new_stories : [])
-					.concat(Array.isArray(json.old_stories) ? json.old_stories : [])
-					.concat(Array.isArray(json.priority_stories) ? json.priority_stories : []);
-				if (!notifInboxState.seeded){
-					notifInboxState.seeded = true;
-					stories.forEach(function(story){
-						var args = story.args || {};
-						seenNotifStory(args.tuuid || story.pk || story.ndid);
-					});
-					return;
-				}
-				stories.sort(function(a, b){
-					return (((a.args || {}).timestamp) || 0) - (((b.args || {}).timestamp) || 0);
+				})
+				.then(function(){
+					notifInboxState.polling = false;
 				});
-				stories.forEach(emitNotifStory);
-			})
-			.catch(function(){
-				notifInboxState.failures++;
-				if (notifInboxState.failures >= 5){ clearInterval(notifInboxState.timer); notifInboxState.timer = null; }
-			});
+		});
 	}
 
 	function startNotifInboxPolling(){

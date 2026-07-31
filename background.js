@@ -4403,9 +4403,38 @@ function extractVideoId(url) {
 
 // The rest of your active chat sources code remains the same
 let activeChatSources = new Map();
+const INSTAGRAM_INBOX_POLLER_LEASE_MS = 60000;
+let instagramInboxPollerLease = {
+	owner: "",
+	tabId: null,
+	expiresAt: 0
+};
+
+function claimInstagramInboxPoller(senderTabId, claimantId) {
+	const now = Date.now();
+	const normalizedTabId = senderTabId === null || senderTabId === undefined ? null : senderTabId;
+	const owner = String(normalizedTabId === null ? "no-tab" : normalizedTabId) + ":" + String(claimantId || "default");
+	if (!instagramInboxPollerLease.owner || instagramInboxPollerLease.owner === owner || instagramInboxPollerLease.expiresAt <= now) {
+		instagramInboxPollerLease.owner = owner;
+		instagramInboxPollerLease.tabId = normalizedTabId;
+		instagramInboxPollerLease.expiresAt = now + INSTAGRAM_INBOX_POLLER_LEASE_MS;
+		return true;
+	}
+	return false;
+}
+
+function releaseInstagramInboxPollerForTab(tabId) {
+	if (instagramInboxPollerLease.tabId === tabId) {
+		instagramInboxPollerLease.owner = "";
+		instagramInboxPollerLease.tabId = null;
+		instagramInboxPollerLease.expiresAt = 0;
+	}
+}
+
 try {
 	if (chrome.tabs.onRemoved) {
 		chrome.tabs.onRemoved.addListener(tabId => {
+			releaseInstagramInboxPollerForTab(tabId);
 			forgetYouTubeChannel(tabId);
 			for (let key of activeChatSources.keys()) {
 				if (key.startsWith(`${tabId}-`)) {
@@ -4420,6 +4449,9 @@ try {
 	}
 	if (chrome.tabs.onUpdated) {
 		chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+			if (changeInfo.status === "loading") {
+				releaseInstagramInboxPollerForTab(tabId);
+			}
 			// Clear content script registration on navigation - it will re-register via getSettings
 			if (changeInfo.status === "loading" && changeInfo.url) {
 				priorityTabs.delete(tabId);
@@ -4553,7 +4585,63 @@ function prependFirstTimerBadge(data) {
 	data.chatbadges = [badge, data.chatbadges];
 }
 
+function normalizeEventName(message) {
+	if (!message || typeof message.event !== "string") {
+		return "";
+	}
+	return message.event
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "_")
+		.replace(/^_+|_+$/g, "");
+}
+
+function isIndividualLikeEvent(message) {
+	var eventName = normalizeEventName(message);
+	return eventName === "liked" || eventName === "like";
+}
+
+function isEventBlockedByCustomFilter(message) {
+	if (!settings.filtereventstoggle || !settings.filterevents || !settings.filterevents.textsetting || !message || !message.event) {
+		return false;
+	}
+
+	var blockedEvents = getCachedCommaList(settings.filterevents.textsetting, true);
+	var eventName = typeof message.event === "string" ? message.event.trim().toLowerCase() : "";
+	var messageText = String(message.textContent || message.chatmessage || "").toLowerCase();
+	return blockedEvents.some(function (blockedEvent) {
+		return (eventName && eventName === blockedEvent) || (messageText && messageText.includes(blockedEvent));
+	});
+}
+
+function routeIndividualLikeEvent(message, alreadyRouted) {
+	if (!isIndividualLikeEvent(message)) {
+		return { routed: false, stop: false };
+	}
+
+	if (getSettingFlag("hideevents")) {
+		return { routed: false, stop: true };
+	}
+
+	if (!alreadyRouted) {
+		var reactionPayload = message;
+		if (typeof sanitizeRelayPayloadFields === "function") {
+			reactionPayload = sanitizeRelayPayloadFields(Object.assign({}, message)) || message;
+		}
+		try {
+			sendTargetP2P(reactionPayload, "reactions");
+		} catch (e) {
+			console.error(e);
+		}
+	}
+
+	return {
+		routed: true,
+		stop: !getSettingFlag("capturelikeevent")
+	};
+}
+
 async function processIncomingMessage(message, sender = null) {
+	var individualLikeRouting = { routed: false, stop: false };
 	try {
 		if (sender?.tab && (message.tid === undefined || message.tid === null)) {
 			message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
@@ -4660,6 +4748,16 @@ async function processIncomingMessage(message, sender = null) {
 			}
 		}
 
+		if (isIndividualLikeEvent(message)) {
+			if (isEventBlockedByCustomFilter(message)) {
+				return message;
+			}
+			individualLikeRouting = routeIndividualLikeEvent(message, false);
+			if (individualLikeRouting.stop) {
+				return message;
+			}
+		}
+
 		if (!message.id) {
 			messageCounter += 1;
 			message.id = messageCounter;
@@ -4687,7 +4785,7 @@ async function processIncomingMessage(message, sender = null) {
 			return message;
 		}
 
-		await sendToDestinations(message); // send the data to the dock
+		await sendToDestinations(message, individualLikeRouting.routed); // send the data to the dock
 	}
 	return message;
 }
@@ -4773,6 +4871,11 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode(), handleStatus: getHandleStatusSnapshot() };
 			}
 			sendResponse(responseData);
+		} else if (request.cmd && request.cmd === "claimInstagramInboxPoller") {
+			sendResponse({
+				granted: claimInstagramInboxPoller(senderTabId, request.claimantId),
+				leaseMs: INSTAGRAM_INBOX_POLLER_LEASE_MS
+			});
 		} else if (request.cmd && request.cmd === "testLLMProvider") {
 			try {
 				const llmResponse = await callLLMAPI(request.prompt || "Reply with one short sentence confirming this chatbot connection works.", null, null, null, null, null, { settings: request.settingsOverride || null });
@@ -5170,9 +5273,6 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				pushSettingChange();
 			}
 			if (request.setting == "capturejoinedevent") {
-				pushSettingChange();
-			}
-			if (request.setting == "capturelikeevent") {
 				pushSettingChange();
 			}
 			if (request.setting == "captureliketotals" || request.setting == "captureyoutubelikes") {
@@ -6834,7 +6934,7 @@ function hasTargetedMetaPayload(message) {
 	return true;
 }
 
-async function sendToDestinations(message) {
+async function sendToDestinations(message, individualLikeAlreadyRouted) {
 	if (typeof message == "object") {
 		if (message.suppressRelay) {
 			return true;
@@ -6916,13 +7016,13 @@ async function sendToDestinations(message) {
 			message.nameColor = adjustColorForOverlay(message.nameColor);
 		}
 
-		if (settings.filtereventstoggle && settings.filterevents && settings.filterevents.textsetting && message.event) {
-			const blockedEvents = getCachedCommaList(settings.filterevents.textsetting, true);
-			const eventName = typeof message.event === "string" ? message.event.trim().toLowerCase() : "";
-			const messageText = (message.textContent || message.chatmessage || "").toLowerCase();
-			if (blockedEvents.some(v => (eventName && eventName === v) || (messageText && messageText.includes(v)))) {
-				return false;
-			}
+		if (isEventBlockedByCustomFilter(message)) {
+			return false;
+		}
+
+		var individualLikeRouting = routeIndividualLikeEvent(message, !!individualLikeAlreadyRouted);
+		if (individualLikeRouting.stop) {
+			return true;
 		}
 
 		if (message.event === "viewer_updates" && message.meta && typeof message.meta === "object") {
@@ -6988,20 +7088,14 @@ async function sendToDestinations(message) {
 		message = sanitizeRelayPayloadFields(message) || message;
 	}
 
-	var reactionEventName = "";
-	if (message && typeof message.event === "string") {
-		reactionEventName = message.event
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, "_")
-			.replace(/^_+|_+$/g, "");
-	}
+	var reactionEventName = normalizeEventName(message);
 	var isDonationMessage = !!(message && (message.hasDonation || message.donation));
 	var donationAlertText = message ? String(message.hasDonation || message.donation || "").toLowerCase() : "";
 	var isRewardAlert = !!(reactionEventName === "channel_points" || reactionEventName === "reward" || (message && message.reward) || donationAlertText.includes("points"));
 	var isDonationAlert = !!(isDonationMessage && !isRewardAlert);
 	var isAlertMessage = !!(message && (message.event || isDonationMessage));
 	var excludeFromDockAsAlert = !!(settings.excludeAlertsDock && isAlertMessage && !isDonationAlert);
-	var isReactionMessage = reactionEventName === "reaction" || reactionEventName === "liked" || reactionEventName === "like";
+	var isReactionMessage = reactionEventName === "reaction";
 
 	try {
 		if (!excludeFromDockAsAlert) {

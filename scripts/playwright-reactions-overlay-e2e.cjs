@@ -313,7 +313,7 @@ async function loadOverlay(page, url) {
   await page.waitForFunction(() => !!(window.__reactionsOverlay && window.__reactionsOverlay.getConfig));
 }
 
-async function runTikTokSourceLikeCaptureCheck(context, captureLikeEvent, expectedTarget) {
+async function runTikTokSourceLikeCaptureCheck(context, captureLikeEvent) {
   const page = await context.newPage();
 
   await addTikTokSourceInitScript(page, captureLikeEvent);
@@ -351,7 +351,7 @@ async function runTikTokSourceLikeCaptureCheck(context, captureLikeEvent, expect
   });
 
   assert(likedMessages.length === 1, 'TikTok source did not emit the anonymous liked event.');
-  assert((likedMessages[0].target || '') === (expectedTarget || ''), 'TikTok liked event used the wrong delivery target.');
+  assert((likedMessages[0].target || '') === '', 'TikTok source bypassed centralized individual-like routing.');
   assert(likedMessages[0].type === 'tiktok', 'TikTok liked event has the wrong source type.');
   assert(likedMessages[0].chatname === '', 'Anonymous TikTok liked events should keep chatname empty.');
   assert(likedMessages[0].chatmessage === 'liked the LIVE', 'TikTok liked event message text changed unexpectedly.');
@@ -495,8 +495,8 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
     });
 
     if (process.argv.includes('--tiktok-only')) {
-      await runTikTokSourceLikeCaptureCheck(context, false, 'reactions');
-      await runTikTokSourceLikeCaptureCheck(context, true, '');
+      await runTikTokSourceLikeCaptureCheck(context, false);
+      await runTikTokSourceLikeCaptureCheck(context, true);
       await runTikTokIncrementalChatCaptureCheck(context);
       await browser.close();
       console.log('TikTok DOM soak passed.');
@@ -824,8 +824,8 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
       assert(joinPayload.in === check.expectedIn, `Socket in channel mismatch for ${check.url}.`);
     }
 
-    await runTikTokSourceLikeCaptureCheck(context, false, 'reactions');
-    await runTikTokSourceLikeCaptureCheck(context, true, '');
+    await runTikTokSourceLikeCaptureCheck(context, false);
+    await runTikTokSourceLikeCaptureCheck(context, true);
     await runTikTokIncrementalChatCaptureCheck(context);
 
     if (blockedExternalRequests.length === 0) {

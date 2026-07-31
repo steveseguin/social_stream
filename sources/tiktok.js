@@ -1456,8 +1456,6 @@
 		const shareFromMessage = compactMessage.includes("share");
 		const followFromMessage = compactMessage.includes("follow");
 		const likeFromMessage = compactMessage.includes("like");
-		let reactionsOnlyLikeEvent = false;
-
 		const isJoinEvent = eventHints.join || ((ital === true || eventHints.hasEventIndicator) && joinFromMessage);
 		const isShareEvent = eventHints.share || ((ital === true || eventHints.hasEventIndicator) && shareFromMessage);
 		const isFollowEvent = eventHints.follow || ((ital === true || eventHints.hasEventIndicator) && followFromMessage);
@@ -1476,7 +1474,6 @@
 				return;
 			}
 		} else if (isLikeEvent) {
-			reactionsOnlyLikeEvent = !settings.capturelikeevent;
 			ital = "liked";
 		}
 		if (settings.customtiktokstate) {
@@ -1570,7 +1567,7 @@
 		addTikTokTopViewerMeta(data);
 		lastMessageTime = Date.now();
 		if (markTikTokGiftUpdate(data, ele)) {
-			pushMessage(data, reactionsOnlyLikeEvent ? "reactions" : "");
+			pushMessage(data);
 		}
 	}
 
@@ -1719,8 +1716,6 @@
 		const shareFromMessage = compactMessage.includes("share");
 		const followFromMessage = compactMessage.includes("follow");
 		const likeFromMessage = compactMessage.includes("like");
-		let reactionsOnlyLikeEvent = false;
-
 		const isJoinEvent = eventHints.join || ((ital === true || eventHints.hasEventIndicator) && joinFromMessage);
 		const isShareEvent = eventHints.share || ((ital === true || eventHints.hasEventIndicator) && shareFromMessage);
 		const isFollowEvent = eventHints.follow || ((ital === true || eventHints.hasEventIndicator) && followFromMessage);
@@ -1739,7 +1734,6 @@
 				return;
 			}
 		} else if (isLikeEvent) {
-			reactionsOnlyLikeEvent = !settings.capturelikeevent;
 			ital = "liked";
 		}
 		let chatimg = "";
@@ -1790,7 +1784,7 @@
 		addTikTokTopViewerMeta(data);
 		lastMessageTime = Date.now();
 		if (markTikTokGiftUpdate(data, ele)) {
-			pushMessage(data, reactionsOnlyLikeEvent ? "reactions" : "");
+			pushMessage(data);
 		}
 	}
 	var bigDUPE = false;

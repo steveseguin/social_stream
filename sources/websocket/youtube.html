@@ -4901,7 +4901,6 @@ function enableBackgroundKeepAlive() {
 			getStoredToken() &&
 			authenticatedChannelId &&
 			!liveChatId &&
-			!streamStatsInterval &&
 			!isYouTubeAuthOnlyMode() &&
 			!hasYouTubeUrlSpecifiedTarget()
 		);
@@ -4959,6 +4958,9 @@ function enableBackgroundKeepAlive() {
 			if (ownBroadcast && ownBroadcast.id) {
 				videoId = ownBroadcast.id;
 				channel = '';
+				if (!liveChatId && streamStatsInterval) {
+					stopStreamStatsPolling();
+				}
 				await connect(videoId, {
 					monitorMode: 'auto',
 					preserveBroadcastMonitorLease: true

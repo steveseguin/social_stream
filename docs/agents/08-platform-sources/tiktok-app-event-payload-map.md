@@ -16,7 +16,7 @@ Connector event → `MessageProcessor`/`GiftProcessor`/event handlers (`connecti
 | --- | --- | --- | --- |
 | `chat` | `MessageProcessor.addToQueue` (`:6685-6689`), batched | Chat message | `chatname`, `chatmessage` (via `composeTikTokChatMessage` `:2277`/`formatChatMessage` `:3606`), badges from `tiktok-badges.js` (`collectTikTokBadges` `:337`) |
 | `gift` | `GiftProcessor` (`:3829`, wired `:6690-6694`) | Donation-style chat row | Streak aggregation; `hasDonation` + `donoValue` (diamond totals), gift image as `contentimg`; tray-hidden gifts → `event: "reaction"` (`:3996-4128`). Gift name/coins resolved via `gift-mapping.json` |
-| `like` | event map | Likes | Viewer-specific `liked`; routed to the `reactions` target when capture-liked is off. When `captureliketotals` (or legacy `captureyoutubelikes`) is enabled, valid `totalLikeCount` values additionally emit throttled `likes_update` snapshots with integer `meta`. |
+| `like` | event map | Likes | Viewer-specific `liked` enters normal background routing. The background always sends it to Reactions, then also allows it into main chat/events when `capturelikeevent` (or the legacy TikTok key) is enabled. When `captureliketotals` (or legacy `captureyoutubelikes`) is enabled, valid `totalLikeCount` values additionally emit throttled `likes_update` snapshots with integer `meta`. |
 | `member` (join) | `:6793` | Join event | `event: "joined"` |
 | `follow` | event map | Follow | follow event row |
 | `share` | event map | Share | share event row |

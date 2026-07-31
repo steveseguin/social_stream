@@ -37,6 +37,8 @@ node scripts/playwright-reactions-overlay-e2e.cjs
 
 Result: passed with output `Reactions overlay test passed with 12 blocked external request(s).`
 
+The centralized background route also passed the real isolated Electron workflow with `npm run test:individual-likes:e2e` in `ssapp`.
+
 Product surface: local pages served by `scripts/playwright-static-server.cjs` and opened in headless Chromium through Playwright. Chrome extension APIs, WebSocket behavior, and external network requests were stubbed by the script.
 
 URL shapes and modes exercised:
@@ -53,6 +55,7 @@ Input payloads or actions:
 - Direct overlay payloads for `reaction` and `liked` events, including inline image reaction markup.
 - Fake WebSocket connections that captured join payloads.
 - Controlled TikTok DOM insertion for anonymous `liked the LIVE` rows, with `capturelikeevent` both disabled and enabled.
+- Synthetic TikTok, Instagram, MeetMe, Zoom, and counter payloads inside SSApp's loaded `background.html`, including one TikTok payload delivered through Electron's `fromMain` bridge.
 
 Observed result:
 
@@ -63,7 +66,9 @@ Observed result:
 - `pagebg`, `align`, `layout`, `scale`, and `speed` affected rendered reaction state as expected in the script.
 - Inline image reactions scaled to the wrapper size.
 - Fake WebSocket joins used the expected endpoint and default channel pair for `server`, `server2`, `server3`, and `localserver` branches.
-- Controlled TikTok like capture routed anonymous likes to `target: "reactions"` when `capturelikeevent` was false, and to the default target when it was true.
+- Controlled TikTok source capture used the default background target regardless of `capturelikeevent`; the source no longer owns the setting.
+- In the isolated SSApp runtime, disabled individual likes reached Reactions only, enabled likes reached Reactions and the main pipeline exactly once, and `hideevents`/custom event filters blocked both paths.
+- Normal `reaction` events still reached Reactions and the main pipeline, while `likes_update` reached the main pipeline without triggering Reactions.
 
 What was not tested:
 
@@ -73,7 +78,7 @@ What was not tested:
 - Real VDO.Ninja bridge delivery.
 - Real WebSocket relay delivery beyond fake join payload capture.
 - Real TikTok live page behavior, login state, selectors, or network behavior.
-- Standalone app behavior.
+- Reactions visual output inside the standalone app's own window.
 - Long-running duplicate suppression or refresh persistence beyond the scripted windows.
 
 Docs updated:

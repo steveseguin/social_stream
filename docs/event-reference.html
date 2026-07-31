@@ -1007,7 +1007,7 @@
                             <tr>
                                 <td><code>liked</code></td>
                                 <td>Like storm summaries triggered by TikTok social cards.</td>
-                                <td><code>chatname</code> is included when TikTok exposes it; anonymous/system like cards may still emit. The main chat/events feed setting does not block the dedicated reactions overlay.</td>
+                                <td><code>chatname</code> is included when TikTok exposes it; anonymous/system like cards may still emit. TikTok sends this through the normal background path. The background routes one copy to the Reactions Overlay, then continues to the main chat/events pipeline only when <code>capturelikeevent</code> is enabled.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>likes_update</code></td>
@@ -1371,7 +1371,7 @@
                         <li>On live pages (<code>/&lt;user&gt;/live/?broadcast_id=...</code>), live chat comes from Instagram's own web API, polled same-origin with the session cookie: <code>GET /api/v1/live/{broadcast_id}/get_comment/?last_comment_ts={ts}</code> every ~2s, and <code>POST /api/v1/live/{broadcast_id}/heartbeat_and_get_viewer_count/</code> every ~5s when viewer counts are enabled. After 3 consecutive failures (or when no <code>broadcast_id</code> is discoverable) the source falls back to parsing the rendered chat DOM.</li>
                         <li>The account's own activity feed is polled via <code>POST /api/v1/news/inbox/</code> every ~45s on any Instagram page. The first poll only seeds the dedupe set so backlog is never replayed; stories dedupe by <code>tuuid</code>.</li>
                         <li>Required API headers (all static/derivable): <code>X-IG-App-ID: 936619743392459</code>, <code>X-CSRFToken</code> (from cookie), <code>X-ASBD-ID: 359341</code>, <code>X-Requested-With: XMLHttpRequest</code>, <code>Content-Type: application/x-www-form-urlencoded</code>.</li>
-                        <li>All activity-feed events use <code>type: "instagram"</code>; live chat stays <code>type: "instagramlive"</code>. The <code>capturelikeevent</code> setting gates <code>liked</code> events the same way it does for TikTok and MeetMe. Because inbox events belong to the signed-in account, they are suppressed while watching someone else's live (both <code>/&lt;user&gt;/live/</code> pages and lives in the stories viewer; ownership is resolved per profile and retried after lookup failures) and emitted on your own live and all non-live pages. Polling only runs when logged in.</li>
+                        <li>All activity-feed events use <code>type: "instagram"</code>; live chat stays <code>type: "instagramlive"</code>. Like events use the normal background path: the background sends one copy to the dedicated Reactions Overlay, then includes them in the main chat/events feed only when <code>capturelikeevent</code> is enabled, matching TikTok and MeetMe. <code>hideevents</code> and the custom event filter block them everywhere. Because inbox events belong to the signed-in account, they are suppressed while watching someone else's live (both <code>/&lt;user&gt;/live/</code> pages and lives in the stories viewer; ownership is resolved per profile and retried after lookup failures) and emitted on your own live and all non-live pages. One active Instagram tab polls the account inbox at a time, and polling only runs when logged in.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -1655,7 +1655,7 @@
                     <ul class="requirements">
                         <li>Reads MeetMe's rendered live chat DOM on <code>app.meetme.com/live/view/...</code> pages and inside the <code>api.gateway.meetme-live.com/web-live/...</code> iframe.</li>
                         <li>When the iframe websocket is available, <code>wss://video-live.meetme.com/</code> frames are parsed before the DOM fallback to capture richer live events.</li>
-                        <li><code>hideevents</code> suppresses non-donation events; MeetMe gifts and diamond donations still populate donation fields. <code>capturejoinedevent</code> enables join/rejoin notices, and <code>capturelikeevent</code> controls whether likes appear in the main feed or only the reactions target.</li>
+                        <li><code>hideevents</code> suppresses non-donation events; MeetMe gifts and diamond donations still populate donation fields. <code>capturejoinedevent</code> enables join/rejoin notices. Actor-specific <code>liked</code> events use the shared background routing controlled by <code>capturelikeevent</code>; aggregate <code>reaction</code> effects remain explicitly targeted to the Reactions Overlay.</li>
                         <li>Viewer counts prefer the visible MeetMe header count, falling back to websocket totals only when the DOM count is unavailable. Counts emit on change and repeat the latest count about every 30 seconds while <code>showviewercount</code>/<code>hypemode</code> is enabled; follower totals are changed-only and rate-limited to roughly 60 seconds.</li>
                     </ul>
                     <table class="event-table">
@@ -1695,7 +1695,7 @@
                             <tr>
                                 <td class="status-event"><code>liked</code> / <code>reaction</code></td>
                                 <td><code>SNSLike</code> websocket frames arrive.</td>
-                                <td>Actor-specific likes use the same <code>liked</code> vocabulary as TikTok. Aggregate/anonymous like totals are sent only to the reactions target as <code>reaction</code>, with flat <code>meta.reactionType</code>, <code>meta.totalLikes</code>, and <code>meta.subscriberLikes</code>.</td>
+                                <td>Actor-specific likes use the same <code>liked</code> vocabulary and centralized background routing as TikTok. Aggregate/anonymous like totals are sent only to the reactions target as <code>reaction</code>, with flat <code>meta.reactionType</code>, <code>meta.totalLikes</code>, and <code>meta.subscriberLikes</code>. The distinction is event meaning, not anonymity: <code>capturelikeevent</code> controls only individual <code>liked</code>/<code>like</code> events.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>follower_update</code></td>
@@ -2032,6 +2032,7 @@
                     <li><strong>Gift events differ:</strong> YouTube uses <code>giftpurchase</code>/<code>giftredemption</code>, while Twitch and Kick use <code>subscription_gift</code>.</li>
                     <li><strong>Donations vary by platform:</strong> YouTube uses specific paid event names such as <code>superchat</code>, <code>supersticker</code>, and <code>jeweldonation</code> with <code>hasDonation</code>; Twitch has bits (<code>cheer</code>); Kick has tips (<code>donation</code>).</li>
                     <li><strong><code>new_follower</code> is now consistent</strong> across all three platforms, but YouTube has a 4-hour API delay and only shows subscribers with public subscription lists.</li>
+                    <li><strong>Likes and reactions are separate contracts:</strong> individual <code>liked</code>/<code>like</code> events reach the Reactions Overlay unless globally filtered, and enter the main pipeline only when <code>capturelikeevent</code> is enabled. Visual or platform-native <code>reaction</code> events retain producer-defined routing. Aggregate <code>likes_update</code> counters are separately controlled by <code>captureliketotals</code>.</li>
                 </ul>
             </section>
 

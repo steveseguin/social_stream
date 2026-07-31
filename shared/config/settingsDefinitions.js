@@ -207,7 +207,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "capturelikeevent": {
     type: "boolean",
     category: "custom_injection",
-    description: "Allow 'liked' stream events in TikTok (high volume)"
+    description: "Include individual 'liked' events from supported platforms in the main chat/events feed"
   },
   "captureliketotals": {
     type: "boolean",

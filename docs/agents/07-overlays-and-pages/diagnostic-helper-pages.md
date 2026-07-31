@@ -39,7 +39,7 @@ Do not treat these pages as normal chat overlays unless the row below says they 
 | `recover.html` | Settings recovery helper | Convert a `dock.html` URL into an importable `.data` settings JSON file | No, recovery helper |
 | `urleditor.html` | URL parameter editor | Parse, edit, save, and copy overlay URLs without hand-editing params | No, helper page |
 | `streamelements-importer.html` | Import/export helper | Convert a StreamElements/Streamlabs chat widget zip/folder into one OBS HTML file | The exported HTML is output; importer page is not |
-| `spotify-overlay.html` | Now-playing overlay | Display Spotify now-playing payloads from SSN traffic | Yes, OBS output page |
+| `spotify-overlay.html` | Now-playing/queue overlay | Display Spotify now-playing data and an optional managed song-request queue | Yes, OBS output page |
 | `test-giveaway-webrtc.html` | Giveaway sync tester | Test local giveaway page communication messages | No, diagnostic only |
 
 ## `createtestmessage.html`
@@ -258,7 +258,7 @@ First failure checks:
 
 ## `spotify-overlay.html`
 
-Primary use: show Spotify now-playing data as an OBS/browser overlay.
+Primary use: show Spotify now-playing data and, when opted in, the managed song-request queue as an OBS/browser overlay.
 
 Accepted URL parameters:
 
@@ -276,6 +276,7 @@ Accepted URL parameters:
 | `hidedevice` | Hide device details. |
 | `hidestatus` | Hide status badge. |
 | `compact` | Use compact sizing. |
+| `showqueue` | Show up to five upcoming managed song requests, including artwork, requester, and estimated start time. Requires `spotifyManagedQueue`. |
 | `accent` | Set CSS accent color. |
 | `style` or `theme` | Theme name; source includes `spotify`, `minimal`, `glass`, `comic`, and `ticker` behavior. |
 | `ticker` | Force ticker mode. |
@@ -286,8 +287,9 @@ Accepted URL parameters:
 Payload shape:
 
 - Processes either a top-level Spotify payload or `payload.spotify`.
-- Expected fields include `track`, `status`, `isPlaying`, `progressMs` or `progress`, `durationMs` or `duration`, `device`, `receivedAt`, and optional `message`.
+- Expected fields include `track`, `status`, `isPlaying`, `progressMs` or `progress`, `durationMs` or `duration`, `device`, `receivedAt`, optional `message`, and optional `queue`.
 - `track` fields include `name`, `artist`, `album`, `imageUrl`, and duration if present.
+- `queue` entries include `name`, `artist`, `album`, `imageUrl`, `duration`, and optional `requesterName`.
 
 Transport:
 
@@ -298,6 +300,7 @@ First failure checks:
 
 - Confirm the source workflow is actually sending Spotify payloads, not ordinary chat.
 - Confirm `session`/`room` and `label` match the sender.
+- If `showqueue` is empty, enable the managed song-request queue and add requests through the Spotify chat commands; Spotify's account-wide queue is not exposed as requester-attributed SSN entries.
 - If using WebSocket mode, confirm the expected channel pair.
 - If hidden while paused/offline/no-song, remove hide flags while debugging.
 
@@ -345,5 +348,5 @@ First failure checks:
 - Validate `createtestmessage.html` presets against `events.html`, `multi-alerts.html`, and Event Flow sample payload handling.
 - Fix or confirm the `background.js` replay progress/cleanup caveat before publishing replay as stable user-facing workflow.
 - Validate `streamelements-importer.html` exports with real StreamElements and Streamlabs chat widget packages in OBS.
-- Trace the Spotify source/control side that emits `spotify-overlay.html` payloads.
+- Validate Spotify managed-queue estimates against a long live request session and track transitions.
 - Validate `test-giveaway-webrtc.html` against current `giveaway.html` and `giveaway-obs-entries.html` runtime behavior in a browser.
