@@ -95,8 +95,105 @@
 	var pendingMessageNodes = new WeakSet();
 	var messageRetryCounts = new WeakMap();
 	var observedContainer = null;
-	var xNotLiveReloadTimer = null;
-	const X_NOT_LIVE_RELOAD_DELAY = 15000;
+	var xStudioResolverFrame = null;
+	var xStudioResolverStarted = false;
+	var xChatOnlyContainer = null;
+	const X_STUDIO_MESSAGE_TYPE = "socialstream-x-studio-broadcasts";
+	const X_CHAT_ONLY_QUERY = "socialstream=chat";
+
+	function getXLiveScreenName() {
+		try {
+			var match = (window.location.pathname || "").match(/^\/([^\/]+)\/(chat|live|livechat)\/?$/i);
+			return match ? decodeURIComponent(match[1]).toLowerCase() : "";
+		} catch(e) {
+			return "";
+		}
+	}
+
+	function isXChatOnlyBroadcastPage() {
+		try {
+			return /^\/i\/broadcasts\/[^\/]+\/?$/i.test(window.location.pathname || "") &&
+				/(?:^|[?&])socialstream=chat(?:&|$)/i.test(window.location.search || "");
+		} catch(e) {
+			return false;
+		}
+	}
+
+	function startXStudioResolver() {
+		if (xStudioResolverStarted || !getXLiveScreenName()) {
+			return;
+		}
+		xStudioResolverStarted = true;
+		try {
+			xStudioResolverFrame = document.createElement("iframe");
+			xStudioResolverFrame.setAttribute("aria-hidden", "true");
+			xStudioResolverFrame.src = "https://studio.x.com/live?rwebShell=1&socialstreamResolver=1";
+			xStudioResolverFrame.style.cssText = "position:fixed!important;width:1px!important;height:1px!important;left:-10px!important;top:-10px!important;opacity:0!important;pointer-events:none!important;border:0!important;";
+			(document.body || document.documentElement).appendChild(xStudioResolverFrame);
+			console.log("Resolving active X broadcast through Live Studio.");
+		} catch(e) {
+			xStudioResolverStarted = false;
+			xStudioResolverFrame = null;
+		}
+	}
+
+	window.addEventListener("message", function(event) {
+		if (!xStudioResolverFrame || (event.source !== xStudioResolverFrame.contentWindow) ||
+			(event.origin !== "https://studio.x.com")) {
+			return;
+		}
+		var data = event.data;
+		if (!data || (data.type !== X_STUDIO_MESSAGE_TYPE) || !Array.isArray(data.broadcasts)) {
+			return;
+		}
+		var screenName = getXLiveScreenName();
+		for (var i = 0; i < data.broadcasts.length; i++) {
+			var broadcast = data.broadcasts[i] || {};
+			if (String(broadcast.ownerScreenName || "").toLowerCase() !== screenName ||
+				String(broadcast.stateName || "").toLowerCase() !== "running" ||
+				!/^[A-Za-z0-9_-]+$/.test(String(broadcast.broadcastId || ""))) {
+				continue;
+			}
+			window.location.replace("https://x.com/i/broadcasts/" + broadcast.broadcastId + "?" + X_CHAT_ONLY_QUERY);
+			return;
+		}
+	});
+
+	function applyXChatOnlyLayout() {
+		if (!isXChatOnlyBroadcastPage()) {
+			return;
+		}
+		if (xChatOnlyContainer && xChatOnlyContainer.isConnected) {
+			return;
+		}
+		var composer = getChatComposer(document);
+		if (!composer) {
+			return;
+		}
+		var current = composer;
+		while (current && (current !== document.body)) {
+			var rect = current.getBoundingClientRect ? current.getBoundingClientRect() : null;
+			if (rect && (rect.height >= (window.innerHeight * 0.6)) && (rect.width >= 240)) {
+				xChatOnlyContainer = current;
+				break;
+			}
+			current = current.parentElement;
+		}
+		if (!xChatOnlyContainer) {
+			return;
+		}
+		xChatOnlyContainer.setAttribute("data-socialstream-x-chat-only", "true");
+		try {
+			xChatOnlyContainer.style.setProperty("background-color", window.getComputedStyle(document.body).backgroundColor, "important");
+		} catch(e) {}
+		var style = document.getElementById("socialstream-x-chat-only-style");
+		if (!style) {
+			style = document.createElement("style");
+			style.id = "socialstream-x-chat-only-style";
+			style.textContent = "html,body{overflow:hidden!important;}[data-socialstream-x-chat-only='true']{position:fixed!important;inset:0!important;width:100vw!important;max-width:none!important;height:100vh!important;margin:0!important;border:0!important;border-radius:0!important;z-index:2147483647!important;background:inherit!important;}";
+			(document.head || document.documentElement).appendChild(style);
+		}
+	}
 
 	function pruneSeenMessageKeys() {
 		const cutoff = Date.now() - MESSAGE_KEY_TTL;
@@ -761,10 +858,6 @@
 			observedContainer.marked = false;
 			observedContainer = null;
 		}
-		if (xNotLiveReloadTimer) {
-			clearTimeout(xNotLiveReloadTimer);
-			xNotLiveReloadTimer = null;
-		}
 	}
 
 	var lastXRoute = window.location.pathname || "";
@@ -874,32 +967,15 @@
 		return false;
 	}
 
-	function checkXNotLiveReload() {
-		if (!isExtensionOn) {
-			if (xNotLiveReloadTimer) {
-				clearTimeout(xNotLiveReloadTimer);
-				xNotLiveReloadTimer = null;
-			}
-			return;
-		}
-		if (isXNotLiveScreen()) {
-			if (!xNotLiveReloadTimer) {
-				console.log("X live page is not live yet; reloading in 15 seconds.");
-				xNotLiveReloadTimer = setTimeout(function(){
-					xNotLiveReloadTimer = null;
-					if (isXNotLiveScreen()) {
-						window.location.reload();
-					}
-				}, X_NOT_LIVE_RELOAD_DELAY);
-			}
-		} else if (xNotLiveReloadTimer) {
-			clearTimeout(xNotLiveReloadTimer);
-			xNotLiveReloadTimer = null;
+	function checkXNotLiveResolver() {
+		if (isExtensionOn && isXNotLiveScreen()) {
+			startXStudioResolver();
 		}
 	}
 	
 	setTimeout(function(){checkViewers();},2000);
 	setInterval(function(){checkViewers()},5000);
+	setInterval(applyXChatOnlyLayout, 500);
 	
 	
 	function onElementInserted(target) {
@@ -1079,7 +1155,7 @@
 				observedContainer = null;
 				observer = null;
 			}
-			checkXNotLiveReload();
+			checkXNotLiveResolver();
 			var container = resolveChatContainer();
 			if (!container) {
 				container = findElementByAttributeAndChildren("[tabIndex='0']",["textarea[inputmode='text']"]);
