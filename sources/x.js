@@ -183,6 +183,11 @@
 			return;
 		}
 		xChatOnlyContainer.setAttribute("data-socialstream-x-chat-only", "true");
+		current = xChatOnlyContainer.parentElement;
+		while (current && (current !== document.documentElement)) {
+			current.setAttribute("data-socialstream-x-chat-path", "true");
+			current = current.parentElement;
+		}
 		try {
 			xChatOnlyContainer.style.setProperty("background-color", window.getComputedStyle(document.body).backgroundColor, "important");
 		} catch(e) {}
@@ -190,7 +195,7 @@
 		if (!style) {
 			style = document.createElement("style");
 			style.id = "socialstream-x-chat-only-style";
-			style.textContent = "html,body{overflow:hidden!important;}[data-socialstream-x-chat-only='true']{position:fixed!important;inset:0!important;width:100vw!important;max-width:none!important;height:100vh!important;margin:0!important;border:0!important;border-radius:0!important;z-index:2147483647!important;background:inherit!important;}";
+			style.textContent = "html,body{overflow:hidden!important;}[data-socialstream-x-chat-path='true']{transform:none!important;filter:none!important;perspective:none!important;contain:none!important;}[data-socialstream-x-chat-path='true']>:not([data-socialstream-x-chat-path='true']):not([data-socialstream-x-chat-only='true']){display:none!important;}[data-socialstream-x-chat-only='true']{position:fixed!important;inset:0!important;width:100vw!important;max-width:none!important;height:100vh!important;margin:0!important;border:0!important;border-radius:0!important;z-index:2147483647!important;background:inherit!important;}";
 			(document.head || document.documentElement).appendChild(style);
 		}
 	}
