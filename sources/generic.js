@@ -223,6 +223,18 @@
     '[data-purpose="chat-message-container"]', '.livelike-message-content'
   ];
 
+  function markExistingMessages(root) {
+    if (!root || !root.querySelectorAll) return;
+    for (const selector of MESSAGE_SELECTORS) {
+      try {
+        root.querySelectorAll(selector).forEach(message => {
+          message.processed = true;
+          message.skip = true;
+        });
+      } catch (e) {}
+    }
+  }
+
   // Expanded username selectors
   const USERNAME_SELECTORS = [
     '.chat-username', '.username', '.user-name', '.author', '.nme', 
@@ -1329,17 +1341,8 @@
                     if (!container.hasObserver) {
                       createObserver(container);
                       
-                      // Process existing messages
-                      for (const msgSelector of MESSAGE_SELECTORS) {
-                        try {
-                          container.querySelectorAll(msgSelector).forEach(message => {
-                            if (!message.processed && !message.skip) {
-                              setTimeout(() => processMessage(message), 50);
-                              message.skip = true;
-                            }
-                          });
-                        } catch (e) {}
-                      }
+                      // Existing rows are backlog; only capture later mutations.
+                      markExistingMessages(container);
                     }
                   });
                 }
@@ -1350,17 +1353,8 @@
             if (!element.shadowRoot.hasObserver) {
               createObserver(element.shadowRoot);
               
-              // Process existing messages in shadow root
-              for (const msgSelector of MESSAGE_SELECTORS) {
-                try {
-                  element.shadowRoot.querySelectorAll(msgSelector).forEach(message => {
-                    if (!message.processed && !message.skip) {
-                      setTimeout(() => processMessage(message), 50);
-                      message.skip = true;
-                    }
-                  });
-                } catch (e) {}
-              }
+              // Existing rows are backlog; only capture later mutations.
+              markExistingMessages(element.shadowRoot);
             }
           }
         }
@@ -1380,17 +1374,8 @@
             if (!container.hasObserver && container.isConnected) {
               createObserver(container);
               
-              // Process existing messages
-              MESSAGE_SELECTORS.forEach(msgSelector => {
-                try {
-                  container.querySelectorAll(msgSelector).forEach(message => {
-                    if (!message.processed && !message.skip) {
-                      setTimeout(() => processMessage(message), 50);
-                      message.skip = true;
-                    }
-                  });
-                } catch (e) {}
-              });
+              // Existing rows are backlog; only capture later mutations.
+              markExistingMessages(container);
             }
           });
         } catch (e) {}
@@ -1422,10 +1407,8 @@
               if (messages.length) {
                 foundMessages = true;
                 messages.forEach(message => {
-                  if (!message.processed && !message.skip) {
-                    setTimeout(() => processMessage(message), 50);
-                    message.skip = true;
-                  }
+                  message.processed = true;
+                  message.skip = true;
                 });
               }
             } catch (e) {}
@@ -2031,17 +2014,8 @@
   setTimeout(() => {
     setupMutationObservers();
     
-    // Process any existing messages
-    MESSAGE_SELECTORS.forEach(selector => {
-      try {
-        document.querySelectorAll(selector).forEach(message => {
-          if (!message.processed && !message.skip) {
-            setTimeout(() => processMessage(message), 100);
-            message.skip = true;
-          }
-        });
-      } catch (e) {}
-    });
+    // Existing rows are backlog; only capture later mutations.
+    markExistingMessages(document);
   }, 500);
   
   // Save learning data periodically
