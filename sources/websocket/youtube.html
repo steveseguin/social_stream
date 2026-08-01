@@ -4864,6 +4864,9 @@ function enableBackgroundKeepAlive() {
 		return wasPending;
 	}
 
+	// Intentional YouTube quota safeguard: automatic own-broadcast discovery is
+	// one-shot. Do not poll a scheduled broadcast for its liveChatId; the user
+	// manually clicks "Look for Streams" to check again after it goes live.
 	function getOwnYouTubeBroadcastCandidatesOnce(token, channelId) {
 		const normalizedChannelId = normalizeYouTubeSignInTargetValue(channelId);
 		if (!token || !normalizedChannelId || isYouTubeAuthOnlyMode()) {
@@ -4880,6 +4883,10 @@ function enableBackgroundKeepAlive() {
 				{ 'Authorization': `Bearer ${token}` }
 			);
 			const data = await response.json();
+			if (!response.ok) {
+				const apiError = data && data.error && (data.error.message || data.error.status);
+				throw new Error(apiError || ('YouTube broadcast lookup failed with status ' + response.status));
+			}
 			return data && Array.isArray(data.items) ? data.items : [];
 		})();
 		return ownBroadcastLookupPromise;

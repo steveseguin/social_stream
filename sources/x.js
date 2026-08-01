@@ -98,6 +98,8 @@
 	var xStudioResolverFrame = null;
 	var xStudioResolverStarted = false;
 	var xChatOnlyContainer = null;
+	var xChatOnlyPreviousBackgroundValue = "";
+	var xChatOnlyPreviousBackgroundPriority = "";
 	const X_STUDIO_MESSAGE_TYPE = "socialstream-x-studio-broadcasts";
 	const X_CHAT_ONLY_QUERY = "socialstream=chat";
 
@@ -159,12 +161,40 @@
 		}
 	});
 
+	function clearXChatOnlyLayout() {
+		var style = document.getElementById("socialstream-x-chat-only-style");
+		if (style && style.parentNode) {
+			style.parentNode.removeChild(style);
+		}
+		try {
+			var markedNodes = document.querySelectorAll("[data-socialstream-x-chat-only], [data-socialstream-x-chat-path]");
+			for (var i = 0; i < markedNodes.length; i++) {
+				markedNodes[i].removeAttribute("data-socialstream-x-chat-only");
+				markedNodes[i].removeAttribute("data-socialstream-x-chat-path");
+			}
+		} catch(e) {}
+		if (xChatOnlyContainer && xChatOnlyContainer.style) {
+			if (xChatOnlyPreviousBackgroundValue) {
+				xChatOnlyContainer.style.setProperty("background-color", xChatOnlyPreviousBackgroundValue, xChatOnlyPreviousBackgroundPriority);
+			} else {
+				xChatOnlyContainer.style.removeProperty("background-color");
+			}
+		}
+		xChatOnlyContainer = null;
+		xChatOnlyPreviousBackgroundValue = "";
+		xChatOnlyPreviousBackgroundPriority = "";
+	}
+
 	function applyXChatOnlyLayout() {
 		if (!isXChatOnlyBroadcastPage()) {
+			clearXChatOnlyLayout();
 			return;
 		}
 		if (xChatOnlyContainer && xChatOnlyContainer.isConnected) {
 			return;
+		}
+		if (xChatOnlyContainer) {
+			clearXChatOnlyLayout();
 		}
 		var composer = getChatComposer(document);
 		if (!composer) {
@@ -182,6 +212,8 @@
 		if (!xChatOnlyContainer) {
 			return;
 		}
+		xChatOnlyPreviousBackgroundValue = xChatOnlyContainer.style.getPropertyValue("background-color");
+		xChatOnlyPreviousBackgroundPriority = xChatOnlyContainer.style.getPropertyPriority("background-color");
 		xChatOnlyContainer.setAttribute("data-socialstream-x-chat-only", "true");
 		current = xChatOnlyContainer.parentElement;
 		while (current && (current !== document.documentElement)) {
@@ -874,6 +906,7 @@
 		}
 		lastXRoute = currentRoute;
 		stopObservingXChat();
+		clearXChatOnlyLayout();
 	}
 
 	window.addEventListener("popstate", handleXRouteChange);

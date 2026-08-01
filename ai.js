@@ -3606,15 +3606,19 @@ async function processMessageWithOllama(data, idx=null) {
 	let shouldSendResponse = false;
 	if (response && typeof response === 'string') {
 	  const lowerResponse = response.toLowerCase();
-	  shouldSendResponse = (
-	    !response.includes("@@@@@") &&
-	    !lowerResponse.startsWith("not available") &&
-	    (settings.alwaysRespondLLM || (
-	      !response.includes("NO_RESPONSE") &&
-	      !response.startsWith("No ") &&
-	      !response.startsWith("NO ")
-	    ))
-	  );
+	  if (data?.privateBotPrompt) {
+		shouldSendResponse = !response.includes("@@@@@") && !lowerResponse.includes("no_response") && !lowerResponse.startsWith("not available");
+	  } else {
+		shouldSendResponse = (
+		  !response.includes("@@@@@") &&
+		  !lowerResponse.startsWith("not available") &&
+		  (settings.alwaysRespondLLM || (
+			!response.includes("NO_RESPONSE") &&
+			!response.startsWith("No ") &&
+			!response.startsWith("NO ")
+		  ))
+		);
+	  }
 	}
 	//console.log(response);
 
@@ -3687,17 +3691,20 @@ async function processMessageWithOllama(data, idx=null) {
 async function processUserInput(userInput, data, additionalInstructions, botname) {
   try {
     additionalInstructions = resolveChatbotPromptVariables(additionalInstructions || '');
+	const privateBotPrompt = Boolean(data?.privateBotPrompt);
 
     // Build base prompt with context
-    let promptBase = `${additionalInstructions || ''}\n\nYou are an AI chat assistant and a participant in a live group chat room.`;
+	let promptBase = privateBotPrompt
+		? `${additionalInstructions || ''}\n\nYou are an AI assistant responding directly to a private request from the host. The host deliberately addressed this request to you, so answer it directly and succinctly.`
+		: `${additionalInstructions || ''}\n\nYou are an AI chat assistant and a participant in a live group chat room.`;
 	
 	let botname = "Bot";
     if (settings.ollamabotname?.textsetting) {
 		botname = settings.ollamabotname.textsetting.trim();
     }
-	if (botname){
+	if (!privateBotPrompt && botname){
 		promptBase += `\n\nYour name in the group chat is: ${botname}.\n\nSpeak only when important or when spoken directly to by name.`;
-	} else {
+	} else if (!privateBotPrompt) {
 		promptBase += `\n\nSpeak only when it's exceedingly helpful to be doing so.`;
 	}
 	
@@ -3722,9 +3729,13 @@ async function processUserInput(userInput, data, additionalInstructions, botname
 			promptBase += `\n\nPrevious messages from ${data.chatname} via ${data.type} chat:\n ${context.userHistory}`;
 		}
 		
-		promptBase += `\n\nCurrent message from ${data.chatname}: ${userInput}`;
+		promptBase += privateBotPrompt
+			? `\n\nCurrent private request from ${data.chatname}: ${userInput}`
+			: `\n\nCurrent message from ${data.chatname}: ${userInput}`;
 	} else {
-		promptBase += `\n\nCurrent group chat message from ${data.chatname}: ${userInput}`;
+		promptBase += privateBotPrompt
+			? `\n\nCurrent private request from ${data.chatname}: ${userInput}`
+			: `\n\nCurrent group chat message from ${data.chatname}: ${userInput}`;
 	}
 
     // Add current message
@@ -3773,7 +3784,9 @@ Prefer this exact format:
 	if (settings.ollamabotname?.textsetting) {
 		debugmode = settings.ollamabotname?.textsetting == "Tommas" ? true : false;
 	}
-	if (debugmode){
+	if (privateBotPrompt) {
+		promptBase += '\n\nAnswer the current private request directly. Do not decline merely because the host did not address you by name.';
+	} else if (debugmode){
 		if (!settings.nollmcontext){
 			promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE, followed by stating why no response is needed.';
 		} else {
@@ -3800,7 +3813,11 @@ Prefer this exact format:
 		response = response.replace(botname+":","").trim();
 	}
 	
-    if (!response || response.toLowerCase().includes('no_response') || response.toLowerCase().startsWith('no ') || response.toLowerCase().startsWith('@@@@')) {
+	const lowerResponse = response ? response.toLowerCase() : '';
+    if (!response || lowerResponse.includes('no_response') || (!privateBotPrompt && lowerResponse.startsWith('no ')) || lowerResponse.startsWith('@@@@')) {
+		if (privateBotPrompt) {
+			return false;
+		}
 		if (settings.alwaysRespondLLM && (response && !response.toLowerCase().startsWith('@@@@'))){
 			return response;
 		}

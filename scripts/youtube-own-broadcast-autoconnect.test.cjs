@@ -18,6 +18,9 @@ function extractBetween(startToken, endToken) {
 let authOnlyMode = false;
 let fetchCalls = [];
 let responseItems = [];
+let responseOk = true;
+let responseStatus = 200;
+let responseBody = null;
 
 class MemoryStorage {
 	constructor() {
@@ -66,8 +69,10 @@ function createContext(instanceId) {
 		async fetchWithTimeout(url, timeout, headers) {
 			fetchCalls.push({ url, timeout, headers });
 			return {
+				ok: responseOk,
+				status: responseStatus,
 				async json() {
-					return { items: responseItems };
+					return responseBody === null ? { items: responseItems } : responseBody;
 				}
 			};
 		},
@@ -301,6 +306,20 @@ assert.strictEqual(context.consumeYouTubeInitialTargetResolution(), true);
 	assert.ok(!fetchCalls[0].url.includes("/search?"), "automatic discovery must not use search.list");
 	assert.strictEqual(fetchCalls[0].timeout, 5000);
 	assert.strictEqual(fetchCalls[0].headers.Authorization, "Bearer token");
+
+	context.resetYouTubeSignInTargetResolution();
+	fetchCalls = [];
+	responseOk = false;
+	responseStatus = 403;
+	responseBody = { error: { message: "YouTube quota exceeded" } };
+	await assert.rejects(
+		context.getOwnYouTubeBroadcastCandidatesOnce("token", "UC-own"),
+		/YouTube quota exceeded/,
+		"failed API responses must use the broadcast-check failure path"
+	);
+	responseOk = true;
+	responseStatus = 200;
+	responseBody = null;
 
 	authOnlyMode = true;
 	context.resetYouTubeSignInTargetResolution();

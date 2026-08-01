@@ -279,8 +279,50 @@
 		viewerTimer: null,
 		failures: 0,
 		seenCommentIds: {},
-		seenCommentOrder: []
+		seenCommentOrder: [],
+		pendingDomCommentFingerprints: []
 	};
+
+	function getLiveCommentFingerprintText(value){
+		var text = String(value || "");
+		try {
+			var container = document.createElement("div");
+			container.innerHTML = text;
+			var images = container.querySelectorAll("img");
+			for (var i = 0; i < images.length; i++){
+				var replacement = document.createTextNode(images[i].getAttribute("alt") || "");
+				images[i].parentNode.replaceChild(replacement, images[i]);
+			}
+			text = container.textContent || container.innerText || text;
+		} catch(e){
+			text = text.replace(/<[^>]*>/g, " ");
+		}
+		return normalizeLiveText(text);
+	}
+
+	function getLiveCommentFingerprint(chatname, chatmessage){
+		var name = getLiveCommentFingerprintText(chatname).toLowerCase();
+		var message = getLiveCommentFingerprintText(chatmessage);
+		return name && message ? name + "::" + message : "";
+	}
+
+	function rememberLiveRestDomComment(chatname, chatmessage){
+		var key = getLiveCommentFingerprint(chatname, chatmessage);
+		if (!key){ return; }
+		liveRestState.pendingDomCommentFingerprints.push(key);
+		while (liveRestState.pendingDomCommentFingerprints.length > 300){
+			liveRestState.pendingDomCommentFingerprints.shift();
+		}
+	}
+
+	function consumeLiveRestDomComment(chatname, chatmessage){
+		var key = getLiveCommentFingerprint(chatname, chatmessage);
+		if (!key){ return false; }
+		var index = liveRestState.pendingDomCommentFingerprints.indexOf(key);
+		if (index === -1){ return false; }
+		liveRestState.pendingDomCommentFingerprints.splice(index, 1);
+		return true;
+	}
 
 	function getLiveBroadcastId(){
 		try {
@@ -370,7 +412,9 @@
 			data.event = false;
 			data.textonly = settings.textonlymode || false;
 			data.type = "instagramlive";
-			sendOut(data, null, null, "instagram-live-rest::" + commentId);
+			if (sendOut(data, null, null, "instagram-live-rest::" + commentId)){
+				rememberLiveRestDomComment(data.chatname, data.chatmessage);
+			}
 		} catch(e){}
 	}
 
@@ -444,6 +488,7 @@
 			liveRestState.lastCommentTs = Math.floor(Date.now() / 1000);
 			liveRestState.lastViewerCount = null;
 			liveRestState.failures = 0;
+			liveRestState.pendingDomCommentFingerprints = [];
 			liveRestState.commentTimer = setInterval(pollLiveCommentsRest, 2000);
 			liveRestState.viewerTimer = setInterval(pollLiveViewersRest, 5000);
 			pushMessage({ type: "instagramlive", event: "stream_online" });
@@ -537,6 +582,7 @@
 				data.event = "notification";
 				data.meta = { notifName: notifName, storyType: story.story_type };
 			}
+			if (settings.hideevents && data.event){ return; }
 			if (!data.chatmessage && !data.event){ return; }
 			sendOut(data);
 		} catch(e){}
@@ -550,36 +596,48 @@
 	var ownLiveStatus = null; // null = unknown/not in a live context, true = our live, false = someone else's
 	var ownLiveCheckedUser = null;
 	var ownLiveRetryAt = 0;
+	var ownLiveLookupGeneration = 0;
+	var ownLiveLookupPendingUser = null;
 
 	function checkOwnLive(){
 		var path = window.location.pathname || "";
 		var m = path.match(/^\/([^\/]+)\/live\/?/) || path.match(/^\/stories\/([^\/]+)\//);
 		if (!m){
+			ownLiveLookupGeneration++;
+			ownLiveLookupPendingUser = null;
 			ownLiveStatus = null;
 			ownLiveCheckedUser = null;
 			ownLiveRetryAt = 0;
 			return;
 		}
 		var user = m[1];
+		if (ownLiveLookupPendingUser === user){ return; }
 		if (ownLiveCheckedUser === user && ownLiveStatus !== null){
 			if (!ownLiveRetryAt || Date.now() < ownLiveRetryAt){ return; }
 		}
 		ownLiveCheckedUser = user;
 		ownLiveStatus = null;
+		ownLiveRetryAt = 0;
+		var lookupGeneration = ++ownLiveLookupGeneration;
+		ownLiveLookupPendingUser = user;
 		var myId = getIgUserId();
-		if (!myId){ ownLiveStatus = false; return; }
+		if (!myId){ ownLiveLookupPendingUser = null; ownLiveStatus = false; return; }
 		fetch("/api/v1/users/web_profile_info/?username=" + encodeURIComponent(user), { headers: igApiHeaders(), credentials: "same-origin" })
 			.then(function(resp){
 				if (!resp.ok){ throw new Error("status " + resp.status); }
 				return resp.json();
 			})
 			.then(function(json){
+				if (lookupGeneration !== ownLiveLookupGeneration || ownLiveCheckedUser !== user){ return; }
 				var pk = json && json.data && json.data.user && (json.data.user.pk || json.data.user.id);
 				if (!pk){ throw new Error("missing profile id"); }
+				ownLiveLookupPendingUser = null;
 				ownLiveStatus = !!(pk && String(pk) === String(myId));
 				ownLiveRetryAt = 0;
 			})
 			.catch(function(){
+				if (lookupGeneration !== ownLiveLookupGeneration || ownLiveCheckedUser !== user){ return; }
+				ownLiveLookupPendingUser = null;
 				ownLiveStatus = false;
 				ownLiveRetryAt = Date.now() + 30000;
 			});
@@ -996,6 +1054,7 @@
 		var parsed = parseLiveRow(row);
 		if (!parsed){ return false; }
 		if (shouldDelayLivePlaceholder(row, parsed.chatmessage)){ return false; }
+		if (consumeLiveRestDomComment(parsed.chatname, parsed.chatmessage)){ return true; }
 
 		var data = {};
 		data.chatname = parsed.chatname;
@@ -1074,6 +1133,7 @@
 				try { row.dataset.ssProcessed = "live"; } catch(e){}
 			}
 		});
+		liveRestState.pendingDomCommentFingerprints = [];
 	}
 
 	function checkViewers(){

@@ -61,7 +61,7 @@ async function createMockLlmServer() {
 				parsed = body ? JSON.parse(body) : {};
 			} catch (_) {}
 			const serialized = JSON.stringify(parsed);
-			const markerMatch = serialized.match(/(IPC_E2E|P2P_E2E|WS_E2E|LEGACY_E2E)/);
+			const markerMatch = serialized.match(/(IPC_E2E|NEGATIVE_E2E|P2P_E2E|WS_E2E|LEGACY_E2E)/);
 			const marker = markerMatch ? markerMatch[1] : "PRIVATE_E2E";
 			requests.push({ marker, url: request.url, body: parsed });
 			const sendResponse = () => {
@@ -72,7 +72,7 @@ async function createMockLlmServer() {
 				response.end(JSON.stringify({
 					choices: [{
 						message: {
-							content: `${marker}_REPLY`
+							content: marker === "NEGATIVE_E2E" ? "No, this is a direct private answer." : `${marker}_REPLY`
 						}
 					}]
 				}));
@@ -210,7 +210,7 @@ async function configureBackground(frame, llmBaseUrl) {
 		settings.ollamaMaxParallelAgents = { numbersetting: "1" };
 		settings.bottriggerwords = { textsetting: "required-trigger" };
 		settings.modLLMonly = { setting: true };
-		settings.alwaysRespondLLM = true;
+		settings.alwaysRespondLLM = false;
 		settings.nollmcontext = true;
 		settings.ollamatts = { setting: true };
 		delete settings.ollamaoverlayonly;
@@ -430,12 +430,29 @@ async function run() {
 			});
 		});
 		await waitForBotReply(bot.page, "IPC_E2E_REPLY", 1);
+		const ipcRequest = llm.requests.find(entry => entry.marker === "IPC_E2E");
+		assert(ipcRequest, "The private IPC prompt did not reach the LLM.");
+		const ipcPrompt = JSON.stringify(ipcRequest.body);
+		assert.match(ipcPrompt, /responding directly to a private request from the host/i);
+		assert.doesNotMatch(ipcPrompt, /participant in a live group chat room|Speak only when important/i);
 		console.log("PASS: Electron-wrapped dock command -> private bot -> overlay/TTS");
+
+		await mainPage.evaluate(() => {
+			require("electron").ipcRenderer.send("postMessage", {
+				overlayNinja: {
+					action: "askBot",
+					value: "NEGATIVE_E2E"
+				},
+				fromDock: true
+			});
+		});
+		await waitForBotReply(bot.page, "No, this is a direct private answer.", 2);
+		console.log("PASS: Private direct answers beginning with No are not screened out");
 
 		const p2pBridge = await openWebRtcCommandBridge(webBrowser, session);
 		contexts.push(p2pBridge.context);
 		await p2pBridge.page.evaluate('sendPrivateBotCommand("P2P_E2E")');
-		await waitForBotReply(bot.page, "P2P_E2E_REPLY", 2);
+		await waitForBotReply(bot.page, "P2P_E2E_REPLY", 3);
 		console.log("PASS: WebRTC data-channel command -> private bot -> overlay/TTS");
 
 		await backgroundFrame.evaluate(serverUrl => {
@@ -459,7 +476,7 @@ async function run() {
 		);
 		await selectPrivateDestination(websocketDock.page);
 		await sendComposerMessage(websocketDock.page, "WS_E2E");
-		await waitForBotReply(bot.page, "WS_E2E_REPLY", 3);
+		await waitForBotReply(bot.page, "WS_E2E_REPLY", 4);
 		assert(relay.messages.some(entry => (
 			entry.route === "/extension" &&
 			entry.data &&
@@ -521,7 +538,7 @@ async function run() {
 		await legacyPrivateDestination.check();
 		await websocketDock.page.locator("#tabslistclose").click();
 		await sendComposerMessage(websocketDock.page, "LEGACY_E2E");
-		await waitForBotReply(bot.page, "LEGACY_E2E_REPLY", 4);
+		await waitForBotReply(bot.page, "LEGACY_E2E_REPLY", 5);
 		console.log("PASS: Legacy ollama enable flag still supports private bot requests");
 
 		const finalState = await backgroundFrame.evaluate(() => ({
@@ -529,7 +546,7 @@ async function run() {
 		}));
 		assert.strictEqual(finalState.tabSendCount, 0, "A private bot response was sent to a connected chat tab.");
 		const spoken = await bot.page.evaluate(() => window.__privateBotSpoken.slice());
-		assert(spoken.length >= 4 && spoken.every(entry => entry.force === true), "Bot overlay did not route every reply through forced TTS.");
+		assert(spoken.length >= 5 && spoken.every(entry => entry.force === true), "Bot overlay did not route every reply through forced TTS.");
 		console.log("PASS: Private replies never entered chat and all carried the TTS route");
 	} finally {
 		for (const context of contexts) {
