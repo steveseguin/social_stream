@@ -13,13 +13,17 @@ try {
 
 const STORAGE_KEY = 'facebookApiConfig';
 const AUTH_STORAGE_KEY = 'facebookApiAuth';
-const API_VERSION = 'v20.0';
+const API_VERSION = 'v25.0';
 const DEFAULT_POLL_INTERVAL = 3000;
 const MIN_POLL_INTERVAL = 1500;
 const MAX_POLL_INTERVAL = 30000;
 const MAX_DEDUPE = 500;
 const VIEWER_POLL_INTERVAL = 15000;
-const DEFAULT_OAUTH_BASE = 'https://auth.socialstream.ninja/auth/facebook/pages';
+const DEFAULT_OAUTH_BASE = 'https://sso.socialstream.ninja/auth/facebook';
+const LEGACY_OAUTH_BASES = [
+  'https://auth.socialstream.ninja/auth/facebook/pages',
+  'https://auth.socialstream.ninja/auth/facebook'
+];
 const DEFAULT_LOCAL_RETURN_BASE = 'http://localhost:8181/';
 const AUTH_MESSAGE_SUCCESS = 'ssn-facebook-auth-success';
 const AUTH_MESSAGE_ERROR = 'ssn-facebook-auth-error';
@@ -191,7 +195,11 @@ function normalizePageId(value) {
 function normalizeOauthBase(value) {
   const raw = (value || '').trim();
   if (!raw) return DEFAULT_OAUTH_BASE;
-  return raw.replace(/\/+$/, '');
+  const normalized = raw.replace(/\/+$/, '');
+  if (LEGACY_OAUTH_BASES.indexOf(normalized) !== -1) {
+    return DEFAULT_OAUTH_BASE;
+  }
+  return normalized;
 }
 
 function getRuntimeParams() {
@@ -990,7 +998,7 @@ async function resolveLiveVideo({ connectAfter = false } = {}) {
   try {
     const data = await graphRequest(`${encodeURIComponent(state.pageId)}/live_videos`, {
       fields: 'id,title,permalink_url,status,creation_time',
-      broadcast_status: 'LIVE',
+      broadcast_status: JSON.stringify(['LIVE']),
       access_token: state.accessToken
     });
     const entry = Array.isArray(data.data) && data.data.length ? data.data[0] : null;

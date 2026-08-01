@@ -60,7 +60,10 @@ async function run() {
         validateExpiresIn: 3600,
         subscriptionCalls: 0,
         subscriptionTypes: [],
+        chatSendRequests: [],
+        tmiSayCalls: 0,
         runtimeMessages: [],
+        runtimeDeletes: [],
         failFirstSubscription: true
       };
       window.__twitchHarness = harness;
@@ -77,6 +80,14 @@ async function run() {
       class FakeTmiClient {
         constructor() {
           this.handlers = new Map();
+          this.userstate = {
+            '#tester': {
+              username: 'tester',
+              'display-name': 'Tester',
+              color: '#9146FF',
+              badges: { broadcaster: '1' }
+            }
+          };
           harness.tmiClients.push(this);
         }
 
@@ -107,6 +118,7 @@ async function run() {
         }
 
         async say() {
+          harness.tmiSayCalls += 1;
           return true;
         }
       }
@@ -167,6 +179,7 @@ async function run() {
             scopes: [
               'chat:read',
               'chat:edit',
+              'user:write:chat',
               'bits:read',
               'moderator:read:followers',
               'channel:read:subscriptions',
@@ -187,7 +200,7 @@ async function run() {
             access_token: 'new-access-token',
             refresh_token: 'new-refresh-token',
             expires_in: 3600,
-            scope: ['chat:read', 'chat:edit'],
+            scope: ['chat:read', 'chat:edit', 'user:write:chat'],
             client_id: 'test-client'
           });
         }
@@ -197,6 +210,17 @@ async function run() {
         if (url.includes('/helix/moderation/moderators')) return json({ data: [] });
         if (url.includes('/helix/channels?')) return json({ data: [{ broadcaster_type: 'affiliate' }] });
         if (url.includes('/helix/chat/badges')) return json({ data: [] });
+        if (url.includes('/helix/chat/messages')) {
+          const body = JSON.parse(init.body || '{}');
+          harness.chatSendRequests.push(body);
+          return json({
+            data: [{
+              message_id: '11111111-2222-4333-8444-555555555555',
+              is_sent: true,
+              drop_reason: null
+            }]
+          });
+        }
         if (url.includes('/helix/eventsub/subscriptions')) {
           harness.subscriptionCalls += 1;
           const subscription = JSON.parse(init.body || '{}');
@@ -223,6 +247,7 @@ async function run() {
           const message = args.find((value) => value && typeof value === 'object');
           const callback = [...args].reverse().find((value) => typeof value === 'function');
           if (message?.message) harness.runtimeMessages.push(message.message);
+          if (message?.delete) harness.runtimeDeletes.push(message.delete);
           queueMicrotask(() => {
             if (message?.getSettings) callback?.({ settings: {}, state: true });
             else callback?.({});
@@ -279,6 +304,49 @@ async function run() {
       await page.evaluate(() => window.__twitchHarness.subscriptionTypes.includes('channel.cheer')),
       false,
       'EventSub should use channel.bits.use instead of the duplicate channel.cheer subscription'
+    );
+
+    await page.fill('#input-text', 'sent through SSN');
+    await page.click('#sendmessage');
+    await page.waitForFunction(() => (
+      window.__twitchHarness.runtimeMessages.some(
+        (message) => message.id === '11111111-2222-4333-8444-555555555555'
+      )
+    ));
+    const sentChatResult = await page.evaluate(() => ({
+      request: window.__twitchHarness.chatSendRequests[0],
+      message: window.__twitchHarness.runtimeMessages.find(
+        (item) => item.id === '11111111-2222-4333-8444-555555555555'
+      ),
+      tmiSayCalls: window.__twitchHarness.tmiSayCalls
+    }));
+    assert.deepStrictEqual(sentChatResult.request, {
+      broadcaster_id: '1',
+      sender_id: '1',
+      message: 'sent through SSN'
+    });
+    assert.strictEqual(sentChatResult.message.chatname, 'Tester');
+    assert.strictEqual(sentChatResult.message.chatmessage, 'sent through SSN');
+    assert.strictEqual(sentChatResult.tmiSayCalls, 0, 'SSN sent Twitch chat through IRC instead of Helix');
+
+    await page.evaluate(() => {
+      window.__twitchHarness.tmiClients[0].emit(
+        'messagedeleted',
+        '#tester',
+        'tester',
+        'sent through SSN',
+        { 'target-msg-id': '11111111-2222-4333-8444-555555555555' }
+      );
+    });
+    await page.waitForFunction(() => window.__twitchHarness.runtimeDeletes.length > 0);
+    assert.deepStrictEqual(
+      await page.evaluate(() => window.__twitchHarness.runtimeDeletes[0]),
+      {
+        type: 'twitch',
+        id: '11111111-2222-4333-8444-555555555555',
+        chatname: 'Tester'
+      },
+      'Twitch delete did not reuse the native ID assigned to the SSN-sent message'
     );
 
     await page.evaluate(() => {

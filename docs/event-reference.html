@@ -678,7 +678,7 @@
                     <h3>Twitch – EventSub/Websocket</h3>
                     <p class="source-note">Implementation: <code>sources/websocket/twitch.js</code> with shared core <code>providers/twitch/chatClient.js</code></p>
                     <ul class="requirements">
-                        <li>OAuth scopes: <code>chat:read</code>, <code>chat:edit</code>, <code>bits:read</code>, <code>moderator:read:followers</code>, <code>moderator:read:chatters</code>, <code>channel:read:subscriptions</code>, <code>channel:read:hype_train</code>, <code>channel:moderate</code>, <code>moderator:manage:banned_users</code>, <code>moderator:manage:chat_messages</code>, <code>channel:manage:broadcast</code>, <code>channel:read:redemptions</code>, <code>channel:read:ads</code>, <code>channel:manage:ads</code>. Broadcaster tokens unlock subscriber/follower counts.</li>
+                        <li>OAuth scopes: <code>chat:read</code>, <code>chat:edit</code>, <code>user:write:chat</code>, <code>bits:read</code>, <code>moderator:read:followers</code>, <code>moderator:read:chatters</code>, <code>channel:read:subscriptions</code>, <code>channel:read:hype_train</code>, <code>channel:moderate</code>, <code>moderator:manage:banned_users</code>, <code>moderator:manage:chat_messages</code>, <code>channel:manage:broadcast</code>, <code>channel:read:redemptions</code>, <code>channel:read:ads</code>, <code>channel:manage:ads</code>. Broadcaster tokens unlock subscriber/follower counts.</li>
                         <li>Events delivered by EventSub, plus Helix polling for viewer/follower/subscriber totals.</li>
                         <li><strong>WebSocket mode provides real-time</strong> follower alerts, subscription events, raids, cheers, Power-ups, channel point redemptions, and hype train metadata.</li>
                         <li>Shared Chat rows use Twitch IRC <code>source-room-id</code> to populate <code>sourceName</code>/<code>sourceImg</code> with the originating channel when it differs from the connected channel.</li>
@@ -769,7 +769,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Dedupe logic uses message IDs; ensure downstream consumers honor <code>data.id</code>.</p>
+                    <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Dedupe and deletion logic uses message IDs; messages sent through SSN use the native <code>message_id</code> returned by Twitch in <code>data.id</code>.</p>
 
                     <h4>Twitch Hype Train Metadata</h4>
                     <p class="field-highlights"><code>hype_train</code> is metadata-only and does not include <code>chatname</code> or <code>chatmessage</code>. Dashboards should update an existing train display by <code>meta.id</code> instead of appending each progress update as chat. The Meta Data Bar (<code>meta.html</code>) renders these events as a top progress bar.</p>

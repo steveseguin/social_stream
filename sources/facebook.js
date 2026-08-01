@@ -168,6 +168,286 @@
 		}
 	}
 
+	var facebookLiveDiscovery = {
+		status: "idle",
+		attempts: 0,
+		lastCheckedAt: 0,
+		candidateUrl: "",
+		candidateScore: 0
+	};
+	try {
+		window.__ssnFacebookLiveDiscovery = facebookLiveDiscovery;
+	} catch (e) {}
+
+	var FACEBOOK_RECOVERY_SEEN_KEY = "ssnFacebookRecoverySeenV1";
+	var FACEBOOK_RECOVERY_RELOAD_KEY = "ssnFacebookRecoveryReloadV1";
+	var FACEBOOK_STALE_REFRESH_MS = 60000;
+	var MAX_FACEBOOK_RECOVERY_KEYS = 500;
+	var facebookRecoverySeen = new Set();
+	var facebookLastArticleChangeAt = Date.now();
+	var facebookRecoveryReplay = urlParamEnabled("ssnfbrefresh");
+	var facebookRecoveryState = {
+		status: "idle",
+		seen: 0,
+		reloads: 0,
+		lastArticleChangeAt: facebookLastArticleChangeAt,
+		lastReloadAt: 0
+	};
+	try {
+		var storedFacebookRecoveryKeys = JSON.parse(sessionStorage.getItem(FACEBOOK_RECOVERY_SEEN_KEY) || "[]");
+		if (Array.isArray(storedFacebookRecoveryKeys)) {
+			storedFacebookRecoveryKeys.slice(-MAX_FACEBOOK_RECOVERY_KEYS).forEach(function(key) {
+				if (key) facebookRecoverySeen.add(String(key));
+			});
+		}
+		var storedFacebookReload = JSON.parse(sessionStorage.getItem(FACEBOOK_RECOVERY_RELOAD_KEY) || "{}");
+		facebookRecoveryState.reloads = parseInt(storedFacebookReload.count || 0, 10) || 0;
+		facebookRecoveryState.lastReloadAt = parseInt(storedFacebookReload.at || 0, 10) || 0;
+	} catch (e) {}
+	facebookRecoveryState.seen = facebookRecoverySeen.size;
+	try {
+		window.__ssnFacebookRecovery = facebookRecoveryState;
+	} catch (e) {}
+
+	function getFacebookRecoveryRowKey(ele) {
+		try {
+			var rowId = ele.id || (ele.parentNode && ele.parentNode.id) || "";
+			if (!rowId) {
+				var identified = ele.querySelector("[id]");
+				rowId = identified ? identified.id : "";
+			}
+			if (rowId && !String(rowId).startsWith("client:")) {
+				return "id:" + String(rowId);
+			}
+			var text = normalizeFacebookText(ele.innerText || ele.textContent || "")
+				.replace(/\b\d+\s*(?:seconds?|minutes?|hours?|days?|weeks?|months?|years?|[smhdw])\b/gi, "")
+				.trim();
+			return text ? "text:" + text.slice(0, 700) : "";
+		} catch (e) {
+			return "";
+		}
+	}
+
+	function rememberFacebookRecoveryRow(key) {
+		if (!key || facebookRecoverySeen.has(key)) {
+			return false;
+		}
+		facebookRecoverySeen.add(key);
+		while (facebookRecoverySeen.size > MAX_FACEBOOK_RECOVERY_KEYS) {
+			facebookRecoverySeen.delete(facebookRecoverySeen.values().next().value);
+		}
+		facebookRecoveryState.seen = facebookRecoverySeen.size;
+		try {
+			sessionStorage.setItem(FACEBOOK_RECOVERY_SEEN_KEY, JSON.stringify(Array.from(facebookRecoverySeen)));
+		} catch (e) {}
+		return true;
+	}
+
+	function shouldProcessFacebookArticle(ele, processedCount, replayExisting) {
+		var key = getFacebookRecoveryRowKey(ele);
+		var wasSeen = key ? facebookRecoverySeen.has(key) : false;
+		rememberFacebookRecoveryRow(key);
+		if (!wasSeen && (processedCount > 3 || facebookRecoveryReplay)) {
+			facebookLastArticleChangeAt = Date.now();
+			facebookRecoveryState.lastArticleChangeAt = facebookLastArticleChangeAt;
+		}
+		if (facebookRecoveryReplay && wasSeen) {
+			return false;
+		}
+		return processedCount > 3 || replayExisting || facebookRecoveryReplay;
+	}
+
+	function isElectronFacebookSource() {
+		try {
+			return window.__SSAPP_TAB_ID__ !== undefined || !!(window.ninjafy || window.__ssapp);
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function isNormalFacebookLiveVideoPage() {
+		try {
+			var href = window.location.href;
+			return !href.includes("/live/producer/") &&
+				(href.includes("/videos/") || href.includes("?v=") || href.includes("/watch/live/"));
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function maybeRefreshStalledFacebookChat() {
+		if (!isElectronFacebookSource() || !isNormalFacebookLiveVideoPage() || !hasFacebookCurrentLiveSignal()) {
+			facebookRecoveryState.status = "inactive";
+			return false;
+		}
+		var now = Date.now();
+		var lastActivityAt = Math.max(facebookLastArticleChangeAt, facebookRecoveryState.lastReloadAt || 0);
+		if (now - lastActivityAt < FACEBOOK_STALE_REFRESH_MS) {
+			facebookRecoveryState.status = "watching";
+			return false;
+		}
+		facebookRecoveryState.status = "reloading";
+		facebookRecoveryState.reloads += 1;
+		facebookRecoveryState.lastReloadAt = now;
+		try {
+			sessionStorage.setItem(FACEBOOK_RECOVERY_RELOAD_KEY, JSON.stringify({
+				count: facebookRecoveryState.reloads,
+				at: now
+			}));
+			var parsed = new URL(window.location.href);
+			parsed.searchParams.set("ssnfbrefresh", "1");
+			window.location.replace(parsed.toString());
+			return true;
+		} catch (e) {
+			facebookRecoveryState.status = "reload-error";
+			return false;
+		}
+	}
+
+	function isFacebookLiveLandingPage() {
+		try {
+			var parsed = new URL(window.location.href);
+			var pathname = parsed.pathname.replace(/\/+$/, "").toLowerCase();
+			if (pathname.includes("/live/producer")) {
+				return false;
+			}
+			return pathname.endsWith("/live") || pathname.endsWith("/videos");
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function normalizeFacebookVideoUrl(href) {
+		try {
+			var parsed = new URL(href, window.location.href);
+			var hostname = parsed.hostname.toLowerCase();
+			if (!(hostname === "facebook.com" || hostname.endsWith(".facebook.com"))) {
+				return "";
+			}
+			var isVideoPath = /\/videos\/(?:[^/?#]+\/)?\d+(?:\/|$)/i.test(parsed.pathname);
+			var isWatchVideo = /\/watch\/?$/i.test(parsed.pathname) && /^\d+$/.test(parsed.searchParams.get("v") || "");
+			var isLiveWatch = parsed.pathname.toLowerCase().includes("/watch/live/");
+			if (!isVideoPath && !isWatchVideo && !isLiveWatch) {
+				return "";
+			}
+			["__cft__", "__tn__", "comment_id", "reply_comment_id", "ref", "refsrc", "mibextid", "sfnsn"].forEach(function(name) {
+				parsed.searchParams.delete(name);
+			});
+			if (urlParamEnabled("ssnreplay")) {
+				parsed.searchParams.set("ssnreplay", "1");
+			}
+			return parsed.toString();
+		} catch (e) {
+			return "";
+		}
+	}
+
+	function hasFacebookCurrentLiveSignal() {
+		try {
+			var text = normalizeFacebookText(document.body ? document.body.innerText : "").slice(0, 12000);
+			return /\b(?:is\s+live\s+now|live\s+now|watch\s+live)\b/i.test(text) || /\bLIVE\s+\d[\d,.]*\b/.test(text);
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function getFacebookLiveSignalScore(anchor) {
+		var score = 0;
+		var node = anchor;
+		for (var depth = 0; node && depth < 6; depth += 1, node = node.parentElement) {
+			var text = "";
+			try {
+				text = normalizeFacebookText([
+					node.getAttribute && node.getAttribute("aria-label"),
+					node.getAttribute && node.getAttribute("title"),
+					node.innerText || node.textContent || ""
+				].filter(Boolean).join(" "));
+			} catch (e) {}
+			if (!text || text.length > 1800) {
+				continue;
+			}
+			if (/\b(?:is\s+live\s+now|live\s+now|watch\s+live)\b/i.test(text)) {
+				score = Math.max(score, 140 - depth * 5);
+			}
+			if (/\b(?:was\s+live|past\s+live\s+videos?|live\s+ended)\b/i.test(text)) {
+				score -= 120;
+			}
+			try {
+				var labels = node.querySelectorAll("span, div");
+				for (var i = 0; i < labels.length && i < 120; i += 1) {
+					var label = normalizeFacebookText(labels[i].innerText || labels[i].textContent || "");
+					if (label.toUpperCase() === "LIVE") {
+						score = Math.max(score, 120 - depth * 5);
+						break;
+					}
+				}
+			} catch (e) {}
+		}
+		return score;
+	}
+
+	function findFacebookLiveVideoUrl() {
+		var anchors = [];
+		try {
+			anchors = document.querySelectorAll('a[href*="/videos/"], a[href*="/watch/?v="], a[href*="/watch/live/"]');
+		} catch (e) {}
+		var best = { url: "", score: 0 };
+		var urlCounts = {};
+		for (var i = 0; i < anchors.length; i += 1) {
+			var url = normalizeFacebookVideoUrl(anchors[i].href || anchors[i].getAttribute("href") || "");
+			if (!url) {
+				continue;
+			}
+			urlCounts[url] = (urlCounts[url] || 0) + 1;
+			var score = getFacebookLiveSignalScore(anchors[i]);
+			if (score > best.score) {
+				best = { url: url, score: score };
+			}
+		}
+		if (best.score >= 100) {
+			return best;
+		}
+		if (hasFacebookCurrentLiveSignal()) {
+			var repeatedUrl = Object.keys(urlCounts).sort(function(a, b) {
+				return urlCounts[b] - urlCounts[a];
+			})[0];
+			if (repeatedUrl && urlCounts[repeatedUrl] >= 2) {
+				return { url: repeatedUrl, score: 100 + urlCounts[repeatedUrl] };
+			}
+		}
+		return null;
+	}
+
+	function maybeDiscoverFacebookLiveVideo() {
+		if (!isFacebookLiveLandingPage()) {
+			facebookLiveDiscovery.status = "inactive";
+			return false;
+		}
+		var now = Date.now();
+		if (now - facebookLiveDiscovery.lastCheckedAt < 2500) {
+			return false;
+		}
+		facebookLiveDiscovery.lastCheckedAt = now;
+		facebookLiveDiscovery.attempts += 1;
+		var candidate = findFacebookLiveVideoUrl();
+		if (!candidate) {
+			facebookLiveDiscovery.status = "waiting";
+			facebookLiveDiscovery.candidateUrl = "";
+			facebookLiveDiscovery.candidateScore = 0;
+			return false;
+		}
+		facebookLiveDiscovery.status = "navigating";
+		facebookLiveDiscovery.candidateUrl = candidate.url;
+		facebookLiveDiscovery.candidateScore = candidate.score;
+		try {
+			window.location.replace(candidate.url);
+			return true;
+		} catch (e) {
+			facebookLiveDiscovery.status = "navigation-error";
+			return false;
+		}
+	}
+
 	function parseFacebookStars(ele) {
 		var rawText = "";
 		try {
@@ -534,7 +814,7 @@
 	
 	var lastURL = "";
 	var processed = 0;
-	var replayExistingMessages = urlParamEnabled("ssnreplay");
+	var replayExistingMessages = urlParamEnabled("ssnreplay") || facebookRecoveryReplay;
 	
 	console.log("LOADED SocialStream EXTENSION");
 	
@@ -557,11 +837,15 @@
 		if (lastURL !== window.location.href){
 			lastURL = window.location.href;
 			processed = 0;
-			replayExistingMessages = urlParamEnabled("ssnreplay");
+			facebookRecoveryReplay = urlParamEnabled("ssnfbrefresh");
+			replayExistingMessages = urlParamEnabled("ssnreplay") || facebookRecoveryReplay;
 		}  else {
 			processed += 1;
 		}
 		try {
+			if (maybeDiscoverFacebookLiveVideo()) {
+				return;
+			}
 			if (window.location.href.includes("/live/producer/") || window.location.href.endsWith("/videos") || window.location.href.includes("/videos/") || window.location.href.includes("?v=") || window.location.href.includes("/watch/live/")) {
 				var main = document.querySelectorAll("[role='article']");
 				for (var j = 0; j < main.length; j++) {
@@ -576,7 +860,7 @@
 									continue;
 								}
 								dupCheck.push(main[j].id);
-								if (processed>3 || replayExistingMessages){
+								if (shouldProcessFacebookArticle(main[j], processed, replayExistingMessages)){
 									processMessage(main[j]);
 								}
 							} else if (main[j].parentNode && main[j].parentNode.id) {
@@ -587,20 +871,23 @@
 									continue;
 								}
 								dupCheck.push(main[j].parentNode.id);
-								if (processed>3 || replayExistingMessages){
+								if (shouldProcessFacebookArticle(main[j], processed, replayExistingMessages)){
 									processMessage(main[j]);
 								}
 							} else if (main[j].parentNode && !main[j].id && !main[j].parentNode.id) {
 								var id = main[j].querySelector("[id]"); // an archived video
 								if (id && !(dupCheck.includes(id))) {
 									dupCheck.push(id);
-									if (processed>3 || replayExistingMessages){
+									if (shouldProcessFacebookArticle(main[j], processed, replayExistingMessages)){
 										processMessage(main[j]);
 									}
 								}
 							}
 						}
 					} catch (e) {}
+				}
+				if (maybeRefreshStalledFacebookChat()) {
+					return;
 				}
 			}
 		} catch (e) {console.error(e);}

@@ -270,6 +270,7 @@ let tmiLoaderPromise = null;
 let chatClient = null;
 let chatClientOffHandlers = [];
 let tmiClientFactory = null;
+let sendTwitchMessageFromSsn = null;
 const twitchDisplayNameByLogin = new Map();
 const TWITCH_DELAYTWITCH_MS = 3000;
 const TWITCH_DELETE_DELAY_BUFFER_MS = 50;
@@ -287,14 +288,20 @@ const websocketProxy = {
     }
   },
   send: (rawMessage) => {
-    if (!chatClient || !rawMessage) {
+    if (!rawMessage) {
       return;
     }
     try {
       if (typeof rawMessage === 'string') {
         const colonIndex = rawMessage.indexOf(' :');
         const payload = colonIndex >= 0 ? rawMessage.slice(colonIndex + 2) : rawMessage;
-        chatClient.sendMessage(payload, channel).catch((err) => {
+        const sendPromise = sendTwitchMessageFromSsn
+          ? sendTwitchMessageFromSsn(payload)
+          : chatClient?.sendMessage(payload, channel);
+        if (!sendPromise) {
+          return;
+        }
+        Promise.resolve(sendPromise).catch((err) => {
           console.warn('Twitch chat proxy send failed', err);
         });
       }
@@ -317,6 +324,7 @@ try{
 	var scope = [
 		'chat:read',
 		'chat:edit',
+		'user:write:chat',
 		'bits:read',
 		'moderator:read:followers',
 		'moderator:read:chatters',
@@ -1617,6 +1625,7 @@ async function ensureChatClientInstance() {
 			return;
 		}
 		tokenRefreshResumePending = false;
+		currentAuthUser = authUser;
 		token = getStoredToken() || token;
 
 		if (!channel && authUser.login) { channel = authUser.login; }
@@ -2316,20 +2325,123 @@ async function ensureChatClientInstance() {
 		window.__SSAPP_START_TWITCH_AUTH__ = startExternalTwitchAuthFlow;
 	} catch (_) {}
 
+	function splitTwitchChatMessage(message, maxLength = 500) {
+		const chunks = [];
+		let remaining = String(message || '');
+		while (remaining.length > maxLength) {
+			let splitAt = remaining.slice(0, maxLength).lastIndexOf(' ');
+			if (splitAt <= 0) {
+				splitAt = maxLength;
+			}
+			chunks.push(remaining.slice(0, splitAt));
+			remaining = remaining.slice(splitAt);
+		}
+		if (remaining) {
+			chunks.push(remaining);
+		}
+		return chunks;
+	}
+
+	function hasTwitchScope(authUser, requiredScope) {
+		return Array.isArray(authUser?.scopes) && authUser.scopes.includes(requiredScope);
+	}
+
+	async function sendTwitchChatChunk(message, allowTokenRetry = true) {
+		const token = getStoredToken();
+		const senderId = currentAuthUser?.user_id;
+		if (!token || !currentChannelId || !senderId) {
+			throw new Error('Twitch chat is not connected.');
+		}
+		if (!hasTwitchScope(currentAuthUser, 'user:write:chat')) {
+			throw new Error('Twitch sign-in is missing user:write:chat. Sign out and sign in again.');
+		}
+
+		const endpoint = 'https://api.twitch.tv/helix/chat/messages';
+		const response = await fetch(endpoint, {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${token}`,
+				'Client-ID': getTwitchApiClientId(),
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				broadcaster_id: currentChannelId,
+				sender_id: senderId,
+				message: message
+			})
+		});
+
+		if (response.status === 401 && allowTokenRetry) {
+			const refreshedToken = await refreshAccessToken({ reason: 'chat-send' });
+			if (refreshedToken && refreshedToken !== token) {
+				return sendTwitchChatChunk(message, false);
+			}
+		}
+
+		const responseData = await response.json().catch(() => ({}));
+		if (!response.ok) {
+			await handleTwitchApiAuthError(response, endpoint);
+			throw new Error(responseData.message || `Twitch chat send failed (HTTP ${response.status}).`);
+		}
+
+		const result = Array.isArray(responseData.data) ? responseData.data[0] : null;
+		if (!result?.is_sent || !result.message_id) {
+			const dropMessage = result?.drop_reason?.message || 'Twitch did not accept the chat message.';
+			throw new Error(dropMessage);
+		}
+		return result.message_id;
+	}
+
+	async function forwardSentTwitchMessage(message, messageId) {
+		const client = await ensureChatClientInstance();
+		const userState = typeof client.getUserState === 'function' ? client.getUserState(channel) : {};
+		const sentAt = Date.now();
+		const login = userState.username || currentAuthUser?.login || username;
+		const displayName = userState['display-name'] || getRememberedTwitchDisplayName(login) || login;
+		const tags = Object.assign({}, userState, {
+			id: messageId,
+			username: login,
+			'display-name': displayName,
+			'message-type': 'chat',
+			'tmi-sent-ts': String(sentAt)
+		});
+
+		await handleNormalizedChatMessage({
+			id: messageId,
+			platform: 'twitch',
+			type: 'twitch',
+			chatname: displayName,
+			chatmessage: message,
+			timestamp: sentAt,
+			event: 'chat',
+			isSelf: true,
+			rawMessage: message,
+			raw: { channel: `#${channel}`, tags: tags }
+		});
+	}
+
 	async function sendMessage(message) {
 		await modulesReady;
 		if (!checkAuthStatus()) {
 			return false;
 		}
-		const client = await ensureChatClientInstance();
 		try {
-			await client.sendMessage(message, channel);
-			return true;
+			const chunks = splitTwitchChatMessage(message);
+			for (let index = 0; index < chunks.length; index += 1) {
+				const messageId = await sendTwitchChatChunk(chunks[index]);
+				await forwardSentTwitchMessage(chunks[index], messageId);
+				if (index < chunks.length - 1) {
+					await new Promise(resolve => setTimeout(resolve, 350));
+				}
+			}
+			return chunks.length > 0;
 		} catch (error) {
 			console.error('Failed to send Twitch chat message', error);
+			addEvent(error?.message || 'Failed to send Twitch chat message');
 			return false;
 		}
 	}
+	sendTwitchMessageFromSsn = sendMessage;
 	function replaceEmotesWithImages(text, twitchEmotes = null, isBitMessage = false) {
 		let workingText = typeof text === 'string' ? text : '';
 		if (workingText && twitchEmotes) {
@@ -3314,6 +3426,7 @@ async function ensureChatClientInstance() {
 	let isDisconnecting = false;
 	let reconnectTimeout = null;
 	let currentChannelId = null;
+	let currentAuthUser = null;
 	let activeSubscriptions = new Set();
 	let eventSubRetryCount = 0;
 	let hasPermissionError = [];
@@ -3437,6 +3550,7 @@ async function cleanupCurrentConnection() {
 		hasPermissionError = [];
 		activeSubscriptions.clear();
 		currentChannelId = null;
+		currentAuthUser = null;
 		lastKnownViewers = null;
 		lastKnownFollowers = null;
 		lastKnownSubscribers = null;
