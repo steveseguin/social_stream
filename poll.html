@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Poll - Social Stream Ninja</title>
@@ -1255,7 +1256,7 @@ const ConnectionManager = {
         }
         if (urlParams.has("server")) {
             this.setupSocket(
-                urlParams.get("server") || (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api"),
+                urlParams.get("server") || (urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/api"),
                 session,
                 2, 1,
                 (data) => processInput(data)

@@ -86,7 +86,7 @@
 	if (password){
 		params += "&password=" + encodeURIComponent(password);
 	}
-	["server", "server2", "server3", "localserver"].forEach(function(key){
+	["server", "server2", "server3", "localserver", "localserverport"].forEach(function(key){
 		if (!urlParams.has(key)) return;
 		var value = urlParams.get(key);
 		params += value ? "&" + key + "=" + encodeURIComponent(value) : "&" + key;

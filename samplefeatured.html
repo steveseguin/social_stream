@@ -7,6 +7,7 @@ Development Notes:
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="utf-8" />
     <title>Social Stream - Overlay</title>
@@ -220,7 +221,7 @@ Development Notes:
 	
     const App = {
         config: {
-            serverURL: (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : 'wss://io.socialstream.ninja'),
+            serverURL: (urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : 'wss://io.socialstream.ninja'),
             maxReconnectAttempts: 10,
             reconnectDelay: 100,
             roomIdMaxLength: 80

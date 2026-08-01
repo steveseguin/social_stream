@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>Social Stream - Spotify Now Playing</title>
@@ -707,7 +708,7 @@ body {
 	}
 
 	if (urlParams.has("server") || urlParams.has("localserver")) {
-		const serverURL = urlParams.get("server") || (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api");
+		const serverURL = urlParams.get("server") || (urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/api");
 		setupSocket(serverURL, outChannel, inChannel);
 	}
 	if (urlParams.has("server2") || urlParams.has("server3")) {

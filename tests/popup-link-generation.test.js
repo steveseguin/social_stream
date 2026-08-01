@@ -2,8 +2,15 @@ const assert = require("assert");
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
+const SocialStreamLocalServer = require("../js/local-server-url.js");
 
 const popupSource = fs.readFileSync(path.resolve(__dirname, "..", "popup.js"), "utf8");
+
+assert.strictEqual(SocialStreamLocalServer.getPort(new URLSearchParams()), 3000);
+assert.strictEqual(SocialStreamLocalServer.getWebSocketUrl(new URLSearchParams("localserverport=3003")), "ws://127.0.0.1:3003");
+for (const invalidPort of ["", "80", "1023", "65536", "3000/path", "3000@example.com", "3.5", "port"]) {
+  assert.strictEqual(SocialStreamLocalServer.normalizeExplicitPort(invalidPort), null, `accepted invalid port: ${invalidPort}`);
+}
 
 function extractFunction(name) {
   const marker = `function ${name}(`;
@@ -35,6 +42,20 @@ function loadFunctions(names, context) {
 }
 
 {
+  let loaded = loadFunctions(["getLocalServerConnectionParams"], {
+    urlParams: new URLSearchParams("localserver&localserverport=3003"),
+    SocialStreamLocalServer,
+  });
+  assert.strictEqual(loaded.functions.getLocalServerConnectionParams(), "&localserver&localserverport=3003");
+
+  loaded = loadFunctions(["getLocalServerConnectionParams"], {
+    urlParams: new URLSearchParams("localserver&localserverport=invalid"),
+    SocialStreamLocalServer,
+  });
+  assert.strictEqual(loaded.functions.getLocalServerConnectionParams(), "&localserver");
+}
+
+{
   const { functions } = loadFunctions(["buildGeneratedUrl"], { baseURL: "https://socialstream.ninja/" });
   const generated = functions.buildGeneratedUrl(
     "themes/compact-classic.html?ultra",
@@ -51,11 +72,11 @@ function loadFunctions(names, context) {
 {
   const elements = {
     overlay: {
-      raw: "https://socialstream.ninja/featured.html?session=room1&password=p%26q&v=9&ln=fr&server&server2=two&server3&localserver&scale=2&cssb64=classic",
+      raw: "https://socialstream.ninja/featured.html?session=room1&password=p%26q&v=9&ln=fr&server&server2=two&server3&localserver&localserverport=3003&scale=2&cssb64=classic",
       id: "overlay",
     },
     dock: {
-      raw: "https://socialstream.ninja/dock.html?session=room1&password=p%26q&v=9&ln=fr&server&server2=two&server3&localserver",
+      raw: "https://socialstream.ninja/dock.html?session=room1&password=p%26q&v=9&ln=fr&server&server2=two&server3&localserver&localserverport=3003",
       id: "dock",
     },
     "featured-preset-select": { value: "" },
@@ -78,8 +99,9 @@ function loadFunctions(names, context) {
     baseURL: "https://socialstream.ninja/",
     document,
     lastResponse: { streamID: "room1", password: "p&q" },
-    urlParams: new URLSearchParams("localserver"),
-    FEATURED_CONNECTION_PARAM_NAMES: ["session", "password", "v", "ln", "server", "server2", "server3", "localserver"],
+    urlParams: new URLSearchParams("localserver&localserverport=3003"),
+    SocialStreamLocalServer,
+    FEATURED_CONNECTION_PARAM_NAMES: ["session", "password", "v", "ln", "server", "server2", "server3", "localserver", "localserverport"],
     getPopupVersionParam: () => "&v=9",
     getSelectedTranslationLinkParam: () => "&ln=fr",
     normalizeGeneratedPath: (raw) => new URL(raw, "https://socialstream.ninja/").pathname.replace(/^\//, ""),
@@ -91,9 +113,10 @@ function loadFunctions(names, context) {
   let parsed = new URL(elements.overlay.raw);
   assert.strictEqual(parsed.pathname, "/themes/featured-styles/featured-modern.html");
   assert.strictEqual(parsed.searchParams.get("style"), "glass");
-  for (const key of ["session", "password", "v", "ln", "server", "server2", "server3", "localserver"]) {
+  for (const key of ["session", "password", "v", "ln", "server", "server2", "server3", "localserver", "localserverport"]) {
     assert.strictEqual(parsed.searchParams.has(key), true, `Preset lost ${key}`);
   }
+  assert.strictEqual(parsed.searchParams.get("localserverport"), "3003");
   assert.strictEqual(parsed.searchParams.has("scale"), false);
   assert.strictEqual(parsed.searchParams.has("cssb64"), false);
 

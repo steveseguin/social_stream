@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>World Map Overlay - Social Stream Ninja</title>
@@ -2540,7 +2541,7 @@
 
             const ConnectionManager = {
                 setupMainSocket() {
-                    const target = urlParams.get('server') || (urlParams.has('localserver') ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja/api');
+                    const target = urlParams.get('server') || (urlParams.has('localserver') ? SocialStreamLocalServer.getWebSocketUrl() : 'wss://io.socialstream.ninja/api');
                     this.setupSocket(
                         target,
                         session,

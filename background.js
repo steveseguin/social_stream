@@ -9221,7 +9221,7 @@ function initializeSpotify() {
 }
 
 var socketserverDock = false;
-var serverURLDock = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/dock";
+var serverURLDock = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/dock";
 var conConDock = 0;
 var reconnectionTimeoutDock = null;
 
@@ -9324,7 +9324,7 @@ function setupSocketDock() {
 //
 
 var socketserver = false;
-var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api";
+var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/api";
 var conCon = 0;
 var reconnectionTimeout = null;
 

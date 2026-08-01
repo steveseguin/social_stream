@@ -1172,7 +1172,7 @@
 						applyRuntimeFieldOverrides(fieldData);
 						var roomID = urlParams.get("session") || config.session || "";
 						var password = urlParams.get("password") || config.password || "false";
-						var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+						var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja";
 						var socketserver = false;
 						var reconnectDelay = 1;
 						var nameToUserId = {};

@@ -1,5 +1,6 @@
 <html lang="en">
 <head>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
 	<meta content="utf-8" http-equiv="encoding" />
@@ -356,7 +357,7 @@
 	
 	var conCon = 1;
 	var socketserver = false;
-	var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+	var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja";
 
 	function setupSocket(){
 		socketserver.onclose = function (){

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giveaway Wheel - OBS Widget</title>
@@ -927,7 +928,7 @@
                 return;
             }
             var serverURL = urlParams.has("localserver")
-                ? "ws://127.0.0.1:3000"
+                ? SocialStreamLocalServer.getWebSocketUrl()
                 : (urlParams.get("server") || "wss://io.socialstream.ninja/api");
 
             function connect() {

@@ -6943,10 +6943,12 @@ class EventFlowEditor {
                 if (!localMediaApi) return;
                 try {
                     await localMediaApi.start();
+                    const flowUrlParams = new URLSearchParams(window.location.search);
                     const result = await localMediaApi.getFlowActionsUrl({
                         sessionId: this.getCurrentSessionId(),
                         search: this.getCurrentFlowActionsSearch(),
-                        localserver: new URLSearchParams(window.location.search).has('localserver')
+                        localserver: flowUrlParams.has('localserver'),
+                        localserverport: flowUrlParams.get('localserverport')
                     });
                     if (!result || !result.url) throw new Error('The local Flow Actions URL was unavailable.');
                     if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {

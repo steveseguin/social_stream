@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
     <meta content="utf-8" http-equiv="encoding" />
@@ -454,7 +455,7 @@
         }
         function connectWebSocket() {
             if (!hasParam("server") || !sessionId) { return; }
-            var serverURL = urlParams.get("server") || (hasParam("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api");
+            var serverURL = urlParams.get("server") || (hasParam("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/api");
             socketserver = new WebSocket(serverURL);
             socketserver.onopen = function () {
                 try { socketserver.send(JSON.stringify({ join: sessionId.split(",")[0], out: 2, in: 1 })); } catch (e) { console.error(e); }

@@ -388,6 +388,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `includeprivate` | boolean | Includes private messages |
 | `password` | string | Sets password for connection |
 | `localserver` | boolean | Uses local WebSocket server |
+| `localserverport` | integer (1024-65535) | Overrides the local WebSocket server port (default: 3000) |
 
 ### Debug & Development Parameters
 
