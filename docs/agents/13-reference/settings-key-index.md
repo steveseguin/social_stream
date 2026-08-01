@@ -194,6 +194,7 @@ Category key: `chat_bot`. Settings: 16.
 
 | Key | Type | Short Description |
 | --- | --- | --- |
+| `aiChatbotEnabled` | boolean | Enable the LLM AI Bot responder. |
 | `allowLLMSummary` | boolean | Include chat summaries with past context |
 | `alwaysRespondLLM` | boolean | By default the bot is told not if it doesn't see value in doing so. You can disable that instruction here though |
 | `bottriggerwords` | text | Leave empty to trigger always. The bot may however still choose to not respond on its own though. |
@@ -205,7 +206,6 @@ Category key: `chat_bot`. Settings: 16.
 | `modLLMonly` | boolean | The bot will only ever respond to mods |
 | `nollmcontext` | boolean | Include message history as context for the bot. Will slow things down.. |
 | `noollamabotname` | boolean | When enabled, do not include the bot's name when responding. |
-| `ollama` | boolean | Enable the LLM AI Bot responder. |
 | `ollamabotname` | text | Display name the Ollama bot uses when replying. |
 | `ollamaoverlayonly` | boolean | Do not relay bot messages |
 | `ollamaprompt` | text | System prompt prepended to every Ollama bot response. Supports prompt variables. |
@@ -416,7 +416,7 @@ Category key: `custom_injection`. Settings: 26.
 | `blockpremiumshorts` | boolean | Block donations/memberships from Youtube Shorts. Requires &shorts added to the Youtube chat pop out also. |
 | `bttv` | boolean | Enable BTTV emotes - YT/TW channels + globals |
 | `capturejoinedevent` | boolean | Capture 'joined' stream events from supported sources |
-| `capturelikeevent` | boolean | Allow 'liked' stream events in TikTok (high volume) |
+| `capturelikeevent` | boolean | Include individual `liked`/legacy `like` events from supported platforms in the main chat/events pipeline; Reactions receives them independently unless globally filtered |
 | `captureliketotals` | boolean | Send absolute platform like totals to the dock feed and custom consumers |
 | `delaykick` | boolean | Delay capturing messages from Kick to give time for messages to be deleted if needed; 3 extra seconds of delay |
 | `delaytwitch` | boolean | Delay capturing messages from Twitch to give time for messages to be deleted if needed; 3 extra seconds of delay |

@@ -51,6 +51,10 @@ class FakeTmiClient {
     return true;
   }
 
+  async disconnect() {
+    return true;
+  }
+
   emit(event, ...args) {
     const set = this.handlers.get(event);
     if (!set) {
@@ -66,6 +70,17 @@ function assert(condition, message) {
   if (!condition) {
     throw new Error(message);
   }
+}
+
+async function waitFor(check, message, timeoutMs = 1000) {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    if (check()) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+  throw new Error(message);
 }
 
 async function run() {
@@ -133,6 +148,48 @@ async function run() {
     anonGift.chatmessage === 'Anonymous gifted a sub to quietviewer!',
     `Unexpected anonymous gift message: ${anonGift.chatmessage}`
   );
+
+  let latestToken = 'initial-token';
+  const reconnectClients = [];
+  const factoryCalls = [];
+  const reconnectingClient = createTwitchChatClient({
+    channel: 'socialstream',
+    tokenProvider: async () => latestToken,
+    reconnect: { minDelayMs: 1, maxDelayMs: 1, factor: 1 },
+    clientFactory: async (options) => {
+      factoryCalls.push(options);
+      const client = new FakeTmiClient();
+      reconnectClients.push(client);
+      return client;
+    },
+    logger: null
+  });
+
+  await reconnectingClient.connect({
+    credentials: {
+      token: latestToken,
+      identity: { login: 'socialstream', userId: '1234' }
+    }
+  });
+  latestToken = 'refreshed-token';
+  reconnectClients[0].emit('disconnected', 'test disconnect');
+  await waitFor(() => factoryCalls.length === 2, 'Twitch chat client did not reconnect');
+
+  assert(factoryCalls[1].token === 'refreshed-token', 'Reconnect did not use the newest Twitch token');
+  assert(factoryCalls[1].identity.login === 'socialstream', 'Reconnect lost the Twitch login identity');
+  assert(factoryCalls[1].identity.userId === '1234', 'Reconnect lost the Twitch user ID');
+  reconnectingClient.disconnect();
+
+  for (const vendorFile of ['tmi.js', 'tmi.module.js']) {
+    const vendorSource = fs.readFileSync(
+      path.join(__dirname, '..', 'shared', 'vendor', vendorFile),
+      'utf8'
+    );
+    assert(
+      /if \(this\.reconnect\) \{\s*setTimeout\(\(\) => this\.connect/.test(vendorSource),
+      `${vendorFile} can still start a competing reconnect when wrapper reconnects are enabled`
+    );
+  }
 
   console.log('twitch-chatClient-subgift.test.js passed');
 }

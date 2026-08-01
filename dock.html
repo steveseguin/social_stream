@@ -5009,8 +5009,8 @@
 			}
 
 			var custombot = false;
-			if (urlParams.has("myname") || urlParams.has("botnames") ||  urlParams.has("botlist")) {
-				custombot = urlParams.get("myname") || urlParams.get("botlist") || false;
+			if (urlParams.has("myname") || urlParams.has("botnames") || urlParams.has("botlist")) {
+				custombot = urlParams.get("myname") || urlParams.get("botlist") || urlParams.get("botnames") || false;
 				if (custombot) {
 					custombot = decodeURIComponent(custombot);
 					custombot = custombot.toLowerCase().replace(/[^a-z0-9,_]+/gi, "");
@@ -5600,6 +5600,10 @@
 				filterEmojiOnly = true;
 			}
 
+			var makeEmoteStatic = null;
+			if (urlParams.has("staticemotes") || urlParams.has("noanimatedemotes") || urlParams.has("freezeemotes")) {
+				makeEmoteStatic = createStaticEmoteProcessor();
+			}
 			var syncDocks = false;
 			if (urlParams.has("sync") || urlParams.has("synced")) {
 				syncDocks = true;
@@ -6955,7 +6959,31 @@
 
 			var activeChatDestinations = new Set();
 
-			
+			function updateChatDestinationSelection(checkbox) {
+				if (!checkbox || !checkbox.dataset || checkbox.dataset.tab === undefined) {
+					return;
+				}
+				var tabId = String(checkbox.dataset.tab);
+				if (checkbox.checked) {
+					if (tabId === "BOT") {
+						activeChatDestinations.clear();
+						var destinationInputs = document.querySelectorAll("#chatDestinationsList input[data-tab]");
+						for (var i = 0; i < destinationInputs.length; i++) {
+							destinationInputs[i].checked = destinationInputs[i] === checkbox;
+						}
+					} else {
+						activeChatDestinations.delete("BOT");
+						var botInput = document.querySelector('#chatDestinationsList input[data-tab="BOT"]');
+						if (botInput) {
+							botInput.checked = false;
+						}
+					}
+					activeChatDestinations.add(tabId);
+				} else {
+					activeChatDestinations.delete(tabId);
+				}
+			}
+
 
 			function getCohostPeerSummary() {
 				var summary = { overlay: false, extension: false, labels: [] };
@@ -7681,6 +7709,21 @@
 					if (isOBSBrowserSource) {
 						return;
 					}
+					if (!data.tabsList.some(function(tab) {
+						return String(tab.id) === "BOT";
+					})) {
+						activeChatDestinations.delete("BOT");
+						if (!activeChatDestinations.size) {
+							getById("getChatSources").innerHTML = "🌐";
+							getById("getChatSources").title = "Sending to all end points";
+						}
+					}
+					// Private BOT prompts are intentionally exclusive so they cannot also be
+					// published to a selected chat destination.
+					if (activeChatDestinations.has("BOT") && activeChatDestinations.size > 1) {
+						activeChatDestinations.clear();
+						activeChatDestinations.add("BOT");
+					}
 					if (document.getElementById("getChatSourcesButton")) {
 						clearTimeout(getById("getChatSourcesButton").setTimeout);
 					}
@@ -7749,11 +7792,8 @@
 					  para.appendChild(smallText);
 
 					  checkbox.onclick = function (event) {
-						if (this.checked) {
-						  activeChatDestinations.add(this.dataset.tab.toString());
-						} else {
-						  activeChatDestinations.delete(this.dataset.tab.toString());
-						}
+						event.stopPropagation();
+						updateChatDestinationSelection(this);
 						if (activeChatDestinations.size) {
 						  getById("getChatSources").innerHTML = "🎯";
 						  getById("getChatSources").title = "Sending to selected end points only";
@@ -7773,11 +7813,7 @@
 						modal.classList.add("hidden");
 						chatDestinationsList.innerHTML = "";
 					  } else if (event.target && event.target.dataset && event.target.dataset.tab) {
-						if (event.target.checked) {
-						  activeChatDestinations.add(event.target.dataset.tab);
-						} else {
-						  activeChatDestinations.delete(event.target.dataset.tab);
-						}
+						updateChatDestinationSelection(event.target);
 
 						if (activeChatDestinations.size) {
 						  getById("getChatSources").innerHTML = "🎯";
@@ -8353,6 +8389,9 @@
 						historyMissedLiveBuffer = [];
 						getById("chatHistoryClearButton").disabled = false;
 						showDockActionNotice("Saved message history cleared.");
+						return true;
+					} else if (data.action == "privateBotStatus") {
+						showDockActionNotice(data.message || "The AI bot could not process that request.");
 						return true;
 					} else if (data.action == "resetleaderboard") {
 						return true;
@@ -10228,6 +10267,316 @@
 					.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "");
 			}
 
+			// Lazily initialized only for ?staticemotes and its aliases. Normal docks allocate no
+			// emote cache, install no handlers, and never enter the per-image feature path.
+			function createStaticEmoteProcessor() {
+				var MAX_FROZEN_EMOTES = 300;
+				var MAX_CANVAS_DIMENSION = 512;
+				var MAX_CANVAS_PIXELS = 262144;
+				var frozenEmoteCache = Object.create(null);
+				var frozenEmoteCacheKeys = [];
+				var pendingFrozenEmotes = Object.create(null);
+
+				function hasOwn(object, key) {
+					return Object.prototype.hasOwnProperty.call(object, key);
+				}
+
+				function getEmoteSourceDetails(src) {
+					if (!src || src.indexOf("data:") === 0) {
+						return null;
+					}
+					try {
+						var url = new URL(src, document.baseURI);
+						var host = url.hostname.toLowerCase();
+						var path = url.pathname.toLowerCase();
+						if (host === "cdn.7tv.app" && path.indexOf("/emote/") === 0) {
+							return { provider: "7tv", url: url };
+						}
+						if (host === "cdn.betterttv.net" && path.indexOf("/emote/") === 0) {
+							return { provider: "bttv", url: url };
+						}
+						if (host === "cdn.frankerfacez.com" && path.indexOf("/emot") === 0) {
+							return { provider: "ffz", url: url };
+						}
+						if (host === "static-cdn.jtvnw.net" && path.indexOf("/emoticons/") === 0) {
+							return { provider: "twitch", url: url };
+						}
+						if (/\.cloudfront\.net$/i.test(host) && path.indexOf("/actions/") === 0) {
+							return { provider: "cheermote", url: url };
+						}
+						if ((host === "cdn.discordapp.com" || host === "media.discordapp.net") && path.indexOf("/emojis/") === 0) {
+							return { provider: "discord", url: url };
+						}
+						if (host === "files.kick.com" && path.indexOf("/emotes/") === 0) {
+							return { provider: "kick", url: url };
+						}
+					} catch (e) {}
+					return null;
+				}
+
+				function getStaticEmoteSrc(src) {
+					var details = getEmoteSourceDetails(src);
+					if (!details || details.provider === "kick") {
+						return null;
+					}
+
+					var url = details.url;
+					var path = url.pathname;
+					var rewrittenPath = path;
+
+					if (details.provider === "7tv") {
+						if (/_static\.(webp|avif|gif|png)$/i.test(path)) {
+							return { src: url.href, changed: false };
+						}
+						rewrittenPath = path.replace(/\/([1-4]x)\.(webp|avif|gif|png)$/i, "/$1_static.$2");
+					} else if (details.provider === "bttv") {
+						if (/\/static\//i.test(path)) {
+							return { src: url.href, changed: false };
+						}
+						rewrittenPath = path.replace(/(\/emote\/[^\/]+)\/([1-3]x)(?:\.(?:webp|gif|png))?$/i, "$1/static/$2.webp");
+					} else if (details.provider === "ffz") {
+						if (!/\/animated\//i.test(path)) {
+							return { src: url.href, changed: false };
+						}
+						rewrittenPath = path.replace(/\/animated\//i, "/").replace(/\.(webp|avif|gif)$/i, "");
+					} else if (details.provider === "twitch") {
+						if (/\/static\//i.test(path)) {
+							return { src: url.href, changed: false };
+						}
+						rewrittenPath = path.replace(/\/(default|animated)\//i, "/static/");
+					} else if (details.provider === "cheermote") {
+						if (!/\/animated\//i.test(path)) {
+							return { src: url.href, changed: false };
+						}
+						rewrittenPath = path.replace(/\/animated\//i, "/static/").replace(/\.gif$/i, ".png");
+					} else if (details.provider === "discord") {
+						if (/\.gif$/i.test(path)) {
+							rewrittenPath = path.replace(/\.gif$/i, ".png");
+						} else if (/\.(webp|avif)$/i.test(path) && url.searchParams.get("animated") === "true") {
+							rewrittenPath = path.replace(/\.(webp|avif)$/i, ".png");
+						} else {
+							return { src: url.href, changed: false };
+						}
+						if (url.searchParams.get("animated") === "true") {
+							url.searchParams.set("animated", "false");
+						}
+					}
+
+					if (rewrittenPath === path) {
+						return null;
+					}
+					url.pathname = rewrittenPath;
+					return { src: url.href, changed: true };
+				}
+
+				function getStaticEmoteSrcset(srcset) {
+					var parts = srcset.split(",");
+					var out = [];
+					var changed = false;
+					for (var s = 0; s < parts.length; s++) {
+						var entry = parts[s].trim();
+						if (!entry) {
+							continue;
+						}
+						var bits = entry.split(/\s+/);
+						var rewritten = getStaticEmoteSrc(bits[0]);
+						if (!rewritten) {
+							return null;
+						}
+						if (rewritten.changed) {
+							bits[0] = rewritten.src;
+							changed = true;
+						}
+						out.push(bits.join(" "));
+					}
+					if (!out.length) {
+						return null;
+					}
+					return { srcset: out.join(", "), changed: changed };
+				}
+
+				function getFirstSrcsetUrl(srcset) {
+					if (!srcset) {
+						return "";
+					}
+					var firstEntry = srcset.split(",")[0].trim();
+					return firstEntry ? firstEntry.split(/\s+/)[0] : "";
+				}
+
+				function isSupportedEmoteImage(img) {
+					if (getEmoteSourceDetails(img.currentSrc || "") || getEmoteSourceDetails(img.src || "")) {
+						return true;
+					}
+					var srcset = img.getAttribute("srcset") || "";
+					var parts = srcset.split(",");
+					for (var s = 0; s < parts.length; s++) {
+						var entry = parts[s].trim();
+						if (entry && getEmoteSourceDetails(entry.split(/\s+/)[0])) {
+							return true;
+						}
+					}
+					return false;
+				}
+
+				function installStaticUrlFallback(img, original) {
+					var previousOnerror = img.onerror;
+					var fallbackUsed = false;
+					img.onerror = function () {
+						if (fallbackUsed) {
+							if (previousOnerror) {
+								previousOnerror.call(this);
+							}
+							return;
+						}
+						fallbackUsed = true;
+						this.onerror = previousOnerror;
+						this.dataset.staticEmote = "fallback";
+						this.removeAttribute("srcset");
+						if (original.hadSrc) {
+							this.setAttribute("src", original.src);
+						} else {
+							this.removeAttribute("src");
+						}
+						if (original.hadSrcset) {
+							this.setAttribute("srcset", original.srcset);
+						}
+					};
+				}
+
+				function cacheFrozenResult(src, value) {
+					if (!hasOwn(frozenEmoteCache, src)) {
+						if (frozenEmoteCacheKeys.length >= MAX_FROZEN_EMOTES) {
+							delete frozenEmoteCache[frozenEmoteCacheKeys.shift()];
+						}
+						frozenEmoteCacheKeys.push(src);
+					}
+					frozenEmoteCache[src] = value;
+				}
+
+				function applyFrozenEmote(img, dataUrl) {
+					img.dataset.staticEmote = "done";
+					img.removeAttribute("srcset");
+					img.src = dataUrl;
+				}
+
+				function finishFrozenEmote(src, dataUrl) {
+					var waiting = pendingFrozenEmotes[src] || [];
+					delete pendingFrozenEmotes[src];
+					cacheFrozenResult(src, dataUrl || false);
+					for (var w = 0; w < waiting.length; w++) {
+						var img = waiting[w];
+						if (img.staticEmotePendingSrc !== src) {
+							continue;
+						}
+						delete img.staticEmotePendingSrc;
+						if (dataUrl) {
+							applyFrozenEmote(img, dataUrl);
+						} else {
+							img.dataset.staticEmote = "fallback";
+						}
+					}
+				}
+
+				function freezeAnimatedImage(img, src) {
+					if (!src || img.dataset.staticEmote) {
+						return;
+					}
+					var details = getEmoteSourceDetails(src);
+					if (!details || details.provider !== "kick") {
+						return;
+					}
+					img.dataset.staticEmote = "pending";
+					img.staticEmotePendingSrc = src;
+					if (hasOwn(frozenEmoteCache, src)) {
+						var cached = frozenEmoteCache[src];
+						delete img.staticEmotePendingSrc;
+						if (cached) {
+							applyFrozenEmote(img, cached);
+						} else {
+							img.dataset.staticEmote = "fallback";
+						}
+						return;
+					}
+					if (pendingFrozenEmotes[src]) {
+						pendingFrozenEmotes[src].push(img);
+						return;
+					}
+					pendingFrozenEmotes[src] = [img];
+
+					var probe = new Image();
+					probe.crossOrigin = "anonymous";
+					probe.onload = function () {
+						try {
+							var width = probe.naturalWidth;
+							var height = probe.naturalHeight;
+							if (!width || !height || width > MAX_CANVAS_DIMENSION || height > MAX_CANVAS_DIMENSION || width * height > MAX_CANVAS_PIXELS) {
+								finishFrozenEmote(src, null);
+								return;
+							}
+							var canvas = document.createElement("canvas");
+							canvas.width = width;
+							canvas.height = height;
+							var context = canvas.getContext("2d");
+							if (!context) {
+								finishFrozenEmote(src, null);
+								return;
+							}
+							context.drawImage(probe, 0, 0, width, height);
+							var frozen = canvas.toDataURL("image/png");
+							finishFrozenEmote(src, frozen && frozen.length > 32 ? frozen : null);
+						} catch (e) {
+							finishFrozenEmote(src, null);
+						}
+					};
+					probe.onerror = function () {
+						finishFrozenEmote(src, null);
+					};
+					probe.src = src;
+				}
+
+				function makeStatic(img) {
+					if (!img || img.dataset.staticEmote || !isSupportedEmoteImage(img)) {
+						return;
+					}
+
+					var original = {
+						hadSrc: img.hasAttribute("src"),
+						src: img.getAttribute("src") || "",
+						hadSrcset: img.hasAttribute("srcset"),
+						srcset: img.getAttribute("srcset") || ""
+					};
+					var resolvedSrc = original.hadSrc ? (img.src || original.src) : "";
+					var rewrittenSrc = resolvedSrc ? getStaticEmoteSrc(resolvedSrc) : null;
+					var rewrittenSrcset = original.hadSrcset ? getStaticEmoteSrcset(original.srcset) : null;
+					var removeSrcset = original.hadSrcset && !rewrittenSrcset && !!rewrittenSrc;
+					var rewriteUrl = !!(rewrittenSrc && rewrittenSrc.changed);
+					var rewriteSrcset = !!(rewrittenSrcset && rewrittenSrcset.changed);
+
+					if (rewriteUrl || rewriteSrcset || removeSrcset) {
+						installStaticUrlFallback(img, original);
+						img.dataset.staticEmote = "rewritten";
+						if (original.hadSrcset && (rewriteSrcset || removeSrcset)) {
+							img.removeAttribute("srcset");
+						}
+						if (rewriteUrl) {
+							img.src = rewrittenSrc.src;
+						}
+						if (rewriteSrcset) {
+							img.setAttribute("srcset", rewrittenSrcset.srcset);
+						}
+						return;
+					}
+
+					if ((rewrittenSrc && !rewrittenSrc.changed) || (rewrittenSrcset && !rewrittenSrcset.changed)) {
+						return;
+					}
+
+					var freezeSrc = img.currentSrc || resolvedSrc || getFirstSrcsetUrl(original.srcset);
+					freezeAnimatedImage(img, freezeSrc);
+				}
+
+				return makeStatic;
+			}
 			function isEmojiOnly(str) {
 				let strippedStr = stripEmojisFromText(str);
 				strippedStr = strippedStr.replace(/\s+/g, '');
@@ -11278,6 +11627,19 @@
 					}
 
 					var chatbadges = "";
+					var has7TVBadge = false;
+					if (typeof data.chatbadges == "string") {
+						has7TVBadge = data.chatbadges.toLowerCase().indexOf("cdn.7tv.app") !== -1;
+					} else if (Array.isArray(data.chatbadges)) {
+						for (var badgeIndex = 0; badgeIndex < data.chatbadges.length; badgeIndex++) {
+							var badgeEntry = data.chatbadges[badgeIndex];
+							var badgeUrl = typeof badgeEntry == "string" ? badgeEntry : badgeEntry && badgeEntry.src;
+							if (typeof badgeUrl == "string" && badgeUrl.toLowerCase().indexOf("cdn.7tv.app") !== -1) {
+								has7TVBadge = true;
+								break;
+							}
+						}
+					}
 					
 					if (giveVIPBadge && vip){
 						if (!data.chatbadges){
@@ -11475,6 +11837,10 @@
 						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + donationHTML+ "</div>" + addImage + "</div>");
 					} else {
 						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</div>" + addImage + donationHTML + "</div>");
+					}
+
+					if (has7TVBadge) {
+						node.classList.add("7tv");
 					}
 
 					if (filtering) {
@@ -11893,7 +12259,6 @@
 							imageElements[i].srcBackup = imageElements[i].src;
 							imageElements[i].src = imageElements[i].src.replaceAll("/light/", "/dark/");
 						}
-						
 						imageElements[i].removeAttribute("width");
 						imageElements[i].removeAttribute("height");
 
@@ -11909,7 +12274,12 @@
 							}
 						};
 					}
-					
+
+					if (makeEmoteStatic) {
+						for (var staticImageIndex = 0; staticImageIndex < imageElements.length; staticImageIndex++) {
+							makeEmoteStatic(imageElements[staticImageIndex]);
+						}
+					}
 					if (typewriterEnabled) {
 						enqueueTypewriter(contentElement, node);
 					}
@@ -12238,10 +12608,19 @@
 								return;
 							}
 						}
+						if (tid.includes("BOT")) {
+							// BOT is intentionally private-only and exclusive in the picker. Keep
+							// this return as a fail-safe for stale or externally supplied arrays.
+							send2Extension({ action: "askBot", value: data });
+							return;
+						}
 					} else if (tid === "TTS") {
 						if (data){
 							TTS.speak(data, true);
 						}
+						return;
+					} else if (tid === "BOT") {
+						send2Extension({ action: "askBot", value: data });
 						return;
 					}
 				}

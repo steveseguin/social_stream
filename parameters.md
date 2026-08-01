@@ -144,6 +144,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `namefilter` | boolean | Applies filters to usernames instead of message text |
 | `stripreplyto` | boolean | Removes “replying to” prefaces from imported messages |
 | `normalize` | boolean | Normalizes characters (e.g., removes diacritics) for comparisons |
+| `staticemotes` or `noanimatedemotes` or `freezeemotes` | boolean | Shows supported animated emotes (7TV, BTTV, FFZ, Twitch, Kick, cheermotes, Discord) as a still image instead |
 
 ### Filtering Parameters
 

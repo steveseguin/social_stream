@@ -27,18 +27,19 @@ This page does not replace current code. If a public doc and source code disagre
 
 ## Current Public Doc Inventory
 
-Checked on 2026-06-24. This excludes `docs/agents/**` and static CSS/image assets.
+Checked on 2026-07-26. This excludes `docs/agents/**` and static CSS/image assets.
 
 | Area | Files | Agent Use |
 | --- | --- | --- |
-| Product/install/support | `docs/index.html`, `docs/download.html`, `docs/features.html`, `docs/guides.html`, `docs/support.html`, `docs/services.html`, `docs/templates.html` | Good user-facing summary. Source-check precise claims before promising exact behavior. |
-| API/commands/events/settings/sites | `docs/commands.html`, `docs/event-reference.html`, `docs/settings.html`, `docs/supported-sites.html` | High-value references. `event-reference.html` is canonical for event vocabulary; settings/sites pages are generated from shared/public data. |
-| Customization docs | `docs/customoverlays.md`, `docs/custom-fonts.html`, `docs/templates.html` | Good for user customization answers. Confirm local-vs-hosted limitations before giving file-path instructions. |
-| TTS/AI docs | `docs/tts.html`, `docs/local-tts.html`, `docs/ai-cohost-guide.html` | Good setup docs. Provider costs, model availability, and API details are volatile. |
-| Platform-specific guides | `docs/tiktok-guide.html`, `docs/youtube-project-setup.html`, `docs/zoom.md`, `docs/kick-channel-points-event-flow.md` | Useful setup guides. Platform details are volatile and should be source-checked. |
-| Newer feature guides | `docs/first-time-chatters.html`, `docs/hype-train-top-bar.html` | Useful feature-specific docs. Check current settings/source behavior before treating as complete. |
+| Product/install/support | `docs/index.html`, `docs/download.html`, `docs/features.html`, `docs/guides.html`, `docs/knowledge-base.html`, `docs/support.html`, `docs/services.html`, `docs/platform-setup-picker.html`, `docs/export-settings-for-support.html` | Good user-facing summary and first-stop routing. Source-check precise claims before promising exact behavior. |
+| API/commands/events/settings/sites | `docs/commands.html`, `docs/event-reference.html`, `docs/settings.html`, `docs/supported-sites.html`, `docs/event-flow-recipes.html`, `docs/llm-control-guide.html`, `docs/test-message-guide.html` | High-value references and workflow guides. `event-reference.html` is canonical for event vocabulary; settings/sites pages are generated from shared/public data. |
+| Customization and overlay docs | `docs/customoverlays.md`, `docs/custom-fonts.html`, `docs/templates.html`, `docs/overlay-template-quick-start.html`, `docs/overlay-customization-guide.html`, `docs/on-screen-chat-overlay.html`, `docs/tip-jar-goal-meter.html`, `docs/media-hosting-event-flow.html` | Good practical coverage. Confirm local-vs-hosted limitations and event compatibility before giving exact setup instructions. |
+| TTS/AI docs | `docs/tts.html`, `docs/tts-setup-guide.html`, `docs/local-tts.html`, `docs/ai-modes-guide.html`, `docs/chatbot-basics-guide.html`, `docs/ai-cohost-guide.html`, `docs/ai-overlay-builder-guide.html`, `docs/twitch-bot-account-chatbot.html` | Good setup coverage. Provider costs, model availability, API details, and multimodal support are volatile. |
+| Platform-specific guides | `docs/source-types-guide.html`, `docs/tiktok-quick-start.html`, `docs/tiktok-guide.html`, `docs/tiktok-app-modes-guide.html`, `docs/youtube-setup-guide.html`, `docs/youtube-project-setup.html`, `docs/vdo-native-social-stream-guide.html`, `docs/zoom.md`, `docs/kick-channel-points-event-flow.md` | Useful setup guides. Platform details are volatile and should be source-checked. |
+| OBS and display guides | `docs/obs-quick-start.html`, `docs/obs-troubleshooting.html`, `docs/on-screen-chat-overlay.html`, `docs/video-stats-bitrate.html` | Strong first-pass coverage for common OBS and on-screen display workflows. Exact OBS/app behavior still needs runtime checks. |
+| Newer feature guides | `docs/first-time-chatters.html`, `docs/hype-train-top-bar.html`, `docs/tip-jar-goal-meter.html`, `docs/video-stats-bitrate.html` | Useful feature-specific docs. Check current settings/source behavior before treating as complete. |
 | Standalone app docs | `docs/ssapp.html`, `docs/appImage.md` | Good public app guide. For exact app behavior, verify in `ssapp` source. |
-| Planning/history | `docs/youtube-websocket-streaming-plan.md` | Planning artifact. Do not treat as implemented behavior without source proof. |
+| Planning/history | `docs/youtube-websocket-streaming-plan.md`, `docs/llm-control-finalization-plan.md`, `docs/local-media-library-plan.md` | Planning artifacts. Do not treat as implemented behavior without source proof. |
 | Generated code/event indexes | `docs/md/*.md` | Useful for discovery and function/event inventory. Confirm generated date/source and current code before using as final behavior proof. |
 | Public data/scripts | `docs/js/sites.js`, `docs/js/settings.js`, `docs/data/services.json` | Current public-page data sources. Good for site/settings/service inventory. |
 
@@ -156,3 +157,19 @@ Needed intense passes:
 - Add a generated public-doc freshness report with file modified dates and source anchors.
 - Verify `docs/md` generated indexes against current code generation process.
 - Promote verified public-doc facts into topic docs and move stale claims into `unresolved-or-stale-claims.md`.
+
+## Prioritized Public Guide Gaps
+
+Second-pass priority review on 2026-07-26:
+
+| Priority | Suggested Public Guide | Why It Matters | Readiness / Risk |
+| --- | --- | --- | --- |
+| Added | [Safe updates, backups, and settings recovery](../../safe-updates-backups.html) | Install/update questions and lost settings recur, while `export-settings-for-support.html` is support-package focused rather than an upgrade-safety walkthrough. | Verified 2026-07-26 against current extension controls and SSApp 0.4.7 menus; settings and encrypted full-session transfer tests passed. |
+| Added | [Twitch setup and EventSub mode guide](../../twitch-eventsub-setup.html) | Twitch is a major source, but the public docs only had the separate bot-account chatbot guide. Users need normal capture vs EventSub/WebSocket, OAuth/scopes, rewards, replies, and first checks. | Verified 2026-07-26 against the current Twitch source, OAuth scopes, EventSub subscription list, official Twitch references, and subscription-gift test. |
+| Added | [Kick setup and authentication guide](../../kick-setup-authentication.html) | The public Kick material focused on channel-point Event Flow, not basic capture, app/WebSocket choices, login, rewards, or common failures. | Verified 2026-07-26 against the packaged Kick source, current bridge scopes and subscriptions, and Kick's official OAuth/scopes/event references. |
+| P1 | Desktop app login and authentication guide | App-vs-browser sign-in failures are common and scattered across mode and troubleshooting pages. | Agent auth/app docs provide structure; verify current external-browser and OAuth flows in the real app. |
+| Added | [Sessions, passwords, and relay/server modes explained](../../sessions-passwords-relay-modes.html) | Session mismatch and routing problems cause many blank dock/overlay cases; current guidance was split across quick starts, settings, commands, and troubleshooting. | Verified 2026-07-26 against current popup labels, page-specific generated-link routing, and link-generation regression tests. |
+| Added | [Events and alerts compatibility guide](../../events-alerts-compatibility.html) | `event-reference.html` defines payloads, but users still need a plain-language map from platform/mode events to Multi Alerts, Event Flow, TTS, goals, and API consumers. | Verified 2026-07-26 against current platform sources, Multi Alerts classification, TTS filtering, goal behavior, and the Multi Alerts end-to-end test. |
+| P2 | Firefox, Chromium, desktop app, and Lite limitations | Install surfaces are listed, but a concise capability comparison would prevent users choosing a surface that cannot support their required source or workflow. | Much of the comparison exists in agent docs; confirm current Firefox packaging and app parity. |
+
+Remaining priorities: desktop app login/authentication, then a verified Firefox/Chromium/desktop/Lite capability comparison.

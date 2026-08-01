@@ -188,9 +188,11 @@ function pushMessage(data){
 			console.log("LOADED SocialStream EXTENSION");
 			
 			try{
-				document.querySelectorAll("nav button").forEach(ele=>{
-					ele.disabled = true;
-				});
+				if (location.pathname.startsWith("/chat/")){
+					document.querySelectorAll("nav button").forEach(ele=>{
+						ele.disabled = true;
+					});
+				}
 			} catch(e){}
 			
 			try { 

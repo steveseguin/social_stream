@@ -494,7 +494,7 @@ document.addEventListener('DOMContentLoaded', function() {
             instructions: `
                 <ul>
                     <li>Use the pop out chat</li>
-                    <li>URL: https://piczel.tv/chat/*</li>
+                    <li>URL: https://piczel.tv/chat/* or https://piczel.tv/watch/*</li>
                 </ul>
             `
         },

@@ -223,7 +223,7 @@ function toDataURL(blobUrl, callback) {
 
 	function shouldCaptureExistingPartiHistory(){
 		if (!("ignorepartibacklog" in settings)){
-			return true;
+			return false;
 		}
 		var value = settings.ignorepartibacklog;
 		if (value && typeof value === "object" && "setting" in value){

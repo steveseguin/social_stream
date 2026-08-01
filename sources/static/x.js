@@ -1,5 +1,20 @@
 (function() {
 
+    function isBlockedXPage() {
+        try {
+            var path = (window.location.pathname || "").toLowerCase();
+            var isPrivateInternalRoute = path.startsWith("/i/") && !path.startsWith("/i/broadcasts/");
+            return isPrivateInternalRoute ||
+                (path === "/messages") || path.startsWith("/messages/") ||
+                (path === "/notifications") || path.startsWith("/notifications/") ||
+                (path === "/bookmarks") || path.startsWith("/bookmarks/") ||
+                (path === "/settings") || path.startsWith("/settings/") ||
+                (path === "/compose") || path.startsWith("/compose/");
+        } catch (e) {
+            return true;
+        }
+    }
+
     function toDataURL(url, callback) {
         var xhr = new XMLHttpRequest();
         xhr.onload = function() {
@@ -19,6 +34,9 @@
     var isExtensionOn = false;
 
     function pushMessage(data) {
+        if (isBlockedXPage() || !isExtensionOn || !settings.xcapture || !enabledSSN) {
+            return;
+        }
         try {
             chrome.runtime.sendMessage(chrome.runtime.id, {
                 "message": data
@@ -98,6 +116,10 @@
         function(request, sender, sendResponse) {
             try {
                 if ("getSource" == request){
+					if (isBlockedXPage()) {
+						sendResponse(false);
+						return;
+					}
 					
 					if (settings.detweet) {
 						sendResponse("twitter");
@@ -108,7 +130,7 @@
 					
 				}
 				if ("focusChat" == request) { // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					if (allowposting){
+					if (!isBlockedXPage() && isExtensionOn && settings.xcapture && enabledSSN && allowposting){
 						document.querySelector('[contenteditable="true"][tabindex="0"]').focus();
 						sendResponse(true);
 					}
@@ -243,6 +265,9 @@
 
 
     function prepMessage(ele) {
+        if (isBlockedXPage() || !isExtensionOn || !settings.xcapture || !enabledSSN) {
+            return;
+        }
         if (ele == window) {
             return;
         }
@@ -489,7 +514,7 @@
 
     function checkButtons() {
 
-        if (!isExtensionOn || !enabledSSN || !settings.xcapture) {
+        if (isBlockedXPage() || !isExtensionOn || !enabledSSN || !settings.xcapture) {
             return;
         }
         try {

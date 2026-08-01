@@ -119,6 +119,7 @@
 								<input type="text" id="channel-input" class="channel-input" placeholder="Enter channel name">
 								<input type="text" id="video-input" class="channel-input" placeholder="Enter video ID">
 								<button id="connect-button" class="connect-button" style="background-color: #2255dd;">Connect</button>
+								<button id="look-for-streams-button" class="connect-button hidden" style="background-color: #1a73e8;">Look for new streams</button>
 								<button id="change-button" class="connect-button" style="background-color: #882244;">Reset</button>
 								<button id="sign-out-button" class="sign-out-button">Sign Out</button>
 							</div>
@@ -585,6 +586,12 @@ try {
     var userDetails = {};
 	var currentStream = null;
 	var authenticatedChannelId = "";
+	var youtubeInitialTargetResolutionPending = true;
+	var youtubeUrlTargetSpecified = false;
+	var ownBroadcastLookupChannelId = "";
+	var ownBroadcastLookupPromise = null;
+	var activeYouTubeBroadcastMonitorLease = null;
+	var youtubeBroadcastMonitorHeartbeatInterval = null;
 	var messageQueue = [];
 	var queueDrainTimeout = null;
 	const YT_ADVANCED_CONTROLS_STORAGE_KEY = 'youtubeAdvancedControls';
@@ -598,6 +605,13 @@ try {
 	const YT_RECENT_SUBSCRIBER_MAX_SEEN = 500;
 	const YT_RECENT_SUBSCRIBER_GROUP_THRESHOLD = 3;
 	const YT_RECENT_SUBSCRIBER_TRACKER_ID = "yt-sub-tracker-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+	const YT_BROADCAST_MONITOR_STORAGE_PREFIX = "youtubeBroadcastMonitorLease.v1.";
+	const YT_BROADCAST_MONITOR_TTL_MS = 2 * 60 * 1000;
+	const YT_BROADCAST_MONITOR_HEARTBEAT_MS = 30 * 1000;
+	const YT_BROADCAST_MONITOR_CLAIM_SETTLE_MS = 75;
+	const YT_BROADCAST_MONITOR_INSTANCE_ID = "yt-broadcast-monitor-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+	const YT_OWN_BROADCAST_LAST_CHECK_PREFIX = "youtubeOwnBroadcastLastCheck.v1.";
+	const YT_OWN_BROADCAST_CHECK_COOLDOWN_MS = 30 * 1000;
     var pendingRelayMessages = [];
     const MAX_CACHED_CHAT_MESSAGES = 500;
     const LIVE_CHAT_MAX_RESULTS = 500;
@@ -3265,6 +3279,8 @@ function enableBackgroundKeepAlive() {
 		localStorage.removeItem('youtubeChannel');
         localStorage.removeItem('youtubeVideoId');
 		authenticatedChannelId = "";
+		releaseYouTubeBroadcastMonitorLease();
+		resetYouTubeSignInTargetResolution();
 	}
     function isSocketInterfaceVisible() {
         return Array.from(document.querySelectorAll('.socket')).some(ele => !ele.classList.contains('hidden'));
@@ -4520,6 +4536,470 @@ function enableBackgroundKeepAlive() {
 	}
 	
 
+	function normalizeYouTubeSignInTargetValue(value) {
+		return typeof value === 'string' ? value.trim() : '';
+	}
+
+	function getYouTubeBroadcastMonitorStorageKey() {
+		return YT_BROADCAST_MONITOR_STORAGE_PREFIX + YT_BROADCAST_MONITOR_INSTANCE_ID;
+	}
+
+	function readYouTubeBroadcastMonitorLease(rawValue) {
+		try {
+			const parsed = rawValue ? JSON.parse(rawValue) : null;
+			if (!parsed || !parsed.accountId || !parsed.videoId || !parsed.monitorId) return null;
+			return {
+				accountId: normalizeYouTubeSignInTargetValue(parsed.accountId),
+				videoId: normalizeYouTubeSignInTargetValue(parsed.videoId),
+				monitorId: normalizeYouTubeSignInTargetValue(parsed.monitorId),
+				mode: normalizeYouTubeSignInTargetValue(parsed.mode) || 'explicit',
+				state: normalizeYouTubeSignInTargetValue(parsed.state) || 'active',
+				expiresAt: Number(parsed.expiresAt) || 0
+			};
+		} catch (_) {
+			return null;
+		}
+	}
+
+	function readActiveYouTubeBroadcastMonitorLeases(accountId, videoId) {
+		const normalizedAccountId = normalizeYouTubeSignInTargetValue(accountId);
+		const normalizedVideoId = normalizeYouTubeSignInTargetValue(videoId);
+		const now = Date.now();
+		const leases = [];
+		const staleKeys = [];
+		try {
+			for (let index = 0; index < localStorage.length; index++) {
+				const key = localStorage.key(index);
+				if (!key || !key.startsWith(YT_BROADCAST_MONITOR_STORAGE_PREFIX)) continue;
+				const lease = readYouTubeBroadcastMonitorLease(localStorage.getItem(key));
+				if (!lease || lease.expiresAt <= now) {
+					staleKeys.push(key);
+					continue;
+				}
+				if (normalizedAccountId && lease.accountId !== normalizedAccountId) continue;
+				if (normalizedVideoId && lease.videoId !== normalizedVideoId) continue;
+				leases.push(lease);
+			}
+			staleKeys.forEach(function(key) {
+				const current = readYouTubeBroadcastMonitorLease(localStorage.getItem(key));
+				if (!current || current.expiresAt <= Date.now()) {
+					localStorage.removeItem(key);
+				}
+			});
+		} catch (_) {}
+		return leases;
+	}
+
+	function writeYouTubeBroadcastMonitorLease(accountId, videoId, mode, state) {
+		const normalizedAccountId = normalizeYouTubeSignInTargetValue(accountId);
+		const normalizedVideoId = normalizeYouTubeSignInTargetValue(videoId);
+		if (!normalizedAccountId || !normalizedVideoId) return false;
+		const lease = {
+			accountId: normalizedAccountId,
+			videoId: normalizedVideoId,
+			monitorId: YT_BROADCAST_MONITOR_INSTANCE_ID,
+			mode: mode === 'auto' ? 'auto' : 'explicit',
+			state: state === 'claiming' ? 'claiming' : 'active',
+			expiresAt: Date.now() + YT_BROADCAST_MONITOR_TTL_MS
+		};
+		try {
+			const key = getYouTubeBroadcastMonitorStorageKey();
+			localStorage.setItem(key, JSON.stringify(lease));
+			const current = readYouTubeBroadcastMonitorLease(localStorage.getItem(key));
+			if (!current || current.monitorId !== YT_BROADCAST_MONITOR_INSTANCE_ID) return false;
+			activeYouTubeBroadcastMonitorLease = lease;
+			return true;
+		} catch (_) {
+			return false;
+		}
+	}
+
+	function refreshYouTubeBroadcastMonitorLease() {
+		if (!activeYouTubeBroadcastMonitorLease) return;
+		writeYouTubeBroadcastMonitorLease(
+			activeYouTubeBroadcastMonitorLease.accountId,
+			activeYouTubeBroadcastMonitorLease.videoId,
+			activeYouTubeBroadcastMonitorLease.mode,
+			'active'
+		);
+	}
+
+	function startYouTubeBroadcastMonitorHeartbeat() {
+		if (youtubeBroadcastMonitorHeartbeatInterval) {
+			clearInterval(youtubeBroadcastMonitorHeartbeatInterval);
+		}
+		youtubeBroadcastMonitorHeartbeatInterval = setInterval(
+			refreshYouTubeBroadcastMonitorLease,
+			YT_BROADCAST_MONITOR_HEARTBEAT_MS
+		);
+	}
+
+	function releaseYouTubeBroadcastMonitorLease() {
+		if (youtubeBroadcastMonitorHeartbeatInterval) {
+			clearInterval(youtubeBroadcastMonitorHeartbeatInterval);
+			youtubeBroadcastMonitorHeartbeatInterval = null;
+		}
+		try {
+			const key = getYouTubeBroadcastMonitorStorageKey();
+			const current = readYouTubeBroadcastMonitorLease(localStorage.getItem(key));
+			if (!current || current.monitorId === YT_BROADCAST_MONITOR_INSTANCE_ID) {
+				localStorage.removeItem(key);
+			}
+		} catch (_) {}
+		activeYouTubeBroadcastMonitorLease = null;
+	}
+
+	function activateYouTubeBroadcastMonitorLease(accountId, videoId, mode) {
+		const normalizedAccountId = normalizeYouTubeSignInTargetValue(accountId);
+		const normalizedVideoId = normalizeYouTubeSignInTargetValue(videoId);
+		if (!normalizedAccountId || !normalizedVideoId) return false;
+		if (
+			activeYouTubeBroadcastMonitorLease &&
+			(
+				activeYouTubeBroadcastMonitorLease.accountId !== normalizedAccountId ||
+				activeYouTubeBroadcastMonitorLease.videoId !== normalizedVideoId
+			)
+		) {
+			releaseYouTubeBroadcastMonitorLease();
+		}
+		if (!writeYouTubeBroadcastMonitorLease(normalizedAccountId, normalizedVideoId, mode, 'active')) {
+			return false;
+		}
+		startYouTubeBroadcastMonitorHeartbeat();
+		return true;
+	}
+
+	function getYouTubeBroadcastsMonitoredByOtherPages(accountId) {
+		const monitoredVideoIds = {};
+		readActiveYouTubeBroadcastMonitorLeases(accountId).forEach(function(lease) {
+			if (lease.monitorId !== YT_BROADCAST_MONITOR_INSTANCE_ID) {
+				monitoredVideoIds[lease.videoId] = true;
+			}
+		});
+		return monitoredVideoIds;
+	}
+
+	async function tryClaimYouTubeBroadcastForAutomaticMonitoring(accountId, videoId) {
+		const normalizedAccountId = normalizeYouTubeSignInTargetValue(accountId);
+		const normalizedVideoId = normalizeYouTubeSignInTargetValue(videoId);
+		if (!normalizedAccountId || !normalizedVideoId) return true;
+		if (
+			activeYouTubeBroadcastMonitorLease &&
+			activeYouTubeBroadcastMonitorLease.accountId === normalizedAccountId &&
+			activeYouTubeBroadcastMonitorLease.videoId === normalizedVideoId
+		) {
+			return true;
+		}
+		if (activeYouTubeBroadcastMonitorLease) {
+			releaseYouTubeBroadcastMonitorLease();
+		}
+		const existingLease = readActiveYouTubeBroadcastMonitorLeases(normalizedAccountId, normalizedVideoId).some(function(lease) {
+			return lease.monitorId !== YT_BROADCAST_MONITOR_INSTANCE_ID;
+		});
+		if (existingLease) return false;
+		if (!writeYouTubeBroadcastMonitorLease(normalizedAccountId, normalizedVideoId, 'auto', 'claiming')) {
+			return true;
+		}
+		await new Promise(function(resolve) {
+			setTimeout(resolve, YT_BROADCAST_MONITOR_CLAIM_SETTLE_MS);
+		});
+		const contenders = readActiveYouTubeBroadcastMonitorLeases(normalizedAccountId, normalizedVideoId);
+		contenders.sort(function(first, second) {
+			return first.monitorId.localeCompare(second.monitorId);
+		});
+		if (contenders.length && contenders[0].monitorId !== YT_BROADCAST_MONITOR_INSTANCE_ID) {
+			releaseYouTubeBroadcastMonitorLease();
+			return false;
+		}
+		activateYouTubeBroadcastMonitorLease(normalizedAccountId, normalizedVideoId, 'auto');
+		return true;
+	}
+
+	function resolveYouTubeSignInTarget(redirectVideoId, redirectChannel, savedVideoId, savedChannel, authOnlyMode) {
+		if (authOnlyMode) {
+			return { type: 'none', source: 'auth-only', value: '' };
+		}
+		const normalizedRedirectVideoId = normalizeYouTubeSignInTargetValue(redirectVideoId);
+		if (normalizedRedirectVideoId) {
+			return { type: 'video', source: 'url', value: normalizedRedirectVideoId };
+		}
+		const normalizedRedirectChannel = normalizeYouTubeSignInTargetValue(redirectChannel);
+		if (normalizedRedirectChannel) {
+			return { type: 'channel', source: 'url', value: normalizedRedirectChannel };
+		}
+		const normalizedSavedVideoId = normalizeYouTubeSignInTargetValue(savedVideoId);
+		if (normalizedSavedVideoId) {
+			return { type: 'video', source: 'saved', value: normalizedSavedVideoId };
+		}
+		const normalizedSavedChannel = normalizeYouTubeSignInTargetValue(savedChannel);
+		if (normalizedSavedChannel) {
+			return { type: 'channel', source: 'saved', value: normalizedSavedChannel };
+		}
+		return { type: 'own', source: 'sign-in', value: '' };
+	}
+
+	function getYouTubeBroadcastTimestamp(item, fieldName) {
+		const rawValue = item && item.snippet ? item.snippet[fieldName] : '';
+		if (!rawValue) return null;
+		const parsed = Date.parse(rawValue);
+		return Number.isFinite(parsed) ? parsed : null;
+	}
+
+	function compareYouTubeBroadcastIds(first, second) {
+		return String(first && first.id || '').localeCompare(String(second && second.id || ''));
+	}
+
+	function compareLiveYouTubeBroadcasts(first, second) {
+		const firstHasChat = !!(first && first.snippet && first.snippet.liveChatId);
+		const secondHasChat = !!(second && second.snippet && second.snippet.liveChatId);
+		if (firstHasChat !== secondHasChat) {
+			return secondHasChat ? 1 : -1;
+		}
+		const liveStatusPriority = { live: 0, liveStarting: 1 };
+		const firstStatus = first && first.status ? first.status.lifeCycleStatus : '';
+		const secondStatus = second && second.status ? second.status.lifeCycleStatus : '';
+		if (liveStatusPriority[firstStatus] !== liveStatusPriority[secondStatus]) {
+			return liveStatusPriority[firstStatus] - liveStatusPriority[secondStatus];
+		}
+		const firstActualStart = getYouTubeBroadcastTimestamp(first, 'actualStartTime');
+		const secondActualStart = getYouTubeBroadcastTimestamp(second, 'actualStartTime');
+		const firstStart = firstActualStart === null ? getYouTubeBroadcastTimestamp(first, 'scheduledStartTime') : firstActualStart;
+		const secondStart = secondActualStart === null ? getYouTubeBroadcastTimestamp(second, 'scheduledStartTime') : secondActualStart;
+		if (firstStart !== secondStart) {
+			if (firstStart === null) return 1;
+			if (secondStart === null) return -1;
+			return secondStart - firstStart;
+		}
+		return compareYouTubeBroadcastIds(first, second);
+	}
+
+	function getUpcomingYouTubeBroadcastSortValue(item, now) {
+		const scheduledStart = getYouTubeBroadcastTimestamp(item, 'scheduledStartTime');
+		if (scheduledStart === null) {
+			return { group: 2, value: 0 };
+		}
+		if (scheduledStart >= now) {
+			return { group: 0, value: scheduledStart };
+		}
+		return { group: 1, value: -scheduledStart };
+	}
+
+	function compareUpcomingYouTubeBroadcasts(first, second, now) {
+		const firstSort = getUpcomingYouTubeBroadcastSortValue(first, now);
+		const secondSort = getUpcomingYouTubeBroadcastSortValue(second, now);
+		if (firstSort.group !== secondSort.group) {
+			return firstSort.group - secondSort.group;
+		}
+		if (firstSort.value !== secondSort.value) {
+			return firstSort.value - secondSort.value;
+		}
+		const firstHasChat = !!(first && first.snippet && first.snippet.liveChatId);
+		const secondHasChat = !!(second && second.snippet && second.snippet.liveChatId);
+		if (firstHasChat !== secondHasChat) {
+			return secondHasChat ? 1 : -1;
+		}
+		const upcomingStatusPriority = { testStarting: 0, testing: 1, ready: 2, created: 3 };
+		const firstStatus = first && first.status ? first.status.lifeCycleStatus : '';
+		const secondStatus = second && second.status ? second.status.lifeCycleStatus : '';
+		if (upcomingStatusPriority[firstStatus] !== upcomingStatusPriority[secondStatus]) {
+			return upcomingStatusPriority[firstStatus] - upcomingStatusPriority[secondStatus];
+		}
+		return compareYouTubeBroadcastIds(first, second);
+	}
+
+	function selectOwnYouTubeBroadcast(items, channelId, nowValue, excludedVideoIds) {
+		const normalizedChannelId = normalizeYouTubeSignInTargetValue(channelId);
+		if (!normalizedChannelId || !Array.isArray(items)) return null;
+		const ownBroadcasts = items.filter(function(item) {
+			return !!(
+				item &&
+				item.id &&
+				item.snippet &&
+				item.snippet.channelId === normalizedChannelId &&
+				!(excludedVideoIds && excludedVideoIds[item.id])
+			);
+		});
+		const liveBroadcasts = ownBroadcasts.filter(function(item) {
+			const status = item.status && item.status.lifeCycleStatus;
+			return status === 'live' || status === 'liveStarting';
+		});
+		if (liveBroadcasts.length) {
+			liveBroadcasts.sort(compareLiveYouTubeBroadcasts);
+			return liveBroadcasts[0];
+		}
+		const upcomingStatuses = { created: true, ready: true, testStarting: true, testing: true };
+		const upcomingBroadcasts = ownBroadcasts.filter(function(item) {
+			const status = item.status && item.status.lifeCycleStatus;
+			return !!upcomingStatuses[status];
+		});
+		if (!upcomingBroadcasts.length) return null;
+		const now = Number.isFinite(nowValue) ? nowValue : Date.now();
+		upcomingBroadcasts.sort(function(first, second) {
+			return compareUpcomingYouTubeBroadcasts(first, second, now);
+		});
+		return upcomingBroadcasts[0];
+	}
+
+	async function selectAvailableOwnYouTubeBroadcast(items, channelId) {
+		const excludedVideoIds = getYouTubeBroadcastsMonitoredByOtherPages(channelId);
+		while (true) {
+			const candidate = selectOwnYouTubeBroadcast(items, channelId, Date.now(), excludedVideoIds);
+			if (!candidate) return null;
+			if (await tryClaimYouTubeBroadcastForAutomaticMonitoring(channelId, candidate.id)) {
+				return candidate;
+			}
+			excludedVideoIds[candidate.id] = true;
+		}
+	}
+
+	function resetYouTubeSignInTargetResolution() {
+		youtubeInitialTargetResolutionPending = true;
+		ownBroadcastLookupChannelId = "";
+		ownBroadcastLookupPromise = null;
+	}
+
+	function consumeYouTubeInitialTargetResolution() {
+		const wasPending = youtubeInitialTargetResolutionPending;
+		youtubeInitialTargetResolutionPending = false;
+		return wasPending;
+	}
+
+	// Intentional YouTube quota safeguard: automatic own-broadcast discovery is
+	// one-shot. Do not poll a scheduled broadcast for its liveChatId; the user
+	// manually clicks "Look for Streams" to check again after it goes live.
+	function getOwnYouTubeBroadcastCandidatesOnce(token, channelId) {
+		const normalizedChannelId = normalizeYouTubeSignInTargetValue(channelId);
+		if (!token || !normalizedChannelId || isYouTubeAuthOnlyMode()) {
+			return Promise.resolve([]);
+		}
+		if (ownBroadcastLookupPromise && ownBroadcastLookupChannelId === normalizedChannelId) {
+			return ownBroadcastLookupPromise;
+		}
+		ownBroadcastLookupChannelId = normalizedChannelId;
+		ownBroadcastLookupPromise = (async function() {
+			const response = await fetchWithTimeout(
+				'https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status&mine=true&broadcastType=all&maxResults=50',
+				5000,
+				{ 'Authorization': `Bearer ${token}` }
+			);
+			const data = await response.json();
+			if (!response.ok) {
+				const apiError = data && data.error && (data.error.message || data.error.status);
+				throw new Error(apiError || ('YouTube broadcast lookup failed with status ' + response.status));
+			}
+			return data && Array.isArray(data.items) ? data.items : [];
+		})();
+		return ownBroadcastLookupPromise;
+	}
+
+	function hasYouTubeUrlSpecifiedTarget() {
+		return youtubeUrlTargetSpecified;
+	}
+
+	function hideLookForYouTubeStreamsButton() {
+		const button = document.getElementById('look-for-streams-button');
+		if (button) button.classList.add('hidden');
+	}
+
+	function updateLookForYouTubeStreamsButton() {
+		const button = document.getElementById('look-for-streams-button');
+		if (!button) return;
+		const shouldShow = !!(
+			getStoredToken() &&
+			authenticatedChannelId &&
+			!liveChatId &&
+			!isYouTubeAuthOnlyMode() &&
+			!hasYouTubeUrlSpecifiedTarget()
+		);
+		button.classList.toggle('hidden', !shouldShow);
+	}
+
+	function getYouTubeOwnBroadcastLastCheckKey(channelId) {
+		return YT_OWN_BROADCAST_LAST_CHECK_PREFIX + normalizeYouTubeSignInTargetValue(channelId);
+	}
+
+	function getYouTubeOwnBroadcastCheckCooldownRemaining(channelId) {
+		const normalizedChannelId = normalizeYouTubeSignInTargetValue(channelId);
+		if (!normalizedChannelId) return 0;
+		const lastCheck = Number(localStorage.getItem(getYouTubeOwnBroadcastLastCheckKey(normalizedChannelId))) || 0;
+		return Math.max(0, YT_OWN_BROADCAST_CHECK_COOLDOWN_MS - (Date.now() - lastCheck));
+	}
+
+	function markYouTubeOwnBroadcastCheck(channelId) {
+		const normalizedChannelId = normalizeYouTubeSignInTargetValue(channelId);
+		if (!normalizedChannelId) return;
+		localStorage.setItem(getYouTubeOwnBroadcastLastCheckKey(normalizedChannelId), String(Date.now()));
+	}
+
+	async function lookForOwnYouTubeStreams(forceRefresh, bypassCooldown) {
+		const token = getStoredToken();
+		if (!token || !authenticatedChannelId || isYouTubeAuthOnlyMode() || hasYouTubeUrlSpecifiedTarget()) {
+			updateLookForYouTubeStreamsButton();
+			return false;
+		}
+		const cooldownRemaining = bypassCooldown ? 0 : getYouTubeOwnBroadcastCheckCooldownRemaining(authenticatedChannelId);
+		if (cooldownRemaining > 0) {
+			const waitSeconds = Math.max(1, Math.ceil(cooldownRemaining / 1000));
+			updateHeaderInfo(username, 'Stream check available in ' + waitSeconds + 's');
+			document.getElementById('textarea').innerHTML = '<div>Live streams were checked recently. Try again in ' + waitSeconds + ' seconds.</div>';
+			updateLookForYouTubeStreamsButton();
+			return false;
+		}
+		markYouTubeOwnBroadcastCheck(authenticatedChannelId);
+		const button = document.getElementById('look-for-streams-button');
+		if (button) {
+			button.disabled = true;
+			button.textContent = 'Looking...';
+		}
+		hideLookForYouTubeStreamsButton();
+		updateHeaderInfo(username, 'Checking your live broadcasts...');
+		document.getElementById('textarea').innerHTML = '<div>Checking your channel for a live or upcoming stream...</div>';
+		if (forceRefresh) {
+			ownBroadcastLookupChannelId = "";
+			ownBroadcastLookupPromise = null;
+		}
+		try {
+			const ownBroadcastCandidates = await getOwnYouTubeBroadcastCandidatesOnce(token, authenticatedChannelId);
+			const anyOwnBroadcast = selectOwnYouTubeBroadcast(ownBroadcastCandidates, authenticatedChannelId);
+			const ownBroadcast = await selectAvailableOwnYouTubeBroadcast(ownBroadcastCandidates, authenticatedChannelId);
+			if (ownBroadcast && ownBroadcast.id) {
+				videoId = ownBroadcast.id;
+				channel = '';
+				if (!liveChatId && streamStatsInterval) {
+					stopStreamStatsPolling();
+				}
+				await connect(videoId, {
+					monitorMode: 'auto',
+					preserveBroadcastMonitorLease: true
+				});
+				return true;
+			}
+			const noStreamStatus = anyOwnBroadcast
+				? 'Your live or upcoming streams are already monitored in another page.'
+				: 'No live or upcoming stream was found on your channel.';
+			updateHeaderInfo(username, anyOwnBroadcast ? 'Streams already monitored' : 'No live or upcoming stream');
+			document.getElementById('textarea').innerHTML = '<div>Signed in. ' + noStreamStatus + '</div>';
+			document.getElementById('viewer-count').textContent = '-';
+			document.getElementById('subscriber-count').textContent = '-';
+			document.getElementById('likes-count').textContent = '-';
+			return false;
+		} catch (error) {
+			console.error('Unable to check your YouTube broadcasts:', error);
+			updateHeaderInfo(username, 'Broadcast check failed');
+			document.getElementById('textarea').innerHTML = '<div>Signed in, but your live broadcasts could not be checked.</div>';
+			document.getElementById('viewer-count').textContent = '-';
+			document.getElementById('subscriber-count').textContent = '-';
+			document.getElementById('likes-count').textContent = '-';
+			return false;
+		} finally {
+			if (button) {
+				button.disabled = false;
+				button.textContent = 'Look for new streams';
+			}
+			updateLookForYouTubeStreamsButton();
+		}
+	}
+
 	function verifyAndUseToken(token) {
 		try {
 			getUserInfo(token).then(async userInfo => {
@@ -4544,30 +5024,36 @@ function enableBackgroundKeepAlive() {
 					}
 					const redirectVideoId = sessionStorage.getItem("youtubeRedirectVideoId");
 					const redirectChannel = sessionStorage.getItem("youtubeRedirectChannel");
-					if (redirectVideoId) {
-						videoId = redirectVideoId;
+					const target = resolveYouTubeSignInTarget(redirectVideoId, redirectChannel, videoId, channel, isYouTubeAuthOnlyMode());
+					const allowOwnBroadcastLookup = consumeYouTubeInitialTargetResolution();
+					if (target.type === 'video') {
+						videoId = target.value;
 						channel = '';
 						await connect(videoId);
-						sessionStorage.removeItem("youtubeRedirectVideoId");
-						sessionStorage.removeItem("youtubeRedirectChannel");
-					} else if (redirectChannel) {
-						channel = redirectChannel;
+						if (target.source === 'url') {
+							sessionStorage.removeItem("youtubeRedirectVideoId");
+							sessionStorage.removeItem("youtubeRedirectChannel");
+						}
+					} else if (target.type === 'channel') {
+						channel = target.value;
 						videoId = '';
 						document.getElementById('channel-input').value = channel;
 						await connect();
-						sessionStorage.removeItem("youtubeRedirectVideoId");
-						sessionStorage.removeItem("youtubeRedirectChannel");
-					} else if (videoId) {
-						connect(videoId);
-					} else if (channel) {
-						document.getElementById('channel-input').value = channel;
-						await connect();
+						if (target.source === 'url') {
+							sessionStorage.removeItem("youtubeRedirectVideoId");
+							sessionStorage.removeItem("youtubeRedirectChannel");
+						}
+					} else if (target.type === 'own' && allowOwnBroadcastLookup) {
+						await lookForOwnYouTubeStreams(false, true);
 					} else {
-						updateHeaderInfo(username, 'No target specified');
-						document.getElementById('textarea').innerHTML = '<div>Welcome! Please enter a YouTube channel name or video ID to connect.</div>';
+						updateHeaderInfo(username, target.type === 'none' ? 'Signed in' : 'No target specified');
+						document.getElementById('textarea').innerHTML = target.type === 'none'
+							? '<div>YouTube sign-in is ready.</div>'
+							: '<div>Welcome! Please enter a YouTube channel name or video ID to connect.</div>';
 						document.getElementById('viewer-count').textContent = '-';
 						document.getElementById('subscriber-count').textContent = '-';
 						document.getElementById('likes-count').textContent = '-';
+						updateLookForYouTubeStreamsButton();
 					}
 					showSocketInterface();
 				} else {
@@ -4898,6 +5384,7 @@ function enableBackgroundKeepAlive() {
     function signOut() {
         clearPolling();
         clearStoredToken();
+        hideLookForYouTubeStreamsButton();
         username = "";
         channel = '';
         videoId = '';
@@ -4974,6 +5461,7 @@ function enableBackgroundKeepAlive() {
 			document.getElementById('events-list').innerHTML = '';
 			connectButton.textContent = 'Connect';
 			connectButton.style.backgroundColor = '#2255dd';
+			updateLookForYouTubeStreamsButton();
 			return;
 		}
 		
@@ -5642,7 +6130,11 @@ function enableBackgroundKeepAlive() {
             console.error('Error fetching subscriber count:', error);
         }
     }
-	function clearPolling() {
+	function clearPolling(options) {
+		const preserveBroadcastMonitorLease = !!(options && options.preserveBroadcastMonitorLease);
+		if (!preserveBroadcastMonitorLease) {
+			releaseYouTubeBroadcastMonitorLease();
+		}
 		stopLiveChatStream();
 		stopRecentSubscriberPolling();
 		// Clear all tracked timeouts
@@ -5737,6 +6229,7 @@ function enableBackgroundKeepAlive() {
 			endedPayload.meta = { streamTitle: endedStreamTitle };
 		}
 		pushMessage(applySourceIdentity(endedPayload));
+		updateLookForYouTubeStreamsButton();
 	}
 	async function getChannelStats(channelIdForStats) {
 		const token = getStoredToken();
@@ -5769,17 +6262,21 @@ function enableBackgroundKeepAlive() {
 			console.error('Error fetching channel stats:', error);
 		}
 	}
-	async function connect(directVideoIdParam = null) {
+	async function connect(directVideoIdParam = null, monitorOptions = null) {
 		// Prevent double connections
 		if (liveChatId || streamStatsInterval) {
 			console.warn('Already connected. Call clearPolling() first to disconnect.');
 			return;
 		}
-		clearPolling();
+		const monitorMode = monitorOptions && monitorOptions.monitorMode === 'auto' ? 'auto' : 'explicit';
+		const preserveBroadcastMonitorLease = !!(monitorOptions && monitorOptions.preserveBroadcastMonitorLease);
+		hideLookForYouTubeStreamsButton();
+		clearPolling({ preserveBroadcastMonitorLease: preserveBroadcastMonitorLease });
 		initialBacklogProcessing = true;
 		initialBacklogTimestamp = null;
 		const token = getStoredToken();
 		if (!token) {
+			releaseYouTubeBroadcastMonitorLease();
 			console.error('No token available for connect');
 			showAuthButton();
 			return;
@@ -5792,7 +6289,12 @@ function enableBackgroundKeepAlive() {
 			document.getElementById('subscriber-count').textContent = '-';
 			document.getElementById('likes-count').textContent = '-';
 			document.getElementById('textarea').innerHTML = '<div>Please enter a YouTube channel name or video ID to connect.</div>';
+			releaseYouTubeBroadcastMonitorLease();
+			updateLookForYouTubeStreamsButton();
 			return;
+		}
+		if (videoIdToUse && monitorMode !== 'auto') {
+			activateYouTubeBroadcastMonitorLease(authenticatedChannelId, videoIdToUse, monitorMode);
 		}
 		document.getElementById('textarea').innerHTML = '<div>Attempting to connect...</div>';
 		try {
@@ -5841,7 +6343,8 @@ function enableBackgroundKeepAlive() {
 					setSourceIdentity(channelDisplayNameToUse || "", endedSourceImage);
 					currentStream = { id: streamInfoToUse.id, title: streamTitleToUse, channelId: effectiveChannelIdToUse };
 					notifyVideoChange(streamInfoToUse.id, effectiveChannelIdToUse);
-
+					releaseYouTubeBroadcastMonitorLease();
+					updateLookForYouTubeStreamsButton();
 					return;
 				} else if (isVideoUpcoming) {
 					liveChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId;
@@ -5897,6 +6400,9 @@ function enableBackgroundKeepAlive() {
 
                 updateHeaderInfo(username, channelDisplayNameToUse + (liveChatId ? ` (Live: ${streamTitleToUse.substring(0,20)}...)` : ` (Upcoming Stream)`));
             }
+			if (currentStream && currentStream.id) {
+				activateYouTubeBroadcastMonitorLease(authenticatedChannelId, currentStream.id, monitorMode);
+			}
 			const resolvedSourceImage = channelInfoForHeaderAndStats
 				? resolveThumbnailUrl(channelInfoForHeaderAndStats?.snippet?.thumbnails)
 				: resolveThumbnailUrl(streamInfoToUse?.snippet?.thumbnails);
@@ -5983,10 +6489,12 @@ function enableBackgroundKeepAlive() {
             refreshCurrentVideoMetadata().catch(error => {
                 console.warn('Failed to refresh current YouTube metadata fields:', error);
             });
-            console.log('Connection process complete for target:', channelDisplayNameToUse);
+			console.log('Connection process complete for target:', channelDisplayNameToUse);
 			const channelInput = document.getElementById('channel-input');
             if (channelInput.value && channelToUse) channelInput.value = '';
+			updateLookForYouTubeStreamsButton();
         } catch (error) {
+			releaseYouTubeBroadcastMonitorLease();
             console.error('Error connecting to YouTube:', error);
 			notifyYouTubeWssStatus('error', error && error.message ? error.message : 'YouTube connection failed', { code: 'youtube_connect_error' });
             updateHeaderInfo(username, 'Connection failed');
@@ -6001,6 +6509,7 @@ function enableBackgroundKeepAlive() {
             document.getElementById('viewer-count').textContent = '-';
             document.getElementById('subscriber-count').textContent = '-';
             document.getElementById('likes-count').textContent = '-';
+			updateLookForYouTubeStreamsButton();
         }
     }
 	
@@ -6802,6 +7311,12 @@ function enableBackgroundKeepAlive() {
 		
 		const urlVideoIdParam = urlParams.get("videoId") || urlParams.get("video_id") || urlParams.get("v") || hashParams.get("videoId");
 		const urlChannelParam = urlParams.get("channel") || urlParams.get("username") || urlParams.get("c") || hashParams.get("channel");
+		youtubeUrlTargetSpecified = !!(
+			urlVideoIdParam ||
+			urlChannelParam ||
+			sessionStorage.getItem("youtubeRedirectVideoId") ||
+			sessionStorage.getItem("youtubeRedirectChannel")
+		);
 		if (!authOnlyMode && (urlVideoIdParam || urlChannelParam)) {
 			sessionStorage.setItem("youtubeRedirectVideoId", urlVideoIdParam || "");
 			sessionStorage.setItem("youtubeRedirectChannel", urlChannelParam || "");
@@ -6994,6 +7509,14 @@ function enableBackgroundKeepAlive() {
 			connectButton.addEventListener('click', handleConnect);
 			registerCleanup(() => connectButton.removeEventListener('click', handleConnect));
 		}
+		const lookForStreamsButton = document.getElementById('look-for-streams-button');
+		if (lookForStreamsButton) {
+			const lookForStreamsHandler = function() {
+				lookForOwnYouTubeStreams(true, false);
+			};
+			lookForStreamsButton.addEventListener('click', lookForStreamsHandler);
+			registerCleanup(() => lookForStreamsButton.removeEventListener('click', lookForStreamsHandler));
+		}
 		const changeButton = document.getElementById('change-button');
 		if (changeButton) {
 			const changeHandler = function() {
@@ -7014,6 +7537,7 @@ function enableBackgroundKeepAlive() {
 					connectButton.textContent = 'Connect';
 					connectButton.style.backgroundColor = '#2255dd';
 				}
+				updateLookForYouTubeStreamsButton();
 			};
 			changeButton.addEventListener('click', changeHandler);
 			registerCleanup(() => changeButton.removeEventListener('click', changeHandler));

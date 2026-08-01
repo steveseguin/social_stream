@@ -858,7 +858,7 @@ Your computer's default language support might be limited. Here's how to expand 
 4. Restart browsers or applications to refresh available voices
 
 ##### Windows 10 Method
-You can install additional language packs following Microsoft's guide: [Download language pack for speech](https://support.microsoft.com/en-us/windows/download-language-pack-for-speech-24d06ef3-ca09-ddcc-70a0-63606fd16394)
+You can install additional language packs following Microsoft's guide: [Manage language and keyboard input layout settings in Windows](https://support.microsoft.com/en-US/Windows/Hardware/Input-Devices/manage-the-language-and-keyboard-input-layout-settings-in-windows)
 
 ![Windows Language Settings](https://user-images.githubusercontent.com/2575698/165753730-374498e7-7885-49ef-83ba-7fe2acde26ee.png)
 

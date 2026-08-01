@@ -528,6 +528,7 @@ TTS.newmembertts = false;
 TTS.ttsclicked = false;
 TTS.tiktokFollowerTTS = false;
 TTS.tiktokMemberLevelTTS = false;
+TTS.pendingTikTokGiftSpeech = new Map();
 
 /**
  * Check if the browser is Safari
@@ -1595,6 +1596,13 @@ TTS.speak = function(text, allow = false, options = {}) {
  * Clear the TTS queue without stopping
  */
 TTS.clearQueue = function() {
+    TTS.pendingTikTokGiftSpeech.forEach(function(pending) {
+        if (pending && pending.timer) {
+            clearTimeout(pending.timer);
+        }
+    });
+    TTS.pendingTikTokGiftSpeech.clear();
+
     // clear but don't stop tts
     if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) {
         window.speechSynthesis.cancel();
@@ -1806,6 +1814,40 @@ TTS.speechMeta = function(data, allow = false) {
         //console.log("Filter: Events not allowed and this is an event");
         return;
     }
+
+    const tikTokGiftStreakId =
+        data.type === "tiktok" &&
+        isDonation &&
+        meta.tiktokGiftStreakId &&
+        !meta.tiktokGiftTtsReady
+            ? String(meta.tiktokGiftStreakId)
+            : "";
+    if (tikTokGiftStreakId) {
+        const existingPending = TTS.pendingTikTokGiftSpeech.get(tikTokGiftStreakId);
+        if (existingPending && existingPending.timer) {
+            clearTimeout(existingPending.timer);
+        }
+
+        const configuredQuietMs = Number(meta.tiktokGiftQuietMs);
+        const quietMs = Number.isFinite(configuredQuietMs)
+            ? Math.max(500, Math.min(30000, configuredQuietMs))
+            : 4500;
+        const settledData = Object.assign({}, data, {
+            meta: Object.assign({}, meta, { tiktokGiftTtsReady: true })
+        });
+        const pending = {
+            timer: setTimeout(function() {
+                if (TTS.pendingTikTokGiftSpeech.get(tikTokGiftStreakId) !== pending) {
+                    return;
+                }
+                TTS.pendingTikTokGiftSpeech.delete(tikTokGiftStreakId);
+                TTS.speechMeta(settledData, allow);
+            }, quietMs)
+        };
+        TTS.pendingTikTokGiftSpeech.set(tikTokGiftStreakId, pending);
+        return;
+    }
+
     try {
         var isCommand = false;
         var msgPlainElement = document.getElementById("content_" + data.id);

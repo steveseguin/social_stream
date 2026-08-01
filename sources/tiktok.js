@@ -146,6 +146,99 @@
 		}
 	}
 
+	var trackedTikTokGiftStreaks = new Map();
+	var TIKTOK_GIFT_STREAK_QUIET_MS = 4500;
+	var TIKTOK_GIFT_DUPLICATE_WINDOW_MS = 500;
+	var tikTokGiftStreakSequence = 0;
+	var tikTokGiftStreakInstanceId = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+
+	function getTikTokGiftUpdateIdentity(data, ele) {
+		if (!data || data.type !== "tiktok" || !data.hasDonation || !data.chatmessage) {
+			return null;
+		}
+
+		var container = document.createElement("div");
+		container.innerHTML = data.chatmessage;
+		var giftImage = container.querySelector("img[src]");
+		var giftImageSrc = giftImage ? (giftImage.getAttribute("src") || "") : "";
+		var giftIdMatch = giftImageSrc.match(/\/([a-f0-9]{32})(?:~|\.)/i);
+		var giftId = giftIdMatch ? giftIdMatch[1].toLowerCase() : giftImageSrc;
+		var visibleText = container.textContent || container.innerText || "";
+		var countMatch = visibleText.match(/[x\u00d7]\s*(\d+)/i);
+		var quantity = countMatch ? parseInt(countMatch[1], 10) : 0;
+		if (!giftId || !Number.isFinite(quantity) || quantity < 1) {
+			return null;
+		}
+
+		var indexValue = "";
+		try {
+			indexValue = ele && ele.dataset && ele.dataset.index
+				? ele.dataset.index
+				: (ele && ele.closest && ele.closest("[data-index]") && ele.closest("[data-index]").dataset.index) || "";
+		} catch (e) {}
+
+		var nameKey = normalizeTikTokNameKey(data.chatname || "unknown");
+		var stableIndexKey = indexValue ? "idx=" + indexValue : "";
+		return {
+			key: stableIndexKey || (nameKey + ":" + giftId),
+			quantity: quantity,
+			hasStableIndex: !!stableIndexKey
+		};
+	}
+
+	function markTikTokGiftUpdate(data, ele) {
+		var identity = getTikTokGiftUpdateIdentity(data, ele);
+		if (!identity) {
+			return true;
+		}
+
+		var now = Date.now();
+		var tracked = trackedTikTokGiftStreaks.get(identity.key);
+		if (tracked) {
+			var isSameRender =
+				identity.quantity === tracked.quantity &&
+				(identity.hasStableIndex || (now - tracked.updatedAt) <= TIKTOK_GIFT_DUPLICATE_WINDOW_MS);
+			if (isSameRender) {
+				return false;
+			}
+			if (identity.quantity <= tracked.quantity) {
+				if (tracked.timer) {
+					clearTimeout(tracked.timer);
+				}
+				tracked = null;
+			}
+		}
+
+		if (!tracked) {
+			tracked = {
+				id: "tiktok-gift-" + tikTokGiftStreakInstanceId + "-" + (++tikTokGiftStreakSequence),
+				quantity: identity.quantity,
+				updatedAt: now,
+				timer: null
+			};
+			trackedTikTokGiftStreaks.set(identity.key, tracked);
+		} else {
+			tracked.quantity = identity.quantity;
+			tracked.updatedAt = now;
+			if (tracked.timer) {
+				clearTimeout(tracked.timer);
+			}
+		}
+
+		tracked.timer = setTimeout(function() {
+			if (trackedTikTokGiftStreaks.get(identity.key) === tracked) {
+				trackedTikTokGiftStreaks.delete(identity.key);
+			}
+		}, TIKTOK_GIFT_STREAK_QUIET_MS);
+
+		data.meta = Object.assign({}, data.meta || {}, {
+			tiktokGiftStreakId: tracked.id,
+			tiktokGiftCount: identity.quantity,
+			tiktokGiftQuietMs: TIKTOK_GIFT_STREAK_QUIET_MS
+		});
+		return true;
+	}
+
 	function sendMetaEvent(eventName, meta) {
 		if (!eventName || !meta) {
 			return;
@@ -1364,8 +1457,6 @@
 		const shareFromMessage = compactMessage.includes("share");
 		const followFromMessage = compactMessage.includes("follow");
 		const likeFromMessage = compactMessage.includes("like");
-		let reactionsOnlyLikeEvent = false;
-
 		const isJoinEvent = eventHints.join || ((ital === true || eventHints.hasEventIndicator) && joinFromMessage);
 		const isShareEvent = eventHints.share || ((ital === true || eventHints.hasEventIndicator) && shareFromMessage);
 		const isFollowEvent = eventHints.follow || ((ital === true || eventHints.hasEventIndicator) && followFromMessage);
@@ -1384,7 +1475,6 @@
 				return;
 			}
 		} else if (isLikeEvent) {
-			reactionsOnlyLikeEvent = !settings.capturelikeevent;
 			ital = "liked";
 		}
 		if (settings.customtiktokstate) {
@@ -1477,7 +1567,9 @@
 		addTikTokEventMeta(data, memberLevel);
 		addTikTokTopViewerMeta(data);
 		lastMessageTime = Date.now();
-		pushMessage(data, reactionsOnlyLikeEvent ? "reactions" : "");
+		if (markTikTokGiftUpdate(data, ele)) {
+			pushMessage(data);
+		}
 	}
 
 	function processEvent(ele) {
@@ -1625,8 +1717,6 @@
 		const shareFromMessage = compactMessage.includes("share");
 		const followFromMessage = compactMessage.includes("follow");
 		const likeFromMessage = compactMessage.includes("like");
-		let reactionsOnlyLikeEvent = false;
-
 		const isJoinEvent = eventHints.join || ((ital === true || eventHints.hasEventIndicator) && joinFromMessage);
 		const isShareEvent = eventHints.share || ((ital === true || eventHints.hasEventIndicator) && shareFromMessage);
 		const isFollowEvent = eventHints.follow || ((ital === true || eventHints.hasEventIndicator) && followFromMessage);
@@ -1645,7 +1735,6 @@
 				return;
 			}
 		} else if (isLikeEvent) {
-			reactionsOnlyLikeEvent = !settings.capturelikeevent;
 			ital = "liked";
 		}
 		let chatimg = "";
@@ -1695,7 +1784,9 @@
 		addTikTokEventMeta(data, cachedMemberLevel);
 		addTikTokTopViewerMeta(data);
 		lastMessageTime = Date.now();
-		pushMessage(data, reactionsOnlyLikeEvent ? "reactions" : "");
+		if (markTikTokGiftUpdate(data, ele)) {
+			pushMessage(data);
+		}
 	}
 	var bigDUPE = false;
 	let observedDomElementForObserver1 = null;
@@ -2442,6 +2533,12 @@
 			clearInterval(messageLog._cleanupInterval);
 			messageLog._cleanupInterval = null;
 		}
+		trackedTikTokGiftStreaks.forEach(function(tracked) {
+			if (tracked && tracked.timer) {
+				clearTimeout(tracked.timer);
+			}
+		});
+		trackedTikTokGiftStreaks.clear();
 		if (videosMuted) {
 			clearInterval(videosMuted);
 			videosMuted = null;

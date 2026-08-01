@@ -611,7 +611,24 @@ function pickDonationLabel(payload = {}) {
   return giftCount > 1 ? `${giftName} x${giftCount}` : giftName;
 }
 
+function pickTikTokGiftStreakId(payload = {}) {
+  if (normalizeText(payload.type).toLowerCase() !== 'tiktok') {
+    return '';
+  }
+  return normalizeText(payload.meta?.tiktokGiftStreakId);
+}
+
 function buildRecentPayloadSignature(payload = {}) {
+  const tikTokGiftStreakId = pickTikTokGiftStreakId(payload);
+  if (tikTokGiftStreakId) {
+    return [
+      'tiktok-gift-streak',
+      tikTokGiftStreakId,
+      normalizeText(payload.meta?.tiktokGiftCount),
+      pickDonationLabel(payload)
+    ].join('|');
+  }
+
   const eventKey = pickEventKey(payload);
   const webhookId = normalizeText(payload.meta?.webhookId);
   if (webhookId) {
@@ -1963,6 +1980,23 @@ function flattenPayloads(payload) {
 }
 
 function queueAlert(model) {
+  const tikTokGiftStreakId = pickTikTokGiftStreakId(model?.payload);
+  if (tikTokGiftStreakId) {
+    if (pickTikTokGiftStreakId(state.currentAlert?.payload) === tikTokGiftStreakId) {
+      displayAlert(model, { silent: true });
+      return;
+    }
+
+    const queuedIndex = state.queue.findIndex(
+      (queuedModel) => pickTikTokGiftStreakId(queuedModel?.payload) === tikTokGiftStreakId
+    );
+    if (queuedIndex !== -1) {
+      state.queue[queuedIndex] = model;
+      updateStatus(`Updated queued ${getCategoryLabel(model.category) || 'gift'} alert`);
+      return;
+    }
+  }
+
   const now = Date.now();
   if (state.currentAlert || now < state.blockedUntil) {
     if (settings.queueEnabled) {
@@ -2004,7 +2038,12 @@ function displayAlert(model, options = {}) {
   elements.stage.classList.add('has-alert');
   if (!options.silent) {
     playAlertSound(model).then(() => {
-      if (typeof TTS !== 'undefined' && TTS.speech && model.payload) {
+      if (
+        state.alertSequence === alertToken &&
+        typeof TTS !== 'undefined' &&
+        TTS.speech &&
+        model.payload
+      ) {
         TTS.speechMeta(model.payload);
       }
     });

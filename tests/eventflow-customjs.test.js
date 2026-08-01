@@ -9,6 +9,7 @@
  *   3. Custom JS trigger executes correctly when allowed
  *   4. Custom JS action executes correctly when allowed
  *   5. Custom JS is blocked (no-op) when allowEvalCustomJs is false
+ *   6. The Custom JS editor preserves drafts and mirrors runtime syntax signatures
  *
  * Run with: node tests/eventflow-customjs.test.js
  */
@@ -20,6 +21,10 @@ const path = require('path');
 // Read once at module load — reused by every loadEventFlowSystem() call
 const EFS_SRC = fs.readFileSync(
     path.join(__dirname, '..', 'actions', 'EventFlowSystem.js'),
+    'utf8'
+);
+const EDITOR_SRC = fs.readFileSync(
+    path.join(__dirname, '..', 'actions', 'EventFlowEditor.js'),
     'utf8'
 );
 
@@ -60,6 +65,17 @@ function loadEventFlowSystem(windowOverrides = {}, globals = {}) {
     // class declarations don't auto-attach to the vm global; expose it explicitly
     vm.runInContext(EFS_SRC + '\nwindow.EventFlowSystem = EventFlowSystem;', sandbox);
     return sandbox.window.EventFlowSystem;
+}
+
+function loadEventFlowEditorPrototype() {
+    const sandbox = vm.createContext({
+        window: {},
+        console,
+        setTimeout,
+        clearTimeout,
+    });
+    vm.runInContext(EDITOR_SRC + '\nwindow.EventFlowEditor = EventFlowEditor;', sandbox);
+    return sandbox.window.EventFlowEditor.prototype;
 }
 
 // ---- Test helpers ----
@@ -189,6 +205,32 @@ console.log('\n[6] Custom JS blocked when allowEvalCustomJs=false');
     const result = await sys.executeAction(actionNode, { chatmessage: 'test' });
     // blocked starts as false and action code should NOT have run
     assert(result.blocked === false, 'customJs action blocked: result.blocked unchanged when eval disabled');
+}
+
+console.log('\n[7] Custom JS editor draft values and syntax validation');
+{
+    const editor = Object.create(loadEventFlowEditorPrototype());
+    editor.eventFlowSystem = { customJsEvalSupported: true };
+
+    const blankTrigger = { type: 'trigger', triggerType: 'customJs', config: { code: '' } };
+    assert(editor.getCustomCode(blankTrigger) === '', 'editor preserves intentionally blank code');
+
+    const textareaText = 'return "</textarea><script>bad()</script>";';
+    const hostileAction = { type: 'action', actionType: 'customJs', config: { code: textareaText } };
+    assert(editor.getCustomCode(hostileAction) === textareaText, 'editor preserves HTML-like code as plain text');
+
+    const missingTriggerCode = { type: 'trigger', triggerType: 'customJs', config: {} };
+    assert(editor.getCustomCode(missingTriggerCode).includes('chatmessage'), 'editor supplies a default only when code is missing');
+
+    assert(editor.validateCustomCode(blankTrigger, 'return true;').valid === true, 'trigger syntax validation accepts valid code');
+    assert(editor.validateCustomCode(blankTrigger, 'return !!!').valid === false, 'trigger syntax validation rejects invalid code');
+
+    const action = { type: 'action', actionType: 'customJs', config: {} };
+    assert(editor.validateCustomCode(action, 'let result = {};').valid === false, 'action validation uses the runtime message/result signature');
+    assert(editor.validateCustomCode(blankTrigger, 'let result = {};').valid === true, 'trigger validation uses only the message signature');
+
+    editor.eventFlowSystem.customJsEvalSupported = false;
+    assert(editor.validateCustomCode(blankTrigger, 'return !!!').valid === true, 'extension mode skips blocked dynamic compilation');
 }
 
 // ---- Summary ----

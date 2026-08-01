@@ -299,6 +299,9 @@ async function getOverlaySnapshot(page, payload, waitMs) {
     return {
       count: overlay.getStageCount(),
       history: overlay.getHistory(),
+      items: Array.from(document.querySelectorAll('.reaction')).map((item) => ({
+        imageCount: item.querySelectorAll('img').length
+      })),
       background: getComputedStyle(document.body).backgroundColor,
       config: overlay.getConfig()
     };
@@ -310,7 +313,7 @@ async function loadOverlay(page, url) {
   await page.waitForFunction(() => !!(window.__reactionsOverlay && window.__reactionsOverlay.getConfig));
 }
 
-async function runTikTokSourceLikeCaptureCheck(context, captureLikeEvent, expectedTarget) {
+async function runTikTokSourceLikeCaptureCheck(context, captureLikeEvent) {
   const page = await context.newPage();
 
   await addTikTokSourceInitScript(page, captureLikeEvent);
@@ -348,7 +351,7 @@ async function runTikTokSourceLikeCaptureCheck(context, captureLikeEvent, expect
   });
 
   assert(likedMessages.length === 1, 'TikTok source did not emit the anonymous liked event.');
-  assert((likedMessages[0].target || '') === (expectedTarget || ''), 'TikTok liked event used the wrong delivery target.');
+  assert((likedMessages[0].target || '') === '', 'TikTok source bypassed centralized individual-like routing.');
   assert(likedMessages[0].type === 'tiktok', 'TikTok liked event has the wrong source type.');
   assert(likedMessages[0].chatname === '', 'Anonymous TikTok liked events should keep chatname empty.');
   assert(likedMessages[0].chatmessage === 'liked the LIVE', 'TikTok liked event message text changed unexpectedly.');
@@ -462,9 +465,10 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
 (async () => {
   const server = await startStaticServer({ root: ROOT, host: HOST, port: PORT });
   const blockedExternalRequests = [];
+  let browser;
 
   try {
-    const browser = await chromium.launch({ headless: true });
+    browser = await chromium.launch({ headless: true });
     const context = await browser.newContext();
 
     await context.route('**/*', async (route) => {
@@ -491,8 +495,8 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
     });
 
     if (process.argv.includes('--tiktok-only')) {
-      await runTikTokSourceLikeCaptureCheck(context, false, 'reactions');
-      await runTikTokSourceLikeCaptureCheck(context, true, '');
+      await runTikTokSourceLikeCaptureCheck(context, false);
+      await runTikTokSourceLikeCaptureCheck(context, true);
       await runTikTokIncrementalChatCaptureCheck(context);
       await browser.close();
       console.log('TikTok DOM soak passed.');
@@ -506,6 +510,19 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
       var link = document.getElementById('reactionslink');
       return !!(link && link.href && link.href.indexOf('reactions.html?session=testsession') !== -1);
     });
+    const reactionsOptionsLabel = (await popupPage.textContent('label[for="wrapper-reactions-options"]')).trim();
+    assert(reactionsOptionsLabel.includes('Customize reactions overlay'), 'Reactions options still use the misleading enable label.');
+    await popupPage.click('#test-reaction-button');
+    const popupReactionRequests = await popupPage.evaluate(() => {
+      return window.__chromeMessages.filter((entry) => {
+        return entry && entry.message && entry.message.meta && entry.message.meta.source === 'popup_test';
+      });
+    });
+    assert(popupReactionRequests.length === 1, 'Popup test reaction was not sent exactly once.');
+    assert(popupReactionRequests[0].target === 'reactions', 'Popup test reaction was not targeted only to the reactions overlay.');
+    assert(popupReactionRequests[0].message.event === 'reaction', 'Popup test reaction used the wrong event.');
+    assert(popupReactionRequests[0].message.platform === 'youtube', 'Popup test reaction omitted its platform.');
+    assert(popupReactionRequests[0].message.chatmessage.includes('👍'), 'Popup test reaction lost its thumbs-up graphic.');
 
     const fallbackPopupPage = await context.newPage();
     await addPopupInitScript(fallbackPopupPage, `http://${HOST}:${PORT}`);
@@ -668,6 +685,17 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
     assert(Math.abs(imageScaleSnapshot.imageWidth - imageScaleSnapshot.itemWidth) <= 0.75, 'Inline image width ignored the scale-adjusted wrapper size.');
     assert(Math.abs(imageScaleSnapshot.imageHeight - imageScaleSnapshot.itemWidth) <= 0.75, 'Inline image height ignored the scale-adjusted wrapper size.');
 
+    const contentImageSnapshot = await getOverlaySnapshot(overlayPage, {
+      event: 'reaction',
+      type: 'youtube',
+      chatmessage: '🎉',
+      contentimg: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
+      textonly: true
+    }, 250);
+
+    assert(contentImageSnapshot.count > 0, 'Text-only YouTube reaction did not render its content image.');
+    assert(contentImageSnapshot.items.every((item) => item.imageCount === 1), 'Text-only YouTube reaction fell back to a generic icon.');
+
     const likeSnapshot = await getOverlaySnapshot(overlayPage, {
       event: 'liked',
       type: 'tiktok',
@@ -796,11 +824,9 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
       assert(joinPayload.in === check.expectedIn, `Socket in channel mismatch for ${check.url}.`);
     }
 
-    await runTikTokSourceLikeCaptureCheck(context, false, 'reactions');
-    await runTikTokSourceLikeCaptureCheck(context, true, '');
+    await runTikTokSourceLikeCaptureCheck(context, false);
+    await runTikTokSourceLikeCaptureCheck(context, true);
     await runTikTokIncrementalChatCaptureCheck(context);
-
-    await browser.close();
 
     if (blockedExternalRequests.length === 0) {
       console.log('Reactions overlay test passed.');
@@ -811,6 +837,9 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
     console.error(error && error.stack ? error.stack : error);
     process.exitCode = 1;
   } finally {
+    if (browser) {
+      await browser.close();
+    }
     server.close();
   }
 })();

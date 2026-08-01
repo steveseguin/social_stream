@@ -217,7 +217,6 @@ function toDataURL(url, callback) {
 				document.querySelector(".chat-container > .messages").marked=true;
 				document.querySelector(".chat-container > .messages").childNodes.forEach(ele =>{
 					ele.skip = true;
-					processMessage(ele);
 				});
 				// console.log("INIT");
 				onElementInserted(document.querySelector(".chat-container > .messages"));

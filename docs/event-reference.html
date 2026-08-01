@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="css/event-reference.css">
     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
     <meta name="description" content="Canonical reference for Social Stream Ninja event payloads across YouTube, Twitch, TikTok, Kick, Facebook, and Rumble.">
+    <link rel="canonical" href="https://socialstream.ninja/docs/event-reference">
 </head>
 <body>
     <header>
@@ -72,7 +73,7 @@
         <div class="events-container">
             <section class="section-intro">
                 <h1>Live Event Reference</h1>
-                <p>This page documents the canonical event payloads that Social Stream Ninja emits for major platforms. Use it as a shared source of truth when wiring new sources, troubleshooting integrations, or aligning UI labels.</p>
+                <p>This page documents the canonical event payloads that Social Stream Ninja emits for major platforms. Use it as a shared source of truth when wiring new sources, troubleshooting integrations, or aligning UI labels. For a shorter consumer-focused matrix, see <a href="events-alerts-compatibility.html">Events and Alerts Compatibility</a>.</p>
                 <div class="reference-index" role="navigation" aria-labelledby="reference-index-title">
                     <h2 id="reference-index-title">On This Page</h2>
                     <p>Jump to the shared field rules, a platform implementation, or the compatibility notes near the end.</p>
@@ -106,6 +107,7 @@
                                 <li><a href="#kick-ws">Kick WebSocket</a></li>
                                 <li><a href="#vpzone-ws">VPZone</a></li>
                                 <li><a href="#joystick-ws">Joystick</a></li>
+                                <li><a href="#xpsync">XP Sync</a></li>
                                 <li><a href="#facebook">Facebook</a></li>
                                 <li><a href="#onlinechurch">Online Church</a></li>
                                 <li><a href="#shareplay">SharePlay</a></li>
@@ -127,7 +129,7 @@
                     <strong>Important:</strong> Stream events (follows, memberships, milestones, viewer counts, etc.) are always captured and forwarded. To hide all events in dock or featured overlays, add <code>&amp;hideevents</code> (dock also accepts <code>&amp;hideallevents</code>). To hide selected events, use <code>&amp;filterevents=subscription_gift,new_follower,gifted</code>. Donation-style items always pass through the dock filter regardless of settings.
                 </div>
                 <div class="alert-note alert-info">
-                    <strong>WebSocket Mode Required:</strong> For YouTube, Twitch, and Kick, most stream events (followers, subscriptions, raids, etc.) require <strong>WebSocket mode</strong> to be enabled in the extension settings. DOM capture alone mostly provides chat, viewer counts, and a limited set of heuristically detected system events. Gift and donation event capture (including YouTube gifts), however, is shared across Standard and WebSocket modes; WebSocket adds broader event coverage. See platform sections below for details.
+                    <strong>WebSocket Mode Required:</strong> For YouTube, Twitch, and Kick, most platform-specific stream events require <strong>WebSocket mode</strong> to be enabled in the extension settings. DOM capture alone mostly provides chat, viewer counts, and a limited set of heuristically detected system events. Gift and donation event capture (including YouTube gifts), however, is shared across Standard and WebSocket modes; WebSocket adds broader event coverage. Available event types still vary by platform. See platform sections below for details.
                 </div>
                 <div class="alert-note alert-tip">
                     <strong>Building Automations?</strong> Check out the <a href="../actions/event-flow-guide.html">Event Flow Guide</a> to learn how to use these event payloads in custom triggers, alerts, and workflows. The guide includes a <a href="../actions/event-flow-guide.html#template-variables">Template Variables Reference</a> for text formatting.
@@ -170,7 +172,7 @@
                             <td><strong>Twitch &ndash; EventSub/Websocket</strong></td>
                             <td>Instant subs, resubs, and gifts</td>
                             <td>Instant follows + follower total</td>
-                            <td>Cheers and channel point redemptions</td>
+                            <td>Cheers, Power-ups, and channel point redemptions</td>
                             <td>Viewer/sub/follower totals, stream status, ad notices</td>
                         </tr>
                         <tr>
@@ -441,6 +443,16 @@
                                 <td><code>hasDonation</code> carries the value; <code>event</code> identifies the YouTube paid item type. YouTube Gifts use <code>N Jewels</code> when present, or <code>1 YouTube Gift</code> when YouTube hides the count. Gift images use <code>contentimg</code>, gift labels use <code>subtitle</code>, and minimal gift details are mirrored under <code>meta.youtubeGift</code>.</td>
                             </tr>
                             <tr>
+                                <td class="donation-event"><code>jeweldonation</code> gift effect</td>
+                                <td>YouTube displays an animated Jewel gift over live chat (<code>ytls-gift-overlay-item-view-model</code>).</td>
+                                <td>Sent directly to the dedicated GIF/media target so the animation can play without duplicating the normal gift row. <code>contentimg</code> carries the animated asset and <code>meta.youtubeGift.animationUrl</code>/<code>animationDescription</code> preserve the effect details.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>reaction</code></td>
+                                <td>A viewer reaction appears in YouTube's live emoji fountain.</td>
+                                <td>Sent directly to the dedicated reactions target. The anonymous emoji and image URL are preserved in <code>chatmessage</code>/<code>contentimg</code> and under <code>meta.reactionType</code>/<code>reactionImage</code>. Known live variants include ❤, 😄, 🎉, 😳, and 💯.</td>
+                            </tr>
+                            <tr>
                                 <td class="donation-event"><code>thankyou</code></td>
                                 <td>Fallback message when a donation amount exists but no chat text was supplied.</td>
                                 <td>Keeps <code>hasDonation</code> and auto-injects “Thank you for your donation!” for overlays.</td>
@@ -666,9 +678,9 @@
                     <h3>Twitch – EventSub/Websocket</h3>
                     <p class="source-note">Implementation: <code>sources/websocket/twitch.js</code> with shared core <code>providers/twitch/chatClient.js</code></p>
                     <ul class="requirements">
-                        <li>OAuth scopes: <code>chat:read</code>, <code>chat:edit</code>, <code>bits:read</code>, <code>moderator:read:followers</code>, <code>channel:read:subscriptions</code>, <code>channel:read:hype_train</code>, <code>channel:moderate</code>, <code>moderator:manage:banned_users</code>, <code>moderator:manage:chat_messages</code>, <code>channel:read:redemptions</code>, <code>channel:read:ads</code>, <code>channel:manage:ads</code>. Broadcaster tokens unlock subscriber/follower counts.</li>
+                        <li>OAuth scopes: <code>chat:read</code>, <code>chat:edit</code>, <code>bits:read</code>, <code>moderator:read:followers</code>, <code>moderator:read:chatters</code>, <code>channel:read:subscriptions</code>, <code>channel:read:hype_train</code>, <code>channel:moderate</code>, <code>moderator:manage:banned_users</code>, <code>moderator:manage:chat_messages</code>, <code>channel:manage:broadcast</code>, <code>channel:read:redemptions</code>, <code>channel:read:ads</code>, <code>channel:manage:ads</code>. Broadcaster tokens unlock subscriber/follower counts.</li>
                         <li>Events delivered by EventSub, plus Helix polling for viewer/follower/subscriber totals.</li>
-                        <li><strong>WebSocket mode provides real-time</strong> follower alerts, subscription events, raids, cheers, channel point redemptions, and hype train metadata.</li>
+                        <li><strong>WebSocket mode provides real-time</strong> follower alerts, subscription events, raids, cheers, Power-ups, channel point redemptions, and hype train metadata.</li>
                         <li>Shared Chat rows use Twitch IRC <code>source-room-id</code> to populate <code>sourceName</code>/<code>sourceImg</code> with the originating channel when it differs from the connected channel.</li>
                     </ul>
                     <table class="event-table">
@@ -682,8 +694,13 @@
                         <tbody>
                             <tr>
                                 <td class="donation-event"><code>cheer</code></td>
-                                <td>EventSub <code>channel.cheer</code> notifications.</td>
+                                <td>Cheer notifications from EventSub <code>channel.bits.use</code>.</td>
                                 <td><code>hasDonation</code> “N bits”; <code>meta.bits</code> numeric; <code>chatmessage</code> preserves raw message.</td>
+                            </tr>
+                            <tr>
+                                <td><code>powerup</code></td>
+                                <td>Built-in or custom Power-up notifications from EventSub <code>channel.bits.use</code>.</td>
+                                <td>Event-only payload with an empty <code>chatmessage</code> and no <code>hasDonation</code>, so it does not create a normal chat row. <code>meta.bits</code> is numeric and <code>meta.powerUp</code> preserves the Twitch subtype, title/reward id, effect details, and supplied message text when available.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>new_subscriber</code></td>
@@ -807,6 +824,7 @@
                             <tr><td><code>resub</code></td><td>Resubscription with message</td></tr>
                             <tr><td><code>subscription_gift</code></td><td>Gifted subs to channel</td></tr>
                             <tr><td><code>cheer</code></td><td>Bits cheered</td></tr>
+                            <tr><td><code>powerup</code></td><td>Built-in or custom Power-up used</td></tr>
                             <tr><td><code>reward</code></td><td>Channel point redemption</td></tr>
                             <tr><td><code>raid</code></td><td>Incoming raid</td></tr>
                             <tr><td><code>viewer_update</code></td><td>Concurrent viewer count</td></tr>
@@ -996,7 +1014,7 @@
                             <tr>
                                 <td><code>liked</code></td>
                                 <td>Like storm summaries triggered by TikTok social cards.</td>
-                                <td><code>chatname</code> is included when TikTok exposes it; anonymous/system like cards may still emit. The main chat/events feed setting does not block the dedicated reactions overlay.</td>
+                                <td><code>chatname</code> is included when TikTok exposes it; anonymous/system like cards may still emit. TikTok sends this through the normal background path. The background routes one copy to the Reactions Overlay, then continues to the main chat/events pipeline only when <code>capturelikeevent</code> is enabled.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>likes_update</code></td>
@@ -1010,7 +1028,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights"><code>membership</code> mirrors badge tooltips (subscriber tiers). Avatar caching keeps <code>chatimg</code> valid between events; if the DOM suppresses color for moderators the script clears <code>nameColor</code>. TikFinity gift rows also set <code>contentimg</code> to the gift icon when available.</p>
+                    <p class="field-highlights"><code>membership</code> mirrors badge tooltips (subscriber tiers). Avatar caching keeps <code>chatimg</code> valid between events; if the DOM suppresses color for moderators the script clears <code>nameColor</code>. TikFinity gift rows also set <code>contentimg</code> to the gift icon when available. Native DOM gift streak updates include <code>meta.tiktokGiftStreakId</code>, <code>meta.tiktokGiftCount</code>, and <code>meta.tiktokGiftQuietMs</code> so overlays can coalesce repeated updates; streak IDs are unique to the page instance.</p>
                 </article>
 
                 <article class="platform-card" id="whatnot">
@@ -1155,7 +1173,7 @@
                     <h3>Kick – Websocket/Bridge</h3>
                     <p class="source-note">Implementation: <code>sources/websocket/kick.js</code> with shared helpers under <code>providers/kick/core.js</code></p>
                     <ul class="requirements">
-                        <li>OAuth via the Social Stream Kick bridge. Core scopes include <code>user:read</code>, <code>channel:read</code>, <code>chat:write</code>, <code>events:subscribe</code>, <code>channel:rewards:read</code>, <code>moderation:ban</code>, and <code>kicks:read</code>. Tokens are refreshed automatically.</li>
+                        <li>OAuth via the Social Stream Kick bridge. Current scopes are <code>user:read</code>, <code>channel:read</code>, <code>channel:write</code>, <code>channel:rewards:read</code>, <code>chat:write</code>, <code>events:subscribe</code>, <code>moderation:ban</code>, <code>moderation:chat_message:manage</code>, and <code>kicks:read</code>. Tokens are refreshed automatically.</li>
                         <li>Kick webhook provisioning may take several minutes; the UI lists active subscriptions per channel.</li>
                     </ul>
                     <table class="event-table">
@@ -1199,8 +1217,8 @@
                             </tr>
                             <tr>
                                 <td class="status-event"><code>raid</code></td>
-                                <td>Kick legacy socket host events such as <code>App\Events\StreamHostEvent</code>.</td>
-                                <td>Mapped to the canonical raid event. <code>meta</code> includes <code>{ fromId, fromLogin, viewers }</code> when Kick supplies them.</td>
+                                <td>Compatibility handling for legacy host-shaped socket payloads such as <code>App\Events\StreamHostEvent</code>.</td>
+                                <td>Kick's current official event catalog has no raid/host subscription. If a compatible legacy payload arrives, it maps to canonical <code>raid</code>; do not depend on this for a current Kick workflow.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>new_follower</code></td>
@@ -1246,7 +1264,7 @@
                             <tr><td><code>subscription_gift</code></td><td>Gifted subs</td></tr>
                             <tr><td><code>reward</code></td><td>Channel reward redemption or reward-style chat/system message</td></tr>
                             <tr><td><code>donation</code></td><td>Tip/support/KICKs gift event</td></tr>
-                            <tr><td><code>raid</code></td><td>Incoming Kick host/raid</td></tr>
+                            <tr><td><code>raid</code></td><td>Compatibility-only legacy host/raid input; not a current official Kick subscription</td></tr>
                             <tr><td><code>follower_update</code></td><td>Total follower count</td></tr>
                             <tr><td><code>stream_online</code></td><td>Stream went live</td></tr>
                             <tr><td><code>stream_offline</code></td><td>Stream ended</td></tr>
@@ -1348,6 +1366,77 @@
                                 <td><code>user_enter</code> / <code>user_leave</code></td>
                                 <td>Joystick <code>UserPresence</code> types <code>enter_stream</code> / <code>leave_stream</code>.</td>
                                 <td>Presence notifications are emitted as event messages and can be suppressed by hide-events settings. Hide-events also suppresses non-donation stream events.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="xpsync">
+                    <h3>XP Sync</h3>
+                    <p class="source-note">Implementation: <code>sources/xpsync.js</code></p>
+                    <ul class="requirements">
+                        <li>Chat rows use the canonical payload fields with <code>type: "xpsync"</code>, including author, message, avatar, badges, name color, and membership when available.</li>
+                        <li>When event capture is enabled, rows containing “just followed” or “followed the channel” emit <code>event: "new_follower"</code>.</li>
+                    </ul>
+                </article>
+
+                <article class="platform-card" id="instagram">
+                    <h3>Instagram &ndash; Live REST Capture and News Inbox</h3>
+                    <p class="source-note">Implementation: <code>sources/instagram.js</code> and <code>sources/instagramlive.js</code> (identical copies)</p>
+                    <ul class="requirements">
+                        <li>On live pages (<code>/&lt;user&gt;/live/?broadcast_id=...</code>), live chat comes from Instagram's own web API, polled same-origin with the session cookie: <code>GET /api/v1/live/{broadcast_id}/get_comment/?last_comment_ts={ts}</code> every ~2s, and <code>POST /api/v1/live/{broadcast_id}/heartbeat_and_get_viewer_count/</code> every ~5s when viewer counts are enabled. After 3 consecutive failures (or when no <code>broadcast_id</code> is discoverable) the source falls back to parsing the rendered chat DOM.</li>
+                        <li>The account's own activity feed is polled via <code>POST /api/v1/news/inbox/</code> every ~45s on any Instagram page. The first poll only seeds the dedupe set so backlog is never replayed; stories dedupe by <code>tuuid</code>.</li>
+                        <li>Required API headers (all static/derivable): <code>X-IG-App-ID: 936619743392459</code>, <code>X-CSRFToken</code> (from cookie), <code>X-ASBD-ID: 359341</code>, <code>X-Requested-With: XMLHttpRequest</code>, <code>Content-Type: application/x-www-form-urlencoded</code>.</li>
+                        <li>All activity-feed events use <code>type: "instagram"</code>; live chat stays <code>type: "instagramlive"</code>. Like events use the normal background path: the background sends one copy to the dedicated Reactions Overlay, then includes them in the main chat/events feed only when <code>capturelikeevent</code> is enabled, matching TikTok and MeetMe. <code>hideevents</code> and the custom event filter block them everywhere. Because inbox events belong to the signed-in account, they are suppressed while watching someone else's live (both <code>/&lt;user&gt;/live/</code> pages and lives in the stories viewer; ownership is resolved per profile and retried after lookup failures) and emitted on your own live and all non-live pages. One active Instagram tab polls the account inbox at a time, and polling only runs when logged in.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code> (live)</td>
+                                <td>New entries in the <code>get_comment</code> response (<code>comments[]</code>/<code>system_comments[]</code>), or new DOM chat rows when REST is unavailable.</td>
+                                <td>Standard chat payload, <code>type: "instagramlive"</code>. REST provides exact <code>user.username</code>, <code>user.profile_pic_url</code>, and a unique <code>pk</code> used for dedupe.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td><code>heartbeat_and_get_viewer_count</code> reports a changed <code>viewer_count</code>, when viewer-count capture or hype mode is enabled.</td>
+                                <td><code>meta</code> integer viewer count. Polling stops when <code>broadcast_status</code> is no longer <code>"live"</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>stream_online</code> / <code>stream_offline</code></td>
+                                <td><code>stream_online</code> fires once when a REST broadcast session starts; <code>stream_offline</code> fires when the heartbeat reports a non-live <code>broadcast_status</code> (requires viewer-count capture or hype mode).</td>
+                                <td>Metadata-only events matching the shared stream-status vocabulary used by Twitch and Joystick.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>new_follower</code></td>
+                                <td>A news-inbox story with a follow-type <code>notif_name</code> (or <code>story_type 12</code>) appears.</td>
+                                <td><code>chatname</code> is the new follower, <code>chatimg</code> their profile image, <code>chatmessage</code> the inbox text (for example "x started following you.").</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>follow_request</code></td>
+                                <td>A <code>private_user_follow_request</code> story appears (private accounts receive requests instead of direct follows).</td>
+                                <td>Same shape as <code>new_follower</code>, kept distinct so automations can approve requests or greet differently.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>liked</code></td>
+                                <td>A news-inbox story with a like-type <code>notif_name</code> (including <code>comment_like</code>) appears.</td>
+                                <td>Shared like vocabulary with TikTok/MeetMe. <code>chatname</code> is the actor, <code>chatmessage</code> the inbox text (for example "x liked your photo.").</td>
+                            </tr>
+                            <tr>
+                                <td><code>message</code> (comment on own post)</td>
+                                <td>A news-inbox story with a comment-type <code>notif_name</code> appears.</td>
+                                <td>Plain chat row (<code>event: false</code>), <code>type: "instagram"</code>; <code>chatmessage</code> carries the inbox text including the comment excerpt.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>notification</code></td>
+                                <td>Any other news-inbox story type (mentions, tags, shopping, and so on).</td>
+                                <td>Generic catch-all; <code>meta.notifName</code> and <code>meta.storyType</code> preserve the raw story classification.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1582,7 +1671,7 @@
                     <ul class="requirements">
                         <li>Reads MeetMe's rendered live chat DOM on <code>app.meetme.com/live/view/...</code> pages and inside the <code>api.gateway.meetme-live.com/web-live/...</code> iframe.</li>
                         <li>When the iframe websocket is available, <code>wss://video-live.meetme.com/</code> frames are parsed before the DOM fallback to capture richer live events.</li>
-                        <li><code>hideevents</code> suppresses non-donation events; MeetMe gifts and diamond donations still populate donation fields. <code>capturejoinedevent</code> enables join/rejoin notices, and <code>capturelikeevent</code> controls whether likes appear in the main feed or only the reactions target.</li>
+                        <li><code>hideevents</code> suppresses non-donation events; MeetMe gifts and diamond donations still populate donation fields. <code>capturejoinedevent</code> enables join/rejoin notices. Actor-specific <code>liked</code> events use the shared background routing controlled by <code>capturelikeevent</code>; aggregate <code>reaction</code> effects remain explicitly targeted to the Reactions Overlay.</li>
                         <li>Viewer counts prefer the visible MeetMe header count, falling back to websocket totals only when the DOM count is unavailable. Counts emit on change and repeat the latest count about every 30 seconds while <code>showviewercount</code>/<code>hypemode</code> is enabled; follower totals are changed-only and rate-limited to roughly 60 seconds.</li>
                     </ul>
                     <table class="event-table">
@@ -1622,7 +1711,7 @@
                             <tr>
                                 <td class="status-event"><code>liked</code> / <code>reaction</code></td>
                                 <td><code>SNSLike</code> websocket frames arrive.</td>
-                                <td>Actor-specific likes use the same <code>liked</code> vocabulary as TikTok. Aggregate/anonymous like totals are sent only to the reactions target as <code>reaction</code>, with flat <code>meta.reactionType</code>, <code>meta.totalLikes</code>, and <code>meta.subscriberLikes</code>.</td>
+                                <td>Actor-specific likes use the same <code>liked</code> vocabulary and centralized background routing as TikTok. Aggregate/anonymous like totals are sent only to the reactions target as <code>reaction</code>, with flat <code>meta.reactionType</code>, <code>meta.totalLikes</code>, and <code>meta.subscriberLikes</code>. The distinction is event meaning, not anonymity: <code>capturelikeevent</code> controls only individual <code>liked</code>/<code>like</code> events.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>follower_update</code></td>
@@ -1959,6 +2048,7 @@
                     <li><strong>Gift events differ:</strong> YouTube uses <code>giftpurchase</code>/<code>giftredemption</code>, while Twitch and Kick use <code>subscription_gift</code>.</li>
                     <li><strong>Donations vary by platform:</strong> YouTube uses specific paid event names such as <code>superchat</code>, <code>supersticker</code>, and <code>jeweldonation</code> with <code>hasDonation</code>; Twitch has bits (<code>cheer</code>); Kick has tips (<code>donation</code>).</li>
                     <li><strong><code>new_follower</code> is now consistent</strong> across all three platforms, but YouTube has a 4-hour API delay and only shows subscribers with public subscription lists.</li>
+                    <li><strong>Likes and reactions are separate contracts:</strong> individual <code>liked</code>/<code>like</code> events reach the Reactions Overlay unless globally filtered, and enter the main pipeline only when <code>capturelikeevent</code> is enabled. Visual or platform-native <code>reaction</code> events retain producer-defined routing. Aggregate <code>likes_update</code> counters are separately controlled by <code>captureliketotals</code>.</li>
                 </ul>
             </section>
 
@@ -2009,13 +2099,13 @@
                     <tbody>
                         <tr>
                             <td>Twitch: Standard vs Websocket</td>
-                            <td>Shared: <code>reward</code>, <code>subscription_gift</code>, <code>viewer_update</code>. Standard-only: <code>giftpurchase</code>, <code>knock</code>, <code>community_highlight</code>. Websocket-only: <code>new_subscriber</code>, <code>resub</code>, <code>cheer</code>, <code>raid</code>, <code>new_follower</code>, <code>follower_update</code>, <code>subscriber_update</code>.</td>
+                            <td>Shared: <code>reward</code>, <code>subscription_gift</code>, <code>viewer_update</code>. Standard-only: <code>giftpurchase</code>, <code>knock</code>, <code>community_highlight</code>. Websocket-only: <code>new_subscriber</code>, <code>resub</code>, <code>cheer</code>, <code>powerup</code>, <code>raid</code>, <code>new_follower</code>, <code>follower_update</code>, <code>subscriber_update</code>.</td>
                             <td><code>channel_points</code> is now a deprecated legacy alias for Twitch reward redemptions; new integrations should key off <code>reward</code>.</td>
                         </tr>
                         <tr>
                             <td>Kick: Standard vs Websocket</td>
-                            <td>Standard emits lightweight markers (<code>gift</code>, <code>reward</code>, boolean <code>true</code>, <code>viewer_update</code>). Websocket adds full event support: <code>reward</code>, <code>new_follower</code>, <code>new_subscriber</code>, <code>resub</code>, <code>subscription_gift</code>, <code>donation</code>, <code>raid</code>, <code>stream_online</code>/<code>stream_offline</code>, <code>follower_update</code>, including API reward redemptions and KICKs gifts.</td>
-                            <td>Websocket mode is richer; automation built around Standard-only event names should be reviewed when switching.</td>
+                            <td>Standard emits lightweight markers (<code>gift</code>, <code>reward</code>, boolean <code>true</code>, <code>viewer_update</code>). Websocket adds official follow, subscription, gift, reward-redemption, KICKs, moderation, and live-status events. It retains compatibility handling for a legacy <code>raid</code> payload, but Kick does not currently offer an official raid/host subscription.</td>
+                            <td>Websocket mode is richer; automation built around Standard-only event names should be reviewed when switching. Do not require a Kick raid event.</td>
                         </tr>
                         <tr>
                             <td>YouTube: Standard vs Websocket</td>
@@ -2075,7 +2165,7 @@
                     <li>Update <code>AGENTS.md</code> and this page in the same pull request so future contributors know which surface produces the event.</li>
                     <li>When source behavior changes, regenerate/update <code>docs/event-audit.json</code> if your branch uses that optional audit artifact so mismatches and voids stay trackable.</li>
                     <li>Stream events are always captured. To hide all events in dock or featured overlays, add <code>&amp;hideevents</code> (dock also accepts <code>&amp;hideallevents</code>). To hide selected events, use <code>&amp;filterevents=subscription_gift,new_follower,gifted</code>.</li>
-                    <li>For YouTube, Twitch, and Kick, enable <strong>WebSocket mode</strong> in extension settings for full event support (followers, subscriptions, raids, etc.). Gift/donation capture for YouTube (including gifts and super chats) is available in both Standard and WebSocket modes; websocket adds additional event types.</li>
+                    <li>For YouTube, Twitch, and Kick, enable <strong>WebSocket mode</strong> for the broadest platform-specific event support. Gift/donation capture for YouTube (including gifts and super chats) is available in both Standard and WebSocket modes; WebSocket adds additional event types. Exact support still varies by platform, account role, and granted scopes.</li>
                 </ul>
                 <p class="back-to-top"><a href="#event-reference">Back to top</a></p>
             </section>

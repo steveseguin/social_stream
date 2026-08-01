@@ -236,9 +236,20 @@ async function createPartiPage(browser, settings, initialMessages) {
   const defaultBacklogPage = await createPartiPage(
     browser,
     { textonlymode: false },
-    [{ name: "Existing", message: "capture me" }]
+    [{ name: "Existing", message: "skip me by default" }]
   );
-  await waitForMessageCount(defaultBacklogPage, 1);
+  assert.strictEqual(
+    await defaultBacklogPage.evaluate(() => window.__partiMessages.length),
+    0,
+    "Parti should ignore existing history by default"
+  );
+
+  const replayBacklogPage = await createPartiPage(
+    browser,
+    { textonlymode: false, ignorepartibacklog: { setting: false } },
+    [{ name: "Existing", message: "capture me when explicitly enabled" }]
+  );
+  await waitForMessageCount(replayBacklogPage, 1);
 
   const noBacklogPage = await createPartiPage(
     browser,

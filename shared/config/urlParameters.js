@@ -966,6 +966,17 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Normalizes characters (e.g., removes diacritics) for comparisons"
+          },
+          {
+            "key": "staticemotes",
+            "displayName": "staticemotes or noanimatedemotes or freezeemotes",
+            "aliases": [
+              "staticemotes",
+              "noanimatedemotes",
+              "freezeemotes"
+            ],
+            "values": "boolean",
+            "description": "Shows supported animated emotes (7TV, BTTV, FFZ, Twitch, Kick, cheermotes, Discord) as a still image instead"
           }
         ]
       },

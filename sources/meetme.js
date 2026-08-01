@@ -571,19 +571,12 @@ function toDataURL(url, callback) {
 		return true;
 	}
 
-	function getEventTarget(eventName) {
-		if ((eventName === "liked" || eventName === "like" || eventName === "reaction") && settings.capturelikeevent === false) {
-			return "reactions";
-		}
-		return "";
-	}
-
 	function emitWsData(data, target) {
 		var base = buildBaseData();
 		for (var key in data) {
 			base[key] = data[key];
 		}
-		pushMessage(base, target || getEventTarget(base.event));
+		pushMessage(base, target);
 	}
 
 	function handleWsChatMessage(frame, className, obj) {
@@ -1075,7 +1068,7 @@ function toDataURL(url, callback) {
 			data.donoValue = giftAmount;
 		}
 
-		pushMessage(data, getEventTarget(data.event));
+		pushMessage(data);
 	}
 
 	function pushMessage(data, target){
@@ -1094,7 +1087,6 @@ function toDataURL(url, callback) {
 	// settings.captureevents
 	// settings.hideevents
 	// settings.capturejoinedevent
-	// settings.capturelikeevent
 
 
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}

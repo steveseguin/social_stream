@@ -347,7 +347,8 @@
 
 .step-content code {
     display: inline-block;
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: var(--code-bg);
+    border: 1px solid var(--border-color);
     padding: 0.3rem 0.8rem;
     border-radius: var(--radius-sm);
     font-family: var(--font-mono);
@@ -382,7 +383,7 @@
     .choice-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .download-tabs {
         flex-wrap: wrap;
     }
@@ -392,23 +393,23 @@
     .download-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .step {
         flex-direction: column;
     }
-    
+
     .step-number {
         margin-bottom: 2rem;
         margin-right: 0;
     }
-    
+
     .step:not(:last-child)::after {
         left: 3rem;
         top: 6rem;
         height: calc(100% - 6rem);
         display: none;
     }
-    
+
     .github-buttons {
         flex-direction: column;
     }

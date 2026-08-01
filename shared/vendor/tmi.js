@@ -986,7 +986,9 @@ ${JSON.stringify(message, null, 4)}`);
                 this.log.info("Received RECONNECT request from Twitch..");
                 this.log.info(`Disconnecting and reconnecting in ${Math.round(this.reconnectTimer / 1e3)} seconds..`);
                 this.disconnect().catch((err) => this.log.error(err));
-                setTimeout(() => this.connect().catch((err) => this.log.error(err)), this.reconnectTimer);
+                if (this.reconnect) {
+                  setTimeout(() => this.connect().catch((err) => this.log.error(err)), this.reconnectTimer);
+                }
                 break;
               case "USERSTATE":
                 message.tags.username = this.username;

@@ -200,7 +200,8 @@ class SpotifyIntegration {
                 durationMs: 0,
                 receivedAt: now,
                 errorCode,
-                message: cleanMessage
+                message: cleanMessage,
+                queue: this.getOverlayQueue()
             });
         }
 
@@ -757,7 +758,8 @@ class SpotifyIntegration {
                         isPlaying: false,
                         progressMs: 0,
                         durationMs: 0,
-                        receivedAt: Date.now()
+                        receivedAt: Date.now(),
+                        queue: this.getOverlayQueue()
                     });
                 }
                 return null;
@@ -821,6 +823,7 @@ class SpotifyIntegration {
                 }
 
                 if (this.callbacks.onTrackUpdate) {
+                    overlayPayload.queue = this.getOverlayQueue();
                     this.callbacks.onTrackUpdate(overlayPayload);
                 }
 
@@ -1247,6 +1250,25 @@ class SpotifyIntegration {
     // Managed Queue Methods (for !revoke support)
     // ============================================
 
+    getOverlayQueue() {
+        if (!this.managedQueueEnabled || !this.managedQueue || !Array.isArray(this.managedQueue.entries)) {
+            return [];
+        }
+
+        return this.managedQueue.entries
+            .filter(entry => entry.status === 'queued' || entry.status === 'pending')
+            .map(entry => ({
+                id: entry.id,
+                name: entry.trackName,
+                artist: entry.artist,
+                album: entry.album || '',
+                imageUrl: entry.imageUrl || '',
+                duration: entry.duration || 0,
+                requesterName: entry.requesterName || '',
+                status: entry.status
+            }));
+    }
+
     /**
      * Add a song to the managed queue with requester tracking
      * @param {string} query - Song search query
@@ -1291,6 +1313,9 @@ class SpotifyIntegration {
                 trackUri: track.uri,
                 trackName: track.name,
                 artist: track.artists.map(a => a.name).join(', '),
+                album: track.album?.name || '',
+                imageUrl: track.album?.images?.[0]?.url || '',
+                duration: track.duration_ms || 0,
                 requesterName: requesterData.requesterName || 'Unknown',
                 requesterKey: requesterData.requesterKey || 'unknown:unknown',
                 timestamp: Date.now(),

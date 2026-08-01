@@ -97,7 +97,7 @@ Important environment responsibilities:
 
 - Store `browserViews`, `connectionStates`, and `websocketConnections`.
 - Report status updates and forwarded events back to the app.
-- Gate capture settings such as joined, liked, viewer update, and text-only modes.
+- Gate source-owned capture settings such as joined, viewer update, and text-only modes. Individual-like routing is owned by `background.js`.
 - Provide local signer and signing helper hooks.
 - Expose callback points for diagnostics and app UI state.
 
@@ -245,11 +245,11 @@ Observed families from app code and tests:
 
 Important behavior:
 
-- Liked events can be routed to the reactions target when capture-liked is disabled for the main stream.
+- Viewer-specific `liked` events always enter the shared background router. They always reach Reactions unless globally filtered, and `capturelikeevent` controls whether they also continue into main chat/events.
 - `captureliketotals` enables authoritative cumulative totals independently of viewer-specific `liked` routing; legacy `captureyoutubelikes` remains an enablement alias.
 - The first known total sends immediately, burst changes are coalesced to at most one update every five seconds, unchanged state heartbeats about every 90 seconds, and confirmed stream end sends zero.
 - Follow/share events have dedupe behavior.
-- Liked events can intentionally pass through more often than other social rows.
+- Viewer-specific liked events can intentionally pass through more often than other social rows.
 - Gift handling uses upstream IDs, streak identity, gift names, quantities, and `gift-mapping.json` when available.
 - Text-only mode avoids image HTML for emote/sticker handling.
 

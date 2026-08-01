@@ -1,4 +1,16 @@
 (function () {
+
+	function isSupportedXLivePage() {
+		try {
+			var path = (window.location.pathname || "").toLowerCase();
+			var liveMatch = path.match(/^\/([^\/]+)\/(chat|live|livechat)\/?$/);
+			var reservedRoutes = ["i", "messages", "notifications", "bookmarks", "settings", "compose"];
+			return !!(liveMatch && (reservedRoutes.indexOf(liveMatch[1]) === -1)) ||
+				path.startsWith("/i/broadcasts/");
+		} catch(e) {
+			return false;
+		}
+	}
 	 
 	function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
@@ -83,8 +95,149 @@
 	var pendingMessageNodes = new WeakSet();
 	var messageRetryCounts = new WeakMap();
 	var observedContainer = null;
+	var xStudioResolverFrame = null;
+	var xStudioResolverStarted = false;
 	var xNotLiveReloadTimer = null;
+	var xChatOnlyContainer = null;
+	var xChatOnlyPreviousBackgroundValue = "";
+	var xChatOnlyPreviousBackgroundPriority = "";
+	const X_STUDIO_MESSAGE_TYPE = "socialstream-x-studio-broadcasts";
+	const X_CHAT_ONLY_QUERY = "socialstream=chat";
 	const X_NOT_LIVE_RELOAD_DELAY = 15000;
+
+	function getXLiveScreenName() {
+		try {
+			var match = (window.location.pathname || "").match(/^\/([^\/]+)\/(chat|live|livechat)\/?$/i);
+			return match ? decodeURIComponent(match[1]).toLowerCase() : "";
+		} catch(e) {
+			return "";
+		}
+	}
+
+	function isXChatOnlyBroadcastPage() {
+		try {
+			return /^\/i\/broadcasts\/[^\/]+\/?$/i.test(window.location.pathname || "") &&
+				/(?:^|[?&])socialstream=chat(?:&|$)/i.test(window.location.search || "");
+		} catch(e) {
+			return false;
+		}
+	}
+
+	// Intentional scope: Studio resolution is only a best-effort browser helper
+	// for username-style /live URLs. Direct /i/broadcasts/ pages are the capture
+	// surface; Electron must not depend on, bundle, or repeatedly restart this
+	// hidden Studio iframe unless the resolver becomes a supported desktop feature.
+	// Electron instead retains the guarded not-live reload fallback below.
+	function startXStudioResolver() {
+		if (xStudioResolverStarted || !getXLiveScreenName()) {
+			return;
+		}
+		xStudioResolverStarted = true;
+		try {
+			xStudioResolverFrame = document.createElement("iframe");
+			xStudioResolverFrame.setAttribute("aria-hidden", "true");
+			xStudioResolverFrame.src = "https://studio.x.com/live?rwebShell=1&socialstreamResolver=1";
+			xStudioResolverFrame.style.cssText = "position:fixed!important;width:1px!important;height:1px!important;left:-10px!important;top:-10px!important;opacity:0!important;pointer-events:none!important;border:0!important;";
+			(document.body || document.documentElement).appendChild(xStudioResolverFrame);
+			console.log("Resolving active X broadcast through Live Studio.");
+		} catch(e) {
+			xStudioResolverStarted = false;
+			xStudioResolverFrame = null;
+		}
+	}
+
+	window.addEventListener("message", function(event) {
+		if (!xStudioResolverFrame || (event.source !== xStudioResolverFrame.contentWindow) ||
+			(event.origin !== "https://studio.x.com")) {
+			return;
+		}
+		var data = event.data;
+		if (!data || (data.type !== X_STUDIO_MESSAGE_TYPE) || !Array.isArray(data.broadcasts)) {
+			return;
+		}
+		var screenName = getXLiveScreenName();
+		for (var i = 0; i < data.broadcasts.length; i++) {
+			var broadcast = data.broadcasts[i] || {};
+			if (String(broadcast.ownerScreenName || "").toLowerCase() !== screenName ||
+				String(broadcast.stateName || "").toLowerCase() !== "running" ||
+				!/^[A-Za-z0-9_-]+$/.test(String(broadcast.broadcastId || ""))) {
+				continue;
+			}
+			window.location.replace("https://x.com/i/broadcasts/" + broadcast.broadcastId + "?" + X_CHAT_ONLY_QUERY);
+			return;
+		}
+	});
+
+	function clearXChatOnlyLayout() {
+		var style = document.getElementById("socialstream-x-chat-only-style");
+		if (style && style.parentNode) {
+			style.parentNode.removeChild(style);
+		}
+		try {
+			var markedNodes = document.querySelectorAll("[data-socialstream-x-chat-only], [data-socialstream-x-chat-path]");
+			for (var i = 0; i < markedNodes.length; i++) {
+				markedNodes[i].removeAttribute("data-socialstream-x-chat-only");
+				markedNodes[i].removeAttribute("data-socialstream-x-chat-path");
+			}
+		} catch(e) {}
+		if (xChatOnlyContainer && xChatOnlyContainer.style) {
+			if (xChatOnlyPreviousBackgroundValue) {
+				xChatOnlyContainer.style.setProperty("background-color", xChatOnlyPreviousBackgroundValue, xChatOnlyPreviousBackgroundPriority);
+			} else {
+				xChatOnlyContainer.style.removeProperty("background-color");
+			}
+		}
+		xChatOnlyContainer = null;
+		xChatOnlyPreviousBackgroundValue = "";
+		xChatOnlyPreviousBackgroundPriority = "";
+	}
+
+	function applyXChatOnlyLayout() {
+		if (!isXChatOnlyBroadcastPage()) {
+			clearXChatOnlyLayout();
+			return;
+		}
+		if (xChatOnlyContainer && xChatOnlyContainer.isConnected) {
+			return;
+		}
+		if (xChatOnlyContainer) {
+			clearXChatOnlyLayout();
+		}
+		var composer = getChatComposer(document);
+		if (!composer) {
+			return;
+		}
+		var current = composer;
+		while (current && (current !== document.body)) {
+			var rect = current.getBoundingClientRect ? current.getBoundingClientRect() : null;
+			if (rect && (rect.height >= (window.innerHeight * 0.6)) && (rect.width >= 240)) {
+				xChatOnlyContainer = current;
+				break;
+			}
+			current = current.parentElement;
+		}
+		if (!xChatOnlyContainer) {
+			return;
+		}
+		xChatOnlyPreviousBackgroundValue = xChatOnlyContainer.style.getPropertyValue("background-color");
+		xChatOnlyPreviousBackgroundPriority = xChatOnlyContainer.style.getPropertyPriority("background-color");
+		xChatOnlyContainer.setAttribute("data-socialstream-x-chat-only", "true");
+		current = xChatOnlyContainer.parentElement;
+		while (current && (current !== document.documentElement)) {
+			current.setAttribute("data-socialstream-x-chat-path", "true");
+			current = current.parentElement;
+		}
+		try {
+			xChatOnlyContainer.style.setProperty("background-color", window.getComputedStyle(document.body).backgroundColor, "important");
+		} catch(e) {}
+		var style = document.getElementById("socialstream-x-chat-only-style");
+		if (!style) {
+			style = document.createElement("style");
+			style.id = "socialstream-x-chat-only-style";
+			style.textContent = "html,body{overflow:hidden!important;}[data-socialstream-x-chat-path='true']{transform:none!important;filter:none!important;perspective:none!important;contain:none!important;}[data-socialstream-x-chat-path='true']>:not([data-socialstream-x-chat-path='true']):not([data-socialstream-x-chat-only='true']){display:none!important;}[data-socialstream-x-chat-only='true']{position:fixed!important;inset:0!important;width:100vw!important;max-width:none!important;height:100vh!important;margin:0!important;border:0!important;border-radius:0!important;z-index:2147483647!important;background:inherit!important;}";
+			(document.head || document.documentElement).appendChild(style);
+		}
+	}
 
 	function pruneSeenMessageKeys() {
 		const cutoff = Date.now() - MESSAGE_KEY_TTL;
@@ -532,6 +685,9 @@
 	}
 	
 	function processMessage(ele){
+		if (!isSupportedXLivePage()){
+			return;
+		}
 		
 		const row = getMessageRow(ele) || ele;
 		if (!row || row.skip){
@@ -663,6 +819,9 @@
 	}
 
 	function pushMessage(data){
+		if (!isSupportedXLivePage()){
+			return;
+		}
 		try{
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
 		} catch(e){
@@ -691,6 +850,10 @@
 			try{
 				if (isExtensionOn){
 					if ("getSource" == request){
+						if (!isSupportedXLivePage()) {
+							sendResponse(false);
+							return;
+						}
 						
 						if (settings.detweet) {
 							sendResponse("twitter");
@@ -701,6 +864,10 @@
 						
 					}
 					if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+						if (!isSupportedXLivePage()) {
+							sendResponse(false);
+							return;
+						}
 						let composer = getChatComposer(document);
 						if (composer && composer.focus){
 							composer.focus();
@@ -723,6 +890,39 @@
 
 	var lastURL =  "";
 	var observer = null;
+
+	function stopObservingXChat() {
+		if (observer) {
+			try {
+				observer.disconnect();
+			} catch(e) {}
+			observer = null;
+		}
+		if (observedContainer) {
+			observedContainer.marked = false;
+			observedContainer = null;
+		}
+		if (xNotLiveReloadTimer) {
+			clearTimeout(xNotLiveReloadTimer);
+			xNotLiveReloadTimer = null;
+		}
+	}
+
+	var lastXRoute = window.location.pathname || "";
+
+	function handleXRouteChange() {
+		var currentRoute = window.location.pathname || "";
+		if (currentRoute === lastXRoute) {
+			return;
+		}
+		lastXRoute = currentRoute;
+		stopObservingXChat();
+		clearXChatOnlyLayout();
+	}
+
+	window.addEventListener("popstate", handleXRouteChange);
+	window.addEventListener("hashchange", handleXRouteChange);
+	setInterval(handleXRouteChange, 250);
 	
 	
 	function findViewerSpan() {
@@ -734,6 +934,9 @@
 	}
 	
 	function checkViewers(){
+		if (!isSupportedXLivePage()){
+			return;
+		}
 		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
 			try {
 				let viewerSpan = findViewerSpan();
@@ -813,32 +1016,31 @@
 		return false;
 	}
 
-	function checkXNotLiveReload() {
-		if (!isExtensionOn) {
+	function checkXNotLiveResolver() {
+		if (!isExtensionOn || !isXNotLiveScreen()) {
 			if (xNotLiveReloadTimer) {
 				clearTimeout(xNotLiveReloadTimer);
 				xNotLiveReloadTimer = null;
 			}
 			return;
 		}
-		if (isXNotLiveScreen()) {
-			if (!xNotLiveReloadTimer) {
-				console.log("X live page is not live yet; reloading in 15 seconds.");
-				xNotLiveReloadTimer = setTimeout(function(){
-					xNotLiveReloadTimer = null;
-					if (isXNotLiveScreen()) {
-						window.location.reload();
-					}
-				}, X_NOT_LIVE_RELOAD_DELAY);
-			}
-		} else if (xNotLiveReloadTimer) {
-			clearTimeout(xNotLiveReloadTimer);
-			xNotLiveReloadTimer = null;
+		startXStudioResolver();
+		var isElectronSource = typeof window.__SSAPP_TAB_ID__ !== "undefined" ||
+			!!window.ninjafy || !!window.electronApi || !!window.__ssapp;
+		if (isElectronSource && !xNotLiveReloadTimer) {
+			console.log("X live page is not live yet; reloading in 15 seconds.");
+			xNotLiveReloadTimer = setTimeout(function(){
+				xNotLiveReloadTimer = null;
+				if (isExtensionOn && isXNotLiveScreen()) {
+					window.location.reload();
+				}
+			}, X_NOT_LIVE_RELOAD_DELAY);
 		}
 	}
 	
 	setTimeout(function(){checkViewers();},2000);
 	setInterval(function(){checkViewers()},5000);
+	setInterval(applyXChatOnlyLayout, 500);
 	
 	
 	function onElementInserted(target) {
@@ -910,17 +1112,58 @@
 		document.webkitHidden = false;
 	} catch(e){	}
 
+	var originalDocumentHasFocus = null;
 	try {
-		document.hasFocus = function () {return true;};
+		originalDocumentHasFocus = document.hasFocus.bind(document);
+	} catch(e) {}
+
+	function getNativeDocumentValue(propertyName, fallbackValue) {
+		try {
+			var prototype = Object.getPrototypeOf(document);
+			while (prototype) {
+				var descriptor = Object.getOwnPropertyDescriptor(prototype, propertyName);
+				if (descriptor && (typeof descriptor.get === "function")) {
+					return descriptor.get.call(document);
+				}
+				prototype = Object.getPrototypeOf(prototype);
+			}
+		} catch(e) {}
+		return fallbackValue;
+	}
+
+	function overrideDocumentVisibilityProperty(propertyName, liveValue, fallbackValue) {
+		try {
+			Object.defineProperty(document, propertyName, {
+				configurable: true,
+				get: function() {
+					if (isSupportedXLivePage()) {
+						return liveValue;
+					}
+					return getNativeDocumentValue(propertyName, fallbackValue);
+				}
+			});
+		} catch(e) {}
+	}
+
+	try {
+		document.hasFocus = function () {
+			if (isSupportedXLivePage()) {
+				return true;
+			}
+			return originalDocumentHasFocus ? originalDocumentHasFocus() : false;
+		};
 		window.onFocus = function () {return true;};
-		
-		Object.defineProperty(document, "mozHidden", { value : false});
-		Object.defineProperty(document, "msHidden", { value : false});
-		Object.defineProperty(document, "webkitHidden", { value : false});
-		Object.defineProperty(document, 'visibilityState', { get: function () { return "visible"; }, value: 'visible', writable: true});
-		Object.defineProperty(document, 'hidden', {value: false, writable: true});
+
+		overrideDocumentVisibilityProperty("mozHidden", false, getNativeDocumentValue("hidden", false));
+		overrideDocumentVisibilityProperty("msHidden", false, getNativeDocumentValue("hidden", false));
+		overrideDocumentVisibilityProperty("webkitHidden", false, getNativeDocumentValue("hidden", false));
+		overrideDocumentVisibilityProperty("visibilityState", "visible", "visible");
+		overrideDocumentVisibilityProperty("hidden", false, false);
 		
 		setInterval(function(){
+			if (!isSupportedXLivePage()) {
+				return;
+			}
 			console.log("set visibility");
 			window.onblur = null;
 			window.blurred = false;
@@ -934,6 +1177,9 @@
 
 	try {
 		document.onvisibilitychange = function(){
+			if (!isSupportedXLivePage()) {
+				return;
+			}
 			window.onFocus = function () {return true;};
 			
 		};
@@ -947,6 +1193,9 @@
 			"msvisibilitychange"]) {
 				try{
 					window.addEventListener(event_name, function(event) {
+						if (!isSupportedXLivePage()) {
+							return;
+						}
 						event.stopImmediatePropagation();
 						event.preventDefault();
 					}, true);
@@ -956,6 +1205,10 @@
 
 	setInterval(function(){
 		try {
+			if (!isSupportedXLivePage()) {
+				stopObservingXChat();
+				return;
+			}
 			if (observedContainer && !observedContainer.isConnected) {
 				var disconnectedContainer = observedContainer;
 				try {
@@ -967,7 +1220,7 @@
 				observedContainer = null;
 				observer = null;
 			}
-			checkXNotLiveReload();
+			checkXNotLiveResolver();
 			var container = resolveChatContainer();
 			if (!container) {
 				container = findElementByAttributeAndChildren("[tabIndex='0']",["textarea[inputmode='text']"]);

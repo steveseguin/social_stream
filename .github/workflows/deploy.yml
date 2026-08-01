@@ -45,8 +45,41 @@ jobs:
               if source.is_dir():
                   shutil.make_archive(str(skills / 'control-social-stream'), 'zip', skills, 'control-social-stream')
           PY
-          rsync -av --exclude='.git/' main-content/ gh-pages-content/
-          rsync -av --exclude='.git/' beta-content/ gh-pages-content/beta/
+          for checkout in main-content beta-content; do
+            generator="$checkout/scripts/build-docs-search-index.py"
+            if [ -f "$generator" ]; then
+              python3 "$generator" --docs-root "$checkout/docs" --output "$checkout/docs/search-index.json"
+            fi
+          done
+          rsync -av \
+            --exclude='/.git/' \
+            --exclude='/.agents/' \
+            --exclude='/.claude/' \
+            --exclude='/.codex/' \
+            --exclude='/.codex-tmp/' \
+            --exclude='/.github/' \
+            --exclude='/.githooks/' \
+            --exclude='/node_modules/' \
+            --exclude='/scripts/' \
+            --exclude='/tests/' \
+            --exclude='/tmp/' \
+            main-content/ gh-pages-content/
+          rsync -av \
+            --exclude='/.git/' \
+            --exclude='/.agents/' \
+            --exclude='/.claude/' \
+            --exclude='/.codex/' \
+            --exclude='/.codex-tmp/' \
+            --exclude='/.github/' \
+            --exclude='/.githooks/' \
+            --exclude='/node_modules/' \
+            --exclude='/scripts/' \
+            --exclude='/tests/' \
+            --exclude='/tmp/' \
+            beta-content/ gh-pages-content/beta/
+          seo_script="${GITHUB_REF_NAME}-content/scripts/prepare-pages-seo.py"
+          python3 "$seo_script" --root gh-pages-content
+          touch gh-pages-content/.nojekyll
           echo "Removing files larger than 25MB from deployment payload"
           find gh-pages-content -type f -size +25M -print -delete || true
           echo "Deployment content (recursive):"

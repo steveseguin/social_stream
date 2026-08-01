@@ -386,8 +386,8 @@
 	}
 
 	var custombot = false;
-	if (urlParams.has("myname") || urlParams.has("botlist")){
-		custombot = urlParams.get("myname") || urlParams.get("botlist") || false;
+	if (urlParams.has("myname") || urlParams.has("botnames") || urlParams.has("botlist")){
+		custombot = urlParams.get("myname") || urlParams.get("botlist") || urlParams.get("botnames") || false;
 		if (custombot){
 			custombot = decodeURIComponent(custombot);
 			custombot = custombot.toLowerCase().replace(/[^a-z0-9,_]+/gi, "");

@@ -846,6 +846,39 @@ p a {
 	cursor: copy!important;
 }
 
+.edit-link {
+    text-decoration: none;
+    color: var(--text-button-text);
+    font-size: 0.6rem;
+    cursor: pointer;
+}
+
+.link-edit-status {
+    display: none;
+    margin-top: 6px;
+    color: var(--color-accent);
+    font-size: 0.78rem;
+}
+
+.link-edit-status.visible {
+    display: block;
+}
+
+.edit-link-dialog-note {
+    display: block;
+    margin-top: 4px;
+    color: var(--options-group-text-color);
+    font-size: 0.78rem;
+    opacity: 0.8;
+}
+
+.edit-link-dialog-error {
+    min-height: 1.2em;
+    margin-top: 4px;
+    color: #ff7b7b;
+    font-size: 0.78rem;
+}
+
 #disableButton {
     appearance: none;
     position: sticky;
@@ -2223,12 +2256,14 @@ input:checked + .slider:before {
                     <span class="title-group"><span class="emoji" aria-hidden="true">💬</span>Main chat overlay & control dock </span>
 					<span class="heading-actions">
 						<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+						<a class="edit-link rounded_area" title="Load an existing Main Chat link for editing" data-edit-link="dock">[edit link]</a>
 						<a class="options-link rounded_area" href="#streaming-chat-options" title="Jump to dockable streaming chat link options."><span data-translate="options">[options]</span></a>
 						<label for="help-dock" class="help-link rounded_area" title="Click for detailed help">[?]</label>
 					</span>
                 </h2>
 				<small class="beginner-section-note">Use this as your main chat view, OBS overlay, or dock for controlling featured messages and TTS.</small>
                 <div id="dock" data-raw="" class="streaming_chat"></div>
+				<div id="dock-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 				<input type="checkbox" id="help-dock" class="link-help-toggle">
 				<div class="link-help-content">
 					<strong>Your all-in-one chat control center.</strong>
@@ -6812,7 +6847,7 @@ input:checked + .slider:before {
 
                                 <div title="When enabled, messages already visible when Parti capture starts are ignored; only new messages are captured.">
                                     <label class="switch">
-                                        <input type="checkbox" data-setting="ignorepartibacklog" />
+                                        <input type="checkbox" data-setting="ignorepartibacklog" checked />
                                         <span class="slider round"></span>
                                     </label>
                                     <img class="icon" src="./sources/images/parti.png" style="display: inline-block;" /> <span>Ignore existing Parti chat history (capture only new messages)</span>
@@ -6933,13 +6968,12 @@ input:checked + .slider:before {
                                     <span class="icon" style="display: inline-block;">🚪</span>
                                     <span data-translate="capture-joined-events"> Capture "joined" stream events </span>
                                 </div>
-                                <div title="Show TikTok like events in the main chat/events feed. Reactions Overlay still receives them directly.">
+                                <div title="Show individual like events from supported platforms in the main chat/events feed. The Reactions Overlay receives them independently unless stream events are globally filtered.">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="capturelikeevent" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <img class="icon" src="./sources/images/tiktok.png" style="display: inline-block;" />
-                                    <span> Show TikTok likes in main chat/events </span>
+                                    <span> Show individual likes in main chat/events. </span>
                                 </div>
                                 <div title="Send current platform like totals to the dock feed and custom consumers. YouTube uses API polling; SSApp TikTok updates are throttled.">
                                     <label class="switch">
@@ -7922,7 +7956,7 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group">
-								<div><i><a href="#colorizename"class="lightblue"  >Name colors in the dock won't show without <b>&color</b></a></i></div>
+								<div><i><a href="#colorizename" class="lightblue">Name colors in the dock won't show without <b>&amp;color</b></a> &middot; <a href="https://socialstream.ninja/docs/name-colors.html" target="_blank" class="lightblue">Name color guide</a></i></div>
 
 								<div title="Sets the color for a name to the color of the source's branding. This does not cause a name to be displayed as colorful though- you need to enable that option.">
                                     <label class="switch">
@@ -7948,7 +7982,7 @@ input:checked + .slider:before {
                                     <span data-translate="add-a-random-color-to-uncolored-names">🌈👤 Add a random color to uncolored names </span>
 									<br>
 									<i>
-										<a class="options-link rounded_area" href="#colorizename" title="Jump to the color name option.">Note: This needs to be used in conjuction with <b>&color</b>
+										<a class="options-link rounded_area" href="#colorizename" title="Jump to the color name option.">Note: This needs to be used in conjunction with <b>&amp;color</b>
 										</a>
 									</i>
                                 </div>
@@ -7983,7 +8017,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-setting="lightencolorname" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="lightencolorname">☀️ Lighten and desaturat name colors</span>
+                                    <span data-translate="lightencolorname">☀️ Lighten and desaturate name colors</span>
                                 </div>
 								<div title="Makes it easier to see names on darker backgrounds.">
                                     <label class="switch">
@@ -9019,7 +9053,7 @@ input:checked + .slider:before {
 								<br>
 								<div style="display: inline-block;" title="Enable the LLM AI Bot responder.">
 									<label class="switch">
-										<input type="checkbox" id="ollama" data-setting="ollama" />
+										<input type="checkbox" id="aiChatbotEnabled" data-setting="aiChatbotEnabled" />
 										<span class="slider round"></span>
 									</label>
 									🚦 <span data-translate="enable-ollama-bot">Enable the LLM AI chat bot</span>
@@ -10227,13 +10261,18 @@ input:checked + .slider:before {
 					</ul>
 				</div>
 				<div id="reactions" data-raw="" class="single_message"><a href="" id="reactionslink"></a></div>
+				<div style="margin: 8px 0 12px;">
+					<button type="button" id="test-reaction-button" class="glowingButton" style="width: 190px; margin-left: 0;" title="Open the Reactions Overlay link first, then send a test reaction.">
+						<span>Send test reaction</span>
+					</button>
+				</div>
 			</div>
 			<a href="" id="reactions-options"></a>
 
 			<div class="wrapper">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-reactions-options" />
-					<label class="collapsible-label" for="wrapper-reactions-options"><span>💖 Enable and customize</span></label>
+					<label class="collapsible-label" for="wrapper-reactions-options"><span>💖 Customize reactions overlay</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group reactions_overlay">
@@ -14557,6 +14596,7 @@ input:checked + .slider:before {
 					<p>Connect your Spotify account to show what song is playing as an overlay, or announce tracks to chat automatically.</p>
 					<ul>
 						<li>"Now Playing" overlay widget</li>
+						<li>Optional upcoming song-request queue</li>
 						<li>Auto-announce songs to chat</li>
 						<li>Chat commands for song info (!song, !np)</li>
 						<li>Customizable overlay appearance</li>
@@ -14652,6 +14692,16 @@ input:checked + .slider:before {
 									</label>
 									<span>Compact layout</span>
 								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param22="showqueue" />
+										<span class="slider round"></span>
+									</label>
+									<span>Show upcoming song-request queue</span>
+								</div>
+								<p style="font-size: 0.85em; color: var(--text-secondary); margin: 0 0 12px;">
+									Requires the managed song-request queue under Spotify Chat Commands.
+								</p>
 								<h3>Visibility toggles</h3>
 								<div>
 									<label class="switch">
