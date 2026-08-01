@@ -168,6 +168,7 @@
 				data.event = "new_follower";
 			}
 		}
+		if (settings.hideevents && data.event){ return; }
 
 		pushMessage(data);
 	}

@@ -509,6 +509,8 @@
 		started: false,
 		polling: false,
 		failures: 0,
+		timer: null,
+		retryTimer: null,
 		seen: {},
 		seenOrder: []
 	};
@@ -665,6 +667,9 @@
 				ownLiveLookupPendingUser = null;
 				ownLiveStatus = !!(pk && String(pk) === String(myId));
 				ownLiveRetryAt = 0;
+				if (ownLiveStatus && notifInboxState.started){
+					pollNotifInbox();
+				}
 			})
 			.catch(function(){
 				if (lookupGeneration !== ownLiveLookupGeneration || ownLiveCheckedUser !== user){ return; }
@@ -674,13 +679,48 @@
 			});
 	}
 
+	function canPollNotifInbox(){
+		var path = window.location.pathname || "";
+		var m = path.match(/^\/([^\/]+)\/live\/?/) || path.match(/^\/stories\/([^\/]+)\//);
+		if (!m){ return true; }
+		return ownLiveCheckedUser === m[1] && ownLiveStatus === true;
+	}
+
+	function ensureNotifInboxInterval(){
+		if (!notifInboxState.started || notifInboxState.timer || notifInboxState.retryTimer){ return; }
+		notifInboxState.timer = setInterval(pollNotifInbox, 45000);
+	}
+
+	function handleNotifInboxFailure(){
+		notifInboxState.failures++;
+		if (notifInboxState.failures < 5){ return; }
+		if (notifInboxState.timer){
+			clearInterval(notifInboxState.timer);
+			notifInboxState.timer = null;
+		}
+		if (notifInboxState.retryTimer){ return; }
+		var retryExponent = Math.min(Math.max(notifInboxState.failures - 5, 0), 3);
+		var retryDelay = Math.min(300000, 45000 * Math.pow(2, retryExponent));
+		notifInboxState.retryTimer = setTimeout(function(){
+			notifInboxState.retryTimer = null;
+			ensureNotifInboxInterval();
+			pollNotifInbox();
+		}, retryDelay);
+	}
+
 	function pollNotifInbox(){
 		if (!isExtensionOn){ return; }
-		if (ownLiveCheckedUser && ownLiveStatus !== true){ return; }
+		checkOwnLive();
+		// Account inbox events must fail closed on live/story routes until ownership is confirmed.
+		if (!canPollNotifInbox()){ return; }
 		if (notifInboxState.polling){ return; }
 		notifInboxState.polling = true;
 		claimNotifInboxPolling(function(granted){
 			if (!granted){
+				notifInboxState.polling = false;
+				return;
+			}
+			if (!canPollNotifInbox()){
 				notifInboxState.polling = false;
 				return;
 			}
@@ -695,17 +735,18 @@
 					return resp.json();
 				})
 				.then(function(json){
+					if (!canPollNotifInbox()){ return; }
 					if (!json || json.status !== "ok"){
-						notifInboxState.failures++;
-						if (notifInboxState.failures >= 5){ clearInterval(notifInboxState.timer); notifInboxState.timer = null; }
+						handleNotifInboxFailure();
 						return;
 					}
 					notifInboxState.failures = 0;
+					ensureNotifInboxInterval();
 					var stories = (Array.isArray(json.new_stories) ? json.new_stories : [])
 						.concat(Array.isArray(json.old_stories) ? json.old_stories : [])
 						.concat(Array.isArray(json.priority_stories) ? json.priority_stories : []);
 					return filterNotifInboxStories(stories).then(function(emitKeys){
-						if (!emitKeys){ return; }
+						if (!emitKeys || !canPollNotifInbox()){ return; }
 						var emitLookup = {};
 						emitKeys.forEach(function(key){ emitLookup[key] = true; });
 						stories.sort(function(a, b){
@@ -723,8 +764,7 @@
 					});
 				})
 				.catch(function(){
-					notifInboxState.failures++;
-					if (notifInboxState.failures >= 5){ clearInterval(notifInboxState.timer); notifInboxState.timer = null; }
+					handleNotifInboxFailure();
 				})
 				.then(function(){
 					notifInboxState.polling = false;
@@ -733,11 +773,11 @@
 	}
 
 	function startNotifInboxPolling(){
-		if (notifInboxState.started){ return; }
+		if (notifInboxState.started){ ensureNotifInboxInterval(); return; }
 		if (!getIgUserId()){ return; }
 		notifInboxState.started = true;
 		pollNotifInbox();
-		notifInboxState.timer = setInterval(pollNotifInbox, 45000);
+		ensureNotifInboxInterval();
 	}
 
 	// ---------- Instagram Live ----------

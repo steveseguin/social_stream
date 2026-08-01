@@ -56,7 +56,7 @@ async function run() {
         eventSockets: [],
         tmiClients: [],
         refreshCalls: 0,
-        refreshMode: 'success',
+        refreshMode: 'network-once',
         validateExpiresIn: 3600,
         subscriptionCalls: 0,
         subscriptionTypes: [],
@@ -68,6 +68,10 @@ async function run() {
       const nativeSetInterval = window.setInterval.bind(window);
       window.setInterval = (handler, delay, ...args) => {
         return nativeSetInterval(handler, delay === 300000 ? 50 : delay, ...args);
+      };
+      const nativeSetTimeout = window.setTimeout.bind(window);
+      window.setTimeout = (handler, delay, ...args) => {
+        return nativeSetTimeout(handler, delay === 30000 ? 75 : delay, ...args);
       };
 
       class FakeTmiClient {
@@ -176,7 +180,9 @@ async function run() {
         }
         if (url.includes('sso.socialstream.ninja/auth/twitch/refresh')) {
           harness.refreshCalls += 1;
-          if (harness.refreshMode === 'network') throw new TypeError('simulated network failure');
+          if (harness.refreshMode === 'network' || (harness.refreshMode === 'network-once' && harness.refreshCalls === 1)) {
+            throw new TypeError('simulated network failure');
+          }
           return json({
             access_token: 'new-access-token',
             refresh_token: 'new-refresh-token',
@@ -232,7 +238,7 @@ async function run() {
 
     await page.goto(`${origin}/sources/websocket/twitch.html?channel=tester`);
     await page.evaluate(() => {
-      localStorage.setItem('twitchOAuthToken', 'original-token');
+      localStorage.setItem('twitchOAuthToken', 'expired-token');
       localStorage.setItem('twitchOAuthRefreshToken', 'original-refresh-token');
       localStorage.setItem('twitchOAuthExpiry', String(Date.now() + 3600000));
       localStorage.setItem('twitchChannel', 'tester');
@@ -251,6 +257,16 @@ async function run() {
       }));
       throw new Error(`${error.message}\nState: ${JSON.stringify(state)}\nLogs:\n${pageLogs.join('\n')}`);
     }
+    assert.strictEqual(
+      await page.evaluate(() => window.__twitchHarness.refreshCalls),
+      2,
+      'Twitch startup did not retry a transient token refresh failure'
+    );
+    assert.strictEqual(
+      await page.evaluate(() => localStorage.getItem('twitchOAuthToken')),
+      'new-access-token',
+      'Twitch startup retry did not persist the refreshed access token'
+    );
     await page.evaluate(() => {
       window.__twitchHarness.eventSockets[0].emitMessage({
         metadata: { message_type: 'session_welcome' },
@@ -379,6 +395,10 @@ async function run() {
     );
 
     const refreshCallsBeforeFailure = await page.evaluate(() => window.__twitchHarness.refreshCalls);
+    const connectionsBeforeActiveRefresh = await page.evaluate(() => ({
+      tmiClients: window.__twitchHarness.tmiClients.length,
+      eventSockets: window.__twitchHarness.eventSockets.length
+    }));
     await page.evaluate(() => {
       window.__twitchHarness.refreshMode = 'network';
       localStorage.setItem('twitchOAuthToken', 'expired-token');
@@ -393,12 +413,21 @@ async function run() {
       refreshToken: localStorage.getItem('twitchOAuthRefreshToken')
     }));
     assert.strictEqual(retained.accessToken, 'expired-token');
-    assert.strictEqual(retained.refreshToken, 'original-refresh-token');
+    assert.strictEqual(retained.refreshToken, 'new-refresh-token');
 
     await page.evaluate(() => {
       window.__twitchHarness.refreshMode = 'success';
     });
     await page.waitForFunction(() => localStorage.getItem('twitchOAuthToken') === 'new-access-token');
+    await page.waitForTimeout(100);
+    assert.deepStrictEqual(
+      await page.evaluate(() => ({
+        tmiClients: window.__twitchHarness.tmiClients.length,
+        eventSockets: window.__twitchHarness.eventSockets.length
+      })),
+      connectionsBeforeActiveRefresh,
+      'A successful token retry must not restart an already active Twitch connection'
+    );
 
     await page.evaluate(() => {
       window.__twitchHarness.validateExpiresIn = 1200;

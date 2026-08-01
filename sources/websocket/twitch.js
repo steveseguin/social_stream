@@ -356,6 +356,7 @@ try{
 	var tokenRefreshPromise = null;
 	var tokenRefreshRetryCount = 0;
 	var lastTokenRefreshFailure = null;
+	var tokenRefreshResumePending = false;
 
 	function createTransientTokenValidationError(status, message) {
 		return {
@@ -558,6 +559,7 @@ try{
 		}
 		tokenRefreshRetryCount = 0;
 		lastTokenRefreshFailure = null;
+		tokenRefreshResumePending = false;
 		localStorage.removeItem('twitchOAuthToken');
 		localStorage.removeItem(TWITCH_REFRESH_TOKEN_KEY);
 		localStorage.removeItem(TWITCH_TOKEN_EXPIRY_KEY);
@@ -608,9 +610,22 @@ try{
 		console.warn(`Retrying Twitch token refresh in ${Math.round(delay / 1000)} seconds.`);
 		tokenRefreshTimer = setTimeout(function() {
 			tokenRefreshTimer = null;
-			refreshAccessToken({ reason: 'retry' }).catch(function(error) {
-				console.warn('Retrying Twitch token refresh failed:', error);
-			});
+			refreshAccessToken({ reason: 'retry' })
+				.then(function(refreshedToken) {
+					if (!refreshedToken || !tokenRefreshResumePending) {
+						return;
+					}
+					tokenRefreshResumePending = false;
+					if (!isExtensionOn || isDisconnecting ||
+						websocketProxy.readyState === WEBSOCKET_READY_STATE.OPEN ||
+						websocketProxy.readyState === WEBSOCKET_READY_STATE.CONNECTING) {
+						return;
+					}
+					verifyAndUseToken(refreshedToken);
+				})
+				.catch(function(error) {
+					console.warn('Retrying Twitch token refresh failed:', error);
+				});
 		}, delay);
 	}
 	function isPermanentTokenRefreshFailure(error) {
@@ -996,11 +1011,13 @@ try{
 		try {
 			const data = await validateToken(token);
 			if (isTransientTokenValidationError(data)) {
+				tokenRefreshResumePending = true;
 				keepStoredTokenAfterTransientValidationFailure('startup', data);
 				return;
 			}
 			console.log("Token validation data:", data);
 			if (data && data.login) {
+				tokenRefreshResumePending = false;
 				setStoredToken(getStoredToken() || token);
 				username = data.login;
 				if (!channel) { channel = data.login; channelFromUrl = false; }
@@ -1590,6 +1607,7 @@ async function ensureChatClientInstance() {
 
 		const authUser = await validateToken(token);
 		if (isTransientTokenValidationError(authUser)) {
+			tokenRefreshResumePending = true;
 			keepStoredTokenAfterTransientValidationFailure('connect', authUser);
 			return;
 		}
@@ -1598,6 +1616,7 @@ async function ensureChatClientInstance() {
 			showAuthButton();
 			return;
 		}
+		tokenRefreshResumePending = false;
 		token = getStoredToken() || token;
 
 		if (!channel && authUser.login) { channel = authUser.login; }

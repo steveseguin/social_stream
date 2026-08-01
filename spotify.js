@@ -200,7 +200,8 @@ class SpotifyIntegration {
                 durationMs: 0,
                 receivedAt: now,
                 errorCode,
-                message: cleanMessage
+                message: cleanMessage,
+                queue: this.getOverlayQueue()
             });
         }
 
@@ -757,7 +758,8 @@ class SpotifyIntegration {
                         isPlaying: false,
                         progressMs: 0,
                         durationMs: 0,
-                        receivedAt: Date.now()
+                        receivedAt: Date.now(),
+                        queue: this.getOverlayQueue()
                     });
                 }
                 return null;

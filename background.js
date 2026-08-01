@@ -9214,7 +9214,8 @@ function initializeSpotify() {
 			progressMs: 0,
 			durationMs: 0,
 			track: null,
-			receivedAt: Date.now()
+			receivedAt: Date.now(),
+			queue: []
 		});
 	}
 }
@@ -14447,10 +14448,11 @@ eventer(messageEvent, async function (e) {
 							latestSpotifyOverlay || {
 								status: "idle",
 								isPlaying: false,
-								progressMs: 0,
-								durationMs: 0,
-								track: null,
-								receivedAt: Date.now()
+				progressMs: 0,
+				durationMs: 0,
+				track: null,
+				receivedAt: Date.now(),
+				queue: []
 							},
 							e.data.UUID
 						);
@@ -14476,10 +14478,11 @@ eventer(messageEvent, async function (e) {
 							latestSpotifyOverlay || {
 								status: "idle",
 								isPlaying: false,
-								progressMs: 0,
-								durationMs: 0,
-								track: null,
-								receivedAt: Date.now()
+				progressMs: 0,
+				durationMs: 0,
+				track: null,
+				receivedAt: Date.now(),
+				queue: []
 							},
 							e.data.UUID
 						);

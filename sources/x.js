@@ -97,11 +97,13 @@
 	var observedContainer = null;
 	var xStudioResolverFrame = null;
 	var xStudioResolverStarted = false;
+	var xNotLiveReloadTimer = null;
 	var xChatOnlyContainer = null;
 	var xChatOnlyPreviousBackgroundValue = "";
 	var xChatOnlyPreviousBackgroundPriority = "";
 	const X_STUDIO_MESSAGE_TYPE = "socialstream-x-studio-broadcasts";
 	const X_CHAT_ONLY_QUERY = "socialstream=chat";
+	const X_NOT_LIVE_RELOAD_DELAY = 15000;
 
 	function getXLiveScreenName() {
 		try {
@@ -125,6 +127,7 @@
 	// for username-style /live URLs. Direct /i/broadcasts/ pages are the capture
 	// surface; Electron must not depend on, bundle, or repeatedly restart this
 	// hidden Studio iframe unless the resolver becomes a supported desktop feature.
+	// Electron instead retains the guarded not-live reload fallback below.
 	function startXStudioResolver() {
 		if (xStudioResolverStarted || !getXLiveScreenName()) {
 			return;
@@ -899,6 +902,10 @@
 			observedContainer.marked = false;
 			observedContainer = null;
 		}
+		if (xNotLiveReloadTimer) {
+			clearTimeout(xNotLiveReloadTimer);
+			xNotLiveReloadTimer = null;
+		}
 	}
 
 	var lastXRoute = window.location.pathname || "";
@@ -1010,8 +1017,24 @@
 	}
 
 	function checkXNotLiveResolver() {
-		if (isExtensionOn && isXNotLiveScreen()) {
-			startXStudioResolver();
+		if (!isExtensionOn || !isXNotLiveScreen()) {
+			if (xNotLiveReloadTimer) {
+				clearTimeout(xNotLiveReloadTimer);
+				xNotLiveReloadTimer = null;
+			}
+			return;
+		}
+		startXStudioResolver();
+		var isElectronSource = typeof window.__SSAPP_TAB_ID__ !== "undefined" ||
+			!!window.ninjafy || !!window.electronApi || !!window.__ssapp;
+		if (isElectronSource && !xNotLiveReloadTimer) {
+			console.log("X live page is not live yet; reloading in 15 seconds.");
+			xNotLiveReloadTimer = setTimeout(function(){
+				xNotLiveReloadTimer = null;
+				if (isExtensionOn && isXNotLiveScreen()) {
+					window.location.reload();
+				}
+			}, X_NOT_LIVE_RELOAD_DELAY);
 		}
 	}
 	
