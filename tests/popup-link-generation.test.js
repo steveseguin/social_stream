@@ -289,12 +289,21 @@ function loadFunctions(names, context) {
   const darkmode = { dataset: { param1: "darkmode" }, checked: false };
   const lightmode = { dataset: { param1: "lightmode" }, checked: true };
   const scaleToggle = { dataset: { param1: "scale" }, checked: false };
-  const scale = { dataset: { numbersetting: "scale" }, value: "2", type: "range" };
-  const customCss = { dataset: { textparam1: "cssb64" }, value: "", id: "customCSS" };
+  const scale = { dataset: { numbersetting: "scale" }, value: "2", defaultValue: "1", type: "range" };
+  const staleVolume = { dataset: { numbersetting: "beepvolume" }, value: "90", defaultValue: "30", type: "range" };
+  const customCss = { dataset: { textparam1: "cssb64" }, value: "", defaultValue: "", id: "customCSS" };
+  const staleApiKey = { dataset: { textparam1: "elevenlabskey" }, value: "old-secret", defaultValue: "", id: "elevenLabsAPIKey" };
   const ttsProvider = {
     dataset: { optionparam1: "ttsprovider", optionsetting: "ttsProvider" },
+    tagName: "SELECT",
     value: "google",
-    options: [{ value: "system" }, { value: "google" }],
+    options: [{ value: "system", defaultSelected: true }, { value: "google" }],
+  };
+  const staleFont = {
+    dataset: { optionparam1: "font" },
+    tagName: "SELECT",
+    value: "Arial",
+    options: [{ value: "", defaultSelected: true }, { value: "Arial" }],
   };
   const dock = { id: "dock", raw: "https://socialstream.ninja/dock.html?session=current&lightmode" };
   const saved = [];
@@ -305,9 +314,9 @@ function loadFunctions(names, context) {
     getElementById: (id) => id === "dock" ? dock : null,
     querySelectorAll: (selector) => {
       if (selector === "input[data-param1]") return [darkmode, lightmode, scaleToggle];
-      if (selector === "[data-numbersetting]") return [scale];
-      if (selector === "[data-textparam1]") return [customCss];
-      if (selector === "[data-optionparam1]") return [ttsProvider];
+      if (selector === "[data-numbersetting]") return [scale, staleVolume];
+      if (selector === "[data-textparam1]") return [customCss, staleApiKey];
+      if (selector === "[data-optionparam1]") return [ttsProvider, staleFont];
       return [];
     },
   };
@@ -316,6 +325,7 @@ function loadFunctions(names, context) {
     "decodeImportedCssParamValue",
     "getImportedParamCheckboxState",
     "findImportedOptionValue",
+    "getImportedControlDefaultValue",
     "saveImportedLinkControl",
     "applyImportedGeneratedLink",
   ], {
@@ -345,13 +355,19 @@ function loadFunctions(names, context) {
   assert.strictEqual(lightmode.checked, false);
   assert.strictEqual(scaleToggle.checked, true);
   assert.strictEqual(scale.value, "1.5");
+  assert.strictEqual(staleVolume.value, "30");
   assert.strictEqual(customCss.value, css);
+  assert.strictEqual(staleApiKey.value, "");
   assert.strictEqual(ttsProvider.value, "system");
+  assert.strictEqual(staleFont.value, "");
   assert.strictEqual(new URL(dock.raw).searchParams.get("customfuture"), "kept");
   assert.strictEqual(templateSyncCount, 1);
   assert.ok(saved.some((message) => message.setting === "darkmode" && message.value === true));
   assert.ok(saved.some((message) => message.setting === "lightmode" && message.value === false));
   assert.ok(saved.some((message) => message.setting === "cssb64" && message.value === css));
+  assert.ok(saved.some((message) => message.setting === "beepvolume" && message.value === "30"));
+  assert.ok(saved.some((message) => message.setting === "elevenlabskey" && message.value === ""));
+  assert.ok(saved.some((message) => message.setting === "font" && message.value === ""));
 }
 
 const popupHtml = fs.readFileSync(path.resolve(__dirname, "..", "popup.html"), "utf8");

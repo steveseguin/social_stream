@@ -2353,11 +2353,11 @@
 		if (!imageNode || imageNode.youtubeSocialStreamHandled) {
 			return;
 		}
-		imageNode.youtubeSocialStreamHandled = true;
 		var imageUrl = normalizeYouTubeEffectImageUrl(imageNode.getAttribute("src") || imageNode.src || "");
 		if (!imageUrl) {
 			return;
 		}
+		imageNode.youtubeSocialStreamHandled = true;
 		var reactionType = normalizeDonationText(imageNode.getAttribute("alt") || "") || "emoji";
 		var chatmessage = reactionType;
 		if (!settings.textonlymode) {

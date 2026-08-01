@@ -232,8 +232,8 @@
 		return isNearBottom || hasUnprocessedSiblingAfter;
 	}
 
-	function sendOut(data, sourceElement, target){
-		var key = (data.chatname || "") + "::" + (data.chatmessage || "") + "::" + (data.contentimg || "");
+	function sendOut(data, sourceElement, target, dedupeKey){
+		var key = dedupeKey || ((data.chatname || "") + "::" + (data.chatmessage || "") + "::" + (data.contentimg || ""));
 		var allowDuplicate = (data.type === "instagramlive") && sourceElement && allowLiveRowDuplicate(sourceElement);
 		if (dupCheck.includes(key) && !allowDuplicate){ return false; }
 		dupCheck.push(key);
@@ -352,7 +352,8 @@
 	function emitLiveRestComment(comment){
 		try {
 			if (!comment || !comment.user){ return; }
-			if (seenLiveRestComment(comment.pk || comment.strong_id__)){ return; }
+			var commentId = comment.pk || comment.strong_id__;
+			if (seenLiveRestComment(commentId)){ return; }
 			var chatname = ((comment.user.username || "") + "").trim();
 			var chatmessage = ((comment.text || "") + "").trim();
 			if (!chatname || !chatmessage){ return; }
@@ -369,7 +370,7 @@
 			data.event = false;
 			data.textonly = settings.textonlymode || false;
 			data.type = "instagramlive";
-			sendOut(data);
+			sendOut(data, null, null, "instagram-live-rest::" + commentId);
 		} catch(e){}
 	}
 
@@ -568,9 +569,13 @@
 		var myId = getIgUserId();
 		if (!myId){ ownLiveStatus = false; return; }
 		fetch("/api/v1/users/web_profile_info/?username=" + encodeURIComponent(user), { headers: igApiHeaders(), credentials: "same-origin" })
-			.then(function(resp){ return resp.ok ? resp.json() : null; })
+			.then(function(resp){
+				if (!resp.ok){ throw new Error("status " + resp.status); }
+				return resp.json();
+			})
 			.then(function(json){
 				var pk = json && json.data && json.data.user && (json.data.user.pk || json.data.user.id);
+				if (!pk){ throw new Error("missing profile id"); }
 				ownLiveStatus = !!(pk && String(pk) === String(myId));
 				ownLiveRetryAt = 0;
 			})

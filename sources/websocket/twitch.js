@@ -1532,13 +1532,19 @@ async function ensureChatClientInstance() {
 				}
 			}
 			
+			const hasRefreshToken = !!getStoredRefreshToken();
+
 			// Update auth status indicator
 			const authStatus = document.getElementById('auth-status');
 			if (authStatus) {
 				if (data.expires_in && data.expires_in < 3600) {
-					// Token expires soon
-					authStatus.innerHTML = `⚠️ <span style="color: orange; font-size: 12px;">Expires in ${Math.floor(data.expires_in / 60)}m</span>`;
-					authStatus.title = `Authentication expires in ${Math.floor(data.expires_in / 60)} minutes`;
+					if (hasRefreshToken) {
+						authStatus.innerHTML = '<span style="color: green; font-size: 12px;">Auto-refresh enabled</span>';
+						authStatus.title = 'Authentication refreshes automatically before it expires';
+					} else {
+						authStatus.innerHTML = `⚠️ <span style="color: orange; font-size: 12px;">Expires in ${Math.floor(data.expires_in / 60)}m</span>`;
+						authStatus.title = `Authentication expires in ${Math.floor(data.expires_in / 60)} minutes`;
+					}
 				} else if (data.expires_in) {
 					// Token is valid
 					authStatus.innerHTML = `✅ <span style="color: green; font-size: 12px;">Valid</span>`;
@@ -1546,12 +1552,15 @@ async function ensureChatClientInstance() {
 				}
 			}
 			
-			// Check if token will expire soon (within 1 hour)
-			if (data.expires_in && data.expires_in < 3600) {
+			// Only prompt for re-authentication when automatic refresh is unavailable.
+			const existingExpiryWarning = document.querySelector('.token-expiry-warning');
+			if (!data.expires_in || data.expires_in >= 3600 || hasRefreshToken) {
+				existingExpiryWarning?.remove();
+			} else {
 				console.warn(`Token expires in ${Math.floor(data.expires_in / 60)} minutes`);
 				// Show warning in UI
 				const textarea = document.querySelector("#textarea");
-				if (textarea && !document.querySelector('.token-expiry-warning')) {
+				if (textarea && !existingExpiryWarning) {
 					const warning = document.createElement("div");
 					warning.className = 'token-expiry-warning';
 					warning.style.cssText = 'color: orange; font-weight: bold; padding: 5px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; margin: 5px 0;';

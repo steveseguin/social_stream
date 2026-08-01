@@ -54,15 +54,22 @@ async function run() {
 		await page.addScriptTag({ path: path.join(process.cwd(), "sources", "youtube.js") });
 		await page.waitForTimeout(1200);
 
-		await page.evaluate(function () {
+		await page.evaluate(async function () {
+			var reactionContainer = document.querySelector("yt-emoji-fountain-view-model #emoji-container");
 			var reaction = document.createElement("emoji");
 			reaction.innerHTML =
 				"<div><img src='https://fonts.gstatic.com/s/e/notoemoji/15.1/1f389/72.png' alt='🎉'></div>";
-			document.querySelector("yt-emoji-fountain-view-model #emoji-container").appendChild(reaction);
+			reactionContainer.appendChild(reaction);
 			var thumbsUp = document.createElement("emoji");
 			thumbsUp.innerHTML =
 				"<div><img src='https://fonts.gstatic.com/s/e/notoemoji/15.1/1f44d/72.png' alt='👍'></div>";
-			document.querySelector("yt-emoji-fountain-view-model #emoji-container").appendChild(thumbsUp);
+			reactionContainer.appendChild(thumbsUp);
+
+			var delayedReaction = document.createElement("img");
+			delayedReaction.alt = "heart";
+			reactionContainer.appendChild(delayedReaction);
+			await new Promise(function (resolve) { setTimeout(resolve, 50); });
+			delayedReaction.src = "https://fonts.gstatic.com/s/e/notoemoji/15.1/2764_fe0f/72.png";
 
 			var giftMessage = document.createElement("yt-gift-message-view-model");
 			giftMessage.innerHTML =
@@ -105,13 +112,18 @@ async function run() {
 			return entry.target === "gif";
 		});
 
-		assert.strictEqual(reactions.length, 2, "YouTube emoji fountain did not emit every reaction.");
+		assert.strictEqual(reactions.length, 3, "YouTube emoji fountain did not emit every reaction.");
+		assert(reactions.some(function (entry) {
+			return entry.message.meta.reactionType === "heart";
+		}), "YouTube must emit a reaction when its image src is assigned after insertion.");
 		assert(reactions.every(function (entry) {
 			return entry.message.event === "reaction" && entry.message.chatmessage.includes("youtube-live-reaction");
 		}));
 		assert.deepStrictEqual(
 			reactions.map(function (entry) {
 				return entry.message.meta.reactionType;
+			}).filter(function (reactionType) {
+				return reactionType !== "heart";
 			}).sort(),
 			["👍", "🎉"].sort()
 		);

@@ -975,6 +975,24 @@ function findImportedOptionValue(selectElement, paramKey, params) {
 	return { found: false, value: "" };
 }
 
+function getImportedControlDefaultValue(element) {
+	if (!element) {
+		return "";
+	}
+
+	if (String(element.tagName || "").toUpperCase() === "SELECT") {
+		var options = Array.prototype.slice.call(element.options || []);
+		var defaultOption = options.find(function(option) {
+			return option.defaultSelected;
+		}) || options[0];
+		return defaultOption ? String(defaultOption.value || "") : "";
+	}
+
+	return element.defaultValue === undefined || element.defaultValue === null
+		? ""
+		: String(element.defaultValue);
+}
+
 function saveImportedLinkControl(element, type, setting, value) {
 	chrome.runtime.sendMessage({
 		cmd: "saveSetting",
@@ -1032,10 +1050,11 @@ function applyImportedGeneratedLink(targetId, parsedUrl) {
 		}
 
 		if (importedValue === null || importedValue === undefined) {
-			return;
+			importedValue = getImportedControlDefaultValue(element);
+		} else {
+			loadedControlCount++;
 		}
 
-		loadedControlCount++;
 		importedValue = String(importedValue);
 		if (element.value !== importedValue) {
 			element.value = importedValue;
@@ -1068,10 +1087,11 @@ function applyImportedGeneratedLink(targetId, parsedUrl) {
 		}
 
 		if (!found) {
-			return;
+			importedValue = getImportedControlDefaultValue(element);
+		} else {
+			loadedControlCount++;
 		}
 
-		loadedControlCount++;
 		if (element.value !== importedValue) {
 			element.value = importedValue;
 			saveImportedLinkControl(element, textType, setting, importedValue);
@@ -1089,12 +1109,15 @@ function applyImportedGeneratedLink(targetId, parsedUrl) {
 		var setting = element.dataset[optionType];
 		var imported = findImportedOptionValue(element, setting, params);
 		if (!imported.found) {
-			return;
+			imported.value = getImportedControlDefaultValue(element);
+		} else {
+			loadedControlCount++;
 		}
 
-		loadedControlCount++;
 		if (element.value !== imported.value) {
-			ensureSelectValueOption(element, imported.value);
+			if (imported.found) {
+				ensureSelectValueOption(element, imported.value);
+			}
 			element.value = imported.value;
 			saveImportedLinkControl(element, optionType, setting, imported.value);
 

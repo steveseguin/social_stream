@@ -57,6 +57,7 @@ async function run() {
         tmiClients: [],
         refreshCalls: 0,
         refreshMode: 'success',
+        validateExpiresIn: 3600,
         subscriptionCalls: 0,
         subscriptionTypes: [],
         runtimeMessages: [],
@@ -158,7 +159,7 @@ async function run() {
             client_id: 'test-client',
             login: 'tester',
             user_id: '1',
-            expires_in: 3600,
+            expires_in: harness.validateExpiresIn,
             scopes: [
               'chat:read',
               'chat:edit',
@@ -398,6 +399,26 @@ async function run() {
       window.__twitchHarness.refreshMode = 'success';
     });
     await page.waitForFunction(() => localStorage.getItem('twitchOAuthToken') === 'new-access-token');
+
+    await page.evaluate(() => {
+      window.__twitchHarness.validateExpiresIn = 1200;
+    });
+    await page.waitForFunction(() => document.getElementById('auth-status')?.textContent.includes('Auto-refresh enabled'));
+    assert.strictEqual(
+      await page.evaluate(() => document.querySelector('.token-expiry-warning')),
+      null,
+      'Refreshable Twitch auth should not prompt the user to sign in again'
+    );
+
+    await page.evaluate(() => {
+      localStorage.removeItem('twitchOAuthRefreshToken');
+    });
+    await page.waitForFunction(() => document.querySelector('.token-expiry-warning'));
+    assert.match(
+      await page.evaluate(() => document.querySelector('.token-expiry-warning').textContent),
+      /Please re-authenticate soon/,
+      'Non-refreshable Twitch auth should retain the expiry warning'
+    );
     assert.deepStrictEqual(pageErrors, [], `Browser errors: ${pageErrors.join('; ')}`);
 
     console.log('twitch-websocket-lifecycle.test.js passed');

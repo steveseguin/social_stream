@@ -150,6 +150,7 @@
 	var TIKTOK_GIFT_STREAK_QUIET_MS = 4500;
 	var TIKTOK_GIFT_DUPLICATE_WINDOW_MS = 500;
 	var tikTokGiftStreakSequence = 0;
+	var tikTokGiftStreakInstanceId = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
 
 	function getTikTokGiftUpdateIdentity(data, ele) {
 		if (!data || data.type !== "tiktok" || !data.hasDonation || !data.chatmessage) {
@@ -210,7 +211,7 @@
 
 		if (!tracked) {
 			tracked = {
-				id: "tiktok-gift-" + (++tikTokGiftStreakSequence),
+				id: "tiktok-gift-" + tikTokGiftStreakInstanceId + "-" + (++tikTokGiftStreakSequence),
 				quantity: identity.quantity,
 				updatedAt: now,
 				timer: null
