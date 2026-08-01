@@ -289,8 +289,10 @@ function loadFunctions(names, context) {
   const darkmode = { dataset: { param1: "darkmode" }, checked: false };
   const lightmode = { dataset: { param1: "lightmode" }, checked: true };
   const scaleToggle = { dataset: { param1: "scale" }, checked: false };
+  const beepToggle = { dataset: { param1: "beepvolume" }, checked: true };
   const scale = { dataset: { numbersetting: "scale" }, value: "2", defaultValue: "1", type: "range" };
   const staleVolume = { dataset: { numbersetting: "beepvolume" }, value: "90", defaultValue: "30", type: "range" };
+  const unrelatedRateLimit = { dataset: { numbersetting: "ollamaRateLimitPerTab" }, value: "9000", defaultValue: "5000", type: "number" };
   const customCss = { dataset: { textparam1: "cssb64" }, value: "", defaultValue: "", id: "customCSS" };
   const staleApiKey = { dataset: { textparam1: "elevenlabskey" }, value: "old-secret", defaultValue: "", id: "elevenLabsAPIKey" };
   const ttsProvider = {
@@ -313,8 +315,8 @@ function loadFunctions(names, context) {
   const document = {
     getElementById: (id) => id === "dock" ? dock : null,
     querySelectorAll: (selector) => {
-      if (selector === "input[data-param1]") return [darkmode, lightmode, scaleToggle];
-      if (selector === "[data-numbersetting]") return [scale, staleVolume];
+      if (selector === "input[data-param1]") return [darkmode, lightmode, scaleToggle, beepToggle];
+      if (selector === "[data-numbersetting]") return [scale, staleVolume, unrelatedRateLimit];
       if (selector === "[data-textparam1]") return [customCss, staleApiKey];
       if (selector === "[data-optionparam1]") return [ttsProvider, staleFont];
       return [];
@@ -356,6 +358,7 @@ function loadFunctions(names, context) {
   assert.strictEqual(scaleToggle.checked, true);
   assert.strictEqual(scale.value, "1.5");
   assert.strictEqual(staleVolume.value, "30");
+  assert.strictEqual(unrelatedRateLimit.value, "9000");
   assert.strictEqual(customCss.value, css);
   assert.strictEqual(staleApiKey.value, "");
   assert.strictEqual(ttsProvider.value, "system");
@@ -366,6 +369,7 @@ function loadFunctions(names, context) {
   assert.ok(saved.some((message) => message.setting === "lightmode" && message.value === false));
   assert.ok(saved.some((message) => message.setting === "cssb64" && message.value === css));
   assert.ok(saved.some((message) => message.setting === "beepvolume" && message.value === "30"));
+  assert.ok(!saved.some((message) => message.setting === "ollamaRateLimitPerTab"));
   assert.ok(saved.some((message) => message.setting === "elevenlabskey" && message.value === ""));
   assert.ok(saved.some((message) => message.setting === "font" && message.value === ""));
 }

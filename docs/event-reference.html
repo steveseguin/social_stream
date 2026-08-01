@@ -107,6 +107,7 @@
                                 <li><a href="#kick-ws">Kick WebSocket</a></li>
                                 <li><a href="#vpzone-ws">VPZone</a></li>
                                 <li><a href="#joystick-ws">Joystick</a></li>
+                                <li><a href="#xpsync">XP Sync</a></li>
                                 <li><a href="#facebook">Facebook</a></li>
                                 <li><a href="#onlinechurch">Online Church</a></li>
                                 <li><a href="#shareplay">SharePlay</a></li>
@@ -1368,6 +1369,15 @@
                             </tr>
                         </tbody>
                     </table>
+                </article>
+
+                <article class="platform-card" id="xpsync">
+                    <h3>XP Sync</h3>
+                    <p class="source-note">Implementation: <code>sources/xpsync.js</code></p>
+                    <ul class="requirements">
+                        <li>Chat rows use the canonical payload fields with <code>type: "xpsync"</code>, including author, message, avatar, badges, name color, and membership when available.</li>
+                        <li>When event capture is enabled, rows containing “just followed” or “followed the channel” emit <code>event: "new_follower"</code>.</li>
+                    </ul>
                 </article>
 
                 <article class="platform-card" id="instagram">

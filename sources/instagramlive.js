@@ -584,7 +584,7 @@
 			}
 			if (settings.hideevents && data.event){ return; }
 			if (!data.chatmessage && !data.event){ return; }
-			sendOut(data);
+			sendOut(data, null, null, key ? "instagram-inbox::" + key : null);
 		} catch(e){}
 	}
 

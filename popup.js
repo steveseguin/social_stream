@@ -1021,6 +1021,11 @@ function applyImportedGeneratedLink(targetId, parsedUrl) {
 	var allParamValues = checkboxes.map(function(element) {
 		return element.dataset[paramType];
 	});
+	var linkOwnedNumberKeys = {};
+	allParamValues.forEach(function(value) {
+		var rawKey = String(value || "").split("=")[0];
+		linkOwnedNumberKeys[normalizeParamKey(rawKey)] = true;
+	});
 	var loadedControlCount = 0;
 
 	checkboxes.forEach(function(element) {
@@ -1038,6 +1043,9 @@ function applyImportedGeneratedLink(targetId, parsedUrl) {
 	Array.prototype.slice.call(document.querySelectorAll(numberSelector)).forEach(function(element) {
 		var setting = element.dataset[numberType];
 		var effectiveKey = normalizeParamKey(setting);
+		if (!linkOwnedNumberKeys[effectiveKey]) {
+			return;
+		}
 		var importedValue = null;
 
 		if (setting === "chromaalpha") {

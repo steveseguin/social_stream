@@ -121,6 +121,10 @@
 		}
 	}
 
+	// Intentional scope: Studio resolution is only a best-effort browser helper
+	// for username-style /live URLs. Direct /i/broadcasts/ pages are the capture
+	// surface; Electron must not depend on, bundle, or repeatedly restart this
+	// hidden Studio iframe unless the resolver becomes a supported desktop feature.
 	function startXStudioResolver() {
 		if (xStudioResolverStarted || !getXLiveScreenName()) {
 			return;
