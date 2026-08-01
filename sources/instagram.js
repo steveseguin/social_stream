@@ -501,12 +501,12 @@
 	//
 	// Polls POST /api/v1/news/inbox/ for the account's own activity feed:
 	// follows, follow requests, likes, and comments on our posts. Stories are
-	// deduped by tuuid; the first poll only seeds the seen-set so we never
-	// replay backlog.
+	// deduped by tuuid. The background poller coordinator owns the seed/seen
+	// state so a replacement tab can continue without replaying backlog or
+	// dropping stories that arrived during the handoff.
 
 	var notifInboxState = {
 		started: false,
-		seeded: false,
 		polling: false,
 		failures: 0,
 		seen: {},
@@ -529,6 +529,37 @@
 		} catch(e){
 			callback(false);
 		}
+	}
+
+	function filterNotifInboxStories(stories){
+		var storyKeys = [];
+		stories.forEach(function(story){
+			var args = story.args || {};
+			var key = args.tuuid || story.pk || story.ndid;
+			if (key){ storyKeys.push(String(key)); }
+		});
+		return new Promise(function(resolve){
+			try {
+				chrome.runtime.sendMessage(chrome.runtime.id, {
+					cmd: "filterInstagramInboxStories",
+					claimantId: notifInboxClaimantId,
+					accountId: getIgUserId() || "default",
+					storyKeys: storyKeys
+				}, function(response){
+					if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError){
+						resolve(null);
+						return;
+					}
+					if (!response || !response.granted || !Array.isArray(response.emitKeys)){
+						resolve(null);
+						return;
+					}
+					resolve(response.emitKeys.map(function(key){ return String(key); }));
+				});
+			} catch(e){
+				resolve(null);
+			}
+		});
 	}
 
 	function seenNotifStory(key){
@@ -673,18 +704,23 @@
 					var stories = (Array.isArray(json.new_stories) ? json.new_stories : [])
 						.concat(Array.isArray(json.old_stories) ? json.old_stories : [])
 						.concat(Array.isArray(json.priority_stories) ? json.priority_stories : []);
-					if (!notifInboxState.seeded){
-						notifInboxState.seeded = true;
+					return filterNotifInboxStories(stories).then(function(emitKeys){
+						if (!emitKeys){ return; }
+						var emitLookup = {};
+						emitKeys.forEach(function(key){ emitLookup[key] = true; });
+						stories.sort(function(a, b){
+							return (((a.args || {}).timestamp) || 0) - (((b.args || {}).timestamp) || 0);
+						});
 						stories.forEach(function(story){
 							var args = story.args || {};
-							seenNotifStory(args.tuuid || story.pk || story.ndid);
+							var key = args.tuuid || story.pk || story.ndid;
+							if (key && emitLookup[String(key)]){
+								emitNotifStory(story);
+							} else {
+								seenNotifStory(key);
+							}
 						});
-						return;
-					}
-					stories.sort(function(a, b){
-						return (((a.args || {}).timestamp) || 0) - (((b.args || {}).timestamp) || 0);
 					});
-					stories.forEach(emitNotifStory);
 				})
 				.catch(function(){
 					notifInboxState.failures++;

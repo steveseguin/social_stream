@@ -1101,6 +1101,164 @@ textarea.property-input {
     font-family: var(--font-monospace); /* Good for code inputs */
 }
 
+body.custom-code-editor-open {
+    overflow: hidden;
+}
+
+.custom-code-editor-launch {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.custom-code-editor-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 11000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.78);
+}
+
+.custom-code-editor-dialog {
+    width: calc(100% - 48px);
+    max-width: 1200px;
+    height: calc(100% - 48px);
+    max-height: 900px;
+    min-height: 360px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--background-dialog);
+    border: 1px solid var(--border-interactive);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+.custom-code-editor-header,
+.custom-code-editor-footer {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--background-surface);
+}
+
+.custom-code-editor-header {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.custom-code-editor-header h3 {
+    margin: 0 0 2px;
+    color: var(--primary-light);
+}
+
+.custom-code-editor-context,
+.custom-code-editor-shortcuts {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.custom-code-editor-close {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.custom-code-editor-close:hover,
+.custom-code-editor-close:focus {
+    outline: none;
+    background: var(--background-hover);
+    color: var(--text-primary);
+}
+
+textarea.custom-code-editor-input {
+    flex: 1 1 auto;
+    width: auto;
+    min-height: 240px;
+    margin: 16px 20px 0;
+    resize: none;
+    overflow: auto;
+    white-space: pre;
+    tab-size: 4;
+    font-family: var(--font-monospace);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    user-select: text;
+    -webkit-user-select: text;
+}
+
+.custom-code-editor-status {
+    flex: 0 0 auto;
+    min-height: 30px;
+    padding: 5px 20px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.custom-code-editor-status.error {
+    color: var(--error-color);
+}
+
+.custom-code-editor-status.info {
+    color: var(--info-color);
+}
+
+.custom-code-editor-footer {
+    border-top: 1px solid var(--border-color);
+}
+
+.custom-code-editor-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.custom-code-editor-actions .btn:disabled {
+    cursor: wait;
+    opacity: 0.6;
+}
+
+@media (max-width: 700px), (max-height: 550px) {
+    .custom-code-editor-overlay {
+        padding: 8px;
+    }
+
+    .custom-code-editor-dialog {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        border-radius: var(--radius-sm);
+    }
+
+    .custom-code-editor-header,
+    .custom-code-editor-footer {
+        padding: 10px 12px;
+    }
+
+    textarea.custom-code-editor-input {
+        margin: 10px 12px 0;
+        min-height: 150px;
+    }
+
+    .custom-code-editor-shortcuts {
+        display: none;
+    }
+}
+
 select.property-input {
     /* appearance, background-image, etc. inherited from global select styles */
 }

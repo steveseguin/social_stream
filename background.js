@@ -4404,11 +4404,13 @@ function extractVideoId(url) {
 // The rest of your active chat sources code remains the same
 let activeChatSources = new Map();
 const INSTAGRAM_INBOX_POLLER_LEASE_MS = 60000;
+const INSTAGRAM_INBOX_POLLER_SEEN_LIMIT = 400;
 let instagramInboxPollerLease = {
 	owner: "",
 	tabId: null,
 	expiresAt: 0
 };
+let instagramInboxPollerStates = Object.create(null);
 
 function claimInstagramInboxPoller(senderTabId, claimantId) {
 	const now = Date.now();
@@ -4421,6 +4423,55 @@ function claimInstagramInboxPoller(senderTabId, claimantId) {
 		return true;
 	}
 	return false;
+}
+
+function filterInstagramInboxStoryKeys(senderTabId, claimantId, accountId, storyKeys) {
+	const now = Date.now();
+	const normalizedTabId = senderTabId === null || senderTabId === undefined ? null : senderTabId;
+	const owner = String(normalizedTabId === null ? "no-tab" : normalizedTabId) + ":" + String(claimantId || "default");
+	if (instagramInboxPollerLease.owner !== owner || instagramInboxPollerLease.expiresAt <= now) {
+		return { granted: false, emitKeys: [] };
+	}
+
+	const normalizedAccountId = String(accountId || "default");
+	let state = instagramInboxPollerStates[normalizedAccountId];
+	if (!state) {
+		state = instagramInboxPollerStates[normalizedAccountId] = {
+			seeded: false,
+			seen: Object.create(null),
+			seenOrder: []
+		};
+	}
+
+	const uniqueKeys = [];
+	const requestKeys = Object.create(null);
+	if (Array.isArray(storyKeys)) {
+		storyKeys.forEach(key => {
+			key = String(key || "").trim();
+			if (key && !requestKeys[key]) {
+				requestKeys[key] = true;
+				uniqueKeys.push(key);
+			}
+		});
+	}
+
+	const emitKeys = [];
+	uniqueKeys.forEach(key => {
+		if (!state.seen[key]) {
+			state.seen[key] = true;
+			state.seenOrder.push(key);
+			if (state.seeded) {
+				emitKeys.push(key);
+			}
+		}
+	});
+	state.seeded = true;
+
+	while (state.seenOrder.length > INSTAGRAM_INBOX_POLLER_SEEN_LIMIT) {
+		delete state.seen[state.seenOrder.shift()];
+	}
+
+	return { granted: true, emitKeys };
 }
 
 function releaseInstagramInboxPollerForTab(tabId) {
@@ -4876,6 +4927,13 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				granted: claimInstagramInboxPoller(senderTabId, request.claimantId),
 				leaseMs: INSTAGRAM_INBOX_POLLER_LEASE_MS
 			});
+		} else if (request.cmd && request.cmd === "filterInstagramInboxStories") {
+			sendResponse(filterInstagramInboxStoryKeys(
+				senderTabId,
+				request.claimantId,
+				request.accountId,
+				request.storyKeys
+			));
 		} else if (request.cmd && request.cmd === "testLLMProvider") {
 			try {
 				const llmResponse = await callLLMAPI(request.prompt || "Reply with one short sentence confirming this chatbot connection works.", null, null, null, null, null, { settings: request.settingsOverride || null });
@@ -13710,6 +13768,12 @@ async function processIncomingRequest(request, UUID = false) {
 						action: "privateBotStatus",
 						status: "busy",
 						message: "The AI bot is busy. Please try again in a moment."
+					}, UUID);
+				} else if (privateBotResult !== true) {
+					sendDataP2P({
+						action: "privateBotStatus",
+						status: "error",
+						message: "The AI bot could not generate a response. Check its provider settings and try again."
 					}, UUID);
 				}
 			} else {

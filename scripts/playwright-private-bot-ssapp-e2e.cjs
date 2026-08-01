@@ -61,7 +61,7 @@ async function createMockLlmServer() {
 				parsed = body ? JSON.parse(body) : {};
 			} catch (_) {}
 			const serialized = JSON.stringify(parsed);
-			const markerMatch = serialized.match(/(IPC_E2E|NEGATIVE_E2E|P2P_E2E|WS_E2E|LEGACY_E2E)/);
+			const markerMatch = serialized.match(/(IPC_E2E|NEGATIVE_E2E|P2P_E2E|WS_E2E|FAILURE_E2E|LEGACY_E2E)/);
 			const marker = markerMatch ? markerMatch[1] : "PRIVATE_E2E";
 			requests.push({ marker, url: request.url, body: parsed });
 			const sendResponse = () => {
@@ -72,7 +72,9 @@ async function createMockLlmServer() {
 				response.end(JSON.stringify({
 					choices: [{
 						message: {
-							content: marker === "NEGATIVE_E2E" ? "No, this is a direct private answer." : `${marker}_REPLY`
+							content: marker === "NEGATIVE_E2E"
+								? "No, this is a direct private answer."
+								: (marker === "FAILURE_E2E" ? "NO_RESPONSE" : `${marker}_REPLY`)
 						}
 					}]
 				}));
@@ -360,8 +362,16 @@ async function openDestinationPicker(page) {
 async function selectPrivateDestination(page) {
 	await openDestinationPicker(page);
 	const privateDestination = page.locator('#chatDestinationsList input[data-tab="BOT"]');
+	const ttsDestination = page.locator('#chatDestinationsList input[data-tab="TTS"]');
 	await privateDestination.waitFor({ state: "visible", timeout: 30000 });
+	await ttsDestination.waitFor({ state: "visible", timeout: 30000 });
+	await ttsDestination.check();
 	await privateDestination.check();
+	assert.strictEqual(await ttsDestination.isChecked(), false, "Selecting BOT must clear other destinations.");
+	await ttsDestination.check();
+	assert.strictEqual(await privateDestination.isChecked(), false, "Selecting another destination must clear BOT.");
+	await privateDestination.check();
+	assert.strictEqual(await ttsDestination.isChecked(), false, "BOT must remain an exclusive private destination.");
 	await page.locator("#tabslistclose").click();
 }
 
@@ -484,6 +494,12 @@ async function run() {
 			entry.data.value === "WS_E2E"
 		)), "The private command did not traverse the server3 WebSocket.");
 		console.log("PASS: Dock UI over server3 WebSocket -> private bot -> overlay/TTS");
+
+		await sendComposerMessage(websocketDock.page, "FAILURE_E2E");
+		const failureNotice = websocketDock.page.locator("#dockActionNotice");
+		await failureNotice.waitFor({ state: "visible", timeout: 15000 });
+		assert.match(await failureNotice.textContent(), /could not generate a response/i);
+		console.log("PASS: Failed private bot generation returns a dock notice");
 
 		const llmCountBeforeDisabledHost = llm.requests.length;
 		await backgroundFrame.evaluate(() => {

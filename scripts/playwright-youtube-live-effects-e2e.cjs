@@ -70,6 +70,8 @@ async function run() {
 			reactionContainer.appendChild(delayedReaction);
 			await new Promise(function (resolve) { setTimeout(resolve, 50); });
 			delayedReaction.src = "https://fonts.gstatic.com/s/e/notoemoji/15.1/2764_fe0f/72.png";
+			await new Promise(function (resolve) { setTimeout(resolve, 50); });
+			delayedReaction.src = "https://fonts.gstatic.com/s/e/notoemoji/15.1/1f499/72.png";
 
 			var giftMessage = document.createElement("yt-gift-message-view-model");
 			giftMessage.innerHTML =
@@ -112,10 +114,13 @@ async function run() {
 			return entry.target === "gif";
 		});
 
-		assert.strictEqual(reactions.length, 3, "YouTube emoji fountain did not emit every reaction.");
+		assert.strictEqual(reactions.length, 4, "YouTube emoji fountain did not emit every reaction or reused image URL.");
 		assert(reactions.some(function (entry) {
-			return entry.message.meta.reactionType === "heart";
+			return entry.message.meta.reactionType === "heart" && entry.message.contentimg.includes("2764_fe0f");
 		}), "YouTube must emit a reaction when its image src is assigned after insertion.");
+		assert(reactions.some(function (entry) {
+			return entry.message.meta.reactionType === "heart" && entry.message.contentimg.includes("1f499");
+		}), "YouTube must reprocess a recycled reaction image when its src changes.");
 		assert(reactions.every(function (entry) {
 			return entry.message.event === "reaction" && entry.message.chatmessage.includes("youtube-live-reaction");
 		}));

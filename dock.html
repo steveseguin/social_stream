@@ -6959,7 +6959,31 @@
 
 			var activeChatDestinations = new Set();
 
-			
+			function updateChatDestinationSelection(checkbox) {
+				if (!checkbox || !checkbox.dataset || checkbox.dataset.tab === undefined) {
+					return;
+				}
+				var tabId = String(checkbox.dataset.tab);
+				if (checkbox.checked) {
+					if (tabId === "BOT") {
+						activeChatDestinations.clear();
+						var destinationInputs = document.querySelectorAll("#chatDestinationsList input[data-tab]");
+						for (var i = 0; i < destinationInputs.length; i++) {
+							destinationInputs[i].checked = destinationInputs[i] === checkbox;
+						}
+					} else {
+						activeChatDestinations.delete("BOT");
+						var botInput = document.querySelector('#chatDestinationsList input[data-tab="BOT"]');
+						if (botInput) {
+							botInput.checked = false;
+						}
+					}
+					activeChatDestinations.add(tabId);
+				} else {
+					activeChatDestinations.delete(tabId);
+				}
+			}
+
 
 			function getCohostPeerSummary() {
 				var summary = { overlay: false, extension: false, labels: [] };
@@ -7694,6 +7718,12 @@
 							getById("getChatSources").title = "Sending to all end points";
 						}
 					}
+					// Private BOT prompts are intentionally exclusive so they cannot also be
+					// published to a selected chat destination.
+					if (activeChatDestinations.has("BOT") && activeChatDestinations.size > 1) {
+						activeChatDestinations.clear();
+						activeChatDestinations.add("BOT");
+					}
 					if (document.getElementById("getChatSourcesButton")) {
 						clearTimeout(getById("getChatSourcesButton").setTimeout);
 					}
@@ -7762,11 +7792,8 @@
 					  para.appendChild(smallText);
 
 					  checkbox.onclick = function (event) {
-						if (this.checked) {
-						  activeChatDestinations.add(this.dataset.tab.toString());
-						} else {
-						  activeChatDestinations.delete(this.dataset.tab.toString());
-						}
+						event.stopPropagation();
+						updateChatDestinationSelection(this);
 						if (activeChatDestinations.size) {
 						  getById("getChatSources").innerHTML = "🎯";
 						  getById("getChatSources").title = "Sending to selected end points only";
@@ -7786,11 +7813,7 @@
 						modal.classList.add("hidden");
 						chatDestinationsList.innerHTML = "";
 					  } else if (event.target && event.target.dataset && event.target.dataset.tab) {
-						if (event.target.checked) {
-						  activeChatDestinations.add(event.target.dataset.tab);
-						} else {
-						  activeChatDestinations.delete(event.target.dataset.tab);
-						}
+						updateChatDestinationSelection(event.target);
 
 						if (activeChatDestinations.size) {
 						  getById("getChatSources").innerHTML = "🎯";
@@ -12586,6 +12609,8 @@
 							}
 						}
 						if (tid.includes("BOT")) {
+							// BOT is intentionally private-only and exclusive in the picker. Keep
+							// this return as a fail-safe for stale or externally supplied arrays.
 							send2Extension({ action: "askBot", value: data });
 							return;
 						}

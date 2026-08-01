@@ -646,7 +646,8 @@ body {
 			progressMs: payload.progressMs || payload.progress || 0,
 			durationMs: payload.durationMs || payload.duration || payload.track?.duration || 0,
 			device: payload.device || null,
-			queue: Array.isArray(payload.queue) ? payload.queue : [],
+			// Playback/error updates can be partial; only an explicit queue array replaces it.
+			queue: Array.isArray(payload.queue) ? payload.queue : state.queue,
 			receivedAt: payload.receivedAt || Date.now(),
 			message: payload.message || null
 		};

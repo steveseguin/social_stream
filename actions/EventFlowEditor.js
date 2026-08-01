@@ -229,6 +229,7 @@ class EventFlowEditor {
         this.draggedConnection = null;
         this.dragOffset = { x: 0, y: 0 };
         this.unsavedChanges = false;
+        this.customCodeEditorState = null;
         try {
             this.noFlowHelpDismissed = window.localStorage.getItem('ssn-eventflow-help-dismissed') === '1';
         } catch (error) {
@@ -806,6 +807,26 @@ class EventFlowEditor {
                     </div>
                 </div>
             </div>
+            <div class="custom-code-editor-overlay" id="custom-code-editor-overlay" aria-hidden="true">
+                <div class="custom-code-editor-dialog" role="dialog" aria-modal="true" aria-labelledby="custom-code-editor-title">
+                    <div class="custom-code-editor-header">
+                        <div>
+                            <h3 id="custom-code-editor-title">Custom JavaScript</h3>
+                            <div class="custom-code-editor-context" id="custom-code-editor-context"></div>
+                        </div>
+                        <button type="button" class="custom-code-editor-close" id="custom-code-editor-close" aria-label="Close code editor">&times;</button>
+                    </div>
+                    <textarea id="custom-code-editor-input" class="custom-code-editor-input" spellcheck="false" autocomplete="off" aria-label="JavaScript code"></textarea>
+                    <div class="custom-code-editor-status" id="custom-code-editor-status" role="alert" aria-live="polite"></div>
+                    <div class="custom-code-editor-footer">
+                        <span class="custom-code-editor-shortcuts">Tab inserts indentation &middot; Ctrl/Cmd+S saves</span>
+                        <div class="custom-code-editor-actions">
+                            <button type="button" class="btn" id="custom-code-editor-cancel">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="custom-code-editor-save">Save &amp; Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         `;
 		const saveButton = document.getElementById('save-flow-btn');
 		if (saveButton) {
@@ -842,6 +863,7 @@ class EventFlowEditor {
         if (helpCreateBtn) {
             helpCreateBtn.addEventListener('click', () => this.createNewFlow());
         }
+        this.initCustomCodeEditor();
 
         document.getElementById('flow-active').addEventListener('change', (e) => {
             if (this.currentFlow) {
@@ -1475,47 +1497,51 @@ class EventFlowEditor {
         }
     }
 
-    async saveCurrentFlow() {
+    async saveCurrentFlow(options = {}) {
+        const suppressErrorAlert = options.suppressErrorAlert === true;
         if (!this.currentFlow) {
-            alert('No flow is currently active to save.'); return;
+            if (!suppressErrorAlert) alert('No flow is currently active to save.');
+            return false;
         }
-
-        // Auto-generate name if current name is empty, whitespace, or the default "New Flow"
-        let currentNameTrimmed = this.currentFlow.name ? this.currentFlow.name.trim() : '';
-        if (currentNameTrimmed === '' || currentNameTrimmed === 'New Flow' || currentNameTrimmed === 'New Flow*') {
-            this.currentFlow.name = await this.generateFlowName();
-            document.getElementById('flow-name').value = this.currentFlow.name; // Update UI immediately
-            // No asterisk needed yet as it's a "new" name until saved
-        } else if (document.getElementById('flow-name').value.trim() === '') { // User manually cleared the name
-            this.currentFlow.name = await this.generateFlowName();
-            document.getElementById('flow-name').value = this.currentFlow.name;
-        }
-
-
-        let flowToSave = JSON.parse(JSON.stringify(this.currentFlow)); // Deep copy
-
 
         try {
+            // Auto-generate name if current name is empty, whitespace, or the default "New Flow"
+            const currentNameTrimmed = this.currentFlow.name ? this.currentFlow.name.trim() : '';
+            const flowNameInput = document.getElementById('flow-name');
+            if (currentNameTrimmed === '' || currentNameTrimmed === 'New Flow' || currentNameTrimmed === 'New Flow*') {
+                this.currentFlow.name = await this.generateFlowName();
+                if (flowNameInput) flowNameInput.value = this.currentFlow.name;
+            } else if (flowNameInput && flowNameInput.value.trim() === '') {
+                this.currentFlow.name = await this.generateFlowName();
+                flowNameInput.value = this.currentFlow.name;
+            }
+
+            const flowToSave = JSON.parse(JSON.stringify(this.currentFlow));
             const savedFlow = await this.eventFlowSystem.saveFlow(flowToSave);
             this.currentFlow.id = savedFlow.id; // Update current flow with ID from DB
             this.currentFlow.name = savedFlow.name; // Reflect cleaned name from DB (e.g. if system modified it)
-            
-            document.getElementById('flow-name').value = this.currentFlow.name; // Update input field without asterisk AFTER save
-            this.markUnsavedChanges(false); // Reset flag AFTER successful save
 
+            if (flowNameInput) flowNameInput.value = this.currentFlow.name; // Update input field without asterisk AFTER save
+            this.markUnsavedChanges(false); // Reset flag AFTER successful save
            // alert('Flow saved successfully!');
-            await this.loadFlowList(); // Refresh list
-            
+            try {
+                await this.loadFlowList(); // Refresh list
+            } catch (refreshError) {
+                console.warn('Flow saved, but the flow list could not be refreshed:', refreshError);
+            }
+
             // Notify background instance to reload flows
             this.notifyParentToReloadFlows();
-            
+
             // Re-select the current flow in the list
             document.querySelectorAll('.flow-item').forEach(item => {
                 item.classList.toggle('selected-flow', item.dataset.id === this.currentFlow.id);
             });
+            return true;
         } catch (error) {
             console.error('Error saving flow:', error);
-            alert('Failed to save flow. Check console for details.');
+            if (!suppressErrorAlert) alert('Failed to save flow. Check console for details.');
+            return false;
         }
     }
 
@@ -2434,6 +2460,210 @@ class EventFlowEditor {
             const targetNodeId = this.getUserMemoryReferenceTargetId(node);
             if (targetNodeId) this.renderStateReference(node.id, targetNodeId);
         });
+    }
+
+    initCustomCodeEditor() {
+        const overlay = document.getElementById('custom-code-editor-overlay');
+        const input = document.getElementById('custom-code-editor-input');
+        const saveButton = document.getElementById('custom-code-editor-save');
+        const cancelButton = document.getElementById('custom-code-editor-cancel');
+        const closeButton = document.getElementById('custom-code-editor-close');
+        if (!overlay || !input || !saveButton || !cancelButton || !closeButton) return;
+
+        saveButton.addEventListener('click', () => this.saveCustomCodeEditor());
+        cancelButton.addEventListener('click', () => this.requestCloseCustomCodeEditor());
+        closeButton.addEventListener('click', () => this.requestCloseCustomCodeEditor());
+        overlay.addEventListener('click', (event) => {
+            if (event.target === overlay) this.requestCloseCustomCodeEditor();
+        });
+        overlay.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                this.requestCloseCustomCodeEditor();
+                return;
+            }
+            if ((event.ctrlKey || event.metaKey) && String(event.key).toLowerCase() === 's') {
+                event.preventDefault();
+                event.stopPropagation();
+                this.saveCustomCodeEditor();
+            }
+        });
+        input.addEventListener('keydown', (event) => {
+            if (event.key !== 'Tab' || event.ctrlKey || event.metaKey || event.altKey) return;
+            event.preventDefault();
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            input.setRangeText('\t', start, end, 'end');
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        input.addEventListener('input', () => this.clearCustomCodeEditorStatus());
+        window.addEventListener('beforeunload', (event) => {
+            if (!this.hasUnsavedCustomCodeDraft()) return;
+            event.preventDefault();
+            event.returnValue = '';
+        });
+    }
+
+    isCustomCodeNode(node) {
+        return !!(node && (
+            (node.type === 'trigger' && node.triggerType === 'customJs') ||
+            (node.type === 'action' && node.actionType === 'customJs')
+        ));
+    }
+
+    getDefaultCustomCode(node) {
+        if (node && node.type === 'trigger') {
+            return 'return (message.chatmessage || "").includes("test");';
+        }
+        return 'message.chatmessage += " (edited)";\nreturn { modified: true, message };';
+    }
+
+    getCustomCode(node) {
+        if (node && node.config && Object.prototype.hasOwnProperty.call(node.config, 'code')) {
+            if (node.config.code === null || node.config.code === undefined) return '';
+            return String(node.config.code);
+        }
+        return this.getDefaultCustomCode(node);
+    }
+
+    openCustomCodeEditor(nodeId, opener) {
+        const node = this.currentFlow && this.currentFlow.nodes
+            ? this.currentFlow.nodes.find(candidate => candidate.id === nodeId)
+            : null;
+        if (!this.isCustomCodeNode(node)) {
+            this.showNotification('The selected node is not a Custom Code node.', 'warning');
+            return;
+        }
+
+        const overlay = document.getElementById('custom-code-editor-overlay');
+        const input = document.getElementById('custom-code-editor-input');
+        const title = document.getElementById('custom-code-editor-title');
+        const context = document.getElementById('custom-code-editor-context');
+        if (!overlay || !input || !title || !context) return;
+
+        const code = this.getCustomCode(node);
+        const kind = node.type === 'trigger' ? 'Trigger' : 'Action';
+        title.textContent = `${kind} Custom JavaScript`;
+        context.textContent = node.type === 'trigger'
+            ? 'Available argument: message. Return true or false.'
+            : 'Available arguments: message and result. Return an updated result object.';
+        input.value = code;
+        this.customCodeEditorState = {
+            flow: this.currentFlow,
+            nodeId: node.id,
+            initialCode: code,
+            opener: opener || document.activeElement
+        };
+        this.clearCustomCodeEditorStatus();
+        overlay.style.display = 'flex';
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('custom-code-editor-open');
+        setTimeout(() => {
+            input.focus();
+            input.setSelectionRange(0, 0);
+        }, 0);
+    }
+
+    hasUnsavedCustomCodeDraft() {
+        const input = document.getElementById('custom-code-editor-input');
+        return !!(this.customCodeEditorState && input && input.value !== this.customCodeEditorState.initialCode);
+    }
+
+    requestCloseCustomCodeEditor() {
+        if (!this.customCodeEditorState) return;
+        if (this.hasUnsavedCustomCodeDraft() && !confirm('Discard unsaved code changes?')) return;
+        this.closeCustomCodeEditor();
+    }
+
+    closeCustomCodeEditor() {
+        const overlay = document.getElementById('custom-code-editor-overlay');
+        const opener = this.customCodeEditorState && this.customCodeEditorState.opener;
+        if (overlay) {
+            overlay.style.display = 'none';
+            overlay.setAttribute('aria-hidden', 'true');
+        }
+        document.body.classList.remove('custom-code-editor-open');
+        this.customCodeEditorState = null;
+        this.clearCustomCodeEditorStatus();
+        if (opener && opener.isConnected && typeof opener.focus === 'function') {
+            opener.focus();
+        }
+    }
+
+    setCustomCodeEditorStatus(message, type) {
+        const status = document.getElementById('custom-code-editor-status');
+        if (!status) return;
+        status.textContent = message || '';
+        status.className = `custom-code-editor-status${type ? ` ${type}` : ''}`;
+    }
+
+    clearCustomCodeEditorStatus() {
+        this.setCustomCodeEditorStatus('', '');
+    }
+
+    validateCustomCode(node, code) {
+        if (!this.isCustomCodeNode(node)) {
+            return { valid: false, message: 'The Custom Code node is no longer available.' };
+        }
+        if (!this.eventFlowSystem || !this.eventFlowSystem.customJsEvalSupported) {
+            return { valid: true };
+        }
+        try {
+            if (node.type === 'trigger') {
+                new Function('message', code);
+            } else {
+                new Function('message', 'result', code);
+            }
+            return { valid: true };
+        } catch (error) {
+            return { valid: false, message: error && error.message ? error.message : String(error) };
+        }
+    }
+
+    async saveCustomCodeEditor() {
+        const state = this.customCodeEditorState;
+        const input = document.getElementById('custom-code-editor-input');
+        const saveButton = document.getElementById('custom-code-editor-save');
+        if (!state || !input || !saveButton) return false;
+        if (saveButton.disabled) return false;
+        if (this.currentFlow !== state.flow) {
+            this.setCustomCodeEditorStatus('The active flow changed. Close the editor and reopen this node.', 'error');
+            return false;
+        }
+
+        const node = this.currentFlow.nodes.find(candidate => candidate.id === state.nodeId);
+        if (!this.isCustomCodeNode(node)) {
+            this.setCustomCodeEditorStatus('The Custom Code node is no longer available.', 'error');
+            return false;
+        }
+        const code = input.value;
+        const validation = this.validateCustomCode(node, code);
+        if (!validation.valid) {
+            this.setCustomCodeEditorStatus(`Syntax error: ${validation.message}`, 'error');
+            input.focus();
+            return false;
+        }
+
+        node.config = node.config || {};
+        node.config.code = code;
+        state.initialCode = code;
+        this.markUnsavedChanges(true);
+        this.renderNodeOnCanvas(node.id);
+        const inlineInput = document.getElementById('prop-code');
+        if (inlineInput) inlineInput.value = code;
+
+        saveButton.disabled = true;
+        this.setCustomCodeEditorStatus('Saving flow...', 'info');
+        const saved = await this.saveCurrentFlow({ suppressErrorAlert: true });
+        saveButton.disabled = false;
+        if (!saved) {
+            this.setCustomCodeEditorStatus('The flow could not be saved. Your code remains in the current unsaved flow.', 'error');
+            return false;
+        }
+
+        this.closeCustomCodeEditor();
+        return true;
     }
 
     renderStateReference(sourceNodeId, targetNodeId) {
@@ -4322,10 +4552,12 @@ class EventFlowEditor {
 					html += `<div class="property-group"><div class="property-help" style="color:#f0ad4e;">Custom Code execution is disabled in extension mode due browser CSP restrictions. Use SSApp desktop.</div></div>`;
 				}
 				if (node.type === 'trigger') {
-					 html += `<div class="property-group"><label class="property-label">JavaScript Code</label><textarea class="property-input" id="prop-code" rows="10" spellcheck="false">${node.config.code || 'return message.chatmessage.includes("test");'}</textarea>
+					 html += `<div class="property-group"><label class="property-label" for="prop-code">JavaScript Code</label><textarea class="property-input" id="prop-code" rows="10" spellcheck="false"></textarea>
+							 <button type="button" class="btn btn-primary custom-code-editor-launch" id="open-custom-code-editor-btn">Open Code Editor</button>
 							 <div class="property-help">Return true/false. \`message\` object is available.</div></div>`;
 				} else if (node.type === 'action') { // Custom JS Action
-					 html += `<div class="property-group"><label class="property-label">JavaScript Code</label><textarea class="property-input" id="prop-code" rows="10" spellcheck="false">${node.config.code || 'message.chatmessage += " (edited)";\nreturn { modified: true, message };'}</textarea>
+					 html += `<div class="property-group"><label class="property-label" for="prop-code">JavaScript Code</label><textarea class="property-input" id="prop-code" rows="10" spellcheck="false"></textarea>
+							 <button type="button" class="btn btn-primary custom-code-editor-launch" id="open-custom-code-editor-btn">Open Code Editor</button>
 							 <div class="property-help">\`message\` and \`result\` objects are available. Return an object like \`{ modified: boolean, message: object, blocked: boolean }\`.</div></div>`;
 				}
 				// Potentially add a case for customJs if it were a logic node type
@@ -5900,12 +6132,23 @@ class EventFlowEditor {
 		}
 
 		propertiesContent.innerHTML = html;
+		if (this.isCustomCodeNode(node)) {
+			const codeInput = document.getElementById('prop-code');
+			if (codeInput) codeInput.value = this.getCustomCode(node);
+		}
 		this.addPropertiesEventListeners(node.id); // Pass node.id to correctly re-attach listeners
 	}
 
     addPropertiesEventListeners(nodeId) {
         const nodeData = this.currentFlow.nodes.find(n => n.id === nodeId);
         if (!nodeData) return;
+
+        const openCustomCodeEditorButton = document.getElementById('open-custom-code-editor-btn');
+        if (openCustomCodeEditorButton) {
+            openCustomCodeEditorButton.addEventListener('click', () => {
+                this.openCustomCodeEditor(nodeData.id, openCustomCodeEditorButton);
+            });
+        }
 
         const subtypeSelect = document.getElementById('node-subtype-prop');
         if (subtypeSelect) {

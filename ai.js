@@ -3681,8 +3681,15 @@ async function processMessageWithOllama(data, idx=null) {
 	  }
     }
 
+	if (data?.privateBotPrompt) {
+	  return shouldSendResponse ? true : null;
+	}
+
   } catch (error) {
     console.warn("Error processing message:", error);
+	if (data?.privateBotPrompt) {
+	  return null;
+	}
   } finally {
     releaseBotResponseSlot();
   }

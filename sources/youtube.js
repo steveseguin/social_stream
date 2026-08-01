@@ -2350,14 +2350,19 @@
 	}
 
 	function emitYouTubeReactionImage(imageNode) {
-		if (!imageNode || imageNode.youtubeSocialStreamHandled) {
+		if (!imageNode) {
 			return;
 		}
-		var imageUrl = normalizeYouTubeEffectImageUrl(imageNode.getAttribute("src") || imageNode.src || "");
+		var sourceAttribute = imageNode.getAttribute("src");
+		var imageUrl = normalizeYouTubeEffectImageUrl(sourceAttribute === null ? (imageNode.src || "") : sourceAttribute);
 		if (!imageUrl) {
+			imageNode.youtubeSocialStreamHandledUrl = "";
 			return;
 		}
-		imageNode.youtubeSocialStreamHandled = true;
+		if (imageNode.youtubeSocialStreamHandledUrl === imageUrl) {
+			return;
+		}
+		imageNode.youtubeSocialStreamHandledUrl = imageUrl;
 		var reactionType = normalizeDonationText(imageNode.getAttribute("alt") || "") || "emoji";
 		var chatmessage = reactionType;
 		if (!settings.textonlymode) {
@@ -2412,8 +2417,11 @@
 		var selector = type === "gift" ? "ytls-gift-overlay-item-view-model" : "img[src]";
 		try {
 			target.querySelectorAll(selector).forEach(function (node) {
-				if (type !== "gift" || node.querySelector("img[src]")) {
+				if (type === "gift" && node.querySelector("img[src]")) {
 					node.youtubeSocialStreamHandled = true;
+				} else if (type !== "gift") {
+					var sourceAttribute = node.getAttribute("src");
+					node.youtubeSocialStreamHandledUrl = normalizeYouTubeEffectImageUrl(sourceAttribute === null ? (node.src || "") : sourceAttribute);
 				}
 			});
 		} catch (e) {}
