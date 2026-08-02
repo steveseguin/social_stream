@@ -2711,9 +2711,40 @@ const sourceTypes = ['relaytargets','eventsSources','ttssources'];
 const sourceSelectTagInputs = ['hideViewerCountSources'];
 const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers', 'filterfeaturedusers'];
-const sourcesList = new Set();
+// These are canonical payload types that cannot be inferred reliably from a
+// manifest filename. Keep them available even when a hosted/app manifest is
+// temporarily unavailable.
+const additionalSourceTypes = [
+    'arena',
+    'clouthub',
+    'external',
+    'instagramlive',
+    'meet',
+    'obs',
+    'socialstreamchat',
+    'stageten',
+    'threads',
+    'twitter',
+    'velora',
+    'workplace',
+    'youtubeshorts',
+    'zoom_poll'
+];
+const sourceTypeAliases = {
+    cloudhub: ['clouthub'],
+    facebook: ['workplace'],
+    instafeed: ['instagramlive'],
+    instagram: ['instagramlive'],
+    meets: ['meet'],
+    verticalpixelzone: ['arena'],
+    x: ['twitter'],
+    youtube: ['youtubeshorts'],
+    zoom: ['zoom_poll']
+};
+const sourcesList = new Set(additionalSourceTypes);
 var sortedSourcesListCache = null;
 var popupSourceDatalistLoaded = false;
+var sourcesManifestLoaded = false;
 
 function formatSourceLabel(source) {
     source = String(source || "");
@@ -2731,12 +2762,16 @@ function loadSourcesListFromRuntimeManifest() {
     try {
         if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getManifest === 'function') {
             const manifest = chrome.runtime.getManifest();
-            return collectSourcesFromManifest(manifest) > 0;
+            if (manifest && Array.isArray(manifest.content_scripts)) {
+                collectSourcesFromManifest(manifest);
+                sourcesManifestLoaded = true;
+                return true;
+            }
         }
     } catch (error) {
         console.warn('Unable to load sources from chrome.runtime manifest:', error);
     }
-    return sourcesList.size > 0;
+    return sourcesManifestLoaded;
 }
 
 function appendSourceOptions(select) {
@@ -2776,7 +2811,7 @@ function populateSourceDatalist() {
 }
 
 function ensureLazySourcesLoaded(callback) {
-    if (sourcesList.size > 0 || loadSourcesListFromRuntimeManifest()) {
+    if (sourcesManifestLoaded || loadSourcesListFromRuntimeManifest()) {
         if (callback) callback();
         return Promise.resolve(true);
     }
@@ -2857,14 +2892,20 @@ function collectSourcesFromManifest(manifestData) {
                 if (!normalized.startsWith('./sources/') || !normalized.endsWith('.js')) {
                     return;
                 }
-                const sourceName = normalized.replace('./sources/', '').replace('.js', '');
-                if (sourceName) {
+                const relativeName = normalized.replace('./sources/', '').replace('.js', '');
+                if (relativeName.startsWith('inject/')) {
+                    return;
+                }
+                const sourceName = relativeName.split('/').pop();
+                const names = [sourceName].concat(sourceTypeAliases[sourceName] || []);
+                names.forEach(name => {
+                    if (!name) return;
                     const previousSize = sourcesList.size;
-                    sourcesList.add(sourceName);
+                    sourcesList.add(name);
                     if (sourcesList.size > previousSize) {
                         added++;
                     }
-                }
+                });
             });
         });
     } catch (error) {
@@ -2878,7 +2919,7 @@ function collectSourcesFromManifest(manifestData) {
 }
 
 async function ensureSourcesListLoaded(options = {}) {
-    if (sourcesList.size > 0) {
+    if (sourcesManifestLoaded) {
         return true;
     }
 
@@ -2890,7 +2931,9 @@ async function ensureSourcesListLoaded(options = {}) {
         try {
             const branch = options.branch || urlParams.get('branch') || 'main';
             const manifestData = await window.ssappFallback.readJson('manifest.json', { branch });
-            if (collectSourcesFromManifest(manifestData)) {
+            if (manifestData && Array.isArray(manifestData.content_scripts)) {
+                collectSourcesFromManifest(manifestData);
+                sourcesManifestLoaded = true;
                 return true;
             }
         } catch (error) {
@@ -2903,7 +2946,9 @@ async function ensureSourcesListLoaded(options = {}) {
         const response = await fetch(manifestUrl);
         if (response.ok) {
             const manifestData = await response.json();
-            if (collectSourcesFromManifest(manifestData)) {
+            if (manifestData && Array.isArray(manifestData.content_scripts)) {
+                collectSourcesFromManifest(manifestData);
+                sourcesManifestLoaded = true;
                 return true;
             }
         }

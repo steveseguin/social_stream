@@ -5,6 +5,7 @@ const vm = require("vm");
 const SocialStreamLocalServer = require("../js/local-server-url.js");
 
 const popupSource = fs.readFileSync(path.resolve(__dirname, "..", "popup.js"), "utf8");
+const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, "..", "manifest.json"), "utf8"));
 
 assert.strictEqual(SocialStreamLocalServer.getPort(new URLSearchParams()), 3000);
 assert.strictEqual(SocialStreamLocalServer.getWebSocketUrl(new URLSearchParams("localserverport=3003")), "ws://127.0.0.1:3003");
@@ -39,6 +40,40 @@ function loadFunctions(names, context) {
   const exports = names.map((name) => `${name}: ${name}`).join(",");
   vm.runInContext(`${names.map(extractFunction).join("\n")}\nthis.testExports = {${exports}};`, sandbox);
   return { sandbox, functions: sandbox.testExports };
+}
+
+{
+  const start = popupSource.indexOf("const sourceTypes = ['relaytargets','eventsSources','ttssources'];");
+  const end = popupSource.indexOf('// Function to handle custom JS file upload', start);
+  assert.notStrictEqual(start, -1, 'source catalog start marker is missing');
+  assert.notStrictEqual(end, -1, 'source catalog end marker is missing');
+
+  const sandbox = vm.createContext({ URL, console, Set, window: {}, chrome: undefined });
+  vm.runInContext(
+    popupSource.slice(start, end) +
+      '\nthis.catalog = { sourceTypes, sourcesList, collectSourcesFromManifest };',
+    sandbox
+  );
+
+  assert.deepStrictEqual(Array.from(sandbox.catalog.sourceTypes), ['relaytargets', 'eventsSources', 'ttssources']);
+  assert.ok(sandbox.catalog.sourcesList.has('velora'), 'Velora must be available without manifest loading');
+
+  sandbox.catalog.collectSourcesFromManifest(manifest);
+  for (const expected of [
+    'arena', 'clouthub', 'external', 'instagramlive', 'meet', 'obs', 'socialstreamchat',
+    'stageten', 'threads', 'twitter', 'velora', 'workplace', 'youtubeshorts', 'zoom_poll'
+  ]) {
+    assert.ok(sandbox.catalog.sourcesList.has(expected), `missing canonical source type: ${expected}`);
+  }
+
+  const manifestSourceFiles = manifest.content_scripts
+    .flatMap(entry => entry.js || [])
+    .filter(file => file.startsWith('./sources/') && file.endsWith('.js') && !file.startsWith('./sources/inject/'));
+  for (const file of manifestSourceFiles) {
+    const sourceName = path.basename(file, '.js');
+    assert.ok(sandbox.catalog.sourcesList.has(sourceName), `missing manifest source: ${sourceName}`);
+  }
+  assert.ok(Array.from(sandbox.catalog.sourcesList).every(source => !source.includes('/')));
 }
 
 {
