@@ -184,6 +184,9 @@
 	var FACEBOOK_STALE_REFRESH_MS = 120000;
 	var FACEBOOK_RECOVERY_REPLAY_WINDOW_MS = 30000;
 	var MAX_FACEBOOK_RECOVERY_KEYS = 500;
+	// Facebook rebuilds the comment DOM after a recovery reload. sessionStorage survives
+	// that reload in this tab, letting us recognize rows that were already sent without
+	// leaking the history into unrelated tabs or future browser sessions.
 	var facebookRecoverySeen = new Set();
 	var facebookRecoveryStartedAt = Date.now();
 	var facebookLastArticleChangeAt = Date.now();
@@ -213,6 +216,9 @@
 
 	function getFacebookRecoveryRowKey(ele) {
 		try {
+			// On Facebook's live-video layout, the article or its parent normally carries
+			// the stable comment ID. Prefer that identity: generated descendant IDs and
+			// visible timestamps can change whenever Facebook rebuilds the same comment.
 			var rowId = ele.id || (ele.parentNode && ele.parentNode.id) || "";
 			if (!rowId) {
 				var identified = ele.querySelector("[id]");
@@ -221,6 +227,8 @@
 			if (rowId && !String(rowId).startsWith("client:")) {
 				return "id:" + String(rowId);
 			}
+			// Text is only a last-resort key for Facebook layouts that expose no usable
+			// row ID. Keep relative time out of it because that text changes after reload.
 			var text = normalizeFacebookText(ele.innerText || ele.textContent || "")
 				.replace(/\b\d+\s*(?:seconds?|minutes?|hours?|days?|weeks?|months?|years?|[smhdw])\b/gi, "")
 				.trim();
@@ -761,8 +769,14 @@
 		}
 		var entry = starsInfo && facebookRowId ? data.type + "+stars+" + facebookRowId : data.chatname + "+" + data.hasDonation + "+" + dupMessage;
 		var entryString = JSON.stringify(entry);
+		var recoveryRowKey = getFacebookRecoveryRowKey(ele);
+		var recoveryHasRowId = recoveryRowKey.indexOf("id:") === 0;
 		var recoveryPayloadKey = "payload:" + normalizeFacebookText(data.chatname + "|" + data.hasDonation + "|" + dupMessage);
-		if (facebookRecoveryReplay && Date.now() - facebookRecoveryStartedAt < FACEBOOK_RECOVERY_REPLAY_WINDOW_MS && facebookRecoverySeen.has(recoveryPayloadKey)) {
+		// Row-ID replay filtering runs before processMessage. Use payload matching only
+		// as a fallback when Facebook provides no row ID; otherwise a viewer posting the
+		// same text again under a new comment ID would be incorrectly discarded.
+		// Do not remove the row-ID guard or make payload matching the primary identity.
+		if (facebookRecoveryReplay && !recoveryHasRowId && Date.now() - facebookRecoveryStartedAt < FACEBOOK_RECOVERY_REPLAY_WINDOW_MS && facebookRecoverySeen.has(recoveryPayloadKey)) {
 			return true;
 		}
 
