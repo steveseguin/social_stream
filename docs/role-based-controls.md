@@ -57,6 +57,7 @@ These are per-overlay URL parameters, mainly for `dock.html` and generated dock 
 | `nobeepbot` | Prevents bot messages from triggering the overlay beep. |
 | `nobeephost` | Prevents host messages from triggering the overlay beep. |
 | `nobeepmod` | Prevents moderator messages from triggering the overlay beep. |
+| `beeponlymod` | Enables the dock beep and limits it to moderator messages. |
 | `showvipbadge` | Adds the local VIP badge to VIP messages. |
 | `autofeaturevip` | Automatically features VIP messages. |
 | `autofeaturepriv` | Automatically features privileged/admin messages. |

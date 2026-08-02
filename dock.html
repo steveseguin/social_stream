@@ -4745,8 +4745,9 @@
 				}
 			}
 
+			var beepOnlyMod = urlParams.has("beeponlymod");
 			var beep = false;
-			if (urlParams.has("beep")) {
+			if (urlParams.has("beep") || beepOnlyMod) {
 				// removes HTML from messages, donations, and names.
 				beep = true;
 				let ele = getById("notify");
@@ -4759,6 +4760,10 @@
 			var beepFirstTime = false;
 			if (urlParams.has("beepfirsttime")) {
 				beepFirstTime = true;
+			}
+
+			function shouldDockBeep(data, isMod) {
+				return !!((beep || (beepFirstTime && data.firsttime)) && (!beepOnlyMod || isMod));
 			}
 			
 			var nobeepbot = false;
@@ -12376,7 +12381,7 @@
 					}
 					
 					if (!suppressLiveSideEffects) {
-						const shouldBeep = beep || (beepFirstTime && data.firsttime);
+						const shouldBeep = shouldDockBeep(data, mod);
 						if (shouldBeep) { 
 							if (!(data.command && doNotTTSBeep) && !(nobeepevent && data.event) && !(nobeepmod && mod) && !(nobeephost && host) && !(nobeepbot && bot)){
 								playtone();
