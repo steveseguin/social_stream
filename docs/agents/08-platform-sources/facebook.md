@@ -80,10 +80,39 @@ Advanced fields in the page:
 The default OAuth service URL in source is:
 
 ```text
-https://auth.socialstream.ninja/auth/facebook/pages
+https://sso.socialstream.ninja/auth/facebook
 ```
 
 Support should not ask users to change that unless debugging a known auth-service issue.
+
+## Meta App Review Checklist
+
+Status recorded on 2026-08-02:
+
+- Business verification for Skindeep.Ai Inc. is approved.
+- `public_profile` advanced access is granted.
+- `pages_show_list` is in an active App Review submission.
+- `pages_read_engagement` has not been requested for advanced access.
+- `pages_read_user_content` has not been requested for advanced access.
+- Page Public Content Access has not been requested for advanced access.
+- The Social Stream Ninja business portfolio currently has no Facebook Pages attached.
+
+Request in the next available App Review submission:
+
+1. `pages_read_engagement` — read Page videos, posts, metadata, and engagement needed by the managed-Page bridge.
+2. `pages_read_user_content` — read user comments/content on managed Pages.
+3. Page Public Content Access — required for public comments/posts on Pages the signed-in user does not manage, including arbitrary public live streams.
+
+Request only if testing proves it is needed:
+
+- Business Asset User Profile Access — commenter `id`, `name`, and `picture` for people engaging with business assets. Request this if approved comment access still masks author names or avatars.
+
+Do not request without a demonstrated use:
+
+- Page Public Metadata Access — unnecessary when Page Public Content Access covers the required public Page content; reconsider only for a separate metadata/search use case.
+- Publishing or management permissions such as `publish_video`, `pages_manage_posts`, or `pages_manage_engagement`; the bridge is read-only.
+
+After approval, reauthorize Facebook without clearing the browser session, confirm the expected managed Pages are returned, and repeat direct-video, username-to-live, comment-type, refresh-recovery, and stream-end soak tests.
 
 ## API Bridge Payloads
 

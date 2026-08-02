@@ -1,13 +1,13 @@
 # Mobile IRL Remote Control Review
 
-Status: source-reviewed proposal; no implementation changes included  
-Date: 2026-08-01  
+Status: Social Stream protocol and routing implemented; Flutter client and UI pending
+Date: 2026-08-02
 Primary client: VDO.Ninja Publisher Flutter app  
 Related repositories: `vdon_flutter`, `social_stream`, and `ssapp`
 
 ## Executive summary
 
-The existing Social Stream transport can support a useful mobile remote-control panel for IRL streamers, but the Flutter app is not yet a production control client. It currently receives chat and has a debug-only send path; it does not discover capabilities, send correlated commands, process command results, maintain remote state, or expose SSApp source controls.
+Social Stream now has a versioned, capability-driven remote-control contract and authoritative routing for the selected mobile actions, but the Flutter app is not yet a production control client. It currently receives chat and has a debug-only send path; it does not discover capabilities, send correlated commands, process command results, maintain remote state, or expose SSApp source controls.
 
 Social Stream currently advertises 42 SSN actions and remotely exposes 13 SSApp source actions. The safest first release is a capability-driven in-call control panel focused on:
 
@@ -20,6 +20,18 @@ Social Stream currently advertises 42 SSN actions and remotely exposes 13 SSApp 
 Polls, giveaways, desktop TTS, per-message moderation, and source editing are valuable follow-ups, but their state and response contracts should be standardized first.
 
 The SSApp localhost API must remain local-only. Mobile control should continue to use Social Stream's existing WebRTC or WebSocket transport and only the remotely approved SSApp subset.
+
+## Current implementation status
+
+Implemented in this `social_stream` worktree:
+
+- protocol version 2 documentation, capability descriptors, availability states, host identity, action ownership, and universal results;
+- authoritative background, default-Dock, and SSApp routing over WebRTC and WebSocket;
+- bounded WebRTC Dock correlation, duplicate handling, default unlabeled Dock enforcement, timer-reset confirmation, and chat-size validation;
+- VDO.Ninja-compatible password interoperability vectors for the Flutter handoff;
+- focused protocol tests plus the existing Electron/SSApp WebRTC and local-relay bridge regression test.
+
+The production Flutter command client, transport integration, state management, and control-panel UI remain the next repository task. No SSApp code change was required.
 
 ## Goals
 
@@ -36,6 +48,7 @@ The SSApp localhost API must remain local-only. Mobile control should continue t
 - Remotely exposing arbitrary SSApp settings, app reload, app shutdown, or unrestricted renderer execution.
 - Replacing the app's existing phone camera, microphone, recording, PiP, or OBS controls.
 - Treating a Social Stream session ID as a strong authentication mechanism.
+- Adding a new pairing, controller-token, or authentication system in Phase 1. The first release uses Social Stream's existing opt-in, session-based remote-control model.
 
 ## Confirmed current capabilities
 
@@ -225,6 +238,14 @@ The current WebRTC data channel can carry both chat and control traffic, but the
 
 The precise outgoing envelope should be locked down with an end-to-end test against `processIncomingRequest()` rather than inferred only from the debug sender.
 
+Host selection should be explicit:
+
+- capability responses should identify the sender as a Social Stream host and include a host-instance identifier;
+- Flutter may send read-only capability discovery to candidate peers, then bind commands to the peer UUID that returned the selected host response;
+- if no host responds, control is unavailable;
+- if multiple hosts respond, mutating controls remain blocked until exactly one host is selected;
+- mutating commands must never be broadcast to every open data channel.
+
 ### 4. The Flutter Social Stream password is displayed but unused
 
 The settings UI exposes an optional Social Stream encryption password. `SocialStreamService` logs `config.password`, but it does not use it in WebRTC room joining, stream IDs, SDP setup, or encryption derivation.
@@ -233,8 +254,8 @@ This field currently creates a false expectation that password-protected Social 
 
 Recommended resolution:
 
-- implement password behavior compatible with Social Stream's VDO.Ninja transport and test it end to end; or
-- temporarily hide/disable the field with an explicit unsupported message.
+- implement password behavior in Flutter compatible with Social Stream's VDO.Ninja WebRTC transport and test it end to end;
+- label the setting as WebRTC-only and leave WebSocket mode unchanged.
 
 This is the Social Stream transport password. It is separate from the VDO.Ninja publishing room/password, which must not influence Social Stream control.
 
@@ -299,28 +320,33 @@ Recommended new read contracts:
 
 The current SSN capability map is boolean-only. A generic mobile UI also needs to know:
 
+- whether an action is supported by the runtime;
+- whether its required owner is currently available, unavailable, or unknown;
+- a safe reason when it is unavailable;
 - category;
 - display label;
 - value schema;
 - whether a state query exists;
 - whether confirmation is required;
-- whether the action is destructive;
+- its read-only, mutating, disruptive, or destructive safety class;
 - whether a dock, overlay, timer, poll, waitlist, SSApp, or another page must be open;
 - whether target labels are supported;
 - whether a callback is guaranteed.
 
-This can be added without breaking current clients by retaining the boolean action map and adding a versioned descriptor map.
+This can be added without breaking current clients by retaining the boolean action map as the stable `supported` view and adding a versioned descriptor and availability map. Availability may be `unknown` when SSN cannot prove that a separate dock or overlay page is connected. The UI should hide unsupported actions, disable known-unavailable actions with a reason, and show the documented prerequisite for unknown availability.
 
-### 9. Remote control currently relies heavily on session secrecy
+### 9. Phase 1 uses the existing session-based access model
 
 Server-mode API examples use the session ID as the practical control boundary. Anyone with the session can potentially issue commands when remote API control is enabled.
 
-Before exposing destructive operations from a phone, SSN should consider an optional controller secret or pairing token that is independent of public overlay links. At minimum:
+Phase 1 intentionally does not add pairing or a separate controller secret. It uses Social Stream's existing opt-in remote-control setting and session-based access model. This is an accepted scope decision, not a blocker; a separate pairing token remains optional future hardening.
+
+The first release should still preserve the existing safety boundaries:
 
 - never expose `clearHistory` in the first mobile release;
 - require confirmation for `removeSource`, reset actions, and source-mode changes;
 - never expose app reload, shutdown, or unrestricted settings;
-- do not log session IDs, passwords, controller tokens, or credential-bearing URLs;
+- do not log session IDs, passwords, or credential-bearing URLs in any build;
 - do not queue mutations offline;
 - do not retry a timed-out mutation without first reading state.
 
@@ -372,6 +398,8 @@ Recommended first-release controls:
 - Start/pause timer.
 - Restart a failed desktop capture source.
 
+Phase 1 sends dock commands to the default, unlabeled target only. Selecting named dock targets is deferred to Phase 2.
+
 Potential emergency macro after the necessary commands are standardized:
 
 - clear featured overlay;
@@ -399,7 +427,7 @@ Advanced source controls should be separate:
 - change connection mode after stopping the source;
 - remove source with confirmation.
 
-Starting a source is asynchronous and may return `accepted` while still activating. The UI must continue checking status instead of immediately showing it as active.
+Starting or restarting a source is asynchronous and may return `accepted` while still activating. The UI must treat `accepted` as work started, not success, and continue reading source state until it reaches `active` or `error`.
 
 ### Timer, polls, and giveaways
 
@@ -435,16 +463,33 @@ Before shipping this, SSN should confirm that mobile-received message IDs map re
 
 ## Recommended phased feature list
 
+### Phase 0: Social Stream public protocol and routing (implemented)
+
+The current Social Stream worktree now:
+
+- publish a canonical, versioned remote-control contract at `docs/remote-control-protocol.md` and link it from `api.md`;
+- define the exact WebRTC and WebSocket request envelopes;
+- define one correlated result schema for every Phase 1 command and query;
+- distinguish stable action support from current owner/page availability;
+- add Social Stream host identity to WebRTC capability responses;
+- validates the routing and result rules with focused tests and the existing Electron/SSApp bridge test.
+
+Final device/browser coverage for every action over both transports remains release validation during the Flutter implementation.
+
 ### Phase 1: low-risk IRL controller
 
 Required transport work:
 
-- capability discovery;
-- correlated commands and callbacks;
+- implement the Phase 0 contract in Flutter;
+- capability discovery with support and availability handling;
+- correlated commands and standardized results;
 - reactive connection state;
 - WebRTC command envelope support;
+- WebRTC host discovery and binding to exactly one host peer;
+- Social Stream WebRTC transport-password support using the existing SSN/VDO.Ninja encryption flow;
 - dedicated server-mode control channel;
-- safe timeout and disconnect behavior.
+- safe timeout and disconnect behavior;
+- secret-free logging in every build mode.
 
 User-facing features:
 
@@ -456,7 +501,8 @@ User-facing features:
 - list desktop sources;
 - source start/stop/restart;
 - source mute/unmute and show/hide;
-- timer start/pause/reset and authoritative timer state.
+- timer start/pause/reset and authoritative timer state;
+- default unlabeled dock targeting only.
 
 ### Phase 2: interactive moderation and show tools
 
@@ -488,18 +534,32 @@ User-facing features:
 - reset waitlist/leaderboard without an advanced confirmation flow
 - any command not present in the runtime capability response
 
+## Action safety classes
+
+Every public action descriptor should declare one safety class and its confirmation policy.
+
+| Class | Examples | Phase 1 policy |
+| --- | --- | --- |
+| Read-only | `getCapabilities`, `getSources`, `getSource`, `gettimerstate` | No confirmation. A read may be retried only while it still belongs to the current connection generation. |
+| Mutating | `nextInQueue`, `clearOverlay`, `sendChat`, source mute/visibility, timer start/pause | Execute from an explicit tap and never replay automatically after a timeout. |
+| Disruptive | stopping or restarting an active source, changing source connection mode | Confirm when an active source will be interrupted. A clearly labelled restart of an already failed source does not need an additional confirmation dialog. |
+| Destructive | `removeSource`, `clearHistory`, timer/poll/waitlist/leaderboard resets | Always confirm. Keep destructive administration out of Phase 1 except timer reset with confirmation. |
+
 ## Proposed request and result rules
 
 1. Request `getCapabilities` after the control transport becomes ready and after every reconnect.
-2. Include a unique, unpredictable `get` token for every command that needs confirmation.
+2. Include a unique, unpredictable `get` token for every Phase 1 command and query.
 3. Bound pending requests and command payload size.
 4. Resolve a request exactly once.
 5. Ignore late, duplicate, unknown, or mismatched callbacks.
 6. Cancel pending requests on service disposal or connection-generation change.
 7. Do not automatically retry a mutation.
 8. After an ambiguous timeout, read the affected state before offering retry.
-9. Render controls only from advertised capabilities.
-10. Sanitize error text before displaying it; do not surface URLs, credentials, or internal stack traces.
+9. Render controls only for supported actions; disable known-unavailable actions with a safe reason.
+10. Treat unknown availability as an explicit prerequisite, not proof that the command will succeed.
+11. Send WebRTC mutations only to the selected Social Stream host peer.
+12. Send Phase 1 dock actions to the default unlabeled target only.
+13. Sanitize error text before displaying it; do not surface URLs, credentials, or internal stack traces.
 
 Example request:
 
@@ -514,7 +574,7 @@ Example request:
 }
 ```
 
-Expected correlated result shape:
+Proposed universal correlated result shape after the Phase 0 protocol changes:
 
 ```json
 {
@@ -522,23 +582,56 @@ Expected correlated result shape:
     "get": "mobile-REQUEST_ID",
     "result": {
       "ok": true,
-      "payload": {}
+      "status": "accepted",
+      "payload": {
+        "sourceId": "SOURCE_ID",
+        "status": "activating"
+      }
     }
   }
 }
 ```
 
+`completed` means a synchronous action or query finished. `accepted` means asynchronous work started and the client must read authoritative state until it completes or fails. Errors use `ok: false`, `status: "failed"`, and a structured `error` containing a stable code and safe message. A callback must describe the authoritative owner's result, not merely confirm that an intermediary forwarded the command.
+
 ## Repository ownership
 
 | Repository | Recommended responsibility |
 | --- | --- |
-| `social_stream` | Public capability contract, transport routing, state queries/events, action semantics, remote safety boundaries, and cross-transport tests. |
-| `ssapp` | Source bridge implementation, local API, source lifecycle correctness, sanitized capability/status data, and local tests. Keep the versioned HTTP API loopback-only. |
-| `vdon_flutter` | Mobile control client, request correlation, both transport lanes, reactive state, modal UI, confirmations, accessibility, and device lifecycle tests. |
+| `social_stream` | Canonical versioned remote-control documentation, public capability and result contracts, transport routing, host identity, state queries/events, action semantics, remote safety boundaries, and cross-transport tests. |
+| `ssapp` | Preserve the existing source bridge, lifecycle correctness, sanitized capability/status data, and local tests. No new Phase 1 remote surface is expected unless cross-repository testing exposes a contract gap. Keep the versioned HTTP API loopback-only. |
+| `vdon_flutter` | Mobile control client, request correlation, both transport lanes, selected-host binding, Social Stream WebRTC password support, reactive state, secret-free logging, modal UI, confirmations, accessibility, and device lifecycle tests. |
+
+### Implementation order and Flutter handoff
+
+The Social Stream contract and routing work is implemented. Continue in this order:
+
+1. Hand the contract, JSON fixtures, password test vectors, supported-action list, and test procedure to `vdon_flutter`.
+2. Implement the Flutter command client and lifecycle tests.
+3. Run live extension/browser and SSApp acceptance tests over both transports.
+4. Add the capability-driven control-panel UI after the transport tests pass.
+
+The Flutter handoff should require the app to implement:
+
+- command, capability, result, connection-state, and remote-event models;
+- bounded request correlation, timeouts, cancellation, and no mutation replay;
+- separate server-mode chat and control sockets;
+- WebRTC capability discovery and binding to one Social Stream host peer;
+- Social Stream WebRTC password support by sharing the app's existing VDO.Ninja-compatible crypto/signaling implementation;
+- source polling while the source panel is visible;
+- the capability-driven control panel, confirmations, accessibility, and device lifecycle handling.
+
+### SSApp Phase 1 scope
+
+SSApp already provides the required source capabilities, sanitized source snapshots, structured errors, asynchronous `accepted` responses, and the `inactive`, `activating`, `active`, and `error` lifecycle states. Phase 1 should use that existing bridge and poll `getSource` after an accepted start or restart.
+
+No new SSApp feature is required initially. SSApp changes are limited to fixes found by cross-repository tests, such as an unstable source-state transition or unsafe error text. Remote source-status push events remain optional later work because Flutter can poll only while its source panel is open.
 
 ## Validation matrix
 
-### Transport and runtime
+The following sections are release-gating for Phase 1. Later-phase cases are listed separately and do not block the first release.
+
+### Phase 1: transport and runtime
 
 - WebRTC with Social Stream web/extension runtime.
 - WebRTC with SSApp runtime.
@@ -549,9 +642,12 @@ Expected correlated result shape:
 - Older SSApp with partial capabilities.
 - Current SSApp with all approved source capabilities.
 - Remote API control disabled in Social Stream.
-- Dock/featured/timer/poll/waitlist pages absent and present as required.
+- Dock, featured, and timer pages absent and present as required.
+- Supported actions whose current availability is available, unavailable, and unknown.
+- WebRTC discovery with zero, one, and multiple Social Stream host peers.
+- Default unlabeled dock targeting; no Phase 1 label selector.
 
-### Independence from VDO publishing settings
+### Phase 1: independence from VDO publishing settings
 
 Run each Social Stream transport with:
 
@@ -562,9 +658,9 @@ Run each Social Stream transport with:
 
 The Social Stream session, transport, capabilities, and commands must remain unchanged across those combinations.
 
-Separately test Social Stream WebRTC with its own transport password after password support is implemented.
+Separately test Social Stream WebRTC with its own transport password enabled and disabled.
 
-### Lifecycle and resilience
+### Phase 1: lifecycle and resilience
 
 - Connect before and after publishing begins.
 - Open and close the control modal repeatedly.
@@ -574,24 +670,22 @@ Separately test Social Stream WebRTC with its own transport password after passw
 - Social Stream host restart.
 - SSApp restart.
 - Data-channel peer churn and multiple peers.
+- Multiple host responses block mutations until exactly one host is selected.
 - Duplicate, late, malformed, oversized, and out-of-order callbacks.
+- Standardized `completed`, `accepted`, and `failed` results.
 - Command timeout immediately before a successful remote mutation.
 - Disconnect during a destructive confirmation.
 - App hang-up/dispose with pending commands.
 
-### Source controls
+### Phase 1: source controls
 
 - Source inactive, activating, active, error, and disappearing during refresh.
 - Start returning accepted before activation completes.
 - Restart failure after successful stop.
 - Mute and visibility changes while active.
 - Visibility rejected while inactive.
-- Connection-mode change rejected while active.
-- Platform-specific connection-mode validation.
-- Credential-bearing remote URL rejected.
-- Source removal confirmation and no blind retry.
 
-### UI
+### Phase 1: UI
 
 - Portrait and compact landscape.
 - Camera, screen-share, and microphone-only publishing modes.
@@ -599,41 +693,59 @@ Separately test Social Stream WebRTC with its own transport password after passw
 - Large font and screen-reader labels.
 - One-handed tap targets.
 - Clear separation of phone controls and desktop/SSN controls.
-- Unsupported controls hidden rather than left enabled.
+- Unsupported controls hidden, known-unavailable controls disabled with a reason, and unknown availability shown with its prerequisite.
 - Concise success, timeout, and partial-availability feedback.
+
+### Later-phase validation, not Phase 1 release-gating
+
+- Named target labels with one or multiple dock pages.
+- SSN desktop TTS state and controls.
+- Per-message pin, feature, block, and history actions with stable message IDs.
+- Poll, giveaway, waitlist, viewer-count, and map state and controls.
+- Source add/update, connection-mode changes, platform validation, and removal confirmation.
+- Credential-bearing remote source URLs rejected.
+- User-defined macros and advanced administration.
+- Optional controller pairing or authentication if that future hardening is pursued.
 
 ## Acceptance criteria for Phase 1
 
+- The canonical versioned remote-control contract exists in Social Stream documentation and is linked from `api.md`.
+- Phase 1 uses Social Stream's existing opt-in, session-based access model and does not depend on new pairing or authentication work.
 - The control panel never depends on VDO publishing room/password state.
-- Both Social Stream transport modes can discover capabilities and receive correlated results.
+- Social Stream WebRTC works with and without its own transport password; WebSocket mode remains unchanged.
+- Both Social Stream transport modes can discover supported capabilities, represent current availability, and receive standardized correlated results.
 - Server mode continues receiving chat while commands and callbacks use the separate control lane.
-- WebRTC commands reach exactly one intended Social Stream host peer.
+- WebRTC capability responses identify Social Stream hosts, commands reach exactly one selected host peer, and mutations remain blocked when host selection is ambiguous.
+- Phase 1 dock commands use the default unlabeled target only.
 - Source controls appear only when SSApp advertises them.
 - A source restart shows accepted/activating/active or a structured failure without claiming premature success.
 - A timed-out mutation is not automatically replayed.
 - Destructive actions require confirmation or are absent.
 - The connection indicator updates after connect, reconnect, failure, and peer loss.
-- No session IDs, passwords, source credentials, or controller tokens are written to production logs.
+- No session IDs, passwords, or source credentials are written to logs in any build mode.
 - Existing chat, local TTS, camera, audio, recording, and publishing behavior remains unchanged.
 
-## Questions for SSN review
+## Resolved Phase 1 scope decisions
+
+- Use the existing opt-in, session-based Social Stream remote-control model; pairing and separate controller authentication are deferred.
+- Control the default unlabeled dock only; named target selection is Phase 2.
+- Support the Social Stream transport password in WebRTC mode only; WebSocket behavior is unchanged.
+- Require standardized correlated results for the selected Phase 1 commands before building the production control UI.
+
+## Remaining questions for SSN review
 
 1. Which currently unadvertised actions should become supported public remote-control actions?
-2. Can SSN provide a versioned descriptor schema in addition to the current boolean action map?
-3. What should the authoritative queue-state response be?
-4. Should one bounded `getRemoteState` response aggregate overlay, queue, TTS, timer, poll, waitlist, viewer, and source summaries?
-5. Which page or runtime owns authoritative SSN TTS state when dock, featured, and extension tabs may all exist?
-6. Can source status changes be pushed remotely, or should mobile poll while its source panel is visible?
-7. Are chat message IDs received by the Flutter dock-labelled peer guaranteed to match the IDs used by dock pin/unpin controls?
-8. Should SSN add a direct `featureMessage` action with a stable message ID?
-9. Should mobile control support target labels from the first release or initially control the default dock only?
-10. What pairing/authentication model should protect server-mode mobile control beyond session secrecy?
-11. What is the supported password derivation and signaling sequence for a non-SDK Flutter WebRTC client?
-12. Is a second channels-1/2 WebSocket the preferred way to combine remote control with the existing channels-3/4 chat feed?
+2. What should the authoritative queue-state response include beyond `queueLength`?
+3. Should one bounded `getRemoteState` response aggregate overlay, queue, TTS, timer, poll, waitlist, viewer, and source summaries?
+4. Which page or runtime owns authoritative SSN TTS state when dock, featured, and extension tabs may all exist?
+5. Should source status changes eventually be pushed remotely, or should mobile continue polling only while its source panel is visible?
+6. Are chat message IDs received by the Flutter dock-labelled peer guaranteed to match the IDs used by dock pin/unpin controls?
+7. Should SSN add a direct `featureMessage` action with a stable message ID?
 
 ## Source-reviewed baseline
 
 - `vdon_flutter` baseline commit: `79b4a2f3e464c9bcc8fb51a73c41d7b52aace492`
-- Social Stream router test: `tests/streamdeck-remote-control-router.test.js` passed during review.
+- Social Stream router, version 2 contract, password-vector, and transport regression tests passed after implementation.
+- The existing SSApp Electron bridge end-to-end test passed against this Social Stream worktree.
 - Flutter Social Stream parsing and lifecycle suites passed during review.
-- This document proposes follow-up work; it does not claim that mobile remote control is already implemented.
+- Social Stream's host-side contract is implemented; Flutter mobile remote control is not yet implemented.

@@ -9548,12 +9548,156 @@ function getStreamDeckRemoteControlRouter() {
 	return typeof window !== "undefined" ? window.StreamDeckRemoteControl : null;
 }
 
+function createStreamDeckHostInstanceId() {
+	var randomPart = "";
+	try {
+		if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+			var values = new Uint32Array(2);
+			crypto.getRandomValues(values);
+			randomPart = values[0].toString(36) + values[1].toString(36);
+		}
+	} catch (e) {}
+	if (!randomPart) {
+		randomPart = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+	}
+	return "ssn-" + Date.now().toString(36) + "-" + randomPart.slice(0, 20);
+}
+
+var streamDeckHostInstanceId = createStreamDeckHostInstanceId();
+var pendingStreamDeckDockRequests = new Map();
+var MAX_PENDING_STREAM_DECK_DOCK_REQUESTS = 128;
+
+function clearPendingStreamDeckDockRequest(get) {
+	var pending = pendingStreamDeckDockRequests.get(get);
+	if (!pending) {
+		return null;
+	}
+	pendingStreamDeckDockRequests.delete(get);
+	if (pending.timer) {
+		clearTimeout(pending.timer);
+	}
+	return pending;
+}
+
+function sendStreamDeckDockResultToOrigin(pending, result) {
+	if (!pending) {
+		return false;
+	}
+	var packet = buildStreamDeckCommandResultPacket(pending.request, result);
+	if (pending.transport === "webrtc" && pending.UUID) {
+		sendDataP2P(packet, pending.UUID);
+		return true;
+	}
+	return false;
+}
+
+function registerPendingStreamDeckDockRequest(request, UUID) {
+	if (!request || !request.get || !UUID) {
+		return { ok: false, code: "INVALID_REQUEST", message: "The Dock request is missing routing information." };
+	}
+	var get = String(request.get);
+	var existing = pendingStreamDeckDockRequests.get(get);
+	if (existing) {
+		if (existing.UUID === UUID) {
+			return { ok: true, duplicate: true, pending: existing };
+		}
+		return { ok: false, code: "DUPLICATE_REQUEST_ID", message: "The correlation ID is already pending." };
+	}
+	if (pendingStreamDeckDockRequests.size >= MAX_PENDING_STREAM_DECK_DOCK_REQUESTS) {
+		return { ok: false, code: "TOO_MANY_PENDING_REQUESTS", message: "Too many Dock commands are awaiting results." };
+	}
+	var pending = {
+		request: request,
+		transport: "webrtc",
+		UUID: UUID,
+		timer: null
+	};
+	pending.timer = setTimeout(function () {
+		var expired = clearPendingStreamDeckDockRequest(get);
+		if (!expired) {
+			return;
+		}
+		var router = getStreamDeckRemoteControlRouter();
+		var result = router && typeof router.makeError === "function"
+			? router.makeError(request, "TARGET_UNAVAILABLE", "No default Dock page completed the command.")
+			: { ok: false, status: "failed", request: get, error: { code: "TARGET_UNAVAILABLE", message: "No default Dock page completed the command." } };
+		sendStreamDeckDockResultToOrigin(expired, result);
+	}, 8000);
+	pendingStreamDeckDockRequests.set(get, pending);
+	return { ok: true, duplicate: false, pending: pending };
+}
+
+function handleStreamDeckDockCallback(request) {
+	if (!request || !request.callback || !request.callback.get) {
+		return false;
+	}
+	var get = String(request.callback.get);
+	var pending = clearPendingStreamDeckDockRequest(get);
+	if (!pending) {
+		return false;
+	}
+	var router = getStreamDeckRemoteControlRouter();
+	var result = router && typeof router.normalizeCommandResult === "function"
+		? router.normalizeCommandResult(pending.request, request.callback.result)
+		: request.callback.result;
+	sendStreamDeckDockResultToOrigin(pending, result);
+	return true;
+}
+
+async function sendStreamDeckDockRequestP2P(request, originUUID) {
+	var sent = false;
+	if (ninjaBridge && ninjaBridge.isReady()) {
+		try {
+			var peers = typeof ninjaBridge.getPeers === "function" ? ninjaBridge.getPeers() : {};
+			var peerIds = Object.keys(peers || {});
+			for (var i = 0; i < peerIds.length; i++) {
+				var peerId = peerIds[i];
+				if (peerId !== originUUID && peers[peerId] === "dock") {
+					var sdkSent = await ninjaBridge.send(request, peerId);
+					if (sdkSent !== false) {
+						sent = true;
+					}
+				}
+			}
+		} catch (e) {
+			markP2PFailure("streamDeckDockSend");
+		}
+		if (sent) {
+			return true;
+		}
+	}
+
+	if (iframe && connectedPeers) {
+		var keys = Object.keys(connectedPeers);
+		for (var j = 0; j < keys.length; j++) {
+			var UUID = keys[j];
+			if (UUID === originUUID || connectedPeers[UUID] !== "dock") {
+				continue;
+			}
+			try {
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: request }, type: "pcs", UUID: UUID }, "*");
+				sent = true;
+			} catch (e) {}
+		}
+	}
+
+	try {
+		if (settings.server2 && socketserverDock && socketserverDock.readyState === WebSocket.OPEN) {
+			socketserverDock.send(JSON.stringify(request));
+			sent = true;
+		}
+	} catch (e) {}
+	return sent;
+}
+
 async function getStreamDeckCapabilities() {
 	const router = getStreamDeckRemoteControlRouter();
 	if (!router || typeof router.buildCapabilities !== "function") {
 		return {
 			type: "capabilities",
-			version: 1,
+			version: 2,
+			role: "social-stream-host",
+			hostInstanceId: streamDeckHostInstanceId,
 			runtime: isSSAPP ? "electron" : "web",
 			ssapp: { available: false },
 			ssn: { actions: {} }
@@ -9585,6 +9729,8 @@ async function getStreamDeckCapabilities() {
 
 	return router.buildCapabilities({
 		runtime: isSSAPP ? "electron" : "web",
+		hostInstanceId: streamDeckHostInstanceId,
+		backgroundAvailable: !!(isExtensionOn && !settings.disablehost),
 		ssapp
 	});
 }
@@ -9825,15 +9971,95 @@ async function handleStreamDeckSsappRequest(request) {
 	}
 }
 
-async function routeStreamDeckRemoteRequest(request) {
+function isStreamDeckTimerAction(action) {
+	return ["starttimer", "pausetimer", "resettimer", "gettimerstate"].indexOf(action) !== -1;
+}
+
+function isStreamDeckResetConfirmed(value) {
+	return value === true || value === "confirm" || !!(value && typeof value === "object" && value.confirm === true);
+}
+
+async function handleStreamDeckBackgroundRequest(request) {
+	const router = getStreamDeckRemoteControlRouter();
+	if (!router) {
+		return null;
+	}
+	if (!isExtensionOn || settings.disablehost) {
+		return router.makeError(request, "CONTROL_UNAVAILABLE", "Social Stream remote control is disabled.");
+	}
+
+	const action = router.normalizeAction(request.action);
+	if (action === "sendChat") {
+		if (typeof request.value !== "string" || !request.value.trim()) {
+			return router.makeError(request, "INVALID_VALUE", "A non-empty chat message is required.");
+		}
+		if (request.value.length > 2000) {
+			return router.makeError(request, "PAYLOAD_TOO_LARGE", "Chat messages are limited to 2000 characters.");
+		}
+		const outgoingMessage = {
+			response: request.value,
+			outgoingOrigin: "host"
+		};
+		if (request.target && request.target !== "null") {
+			outgoingMessage.destination = request.target;
+		}
+		const requestedTabId = "tabId" in request ? request.tabId : request.tid;
+		const normalizedTabId = normalizeRelayTabId(requestedTabId);
+		if (normalizedTabId !== null) {
+			outgoingMessage.tid = normalizedTabId;
+		}
+		const accepted = await sendMessageToTabs(outgoingMessage, false, null, false, false, false);
+		if (!accepted) {
+			return router.makeError(request, "TARGET_UNAVAILABLE", "No writable capture source accepted the chat message.");
+		}
+		return router.makeResponse(
+			request,
+			{
+				accepted: true,
+				action: action,
+				destination: outgoingMessage.destination || null
+			},
+			"accepted"
+		);
+	}
+
+	if (isStreamDeckTimerAction(action)) {
+		if (action === "resettimer" && !isStreamDeckResetConfirmed(request.value)) {
+			return router.makeError(request, "CONFIRMATION_REQUIRED", "Timer reset requires value.confirm=true.");
+		}
+		if (action !== "gettimerstate") {
+			applyTimerAction(action, request.value);
+			initializeTimer();
+		}
+		return router.makeResponse(request, {
+			action: action,
+			timer: exportTimerState()
+		});
+	}
+
+	return router.makeError(request, "UNSUPPORTED_ACTION", "The requested Social Stream action is not part of the Phase 1 contract.");
+}
+
+async function routeStreamDeckRemoteRequest(request, context) {
 	const router = getStreamDeckRemoteControlRouter();
 	if (!router || !request || typeof request !== "object") {
 		return null;
 	}
+	context = context || {};
+	if (router.isVersionedRequest(request) && typeof router.validateVersionedRequest === "function") {
+		const validation = router.validateVersionedRequest(request);
+		if (!validation.ok) {
+			return {
+				kind: "command",
+				result: router.makeError(request, validation.code || "INVALID_REQUEST", validation.message || "The remote-control request is invalid.")
+			};
+		}
+	}
 	if (router.isCapabilityRequest(request)) {
+		const capabilities = await getStreamDeckCapabilities();
 		return {
 			kind: "capabilities",
-			result: await getStreamDeckCapabilities()
+			result: router.isVersionedRequest(request) && request.get ? router.makeResponse(request, capabilities) : capabilities
 		};
 	}
 	if (router.isSsappRequest(request)) {
@@ -9842,11 +10068,49 @@ async function routeStreamDeckRemoteRequest(request) {
 			result: await handleStreamDeckSsappRequest(request)
 		};
 	}
+	if (router.isVersionedRequest(request) && router.isRemoteSsnRequest(request, "background")) {
+		return {
+			kind: "command",
+			result: await handleStreamDeckBackgroundRequest(request)
+		};
+	}
+	if (router.isVersionedRequest(request) && router.isRemoteSsnRequest(request, "dock")) {
+		if (context.transport === "websocket") {
+			// A server-connected Dock is the authoritative owner and answers the
+			// control client's channel-1 request directly on channel 2.
+			return { kind: "deferred" };
+		}
+		if (context.transport === "webrtc" && context.UUID) {
+			const registration = registerPendingStreamDeckDockRequest(request, context.UUID);
+			if (!registration || registration.ok !== true) {
+				return {
+					kind: "command",
+					result: router.makeError(
+						request,
+						(registration && registration.code) || "CONTROL_UNAVAILABLE",
+						(registration && registration.message) || "The Dock command could not be queued."
+					)
+				};
+			}
+			if (registration.duplicate) {
+				return { kind: "deferred" };
+			}
+			const sent = await sendStreamDeckDockRequestP2P(request, context.UUID);
+			if (!sent) {
+				clearPendingStreamDeckDockRequest(String(request.get || ""));
+				return {
+					kind: "command",
+					result: router.makeError(request, "TARGET_UNAVAILABLE", "No connected default Dock page is available.")
+				};
+			}
+			return { kind: "deferred" };
+		}
+	}
 	return null;
 }
 
 function sendStreamDeckPeerResult(request, routed, UUID) {
-	if (!routed || !UUID) {
+	if (!routed || routed.kind === "deferred" || !UUID) {
 		return false;
 	}
 	const packet = routed.kind === "capabilities" && !request.get
@@ -9949,8 +10213,14 @@ function setupSocket() {
 				data.target = "";
 			}
 
-			const streamDeckRoute = await routeStreamDeckRemoteRequest(data);
+			const streamDeckRoute = await routeStreamDeckRemoteRequest(data, {
+				transport: "websocket",
+				socket: socketserver
+			});
 			if (streamDeckRoute) {
+				if (streamDeckRoute.kind === "deferred") {
+					return;
+				}
 				if (streamDeckRoute.kind === "capabilities" && !data.get) {
 					if (socketserver && socketserver.readyState === WebSocket.OPEN) {
 						socketserver.send(JSON.stringify(streamDeckRoute.result));
@@ -13719,6 +13989,9 @@ async function processEventFlowBridgeEvent(value) {
 
 async function processIncomingRequest(request, UUID = false) {
 	// from the dock or chat bot, etc.
+	if (handleStreamDeckDockCallback(request)) {
+		return true;
+	}
 	if (request && request.action === "requestViewerCount") {
 		refreshTemporaryViewerCount(request.value && request.value.ttl);
 		return;
@@ -13737,9 +14010,14 @@ async function processIncomingRequest(request, UUID = false) {
 	// WebRTC SDK and iframe traffic enters here, while server mode enters setupSocket().
 	// Route both through the same SSApp command implementation and answer the originating
 	// peer using the existing Social Stream P2P transport.
-	const streamDeckRoute = await routeStreamDeckRemoteRequest(request);
+	const streamDeckRoute = await routeStreamDeckRemoteRequest(request, {
+		transport: "webrtc",
+		UUID: UUID
+	});
 	if (streamDeckRoute) {
-		sendStreamDeckPeerResult(request, streamDeckRoute, UUID);
+		if (streamDeckRoute.kind !== "deferred") {
+			sendStreamDeckPeerResult(request, streamDeckRoute, UUID);
+		}
 		return streamDeckRoute.result;
 	}
 

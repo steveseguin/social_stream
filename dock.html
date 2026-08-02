@@ -5098,6 +5098,74 @@
 			
 			var conCon = 1;
 			var socketserver = false;
+			var remoteControlDockResultCache = new Map();
+			var remoteControlDockActions = {
+				nextInQueue: true,
+				clearOverlay: true,
+				nextPinned: true,
+				getQueueSize: true
+			};
+
+			function isVersionedRemoteControlRequest(data) {
+				if (!data || typeof data !== "object") return false;
+				var version = Number(data.protocolVersion !== undefined ? data.protocolVersion : data.protocol);
+				return isFinite(version) && version >= 2;
+			}
+
+			function pruneRemoteControlDockResults(now) {
+				remoteControlDockResultCache.forEach(function (entry, key) {
+					if (!entry || now - entry.createdAt > 15000) {
+						remoteControlDockResultCache.delete(key);
+					}
+				});
+			}
+
+			function makeRemoteControlDockResult(data, rawResult) {
+				if (rawResult && typeof rawResult === "object" && !Array.isArray(rawResult) && typeof rawResult.ok === "boolean") {
+					return rawResult;
+				}
+				if (rawResult === false || rawResult === null || rawResult === undefined) {
+					return {
+						ok: false,
+						status: "failed",
+						request: data.get || null,
+						error: {
+							code: "TARGET_UNAVAILABLE",
+							message: "The default Dock could not complete the command."
+						}
+					};
+				}
+				return {
+					ok: true,
+					status: "completed",
+					request: data.get || null,
+					payload: typeof rawResult === "object" ? rawResult : { value: rawResult }
+				};
+			}
+
+			function executeRemoteControlDockRequest(data) {
+				if (!isVersionedRemoteControlRequest(data)) {
+					return { skip: false, result: processInput(data) };
+				}
+				if (!data.action || !remoteControlDockActions[data.action]) {
+					return { skip: true, result: null };
+				}
+				if (thisLabel) {
+					return { skip: true, result: null };
+				}
+				var key = data.get ? String(data.get) : "";
+				var now = Date.now();
+				pruneRemoteControlDockResults(now);
+				if (key && remoteControlDockResultCache.has(key)) {
+					return { skip: false, result: remoteControlDockResultCache.get(key).result };
+				}
+				var result = makeRemoteControlDockResult(data, processInput(data));
+				if (key) {
+					remoteControlDockResultCache.set(key, { createdAt: now, result: result });
+				}
+				return { skip: false, result: result };
+			}
+
 			var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/api";
 			var reconnectionTimeout = null;
 			function setupSocket() {
@@ -5144,7 +5212,11 @@
 						} catch (e) {
 							return;
 						}
-						resp = processInput(data);
+						var remoteExecution = executeRemoteControlDockRequest(data);
+						if (remoteExecution.skip) {
+							return;
+						}
+						resp = remoteExecution.result;
 						//console.log(resp);
 						if (resp !== null) {
 							if (data.get) {
@@ -7672,7 +7744,10 @@
 						if (pinned){
 							selectedMessage(false,pinned);
 						}
-						return true;
+						return isVersionedRemoteControlRequest(data) ? {
+							featured: !!pinned,
+							messageId: pinned && pinned.dataset ? pinned.dataset.mid || null : null
+						} : true;
 					} catch (e) {}
 				} else if ("nextPinned" in data){
 					// selectedMessage
@@ -7681,7 +7756,10 @@
 						if (pinned){
 							selectedMessage(false,pinned);
 						}
-						return true;
+						return isVersionedRemoteControlRequest(data) ? {
+							featured: !!pinned,
+							messageId: pinned && pinned.dataset ? pinned.dataset.mid || null : null
+						} : true;
 					} catch (e) {}
 				} else if ("deleteMessage" in data) {
 					// delete by message ID; likely another dock is syncing their delete with me
@@ -8399,17 +8477,20 @@
 					} else if (data.action == "clearOverlay") {
 						// or just send data=false
 						sendDataP2P(false);
-						return true;
+						return isVersionedRemoteControlRequest(data) ? { cleared: true } : true;
 					} else if (data.action == "clearBotOverlay") {
 						sendDataP2P({ action: "clearBotOverlay", target: "bot" });
 						return true;
 					} else if (data.action == "nextInQueue") {
+						var hadQueuedMessage = selectedQueue.length > 0;
 						nextInQueue();
-						return true;
+						return isVersionedRemoteControlRequest(data) ? {
+							featured: hadQueuedMessage,
+							queueLength: selectedQueue.length
+						} : true;
 					} else if (data.action == "getQueueSize") {
-						// or just send data=false
 						updateQueueButton();
-						return true;
+						return isVersionedRemoteControlRequest(data) ? { queueLength: selectedQueue.length } : true;
 					} else if (data.action == "autoShow") {
 						// or just send data=false
 						if (data.value == "toggle") {
@@ -8738,8 +8819,17 @@
 					if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
 						// raw data
 						if ("overlayNinja" in e.data.dataReceived) {
-							if (!isDuplicateTransportDelivery(e.data.dataReceived.overlayNinja)) {
-								processInput(e.data.dataReceived.overlayNinja);
+							var remotePayload = e.data.dataReceived.overlayNinja;
+							if (!isDuplicateTransportDelivery(remotePayload)) {
+								var remoteExecution = executeRemoteControlDockRequest(remotePayload);
+								if (!remoteExecution.skip && isVersionedRemoteControlRequest(remotePayload) && remotePayload.get) {
+									send2Extension(
+										{ callback: { get: remotePayload.get, result: remoteExecution.result } },
+										e.data.UUID || null,
+										true,
+										true
+									);
+								}
 							}
 						}
 					}
@@ -12447,12 +12537,12 @@
 				send2Extension({ action: "requestViewerCount", value: { ttl: viewerCountRequestTtl } }, uid || null, true);
 			}
 
-			function send2Extension(data, uid = null, force) {
+			function send2Extension(data, uid = null, force, preferP2P = false) {
 				if (!force && (blockMessageSelecting || blockMessageSelecting3)) {
 					return;
 				}
 
-				if (socketserverExtension && server3) {
+				if (!preferP2P && socketserverExtension && server3) {
 					try {
 						if (data.out){
 							delete data.out;
