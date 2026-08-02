@@ -5,6 +5,8 @@ const vm = require("vm");
 const SocialStreamLocalServer = require("../js/local-server-url.js");
 
 const popupSource = fs.readFileSync(path.resolve(__dirname, "..", "popup.js"), "utf8");
+const popupHtml = fs.readFileSync(path.resolve(__dirname, "..", "popup.html"), "utf8");
+const backgroundSource = fs.readFileSync(path.resolve(__dirname, "..", "background.js"), "utf8");
 const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, "..", "manifest.json"), "utf8"));
 
 assert.strictEqual(SocialStreamLocalServer.getPort(new URLSearchParams()), 3000);
@@ -40,6 +42,12 @@ function loadFunctions(names, context) {
   const exports = names.map((name) => `${name}: ${name}`).join(",");
   vm.runInContext(`${names.map(extractFunction).join("\n")}\nthis.testExports = {${exports}};`, sandbox);
   return { sandbox, functions: sandbox.testExports };
+}
+
+for (const retiredSource of ['trovo', 'dlive']) {
+  assert.ok(!popupHtml.includes(`id="${retiredSource}_username"`), `${retiredSource} quick-open input is still present`);
+  assert.ok(!popupHtml.includes(`data-action="openchat" data-value="${retiredSource}"`), `${retiredSource} quick-open button is still present`);
+  assert.ok(!backgroundSource.includes(`target == "${retiredSource}"`), `${retiredSource} quick-open handler is still present`);
 }
 
 {
@@ -432,7 +440,6 @@ function loadFunctions(names, context) {
   assert.ok(saved.some((message) => message.setting === "font" && message.value === ""));
 }
 
-const popupHtml = fs.readFileSync(path.resolve(__dirname, "..", "popup.html"), "utf8");
 assert.ok(popupHtml.includes('data-edit-link="dock"'));
 assert.ok(popupHtml.includes('id="dock-edit-status"'));
 assert.ok(popupSource.includes('input.value = currentLinkElement && currentLinkElement.raw ? currentLinkElement.raw : "";'));
