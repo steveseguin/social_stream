@@ -30,6 +30,7 @@ Messages scroll from right to left in a single row with smooth infinite scrollin
 -->
 <html lang="en">
 <head>
+  <script type="text/javascript" src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horizontal Chat Overlay</title>
@@ -564,7 +565,7 @@ body, html {
     
     var conCon = 1;
     var socketserver = false;
-    var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+    var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja";
 
     function setupSocket(){
         socketserver.onclose = function (){

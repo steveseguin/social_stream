@@ -4,6 +4,8 @@ The API allows real-time, bidirectional communication between your application a
 
 There is an easy to use sandbox to play with some of the common API commands and options [over here](sampleapi.html).
 
+Capability-driven control clients should use the versioned [Social Stream Remote-Control Protocol](docs/remote-control-protocol.md). The legacy commands documented below remain supported.
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**

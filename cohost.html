@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 	<head>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Co-host /w Vision & Voice - Social Stream Ninja</title>
@@ -2524,9 +2525,9 @@
 				cohostLiveChatConnected = false;
 			}
 			function getCohostLiveChatSocketUrl() {
-				if (cohostOverlayParams.has("server")) return cohostOverlayParams.get("server") || (cohostOverlayParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja");
-				if (cohostOverlayParams.has("server2") || cohostOverlayParams.has("server3")) return cohostOverlayParams.get("server2") || cohostOverlayParams.get("server3") || (cohostOverlayParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/extension");
-				if (cohostOverlayParams.has("localserver")) return "ws://127.0.0.1:3000";
+				if (cohostOverlayParams.has("server")) return cohostOverlayParams.get("server") || (cohostOverlayParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja");
+				if (cohostOverlayParams.has("server2") || cohostOverlayParams.has("server3")) return cohostOverlayParams.get("server2") || cohostOverlayParams.get("server3") || (cohostOverlayParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/extension");
+				if (cohostOverlayParams.has("localserver")) return SocialStreamLocalServer.getWebSocketUrl();
 				return "";
 			}
 			function startCohostLiveChatSocket(room) {

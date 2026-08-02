@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tip Jar Overlay - Social Stream Ninja</title>
@@ -2180,7 +2181,7 @@
             socketserver.onclose = function() {
                 setTimeout(function() {
                     conCon += 1;
-                    const finalServerURL = useLocalServer ? "ws://127.0.0.1:3000" : (serverURL || "wss://io.socialstream.ninja");
+                    const finalServerURL = useLocalServer ? SocialStreamLocalServer.getWebSocketUrl() : (serverURL || "wss://io.socialstream.ninja");
                     socketserver = new WebSocket(finalServerURL);
                     setupSocket();
                 }, 100 * conCon);
@@ -2220,7 +2221,7 @@
         
         // Initialize socket server if enabled
         if (serverURL || useLocalServer) {
-            const finalServerURL = useLocalServer ? "ws://127.0.0.1:3000" : (serverURL || "wss://io.socialstream.ninja");
+            const finalServerURL = useLocalServer ? SocialStreamLocalServer.getWebSocketUrl() : (serverURL || "wss://io.socialstream.ninja");
             socketserver = new WebSocket(finalServerURL);
             setupSocket();
         }

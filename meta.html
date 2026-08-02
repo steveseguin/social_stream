@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
     <!--
         ================================================================================
         META OVERLAY CONTEXT FOR FUTURE CONTRIBUTORS / AI AGENTS
@@ -1729,7 +1730,7 @@
                 if (!roomId) return;
 
                 if (urlParams.has("server")) {
-                    var apiServerURL = urlParams.get("server") || (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api");
+                    var apiServerURL = urlParams.get("server") || (urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/api");
                     connectSocket(apiServerURL, roomId, 2, 1);
                 }
 

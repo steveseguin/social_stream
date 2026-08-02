@@ -452,7 +452,7 @@
                 <li><a href="#voice-cloning">How Voice Cloning Works</a></li>
                 <li><a href="#hardware">Computer Requirements</a></li>
                 <li><a href="#kokoro-fastapi">Kokoro-FastAPI Setup</a></li>
-                <li><a href="#openedai">openedai-speech Setup</a></li>
+                <li><a href="#openedai">openedai-speech / XTTS-v2 Setup</a></li>
                 <li><a href="#bridge">Local TTS Bridge</a></li>
                 <li><a href="#tested-servers">Tested Server Notes</a></li>
                 <li><a href="#connect">Connecting to Social Stream</a></li>
@@ -840,6 +840,10 @@ British male:   bm_george, bm_lewis</div>
                 <strong>Use consented voices only.</strong> Voice cloning can sound like a real person, so only use voices you own, have permission to use, or have clearly licensed for this purpose.
             </div>
 
+            <div class="warning">
+                <strong>XTTS-v2 is non-commercial by default.</strong> The <a href="https://huggingface.co/coqui/XTTS-v2/blob/main/LICENSE.txt" target="_blank">Coqui Public Model License</a> allows only non-commercial use of the model and its outputs. A monetized stream may not qualify, so verify the license or obtain separate permission before using XTTS-v2 commercially.
+            </div>
+
             <p>For 6 GB VRAM or less, target small zero-shot cloning models and OpenAI-compatible servers first. Bigger models can still work through the same SSN endpoint if the user hosts them elsewhere.</p>
 
             <div class="link-row">
@@ -1077,9 +1081,16 @@ bm_george, bm_lewis                              (British male)</div>
         </div>
 
         <!-- OPENEDAI-SPEECH -->
-        <h2 id="openedai">openedai-speech Setup (Lightweight Piper)</h2>
+        <h2 id="openedai">openedai-speech Setup (Piper and XTTS-v2)</h2>
         <div class="card">
-            <p><a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a> is the lightest option — a CPU-only Piper TTS server under 1 GB. Good for older or less powerful computers.</p>
+            <p><a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a> exposes the OpenAI-compatible <code>/v1/audio/speech</code> endpoint that Social Stream needs. Its small image runs Piper on the CPU; its full image can run XTTS-v2 voice cloning on a supported GPU.</p>
+
+            <div class="warning">
+                <strong>Archived project:</strong> openedai-speech was archived in January 2026 and describes itself as mostly obsolete. It remains a useful compatibility example, but it is no longer maintained. Keep it local, and do not expose its unauthenticated port to the public Internet.
+            </div>
+
+            <h3>Option A: Lightweight Piper</h3>
+            <p>Use this option for a CPU-only TTS server under 1 GB. It does not include XTTS-v2 or voice cloning.</p>
 
             <h3>Install with Docker Compose</h3>
 
@@ -1110,6 +1121,53 @@ $env:Path = "$PWD\.venv\Scripts;$env:Path"
 
             <h3>SSN URL</h3>
             <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=openai&openaiendpoint=http://localhost:8000/v1/audio/speech&voiceopenai=nova</div>
+
+            <h3>Option B: XTTS-v2 Voice Cloning</h3>
+            <p>XTTS-v2 itself is a model, not a web API. Use the full openedai-speech server to load the model, select a saved reference voice, accept chat text from SSN, and return playable audio. The server reports a practical target of about 4 GB of GPU VRAM; CPU inference is possible but slow.</p>
+
+            <div class="warning">
+                <strong>Do not use <code>openedai-speech-min</code> for XTTS-v2.</strong> The minimal image is Piper-only. XTTS-v2 requires the full installation and <code>model=tts-1-hd</code> in each speech request.
+            </div>
+
+            <div class="step">
+                <span class="step-number">1</span>
+                <div class="step-content">Clone the archived server, create its environment file, and start the full GPU-enabled Docker Compose setup:</div>
+            </div>
+            <div class="code">git clone https://github.com/matatonic/openedai-speech.git
+cd openedai-speech
+Copy-Item sample.env speech.env
+docker compose up -d</div>
+            <p class="tiny-note">On macOS or Linux, use <code>cp sample.env speech.env</code> instead of <code>Copy-Item</code>. Docker must have access to a supported GPU. The model downloads on first use.</p>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                <div class="step-content">Prepare a clean, consented reference clip. A mono 22050 Hz WAV between 6 and 30 seconds is a good starting point:</div>
+            </div>
+            <div class="code">ffmpeg -i input.mp3 -ac 1 -ar 22050 -t 6 -y voices/me.wav</div>
+
+            <div class="step">
+                <span class="step-number">3</span>
+                <div class="step-content">Add the cloned voice beneath the existing <code>tts-1-hd</code> section in <code>config/voice_to_speaker.yaml</code>:</div>
+            </div>
+            <div class="code">tts-1-hd:
+  me:
+    model: xtts
+    speaker: voices/me.wav
+    language: en</div>
+            <p class="tiny-note">Keep any existing voices already listed under <code>tts-1-hd</code>. Change <code>me</code> to the voice name you want SSN to send, and use the correct XTTS language code when needed.</p>
+
+            <div class="step">
+                <span class="step-number">4</span>
+                <div class="step-content">Restart the server, then point the SSN dock or featured overlay at it:</div>
+            </div>
+            <div class="code">docker compose restart</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8000/v1/audio/speech&openaimodel=tts-1-hd&voiceopenai=me&openaiformat=wav</div>
+
+            <div class="info">
+                <strong><code>openaimodel=tts-1-hd</code> is required for XTTS-v2.</strong> If it is omitted, Social Stream sends its default <code>tts-1</code>, and openedai-speech selects Piper instead. The <code>voiceopenai</code> value must match the cloned voice name in <code>voice_to_speaker.yaml</code>.
+            </div>
+
+            <p>If the browser or OBS blocks the direct request, run the <a href="#bridge">Local TTS Bridge</a> on the OBS computer and keep the same model and voice parameters while changing <code>openaiendpoint</code> to <code>http://127.0.0.1:8124/v1/audio/speech</code>.</p>
         </div>
 
         <!-- LOCAL TTS BRIDGE -->

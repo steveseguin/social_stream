@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Social Stream API Sandbox</title>
@@ -518,7 +519,7 @@
             const channelIn = channelInInput ? parseInt(channelInInput) : 
                              (parseInt(urlParams.get('channelin')) || 2);
             
-            socket = new WebSocket(urlParams.has("localserver") ? "ws://127.0.0.1:3000" : 'wss://io.socialstream.ninja:443');
+            socket = new WebSocket(urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : 'wss://io.socialstream.ninja:443');
             socket.onopen = function() {
                 socket.send(JSON.stringify({
                     join: sessionID,
@@ -730,7 +731,7 @@
 		}
 
 		function sendRawPayloadToChannel(currentSessionID, payload, channel, container) {
-			const wsUrl = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : 'wss://io.socialstream.ninja:443';
+			const wsUrl = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : 'wss://io.socialstream.ninja:443';
 			const tempSocket = new WebSocket(wsUrl);
 			let completed = false;
 			const timeout = setTimeout(function() {

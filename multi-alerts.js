@@ -1667,12 +1667,12 @@ function readSettings() {
     normalizeText(urlParams.get('server')) ||
     normalizeText(urlParams.get('server2')) ||
     normalizeText(urlParams.get('server3'));
-  let serverURL = hasLocalServer ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja';
+  let serverURL = hasLocalServer ? SocialStreamLocalServer.getWebSocketUrl() : 'wss://io.socialstream.ninja';
 
   if (hasServer) {
-    serverURL = remoteServerUrl || (hasLocalServer ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja/api');
+    serverURL = remoteServerUrl || (hasLocalServer ? SocialStreamLocalServer.getWebSocketUrl() : 'wss://io.socialstream.ninja/api');
   } else if (hasServer2 || hasServer3) {
-    serverURL = remoteServerUrl || (hasLocalServer ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja/extension');
+    serverURL = remoteServerUrl || (hasLocalServer ? SocialStreamLocalServer.getWebSocketUrl() : 'wss://io.socialstream.ninja/extension');
   }
 
   const queueEnabled = urlParams.has('queue')

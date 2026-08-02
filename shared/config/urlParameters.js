@@ -2543,6 +2543,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Uses local WebSocket server"
+          },
+          {
+            "key": "localserverport",
+            "displayName": "localserverport",
+            "aliases": [
+              "localserverport"
+            ],
+            "values": "integer (1024-65535)",
+            "description": "Overrides the local WebSocket server port (default: 3000)"
           }
         ]
       },

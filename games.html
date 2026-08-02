@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spam Power - Social Stream Ninja</title>
@@ -650,7 +651,7 @@
         
         // Handle WebSocket connection if server parameters are provided
         if (urlParams.has('server')) {
-            const serverURL = urlParams.get('server') || (urlParams.has('localserver') ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja');
+            const serverURL = urlParams.get('server') || (urlParams.has('localserver') ? SocialStreamLocalServer.getWebSocketUrl() : 'wss://io.socialstream.ninja');
             const socketserver = new WebSocket(serverURL);
             socketserver.onopen = function() {
                 socketserver.send(JSON.stringify({ join: sessionId.split(",")[0], out: 2, in: 1 }));

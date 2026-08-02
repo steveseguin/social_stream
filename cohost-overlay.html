@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>AI Stage Overlay - Social Stream Ninja</title>
@@ -1211,13 +1212,13 @@
 
 		function resolveSocketURL() {
 			if (urlParams.has("server")) {
-				return urlParams.get("server") || (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api");
+				return urlParams.get("server") || (urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/api");
 			}
 			if (urlParams.has("server2") || urlParams.has("server3")) {
-				return urlParams.get("server2") || urlParams.get("server3") || (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/extension");
+				return urlParams.get("server2") || urlParams.get("server3") || (urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/extension");
 			}
 			if (urlParams.has("localserver")) {
-				return "ws://127.0.0.1:3000";
+				return SocialStreamLocalServer.getWebSocketUrl();
 			}
 			return "";
 		}

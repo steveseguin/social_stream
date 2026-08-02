@@ -3097,6 +3097,17 @@ function getPopupVersionParam() {
   return "";
 }
 
+function getLocalServerConnectionParams(params = urlParams) {
+  if (!params || !params.has("localserver")) return "";
+
+  let result = "&localserver";
+  const explicitPort = SocialStreamLocalServer.getExplicitPort(params);
+  if (explicitPort !== null) {
+    result += "&localserverport=" + explicitPort;
+  }
+  return result;
+}
+
 function getAiOverlayControlValue(id, fallback = "") {
   const ele = document.getElementById(id);
   if (!ele) return fallback;
@@ -3112,9 +3123,7 @@ function getAiOverlayPasswordParam(response) {
   if (response && response.password) {
     password = "&password=" + encodeURIComponent(response.password);
   }
-  if (urlParams.has("localserver")) {
-    password += "&localserver";
-  }
+  password += getLocalServerConnectionParams();
   return password;
 }
 
@@ -3628,7 +3637,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     const currentUrl = new URL(window.location.href);
     
     // List of parameters to ignore (TTS-related and standard ones)
-    const ignoreParams = ['session', 'password', 'localserver'];
+    const ignoreParams = ['session', 'password', 'localserver', 'localserverport'];
   const ttsRelatedParams = [
     'ttsprovider', 'lang', 'voice', 'rate', 'pitch',
     'elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency', 'elevenstability', 
@@ -3738,7 +3747,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
 }
 
 const FEATURED_CONNECTION_PARAM_NAMES = [
-	'session', 'password', 'v', 'ln', 'server', 'server2', 'server3', 'localserver'
+	'session', 'password', 'v', 'ln', 'server', 'server2', 'server3', 'localserver', 'localserverport'
 ];
 
 function appendMissingGeneratedParams(targetParams, rawUrl, paramNames) {
@@ -3800,6 +3809,10 @@ function getFeaturedConnectionParams(rawUrl) {
 	}
 	if (!params.has('localserver') && urlParams.has('localserver')) {
 		params.set('localserver', '');
+	}
+	if (params.has('localserver') && !params.has('localserverport')) {
+		const explicitPort = SocialStreamLocalServer.getExplicitPort(urlParams);
+		if (explicitPort !== null) params.set('localserverport', String(explicitPort));
 	}
 
 	return params;
@@ -4358,7 +4371,7 @@ function update(response, sync = true) {
                 password = "&password=" + encodeURIComponent(response.password);
             }
 
-            var localServer = urlParams.has("localserver") ? "&localserver" : "";
+            var localServer = getLocalServerConnectionParams();
             password += localServer;
 
             // Determine hideLinks status initially

@@ -29,7 +29,7 @@ URL PARAMETERS:
   ultra             super dense rows, smaller icons/media
   reverse           newest messages at top instead of bottom
   server / server2  connect via WebSocket instead of (or in addition to) WebRTC
-  localserver       use ws://127.0.0.1:3000
+  localserver       use ws://127.0.0.1:3000 (override with localserverport=PORT)
   deleteonlylast    delete commands only remove the most recent match
   fadezone=PX       distance from the edge where messages start fading (default 120)
 
@@ -37,6 +37,7 @@ Keep this file Chrome-80 friendly: no <script type="module">, no top-level impor
 -->
 <html lang="en">
 <head>
+  <script type="text/javascript" src="../js/local-server-url.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Compact Clean Chat Overlay</title>
@@ -737,7 +738,7 @@ body.ultra .content-img {
     // --- optional WebSocket ---
     var conCon = 1;
     var socketserver = false;
-    var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+    var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja";
     function setupSocket() {
         socketserver.onclose = function () {
             setTimeout(function () { conCon += 1; socketserver = new WebSocket(serverURL); setupSocket(); }, 100 * conCon);

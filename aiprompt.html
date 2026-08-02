@@ -2318,7 +2318,7 @@ If the user asks a question that does not require a file change, answer normally
 			if (bridgeRoomID) params.push("session=" + encodeURIComponent(bridgeRoomID));
 			if (bridgePassword && bridgePassword !== "false") params.push("password=" + encodeURIComponent(bridgePassword));
 			if (urlParams.get("v")) params.push("v=" + encodeURIComponent(urlParams.get("v")));
-			["server", "server2", "server3", "localserver"].forEach(function (key) {
+			["server", "server2", "server3", "localserver", "localserverport"].forEach(function (key) {
 				if (!urlParams.has(key)) return;
 				var value = urlParams.get(key);
 				params.push(value ? (key + "=" + encodeURIComponent(value)) : key);

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script type="text/javascript" src="../../js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Overlay</title>
@@ -405,7 +406,7 @@ body.gaming .message-container { text-shadow: 0 0 6px rgba(0,200,255,0.55), 0 0 
 	var conCon = 1;
 	var socketserver = false;
 	// localserver mode can be used via the stand-alone app; file-> enable local server, or use the publicly hosted one.
-	var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+	var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja";
 
 	function setupSocket(){
 		socketserver.onclose = function (){

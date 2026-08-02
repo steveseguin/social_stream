@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>AI Overlay</title>
@@ -252,7 +253,7 @@
 			var socketRoomID = (roomID || "").split(",")[0];
 			if (!socketRoomID) return;
 			if (params.has("server")) {
-				var apiServerURL = params.get("server") || (params.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api");
+				var apiServerURL = params.get("server") || (params.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/api");
 				connectSocket(apiServerURL, socketRoomID, 2, 1);
 			}
 			if (params.has("server2") || params.has("server3")) {

@@ -30,6 +30,12 @@ this.TWITCH_CHAT_EVENTS = TWITCH_CHAT_EVENTS;`;
 class FakeTmiClient {
   constructor() {
     this.handlers = new Map();
+    this.userstate = {
+      '#socialstream': {
+        username: 'socialstream',
+        'display-name': 'Social Stream'
+      }
+    };
   }
 
   on(event, handler) {
@@ -103,6 +109,14 @@ async function run() {
   });
 
   await chatClient.connect();
+
+  const userState = chatClient.getUserState('socialstream');
+  assert(userState['display-name'] === 'Social Stream', 'Twitch user state was not exposed');
+  userState['display-name'] = 'Changed';
+  assert(
+    fakeClient.userstate['#socialstream']['display-name'] === 'Social Stream',
+    'Twitch user state should be returned as a copy'
+  );
 
   fakeClient.emit(
     'subgift',

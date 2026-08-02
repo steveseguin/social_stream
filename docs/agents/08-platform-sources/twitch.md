@@ -117,6 +117,7 @@ Support implication: app sign-in failures can be simple loopback port conflicts,
 
 - `chat:read`
 - `chat:edit`
+- `user:write:chat`
 - `bits:read`
 - `moderator:read:followers`
 - `channel:read:subscriptions`
