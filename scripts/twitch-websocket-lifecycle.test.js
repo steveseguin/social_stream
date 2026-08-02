@@ -329,6 +329,39 @@ async function run() {
     assert.strictEqual(sentChatResult.message.chatmessage, 'sent through SSN');
     assert.strictEqual(sentChatResult.tmiSayCalls, 0, 'SSN sent Twitch chat through IRC instead of Helix');
 
+    const unicodeBoundaryMessage = 'a'.repeat(499) + '😀';
+    const unicodeBoundaryStart = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
+    await page.fill('#input-text', unicodeBoundaryMessage);
+    await page.click('#sendmessage');
+    await page.waitForFunction(
+      (minimum) => window.__twitchHarness.chatSendRequests.length >= minimum,
+      unicodeBoundaryStart + 1
+    );
+    await page.waitForTimeout(500);
+    assert.deepStrictEqual(
+      await page.evaluate((start) => (
+        window.__twitchHarness.chatSendRequests.slice(start).map((request) => request.message)
+      ), unicodeBoundaryStart),
+      [unicodeBoundaryMessage],
+      'A valid 500-character Twitch message was split at an emoji boundary'
+    );
+
+    const overLimitMessage = 'b'.repeat(500) + '😀';
+    const overLimitStart = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
+    await page.fill('#input-text', overLimitMessage);
+    await page.click('#sendmessage');
+    await page.waitForFunction(
+      (minimum) => window.__twitchHarness.chatSendRequests.length >= minimum,
+      overLimitStart + 2
+    );
+    assert.deepStrictEqual(
+      await page.evaluate((start) => (
+        window.__twitchHarness.chatSendRequests.slice(start).map((request) => request.message)
+      ), overLimitStart),
+      ['b'.repeat(500), '😀'],
+      'Twitch message splitting corrupted the emoji after the 500-character boundary'
+    );
+
     await page.evaluate(() => {
       window.__twitchHarness.tmiClients[0].emit(
         'messagedeleted',

@@ -2327,17 +2327,17 @@ async function ensureChatClientInstance() {
 
 	function splitTwitchChatMessage(message, maxLength = 500) {
 		const chunks = [];
-		let remaining = String(message || '');
+		let remaining = Array.from(String(message || ''));
 		while (remaining.length > maxLength) {
 			let splitAt = remaining.slice(0, maxLength).lastIndexOf(' ');
 			if (splitAt <= 0) {
 				splitAt = maxLength;
 			}
-			chunks.push(remaining.slice(0, splitAt));
-			remaining = remaining.slice(splitAt);
+			chunks.push(remaining.slice(0, splitAt).join(''));
+			remaining = remaining.slice(splitAt + (remaining[splitAt] === ' ' ? 1 : 0));
 		}
-		if (remaining) {
-			chunks.push(remaining);
+		if (remaining.length) {
+			chunks.push(remaining.join(''));
 		}
 		return chunks;
 	}
