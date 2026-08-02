@@ -1,0 +1,263 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Alert Banner</title>
+<style>
+  :root {
+    --alert-bg: rgba(0, 0, 0, 0.85);
+    --alert-border: #fff;
+    --text-color: #fff;
+    --accent-follow: #00ff9d;
+    --accent-sub: #9d00ff;
+    --accent-gift: #ff009d;
+    --accent-donate: #ffcc00;
+    --accent-raid: #00ccff;
+    --font-stack: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --anim-duration: 0.5s;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--font-stack);
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Align to bottom */
+    align-items: center;
+    padding-bottom: 50px;
+  }
+
+  #alert-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none; /* Let clicks pass through to OBS */
+  }
+
+  .alert-card {
+    background: var(--alert-bg);
+    border: 2px solid var(--alert-border);
+    border-radius: 12px;
+    padding: 15px 30px;
+    margin-bottom: 10px;
+    color: var(--text-color);
+    font-size: 24px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+    animation: slideIn var(--anim-duration) forwards ease-out;
+    position: relative;
+    overflow: hidden;
+    max-width: 800px;
+    width: fit-content;
+    text-align: center;
+  }
+
+  /* Accent borders based on type */
+  .alert-card[data-type="new_follower"] { border-color: var(--accent-follow); }
+  .alert-card[data-type="subscriber"] { border-color: var(--accent-sub); }
+  .alert-card[data-type="subscription_gift"] { border-color: var(--accent-gift); }
+  .alert-card[data-type="gifted"] { border-color: var(--accent-gift); }
+  .alert-card[data-type="donation"] { border-color: var(--accent-donate); }
+  .alert-card[data-type="raid"] { border-color: var(--accent-raid); }
+
+  /* User Name Styling */
+  .alert-name {
+    color: #fff;
+    margin-right: 10px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  }
+
+  /* Message/Detail Styling */
+  .alert-detail {
+    font-weight: normal;
+    font-size: 0.9em;
+    opacity: 0.9;
+  }
+
+  /* Animations */
+  @keyframes slideIn {
+    0% { opacity: 0; transform: translateY(30px) scale(0.9); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes slideOut {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-30px) scale(0.9); }
+  }
+
+  .alert-card.removing {
+    animation: slideOut 0.4s forwards ease-in;
+  }
+
+  /* Avatar Image (Optional) */
+  .alert-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 15px;
+    border: 2px solid #fff;
+    object-fit: cover;
+    display: none; /* Hidden by default, shown if src exists */
+  }
+</style>
+</head>
+<body>
+
+<div id="alert-container"></div>
+
+<script>
+(function () {
+  // --- Bridge Setup ---
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "alert_overlay_" + Date.now();
+  var bridge = document.createElement("iframe");
+  bridge.id = "ssn_bridge";
+  bridge.style.display = "none";
+  document.body.appendChild(bridge);
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  // --- State & Config ---
+  var container = document.getElementById("alert-container");
+  var DISMISS_DELAY = 4000; // 4 seconds
+
+  // --- Helper: Escape HTML ---
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+
+  // --- Helper: Create Alert Element ---
+  function createAlertCard(type, name, detail, avatarUrl) {
+    var card = document.createElement("div");
+    card.className = "alert-card";
+    card.setAttribute("data-type", type);
+
+    // Avatar
+    if (avatarUrl) {
+      var img = document.createElement("img");
+      img.className = "alert-avatar";
+      img.src = avatarUrl;
+      img.onerror = function() { this.style.display = 'none'; };
+      card.appendChild(img);
+    }
+
+    // Name
+    var nameSpan = document.createElement("span");
+    nameSpan.className = "alert-name";
+    nameSpan.textContent = name || "Unknown";
+    card.appendChild(nameSpan);
+
+    // Detail (Message, Amount, Count, etc.)
+    if (detail) {
+      var detailSpan = document.createElement("span");
+      detailSpan.className = "alert-detail";
+      detailSpan.textContent = detail;
+      card.appendChild(detailSpan);
+    }
+
+    return card;
+  }
+
+  // --- Core Handler ---
+  function handlePayload(data) {
+    if (!data) return;
+
+    var type = data.type || "";
+    var event = data.event || "";
+    var name = data.chatname || "";
+    var message = data.chatmessage || "";
+    var donation = data.hasDonation || "";
+    var membership = data.membership || "";
+    var subtitle = data.subtitle || "";
+    var avatar = data.chatimg || "";
+    var alertType = null;
+    var detailText = "";
+
+    // 1. New Follower
+    if (event === "new_follower") {
+      alertType = "new_follower";
+      detailText = "just followed!";
+    }
+    // 2. Subscriber (Resub)
+    else if (event === "subscriber" || event === "resub") {
+      alertType = "subscriber";
+      detailText = membership ? membership + " — " + subtitle : "subscribed!";
+    }
+    // 3. Gifted Sub
+    else if (event === "subscription_gift" || event === "gifted") {
+      alertType = "subscription_gift";
+      // Try to parse count from subtitle or meta
+      var count = subtitle;
+      if (data.meta && data.meta.gift_count) count = data.meta.gift_count;
+      detailText = "gifted " + (count || "a") + " sub(s)!";
+    }
+    // 4. Donation
+    else if (donation) {
+      alertType = "donation";
+      detailText = "donated " + donation;
+      if (message) detailText += " — " + message;
+    }
+    // 5. Raid
+    else if (event === "raid") {
+      alertType = "raid";
+      var viewers = subtitle;
+      if (data.meta && data.meta.viewers) viewers = data.meta.viewers;
+      detailText = "is raiding with " + (viewers || "many") + " viewers!";
+    }
+
+    // If we identified an alert type, render it
+    if (alertType) {
+      var card = createAlertCard(alertType, name, detailText, avatar);
+      container.appendChild(card);
+
+      // Auto-dismiss
+      setTimeout(function () {
+        if (card.parentNode) {
+          card.classList.add("removing");
+          card.addEventListener("animationend", function () {
+            if (card.parentNode) {
+              card.parentNode.removeChild(card);
+            }
+          });
+        }
+      }, DISMISS_DELAY);
+    }
+  }
+
+  // --- Event Listeners ---
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handlePayload(payload);
+    }
+  });
+
+  // Expose for testing
+  window.handleOverlayPayload = handlePayload;
+})();
+</script>
+</body>
+</html>
+```

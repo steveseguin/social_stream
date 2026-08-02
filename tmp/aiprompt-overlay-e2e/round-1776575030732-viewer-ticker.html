@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>SSN — Bottom Bar Overlay</title>
+<style>
+  :root {
+    --bar-bg: rgba(0, 0, 0, 0.7);
+    --bar-radius: 8px;
+    --bar-padding: 10px 20px;
+    --font-family: 'Segoe UI', Arial, sans-serif;
+    --font-size: 14px;
+    --font-weight: 600;
+    --text-color: #ffffff;
+    --text-muted: #aaaaaa;
+    --gap: 16px;
+    --divider-color: rgba(255, 255, 255, 0.15);
+    --total-color: #ffcc00;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: transparent;
+    font-family: var(--font-family);
+    font-size: var(--font-size);
+    font-weight: var(--font-weight);
+    color: var(--text-color);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #bar-container {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bar-bg);
+    border-radius: var(--bar-radius);
+    padding: var(--bar-padding);
+    display: flex;
+    align-items: center;
+    gap: var(--gap);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  #bar-container.visible {
+    opacity: 1;
+  }
+
+  .platform-count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .platform-count .label {
+    color: var(--text-muted);
+    text-transform: capitalize;
+    font-size: 0.85em;
+  }
+
+  .platform-count .count {
+    font-size: 1.1em;
+    min-width: 3ch;
+    text-align: right;
+  }
+
+  .divider {
+    width: 1px;
+    height: 20px;
+    background: var(--divider-color);
+    flex-shrink: 0;
+  }
+
+  .total-count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .total-count .label {
+    color: var(--text-muted);
+    font-size: 0.85em;
+  }
+
+  .total-count .count {
+    color: var(--total-color);
+    font-size: 1.2em;
+    min-width: 4ch;
+    text-align: right;
+  }
+
+  /* Fade-in animation for the bar */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  #bar-container.visible {
+    animation: fadeIn 0.5s ease forwards;
+  }
+</style>
+</head>
+<body>
+
+<!-- VDO.Ninja Bridge -->
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  // --- State ---
+  var platformCounts = {};
+  var totalViewers = 0;
+  var barVisible = false;
+
+  // --- DOM refs ---
+  var barContainer = null;
+  var bridge = null;
+
+  // --- Build the bar UI ---
+  function buildBar() {
+    barContainer = document.createElement('div');
+    barContainer.id = 'bar-container';
+    barContainer.setAttribute('aria-live', 'polite');
+    barContainer.setAttribute('aria-label', 'Live viewer counts');
+    document.body.appendChild(barContainer);
+
+    bridge = document.getElementById('ssn_bridge');
+  }
+
+  // --- Render the bar ---
+  function renderBar() {
+    if (!barContainer) return;
+
+    // Clear previous content
+    barContainer.innerHTML = '';
+
+    var platforms = Object.keys(platformCounts).sort();
+    var total = 0;
+
+    // Build platform count elements
+    platforms.forEach(function (platform, index) {
+      var count = platformCounts[platform] || 0;
+      total += count;
+
+      var platformDiv = document.createElement('div');
+      platformDiv.className = 'platform-count';
+
+      var labelSpan = document.createElement('span');
+      labelSpan.className = 'label';
+      labelSpan.textContent = platform;
+
+      var countSpan = document.createElement('span');
+      countSpan.className = 'count';
+      countSpan.textContent = count.toLocaleString();
+
+      platformDiv.appendChild(labelSpan);
+      platformDiv.appendChild(countSpan);
+      barContainer.appendChild(platformDiv);
+
+      // Add divider between platforms and before total
+      if (index < platforms.length - 1) {
+        var divider = document.createElement('div');
+        divider.className = 'divider';
+        barContainer.appendChild(divider);
+      }
+    });
+
+    // Add total if there are any platforms
+    if (platforms.length > 0) {
+      var totalDivider = document.createElement('div');
+      totalDivider.className = 'divider';
+      barContainer.appendChild(totalDivider);
+
+      var totalDiv = document.createElement('div');
+      totalDiv.className = 'total-count';
+
+      var totalLabel = document.createElement('span');
+      totalLabel.className = 'label';
+      totalLabel.textContent = 'Total';
+
+      var totalCountSpan = document.createElement('span');
+      totalCountSpan.className = 'count';
+      totalCountSpan.textContent = total.toLocaleString();
+
+      totalDiv.appendChild(totalLabel);
+      totalDiv.appendChild(totalCountSpan);
+      barContainer.appendChild(totalDiv);
+
+      // Show the bar
+      if (!barVisible) {
+        barContainer.classList.add('visible');
+        barVisible = true;
+      }
+    } else {
+      // Hide the bar if no data
+      if (barVisible) {
+        barContainer.classList.remove('visible');
+        barVisible = false;
+      }
+    }
+  }
+
+  // --- Handle incoming payloads ---
+  function handlePayload(data) {
+    if (!data || !data.event || data.event !== 'viewer_updates') return;
+    if (!data.meta || typeof data.meta !== 'object') return;
+
+    // Replace state with the snapshot from meta
+    platformCounts = {};
+    var keys = Object.keys(data.meta);
+    for (var i = 0; i < keys.length; i++) {
+      var platform = keys[i];
+      var count = data.meta[platform];
+      if (typeof count === 'number' && count >= 0) {
+        platformCounts[platform] = count;
+      }
+    }
+
+    renderBar();
+  }
+
+  // --- Initialize ---
+  function init() {
+    buildBar();
+
+    // Listen for messages from the bridge
+    window.addEventListener('message', function (event) {
+      var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+      if (typeof payload !== 'undefined') {
+        handlePayload(payload);
+      }
+    });
+
+    // Expose for testing
+    window.handleOverlayPayload = handlePayload;
+  }
+
+  // Start when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>RAG E2E Harness</title>
+</head>
+<body>
+  <div id="status">ready</div>
+  <script>
+    window.CACHE_SIZE = 20;
+    window.settings = {
+      ollamaRagEnabled: true,
+      nollmcontext: true,
+      alwaysRespondLLM: false,
+      ollamabotname: { textsetting: 'RagBot' }
+    };
+    window.messagePopup = function() {};
+    window.log = function() {};
+    window.alert = function() {};
+    window.confirm = function() { return true; };
+    window.sendTargetP2P = function() {};
+    window.sendMessageToTabs = function() {};
+    window.messageStoreDB = {
+      getRecentMessages: async function() { return []; },
+      getUserMessages: async function() { return []; },
+      updateMessage: async function() { return; }
+    };
+  </script>
+  <script src="/thirdparty/lunr.js"></script>
+  <script src="/ai.js"></script>
+  <script>
+    (function() {
+      var llmCalls = [];
+
+      function setStatus(text) {
+        document.getElementById('status').textContent = text;
+      }
+
+      function clone(value) {
+        return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+      }
+
+      function countByKind(calls) {
+        return calls.reduce(function(result, entry) {
+          result[entry.kind] = (result[entry.kind] || 0) + 1;
+          return result;
+        }, {});
+      }
+
+      function getCurrentMessage(prompt) {
+        var match = prompt.match(/Current(?: group)? chat message from [^:]+:\s*([\s\S]*?)$/m);
+        return match ? match[1].trim() : '';
+      }
+
+      function classifyPrompt(prompt) {
+        if (prompt.indexOf('Analyze the following document chunk') !== -1) {
+          return 'analyzeChunk';
+        }
+        if (prompt.indexOf('Summarize the main points of the following document in 3-4 sentences:') !== -1) {
+          return 'overallSummary';
+        }
+        if (prompt.indexOf('Given the following summaries of documents in our database') !== -1) {
+          return 'databaseDescriptor';
+        }
+        if (prompt.indexOf('Decide if the current message needs a search of the custom knowledge database') !== -1) {
+          return 'ragDecision';
+        }
+        if (prompt.indexOf('Given the following user input, user name, and relevant information from our database') !== -1) {
+          return 'ragAnswer';
+        }
+        return 'genericResponse';
+      }
+
+      function findDocumentAnalysis(prompt, dataset) {
+        var docs = (dataset && dataset.documents) || [];
+        for (var index = 0; index < docs.length; index += 1) {
+          var analysis = docs[index] && docs[index].analysis;
+          if (analysis && analysis.match && prompt.indexOf(analysis.match) !== -1) {
+            return analysis;
+          }
+        }
+        return null;
+      }
+
+      function findQuestionCase(message, dataset) {
+        var cases = (dataset && dataset.questionCases) || [];
+        var normalizedMessage = String(message || '').trim();
+
+        for (var index = 0; index < cases.length; index += 1) {
+          if (String(cases[index].question || '').trim() === normalizedMessage) {
+            return cases[index];
+          }
+        }
+
+        return null;
+      }
+
+      function buildChunkAnalysis(prompt, dataset) {
+        var analysis = findDocumentAnalysis(prompt, dataset);
+        if (analysis) {
+          return '[SUMMARY]\n' + analysis.summary + '\n[/SUMMARY]\n\n[TAGS]\n' + analysis.tags.join(', ') + '\n[/TAGS]\n\n[SYNONYMS]\n' + analysis.synonyms.join(', ') + '\n[/SYNONYMS]';
+        }
+
+        if (prompt.indexOf('Orders to Canada usually arrive in 5-7 business days.') !== -1) {
+          return '[SUMMARY]\nShipping timelines cover Canada, the United States, and a 30-day unopened-item return window.\n[/SUMMARY]\n\n[TAGS]\nshipping, canada, delivery, returns, store\n[/TAGS]\n\n[SYNONYMS]\npostage, dispatch, delivery times\n[/SYNONYMS]';
+        }
+        if (prompt.indexOf('Use Camera 2 for face cam during solo streams.') !== -1) {
+          return '[SUMMARY]\nSetup notes cover Camera 2, OBS audio monitoring, and how the bot uses the custom knowledge base.\n[/SUMMARY]\n\n[TAGS]\ncamera, audio, obs, rag, setup\n[/TAGS]\n\n[SYNONYMS]\nconfiguration, routing, knowledge base\n[/SYNONYMS]';
+        }
+        return '[SUMMARY]\nGeneral test fixture content.\n[/SUMMARY]\n\n[TAGS]\ntest, fixture\n[/TAGS]\n\n[SYNONYMS]\nsample, stub\n[/SYNONYMS]';
+      }
+
+      function buildOverallSummary(prompt, dataset) {
+        var docs = (dataset && dataset.documents) || [];
+        for (var index = 0; index < docs.length; index += 1) {
+          var analysis = docs[index] && docs[index].analysis;
+          if (analysis && analysis.summary && prompt.indexOf(analysis.summary) !== -1) {
+            return analysis.overallSummary || analysis.summary;
+          }
+        }
+
+        if (prompt.indexOf('Shipping timelines cover Canada') !== -1) {
+          return 'Store order policies covering delivery timelines and return rules.';
+        }
+        if (prompt.indexOf('Setup notes cover Camera 2') !== -1) {
+          return 'Stream setup notes covering camera, audio, and knowledge-base bot behavior.';
+        }
+        return 'General fixture summary.';
+      }
+
+      function buildRagDecision(prompt, dataset) {
+        var currentMessage = getCurrentMessage(prompt);
+        var questionCase = findQuestionCase(currentMessage, dataset);
+        var message = currentMessage.toLowerCase();
+
+        if (questionCase) {
+          if (questionCase.shouldSearch === false || !questionCase.decisionQuery) {
+            return 'NO_RESPONSE';
+          }
+          return '[NEEDS_SEARCH]YES[/NEEDS_SEARCH]\n[SEARCH_QUERY]' + questionCase.decisionQuery + '[/SEARCH_QUERY]';
+        }
+
+        if (message.indexOf('shipping') !== -1 && message.indexOf('canada') !== -1) {
+          return '[NEEDS_SEARCH]YES[/NEEDS_SEARCH]\n[SEARCH_QUERY]shipping canada delivery[/SEARCH_QUERY]';
+        }
+        if (message.indexOf('friday') !== -1) {
+          return '[NEEDS_SEARCH]YES[/NEEDS_SEARCH]\n[SEARCH_QUERY]friday community games[/SEARCH_QUERY]';
+        }
+        return 'NO_RESPONSE';
+      }
+
+      function buildRagAnswer(prompt, dataset) {
+        var questionCases = (dataset && dataset.questionCases) || [];
+        for (var index = 0; index < questionCases.length; index += 1) {
+          var questionCase = questionCases[index];
+          if (prompt.indexOf(questionCase.question) === -1) {
+            continue;
+          }
+          if (!questionCase.expectedAnswer) {
+            return 'NO_RESPONSE';
+          }
+          if (questionCase.answerMustContain && prompt.indexOf(questionCase.answerMustContain) === -1) {
+            return 'NO_RESPONSE';
+          }
+          return questionCase.expectedAnswer;
+        }
+
+        if (
+          prompt.indexOf(dataset.cases.canadaQuestion) !== -1 &&
+          prompt.indexOf(dataset.expected.canadaAnswer) !== -1
+        ) {
+          return dataset.expected.canadaAnswer;
+        }
+        if (
+          prompt.indexOf(dataset.cases.fridayQuestion) !== -1 &&
+          prompt.indexOf(dataset.expected.fridayAnswer) !== -1
+        ) {
+          return dataset.expected.fridayAnswer;
+        }
+        return 'NO_RESPONSE';
+      }
+
+      function installLLMStub(dataset, resetCalls) {
+        if (resetCalls !== false) {
+          llmCalls = [];
+        }
+        callLLMAPI = async function(prompt) {
+          var kind = classifyPrompt(prompt);
+          llmCalls.push({
+            kind: kind,
+            prompt: prompt
+          });
+
+          if (kind === 'analyzeChunk') {
+            return buildChunkAnalysis(prompt, dataset);
+          }
+          if (kind === 'overallSummary') {
+            return buildOverallSummary(prompt, dataset);
+          }
+          if (kind === 'databaseDescriptor') {
+            return dataset.descriptor || (dataset.expected && dataset.expected.descriptor) || '';
+          }
+          if (kind === 'ragDecision') {
+            return buildRagDecision(prompt, dataset);
+          }
+          if (kind === 'ragAnswer') {
+            return buildRagAnswer(prompt, dataset);
+          }
+          return 'NO_RESPONSE';
+        };
+      }
+
+      function resetSettings() {
+        settings.ollamaRagEnabled = true;
+        settings.nollmcontext = true;
+        settings.alwaysRespondLLM = false;
+        settings.ollamabotname = { textsetting: 'RagBot' };
+      }
+
+      async function readAllDocuments() {
+        var db = await openLunrDatabase();
+        var transaction = db.transaction('documents', 'readonly');
+        var store = transaction.objectStore('documents');
+        return new Promise(function(resolve, reject) {
+          var request = store.getAll();
+          request.onerror = function() {
+            reject(request.error);
+          };
+          request.onsuccess = function() {
+            resolve(request.result);
+          };
+        });
+      }
+
+      async function prepareEmptyDatabase() {
+        resetSettings();
+        localStorage.removeItem('databaseDescriptor');
+        resetLunrIndex();
+        await clearLunrDatabase();
+        await loadDocumentsFromDB();
+        await loadLunrIndex();
+      }
+
+      async function seedDataset(dataset) {
+        await prepareEmptyDatabase();
+        installLLMStub(dataset, true);
+
+        for (var index = 0; index < dataset.documents.length; index += 1) {
+          var doc = dataset.documents[index];
+          if (doc.mode === 'processed') {
+            var processedDoc = await preprocessDocument(doc.content, doc.id, true);
+            await indexProcessedDocument(doc.id, processedDoc, doc.title);
+          } else {
+            await addDocumentToRAG(doc.id, doc.content, doc.title, doc.tags || [], doc.synonyms || [], false);
+          }
+        }
+
+        await loadDocumentsFromDB();
+        await loadLunrIndex();
+      }
+
+      async function collectState(dataset, resetCalls) {
+        resetSettings();
+        installLLMStub(dataset, resetCalls);
+        await loadDocumentsFromDB();
+        await loadLunrIndex();
+
+        var storedDocs = await readAllDocuments();
+        var baseState = {
+          docCount: storedDocs.length,
+          chunkCount: storedDocs.reduce(function(total, doc) {
+            return total + (doc.chunks ? doc.chunks.length : 0);
+          }, 0),
+          docs: storedDocs.map(function(doc) {
+            return {
+              id: doc.id,
+              title: doc.title,
+              chunkCount: doc.chunks ? doc.chunks.length : 0,
+              firstChunkSummary: doc.chunks && doc.chunks[0] ? doc.chunks[0].summary : null,
+              tags: doc.chunks && doc.chunks[0] ? clone(doc.chunks[0].tags || []) : clone(doc.tags || [])
+            };
+          }),
+          descriptor: localStorage.getItem('databaseDescriptor'),
+          promptKinds: countByKind(llmCalls),
+          lastRagDecisionPrompt: (llmCalls.filter(function(call) { return call.kind === 'ragDecision'; }).pop() || {}).prompt || '',
+          lastRagAnswerPrompt: (llmCalls.filter(function(call) { return call.kind === 'ragAnswer'; }).pop() || {}).prompt || ''
+        };
+
+        if (!dataset.cases) {
+          return baseState;
+        }
+
+        var canadaResults = await performLunrSearch(dataset.cases.canadaSearch);
+        var fridayResults = await performLunrSearch(dataset.cases.fridaySearch);
+        var fuzzyResults = await performLunrSearch(dataset.cases.fuzzySearch);
+        var canadaDocs = await getDocumentsFromSearchResults(canadaResults);
+        var fridayDocs = await getDocumentsFromSearchResults(fridayResults);
+
+        var canadaReply = await processUserInput(
+          dataset.cases.canadaQuestion,
+          { chatname: 'Tester', type: 'youtube', tid: 'rag-canada' },
+          '',
+          'RagBot'
+        );
+        var fridayReply = await processUserInput(
+          dataset.cases.fridayQuestion,
+          { chatname: 'Tester', type: 'youtube', tid: 'rag-friday' },
+          '',
+          'RagBot'
+        );
+        var offtopicReply = await processUserInput(
+          dataset.cases.offtopicQuestion,
+          { chatname: 'Tester', type: 'youtube', tid: 'rag-offtopic' },
+          '',
+          'RagBot'
+        );
+
+        return Object.assign({}, baseState, {
+          searches: {
+            canada: {
+              refs: canadaResults.map(function(result) { return result.ref; }),
+              strategies: canadaResults.map(function(result) { return result.strategy; }),
+              firstContent: canadaDocs[0] ? canadaDocs[0].content : null
+            },
+            friday: {
+              refs: fridayResults.map(function(result) { return result.ref; }),
+              strategies: fridayResults.map(function(result) { return result.strategy; }),
+              firstContent: fridayDocs[0] ? fridayDocs[0].content : null
+            },
+            fuzzy: {
+              refs: fuzzyResults.map(function(result) { return result.ref; }),
+              strategies: fuzzyResults.map(function(result) { return result.strategy; })
+            }
+          },
+          answers: {
+            canada: canadaReply,
+            friday: fridayReply,
+            offtopic: offtopicReply
+          },
+          promptKinds: countByKind(llmCalls),
+          lastRagDecisionPrompt: (llmCalls.filter(function(call) { return call.kind === 'ragDecision'; }).pop() || {}).prompt || '',
+          lastRagAnswerPrompt: (llmCalls.filter(function(call) { return call.kind === 'ragAnswer'; }).pop() || {}).prompt || ''
+        });
+      }
+
+      function getExpectedRefs(testCase) {
+        if (Array.isArray(testCase.expectedRefs)) {
+          return testCase.expectedRefs.slice();
+        }
+        if (testCase.expectedTop1) {
+          return [testCase.expectedTop1];
+        }
+        return [];
+      }
+
+      function hasAnyExpectedRef(refs, expectedRefs) {
+        for (var index = 0; index < expectedRefs.length; index += 1) {
+          if (refs.indexOf(expectedRefs[index]) !== -1) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function summarizePassRate(results, passField) {
+        var summary = {
+          total: results.length,
+          passed: 0,
+          accuracy: 0,
+          byLevel: {}
+        };
+
+        results.forEach(function(result) {
+          var level = result.level || 'unspecified';
+          if (!summary.byLevel[level]) {
+            summary.byLevel[level] = { total: 0, passed: 0, accuracy: 0 };
+          }
+          summary.byLevel[level].total += 1;
+          if (result[passField]) {
+            summary.passed += 1;
+            summary.byLevel[level].passed += 1;
+          }
+        });
+
+        summary.accuracy = summary.total ? summary.passed / summary.total : 0;
+        Object.keys(summary.byLevel).forEach(function(level) {
+          var levelSummary = summary.byLevel[level];
+          levelSummary.accuracy = levelSummary.total ? levelSummary.passed / levelSummary.total : 0;
+        });
+
+        return summary;
+      }
+
+      async function runRetrievalCase(testCase) {
+        var expectedRefs = getExpectedRefs(testCase);
+        var results = await performLunrSearch(testCase.query);
+        var refs = results.map(function(result) { return result.ref; });
+        var expectNoHit = !!testCase.expectNoHit || expectedRefs.length === 0;
+        var top1Pass = expectNoHit ? refs.length === 0 : refs[0] === expectedRefs[0];
+        var topKPass = expectNoHit ? refs.length === 0 : hasAnyExpectedRef(refs, expectedRefs);
+
+        return {
+          id: testCase.id,
+          level: testCase.level,
+          query: testCase.query,
+          refs: refs,
+          expectedRefs: expectedRefs,
+          strategies: results.map(function(result) { return result.strategy; }),
+          top1Pass: top1Pass,
+          topKPass: topKPass
+        };
+      }
+
+      async function runQuestionCase(testCase) {
+        var expectedRefs = getExpectedRefs(testCase);
+        var searchResults = testCase.decisionQuery ? await performLunrSearch(testCase.decisionQuery) : [];
+        var refs = searchResults.map(function(result) { return result.ref; });
+        var response = await processUserInput(
+          testCase.question,
+          { chatname: 'BenchmarkUser', type: 'youtube', tid: 'rag-benchmark-' + testCase.id },
+          '',
+          'RagBot'
+        );
+        var expectAnswer = !!testCase.expectedAnswer;
+        var answerPass = expectAnswer ? response === testCase.expectedAnswer : response === false;
+        var retrievalTopKPass = !testCase.decisionQuery ? refs.length === 0 : hasAnyExpectedRef(refs, expectedRefs);
+        var retrievalTop1Pass = !testCase.decisionQuery ? refs.length === 0 : refs[0] === expectedRefs[0];
+
+        return {
+          id: testCase.id,
+          level: testCase.level,
+          question: testCase.question,
+          decisionQuery: testCase.decisionQuery || '',
+          expectedRefs: expectedRefs,
+          refs: refs,
+          expectedAnswer: testCase.expectedAnswer || false,
+          response: response,
+          expectAnswer: expectAnswer,
+          answerPass: answerPass,
+          retrievalTop1Pass: retrievalTop1Pass,
+          retrievalTopKPass: retrievalTopKPass
+        };
+      }
+
+      window.runRagBenchmark = async function(options) {
+        var dataset = options && options.dataset;
+        var shouldSeed = options && options.seed !== false;
+        var retrievalCases = (dataset && dataset.retrievalCases) || [];
+        var questionCases = (dataset && dataset.questionCases) || [];
+        var retrievalResults = [];
+        var questionResults = [];
+        var benchmarkStart = performance.now();
+        var seedStart = benchmarkStart;
+        var seedEnd = benchmarkStart;
+        var retrievalStart = benchmarkStart;
+        var retrievalEnd = benchmarkStart;
+        var questionStart = benchmarkStart;
+        var questionEnd = benchmarkStart;
+        var collectStart = benchmarkStart;
+        var collectEnd = benchmarkStart;
+
+        if (!dataset) {
+          throw new Error('Missing dataset');
+        }
+
+        setStatus(shouldSeed ? 'benchmark-seeding' : 'benchmark-running');
+        if (shouldSeed) {
+          seedStart = performance.now();
+          await seedDataset(dataset);
+          seedEnd = performance.now();
+        } else {
+          seedStart = performance.now();
+          resetSettings();
+          installLLMStub(dataset, true);
+          await loadDocumentsFromDB();
+          await loadLunrIndex();
+          seedEnd = performance.now();
+        }
+
+        retrievalStart = performance.now();
+        for (var retrievalIndex = 0; retrievalIndex < retrievalCases.length; retrievalIndex += 1) {
+          retrievalResults.push(await runRetrievalCase(retrievalCases[retrievalIndex]));
+        }
+        retrievalEnd = performance.now();
+
+        questionStart = performance.now();
+        for (var questionIndex = 0; questionIndex < questionCases.length; questionIndex += 1) {
+          questionResults.push(await runQuestionCase(questionCases[questionIndex]));
+        }
+        questionEnd = performance.now();
+
+        setStatus('done');
+        collectStart = performance.now();
+        var corpusState = await collectState(dataset, false);
+        collectEnd = performance.now();
+        return {
+          corpus: corpusState,
+          timings: {
+            seedMs: Math.round(seedEnd - seedStart),
+            retrievalMs: Math.round(retrievalEnd - retrievalStart),
+            questionMs: Math.round(questionEnd - questionStart),
+            collectMs: Math.round(collectEnd - collectStart),
+            totalMs: Math.round(collectEnd - benchmarkStart)
+          },
+          retrieval: {
+            cases: retrievalResults,
+            top1: summarizePassRate(retrievalResults, 'top1Pass'),
+            topK: summarizePassRate(retrievalResults, 'topKPass')
+          },
+          questions: {
+            cases: questionResults,
+            overall: summarizePassRate(questionResults, 'answerPass'),
+            answerable: summarizePassRate(questionResults.filter(function(result) { return result.expectAnswer; }), 'answerPass'),
+            abstain: summarizePassRate(questionResults.filter(function(result) { return !result.expectAnswer; }), 'answerPass'),
+            retrievalTop1: summarizePassRate(questionResults, 'retrievalTop1Pass'),
+            retrievalTopK: summarizePassRate(questionResults, 'retrievalTopKPass')
+          }
+        };
+      };
+
+      window.runRagE2EScenario = async function(options) {
+        var dataset = options && options.dataset;
+        var shouldSeed = options && options.seed;
+
+        if (!dataset) {
+          throw new Error('Missing dataset');
+        }
+
+        setStatus(shouldSeed ? 'seeding' : 'checking');
+        if (shouldSeed) {
+          await seedDataset(dataset);
+        }
+        var state = await collectState(dataset, !shouldSeed);
+        setStatus('done');
+        return state;
+      };
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSN Alert Banner Overlay</title>
+<style>
+  :root {
+    --bg-gradient: linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    --border-color: rgba(255, 255, 255, 0.2);
+    --text-color: #ffffff;
+    --text-secondary: #e0e0e0;
+    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --anim-duration: 0.5s;
+    --hold-duration: 4s;
+  }
+
+  body {
+    margin: 0;
+    padding: 20px;
+    background: transparent;
+    font-family: var(--font-family);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    pointer-events: none; /* Let clicks pass through to OBS/Scene */
+  }
+
+  #alert-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 10;
+  }
+
+  .alert-card {
+    position: relative;
+    background: var(--bg-gradient);
+    backdrop-filter: blur(4px);
+    border: 1px solid var(--border-color);
+    border-left: 6px solid #fff;
+    padding: 12px 20px;
+    border-radius: 4px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+    animation: slideIn var(--anim-duration) cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  /* Animation for removal */
+  .alert-card.dismissing {
+    animation: slideOut 0.4s ease-in forwards;
+  }
+
+  /* Icon styling */
+  .alert-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+    flex-shrink: 0;
+    background: #555;
+  }
+
+  .alert-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .alert-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+
+  .alert-subtitle {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+
+  .alert-user {
+    font-weight: 700;
+    color: #fff;
+  }
+
+  /* Progress bar at the bottom of the alert */
+  .progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: rgba(255,255,255,0.5);
+    width: 100%;
+    transform-origin: left;
+    animation: shrink var(--hold-duration) linear forwards;
+  }
+
+  /* Keyframes */
+  @keyframes slideIn {
+    0% { opacity: 0; transform: translateY(-20px) scale(0.95); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes slideOut {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-20px) scale(0.95); }
+  }
+
+  @keyframes shrink {
+    0% { transform: scaleX(1); }
+    100% { transform: scaleX(0); }
+  }
+
+  /* Type-specific colors */
+  .type-follow .alert-icon { background: #9146FF; } /* Twitch Purple */
+  .type-follow { border-left-color: #9146FF; }
+
+  .type-sub .alert-icon { background: #00FF7F; } /* Green */
+  .type-sub { border-left-color: #00FF7F; }
+
+  .type-gift .alert-icon { background: #FFD700; } /* Gold */
+  .type-gift { border-left-color: #FFD700; }
+
+  .type-donation .alert-icon { background: #00BFFF; } /* Blue */
+  .type-donation { border-left-color: #00BFFF; }
+
+  .type-raid .alert-icon { background: #FF4500; } /* Orange/Red */
+  .type-raid { border-left-color: #FF4500; }
+
+</style>
+</head>
+<body>
+
+<div id="alert-container"></div>
+
+<script>
+(function () {
+  // 1. Setup Bridge
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "alert_overlay_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge") || document.createElement("iframe");
+  bridge.id = "ssn_bridge";
+  bridge.style.display = "none";
+  document.body.appendChild(bridge);
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  // 2. Message Handler
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handleAlert(payload);
+    }
+  });
+
+  // 3. Logic
+  function handleAlert(data) {
+    if (!data) return;
+
+    var type = determineAlertType(data);
+    if (!type) return;
+
+    var userName = data.chatname || "Unknown User";
+    var title = "";
+    var subtitle = "";
+    var icon = "";
+
+    // Determine content based on type
+    switch (type) {
+      case "follow":
+        title = "New Follower";
+        subtitle = "Followed the stream";
+        icon = "★";
+        break;
+      case "sub":
+        title = "New Subscriber";
+        subtitle = "Subscribed";
+        if (data.membership) subtitle += " (" + data.membership + ")";
+        icon = "♥";
+        break;
+      case "gift":
+        title = "Gifted Subs";
+        subtitle = "Gifted " + (data.subtitle || data.meta && data.meta.gift_count || 1) + " subs";
+        icon = "🎁";
+        break;
+      case "donation":
+        title = "Donation";
+        subtitle = data.chatmessage || "Generous tip";
+        icon = "💰";
+        break;
+      case "raid":
+        title = "Raid";
+        subtitle = (data.meta && data.meta.viewer_count) ? "Joining with " + data.meta.viewer_count + " viewers" : "Joined the stream";
+        icon = "⚔️";
+        break;
+    }
+
+    createAlertElement(type, userName, title, subtitle, icon);
+  }
+
+  function determineAlertType(data) {
+    // Prioritize specific events
+    if (data.event === "new_follower") return "follow";
+    if (data.event === "raid") return "raid";
+    if (data.event === "subscription_gift" || data.event === "gifted") return "gift";
+    
+    // Donations
+    if (data.hasDonation) return "donation";
+
+    // Subscribers (event or membership string)
+    if (data.event === "subscriber" || data.membership) return "sub";
+
+    return null;
+  }
+
+  function createAlertElement(type, userName, title, subtitle, icon) {
+    var container = document.getElementById("alert-container");
+    var card = document.createElement("div");
+    card.className = "alert-card type-" + type;
+    
+    // Escape HTML for safety
+    var safeUser = escapeHtml(userName);
+    var safeTitle = escapeHtml(title);
+    var safeSubtitle = escapeHtml(subtitle);
+
+    card.innerHTML = 
+      '<div class="alert-icon">' + icon + '</div>' +
+      '<div class="alert-content">' +
+        '<div class="alert-title">' + safeTitle + '</div>' +
+        '<div class="alert-subtitle"><span class="alert-user">' + safeUser + '</span> ' + safeSubtitle + '</div>' +
+      '</div>' +
+      '<div class="progress-bar"></div>';
+
+    container.appendChild(card);
+
+    // Auto-dismiss after 4 seconds
+    setTimeout(function() {
+      card.classList.add("dismissing");
+      // Remove from DOM after animation finishes
+      setTimeout(function() {
+        if (card.parentNode) {
+          card.parentNode.removeChild(card);
+        }
+      }, 400); // Matches CSS animation duration
+    }, 4000);
+  }
+
+  function escapeHtml(text) {
+    if (!text) return "";
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+  }
+
+  // Expose for testing
+  window.handleOverlayPayload = handleAlert;
+})();
+</script>
+</body>
+</html>
+```

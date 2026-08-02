@@ -1,0 +1,365 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSN Alert Banner</title>
+<style>
+  :root {
+    --bg-color: rgba(0, 0, 0, 0.85);
+    --text-color: #ffffff;
+    --accent-color: #00ffcc;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --banner-height: 120px;
+    --transition-speed: 0.5s;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: transparent; /* OBS Overlay Requirement */
+    overflow: hidden;
+    font-family: var(--font-family);
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; /* Align to bottom */
+    padding-bottom: 40px;
+  }
+
+  #alert-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    pointer-events: none; /* Let clicks pass through to OBS */
+  }
+
+  .alert-banner {
+    position: absolute;
+    bottom: 0;
+    width: 800px;
+    max-width: 90vw;
+    height: var(--banner-height);
+    background: var(--bg-color);
+    border-radius: 12px;
+    border-left: 8px solid var(--accent-color);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    box-sizing: border-box;
+    transform: translateY(120%); /* Start hidden below */
+    opacity: 0;
+    transition: transform var(--transition-speed) cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+    overflow: hidden;
+  }
+
+  .alert-banner.active {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .alert-banner.exit {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+
+  /* Profile Image */
+  .alert-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #333;
+    background-size: cover;
+    background-position: center;
+    border: 3px solid var(--accent-color);
+    flex-shrink: 0;
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 24px;
+    font-weight: bold;
+  }
+
+  /* Content Area */
+  .alert-content {
+    flex-grow: 1;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+  }
+
+  .alert-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .alert-name {
+    font-size: 28px;
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 1;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  }
+
+  .alert-event-type {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent-color);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .alert-details {
+    font-size: 18px;
+    font-weight: 400;
+    opacity: 0.9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Progress Bar for Auto-dismiss */
+  .alert-timer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background-color: var(--accent-color);
+    width: 100%;
+    transform-origin: left;
+  }
+
+  /* Specific Styles for different event types */
+  .alert-banner[data-type="donation"] {
+    border-left-color: #ffd700; /* Gold */
+  }
+  .alert-banner[data-type="donation"] .alert-event-type {
+    color: #ffd700;
+  }
+  
+  .alert-banner[data-type="raid"] {
+    border-left-color: #ff4444; /* Red */
+  }
+  .alert-banner[data-type="raid"] .alert-event-type {
+    color: #ff4444;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    .alert-banner {
+      width: 95vw;
+      height: 100px;
+    }
+    .alert-avatar {
+      width: 60px;
+      height: 60px;
+      margin-right: 15px;
+    }
+    .alert-name {
+      font-size: 22px;
+    }
+    .alert-details {
+      font-size: 16px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div id="alert-container">
+  <!-- Alert Banner Template -->
+  <div id="alert-banner" class="alert-banner">
+    <div id="alert-avatar" class="alert-avatar"></div>
+    <div class="alert-content">
+      <div class="alert-header">
+        <span id="alert-name" class="alert-name"></span>
+        <span id="alert-event" class="alert-event-type"></span>
+      </div>
+      <div id="alert-details" class="alert-details"></div>
+    </div>
+    <div id="alert-timer" class="alert-timer"></div>
+  </div>
+</div>
+
+<!-- VDO.Ninja Bridge -->
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  // --- Configuration ---
+  const AUTO_DISMISS_MS = 4000;
+  const ANIMATION_DURATION_MS = 500; // Must match CSS transition
+
+  // --- DOM Elements ---
+  const banner = document.getElementById('alert-banner');
+  const avatar = document.getElementById('alert-avatar');
+  const nameEl = document.getElementById('alert-name');
+  const eventEl = document.getElementById('alert-event');
+  const detailsEl = document.getElementById('alert-details');
+  const timerEl = document.getElementById('alert-timer');
+  const container = document.getElementById('alert-container');
+
+  let currentTimeout = null;
+  let currentAnimationFrame = null;
+  let isAnimating = false;
+
+  // --- VDO.Ninja Bridge Setup ---
+  (function () {
+    var params = new URLSearchParams(location.search);
+    var roomID = params.get("session") || "";
+    var password = params.get("password") || "false";
+    var label = params.get("label") || "custom_overlay_" + Date.now();
+    var bridge = document.getElementById("ssn_bridge");
+    if (roomID) {
+      bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+        encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+        "&label=" + encodeURIComponent(label) +
+        "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+    }
+    window.addEventListener("message", function (event) {
+      var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+      if (typeof payload !== "undefined") handlePayload(payload);
+    });
+    window.handleOverlayPayload = handlePayload; // For testing
+  }());
+
+  // --- Helper: Escape HTML ---
+  function escapeHtml(text) {
+    if (!text) return "";
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // --- Helper: Get Initials ---
+  function getInitials(name) {
+    if (!name) return "?";
+    return name.charAt(0).toUpperCase();
+  }
+
+  // --- Core Logic: Process Payload ---
+  function handlePayload(data) {
+    if (!data) return;
+
+    // Filter: Only process specific events
+    const eventType = data.event;
+    const hasDonation = !!data.hasDonation;
+    const hasMembership = !!data.membership;
+    const isGifted = (eventType === "subscription_gift" || eventType === "gifted");
+    const isSub = (eventType === "subscriber" || (hasMembership && !eventType));
+    const isFollow = (eventType === "new_follower");
+    const isRaid = (eventType === "raid");
+
+    // Check if this is a valid alert type
+    if (!isFollow && !isSub && !isGifted && !hasDonation && !isRaid) {
+      return; // Not an alert we handle
+    }
+
+    // Prevent spamming if an animation is currently playing
+    if (isAnimating) return;
+
+    // Determine Banner Type & Content
+    let type = "";
+    let eventText = "";
+    let detailText = "";
+    let avatarUrl = data.chatimg;
+
+    if (isFollow) {
+      type = "follow";
+      eventText = "New Follower";
+      detailText = "Thanks for following!";
+    } else if (isGifted) {
+      type = "gifted";
+      eventText = "Gifted Subs";
+      // Try to get count from subtitle or meta
+      const count = data.subtitle || (data.meta && data.meta.gift_count) || "multiple";
+      detailText = `Gifted ${escapeHtml(String(count))} subscriptions`;
+    } else if (isSub) {
+      type = "sub";
+      eventText = "Subscriber";
+      detailText = data.membership || "Subscribed";
+    } else if (hasDonation) {
+      type = "donation";
+      eventText = "Donation";
+      detailText = `${escapeHtml(data.hasDonation)} — ${data.chatmessage || "Thank you!"}`;
+    } else if (isRaid) {
+      type = "raid";
+      eventText = "Raid";
+      // Try to get viewer count from subtitle or meta
+      const viewers = data.subtitle || (data.meta && data.meta.viewers) || "viewers";
+      detailText = `Joining with ${escapeHtml(String(viewers))} viewers`;
+    }
+
+    // Update DOM
+    banner.setAttribute('data-type', type);
+    nameEl.textContent = data.chatname || "Unknown";
+    eventEl.textContent = eventText;
+    detailsEl.textContent = detailText;
+
+    // Handle Avatar
+    if (avatarUrl) {
+      avatar.style.backgroundImage = `url('${avatarUrl}')`;
+      avatar.textContent = ""; // Clear initials
+    } else {
+      avatar.style.backgroundImage = "none";
+      avatar.textContent = getInitials(data.chatname);
+    }
+
+    // Trigger Animation
+    triggerAnimation();
+  }
+
+  function triggerAnimation() {
+    isAnimating = true;
+    
+    // Reset classes
+    banner.classList.remove('exit');
+    banner.classList.add('active');
+
+    // Start Timer Animation
+    timerEl.style.transition = 'none';
+    timerEl.style.transform = 'scaleX(1)';
+    
+    // Force reflow
+    void timerEl.offsetWidth;
+
+    // Animate bar shrinking
+    timerEl.style.transition = `transform ${AUTO_DISMISS_MS}ms linear`;
+    timerEl.style.transform = 'scaleX(0)';
+
+    // Set Auto-Dismiss
+    if (currentTimeout) clearTimeout(currentTimeout);
+    
+    currentTimeout = setTimeout(() => {
+      dismissAlert();
+    }, AUTO_DISMISS_MS);
+  }
+
+  function dismissAlert() {
+    banner.classList.remove('active');
+    banner.classList.add('exit');
+
+    // Wait for exit animation to finish before allowing new alerts
+    setTimeout(() => {
+      isAnimating = false;
+      // Optional: Reset timer bar for next time
+      timerEl.style.transition = 'none';
+      timerEl.style.transform = 'scaleX(1)';
+    }, ANIMATION_DURATION_MS);
+  }
+
+})();
+</script>
+</body>
+</html>
+```

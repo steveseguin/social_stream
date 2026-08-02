@@ -1,0 +1,286 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Alert Banner</title>
+<style>
+  :root {
+    --alert-bg: rgba(0, 0, 0, 0.85);
+    --alert-border: #00d2ff;
+    --alert-text: #ffffff;
+    --alert-subtext: #cccccc;
+    --alert-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --alert-width: 500px;
+    --alert-height: 120px;
+    --alert-gap: 10px;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--alert-font);
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  #alert-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 50px;
+    width: 100%;
+    pointer-events: none;
+  }
+
+  .alert-card {
+    width: var(--alert-width);
+    height: var(--alert-height);
+    background: var(--alert-bg);
+    border: 2px solid var(--alert-border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    box-sizing: border-box;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
+    animation: slideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: var(--alert-gap);
+  }
+
+  .alert-card.removing {
+    animation: slideOut 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+  }
+
+  .alert-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #333;
+    background-size: cover;
+    background-position: center;
+    border: 2px solid #fff;
+    flex-shrink: 0;
+  }
+
+  .alert-content {
+    flex-grow: 1;
+    padding-left: 20px;
+    color: var(--alert-text);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+  }
+
+  .alert-header {
+    font-size: 24px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  }
+
+  .alert-sub {
+    font-size: 16px;
+    color: var(--alert-subtext);
+    font-weight: 500;
+  }
+
+  .alert-sub strong {
+    color: #fff;
+  }
+
+  /* Progress bar for auto-dismiss */
+  .alert-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: var(--alert-border);
+    width: 100%;
+    transform-origin: left;
+    animation: progress 4s linear forwards;
+  }
+
+  @keyframes slideIn {
+    0% { opacity: 0; transform: translateY(-50px) scale(0.9); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes slideOut {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-50px) scale(0.9); }
+  }
+
+  @keyframes progress {
+    0% { transform: scaleX(1); }
+    100% { transform: scaleX(0); }
+  }
+</style>
+</head>
+<body>
+
+<div id="alert-container"></div>
+
+<script>
+(function () {
+  // --- VDO.Ninja Bridge Setup ---
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+  
+  // Ensure bridge exists
+  if (!bridge) {
+    bridge = document.createElement("iframe");
+    bridge.id = "ssn_bridge";
+    bridge.style.display = "none";
+    document.body.appendChild(bridge);
+  }
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") handlePayload(payload);
+  });
+
+  // --- Alert Logic ---
+  var container = document.getElementById("alert-container");
+  var alertTypes = ["new_follower", "subscriber", "subscription_gift", "gifted", "raid", "donation"];
+
+  function handlePayload(data) {
+    if (!data) return;
+
+    var type = data.event || (data.hasDonation ? "donation" : null);
+    var isAlert = false;
+
+    // Determine alert type
+    if (data.event === "new_follower") type = "new_follower";
+    else if (data.event === "subscriber" || data.membership) type = "subscriber";
+    else if (data.event === "subscription_gift" || data.event === "gifted") type = "subscription_gift";
+    else if (data.event === "raid") type = "raid";
+    else if (data.hasDonation) type = "donation";
+
+    if (!type) return;
+
+    createAlertCard(type, data);
+  }
+
+  function createAlertCard(type, data) {
+    var card = document.createElement("div");
+    card.className = "alert-card";
+
+    var icon = document.createElement("div");
+    icon.className = "alert-icon";
+    
+    // Set icon based on type
+    if (data.chatimg) {
+      icon.style.backgroundImage = "url('" + data.chatimg + "')";
+    } else {
+      // Fallback icon color based on type
+      var colors = {
+        "new_follower": "#4CAF50",
+        "subscriber": "#FF9800",
+        "subscription_gift": "#2196F3",
+        "raid": "#9C27B0",
+        "donation": "#F44336"
+      };
+      icon.style.backgroundColor = colors[type] || "#333";
+    }
+
+    var content = document.createElement("div");
+    content.className = "alert-content";
+
+    var header = document.createElement("div");
+    header.className = "alert-header";
+    
+    var sub = document.createElement("div");
+    sub.className = "alert-sub";
+
+    // Format content based on type
+    var name = data.chatname || "Unknown";
+    var message = "";
+
+    switch (type) {
+      case "new_follower":
+        header.textContent = "New Follower!";
+        sub.innerHTML = "<strong>" + escapeHtml(name) + "</strong> just followed!";
+        break;
+      case "subscriber":
+        header.textContent = "New Subscriber!";
+        var memberText = data.membership ? " — " + escapeHtml(data.membership) : "";
+        sub.innerHTML = "<strong>" + escapeHtml(name) + "</strong> subscribed" + memberText;
+        break;
+      case "subscription_gift":
+        header.textContent = "Gifted Subs!";
+        var giftCount = data.subtitle || (data.meta && data.meta.gift_count) || "1";
+        sub.innerHTML = "<strong>" + escapeHtml(name) + "</strong> gifted <strong>" + escapeHtml(giftCount) + "</strong> subs!";
+        break;
+      case "raid":
+        header.textContent = "Raid Incoming!";
+        var raidViewers = data.subtitle || (data.meta && data.meta.viewers) || "many";
+        sub.innerHTML = "<strong>" + escapeHtml(name) + "</strong> is raiding with <strong>" + escapeHtml(raidViewers) + "</strong> viewers!";
+        break;
+      case "donation":
+        header.textContent = "Donation!";
+        var amount = data.hasDonation || "0.00";
+        var msg = data.chatmessage ? " — " + escapeHtml(data.chatmessage) : "";
+        sub.innerHTML = "<strong>" + escapeHtml(name) + "</strong> donated <strong>" + escapeHtml(amount) + "</strong>" + msg;
+        break;
+    }
+
+    content.appendChild(header);
+    content.appendChild(sub);
+    card.appendChild(icon);
+    card.appendChild(content);
+
+    // Progress bar
+    var progress = document.createElement("div");
+    progress.className = "alert-progress";
+    card.appendChild(progress);
+
+    container.appendChild(card);
+
+    // Auto-dismiss after 4 seconds
+    setTimeout(function () {
+      card.classList.add("removing");
+      card.addEventListener("animationend", function () {
+        if (card.parentNode) {
+          card.parentNode.removeChild(card);
+        }
+      });
+    }, 4000);
+  }
+
+  function escapeHtml(text) {
+    if (!text) return "";
+    var div = document.createElement("div");
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+  }
+
+  // Expose for testing
+  window.handleOverlayPayload = handlePayload;
+})();
+</script>
+
+</body>
+</html>
+```

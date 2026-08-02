@@ -1,0 +1,106 @@
+name: Deploy Main and Beta to GitHub Pages
+on:
+  push:
+    branches:
+      - main
+      - beta
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-gh-pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    if: "!contains(github.event.head_commit.message, '[skip pages]') && !contains(github.event.head_commit.message, '[auto-enhanced]') && github.actor != 'github-pages[bot]'"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create deployment structure
+        run: mkdir -p gh-pages-content/beta
+
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-content
+
+      - name: Checkout beta branch
+        uses: actions/checkout@v4
+        with:
+          ref: beta
+          path: beta-content
+
+      - name: Prepare content
+        run: |
+          python3 - <<'PY'
+          import shutil
+          from pathlib import Path
+
+          for checkout in ('main-content', 'beta-content'):
+              skills = Path(checkout) / 'docs' / 'skills'
+              source = skills / 'control-social-stream'
+              if source.is_dir():
+                  shutil.make_archive(str(skills / 'control-social-stream'), 'zip', skills, 'control-social-stream')
+          PY
+          for checkout in main-content beta-content; do
+            generator="$checkout/scripts/build-docs-search-index.py"
+            if [ -f "$generator" ]; then
+              python3 "$generator" --docs-root "$checkout/docs" --output "$checkout/docs/search-index.json"
+            fi
+          done
+          rsync -av \
+            --exclude='/.git/' \
+            --exclude='/.agents/' \
+            --exclude='/.claude/' \
+            --exclude='/.codex/' \
+            --exclude='/.codex-tmp/' \
+            --exclude='/.github/' \
+            --exclude='/.githooks/' \
+            --exclude='/node_modules/' \
+            --exclude='/scripts/' \
+            --exclude='/tests/' \
+            --exclude='/tmp/' \
+            main-content/ gh-pages-content/
+          rsync -av \
+            --exclude='/.git/' \
+            --exclude='/.agents/' \
+            --exclude='/.claude/' \
+            --exclude='/.codex/' \
+            --exclude='/.codex-tmp/' \
+            --exclude='/.github/' \
+            --exclude='/.githooks/' \
+            --exclude='/node_modules/' \
+            --exclude='/scripts/' \
+            --exclude='/tests/' \
+            --exclude='/tmp/' \
+            beta-content/ gh-pages-content/beta/
+          seo_script="${GITHUB_REF_NAME}-content/scripts/prepare-pages-seo.py"
+          python3 "$seo_script" --root gh-pages-content
+          touch gh-pages-content/.nojekyll
+          echo "Removing files larger than 25MB from deployment payload"
+          find gh-pages-content -type f -size +25M -print -delete || true
+          echo "Deployment content (recursive):"
+          ls -laR gh-pages-content
+
+      - name: Push to gh-pages branch
+        run: |
+          cd gh-pages-content
+          git init
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          # /* Ensure this commit message contains '[skip pages]' */
+          git commit -m "Deploy main and beta to GitHub Pages [skip pages]"
+          git branch -M gh-pages
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          for attempt in 1 2 3; do
+            if git push -f origin gh-pages; then
+              exit 0
+            fi
+            echo "gh-pages push failed on attempt ${attempt}; retrying after ref-lock backoff..."
+            sleep $((attempt * 10))
+          done
+          git push -f origin gh-pages

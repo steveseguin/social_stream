@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSN Alert Banner</title>
+<style>
+  :root {
+    --alert-bg: rgba(20, 20, 30, 0.9);
+    --alert-border: #4a90e2;
+    --alert-text: #ffffff;
+    --alert-name: #ffd700;
+    --alert-donate: #00e676;
+    --alert-sub: #9c27b0;
+    --alert-follow: #2196f3;
+    --alert-raid: #ff9800;
+    --alert-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --alert-font-size: 24px;
+    --alert-padding: 15px 25px;
+    --alert-width: 500px;
+    --alert-height: 80px;
+    --alert-duration: 4s;
+    --alert-enter-duration: 0.5s;
+    --alert-exit-duration: 0.5s;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: transparent;
+    font-family: var(--alert-font);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  #alert-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .alert-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--alert-bg);
+    border: 2px solid var(--alert-border);
+    border-radius: 12px;
+    padding: var(--alert-padding);
+    width: var(--alert-width);
+    height: var(--alert-height);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    animation: alertEnter var(--alert-enter-duration) ease-out forwards,
+               alertPulse 0.3s ease-in-out 0.5s 2,
+               alertExit var(--alert-exit-duration) ease-in forwards var(--alert-duration);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .alert-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: shimmer 2s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+
+  @keyframes alertEnter {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes alertPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+  }
+
+  @keyframes alertExit {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.95);
+    }
+  }
+
+  .alert-icon {
+    font-size: 32px;
+    margin-right: 15px;
+    flex-shrink: 0;
+  }
+
+  .alert-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .alert-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .alert-name {
+    font-weight: bold;
+    font-size: var(--alert-font-size);
+    color: var(--alert-name);
+  }
+
+  .alert-action {
+    font-size: var(--alert-font-size);
+    color: var(--alert-text);
+  }
+
+  .alert-detail {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .alert-donation {
+    color: var(--alert-donate);
+    font-weight: bold;
+  }
+
+  .alert-sub {
+    color: var(--alert-sub);
+  }
+
+  .alert-follow {
+    color: var(--alert-follow);
+  }
+
+  .alert-raid {
+    color: var(--alert-raid);
+  }
+
+  .alert-card[data-type="donation"] {
+    border-color: var(--alert-donate);
+  }
+
+  .alert-card[data-type="subscriber"] {
+    border-color: var(--alert-sub);
+  }
+
+  .alert-card[data-type="new_follower"] {
+    border-color: var(--alert-follow);
+  }
+
+  .alert-card[data-type="raid"] {
+    border-color: var(--alert-raid);
+  }
+
+  .alert-card[data-type="subscription_gift"] {
+    border-color: #e91e63;
+  }
+
+  .alert-card[data-type="gifted"] {
+    border-color: #e91e63;
+  }
+
+  .alert-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 12px;
+    object-fit: cover;
+    border: 2px solid var(--alert-name);
+    flex-shrink: 0;
+  }
+
+  .alert-message {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 2px;
+    font-style: italic;
+  }
+
+  .progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--alert-border);
+    animation: progress var(--alert-duration) linear forwards;
+  }
+
+  @keyframes progress {
+    from { width: 100%; }
+    to { width: 0%; }
+  }
+
+  .alert-card[data-type="donation"] .progress-bar {
+    background: var(--alert-donate);
+  }
+
+  .alert-card[data-type="subscriber"] .progress-bar {
+    background: var(--alert-sub);
+  }
+
+  .alert-card[data-type="new_follower"] .progress-bar {
+    background: var(--alert-follow);
+  }
+
+  .alert-card[data-type="raid"] .progress-bar {
+    background: var(--alert-raid);
+  }
+</style>
+</head>
+<body>
+
+<div id="alert-container"></div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function() {
+  var alertContainer = document.getElementById('alert-container');
+  var alertQueue = [];
+  var isProcessing = false;
+
+  // VDO.Ninja bridge setup
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+  
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  window.addEventListener("message", function(event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handlePayload(payload);
+    }
+  });
+
+  function handlePayload(data) {
+    if (!data || !data.chatname) return;
+    
+    var alertType = getAlertType(data);
+    if (!alertType) return;
+    
+    var alertData = {
+      type: alertType,
+      chatname: data.chatname,
+      chatmessage: data.chatmessage || "",
+      chatimg: data.chatimg || "",
+      hasDonation: data.hasDonation || "",
+      membership: data.membership || "",
+      subtitle: data.subtitle || "",
+      event: data.event || "",
+      meta: data.meta || {}
+    };
+    
+    queueAlert(alertData);
+  }
+
+  function getAlertType(data) {
+    if (data.event === "new_follower") return "new_follower";
+    if (data.event === "subscriber" || (data.membership && data.event !== "subscription_gift" && data.event !== "gifted")) return "subscriber";
+    if (data.event === "subscription_gift" || data.event === "gifted") return "subscription_gift";
+    if (data.hasDonation) return "donation";
+    if (data.event === "raid") return "raid";
+    return null;
+  }
+
+  function queueAlert(alertData) {
+    alertQueue.push(alertData);
+    if (!isProcessing) {
+      processQueue();
+    }
+  }
+
+  function processQueue() {
+    if (alertQueue.length === 0) {
+      isProcessing = false;
+      return;
+    }
+    
+    isProcessing = true;
+    var alertData = alertQueue.shift();
+    createAlert(alertData);
+  }
+
+  function createAlert(alertData) {
+    var alertCard = document.createElement('div');
+    alertCard.className = 'alert-card';
+    alertCard.setAttribute('data-type', alertData.type);
+    
+    var icon = getAlertIcon(alertData.type);
+    var nameClass = 'alert-name';
+    var actionClass = 'alert-action';
+    var detailText = getAlertDetail(alertData);
+    var messageText = alertData.chatmessage ? '<div class="alert-message">' + escapeHtml(alertData.chatmessage) + '</div>' : '';
+    
+    var avatarHtml = alertData.chatimg ? '<img src="' + escapeHtml(alertData.chatimg) + '" class="alert-avatar" onerror="this.style.display=\'none\'">' : '';
+    
+    alertCard.innerHTML = 
+      avatarHtml +
+      '<div class="alert-icon">' + icon + '</div>' +
+      '<div class="alert-content">' +
+        '<div class="alert-header">' +
+          '<span class="' + nameClass + '">' + escapeHtml(alertData.chatname) + '</span>' +
+          '<span class="' + actionClass + '">' + getAlertAction(alertData) + '</span>' +
+        '</div>' +
+        (detailText ? '<div class="alert-detail">' + detailText + '</div>' : '') +
+        messageText +
+      '</div>' +
+      '<div class="progress-bar"></div>';
+    
+    alertContainer.appendChild(alertCard);
+    
+    // Remove alert after animation completes
+    setTimeout(function() {
+      if (alertCard.parentNode) {
+        alertCard.parentNode.removeChild(alertCard);
+      }
+      processQueue();
+    }, 4500); // 4s duration + 0.5s exit + 0.5s buffer
+  }
+
+  function getAlertIcon(type) {
+    switch(type) {
+      case 'new_follower': return '👤';
+      case 'subscriber': return '⭐';
+      case 'subscription_gift': return '🎁';
+      case 'donation': return '💰';
+      case 'raid': return '🚀';
+      default: return '🔔';
+    }
+  }
+
+  function getAlertAction(alertData) {
+    switch(alertData.type) {
+      case 'new_follower': return 'followed!';
+      case 'subscriber': return 'subscribed!';
+      case 'subscription_gift': return 'gifted ' + (alertData.subtitle || alertData.meta.gift_count || 'subs');
+      case 'donation': return 'donated ' + escapeHtml(alertData.hasDonation);
+      case 'raid': return 'is raiding with ' + (alertData.subtitle || alertData.meta.viewers || 'viewers');
+      default: return '';
+    }
+  }
+
+  function getAlertDetail(alertData) {
+    if (alertData.membership) {
+      return '<span class="alert-sub">' + escapeHtml(alertData.membership) + '</span>';
+    }
+    if (alertData.subtitle && alertData.type !== 'subscription_gift' && alertData.type !== 'raid') {
+      return '<span class="alert-detail">' + escapeHtml(alertData.subtitle) + '</span>';
+    }
+    return '';
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+  }
+
+  // Expose for testing
+  window.handleOverlayPayload = handlePayload;
+  window.sendTestAlert = function() {
+    var testAlerts = [
+      { chatname: "TestUser1", event: "new_follower", type: "twitch" },
+      { chatname: "TestUser2", membership: "Tier 1", type: "youtube" },
+      { chatname: "TestUser3", event: "subscription_gift", subtitle: "3", type: "kick" },
+      { chatname: "TestUser4", hasDonation: "$25.00", chatmessage: "Great stream!", type: "youtube" },
+      { chatname: "TestUser5", event: "raid", subtitle: "50", type: "twitch" }
+    ];
+    
+    testAlerts.forEach(function(alert, index) {
+      setTimeout(function() {
+        queueAlert(alert);
+      }, index * 100);
+    });
+  };
+})();
+</script>
+
+</body>
+</html>

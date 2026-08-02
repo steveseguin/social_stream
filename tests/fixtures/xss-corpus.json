@@ -1,0 +1,128 @@
+[
+  {
+    "name": "reported img onerror",
+    "input": "<img src=\"qsdf\" onerror=\"alert('hi')\">"
+  },
+  {
+    "name": "script tag",
+    "input": "before <script>alert('xss')</script> after"
+  },
+  {
+    "name": "svg onload",
+    "input": "<svg onload=\"alert(1)\"><circle></circle></svg>ok"
+  },
+  {
+    "name": "safe svg badge",
+    "input": "<span class=\"hl-badge svg\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" role=\"img\" aria-label=\"First-time chatter\" xmlns=\"http://www.w3.org/2000/svg\"><title>First-time chatter</title><path d=\"M20.8 3.2C13.7 3.4 7.6 6.7 5.2 11.7\" fill=\"#4caf50\"/><path d=\"M4 20c3.3-5.5 7.4-8.8 12.8-10.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg></span>",
+    "mustContain": ["hl-badge", "<svg", "<path", "First-time chatter", "#4caf50", "stroke-width=\"2\""]
+  },
+  {
+    "name": "safe svg gradient",
+    "input": "<svg viewBox=\"0 0 10 10\"><defs><linearGradient id=\"g1\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#fff\"/><stop offset=\"100%\" stop-color=\"#000\"/></linearGradient></defs><rect width=\"10\" height=\"10\" fill=\"url(#g1)\"/></svg>",
+    "mustContain": ["<defs", "id=\"g1\"", "stop-color=\"#fff\"", "fill=\"url(#g1)\""]
+  },
+  {
+    "name": "svg script child",
+    "input": "<svg viewBox=\"0 0 10 10\"><script>alert(1)</script><circle cx=\"5\" cy=\"5\" r=\"4\" fill=\"red\"></circle></svg>",
+    "mustContain": ["<svg", "<circle", "fill=\"red\""]
+  },
+  {
+    "name": "svg foreign object",
+    "input": "<svg><foreignObject><iframe srcdoc=\"<script>alert(1)</script>\"></iframe></foreignObject><path d=\"M0 0h1v1z\"></path></svg>",
+    "mustContain": ["<svg", "<path"]
+  },
+  {
+    "name": "svg animation payload",
+    "input": "<svg><animate xlink:href=\"javascript:alert(1)\" onbegin=\"alert(1)\"></animate><path d=\"M0 0h1v1z\"></path></svg>",
+    "mustContain": ["<svg", "<path"]
+  },
+  {
+    "name": "svg paint url payload",
+    "input": "<svg><path d=\"M0 0h1v1z\" fill=\"url(javascript:alert(1))\" stroke=\"url(https://example.com/x)\"></path></svg>",
+    "mustContain": ["<svg", "<path"]
+  },
+  {
+    "name": "javascript href",
+    "input": "<a href=\"javascript:alert(1)\" target=\"_blank\">bad</a>"
+  },
+  {
+    "name": "encoded javascript href",
+    "input": "<a href=\"&#x6a;avascript:alert(1)\">bad</a>"
+  },
+  {
+    "name": "data html image",
+    "input": "<img src=\"data:text/html,<script>alert(1)</script>\" alt=\"x\">"
+  },
+  {
+    "name": "srcdoc iframe",
+    "input": "<iframe srcdoc=\"<script>alert(1)</script>\"></iframe>"
+  },
+  {
+    "name": "style javascript url",
+    "input": "<span class=\"ok\" style=\"background:url(javascript:alert(1))\">text</span>"
+  },
+  {
+    "name": "mixed event attrs",
+    "input": "<span onclick=\"alert(1)\" onmouseover=\"alert(2)\">hover</span>"
+  },
+  {
+    "name": "safe emote image",
+    "input": "<img class=\"regular-emote\" src=\"https://socialstream.ninja/icons/twitch.png\" alt=\"Kappa\" title=\"Kappa\"> hello",
+    "mustContain": ["regular-emote", "https://socialstream.ninja/icons/twitch.png", "Kappa"]
+  },
+  {
+    "name": "safe bttv emote image",
+    "input": "<img class=\"regular-emote\" src=\"https://cdn.betterttv.net/emote/566ca06065dbbdab32ec054a/2x\" alt=\"OMEGALUL\" title=\"OMEGALUL\">",
+    "mustContain": ["regular-emote", "https://cdn.betterttv.net/emote/566ca06065dbbdab32ec054a/2x", "OMEGALUL"]
+  },
+  {
+    "name": "safe 7tv regular and zero width centered emotes",
+    "input": "<span class=\"emote-container\"><img class=\"regular-emote\" src=\"https://cdn.7tv.app/emote/634493ce05c2b2cd864d5f0d/2x.webp\" alt=\"widepeepoHappy\" title=\"widepeepoHappy\"><img class=\"zero-width-emote-centered\" src=\"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp\" alt=\"ASSEMBLE0\" title=\"ASSEMBLE0\"></span>",
+    "mustContain": ["emote-container", "regular-emote", "zero-width-emote-centered", "https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp"]
+  },
+  {
+    "name": "safe ffz zero width parent emote",
+    "input": "<span class=\"zero-width-parent\"><img class=\"zero-width-emote\" src=\"//cdn.frankerfacez.com/emote/12345/2\" alt=\"ffzModifier\" title=\"ffzModifier\"></span>",
+    "mustContain": ["zero-width-parent", "zero-width-emote", "//cdn.frankerfacez.com/emote/12345/2", "ffzModifier"]
+  },
+  {
+    "name": "safe twitch emote srcset",
+    "input": "<img class=\"regular-emote\" src=\"https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/2.0\" srcset=\"https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/1.0 1x, https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/2.0 2x, https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0 4x\" alt=\"Kappa\" title=\"Kappa\">",
+    "mustContain": ["srcset=", "1x", "2x", "4x", "regular-emote"]
+  },
+  {
+    "name": "safe 7tv srcset only emote",
+    "input": "<img class=\"regular-emote\" srcset=\"https://cdn.7tv.app/emote/60ae958e229664e8667aea38/1x.webp 1x, https://cdn.7tv.app/emote/60ae958e229664e8667aea38/2x.webp 2x\" alt=\"7tv\" title=\"7tv\">",
+    "mustContain": ["srcset=", "https://cdn.7tv.app/emote/60ae958e229664e8667aea38/2x.webp 2x", "regular-emote"]
+  },
+  {
+    "name": "safe zero width emote span",
+    "input": "<span class=\"zero-width-span\"><img class=\"zero-width-emote\" src=\"./icons/twitch.png\" alt=\"ZW\"></span> hello",
+    "mustContain": ["zero-width-span", "zero-width-emote", "./icons/twitch.png"]
+  },
+  {
+    "name": "safe bttv zero width friendly pair",
+    "input": "<img src=\"https://cdn.betterttv.net/emote/566ca06065dbbdab32ec054a/2x\" alt=\"base\" class=\"zero-width-friendly\"><span class=\"zero-width-span\"><img src=\"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp\" alt=\"overlay\" class=\"zero-width-emote\"></span>",
+    "mustContain": ["zero-width-friendly", "zero-width-span", "zero-width-emote", "https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp"]
+  },
+  {
+    "name": "malicious emote srcset",
+    "input": "<img class=\"regular-emote\" src=\"javascript:alert(2)\" srcset=\"javascript:alert(1) 1x, https://cdn.7tv.app/emote/good/2x.webp 2x\" onerror=\"alert(3)\" alt=\"bad\">",
+    "mustContain": ["regular-emote", "https://cdn.7tv.app/emote/good/2x.webp 2x"]
+  },
+  {
+    "name": "safe external link",
+    "input": "<a href=\"https://example.com\" target=\"_blank\">example</a>",
+    "mustContain": ["https://example.com/", "target=\"_blank\""]
+  },
+  {
+    "name": "plain alert discussion",
+    "input": "Can someone explain why alert('hi') freezes the overlay?",
+    "mustContain": ["alert('hi')"]
+  },
+  {
+    "name": "plain javascript discussion",
+    "input": "JavaScript: the language has weird edge cases.",
+    "mustContain": ["JavaScript:"]
+  }
+]

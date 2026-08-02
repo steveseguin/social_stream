@@ -1,0 +1,315 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Alert Banner</title>
+<style>
+  :root {
+    --alert-duration: 4s;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-weight: 700;
+    --font-size: 24px;
+    --padding: 15px 25px;
+    --border-radius: 12px;
+    --shadow: 0 4px 15px rgba(0,0,0,0.4);
+    --text-color: #ffffff;
+    
+    /* Alert Colors */
+    --color-follow: #9146FF; /* Twitch Purple */
+    --color-sub: #00FF7F;    /* Spring Green */
+    --color-gift: #FFD700;   /* Gold */
+    --color-donation: #FF4500; /* Orange Red */
+    --color-raid: #00BFFF;   /* Deep Sky Blue */
+  }
+
+  body {
+    background: transparent;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: var(--font-family);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Align right */
+    justify-content: flex-start; /* Align top */
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #alert-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    padding: 20px;
+    pointer-events: none; /* Let clicks pass through */
+  }
+
+  .alert-card {
+    display: flex;
+    align-items: center;
+    padding: var(--padding);
+    border-radius: var(--border-radius);
+    color: var(--text-color);
+    font-size: var(--font-size);
+    font-weight: var(--font-weight);
+    box-shadow: var(--shadow);
+    min-width: 300px;
+    max-width: 600px;
+    opacity: 0;
+    transform: translateX(100%);
+    animation: slideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    position: relative;
+    overflow: hidden;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  }
+
+  /* Progress bar for auto-dismiss */
+  .alert-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: rgba(255,255,255,0.5);
+    width: 100%;
+    transform-origin: left;
+    animation: shrink var(--alert-duration) linear forwards;
+  }
+
+  .alert-card.removing {
+    animation: slideOut 0.5s ease-in forwards;
+  }
+  .alert-card.removing::after {
+    animation: none;
+    opacity: 0;
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 15px;
+    border: 2px solid rgba(255,255,255,0.8);
+    object-fit: cover;
+    background: #333;
+  }
+
+  .alert-content {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+
+  .user-name {
+    font-size: 1.2em;
+    text-transform: capitalize;
+  }
+
+  .alert-message {
+    font-size: 0.9em;
+    font-weight: 400;
+    opacity: 0.9;
+  }
+
+  /* Specific Colors */
+  .type-follow { background: linear-gradient(135deg, #9146FF, #6c2bd9); }
+  .type-sub { background: linear-gradient(135deg, #00FF7F, #00cc66); }
+  .type-gift { background: linear-gradient(135deg, #FFD700, #ffaa00); color: #333; text-shadow: none; }
+  .type-donation { background: linear-gradient(135deg, #FF4500, #cc3700); }
+  .type-raid { background: linear-gradient(135deg, #00BFFF, #0088cc); }
+
+  /* Animations */
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(100%); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes slideOut {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(100%); }
+  }
+
+  @keyframes shrink {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    .alert-card { min-width: 200px; font-size: 18px; padding: 10px 15px; }
+    .user-avatar { width: 30px; height: 30px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="alert-container"></div>
+
+<script>
+(function() {
+  // --- Bridge Setup ---
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "alert_banner_" + Date.now();
+  
+  var bridge = document.createElement("iframe");
+  bridge.id = "ssn_bridge";
+  bridge.style.display = "none";
+  document.body.appendChild(bridge);
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  // --- State & Config ---
+  var container = document.getElementById("alert-container");
+  var alertDuration = 4000; // 4 seconds
+
+  // --- Helper: Escape HTML ---
+  function escapeHtml(text) {
+    if (!text) return "";
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+  }
+
+  // --- Helper: Create Avatar Element ---
+  function createAvatar(url) {
+    var img = document.createElement("img");
+    img.className = "user-avatar";
+    if (url) {
+      img.src = url;
+      img.onerror = function() { this.style.display = 'none'; };
+    } else {
+      img.style.display = 'none';
+    }
+    return img;
+  }
+
+  // --- Core: Render Alert ---
+  function renderAlert(data) {
+    var type = data.type || "unknown";
+    var chatname = data.chatname || "Anonymous";
+    var chatimg = data.chatimg || "";
+    var chatmessage = data.chatmessage || "";
+    var hasDonation = data.hasDonation;
+    var membership = data.membership;
+    var event = data.event;
+    var subtitle = data.subtitle || "";
+
+    var alertClass = "";
+    var titleText = "";
+    var detailText = "";
+
+    // Determine Alert Type
+    if (event === "new_follower") {
+      alertClass = "type-follow";
+      titleText = "New Follower!";
+      detailText = chatname + " just followed";
+    } 
+    else if (event === "subscriber" || (membership && event !== "subscription_gift" && event !== "gifted")) {
+      alertClass = "type-sub";
+      titleText = "New Subscriber!";
+      detailText = chatname + " subscribed";
+      if (membership) detailText += " (" + escapeHtml(membership) + ")";
+    } 
+    else if (event === "subscription_gift" || event === "gifted") {
+      alertClass = "type-gift";
+      titleText = "Gifted Subs!";
+      detailText = chatname + " gifted";
+      // Try to get count from subtitle or meta
+      var count = subtitle;
+      if (data.meta && data.meta.gift_count) count = data.meta.gift_count;
+      if (count) detailText += " " + count + " subs";
+      else detailText += " subs";
+    } 
+    else if (hasDonation) {
+      alertClass = "type-donation";
+      titleText = "Donation!";
+      detailText = chatname + " donated " + escapeHtml(hasDonation);
+      if (chatmessage) detailText += ": " + escapeHtml(chatmessage);
+    } 
+    else if (event === "raid") {
+      alertClass = "type-raid";
+      titleText = "Raid Incoming!";
+      detailText = chatname + " is raiding with";
+      var viewers = subtitle || (data.meta && data.meta.viewers);
+      if (viewers) detailText += " " + viewers + " viewers";
+    } 
+    else {
+      return; // Not an alert type we handle
+    }
+
+    // Create DOM Elements
+    var card = document.createElement("div");
+    card.className = "alert-card " + alertClass;
+
+    var avatar = createAvatar(chatimg);
+    
+    var contentDiv = document.createElement("div");
+    contentDiv.className = "alert-content";
+
+    var titleSpan = document.createElement("div");
+    titleSpan.className = "user-name";
+    titleSpan.textContent = titleText;
+
+    var detailSpan = document.createElement("div");
+    detailSpan.className = "alert-message";
+    detailSpan.textContent = detailText;
+
+    contentDiv.appendChild(titleSpan);
+    contentDiv.appendChild(detailSpan);
+    card.appendChild(avatar);
+    card.appendChild(contentDiv);
+
+    // Append to container
+    container.appendChild(card);
+
+    // Auto-dismiss
+    setTimeout(function() {
+      card.classList.add("removing");
+      card.addEventListener("animationend", function() {
+        if (card.parentNode) {
+          card.parentNode.removeChild(card);
+        }
+      });
+    }, alertDuration);
+  }
+
+  // --- Message Handler ---
+  function handlePayload(data) {
+    if (!data) return;
+    
+    // Filter: Only process if it has an event, donation, or membership
+    // Exclude plain chat
+    var isAlert = (data.event && (data.event === "new_follower" || data.event === "subscriber" || data.event === "subscription_gift" || data.event === "gifted" || data.event === "raid")) ||
+                  (data.hasDonation) ||
+                  (data.membership && data.event !== "subscription_gift" && data.event !== "gifted");
+
+    if (isAlert) {
+      renderAlert(data);
+    }
+  }
+
+  // --- Event Listeners ---
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handlePayload(payload);
+    }
+  });
+
+  // Expose for testing
+  window.handleOverlayPayload = handlePayload;
+
+})();
+</script>
+</body>
+</html>
+```

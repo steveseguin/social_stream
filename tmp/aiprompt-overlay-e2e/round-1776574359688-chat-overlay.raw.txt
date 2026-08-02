@@ -1,0 +1,262 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Social Stream Ninja — Chat Overlay</title>
+<style>
+  :root {
+    --bg-color: rgba(0, 0, 0, 0.65);
+    --text-color: #ffffff;
+    --accent-color: #00d4ff;
+    --font-family: "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+    --font-size: 15px;
+    --avatar-size: 32px;
+    --max-width: 600px;
+    --row-padding: 6px 10px;
+    --row-radius: 6px;
+    --spacing: 4px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: transparent;
+    font-family: var(--font-family);
+    color: var(--text-color);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #chat-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: var(--max-width);
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 10px;
+    gap: var(--spacing);
+  }
+
+  .chat-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: var(--row-padding);
+    background: var(--bg-color);
+    border-radius: var(--row-radius);
+    animation: fadeIn 0.35s ease-out;
+    line-height: 1.35;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .chat-row.fade-out {
+    animation: fadeOut 0.4s ease-in forwards;
+  }
+
+  .avatar {
+    flex-shrink: 0;
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    border-radius: 50%;
+    object-fit: cover;
+    background: #333;
+  }
+
+  .avatar-placeholder {
+    flex-shrink: 0;
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    border-radius: 50%;
+    background: var(--accent-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: #000;
+  }
+
+  .chat-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .chat-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .chat-name {
+    font-weight: 700;
+    font-size: 0.95em;
+  }
+
+  .chat-platform {
+    font-size: 0.7em;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.15);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+  }
+
+  .chat-message {
+    margin-top: 1px;
+    font-size: var(--font-size);
+    opacity: 0.95;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-12px); }
+  }
+</style>
+</head>
+<body>
+
+<div id="chat-container"></div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---- Config ---- */
+  var params = new URLSearchParams(location.search);
+  var limit = parseInt(params.get("limit"), 10) || 10;
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_chat_" + Date.now();
+
+  var container = document.getElementById("chat-container");
+  var bridge = document.getElementById("ssn_bridge");
+  var rows = [];
+
+  /* ---- Platform color map ---- */
+  var platformColors = {
+    youtube: "#ff0000",
+    twitch: "#9146ff",
+    kick: "#53fc18",
+    tiktok: "#fe2c55",
+    facebook: "#1877f2",
+    rumble: "#8b0000",
+    discord: "#5865f2",
+    whatnot: "#ff6b35"
+  };
+
+  /* ---- Bridge setup ---- */
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handlePayload(payload);
+    }
+  });
+
+  window.handleOverlayPayload = handlePayload;
+
+  /* ---- Core handler ---- */
+  function handlePayload(data) {
+    if (!data || typeof data !== "object") return;
+
+    /* Filter: skip bots */
+    if (data.bot === true) return;
+
+    /* Filter: skip system events (only show plain chat) */
+    if (data.event) return;
+
+    /* Filter: must have a chatname */
+    if (!data.chatname) return;
+
+    addChatRow(data);
+  }
+
+  /* ---- Render a single chat row ---- */
+  function addChatRow(data) {
+    var row = document.createElement("div");
+    row.className = "chat-row";
+
+    /* Avatar */
+    var avatarHTML = "";
+    if (data.chatimg) {
+      avatarHTML = '<img class="avatar" src="' + escapeAttr(data.chatimg) + '" alt="" onerror="this.outerHTML=\'' + avatarPlaceholder(data.chatname) + '\'">';
+    } else {
+      avatarHTML = avatarPlaceholder(data.chatname);
+    }
+
+    /* Username */
+    var nameSpan = '<span class="chat-name">' + escapeHTML(data.chatname) + '</span>';
+
+    /* Platform badge */
+    var platformBadge = "";
+    if (data.type) {
+      var pColor = platformColors[data.type] || "#888";
+      platformBadge = '<span class="chat-platform" style="background:' + pColor + '22;color:' + pColor + '">' + escapeHTML(data.type) + '</span>';
+    }
+
+    /* Message text */
+    var msgText = data.chatmessage ? escapeHTML(data.chatmessage) : "";
+
+    row.innerHTML =
+      avatarHTML +
+      '<div class="chat-content">' +
+        '<div class="chat-meta">' + nameSpan + platformBadge + '</div>' +
+        (msgText ? '<div class="chat-message">' + msgText + '</div>' : "") +
+      '</div>';
+
+    container.appendChild(row);
+    rows.push(row);
+
+    /* Enforce limit — fade out oldest */
+    while (rows.length > limit) {
+      var oldRow = rows.shift();
+      oldRow.classList.add("fade-out");
+      setTimeout(function () {
+        if (oldRow.parentNode) oldRow.parentNode.removeChild(oldRow);
+      }, 420);
+    }
+  }
+
+  /* ---- Helpers ---- */
+  function escapeHTML(str) {
+    var div = document.createElement("div");
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
+  function escapeAttr(str) {
+    return str.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function avatarPlaceholder(name) {
+    var initial = name.charAt(0).toUpperCase();
+    return '<div class="avatar-placeholder">' + escapeHTML(initial) + '</div>';
+  }
+
+})();
+</script>
+</body>
+</html>
+```

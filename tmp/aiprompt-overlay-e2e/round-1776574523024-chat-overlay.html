@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Chat Overlay</title>
+<style>
+  :root {
+    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-size: 16px;
+    --line-height: 1.4;
+    --max-width: 600px;
+    --padding: 10px;
+    --avatar-size: 32px;
+    --name-color: #ffffff;
+    --text-color: #e0e0e0;
+    --bg-color: rgba(0, 0, 0, 0.6);
+    --border-radius: 4px;
+    --animation-duration: 0.5s;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-family: var(--font-family);
+    color: var(--text-color);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+  }
+
+  #chat-container {
+    width: var(--max-width);
+    max-height: 80vh;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: none; /* Let clicks pass through to OBS/Stream */
+  }
+
+  .chat-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px var(--padding);
+    background: var(--bg-color);
+    border-radius: var(--border-radius);
+    animation: slideIn var(--animation-duration) ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+
+  .chat-row.fade-out {
+    animation: fadeOut 0.5s ease-in forwards;
+  }
+
+  @keyframes slideIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeOut {
+    to { opacity: 0; transform: translateY(-10px); }
+  }
+
+  .avatar {
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #333;
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .username {
+    font-weight: bold;
+    color: var(--name-color);
+    font-size: 0.95em;
+    margin-bottom: 2px;
+  }
+
+  .message {
+    font-size: var(--font-size);
+    line-height: var(--line-height);
+    color: var(--text-color);
+  }
+
+  /* Utility to hide elements */
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div id="chat-container"></div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  // --- Configuration & State ---
+  var params = new URLSearchParams(location.search);
+  var limit = parseInt(params.get("limit"), 10) || 10;
+  var container = document.getElementById("chat-container");
+  var messages = []; // Store valid messages to manage limit
+
+  // --- Bridge Setup ---
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_chat_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  // --- Event Handling ---
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handlePayload(payload);
+    }
+  });
+
+  function handlePayload(data) {
+    // 1. Filter: Must be chat (no event) and not a bot
+    if (data.event || data.bot === true) return;
+    
+    // 2. Filter: Must have essential fields
+    if (!data.chatname || !data.chatmessage) return;
+
+    // 3. Add to state
+    messages.push(data);
+
+    // 4. Enforce Limit (remove oldest)
+    while (messages.length > limit) {
+      messages.shift();
+    }
+
+    // 5. Render
+    renderChat();
+  }
+
+  // --- Rendering ---
+  function renderChat() {
+    // Clear current container
+    container.innerHTML = "";
+
+    // Re-append messages in order
+    messages.forEach(function(msg) {
+      var row = document.createElement("div");
+      row.className = "chat-row";
+
+      // Avatar
+      var img = document.createElement("img");
+      img.className = "avatar";
+      img.src = msg.chatimg || "";
+      img.alt = "Avatar";
+      // Handle broken images gracefully
+      img.onerror = function() {
+        this.style.display = 'none';
+      };
+      if (!msg.chatimg) img.style.display = 'none';
+
+      // Content Wrapper
+      var content = document.createElement("div");
+      content.className = "content";
+
+      // Username
+      var nameSpan = document.createElement("span");
+      nameSpan.className = "username";
+      nameSpan.textContent = msg.chatname;
+      if (msg.nameColor) {
+        nameSpan.style.color = msg.nameColor;
+      }
+
+      // Message Text
+      var msgSpan = document.createElement("span");
+      msgSpan.className = "message";
+      msgSpan.textContent = msg.chatmessage;
+
+      // Assemble
+      content.appendChild(nameSpan);
+      content.appendChild(msgSpan);
+      row.appendChild(img);
+      row.appendChild(content);
+      container.appendChild(row);
+    });
+  }
+
+  // --- Test Helper ---
+  // Allows the builder to send test payloads directly
+  window.handleOverlayPayload = handlePayload;
+  
+  // Initial render (empty)
+  renderChat();
+
+})();
+</script>
+</body>
+</html>
