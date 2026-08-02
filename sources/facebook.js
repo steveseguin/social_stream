@@ -182,8 +182,10 @@
 	var FACEBOOK_RECOVERY_SEEN_KEY = "ssnFacebookRecoverySeenV1";
 	var FACEBOOK_RECOVERY_RELOAD_KEY = "ssnFacebookRecoveryReloadV1";
 	var FACEBOOK_STALE_REFRESH_MS = 120000;
+	var FACEBOOK_RECOVERY_REPLAY_WINDOW_MS = 30000;
 	var MAX_FACEBOOK_RECOVERY_KEYS = 500;
 	var facebookRecoverySeen = new Set();
+	var facebookRecoveryStartedAt = Date.now();
 	var facebookLastArticleChangeAt = Date.now();
 	var facebookRecoveryReplay = urlParamEnabled("ssnfbrefresh");
 	var facebookRecoveryState = {
@@ -759,6 +761,10 @@
 		}
 		var entry = starsInfo && facebookRowId ? data.type + "+stars+" + facebookRowId : data.chatname + "+" + data.hasDonation + "+" + dupMessage;
 		var entryString = JSON.stringify(entry);
+		var recoveryPayloadKey = "payload:" + normalizeFacebookText(data.chatname + "|" + data.hasDonation + "|" + dupMessage);
+		if (facebookRecoveryReplay && Date.now() - facebookRecoveryStartedAt < FACEBOOK_RECOVERY_REPLAY_WINDOW_MS && facebookRecoverySeen.has(recoveryPayloadKey)) {
+			return true;
+		}
 
 		if (!dupCheck2.includes(entryString)) {
 			dupCheck2.push(entryString);
@@ -772,11 +778,12 @@
 
 			//console.log(data);
 		} else {
-			return;
+			return true;
 		}
 	//	console.log([...dupCheck2]);
 		
 		//console.warn(data);
+		rememberFacebookRecoveryRow(recoveryPayloadKey);
 		pushMessage(data);
 		return true;
 	}
