@@ -181,7 +181,7 @@
 
 	var FACEBOOK_RECOVERY_SEEN_KEY = "ssnFacebookRecoverySeenV1";
 	var FACEBOOK_RECOVERY_RELOAD_KEY = "ssnFacebookRecoveryReloadV1";
-	var FACEBOOK_STALE_REFRESH_MS = 60000;
+	var FACEBOOK_STALE_REFRESH_MS = 120000;
 	var MAX_FACEBOOK_RECOVERY_KEYS = 500;
 	var facebookRecoverySeen = new Set();
 	var facebookLastArticleChangeAt = Date.now();
@@ -246,15 +246,55 @@
 	function shouldProcessFacebookArticle(ele, processedCount, replayExisting) {
 		var key = getFacebookRecoveryRowKey(ele);
 		var wasSeen = key ? facebookRecoverySeen.has(key) : false;
-		rememberFacebookRecoveryRow(key);
-		if (!wasSeen && (processedCount > 3 || facebookRecoveryReplay)) {
-			facebookLastArticleChangeAt = Date.now();
-			facebookRecoveryState.lastArticleChangeAt = facebookLastArticleChangeAt;
-		}
 		if (facebookRecoveryReplay && wasSeen) {
 			return false;
 		}
-		return processedCount > 3 || replayExisting || facebookRecoveryReplay;
+		var shouldProcess = processedCount > 3 || replayExisting || facebookRecoveryReplay;
+		if (!shouldProcess) {
+			rememberFacebookRecoveryRow(key);
+		}
+		return shouldProcess;
+	}
+
+	function markFacebookArticleProcessed(ele) {
+		var key = getFacebookRecoveryRowKey(ele);
+		var wasSeen = key ? facebookRecoverySeen.has(key) : false;
+		rememberFacebookRecoveryRow(key);
+		if (!wasSeen) {
+			facebookLastArticleChangeAt = Date.now();
+			facebookRecoveryState.lastArticleChangeAt = facebookLastArticleChangeAt;
+		}
+	}
+
+	function queueFacebookArticle(ele, articleKey, processedCount, replayExisting) {
+		if (!shouldProcessFacebookArticle(ele, processedCount, replayExisting)) {
+			return;
+		}
+		Promise.resolve(processMessage(ele)).then(function(sent) {
+			if (sent) {
+				markFacebookArticleProcessed(ele);
+				return;
+			}
+			try {
+				delete ele.dataset.set123;
+			} catch (e) {}
+			if (articleKey) {
+				var index = dupCheck.indexOf(articleKey);
+				if (index > -1) {
+					dupCheck.splice(index, 1);
+				}
+			}
+		}).catch(function() {
+			try {
+				delete ele.dataset.set123;
+			} catch (e) {}
+			if (articleKey) {
+				var index = dupCheck.indexOf(articleKey);
+				if (index > -1) {
+					dupCheck.splice(index, 1);
+				}
+			}
+		});
 	}
 
 	function isElectronFacebookSource() {
@@ -738,6 +778,7 @@
 		
 		//console.warn(data);
 		pushMessage(data);
+		return true;
 	}
 	
 	var settings = {};
@@ -852,37 +893,21 @@
 					try {
 						if (!main[j].dataset.set123) {
 							main[j].dataset.set123 = "true";
-							if (main[j].id){
-								if (main[j].id.startsWith("client:")) {
-									continue;
-								}
-								if (dupCheck.includes(main[j].id)) {
-									continue;
-								}
-								dupCheck.push(main[j].id);
-								if (shouldProcessFacebookArticle(main[j], processed, replayExistingMessages)){
-									processMessage(main[j]);
-								}
-							} else if (main[j].parentNode && main[j].parentNode.id) {
-								if (dupCheck.includes(main[j].parentNode.id)){
-									continue;
-								}
-								if (main[j].parentNode.id.startsWith("client:")) {
-									continue;
-								}
-								dupCheck.push(main[j].parentNode.id);
-								if (shouldProcessFacebookArticle(main[j], processed, replayExistingMessages)){
-									processMessage(main[j]);
-								}
-							} else if (main[j].parentNode && !main[j].id && !main[j].parentNode.id) {
-								var id = main[j].querySelector("[id]"); // an archived video
-								if (id && !(dupCheck.includes(id))) {
-									dupCheck.push(id);
-									if (shouldProcessFacebookArticle(main[j], processed, replayExistingMessages)){
-										processMessage(main[j]);
-									}
-								}
+							var articleId = main[j].id || (main[j].parentNode && main[j].parentNode.id) || "";
+							if (!articleId) {
+								var identified = main[j].querySelector("[id]");
+								articleId = identified ? identified.id : "";
 							}
+							var articleKey = articleId && !String(articleId).startsWith("client:")
+								? "id:" + articleId
+								: getFacebookRecoveryRowKey(main[j]);
+							if (articleKey && dupCheck.includes(articleKey)) {
+								continue;
+							}
+							if (articleKey) {
+								dupCheck.push(articleKey);
+							}
+							queueFacebookArticle(main[j], articleKey, processed, replayExistingMessages);
 						}
 					} catch (e) {}
 				}
