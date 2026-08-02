@@ -15652,6 +15652,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		} catch (e) {}
 	}
 
+	let processedAnyTab = false;
 	try {
 		let tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
 		let routingData = data;
@@ -15681,7 +15682,6 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		tabs = filterRelayCandidateTabs(tabs, routingData, roleRoutingReverse);
 
 		var published = {};
-		let processedAnyTab = false;
 
 		const processTab = async tab => {
 			processedAnyTab = true;
@@ -15710,7 +15710,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		return false;
 	}
 
-	return true;
+	return processedAnyTab;
 }
 
 // Helper function to check if a tab is valid for processing

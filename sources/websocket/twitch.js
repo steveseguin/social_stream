@@ -2398,11 +2398,14 @@ async function ensureChatClientInstance() {
 		const sentAt = Date.now();
 		const login = userState.username || currentAuthUser?.login || username;
 		const displayName = userState['display-name'] || getRememberedTwitchDisplayName(login) || login;
+		const actionMatch = typeof message === 'string' ? message.match(/^\/me(?:\s+|$)([\s\S]*)$/i) : null;
+		const isAction = !!actionMatch;
+		const forwardedMessage = isAction ? actionMatch[1] : message;
 		const tags = Object.assign({}, userState, {
 			id: messageId,
 			username: login,
 			'display-name': displayName,
-			'message-type': 'chat',
+			'message-type': isAction ? 'action' : 'chat',
 			'tmi-sent-ts': String(sentAt)
 		});
 
@@ -2411,11 +2414,11 @@ async function ensureChatClientInstance() {
 			platform: 'twitch',
 			type: 'twitch',
 			chatname: displayName,
-			chatmessage: message,
+			chatmessage: forwardedMessage,
 			timestamp: sentAt,
-			event: 'chat',
+			event: isAction ? 'action' : 'chat',
 			isSelf: true,
-			rawMessage: message,
+			rawMessage: forwardedMessage,
 			raw: { channel: `#${channel}`, tags: tags }
 		});
 	}

@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const vm = require("node:vm");
 
 const router = require("../js/streamdeck-remote-control.js");
 const root = path.resolve(__dirname, "..");
@@ -122,6 +123,60 @@ async function testBackgroundCommandHandler() {
 	assert.equal(reset.payload.timer.currentMs, 12000);
 }
 
+async function testSendChatRequiresDispatchCandidate() {
+	const background = read("background.js");
+	const source = [
+		extractFunction(background, "processRelayTabBatch"),
+		extractFunction(background, "sendMessageToTabs")
+	].join("\n");
+	let tabs = [];
+	let dispatches = 0;
+	const sandbox = {
+		chrome: {
+			debugger: {},
+			tabs: {
+				query(_query, callback) {
+					callback(tabs);
+				}
+			},
+			runtime: { lastError: null }
+		},
+		isExtensionOn: true,
+		settings: {},
+		getSettingFlag: () => false,
+		messageCounter: 1,
+		lastAntiSpam: 0,
+		messageTimeout: {},
+		handleStageTen() {},
+		getAccountRoleListSetting: () => [],
+		getRelayTargetTabIdSet: () => new Set(),
+		getSourceType: async () => "twitch",
+		getLegacySSAppRelaySourceType: () => false,
+		shouldApplyRelayAccountRoleFilter: () => false,
+		filterRelayCandidateTabs: (candidates) => candidates,
+		hasExplicitRelayTabTargets: () => false,
+		isValidTab: async () => true,
+		claimPublishedUrl: () => true,
+		dispatchRelayMessageToTab: async () => {
+			dispatches += 1;
+		},
+		console,
+		Promise,
+		Set,
+		Date
+	};
+	vm.runInNewContext(`${source}; this.sendMessageToTabs = sendMessageToTabs;`, sandbox);
+
+	const missing = await sandbox.sendMessageToTabs({ response: "hello", outgoingOrigin: "host" });
+	assert.equal(missing, false, "sendChat reported accepted without an eligible capture source");
+	assert.equal(dispatches, 0);
+
+	tabs = [{ id: 1, url: "https://www.twitch.tv/tester" }];
+	const accepted = await sandbox.sendMessageToTabs({ response: "hello", outgoingOrigin: "host" });
+	assert.equal(accepted, true, "sendChat rejected an eligible capture-source dispatch");
+	assert.equal(dispatches, 1);
+}
+
 function testDockOwnerAndDeduplication() {
 	const dock = read("dock.html");
 	const source = [
@@ -228,6 +283,7 @@ async function testVersionedRoutingOwnership() {
 
 Promise.resolve()
 	.then(testBackgroundCommandHandler)
+	.then(testSendChatRequiresDispatchCandidate)
 	.then(testDockOwnerAndDeduplication)
 	.then(testVersionedRoutingOwnership)
 	.then(() => console.log("mobile remote-control contract tests passed"))

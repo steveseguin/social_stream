@@ -362,6 +362,24 @@ async function run() {
       'Twitch message splitting corrupted the emoji after the 500-character boundary'
     );
 
+    const actionStart = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
+    await page.fill('#input-text', '/me waves');
+    await page.click('#sendmessage');
+    await page.waitForFunction(() => (
+      window.__twitchHarness.runtimeMessages.some(
+        (message) => message.event === 'action' && message.chatmessage === 'waves'
+      )
+    ));
+    const actionResult = await page.evaluate((start) => ({
+      request: window.__twitchHarness.chatSendRequests[start],
+      message: window.__twitchHarness.runtimeMessages.find(
+        (item) => item.event === 'action' && item.chatmessage === 'waves'
+      )
+    }), actionStart);
+    assert.strictEqual(actionResult.request.message, '/me waves');
+    assert.strictEqual(actionResult.message.chatmessage, 'waves');
+    assert.strictEqual(actionResult.message.event, 'action');
+
     await page.evaluate(() => {
       window.__twitchHarness.tmiClients[0].emit(
         'messagedeleted',
