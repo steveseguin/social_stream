@@ -3379,6 +3379,9 @@
 				}
 				return true;
 			}
+			function usesLegacyExtensionTransport() {
+				return !versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION);
+			}
 			// Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
 			function hasExclusiveServerTransport(caps) {
 				var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
@@ -3389,7 +3392,7 @@
 			function useServerOnlyTransport() {
 				var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
 				return hasExclusiveServerTransport(caps) &&
-					versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+					!usesLegacyExtensionTransport() &&
 					caps.serverFeed === true &&
 					caps.legacyBridgeRequired !== true &&
 					caps.upstreamCommands !== true &&
@@ -5286,7 +5289,7 @@
 					if (event.data && server2) {
 						try {
 							var data = JSON.parse(event.data);
-							if (!isDuplicateTransportDelivery(data)) {
+							if (!isDuplicateTransportDelivery(data, "server")) {
 								processInput(data);
 							}
 						} catch (e) {
@@ -7528,43 +7531,71 @@
 				return false;
 			}
 
-			// In server2 mode the extension may deliver the same feed message over both the
-			// websocket and the VDO.Ninja bridge (additive delivery); drop the second copy.
+			// The extension may deliver the same feed message over both the websocket and
+			// the VDO.Ninja bridge. Keep this active for stale URLs and mixed-version clients.
 			var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
 			var recentTransportDeliveries = new Map();
-			function isDuplicateTransportDelivery(data) {
-				if (!server2) {
-					return false;
+			function stableTransportStringify(value, isRoot) {
+				if (value === null || typeof value !== "object") {
+					var serialized = JSON.stringify(value);
+					return serialized === undefined ? String(value) : serialized;
 				}
+				if (Array.isArray(value)) {
+					return "[" + value.map(function (item) {
+						return stableTransportStringify(item, false);
+					}).join(",") + "]";
+				}
+				var parts = [];
+				Object.keys(value).sort().forEach(function (key) {
+					if (isRoot && key === "out") return;
+					parts.push(JSON.stringify(key) + ":" + stableTransportStringify(value[key], false));
+				});
+				return "{" + parts.join(",") + "}";
+			}
+			function getTransportDeliveryKey(data) {
 				if (!data || typeof data !== "object") {
-					return false;
-				}
-				if (data.id === undefined || data.id === null) {
-					return false;
+					return "";
 				}
 				if ("action" in data || "get" in data || "callback" in data || "mid" in data) {
-					return false;
+					return "";
 				}
-				if (!(data.chatname || data.chatmessage || data.chatimg || data.hasDonation || data.membership || data.event || data.contentimg)) {
-					return false;
+				if (!(data.chatname || data.chatmessage || data.chatimg || data.hasDonation || data.membership || data.event || data.contentimg || data.meta)) {
+					return "";
 				}
-				var key =
-					String(data.id) +
-					"|" + (data.type || "") +
-					"|" + (data.chatname || "") +
-					"|" + String(data.chatmessage || "").slice(0, 100) +
-					"|" + (data.hasDonation || "") +
-					"|" + (data.event || "");
+				if (data.id !== undefined && data.id !== null) {
+					return "id|" + String(data.id) +
+						"|" + (data.type || "") +
+						"|" + (data.chatname || "") +
+						"|" + String(data.chatmessage || "").slice(0, 100) +
+						"|" + (data.hasDonation || "") +
+						"|" + (data.event || "");
+				}
+				return "payload|" + stableTransportStringify(data, true);
+			}
+			function isDuplicateTransportDelivery(data, source) {
+				var key = getTransportDeliveryKey(data);
+				if (!key) return false;
+				source = source || "unknown";
 				var now = Date.now();
-				recentTransportDeliveries.forEach(function (seenAt, seenKey) {
-					if (now - seenAt > CROSS_TRANSPORT_DEDUPE_TTL_MS) {
+				recentTransportDeliveries.forEach(function (seenSources, seenKey) {
+					var newestSeenAt = 0;
+					Object.keys(seenSources).forEach(function (seenSource) {
+						newestSeenAt = Math.max(newestSeenAt, seenSources[seenSource]);
+					});
+					if (now - newestSeenAt > CROSS_TRANSPORT_DEDUPE_TTL_MS) {
 						recentTransportDeliveries.delete(seenKey);
 					}
 				});
-				if (recentTransportDeliveries.has(key)) {
+				var seenSources = recentTransportDeliveries.get(key) || {};
+				var duplicate = Object.keys(seenSources).some(function (seenSource) {
+					return seenSource !== source && now - seenSources[seenSource] <= CROSS_TRANSPORT_DEDUPE_TTL_MS;
+				});
+				if (duplicate) {
+					recentTransportDeliveries.delete(key);
 					return true;
 				}
-				recentTransportDeliveries.set(key, now);
+				seenSources[source] = now;
+				recentTransportDeliveries.set(key, seenSources);
 				return false;
 			}
 
@@ -8825,7 +8856,7 @@
 						// raw data
 						if ("overlayNinja" in e.data.dataReceived) {
 							var remotePayload = e.data.dataReceived.overlayNinja;
-							if (!isDuplicateTransportDelivery(remotePayload)) {
+							if (!isDuplicateTransportDelivery(remotePayload, "p2p")) {
 								var remoteExecution = executeRemoteControlDockRequest(remotePayload);
 								if (!remoteExecution.skip && isVersionedRemoteControlRequest(remotePayload) && remotePayload.get) {
 									send2Extension(
@@ -12542,24 +12573,24 @@
 				send2Extension({ action: "requestViewerCount", value: { ttl: viewerCountRequestTtl } }, uid || null, true);
 			}
 
-			function send2Extension(data, uid = null, force, preferP2P = false) {
-				if (!force && (blockMessageSelecting || blockMessageSelecting3)) {
-					return;
-				}
-
-				if (!preferP2P && socketserverExtension && server3) {
-					try {
-						if (data.out){
-							delete data.out;
-						}
-						socketserverExtension.send(JSON.stringify(data));
-						return;
-					} catch (e) {
-						// if failed, try p2p
-						console.error(e);
+			function sendExtensionDataToServer(data) {
+				if (!socketserverExtension || !server3 || socketserverExtension.readyState !== 1) return false;
+				try {
+					var serverPayload = data;
+					if (data && data.out) {
+						serverPayload = Object.assign({}, data);
+						delete serverPayload.out;
 					}
+					socketserverExtension.send(JSON.stringify(serverPayload));
+					return true;
+				} catch (e) {
+					console.error(e);
+					return false;
 				}
+			}
 
+			function sendExtensionDataToPeers(data, uid) {
+				var sent = false;
 				iframes.forEach(iframe => {
 					if (!uid) {
 						var keys = Object.keys(iframe.connectedPeers);
@@ -12569,6 +12600,7 @@
 								var label = iframe.connectedPeers[UUID];
 								if (label === "SocialStream") {
 									iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs", UUID: UUID }, "*");
+									sent = true;
 								}
 							} catch (e) {}
 						}
@@ -12576,9 +12608,29 @@
 						var label = iframe.connectedPeers[uid];
 						if (label === "SocialStream") {
 							iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs", UUID: uid }, "*");
+							sent = true;
 						}
 					}
 				});
+				return sent;
+			}
+
+			function send2Extension(data, uid = null, force, preferP2P = false) {
+				if (!force && (blockMessageSelecting || blockMessageSelecting3)) {
+					return false;
+				}
+
+				var legacyTransport = usesLegacyExtensionTransport();
+				if (!preferP2P && !legacyTransport && sendExtensionDataToServer(data)) {
+					return true;
+				}
+				if (sendExtensionDataToPeers(data, uid)) {
+					return true;
+				}
+				if (!preferP2P && legacyTransport) {
+					return sendExtensionDataToServer(data);
+				}
+				return false;
 			}
 			
 			function syncDataAny(data, UUID = false, force = false) {

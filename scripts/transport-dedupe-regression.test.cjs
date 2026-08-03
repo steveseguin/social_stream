@@ -27,9 +27,22 @@ function extractFunction(source, name) {
   assert(start >= 0, `Missing function ${name}`);
   const braceStart = source.indexOf('{', start);
   let depth = 0;
+  let quote = '';
+  let escaped = false;
   for (let index = braceStart; index < source.length; index += 1) {
-    if (source[index] === '{') depth += 1;
-    if (source[index] === '}') {
+    const character = source[index];
+    if (quote) {
+      if (escaped) escaped = false;
+      else if (character === '\\') escaped = true;
+      else if (character === quote) quote = '';
+      continue;
+    }
+    if (character === '"' || character === "'" || character === '`') {
+      quote = character;
+      continue;
+    }
+    if (character === '{') depth += 1;
+    if (character === '}') {
       depth -= 1;
       if (depth === 0) return source.slice(start, index + 1);
     }
@@ -38,6 +51,7 @@ function extractFunction(source, name) {
 }
 
 function runSuite(file, source) {
+  const isDock = file === 'dock.html';
   let fakeNow = 1000000;
   let gateOpen = true;
   const sandbox = {
@@ -46,35 +60,43 @@ function runSuite(file, source) {
     Date: { now: () => fakeNow }
   };
   vm.createContext(sandbox);
+  const supportingFunctions = isDock
+    ? `${extractFunction(source, 'stableTransportStringify')}\n${extractFunction(source, 'getTransportDeliveryKey')}\n`
+    : '';
   vm.runInContext(
     'var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;\n' +
     'var recentTransportDeliveries = new Map();\n' +
+    supportingFunctions +
     `${extractFunction(source, 'isDuplicateTransportDelivery')}\n` +
     'this.isDuplicateTransportDelivery = isDuplicateTransportDelivery;',
     sandbox
   );
-  const isDup = payload => sandbox.isDuplicateTransportDelivery(payload);
+  const isDup = (payload, sourceName) => sandbox.isDuplicateTransportDelivery(payload, sourceName);
   const chat = { id: 62509, type: 'twitch', chatname: 'vdoninja', chatmessage: 'hello world' };
 
   // Same feed message over two transports renders only once.
-  assert.strictEqual(isDup({ ...chat }), false, `${file}: first delivery must pass`);
-  assert.strictEqual(isDup({ ...chat }), true, `${file}: second transport copy must be dropped`);
+  assert.strictEqual(isDup({ ...chat }, 'p2p'), false, `${file}: first delivery must pass`);
+  assert.strictEqual(isDup({ ...chat }, 'server'), true, `${file}: second transport copy must be dropped`);
 
   // A different message with its own id is unaffected.
   assert.strictEqual(isDup({ ...chat, id: 62510 }), false, `${file}: new ids must pass`);
 
   // Re-sends that change donation or event state are updates, not duplicates.
   assert.strictEqual(isDup({ ...chat, hasDonation: '$5' }), false, `${file}: donation updates must pass`);
-  assert.strictEqual(isDup({ ...chat, id: 62511, event: 'follow', chatmessage: '' }), false, file);
-  assert.strictEqual(isDup({ ...chat, id: 62511, event: 'follow', chatmessage: '' }), true, file);
+  assert.strictEqual(isDup({ ...chat, id: 62511, event: 'follow', chatmessage: '' }, 'p2p'), false, file);
+  assert.strictEqual(isDup({ ...chat, id: 62511, event: 'follow', chatmessage: '' }, 'server'), true, file);
 
-  // Commands, callbacks, dock sync, and idless payloads are never deduplicated.
+  // Commands, callbacks, and dock sync payloads are never deduplicated.
   assert.strictEqual(isDup({ id: 1, action: 'clear', chatname: 'x' }), false, file);
   assert.strictEqual(isDup({ id: 1, action: 'clear', chatname: 'x' }), false, file);
   assert.strictEqual(isDup({ id: 2, mid: 2, chatname: 'x' }), false, file);
   assert.strictEqual(isDup({ id: 2, mid: 2, chatname: 'x' }), false, file);
-  assert.strictEqual(isDup({ chatname: 'noid', chatmessage: 'hi' }), false, file);
-  assert.strictEqual(isDup({ chatname: 'noid', chatmessage: 'hi' }), false, file);
+  assert.strictEqual(isDup({ chatname: 'noid', chatmessage: 'hi' }, 'p2p'), false, file);
+  assert.strictEqual(
+    isDup({ chatname: 'noid', chatmessage: 'hi' }, isDock ? 'server' : 'p2p'),
+    isDock,
+    `${file}: only Dock deduplicates idless cross-transport payloads`
+  );
   assert.strictEqual(isDup({ id: 3, get: 'token', chatmessage: 'hi' }), false, file);
   assert.strictEqual(isDup({ id: 3, get: 'token', chatmessage: 'hi' }), false, file);
 
@@ -83,11 +105,11 @@ function runSuite(file, source) {
   fakeNow += 12001;
   assert.strictEqual(isDup({ ...chat, id: 62512 }), false, `${file}: expired entries must pass again`);
 
-  // Without any server transport params the guard stays inert.
+  // Without server transport params, only Dock's same-source path remains active.
   sandbox.server2 = false;
   gateOpen = false;
-  assert.strictEqual(isDup({ ...chat, id: 62513 }), false, file);
-  assert.strictEqual(isDup({ ...chat, id: 62513 }), false, `${file}: dedupe must be inactive without server params`);
+  assert.strictEqual(isDup({ ...chat, id: 62513 }, 'p2p'), false, file);
+  assert.strictEqual(isDup({ ...chat, id: 62513 }, 'p2p'), false, `${file}: same-source delivery must remain active`);
 }
 
 for (const file of guardedFiles) {
@@ -99,10 +121,59 @@ for (const file of guardedFiles) {
 
 // The dock and hype guard both transport entry points explicitly.
 const dockSource = fs.readFileSync(path.join(root, 'dock.html'), 'utf8');
-assert(dockSource.includes('if (!isDuplicateTransportDelivery(data)) {'), 'dock server2 websocket listener is not deduplicated');
-assert(dockSource.includes('if (!isDuplicateTransportDelivery(e.data.dataReceived.overlayNinja)) {'), 'dock P2P bridge listener is not deduplicated');
+assert(dockSource.includes('if (!isDuplicateTransportDelivery(data, "server")) {'), 'dock server2 websocket listener is not source-aware');
+assert(dockSource.includes('if (!isDuplicateTransportDelivery(remotePayload, "p2p")) {'), 'dock P2P bridge listener is not source-aware');
 const hypeSource = fs.readFileSync(path.join(root, 'hype.html'), 'utf8');
 assert(hypeSource.includes('if (!isDuplicateTransportDelivery(data)) {'), 'hype websocket listener is not deduplicated');
 assert(hypeSource.includes('if (isDuplicateTransportDelivery(data)) {'), 'hype bridge handler is not deduplicated');
+
+function createDockRoutingContext(version, hasPeer) {
+  const peerMessages = [];
+  const serverMessages = [];
+  const sandbox = {
+    URLSearchParams,
+    urlParams: new URLSearchParams(version ? `v=${version}` : ''),
+    SERVER_EXCLUSIVE_TRANSPORT_VERSION: '3.52.0',
+    blockMessageSelecting: false,
+    blockMessageSelecting3: false,
+    server3: true,
+    iframes: [{
+      connectedPeers: hasPeer ? { peer: 'SocialStream' } : {},
+      contentWindow: { postMessage: message => peerMessages.push(message) }
+    }],
+    socketserverExtension: {
+      readyState: 1,
+      send: message => serverMessages.push(JSON.parse(message))
+    },
+    console
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(
+    `${extractFunction(dockSource, 'versionAtLeast')}\n` +
+    `${extractFunction(dockSource, 'usesLegacyExtensionTransport')}\n` +
+    `${extractFunction(dockSource, 'sendExtensionDataToServer')}\n` +
+    `${extractFunction(dockSource, 'sendExtensionDataToPeers')}\n` +
+    `${extractFunction(dockSource, 'send2Extension')}\n` +
+    'this.send2Extension = send2Extension; this.usesLegacyExtensionTransport = usesLegacyExtensionTransport;',
+    sandbox
+  );
+  return { sandbox, peerMessages, serverMessages };
+}
+
+const legacyDock = createDockRoutingContext('3.50.4', true);
+assert.strictEqual(legacyDock.sandbox.usesLegacyExtensionTransport(), true, '3.50.4 must retain legacy routing');
+assert.strictEqual(legacyDock.sandbox.send2Extension({ action: 'clearOverlay' }), true);
+assert.strictEqual(legacyDock.peerMessages.length, 1, 'legacy Dock commands must prefer P2P');
+assert.strictEqual(legacyDock.serverMessages.length, 0, 'legacy Dock must not duplicate commands over server3');
+
+const legacyFallbackDock = createDockRoutingContext('', false);
+assert.strictEqual(legacyFallbackDock.sandbox.send2Extension({ action: 'clearOverlay' }), true);
+assert.strictEqual(legacyFallbackDock.serverMessages.length, 1, 'legacy Dock must fall back to server3 without a P2P peer');
+
+const currentDock = createDockRoutingContext('3.52.0', true);
+assert.strictEqual(currentDock.sandbox.usesLegacyExtensionTransport(), false, '3.52.0 must use current routing');
+assert.strictEqual(currentDock.sandbox.send2Extension({ action: 'clearOverlay' }), true);
+assert.strictEqual(currentDock.serverMessages.length, 1, 'current Dock commands must prefer server3');
+assert.strictEqual(currentDock.peerMessages.length, 0, 'current Dock commands must not duplicate over P2P');
 
 console.log(`PASS cross-transport delivery dedupe (${guardedFiles.length} pages)`);
