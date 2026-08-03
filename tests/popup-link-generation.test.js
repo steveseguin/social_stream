@@ -67,6 +67,8 @@ for (const retiredSource of ['trovo', 'dlive']) {
   assert.ok(sandbox.catalog.sourcesList.has('velora'), 'Velora must be available without manifest loading');
 
   sandbox.catalog.collectSourcesFromManifest(manifest);
+  assert.ok(!sandbox.catalog.sourcesList.has('dlive'), 'DLive must not appear in source dropdowns');
+  assert.ok(sandbox.catalog.sourcesList.has('trovo'), 'Trovo must remain in source dropdowns');
   for (const expected of [
     'arena', 'clouthub', 'external', 'instagramlive', 'meet', 'obs', 'socialstreamchat',
     'stageten', 'threads', 'twitter', 'velora', 'workplace', 'youtubeshorts', 'zoom_poll'
@@ -76,7 +78,8 @@ for (const retiredSource of ['trovo', 'dlive']) {
 
   const manifestSourceFiles = manifest.content_scripts
     .flatMap(entry => entry.js || [])
-    .filter(file => file.startsWith('./sources/') && file.endsWith('.js') && !file.startsWith('./sources/inject/'));
+    .filter(file => file.startsWith('./sources/') && file.endsWith('.js') && !file.startsWith('./sources/inject/'))
+    .filter(file => path.basename(file, '.js') !== 'dlive');
   for (const file of manifestSourceFiles) {
     const sourceName = path.basename(file, '.js');
     assert.ok(sandbox.catalog.sourcesList.has(sourceName), `missing manifest source: ${sourceName}`);

@@ -2741,6 +2741,7 @@ const sourceTypeAliases = {
     youtube: ['youtubeshorts'],
     zoom: ['zoom_poll']
 };
+const retiredSourceTypes = new Set(['dlive']);
 const sourcesList = new Set(additionalSourceTypes);
 var sortedSourcesListCache = null;
 var popupSourceDatalistLoaded = false;
@@ -2897,6 +2898,9 @@ function collectSourcesFromManifest(manifestData) {
                     return;
                 }
                 const sourceName = relativeName.split('/').pop();
+                if (retiredSourceTypes.has(sourceName)) {
+                    return;
+                }
                 const names = [sourceName].concat(sourceTypeAliases[sourceName] || []);
                 names.forEach(name => {
                     if (!name) return;
