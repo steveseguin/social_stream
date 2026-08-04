@@ -4,6 +4,7 @@ const path = require('path');
 const vm = require('vm');
 
 const root = path.join(__dirname, '..');
+const sharedDedupeSource = fs.readFileSync(path.join(root, 'js', 'transport-dedupe.js'), 'utf8');
 
 // Every page carrying the cross-transport dedupe guard.
 const guardedFiles = [
@@ -52,6 +53,8 @@ function extractFunction(source, name) {
 
 function runSuite(file, source) {
   const isDock = file === 'dock.html';
+  const usesSharedDedupe = source.includes('SocialStreamTransportDedupe.create()');
+  const supportsIdlessDedupe = isDock || usesSharedDedupe;
   let fakeNow = 1000000;
   let gateOpen = true;
   const sandbox = {
@@ -59,13 +62,22 @@ function runSuite(file, source) {
     urlParams: { has: () => gateOpen }, // gate used by the other pages
     Date: { now: () => fakeNow }
   };
+  sandbox.window = sandbox;
   vm.createContext(sandbox);
+  if (usesSharedDedupe) vm.runInContext(sharedDedupeSource, sandbox);
   const supportingFunctions = isDock
-    ? `${extractFunction(source, 'stableTransportStringify')}\n${extractFunction(source, 'getTransportDeliveryKey')}\n`
+    ? `${extractFunction(source, 'stableTransportStringify')}\n` +
+      `${extractFunction(source, 'getTransportDeliveryKey')}\n` +
+      `${extractFunction(source, 'isDuplicateIdlessTransportDelivery')}\n`
     : '';
   vm.runInContext(
     'var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;\n' +
+    'var IDLESS_CROSS_TRANSPORT_DEDUPE_TTL_MS = 1000;\n' +
     'var recentTransportDeliveries = new Map();\n' +
+    'var recentIdlessTransportDeliveries = new Map();\n' +
+    (usesSharedDedupe
+      ? 'var transportDeliveryDedupe = SocialStreamTransportDedupe.create();\n'
+      : '') +
     supportingFunctions +
     `${extractFunction(source, 'isDuplicateTransportDelivery')}\n` +
     'this.isDuplicateTransportDelivery = isDuplicateTransportDelivery;',
@@ -93,10 +105,23 @@ function runSuite(file, source) {
   assert.strictEqual(isDup({ id: 2, mid: 2, chatname: 'x' }), false, file);
   assert.strictEqual(isDup({ chatname: 'noid', chatmessage: 'hi' }, 'p2p'), false, file);
   assert.strictEqual(
-    isDup({ chatname: 'noid', chatmessage: 'hi' }, isDock ? 'server' : 'p2p'),
-    isDock,
-    `${file}: only Dock deduplicates idless cross-transport payloads`
+    isDup({ chatname: 'noid', chatmessage: 'hi' }, supportsIdlessDedupe ? 'server' : 'p2p'),
+    supportsIdlessDedupe,
+    `${file}: shared guard must deduplicate idless cross-transport payloads`
   );
+
+  if (supportsIdlessDedupe) {
+    const repeatedNoId = { chatname: 'repeat', chatmessage: 'same legitimate message', type: 'youtube' };
+    assert.strictEqual(isDup({ ...repeatedNoId }, 'server'), false, `${file}: first idless message must pass`);
+    assert.strictEqual(isDup({ ...repeatedNoId }, 'server'), false, `${file}: same-source idless repeat must pass`);
+    assert.strictEqual(isDup({ ...repeatedNoId }, 'p2p'), true, `${file}: first mirrored idless copy must be paired`);
+    assert.strictEqual(isDup({ ...repeatedNoId }, 'p2p'), true, `${file}: second mirrored idless copy must be paired`);
+
+    const delayedNoId = { chatname: 'repeat', chatmessage: 'outside pairing window', type: 'youtube' };
+    assert.strictEqual(isDup({ ...delayedNoId }, 'server'), false, `${file}: initial delayed idless message must pass`);
+    fakeNow += 1001;
+    assert.strictEqual(isDup({ ...delayedNoId }, 'p2p'), false, `${file}: idless message outside one second must pass`);
+  }
   assert.strictEqual(isDup({ id: 3, get: 'token', chatmessage: 'hi' }), false, file);
   assert.strictEqual(isDup({ id: 3, get: 'token', chatmessage: 'hi' }), false, file);
 

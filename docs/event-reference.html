@@ -109,6 +109,7 @@
                                 <li><a href="#joystick-ws">Joystick</a></li>
                                 <li><a href="#xpsync">XP Sync</a></li>
                                 <li><a href="#facebook">Facebook</a></li>
+                                <li><a href="#instagram">Instagram</a></li>
                                 <li><a href="#onlinechurch">Online Church</a></li>
                                 <li><a href="#shareplay">SharePlay</a></li>
                                 <li><a href="#streamplace">Streamplace</a></li>
@@ -121,6 +122,9 @@
                                 <li><a href="#chzzk">CHZZK</a></li>
                                 <li><a href="#rumble-dom">Rumble DOM</a></li>
                                 <li><a href="#rumble-ws">Rumble API</a></li>
+                                <li><a href="#younow">YouNow</a></li>
+                                <li><a href="#favorited">Favorited Studio</a></li>
+                                <li><a href="#beamstream">BEAM</a></li>
                             </ul>
                         </div>
                     </div>
@@ -142,7 +146,7 @@
             <section class="section-summary" id="quick-availability">
                 <h2>Quick Feature Availability</h2>
                 <p>Use this table to see which alert types each capture method currently delivers. Detailed payload notes follow below.</p>
-                <p class="field-highlights">The dedicated Multi-Stream Alert Box groups live events into five shared alert categories: <code>Follow</code>, <code>Subscription/Member</code>, <code>Donation</code>, <code>Bits/Cheers</code>, and <code>Raid/Host</code>. It derives those categories from the existing <code>event</code>, <code>membership</code>, <code>subtitle</code>, <code>hasDonation</code>, and <code>meta</code> fields documented here; no separate payload format is required.</p>
+                <p class="field-highlights">The dedicated Multi-Stream Alert Box groups live events into five core alert categories: <code>Follow</code>, <code>Subscription/Member</code>, <code>Donation</code>, <code>Bits/Cheers</code>, and <code>Raid/Host</code>, plus two opt-in categories (<code>Auction</code> and <code>Hype Train</code>) enabled via URL parameters. It derives those categories from the existing <code>event</code>, <code>membership</code>, <code>subtitle</code>, <code>hasDonation</code>, and <code>meta</code> fields documented here; no separate payload format is required.</p>
                 <table class="field-table summary-table">
                     <thead>
                         <tr>
@@ -414,8 +418,8 @@
                         <tbody>
                             <tr>
                                 <td class="membership-event"><code>sponsorship</code></td>
-                                <td>Membership welcome header without explicit chat text (new members, gifted bundles landing).</td>
-                                <td><code>membership</code> populated with translated “MEMBERSHIP”; <code>subtitle</code> contains streak/tier when detected.</td>
+                                <td>Membership welcome header without explicit chat text (new members, gifted bundles landing), including structured welcome cards or localized “Welcome to …” text.</td>
+                                <td><code>membership</code> populated with translated “MEMBERSHIP”; <code>subtitle</code> contains streak/tier when detected; <code>nameColor</code> uses membership green when allowed.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>giftpurchase</code></td>
@@ -426,11 +430,6 @@
                                 <td class="membership-event"><code>giftredemption</code></td>
                                 <td>Gift redemption announcement for recipients.</td>
                                 <td><code>membership</code> becomes “MEMBERSHIP”; <code>subtitle</code> includes “Gifted by …”.</td>
-                            </tr>
-                            <tr>
-                                <td class="membership-event"><code>sponsorship</code></td>
-                                <td>Structured welcome cards or localized “Welcome to …” text.</td>
-                                <td><code>membership</code> “MEMBERSHIP”; <code>subtitle</code> carries tier/title; <code>nameColor</code> uses membership green when allowed.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>resub</code></td>
@@ -1945,6 +1944,91 @@
                     </table>
                     <p class="field-highlights">This transport is intended for channels you own or manage. Because the API URL contains a live stream key, do not expose it in overlays, logs, screenshots, or shared browser profiles. Chat avatars come from Rumble's SSE chat stream once the official API resolves the stream ID; this transport does not scrape Rumble pages for avatars.</p>
                 </article>
+                <article class="platform-card" id="younow">
+                    <h3>YouNow - DOM Capture</h3>
+                    <p class="source-note">Implementation: <code>sources/younow.js</code></p>
+                    <ul class="requirements">
+                        <li>Reads the rendered live chat DOM and emits standard chat payloads with <code>type: "younow"</code>.</li>
+                        <li>Audience activity lines such as <code>is watching</code>, <code>I became a fan!</code>, and <code>invited N fans to this broadcast.</code> are flagged with <code>event: true</code> so event filters can route them.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>New chat rows appear in the live audience chat.</td>
+                                <td>Standard chat payload; fan/audience activity rows set <code>event: true</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>The visible audience panel count changes while <code>showviewercount</code>/<code>hypemode</code> is enabled.</td>
+                                <td><code>meta</code> integer viewer count; emits <code>0</code> when the counter disappears.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+                <article class="platform-card" id="favorited">
+                    <h3>Favorited Studio - DOM Capture</h3>
+                    <p class="source-note">Implementation: <code>sources/favorited.js</code></p>
+                    <ul class="requirements">
+                        <li>Reads the rendered live chat DOM and emits standard chat payloads with <code>type: "favorited"</code>.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>New chat rows appear.</td>
+                                <td>Standard chat payload.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>The live viewers tab count changes while <code>showviewercount</code>/<code>hypemode</code> is enabled.</td>
+                                <td><code>meta</code> integer viewer count read from the <code>content-live-viewers</code> tab.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+                <article class="platform-card" id="beamstream">
+                    <h3>BEAM - DOM Capture</h3>
+                    <p class="source-note">Implementation: <code>sources/beamstream.js</code></p>
+                    <ul class="requirements">
+                        <li>Reads the rendered live chat DOM and emits standard chat payloads with <code>type: "beamstream"</code>.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>New chat rows appear.</td>
+                                <td>Standard chat payload; <code>contentimg</code> may carry inline video/webm attachments when exposed.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>A viewer counter element changes while <code>showviewercount</code>/<code>hypemode</code> is enabled.</td>
+                                <td><code>meta</code> integer viewer count; only emitted when the chat page exposes a viewer counter.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
             </section>
 
             <section class="section-summary" id="cross-platform">
@@ -2054,7 +2138,7 @@
 
             <section class="section-summary" id="repository-audit">
                 <h2>Repository Audit Snapshot (All Sources)</h2>
-                <p>Static scan scope: <code>sources/*.js</code> and <code>sources/websocket/*.js</code>. The optional audit snapshot file (<code>docs/event-audit.json</code>) is not currently checked in; regenerate it locally when needed.</p>
+                <p>Static scan scope: <code>sources/*.js</code> and <code>sources/websocket/*.js</code> (snapshot taken August 2026). The optional audit snapshot file (<code>docs/event-audit.json</code>) is not currently checked in; regenerate it locally when needed.</p>
                 <table class="field-table summary-table">
                     <thead>
                         <tr>
@@ -2066,12 +2150,12 @@
                     <tbody>
                         <tr>
                             <td>Files scanned</td>
-                            <td><code>150</code></td>
+                            <td><code>162</code></td>
                             <td>Coverage includes all root capture scripts plus all websocket capture scripts.</td>
                         </tr>
                         <tr>
                             <td>Files writing <code>hasDonation</code></td>
-                            <td><code>132</code></td>
+                            <td><code>149</code></td>
                             <td>Most sources expose donation/cheer/tip value even when no explicit event marker is set.</td>
                         </tr>
                         <tr>

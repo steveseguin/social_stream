@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script type="text/javascript" src="../../js/local-server-url.js"></script>
+<script type="text/javascript" src="../../js/local-server-url.js"></script>
+<script type="text/javascript" src="../../js/transport-dedupe.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Overlay</title>
@@ -273,10 +274,12 @@ body.gaming .message-container { text-shadow: 0 0 6px rgba(0,200,255,0.55), 0 0 
     // the websocket relay and the VDO.Ninja bridge; render only the first copy.
     var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
     var recentTransportDeliveries = new Map();
-    function isDuplicateTransportDelivery(data) {
+    var transportDeliveryDedupe = typeof SocialStreamTransportDedupe !== "undefined" ? SocialStreamTransportDedupe.create() : null;
+    function isDuplicateTransportDelivery(data, source) {
         if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) {
             return false;
         }
+        if (transportDeliveryDedupe) return transportDeliveryDedupe(data, source);
         if (!data || typeof data !== "object") {
             return false;
         }
@@ -308,8 +311,8 @@ body.gaming .message-container { text-shadow: 0 0 6px rgba(0,200,255,0.55), 0 0 
         recentTransportDeliveries.set(key, now);
         return false;
     }
-    function addMessageToOverlay(data) {
-        if (isDuplicateTransportDelivery(data)) {
+    function addMessageToOverlay(data, source) {
+        if (isDuplicateTransportDelivery(data, source)) {
             return;
         }
         if (hideBots && data.bot) { return; }
@@ -397,7 +400,7 @@ body.gaming .message-container { text-shadow: 0 0 6px rgba(0,200,255,0.55), 0 0 
 		window.addEventListener("message", function (e) {
 			if (e.source != iframe.contentWindow) return;
 			if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja) {
-				addMessageToOverlay(e.data.dataReceived.overlayNinja);
+				addMessageToOverlay(e.data.dataReceived.overlayNinja, "p2p");
 			}
 		});
 	}
@@ -424,7 +427,7 @@ body.gaming .message-container { text-shadow: 0 0 6px rgba(0,200,255,0.55), 0 0 
 			var resp = false
 			if (event.data){
 				var data = JSON.parse(event.data);
-				addMessageToOverlay(data);
+				addMessageToOverlay(data, "server");
 				if (data.get){
 					var ret = {};
 					ret.callback = {};

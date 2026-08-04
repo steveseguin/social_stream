@@ -93,7 +93,7 @@ This is the most common and straightforward method for overlay pages. Your custo
   - For speaker-based rooms, keep browser voice processing enabled on guest links (`&aec=1&denoise=1&autogain=1`) and avoid `&proaudio`/`&stereo` unless you are intentionally bypassing processing.
   - For no-headphone panels, consider adding a conservative gate such as `&noisegate=4` (then tune as needed) to reduce open-mic recapture between turns.
 
-See `dock.html`, `featured.html`, `events.html` etc. for more examples of iframe setups. They often use `label=dock`, `label=overlay`, `label=actions` respectively.
+See `dock.html`, `featured.html`, `events.html` etc. for more examples of iframe setups. `dock.html` uses `label=dock`, while `featured.html` and `events.html` both use `label=overlay` (`actions.html` uses `label=actions`).
 
 ### 4.2. WebSocket API (Advanced)
 

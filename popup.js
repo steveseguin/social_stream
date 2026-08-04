@@ -5856,6 +5856,154 @@ function normalizeGeneratedLinkBase(value) {
 	}
 }
 
+/**
+ * Keep SSApp history under the app's file:// top-level page. Chromium partitions storage
+ * for the remotely loaded popup/background frames by their top-level site, so a separate
+ * BrowserWindow cannot see that IndexedDB even when it loads the same remote URL.
+ */
+async function readSsappChatHistorySnapshot() {
+	const databases = typeof indexedDB.databases === "function" ? await indexedDB.databases() : null;
+	if (databases && !databases.some(database => database.name === "chatMessagesDB_v3")) {
+		return { messages: [], version: null, stores: [] };
+	}
+
+	return new Promise((resolve, reject) => {
+		const request = indexedDB.open("chatMessagesDB_v3");
+		request.onerror = () => reject(request.error || new Error("Unable to open the local message database."));
+		request.onsuccess = () => {
+			const database = request.result;
+			const stores = Array.from(database.objectStoreNames);
+			if (!database.objectStoreNames.contains("messages")) {
+				database.close();
+				reject(new Error("The local message database does not contain the messages store."));
+				return;
+			}
+
+			const allMessages = database.transaction("messages", "readonly").objectStore("messages").getAll();
+			allMessages.onerror = () => {
+				database.close();
+				reject(allMessages.error || new Error("Unable to read saved messages."));
+			};
+			allMessages.onsuccess = () => {
+				const snapshot = {
+					messages: Array.isArray(allMessages.result) ? allMessages.result : [],
+					version: database.version,
+					stores,
+				};
+				database.close();
+				resolve(snapshot);
+			};
+		};
+	});
+}
+
+function createSsappChatHistorySnapshotDocument(historyUrl, snapshot) {
+	const snapshotJson = JSON.stringify(snapshot);
+	const snapshotLiteral = JSON.stringify(snapshotJson).replace(/</g, "\\u003c");
+	const historyUrlLiteral = JSON.stringify(historyUrl.toString()).replace(/</g, "\\u003c");
+	let targetOrigin = "*";
+	try {
+		if (historyUrl.protocol === "http:" || historyUrl.protocol === "https:") targetOrigin = historyUrl.origin;
+	} catch (_) {}
+
+	return `<!doctype html>
+		<html>
+		<head>
+			<meta charset="utf-8">
+			<title>Message Browser</title>
+			<style>
+				html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #fff; }
+				#history-frame { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
+			</style>
+		</head>
+		<body>
+			<iframe id="history-frame" title="Message Browser"></iframe>
+			<script>
+				const snapshot = JSON.parse(${snapshotLiteral});
+				const frame = document.getElementById("history-frame");
+				const targetOrigin = ${JSON.stringify(targetOrigin)};
+				const sendSnapshot = () => frame.contentWindow && frame.contentWindow.postMessage({
+					type: "ssapp-chat-history-snapshot",
+					snapshot
+				}, targetOrigin);
+				window.addEventListener("message", event => {
+					if (event.source !== frame.contentWindow || !event.data) return;
+					if (event.data.type === "ssapp-chat-history-ready") {
+						sendSnapshot();
+					} else if (event.data.type === "ssapp-chat-history-clear") {
+						let ok = false;
+						try {
+							if (window.ninjafy && typeof window.ninjafy.sendMessage === "function") {
+								window.ninjafy.sendMessage(null, {
+									type: "toBackground",
+									data: { action: "clearHistory", value: { confirm: true } }
+								});
+								ok = true;
+							}
+						} catch (_) {}
+						frame.contentWindow.postMessage({
+							type: "ssapp-chat-history-clear-result",
+							requestId: event.data.requestId,
+							ok
+						}, targetOrigin);
+					}
+				});
+				frame.src = ${historyUrlLiteral};
+			</script>
+		</body>
+		</html>`;
+}
+
+function setupSsappChatHistoryPanel() {
+	const historyLink = document.getElementById("chathistory");
+	if (!historyLink) return;
+
+	let historyUrl;
+	try {
+		historyUrl = new URL("./chathistory.html", window.location.href);
+		historyUrl.searchParams.set("ssapp", "1");
+	} catch (error) {
+		console.error("Unable to create the SSApp chat history URL:", error);
+		return;
+	}
+
+	historyUrl.searchParams.set("ssappSnapshot", "1");
+
+	const configureHistoryLink = () => {
+		const currentHistoryLink = document.getElementById("chathistory");
+		if (!currentHistoryLink) return;
+		currentHistoryLink.href = "#";
+		currentHistoryLink.target = "_self";
+	};
+	configureHistoryLink();
+
+	const databaseSettingsRow = document.getElementById("databaseSettingsRow");
+	if (databaseSettingsRow && !databaseSettingsRow.__ssappHistoryLinkObserver) {
+		databaseSettingsRow.__ssappHistoryLinkObserver = new MutationObserver(configureHistoryLink);
+		databaseSettingsRow.__ssappHistoryLinkObserver.observe(databaseSettingsRow, { childList: true, subtree: true });
+	}
+
+	document.addEventListener("click", async event => {
+		const clickedLink = event.target && event.target.closest ? event.target.closest("#chathistory") : null;
+		if (!clickedLink) return;
+		event.preventDefault();
+		if (clickedLink.getAttribute("aria-busy") === "true") return;
+		clickedLink.setAttribute("aria-busy", "true");
+		try {
+			const snapshot = await readSsappChatHistorySnapshot();
+			const html = createSsappChatHistorySnapshotDocument(historyUrl, snapshot);
+			const blobUrl = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+			window.open(blobUrl, "_blank");
+			setTimeout(() => URL.revokeObjectURL(blobUrl), 300000);
+		} catch (error) {
+			console.error("Unable to open the SSApp chat history:", error);
+			window.alert(error && error.message ? error.message : "Unable to open the local message database.");
+		} finally {
+			clickedLink.removeAttribute("aria-busy");
+		}
+	});
+}
+
 // First check if we're on a beta URL (either subdomain or path)
 if (location.href.includes("/beta/") || location.hostname === "beta.socialstream.ninja"){
     Beta = true;
@@ -10589,10 +10737,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 	if (ssapp){
 		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
-		const basePath = decodeURIComponent(urlParams.get('basePath'));
- 		if (basePath){
- 			document.getElementById("chathistory").href = basePath  + "/chathistory.html?href="+encodeURIComponent(window.location.href);
- 		}
+		setupSsappChatHistoryPanel();
 	} else {
 		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
 	}

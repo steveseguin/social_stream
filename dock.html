@@ -7532,9 +7532,12 @@
 			}
 
 			// The extension may deliver the same feed message over both the websocket and
-			// the VDO.Ninja bridge. Keep this active for stale URLs and mixed-version clients.
+			// the VDO.Ninja bridge. IDs support a wider replay window; ID-less payloads are
+			// paired one-for-one only when the other transport follows within one second.
 			var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
+			var IDLESS_CROSS_TRANSPORT_DEDUPE_TTL_MS = 1000;
 			var recentTransportDeliveries = new Map();
+			var recentIdlessTransportDeliveries = new Map();
 			function stableTransportStringify(value, isRoot) {
 				if (value === null || typeof value !== "object") {
 					var serialized = JSON.stringify(value);
@@ -7572,10 +7575,52 @@
 				}
 				return "payload|" + stableTransportStringify(data, true);
 			}
+			function isDuplicateIdlessTransportDelivery(key, source) {
+				var now = Date.now();
+				recentIdlessTransportDeliveries.forEach(function (seenSources, seenKey) {
+					Object.keys(seenSources).forEach(function (seenSource) {
+						seenSources[seenSource] = seenSources[seenSource].filter(function (seenAt) {
+							return now - seenAt <= IDLESS_CROSS_TRANSPORT_DEDUPE_TTL_MS;
+						});
+						if (!seenSources[seenSource].length) {
+							delete seenSources[seenSource];
+						}
+					});
+					if (!Object.keys(seenSources).length) {
+						recentIdlessTransportDeliveries.delete(seenKey);
+					}
+				});
+
+				var seenSources = recentIdlessTransportDeliveries.get(key) || {};
+				var sourceNames = Object.keys(seenSources);
+				for (var i = 0; i < sourceNames.length; i++) {
+					var seenSource = sourceNames[i];
+					if (seenSource === source || !seenSources[seenSource].length) continue;
+					seenSources[seenSource].shift();
+					if (!seenSources[seenSource].length) {
+						delete seenSources[seenSource];
+					}
+					if (Object.keys(seenSources).length) {
+						recentIdlessTransportDeliveries.set(key, seenSources);
+					} else {
+						recentIdlessTransportDeliveries.delete(key);
+					}
+					return true;
+				}
+
+				var sourceQueue = seenSources[source] || [];
+				sourceQueue.push(now);
+				seenSources[source] = sourceQueue;
+				recentIdlessTransportDeliveries.set(key, seenSources);
+				return false;
+			}
 			function isDuplicateTransportDelivery(data, source) {
 				var key = getTransportDeliveryKey(data);
 				if (!key) return false;
 				source = source || "unknown";
+				if (key.indexOf("payload|") === 0) {
+					return isDuplicateIdlessTransportDelivery(key, source);
+				}
 				var now = Date.now();
 				recentTransportDeliveries.forEach(function (seenSources, seenKey) {
 					var newestSeenAt = 0;
