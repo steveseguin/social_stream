@@ -7,17 +7,24 @@
         <meta content="utf-8" http-equiv="encoding" />
         <style>
 :root {
+    color-scheme: light;
     --body-background-enabled: #e7e7e7;
     --body-background-disabled: #ffdcdd;
+    --body-background-color: var(--body-background-disabled);
     --default-text-color: #362e26;
     --section-title-color: #362e26;
-    --color-accent: #00a6ff;
+    --color-accent: #0071b8;
     --color-accent-subtle: #ddf4ff;
     --collapsible-label-color: #dcf4ff;
     --collapsible-border-color: #b7defe;
     --color-wrapper-background: #e9e4dd;
     --button-background: #b7defe;
     --text-button-text: #222;
+    --text-secondary: #57606a;
+    --danger-text: #c62828;
+    --upload-button-bg: #515cd4;
+    --scrollbar-thumb: #9aa0a6;
+    --scrollbar-track: #dcdcdc;
     --h2-color: black;
     --h3-color: #111;
     --link-color: black;
@@ -35,32 +42,33 @@
     --extension-enabled-background-color: rgb(153, 255, 153);
     --extension-disabled-background-color: red;
     --extension-disabled-text-color: white;
-    --streaming-chat-color: #00a6ff;
-    --chat-overlay-template-color: #8b5cf6;
-    --single-message-color: #ff7f00;
-    --featured-chat-color: #ff7f00;
-    --multi-alert-color: #ef4444;
-    --reactions-color: #ec4899;
-    --emotes-wall-color: #d7b300;
-	--tipjar-color: #35d0ff;
-	--chatbot-wall-color: #ff0000;
-    --hype-meter-color: #00d74f;
-    --waitlist-color: #ff00d2;
-	--ticker-color: #ff3a3bdd;
-	--gif-color: #9a3f7bdd;
-	--wordcloud-color: #6a6bffdd;
-	--poll-color: #61b700dd;
-	--poll-color: #D16700dd;
-	--credits-color: #02a0aa;
+    --streaming-chat-color: #0071b8;
+    --chat-overlay-template-color: #7345d6;
+    --single-message-color: #b45400;
+    --featured-chat-color: #b45400;
+    --multi-alert-color: #c62828;
+    --reactions-color: #c9256f;
+    --emotes-wall-color: #857000;
+	--tipjar-color: #0b6f90;
+	--chatbot-wall-color: #cc0000;
+    --hype-meter-color: #007a2c;
+    --waitlist-color: #c400a1;
+	--ticker-color: #d21f20;
+	--gif-color: #8d3a70;
+	--wordcloud-color: #5152e0;
+	--poll-color: #b35400;
+	--credits-color: #017a82;
 	--meta-color: #475569;
-	--leaderboard-color: #9b59b6;
-	--scoreboard-color: #e74c3c;
+	--leaderboard-color: #7d3c98;
+	--scoreboard-color: #c0392b;
+	--eventsdashboard-color: #111;
     --download-link: blue;
     --font-family: "Segoe UI", Tahoma, "Sora", Roboto, Arial, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
+        color-scheme: dark;
         --body-background-enabled: #0d1117;
         --body-background-disabled: #170d0e;
         --default-text-color: #c9d1d9;
@@ -86,6 +94,10 @@
         --important-changes-link: #6ea8fe;
         --options-group-background-color: #161b22;
         --options-group-text-color: #c9d1d9;
+        --text-secondary: #8b949e;
+        --danger-text: #ff7b72;
+        --scrollbar-thumb: #666;
+        --scrollbar-track: #201c29;
         --extension-enabled-background-color: rgb(153, 255, 153);
         --extension-disabled-background-color: #781717;
         --extension-disabled-text-color: white;
@@ -96,11 +108,18 @@
         --multi-alert-color: #f87171;
         --reactions-color: #f472b6;
         --emotes-wall-color: #ffd400dd;
+        --tipjar-color: #35d0ff;
+        --chatbot-wall-color: #ff5c5c;
         --hype-meter-color: #00ff5edd;
-        --waitlist-color: #ff00d2dd;
-		--ticker-color: #dd3334dd;
-		--poll-color: #a3ff3bdd;
+        --waitlist-color: #ff47dd;
+		--ticker-color: #ff5b5c;
+		--gif-color: #d478b0;
+		--wordcloud-color: #8a8bff;
+		--poll-color: #ffa14e;
+		--credits-color: #0ab6c1;
 		--meta-color: #94a3b8;
+		--leaderboard-color: #b880d6;
+		--scoreboard-color: #e74c3c;
         --download-link: lightblue;
 		--eventsdashboard-color: white;
     }
@@ -192,9 +211,15 @@ hr {
 }
 .remove-username, .remove-source {
 	cursor: pointer;
-	color: #ff0000;
+	color: var(--danger-text);
 	font-weight: bold;
 	margin-right: 8px;
+}
+
+/* Source tags keep a dark background in both themes, so their remove buttons need a light red */
+.username-tag .remove-source,
+.username-tag .remove-username {
+	color: #ffb3b3;
 }
 
 #source-selector {
@@ -426,7 +451,7 @@ input[type="range"] {
 	display: inline-block;
     margin: 0 9px;
     padding: 3px 8px 2px 6px;
-	background-color: #007bff;
+	background-color: #0066d4;
 	color: white;
 	border: none;
 	border-radius: 4px;
@@ -443,8 +468,55 @@ input[type="range"] {
     padding: 5px;
 }
 .copy-link-btn:hover {
-    background-color: #f0f0f0;
+    background-color: rgba(0, 0, 0, 0.08);
     border-radius: 50%;
+}
+
+@media (prefers-color-scheme: dark) {
+    .copy-link-btn:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+}
+
+kbd {
+    background: #eee;
+    color: #1f2328;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+    font-size: 0.95em;
+}
+
+@media (prefers-color-scheme: dark) {
+    kbd {
+        background: #21262d;
+        color: #c9d1d9;
+        border-color: #3d444d;
+    }
+}
+
+.shortcut-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.shortcut-table tr {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.shortcut-table tr:last-child {
+    border-bottom: none;
+}
+
+.shortcut-table td {
+    padding: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .shortcut-table tr {
+        border-bottom-color: rgba(255, 255, 255, 0.12);
+    }
 }
 
 /* example of how to remotely load a font */
@@ -527,9 +599,10 @@ html {
 body {
     padding: 0;
     margin: 0;
-    scrollbar-color: #666 #201c29;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
     font-family: var(--font-family);
     background-color: var(--body-background-disabled);
+    color: var(--default-text-color);
     font-size: 12px;
 	overflow-x: hidden;
 }
@@ -584,10 +657,12 @@ body.popup-search-empty #popupSearchNoResults {
 }
 
 body.extension-disabled {
+    --body-background-color: var(--body-background-disabled);
     background-color: var(--body-background-disabled);
 }
 
 body.extension-enabled {
+    --body-background-color: var(--body-background-enabled);
     background-color: var(--body-background-enabled);
 }
 body.beginner-mode .beginner-advanced {
@@ -876,8 +951,12 @@ p a {
 .edit-link-dialog-error {
     min-height: 1.2em;
     margin-top: 4px;
-    color: #ff7b7b;
+    color: var(--danger-text);
     font-size: 0.78rem;
+}
+
+.danger-note {
+    color: var(--danger-text);
 }
 
 #disableButton {
@@ -899,6 +978,7 @@ button {
 
 .extension-enabled #disableButton {
     background-color: var(--extension-enabled-background-color);
+    color: #1a1a1a;
 }
 
 .extension-disabled #disableButton {
@@ -1083,14 +1163,30 @@ h2 {
     font-weight: 600;
 }
 .lightblue{
-	color: #006f93;
+	color: #00607f;
 }
 @media (prefers-color-scheme: dark) {
-	.options_group > a {
+	.options_group a {
 		color: lightblue;
 	}
 	.lightblue{
 		color: lightblue;
+	}
+	.slider {
+		background-color: #3d4654;
+	}
+	.isolate {
+		border-top-color: #3d444d;
+		border-bottom-color: #3d444d;
+	}
+	.tab-button.active,
+	.arc-ok-button {
+		color: #04121f;
+	}
+	#searchIcon,
+	#activeIcon,
+	#languageIcon {
+		filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
 	}
 }
 
@@ -1426,14 +1522,21 @@ input:checked + .slider:before {
 }
 .link-help-content {
     display: none;
-    background: rgba(255,255,255,0.03);
+    background: rgba(0,0,0,0.04);
     border-radius: 6px;
     font-size: 0.9em;
     line-height: 1.5;
     color: var(--options-group-text-color);
     padding: 12px 15px;
     margin: 10px 0;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(0,0,0,0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+    .link-help-content {
+        background: rgba(255,255,255,0.03);
+        border-color: rgba(255,255,255,0.1);
+    }
 }
 .link-help-toggle:checked + .link-help-content {
     display: block;
@@ -1715,7 +1818,7 @@ input:checked + .slider:before {
 }
 
 .custom_gif_commands_title {
-    color: #00a6ff; /* You can adjust this color to match your theme */
+    color: var(--gif-color);
 }
 
 .custom-gif-command-entry {
@@ -1746,32 +1849,32 @@ input:checked + .slider:before {
 }
 
 .uploadCustomGifMedia {
-    background-color: #667eea;
+    background-color: var(--upload-button-bg);
 }
 
 .uploadCustomGifMedia:hover {
-    background-color: #4f67d8;
+    background-color: #4353c4;
 }
 
 .testCustomGifCommand {
-    background-color: #0ea5e9;
+    background-color: #0374b8;
 }
 
 .testCustomGifCommand:hover {
-    background-color: #0284c7;
+    background-color: #025e94;
 }
 
 .copyCustomGifCommandSource {
-    background-color: #16a34a;
+    background-color: #15803d;
 }
 
 .copyCustomGifCommandSource:hover {
-    background-color: #15803d;
+    background-color: #126c34;
 }
 
 .removeCustomGifCommand {
     padding: 5px 10px;
-    background-color: #ff0000;
+    background-color: #cf2e2e;
     color: white;
     border: none;
     border-radius: 4px;
@@ -1779,7 +1882,7 @@ input:checked + .slider:before {
 }
 
 .removeCustomGifCommand:hover {
-    background-color: #cc0000;
+    background-color: #b02525;
 }
 
 .tab-container {
@@ -1837,7 +1940,7 @@ input:checked + .slider:before {
 
 .delete-tab {
   margin-left: 8px;
-  color: #ff4444;
+  color: var(--danger-text);
   cursor: pointer;
   font-size: 14px;
 }
@@ -2138,7 +2241,7 @@ input:checked + .slider:before {
 
 .spotify-command-row .spotify-cmd-trigger:focus {
     outline: none;
-    border-color: var(--accent-color, #007bff);
+    border-color: var(--color-accent);
     background: var(--options-group-background-color);
 }
 
@@ -5048,7 +5151,7 @@ input:checked + .slider:before {
                                 <div class="textInputContainer" style="width: 95%; position: relative;" title="Specify the image URL that should appear when a chat message is missing an avatar">
                                     <input type="text" id="featuredFallbackImage" class="textInput instant" autocomplete="off" placeholder="https://fileuploads.socialstream.ninja/your-image.png" data-textparam2="fallbackimg" />
                                     <label for="featuredFallbackImage">&gt; Custom fallback avatar image URL</label>
-                                    <button type="button" id="uploadFeaturedFallbackBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+                                    <button type="button" id="uploadFeaturedFallbackBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: var(--upload-button-bg, #667eea); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
                                 </div>
                             </div>
                         </div>
@@ -6461,12 +6564,12 @@ input:checked + .slider:before {
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Follow sound URL (.ogg, .mp3, .wav)" data-textparam25="followsound" id="multi-alert-followsound" />
 											<label><span>&gt; 💖 Follow sound</span></label>
-											<button type="button" id="uploadFollowSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #ff68b3;">Upload</button>
+											<button type="button" id="uploadFollowSoundBtn" class="textInputUploadButton">Upload</button>
 										</div>
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Sub sound URL (.ogg, .mp3, .wav)" data-textparam25="subsound" id="multi-alert-subsound" />
 											<label><span>&gt; 💜 Subscription sound</span></label>
-											<button type="button" id="uploadSubSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #8b5cf6;">Upload</button>
+											<button type="button" id="uploadSubSoundBtn" class="textInputUploadButton">Upload</button>
 										</div>
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Donation sound URL (.ogg, .mp3, .wav)" data-textparam25="donosound" id="multi-alert-donosound" />
@@ -6476,7 +6579,7 @@ input:checked + .slider:before {
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Bits sound URL (.ogg, .mp3, .wav)" data-textparam25="bitssound" id="multi-alert-bitssound" />
 											<label><span>&gt; 💙 Bits/Cheer sound</span></label>
-											<button type="button" id="uploadBitsSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #38bdf8; --upload-button-color: #111;">Upload</button>
+											<button type="button" id="uploadBitsSoundBtn" class="textInputUploadButton">Upload</button>
 										</div>
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Raid sound URL (.ogg, .mp3, .wav)" data-textparam25="raidsound" id="multi-alert-raidsound" />
@@ -6491,7 +6594,7 @@ input:checked + .slider:before {
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Hype train sound URL (.ogg, .mp3, .wav)" data-textparam25="hypesound" id="multi-alert-hypesound" />
 											<label><span>&gt; ❤️ Hype train sound</span></label>
-											<button type="button" id="uploadHypeSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #f43f5e;">Upload</button>
+											<button type="button" id="uploadHypeSoundBtn" class="textInputUploadButton">Upload</button>
 										</div>
 									</div>
 								</details>
@@ -7197,7 +7300,7 @@ input:checked + .slider:before {
 									  <input type="checkbox" id="ssc" data-setting="ssc" />
 									  <span class="slider round"></span>
 								  </label>
-								  <img class="icon" src="./sources/images/socialstream.png" style="display: inline-block;" />📨 <span>Send messages to <a href="https://ninjachatter.com/" target="_blank" style="font-size: 13px; color: #38bdf8;" title="Free public-facing embeddable chat">Ninja Chatter</a></span>
+								  <img class="icon" src="./sources/images/socialstream.png" style="display: inline-block;" />📨 <span>Send messages to <a href="https://ninjachatter.com/" target="_blank" class="lightblue" style="font-size: 13px;" title="Free public-facing embeddable chat">Ninja Chatter</a></span>
 								</div>
 								<div>
 								  <div class="textInputContainer" style="display: inline-block; width: 300px; ">
@@ -7437,8 +7540,8 @@ input:checked + .slider:before {
 
                                 <h4 style="margin-top: 15px;">Backup & Restore</h4>
                                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                    <button id="exportPointsData" class="button" style="background-color: #28a745;">Export Points</button>
-                                    <button id="importPointsData" class="button" style="background-color: #17a2b8;">Import Points</button>
+                                    <button id="exportPointsData" class="button" style="background-color: #1e7e34; color: white;">Export Points</button>
+                                    <button id="importPointsData" class="button" style="background-color: #117a8b; color: white;">Import Points</button>
                                 </div>
                                 <input type="file" id="importPointsFile" accept=".json" style="display: none;">
 
@@ -7792,7 +7895,7 @@ input:checked + .slider:before {
 									    <option value="all">All Channels</option>
 								    </select>
 								    <a href="https://socialstream.ninja/midimonitor" class="lightblue"  title="Open a page to debug MIDI with" target="_blank">⚙️</a>
-								    <div style="font-size: 12px; color: #888; margin-top: 5px;">
+								    <div style="font-size: 12px; opacity: 0.75; margin-top: 5px;">
 									    <span data-translate="enable-midi-to-see-devices">Enable MIDI hotkeys above to see available devices</span>
 								    </div>
                                     <div id="midiCommands"></div>
@@ -8043,7 +8146,7 @@ input:checked + .slider:before {
                                 <div class="textInputContainer" style="width: 95%; position: relative;">
                                     <input type="text" id="default_avatar" class="textInput" autocomplete="off" placeholder="Default avatar image URL" data-textsetting="defaultavatar" />
                                     <label for="default_avatar"><span data-translate="default-avatar-image-url">&gt; Default avatar image URL</span></label>
-                                    <button type="button" id="uploadDefaultAvatarBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+                                    <button type="button" id="uploadDefaultAvatarBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: var(--upload-button-bg, #667eea); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
                                 </div>
                             </div>
                         </div>
@@ -8349,7 +8452,7 @@ input:checked + .slider:before {
 
                                 <h3><span data-translate="opened-in-new-window">Opened in new window</span></h3>
                                 <center>
-                                    <span style="color: #ff0000dd;">
+                                    <span class="danger-note">
                                         <b><span data-translate="note">Note</span></b><span data-translate="do">: Do </span><u><span data-translate="not">NOT</span></u><span data-translate="minimize-them"> minimize them!</span>
                                     </span>
                                 </center>
@@ -8690,7 +8793,7 @@ input:checked + .slider:before {
                         <div class="options">
                             <div class="options_group">
                                 <center>
-                                    💀☠️ <span style="color: red;">PLEASE DO NOT CHANGE YOUR SESSION ID</span> 💀☠️<br />
+                                    💀☠️ <span class="danger-note">PLEASE DO NOT CHANGE YOUR SESSION ID</span> 💀☠️<br />
                                     ...unless you know exactly what you are doing.
                                 </center>
                                 <br />
@@ -10018,7 +10121,7 @@ input:checked + .slider:before {
 								<div class="textInputContainer" style="width: 95%; position: relative;">
 									<input type="text" id="aiOverlayAvatar" class="textInput" autocomplete="off" placeholder="Optional avatar image URL" data-textsetting="aiOverlayAvatar" />
 									<label for="aiOverlayAvatar">&gt; Avatar image URL</label>
-									<button type="button" id="uploadAiOverlayAvatarBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+									<button type="button" id="uploadAiOverlayAvatarBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: var(--upload-button-bg, #667eea); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
 								</div>
 								<div style="margin: 8px 0;">
 									<span>Position</span>
@@ -11516,7 +11619,7 @@ input:checked + .slider:before {
                                 <div class="textInputContainer" style="width: 95%; position: relative;" title="Specify a URL for a custom sound audio file">
                                     <input type="text" id="customsound" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/sound.wav" data-textparam5="customsound" />
                                     <label for="customsound"><span data-translate="customsound">&gt; URL for custom sound audio file</span></label>
-                                    <button type="button" id="uploadWaitlistSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+                                    <button type="button" id="uploadWaitlistSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: var(--upload-button-bg, #667eea); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -11661,8 +11764,8 @@ input:checked + .slider:before {
 				<h3>
                     <span data-translate="flowactions-description">This page is the output for actions triggered by the Flow Editor page.</span>
                     <br>
-                    <span style="color: #888; font-size: 0.9em;">
-                       Note: To access the Event Flow Editor, <a href="#" id="open-event-flow-editor-link" style="color: #4a9eff;">click here</a>.
+                    <span style="opacity: 0.8; font-size: 0.9em; font-weight: 400;">
+                       Note: To access the Event Flow Editor, <a href="#" id="open-event-flow-editor-link" class="lightblue">click here</a>.
                     </span>
                 </h3>
                 <div id="flowactions" data-raw="" class="flowactions_chat"><a href="" id="flowactionslink"></a></div>
@@ -12595,31 +12698,31 @@ input:checked + .slider:before {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group" style="padding: 15px;">
-								<p style="margin-bottom: 10px; color: #666;">Use these shortcuts while the popup or dock is focused:</p>
-								<table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-									<tr style="border-bottom: 1px solid #ddd;">
-										<td style="padding: 8px;"><kbd style="background: #eee; padding: 2px 6px; border-radius: 3px; border: 1px solid #ccc;">Ctrl+Shift+E</kbd></td>
-										<td style="padding: 8px;">End Poll</td>
-									</tr>
-									<tr style="border-bottom: 1px solid #ddd;">
-										<td style="padding: 8px;"><kbd style="background: #eee; padding: 2px 6px; border-radius: 3px; border: 1px solid #ccc;">Ctrl+Shift+R</kbd></td>
-										<td style="padding: 8px;">Reset Poll</td>
-									</tr>
-									<tr style="border-bottom: 1px solid #ddd;">
-										<td style="padding: 8px;"><kbd style="background: #eee; padding: 2px 6px; border-radius: 3px; border: 1px solid #ccc;">Ctrl+Shift+W</kbd></td>
-										<td style="padding: 8px;">Select Winner (Waitlist)</td>
-									</tr>
-									<tr style="border-bottom: 1px solid #ddd;">
-										<td style="padding: 8px;"><kbd style="background: #eee; padding: 2px 6px; border-radius: 3px; border: 1px solid #ccc;">Ctrl+Shift+S</kbd></td>
-										<td style="padding: 8px;">Stop Entries (Waitlist)</td>
-									</tr>
-									<tr style="border-bottom: 1px solid #ddd;">
-										<td style="padding: 8px;"><kbd style="background: #eee; padding: 2px 6px; border-radius: 3px; border: 1px solid #ccc;">Ctrl+Shift+X</kbd></td>
-										<td style="padding: 8px;">Reset Waitlist</td>
+								<p style="margin-bottom: 10px; opacity: 0.8;">Use these shortcuts while the popup or dock is focused:</p>
+								<table class="shortcut-table">
+									<tr>
+										<td><kbd>Ctrl+Shift+E</kbd></td>
+										<td>End Poll</td>
 									</tr>
 									<tr>
-										<td style="padding: 8px;"><kbd style="background: #eee; padding: 2px 6px; border-radius: 3px; border: 1px solid #ccc;">Ctrl+Shift+C</kbd></td>
-										<td style="padding: 8px;">Clear Dock</td>
+										<td><kbd>Ctrl+Shift+R</kbd></td>
+										<td>Reset Poll</td>
+									</tr>
+									<tr>
+										<td><kbd>Ctrl+Shift+W</kbd></td>
+										<td>Select Winner (Waitlist)</td>
+									</tr>
+									<tr>
+										<td><kbd>Ctrl+Shift+S</kbd></td>
+										<td>Stop Entries (Waitlist)</td>
+									</tr>
+									<tr>
+										<td><kbd>Ctrl+Shift+X</kbd></td>
+										<td>Reset Waitlist</td>
+									</tr>
+									<tr>
+										<td><kbd>Ctrl+Shift+C</kbd></td>
+										<td>Clear Dock</td>
 									</tr>
 								</table>
 							</div>
@@ -13087,7 +13190,7 @@ input:checked + .slider:before {
 
                                 <div class="link" title="Points system scoreboard display">
 				<h2 class="scoreboard_mode_title">
-					<span data-translate="scoreboard">Scoreboard</span>
+					<span class="title-group"><span class="emoji" aria-hidden="true">🧮</span><span data-translate="scoreboard">Scoreboard</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#scoreboard" title="Jump to the scoreboard link options."><span data-translate="options">[options]</span></a>
 					<label for="help-scoreboard" class="help-link rounded_area" title="Click for detailed help">[?]</label>
@@ -14456,7 +14559,7 @@ input:checked + .slider:before {
 
 			<div class="link" title="Timer overlay">
 				<h2 class="timer_section_title">
-					<span class="title-group"><span class="emoji" aria-hidden="true">&#x23F1;&#xFE0F;</span>Timer</span>
+					<span class="title-group"><span class="emoji" aria-hidden="true">⏳</span>Timer</span>
 					<span class="options-link-group" style="float: right; display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center;">
 						<a class="copy-link rounded_area" title="Copy timer link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 						<a class="options-link rounded_area" href="#timer" title="Jump to the timer options."><span data-translate="options">[options]</span></a>
@@ -14474,14 +14577,14 @@ input:checked + .slider:before {
 						<li>Works with the <code>&amp;server</code> API path for remote control</li>
 					</ul>
 				</div>
-				<p style="margin-top: -5px;">A focused timer overlay for breaks, interviews, countdowns, and on-stream pacing.</p>
+				<h3><span>A focused timer overlay for breaks, interviews, countdowns, and on-stream pacing.</span></h3>
 				<div id="timer" data-raw="" class="streaming_chat"><a href="" id="timerlink"></a></div>
 			</div>
 
 			<div class="wrapper">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-timer-options" />
-					<label class="collapsible-label" for="wrapper-timer-options"><span>Timer Options</span></label>
+					<label class="collapsible-label" for="wrapper-timer-options"><span>⏳ Timer Options</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group timer">
@@ -14591,9 +14694,7 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-warning">⚠️ <strong>Requires setup:</strong> You need to authorize your Spotify account in the setup section below.</div>
 				</div>
-				<p style="margin-top: -5px;">
-					Connect your Spotify account to create a widget overlay or announce to chat the current song.
-				</p>
+				<h3><span>Connect your Spotify account to create a widget overlay or announce to chat the current song.</span></h3>
 				<div id="spotify" data-raw="" class="streaming_chat"><a href="" id="spotifylink"></a></div>
 			</div>
 
