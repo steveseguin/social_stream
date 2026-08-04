@@ -21,6 +21,7 @@
     --button-background: #b7defe;
     --text-button-text: #222;
     --text-secondary: #57606a;
+    --placeholder-color: #5c6670;
     --danger-text: #c62828;
     --upload-button-bg: #515cd4;
     --scrollbar-thumb: #9aa0a6;
@@ -95,6 +96,7 @@
         --options-group-background-color: #161b22;
         --options-group-text-color: #c9d1d9;
         --text-secondary: #8b949e;
+        --placeholder-color: #a8b3c1;
         --danger-text: #ff7b72;
         --scrollbar-thumb: #666;
         --scrollbar-track: #201c29;
@@ -392,15 +394,22 @@ input[type="range"] {
     position: fixed;
     top: 65px;
     right: 26px;
-    border: none;
+    border: 1px solid var(--collapsible-border-color);
+    background-color: var(--color-accent-subtle);
+    color: var(--default-text-color);
     display: none;
     width: 0;
-    padding: 1px;
+    padding: 1px 4px;
     font-weight: bold;
     cursor: text;
     z-index: 100;
     transition: width 0.5s ease;
-	border-radius: 1px;
+	border-radius: 4px;
+}
+
+#searchInput:focus {
+    outline: none;
+    border-color: var(--color-accent);
 }
 
 @keyframes shake {
@@ -1402,6 +1411,12 @@ input {
     margin: 2px;
 }
 
+input::placeholder,
+textarea::placeholder {
+    color: var(--placeholder-color);
+    opacity: 1;
+}
+
 input:focus + .slider {
     box-shadow: 0 0 1px #2196f3;
 }
@@ -2250,8 +2265,8 @@ input:checked + .slider:before {
 }
 
 .spotify-command-row .spotify-cmd-trigger::placeholder {
-    color: var(--text-secondary);
-    opacity: 0.7;
+    color: var(--placeholder-color);
+    opacity: 1;
 }
 
 .spotify-command-row .spotify-cmd-desc {
@@ -7550,7 +7565,7 @@ input:checked + .slider:before {
                                 <input type="file" id="importPointsFile" accept=".json" style="display: none;">
 
                                 <div style="margin-top: 10px;">
-                                    <button id="resetPoints" class="button" style="background-color: #dc3545;" data-translate="reset-all-points">Reset All Points</button>
+                                    <button id="resetPoints" class="button" style="background-color: #c62828; color: white;" data-translate="reset-all-points">Reset All Points</button>
                                 </div>
 
                                 <div style="margin-top: 15px; padding: 10px; background-color: var(--color-accent-subtle); border-radius: 5px;">
@@ -14744,7 +14759,7 @@ input:checked + .slider:before {
                                     <button id="spotifyAuthButton" class="glowingButton"  title="Connect to Spotify">
                                         <span>🔗 Connect to Spotify</span>
                                     </button>
-                                    <button id="spotifySignOutButton" class="glowingButton" style="margin-left: 10px; display: none; background: #d32f2f;" title="Sign out of Spotify">
+                                    <button id="spotifySignOutButton" class="glowingButton" style="margin-left: 10px; display: none; background: #d32f2f; color: white;" title="Sign out of Spotify">
                                         <span>🚪 Sign Out</span>
                                     </button>
                                     <span id="spotifyAuthStatus" style="margin-left: 10px; color: var(--success-color); display: none;">✓ Connected</span>
