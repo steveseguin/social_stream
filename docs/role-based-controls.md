@@ -25,7 +25,8 @@ These settings classify messages before they are sent to overlays and integratio
 | `hostnamesext` | Host | Marks matching names as `host`. |
 | `viplistusers` | VIP | Marks matching names as `vip`. |
 | `adminnames` | Privileged/admin | Marks matching names as `admin`. |
-| `matchRolesByDisplayName` | Matching behavior | Also checks display names, not just user IDs, when matching role lists. |
+
+Captured user IDs and manually entered display names are both supported. User IDs are checked first when present, followed by the displayed chat name.
 
 Use comma-separated entries. Add a source suffix when needed, such as `name:twitch`, `name:youtube`, or `name:kick`.
 

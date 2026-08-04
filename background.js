@@ -106,6 +106,25 @@ function getCachedRoleList(value) {
 	return entries;
 }
 
+function normalizeRoleIdentifier(value) {
+	if (value === undefined || value === null) return "";
+	return String(value).toLowerCase().trim().replace(/^@+/, "");
+}
+
+function matchesConfiguredUser(entry, data, sourceType) {
+	if (!entry || !data) return false;
+	if (entry.type && entry.type !== sourceType) return false;
+
+	const configuredIdentifier = normalizeRoleIdentifier(entry.name);
+	if (!configuredIdentifier) return false;
+
+	const userId = normalizeRoleIdentifier(data.userid);
+	if (userId && configuredIdentifier === userId) return true;
+
+	const chatName = normalizeRoleIdentifier(data.chatname);
+	return !!chatName && configuredIdentifier === chatName;
+}
+
 function getCommandAliases(commandString) {
 	if (!commandString) {
 		return [];
@@ -14148,8 +14167,7 @@ async function processIncomingRequest(request, UUID = false) {
 					altSourceType = "youtube";
 				}
 
-				const useCaptureNameForRoles = request.value.role == "host" || (request.value.role == "bot" && (altSourceType == "youtube" || altSourceType == "kick"));
-				const storageUsername = useCaptureNameForRoles ? request.value.chatname || request.value.userid || "" : request.value.userid || request.value.chatname || "";
+				const storageUsername = request.value.userid || request.value.chatname || "";
 				const userToMark = { username: storageUsername, type: altSourceType };
 				const dockUserToMark = {
 					username: request.value.chatname || request.value.userid || storageUsername,
@@ -16879,33 +16897,15 @@ async function applyBotActions(data, tab = false) {
 			altSourceType = "youtube";
 		}
 
-		const normalizeRoleIdentifier = value => {
-			if (value === undefined || value === null) return "";
-			return String(value).toLowerCase().trim().replace(/^@+/, "");
-		};
 		const roleUserIdLower = normalizeRoleIdentifier(data.userid);
 		const roleChatNameLower = normalizeRoleIdentifier(data.chatname);
-		const useCaptureNameForRoles = altSourceType == "youtube" || altSourceType == "kick";
-		const primaryRoleIdentifier = useCaptureNameForRoles ? roleChatNameLower || roleUserIdLower : roleUserIdLower || roleChatNameLower;
-		const roleIdentifierMatches = name => {
-			name = normalizeRoleIdentifier(name);
-			if (!name) return false;
-			if (settings.matchRolesByDisplayName) {
-				return name === roleUserIdLower || name === roleChatNameLower;
-			}
-			return name === primaryRoleIdentifier;
-		};
 
 		if (settings.blacklistuserstoggle && settings.blacklistusers?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return null;
+				if (!roleUserIdLower && !roleChatNameLower) return null;
 
 				const blacklist = getCachedRoleList(settings.blacklistusers.textsetting);
-
-				const isBlocked = blacklist.some(entry => {
-					return entry.type ? entry.name === userIdentifier && entry.type === altSourceType : entry.name === userIdentifier;
-				});
+				const isBlocked = blacklist.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 
 				if (isBlocked) {
 					return null;
@@ -16918,14 +16918,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (settings.whitelistuserstoggle && settings.whitelistusers?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return null;
+				if (!roleUserIdLower && !roleChatNameLower) return null;
 
 				const whitelist = getCachedRoleList(settings.whitelistusers.textsetting);
-
-				const isWhitelisted = whitelist.some(entry => {
-					return entry.type ? entry.name === userIdentifier && entry.type === altSourceType : entry.name === userIdentifier;
-				});
+				const isWhitelisted = whitelist.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 
 				if (!isWhitelisted) {
 					return null;
@@ -16948,12 +16944,7 @@ async function applyBotActions(data, tab = false) {
 
 				const bots = getCachedRoleList(settings.botnamesext.textsetting);
 
-				data.bot = bots.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					return roleIdentifierMatches(entry.name);
-				});
+				data.bot = bots.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 				data.bot = false;
@@ -16968,21 +16959,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.host && settings.hostnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const hosts = getCachedRoleList(settings.hostnamesext.textsetting);
-
-				data.host = hosts.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					if (settings.matchRolesByDisplayName) {
-						return entry.name === userIdLower || entry.name === chatNameLower;
-					}
-					return entry.name === (userIdLower || chatNameLower);
-				});
+				data.host = hosts.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 				data.host = false;
@@ -17021,21 +17001,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.mod && settings.modnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const mods = getCachedRoleList(settings.modnamesext.textsetting);
-
-				data.mod = mods.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					if (settings.matchRolesByDisplayName) {
-						return entry.name === userIdLower || entry.name === chatNameLower;
-					}
-					return entry.name === (userIdLower || chatNameLower);
-				});
+				data.mod = mods.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 				data.mod = false;
@@ -17051,21 +17020,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.admin && settings.adminnames?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const admins = getCachedRoleList(settings.adminnames.textsetting);
-
-				data.admin = admins.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					if (settings.matchRolesByDisplayName) {
-						return entry.name === userIdLower || entry.name === chatNameLower;
-					}
-					return entry.name === (userIdLower || chatNameLower);
-				});
+				data.admin = admins.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 			}
@@ -17073,21 +17031,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.vip && settings.viplistusers?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const vips = getCachedRoleList(settings.viplistusers.textsetting);
-
-				data.vip = vips.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					if (settings.matchRolesByDisplayName) {
-						return entry.name === userIdLower || entry.name === chatNameLower;
-					}
-					return entry.name === (userIdLower || chatNameLower);
-				});
+				data.vip = vips.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 			}
