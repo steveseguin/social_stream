@@ -112,14 +112,26 @@ function pushMessage(data){
 		var messageGroup = messageElement;
 		var buttons = [];
 		try {
-			while (messageGroup && messageGroup !== document.body) {
+			// The author header (avatar + name buttons) sits on the group wrapper of
+			// consecutive messages, strictly below the chat container; at or above the
+			// container the first buttons belong to other users' messages, so a walk
+			// that far means no author header exists for this row.
+			var chatContainer = messageElement.closest("#PiczelChat") || document.body;
+			var matchedGroup = false;
+			while (messageGroup && messageGroup !== chatContainer && messageGroup !== document.body) {
 				buttons = messageGroup.querySelectorAll("button");
 				if (buttons.length > 1 && buttons[0].querySelector("img")){
+					matchedGroup = true;
 					break;
 				}
 				messageGroup = messageGroup.parentElement;
 			}
-		} catch(e){}
+			if (!matchedGroup) {
+				buttons = [];
+			}
+		} catch(e){
+			buttons = [];
+		}
 		
 		var chatname="";
 		try{
