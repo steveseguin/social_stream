@@ -170,13 +170,43 @@
 			return;
 		}
 
-		if (msg.type === "delete_message") return;
+		if (msg.type === "delete_message") {
+			var deletedId = msg.metadata && msg.metadata.messageId;
+			if (deletedId) {
+				try { chrome.runtime.sendMessage(chrome.runtime.id, { "delete": { type: "vpzone", id: String(deletedId) } }, function () {}); } catch (e) {}
+			}
+			return;
+		}
+		if (msg.type === "clear_chat") {
+			try { chrome.runtime.sendMessage(chrome.runtime.id, { "delete": { type: "vpzone" } }, function () {}); } catch (e) {}
+			return;
+		}
 
 		if (msg.id && seenWsMessageIds.has(msg.id)) return;
 		if (msg.id) seenWsMessageIds.set(msg.id, now);
 
 		var ts = msg.ts || "";
 		if (isStaleInitialTimestamp(ts)) return;
+
+		// Only incoming raids belong to this channel's feed — the outgoing half
+		// of the pair is for the raiding channel.
+		if (msg.type === "raid" && msg.metadata && msg.metadata.kind === "outgoing") return;
+
+		if (msg.type === "shoutout") {
+			var soCaster = (msg.metadata && msg.metadata.username) || msg.username || "";
+			var soTarget = msg.metadata && msg.metadata.target_user ? String(msg.metadata.target_user) : "";
+			if (!soCaster) return;
+			var soAvatar = avatarCache.get(String(soCaster).toLowerCase()) || "";
+			if (!soAvatar) fetchAvatar(soCaster);
+			emitWsMessage({
+				chatname: escapeHtmlMaybe(soCaster),
+				chatmessage: escapeHtmlMaybe(soTarget ? "gave a shoutout to @" + soTarget : (msg.body || "shoutout")),
+				chatimg: soAvatar,
+				event: "shoutout",
+				meta: { timestamp: ts, targetUser: soTarget }
+			});
+			return;
+		}
 
 		if (msg.type === "follow" || msg.type === "subscription" || msg.type === "raid" || msg.type === "gift" || msg.type === "clip") {
 			// Prefer metadata.username when present — gift events name the
@@ -203,6 +233,39 @@
 			// dropping them avoids "system: alice just joined" rows that
 			// social_stream can't attribute or theme correctly.
 			if (!kind && /\bjust\s+joined\b/i.test(String(msg.body || ""))) return;
+
+			// Pixels cheers are donation-bearing chat rows (Kick tip pattern):
+			// hasDonation carries the amount label, event stays blank.
+			if (kind === "pixels_cheer") {
+				var cheerAmount = parseInt(msg.metadata && msg.metadata.amount, 10);
+				var cheerName = (msg.metadata && msg.metadata.username) || msg.username || "";
+				if (!isFinite(cheerAmount) || cheerAmount <= 0 || !cheerName || cheerName === "system") return;
+				var cheerAvatar = avatarCache.get(String(cheerName).toLowerCase()) || "";
+				if (!cheerAvatar) fetchAvatar(cheerName);
+				emitWsMessage({
+					chatname: escapeHtmlMaybe(cheerName),
+					chatmessage: escapeHtmlMaybe((msg.metadata && msg.metadata.message) || ""),
+					chatimg: cheerAvatar,
+					hasDonation: cheerAmount.toLocaleString() + " " + (cheerAmount === 1 ? "Pixel" : "Pixels"),
+					meta: { timestamp: ts, kind: kind, pixels: cheerAmount }
+				});
+				return;
+			}
+
+			// Stream lifecycle frames carry no actor — attribute them to the
+			// channel itself, using SSN's standard event names.
+			if (kind === "stream_started" || kind === "stream_ended") {
+				var channelName = (msg.metadata && msg.metadata.channel_slug) || currentChannelSlug || "";
+				if (!channelName) return;
+				emitWsMessage({
+					chatname: escapeHtmlMaybe(channelName),
+					chatmessage: escapeHtmlMaybe(msg.body || (kind === "stream_started" ? "Stream started" : "Stream ended")),
+					event: kind === "stream_started" ? "stream_online" : "stream_offline",
+					meta: { timestamp: ts, kind: kind }
+				});
+				return;
+			}
+
 			// level_up (and similar) carry the real user in metadata.username;
 			// the top-level field is hard-coded to "system" server-side.
 			var sysName = (msg.metadata && msg.metadata.username) || msg.username || "system";
@@ -215,7 +278,7 @@
 				chatname: escapeHtmlMaybe(sysName),
 				chatmessage: escapeHtmlMaybe(msg.body || ""),
 				chatimg: sysAvatar,
-				event: kind || "system",
+				event: kind === "channel_points_redeem" ? "reward" : (kind || "system"),
 				meta: { timestamp: ts, kind: kind || "" }
 			});
 			return;

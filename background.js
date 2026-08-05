@@ -5906,17 +5906,23 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				const method = String(request.method || "GET").toUpperCase();
 				const isOAuthTokenPost = method === "POST" && parsedUrl.pathname === "/api/oauth/token";
 				const isChatMessagePost = method === "POST" && /^\/api\/v1\/channels\/[^\/]+\/chat$/.test(parsedUrl.pathname);
-				if (method !== "GET" && !isOAuthTokenPost && !isChatMessagePost) {
+				const isChannelPatch = method === "PATCH" && /^\/api\/v1\/channels\/[^\/]+$/.test(parsedUrl.pathname);
+				const isModerationDelete = method === "DELETE" && /^\/api\/v1\/channels\/[^\/]+\/chat\/moderation$/.test(parsedUrl.pathname);
+				const isModerationBanPost = method === "POST" && /^\/api\/v1\/channels\/[^\/]+\/chat\/moderation\/bans$/.test(parsedUrl.pathname);
+				if (method !== "GET" && !isOAuthTokenPost && !isChatMessagePost && !isChannelPatch && !isModerationDelete && !isModerationBanPost) {
 					sendResponse({ ok: false, error: "VPZone fetch method not allowed" });
 					return response;
 				}
+				const hasJsonBody = isChatMessagePost || isChannelPatch || isModerationBanPost;
 				const headers = {
 					Accept: "application/json"
 				};
 				if (isOAuthTokenPost) {
 					headers["Content-Type"] = "application/x-www-form-urlencoded";
-				} else if (isChatMessagePost) {
-					headers["Content-Type"] = "application/json";
+				} else {
+					if (hasJsonBody) {
+						headers["Content-Type"] = "application/json";
+					}
 					if (request.authToken && typeof request.authToken === "string") {
 						headers.Authorization = "Bearer " + request.authToken.replace(/[\r\n]/g, "");
 					}
@@ -5926,7 +5932,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 					cache: "no-store",
 					credentials: "omit",
 					headers,
-					body: method === "POST" ? String(request.body || "") : undefined
+					body: isOAuthTokenPost || hasJsonBody ? String(request.body || "") : undefined
 				});
 				const responseText = await vpzoneResponse.text();
 				let responseJson = {};
@@ -14514,7 +14520,7 @@ function normalizeSourceControlPlatform(type) {
 function getSourceControlPlatforms(type) {
 	const normalized = normalizeSourceControlPlatform(type);
 	if (normalized === "*" || !normalized) {
-		return ["twitch", "kick", "youtube"];
+		return ["twitch", "kick", "youtube", "vpzone"];
 	}
 	return [normalized];
 }
@@ -14532,6 +14538,9 @@ function getWebsocketSourcePlatformFromUrl(url) {
 	}
 	if (lowerUrl.includes("/sources/websocket/youtube.html")) {
 		return "youtube";
+	}
+	if (lowerUrl.includes("/sources/websocket/vpzone.html")) {
+		return "vpzone";
 	}
 	return "";
 }
