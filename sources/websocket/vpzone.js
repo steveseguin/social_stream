@@ -1279,6 +1279,23 @@
 		data.timestamp = eventTime(ev);
 		data.meta = { streamUsername: ev.streamUsername || state.currentChannel || state.cfg.channel, createdAt: eventTime(ev), actorUsername: ev.actorUsername || ev.username || "", actorRank: ev.metadata && ev.metadata.actorRank ? ev.metadata.actorRank : "", rawEventType: ev.eventType || ev.type || "chat_message", transport: "websocket", isSubscriber: isSubscriber, subMonths: Number(ev.sub_months || ev.subMonths || 0), isOwner: isOwner, isModerator: isModerator, isVip: isVip };
 		if (messageId) data.meta.messageId = messageId;
+		// Reply threading — VPZone denormalizes the target into
+		// metadata.reply_to {message_id, username, excerpt}, so unlike Kick no
+		// message cache is needed. Output shape mirrors Kick's reply rows:
+		// `initial` label + quoted prefix on chatmessage + meta.reply.
+		var replyTo = ev.metadata && typeof ev.metadata === "object" && ev.metadata.reply_to && typeof ev.metadata.reply_to === "object" ? ev.metadata.reply_to : null;
+		if (replyTo && !(state.settings && state.settings.excludeReplyingTo) && data.chatmessage) {
+			var replyAuthor = String(replyTo.username || "");
+			var replyText = String(replyTo.excerpt || "");
+			var replyLabel = replyAuthor && replyText ? replyAuthor + ": " + replyText : (replyAuthor || replyText);
+			if (replyLabel) {
+				data.initial = replyLabel;
+				data.reply = data.chatmessage;
+				if (state.settings && state.settings.textonlymode) data.chatmessage = replyLabel + ": " + data.chatmessage;
+				else data.chatmessage = "<i><small>" + esc(replyLabel) + ":&nbsp;</small></i> " + data.chatmessage;
+				data.meta.reply = { messageId: replyTo.message_id ? String(replyTo.message_id) : "", author: replyAuthor, text: replyText };
+			}
+		}
 		return data.chatname && data.chatmessage ? data : null;
 	}
 

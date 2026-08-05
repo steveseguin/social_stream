@@ -301,9 +301,10 @@
 			fetchAvatar(name);
 		}
 
-		emitWsMessage({
+		var rendered = escapeHtmlMaybe(body);
+		var wsPayload = {
 			chatname: escapeHtmlMaybe(name),
-			chatmessage: escapeHtmlMaybe(body),
+			chatmessage: rendered,
 			chatimg: avatar,
 			nameColor: msg.color || "",
 			chatbadges: buildBadgesFromWs(msg),
@@ -313,7 +314,25 @@
 				channel: currentChannelSlug,
 				source: msg.metadata && msg.metadata.source ? msg.metadata.source : "vpzone"
 			}
-		});
+		};
+		// Reply threading — the frame denormalizes the target into
+		// metadata.reply_to {message_id, username, excerpt}; render it the
+		// same way Kick reply rows render (initial label + quoted prefix).
+		var replyTo = msg.metadata && msg.metadata.reply_to && typeof msg.metadata.reply_to === "object" ? msg.metadata.reply_to : null;
+		if (replyTo && !settings.excludeReplyingTo) {
+			var replyAuthor = String(replyTo.username || "");
+			var replyText = String(replyTo.excerpt || "");
+			var replyLabel = replyAuthor && replyText ? replyAuthor + ": " + replyText : (replyAuthor || replyText);
+			if (replyLabel) {
+				wsPayload.initial = replyLabel;
+				wsPayload.reply = rendered;
+				wsPayload.chatmessage = settings.textonlymode
+					? replyLabel + ": " + rendered
+					: "<i><small>" + escapeHtml(replyLabel) + ":&nbsp;</small></i> " + rendered;
+				wsPayload.meta.reply = { messageId: replyTo.message_id ? String(replyTo.message_id) : "", author: replyAuthor, text: replyText };
+			}
+		}
+		emitWsMessage(wsPayload);
 	}
 
 	function handleWindowMessage(event) {

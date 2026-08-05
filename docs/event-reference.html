@@ -1317,6 +1317,11 @@
                                 <td>Donation-bearing chat row; <code>hasDonation</code> is the amount label (for example <code>100 Pixels</code>), <code>meta.pixels</code> the integer. <code>event</code> stays blank, matching Kick tips.</td>
                             </tr>
                             <tr>
+                                <td><code>message</code> replies</td>
+                                <td>VPZone <code>msg</code> frame carrying <code>metadata.reply_to</code> (message id, author, excerpt — denormalized server-side).</td>
+                                <td>Rendered like Kick replies: <code>initial</code> holds the "author: excerpt" label, <code>reply</code> the raw reply text, <code>meta.reply</code> the structured target. Respects the <em>exclude "replying to"</em> setting.</td>
+                            </tr>
+                            <tr>
                                 <td class="status-event"><code>raid</code></td>
                                 <td>VPZone <code>raid</code> frame with <code>metadata.kind: "incoming"</code>.</td>
                                 <td>Outgoing raid frames are skipped; <code>meta.viewers</code> carries the raid size when provided.</td>
