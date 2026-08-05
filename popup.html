@@ -1183,16 +1183,9 @@ h2 {
 	.lightblue{
 		color: lightblue;
 	}
-	.slider {
-		background-color: #3d4654;
-	}
 	.isolate {
 		border-top-color: #3d444d;
 		border-bottom-color: #3d444d;
-	}
-	.tab-button.active,
-	.arc-ok-button {
-		color: #04121f;
 	}
 	#searchIcon,
 	#activeIcon,
@@ -2305,6 +2298,18 @@ input:checked + .slider:before {
 
 .spotify-command-row .switch {
     margin: 0;
+}
+
+/* These dark overrides share specificity with base rules declared above them,
+   so they must come last for the cascade to apply them. */
+@media (prefers-color-scheme: dark) {
+	.slider {
+		background-color: #3d4654;
+	}
+	.tab-button.active,
+	.arc-ok-button {
+		color: #04121f;
+	}
 }
         </style>
     </head>

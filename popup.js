@@ -2778,7 +2778,12 @@ function loadSourcesListFromRuntimeManifest() {
 function appendSourceOptions(select) {
     if (!select || select.dataset.sourceOptionsLoaded === "true") return;
     const currentValue = select.value;
+    const existingValues = new Set();
+    for (let i = 0; i < select.options.length; i++) {
+        existingValues.add(select.options[i].value);
+    }
     getSortedSourcesList().forEach(source => {
+        if (existingValues.has(source)) return;
         const option = document.createElement('option');
         option.value = source;
         option.textContent = formatSourceLabel(source);
@@ -2787,7 +2792,9 @@ function appendSourceOptions(select) {
     if (currentValue) {
         select.value = currentValue;
     }
-    select.dataset.sourceOptionsLoaded = "true";
+    // A fill made without the manifest holds only the seeded fallback types;
+    // leave the select open for a retry so a late manifest load completes it.
+    select.dataset.sourceOptionsLoaded = sourcesManifestLoaded ? "true" : "partial";
 }
 
 function populateSourceDatalist() {
