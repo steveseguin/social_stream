@@ -56,36 +56,49 @@ function waitForMessageCount(page, expected) {
         row.appendChild(owner);
       }
 
+      // Mirrors the live site: badges, the bot icon, and the name button share a
+      // span.inline-flex wrapper, so the production badge scope is exercised.
+      var nameWrap = document.createElement("span");
+      nameWrap.className = "inline-flex max-w-full items-center gap-1";
+
       if (opts.botIcon) {
         var bot = document.createElement("button");
         bot.setAttribute("aria-label", "Open user actions for " + name + " (Bot)");
         bot.innerHTML = '<svg class="lucide lucide-bot"><path d="M12 8V4H8"></path></svg>';
-        row.appendChild(bot);
+        nameWrap.appendChild(bot);
       }
 
       if (opts.subBadge) {
+        var subWrap = document.createElement("span");
+        subWrap.className = "relative inline-flex items-center";
         var sub = document.createElement("button");
         sub.setAttribute("aria-label", "Subscriber");
         sub.innerHTML = '<svg class="lucide lucide-star"><path d="M11.5 2.3"></path></svg>';
-        row.appendChild(sub);
+        subWrap.appendChild(sub);
+        nameWrap.appendChild(subWrap);
       }
 
       if (opts.vipBadge) {
+        var vipWrap = document.createElement("span");
+        vipWrap.className = "relative inline-flex items-center";
         var vip = document.createElement("button");
         vip.setAttribute("aria-label", "VIP");
         var vipImg = document.createElement("img");
         vipImg.src = "https://cdn.blaze.stream/site/icons/vip.png";
         vip.appendChild(vipImg);
-        row.appendChild(vip);
+        vipWrap.appendChild(vip);
+        nameWrap.appendChild(vipWrap);
       }
 
       var nameButton = document.createElement("button");
+      nameButton.className = "inline-flex min-w-0 max-w-36 items-center gap-1";
       nameButton.title = "User actions";
       var nameSpan = document.createElement("span");
       nameSpan.className = "truncate";
       nameSpan.textContent = name + ":";
       nameButton.appendChild(nameSpan);
-      row.appendChild(nameButton);
+      nameWrap.appendChild(nameButton);
+      row.appendChild(nameWrap);
 
       var body = document.createElement("span");
       body.className = "text-text pl-1 font-normal";

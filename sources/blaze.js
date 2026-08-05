@@ -90,7 +90,7 @@
 	// dedupe guard. Signatures include the row index, so identical repeat
 	// messages (new index) still emit.
 	var emittedSignatures = new Map();
-	var EMITTED_SIGNATURE_LIMIT = 800;
+	var EMITTED_SIGNATURE_LIMIT = 2000;
 	var liveEmitAfter = 0;
 
 	function rememberSignature(signature) {
