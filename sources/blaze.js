@@ -85,6 +85,25 @@
 	
 	var channelName = "";
 
+	// Virtuoso destroys off-screen rows and recreates them on scroll-back, so
+	// per-node markers alone re-emit history; this cross-node memory is the real
+	// dedupe guard. Signatures include the row index, so identical repeat
+	// messages (new index) still emit.
+	var emittedSignatures = new Map();
+	var EMITTED_SIGNATURE_LIMIT = 800;
+	var liveEmitAfter = 0;
+
+	function rememberSignature(signature) {
+		emittedSignatures.set(signature, Date.now());
+		if (emittedSignatures.size > EMITTED_SIGNATURE_LIMIT) {
+			var excess = emittedSignatures.size - EMITTED_SIGNATURE_LIMIT;
+			var keys = emittedSignatures.keys();
+			for (var i = 0; i < excess; i++) {
+				emittedSignatures.delete(keys.next().value);
+			}
+		}
+	}
+
 	function getNameElement(ele) {
 		var nameElement = ele.querySelector("button[title='User actions'] span.truncate");
 		if (nameElement) {
@@ -150,12 +169,33 @@
 		}
 		
 		var badges=[];
-		/* try {
-			ele.querySelectorAll("img[class^='ChatBadge_image_'][src]").forEach(badge=>{
-				badges.push(badge.src);
+		var isBot = false;
+		var isMod = false;
+		var isVip = false;
+		try {
+			var nameSpan = getNameElement(ele);
+			var badgeScope = (nameSpan && nameSpan.closest("span.inline-flex")) || ele;
+			badgeScope.querySelectorAll("button[aria-label]").forEach(function(btn){
+				var label = (btn.getAttribute("aria-label") || "").trim();
+				if (!label || / avatar$/i.test(label)) { return; }
+				if (/^Open user actions/i.test(label)) {
+					if (/\(Bot\)/i.test(label)) { isBot = true; }
+					return;
+				}
+				if (/^Moderator$/i.test(label)) { isMod = true; }
+				else if (/^VIP$/i.test(label)) { isVip = true; }
+				var badgeImg = btn.querySelector("img[src]");
+				if (badgeImg) {
+					badges.push(badgeImg.src);
+					return;
+				}
+				var badgeSvg = btn.querySelector("svg");
+				if (badgeSvg) {
+					badges.push({ html: badgeSvg.outerHTML, type: "svg" });
+				}
 			});
 		} catch(e){
-		} */
+		}
 
 		var msg="";
 		try {
@@ -182,7 +222,13 @@
 			return;
 		}
 		ele.dataset.ssnBlazeMessageSignature = signature;
-		if (seedOnly) {
+		if (emittedSignatures.has(signature)) {
+			return;
+		}
+		rememberSignature(signature);
+		// Rows seen while the freshly detected list is still hydrating are
+		// backlog, not live chat.
+		if (seedOnly || Date.now() < liveEmitAfter) {
 			return;
 		}
 		
@@ -199,6 +245,9 @@
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "blaze";
+		if (isMod) { data.mod = true; }
+		if (isVip) { data.vip = true; }
+		if (isBot) { data.bot = true; }
 		
 		
 		pushMessage(data);
@@ -394,6 +443,7 @@
 
 					console.log("CONNECTED chat detected");
 
+					liveEmitAfter = Date.now() + 1200;
 					container.querySelectorAll("[data-item-index],[data-index]").forEach(function(item){
 						processMessage(item, true);
 					});
