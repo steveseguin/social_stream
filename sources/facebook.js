@@ -579,7 +579,7 @@
 
 	async function processMessage(ele) {
 		if (ele == window) {
-			return;
+			return true;
 		}
 		
 		var chatimg = "";
@@ -637,7 +637,7 @@
 			try {
 				name = escapeHtml(ele.childNodes[1].childNodes[0].querySelector('a[role="link"]').innerText);
 			} catch (e) {
-				return;
+				return true;
 			}
 		}
 
@@ -711,11 +711,11 @@
 				//msg = "<img src='"+msg+"' />";
 			} catch(e){
 				//console.log("5");
-				return;
+				return true;
 			}
 		}
 		
-		if (!msg && !contentimg && !starsInfo && !highlightedMessage){return;}
+		if (!msg && !contentimg && !starsInfo && !highlightedMessage){return true;}
 
 		var badges = [];	// we do badges last, as we have already marked images as used in the msg step, so less likely of confusing baddges with images
 		try {

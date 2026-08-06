@@ -296,10 +296,26 @@
                         <p>Every message carries a JSON object. Mandatory keys follow <a href="../docs/event-reference.html" target="_blank" rel="noopener">docs/event-reference.html</a> (platform, type, chatname, chatmessage, etc.). Attach custom data under <code>meta</code>.</p>
                     </div>
                 </div>
+                <h3 id="every-flow-needs-a-trigger">Every flow starts with a trigger</h3>
+                <p>Action nodes (green) never run on their own — they only fire when a trigger node (blue) above them evaluates <code>true</code>. A flow built only from actions chained together looks valid but is permanently idle, because nothing ever starts the chain. Node names describe what the node <em>does</em>, not when it happens: <em>Feature Message</em> features a message when the flow reaches it — it does not fire when you feature a message elsewhere.</p>
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="img/flow-missing-trigger.png" alt="Two action nodes chained together with no trigger node">
+                        <figcaption>❌ Never runs. Feature Message and Speak Text are both <em>actions</em>; with no trigger on top, nothing starts the chain.</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="img/flow-trigger-first.png" alt="Any Message trigger connected to Feature Message and Speak Text actions">
+                        <figcaption>✅ Works. An <em>Any Message</em> trigger (or Message Contains, a regex, a donation event, etc.) starts the chain; both actions then run for each matching message.</figcaption>
+                    </figure>
+                </div>
             </section>
             <section id="flow-actions-overlay">
                 <h2>Flow Actions Overlay (Action Output)</h2>
                 <p>Nodes such as <em>Play Audio Clip</em>, <em>Display Media Overlay</em>, and the OBS controls need a rendering surface. That surface is the Flow Actions overlay page served from <a href="../actions.html" target="_blank" rel="noopener">actions.html</a>. Keep it running in your broadcasting software (OBS/Streamer.bot browser docks/etc.) so Event Flow actions have somewhere to appear.</p>
+                <figure class="screenshot">
+                    <img src="img/flow-audio-overlay.png" alt="Any Message trigger connected to a Play Audio Clip action">
+                    <figcaption>This flow is complete and fires on every message — but the sound plays on the Flow Actions overlay page, <em>not</em> in the editor. The editor's Preview button plays locally; live playback needs the overlay open. If you hear nothing, the overlay page isn't open, or it hasn't been clicked once (browsers block audio until you interact with the page — an OBS Browser Source doesn't have this restriction).</figcaption>
+                </figure>
                 <div class="panel">
                     <strong>How to open it (from the popup/dash):</strong>
                     <ol>
@@ -442,6 +458,18 @@ Event Payload ─▶ State Check (isAlertMuted)
                  └─false─▶ NOT ─▶ Play Celebration
                 </div>
                 <p><code>State Check</code> outputs <code>true</code> when the alert is muted. By inverting that result, the NOT node makes sure we only play the celebration when the flag is <code>false</code>.</p>
+                <h3>D. Randomly Play One of Two Sounds</h3>
+                <figure class="screenshot">
+                    <img src="img/flow-random-two-sounds.png" alt="Flow using a RANDOM gate, NOT gate, and AND gate to play one of two audio clips at random">
+                    <figcaption>A 50/50 coin flip between two audio clips. The RANDOM gate rolls once per matching message: when it passes, sound A plays; when it fails, the NOT gate flips the result and the AND gate lets sound B play instead.</figcaption>
+                </figure>
+                <div class="diagram">
+Trigger ──▶ RANDOM (50%) ──▶ Play Sound A
+              │
+              └──▶ NOT ──▶ AND ──▶ Play Sound B
+Trigger ──────────────────▲
+                </div>
+                <p><strong>The AND gate is not optional.</strong> A bare NOT would output <code>true</code> whenever the RANDOM gate sits idle, so sound B would play on every chat message that <em>doesn't</em> match your trigger. Feeding the trigger into the AND as a second input restricts sound B to matching messages only. The same pattern works for any either/or pair of actions, not just audio.</p>
             </section>
 
             <section>
