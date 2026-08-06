@@ -469,6 +469,12 @@
 	}
 
 	function maybeDiscoverFacebookLiveVideo() {
+		// Opt-in only: auto-navigation has no ownership check, so on landing pages full
+		// of recommended streams it can yank users to another creator's live video.
+		if (!urlParamEnabled("ssnautolive")) {
+			facebookLiveDiscovery.status = "disabled";
+			return false;
+		}
 		if (!isFacebookLiveLandingPage()) {
 			facebookLiveDiscovery.status = "inactive";
 			return false;
