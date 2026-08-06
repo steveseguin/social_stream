@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
         {
             name: 'VPZone.tv',
             icon: 'vpzone.png',
-            description: 'Live streaming platform with on-page chat capture and an authenticated API page option.',
+            description: 'Live streaming platform with on-page chat capture and an authenticated API page option. Supports Pixels tips as donations, dock delete/block sync, and a stream title/category editor for channel owners.',
             type: 'standard',
             instructions: `
                 <ul>

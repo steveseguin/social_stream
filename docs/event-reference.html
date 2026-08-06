@@ -1276,8 +1276,10 @@
                     <h3>VPZone - WebSocket</h3>
                     <p class="source-note">Implementation: <code>sources/websocket/vpzone.js</code></p>
                     <ul class="requirements">
-                        <li>Connects to the VPZone chat websocket with <code>?channel=USERNAME</code>; OAuth requests <code>profile:read</code>, <code>chat:read</code>, and <code>chat:write</code> for chat sending. A bearer token with <code>chat:write</code> can also be supplied.</li>
+                        <li>Connects to <code>wss://chat.vpzone.tv/ws?channel=USERNAME</code>; OAuth requests <code>profile:read</code>, <code>chat:read</code>, <code>chat:write</code>, <code>channel:read</code>, <code>channel:write</code>, and <code>chat:moderate</code>. A bearer token can also be supplied manually.</li>
                         <li>Flat VPZone frames such as <code>type: "msg"</code> are normalized into standard chat payloads.</li>
+                        <li>Platform-side <code>delete_message</code> / <code>clear_chat</code> frames remove the matching rows from the dock; optional toggles sync dock deletes and blocks back to VPZone (channel owner only).</li>
+                        <li>Channel owners get a page-local Stream Info panel to update the live stream's title and category (same pattern as the Twitch source page).</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -1306,7 +1308,37 @@
                             <tr>
                                 <td class="membership-event"><code>subscription_gift</code></td>
                                 <td>VPZone <code>gift</code> / <code>gift_subscription</code> frame.</td>
-                                <td>Uses the same gifted-sub event name as Twitch, Kick, Rumble, and Velora.</td>
+                                <td>Uses the same gifted-sub event name as Twitch, Kick, Rumble, and Velora. <code>subtitle</code> carries the gift count (<code>x5</code>) or recipient.</td>
+                            </tr>
+                            <tr>
+                                <td><code>message</code> + <code>hasDonation</code></td>
+                                <td>VPZone <code>system</code> frame with <code>metadata.kind: "pixels_cheer"</code> (Pixels tip).</td>
+                                <td>Donation-bearing chat row; <code>hasDonation</code> is the amount label (for example <code>100 Pixels</code>), <code>meta.pixels</code> the integer. <code>event</code> stays blank, matching Kick tips.</td>
+                            </tr>
+                            <tr>
+                                <td><code>message</code> replies</td>
+                                <td>VPZone <code>msg</code> frame carrying <code>metadata.reply_to</code> (message id, author, excerpt — denormalized server-side).</td>
+                                <td>Rendered like Kick replies: <code>initial</code> holds the "author: excerpt" label, <code>reply</code> the raw reply text, <code>meta.reply</code> the structured target. Respects the <em>exclude "replying to"</em> setting.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>raid</code></td>
+                                <td>VPZone <code>raid</code> frame with <code>metadata.kind: "incoming"</code>.</td>
+                                <td>Outgoing raid frames are skipped; <code>meta.viewers</code> carries the raid size when provided.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>shoutout</code></td>
+                                <td>VPZone <code>shoutout</code> frame (<code>!so</code> command).</td>
+                                <td><code>meta.targetUser</code> names the shouted-out channel.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>reward</code></td>
+                                <td>VPZone <code>system</code> frame with <code>metadata.kind: "channel_points_redeem"</code>.</td>
+                                <td>Channel-point redemption, using the same event name as Twitch rewards.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>stream_online</code> / <code>stream_offline</code></td>
+                                <td>VPZone <code>system</code> frames with <code>metadata.kind: "stream_started"</code> / <code>"stream_ended"</code>.</td>
+                                <td>Attributed to the channel name (the frames carry no actor).</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>new_follower</code></td>

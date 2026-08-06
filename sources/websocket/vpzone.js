@@ -6,8 +6,10 @@
 	const TOKEN_KEY = "vpzoneWsTokens";
 	const OAUTH_KEY = "vpzoneOAuthState";
 	const DEFAULT_CLIENT_ID = "e63ceeb6-e9e6-4732-a7eb-a8f1613a2686";
-	const DEFAULT_SCOPES = "profile:read chat:read chat:write";
-	const DEFAULT_CONFIG = { channel: "", wsUrl: "wss://chat.nexus-7.vpzone.tv/ws", token: "", clientId: DEFAULT_CLIENT_ID, redirectUri: "", scopes: DEFAULT_SCOPES, hideMetrics: false };
+	const DEFAULT_SCOPES = "profile:read chat:read chat:write channel:read channel:write chat:moderate";
+	const DEFAULT_CONFIG = { channel: "", wsUrl: "wss://chat.vpzone.tv/ws", token: "", clientId: DEFAULT_CLIENT_ID, redirectUri: "", scopes: DEFAULT_SCOPES, hideMetrics: false };
+	const LEGACY_WS_URL = /^wss:\/\/chat\.nexus-7\.vpzone\.tv\//i;
+	const ADVANCED_CONTROLS_KEY = "vpzoneWsAdvancedControls";
 	const RECONNECT_DELAY_MS = 4000;
 	const MAX_SEEN_IDS = 1500;
 	const FETCH_BRIDGE_SOURCE = "ssn-vpzone";
@@ -51,6 +53,7 @@
 		lastStatus: "",
 		lastMessage: "",
 		tokens: null,
+		meUsername: null,
 		seenIds: new Set(),
 		seenOrder: [],
 		avatarCache: new Map(),
@@ -98,6 +101,13 @@
 	function pushMessage(data) {
 		if (!state.isExtensionOn || !data || typeof data !== "object") return;
 		relay({ message: data });
+	}
+
+	// Mirror platform-side deletions into the dock. `{delete:{type}}` alone
+	// wipes every vpzone row; adding `id` targets a single message.
+	function pushDelete(payload) {
+		if (!state.isExtensionOn) return;
+		relay({ "delete": Object.assign({ type: "vpzone" }, payload || {}) });
 	}
 
 	function pushStatus(status, message, meta) {
@@ -464,7 +474,7 @@
 					if (request === "getSource") { sendResponse("vpzone"); return; }
 					if (request === "focusChat") { sendResponse(false); return; }
 					if (request && typeof request === "object") {
-						if ("settings" in request || "state" in request || request.type === "SEND_MESSAGE") {
+						if ("settings" in request || "state" in request || request.type === "SEND_MESSAGE" || request.type === "SOURCE_CONTROL") {
 							window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: EXTENSION_MESSAGE, request: request }, "*");
 							sendResponse(true);
 							return;
@@ -477,7 +487,7 @@
 		window.addEventListener("message", function (event) {
 			var message = event && event.data;
 			if (!message || typeof message !== "object" || message.source === FETCH_BRIDGE_SOURCE) return;
-			if (!("message" in message) && !("wssStatus" in message)) return;
+			if (!("message" in message) && !("wssStatus" in message) && !("delete" in message)) return;
 			try {
 				chrome.runtime.sendMessage(chrome.runtime.id, message, function () {});
 			} catch (e) {}
@@ -540,6 +550,7 @@
 
 	function storeTokenResponse(json) {
 		if (!json || !json.access_token) throw new Error("VPZone did not return an access token.");
+		state.meUsername = null;
 		state.tokens = {
 			access_token: json.access_token,
 			token_type: json.token_type || "Bearer",
@@ -642,6 +653,7 @@
 
 	function clearOAuth() {
 		state.tokens = null;
+		state.meUsername = null;
 		state.cfg.token = "";
 		saveTokens();
 		saveConfig();
@@ -652,6 +664,7 @@
 
 	function clearStaleOAuth() {
 		state.tokens = null;
+		state.meUsername = null;
 		state.cfg.token = "";
 		saveTokens();
 		saveConfig();
@@ -732,6 +745,7 @@
 	}
 
 	function updateAuthChip() {
+		if (!state.cfg.token) showChannelEditor(false);
 		if (state.tokens && state.tokens.access_token) {
 			chip(els.authChip, "Signed in", "good");
 			return;
@@ -776,11 +790,15 @@
 		}
 	}
 
-	function buildSocketUrl(channel) {
+	// The documented contract authenticates via a `token` query param; a `since`
+	// cursor (epoch ms) suppresses the server's history replay on reconnects so
+	// the dock doesn't re-receive frames it already deduped.
+	function buildSocketUrl(channel, isReconnect) {
 		var url = new URL(normalizeWs(state.cfg.wsUrl));
 		url.searchParams.set("channel", channel);
-		if (state.cfg.token) url.searchParams.set("mode", "developer");
-		else url.searchParams.delete("mode");
+		if (state.cfg.token) url.searchParams.set("token", state.cfg.token);
+		else url.searchParams.delete("token");
+		if (isReconnect) url.searchParams.set("since", String(Date.now() - 30000));
 		return url.toString();
 	}
 
@@ -854,6 +872,177 @@
 		});
 	}
 
+	function getAdvancedControlSettings() {
+		try {
+			var parsed = JSON.parse(localStorage.getItem(ADVANCED_CONTROLS_KEY) || "{}") || {};
+			return { syncDeleteMessages: !!parsed.syncDeleteMessages, syncBlockUsers: !!parsed.syncBlockUsers };
+		} catch (e) {
+			return { syncDeleteMessages: false, syncBlockUsers: false };
+		}
+	}
+
+	function saveAdvancedControlSettings(settings) {
+		try { localStorage.setItem(ADVANCED_CONTROLS_KEY, JSON.stringify(settings || {})); } catch (e) {}
+	}
+
+	function apiDeleteMessage(channel, messageId, token) {
+		return fetchJson(HOST + "/api/v1/channels/" + encodeURIComponent(channel) + "/chat/moderation?messageId=" + encodeURIComponent(messageId), {
+			method: "DELETE",
+			headers: { Accept: "application/json", Authorization: "Bearer " + token },
+			authToken: token
+		});
+	}
+
+	function apiBanUser(channel, username, token) {
+		return fetchJson(HOST + "/api/v1/channels/" + encodeURIComponent(channel) + "/chat/moderation/bans", {
+			method: "POST",
+			headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: "Bearer " + token },
+			body: JSON.stringify({ target_username: username }),
+			authToken: token
+		});
+	}
+
+	function moderationErrorMessage(error) {
+		if (error && error.status === 403) return "VPZone moderation is owner-only; sign in as the channel owner.";
+		return (error && error.message) || String(error || "request failed");
+	}
+
+	// Dock delete/block sync — VPZone's v1 moderation endpoints target the
+	// message id (query param) and the username (bans take target_username, so
+	// no user-id resolution is needed). Both require chat:moderate and only
+	// work for the channel owner's token.
+	function handleSourceControlRequest(request) {
+		var payload = (request && request.payload) || {};
+		var platform = String((request && request.platform) || payload.type || "").toLowerCase();
+		if (platform !== "vpzone") return Promise.resolve(false);
+		var channel = normalizeChannel(state.currentChannel || state.cfg.channel);
+		var token = String(state.cfg.token || "");
+		if (!channel || !token) return Promise.resolve(false);
+		if (request.control === "deleteMessage") {
+			if (!getAdvancedControlSettings().syncDeleteMessages) return Promise.resolve(false);
+			var messageId = payload.messageId || (payload.meta && payload.meta.messageId) || payload.id || "";
+			if (!messageId) {
+				log("Skipped dock delete: missing native VPZone message id.", "warn");
+				return Promise.resolve(false);
+			}
+			return apiDeleteMessage(channel, String(messageId), token).then(function () {
+				log("Synced dock delete to VPZone.", "success");
+				return true;
+			}).catch(function (error) {
+				log("VPZone delete failed: " + moderationErrorMessage(error), "error");
+				return false;
+			});
+		}
+		if (request.control === "blockUser") {
+			if (!getAdvancedControlSettings().syncBlockUsers) return Promise.resolve(false);
+			var username = String(payload.username || payload.userid || stripHtml(payload.chatname || "") || "").trim();
+			if (!username) {
+				log("Skipped dock block: missing VPZone username.", "warn");
+				return Promise.resolve(false);
+			}
+			return apiBanUser(channel, username, token).then(function () {
+				log("Synced dock block to VPZone ban: " + username, "success");
+				return true;
+			}).catch(function (error) {
+				log("VPZone ban failed: " + moderationErrorMessage(error), "error");
+				return false;
+			});
+		}
+		return Promise.resolve(false);
+	}
+
+	function apiGetJson(path, token) {
+		return fetchJson(HOST + path, {
+			headers: { Accept: "application/json", Authorization: "Bearer " + token },
+			authToken: token
+		});
+	}
+
+	function showChannelEditor(show) {
+		if (!els.channelEditor) return;
+		if (show) els.channelEditor.classList.remove("hidden");
+		else els.channelEditor.classList.add("hidden");
+	}
+
+	// Stream title/category editor — same page-local pattern as the Twitch
+	// source page's "update channel info" panel. Only revealed when the signed
+	// in account owns the connected channel (PATCH is owner-only server-side).
+	function refreshChannelInfo() {
+		var channel = normalizeChannel(state.currentChannel || state.cfg.channel);
+		var token = String(state.cfg.token || "");
+		if (!channel || !token) {
+			showChannelEditor(false);
+			return Promise.resolve(null);
+		}
+		var mePromise = state.meUsername != null
+			? Promise.resolve(state.meUsername)
+			: apiGetJson("/api/v1/me", token).then(function (json) {
+				var profile = json && json.data && json.data.profile;
+				state.meUsername = profile && profile.username ? String(profile.username).toLowerCase() : "";
+				return state.meUsername;
+			}).catch(function () {
+				state.meUsername = "";
+				return "";
+			});
+		return Promise.all([
+			apiGetJson("/api/v1/channels/" + encodeURIComponent(channel), token),
+			mePromise
+		]).then(function (results) {
+			var info = results[0] && results[0].data ? results[0].data : (results[0] || {});
+			var owner = info.owner && info.owner.username ? String(info.owner.username).toLowerCase() : "";
+			var isOwner = !!(owner && results[1] && owner === results[1]);
+			showChannelEditor(isOwner);
+			if (isOwner) {
+				if (els.streamTitle) els.streamTitle.value = info.title || "";
+				if (els.streamCategory) els.streamCategory.value = info.category || "";
+			}
+			return info;
+		}).catch(function (error) {
+			if (error && (error.status === 401 || error.status === 403)) showChannelEditor(false);
+			return null;
+		});
+	}
+
+	function loadCategories() {
+		var token = String(state.cfg.token || "");
+		if (!token || !els.categoryList || els.categoryList.childElementCount) return;
+		apiGetJson("/api/v1/categories", token).then(function (json) {
+			var items = json && Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []);
+			items.forEach(function (item) {
+				var name = typeof item === "string" ? item : String((item && (item.name || item.title)) || "");
+				if (!name) return;
+				var option = document.createElement("option");
+				option.value = name;
+				els.categoryList.appendChild(option);
+			});
+		}).catch(function () {});
+	}
+
+	function updateChannelInfo() {
+		var channel = normalizeChannel(state.currentChannel || state.cfg.channel);
+		var token = String(state.cfg.token || "");
+		var body = {};
+		var title = String(els.streamTitle ? els.streamTitle.value : "").trim();
+		var category = String(els.streamCategory ? els.streamCategory.value : "").trim();
+		if (title) body.title = title.slice(0, 140);
+		if (category) body.category = category.slice(0, 80);
+		if (!channel || !token || !Object.keys(body).length) return;
+		fetchJson(HOST + "/api/v1/channels/" + encodeURIComponent(channel), {
+			method: "PATCH",
+			headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: "Bearer " + token },
+			body: JSON.stringify(body),
+			authToken: token
+		}).then(function () {
+			log("Stream title/category updated on VPZone.", "success");
+			refreshChannelInfo();
+		}).catch(function (error) {
+			var message = (error && error.message) || String(error || "update failed");
+			if (error && error.status === 422) log("VPZone rejected the update (blocked content): " + message, "error");
+			else if (error && error.status === 403) log("Channel update needs the channel:write scope and channel ownership.", "error");
+			else log("Channel update failed: " + message, "error");
+		});
+	}
+
 	function loadConfig() {
 		var query;
 		var hash;
@@ -861,6 +1050,7 @@
 		try { saved = JSON.parse(localStorage.getItem(CONFIG_KEY) || "{}") || {}; } catch (e) {}
 		state.cfg.channel = normalizeChannel(saved.channel || "");
 		state.cfg.wsUrl = normalizeWs(saved.wsUrl || DEFAULT_CONFIG.wsUrl);
+		if (LEGACY_WS_URL.test(state.cfg.wsUrl)) state.cfg.wsUrl = DEFAULT_CONFIG.wsUrl;
 		state.cfg.token = typeof saved.token === "string" ? saved.token : "";
 		state.cfg.clientId = typeof saved.clientId === "string" && saved.clientId ? saved.clientId : DEFAULT_CLIENT_ID;
 		state.cfg.redirectUri = normalizeRedirectUri(saved.redirectUri || "");
@@ -893,10 +1083,13 @@
 	}
 
 	function syncStateToUi() {
+		var advancedControls = getAdvancedControlSettings();
 		if (els.channel) els.channel.value = state.cfg.channel || "";
 		if (els.wsUrl) els.wsUrl.value = state.cfg.wsUrl || DEFAULT_CONFIG.wsUrl;
 		if (els.token) els.token.value = state.cfg.token || "";
 		if (els.hideMetrics) els.hideMetrics.checked = !!state.cfg.hideMetrics;
+		if (els.syncDeleteMessages) els.syncDeleteMessages.checked = !!advancedControls.syncDeleteMessages;
+		if (els.syncBlockUsers) els.syncBlockUsers.checked = !!advancedControls.syncBlockUsers;
 		applyMetricsVisibility();
 		updateAuthChip();
 		updateLink();
@@ -1036,6 +1229,9 @@
 		if (value === "raid") return "raid";
 		if (value === "clip") return "clip";
 		if (value === "level_up") return "level_up";
+		if (value === "stream_started") return "stream_online";
+		if (value === "stream_ended") return "stream_offline";
+		if (value === "channel_points_redeem") return "reward";
 		return value;
 	}
 
@@ -1083,6 +1279,23 @@
 		data.timestamp = eventTime(ev);
 		data.meta = { streamUsername: ev.streamUsername || state.currentChannel || state.cfg.channel, createdAt: eventTime(ev), actorUsername: ev.actorUsername || ev.username || "", actorRank: ev.metadata && ev.metadata.actorRank ? ev.metadata.actorRank : "", rawEventType: ev.eventType || ev.type || "chat_message", transport: "websocket", isSubscriber: isSubscriber, subMonths: Number(ev.sub_months || ev.subMonths || 0), isOwner: isOwner, isModerator: isModerator, isVip: isVip };
 		if (messageId) data.meta.messageId = messageId;
+		// Reply threading — VPZone denormalizes the target into
+		// metadata.reply_to {message_id, username, excerpt}, so unlike Kick no
+		// message cache is needed. Output shape mirrors Kick's reply rows:
+		// `initial` label + quoted prefix on chatmessage + meta.reply.
+		var replyTo = ev.metadata && typeof ev.metadata === "object" && ev.metadata.reply_to && typeof ev.metadata.reply_to === "object" ? ev.metadata.reply_to : null;
+		if (replyTo && !(state.settings && state.settings.excludeReplyingTo) && data.chatmessage) {
+			var replyAuthor = String(replyTo.username || "");
+			var replyText = String(replyTo.excerpt || "");
+			var replyLabel = replyAuthor && replyText ? replyAuthor + ": " + replyText : (replyAuthor || replyText);
+			if (replyLabel) {
+				data.initial = replyLabel;
+				data.reply = data.chatmessage;
+				if (state.settings && state.settings.textonlymode) data.chatmessage = replyLabel + ": " + data.chatmessage;
+				else data.chatmessage = "<i><small>" + esc(replyLabel) + ":&nbsp;</small></i> " + data.chatmessage;
+				data.meta.reply = { messageId: replyTo.message_id ? String(replyTo.message_id) : "", author: replyAuthor, text: replyText };
+			}
+		}
 		return data.chatname && data.chatmessage ? data : null;
 	}
 
@@ -1118,6 +1331,23 @@
 		if (messageId) data.meta.messageId = messageId;
 		if (mapped === "new_follower") data.meta.followedOn = eventTime(ev);
 		if (mapped === "new_subscriber") data.meta.subscribedOn = eventTime(ev);
+		if (mapped === "subscription_gift") {
+			var giftMeta = ev.metadata && typeof ev.metadata === "object" ? ev.metadata : {};
+			if (giftMeta.gift_count && Number(giftMeta.gift_count) > 1) data.subtitle = "x" + giftMeta.gift_count;
+			else if (giftMeta.gift_recipient) data.subtitle = "to " + esc(String(giftMeta.gift_recipient));
+			if (giftMeta.tier) data.membership = "Gifted " + nice(giftMeta.tier);
+		}
+		if (mapped === "raid") {
+			var raidMeta = ev.metadata && typeof ev.metadata === "object" ? ev.metadata : {};
+			if (raidMeta.viewer_count != null) data.meta.viewers = Number(raidMeta.viewer_count) || 0;
+		}
+		if (mapped === "shoutout") {
+			var target = ev.metadata && ev.metadata.target_user ? String(ev.metadata.target_user) : "";
+			if (target) {
+				data.chatmessage = renderMessage("gave a shoutout to @" + target);
+				data.meta.targetUser = target;
+			}
+		}
 		return data.chatname ? data : null;
 	}
 
@@ -1173,15 +1403,56 @@
 	// Some VPZONE system frames identify the real actor via `metadata.username`
 	// (level_up, etc.) rather than the top-level `username` which is hard-coded
 	// to "system". Lift it so downstream renderers attribute the row correctly.
+	// `metadata.kind` is always promoted so kinds without a metadata actor
+	// (pixels_cheer carries the sender in the top-level username field;
+	// stream_started/ended carry no actor at all) still route by kind.
 	function liftSystemActor(ev) {
 		if (!ev || String(ev.eventType || ev.type || "").toLowerCase() !== "system") return;
 		var meta = ev.metadata;
 		if (!meta || typeof meta !== "object") return;
 		var name = meta.username || meta.actorUsername || meta.user || "";
-		if (!name) return;
-		ev.actorUsername = name;
-		ev.actorDisplayName = meta.display_name || meta.actorDisplayName || name;
+		if (name) {
+			ev.actorUsername = name;
+			ev.actorDisplayName = meta.display_name || meta.actorDisplayName || name;
+		}
 		if (meta.kind) ev.type = String(meta.kind);
+	}
+
+	function pixelsLabel(amount) {
+		var n = parseInt(amount, 10);
+		if (!isFinite(n) || n <= 0) return "";
+		return n.toLocaleString() + " " + (n === 1 ? "Pixel" : "Pixels");
+	}
+
+	// Pixels cheers arrive as system frames with `metadata.kind:"pixels_cheer"`
+	// (amount + optional message; the sender sits in the top-level username
+	// field). Render them as a donation-bearing chat row — same shape Kick uses
+	// for tips (`hasDonation` label, `event` left blank per the payload contract).
+	function buildPixelsCheer(ev) {
+		var meta = ev.metadata && typeof ev.metadata === "object" ? ev.metadata : {};
+		var label = pixelsLabel(meta.amount);
+		if (!label) return null;
+		// Blank out the server-composed body ("X sent N Pixels!") — the donation
+		// label carries that information; only the cheerer's own text remains.
+		var data = buildChat(Object.assign({}, ev, { type: "msg", message: meta.message ? String(meta.message) : "", body: "", text: "", content: "" }));
+		if (!data) {
+			var rawName = ev.actorDisplayName || ev.displayName || ev.actorUsername || ev.username || "";
+			if (!rawName || String(rawName).toLowerCase() === "system") return null;
+			data = basePayload();
+			data.chatname = esc(rawName);
+			data.username = ev.actorUsername || ev.username || "";
+			data.chatmessage = "";
+			data.chatimg = absUrl(ev.actorAvatarUrl || ev.avatarUrl || ev.actorAvatar || ev.avatar_url || "");
+			data.nameColor = ev.actorNameColor || ev.nameColor || ev.color || "#c084fc";
+			data.userid = ev.actorUsername || ev.username || "";
+			data.timestamp = eventTime(ev);
+			data.meta = { streamUsername: state.currentChannel || state.cfg.channel, transport: "websocket" };
+		}
+		data.hasDonation = label;
+		data.event = "";
+		data.meta.rawEventType = "pixels_cheer";
+		data.meta.pixels = parseInt(meta.amount, 10) || 0;
+		return data;
 	}
 
 	function handleEvent(ev) {
@@ -1189,6 +1460,23 @@
 		if (!ev || typeof ev !== "object") return;
 		if (isJoinAnnouncement(ev)) return;
 		liftSystemActor(ev);
+		var mapped = mapEventName(ev.eventType || ev.type || "");
+		var meta = ev.metadata && typeof ev.metadata === "object" ? ev.metadata : {};
+		// Only incoming raids are events for the channel being watched; the
+		// outgoing half of the pair belongs to the raiding channel's feed.
+		if (mapped === "raid") {
+			if (meta.kind === "outgoing") return;
+			if (!(ev.actorUsername || ev.username) || String(ev.actorUsername || ev.username).toLowerCase() === "system") {
+				ev.actorUsername = meta.source_slug || "";
+				ev.actorDisplayName = meta.source_display || meta.source_slug || "";
+			}
+		}
+		// stream_started/stream_ended frames carry no actor — attribute them to
+		// the channel itself so buildEvent doesn't drop them.
+		if ((mapped === "stream_online" || mapped === "stream_offline") && (!(ev.actorUsername || ev.username) || String(ev.actorUsername || ev.username).toLowerCase() === "system")) {
+			ev.actorUsername = state.currentChannel || state.cfg.channel || "";
+			ev.actorDisplayName = ev.actorUsername;
+		}
 		key = ev.id != null ? ev.id : [eventTime(ev), ev.actorUsername || ev.username || "", ev.eventType || ev.type || "", ev.message || ev.text || ev.body || ev.content || ""].join("::");
 		if (!remember(key)) return;
 		var actor = ev.actorUsername || ev.username || "";
@@ -1196,7 +1484,20 @@
 		var enrich = hasCarriedAvatar ? Promise.resolve("") : fetchAvatar(actor);
 		enrich.then(function (avatarUrl) {
 			if (avatarUrl && !hasCarriedAvatar) ev.avatarUrl = avatarUrl;
-			var data = mapEventName(ev.eventType || ev.type || "") === "chat_message" ? buildChat(ev) : buildEvent(ev);
+			var data;
+			if (mapped === "pixels_cheer") data = buildPixelsCheer(ev);
+			else if (mapped === "mod_message") {
+				// Highlighted moderator chat row — keep it a chat message rather
+				// than inventing a new event name.
+				data = buildChat(Object.assign({}, ev, { type: "msg" }));
+				if (data) {
+					data.mod = true;
+					data.backgroundColor = "rgba(0, 167, 255, 0.15)";
+					data.meta.rawEventType = "mod_message";
+				}
+			}
+			else if (mapped === "chat_message") data = buildChat(ev);
+			else data = buildEvent(ev);
 			if (!data) return;
 			pushMessage(data);
 			appendFeed(data);
@@ -1219,7 +1520,12 @@
 		if (!payload || typeof payload !== "object") return;
 		if (Array.isArray(payload.events)) { payload.events.forEach(routePayload); return; }
 		type = String(payload.type || "").toLowerCase();
-		if (type === "delete_message") return;
+		if (type === "delete_message") {
+			var deletedId = payload.metadata && payload.metadata.messageId;
+			if (deletedId) pushDelete({ id: String(deletedId) });
+			return;
+		}
+		if (type === "clear_chat") { pushDelete({}); return; }
 		if (type === "presence") { handlePresence(payload); return; }
 		if (type === "stream_event" || type === "chat_event") {
 			ev = payload.event && typeof payload.event === "object" ? payload.event : payload.data;
@@ -1277,19 +1583,21 @@
 	function openSocket(isReconnect) {
 		var channel = normalizeChannel(state.currentChannel || state.cfg.channel);
 		var wsUrl;
+		var displayUrl;
 		var socket;
 		if (!state.active) return;
 		if (!channel) throw new Error("Channel is required.");
-		wsUrl = buildSocketUrl(channel);
+		wsUrl = buildSocketUrl(channel, !!isReconnect);
+		displayUrl = normalizeWs(state.cfg.wsUrl);
 		closeSocket();
 		state.currentChannel = channel;
 		updateLink();
 		wsProxy.readyState = READY_STATE.CONNECTING;
 		showBadOriginHelp(false);
-		setStatus("connecting", (isReconnect ? "Reconnecting" : "Connecting") + " @" + channel + "...", { channel: channel, wsUrl: wsUrl });
+		setStatus("connecting", (isReconnect ? "Reconnecting" : "Connecting") + " @" + channel + "...", { channel: channel, wsUrl: displayUrl });
 		log((isReconnect ? "Reconnecting" : "Connecting") + " chat for @" + channel + ".", "info");
 		try { socket = new WebSocket(wsUrl); } catch (error) {
-			setStatus("error", "Connection failed: " + ((error && error.message) || error), { channel: channel, wsUrl: wsUrl });
+			setStatus("error", "Connection failed: " + ((error && error.message) || error), { channel: channel, wsUrl: displayUrl });
 			log("Connection failed: " + ((error && error.message) || error), "error");
 			scheduleReconnect("Connection setup failed.");
 			return;
@@ -1297,12 +1605,10 @@
 		state.socket = socket;
 		socket.onopen = function () {
 			wsProxy.readyState = READY_STATE.OPEN;
-			if (state.cfg.token) {
-				try { socket.send(JSON.stringify({ type: "auth", token: state.cfg.token })); } catch (e) {}
-			}
-			setStatus("connected", "Connected to @" + channel + ".", { channel: channel, wsUrl: wsUrl });
-			log("Connected to @" + channel + ".", "success");
-			if (state.cfg.token) log("Developer auth payload sent.", "info");
+			setStatus("connected", "Connected to @" + channel + ".", { channel: channel, wsUrl: displayUrl });
+			log("Connected to @" + channel + (state.cfg.token ? " (authenticated)." : "."), "success");
+			refreshChannelInfo();
+			loadCategories();
 		};
 		socket.onmessage = function (event) {
 			try { routePayload(JSON.parse(event.data)); } catch (e) { log("Ignoring non-JSON socket payload.", "warn"); }
@@ -1327,13 +1633,13 @@
 						? "VPZone banned this account from @" + channel + "."
 						: "VPZone rejected the connection: " + (rejReason || "policy violation");
 				showBadOriginHelp(isBadOrigin);
-				setStatus("error", msg, { channel: channel, wsUrl: wsUrl });
+				setStatus("error", msg, { channel: channel, wsUrl: displayUrl });
 				log(reason + ". " + msg, "error");
 				syncButtons();
 				return;
 			}
 			if (!state.active || state.manualDisconnect) {
-				setStatus("disconnected", "Disconnected.", { channel: channel, wsUrl: wsUrl });
+				setStatus("disconnected", "Disconnected.", { channel: channel, wsUrl: displayUrl });
 				log(reason + ".", "warn");
 				return;
 			}
@@ -1387,6 +1693,14 @@
 								});
 								return true;
 							}
+							if (request.type === "SOURCE_CONTROL") {
+								handleSourceControlRequest(request).then(function (handled) {
+									sendResponse(!!handled);
+								}).catch(function () {
+									sendResponse(false);
+								});
+								return true;
+							}
 						}
 					} catch (error) {
 						log("Extension bridge error: " + ((error && error.message) || error), "error");
@@ -1414,6 +1728,10 @@
 				sendChatMessage(request.message).catch(function (error) {
 					log("VPZone postMessage SEND_MESSAGE failed: " + ((error && error.message) || error), "error");
 				});
+				return;
+			}
+			if (request.type === "SOURCE_CONTROL") {
+				handleSourceControlRequest(request).catch(function () {});
 			}
 		});
 	}
@@ -1430,8 +1748,20 @@
 			els.channel.addEventListener("keydown", function (event) { if (event.key === "Enter" && !state.active && els.connect) { event.preventDefault(); els.connect.click(); } });
 		}
 		if (els.wsUrl) els.wsUrl.addEventListener("change", function () { els.wsUrl.value = normalizeWs(els.wsUrl.value); });
-		if (els.token) els.token.addEventListener("change", function () { state.cfg.token = String(els.token.value || ""); updateAuthChip(); });
+		if (els.token) els.token.addEventListener("change", function () { state.cfg.token = String(els.token.value || ""); state.meUsername = null; updateAuthChip(); });
 		if (els.hideMetrics) els.hideMetrics.addEventListener("change", function () { state.cfg.hideMetrics = !!els.hideMetrics.checked; applyMetricsVisibility(); saveConfig(); });
+		if (els.updateChannel) els.updateChannel.addEventListener("click", function (event) { event.preventDefault(); syncUiToState(); updateChannelInfo(); });
+		if (els.refreshChannel) els.refreshChannel.addEventListener("click", function (event) { event.preventDefault(); syncUiToState(); refreshChannelInfo(); });
+		if (els.syncDeleteMessages) els.syncDeleteMessages.addEventListener("change", function () {
+			var settings = getAdvancedControlSettings();
+			settings.syncDeleteMessages = !!els.syncDeleteMessages.checked;
+			saveAdvancedControlSettings(settings);
+		});
+		if (els.syncBlockUsers) els.syncBlockUsers.addEventListener("change", function () {
+			var settings = getAdvancedControlSettings();
+			settings.syncBlockUsers = !!els.syncBlockUsers.checked;
+			saveAdvancedControlSettings(settings);
+		});
 		try { window.__SSAPP_START_VPZONE_AUTH__ = function () { return startExternalOAuth(); }; } catch (e) {}
 	}
 
@@ -1448,6 +1778,14 @@
 		els.chatMessage = document.getElementById("chat-message");
 		els.sendMessage = document.getElementById("send-message-btn");
 		els.hideMetrics = document.getElementById("hide-metrics");
+		els.syncDeleteMessages = document.getElementById("sync-delete-messages");
+		els.syncBlockUsers = document.getElementById("sync-block-users");
+		els.channelEditor = document.getElementById("channel-editor");
+		els.streamTitle = document.getElementById("stream-title");
+		els.streamCategory = document.getElementById("stream-category");
+		els.categoryList = document.getElementById("category-list");
+		els.updateChannel = document.getElementById("update-channel-btn");
+		els.refreshChannel = document.getElementById("refresh-channel-btn");
 		els.socketChip = document.getElementById("socket-chip");
 		els.viewerChip = document.getElementById("viewer-chip");
 		els.lastEventChip = document.getElementById("last-event-chip");
