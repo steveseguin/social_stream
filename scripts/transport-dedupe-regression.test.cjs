@@ -9,7 +9,7 @@ const sharedDedupeSource = fs.readFileSync(path.join(root, 'js', 'transport-dedu
 // Every page carrying the cross-transport dedupe guard.
 const guardedFiles = [
   'dock.html',
-  'sampleoverlay.html', 'emotes.html', 'content.html', 'credits.html', 'events.html',
+  'sampleoverlay.html', 'featured.html', 'emotes.html', 'content.html', 'credits.html', 'events.html',
   'games.html', 'leaderboard.html', 'scoreboard.html', 'battle.html',
   'games/chickenroyale.html', 'hype.html', 'streamelements-importer.js',
   'themes/compact-clean.html', 'themes/compact-classic.html', 'themes/compact-glass.html',
