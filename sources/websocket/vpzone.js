@@ -1521,7 +1521,7 @@
 		if (Array.isArray(payload.events)) { payload.events.forEach(routePayload); return; }
 		type = String(payload.type || "").toLowerCase();
 		if (type === "delete_message") {
-			var deletedId = payload.metadata && payload.metadata.messageId;
+			var deletedId = payload.metadata && (payload.metadata.messageId || payload.metadata.message_id);
 			if (deletedId) pushDelete({ id: String(deletedId) });
 			return;
 		}

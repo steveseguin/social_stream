@@ -171,7 +171,7 @@
 		}
 
 		if (msg.type === "delete_message") {
-			var deletedId = msg.metadata && msg.metadata.messageId;
+			var deletedId = msg.metadata && (msg.metadata.messageId || msg.metadata.message_id);
 			if (deletedId) {
 				try { chrome.runtime.sendMessage(chrome.runtime.id, { "delete": { type: "vpzone", id: String(deletedId) } }, function () {}); } catch (e) {}
 			}
@@ -242,13 +242,15 @@
 				if (!isFinite(cheerAmount) || cheerAmount <= 0 || !cheerName || cheerName === "system") return;
 				var cheerAvatar = avatarCache.get(String(cheerName).toLowerCase()) || "";
 				if (!cheerAvatar) fetchAvatar(cheerName);
-				emitWsMessage({
+				var cheerPayload = {
 					chatname: escapeHtmlMaybe(cheerName),
 					chatmessage: escapeHtmlMaybe((msg.metadata && msg.metadata.message) || ""),
 					chatimg: cheerAvatar,
 					hasDonation: cheerAmount.toLocaleString() + " " + (cheerAmount === 1 ? "Pixel" : "Pixels"),
 					meta: { timestamp: ts, kind: kind, pixels: cheerAmount }
-				});
+				};
+				if (msg.id) cheerPayload.id = String(msg.id);
+				emitWsMessage(cheerPayload);
 				return;
 			}
 
@@ -315,6 +317,10 @@
 				source: msg.metadata && msg.metadata.source ? msg.metadata.source : "vpzone"
 			}
 		};
+		// Carry the native frame id as the payload id (Twitch ws-page pattern) so
+		// platform-side delete_message frames can target the dock row by data-mid;
+		// without it the row gets the internal counter id and deletes never match.
+		if (msg.id) wsPayload.id = String(msg.id);
 		// Reply threading — the frame denormalizes the target into
 		// metadata.reply_to {message_id, username, excerpt}; render it the
 		// same way Kick reply rows render (initial label + quoted prefix).
