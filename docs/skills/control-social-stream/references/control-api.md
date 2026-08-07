@@ -124,12 +124,17 @@ adapter with `--ssapp-mcp`. Enable **File > Local AI / Automation**, restart, th
 `SSAPP_CONTROL_URL` into the local agent's MCP configuration. A source checkout and separate
 Node installation are not required.
 
-The adapter discovers capabilities at runtime, filters unavailable tools, and includes
-`ssappVersion` and `apiVersion` in every tool result. Linux configurations add
-`--ozone-platform=headless` so the lightweight adapter process does not need a second X
-display; the main capture application still needs a desktop session or Xvfb.
+MCP 1.0.5 in SSApp 0.4.11 and newer advertises the adapter's complete stable tool set even
+when the main app is offline during discovery. Each version-gated tool re-reads runtime
+capabilities when called and rejects commands unsupported by the connected SSApp version.
+Older adapters filter unavailable tools during discovery, so start SSApp first or reconnect
+the MCP server after SSApp starts. Tool results include `ssappVersion` and `apiVersion`.
+Linux configurations add `--ozone-platform=headless` so the lightweight adapter process does
+not need a second X display; the main capture application still needs a desktop session or
+Xvfb.
 
-Call `ssapp_get_capabilities` first. Do not assume a tool described by a newer skill revision is present in an older running app.
+Call `ssapp_get_capabilities` first. Tool presence in MCP 1.0.5 indicates that the adapter
+knows the tool, not that the connected SSApp version supports its underlying command.
 
 ## Limits
 

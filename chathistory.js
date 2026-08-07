@@ -5,9 +5,11 @@ const PAGE_SIZE = 100;
 const MAX_PAGES = 5;
 const MAX_ITEMS = PAGE_SIZE * MAX_PAGES;
 const FILTER_DEBOUNCE_MS = 300;
+const DEFAULT_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
 let db;
 let messages = [];
+let unlimitedDBEnabled = false;
 let isLoading = false;
 let newestTimestamp = null;
 let oldestTimestamp = null;
@@ -32,6 +34,7 @@ if (snapshotMode) {
         if (event.source !== window.parent || !event.data || event.data.type !== 'ssapp-chat-history-snapshot') return;
         const snapshot = event.data.snapshot || {};
         snapshotMessages = Array.isArray(snapshot.messages) ? snapshot.messages : [];
+        unlimitedDBEnabled = snapshot.unlimitedDB === true;
         snapshotMessages.sort(compareMessagesNewestFirst);
         window.__ssappHistorySnapshotState = {
             active: true,
@@ -269,8 +272,82 @@ function buildCursorConfig(direction) {
     return { cursorDirection: null, range: null };
 }
 
+function isHistorySettingEnabled(value) {
+    return value === true || !!(value && typeof value === 'object' && value.setting === true);
+}
+
+function isHistoryMessageExpired(message, now = Date.now()) {
+    if (!message || unlimitedDBEnabled) return false;
+
+    if (message.expiresAt !== undefined && message.expiresAt !== null && message.expiresAt !== '') {
+        const explicitExpiration = Number(message.expiresAt);
+        if (Number.isFinite(explicitExpiration)) return explicitExpiration <= now;
+    }
+
+    const timestamp = Number(message.timestamp);
+    return Number.isFinite(timestamp) && timestamp + DEFAULT_RETENTION_MS <= now;
+}
+
+function loadUnlimitedDBSetting() {
+    if (snapshotMode) return snapshotReady.then(() => unlimitedDBEnabled);
+
+    return new Promise(resolve => {
+        let settled = false;
+        let timeout = null;
+        const finish = value => {
+            if (settled) return;
+            settled = true;
+            if (timeout !== null) clearTimeout(timeout);
+            unlimitedDBEnabled = value;
+            resolve(value);
+        };
+        timeout = setTimeout(() => finish(false), 5000);
+
+        const readFromRuntime = () => {
+            if (typeof chrome === 'undefined' || !chrome.runtime || typeof chrome.runtime.sendMessage !== 'function') {
+                finish(false);
+                return;
+            }
+
+            try {
+                chrome.runtime.sendMessage({ cmd: 'getSettings' }, response => {
+                    if (chrome.runtime.lastError || !response || !response.settings) {
+                        finish(false);
+                        return;
+                    }
+                    finish(isHistorySettingEnabled(response.settings.unlimitedDB));
+                });
+            } catch (error) {
+                finish(false);
+            }
+        };
+
+        if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local || typeof chrome.storage.local.get !== 'function') {
+            readFromRuntime();
+            return;
+        }
+
+        try {
+            chrome.storage.local.get(['settings'], result => {
+                if (chrome.runtime && chrome.runtime.lastError) {
+                    readFromRuntime();
+                    return;
+                }
+                if (!result || typeof result !== 'object') {
+                    readFromRuntime();
+                    return;
+                }
+                finish(isHistorySettingEnabled(result.settings && result.settings.unlimitedDB));
+            });
+        } catch (error) {
+            readFromRuntime();
+        }
+    });
+}
+
 function messageMatchesFilters(message, activeFilters = filters) {
     if (!message) return false;
+    if (isHistoryMessageExpired(message)) return false;
 
     if (activeFilters.search) {
         const term = activeFilters.search;
@@ -906,15 +983,15 @@ exportTimeframe.addEventListener('change', function () {
     dateFilterContainer.style.display = this.value === 'custom' ? 'inline-block' : 'none';
 });
 
-const historyReady = snapshotMode
+const databaseReady = snapshotMode
     ? snapshotReady.then(() => {
         updateTypeOptions(snapshotMessages || []);
         return null;
     })
     : initDatabase();
 
-historyReady
-    .then(result => {
+Promise.all([databaseReady, loadUnlimitedDBSetting()])
+    .then(([result]) => {
         db = result;
         setDefaultExportDates();
         return resetAndLoadMessages();

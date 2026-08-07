@@ -731,17 +731,6 @@ export function createTwitchChatClient(options = {}) {
     return state.client.say(`#${channel}`, message);
   }
 
-  function getUserState(targetChannel = null) {
-    if (!state.client) {
-      return {};
-    }
-    const channel = normalizeTwitchChannel(targetChannel || state.channel);
-    const channelKey = channel ? `#${channel}` : null;
-    const channelState = channelKey && state.client.userstate?.[channelKey];
-    const source = channelState || state.client.globaluserstate || {};
-    return { ...source };
-  }
-
   function getState() {
     return {
       status: state.status,
@@ -760,7 +749,6 @@ export function createTwitchChatClient(options = {}) {
     off: emitter.off,
     once: emitter.once,
     sendMessage,
-    getUserState,
     scheduleReconnect,
     updateStatus,
     getState,

@@ -61,6 +61,7 @@ async function run() {
         subscriptionCalls: 0,
         subscriptionTypes: [],
         chatSendRequests: [],
+        chatSendResponses: [],
         tmiSayCalls: 0,
         runtimeMessages: [],
         runtimeDeletes: [],
@@ -213,9 +214,14 @@ async function run() {
         if (url.includes('/helix/chat/messages')) {
           const body = JSON.parse(init.body || '{}');
           harness.chatSendRequests.push(body);
+          const requestNumber = harness.chatSendRequests.length;
+          const messageId = requestNumber === 1
+            ? '11111111-2222-4333-8444-555555555555'
+            : `11111111-2222-4333-8444-${String(requestNumber).padStart(12, '0')}`;
+          harness.chatSendResponses.push({ messageId });
           return json({
             data: [{
-              message_id: '11111111-2222-4333-8444-555555555555',
+              message_id: messageId,
               is_sent: true,
               drop_reason: null
             }]
@@ -308,6 +314,30 @@ async function run() {
 
     await page.fill('#input-text', 'sent through SSN');
     await page.click('#sendmessage');
+    await page.waitForFunction(() => window.__twitchHarness.chatSendResponses.length > 0);
+    assert.strictEqual(
+      await page.evaluate(() => window.__twitchHarness.runtimeMessages.filter(
+        (message) => message.chatmessage === 'sent through SSN'
+      ).length),
+      0,
+      'SSN created a local chat copy before Twitch echoed the accepted message'
+    );
+    await page.evaluate(() => {
+      const harness = window.__twitchHarness;
+      const client = harness.tmiClients[0];
+      client.emit(
+        'chat',
+        '#tester',
+        {
+          ...client.userstate['#tester'],
+          id: harness.chatSendResponses[0].messageId,
+          'message-type': 'chat',
+          'tmi-sent-ts': String(Date.now())
+        },
+        'sent through SSN',
+        false
+      );
+    });
     await page.waitForFunction(() => (
       window.__twitchHarness.runtimeMessages.some(
         (message) => message.id === '11111111-2222-4333-8444-555555555555'
@@ -318,6 +348,12 @@ async function run() {
       message: window.__twitchHarness.runtimeMessages.find(
         (item) => item.id === '11111111-2222-4333-8444-555555555555'
       ),
+      matchingMessages: window.__twitchHarness.runtimeMessages.filter(
+        (item) => item.id === '11111111-2222-4333-8444-555555555555'
+      ).length,
+      matchingRows: [...document.querySelectorAll('#textarea > div')].filter(
+        (row) => row.textContent.includes('Tester: sent through SSN')
+      ).length,
       tmiSayCalls: window.__twitchHarness.tmiSayCalls
     }));
     assert.deepStrictEqual(sentChatResult.request, {
@@ -327,6 +363,8 @@ async function run() {
     });
     assert.strictEqual(sentChatResult.message.chatname, 'Tester');
     assert.strictEqual(sentChatResult.message.chatmessage, 'sent through SSN');
+    assert.strictEqual(sentChatResult.matchingMessages, 1, 'Twitch socket echo was relayed more than once');
+    assert.strictEqual(sentChatResult.matchingRows, 1, 'Twitch socket echo was rendered more than once');
     assert.strictEqual(sentChatResult.tmiSayCalls, 0, 'SSN sent Twitch chat through IRC instead of Helix');
 
     const unicodeBoundaryMessage = 'a'.repeat(499) + '😀';
@@ -365,6 +403,26 @@ async function run() {
     const actionStart = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
     await page.fill('#input-text', '/me waves');
     await page.click('#sendmessage');
+    await page.waitForFunction(
+      (minimum) => window.__twitchHarness.chatSendResponses.length > minimum,
+      actionStart
+    );
+    await page.evaluate((responseIndex) => {
+      const harness = window.__twitchHarness;
+      const client = harness.tmiClients[0];
+      client.emit(
+        'action',
+        '#tester',
+        {
+          ...client.userstate['#tester'],
+          id: harness.chatSendResponses[responseIndex].messageId,
+          'message-type': 'action',
+          'tmi-sent-ts': String(Date.now())
+        },
+        'waves',
+        false
+      );
+    }, actionStart);
     await page.waitForFunction(() => (
       window.__twitchHarness.runtimeMessages.some(
         (message) => message.event === 'action' && message.chatmessage === 'waves'

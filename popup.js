@@ -5868,10 +5868,51 @@ function normalizeGeneratedLinkBase(value) {
  * for the remotely loaded popup/background frames by their top-level site, so a separate
  * BrowserWindow cannot see that IndexedDB even when it loads the same remote URL.
  */
+function isSsappUnlimitedDBSettingEnabled(value) {
+	return value === true || !!(value && typeof value === "object" && value.setting === true);
+}
+
+function readSsappUnlimitedDBSetting() {
+	const checkboxValue = () => {
+		const input = document.querySelector('[data-setting="unlimitedDB"]');
+		return !!(input && input.checked);
+	};
+
+	if (popupStartupSettingsHydrated) return Promise.resolve(checkboxValue());
+	if (typeof chrome === "undefined" || !chrome.runtime || typeof chrome.runtime.sendMessage !== "function") {
+		return Promise.resolve(checkboxValue());
+	}
+
+	return new Promise(resolve => {
+		let settled = false;
+		let timeout = null;
+		const finish = value => {
+			if (settled) return;
+			settled = true;
+			if (timeout !== null) clearTimeout(timeout);
+			resolve(value);
+		};
+		timeout = setTimeout(() => finish(checkboxValue()), 3500);
+
+		try {
+			chrome.runtime.sendMessage({ cmd: "getSettings" }, response => {
+				if (chrome.runtime.lastError || !response || !response.settings) {
+					finish(checkboxValue());
+					return;
+				}
+				finish(isSsappUnlimitedDBSettingEnabled(response.settings.unlimitedDB));
+			});
+		} catch (error) {
+			finish(checkboxValue());
+		}
+	});
+}
+
 async function readSsappChatHistorySnapshot() {
+	const unlimitedDB = await readSsappUnlimitedDBSetting();
 	const databases = typeof indexedDB.databases === "function" ? await indexedDB.databases() : null;
 	if (databases && !databases.some(database => database.name === "chatMessagesDB_v3")) {
-		return { messages: [], version: null, stores: [] };
+		return { messages: [], version: null, stores: [], unlimitedDB };
 	}
 
 	return new Promise((resolve, reject) => {
@@ -5896,6 +5937,7 @@ async function readSsappChatHistorySnapshot() {
 					messages: Array.isArray(allMessages.result) ? allMessages.result : [],
 					version: database.version,
 					stores,
+					unlimitedDB
 				};
 				database.close();
 				resolve(snapshot);

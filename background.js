@@ -7284,6 +7284,7 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
 		const store = transaction.objectStore(messageStoreDB.storeName);
 		const index = store.index("timestamp");
 		const messages = [];
+		const retentionCheckTime = Date.now();
 
 		let range;
 		if (endTimestamp) {
@@ -7297,7 +7298,9 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
 		cursorRequest.onsuccess = event => {
 			const cursor = event.target.result;
 			if (cursor) {
-				messages.push(cursor.value);
+				if (!messageStoreDB.isMessageExpired(cursor.value, retentionCheckTime)) {
+					messages.push(cursor.value);
+				}
 				cursor.continue();
 			} else {
 				if (messages.length === 0) {

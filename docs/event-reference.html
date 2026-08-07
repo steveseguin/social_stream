@@ -478,6 +478,7 @@
                         <li>Defaults to OAuth scopes <code>youtube.readonly</code> and <code>youtube.channel-memberships.creator</code>. Optional write access adds <code>youtube.force-ssl</code> for chat sending, moderation, bans, and stream-detail edits; Google may present this as broad YouTube management permission because YouTube does not provide a chat-only write scope.</li>
                         <li>Channel statistics respect the per-setting toggles (<code>showsubscount</code>, <code>showviewercount</code>).</li>
                         <li>The API cannot deliver custom badge imagery; badge fallbacks use emoji icons noted below.</li>
+						<li>When the API explicitly reports <code>authorDetails.isChatModerator: true</code>, chat, Super Chat, Super Sticker, YouTube Gift, and membership-gift payloads include <code>mod: true</code>. Moderator status is not inferred or cached between events.</li>
                         <li>New subscriber alerts use the <code>myRecentSubscribers</code> API (polled every 5 minutes). Note: YouTube API has up to 4-hour delay and only shows subscribers with public subscription lists.</li>
                         <li>YouTube redirect banners are not exposed by the Data API, so <code>redirect</code> remains available only from Standard DOM capture.</li>
                     </ul>
@@ -768,7 +769,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Dedupe and deletion logic uses message IDs; messages sent through SSN use the native <code>message_id</code> returned by Twitch in <code>data.id</code>.</p>
+                    <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Dedupe and deletion logic uses message IDs; messages sent through SSN use the native <code>message_id</code> from Twitch's IRC echo in <code>data.id</code>.</p>
 
                     <h4>Twitch Hype Train Metadata</h4>
                     <p class="field-highlights"><code>hype_train</code> is metadata-only and does not include <code>chatname</code> or <code>chatmessage</code>. Dashboards should update an existing train display by <code>meta.id</code> instead of appending each progress update as chat. The Meta Data Bar (<code>meta.html</code>) renders these events as a top progress bar.</p>

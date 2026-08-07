@@ -2392,37 +2392,6 @@ async function ensureChatClientInstance() {
 		return result.message_id;
 	}
 
-	async function forwardSentTwitchMessage(message, messageId) {
-		const client = await ensureChatClientInstance();
-		const userState = typeof client.getUserState === 'function' ? client.getUserState(channel) : {};
-		const sentAt = Date.now();
-		const login = userState.username || currentAuthUser?.login || username;
-		const displayName = userState['display-name'] || getRememberedTwitchDisplayName(login) || login;
-		const actionMatch = typeof message === 'string' ? message.match(/^\/me(?:\s+|$)([\s\S]*)$/i) : null;
-		const isAction = !!actionMatch;
-		const forwardedMessage = isAction ? actionMatch[1] : message;
-		const tags = Object.assign({}, userState, {
-			id: messageId,
-			username: login,
-			'display-name': displayName,
-			'message-type': isAction ? 'action' : 'chat',
-			'tmi-sent-ts': String(sentAt)
-		});
-
-		await handleNormalizedChatMessage({
-			id: messageId,
-			platform: 'twitch',
-			type: 'twitch',
-			chatname: displayName,
-			chatmessage: forwardedMessage,
-			timestamp: sentAt,
-			event: isAction ? 'action' : 'chat',
-			isSelf: true,
-			rawMessage: forwardedMessage,
-			raw: { channel: `#${channel}`, tags: tags }
-		});
-	}
-
 	async function sendMessage(message) {
 		await modulesReady;
 		if (!checkAuthStatus()) {
@@ -2431,8 +2400,7 @@ async function ensureChatClientInstance() {
 		try {
 			const chunks = splitTwitchChatMessage(message);
 			for (let index = 0; index < chunks.length; index += 1) {
-				const messageId = await sendTwitchChatChunk(chunks[index]);
-				await forwardSentTwitchMessage(chunks[index], messageId);
+				await sendTwitchChatChunk(chunks[index]);
 				if (index < chunks.length - 1) {
 					await new Promise(resolve => setTimeout(resolve, 350));
 				}
@@ -2837,7 +2805,12 @@ async function ensureChatClientInstance() {
 		// Parse subscriber info from badge tags
 		let subscriber = "";
 		let subtitle = "";
-		let mod = false;
+		let mod = normalizedPayload?.isModerator === true
+			|| normalizedPayload?.isOwner === true
+			|| parsedMessage.tags?.mod === true
+			|| parsedMessage.tags?.mod === 1
+			|| parsedMessage.tags?.mod === '1'
+			|| parsedMessage.tags?.mod === 'true';
 		const badgeList = parseBadges(parsedMessage);
 		
 		if (parsedMessage.tags) {
