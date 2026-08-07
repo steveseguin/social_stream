@@ -1,3 +1,11 @@
+(function () {
+'use strict';
+
+if (window.__SSN_VELORA_SOURCE_INITIALIZED__) {
+    return;
+}
+window.__SSN_VELORA_SOURCE_INITIALIZED__ = true;
+
 // Velora WebSocket integration for Social Stream
 // Uses the official Velora Events API (Socket.IO) with OAuth 2.0 PKCE user sign-in.
 // API docs: https://developer.velora.tv/developer/docs/webhooks/events
@@ -26,7 +34,9 @@ const EVENT_LOG_LIMIT = 100;
 const VIEWER_POLL_INTERVAL_MS = 30000;
 const SOCKET_CONNECT_TIMEOUT_MS = 8000;
 const SOCKET_CONNECTED_EVENT_TIMEOUT_MS = 4000;
+const SSE_CONNECT_TIMEOUT_MS = 15000;
 const SSE_RECONNECT_DELAY_MS = 3000;
+const TOKEN_REFRESH_RETRY_MS = 30000;
 const VELORA_EMOTE_MAP = {
     "AirRaid": "https://assets.velora.tv/emotes/raid/raid-airraid/56.webp",
     "BlueGlitzRaid": "https://assets.velora.tv/emotes/raid/raid-blueglitzraid/56.webp",
@@ -111,6 +121,7 @@ const state = {
     viewerPollTimer: null,
     refreshTimer: null,
     sseReconnectTimer: null,
+    sseConnectTimer: null,
     socketFallbackTimer: null,
     authHandoffPollTimer: null,
     authHandoffInFlight: false,
@@ -123,6 +134,9 @@ const state = {
     sseAuthRetries: 0,
     sseAuthRefreshInFlight: false,
     socketConnectTimer: null,
+    refreshRetryTimer: null,
+    refreshPromise: null,
+    authGeneration: 0,
     eventsConnected: false,
     eventTransport: '',
     connectedChannel: '',
@@ -135,7 +149,12 @@ const state = {
     chatHistoryStartedAt: 0,
     chatHistoryResolveCache: {},
     chatHistoryResolvePending: {},
-    processedChatMessages: new Set()
+    processedChatMessages: new Set(),
+    profileStatus: 'unverified',
+    profileError: '',
+    connectionError: '',
+    authError: '',
+    authInProgress: false
 };
 
 const els = {};
@@ -280,11 +299,37 @@ function getRequestedChannel() {
 }
 
 function getAuthedChannelName() {
+    const authUser = state.authUser || {};
     return normalizeChannelName(
-        state.authUser?.username ||
-        state.authUser?.login ||
-        state.authUser?.channelUsername ||
+        authUser.username ||
+        authUser.login ||
+        authUser.channelUsername ||
         ''
+    );
+}
+
+function hasUsableToken() {
+    if (!state.tokens?.access_token) return false;
+    if (!state.tokens.expires_at) return true;
+    return Date.now() < state.tokens.expires_at;
+}
+
+function hasChannelMismatch() {
+    const actualChannel = getAuthedChannelName();
+    return Boolean(
+        state.profileStatus === 'verified' &&
+        state.requestedChannel &&
+        actualChannel &&
+        state.requestedChannel !== actualChannel
+    );
+}
+
+function isAccountReady() {
+    return Boolean(
+        hasUsableToken() &&
+        state.profileStatus === 'verified' &&
+        getAuthedChannelName() &&
+        !hasChannelMismatch()
     );
 }
 
@@ -772,7 +817,14 @@ function loadTokens() {
         if (!raw) return;
         const tokens = JSON.parse(raw);
         if (tokens && tokens.access_token) {
+            const previousIdentity = state.tokens
+                ? `${state.tokens.access_token || ''}|${state.tokens.refresh_token || ''}`
+                : '';
+            const nextIdentity = `${tokens.access_token || ''}|${tokens.refresh_token || ''}`;
             state.tokens = tokens;
+            if (previousIdentity !== nextIdentity) {
+                state.authGeneration += 1;
+            }
         }
     } catch (e) {}
 }
@@ -787,13 +839,21 @@ function persistTokens() {
     } catch (e) {}
 }
 
-function clearAuthState() {
+function clearAuthState(expiredMessage) {
+    state.authGeneration += 1;
     state.tokens = null;
     state.authUser = null;
+    state.profileStatus = expiredMessage ? 'auth-error' : 'unverified';
+    state.profileError = expiredMessage || '';
+    state.authError = '';
+    state.authInProgress = false;
     state.streamId = null;
     persistTokens();
     clearTimeout(state.refreshTimer);
     state.refreshTimer = null;
+    clearTimeout(state.refreshRetryTimer);
+    state.refreshRetryTimer = null;
+    state.refreshPromise = null;
 }
 
 function clearAuthHandoffWatcher() {
@@ -877,12 +937,18 @@ function applyTokenPayload(payload) {
         throw new Error('Velora auth payload did not include an access token.');
     }
     state.tokens = tokens;
+    state.authGeneration += 1;
+    state.authUser = null;
+    state.profileStatus = 'unverified';
+    state.profileError = '';
+    state.authError = '';
     persistTokens();
     scheduleTokenRefresh();
 }
 
 async function handleAuthSuccess(payload) {
     clearAuthHandoffWatcher();
+    state.authInProgress = false;
     applyTokenPayload(payload && payload.tokens ? payload.tokens : payload);
     if (!state.tokens?.access_token) {
         loadTokens();
@@ -894,8 +960,12 @@ async function handleAuthSuccess(payload) {
 
 function handleAuthError(payload) {
     clearAuthHandoffWatcher();
-    const message = payload && payload.message ? payload.message : 'Velora sign-in failed.';
-    setAuthStatus(message, 'danger');
+    state.authInProgress = false;
+    const detail = payload && payload.message ? payload.message : 'Velora sign-in failed.';
+    state.authError = 'Velora sign-in did not complete. Try again.';
+    addEventLogEntry(detail, 'error');
+    setAuthStatus(state.authError, 'danger');
+    updateAuthUI();
 }
 
 async function completeStoredAuthHandoff() {
@@ -904,17 +974,27 @@ async function completeStoredAuthHandoff() {
     }
     state.authHandoffInFlight = true;
     try {
-        const hadToken = !!state.tokens?.access_token;
+        const previousAccessToken = state.tokens?.access_token || '';
         loadTokens();
         if (!state.tokens?.access_token || isTokenExpired()) {
             return false;
         }
         scheduleTokenRefresh();
-        if (hadToken && state.authUser && state.eventsConnected) {
+        if (previousAccessToken && previousAccessToken === state.tokens.access_token && state.authUser && state.eventsConnected) {
             clearAuthHandoffWatcher();
             return true;
         }
+        if (previousAccessToken !== state.tokens.access_token) {
+            disconnectSocketTransport();
+            disconnectSseTransport();
+            stopViewerPoll();
+            stopChatHistoryPoll();
+            state.authUser = null;
+            state.profileStatus = 'unverified';
+            state.profileError = '';
+        }
         await loadUserProfile();
+        state.authInProgress = false;
         updateAuthUI();
         connectSocket();
         if (state.authPopup && !state.authPopup.closed) {
@@ -937,8 +1017,20 @@ function startAuthHandoffWatcher() {
     clearAuthHandoffWatcher();
     const started = Date.now();
     state.authHandoffPollTimer = setInterval(function () {
+        if (state.authPopup && state.authPopup.closed) {
+            state.authPopup = null;
+            clearAuthHandoffWatcher();
+            state.authInProgress = false;
+            state.authError = 'Velora sign-in was cancelled. Try again.';
+            updateAuthUI();
+            return;
+        }
         if ((Date.now() - started) > 120000) {
             clearAuthHandoffWatcher();
+            state.authInProgress = false;
+            state.authError = 'Velora sign-in timed out. Try again.';
+            setAuthStatus(state.authError, 'danger');
+            updateAuthUI();
             return;
         }
         completeStoredAuthHandoff();
@@ -1070,6 +1162,7 @@ async function startExternalAuthFlow() {
     }
 
     await exchangeCodeForToken(result.code, result.codeVerifier, result.redirectUri || getRedirectUri());
+    state.authInProgress = false;
     await loadUserProfile();
     updateAuthUI();
     connectSocket();
@@ -1084,11 +1177,23 @@ function startBrowserAuthFlow() {
         return;
     }
     state.authPopup = popup;
+    state.authInProgress = true;
     setAuthStatus('Complete Velora sign-in in the popup.', 'warning');
+    updateAuthUI();
     startAuthHandoffWatcher();
 }
 
 async function startAuthFlow() {
+    if (state.profileStatus === 'auth-error') {
+        disconnectSocket();
+        stopChatHistoryPoll();
+        clearAuthState();
+        updateViewerCount(null, 'Checking viewers…');
+    }
+    state.authInProgress = true;
+    state.authError = '';
+    updateAuthUI();
+    setSocketStatus('connecting', 'Finish signing in to Velora.');
     try {
         const handled = await startExternalAuthFlow();
         if (!handled) {
@@ -1096,7 +1201,11 @@ async function startAuthFlow() {
         }
     } catch (err) {
         console.error('[Velora] Sign-in failed:', err);
-        setAuthStatus(`Sign-in failed: ${err.message}`, 'danger');
+        state.authInProgress = false;
+        state.authError = 'Velora sign-in did not complete. Try again.';
+        addEventLogEntry(`Velora sign-in failed: ${err && err.message ? err.message : err}`, 'error');
+        setAuthStatus(state.authError, 'danger');
+        updateAuthUI();
     }
 }
 
@@ -1105,91 +1214,197 @@ async function handleAuthCallback() {
 }
 
 async function refreshAccessToken() {
-    if (!state.tokens?.refresh_token) {
-        clearAuthState();
-        updateAuthUI();
+    if (state.refreshPromise) return state.refreshPromise;
+
+    const generation = state.authGeneration;
+    const accessToken = state.tokens?.access_token || '';
+    const refreshToken = state.tokens?.refresh_token || '';
+    if (!refreshToken) {
+        clearAuthState('Your Velora sign-in expired. Sign in again.');
         disconnectSocket();
-        return;
+        updateAuthUI();
+        return false;
     }
 
-    try {
-        const response = await fetch(`${getVeloraAuthBase()}/refresh`, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                refresh_token: state.tokens.refresh_token
-            })
-        });
+    const refreshPromise = (async function () {
+        try {
+            const response = await fetch(`${getVeloraAuthBase()}/refresh`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ refresh_token: refreshToken })
+            });
 
-        const text = await response.text();
-        let data = {};
-        try { data = text ? JSON.parse(text) : {}; } catch (e) {}
+            const text = await response.text();
+            let data = {};
+            try { data = text ? JSON.parse(text) : {}; } catch (e) {}
+            if (generation !== state.authGeneration || accessToken !== (state.tokens?.access_token || '') ||
+                refreshToken !== (state.tokens?.refresh_token || '')) {
+                return false;
+            }
 
-        if (!response.ok) throw new Error(data.message || data.error_description || data.error || text || `HTTP ${response.status}`);
+            if (!response.ok) {
+                const refreshError = new Error(data.message || data.error_description || data.error || text || `HTTP ${response.status}`);
+                refreshError.status = response.status;
+                refreshError.code = data.error || data.code || '';
+                throw refreshError;
+            }
 
-        const tokens = normalizeTokenPayload(data);
-        if (!tokens) {
-            throw new Error('Velora refresh response did not include an access token.');
-        }
-        if (!tokens.refresh_token && state.tokens && state.tokens.refresh_token) {
-            tokens.refresh_token = state.tokens.refresh_token;
-        }
-        state.tokens = tokens;
-        persistTokens();
-        scheduleTokenRefresh();
+            const tokens = normalizeTokenPayload(data);
+            if (!tokens) {
+                throw new Error('Velora refresh response did not include an access token.');
+            }
+            if (!tokens.refresh_token) {
+                tokens.refresh_token = refreshToken;
+            }
+            state.tokens = tokens;
+            state.authGeneration += 1;
+            persistTokens();
+            scheduleTokenRefresh();
+            clearTimeout(state.refreshRetryTimer);
+            state.refreshRetryTimer = null;
+            state.connectionError = '';
 
-        // Re-auth the active events transport with the new token
-        if (state.socket && state.socket.connected) {
-            state.socket.auth = { token: state.tokens.access_token };
+            if (state.socket && state.socket.connected) {
+                state.socket.auth = { token: state.tokens.access_token };
+            }
+            return true;
+        } catch (err) {
+            if (generation !== state.authGeneration || accessToken !== (state.tokens?.access_token || '') ||
+                refreshToken !== (state.tokens?.refresh_token || '')) {
+                return false;
+            }
+            console.error('[Velora] Token refresh failed:', err);
+            const errorCode = String(err?.code || '').toLowerCase();
+            const rejected = err && (
+                err.status === 400 ||
+                err.status === 401 ||
+                errorCode === 'invalid_grant' ||
+                errorCode === 'invalid_token' ||
+                errorCode === 'token_revoked' ||
+                errorCode === 'revoked_token'
+            );
+            if (rejected) {
+                clearAuthState('Your Velora sign-in expired. Sign in again.');
+                disconnectSocket();
+                updateAuthUI();
+                return false;
+            }
+            state.connectionError = 'Velora could not refresh your session. Retrying automatically.';
+            renderConnectionState('connecting', state.connectionError);
+            notifyAppStatus('connecting', state.connectionError);
+            updateAuthUI();
+            clearTimeout(state.refreshRetryTimer);
+            state.refreshRetryTimer = setTimeout(async function () {
+                if (await refreshAccessToken()) {
+                    await resumeAfterTokenRefresh();
+                }
+            }, TOKEN_REFRESH_RETRY_MS);
+            return false;
+        } finally {
+            if (state.refreshPromise === refreshPromise) {
+                state.refreshPromise = null;
+            }
         }
-        if (state.sseRequest) {
-            connectSse('Refreshing Velora SSE connection with updated token.');
-        }
-    } catch (err) {
-        console.error('[Velora] Token refresh failed:', err);
-        clearAuthState();
-        updateAuthUI();
-        disconnectSocket();
-    }
+    })();
+
+    state.refreshPromise = refreshPromise;
+    return refreshPromise;
 }
 
 function scheduleTokenRefresh() {
     clearTimeout(state.refreshTimer);
     if (!state.tokens?.expires_at) return;
     const delay = Math.max(10000, state.tokens.expires_at - Date.now() - 120000);
-    state.refreshTimer = setTimeout(refreshAccessToken, delay);
+    state.refreshTimer = setTimeout(async function () {
+        if (await refreshAccessToken()) {
+            await resumeAfterTokenRefresh();
+        }
+    }, delay);
+}
+
+async function resumeAfterTokenRefresh() {
+    if (!state.tokens?.access_token) return false;
+    if (state.profileStatus !== 'verified' || !getAuthedChannelName()) {
+        const verified = await loadUserProfile({ allowRefresh: false });
+        updateAuthUI();
+        if (!verified) return false;
+    }
+    if (!isAccountReady()) {
+        updateAuthUI();
+        return false;
+    }
+    if (state.sseRequest || state.eventTransport === 'sse') {
+        connectSse('Refreshing Velora SSE connection with updated token.');
+    } else if (!state.eventsConnected) {
+        connectSocket();
+    }
+    updateAuthUI();
+    return true;
 }
 
 // ─── User profile ─────────────────────────────────────────────────────────────
 
-async function loadUserProfile() {
-    if (!state.tokens?.access_token) return;
+async function loadUserProfile(options = {}) {
+    if (!state.tokens?.access_token) return false;
+    const generation = state.authGeneration;
+    const accessToken = state.tokens.access_token;
+    state.profileStatus = 'verifying';
+    state.profileError = '';
+    state.authUser = null;
+    updateAuthUI();
     try {
         const response = await fetch(`${VELORA_API_BASE}/api/users/me`, {
-            headers: { 'Authorization': `Bearer ${state.tokens.access_token}` }
+            headers: { 'Authorization': `Bearer ${accessToken}` }
         });
-        if (!response.ok) return;
+        if (generation !== state.authGeneration || accessToken !== state.tokens?.access_token) return false;
+        if (!response.ok) {
+            if ((response.status === 401 || response.status === 403) && options.allowRefresh !== false && state.tokens?.refresh_token) {
+                if (await refreshAccessToken()) {
+                    return loadUserProfile({ allowRefresh: false });
+                }
+                if (generation !== state.authGeneration || accessToken !== state.tokens?.access_token) return false;
+            }
+            state.profileStatus = response.status === 401 || response.status === 403 ? 'auth-error' : 'error';
+            state.profileError = state.profileStatus === 'auth-error'
+                ? 'Your Velora sign-in expired. Sign in again.'
+                : `Velora could not verify your account (HTTP ${response.status}).`;
+            return false;
+        }
         const data = await response.json();
+        if (generation !== state.authGeneration || accessToken !== state.tokens?.access_token) return false;
         state.authUser = data.user || data;
-    } catch (e) {}
+        if (!getAuthedChannelName()) {
+            state.authUser = null;
+            state.profileStatus = 'error';
+            state.profileError = 'Velora did not return an account username.';
+            return false;
+        }
+        state.profileStatus = 'verified';
+        state.profileError = '';
+        return true;
+    } catch (e) {
+        if (generation !== state.authGeneration || accessToken !== state.tokens?.access_token) return false;
+        state.profileStatus = 'error';
+        state.profileError = 'Check your internet connection, then try again.';
+        return false;
+    }
 }
 
 // ─── Viewer count polling ─────────────────────────────────────────────────────
 
 function getChatHistoryChannelId() {
-    return normalizeChannelName(
-        state.requestedChannel ||
-        state.authUser?.id ||
-        state.authUser?.username ||
-        state.authUser?.login ||
-        getAuthedChannelName()
-    );
+    if (!isAccountReady()) return '';
+    return getAuthedChannelName();
 }
 
 async function pollChatHistory() {
+    if (!isAccountReady()) {
+        stopChatHistoryPoll();
+        return;
+    }
     const requestedChannel = getChatHistoryChannelId();
     if (!requestedChannel || state.chatHistoryInFlight) {
         return;
@@ -1212,6 +1427,9 @@ async function pollChatHistory() {
         }
 
         const data = await fetchVeloraJson(`${VELORA_API_BASE}/api/chat/channels/${encodeURIComponent(channelId)}/history?limit=${VELORA_CHAT_HISTORY_LIMIT}`);
+        if (!isAccountReady() || requestedChannel !== getChatHistoryChannelId()) {
+            return;
+        }
         const messages = getHistoryMessagesFromResponse(data).slice();
         if (messages.length > 1 && getChatMessageTimestampValue(messages[0]) > getChatMessageTimestampValue(messages[messages.length - 1])) {
             messages.reverse();
@@ -1242,7 +1460,7 @@ async function pollChatHistory() {
 }
 
 function startChatHistoryPoll() {
-    if (!getChatHistoryChannelId()) {
+    if (!isAccountReady() || !getChatHistoryChannelId()) {
         return;
     }
     if (!state.chatHistoryTimer) {
@@ -1266,20 +1484,33 @@ function stopChatHistoryPoll() {
 }
 
 async function pollViewerCount() {
-    if (!state.tokens?.access_token || !state.authUser) return;
+    if (!isAccountReady()) return;
+    const generation = state.authGeneration;
+    const accessToken = state.tokens.access_token;
+    const username = getAuthedChannelName();
+    const isCurrentRequest = function () {
+        return isAccountReady() &&
+            generation === state.authGeneration &&
+            accessToken === state.tokens?.access_token &&
+            username === getAuthedChannelName();
+    };
     try {
-        const username = state.authUser.username || state.authUser.login;
         if (!username) return;
         const response = await fetch(`${VELORA_API_BASE}/api/streams/user/${encodeURIComponent(username)}`, {
-            headers: { 'Authorization': `Bearer ${state.tokens.access_token}` }
+            headers: { 'Authorization': `Bearer ${accessToken}` }
         });
+        if (!isCurrentRequest()) return;
         if (response.status === 404) {
             state.streamId = null;
-            updateViewerCount(null);
+            updateViewerCount(null, 'Stream offline');
             return;
         }
-        if (!response.ok) return;
+        if (!response.ok) {
+            updateViewerCount(null, 'Viewers unavailable');
+            return;
+        }
         const data = await response.json();
+        if (!isCurrentRequest()) return;
         const stream = Array.isArray(data.streams)
             ? data.streams[0]
             : (data.stream || data.data || data || null);
@@ -1294,13 +1525,18 @@ async function pollViewerCount() {
             );
         } else {
             state.streamId = null;
-            updateViewerCount(null);
+            updateViewerCount(null, 'Stream offline');
         }
-    } catch (e) {}
+    } catch (e) {
+        if (isCurrentRequest()) {
+            updateViewerCount(null, 'Viewers unavailable');
+        }
+    }
 }
 
 function startViewerPoll() {
     stopViewerPoll();
+    updateViewerCount(null, 'Checking viewersâ€¦');
     pollViewerCount();
     state.viewerPollTimer = setInterval(pollViewerCount, VIEWER_POLL_INTERVAL_MS);
 }
@@ -1325,6 +1561,11 @@ function clearSseReconnectTimer() {
     state.sseReconnectTimer = null;
 }
 
+function clearSseConnectTimer() {
+    clearTimeout(state.sseConnectTimer);
+    state.sseConnectTimer = null;
+}
+
 function resetEventConnectionState() {
     state.eventsConnected = false;
     state.eventTransport = '';
@@ -1335,15 +1576,17 @@ function disconnectSocketTransport() {
     clearSocketFallbackTimer();
     clearSocketConnectTimer();
     if (state.socket) {
-        try {
-            state.socket.disconnect();
-        } catch (e) {}
+        const socket = state.socket;
         state.socket = null;
+        try {
+            socket.disconnect();
+        } catch (e) {}
     }
 }
 
 function disconnectSseTransport() {
     clearSseReconnectTimer();
+    clearSseConnectTimer();
     const xhr = state.sseRequest;
     state.sseRequest = null;
     state.sseReadOffset = 0;
@@ -1358,9 +1601,17 @@ function disconnectSseTransport() {
 function applyConnectedChannelInfo(data, transportLabel) {
     const channelName = normalizeChannelName(
         (data && (data.channelUsername || data.username)) ||
-        getAuthedChannelName() ||
-        state.requestedChannel
+        getAuthedChannelName()
     );
+    if (!isAccountReady() || !channelName || channelName !== getAuthedChannelName()) {
+        disconnectSocketTransport();
+        disconnectSseTransport();
+        stopViewerPoll();
+        stopChatHistoryPoll();
+        resetEventConnectionState();
+        updateAuthUI();
+        return;
+    }
     const labelName = channelName || '-';
     const transportKey = String(transportLabel || '').toLowerCase();
     const isFirstConnection = !state.eventsConnected;
@@ -1376,6 +1627,7 @@ function applyConnectedChannelInfo(data, transportLabel) {
     clearSocketFallbackTimer();
     clearSocketConnectTimer();
     clearSseReconnectTimer();
+    clearSseConnectTimer();
     setSocketStatus('connected', `Velora ${transportLabel} connected.`, {
         channel: labelName,
         transport: transportLabel
@@ -1394,20 +1646,13 @@ function applyConnectedChannelInfo(data, transportLabel) {
         addEventLogEntry(`Authenticated as channel: ${labelName}`, 'info');
     }
 
-    if (els.channelLabel) {
-        els.channelLabel.querySelector('span').textContent = labelName;
-    }
-
-    if (state.requestedChannel && channelName && channelName !== state.requestedChannel) {
-        addEventLogEntry(`URL requested @${state.requestedChannel}, but Velora connected as @${channelName}.`, 'warn');
-    }
-
     startViewerPoll();
     startChatHistoryPoll();
+    updateAuthUI();
 }
 
 function scheduleSseReconnect(reason) {
-    if (!state.tokens?.access_token || state.sseRequest) {
+    if (!isAccountReady() || state.sseRequest) {
         return;
     }
     clearSseReconnectTimer();
@@ -1417,7 +1662,7 @@ function scheduleSseReconnect(reason) {
 }
 
 function handleSsePayload(eventName, payload) {
-    if (!payload || typeof payload !== 'object') {
+    if (!isAccountReady() || !payload || typeof payload !== 'object') {
         return;
     }
     if (eventName === 'connected' || payload.event === 'connected') {
@@ -1470,18 +1715,21 @@ function handleSseAuthFailure(status) {
 
     if (state.sseAuthRefreshInFlight) return;
     if (state.sseAuthRetries >= 1) {
+        state.profileStatus = 'auth-error';
+        state.profileError = 'Your Velora sign-in expired. Sign in again.';
         setSocketStatus('error', 'Velora sign-in required.');
         addEventLogEntry(`Velora SSE auth still failing (HTTP ${status}) after refresh. Please sign in again.`, 'error');
+        updateAuthUI();
         return;
     }
     state.sseAuthRetries += 1;
     state.sseAuthRefreshInFlight = true;
     setSocketStatus('connecting', 'Velora session expired. Refreshing token…');
     addEventLogEntry(`Velora SSE auth failed (HTTP ${status}). Refreshing token…`, 'warn');
-    Promise.resolve(refreshAccessToken()).then(function () {
+    Promise.resolve(refreshAccessToken()).then(async function (refreshed) {
         state.sseAuthRefreshInFlight = false;
-        if (state.tokens?.access_token) {
-            connectSse('Reconnecting Velora SSE after token refresh.');
+        if (refreshed) {
+            await resumeAfterTokenRefresh();
         }
     }).catch(function () {
         state.sseAuthRefreshInFlight = false;
@@ -1489,7 +1737,10 @@ function handleSseAuthFailure(status) {
 }
 
 function connectSse(reason) {
-    if (!state.tokens?.access_token) return;
+    if (!isAccountReady()) {
+        updateAuthUI();
+        return;
+    }
 
     disconnectSseTransport();
     disconnectSocketTransport();
@@ -1508,12 +1759,23 @@ function connectSse(reason) {
     xhr.open('GET', VELORA_EVENTS_SSE_URL, true);
     xhr.setRequestHeader('Authorization', `Bearer ${state.tokens.access_token}`);
     xhr.setRequestHeader('Accept', 'text/event-stream');
+    state.sseConnectTimer = setTimeout(function () {
+        if (xhr !== state.sseRequest || state.eventsConnected) return;
+        state.sseRequest = null;
+        try { xhr.abort(); } catch (e) {}
+        resetEventConnectionState();
+        setSocketStatus('error', 'Velora is taking too long to connect. Retrying automatically.');
+        addEventLogEntry('Velora SSE connection timed out.', 'warn');
+        scheduleSseReconnect('Retrying Velora SSE connection.');
+    }, SSE_CONNECT_TIMEOUT_MS);
 
     xhr.onreadystatechange = function () {
         if (xhr !== state.sseRequest) return;
         if (xhr.readyState === 2 && (xhr.status === 401 || xhr.status === 403)) {
+            clearSseConnectTimer();
             handleSseAuthFailure(xhr.status);
         } else if (xhr.readyState === 2 && xhr.status && xhr.status !== 200) {
+            clearSseConnectTimer();
             setSocketStatus('error', `Velora SSE error: HTTP ${xhr.status}`);
             addEventLogEntry(`SSE connection failed: HTTP ${xhr.status}`, 'error');
         } else if (xhr.readyState === 2 && xhr.status === 200 && !state.eventsConnected) {
@@ -1532,22 +1794,27 @@ function connectSse(reason) {
 
     xhr.onerror = function () {
         if (xhr !== state.sseRequest) return;
+        clearSseConnectTimer();
         state.sseRequest = null;
         state.sseReadOffset = 0;
         state.sseBuffer = '';
-        if (!state.eventsConnected) {
-            setSocketStatus('error', 'Velora SSE connection error.');
-        }
+        resetEventConnectionState();
+        stopViewerPoll();
+        setSocketStatus('connecting', 'Connection interrupted. Reconnecting automatically.');
         addEventLogEntry('Velora SSE connection error.', 'error');
         scheduleSseReconnect('Retrying Velora SSE connection.');
     };
 
     xhr.onload = function () {
         if (xhr !== state.sseRequest) return;
+        clearSseConnectTimer();
         state.sseRequest = null;
         state.sseReadOffset = 0;
         state.sseBuffer = '';
-        if (state.tokens?.access_token) {
+        resetEventConnectionState();
+        stopViewerPoll();
+        if (isAccountReady()) {
+            setSocketStatus('connecting', 'Connection interrupted. Reconnecting automatically.');
             addEventLogEntry('Velora SSE stream closed. Reconnecting…', 'warn');
             scheduleSseReconnect();
         }
@@ -1580,14 +1847,19 @@ function startSocketConnectTimeout() {
 }
 
 function connectSocket() {
-    if (!state.tokens?.access_token) return;
+    if (!isAccountReady()) {
+        updateAuthUI();
+        return;
+    }
     if (typeof io !== 'function') {
         startChatHistoryPoll();
         connectSse('socket.io client not loaded. Using SSE instead.');
         return;
     }
 
-    disconnectSocket();
+    disconnectSocketTransport();
+    disconnectSseTransport();
+    stopViewerPoll();
     resetEventConnectionState();
     startChatHistoryPoll();
 
@@ -1605,26 +1877,30 @@ function connectSocket() {
     startSocketConnectTimeout();
 
     socket.on('connect', () => {
+        if (socket !== state.socket || !isAccountReady()) return;
         setSocketStatus('connecting', 'Velora WebSocket connected; waiting for channel confirmation...');
         addEventLogEntry('Velora WebSocket transport connected. Waiting for channel confirmation…', 'info');
         startSocketFallbackTimer();
     });
 
     socket.on('connected', (data) => {
+        if (socket !== state.socket || !isAccountReady()) return;
         applyConnectedChannelInfo(data, 'WebSocket');
     });
 
     socket.on('event', (payload) => {
+        if (socket !== state.socket || !isAccountReady()) return;
         if (!state.eventsConnected) {
-            applyConnectedChannelInfo(payload && payload.data ? payload.data : null, 'WebSocket');
+            applyConnectedChannelInfo(null, 'WebSocket');
         }
         handleEvent(payload);
     });
 
     socket.on('disconnect', (reason) => {
+        if (socket !== state.socket) return;
         clearSocketFallbackTimer();
         if (!state.sseRequest) {
-            setSocketStatus('disconnected', `Velora disconnected: ${reason}`);
+            setSocketStatus('connecting', 'Connection interrupted. Reconnecting automatically.');
             addEventLogEntry(`Disconnected: ${reason}`, 'warn');
             stopViewerPoll();
             resetEventConnectionState();
@@ -1632,12 +1908,13 @@ function connectSocket() {
     });
 
     socket.on('connect_error', (err) => {
-        setSocketStatus('error', `Velora WebSocket error: ${err.message}`);
+        if (socket !== state.socket || !isAccountReady()) return;
         addEventLogEntry(`Connection error: ${err.message}`, 'error');
         connectSse('WebSocket connection failed. Falling back to SSE.');
     });
 
     socket.on('error', (err) => {
+        if (socket !== state.socket) return;
         const message = err && err.message ? err.message : String(err || 'Unknown socket error');
         addEventLogEntry(`Socket error: ${message}`, 'error');
     });
@@ -1654,7 +1931,7 @@ function disconnectSocket() {
 // ─── Event routing ────────────────────────────────────────────────────────────
 
 function handleEvent(payload) {
-    if (!payload || !payload.event) return;
+    if (!isAccountReady() || !payload || !payload.event) return;
     const { event, data } = payload;
 
     addEventLogEntry(event, 'info', data);
@@ -1947,8 +2224,8 @@ async function sendChatMessage() {
     if (!els.chatMessage) return;
     const text = els.chatMessage.value.trim();
     if (!text) return;
-    if (!state.tokens?.access_token) {
-        setChatStatus('Not signed in.', true);
+    if (!isAccountReady()) {
+        setChatStatus('Sign in with the matching source account first.', true);
         return;
     }
 
@@ -1988,7 +2265,7 @@ async function sendChatMessage() {
     } catch (err) {
         setChatStatus(`Error: ${err.message}`, true);
     } finally {
-        els.sendChat.disabled = false;
+        els.sendChat.disabled = !isAccountReady();
     }
 }
 
@@ -1997,8 +2274,8 @@ async function sendChatBridgeMessage(text) {
     if (!text) {
         return false;
     }
-    if (!state.tokens?.access_token) {
-        throw new Error('Not signed in.');
+    if (!isAccountReady()) {
+        throw new Error('Velora account does not match this source.');
     }
 
     const channelId = state.authUser?.id;
@@ -2041,8 +2318,9 @@ function notifyBridgeStatus() {
         typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id
     );
     if (els.bridgeState) {
-        els.bridgeState.textContent = connected ? 'Extension connected' : 'Extension disconnected';
-        els.bridgeState.className = `status-chip ${connected ? 'ok' : 'warning'}`;
+        els.bridgeState.hidden = !connected;
+        els.bridgeState.textContent = connected ? 'Extension connected' : '';
+        els.bridgeState.className = connected ? 'status-chip ok' : '';
     }
 }
 
@@ -2154,7 +2432,15 @@ function wirePostMessageBridge() {
 
 function wireAuthStorageBridge() {
     window.addEventListener('storage', function (event) {
-        if (!event || event.key !== TOKEN_KEY || !event.newValue) {
+        if (!event || event.key !== TOKEN_KEY) {
+            return;
+        }
+        if (!event.newValue) {
+            disconnectSocket();
+            stopChatHistoryPoll();
+            clearAuthState();
+            updateViewerCount(null);
+            updateAuthUI();
             return;
         }
         completeStoredAuthHandoff();
@@ -2164,70 +2450,153 @@ function wireAuthStorageBridge() {
 // ─── UI updates ───────────────────────────────────────────────────────────────
 
 function updateAuthUI() {
-    const authed = Boolean(state.tokens?.access_token) && !isTokenExpired();
-    const username = state.authUser?.displayName || state.authUser?.username || '';
+    const authed = hasUsableToken();
     const actualChannel = getAuthedChannelName();
-    const channelMismatch = Boolean(state.requestedChannel && actualChannel && state.requestedChannel !== actualChannel);
+    const channelMismatch = hasChannelMismatch();
+    const accountReady = isAccountReady();
+    const profileFailed = state.profileStatus === 'error' || state.profileStatus === 'auth-error';
+
+    if (!accountReady) {
+        disconnectSocketTransport();
+        disconnectSseTransport();
+        stopViewerPoll();
+        stopChatHistoryPoll();
+        resetEventConnectionState();
+    }
 
     if (els.authState) {
-        if (authed) {
-            els.authState.textContent = channelMismatch
-                ? `Signed in as ${username || actualChannel} - URL expects @${state.requestedChannel}`
-                : (username ? `Signed in as ${username}` : 'Signed in');
+        if (state.authInProgress) {
+            els.authState.textContent = 'Finish signing in to Velora.';
+        } else if (state.profileStatus === 'verifying') {
+            els.authState.textContent = 'Verifying Velora account.';
+        } else if (actualChannel) {
+            els.authState.textContent = `Signed in as @${actualChannel}`;
         } else {
-            els.authState.textContent = state.requestedChannel
-                ? `Sign in as @${state.requestedChannel}`
-                : 'Not signed in';
+            els.authState.textContent = 'Not signed in';
         }
-        els.authState.className = `status-chip ${channelMismatch ? 'warning' : (authed ? 'ok' : 'warning')}`;
     }
     if (els.startAuth) {
-        els.startAuth.style.display = authed ? 'none' : '';
+        els.startAuth.hidden = authed && state.profileStatus !== 'auth-error';
+        els.startAuth.disabled = state.authInProgress;
+        els.startAuth.textContent = state.authInProgress ? 'Waiting for Velora…' :
+            (state.profileStatus === 'auth-error' ? 'Sign in again' : 'Sign in with Velora');
     }
     if (els.signOut) {
-        els.signOut.style.display = authed ? '' : 'none';
+        els.signOut.hidden = !state.tokens?.access_token;
     }
     if (els.setupNotice) {
-        els.setupNotice.style.display = authed ? 'none' : '';
+        els.setupNotice.hidden = authed && state.profileStatus !== 'auth-error';
     }
     if (els.channelLabel) {
-        const channel = actualChannel || state.requestedChannel || '';
-        els.channelLabel.querySelector('span').textContent = channel || '-';
+        const channel = state.requestedChannel || actualChannel || '';
+        els.channelLabel.querySelector('strong span').textContent = channel || '-';
     }
+    if (els.signedInAccount) {
+        els.signedInAccount.textContent = actualChannel ? `@${actualChannel}` :
+            (authed ? 'Verifying…' : 'Not signed in');
+    }
+    if (els.setupHeading) {
+        els.setupHeading.textContent = state.authInProgress ? 'Finish signing in to Velora' :
+            (state.profileStatus === 'auth-error' ? 'Sign in to Velora again' : 'Sign in to Velora');
+    }
+    if (els.setupCopy) {
+        els.setupCopy.textContent = state.authInProgress
+            ? 'Complete sign-in in the separate Velora sign-in window. It should close automatically. Keep this Social Stream setup window open until it says Connected.'
+            : (state.profileStatus === 'auth-error'
+                ? (state.profileError || 'Your Velora sign-in expired. Sign in again.')
+                : state.requestedChannel
+                ? `This source is set up for @${state.requestedChannel}. Sign in to that Velora account.`
+                : 'Sign in with the Velora account whose chat and alerts you want to capture.');
+    }
+    if (els.mismatchNotice) {
+        els.mismatchNotice.hidden = !channelMismatch;
+    }
+    if (els.mismatchCopy && channelMismatch) {
+        els.mismatchCopy.textContent = `This source is set up for @${state.requestedChannel}, but you’re signed in as @${actualChannel}. Nothing is being captured until they match. If @${state.requestedChannel} is correct, sign out here, then sign in with that account. If Velora automatically returns to @${actualChannel}, sign out in the separate Velora sign-in window first. If @${actualChannel} is correct, close this source and add it again as @${actualChannel} in Social Stream.`;
+    }
+    if (els.switchAccount && channelMismatch) {
+        els.switchAccount.textContent = 'Sign out of this Velora account';
+    }
+    if (els.profileErrorNotice) {
+        els.profileErrorNotice.hidden = channelMismatch || (!state.authError && state.profileStatus !== 'error' && !(accountReady && state.socketStatus === 'error'));
+    }
+    if (els.profileErrorCopy) {
+        els.profileErrorCopy.textContent = state.authError || state.profileError || state.connectionError || 'Check your connection, then try again.';
+    }
+    if (els.connectedActions) {
+        els.connectedActions.hidden = !state.tokens?.access_token || state.authInProgress || channelMismatch;
+    }
+    if (els.dashboard) {
+        els.dashboard.hidden = !accountReady;
+    }
+    if (els.chatMessage) {
+        els.chatMessage.disabled = !accountReady;
+    }
+    if (els.sendChat) {
+        els.sendChat.disabled = !accountReady;
+    }
+    if (els.chatMessageLabel) {
+        els.chatMessageLabel.textContent = actualChannel ? `Send a message as @${actualChannel}` : 'Send a message';
+    }
+
+    if (channelMismatch) {
+        renderConnectionState('mismatch', 'Account doesn’t match this source');
+        notifyAppStatus('error', 'Velora account does not match this source.', {
+            code: 'velora_account_mismatch',
+            requestedChannel: state.requestedChannel,
+            authenticatedChannel: actualChannel
+        });
+    } else if (state.authInProgress) {
+        renderConnectionState('connecting', 'Finish signing in to Velora');
+    } else if (state.profileStatus === 'verifying') {
+        renderConnectionState('connecting', 'Verifying Velora account…');
+    } else if (authed && state.profileStatus === 'unverified') {
+        renderConnectionState('connecting', 'Verifying Velora account…');
+    } else if (profileFailed) {
+        renderConnectionState('error', state.profileError || 'We couldn’t verify your Velora account');
+        notifyAppStatus('error', state.profileError || 'Velora account verification failed.');
+    } else if (state.authError) {
+        renderConnectionState('error', state.authError);
+        notifyAppStatus('error', state.authError);
+    } else if (state.connectionError && state.socketStatus !== 'error') {
+        renderConnectionState('connecting', state.connectionError);
+    } else if (!accountReady) {
+        renderConnectionState('disconnected', 'Sign in to connect');
+    }
+}
+
+function renderConnectionState(status, text) {
+    if (!els.socketState) return;
+    els.socketState.textContent = text;
+    els.socketState.className = `connection-state ${status}`;
 }
 
 function setAuthStatus(msg, level) {
     if (els.authState) {
         els.authState.textContent = msg;
-        els.authState.className = `status-chip ${level}`;
+        els.authState.className = 'sr-only';
     }
 }
 
 function setSocketStatus(status, appMessage, detail) {
     state.socketStatus = status;
-    if (!els.socketState) return;
+    state.connectionError = status === 'error' ? (appMessage || 'Velora connection error.') : '';
     const labels = {
-        connected: 'Events connected',
-        connecting: 'Events connecting…',
-        disconnected: 'Events disconnected',
-        error: 'Events error'
+        connected: getAuthedChannelName() ? `Connected — syncing @${getAuthedChannelName()}` : 'Connected',
+        connecting: 'Connecting to Velora…',
+        disconnected: hasUsableToken() ? 'Connection interrupted' : 'Sign in to connect',
+        error: 'Velora needs attention'
     };
-    const chips = {
-        connected: 'ok',
-        connecting: 'warning',
-        disconnected: 'warning',
-        error: 'danger'
-    };
-    els.socketState.textContent = labels[status] || status;
-    els.socketState.className = `status-chip ${chips[status] || 'warning'}`;
+    renderConnectionState(status, labels[status] || status);
     notifyAppStatus(status, appMessage || labels[status] || status, detail || {});
+    updateAuthUI();
 }
 
-function updateViewerCount(count) {
+function updateViewerCount(count, unavailableLabel) {
     if (!els.viewerCount) return;
     if (count === null || count === undefined) {
-        els.viewerCount.textContent = 'Viewers: -';
-        els.viewerCount.className = 'status-chip warning';
+        els.viewerCount.textContent = unavailableLabel || 'Viewers unavailable';
+        els.viewerCount.className = 'status-chip neutral';
     } else {
         els.viewerCount.textContent = `Viewers: ${Number(count).toLocaleString()}`;
         els.viewerCount.className = 'status-chip ok';
@@ -2340,22 +2709,62 @@ function addEventLogEntry(label, level, data) {
 function initElements() {
     Object.assign(els, {
         setupNotice: q('setup-notice'),
+        setupHeading: q('setup-heading'),
+        setupCopy: q('setup-copy'),
         redirectUriHint: q('redirect-uri-hint'),
         startAuth: q('start-auth'),
         signOut: q('sign-out'),
+        switchAccount: q('switch-account'),
+        retryConnection: q('retry-connection'),
         authState: q('auth-state'),
         channelLabel: q('channel-label'),
+        signedInAccount: q('signed-in-account'),
         viewerCount: q('viewer-count'),
         hideMetrics: q('hide-metrics'),
         socketState: q('socket-state'),
         bridgeState: q('bridge-state'),
         chatFeed: q('chat-feed'),
         chatMessage: q('chat-message'),
+        chatMessageLabel: q('chat-message-label'),
         sendChat: q('send-chat'),
         chatStatus: q('chat-status'),
         eventLog: q('event-log'),
-        alertsFeed: q('alerts-feed')
+        alertsFeed: q('alerts-feed'),
+        mismatchNotice: q('mismatch-notice'),
+        mismatchCopy: q('mismatch-copy'),
+        profileErrorNotice: q('profile-error-notice'),
+        profileErrorCopy: q('profile-error-copy'),
+        connectedActions: q('connected-actions'),
+        dashboard: q('dashboard')
     });
+}
+
+function signOutVelora() {
+    disconnectSocket();
+    stopChatHistoryPoll();
+    clearAuthHandoffWatcher();
+    clearAuthState();
+    updateViewerCount(null);
+    updateAuthUI();
+}
+
+async function retryVeloraConnection() {
+    if (state.profileStatus === 'auth-error') {
+        clearAuthState();
+        updateAuthUI();
+        startAuthFlow();
+        return;
+    }
+    if (!state.tokens?.access_token || isTokenExpired()) {
+        startAuthFlow();
+        return;
+    }
+    state.connectionError = '';
+    const verified = await loadUserProfile();
+    updateAuthUI();
+    if (verified && isAccountReady()) {
+        connectSocket();
+    }
 }
 
 function bindEvents() {
@@ -2364,16 +2773,15 @@ function bindEvents() {
     }
 
     if (els.signOut) {
-        els.signOut.addEventListener('click', () => {
-            disconnectSocket();
-            stopChatHistoryPoll();
-            clearAuthHandoffWatcher();
-            clearAuthState();
-            updateAuthUI();
-            setSocketStatus('disconnected');
-            updateViewerCount(null);
-            if (els.channelLabel) els.channelLabel.querySelector('span').textContent = '-';
-        });
+        els.signOut.addEventListener('click', signOutVelora);
+    }
+
+    if (els.switchAccount) {
+        els.switchAccount.addEventListener('click', signOutVelora);
+    }
+
+    if (els.retryConnection) {
+        els.retryConnection.addEventListener('click', retryVeloraConnection);
     }
 
     if (els.sendChat) {
@@ -2425,7 +2833,6 @@ async function init() {
     wireAuthStorageBridge();
     notifyBridgeStatus();
     updateAuthUI();
-    startChatHistoryPoll();
 
     // Handle OAuth redirect callback
     const wasCallback = await handleAuthCallback();
@@ -2433,17 +2840,22 @@ async function init() {
     // If already authenticated (stored tokens, not a fresh callback), connect
     if (!wasCallback && state.tokens?.access_token && !isTokenExpired()) {
         scheduleTokenRefresh();
-        await loadUserProfile();
+        const verified = await loadUserProfile();
         updateAuthUI();
-        connectSocket();
-    } else if (!wasCallback && state.tokens?.access_token && isTokenExpired()) {
-        await refreshAccessToken();
-        if (state.tokens?.access_token) {
-            await loadUserProfile();
-            updateAuthUI();
+        if (verified && isAccountReady()) {
             connectSocket();
+        }
+    } else if (!wasCallback && state.tokens?.access_token && isTokenExpired()) {
+        if (await refreshAccessToken()) {
+            await resumeAfterTokenRefresh();
         }
     }
 }
 
-document.addEventListener('DOMContentLoaded', init);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+} else {
+    init();
+}
+
+})();
