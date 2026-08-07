@@ -7023,6 +7023,10 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 			return true;
 		}
 
+		if (message.event === "likes_update" && !getSettingFlag("captureliketotals") && !getSettingFlag("captureyoutubelikes")) {
+			return true;
+		}
+
 		const isTwitchAdEvent = message.type === "twitch" && ["ad_break", "ad_request", "ad_schedule"].includes(message.event);
 		if (isTwitchAdEvent && !settings.twichadannounce) {
 			return true;

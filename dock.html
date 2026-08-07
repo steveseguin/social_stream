@@ -4038,6 +4038,10 @@
 			if (urlParams.has("showviewercount")) {
 				showviewercount = true;
 			}
+			var showlikecount = false;
+			if (urlParams.has("showlikecount")) {
+				showlikecount = true;
+			}
 			var viewerCountRequestTtl = 70 * 60 * 1000;
 			var viewerCountRequestRefresh = 60 * 60 * 1000;
 			var showbitrate = false;
@@ -6679,6 +6683,7 @@
 						followers[data.type] = parseInt(data.meta) || 0;
 						return true;
 					} else if (data.type && data.event == "likes_update"){
+						if (!showlikecount) return true;
 						let likeCount = parseInt(data.meta, 10);
 						if (isNaN(likeCount) || likeCount < 0) return true;
 						let likeType = String(data.type).toLowerCase();
