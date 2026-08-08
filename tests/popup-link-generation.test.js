@@ -5,6 +5,9 @@ const vm = require("vm");
 const SocialStreamLocalServer = require("../js/local-server-url.js");
 
 const popupSource = fs.readFileSync(path.resolve(__dirname, "..", "popup.js"), "utf8");
+const popupHtml = fs.readFileSync(path.resolve(__dirname, "..", "popup.html"), "utf8");
+const backgroundSource = fs.readFileSync(path.resolve(__dirname, "..", "background.js"), "utf8");
+const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, "..", "manifest.json"), "utf8"));
 
 assert.strictEqual(SocialStreamLocalServer.getPort(new URLSearchParams()), 3000);
 assert.strictEqual(SocialStreamLocalServer.getWebSocketUrl(new URLSearchParams("localserverport=3003")), "ws://127.0.0.1:3003");
@@ -39,6 +42,49 @@ function loadFunctions(names, context) {
   const exports = names.map((name) => `${name}: ${name}`).join(",");
   vm.runInContext(`${names.map(extractFunction).join("\n")}\nthis.testExports = {${exports}};`, sandbox);
   return { sandbox, functions: sandbox.testExports };
+}
+
+for (const retiredSource of ['trovo', 'dlive']) {
+  assert.ok(!popupHtml.includes(`id="${retiredSource}_username"`), `${retiredSource} quick-open input is still present`);
+  assert.ok(!popupHtml.includes(`data-action="openchat" data-value="${retiredSource}"`), `${retiredSource} quick-open button is still present`);
+  assert.ok(!backgroundSource.includes(`target == "${retiredSource}"`), `${retiredSource} quick-open handler is still present`);
+}
+
+{
+  const start = popupSource.indexOf("const sourceTypes = ['relaytargets','eventsSources','ttssources'];");
+  const end = popupSource.indexOf('// Function to handle custom JS file upload', start);
+  assert.notStrictEqual(start, -1, 'source catalog start marker is missing');
+  assert.notStrictEqual(end, -1, 'source catalog end marker is missing');
+
+  const sandbox = vm.createContext({ URL, console, Set, window: {}, chrome: undefined });
+  vm.runInContext(
+    popupSource.slice(start, end) +
+      '\nthis.catalog = { sourceTypes, sourcesList, collectSourcesFromManifest };',
+    sandbox
+  );
+
+  assert.deepStrictEqual(Array.from(sandbox.catalog.sourceTypes), ['relaytargets', 'eventsSources', 'ttssources']);
+  assert.ok(sandbox.catalog.sourcesList.has('velora'), 'Velora must be available without manifest loading');
+
+  sandbox.catalog.collectSourcesFromManifest(manifest);
+  assert.ok(!sandbox.catalog.sourcesList.has('dlive'), 'DLive must not appear in source dropdowns');
+  assert.ok(sandbox.catalog.sourcesList.has('trovo'), 'Trovo must remain in source dropdowns');
+  for (const expected of [
+    'arena', 'clouthub', 'external', 'instagramlive', 'meet', 'obs', 'socialstreamchat',
+    'stageten', 'threads', 'twitter', 'velora', 'workplace', 'youtubeshorts', 'zoom_poll'
+  ]) {
+    assert.ok(sandbox.catalog.sourcesList.has(expected), `missing canonical source type: ${expected}`);
+  }
+
+  const manifestSourceFiles = manifest.content_scripts
+    .flatMap(entry => entry.js || [])
+    .filter(file => file.startsWith('./sources/') && file.endsWith('.js') && !file.startsWith('./sources/inject/'))
+    .filter(file => path.basename(file, '.js') !== 'dlive');
+  for (const file of manifestSourceFiles) {
+    const sourceName = path.basename(file, '.js');
+    assert.ok(sandbox.catalog.sourcesList.has(sourceName), `missing manifest source: ${sourceName}`);
+  }
+  assert.ok(Array.from(sandbox.catalog.sourcesList).every(source => !source.includes('/')));
 }
 
 {
@@ -397,7 +443,6 @@ function loadFunctions(names, context) {
   assert.ok(saved.some((message) => message.setting === "font" && message.value === ""));
 }
 
-const popupHtml = fs.readFileSync(path.resolve(__dirname, "..", "popup.html"), "utf8");
 assert.ok(popupHtml.includes('data-edit-link="dock"'));
 assert.ok(popupHtml.includes('id="dock-edit-status"'));
 assert.ok(popupSource.includes('input.value = currentLinkElement && currentLinkElement.raw ? currentLinkElement.raw : "";'));

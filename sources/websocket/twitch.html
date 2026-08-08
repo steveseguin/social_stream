@@ -7,6 +7,17 @@
     <title>Social Stream - Twitch</title>
     <style>
         .hidden { display: none!important; }
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
         body {
             background-color: #ddd;
             font-size: 14px;
@@ -26,6 +37,15 @@
         }
         .auth-button:hover, .connect-button:hover {
             background-color: #7D3CD0;
+        }
+        .auth-button:disabled,
+        .connect-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.58;
+        }
+        .auth-button:disabled:hover,
+        .connect-button:disabled:hover {
+            background-color: #9146FF;
         }
         .sign-out-button {
             background-color: #f44336;
@@ -304,6 +324,16 @@
             border-radius: 4px;
             font-size: 14px;
         }
+        .send-status {
+            min-height: 18px;
+            margin-top: 6px;
+            color: #666;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .send-status[data-state="success"] { color: #237a3b; }
+        .send-status[data-state="warning"] { color: #8a5a00; }
+        .send-status[data-state="error"] { color: #b42318; }
         
         /* Sidebar components */
         .permissions-container,
@@ -421,6 +451,10 @@
             .moderation-requirements {
                 color: #adadb8;
             }
+            .send-status { color: #adadb8; }
+            .send-status[data-state="success"] { color: #7ddc91; }
+            .send-status[data-state="warning"] { color: #f0c36a; }
+            .send-status[data-state="error"] { color: #ff8a80; }
             #textarea div {
                 color: #efeff1;
             }
@@ -501,11 +535,13 @@
                 <!-- Chat section -->
                 <div class="chat-container">
                     <h3>Chat Messages</h3>
-                    <div id="textarea" class="ws-output"></div>
+                    <div id="textarea" class="ws-output" role="log" aria-live="polite" aria-relevant="additions text" aria-label="Twitch chat messages"></div>
                     <div class="chat-input">
-                        <input type="text" id="input-text" placeholder="Send Message">
-                        <button id="sendmessage" class="auth-button">Send</button>
+                        <label for="input-text" class="visually-hidden">Chat message</label>
+                        <input type="text" id="input-text" placeholder="Send Message" aria-describedby="send-status">
+                        <button type="button" id="sendmessage" class="auth-button" disabled>Send</button>
                     </div>
+                    <div id="send-status" class="send-status" role="status" aria-live="polite"></div>
                 </div>
             </div>
         </div>

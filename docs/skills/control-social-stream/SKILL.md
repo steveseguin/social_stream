@@ -16,6 +16,14 @@ For SSApp 0.4.7 and newer, choose **Copy MCP Setup** from the same menu after re
 that configuration when MCP tools are not already connected. It launches the downloaded app
 with `--ssapp-mcp`; do not require Node, Python, or a source checkout.
 
+MCP 1.0.6 in SSApp 0.4.11 and newer advertises its complete stable tool set even when the
+main app is offline during MCP startup. The tools become usable after SSApp starts because
+each version-gated call re-checks live capabilities. When an MCP caller adds a TikTok source
+without `connectionMode`, the MCP adapter supplies `tiktok-websocket` (WebSocket Auto).
+Explicit modes are preserved. This default is MCP-only; the desktop UI and direct HTTP API
+are unchanged. With older adapters, start SSApp before the MCP client or reconnect the MCP
+server after SSApp starts.
+
 Headless mode is separate. To hide windows and also allow a local agent, pass both
 `--ssapp-headless-control` and `--ssapp-control-api`. Headless mode alone does not open the
 API. Environment variables are also supported.

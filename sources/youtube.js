@@ -1978,6 +1978,16 @@
 			yt-creator-goal-set-up-flow-view-model {
 				background-color: var(--yt-live-chat-background-color, #0f0f0f) !important;
 			}
+			yt-live-chat-text-message-renderer[author-is-owner]:not([enable-banner-update]) {
+				background-color: var(--yt-live-chat-background-color, #0f0f0f) !important;
+			}
+			yt-live-chat-text-message-renderer[author-is-owner]:not([enable-banner-update]) #menu {
+				background: linear-gradient(
+					to right,
+					transparent 0,
+					var(--yt-live-chat-background-color, #0f0f0f) 100%
+				) !important;
+			}
 		`;
 		document.head.appendChild(style);
 	}

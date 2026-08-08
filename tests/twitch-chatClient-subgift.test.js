@@ -30,12 +30,6 @@ this.TWITCH_CHAT_EVENTS = TWITCH_CHAT_EVENTS;`;
 class FakeTmiClient {
   constructor() {
     this.handlers = new Map();
-    this.userstate = {
-      '#socialstream': {
-        username: 'socialstream',
-        'display-name': 'Social Stream'
-      }
-    };
   }
 
   on(event, handler) {
@@ -109,14 +103,9 @@ async function run() {
   });
 
   await chatClient.connect();
-
-  const userState = chatClient.getUserState('socialstream');
-  assert(userState['display-name'] === 'Social Stream', 'Twitch user state was not exposed');
-  userState['display-name'] = 'Changed';
-  assert(
-    fakeClient.userstate['#socialstream']['display-name'] === 'Social Stream',
-    'Twitch user state should be returned as a copy'
-  );
+  assert(chatClient.getState().joined === false, 'Twitch chat client reported JOIN before the self join event');
+  fakeClient.emit('join', '#socialstream', 'socialstream', true);
+  assert(chatClient.getState().joined === true, 'Twitch chat client did not record the self join event');
 
   fakeClient.emit(
     'subgift',

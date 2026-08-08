@@ -4,6 +4,8 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |
+| 1.1.5 / MCP 1.0.6 | 0.4.11 | Defaults mode-less MCP TikTok `ssapp_add_source` requests to `tiktok-websocket` (WebSocket Auto) while preserving explicit modes; desktop UI and direct HTTP behavior are unchanged |
+| 1.1.5 / MCP 1.0.5 | 0.4.11 | Keeps the complete MCP tool set discoverable when SSApp starts after the MCP client, while preserving live capability checks before version-gated commands |
 | 1.1.5 / MCP 1.0.4 | 0.4.7 | Adds downloaded-app `--ssapp-mcp` launch and copied setup, including reliable Windows stdio through Electron's bundled Node runtime, while keeping the explicitly enabled tokenless API local and separate from headless mode |
 | 1.1.4 / MCP 1.0.1 | 0.4.6 | Rejects inactive-only `updateSource` fields for running sources and directs live mute/visibility changes through their dedicated commands |
 | 1.1.3 / MCP 1.0.1 | 0.4.4 | Omits stored source URLs, which may contain access tokens, from normalized source/status responses and exposes the active numeric `tabId` instead |
@@ -13,6 +15,14 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
 ## Skill revisions
+
+### 2026-08-07
+
+- Documented the MCP-only WebSocket Auto default for mode-less TikTok `ssapp_add_source`
+  requests (API 1.1.5 / MCP 1.0.6, minimum SSApp 0.4.11). Explicit modes, the desktop UI,
+  and direct HTTP behavior remain unchanged.
+- Documented startup-order-independent tool discovery and call-time compatibility checks
+  (API 1.1.5 / MCP 1.0.5, minimum SSApp 0.4.11).
 
 ### 2026-07-26
 

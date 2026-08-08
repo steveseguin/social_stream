@@ -10,7 +10,8 @@ This overlay creates a particle-based floating message system with:
 -->
 <html lang="en">
 <head>
-  <script type="text/javascript" src="../js/local-server-url.js"></script>
+<script type="text/javascript" src="../js/local-server-url.js"></script>
+<script type="text/javascript" src="../js/transport-dedupe.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Particle System Chat Overlay</title>
@@ -635,10 +636,12 @@ body {
     // the websocket relay and the VDO.Ninja bridge; render only the first copy.
     var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
     var recentTransportDeliveries = new Map();
-    function isDuplicateTransportDelivery(data) {
+    var transportDeliveryDedupe = typeof SocialStreamTransportDedupe !== "undefined" ? SocialStreamTransportDedupe.create() : null;
+    function isDuplicateTransportDelivery(data, source) {
         if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) {
             return false;
         }
+        if (transportDeliveryDedupe) return transportDeliveryDedupe(data, source);
         if (!data || typeof data !== "object") {
             return false;
         }
@@ -670,8 +673,8 @@ body {
         recentTransportDeliveries.set(key, now);
         return false;
     }
-    function addMessageToOverlay(data) {
-        if (isDuplicateTransportDelivery(data)) {
+    function addMessageToOverlay(data, source) {
+        if (isDuplicateTransportDelivery(data, source)) {
             return;
         }
         if (hideBots && data.bot) { return; }
@@ -824,7 +827,7 @@ body {
         window.addEventListener("message", function (e) {
             if (e.source != iframe.contentWindow) return;
             if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja) {
-                addMessageToOverlay(e.data.dataReceived.overlayNinja);
+                addMessageToOverlay(e.data.dataReceived.overlayNinja, "p2p");
             }
         });
     }
@@ -850,7 +853,7 @@ body {
                 try {
                     var data = JSON.parse(event.data);
                     if (data) { 
-                        addMessageToOverlay(data);
+                        addMessageToOverlay(data, "server");
                     }
                 } catch (error) {
                     console.error("Error processing WebSocket message:", error, "Data:", event.data);

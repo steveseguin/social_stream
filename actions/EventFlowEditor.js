@@ -1523,6 +1523,11 @@ class EventFlowEditor {
 
             if (flowNameInput) flowNameInput.value = this.currentFlow.name; // Update input field without asterisk AFTER save
             this.markUnsavedChanges(false); // Reset flag AFTER successful save
+
+            const savedNodes = this.currentFlow.nodes || [];
+            if (savedNodes.some(n => n.type === 'action') && !savedNodes.some(n => n.type === 'trigger')) {
+                this.showNotification('This flow has no trigger, so it will never run. Add a trigger node (blue) to start it.', 'warning');
+            }
            // alert('Flow saved successfully!');
             try {
                 await this.loadFlowList(); // Refresh list

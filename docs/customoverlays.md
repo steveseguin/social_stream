@@ -93,7 +93,7 @@ This is the most common and straightforward method for overlay pages. Your custo
   - For speaker-based rooms, keep browser voice processing enabled on guest links (`&aec=1&denoise=1&autogain=1`) and avoid `&proaudio`/`&stereo` unless you are intentionally bypassing processing.
   - For no-headphone panels, consider adding a conservative gate such as `&noisegate=4` (then tune as needed) to reduce open-mic recapture between turns.
 
-See `dock.html`, `featured.html`, `events.html` etc. for more examples of iframe setups. They often use `label=dock`, `label=overlay`, `label=actions` respectively.
+See `dock.html`, `featured.html`, `events.html` etc. for more examples of iframe setups. `dock.html` uses `label=dock`, while `featured.html` and `events.html` both use `label=overlay` (`actions.html` uses `label=actions`).
 
 ### 4.2. WebSocket API (Advanced)
 
@@ -484,6 +484,8 @@ Remember that SSN overlays are highly customizable via URL parameters. Your cust
   - `&hidesource=1`: To hide the source platform icon/name.
   - `&showtime=MILLISECONDS`: How long to display a message before auto-hiding (if implemented).
   - `&fadeout=1`: To enable fade-out animations.
+  - `&showviewercount`: Show per-source viewer totals in the dock's top-right bar.
+  - `&showlikecount`: Show per-source like totals in the dock's top-right bar. Like updates must also be enabled globally with **Send platform like totals**.
   - Filtering params: `&onlytype=`, `&hidetype=`, `&sources=`, `&hidesources=`, `&sourceids=`, `&hidesourceids=`, `&donationsonly=1`, `&eventsonly=1`, `&hidebots=1`, etc.
 
 Your JavaScript can parse these using `URLSearchParams` and adjust behavior accordingly.

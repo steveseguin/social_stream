@@ -1158,17 +1158,12 @@
 	}
 
 	function processMessage(ele) {
-		if (!ele || ele.dataset.skip) {
-			return;
-		}
-		if (ele?.parentNode?.dataset.skip) {
-			return;
-		}
+		// TikTok reuses DOM elements, so dataset.skip must never decide whether a chat message is new.
+		if (!ele) return;
 		if (ele.querySelector("[class*='DivTopGiverContainer']")) {
 			return;
 		}
 		if (checkNextSiblingsForAttribute(ele, "data-tiktok-initial")) {
-			ele.dataset.skip = ++msgCount;
 			return;
 		}
 		const eventHints = deriveEventHints(ele);
@@ -1435,7 +1430,6 @@
 		} else if (chatmessage) {
 			chatmessage = chatmessage.trim();
 		}
-		ele.dataset.skip = ++msgCount;
 		let normalizedMessage = chatmessage ? chatmessage.toLowerCase() : "";
 		if (chatmessage == "Moderator") {
 			return;
@@ -2367,6 +2361,14 @@
 		observer = new MutationObserver((mutations) => {
 			try {
 				if (!isExtensionOn) return;
+				let addedNodeCount = 0;
+				mutations.forEach(mutation => {
+					addedNodeCount += mutation.addedNodes.length;
+				});
+				if (addedNodeCount > 295) {
+					console.warn("[TikTok] Ignoring oversized chat update:", addedNodeCount);
+					return;
+				}
 				mutations.forEach((mutation) => {
 					if (mutation.addedNodes.length) {
 						//console.warn(mutation.addedNodes);
@@ -2378,6 +2380,7 @@
 								if (node.dataset && node.dataset.e2e === "chat-message") {
 									setTimeout(processMessage, 10, node);
 								} else if (node.dataset && node.dataset.index) {
+									// data-index is a recycled DOM slot (usually 0–299), not a message ID.
 
 									setTimeout(processMessage, 10, node);
 								} else {

@@ -99,9 +99,39 @@ function pushMessage(data){
 	}
 	
 	async function processMessage(content){
-		
-		
-		var buttons = content.querySelectorAll("button");
+		var messageElement = null;
+		try {
+			if (content.matches && content.matches("[id^='Message_']")) {
+				messageElement = content;
+			} else {
+				messageElement = content.querySelector("[id^='Message_']");
+			}
+		} catch(e){}
+		if (!messageElement){return;}
+
+		var messageGroup = messageElement;
+		var buttons = [];
+		try {
+			// The author header (avatar + name buttons) sits on the group wrapper of
+			// consecutive messages, strictly below the chat container; at or above the
+			// container the first buttons belong to other users' messages, so a walk
+			// that far means no author header exists for this row.
+			var chatContainer = messageElement.closest("#PiczelChat") || document.body;
+			var matchedGroup = false;
+			while (messageGroup && messageGroup !== chatContainer && messageGroup !== document.body) {
+				buttons = messageGroup.querySelectorAll("button");
+				if (buttons.length > 1 && buttons[0].querySelector("img")){
+					matchedGroup = true;
+					break;
+				}
+				messageGroup = messageGroup.parentElement;
+			}
+			if (!matchedGroup) {
+				buttons = [];
+			}
+		} catch(e){
+			buttons = [];
+		}
 		
 		var chatname="";
 		try{
@@ -120,9 +150,9 @@ function pushMessage(data){
 		var chatmessage="";
 		try{
 			 if (settings.textonlymode){
-				chatmessage = escapeHtml(content.querySelector("[id^='Message_']").textContent);
+				chatmessage = escapeHtml(messageElement.textContent);
 			 } else {
-				chatmessage = digInto(content.querySelector("[id^='Message_']").childNodes)
+				chatmessage = digInto(messageElement.childNodes)
 			 }
 		} catch(e){
 			return;
@@ -161,12 +191,19 @@ function pushMessage(data){
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (!mutation.addedNodes[i].children.length){continue;}
-							if (mutation.addedNodes[i].dataset.set123){continue;}
-							mutation.addedNodes[i].dataset.set123 = "true";
-							
-							callback(mutation.addedNodes[i]);
-								
+							if (mutation.addedNodes[i].nodeType !== 1){continue;}
+							var messages = [];
+							if (mutation.addedNodes[i].matches("[id^='Message_']")){
+								messages.push(mutation.addedNodes[i]);
+							}
+							mutation.addedNodes[i].querySelectorAll("[id^='Message_']").forEach(function(message){
+								messages.push(message);
+							});
+							messages.forEach(function(message){
+								if (message.dataset.set123){return;}
+								message.dataset.set123 = "true";
+								callback(message);
+							});
 						} catch(e){}
 					}
 				}
@@ -195,16 +232,10 @@ function pushMessage(data){
 				}
 			} catch(e){}
 			
-			try { 
-				var main = document.querySelector("#PiczelChat").childNodes[0].childNodes[0].childNodes[3].childNodes[0].childNodes[0].childNodes;
-				for (var j =0;j<main.length;j++){
-					try{
-						if (!main[j].dataset.set123){
-							main[j].dataset.set123 = "true";
-							//processMessage(main[j]);
-						} 
-					} catch(e){}
-				}
+			try {
+				document.querySelectorAll("#PiczelChat [id^='Message_']").forEach(function(message){
+					message.dataset.set123 = "true";
+				});
 			} catch(e){ }
 			
 			onElementInserted("#PiczelChat", function(first){

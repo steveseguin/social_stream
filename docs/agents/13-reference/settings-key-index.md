@@ -688,10 +688,8 @@ Category key: `opened_in_new_window`. Settings: 6.
 
 | Key | Type | Short Description |
 | --- | --- | --- |
-| `dlive_username` | text | DLive channel name used by the open chat button. |
 | `picarto_username` | text | Picarto channel name used by the open chat button. |
 | `tiktok_username` | text | TikTok channel handle opened by the chat shortcut. |
-| `trovo_username` | text | Trovo channel name opened in a new window. |
 | `twitch_username` | text | Twitch channel name opened in a new window. |
 | `youtube_username` | text | YouTube channel ID used when opening the pop-out chat window. |
 

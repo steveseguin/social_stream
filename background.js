@@ -106,6 +106,25 @@ function getCachedRoleList(value) {
 	return entries;
 }
 
+function normalizeRoleIdentifier(value) {
+	if (value === undefined || value === null) return "";
+	return String(value).toLowerCase().trim().replace(/^@+/, "");
+}
+
+function matchesConfiguredUser(entry, data, sourceType) {
+	if (!entry || !data) return false;
+	if (entry.type && entry.type !== sourceType) return false;
+
+	const configuredIdentifier = normalizeRoleIdentifier(entry.name);
+	if (!configuredIdentifier) return false;
+
+	const userId = normalizeRoleIdentifier(data.userid);
+	if (userId && configuredIdentifier === userId) return true;
+
+	const chatName = normalizeRoleIdentifier(data.chatname);
+	return !!chatName && configuredIdentifier === chatName;
+}
+
 function getCommandAliases(commandString) {
 	if (!commandString) {
 		return [];
@@ -5906,17 +5925,23 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				const method = String(request.method || "GET").toUpperCase();
 				const isOAuthTokenPost = method === "POST" && parsedUrl.pathname === "/api/oauth/token";
 				const isChatMessagePost = method === "POST" && /^\/api\/v1\/channels\/[^\/]+\/chat$/.test(parsedUrl.pathname);
-				if (method !== "GET" && !isOAuthTokenPost && !isChatMessagePost) {
+				const isChannelPatch = method === "PATCH" && /^\/api\/v1\/channels\/[^\/]+$/.test(parsedUrl.pathname);
+				const isModerationDelete = method === "DELETE" && /^\/api\/v1\/channels\/[^\/]+\/chat\/moderation$/.test(parsedUrl.pathname);
+				const isModerationBanPost = method === "POST" && /^\/api\/v1\/channels\/[^\/]+\/chat\/moderation\/bans$/.test(parsedUrl.pathname);
+				if (method !== "GET" && !isOAuthTokenPost && !isChatMessagePost && !isChannelPatch && !isModerationDelete && !isModerationBanPost) {
 					sendResponse({ ok: false, error: "VPZone fetch method not allowed" });
 					return response;
 				}
+				const hasJsonBody = isChatMessagePost || isChannelPatch || isModerationBanPost;
 				const headers = {
 					Accept: "application/json"
 				};
 				if (isOAuthTokenPost) {
 					headers["Content-Type"] = "application/x-www-form-urlencoded";
-				} else if (isChatMessagePost) {
-					headers["Content-Type"] = "application/json";
+				} else {
+					if (hasJsonBody) {
+						headers["Content-Type"] = "application/json";
+					}
 					if (request.authToken && typeof request.authToken === "string") {
 						headers.Authorization = "Bearer " + request.authToken.replace(/[\r\n]/g, "");
 					}
@@ -5926,7 +5951,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 					cache: "no-store",
 					credentials: "omit",
 					headers,
-					body: method === "POST" ? String(request.body || "") : undefined
+					body: isOAuthTokenPost || hasJsonBody ? String(request.body || "") : undefined
 				});
 				const responseText = await vpzoneResponse.text();
 				let responseJson = {};
@@ -6998,6 +7023,10 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 			return true;
 		}
 
+		if (message.event === "likes_update" && !getSettingFlag("captureliketotals") && !getSettingFlag("captureyoutubelikes")) {
+			return true;
+		}
+
 		const isTwitchAdEvent = message.type === "twitch" && ["ad_break", "ad_request", "ad_schedule"].includes(message.event);
 		if (isTwitchAdEvent && !settings.twichadannounce) {
 			return true;
@@ -7255,6 +7284,7 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
 		const store = transaction.objectStore(messageStoreDB.storeName);
 		const index = store.index("timestamp");
 		const messages = [];
+		const retentionCheckTime = Date.now();
 
 		let range;
 		if (endTimestamp) {
@@ -7268,7 +7298,9 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
 		cursorRequest.onsuccess = event => {
 			const cursor = event.target.result;
 			if (cursor) {
-				messages.push(cursor.value);
+				if (!messageStoreDB.isMessageExpired(cursor.value, retentionCheckTime)) {
+					messages.push(cursor.value);
+				}
 				cursor.continue();
 			} else {
 				if (messages.length === 0) {
@@ -11814,18 +11846,8 @@ async function openchat(target = null, force = false) {
 		openURL(url, true);
 	}
 
-	if ((target == "trovo" || !target) && settings.trovo_username) {
-		let url = "https://trovo.live/chat/" + settings.trovo_username.textsetting;
-		openURL(url, true);
-	}
-
 	if ((target == "picarto" || !target) && settings.picarto_username) {
 		let url = "https://picarto.tv/chatpopout/" + settings.picarto_username.textsetting + "/public";
-		openURL(url, true);
-	}
-
-	if ((target == "dlive" || !target) && settings.dlive_username) {
-		let url = "https://dlive.tv/c/" + settings.dlive_username.textsetting + "/" + settings.dlive_username.textsetting;
 		openURL(url, true);
 	}
 
@@ -14158,8 +14180,7 @@ async function processIncomingRequest(request, UUID = false) {
 					altSourceType = "youtube";
 				}
 
-				const useCaptureNameForRoles = request.value.role == "host" || (request.value.role == "bot" && (altSourceType == "youtube" || altSourceType == "kick"));
-				const storageUsername = useCaptureNameForRoles ? request.value.chatname || request.value.userid || "" : request.value.userid || request.value.chatname || "";
+				const storageUsername = request.value.userid || request.value.chatname || "";
 				const userToMark = { username: storageUsername, type: altSourceType };
 				const dockUserToMark = {
 					username: request.value.chatname || request.value.userid || storageUsername,
@@ -14514,7 +14535,7 @@ function normalizeSourceControlPlatform(type) {
 function getSourceControlPlatforms(type) {
 	const normalized = normalizeSourceControlPlatform(type);
 	if (normalized === "*" || !normalized) {
-		return ["twitch", "kick", "youtube"];
+		return ["twitch", "kick", "youtube", "vpzone"];
 	}
 	return [normalized];
 }
@@ -14532,6 +14553,9 @@ function getWebsocketSourcePlatformFromUrl(url) {
 	}
 	if (lowerUrl.includes("/sources/websocket/youtube.html")) {
 		return "youtube";
+	}
+	if (lowerUrl.includes("/sources/websocket/vpzone.html")) {
+		return "vpzone";
 	}
 	return "";
 }
@@ -16889,33 +16913,15 @@ async function applyBotActions(data, tab = false) {
 			altSourceType = "youtube";
 		}
 
-		const normalizeRoleIdentifier = value => {
-			if (value === undefined || value === null) return "";
-			return String(value).toLowerCase().trim().replace(/^@+/, "");
-		};
 		const roleUserIdLower = normalizeRoleIdentifier(data.userid);
 		const roleChatNameLower = normalizeRoleIdentifier(data.chatname);
-		const useCaptureNameForRoles = altSourceType == "youtube" || altSourceType == "kick";
-		const primaryRoleIdentifier = useCaptureNameForRoles ? roleChatNameLower || roleUserIdLower : roleUserIdLower || roleChatNameLower;
-		const roleIdentifierMatches = name => {
-			name = normalizeRoleIdentifier(name);
-			if (!name) return false;
-			if (settings.matchRolesByDisplayName) {
-				return name === roleUserIdLower || name === roleChatNameLower;
-			}
-			return name === primaryRoleIdentifier;
-		};
 
 		if (settings.blacklistuserstoggle && settings.blacklistusers?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return null;
+				if (!roleUserIdLower && !roleChatNameLower) return null;
 
 				const blacklist = getCachedRoleList(settings.blacklistusers.textsetting);
-
-				const isBlocked = blacklist.some(entry => {
-					return entry.type ? entry.name === userIdentifier && entry.type === altSourceType : entry.name === userIdentifier;
-				});
+				const isBlocked = blacklist.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 
 				if (isBlocked) {
 					return null;
@@ -16928,14 +16934,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (settings.whitelistuserstoggle && settings.whitelistusers?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return null;
+				if (!roleUserIdLower && !roleChatNameLower) return null;
 
 				const whitelist = getCachedRoleList(settings.whitelistusers.textsetting);
-
-				const isWhitelisted = whitelist.some(entry => {
-					return entry.type ? entry.name === userIdentifier && entry.type === altSourceType : entry.name === userIdentifier;
-				});
+				const isWhitelisted = whitelist.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 
 				if (!isWhitelisted) {
 					return null;
@@ -16958,12 +16960,7 @@ async function applyBotActions(data, tab = false) {
 
 				const bots = getCachedRoleList(settings.botnamesext.textsetting);
 
-				data.bot = bots.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					return roleIdentifierMatches(entry.name);
-				});
+				data.bot = bots.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 				data.bot = false;
@@ -16978,21 +16975,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.host && settings.hostnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const hosts = getCachedRoleList(settings.hostnamesext.textsetting);
-
-				data.host = hosts.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					if (settings.matchRolesByDisplayName) {
-						return entry.name === userIdLower || entry.name === chatNameLower;
-					}
-					return entry.name === (userIdLower || chatNameLower);
-				});
+				data.host = hosts.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 				data.host = false;
@@ -17031,21 +17017,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.mod && settings.modnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const mods = getCachedRoleList(settings.modnamesext.textsetting);
-
-				data.mod = mods.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					if (settings.matchRolesByDisplayName) {
-						return entry.name === userIdLower || entry.name === chatNameLower;
-					}
-					return entry.name === (userIdLower || chatNameLower);
-				});
+				data.mod = mods.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 				data.mod = false;
@@ -17061,21 +17036,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.admin && settings.adminnames?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const admins = getCachedRoleList(settings.adminnames.textsetting);
-
-				data.admin = admins.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					if (settings.matchRolesByDisplayName) {
-						return entry.name === userIdLower || entry.name === chatNameLower;
-					}
-					return entry.name === (userIdLower || chatNameLower);
-				});
+				data.admin = admins.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 			}
@@ -17083,21 +17047,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.vip && settings.viplistusers?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const vips = getCachedRoleList(settings.viplistusers.textsetting);
-
-				data.vip = vips.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					if (settings.matchRolesByDisplayName) {
-						return entry.name === userIdLower || entry.name === chatNameLower;
-					}
-					return entry.name === (userIdLower || chatNameLower);
-				});
+				data.vip = vips.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 			}

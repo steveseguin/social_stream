@@ -5,6 +5,92 @@ const MS_PER_DAY = 24 * MS_PER_HOUR;
 const CACHE_SIZE = 100;
 const CACHE_DURATION = 5 * 60 * 1000;
 
+function isDatabaseSettingEnabled(value) {
+    return value === true || !!(value && typeof value === 'object' && value.setting === true);
+}
+
+function getInMemoryUnlimitedDBSetting() {
+    const globalSettings = typeof settings !== 'undefined' ? settings : null;
+    const windowSettings = typeof window !== 'undefined' ? window.settings : null;
+    const candidates = [globalSettings, windowSettings];
+    let known = false;
+
+    for (const candidate of candidates) {
+        if (!candidate || typeof candidate !== 'object') continue;
+        if (!Object.prototype.hasOwnProperty.call(candidate, 'unlimitedDB')) continue;
+        known = true;
+        if (isDatabaseSettingEnabled(candidate.unlimitedDB)) return { known: true, enabled: true };
+    }
+
+    return { known, enabled: false };
+}
+
+function isUnlimitedDBEnabled() {
+    return getInMemoryUnlimitedDBSetting().enabled;
+}
+
+function getStoredMessageExpiration(message, daysToKeep = 30) {
+    if (!message) return null;
+
+    if (message.expiresAt !== undefined && message.expiresAt !== null && message.expiresAt !== '') {
+        const explicitExpiration = Number(message.expiresAt);
+        if (Number.isFinite(explicitExpiration)) return explicitExpiration;
+    }
+
+    const timestamp = Number(message.timestamp);
+    if (!Number.isFinite(timestamp)) return null;
+    return timestamp + (daysToKeep * MS_PER_DAY);
+}
+
+function isStoredMessageExpired(message, now, daysToKeep = 30) {
+    if (isUnlimitedDBEnabled()) return false;
+    const expiration = getStoredMessageExpiration(message, daysToKeep);
+    return expiration !== null && expiration <= now;
+}
+
+function isUnlimitedDBEnabledInStorage(timeoutMs = 3000) {
+    const memorySetting = getInMemoryUnlimitedDBSetting();
+    if (memorySetting.enabled) return Promise.resolve(true);
+    if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local || !chrome.storage.local.get) {
+        if (memorySetting.known) return Promise.resolve(memorySetting.enabled);
+        return Promise.reject(new Error('Unlimited DB setting is unavailable'));
+    }
+
+    return new Promise((resolve, reject) => {
+        let settled = false;
+        let timeout = null;
+        const finish = (error, value) => {
+            if (settled) return;
+            settled = true;
+            if (timeout !== null) clearTimeout(timeout);
+            if (error) reject(error);
+            else resolve(value);
+        };
+        timeout = setTimeout(() => {
+            finish(new Error('Timed out reading the Unlimited DB setting'));
+        }, timeoutMs);
+
+        try {
+            chrome.storage.local.get(['settings'], result => {
+                const runtimeError = chrome.runtime && chrome.runtime.lastError;
+                if (runtimeError) {
+                    finish(new Error(runtimeError.message || 'Failed to read the Unlimited DB setting'));
+                    return;
+                }
+                if (!result || typeof result !== 'object') {
+                    finish(new Error('Unlimited DB setting returned no storage result'));
+                    return;
+                }
+                const storedSettings = result.settings;
+                finish(null, getInMemoryUnlimitedDBSetting().enabled ||
+                    isDatabaseSettingEnabled(storedSettings && storedSettings.unlimitedDB));
+            });
+        } catch (error) {
+            finish(error);
+        }
+    });
+}
+
 class MessageStoreDB {
     constructor(options = {}) {
         this.dbName = options.dbName || 'chatMessagesDB_v3';
@@ -17,7 +103,8 @@ class MessageStoreDB {
         this.cache = {
             recent: [],
             userMessages: new Map(),
-            lastUpdate: 0
+            lastUpdate: 0,
+            retentionMode: null
         };
 		
 		this.existenceCache = {
@@ -103,24 +190,78 @@ class MessageStoreDB {
         return this.db;
     }
 
+    isMessageExpired(message, now = Date.now()) {
+        return isStoredMessageExpired(message, now, this.daysToKeep);
+    }
+
+    syncRetentionCacheMode() {
+        const unlimited = isUnlimitedDBEnabled();
+        if (this.cache.retentionMode !== null && this.cache.retentionMode !== unlimited) {
+            this.cache.recent = [];
+            this.cache.userMessages.clear();
+            this.cache.lastUpdate = 0;
+            this.clearExistenceCache();
+        }
+        this.cache.retentionMode = unlimited;
+    }
+
 	async addMessage(message) {
-        const db = await this.ensureDB();
+        return this.addMessageRecord(message, false);
+    }
+
+    async addMigratedMessage(message, migrationSource = null) {
+        const ids = await this.addMigratedMessages([message], migrationSource);
+        return ids[0];
+    }
+
+    createMessageRecord(message, preserveTimestamp, additionalFields = null) {
         const now = Date.now();
-        
         const cloned = {...message};
-        
+
         if (cloned.id){
             cloned.mid = cloned.id;
             delete cloned.id;   // Remove id as it will be auto-generated
         }
         
-        // Set expiration only if unlimiteDB is not enabled
-        const messageData = { 
+        const sourceTimestamp = Number(cloned.timestamp);
+        const timestamp = preserveTimestamp && Number.isFinite(sourceTimestamp) ? sourceTimestamp : now;
+        const messageData = {
             ...cloned,
-            timestamp: now,
-            expiresAt: now + (this.daysToKeep * MS_PER_DAY)
+            timestamp,
+            expiresAt: timestamp + (this.daysToKeep * MS_PER_DAY)
         };
-        
+
+        if (additionalFields) Object.assign(messageData, additionalFields);
+        return messageData;
+    }
+
+    async addMigratedMessages(messages, migrationSource = null) {
+        if (!Array.isArray(messages) || messages.length === 0) return [];
+        const db = await this.ensureDB();
+        const marker = migrationSource ? { __ssnMigrationSource: migrationSource } : null;
+        const records = messages.map(message => this.createMessageRecord(message, true, marker));
+
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            const ids = [];
+
+            records.forEach(record => {
+                const request = store.add(record);
+                request.onsuccess = () => ids.push(request.result);
+            });
+
+            tx.oncomplete = () => resolve(ids);
+            tx.onerror = () => reject(tx.error || new Error('Failed to migrate message batch'));
+            tx.onabort = () => reject(tx.error || new Error('Message migration batch was aborted'));
+        });
+    }
+
+	async addMessageRecord(message, preserveTimestamp) {
+        const db = await this.ensureDB();
+        this.syncRetentionCacheMode();
+        const messageData = this.createMessageRecord(message, preserveTimestamp);
+
         return new Promise((resolve, reject) => {
             const tx = db.transaction(this.storeName, 'readwrite');
             const store = tx.objectStore(this.storeName);
@@ -151,22 +292,38 @@ class MessageStoreDB {
 
 	async updateMessage(idx, updatedResponse) {
 		if (!idx || !updatedResponse) return null;
-		
+
 		const db = await this.ensureDB();
-		
+		this.syncRetentionCacheMode();
+
 		return new Promise((resolve, reject) => {
 			const tx = db.transaction(this.storeName, 'readwrite');
 			const store = tx.objectStore(this.storeName);
-			
-			// Put the updated message back
-			const putRequest = store.put({...updatedResponse, id:idx});
-			
-			putRequest.onsuccess = () => {
-				this.updateCache(updatedResponse);
-				resolve(updatedResponse);
+			const getRequest = store.get(idx);
+
+			getRequest.onsuccess = () => {
+				const existing = getRequest.result;
+				if (!existing) {
+					resolve(null);
+					return;
+				}
+
+				const timestamp = Number(existing.timestamp);
+				const expiration = getStoredMessageExpiration(existing, this.daysToKeep);
+				const merged = {...existing, ...updatedResponse, id: idx};
+				if (Number.isFinite(timestamp)) merged.timestamp = timestamp;
+				if (expiration !== null) merged.expiresAt = expiration;
+
+				const putRequest = store.put(merged);
+				putRequest.onsuccess = () => {
+					this.clearCache();
+					this.clearExistenceCache();
+					resolve(merged);
+				};
+				putRequest.onerror = () => reject(putRequest.error);
 			};
-			
-			putRequest.onerror = () => reject(putRequest.error);
+
+			getRequest.onerror = () => reject(getRequest.error);
 		});
 	}
     updateCache(message) {
@@ -188,7 +345,8 @@ class MessageStoreDB {
 
     async getRecentMessages(limit = 10) {
         const now = Date.now();
-        if (this.cache.recent.length >= limit && 
+        this.syncRetentionCacheMode();
+        if (this.cache.recent.length >= limit &&
             (now - this.cache.lastUpdate) < this.cacheDuration) {
             return this.cache.recent.slice(0, limit);
         }
@@ -203,7 +361,7 @@ class MessageStoreDB {
                 const cursor = event.target.result;
                 if (cursor && messages.length < limit) {
                     const msg = cursor.value;
-                    if (!msg.expiresAt || msg.expiresAt > now) {
+                    if (!this.isMessageExpired(msg, now)) {
                         messages.push(msg);
                     }
                     cursor.continue();
@@ -218,6 +376,7 @@ class MessageStoreDB {
 	
 	async checkUserTypeExists(userIdentifier, type, fallbackChatname = null) {
 		const now = Date.now();
+		this.syncRetentionCacheMode();
 		const cacheKeys = this.getExistenceCacheKeys(userIdentifier, type, fallbackChatname);
 
 		// Check cache first
@@ -283,7 +442,7 @@ class MessageStoreDB {
                 }
 
                 const message = cursor.value;
-                if (message.expiresAt && message.expiresAt <= now) {
+                if (this.isMessageExpired(message, now)) {
                     cursor.continue();
                     return;
                 }
@@ -326,6 +485,7 @@ class MessageStoreDB {
 	async getUserMessages(chatname, type, page = 0, pageSize = 100) {
 		const db = await this.ensureDB();
 		const now = Date.now();
+		this.syncRetentionCacheMode();
 		
 		if (settings?.disableDB) return [];
 		
@@ -363,7 +523,7 @@ class MessageStoreDB {
                 const cursor = event.target.result;
                 if (cursor) {
                     const msg = cursor.value;
-                    if (!msg.expiresAt || msg.expiresAt > now) {
+                    if (!this.isMessageExpired(msg, now)) {
                         if (count >= skip && messages.length < pageSize) {
                             messages.push(msg);
                         }
@@ -381,32 +541,57 @@ class MessageStoreDB {
         });
     }
 
-    scheduleCleanup() {
-        const cleanup = async () => {
-            // Skip cleanup if unlimiteDB is enabled
-            if (window.settings?.unlimiteDB || (typeof settings !== 'undefined' && settings?.unlimiteDB)) {
-                console.log('Unlimited DB mode enabled, skipping cleanup');
-                return;
-            }
-            
-            const db = await this.ensureDB();
-            const now = Date.now();
-            
+    async cleanupExpiredMessages() {
+        // Read storage as well as the in-memory setting so startup cleanup
+        // cannot race settings hydration and delete unlimited history.
+        let unlimitedMode;
+        try {
+            unlimitedMode = await isUnlimitedDBEnabledInStorage();
+        } catch (error) {
+            console.warn('Skipping message cleanup because retention settings are unavailable:', error);
+            return 0;
+        }
+
+        if (unlimitedMode) {
+            console.log('Unlimited DB mode enabled, skipping cleanup');
+            return 0;
+        }
+
+        const db = await this.ensureDB();
+        const now = Date.now();
+
+        return new Promise((resolve, reject) => {
             const tx = db.transaction(this.storeName, 'readwrite');
             const store = tx.objectStore(this.storeName);
             const index = store.index('timestamp');
-            
+            let deleted = 0;
+
             index.openCursor().onsuccess = event => {
                 const cursor = event.target.result;
-                if (cursor) {
-                    const message = cursor.value;
-                    if (message.expiresAt && message.expiresAt < now) {
-                        store.delete(cursor.primaryKey);
-                    }
-                    cursor.continue();
+                if (!cursor) return;
+                if (this.isMessageExpired(cursor.value, now)) {
+                    store.delete(cursor.primaryKey);
+                    deleted++;
                 }
+                cursor.continue();
             };
-        };
+
+            tx.oncomplete = () => {
+                if (deleted) {
+                    this.clearCache();
+                    this.clearExistenceCache();
+                }
+                resolve(deleted);
+            };
+            tx.onerror = () => reject(tx.error || new Error('Failed to clean expired message history'));
+            tx.onabort = () => reject(tx.error || new Error('Message history cleanup was aborted'));
+        });
+    }
+
+    scheduleCleanup() {
+        const cleanup = () => this.cleanupExpiredMessages().catch(error => {
+            console.error('Failed to clean expired message history:', error);
+        });
 
         cleanup();
         setInterval(cleanup, MS_PER_DAY);
@@ -414,6 +599,7 @@ class MessageStoreDB {
 
     async getMessagesBefore(beforeTimestamp, limit = 50, beforeId = null) {
         if (settings?.disableDB) return [];
+        this.syncRetentionCacheMode();
 
         let normalizedBeforeTimestamp;
         if (beforeTimestamp === null || beforeTimestamp === undefined || beforeTimestamp === "") {
@@ -462,7 +648,7 @@ class MessageStoreDB {
                         cursor.continue();
                         return;
                     }
-                    if (!msg.expiresAt || msg.expiresAt > now) {
+                    if (!this.isMessageExpired(msg, now)) {
                         messages.push(msg);
                     }
                     cursor.continue();
@@ -479,6 +665,7 @@ class MessageStoreDB {
         this.cache.recent = [];
         this.cache.userMessages.clear();
         this.cache.lastUpdate = 0;
+        this.cache.retentionMode = isUnlimitedDBEnabled();
     }
 
     async clearMessages() {
@@ -566,7 +753,7 @@ class MessageStoreMigration {
         this.messageStore = messageStore;
         this.oldDbName = 'chatMessagesDB';
         this.oldStoreName = 'messages';
-        this.maxMessages = options.maxMessages || 10000;
+        this.migrationSource = `${this.oldDbName}:${this.oldStoreName}`;
         this.cutoffDate = options.cutoffDate || new Date(Date.now() - (30 * 24 * 60 * 60 * 1000));
         this.migrationAttempted = false;
     }
@@ -583,28 +770,77 @@ class MessageStoreMigration {
 
             const hasValidStore = await this.verifyObjectStore(oldVersion);
             if (!hasValidStore) {
-                console.log('Old database found but store is invalid, cleaning up...');
-                await this.deleteOldDatabase();
+                console.warn('Old database could not be verified; preserving it for a later retry');
                 return;
             }
-            
+
             console.log(`Found valid old database (version ${oldVersion}), starting migration...`);
-            const migratedCount = await this.migrateRecentData(oldVersion);
-            
-            if (migratedCount > 0) {
-                console.log(`Successfully migrated ${migratedCount} messages`);
-                await this.deleteOldDatabase();
-            } else {
-                console.log('No messages to migrate');
-                await this.deleteOldDatabase();
+            const unlimitedMode = await isUnlimitedDBEnabledInStorage();
+            const removedPartialRows = await this.processTaggedMigrationRows('delete');
+            if (removedPartialRows) {
+                console.log(`Removed ${removedPartialRows} incomplete migration rows before retry`);
             }
-            
+            const migratedCount = await this.migrateRecentData(oldVersion, unlimitedMode);
+            const taggedCount = await this.processTaggedMigrationRows('count');
+            if (taggedCount !== migratedCount) {
+                throw new Error(`Migration verification failed: copied ${migratedCount}, found ${taggedCount}`);
+            }
+
+            console.log(migratedCount > 0 ? `Successfully migrated ${migratedCount} messages` : 'No messages to migrate');
+            await this.deleteOldDatabase();
+            try {
+                await this.processTaggedMigrationRows('clear');
+            } catch (error) {
+                console.warn('Migrated messages were saved, but internal migration markers could not be cleared:', error);
+            }
+            this.messageStore.clearCache();
+            this.messageStore.clearExistenceCache();
+
         } catch (error) {
             console.error('Migration failed:', error);
-            await this.cleanupFailedMigration();
+            console.warn('Old message database preserved because migration did not complete');
         } finally {
             this.migrationAttempted = true;
         }
+    }
+
+    async processTaggedMigrationRows(action) {
+        const db = await this.messageStore.ensureDB();
+        const readOnly = action === 'count';
+
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.messageStore.storeName, readOnly ? 'readonly' : 'readwrite');
+            const store = tx.objectStore(this.messageStore.storeName);
+            const request = store.openCursor();
+            let matched = 0;
+
+            request.onsuccess = event => {
+                const cursor = event.target.result;
+                if (!cursor) return;
+                const value = cursor.value;
+                if (value && value.__ssnMigrationSource === this.migrationSource) {
+                    matched++;
+                    if (action === 'delete') {
+                        cursor.delete();
+                    } else if (action === 'clear') {
+                        delete value.__ssnMigrationSource;
+                        cursor.update(value);
+                    }
+                }
+                cursor.continue();
+            };
+
+            request.onerror = () => reject(request.error || new Error('Failed to inspect migrated messages'));
+            tx.oncomplete = () => {
+                if (action === 'delete' && matched) {
+                    this.messageStore.clearCache();
+                    this.messageStore.clearExistenceCache();
+                }
+                resolve(matched);
+            };
+            tx.onerror = () => reject(tx.error || new Error('Failed to process migrated messages'));
+            tx.onabort = () => reject(tx.error || new Error('Migrated message transaction was aborted'));
+        });
     }
 
 	async verifyObjectStore(version) {
@@ -698,7 +934,7 @@ class MessageStoreMigration {
 		});
 	}
 
-    async migrateRecentData(oldVersion) {
+    async migrateRecentData(oldVersion, unlimitedMode = false) {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(this.oldDbName, oldVersion);
             
@@ -710,24 +946,21 @@ class MessageStoreMigration {
             request.onsuccess = async event => {
                 const oldDb = event.target.result;
                 let migratedCount = 0;
-                
+
                 try {
-                    const messages = await this.getRecentMessages(oldDb, oldVersion);
-                    console.log(`Found ${messages.length} messages to migrate`);
-                    
-                    if (messages.length === 0) {
-                        oldDb.close();
-                        resolve(0);
-                        return;
-                    }
-                    
                     const batchSize = 50;
-                    for (let i = 0; i < messages.length; i += batchSize) {
-                        const batch = messages.slice(i, i + batchSize);
-                        const batchResults = await this.migrateBatch(batch);
-                        migratedCount += batchResults.filter(Boolean).length;
+                    let beforeKey;
+                    let done = false;
+
+                    while (!done) {
+                        const batch = await this.getMigrationBatch(oldDb, oldVersion, beforeKey, unlimitedMode, batchSize);
+                        if (batch.messages.length) {
+                            migratedCount += await this.migrateBatch(batch.messages);
+                        }
+                        beforeKey = batch.lastKey;
+                        done = batch.done;
                     }
-                    
+
                     oldDb.close();
                     resolve(migratedCount);
                 } catch (error) {
@@ -740,89 +973,69 @@ class MessageStoreMigration {
     }
 
     async migrateBatch(messages) {
-        return Promise.all(messages.map(async (message) => {
-            try {
-                await this.messageStore.addMessage(message);
-                return true;
-            } catch (error) {
-                console.error("Failed to migrate message:", message, error);
-                return false;
-            }
-        }));
+        const ids = await this.messageStore.addMigratedMessages(messages, this.migrationSource);
+        if (ids.length !== messages.length) {
+            throw new Error(`Migration batch verification failed: expected ${messages.length}, saved ${ids.length}`);
+        }
+        return ids.length;
     }
-	
-	async getRecentMessages(db, oldVersion) {
+
+	async getMigrationBatch(db, oldVersion, beforeKey, unlimitedMode, batchSize) {
 		return new Promise((resolve, reject) => {
-			console.log(`Getting messages from version ${oldVersion} database`);
 			const tx = db.transaction(this.oldStoreName, 'readonly');
 			const store = tx.objectStore(this.oldStoreName);
 			const messages = [];
-			
-			let cursorRequest;
-			
+			let lastKey = beforeKey;
+
 			try {
-				// Try to get cursor from store directly first
-				cursorRequest = store.openCursor(null, 'prev');
-				
+				const range = beforeKey === undefined ? null : IDBKeyRange.upperBound(beforeKey, true);
+				const cursorRequest = store.openCursor(range, 'prev');
+
 				cursorRequest.onsuccess = event => {
 					const cursor = event.target.result;
-					if (cursor && messages.length < this.maxMessages) {
-						console.log('Processing message:', cursor.value);
-						
-						try {
-							const message = this.normalizeMessage(cursor.value, oldVersion);
-							const messageDate = new Date(message.timestamp);
-							
-							if (messageDate >= this.cutoffDate) {
-								messages.push(message);
-							}
-							
-							cursor.continue();
-						} catch (e) {
-							console.error('Error processing message:', e);
-							cursor.continue();
-						}
-					} else {
-						console.log(`Retrieved ${messages.length} messages`);
-						resolve(messages);
+					if (!cursor) {
+						resolve({ messages, lastKey, done: true });
+						return;
 					}
+
+					lastKey = cursor.primaryKey;
+					try {
+						const message = this.normalizeMessage(cursor.value, oldVersion);
+						if (unlimitedMode || new Date(message.timestamp) >= this.cutoffDate) {
+							messages.push(message);
+						}
+					} catch (error) {
+						reject(error);
+						return;
+					}
+
+					if (messages.length >= batchSize) {
+						resolve({ messages, lastKey, done: false });
+						return;
+					}
+
+					cursor.continue();
 				};
-				
-				cursorRequest.onerror = (error) => {
-					console.error('Error during cursor operation:', error);
-					resolve(messages); // Resolve with whatever we got
-				};
-				
+
+				cursorRequest.onerror = () => reject(cursorRequest.error || new Error('Failed to read old message history'));
+
 			} catch (error) {
-				console.error('Error setting up cursor:', error);
-				resolve(messages);
+				reject(error);
 			}
-			
-			tx.onerror = () => {
-				console.error('Transaction error:', tx.error);
-				resolve(messages);
-			};
+
+			tx.onerror = () => reject(tx.error || new Error('Old message history transaction failed'));
 		});
 	}
-	
-	async cleanupFailedMigration() {
-        try {
-            // Attempt to delete the old database
-            await this.deleteOldDatabase();
-            console.log('Cleaned up old database after failed migration');
-        } catch (error) {
-            console.error('Failed to cleanup after migration:', error);
-        }
-    }
-	
+
 
     normalizeMessage(oldMessage, oldVersion) {
         const now = Date.now();
-        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-        
+
         let timestamp;
         if (oldMessage.timestamp instanceof Date) {
             timestamp = oldMessage.timestamp.getTime();
+        } else if (typeof oldMessage.timestamp === 'number' && Number.isFinite(oldMessage.timestamp)) {
+            timestamp = oldMessage.timestamp;
         } else if (typeof oldMessage.timestamp === 'string') {
             timestamp = new Date(oldMessage.timestamp).getTime();
         } else {
@@ -838,7 +1051,6 @@ class MessageStoreMigration {
             membership: oldMessage.membership || oldMessage.hasMembership || '',
             type: oldMessage.type || 'user',
             timestamp: timestamp,
-            expiresAt: now + thirtyDays,
             backgroundColor: oldMessage.backgroundColor || '',
             chatbadges: oldMessage.chatbadges || '',
             event: oldMessage.event || '',
@@ -855,6 +1067,7 @@ class MessageStoreMigration {
                 resolve();
             };
             request.onerror = () => reject(request.error);
+            request.onblocked = () => reject(new Error('Old message database deletion was blocked'));
         });
     }
 }
