@@ -5701,14 +5701,16 @@ function renderBeginnerWelcomeBanner(container) {
     container = container || document.getElementById("importantChanges");
     if (!container) return;
 
-    const videoGuideText = shouldShowBeginnerChromeVideoGuide() ? ` If stuck getting started, check out this <a href="https://www.youtube.com/watch?v=Zql6Q5H2Eqw" target="_blank" rel="noopener noreferrer">video guide</a>.` : "";
+    const videoGuideText = shouldShowBeginnerChromeVideoGuide()
+        ? getTranslation("beginner-video-guide", ` If stuck getting started, check out this <a href="https://www.youtube.com/watch?v=Zql6Q5H2Eqw" target="_blank" rel="noopener noreferrer">video guide</a>.`)
+        : "";
 
     container.classList.add('show', 'beginner-welcome');
     container.innerHTML = `
         <div class="beginner-welcome-card">
-            <strong>Welcome to Social Stream Ninja</strong>
-            <small>You are in beginner mode, so only the most common setup options are shown.${videoGuideText}</small>
-            <button type="button" id="beginnerWelcomeAdvanced">Switch to full mode</button>
+            <strong>${getTranslation("welcome-to-social-stream-ninja", "Welcome to Social Stream Ninja")}</strong>
+            <small>${getTranslation("beginner-mode-description", "You are in beginner mode, so only the most common setup options are shown.")}${videoGuideText}</small>
+            <button type="button" id="beginnerWelcomeAdvanced">${getTranslation("switch-to-full-mode", "Switch to full mode")}</button>
         </div>
     `;
 
