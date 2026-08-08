@@ -340,12 +340,15 @@
 	}
 
 	function markTikTokStandardConnected(connectionLabel = "Connected via standard capture") {
-		if (!canSendTikTokStandardStatus() || tikTokStandardStatusState.connectedSent) {
+		if (!canSendTikTokStandardStatus()) {
 			return;
 		}
 		resetTikTokStandardPendingError();
-		tikTokStandardStatusState.connectedSent = true;
 		tikTokStandardStatusState.lastConnectedAt = Date.now();
+		if (tikTokStandardStatusState.connectedSent) {
+			return;
+		}
+		tikTokStandardStatusState.connectedSent = true;
 		tikTokStandardStatusState.lastKey = "connected";
 		tikTokStandardStatusState.lastSentAt = Date.now();
 		sendTikTokStandardStatus({
