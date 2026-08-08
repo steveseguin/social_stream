@@ -1407,8 +1407,11 @@
                     <h3>XP Sync</h3>
                     <p class="source-note">Implementation: <code>sources/xpsync.js</code></p>
                     <ul class="requirements">
-                        <li>Chat rows use the canonical payload fields with <code>type: "xpsync"</code>, including author, message, avatar, badges, name color, and membership when available.</li>
+						<li>Chat rows use the canonical payload fields with <code>type: "xpsync"</code>, including author, message, avatar, image and inline SVG badges, name color, membership, moderator/member/bot flags, and the native message UUID as <code>id</code> when available.</li>
+						<li>Replies follow the YouTube, Twitch, and Kick DOM-source convention: unless reply prefixes are disabled, <code>initial</code> contains the replied-to user, <code>reply</code> preserves the unprefixed message, and <code>chatmessage</code> receives the visible reply prefix.</li>
+						<li>Sparks-highlighted rows are captured even though XPSync renders them without the normal chat row class or message id; the visible amount is exposed through <code>hasDonation</code> as <code>N Sparks</code>.</li>
                         <li>When event capture is enabled, rows containing “just followed” or “followed the channel” emit <code>event: "new_follower"</code>.</li>
+						<li>When viewer counts are enabled, the permanent chat dock emits <code>event: "viewer_update"</code> from the live-video count already loaded by the XPSync page and refreshes it from XPSync's live page updates. No separate SSN credentials are required.</li>
                     </ul>
                 </article>
 

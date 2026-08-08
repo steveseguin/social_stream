@@ -35,6 +35,14 @@ What it does not support: live Twitch IRC/EventSub behavior, OAuth/scopes, DOM c
 
 Full evidence entry: `../18-focused-validation-evidence-log.md`.
 
+On 2026-08-07, the focused WebSocket lifecycle test also passed:
+
+```powershell
+node scripts/twitch-websocket-lifecycle.test.js
+```
+
+This supporting test covers the Twitch source composer, Helix acceptance, canonical IRC echoes with native IDs, delayed duplicate checks, JOIN/reconnect gating, in-flight disconnects, rejected and timed-out sends, partial sends, repeated identical messages, Unicode splitting, and `/me` action splitting. It runs with mocked Twitch services, so it is not a substitute for an authenticated SSApp Electron test.
+
 ## Runtime Surfaces
 
 Twitch has two main capture paths:
@@ -132,6 +140,15 @@ Support implication: app sign-in failures can be simple loopback port conflicts,
 Actual EventSub subscriptions are created only when permission checks allow them. For example, channel point redemption events require broadcaster-level access with redemption scope.
 
 ## Chat Sending And Moderation
+
+WebSocket source behavior from `sources/websocket/twitch.js`:
+
+- The source composer sends through Twitch's Helix Send Chat Message endpoint and requires `user:write:chat`.
+- A successful Helix response does not create a local chat row. The accepted message must return through the connected IRC chat client before it is rendered and forwarded, preserving Twitch's native message ID. The composer distinguishes API acceptance from receipt of that echo and warns if the matching ID is not observed locally.
+- Sending is unavailable until the authenticated account's IRC `JOIN` completes, and remains unavailable while the client is disconnected or reconnecting. A disconnect after Helix accepts a message can still prevent local capture of its echo; there is no replay/backfill assumption.
+- Only one composer send can be in flight at a time. The input and button expose a `Sending…` state, failed drafts remain in the input, and Twitch rejection text is shown beside the composer. A request timeout is reported as unknown delivery so users can check Twitch before retrying.
+- If a later chunk of a split message fails, the composer reports how many parts Twitch accepted and retains only the unsent remainder, avoiding duplication of accepted parts on retry.
+- Messages are split on Unicode code points at Twitch's 500-character limit. Every chunk of a long `/me` message retains the `/me ` prefix so each echo remains an action.
 
 Provider behavior from `providers/twitch/chatClient.js`:
 

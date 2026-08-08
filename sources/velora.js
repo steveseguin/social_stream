@@ -41,6 +41,45 @@
 		}
 	}
 
+	var VELORA_EMOTE_MAP = {};
+	[
+		["raid", "raid", ["AirRaid", "BlueGlitzRaid", "CannonRaid", "FireRaid", "GlitzRaid", "PinkRaid", "PixtextRaid", "RainbowRaid", "SimpleRaid", "SplitRedRaid"]],
+		["flame", "flame", ["VeloraFlameAllSmiles", "VeloraFlameAngel", "VeloraFlameAngry", "VeloraFlameBigF", "VeloraFlameBigGrin", "VeloraFlameBlowKisses", "VeloraFlameCoolLook", "VeloraFlameCrying", "VeloraFlameDazed", "VeloraFlameDead", "VeloraFlameDropLaugh", "VeloraFlameEvil", "VeloraFlameInjured", "VeloraFlameLaugh", "VeloraFlameLove", "VeloraFlameLoveEyes", "VeloraFlameMelting", "VeloraFlameMindBlown", "VeloraFlameMoney", "VeloraFlameNerdy", "VeloraFlameRedEye", "VeloraFlameShock", "VeloraFlameSick", "VeloraFlameSleeping", "VeloraFlameThinking", "VeloraFlameThumbsDown", "VeloraFlameThumbsUp", "VeloraFlameTongueWink", "VeloraFlameWellMeh", "VeloraFlameYawning"]],
+		["pixel", "pixel", ["VeloraPXLAFK", "VeloraPXLBait", "VeloraPXLBan", "VeloraPXLBg", "VeloraPXLBro", "VeloraPXLBuff", "VeloraPXLBug", "VeloraPXLDc", "VeloraPXLFB", "VeloraPXLFix", "VeloraPXLFu", "VeloraPXLGg", "VeloraPXLGold", "VeloraPXLHack", "VeloraPXLHit", "VeloraPXLLol", "VeloraPXLLoot", "VeloraPXLLoveYouText", "VeloraPXLMp", "VeloraPXLNoText", "VeloraPXLOp", "VeloraPXLQq", "VeloraPXLRage", "VeloraPXLSad", "VeloraPXLSave", "VeloraPXLStfu", "VeloraPXLUp", "VeloraPXLWtf", "VeloraPXLYes"]]
+	].forEach(function(group){
+		group[2].forEach(function(code){
+			var slug = code;
+			if (group[0] === "flame"){
+				slug = code.replace(/^VeloraFlame/, "");
+			} else if (group[0] === "pixel"){
+				slug = code.replace(/^VeloraPXL/, "");
+			}
+			VELORA_EMOTE_MAP[code] = "https://assets.velora.tv/emotes/" + group[0] + "/" + group[1] + "-" + slug.toLowerCase() + "/56.webp";
+		});
+	});
+
+	function renderVeloraMessageHtml(message){
+		var raw = String(message || "");
+		var emotes = [];
+		var html = raw.split(/(\s+)/).map(function(part){
+			var emoteUrl;
+			if (!part){ return ""; }
+			if (/^\s+$/.test(part)){
+				return part.replace(/\r?\n/g, "<br>");
+			}
+			emoteUrl = VELORA_EMOTE_MAP[part];
+			if (!emoteUrl){
+				return escapeHtml(part);
+			}
+			emotes.push({ code: part, url: emoteUrl });
+			return '<img class="velora-inline-emote" src="' + escapeHtml(emoteUrl) + '" alt="' + escapeHtml(part) + '" title="' + escapeHtml(part) + '" loading="lazy" draggable="false">';
+		}).join("");
+		return {
+			html: html || escapeHtml(raw),
+			emotes: emotes
+		};
+	}
+
 	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
 		
@@ -60,7 +99,9 @@
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent)+" ";
 			} else if (node.nodeType === 1){
-				if (!isTextOnlyMode()){
+				if ((node.nodeName == "IMG") && isTextOnlyMode()){
+					resp += escapeHtml(node.alt || node.title || "") + " ";
+				} else if (!isTextOnlyMode()){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
 					}
@@ -113,6 +154,9 @@
 
 	function normalizeMessageTextForKey(value){
 		value = String(value || "");
+		value = value.replace(/<img\b[^>]*\balt=(["'])(.*?)\1[^>]*>/gi, function(match, quote, alt){
+			return " " + alt + " ";
+		});
 		value = value.replace(/<[^>]*>/g, " ");
 		value = value.replace(/&nbsp;/gi, " ");
 		value = value.replace(/&amp;/gi, "&");
@@ -374,6 +418,7 @@
 		var msgKey;
 		var contentKey;
 		var data;
+		var renderedMessage;
 		var textOnly = isTextOnlyMode();
 		if (!msg || !msg.name || !msg.text){
 			return;
@@ -390,12 +435,23 @@
 		data.chatname = escapeHtml(msg.name);
 		data.chatbadges = msg.badges;
 		data.nameColor = msg.color || "";
-		data.chatmessage = textOnly ? msg.text : escapeHtml(msg.text);
+		renderedMessage = renderVeloraMessageHtml(msg.text);
+		data.chatmessage = textOnly ? msg.text : renderedMessage.html;
 		data.chatimg = msg.avatar || "";
 		data.membership = msg.isSubscriber ? (msg.subscriberMonths ? msg.subscriberMonths + " month subscriber" : "Subscriber") : "";
 		data.textonly = textOnly;
 		if (msg.card){
 			data.contentimg = getObjectValue(msg.card, ["imageUrl", "thumbnailUrl", "image", "thumbnail"]) || "";
+		}
+		if (renderedMessage.emotes.length){
+			data.meta = {
+				velora: {
+					rawMessage: msg.text,
+					emotes: renderedMessage.emotes,
+					messageId: msg.id || "",
+					userId: msg.userId || ""
+				}
+			};
 		}
 		pushMessage(data);
 		historyPublishedMessages = true;
@@ -518,8 +574,19 @@
 		}
 
 		var inlineEl = null;
+		var legacyInlineEl = null;
 		try {
-			inlineEl = root.querySelector("span.inline");
+			legacyInlineEl = root.querySelector("span.inline");
+			inlineEl = legacyInlineEl;
+			if (!inlineEl && root.children){
+				for (var headerIndex = 0; headerIndex < root.children.length; headerIndex++){
+					var headerCandidate = root.children[headerIndex];
+					if (headerCandidate && headerCandidate.querySelector && headerCandidate.querySelector("button")){
+						inlineEl = headerCandidate;
+						break;
+					}
+				}
+			}
 		} catch(e){
 		}
 		if (!inlineEl){
@@ -551,28 +618,47 @@
 		
 		var badges=[];
 		try {
-			for (var i = 0; i < inlineEl.childNodes.length; i++){
-				var badge = inlineEl.childNodes[i];
-				if (badge === nameEl){
-					break;
+			if (legacyInlineEl){
+				for (var i = 0; i < inlineEl.childNodes.length; i++){
+					var badge = inlineEl.childNodes[i];
+					if (badge === nameEl){
+						break;
+					}
+					if ((badge.nodeType === 1) && (badge.nodeName === "IMG") && badge.src){
+						badges.push(badge.src + "");
+					}
 				}
-				if ((badge.nodeType === 1) && (badge.nodeName === "IMG") && badge.src){
-					badges.push(badge.src + "");
-				}
+			} else {
+				inlineEl.querySelectorAll("img").forEach(function(badge){
+					if (badge.src){
+						badges.push(badge.src + "");
+					}
+				});
 			}
 		} catch(e){
 		} 
 
 		var timeText = "";
 		try {
-			for (var j = 0; j < inlineEl.childNodes.length; j++){
-				var timeNode = inlineEl.childNodes[j];
-				if (timeNode === nameEl){
-					break;
+			if (legacyInlineEl){
+				for (var j = 0; j < inlineEl.childNodes.length; j++){
+					var timeNode = inlineEl.childNodes[j];
+					if (timeNode === nameEl){
+						break;
+					}
+					if ((timeNode.nodeType === 1) && (timeNode.nodeName === "SPAN") && timeNode.textContent){
+						timeText = timeNode.textContent.trim();
+						if (timeText){
+							break;
+						}
+					}
 				}
-				if ((timeNode.nodeType === 1) && (timeNode.nodeName === "SPAN") && timeNode.textContent){
-					timeText = timeNode.textContent.trim();
-					if (timeText){
+			} else {
+				var timeNodes = inlineEl.querySelectorAll("span");
+				for (var timeIndex = 0; timeIndex < timeNodes.length; timeIndex++){
+					var candidateTime = (timeNodes[timeIndex].textContent || "").trim();
+					if (/^\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM)?$/i.test(candidateTime)){
+						timeText = candidateTime;
 						break;
 					}
 				}
@@ -581,10 +667,24 @@
 		}
 
 		var msg="";
+		var msgEl = null;
 		try {
-			var msgEl = nameEl ? nameEl.nextElementSibling : null;
-			if (!msgEl && nameEl && nameEl.parentNode && nameEl.parentNode.querySelector){
-				msgEl = nameEl.parentNode.querySelector("button + span");
+			if (legacyInlineEl){
+				msgEl = nameEl ? nameEl.nextElementSibling : null;
+				if (!msgEl && nameEl && nameEl.parentNode && nameEl.parentNode.querySelector){
+					msgEl = nameEl.parentNode.querySelector("button + span");
+				}
+			} else {
+				msgEl = inlineEl.nextElementSibling;
+				if (!msgEl && root.children){
+					for (var messageIndex = 0; messageIndex < root.children.length; messageIndex++){
+						var messageCandidate = root.children[messageIndex];
+						if (messageCandidate !== inlineEl && messageCandidate.querySelector && (messageCandidate.querySelector("[class*='wrap-break-word']") || messageCandidate.querySelector("img[src*='/emotes/']"))){
+							msgEl = messageCandidate;
+							break;
+						}
+					}
+				}
 			}
 			if (msgEl) {
 				msg = getAllContentNodes(msgEl).trim();

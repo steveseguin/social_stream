@@ -124,7 +124,7 @@ adapter with `--ssapp-mcp`. Enable **File > Local AI / Automation**, restart, th
 `SSAPP_CONTROL_URL` into the local agent's MCP configuration. A source checkout and separate
 Node installation are not required.
 
-MCP 1.0.5 in SSApp 0.4.11 and newer advertises the adapter's complete stable tool set even
+MCP 1.0.6 in SSApp 0.4.11 and newer advertises the adapter's complete stable tool set even
 when the main app is offline during discovery. Each version-gated tool re-reads runtime
 capabilities when called and rejects commands unsupported by the connected SSApp version.
 Older adapters filter unavailable tools during discovery, so start SSApp first or reconnect
@@ -133,7 +133,12 @@ Linux configurations add `--ozone-platform=headless` so the lightweight adapter 
 not need a second X display; the main capture application still needs a desktop session or
 Xvfb.
 
-Call `ssapp_get_capabilities` first. Tool presence in MCP 1.0.5 indicates that the adapter
+For `ssapp_add_source` only, MCP 1.0.6 supplies `connectionMode: "tiktok-websocket"`
+(WebSocket Auto) when a TikTok request omits the mode. Explicit modes are passed through.
+This is MCP adapter behavior only; the desktop UI and direct HTTP `addSource` behavior are
+unchanged.
+
+Call `ssapp_get_capabilities` first. Tool presence in MCP 1.0.6 indicates that the adapter
 knows the tool, not that the connected SSApp version supports its underlying command.
 
 ## Limits

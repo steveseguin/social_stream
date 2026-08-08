@@ -103,6 +103,9 @@ async function run() {
   });
 
   await chatClient.connect();
+  assert(chatClient.getState().joined === false, 'Twitch chat client reported JOIN before the self join event');
+  fakeClient.emit('join', '#socialstream', 'socialstream', true);
+  assert(chatClient.getState().joined === true, 'Twitch chat client did not record the self join event');
 
   fakeClient.emit(
     'subgift',

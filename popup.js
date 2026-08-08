@@ -11,6 +11,7 @@ function normalizePopupTranslationLanguage(lang) {
 	if (lower === "en-gb" || lower === "en-uk") return "en-uk";
 	if (lower === "en" || lower.startsWith("en-")) return "en-us";
 	if (lower === "pt-br" || lower.startsWith("pt")) return "pt-br";
+	if (lower.startsWith("fr")) return "fr";
 	if (lower.startsWith("es")) return "es";
 	if (lower.startsWith("de")) return "de";
 	if (lower.startsWith("cs")) return "cs";

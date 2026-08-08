@@ -36,95 +36,164 @@
 			}
 		}
 	};
-	const messageLog = {
-		_entries: new Map(),
-		_order: [],
-		_mode: 'count',
-		_maxMessages: 501,
-		_timeWindow: null,
-		_cleanupInterval: null,
-		init(options = {}) {
-			this._mode = options.mode || 'count';
-			this._maxMessages = options.maxMessages || 501;
-			this._timeWindow = Number.isFinite(options.timeWindow) ? options.timeWindow : null;
-			this.destroy();
-			this._cleanupInterval = setInterval(() => this.cleanup(), 5000);
-		},
-		cleanup() {
-			const currentTime = Date.now();
-			if (this._mode === 'time' || (this._timeWindow && this._mode !== 'count')) {
-				while (this._order.length) {
-					const key = this._order[0];
-					const entry = this._entries.get(key);
-					if (!entry) {
-						this._order.shift();
-						continue;
-					}
-					if (!this._timeWindow || (currentTime - entry.time) <= this._timeWindow) {
-						break;
-					}
-					this._entries.delete(key);
-					this._order.shift();
-				}
-			}
-			if (this._maxMessages && this._entries.size > this._maxMessages) {
-				const overflow = this._entries.size - this._maxMessages;
-				for (let i = 0; i < overflow && this._order.length; i++) {
-					const key = this._order.shift();
-					this._entries.delete(key);
-				}
-			}
-		},
-		isDuplicate(name, message, contextKey = "") {
-			if (!name && !message) return true;
-			const currentTime = Date.now();
-			const messageKey = contextKey ? `${contextKey}:${name}:${message}` : `${name}:${message}`;
-			const existing = this._entries.get(messageKey);
-			if (existing) {
-				if (!this._timeWindow || (currentTime - existing.time) <= this._timeWindow) {
-					return true;
-				}
-				// The message is older than the window; drop the stale entry before continuing.
-				this._entries.delete(messageKey);
-				const index = this._order.indexOf(messageKey);
-				if (index !== -1) {
-					this._order.splice(index, 1);
-				}
-			}
-			this._entries.set(messageKey, { time: currentTime });
-			this._order.push(messageKey);
-			if (this._timeWindow && this._mode === 'time') {
-				this.cleanup();
-			} else if (this._entries.size > this._maxMessages) {
-				const overflow = this._entries.size - this._maxMessages;
-				for (let i = 0; i < overflow && this._order.length; i++) {
-					const key = this._order.shift();
-					this._entries.delete(key);
-				}
-			}
-			return false;
-		},
-		destroy() {
-			if (this._cleanupInterval) {
-				clearInterval(this._cleanupInterval);
-				this._cleanupInterval = null;
-			}
-			this._entries.clear();
-			this._order = [];
-		},
-		configure(options = {}) {
-			if (options.mode !== undefined) this._mode = options.mode;
-			if (options.maxMessages !== undefined) this._maxMessages = options.maxMessages;
-			if (options.timeWindow !== undefined) {
+	const TIKTOK_DOM_DEDUPE_MAX_MESSAGES = 5000;
+	const TIKTOK_DOM_DEDUPE_WINDOW_MS = 30 * 60 * 1000;
+	const TIKTOK_DOM_REPLAY_GUARD_MS = 30 * 1000;
+	let tikTokDomReplayGuardUntil = 0;
+	let tikTokDomReplayKeys = null;
+
+	function getTikTokMessageLogKey(name, message, contextKey = "") {
+		return contextKey ? `${contextKey}:${name}:${message}` : `${name}:${message}`;
+	}
+
+	function createTikTokMessageLog() {
+		return {
+			_entries: new Map(),
+			_order: [],
+			_mode: 'count',
+			_maxMessages: 501,
+			_timeWindow: null,
+			_cleanupInterval: null,
+			init(options = {}) {
+				this._mode = options.mode || 'count';
+				this._maxMessages = options.maxMessages || 501;
 				this._timeWindow = Number.isFinite(options.timeWindow) ? options.timeWindow : null;
+				this.destroy();
+				this._cleanupInterval = setInterval(() => this.cleanup(), 5000);
+			},
+			cleanup() {
+				const currentTime = Date.now();
+				if (this._mode === 'time' || (this._timeWindow && this._mode !== 'count')) {
+					while (this._order.length) {
+						const key = this._order[0];
+						const entry = this._entries.get(key);
+						if (!entry) {
+							this._order.shift();
+							continue;
+						}
+						if (!this._timeWindow || (currentTime - entry.time) <= this._timeWindow) {
+							break;
+						}
+						this._entries.delete(key);
+						this._order.shift();
+					}
+				}
+				if (this._maxMessages && this._entries.size > this._maxMessages) {
+					const overflow = this._entries.size - this._maxMessages;
+					for (let i = 0; i < overflow && this._order.length; i++) {
+						const key = this._order.shift();
+						this._entries.delete(key);
+					}
+				}
+			},
+			isDuplicate(name, message, contextKey = "") {
+				if (!name && !message) return true;
+				const currentTime = Date.now();
+				const messageKey = getTikTokMessageLogKey(name, message, contextKey);
+				const existing = this._entries.get(messageKey);
+				if (existing) {
+					if (!this._timeWindow || (currentTime - existing.time) <= this._timeWindow) {
+						return true;
+					}
+					// The message is older than the window; drop the stale entry before continuing.
+					this._entries.delete(messageKey);
+					const index = this._order.indexOf(messageKey);
+					if (index !== -1) {
+						this._order.splice(index, 1);
+					}
+				}
+				this._entries.set(messageKey, { time: currentTime });
+				this._order.push(messageKey);
+				if (this._timeWindow && this._mode === 'time') {
+					this.cleanup();
+				} else if (this._entries.size > this._maxMessages) {
+					const overflow = this._entries.size - this._maxMessages;
+					for (let i = 0; i < overflow && this._order.length; i++) {
+						const key = this._order.shift();
+						this._entries.delete(key);
+					}
+				}
+				return false;
+			},
+			destroy() {
+				if (this._cleanupInterval) {
+					clearInterval(this._cleanupInterval);
+					this._cleanupInterval = null;
+				}
+				this._entries.clear();
+				this._order = [];
+			},
+			configure(options = {}) {
+				if (options.mode !== undefined) this._mode = options.mode;
+				if (options.maxMessages !== undefined) this._maxMessages = options.maxMessages;
+				if (options.timeWindow !== undefined) {
+					this._timeWindow = Number.isFinite(options.timeWindow) ? options.timeWindow : null;
+				}
+				this.cleanup();
 			}
-			this.cleanup();
-		}
-	};
+		};
+	}
+
+	const messageLog = createTikTokMessageLog();
+	const domMessageLog = createTikTokMessageLog();
 	messageLog.init({
-		mode: 'count',
-		maxMessages: 501
+		mode: 'time',
+		maxMessages: TIKTOK_DOM_DEDUPE_MAX_MESSAGES,
+		timeWindow: TIKTOK_DOM_DEDUPE_WINDOW_MS
 	});
+	domMessageLog.init({
+		mode: 'time',
+		maxMessages: TIKTOK_DOM_DEDUPE_MAX_MESSAGES,
+		timeWindow: TIKTOK_DOM_DEDUPE_WINDOW_MS
+	});
+
+	function getTikTokDomMessageContextKey(element) {
+		if (!element || element.nodeType !== 1) {
+			return "";
+		}
+		try {
+			const indexedElement = element.dataset?.index !== undefined
+				? element
+				: element.closest?.("[data-index]");
+			const indexValue = indexedElement?.dataset?.index;
+			if (indexValue !== undefined && String(indexValue).trim() && String(indexValue).trim() !== "-1") {
+				return "idx=" + String(indexValue).trim();
+			}
+
+			for (const attribute of ["data-message-id", "data-msg-id", "data-id"]) {
+				const value = element.getAttribute?.(attribute);
+				if (value && String(value).trim()) {
+					return attribute + "=" + String(value).trim();
+				}
+			}
+			if (element.id && String(element.id).trim()) {
+				return "id=" + String(element.id).trim();
+			}
+		} catch (e) {}
+		return "";
+	}
+
+	function beginTikTokDomReplayGuard() {
+		messageLog.cleanup();
+		tikTokDomReplayKeys = new Set(messageLog._entries.keys());
+		tikTokDomReplayGuardUntil = Math.max(
+			tikTokDomReplayGuardUntil,
+			Date.now() + TIKTOK_DOM_REPLAY_GUARD_MS
+		);
+	}
+
+	function isTikTokDomReplayGuardActive() {
+		if (Date.now() < tikTokDomReplayGuardUntil) {
+			return true;
+		}
+		tikTokDomReplayKeys = null;
+		return false;
+	}
+
+	function wasTikTokContentSeenBeforeReplayGuard(name, message) {
+		return isTikTokDomReplayGuardActive() &&
+			tikTokDomReplayKeys?.has(getTikTokMessageLogKey(name, message)) === true;
+	}
 
 	function pushMessage(data, target) {
 		try {
@@ -1528,8 +1597,21 @@
 				}
 			} catch (e) {}
 		}
-		if ((!isGiftMessage || giftIndexKey) && messageLog?.isDuplicate(chatname, chatmessage, giftIndexKey)) {
-			////console.log("duplicate message; skipping",chatname, chatmessage);
+		const messageContextKey = giftIndexKey || (!isGiftMessage ? getTikTokDomMessageContextKey(ele) : "");
+		if (!isGiftMessage) {
+			const duplicateContent = messageLog?.isDuplicate(chatname, chatmessage) || false;
+			const duplicateContext = messageContextKey
+				? (domMessageLog?.isDuplicate(chatname, chatmessage, messageContextKey) || false)
+				: false;
+			if (
+				duplicateContext ||
+				(!messageContextKey && duplicateContent) ||
+				wasTikTokContentSeenBeforeReplayGuard(chatname, chatmessage)
+			) {
+				////console.log("duplicate message; skipping",chatname, chatmessage);
+				return;
+			}
+		} else if (giftIndexKey && domMessageLog?.isDuplicate(chatname, chatmessage, giftIndexKey)) {
 			return;
 		}
 		var data = {};
@@ -2264,6 +2346,7 @@
 		// Health check: If no messages for over 2 minutes and observers exist, force restart
 		if (observer && (Date.now() - lastMessageTime > 120000) && counter % 30 === 0) {
 			console.log("[TikTok] No messages for 2+ minutes, forcing observer restart");
+			beginTikTokDomReplayGuard();
 			if (observer) {
 				observer.disconnect();
 				observer = false;
@@ -2328,11 +2411,13 @@
 			// Check if the observed element is still connected
 			if (!observedDomElementForObserver1.isConnected) {
 				console.log("[TikTok] Observer target disconnected, will re-establish");
+				beginTikTokDomReplayGuard();
 				observer.disconnect();
 				observer = false;
 				observedDomElementForObserver1 = null;
 			} else if (mainTargetInfo && mainTargetInfo.target !== observedDomElementForObserver1) {
 				console.log("[TikTok] Observer target changed, will re-establish");
+				beginTikTokDomReplayGuard();
 				observer.disconnect();
 				observer = false;
 				observedDomElementForObserver1 = null;
@@ -2404,6 +2489,7 @@
 				console.error("[TikTok] Observer error:", err);
 				// If there's a critical error, try to restart
 				if (observer) {
+					beginTikTokDomReplayGuard();
 					observer.disconnect();
 					observer = false;
 					observedDomElementForObserver1 = null;
@@ -2529,10 +2615,8 @@
 			observer2 = false;
 			observedDomElementForObserver2 = null;
 		}
-		if (messageLog._cleanupInterval) {
-			clearInterval(messageLog._cleanupInterval);
-			messageLog._cleanupInterval = null;
-		}
+		messageLog.destroy();
+		domMessageLog.destroy();
 		trackedTikTokGiftStreaks.forEach(function(tracked) {
 			if (tracked && tracked.timer) {
 				clearTimeout(tracked.timer);
