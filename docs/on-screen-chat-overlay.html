@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>On-Screen Chat Overlay While Gaming - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Show a private Social Stream Ninja chat overlay over a game using the standalone desktop app or Electron Capture, with transparency, click-through hotkeys, command-line examples, and OBS capture notes.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands &amp; API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <div class="mobile-nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>On-Screen Chat While Gaming</h1>
+            <p>Keep Social Stream chat visible on your monitor without automatically putting it on the stream.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Yes, With A Desktop Overlay Window</h2>
+                <p>Social Stream can sit above a game as a transparent, always-on-top window. This is a separate desktop window, not a game HUD injection.</p>
+                <div class="guide-note">
+                    <p><strong>You need a desktop wrapper.</strong> Use the <a href="download.html">Social Stream Ninja standalone app</a> or <a href="https://electroncapture.app/" target="_blank" rel="noopener">Electron Capture</a>. The browser extension and an OBS Browser Source cannot create a system-wide click-through window by themselves.</p>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Option</th><th>Best When</th><th>What It Adds</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Option">Social Stream standalone app</td>
+                            <td data-label="Best When">You already capture chat in SSApp and want the shortest setup.</td>
+                            <td data-label="What It Adds">Transparent popup windows, always-on-top, resizing, and click-through.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Option">Electron Capture</td>
+                            <td data-label="Best When">You want exact size and position, reusable launch commands, or a dedicated overlay wrapper.</td>
+                            <td data-label="What It Adds">Frameless transparency, pinning, click-through, monitor selection, and command-line control.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Option">Normal browser or OBS only</td>
+                            <td data-label="Best When">The chat should appear on the broadcast rather than privately on your monitor.</td>
+                            <td data-label="What It Adds">No reliable system-wide transparency or mouse click-through.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Video Walkthrough</h2>
+                <p>This older video shows the transparent, always-on-top, click-through chat setup. The app interface may look different in current versions.</p>
+                <div class="video-container">
+                    <iframe
+                        src="https://www.youtube.com/embed/bMVVof_L0sI"
+                        title="See Live Chat While Gaming! Transparent Overlay Guide"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Choose The Chat View</h2>
+                <ul class="guide-list">
+                    <li><strong>Streaming Chat / Dock:</strong> shows the ongoing combined chat. This is usually the best choice while gaming.</li>
+                    <li><strong>Featured Chat Overlay:</strong> shows one message selected from the Dock. Use this when you only want highlighted messages.</li>
+                    <li><strong>Template or custom overlay:</strong> works too, as long as the page supports a transparent background.</li>
+                </ul>
+                <p>Use the same session ID as your active Social Stream setup. In the Social Stream settings panel, open the options for the view you chose and enable <strong>Force transparent background</strong>. The generated URL should contain <code>transparent</code>.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/on-screen-overlay-preview.png" alt="Social Stream Ninja featured chat message positioned over a simulated gameplay scene" class="guide-image">
+                    <figcaption>Example placement using the real SSApp Featured Chat overlay over a simulated gameplay scene. A Dock URL can show the full running chat instead.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Method 1: Social Stream Standalone App</h2>
+                <ol class="guide-steps">
+                    <li>Install and open the <a href="download.html">standalone desktop app</a>. Activate your chat sources normally.</li>
+                    <li>In the Social Stream settings panel, find <strong>Streaming Chat</strong> or <strong>Featured Chat Overlay</strong>.</li>
+                    <li>Open its options and enable <strong>Force transparent background</strong>.</li>
+                    <li>Click the generated Dock or Featured link <strong>from inside the standalone app</strong>. SSApp opens it as its own overlay window.</li>
+                    <li>Move and size the window before locking it. Right-click the overlay for size presets and select <strong>Always on top</strong>.</li>
+                    <li>When placement is finished, right-click it again and select <strong>Make UnClickable</strong>. Mouse clicks will pass through to the game.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="images/guides/ssapp-on-screen-overlay-menu.png" alt="SSApp overlay right-click menu showing Resize window, Always on top, and Make UnClickable until in-focus with the Ctrl Shift Alt X hotkey" class="guide-image">
+                    <figcaption>Right-click an SSApp overlay window to resize, pin, or make it click-through. Set click-through last so you do not lock yourself out while positioning it.</figcaption>
+                </figure>
+                <h3>SSApp Hotkeys</h3>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Windows / Linux</th><th>macOS</th><th>Action</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Windows / Linux"><code>Ctrl+Shift+Alt+X</code></td>
+                            <td data-label="macOS"><code>Command+Shift+Option+X</code></td>
+                            <td data-label="Action">Toggle mouse click-through so you can interact with the overlay again.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Windows / Linux"><code>Ctrl+Shift+Alt+R</code></td>
+                            <td data-label="macOS"><code>Command+Shift+Option+R</code></td>
+                            <td data-label="Action">Reload the focused overlay window.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="guide-note">
+                    <p><strong>Positioning tip:</strong> transparent areas can be hard to grab. Keep the Dock menu visible while positioning it, use your operating system's window movement shortcuts, or use Electron Capture's <code>--x</code> and <code>--y</code> options for exact placement.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Method 2: Electron Capture</h2>
+                <p><a href="https://electroncapture.app/" target="_blank" rel="noopener">Electron Capture</a> is a separate free, open-source app that can wrap a Social Stream URL in a transparent desktop window. It is often the easier option when you only want a dedicated overlay window.</p>
+                <ol class="guide-steps">
+                    <li>Copy your generated Social Stream Dock, Featured, template, or custom overlay URL.</li>
+                    <li>Make sure it includes <code>&amp;transparent</code>. If the URL has no question mark yet, use <code>?transparent</code>.</li>
+                    <li>Open the URL in Electron Capture.</li>
+                    <li>Right-click its window and enable <strong>Always on top</strong>.</li>
+                    <li>Move and resize it, then enable <strong>Make UnClickable</strong>.</li>
+                    <li>Use <code>Ctrl+Shift+Alt+X</code> (or <code>Command+Shift+Option+X</code> on macOS) to toggle click-through later.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="images/guides/electron-capture-overlay-features.png" alt="Electron Capture feature cards for Pin on Top, Frameless Window, Transparency Support, Click-Through Mode, Auto Screen Capture, and Game and App Capture" class="guide-image">
+                    <figcaption>Electron Capture provides the pin, frameless transparency, and click-through controls needed for a private on-screen overlay.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Electron Capture Command-Line Launch</h2>
+                <p>The portable Windows build is the simplest version to automate. Replace <code>YOUR_SESSION_ID</code> and adjust the size and position for your display.</p>
+
+                <h3>Continuous Chat Dock</h3>
+                <pre><code>.\elecap.exe --url="https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;transparent&amp;compact&amp;hidemenu" --width=520 --height=760 --x=1380 --y=80 --pin --unclickable --title="SSN Chat"</code></pre>
+
+                <h3>Featured Chat Only</h3>
+                <pre><code>.\elecap.exe --url="https://socialstream.ninja/featured.html?session=YOUR_SESSION_ID&amp;transparent&amp;hidesource" --width=700 --height=500 --x=1160 --y=80 --pin --unclickable --title="SSN Featured"</code></pre>
+
+                <h3>macOS And Linux</h3>
+                <pre><code># macOS
+"/Applications/elecap.app/Contents/MacOS/elecap" --url='YOUR_OVERLAY_URL' --width=520 --height=760 --pin --unclickable
+
+# Linux AppImage; replace the filename with the version you downloaded
+./elecap-VERSION-x86_64.AppImage --url='YOUR_OVERLAY_URL' --width=520 --height=760 --pin --unclickable</code></pre>
+
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Option</th><th>Purpose</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Option"><code>--url</code></td><td data-label="Purpose">The complete Social Stream overlay URL. Quote it because it contains <code>&amp;</code> characters.</td></tr>
+                        <tr><td data-label="Option"><code>--width</code>, <code>--height</code></td><td data-label="Purpose">Initial window size in pixels.</td></tr>
+                        <tr><td data-label="Option"><code>--x</code>, <code>--y</code></td><td data-label="Purpose">Initial position in the virtual desktop. Negative coordinates may be valid for monitors placed left or above the primary monitor.</td></tr>
+                        <tr><td data-label="Option"><code>--monitor=0</code></td><td data-label="Purpose">Choose a zero-based monitor when a monitor index is easier than desktop coordinates.</td></tr>
+                        <tr><td data-label="Option"><code>--pin</code></td><td data-label="Purpose">Start always-on-top.</td></tr>
+                        <tr><td data-label="Option"><code>--unclickable</code></td><td data-label="Purpose">Start in click-through mode. Remember the recovery hotkey before using it.</td></tr>
+                        <tr><td data-label="Option"><code>--css="C:\path\chat.css"</code></td><td data-label="Purpose">Inject a local CSS file for advanced styling.</td></tr>
+                        <tr><td data-label="Option"><code>--multiinstance</code></td><td data-label="Purpose">Run a separate Electron Capture process when you need more than one independent overlay.</td></tr>
+                    </tbody>
+                </table>
+                <p>See Electron Capture's <a href="https://electroncapture.app/command-line.html" target="_blank" rel="noopener">complete command-line reference</a> for additional parameters.</p>
+                <div class="guide-note">
+                    <p><strong><code>--node</code> is not needed for a normal Social Stream overlay.</strong> Leave it off unless a page specifically needs screen capture or another elevated Electron feature.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Useful Overlay URL Options</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>URL Option</th><th>Use</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="URL Option"><code>transparent</code></td><td data-label="Use">Remove the page background and request a transparent desktop window.</td></tr>
+                        <tr><td data-label="URL Option"><code>compact</code></td><td data-label="Use">Use a denser Dock layout.</td></tr>
+                        <tr><td data-label="URL Option"><code>hidemenu</code></td><td data-label="Use">Hide the Dock toolbar after setup.</td></tr>
+                        <tr><td data-label="URL Option"><code>scale=0.85</code></td><td data-label="Use">Scale supported overlays down without changing window size.</td></tr>
+                        <tr><td data-label="URL Option"><code>limit=15</code></td><td data-label="Use">Limit the number of retained messages on supported pages.</td></tr>
+                        <tr><td data-label="URL Option"><code>hidesource</code></td><td data-label="Use">Hide platform source labels or icons on supported overlays.</td></tr>
+                        <tr><td data-label="URL Option"><code>onlytype=twitch,youtube</code></td><td data-label="Use">Only show selected platform types on supported pages.</td></tr>
+                        <tr><td data-label="URL Option"><code>hidetype=discord</code></td><td data-label="Use">Hide selected platform types on supported pages.</td></tr>
+                        <tr><td data-label="URL Option"><code>chroma=0000</code></td><td data-label="Use">Alternative transparent background mode; useful when the Dock's normal <code>transparent</code> mode hides its scrollbar.</td></tr>
+                    </tbody>
+                </table>
+                <p>For templates, custom CSS, fonts, and more URL controls, see the <a href="overlay-customization-guide.html">Overlay Customization guide</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Keep It On Your Monitor, Not On The Stream</h2>
+                <p>The overlay stays private only when your streaming software captures the game or game window rather than the whole monitor.</p>
+                <ol class="guide-steps">
+                    <li><strong>Do not add this overlay URL as an OBS Browser Source</strong> if viewers should not see it.</li>
+                    <li>On Windows, prefer an OBS <a href="https://obsproject.com/kb/game-capture-source" target="_blank" rel="noopener">Game Capture</a> source targeting the game.</li>
+                    <li>Leave OBS's <strong>Capture third-party overlays (such as Steam)</strong> option off unless you have tested that it does not include this window.</li>
+                    <li>Avoid <a href="https://obsproject.com/kb/display-capture-sources" target="_blank" rel="noopener">Display Capture</a> for this workflow. It captures the entire monitor, including the chat overlay.</li>
+                    <li>Make a short local recording and watch it back before going live. Capture methods and games differ.</li>
+                </ol>
+                <div class="warning-note">
+                    <p><strong>macOS and Linux limitation:</strong> OBS Game Capture is Windows-only. If your setup must capture the entire display, the on-screen overlay will also be captured. Use a separate monitor or a window/application capture method that excludes the overlay, then verify with a recording.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Important Limitations</h2>
+                <ul class="guide-list">
+                    <li><strong>Borderless or windowed fullscreen is the reliable game mode.</strong> An exclusive fullscreen game may cover all normal desktop windows, including an always-on-top overlay.</li>
+                    <li><strong>The desktop app must stay open.</strong> Closing SSApp or Electron Capture closes the local overlay.</li>
+                    <li><strong>The session must match.</strong> A Dock or Featured URL with the wrong session ID will remain empty.</li>
+                    <li><strong>Featured Chat is not the full feed.</strong> It only shows a message after you select one in the Dock.</li>
+                    <li><strong>Click-through disables mouse interaction.</strong> Use the recovery hotkey before trying to right-click the window again.</li>
+                    <li><strong>Some games and anti-cheat systems restrict overlays.</strong> Do not attempt to bypass a game's security controls.</li>
+                    <li><strong>Transparency varies by operating system and graphics setup.</strong> Update the desktop app and graphics driver if a transparent area appears white or black.</li>
+                    <li><strong>Display capture includes what you see.</strong> If you cannot isolate the game from the monitor in your capture software, this overlay cannot be guaranteed private.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>Quick Checklist</h2>
+                <ol class="guide-steps">
+                    <li>Chat is arriving in Social Stream.</li>
+                    <li>The overlay URL uses the correct session ID.</li>
+                    <li>The URL contains <code>transparent</code>.</li>
+                    <li>The desktop wrapper is pinned above the game.</li>
+                    <li>Click-through is enabled only after positioning.</li>
+                    <li>The game uses borderless or windowed fullscreen if exclusive fullscreen hides the overlay.</li>
+                    <li>OBS captures the game/window, not the entire display.</li>
+                    <li>A test recording confirms viewers cannot see the private overlay.</li>
+                </ol>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p>
+            </div>
+        </div>
+    </footer>
+    <script src="js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

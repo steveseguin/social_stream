@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Create Test Messages - Social Stream Ninja</title>
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/guides.css">
+	<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Send controlled fake chat messages, donations, memberships, raids, rewards, and other events into a Social Stream Ninja session for safe testing.">
+</head>
+<body>
+	<header>
+		<div class="container">
+			<div class="logo">
+				<a href="../index.html">
+					<img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+					<span>Social Stream Ninja</span>
+				</a>
+			</div>
+			<nav>
+				<ul>
+					<li><a href="../index.html">Home</a></li>
+					<li><a href="../docs/features.html">Features</a></li>
+					<li><a href="../docs/download.html">Download</a></li>
+					<li><a href="../docs/guides.html" class="active">Guides</a></li>
+					<li><a href="../docs/commands.html">Commands &amp; API</a></li>
+					<li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+					<li><a href="../docs/templates.html">Templates</a></li>
+					<li><a href="../docs/services.html">Hire</a></li>
+					<li><a href="../docs/support.html">Support</a></li>
+				</ul>
+			</nav>
+			<div class="header-controls">
+				<button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+					<svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+					<svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+				</button>
+				<div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+			</div>
+		</div>
+	</header>
+
+	<section class="page-hero">
+		<div class="container">
+			<h1>Create Test Messages</h1>
+			<p>Send controlled fake messages and events into your Social Stream session.</p>
+		</div>
+	</section>
+
+	<main class="guide-section">
+		<div class="container">
+			<div class="guide-card">
+				<h2>What This Tool Does</h2>
+				<p>The <a href="../createtestmessage.html">Create Test Message page</a> sends synthetic Social Stream payloads to your dock, overlays, alerts, or Event Flow setup. Use it to test without waiting for a real chat message, donation, membership, raid, reward, or other event.</p>
+				<div class="warning-note"><strong>Use a test session when possible.</strong> A submitted message behaves like incoming session traffic and can trigger alerts, sounds, webhooks, OBS actions, or other automations.</div>
+			</div>
+
+			<div class="guide-card">
+				<h2>Quick Start For SSApp Or The Extension</h2>
+				<ol class="guide-steps">
+					<li>Open Social Stream Ninja and make sure the service is active.</li>
+					<li>Under <strong>Global settings and tools</strong> &rarr; <strong>Mechanics</strong>, enable <strong>remote API control of extension</strong>. SSApp uses the same setting name.</li>
+					<li>Copy your Session ID from Social Stream or from the <code>session=</code> value in your dock or overlay URL.</li>
+					<li>Open <a href="../createtestmessage.html">Create Test Message</a> and enter that Session ID.</li>
+					<li>Leave <strong>Send Via</strong> set to <strong>Extension API ingest</strong> for normal testing.</li>
+					<li>Choose a preset, adjust its fields, and select <strong>Load Preset</strong>.</li>
+					<li>Review the Payload JSON, then select <strong>Submit</strong>.</li>
+					<li>Confirm the item appears in the dock or target overlay and that the expected automation runs.</li>
+				</ol>
+				<div class="guide-note"><p>You can include the session in the URL: <code>createtestmessage.html?session=YOUR_SESSION_ID</code>.</p></div>
+			</div>
+
+			<div class="guide-card">
+				<h2>Example: One Fake 1,000 KICKs Message</h2>
+				<p>This creates one Kick-style support message worth 1,000 KICKs. It does not create 1,000 separate messages.</p>
+				<ol class="guide-steps">
+					<li>Choose the <strong>Chat Message</strong> preset.</li>
+					<li>Set <strong>Type</strong> to <strong>Kick</strong>.</li>
+					<li>Enter a test name and message.</li>
+					<li>Set <strong>Has Donation</strong> to <code>1000 KICKs</code>.</li>
+					<li>Select <strong>Update JSON from Fields</strong>, verify the JSON, and submit it.</li>
+				</ol>
+				<p>The minimal payload is:</p>
+				<pre><code>{
+  "type": "kick",
+  "chatname": "Test Supporter",
+  "chatmessage": "Thanks for the stream!",
+  "hasDonation": "1000 KICKs"
+}</code></pre>
+				<div class="guide-note"><p>Use <strong>Chat Message</strong> for this example. The <strong>Donation / Cheer</strong> preset includes Twitch-specific cheer fields.</p></div>
+			</div>
+
+			<div class="guide-card">
+				<h2>Using Presets And Custom JSON</h2>
+				<p>Presets provide a starting payload for common cases such as donations, subscribers, gifted subscriptions, raids, rewards, viewer updates, first-time chatters, and train events.</p>
+				<ul class="guide-list">
+					<li><strong>Load Preset</strong> replaces the JSON with the selected preset and current field values.</li>
+					<li><strong>Update JSON from Fields</strong> builds a basic message from the visible fields.</li>
+					<li>You can edit <strong>Payload JSON</strong> directly when testing a specific field or event shape.</li>
+					<li><code>hasDonation</code> carries the visible support amount, such as <code>1000 KICKs</code> or <code>$10.00</code>.</li>
+					<li>Only include <code>event</code> when you are testing a real named event. A normal donation-style chat row can use <code>hasDonation</code> by itself.</li>
+				</ul>
+				<p>For field definitions and real platform examples, see the <a href="event-reference.html">Event Reference</a>.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Choose The Right Delivery Mode</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Send Via</th><th>Use It When</th><th>Required Setup</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Send Via">Extension API ingest</td><td data-label="Use It When">Testing normal docks, overlays, alerts, Event Flow, or SSApp.</td><td data-label="Required Setup">Same Session ID and <strong>remote API control of extension</strong> enabled.</td></tr>
+						<tr><td data-label="Send Via">Direct to channel 1</td><td data-label="Use It When">The target dock was opened with <code>&amp;server</code>.</td><td data-label="Required Setup">The target must be listening on the matching server channel.</td></tr>
+						<tr><td data-label="Send Via">Direct to channel 4</td><td data-label="Use It When">Testing a target that uses <code>&amp;server2</code>, including compatible event pages.</td><td data-label="Required Setup">The target must be listening on the matching server channel.</td></tr>
+					</tbody>
+				</table>
+				<p>If you are unsure, use <strong>Extension API ingest</strong>.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Common Fixes</h2>
+				<ul class="guide-list">
+					<li><strong>Nothing appears:</strong> confirm the target page is open and uses the same Session ID.</li>
+					<li><strong>Extension API ingest fails:</strong> enable <strong>remote API control of extension</strong>, then reload the dock or overlay and try again.</li>
+					<li><strong>Direct mode says sent but nothing appears:</strong> use Extension API ingest unless the target URL has the matching <code>&amp;server</code> or <code>&amp;server2</code> mode.</li>
+					<li><strong>Wrong event fires:</strong> inspect the Payload JSON for leftover fields from another preset.</li>
+					<li><strong>Kick test behaves like Twitch:</strong> use the Chat Message preset and set <code>type</code> and <code>hasDonation</code> as shown above.</li>
+					<li><strong>An automation runs more than once:</strong> check whether multiple docks, action pages, or Event Flow instances are open on the same session.</li>
+				</ul>
+			</div>
+		</div>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+	<script src="js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

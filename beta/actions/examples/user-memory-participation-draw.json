@@ -1,0 +1,205 @@
+{
+  "name": "User Memory: Participation + Prize Draw",
+  "description": "Remembers unique !enter users, checks later ? messages, and gives moderators protected draw/reset commands for this memory only.",
+  "active": true,
+  "nodes": [
+    {
+      "id": "trigger_enter",
+      "type": "trigger",
+      "triggerType": "messageStartsWith",
+      "label": "Message starts with !enter",
+      "x": 20,
+      "y": 50,
+      "config": {
+        "text": "!enter"
+      }
+    },
+    {
+      "id": "action_remember_entrant",
+      "type": "action",
+      "actionType": "rememberUser",
+      "label": "Remember entrant",
+      "x": 260,
+      "y": 50,
+      "config": {
+        "targetNodeId": "state_prize_draw",
+        "reason": "Entered with !enter"
+      }
+    },
+    {
+      "id": "trigger_question",
+      "type": "trigger",
+      "triggerType": "messageStartsWith",
+      "label": "Message starts with ?",
+      "x": 20,
+      "y": 220,
+      "config": {
+        "text": "?"
+      }
+    },
+    {
+      "id": "trigger_is_entrant",
+      "type": "trigger",
+      "triggerType": "userMemoryContains",
+      "label": "User is remembered",
+      "x": 20,
+      "y": 370,
+      "config": {
+        "targetNodeId": "state_prize_draw"
+      }
+    },
+    {
+      "id": "logic_question_eligible",
+      "type": "logic",
+      "logicType": "AND",
+      "label": "Command and remembered",
+      "x": 260,
+      "y": 285,
+      "config": {}
+    },
+    {
+      "id": "action_mark_eligible",
+      "type": "action",
+      "actionType": "addPrefix",
+      "label": "Mark eligible message",
+      "x": 450,
+      "y": 200,
+      "config": {
+        "prefix": "[eligible] "
+      }
+    },
+    {
+      "id": "trigger_draw",
+      "type": "trigger",
+      "triggerType": "messageStartsWith",
+      "label": "Message starts with !draw",
+      "x": 20,
+      "y": 560,
+      "config": {
+        "text": "!draw"
+      }
+    },
+    {
+      "id": "action_pick_winner",
+      "type": "action",
+      "actionType": "pickRandomUser",
+      "label": "Pick random entrant",
+      "x": 450,
+      "y": 560,
+      "config": {
+        "targetNodeId": "state_prize_draw",
+        "removeSelected": true
+      }
+    },
+    {
+      "id": "logic_draw_authorized",
+      "type": "logic",
+      "logicType": "AND",
+      "label": "Draw command and moderator",
+      "x": 260,
+      "y": 560,
+      "config": {}
+    },
+    {
+      "id": "trigger_reset_draw",
+      "type": "trigger",
+      "triggerType": "messageStartsWith",
+      "label": "Message starts with !resetdraw",
+      "x": 20,
+      "y": 730,
+      "config": {
+        "text": "!resetdraw"
+      }
+    },
+    {
+      "id": "action_clear_draw",
+      "type": "action",
+      "actionType": "clearUserMemory",
+      "label": "Clear all draw entrants",
+      "x": 450,
+      "y": 730,
+      "config": {
+        "targetNodeId": "state_prize_draw"
+      }
+    },
+    {
+      "id": "logic_reset_authorized",
+      "type": "logic",
+      "logicType": "AND",
+      "label": "Reset command and moderator",
+      "x": 260,
+      "y": 730,
+      "config": {}
+    },
+    {
+      "id": "trigger_moderator",
+      "type": "trigger",
+      "triggerType": "userRole",
+      "label": "User is a moderator",
+      "x": 20,
+      "y": 900,
+      "config": {
+        "role": "mod"
+      }
+    },
+    {
+      "id": "state_prize_draw",
+      "type": "state",
+      "stateType": "USER_MEMORY",
+      "label": "Prize Draw Entrants",
+      "x": 450,
+      "y": 400,
+      "config": {
+        "name": "Prize Draw Entrants",
+        "persistence": "session",
+        "resetAfterMs": 0,
+        "resetOnStreamStart": false,
+        "resetOnStreamStop": false
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "trigger_enter",
+      "to": "action_remember_entrant"
+    },
+    {
+      "from": "trigger_question",
+      "to": "logic_question_eligible"
+    },
+    {
+      "from": "trigger_is_entrant",
+      "to": "logic_question_eligible"
+    },
+    {
+      "from": "logic_question_eligible",
+      "to": "action_mark_eligible"
+    },
+    {
+      "from": "trigger_draw",
+      "to": "logic_draw_authorized"
+    },
+    {
+      "from": "trigger_moderator",
+      "to": "logic_draw_authorized"
+    },
+    {
+      "from": "logic_draw_authorized",
+      "to": "action_pick_winner"
+    },
+    {
+      "from": "trigger_reset_draw",
+      "to": "logic_reset_authorized"
+    },
+    {
+      "from": "trigger_moderator",
+      "to": "logic_reset_authorized"
+    },
+    {
+      "from": "logic_reset_authorized",
+      "to": "action_clear_draw"
+    }
+  ],
+  "version": "1.1.0",
+  "exportedBy": "Social Stream Event Flow System"
+}

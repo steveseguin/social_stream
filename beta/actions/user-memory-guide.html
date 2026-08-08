@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Memory Guide - Social Stream Ninja</title>
+    <style>
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            color: #e5e7eb;
+            background: #090c13;
+            line-height: 1.65;
+        }
+        a { color: #5eead4; }
+        code {
+            padding: 2px 6px;
+            border-radius: 5px;
+            color: #f5d0fe;
+            background: rgba(192, 132, 252, 0.14);
+        }
+        .shell { max-width: 1120px; margin: 0 auto; }
+        header {
+            padding: 64px 32px 48px;
+            background:
+                radial-gradient(circle at 78% 15%, rgba(192,132,252,0.28), transparent 32%),
+                linear-gradient(145deg, #111827, #172554 62%, #312e81);
+            border-bottom: 1px solid rgba(192,132,252,0.3);
+        }
+        header .eyebrow {
+            color: #c4b5fd;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        h1 { margin: 8px 0 14px; font-size: clamp(2.2rem, 6vw, 4rem); line-height: 1.08; }
+        header p { max-width: 760px; margin: 0; color: #cbd5e1; font-size: 1.12rem; }
+        nav { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+        nav a, .button {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 999px;
+            color: #f8fafc;
+            text-decoration: none;
+            background: rgba(15,23,42,0.34);
+        }
+        main { padding: 44px 32px 72px; }
+        section { margin: 0 0 68px; scroll-margin-top: 20px; }
+        h2 { margin: 0 0 16px; color: #ddd6fe; font-size: 2rem; }
+        h3 { margin: 28px 0 10px; color: #c4b5fd; }
+        p { margin: 10px 0; color: #cbd5e1; }
+        ul, ol { color: #cbd5e1; }
+        li { margin: 7px 0; }
+        .lead, .callout, .card {
+            border: 1px solid rgba(148,163,184,0.2);
+            border-radius: 14px;
+            background: #111827;
+        }
+        .lead, .callout { padding: 18px 20px; }
+        .callout { margin: 20px 0; border-color: rgba(94,234,212,0.25); }
+        .warning { border-color: rgba(251,191,36,0.35); background: rgba(120,53,15,0.18); }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+            gap: 16px;
+            margin: 22px 0;
+        }
+        .card { padding: 18px; }
+        .card h3, .card h4 { margin-top: 0; }
+        .wire-key { display: flex; flex-wrap: wrap; gap: 18px; margin: 18px 0; color: #cbd5e1; }
+        .wire { display: inline-flex; align-items: center; gap: 9px; }
+        .wire::before { content: ""; width: 46px; border-top: 3px solid #2dd4bf; }
+        .wire.state::before { border-top: 3px dashed #c084fc; }
+        figure {
+            margin: 24px 0;
+            border: 1px solid rgba(148,163,184,0.22);
+            border-radius: 14px;
+            overflow: hidden;
+            background: #15171d;
+        }
+        figure img { display: block; width: 100%; height: auto; }
+        figcaption { padding: 12px 16px; color: #94a3b8; font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; background: #111827; }
+        th, td { padding: 12px 14px; border: 1px solid #293244; text-align: left; vertical-align: top; }
+        th { color: #ddd6fe; background: #172033; }
+        .flow {
+            padding: 16px 18px;
+            margin: 14px 0;
+            border-radius: 12px;
+            color: #e2e8f0;
+            background: #070b12;
+            border: 1px solid #253047;
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+            white-space: pre-wrap;
+        }
+        .recipe { padding-left: 18px; border-left: 4px solid #8b5cf6; margin: 28px 0; }
+        .recipe h3 { margin-top: 0; }
+        .two-col { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 22px; align-items: start; }
+        footer { padding: 24px 32px 42px; color: #94a3b8; border-top: 1px solid #1f2937; }
+        @media (max-width: 760px) {
+            header, main, footer { padding-left: 18px; padding-right: 18px; }
+            .two-col { grid-template-columns: 1fr; }
+            table { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="shell">
+            <div class="eyebrow">Event Flow shared state</div>
+            <h1>User Memory</h1>
+            <p>Remember unique participants, check them on later messages, draw a random winner, and reset exactly the list you intended—without turning a platform role into permanent global state.</p>
+            <nav>
+                <a href="#model">How it works</a>
+                <a href="#setup">Set it up</a>
+                <a href="#recipes">Recipes</a>
+                <a href="#reset">Reset and persistence</a>
+                <a href="#outputs">Draw outputs</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <section id="model">
+            <h2>One named memory, many tools</h2>
+            <div class="lead">
+                A <strong>User Memory</strong> state node owns one isolated set of people. Every Remember, Forget, Check, Draw, or Clear node selects that state node. Create another User Memory node when you need a separate list—for example, one for “liked the stream” and another for “entered the giveaway.”
+            </div>
+            <div class="wire-key">
+                <span class="wire">Solid teal: this event runs next</span>
+                <span class="wire state">Dashed purple: this node uses that memory</span>
+            </div>
+            <p>Drag the small purple side diamond onto a User Memory node, or choose the memory by name in the node properties. Internally the operation stores the state node’s ID. Selecting the memory highlights every linked operation, and deleting it warns before those links are broken.</p>
+            <figure>
+                <img src="img/user-memory-shared-state.png" alt="Event Flow canvas showing Remember User and User Is Remembered linked to the Prize Draw Entrants memory with dashed purple lines">
+                <figcaption>A real SSApp flow with two remembered entrants. The event path stays teal; shared-state references are dashed purple.</figcaption>
+            </figure>
+        </section>
+
+        <section id="setup">
+            <h2>Set it up</h2>
+            <ol>
+                <li>Drag <strong>State Nodes → User Memory</strong> onto the canvas.</li>
+                <li>Name it for the list it owns, such as <em>Heart Me Eligible</em>, <em>Liked Stream</em>, or <em>Prize Draw Entrants</em>.</li>
+                <li>Choose <strong>This app session</strong> or <strong>Save across restarts</strong>.</li>
+                <li>Add the checks and actions you need, then link each one to the named memory using its side diamond or dropdown.</li>
+                <li>Connect the normal event path with teal wires and use <strong>Test Flow</strong> with two different usernames before going live.</li>
+            </ol>
+            <div class="two-col">
+                <div>
+                    <h3>Available operations</h3>
+                    <table>
+                        <thead><tr><th>Node</th><th>What it does</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Remember User</strong></td><td>Adds the current event’s user once. Repeated participation increases that user’s participation count without adding duplicate draw entries.</td></tr>
+                            <tr><td><strong>User Is Remembered</strong></td><td>A trigger/check that returns true when the current message belongs to someone in the selected memory.</td></tr>
+                            <tr><td><strong>Forget User</strong></td><td>Removes only the current event’s user.</td></tr>
+                            <tr><td><strong>Pick Random User</strong></td><td>Selects one unique remembered user. It can optionally remove the winner so they cannot win again.</td></tr>
+                            <tr><td><strong>Clear All Users</strong></td><td>Empties only the selected User Memory object.</td></tr>
+                            <tr><td><strong>Reset State Node</strong></td><td>Also clears a User Memory when that memory is the selected reset target.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <figure>
+                    <img src="img/user-memory-settings.png" alt="User Memory node properties showing two current users and Save across restarts">
+                    <figcaption>The hub reports its current unique-user count and owns persistence/reset settings.</figcaption>
+                </figure>
+            </div>
+            <div class="callout">
+                <strong>Identity rule:</strong> users are keyed by platform plus user ID. The displayed username is used only as a fallback. An anonymous or aggregate event with no user identity is safely ignored.
+            </div>
+        </section>
+
+        <section id="recipes">
+            <h2>Practical recipes</h2>
+
+            <div class="recipe">
+                <h3>TikTok Heart Me or Team Member → <code>?</code> TTS</h3>
+                <p>Use the gift event to remember the sender; do not try to turn the one gift row into a permanent “member” role.</p>
+                <div class="flow">TikTok gift event + “Heart Me” match → AND → Remember User ···→ [Heart Me Eligible]</div>
+                <div class="flow">? command + TikTok source + (TikTok Team Member OR User Is Remembered) → AND → Speak Text
+? command + NOT TikTok source → AND ────────────────────────────────→ Speak Text</div>
+                <ul>
+                    <li>For TikTok Team/Fan status, choose <strong>User Role → TikTok Team Member</strong>. It reads the incoming TikTok badge/level data directly; the Main Chat Overlay’s “treat as members” display setting is not required.</li>
+                    <li>Gift payloads differ by capture mode. A common setup is <strong>Event Type → Other: gift</strong> plus <strong>Message Contains: Heart Me</strong>. Confirm the captured row in Test Flow/Event Reference and match the cleanest field your source provides.</li>
+                    <li>Both branches still require the leading <code>?</code>, so other platforms speak for everyone while TikTok stays restricted.</li>
+                </ul>
+            </div>
+
+            <div class="recipe">
+                <h3>Remember people who liked or participated</h3>
+                <div class="flow">Event Type → Other: liked → Remember User ···→ [Liked Stream]</div>
+                <p>This works when the captured like/participation event names a user. Aggregate like-count updates do not identify a person and therefore cannot be remembered. Use a separate memory for each kind of participation if you want independent checks or draws.</p>
+            </div>
+
+            <div class="recipe">
+                <h3>Unique-entry prize draw</h3>
+                <div class="flow">Message Starts With !enter → Remember User ···→ [Prize Draw Entrants]
+Moderator + Message Starts With !draw → AND → Pick Random User ···→ [Prize Draw Entrants]
+Moderator + Message Starts With !resetdraw → AND → Clear All Users ···→ [Prize Draw Entrants]</div>
+                <p>Enable <strong>Remove selected user</strong> when winners should not be drawn twice. In a public stream, protect draw/reset commands with a moderator, admin, or exact-user check.</p>
+                <p><a class="button" href="examples/user-memory-participation-draw.json" download>Download the participation + draw example flow</a></p>
+            </div>
+        </section>
+
+        <section id="reset">
+            <h2>Reset and persistence</h2>
+            <div class="grid">
+                <div class="card"><h3>Manual</h3><p>Use <strong>Clear All Users Now</strong> in the memory properties while building/testing.</p></div>
+                <div class="card"><h3>From a flow</h3><p>Use <strong>Clear All Users</strong> or the generic <strong>Reset State Node</strong>, selecting the exact memory.</p></div>
+                <div class="card"><h3>Automatic</h3><p>Clear after inactivity, on stream start, or on stream stop. A value of 0 disables inactivity reset.</p></div>
+                <div class="card"><h3>Across restarts</h3><p>Session memories start empty with the app. Saved memories reload until that specific memory is cleared.</p></div>
+            </div>
+            <figure>
+                <img src="img/user-memory-reset-controls.png" alt="User Memory reset properties including inactivity, stream start, stream stop, and Clear All Users Now">
+                <figcaption>Every reset option belongs to this one named memory. Other User Memory nodes are not touched.</figcaption>
+            </figure>
+            <div class="callout warning">
+                <strong>“Clear all” is scoped:</strong> it means all users inside the selected memory—not all Event Flow state, not every draw, and not every memory in Social Stream Ninja.
+            </div>
+        </section>
+
+        <section id="outputs">
+            <h2>Use draw and participation outputs</h2>
+            <p>Memory actions add fields to the message so downstream Show Text, Send Message, webhook, or custom actions can use them.</p>
+            <table>
+                <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+                <tbody>
+                    <tr><td><code>userMemoryName</code></td><td>The selected memory’s name.</td></tr>
+                    <tr><td><code>userMemoryCount</code></td><td>Unique users currently remembered.</td></tr>
+                    <tr><td><code>userMemoryAdded</code></td><td>True only when Remember User added a new unique person.</td></tr>
+                    <tr><td><code>userMemoryEntryCount</code></td><td>How many times that person has participated.</td></tr>
+                    <tr><td><code>selectedUser</code></td><td>The drawn user’s display name.</td></tr>
+                    <tr><td><code>selectedUserId</code>, <code>selectedUserSource</code></td><td>The drawn user’s stable ID and platform.</td></tr>
+                    <tr><td><code>selectedUserParticipationCount</code></td><td>The winner’s recorded participation count.</td></tr>
+                    <tr><td><code>selectedUserReason</code></td><td>The latest reason template saved by Remember User.</td></tr>
+                    <tr><td><code>selectedUserRemoved</code></td><td>Whether the draw removed the selected winner.</td></tr>
+                </tbody>
+            </table>
+            <figure>
+                <img src="img/user-memory-draw-result.png" alt="Test Flow result showing a selected prize draw user and one remaining entrant">
+                <figcaption>Actual Test Flow output: Alice was selected and the memory count fell to one because “remove selected” was enabled.</figcaption>
+            </figure>
+        </section>
+
+        <section>
+            <h2>Troubleshooting</h2>
+            <table>
+                <tbody>
+                    <tr><th>The dashed line is missing</th><td>Select the operation and choose a User Memory target, or drag its purple side diamond to the memory hub.</td></tr>
+                    <tr><th>The same person appears twice</th><td>Check whether the events came from different platforms. Platform + user ID intentionally creates separate identities.</td></tr>
+                    <tr><th>A like did not add anyone</th><td>The event probably had no user identity. Inspect the event payload; aggregate counts cannot become named entrants.</td></tr>
+                    <tr><th>A saved memory came back</th><td>Use Clear All Users on that memory. Changing a flow or clearing a different memory does not erase it.</td></tr>
+                    <tr><th>Anyone can run the draw/reset command</th><td>Add User Role: moderator/admin (or an exact host-user check) into an AND gate before the action.</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer><div class="shell">Social Stream Ninja · <a href="event-flow-guide.html">Event Flow Guide</a> · <a href="state-nodes-guide.html">State Nodes Guide</a></div></footer>
+</body>
+</html>

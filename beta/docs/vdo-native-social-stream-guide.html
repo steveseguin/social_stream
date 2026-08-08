@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VDO.Ninja Native App + Social Stream Ninja - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Guide for receiving Social Stream Ninja chat inside the VDO.Ninja native mobile app.">
+    <style>
+        .phone-shot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+            gap: 1rem;
+            align-items: start;
+        }
+
+        .guide-phone-image {
+            width: min(100%, 24rem);
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands & API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <div class="mobile-nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>VDO.Ninja Native App + Social Stream Ninja</h1>
+            <p>Receive Social Stream Ninja chat inside the VDO.Ninja native mobile app.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>What This Setup Does</h3>
+                <p>Social Stream Ninja runs on a computer, captures chat from Twitch, YouTube, Kick, or another source, then forwards those chat messages to the VDO.Ninja native app on your phone.</p>
+                <p>The phone is the receiver. It does not connect directly to Twitch or your chat platform.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/ssn-vdo-native-current.png" alt="VDO.Ninja native app start screen with Screen, Back Camera, Front Camera, Back Ultra-wide, and Microphone Only options" class="guide-image guide-phone-image">
+                    <figcaption>Start from the VDO.Ninja native app and choose the camera or screen mode you want to publish.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>1. Start A Social Stream Source</h3>
+                <ol class="guide-steps">
+                    <li>Open Social Stream Ninja on the computer that will collect chat.</li>
+                    <li>Set your Social Stream Ninja session ID.</li>
+                    <li>Open the platform source you need, such as Twitch, YouTube, Kick, or TikTok.</li>
+                    <li>Confirm messages are appearing in the Social Stream source window or dock before checking the phone.</li>
+                </ol>
+                <p>Twitch WebSocket source mode is fine. That source mode only controls how SSN captures Twitch chat; it is separate from the phone's Peer-to-Peer or Server mode.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>2. Open Publishing Settings On The Phone</h3>
+                <ol class="guide-steps">
+                    <li>Open the VDO.Ninja native app.</li>
+                    <li>Choose the camera, screen, or microphone mode you want to use.</li>
+                    <li>On the Publishing Settings screen, scroll down to Social Stream Ninja Integration.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="images/guides/ssn-vdo-native-share.png" alt="VDO.Ninja native app Publishing Settings screen before scrolling to Social Stream Ninja Integration" class="guide-image guide-phone-image">
+                    <figcaption>The Social Stream settings are lower on the same Publishing Settings screen.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>3. Use The Same Session ID</h3>
+                <p>Enable Social Stream and paste the exact same session ID that SSN is using on the computer.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/ssn-vdo-native-social-stream-filled-clean.png" alt="VDO.Ninja native app Social Stream Ninja Integration enabled with session ID SSNGuide123 and Peer-to-Peer mode selected" class="guide-image guide-phone-image">
+                    <figcaption>The session ID must match SSN exactly. Leave Encryption Password as <code>false</code> unless you set a matching SSN session password.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>4. Pick One Connection Mode</h3>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Phone Mode</th><th>SSN Setting</th><th>Use When</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Phone Mode">Peer-to-Peer</td>
+                            <td data-label="SSN Setting">Use the normal SSN P2P output. Do not route chat only through the API server.</td>
+                            <td data-label="Use When">Best first choice. Works across normal internet connections without a local server.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Phone Mode">Server</td>
+                            <td data-label="SSN Setting">Enable <strong>Send chat messages to API server</strong> in SSN Global &gt; Mechanics.</td>
+                            <td data-label="Use When">Use this when P2P is blocked or unreliable.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <figure class="guide-figure">
+                    <img src="images/guides/ssn-vdo-native-server-mode.png" alt="VDO.Ninja native app Social Stream Ninja Integration with Server mode selected" class="guide-image guide-phone-image">
+                    <figcaption>If the phone is set to Server mode, SSN must publish chat to the API server.</figcaption>
+                </figure>
+                <div class="warning-note">
+                    <p>Do not mix modes. If the phone is Peer-to-Peer but SSN is only sending via Server mode, the phone will not receive chat. If the phone is Server mode but SSN is not sending chat to the API server, the phone will not receive chat.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h3>5. Connect And Test</h3>
+                <ol class="guide-steps">
+                    <li>Tap <strong>Connect</strong> in the VDO.Ninja native app.</li>
+                    <li>Send a real chat message, or use an SSN test message.</li>
+                    <li>Watch the phone. If the phone says <strong>Social Stream not connected</strong>, the chat source may still be working, but the SSN-to-phone transport is not connected.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h3>Common Failure Cases</h3>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Symptom</th><th>Actual Cause</th><th>Fix</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Symptom">Chat appears in SSN, but the phone says Social Stream not connected.</td>
+                            <td data-label="Actual Cause">The platform source is working, but the output path from SSN to the phone is not connected.</td>
+                            <td data-label="Fix">Check the session ID, connection mode, and SSN output setting.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Symptom">It works on one PC but not another using the same session ID.</td>
+                            <td data-label="Actual Cause">In Peer-to-Peer mode, SSN publishes using the session ID as the VDO.Ninja stream ID. Only one SSN instance can publish that same ID at a time.</td>
+                            <td data-label="Fix">Close or disable Social Stream on the first PC, then restart SSN on the second PC; or use a different session ID.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Symptom">Server mode never receives chat.</td>
+                            <td data-label="Actual Cause">The phone is listening on the SSN API-server channel, but SSN is not publishing chat there.</td>
+                            <td data-label="Fix">Enable <strong>Send chat messages to API server</strong> in SSN Global &gt; Mechanics.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Symptom">The source window shows chat, but nothing is forwarded.</td>
+                            <td data-label="Actual Cause">The source may be in reply-only or no-capture mode.</td>
+                            <td data-label="Fix">Disable <strong>Bot reply-only (no capture)</strong> for that source.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Symptom">A remote phone cannot use local server mode.</td>
+                            <td data-label="Actual Cause">Local server mode is local to the computer or LAN and usually is not reachable through a firewall.</td>
+                            <td data-label="Fix">Use Peer-to-Peer, or use the public Server mode with SSN's API-server chat output enabled.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h3>BTTV, 7TV, And FFZ Emotes</h3>
+                <p>Enable the BTTV, 7TV, or FFZ emote options in SSN before forwarding chat. SSN enriches the message before it reaches the phone.</p>
+                <p>The native app chat display may still show fallback text for image emotes if the app build is not rendering inline chat images.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

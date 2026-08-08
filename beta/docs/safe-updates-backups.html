@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safe Updates, Backups, and Settings Recovery - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Safely update Social Stream Ninja, export extension or desktop app settings, and recover a session without making data loss worse.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands &amp; API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
+                </button>
+                <div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Safe Updates, Backups, and Recovery</h1>
+            <p>Make one usable backup before updating, reinstalling, resetting, or changing release channels.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>The Safe Rule</h2>
+                <ol class="guide-steps">
+                    <li><strong>Export settings first.</strong> Keep the exported file somewhere outside the app or unpacked-extension folder.</li>
+                    <li><strong>Do not uninstall the browser extension just to update it.</strong> Uninstalling removes that extension installation's stored settings.</li>
+                    <li><strong>Keep one working copy.</strong> Do not overwrite your only backup while troubleshooting a damaged setup.</li>
+                    <li><strong>After updating, reload the source pages.</strong> Reopen generated dock/overlay links and refresh saved OBS Browser Sources when their URLs changed.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2>Browser Extension Backup</h2>
+                <ol class="guide-steps">
+                    <li>Open Social Stream Ninja and go to <strong>Global settings and tools</strong>.</li>
+                    <li>Open <strong>Export / import</strong>.</li>
+                    <li>Select <strong>Export to disk</strong> and keep the resulting <code>.data</code> file.</li>
+                    <li>Use <strong>Import settings</strong> to restore that file later.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="images/guides/settings-backup-export-recovery.png" alt="Social Stream Ninja Export and import section showing Reset all settings, Export to disk, Import settings, and the dock-link recovery helper" class="guide-image">
+                    <figcaption>The current Export / import panel. Export before using Reset all settings.</figcaption>
+                </figure>
+                <div class="guide-note">
+                    <p><strong>Manual unpacked update:</strong> download and extract the new build, replace the old extension files, then select <strong>Reload</strong> on <code>chrome://extensions</code>. Keep the unpacked folder in place and reload open chat tabs. See <a href="download.html#manual-install">manual installation</a>.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Desktop App Backup</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Backup</th><th>Menu</th><th>Use It For</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Backup">Settings Backup</td>
+                            <td data-label="Menu"><strong>File → Settings Backup → Export Settings…</strong></td>
+                            <td data-label="Use It For">Normal updates, settings moves, and first-line recovery. Imports through <strong>Import Settings…</strong>.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Backup">Full Session Transfer</td>
+                            <td data-label="Menu"><strong>File → Advanced Full Session Transfer</strong></td>
+                            <td data-label="Use It For">Moving or preserving the whole desktop profile, including local sessions and sign-in state. It creates an encrypted <code>.ssappbk</code> file.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>The normal settings export is the right choice for most updates. Full Session Transfer is larger and replaces the target profile during restore; the app first keeps a <code>pre-restore-*</code> copy of the current profile.</p>
+                <div class="guide-note">
+                    <p><strong>Automatic app updates should preserve the existing profile.</strong> Still export before manually reinstalling, moving between portable and installed builds, changing channels, or trying a reset.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>If Settings Already Disappeared</h2>
+                <ol class="guide-steps">
+                    <li><strong>Stop resetting and reinstalling.</strong> More changes can overwrite the best recovery copy.</li>
+                    <li>If the app or extension still has useful state, export it before doing anything else.</li>
+                    <li>Import the newest known-good <code>.data</code> or <code>.json</code> settings backup.</li>
+                    <li>For a desktop whole-profile backup, use <strong>Advanced Full Session Transfer</strong>.</li>
+                    <li>If only the desktop source list is damaged, try <strong>Clear All Sources</strong>. It is narrower than Full Reset and is designed to preserve sessions, cookies, and settings.</li>
+                    <li>Use Full Reset only after making a backup or after accepting a complete local cleanup.</li>
+                </ol>
+                <p>If you have no export but still have an old dock URL, the <a href="../recover.html">dock-link recovery helper</a> can rebuild the session ID, password, and URL-driven settings found in that link. It cannot recreate settings or source accounts that were never present in the URL.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>What A Normal Settings Backup Covers</h2>
+                <p>The current desktop settings-transfer test verifies a round trip for the cached Social Stream state and selected app settings. The browser extension export includes its session ID, optional password, state, and settings object.</p>
+                <ul class="guide-list">
+                    <li>Source and global settings represented in the saved state.</li>
+                    <li>The Social Stream session ID and optional session password.</li>
+                    <li>Selected desktop preferences used by the app.</li>
+                </ul>
+                <p>A normal settings export is not a complete copy of every browser cookie or site login. Use Full Session Transfer when the entire desktop profile must move.</p>
+            </div>
+
+            <template data-copy-markdown-extra>
+## Verified maintainer context
+
+- Desktop app verification: `npm run test:settings-transfer` passed against SSApp 0.4.7. It confirmed the Settings Backup menu, Advanced Full Session Transfer menu, settings export/import round trip, encrypted `.ssappbk` round trip, and creation of a `pre-restore-*` directory.
+- Current desktop normal backup recognizes cached `streamID`, `password`, `state`, and `settings`, plus selected app-local settings such as `socialStreamState`, `settings`, `betaMode`, language, and supported YouTube/TikTok mode flags.
+- Desktop cached-state recovery also maintains guarded copies such as `savedSync.json` and backup/mirror state. Do not tell a user to delete the profile while attempting recovery.
+- `Clear All Sources` is intentionally narrower than Full Reset. It removes configured sources/groups while preserving sessions, cookies, and settings.
+- The dock-link recovery helper reconstructs only the session/password and URL parameters present in the pasted URL.
+            </template>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 License.</p></div></div>
+    </footer>
+    <script src="js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

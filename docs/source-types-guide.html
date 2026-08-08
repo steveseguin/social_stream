@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem("darkMode");
+				var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+				if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+					document.documentElement.classList.add("dark-mode");
+				}
+			})();
+		</script>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Source Types - Social Stream Ninja</title>
+		<link rel="stylesheet" href="css/styles.css" />
+		<link rel="stylesheet" href="css/guides.css" />
+		<link rel="icon" href="../icons/favicon.ico" type="image/x-icon" />
+		<meta name="description" content="How Social Stream Ninja source type names work in payloads, filters, Event Flow, desktop app sources, custom capture, and replies." />
+	</head>
+	<body>
+		<header>
+			<div class="container">
+				<div class="logo">
+					<a href="../index.html"><img src="../icons/logo.svg" alt="Social Stream Ninja Logo" /><span>Social Stream Ninja</span></a>
+				</div>
+				<nav>
+					<ul>
+						<li><a href="../index.html">Home</a></li>
+						<li><a href="../docs/features.html">Features</a></li>
+						<li><a href="../docs/download.html">Download</a></li>
+						<li><a href="../docs/guides.html" class="active">Guides</a></li>
+						<li><a href="../docs/commands.html">Commands &amp; API</a></li>
+						<li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+						<li><a href="../docs/templates.html">Templates</a></li>
+						<li><a href="../docs/services.html">Hire</a></li>
+						<li><a href="../docs/support.html">Support</a></li>
+					</ul>
+				</nav>
+				<div class="header-controls">
+					<button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+						<svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg
+						><svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+							<circle cx="12" cy="12" r="5"></circle>
+							<line x1="12" y1="1" x2="12" y2="3"></line>
+							<line x1="12" y1="21" x2="12" y2="23"></line>
+							<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+							<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+							<line x1="1" y1="12" x2="3" y2="12"></line>
+							<line x1="21" y1="12" x2="23" y2="12"></line>
+							<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+							<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+						</svg>
+					</button>
+					<div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+				</div>
+			</div>
+		</header>
+		<section class="page-hero">
+			<div class="container">
+				<h1>Source Types</h1>
+				<p>Use the payload's exact source name for incoming filters, and understand the destination family before sending chat back out.</p>
+			</div>
+		</section>
+		<main class="guide-section">
+			<div class="container">
+				<div class="guide-card">
+					<h2>On This Page</h2>
+					<ul class="guide-list">
+						<li><a href="#what-is-a-type">What a type is</a></li>
+						<li><a href="#common-and-confusing-types">Common and confusing names</a></li>
+						<li><a href="#youtube-shorts-event-flow">YouTube Shorts and Event Flow</a></li>
+						<li><a href="#instagram-live">Instagram Live and Instagram comments</a></li>
+						<li><a href="#generic-and-unnamed-sources">Generic, custom, and unnamed sources</a></li>
+						<li><a href="#desktop-app-injection">Desktop app script injection</a></li>
+						<li><a href="#replying-to-sources">Replying and relaying to sources</a></li>
+						<li><a href="#where-to-find-details">Where to find exact details</a></li>
+					</ul>
+				</div>
+
+				<div class="guide-card" id="what-is-a-type">
+					<h2>What Is a <code>type</code>?</h2>
+					<p><code>type</code> is the canonical source identifier on an incoming Social Stream payload. Overlays, URL filters, APIs, and Event Flow use it to tell platforms and source variants apart.</p>
+					<pre><code>{
+  "type": "youtubeshorts",
+  "chatname": "Ava",
+  "chatmessage": "Hello from Shorts"
+}</code></pre>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Meaning</th>
+								<th>Do Not Confuse It With</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Name"><code>type</code></td>
+								<td data-label="Meaning">The incoming payload source, such as <code>youtube</code> or <code>instagramlive</code>.</td>
+								<td data-label="Do Not Confuse It With">A display label, connection mode, or event name.</td>
+							</tr>
+							<tr>
+								<td data-label="Name"><code>event</code></td>
+								<td data-label="Meaning">What happened, such as <code>superchat</code>, <code>gift</code>, or <code>viewer_update</code>.</td>
+								<td data-label="Do Not Confuse It With">The platform that produced it.</td>
+							</tr>
+							<tr>
+								<td data-label="Name"><code>sourceName</code></td>
+								<td data-label="Meaning">An optional channel, room, or source display name.</td>
+								<td data-label="Do Not Confuse It With">The stable value used by a From Source trigger.</td>
+							</tr>
+							<tr>
+								<td data-label="Name"><code>tid</code></td>
+								<td data-label="Meaning">The originating tab or desktop source-window ID used for reply and source exclusion.</td>
+								<td data-label="Do Not Confuse It With">A platform type.</td>
+							</tr>
+							<tr>
+								<td data-label="Name">Desktop app <code>target</code></td>
+								<td data-label="Meaning">The saved category used to choose a URL, mode, and capture script.</td>
+								<td data-label="Do Not Confuse It With">A guarantee that every emitted payload has the same string.</td>
+							</tr>
+						</tbody>
+					</table>
+					<p><strong>Important:</strong> Event Flow's <em>From Source</em> trigger compares its configured value directly with <code>message.type</code>. Use the exact lowercase payload value.</p>
+				</div>
+
+				<div class="guide-card" id="common-and-confusing-types">
+					<h2>Common and Confusing Types</h2>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>Capture or UI Name</th>
+								<th>Payload Type</th>
+								<th>Why It May Be Surprising</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Capture or UI Name">YouTube live chat</td>
+								<td data-label="Payload Type"><code>youtube</code></td>
+								<td data-label="Why It May Be Surprising">DOM, API polling, and WebSocket/streaming describe transport, not separate types.</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">YouTube Shorts live chat</td>
+								<td data-label="Payload Type"><code>youtubeshorts</code></td>
+								<td data-label="Why It May Be Surprising">It is distinct for incoming filters and Event Flow relay destinations, while shared YouTube controls still treat both variants as one family where needed.</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">Instagram Live / InstaFeed live</td>
+								<td data-label="Payload Type"><code>instagramlive</code></td>
+								<td data-label="Why It May Be Surprising">Instagram post and feed comments use <code>instagram</code>.</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">TikFinity</td>
+								<td data-label="Payload Type"><code>tiktok</code></td>
+								<td data-label="Why It May Be Surprising">TikFinity is the connector; the normalized platform remains TikTok.</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">X</td>
+								<td data-label="Payload Type"><code>x</code>, or legacy <code>twitter</code> with the Twitter-branding option</td>
+								<td data-label="Why It May Be Surprising">Existing filters may intentionally preserve the older name.</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">Bilibili regional choices</td>
+								<td data-label="Payload Type"><code>bilibili</code></td>
+								<td data-label="Why It May Be Surprising">Desktop targets and scripts may say <code>bilibilicom</code> or <code>bilibilitv</code>, while payloads are normalized.</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">OBS system events</td>
+								<td data-label="Payload Type"><code>obs</code></td>
+								<td data-label="Why It May Be Surprising">They are not chat sources, but can enter Event Flow with events such as <code>scene_changed</code>.</td>
+							</tr>
+						</tbody>
+					</table>
+					<p>Use the <a href="event-reference.html">Event Reference</a> for the field contract and <a href="supported-sites.html">Supported Sites</a> for public platform setup names.</p>
+				</div>
+
+				<div class="guide-card" id="youtube-shorts-event-flow">
+					<h2>YouTube Shorts and Event Flow</h2>
+					<p><strong>Incoming matching is exact:</strong> use <code>youtubeshorts</code> in a From Source trigger for Shorts messages, and <code>youtube</code> for regular YouTube live chat.</p>
+					<p><strong>Outgoing matching is also exact:</strong> Relay Chat treats them as separate destinations.</p>
+					<ul class="guide-list">
+						<li>Destination <code>youtube</code> sends only to regular YouTube live-chat windows.</li>
+						<li>Destination <code>youtubeshorts</code> sends only to YouTube Shorts live-chat windows.</li>
+						<li>To reach both, add one action for each destination or relay to all platforms excluding the source.</li>
+					</ul>
+					<p>Other YouTube-wide controls may intentionally handle both types as one platform family. This does not change the exact Event Flow matching above.</p>
+					<h3>Troubleshooting Older Versions</h3>
+					<p>Older versions grouped both relay destinations, so two actions could send twice to each YouTube window. Update Social Stream Ninja if that happens. A Reflection Filter prevents relay loops, but it does not correct overlapping destination matching in those older versions.</p>
+					<figure class="guide-figure">
+						<img src="images/guides/guide-event-flow-overview.png" alt="Social Stream Ninja Event Flow editor with connected trigger, filter, and action nodes" class="guide-image" />
+						<figcaption>From Source reads the incoming payload type; Relay Chat selects outbound source windows.</figcaption>
+					</figure>
+					<p>Continue with the <a href="../actions/event-flow-guide.html">Event Flow Guide</a> or <a href="youtube-setup-guide.html">YouTube Setup Guide</a>.</p>
+				</div>
+
+				<div class="guide-card" id="instagram-live">
+					<h2>Instagram Live vs Instagram Comments</h2>
+					<p>Use <code>instagramlive</code> for live-room chat captured by the Instagram Live or InstaFeed live source. Use <code>instagram</code> for non-live feed, post, or static comments.</p>
+					<ul class="guide-list">
+						<li><strong>Live chat flow:</strong> From Source = <code>instagramlive</code>.</li>
+						<li><strong>Post/comment flow:</strong> From Source = <code>instagram</code>.</li>
+						<li><strong>Both:</strong> use two triggers feeding one shared action, or an Any Source trigger followed by a type-aware filter.</li>
+					</ul>
+					<p>The visible Instagram brand is not enough to choose the type; the content context separates the two.</p>
+				</div>
+
+				<div class="guide-card" id="generic-and-unnamed-sources">
+					<h2>Generic, Custom, and Unnamed Sources</h2>
+					<p><code>sources/generic.js</code> is a broad DOM-capture fallback. It looks for common chat rows, names, messages, avatars, and inputs. It starts with <code>generic</code>, then normally derives a lowercase type from a known platform or the page hostname.</p>
+					<ul class="guide-list">
+						<li>Use it to prove that an ordinary DOM chat can be captured before writing a dedicated source.</li>
+						<li>Do not expect reliable event, moderation, deletion, virtualized-list, or closed shadow-DOM support.</li>
+						<li>A hostname-derived type is convenient, but not a permanent public contract. Confirm the emitted payload before building filters around it.</li>
+						<li>If a source has no established platform name, choose one stable lowercase <code>type</code>. Use <code>sourceName</code> for the human-facing room or channel label.</li>
+						<li>If no stable identity exists yet, <code>generic</code> is safer than changing type per message. External integrations commonly use a deliberate value such as <code>external</code>.</li>
+					</ul>
+					<p>Once users, overlays, or flows depend on a new type, document it in the <a href="event-reference.html">Event Reference</a> rather than silently renaming it.</p>
+				</div>
+
+				<div class="guide-card" id="desktop-app-injection">
+					<h2>Desktop App Script Injection</h2>
+					<p>The desktop app saves a source <code>target</code>, chooses one or more <code>sourceFile</code>/<code>sourceFiles</code>, opens a source window, and injects shared capture scripts from this project. A Chrome-runtime compatibility bridge carries captured messages and reply commands between the page and app.</p>
+					<ul class="guide-list">
+						<li>A target and script filename need not match the payload type. The <code>youtubeshorts</code> target loads <code>sources/youtube.js</code>, which emits <code>youtube</code> or <code>youtubeshorts</code> from page context.</li>
+						<li>Bilibili targets similarly map to shared/regional scripts while emitting <code>bilibili</code>.</li>
+						<li><code>sources/inject/*.js</code> files are page-context helpers for sockets or page variables. The source wrapper remains responsible for the canonical payload.</li>
+						<li>When several scripts are injected, avoid making every helper claim the same outbound destination. Capture identity and reply capability are separate concerns.</li>
+						<li>Source capture changes belong in this repository's <code>sources/</code> files. The desktop app consumes them; its packaged fallback copy is not the source of truth.</li>
+					</ul>
+					<figure class="guide-figure">
+						<img src="images/guides/guide-standalone-source-modes.png" alt="Social Stream Ninja desktop app source entries showing connection modes" class="guide-image" />
+						<figcaption>Each desktop source keeps its own target, URL, connection mode, and capture script.</figcaption>
+					</figure>
+					<p>Maintainers can trace setup in the desktop app's <code>index.html</code> source-window creation, then <code>main.js</code> and <code>preload.js</code> for injection and bridging.</p>
+				</div>
+
+				<div class="guide-card" id="replying-to-sources">
+					<h2>Replying and Relaying to Sources</h2>
+					<p>Incoming identity and outbound capability are related, but they are not the same contract.</p>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>Action</th>
+								<th>How It Chooses</th>
+								<th>Common Failure</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Action">Reply to source</td>
+								<td data-label="How It Chooses">Uses <code>tid</code> to address the exact originating tab/window.</td>
+								<td data-label="Common Failure">No <code>tid</code>, or that capture mode cannot send chat.</td>
+							</tr>
+							<tr>
+								<td data-label="Action">Relay to a platform</td>
+								<td data-label="How It Chooses">Asks open sources whether they support that outbound destination.</td>
+								<td data-label="Common Failure">The selected variant has no matching open source window, or the source cannot send chat.</td>
+							</tr>
+							<tr>
+								<td data-label="Action">Relay to all except source</td>
+								<td data-label="How It Chooses">Broadcasts to routeable sources and excludes the originating <code>tid</code>.</td>
+								<td data-label="Common Failure">A source cannot accept automated input, or a reflection is captured again.</td>
+							</tr>
+						</tbody>
+					</table>
+					<ul class="guide-list">
+						<li>A source script's <code>getSource</code> response is an outbound-routeability signal. Shared YouTube controls may group both variants, while Relay Chat adds exact Shorts URL context for destination matching.</li>
+						<li>Generic capture can find and focus likely inputs, but that does not guarantee the site will accept an automated send.</li>
+						<li>API/WebSocket modes may send through platform APIs instead of typing into the visible page.</li>
+						<li>In the desktop app, <em>Bot reply-only (no capture)</em> keeps a source available for replies/status while suppressing its normal captured messages.</li>
+						<li>Test reply support with one source window before building a multi-platform relay.</li>
+					</ul>
+				</div>
+
+				<div class="guide-card" id="where-to-find-details">
+					<h2>Where to Find Exact Details</h2>
+					<ul class="guide-list">
+						<li><a href="event-reference.html">Event Reference</a>: canonical fields and platform event names.</li>
+						<li><a href="../actions/event-flow-guide.html">Event Flow Guide</a>: triggers, actions, templates, reflection handling, and tests.</li>
+						<li><a href="standalone-app-modes.html">Standalone App Modes</a>: source-window and connection-mode behavior.</li>
+						<li><a href="supported-sites.html">Supported Sites</a>: platform names and setup requirements.</li>
+						<li><a href="index.html?file=agents/08-platform-sources/generic-and-custom-sources.md">Generic and Custom Sources</a>: fallback and external capture.</li>
+						<li><a href="index.html?file=agents/04-standalone-app-source-windows.md">Desktop App Source Windows</a>: target, script, bridge, and reply-only internals.</li>
+						<li><a href="index.html?file=agents/12-development/adding-a-source.md">Adding a Source</a>: source contracts, injection helpers, manifests, and docs.</li>
+					</ul>
+					<p>When debugging, inspect one raw payload and record its <code>type</code>, <code>event</code>, <code>sourceName</code>, and <code>tid</code>. That usually separates incoming matching, outbound routing, and capture duplication.</p>
+				</div>
+			</div>
+		</main>
+		<footer>
+			<div class="container">
+				<div class="footer-bottom">
+					<p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p>
+				</div>
+			</div>
+		</footer>
+		<script src="js/main.js"></script>
+		<script>
+			document.getElementById("current-year").textContent = new Date().getFullYear();
+		</script>
+	</body>
+</html>
