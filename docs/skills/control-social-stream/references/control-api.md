@@ -28,7 +28,7 @@ GET /api/v1/events
 GET /api/v1/operations/OPERATION_ID
 ```
 
-Status includes app version, session, headless/visibility state, local-media server state, and normalized sources. `app.mainWindowVisible` reports the actual show/hide state; SSApp 0.4.7 and newer track it explicitly so a window hidden to the tray is not incorrectly reported as visible on Linux. As of API 1.1.3, normalized sources deliberately omit the stored `url` because it may contain credentials; use the numeric `tabId` to address an active source window. Embedded HTTP(S) URLs in normalized source errors are reduced to their origin, except for the strict public TikTok `/@handle/live` route.
+Status includes app version, session, headless/visibility state, local-media server state, pending app-dialog count, and normalized sources. `app.mainWindowVisible` reports the actual show/hide state; SSApp 0.4.7 and newer track it explicitly so a window hidden to the tray is not incorrectly reported as visible on Linux. As of API 1.1.3, normalized sources deliberately omit the stored `url` because it may contain credentials; use the numeric `tabId` to address an active source window. Embedded HTTP(S) URLs in normalized source errors are reduced to their origin, except for the strict public TikTok `/@handle/live` route.
 
 The events endpoint is a Server-Sent Events stream. It emits bounded, resumable status, operation, and captured-source events and accepts the standard `Last-Event-ID` header. Mutation responses include an operation ID that can be inspected independently.
 
@@ -57,6 +57,18 @@ Supported settings actions:
 
 - `getSettings`
 - `updateSettings`
+
+Supported app-window and dialog actions in API 1.3.0:
+
+- `listAppWindows`, `captureAppWindowScreenshot`, `inspectAppWindow`, `interactAppWindow`
+- `setAppWindowVisibility`
+- `getPendingAppDialogs`, `waitForAppDialog`, `respondToAppDialog`
+
+Omit `windowId` to target the main window. These actions replace operating-system screen
+capture and desktop control for SSApp-owned UI. Dialog actions bypass the main renderer, so
+they remain usable while a synchronous JavaScript prompt is waiting. Electron message/open/save
+dialogs are rendered inside SSApp while MCP dialog control is armed. Merely enabling the API
+does not change the normal dialog path.
 
 Controllable settings are returned by `getCapabilities`. The initial set is `betaMode`, `youtubeAutoAdd`, `youtubeAutoCleanup`, `youtubeCheckInterval`, `forceTikTokClassic`, `preferTikTokLegacy`, and `lastTikTokMode`.
 
@@ -159,7 +171,7 @@ adapter with `--ssapp-mcp`. Enable **File > Local AI / Automation**, restart, th
 `SSAPP_CONTROL_URL` into the local agent's MCP configuration. A source checkout and separate
 Node installation are not required.
 
-MCP 1.1.0 in SSApp 0.4.13 and newer advertises the adapter's complete stable tool set even
+MCP 1.2.0 in SSApp 0.4.14 and newer advertises the adapter's complete stable tool set even
 when the main app is offline during discovery. Each version-gated tool re-reads runtime
 capabilities when called and rejects commands unsupported by the connected SSApp version.
 It maps every approved control API operation and includes diagnostics, captured events,
@@ -169,12 +181,12 @@ Linux configurations add `--ozone-platform=headless` so the lightweight adapter 
 not need a second X display; the main capture application still needs a desktop session or
 Xvfb.
 
-For `ssapp_add_source` only, MCP 1.1.0 supplies `connectionMode: "tiktok-websocket"`
+For `ssapp_add_source` only, MCP 1.2.0 supplies `connectionMode: "tiktok-websocket"`
 (WebSocket Auto) when a TikTok request omits the mode. Explicit modes are passed through.
 This is MCP adapter behavior only; the desktop UI and direct HTTP `addSource` behavior are
 unchanged.
 
-Call `ssapp_get_capabilities` first. Tool presence in MCP 1.1.0 indicates that the adapter
+Call `ssapp_get_capabilities` first. Tool presence in MCP 1.2.0 indicates that the adapter
 knows the tool, not that the connected SSApp version supports its underlying command.
 The adapter accepts only an uncredentialed `http://127.0.0.1` control origin. An adapter
 process already running during an app upgrade still contains its old code and must be
@@ -184,4 +196,4 @@ to `SSAPP_UNREACHABLE` with an actionable setup message rather than raw socket d
 
 ## Limits
 
-Headless means no visible Electron windows; Chromium still runs because capture sources require a browser runtime. The API binds only to loopback and is intended for same-machine agents, not remote cloud control. It does not expose arbitrary JavaScript execution, selectors, page HTML, secrets, cookies, storage, request headers, unrestricted settings, or raw filesystem access. Captured history, lifecycle details, page text, semantic elements, and screenshots are bounded. Remote operators use Social Stream's existing WebRTC or WebSocket control path.
+Headless means no visible Electron windows; Chromium still runs because capture sources require a browser runtime. The API binds only to loopback and is intended for same-machine agents, not remote cloud control. It does not expose arbitrary JavaScript execution, selectors, page HTML, secrets, cookies, storage, request headers, unrestricted settings, or raw filesystem access. A confirmed pending open/save dialog may receive only the explicit path chosen by the user. Captured history, lifecycle details, page text, semantic elements, and screenshots are bounded. Remote operators use Social Stream's existing WebRTC or WebSocket control path.

@@ -6,7 +6,10 @@ const SocialStreamLocalServer = require("../js/local-server-url.js");
 
 const popupSource = fs.readFileSync(path.resolve(__dirname, "..", "popup.js"), "utf8");
 const popupHtml = fs.readFileSync(path.resolve(__dirname, "..", "popup.html"), "utf8");
+const dockHtml = fs.readFileSync(path.resolve(__dirname, "..", "dock.html"), "utf8");
 const backgroundSource = fs.readFileSync(path.resolve(__dirname, "..", "background.js"), "utf8");
+const parametersSource = fs.readFileSync(path.resolve(__dirname, "..", "parameters.md"), "utf8");
+const urlParameterConfig = fs.readFileSync(path.resolve(__dirname, "..", "shared", "config", "urlParameters.js"), "utf8");
 const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, "..", "manifest.json"), "utf8"));
 
 assert.strictEqual(SocialStreamLocalServer.getPort(new URLSearchParams()), 3000);
@@ -49,6 +52,22 @@ for (const retiredSource of ['trovo', 'dlive']) {
   assert.ok(!popupHtml.includes(`data-action="openchat" data-value="${retiredSource}"`), `${retiredSource} quick-open button is still present`);
   assert.ok(!backgroundSource.includes(`target == "${retiredSource}"`), `${retiredSource} quick-open handler is still present`);
 }
+
+assert.ok(
+  popupHtml.includes('data-translate="viewer-count-and-chat-activity-overlay">Viewer Count &amp; Chat Activity Overlay'),
+  "viewer-count overlay section title is missing"
+);
+const reserveViewerSpaceOption = popupHtml.match(/<input type="checkbox" data-param1="reserveviewercountspace"[^>]*>/);
+assert.ok(reserveViewerSpaceOption, "reserve viewer-count space option is missing");
+assert.ok(!/\bchecked\b/.test(reserveViewerSpaceOption[0]), "reserve viewer-count space must default to off");
+assert.ok(
+  dockHtml.includes('var reserveviewercountspace = showviewercount && urlParams.has("reserveviewercountspace");'),
+  "dock must require both viewer counts and the reserve-space option"
+);
+assert.ok(dockHtml.includes('--viewer-count-reserved-space: 0px;'), "reserved space must default to zero");
+assert.ok(dockHtml.includes('new MutationObserver(scheduleViewerBarSpaceUpdate)'), "viewer bar height tracking is missing");
+assert.ok(parametersSource.includes('| `reserveviewercountspace` | boolean |'), "parameter documentation is missing");
+assert.ok(urlParameterConfig.includes('"key": "reserveviewercountspace"'), "generated parameter metadata is missing");
 
 {
   const start = popupSource.indexOf("const sourceTypes = ['relaytargets','eventsSources','ttssources'];");

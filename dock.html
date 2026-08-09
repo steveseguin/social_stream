@@ -23,6 +23,7 @@
 				--font-color-name: var(--author-color, #ddd);
 				--background-color: #36393f;
 				--topbar-background: #0009;
+				--viewer-count-reserved-space: 0px;
 				--locked-chatbar: 0px;
 				--menu-background-color: #2f3136;
 				--menu-border-color: 0 0 5px #000;
@@ -2110,7 +2111,7 @@
 
 			#pinned {
 				position: sticky;
-				top: 0 !important;
+				top: var(--viewer-count-reserved-space) !important;
 				background-color: var(--pinned-bg) !important;
 				left: 0;
 				width: 100%;
@@ -2138,7 +2139,7 @@
 				position: absolute;
 				right: 0px;
 				overflow-y: auto;
-				max-height: 100%;
+				max-height: calc(100% - var(--viewer-count-reserved-space));
 				overflow-x: hidden;
 			}
 
@@ -2585,6 +2586,11 @@
 		#topbar:empty {
 			display:none;
 		}
+		#topbarSpacer {
+			height: var(--viewer-count-reserved-space);
+			width: 100%;
+			pointer-events: none;
+		}
 		
 		.output-container {
 			mask-image: linear-gradient(to top,
@@ -2597,13 +2603,13 @@
 			);
 			display: block;
 			width: 100vw;
-			height: 100vh;
+			height: calc(100vh - var(--viewer-count-reserved-space));
 			overflow-x: hidden;
 			overflow-y: hidden !important;
 			margin-bottom: 0;
 		}
 		.electronDraggable .output-container {
-			height: calc(100vh); 
+			height: calc(100vh - var(--viewer-count-reserved-space)); 
 			scrollbar-width: none; /* Firefox */
 			-ms-overflow-style: none; /* IE and Edge */
 		}
@@ -2679,6 +2685,7 @@
 	</head>
 	<body id="main" class="vanilla notcompactmode">
 		<div id="topbar"></div>
+		<div id="topbarSpacer" aria-hidden="true"></div>
 		<div id="pinned" class="output"></div>
 		<div id="output" class="output"></div>
 		<div id="backToLive" onclick="returnToLive();" style="display:none; position:fixed; bottom:40px; left:50%; transform:translateX(-50%); z-index:9999; background:rgba(0,120,255,0.9); color:#fff; padding:6px 16px; border-radius:20px; cursor:pointer; font-size:14px; font-family:sans-serif; box-shadow:0 2px 8px rgba(0,0,0,0.3); white-space:nowrap;">Back to live (<span id="missedCount">0</span> new)</div>
@@ -4038,6 +4045,7 @@
 			if (urlParams.has("showviewercount")) {
 				showviewercount = true;
 			}
+			var reserveviewercountspace = showviewercount && urlParams.has("reserveviewercountspace");
 			var showlikecount = false;
 			if (urlParams.has("showlikecount")) {
 				showlikecount = true;
@@ -6620,6 +6628,26 @@
 			var followers = {};
 			
 			var topBarElement = getById("topbar");
+
+			if (reserveviewercountspace && topBarElement) {
+				var viewerBarSpaceUpdatePending = false;
+				var updateViewerBarReservedSpace = function() {
+					viewerBarSpaceUpdatePending = false;
+					var height = topBarElement.children.length ? Math.ceil(topBarElement.getBoundingClientRect().height) : 0;
+					document.documentElement.style.setProperty("--viewer-count-reserved-space", height + "px");
+				};
+				var scheduleViewerBarSpaceUpdate = function() {
+					if (viewerBarSpaceUpdatePending) {
+						return;
+					}
+					viewerBarSpaceUpdatePending = true;
+					requestAnimationFrame(updateViewerBarReservedSpace);
+				};
+				var viewerBarSpaceObserver = new MutationObserver(scheduleViewerBarSpaceUpdate);
+				viewerBarSpaceObserver.observe(topBarElement, { childList: true, subtree: true, characterData: true });
+				window.addEventListener("resize", scheduleViewerBarSpaceUpdate);
+				scheduleViewerBarSpaceUpdate();
+			}
 
 			function formatVideoBitrate(bitrateKbps){
 				var bitrate = parseFloat(bitrateKbps);

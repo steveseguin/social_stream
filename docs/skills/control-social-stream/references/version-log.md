@@ -4,6 +4,7 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |
+| 1.3.0 / MCP 1.2.0 | 0.4.14 | Adds SSApp-owned window listing, built-in screenshots, semantic inspection and confirmed interaction, visibility control, blocking-safe JavaScript/Electron dialog discovery and response, bounded dialog waiting, and user-confirmed open/save paths; ordinary dialogs keep their native behavior until MCP app-window/dialog control is armed |
 | 1.2.0 / MCP 1.1.0 | 0.4.13 | Maps every approved API command to a stable offline MCP tool list; adds bounded captured events and waiting, source/page/process diagnostics with renderer PID/type plus `privateKb` and `residentSetKb` memory in KiB for shared-process de-duplication, secret-safe embedded URL redaction in normalized source errors, screenshots as MCP image content, semantic page inspection, confirmed opaque-reference interaction, page reload, human handoff, strict schemas, and loopback-only adapter enforcement |
 | 1.1.5 / MCP 1.0.6 | 0.4.11 | Defaults mode-less MCP TikTok `ssapp_add_source` requests to `tiktok-websocket` (WebSocket Auto) while preserving explicit modes; desktop UI and direct HTTP behavior are unchanged |
 | 1.1.5 / MCP 1.0.5 | 0.4.11 | Keeps the complete MCP tool set discoverable when SSApp starts after the MCP client, while preserving live capability checks before version-gated commands |
@@ -18,6 +19,13 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 ## Skill revisions
 
 ### 2026-08-08
+
+- Documented SSApp-owned window capture/control and blocking-safe JavaScript/Electron dialog
+  handling (API 1.3.0 / MCP 1.2.0, minimum SSApp 0.4.14).
+- Replaced the desktop-control fallback for SSApp UI with built-in MCP screenshot, semantic
+  interaction, dialog waiting, and confirmed dialog response workflows.
+- Clarified that ordinary dialogs are unchanged until an MCP app-window interaction or dialog
+  call arms dialog control, and that passwords and other secrets remain human-only.
 
 - Documented full MCP parity with the approved control API and the stable offline tool catalog
   (API 1.2.0 / MCP 1.1.0, minimum SSApp 0.4.13).

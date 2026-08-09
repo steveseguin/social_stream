@@ -140,6 +140,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `hidenumbers` | boolean | Hides messages that contain only digits |
 | `showsourcename` | boolean | Displays the originating platform label on each card |
 | `showviewercount` | boolean | Shows the current viewer count indicator |
+| `reserveviewercountspace` | boolean | Reserves vertical space so the viewer count bar does not cover chat messages |
 | `nocolon` | boolean | Removes the colon between username and message body |
 | `namefilter` | boolean | Applies filters to usernames instead of message text |
 | `stripreplyto` | boolean | Removes “replying to” prefaces from imported messages |
