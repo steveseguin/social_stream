@@ -61,7 +61,7 @@ URL parameters observed:
 
 - Session/security: `session`, `s`, `id`, `password`, `lanonly`.
 - Server path: `server`, `server2`, `server3`, `localserver`.
-- Limits/timing: `showtime`, `floatup`, `limit`, `max`, `speed`.
+- Limits/timing: `showtime`, `floatup`, `limit`, `max`, `burst`, `speed`.
 - Filters: `hidedupes`, `membersonly`, `hidereplies`, `bademotes`, `myname`, `botlist`, `hidebots`.
 - Visuals: `scale`, `chroma`, `darkmode`, `lightmode`, `transparent`, `pagebg`, `pagebackground`, `dockbg`.
 - Custom code/style: `css`, `base64css`, `b64css`, `cssbase64`, `cssb64`, `js`.
@@ -71,6 +71,7 @@ Support checks:
 - If it is blank, send a chat message with a normal emoji first.
 - If platform emotes do not show, inspect whether the source payload includes image/SVG HTML in `chatmessage`.
 - If too many emotes appear, use `limit`/`max` and `hidedupes`.
+- To expand a small emote message into a larger effect, use `burst=15` (or another value up to 100). This sets the minimum number of emotes produced by a message that contains at least one emote.
 - If a bot keeps triggering emotes, use `hidebots` and the `myname`/`botlist` parameter.
 
 ## `reactions.html`
