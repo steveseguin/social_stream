@@ -117,14 +117,28 @@
             <div class="guide-card">
                 <h2>What This Solves</h2>
                 <p>By default, AI chatbot replies go back through the Twitch source that received the message. If that source is signed in as the broadcaster, the reply appears from the broadcaster account.</p>
-                <p>This setup routes bot and auto-reply output through a separate Twitch source that is signed in as the bot account.</p>
+                <p>SSApp supports two bot-account setups: an account attached directly to a Twitch WebSocket source, or the existing separate reply-only source with an account role.</p>
                 <div class="guide-note">
-                    <p><strong>Important:</strong> This workflow uses the standalone app source account roles. The browser extension does not have the same per-source account role controls.</p>
+                    <p><strong>Important:</strong> The attached-account option is WebSocket-only. Standard Twitch sources and the browser extension continue to use the separate-source setup.</p>
                 </div>
             </div>
 
             <div class="guide-card">
-                <h2>Quick Setup</h2>
+                <h2>WebSocket Setup (No Extra Source)</h2>
+                <ol class="guide-steps">
+                    <li>Open the settings menu on an existing Twitch source that uses <strong>WebSocket</strong> mode.</li>
+                    <li>Under <strong>Twitch WebSocket sending</strong>, select <strong>Automatic reply account: Main account</strong>.</li>
+                    <li>Choose <strong>Connect bot account</strong>, then sign in to Twitch with the bot account.</li>
+                    <li>After connection, the menu shows the bot username. Chatbot and scheduled automatic replies use it; manual sends still use the main account.</li>
+                </ol>
+                <p>This does not create a source or a browser session. In Twitch Shared Chat, attached-bot replies are delivered only to the channel connected by that source.</p>
+                <div class="guide-note">
+                    <p>If <code>botreplyaccountroles</code> is configured, the existing separate bot source keeps priority. This prevents both setups from sending the same reply.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Separate-Source Setup (Still Supported)</h2>
                 <ol class="guide-steps">
                     <li>Open the Social Stream Ninja standalone app.</li>
                     <li>Add your normal Twitch source for the channel. This source can capture chat as usual.</li>
@@ -200,6 +214,8 @@
             <div class="guide-card">
                 <h2>Troubleshooting</h2>
                 <ul class="guide-list">
+                    <li><strong>An attached WebSocket bot cannot send:</strong> make the bot a moderator in the channel, or sign the main Twitch account out and back in once to approve Twitch bot access.</li>
+                    <li><strong>The attached-account option is missing:</strong> it appears only on a Twitch source using WebSocket mode. Use the separate-source setup for Standard mode.</li>
                     <li><strong>Replies still come from the broadcaster:</strong> confirm the second source is signed in as the bot account and its account role is <code>bot</code>.</li>
                     <li><strong>No reply is sent:</strong> confirm the bot source is active, the bot account can chat, and <code>botreplyaccountroles</code> is exactly <code>bot</code>.</li>
                     <li><strong>The bot source captures duplicate messages:</strong> enable <strong>Bot reply-only (no capture)</strong> on the bot source.</li>

@@ -2426,6 +2426,7 @@ function checkIntervalState(intervalIndex) {
 					//messageTimeout = Date.now();
 					const scheduledMessage = {};
 					scheduledMessage.response = settings["timemessagecommand" + currentIndex].textsetting;
+					scheduledMessage.outgoingOrigin = "chatbot";
 					//sendMessageToTabs(scheduledMessage, false, null, false, antispam);
 					sendMessageToTabs(scheduledMessage, false, null, false, antispam, false);
 				} else if (settings["timemessageinterval" + currentIndex].numbersetting) {
@@ -2444,6 +2445,7 @@ function checkIntervalState(intervalIndex) {
 							//messageTimeout = Date.now();
 							const scheduledMessage = {};
 							scheduledMessage.response = settings["timemessagecommand" + activeIndex].textsetting;
+							scheduledMessage.outgoingOrigin = "chatbot";
 							//sendMessageToTabs(scheduledMessage, false, null, false, antispam);
 							sendMessageToTabs(scheduledMessage, false, null, false, antispam, false);
 						},
@@ -2467,6 +2469,7 @@ function checkIntervalState(intervalIndex) {
 						//messageTimeout = Date.now();
 						const scheduledMessage = {};
 						scheduledMessage.response = settings["timemessagecommand" + activeIndex].textsetting;
+						scheduledMessage.outgoingOrigin = "chatbot";
 						sendMessageToTabs(scheduledMessage, false, null, false, antispam, false);
 					},
 					15 * 60000,
@@ -15643,13 +15646,14 @@ function isWebsocketSourceTabUrl(url) {
 	return !!(url && url.includes("/sources/websocket/") && (url.includes("socialstream.ninja") || url.startsWith("file://") || url.startsWith("chrome-extension://")));
 }
 
-function relayMessageToWebsocketSourceTab(tabId, message) {
+function relayMessageToWebsocketSourceTab(tabId, message, messageOrigin = "relay") {
 	try {
 		chrome.tabs.sendMessage(
 			tabId,
 			{
 				type: "SEND_MESSAGE",
-				message: message
+				message: message,
+				messageOrigin: messageOrigin
 			},
 			function () {
 				chrome.runtime.lastError;
@@ -15793,7 +15797,7 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 	}
 
 	if (isWebsocketSourceTabUrl(url)) {
-		if (relayMessageToWebsocketSourceTab(tab.id, data.response)) {
+		if (relayMessageToWebsocketSourceTab(tab.id, data.response, messageOrigin)) {
 			relayTabContext.storeMessage(data.response);
 			lastSentMessage = sanitizeMessageForTracking(data.response, false);
 			lastSentTimestamp = now;
@@ -15871,7 +15875,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		return false;
 	}
 
-	const messageOrigin = data.outgoingOrigin || (data.bot ? "chatbot" : data.host ? "host" : "relay");
+	const messageOrigin = data.outgoingOrigin || (data.bot || data.botRoleControlled ? "chatbot" : data.host ? "host" : "relay");
 
 	if (messageOrigin === "host" && getSettingFlag("aiAutoTranslateOutgoing")) {
 		try {

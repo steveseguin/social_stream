@@ -131,6 +131,7 @@ async function testSendChatRequiresDispatchCandidate() {
 	].join("\n");
 	let tabs = [];
 	let dispatches = 0;
+	let lastDispatchOptions = null;
 	const sandbox = {
 		chrome: {
 			debugger: {},
@@ -157,8 +158,9 @@ async function testSendChatRequiresDispatchCandidate() {
 		hasExplicitRelayTabTargets: () => false,
 		isValidTab: async () => true,
 		claimPublishedUrl: () => true,
-		dispatchRelayMessageToTab: async () => {
+		dispatchRelayMessageToTab: async (_tab, _data, options) => {
 			dispatches += 1;
+			lastDispatchOptions = options;
 		},
 		console,
 		Promise,
@@ -175,6 +177,38 @@ async function testSendChatRequiresDispatchCandidate() {
 	const accepted = await sandbox.sendMessageToTabs({ response: "hello", outgoingOrigin: "host" });
 	assert.equal(accepted, true, "sendChat rejected an eligible capture-source dispatch");
 	assert.equal(dispatches, 1);
+
+	await sandbox.sendMessageToTabs({ response: "automatic", botRoleControlled: true });
+	assert.equal(lastDispatchOptions.messageOrigin, "chatbot", "automatic bot replies were not marked for bot-account routing");
+}
+
+function testWebsocketMessageOriginForwarding() {
+	const background = read("background.js");
+	const source = extractFunction(background, "relayMessageToWebsocketSourceTab");
+	let captured = null;
+	const relay = Function(
+		"chrome",
+		"console",
+		`${source}; return relayMessageToWebsocketSourceTab;`
+	)({
+		tabs: {
+			sendMessage(tabId, payload, callback) {
+				captured = { tabId, payload };
+				callback();
+			}
+		},
+		runtime: { lastError: null }
+	}, console);
+
+	assert.equal(relay(42, "hello", "chatbot"), true);
+	assert.deepEqual(captured, {
+		tabId: 42,
+		payload: {
+			type: "SEND_MESSAGE",
+			message: "hello",
+			messageOrigin: "chatbot"
+		}
+	});
 }
 
 function testDockOwnerAndDeduplication() {
@@ -284,6 +318,7 @@ async function testVersionedRoutingOwnership() {
 Promise.resolve()
 	.then(testBackgroundCommandHandler)
 	.then(testSendChatRequiresDispatchCandidate)
+	.then(testWebsocketMessageOriginForwarding)
 	.then(testDockOwnerAndDeduplication)
 	.then(testVersionedRoutingOwnership)
 	.then(() => console.log("mobile remote-control contract tests passed"))
