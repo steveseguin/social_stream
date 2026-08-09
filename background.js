@@ -257,11 +257,12 @@ const HANDLE_STORE_NAME = "handles";
 let fileHandleDBPromise = null;
 const HANDLE_KEYS = {
 	chatLog: "chatLog",
+	liveStats: "liveStats",
 	savedNames: "savedNames",
 	ticker: "tickerFile"
 };
 
-const HANDLE_STATUS_KEYS = ["chatLog", "savedNames", "ticker"];
+const HANDLE_STATUS_KEYS = ["chatLog", "liveStats", "savedNames", "ticker"];
 const HANDLE_STATUS_FIELDS = ["name", "status", "detail", "persisted"];
 const HANDLE_STATUS_STATES = {
 	ACTIVE: "active",
@@ -2744,6 +2745,240 @@ async function overwriteFile(data = false) {
 			await writableStream.close();
 		}
 	}
+}
+
+var liveStatsFileHandle = false;
+var liveStatsWritePromise = Promise.resolve();
+var liveStatsWriterGeneration = 0;
+var liveStatsSnapshot = {
+	version: 1,
+	updatedAt: null,
+	platforms: {}
+};
+
+function normalizeLiveStatsPlatform(value) {
+	var platform = String(value || "")
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9_-]+/g, "-")
+		.replace(/^-+|-+$/g, "");
+	if (["__proto__", "constructor", "prototype"].includes(platform)) {
+		return "";
+	}
+	return platform;
+}
+
+function normalizeLiveStatsCount(value) {
+	if (value === null || value === undefined || value === "") {
+		return null;
+	}
+	if (typeof value === "string") {
+		value = value.replace(/,/g, "").trim();
+		if (!value) {
+			return null;
+		}
+	}
+	var number = Number(value);
+	if (!Number.isFinite(number)) {
+		return null;
+	}
+	return Math.max(0, Math.round(number));
+}
+
+function mergeLiveStatsPlatformUpdate(platform, update) {
+	platform = normalizeLiveStatsPlatform(platform);
+	if (!platform || !update || typeof update !== "object") {
+		return false;
+	}
+
+	var current = liveStatsSnapshot.platforms[platform] || {};
+	var next = Object.assign({}, current);
+	var changed = false;
+	["viewers", "likes", "followers", "subscribers"].forEach(function (field) {
+		if (!Object.prototype.hasOwnProperty.call(update, field)) {
+			return;
+		}
+		var count = normalizeLiveStatsCount(update[field]);
+		if (count !== null && next[field] !== count) {
+			next[field] = count;
+			changed = true;
+		}
+	});
+
+	if (Object.prototype.hasOwnProperty.call(update, "title") && update.title !== null && update.title !== undefined) {
+		var title = String(update.title);
+		if (next.title !== title) {
+			next.title = title;
+			changed = true;
+		}
+	}
+
+	if (typeof update.isLive === "boolean" && next.isLive !== update.isLive) {
+		next.isLive = update.isLive;
+		changed = true;
+	}
+
+	if (changed) {
+		next.updatedAt = new Date().toISOString();
+		liveStatsSnapshot.platforms[platform] = next;
+	}
+	return changed;
+}
+
+function commitLiveStatsSnapshot(changed) {
+	if (!changed) {
+		return false;
+	}
+	liveStatsSnapshot.updatedAt = new Date().toISOString();
+	writeLiveStatsSnapshot();
+	return true;
+}
+
+function updateLiveStatsSnapshot(update) {
+	if (!update || typeof update !== "object") {
+		return false;
+	}
+	var changed = false;
+	if (update.platforms && typeof update.platforms === "object" && !Array.isArray(update.platforms)) {
+		Object.keys(update.platforms).forEach(function (platform) {
+			changed = mergeLiveStatsPlatformUpdate(platform, update.platforms[platform]) || changed;
+		});
+	} else {
+		changed = mergeLiveStatsPlatformUpdate(update.platform || update.type, update);
+	}
+	return commitLiveStatsSnapshot(changed);
+}
+
+function captureLiveStatsFromMessage(message) {
+	if (!message || typeof message !== "object") {
+		return false;
+	}
+
+	var changed = false;
+	var eventName = String(message.event || "").toLowerCase();
+	var platform = normalizeLiveStatsPlatform(message.type);
+	var meta = message.meta;
+	var fieldByEvent = {
+		viewer_update: "viewers",
+		likes_update: "likes",
+		follower_update: "followers",
+		subscriber_update: "subscribers"
+	};
+
+	if (eventName === "viewer_updates" && meta && typeof meta === "object" && !Array.isArray(meta)) {
+		Object.keys(meta).forEach(function (sourceType) {
+			changed = mergeLiveStatsPlatformUpdate(sourceType, { viewers: meta[sourceType] }) || changed;
+		});
+	} else if (platform && fieldByEvent[eventName]) {
+		var metricUpdate = {};
+		metricUpdate[fieldByEvent[eventName]] = meta;
+		changed = mergeLiveStatsPlatformUpdate(platform, metricUpdate) || changed;
+	}
+
+	if (platform && (eventName === "stream_online" || eventName === "stream_offline")) {
+		var streamUpdate = { isLive: eventName === "stream_online" };
+		if (eventName === "stream_offline") {
+			streamUpdate.viewers = 0;
+		}
+		if (meta && typeof meta === "object") {
+			if (meta.title !== undefined) {
+				streamUpdate.title = meta.title;
+			} else if (meta.streamTitle !== undefined) {
+				streamUpdate.title = meta.streamTitle;
+			}
+			if (meta.likes !== undefined) {
+				streamUpdate.likes = meta.likes;
+			}
+		}
+		changed = mergeLiveStatsPlatformUpdate(platform, streamUpdate) || changed;
+	} else if (platform && meta && typeof meta === "object" && meta.streamTitle !== undefined) {
+		changed = mergeLiveStatsPlatformUpdate(platform, { title: meta.streamTitle }) || changed;
+	}
+
+	return commitLiveStatsSnapshot(changed);
+}
+
+function writeLiveStatsSnapshot() {
+	if (!liveStatsFileHandle) {
+		return Promise.resolve(false);
+	}
+	var handle = liveStatsFileHandle;
+	var generation = liveStatsWriterGeneration;
+	var data = JSON.stringify(liveStatsSnapshot, null, 2);
+	if (typeof handle === "string") {
+		ipcRenderer.send("write-to-file", { filePath: handle, data: data });
+		return Promise.resolve(true);
+	}
+
+	liveStatsWritePromise = liveStatsWritePromise
+		.catch(function () {})
+		.then(async function () {
+			if (generation !== liveStatsWriterGeneration || handle !== liveStatsFileHandle) {
+				return false;
+			}
+			var writableStream = await handle.createWritable();
+			await writableStream.write(data);
+			await writableStream.close();
+			return true;
+		})
+		.catch(function (error) {
+			console.warn("Could not write live stats file:", error);
+			updateHandleStatus("liveStats", {
+				status: HANDLE_STATUS_STATES.ERROR,
+				detail: "Could not write live stats file"
+			});
+			return false;
+		});
+	return liveStatsWritePromise;
+}
+
+async function overwriteLiveStatsFile(action = "setup") {
+	if (action === "stop") {
+		liveStatsWriterGeneration += 1;
+		liveStatsFileHandle = false;
+		if (isSSAPP) {
+			localStorage.removeItem("savedLiveStatsFilePath");
+		}
+		await dropBrowserHandle(HANDLE_KEYS.liveStats);
+		await updateHandleStatus("liveStats", {
+			name: null,
+			status: HANDLE_STATUS_STATES.MISSING,
+			detail: "",
+			persisted: false
+		});
+		return;
+	}
+
+	const opts = {
+		suggestedName: "social-stream-live-stats.json",
+		types: [
+			{
+				description: "JSON data",
+				accept: { "application/json": [".json"] }
+			}
+		]
+	};
+	if (!window.showSaveFilePicker) {
+		console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
+	}
+	const restoreTarget = await bringBackgroundPageToFrontForPicker();
+	try {
+		liveStatsFileHandle = await window.showSaveFilePicker(opts);
+	} finally {
+		await restorePreviousTabAfterPicker(restoreTarget);
+	}
+	liveStatsWriterGeneration += 1;
+	await persistBrowserHandle(HANDLE_KEYS.liveStats, liveStatsFileHandle);
+	if (isSSAPP && typeof liveStatsFileHandle === "string") {
+		localStorage.setItem("savedLiveStatsFilePath", liveStatsFileHandle);
+	}
+	await updateHandleStatus("liveStats", {
+		name: getFileHandleDisplayName(liveStatsFileHandle),
+		status: HANDLE_STATUS_STATES.ACTIVE,
+		detail: "",
+		persisted: shouldUseBrowserHandleStore() || isSSAPP
+	});
+	await writeLiveStatsSnapshot();
 }
 
 const MAX_NATIVE_FILE_PATH_LENGTH = 4096;
@@ -5497,6 +5732,11 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (isExtensionOn && (request.delete.type || request.delete.chatname || request.delete.id)) {
 				sendToDestinations({ delete: request.delete });
 			}
+		} else if ("liveStats" in request) {
+			sendResponse({ state: isExtensionOn });
+			if (isExtensionOn) {
+				updateLiveStatsSnapshot(request.liveStats);
+			}
 		} else if ("message" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 
@@ -6144,6 +6384,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if (request.cmd && request.cmd === "singlesave") {
 			sendResponse({ state: isExtensionOn });
 			overwriteFile("setup");
+		} else if (request.cmd && request.cmd === "livestatssave") {
+			sendResponse({ state: isExtensionOn });
+			overwriteLiveStatsFile("setup");
 		} else if (request.cmd && request.cmd === "excelsave") {
 			sendResponse({ state: isExtensionOn });
 			overwriteFileExcel("setup");
@@ -6305,6 +6548,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				detail: "",
 				persisted: false
 			});
+		} else if (request.cmd && request.cmd === "livestatssaveStop") {
+			sendResponse({ state: isExtensionOn });
+			await overwriteLiveStatsFile("stop");
 		} else if (request.cmd && request.cmd === "selectwinner") {
 			////console.logrequest);
 			if ("value" in request) {
@@ -7019,6 +7265,8 @@ function hasTargetedMetaPayload(message) {
 
 async function sendToDestinations(message, individualLikeAlreadyRouted) {
 	if (typeof message == "object") {
+		captureLiveStatsFromMessage(message);
+
 		if (message.suppressRelay) {
 			return true;
 		}
@@ -18542,6 +18790,33 @@ async function initializeFileHandles() {
 			});
 		}
 
+		const savedLiveStatsFilePathRaw = localStorage.getItem("savedLiveStatsFilePath");
+		const savedLiveStatsFilePath = sanitizeNativeFilePath(savedLiveStatsFilePathRaw);
+		if (savedLiveStatsFilePathRaw && !savedLiveStatsFilePath) {
+			console.warn("[LiveStats] Invalid live stats file path detected. Clearing remembered value.");
+			localStorage.removeItem("savedLiveStatsFilePath");
+		}
+		if (savedLiveStatsFilePath) {
+			liveStatsFileHandle = savedLiveStatsFilePath;
+			liveStatsWriterGeneration += 1;
+			await updateHandleStatus("liveStats", {
+				name: getFileHandleDisplayName(savedLiveStatsFilePath),
+				status: HANDLE_STATUS_STATES.ACTIVE,
+				detail: "",
+				persisted: true
+			});
+			if (Object.keys(liveStatsSnapshot.platforms).length) {
+				await writeLiveStatsSnapshot();
+			}
+		} else {
+			await updateHandleStatus("liveStats", {
+				name: null,
+				status: HANDLE_STATUS_STATES.MISSING,
+				detail: "",
+				persisted: false
+			});
+		}
+
 		// Restore saved names file handle
 		const savedNamesFilePathRaw = localStorage.getItem("savedNamesFilePath");
 		const savedNamesFilePath = sanitizeNativeFilePath(savedNamesFilePathRaw);
@@ -18633,6 +18908,32 @@ async function initializeFileHandles() {
 		await updateHandleStatus("chatLog", {
 			status: HANDLE_STATUS_STATES.ERROR,
 			detail: "Could not restore chat log file",
+			persisted: false
+		});
+	}
+
+	try {
+		const restoredLiveStatsHandle = await restoreBrowserHandle(HANDLE_KEYS.liveStats, "readwrite");
+		if (restoredLiveStatsHandle) {
+			liveStatsFileHandle = restoredLiveStatsHandle;
+			liveStatsWriterGeneration += 1;
+			await updateHandleStatus("liveStats", {
+				name: getFileHandleDisplayName(restoredLiveStatsHandle),
+				status: HANDLE_STATUS_STATES.ACTIVE,
+				detail: "",
+				persisted: true
+			});
+			if (Object.keys(liveStatsSnapshot.platforms).length) {
+				await writeLiveStatsSnapshot();
+			}
+		} else {
+			await markHandleNeedsAttention("liveStats", "Select a file to save current live stats");
+		}
+	} catch (error) {
+		console.warn("Could not restore live stats handle:", error);
+		await updateHandleStatus("liveStats", {
+			status: HANDLE_STATUS_STATES.ERROR,
+			detail: "Could not restore live stats file",
 			persisted: false
 		});
 	}

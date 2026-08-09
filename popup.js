@@ -184,15 +184,17 @@ const HANDLE_STATUS_STATES = {
 	NEEDS_PERMISSION: "needs-permission",
 	ERROR: "error"
 };
-const HANDLE_STATUS_KEYS = ["ticker", "chatLog", "savedNames"];
+const HANDLE_STATUS_KEYS = ["ticker", "chatLog", "liveStats", "savedNames"];
 const HANDLE_STATUS_LABELS = {
 	ticker: "Ticker source",
 	chatLog: "Last message file",
+	liveStats: "Live stats file",
 	savedNames: "Names log"
 };
 const HANDLE_STATUS_HELP = {
 	ticker: "Select a ticker source file to stream text",
 	chatLog: "Choose where the last message should be saved",
+	liveStats: "Choose where the current live stats should be saved",
 	savedNames: "Choose where unique chat names should be stored"
 };
 const popupHandleStatusState = {};
