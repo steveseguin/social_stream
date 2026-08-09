@@ -11510,25 +11510,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return index;
 	}
 
-	function preparePopupSearchIndex() {
-		if (popupSearchIndex) {
-			return;
-		}
-		clearPopupSearchHidden();
-		var openStates = [];
-		document.querySelectorAll('input.collapsible-input').forEach(function(input) {
-			openStates.push({
-				input: input,
-				checked: input.checked
-			});
-			input.checked = true;
-		});
-		popupSearchIndex = createPopupSearchIndex();
-		openStates.forEach(function(state) {
-			state.input.checked = state.checked;
-		});
-	}
-
 	function popupSearchRecordMatches(record, terms) {
 		return popupSearchTextMatches(record.text || '', terms);
 	}
@@ -11695,7 +11676,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			searchInput.style.display = 'block';
 			searchInput.style.width = 'calc(100% - 35px)'; // Match this with your CSS width
 			searchInput.focus(); // Optional: Focus on the input field when it's shown
-			setTimeout(preparePopupSearchIndex, 0);
 		} else {
 			searchInput.focus();
 			searchInput.select();

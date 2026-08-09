@@ -770,7 +770,7 @@ class MessageStoreMigration {
 
             const hasValidStore = await this.verifyObjectStore(oldVersion);
             if (!hasValidStore) {
-                console.warn('Old database could not be verified; preserving it for a later retry');
+                console.log('Old database could not be verified; preserving it for a later retry');
                 return;
             }
 
