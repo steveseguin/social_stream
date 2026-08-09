@@ -553,6 +553,9 @@ try{
 	var tokenRefreshResumePending = false;
 	var botTokenRefreshTimer = null;
 	var botTokenRefreshPromise = null;
+	var lastBotSendAuthorizationError = '';
+	let currentChannelId = null;
+	let currentAuthUser = null;
 
 	function createTransientTokenValidationError(status, message) {
 		return {
@@ -734,6 +737,32 @@ try{
 		const value = parseInt(localStorage.getItem(TWITCH_BOT_TOKEN_EXPIRY_KEY) || '', 10);
 		return Number.isFinite(value) ? value : 0;
 	}
+	function getMainBotAuthorizationStatus() {
+		const validatedScopes = Array.isArray(currentAuthUser?.scopes) ? currentAuthUser.scopes : [];
+		const storedScopes = String(localStorage.getItem(TWITCH_TOKEN_SCOPE_KEY) || '')
+			.split(/[,\s]+/)
+			.filter(Boolean);
+		const scopes = validatedScopes.length ? validatedScopes : storedScopes;
+		const mainHasChannelBotScope = scopes.length ? scopes.includes('channel:bot') : null;
+		const tokenClientId = String(currentAuthUser?.client_id || localStorage.getItem(TWITCH_TOKEN_CLIENT_ID_KEY) || '');
+		const mainUsesHostedApp = tokenClientId ? tokenClientId === hostedClientId : null;
+		const mainAccountIsBroadcaster = currentAuthUser?.user_id && currentChannelId
+			? String(currentAuthUser.user_id) === String(currentChannelId)
+			: null;
+		let mainBotAuthorizationReady = null;
+		if (mainHasChannelBotScope === true && mainUsesHostedApp === true && mainAccountIsBroadcaster === true) {
+			mainBotAuthorizationReady = true;
+		} else if (mainHasChannelBotScope === false || mainUsesHostedApp === false || mainAccountIsBroadcaster === false) {
+			mainBotAuthorizationReady = false;
+		}
+
+		return {
+			mainHasChannelBotScope,
+			mainBotAuthorizationReady,
+			mainAccountIsBroadcaster,
+			mainAccountLogin: currentAuthUser?.login || ''
+		};
+	}
 	function getStoredBotAccountStatus(extra = {}) {
 		const login = localStorage.getItem(TWITCH_BOT_LOGIN_KEY) || '';
 		const userId = localStorage.getItem(TWITCH_BOT_USER_ID_KEY) || '';
@@ -741,6 +770,9 @@ try{
 			connected: !!getStoredBotToken(),
 			login,
 			userId,
+			error: lastBotSendAuthorizationError || null,
+			requiresMainReauthorization: !!lastBotSendAuthorizationError,
+			...getMainBotAuthorizationStatus(),
 			...extra
 		};
 	}
@@ -1279,6 +1311,7 @@ try{
 			return notifyBotAccountStatus({ event: 'error', error });
 		}
 
+		lastBotSendAuthorizationError = '';
 		notifyBotAccountStatus({ event: 'connecting', connecting: true });
 		try {
 			const state = nonce(15) + '@bot';
@@ -1310,6 +1343,7 @@ try{
 	}
 
 	function disconnectTwitchBotAccount() {
+		lastBotSendAuthorizationError = '';
 		clearStoredBotToken();
 		return notifyBotAccountStatus({ event: 'disconnected' });
 	}
@@ -3001,10 +3035,19 @@ async function ensureChatClientInstance() {
 
 		const responseData = await response.json().catch(() => ({}));
 		if (!response.ok) {
-			const errorMessage = responseData.message || responseData.error ||
-				(response.status === 403
-					? 'Twitch rejected the bot reply. Make the bot a moderator, or reconnect the main Twitch account to approve bot access.'
-					: `Twitch bot reply failed (HTTP ${response.status}).`);
+			const botLogin = localStorage.getItem(TWITCH_BOT_LOGIN_KEY) || '';
+			const botLabel = botLogin ? `@${botLogin}` : 'the bot account';
+			const errorMessage = response.status === 403
+				? `Twitch blocked automatic replies from ${botLabel}. Reconnect this WebSocket source's main Twitch account using the channel owner, or make ${botLabel} a moderator in this channel.`
+				: responseData.message || responseData.error || `Twitch bot reply failed (HTTP ${response.status}).`;
+			if (response.status === 403 && lastBotSendAuthorizationError !== errorMessage) {
+				lastBotSendAuthorizationError = errorMessage;
+				notifyBotAccountStatus({
+					event: 'error',
+					error: errorMessage,
+					requiresMainReauthorization: true
+				});
+			}
 			throw new Error(errorMessage);
 		}
 
@@ -3012,6 +3055,10 @@ async function ensureChatClientInstance() {
 		if (!result?.is_sent || !result.message_id) {
 			const dropMessage = result?.drop_reason?.message || 'Twitch did not accept the bot reply.';
 			throw new Error(dropMessage);
+		}
+		if (lastBotSendAuthorizationError) {
+			lastBotSendAuthorizationError = '';
+			notifyBotAccountStatus({ event: 'status', error: null, requiresMainReauthorization: false });
 		}
 		return result.message_id;
 	}
@@ -4108,8 +4155,6 @@ async function ensureChatClientInstance() {
 	let eventSessionId;
 	let isDisconnecting = false;
 	let reconnectTimeout = null;
-	let currentChannelId = null;
-	let currentAuthUser = null;
 	let activeSubscriptions = new Set();
 	let eventSubRetryCount = 0;
 	let hasPermissionError = [];
