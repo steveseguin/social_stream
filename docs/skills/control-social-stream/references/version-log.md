@@ -4,6 +4,7 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |
+| 1.3.1 / MCP 1.2.1 | 0.4.14 | Adds opt-in reverse document-order semantic inspection so late-mounted modal controls remain reachable when a page exceeds the bounded element limit |
 | 1.3.0 / MCP 1.2.0 | 0.4.14 | Adds SSApp-owned window listing, built-in screenshots, semantic inspection and confirmed interaction, visibility control, blocking-safe JavaScript/Electron dialog discovery and response, bounded dialog waiting, and user-confirmed open/save paths; ordinary dialogs keep their native behavior until MCP app-window/dialog control is armed |
 | 1.2.0 / MCP 1.1.0 | 0.4.13 | Maps every approved API command to a stable offline MCP tool list; adds bounded captured events and waiting, source/page/process diagnostics with renderer PID/type plus `privateKb` and `residentSetKb` memory in KiB for shared-process de-duplication, secret-safe embedded URL redaction in normalized source errors, screenshots as MCP image content, semantic page inspection, confirmed opaque-reference interaction, page reload, human handoff, strict schemas, and loopback-only adapter enforcement |
 | 1.1.5 / MCP 1.0.6 | 0.4.11 | Defaults mode-less MCP TikTok `ssapp_add_source` requests to `tiktok-websocket` (WebSocket Auto) while preserving explicit modes; desktop UI and direct HTTP behavior are unchanged |
@@ -17,6 +18,11 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
 ## Skill revisions
+
+### 2026-08-09
+
+- Added `elementOrder: "reverse"` to source-page and app-window semantic inspection for
+  late-mounted modal controls (API 1.3.1 / MCP 1.2.1, minimum SSApp 0.4.14).
 
 ### 2026-08-08
 

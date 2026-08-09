@@ -2534,6 +2534,13 @@ input:checked + .slider:before {
                                     </label>
 									<span data-translate="show-viewer-count">🔢 Show viewer count per source; top-right</span>
                                 </div>
+								<div data-keywords="like count likes reactions stats analytics tally" title="Enabling this also enables Send platform like totals in Global Settings.">
+									<label class="switch">
+										<input type="checkbox" data-param1="showlikecount" />
+										<span class="slider round"></span>
+									</label>
+									<span><span class="icon" style="display: inline-block;" aria-hidden="true">❤️</span> Show like totals per source; top-right</span>
+								</div>
 								<div data-keywords="viewer count reserve space top bar overlap chat">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="reserveviewercountspace" />
@@ -2541,13 +2548,6 @@ input:checked + .slider:before {
                                     </label>
 									<span data-translate="reserve-space-for-the-viewer-count-bar">↕️ Reserve space for the viewer count bar</span>
                                 </div>
-								<div data-keywords="like count likes reactions stats analytics tally" title="Controls this dock only. Requires Send platform like totals to be enabled in Global Settings.">
-									<label class="switch">
-										<input type="checkbox" data-param1="showlikecount" />
-										<span class="slider round"></span>
-									</label>
-									<span>♥ Show like totals per source; top-right <small>(requires "Send platform like totals")</small></span>
-								</div>
 								<div data-keywords="viewer count hide source exclude platform audience stats">
 									<div class="textInputContainer" style="width: 95%;" title="Select source types to exclude from viewer counts only. Chat stays active.">
 										<input type="text" id="hideViewerCountSources" class="textInput instant" autocomplete="off" placeholder="Select sources below" data-textsetting="hideViewerCountSources" />
@@ -7123,7 +7123,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span> Show individual likes in main chat/events. </span>
                                 </div>
-                                <div title="Send current platform like totals to the dock feed and custom consumers. To display them in a dock, also enable Show like totals per source in that dock's options. YouTube uses API polling; SSApp TikTok updates are throttled.">
+                                <div title="Send current platform like totals to docks, WebSocket, and custom consumers. This is required for YouTube WebSocket like totals. YouTube uses API polling; SSApp TikTok updates are throttled.">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="captureliketotals" />
                                         <span class="slider round"></span>

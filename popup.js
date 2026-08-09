@@ -6480,6 +6480,14 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
         updateFirstTimerUiState();
     }
 
+    if (sync && paramType === "param1" && paramValue === "showlikecount" && ele.checked) {
+        var likeTotalsToggle = document.querySelector("input[data-setting='captureliketotals']");
+        if (likeTotalsToggle && !likeTotalsToggle.checked) {
+            likeTotalsToggle.checked = true;
+            updateSettings(likeTotalsToggle, true);
+        }
+    }
+
     return true;
 }
 function handleExclusiveCases(ele, paramType, paramValue, sync) {

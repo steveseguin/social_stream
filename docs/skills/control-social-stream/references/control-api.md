@@ -58,7 +58,7 @@ Supported settings actions:
 - `getSettings`
 - `updateSettings`
 
-Supported app-window and dialog actions in API 1.3.0:
+Supported app-window and dialog actions in API 1.3.0 and newer:
 
 - `listAppWindows`, `captureAppWindowScreenshot`, `inspectAppWindow`, `interactAppWindow`
 - `setAppWindowVisibility`
@@ -69,6 +69,10 @@ capture and desktop control for SSApp-owned UI. Dialog actions bypass the main r
 they remain usable while a synchronous JavaScript prompt is waiting. Electron message/open/save
 dialogs are rendered inside SSApp while MCP dialog control is armed. Merely enabling the API
 does not change the normal dialog path.
+
+In API 1.3.1, `inspectSourcePage` and `inspectAppWindow` accept optional
+`elementOrder: "reverse"`. Use it when a late-mounted modal falls beyond the bounded element
+limit; opaque references and all interaction safety rules remain unchanged.
 
 Controllable settings are returned by `getCapabilities`. The initial set is `betaMode`, `youtubeAutoAdd`, `youtubeAutoCleanup`, `youtubeCheckInterval`, `forceTikTokClassic`, `preferTikTokLegacy`, and `lastTikTokMode`.
 
@@ -177,6 +181,8 @@ capabilities when called and rejects commands unsupported by the connected SSApp
 It maps every approved control API operation and includes diagnostics, captured events,
 screenshots, semantic inspection, safe page interaction, and human handoff. Tool results
 include `ssappVersion` and `apiVersion`.
+MCP 1.2.1 with API 1.3.1 adds reverse document-order inspection for late-mounted modal
+controls that would otherwise fall beyond the bounded element limit.
 Linux configurations add `--ozone-platform=headless` so the lightweight adapter process does
 not need a second X display; the main capture application still needs a desktop session or
 Xvfb.

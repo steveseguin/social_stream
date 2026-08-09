@@ -69,6 +69,19 @@ assert.ok(dockHtml.includes('new MutationObserver(scheduleViewerBarSpaceUpdate)'
 assert.ok(parametersSource.includes('| `reserveviewercountspace` | boolean |'), "parameter documentation is missing");
 assert.ok(urlParameterConfig.includes('"key": "reserveviewercountspace"'), "generated parameter metadata is missing");
 
+const viewerCountOptionIndex = popupHtml.indexOf('data-param1="showviewercount"');
+const likeCountOptionIndex = popupHtml.indexOf('data-param1="showlikecount"');
+const reserveViewerSpaceOptionIndex = popupHtml.indexOf('data-param1="reserveviewercountspace"');
+assert.ok(viewerCountOptionIndex !== -1 && likeCountOptionIndex > viewerCountOptionIndex, "like totals must follow viewer counts");
+assert.ok(likeCountOptionIndex < reserveViewerSpaceOptionIndex, "like totals must be directly below viewer counts");
+assert.ok(popupHtml.includes('aria-hidden="true">❤️</span> Show like totals'), "like totals must use the full-width heart icon");
+
+{
+  const handleElementParam = extractFunction("handleElementParam");
+  assert.ok(handleElementParam.includes('paramValue === "showlikecount" && ele.checked'), "dock like totals must enable capture");
+  assert.ok(handleElementParam.includes("input[data-setting='captureliketotals']"), "dock like totals must target the global capture setting");
+}
+
 {
   const start = popupSource.indexOf("const sourceTypes = ['relaytargets','eventsSources','ttssources'];");
   const end = popupSource.indexOf('// Function to handle custom JS file upload', start);

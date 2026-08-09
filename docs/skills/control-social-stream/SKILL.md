@@ -33,6 +33,9 @@ It also lists, captures, inspects, and interacts with SSApp-owned windows; shows
 windows; and detects, waits for, and answers JavaScript and Electron dialogs. Use those tools
 instead of desktop control or operating-system screen capture.
 
+MCP 1.2.1 with API 1.3.1 adds `elementOrder: "reverse"` to source-page and app-window
+inspection. Use it when a late-mounted modal falls beyond the bounded semantic element limit.
+
 Headless mode is separate. To hide windows and also allow a local agent, pass both
 `--ssapp-headless-control` and `--ssapp-control-api`. Headless mode alone does not open the
 API. Environment variables are also supported.
