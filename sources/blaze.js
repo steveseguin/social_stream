@@ -71,8 +71,6 @@
 	// settings.captureevents
 	
 	
-	var dataIndex = -5;
-
 	function getMessageIndex(ele) {
 		if (!ele || !ele.dataset) {
 			return NaN;
@@ -86,8 +84,57 @@
 	}
 	
 	var channelName = "";
+
+	// Virtuoso destroys off-screen rows and recreates them on scroll-back, so
+	// per-node markers alone re-emit history; this cross-node memory is the real
+	// dedupe guard. Signatures include the row index, so identical repeat
+	// messages (new index) still emit.
+	var emittedSignatures = new Map();
+	var EMITTED_SIGNATURE_LIMIT = 2000;
+	var liveEmitAfter = 0;
+
+	function rememberSignature(signature) {
+		emittedSignatures.set(signature, Date.now());
+		if (emittedSignatures.size > EMITTED_SIGNATURE_LIMIT) {
+			var excess = emittedSignatures.size - EMITTED_SIGNATURE_LIMIT;
+			var keys = emittedSignatures.keys();
+			for (var i = 0; i < excess; i++) {
+				emittedSignatures.delete(keys.next().value);
+			}
+		}
+	}
+
+	function getNameElement(ele) {
+		var nameElement = ele.querySelector("button[title='User actions'] span.truncate");
+		if (nameElement) {
+			return nameElement;
+		}
+
+		var actionButtons = ele.querySelectorAll("button[title='User actions']");
+		for (var i = 0; i < actionButtons.length; i++) {
+			if (actionButtons[i].textContent.trim()) {
+				return actionButtons[i];
+			}
+		}
+
+		return ele.querySelector("button[title].truncate.text-sm.font-semibold.text-white");
+	}
+
+	function getMessageName(ele) {
+		var nameElement = getNameElement(ele);
+		var name = nameElement ? nameElement.textContent.trim().replace(/:\s*$/, "") : "";
+		if (name) {
+			return name;
+		}
+
+		var avatarButton = ele.querySelector("button[aria-label$=' avatar']");
+		if (avatarButton) {
+			return avatarButton.getAttribute("aria-label").replace(/\s+avatar$/, "").trim();
+		}
+		return "";
+	}
 	
-	function processMessage(ele){
+	function processMessage(ele, seedOnly){
 		//console.log(ele);
 		if (!ele || !ele.isConnected){
 		//	console.log("no connected");
@@ -101,38 +148,54 @@
 			}
 		}
 		
-		var messageIndex = getMessageIndex(ele);
-		if (!Number.isNaN(messageIndex) && (messageIndex <= dataIndex)) {
-			return;
-		}
-
-		
 		var chatimg = ""
 
 		try {
-			chatimg = ele.querySelector("img[src^='https://cdn.blaze.stream/uploads/avatar/']").src;
+			chatimg = ele.querySelector("button[aria-label$=' avatar'] img[src], img[src^='https://cdn.blaze.stream/uploads/avatar/']").src;
 		} catch(e){
 		}
 		
 		var name="";
 		try {
-			name = escapeHtml(ele.querySelector("button[title='User actions'],button[title].truncate.text-sm.font-semibold.text-white").textContent.split(":")[0]);
+			name = escapeHtml(getMessageName(ele));
 		} catch(e){
 		}
 		
 		var namecolor="";
 		try {
-			namecolor = getComputedStyle(ele.querySelector("button[title='User actions']")).color;
+			var nameElement = getNameElement(ele);
+			namecolor = getComputedStyle(nameElement.closest("button") || nameElement).color;
 		} catch(e){
 		}
 		
 		var badges=[];
-		/* try {
-			ele.querySelectorAll("img[class^='ChatBadge_image_'][src]").forEach(badge=>{
-				badges.push(badge.src);
+		var isBot = false;
+		var isMod = false;
+		var isVip = false;
+		try {
+			var nameSpan = getNameElement(ele);
+			var badgeScope = (nameSpan && nameSpan.closest("span.inline-flex")) || ele;
+			badgeScope.querySelectorAll("button[aria-label]").forEach(function(btn){
+				var label = (btn.getAttribute("aria-label") || "").trim();
+				if (!label || / avatar$/i.test(label)) { return; }
+				if (/^Open user actions/i.test(label)) {
+					if (/\(Bot\)/i.test(label)) { isBot = true; }
+					return;
+				}
+				if (/^Moderator$/i.test(label)) { isMod = true; }
+				else if (/^VIP$/i.test(label)) { isVip = true; }
+				var badgeImg = btn.querySelector("img[src]");
+				if (badgeImg) {
+					badges.push(badgeImg.src);
+					return;
+				}
+				var badgeSvg = btn.querySelector("svg");
+				if (badgeSvg) {
+					badges.push({ html: badgeSvg.outerHTML, type: "svg" });
+				}
 			});
 		} catch(e){
-		} */
+		}
 
 		var msg="";
 		try {
@@ -152,11 +215,22 @@
 	//		console.log("no name");
 			return;
 		}
-		
-		if (!Number.isNaN(messageIndex) && (messageIndex > dataIndex)) {
-			dataIndex = messageIndex;
+
+		var messageIndex = getMessageIndex(ele);
+		var signature = String(messageIndex) + "|" + name + "|" + msg + "|" + dono;
+		if (ele.dataset.ssnBlazeMessageSignature === signature) {
+			return;
 		}
-		
+		ele.dataset.ssnBlazeMessageSignature = signature;
+		if (emittedSignatures.has(signature)) {
+			return;
+		}
+		rememberSignature(signature);
+		// Rows seen while the freshly detected list is still hydrating are
+		// backlog, not live chat.
+		if (seedOnly || Date.now() < liveEmitAfter) {
+			return;
+		}
 		
 		var data = {};
 		data.chatname = name;
@@ -171,6 +245,9 @@
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "blaze";
+		if (isMod) { data.mod = true; }
+		if (isVip) { data.vip = true; }
+		if (isBot) { data.bot = true; }
 		
 		
 		pushMessage(data);
@@ -283,9 +360,11 @@
 				if (!node || node.nodeType !== 1) {
 					return;
 				}
-				if (node.matches && node.matches("[data-item-index],[data-index]")) {
+				var item = node.matches && node.matches("[data-item-index],[data-index]") ? node :
+					(node.closest ? node.closest("[data-item-index],[data-index]") : null);
+				if (item) {
 					setTimeout(function() {
-						processMessage(node);
+						processMessage(item);
 					}, 200);
 				}
 				if (node.querySelectorAll) {
@@ -302,10 +381,11 @@
 
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
-				if (mutation.type === "attributes") {
-					scheduleProcess(mutation.target);
+				if (mutation.type === "attributes" || mutation.type === "characterData") {
+					scheduleProcess(mutation.target.nodeType === 1 ? mutation.target : mutation.target.parentElement);
 					return;
 				}
+				scheduleProcess(mutation.target);
 				if (mutation.addedNodes.length) {
 					//console.log(mutation.addedNodes);
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
@@ -324,6 +404,7 @@
 		var config = {
 			childList: true,
 			subtree: true,
+			characterData: true,
 			attributes: true,
 			attributeFilter: ["data-index", "data-item-index", "data-known-size"]
 		};
@@ -362,16 +443,11 @@
 
 					console.log("CONNECTED chat detected");
 
-					setTimeout(function(){
-						dataIndex = -1;
-						container.querySelectorAll("[data-item-index],[data-index]").forEach(function(item){
-							var indexx = getMessageIndex(item);
-							if (!Number.isNaN(indexx) && (indexx > dataIndex)) {
-								dataIndex = indexx;
-							}
-						});
-						onElementInserted(container);
-					},1000);
+					liveEmitAfter = Date.now() + 1200;
+					container.querySelectorAll("[data-item-index],[data-index]").forEach(function(item){
+						processMessage(item, true);
+					});
+					onElementInserted(container);
 				}
 				checkViewers();
 			} catch(e){}

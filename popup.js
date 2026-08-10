@@ -2235,9 +2235,39 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 const sourceTypes = ['relaytargets','eventsSources','ttssources'];
 const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
-const sourcesList = new Set();
+// Canonical payload types that cannot always be inferred from a manifest filename.
+// Keep these available even when a hosted/app manifest is temporarily unavailable.
+const additionalSourceTypes = [
+    'arena',
+    'clouthub',
+    'external',
+    'instagramlive',
+    'meet',
+    'obs',
+    'socialstreamchat',
+    'stageten',
+    'threads',
+    'twitter',
+    'workplace',
+    'youtubeshorts',
+    'zoom_poll'
+];
+const sourceTypeAliases = {
+    cloudhub: ['clouthub'],
+    facebook: ['workplace'],
+    instafeed: ['instagramlive'],
+    instagram: ['instagramlive'],
+    meets: ['meet'],
+    verticalpixelzone: ['arena'],
+    x: ['twitter'],
+    youtube: ['youtubeshorts'],
+    zoom: ['zoom_poll']
+};
+const retiredSourceTypes = new Set(['dlive']);
+const sourcesList = new Set(additionalSourceTypes);
 var sortedSourcesListCache = null;
 var popupSourceDatalistLoaded = false;
+var sourcesManifestLoaded = false;
 
 function formatSourceLabel(source) {
     source = String(source || "");
@@ -2255,18 +2285,27 @@ function loadSourcesListFromRuntimeManifest() {
     try {
         if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getManifest === 'function') {
             const manifest = chrome.runtime.getManifest();
-            return collectSourcesFromManifest(manifest) > 0;
+            if (manifest && Array.isArray(manifest.content_scripts)) {
+                collectSourcesFromManifest(manifest);
+                sourcesManifestLoaded = true;
+                return true;
+            }
         }
     } catch (error) {
         console.warn('Unable to load sources from chrome.runtime manifest:', error);
     }
-    return sourcesList.size > 0;
+    return sourcesManifestLoaded;
 }
 
 function appendSourceOptions(select) {
     if (!select || select.dataset.sourceOptionsLoaded === "true") return;
     const currentValue = select.value;
+    const existingValues = new Set();
+    for (let i = 0; i < select.options.length; i++) {
+        existingValues.add(select.options[i].value);
+    }
     getSortedSourcesList().forEach(source => {
+        if (existingValues.has(source)) return;
         const option = document.createElement('option');
         option.value = source;
         option.textContent = formatSourceLabel(source);
@@ -2275,7 +2314,9 @@ function appendSourceOptions(select) {
     if (currentValue) {
         select.value = currentValue;
     }
-    select.dataset.sourceOptionsLoaded = "true";
+    // A fill made without the manifest contains only the seeded fallback types;
+    // leave it open for a later retry so the manifest can complete the list.
+    select.dataset.sourceOptionsLoaded = sourcesManifestLoaded ? "true" : "partial";
 }
 
 function populateSourceDatalist() {
@@ -2300,7 +2341,7 @@ function populateSourceDatalist() {
 }
 
 function ensureLazySourcesLoaded(callback) {
-    if (sourcesList.size > 0 || loadSourcesListFromRuntimeManifest()) {
+    if (sourcesManifestLoaded || loadSourcesListFromRuntimeManifest()) {
         if (callback) callback();
         return Promise.resolve(true);
     }
@@ -2381,14 +2422,23 @@ function collectSourcesFromManifest(manifestData) {
                 if (!normalized.startsWith('./sources/') || !normalized.endsWith('.js')) {
                     return;
                 }
-                const sourceName = normalized.replace('./sources/', '').replace('.js', '');
-                if (sourceName) {
+                const relativeName = normalized.replace('./sources/', '').replace('.js', '');
+                if (relativeName.startsWith('inject/')) {
+                    return;
+                }
+                const sourceName = relativeName.split('/').pop();
+                if (retiredSourceTypes.has(sourceName)) {
+                    return;
+                }
+                const names = [sourceName].concat(sourceTypeAliases[sourceName] || []);
+                names.forEach(name => {
+                    if (!name) return;
                     const previousSize = sourcesList.size;
-                    sourcesList.add(sourceName);
+                    sourcesList.add(name);
                     if (sourcesList.size > previousSize) {
                         added++;
                     }
-                }
+                });
             });
         });
     } catch (error) {
@@ -2402,7 +2452,7 @@ function collectSourcesFromManifest(manifestData) {
 }
 
 async function ensureSourcesListLoaded(options = {}) {
-    if (sourcesList.size > 0) {
+    if (sourcesManifestLoaded) {
         return true;
     }
 
@@ -2414,7 +2464,9 @@ async function ensureSourcesListLoaded(options = {}) {
         try {
             const branch = options.branch || urlParams.get('branch') || 'main';
             const manifestData = await window.ssappFallback.readJson('manifest.json', { branch });
-            if (collectSourcesFromManifest(manifestData)) {
+            if (manifestData && Array.isArray(manifestData.content_scripts)) {
+                collectSourcesFromManifest(manifestData);
+                sourcesManifestLoaded = true;
                 return true;
             }
         } catch (error) {
@@ -2427,7 +2479,9 @@ async function ensureSourcesListLoaded(options = {}) {
         const response = await fetch(manifestUrl);
         if (response.ok) {
             const manifestData = await response.json();
-            if (collectSourcesFromManifest(manifestData)) {
+            if (manifestData && Array.isArray(manifestData.content_scripts)) {
+                collectSourcesFromManifest(manifestData);
+                sourcesManifestLoaded = true;
                 return true;
             }
         }
@@ -10131,25 +10185,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return index;
 	}
 
-	function preparePopupSearchIndex() {
-		if (popupSearchIndex) {
-			return;
-		}
-		clearPopupSearchHidden();
-		var openStates = [];
-		document.querySelectorAll('input.collapsible-input').forEach(function(input) {
-			openStates.push({
-				input: input,
-				checked: input.checked
-			});
-			input.checked = true;
-		});
-		popupSearchIndex = createPopupSearchIndex();
-		openStates.forEach(function(state) {
-			state.input.checked = state.checked;
-		});
-	}
-
 	function popupSearchRecordMatches(record, terms) {
 		return popupSearchTextMatches(record.text || '', terms);
 	}
@@ -10299,7 +10334,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			searchInput.style.display = 'block';
 			searchInput.style.width = 'calc(100% - 35px)'; // Match this with your CSS width
 			searchInput.focus(); // Optional: Focus on the input field when it's shown
-			setTimeout(preparePopupSearchIndex, 0);
 		} else {
 			closePopupSearch();
 		}

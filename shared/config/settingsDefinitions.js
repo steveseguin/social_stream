@@ -562,11 +562,6 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "custom_injection",
     description: "Treat Discord roles as Memberships"
   },
-  "dlive_username": {
-    type: "text",
-    category: "opened_in_new_window",
-    description: "DLive channel name used by the open chat button."
-  },
   "drawmode": {
     type: "boolean",
     category: "configure_select_a_winner_draw_mode",
@@ -1566,11 +1561,6 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     type: "number",
     category: "customize_donation_colors_by_threshold",
     description: "Set trim names longer than chars."
-  },
-  "trovo_username": {
-    type: "text",
-    category: "opened_in_new_window",
-    description: "Trovo channel name opened in a new window."
   },
   "ttsProvider": {
     type: "select",

@@ -426,3 +426,51 @@ source, and one overlay URL before upload.
     successfully
   - Additional checks passed: `npm run lint:js:background:strict`,
     `npm run test:xss:sanitizer`, and `node tests/eventflow-customjs.test.js`
+
+### 2026-08-09 Selective 3.50.5 Update
+
+- Reviewed the clean local `beta` checkout at `672a1328` read-only; no beta
+  files, refs, or working-tree state were changed and no blanket merge was
+  performed.
+- Kept this release deliberately narrow. Included only:
+  - the popup search crash fix from `0c1ab770`
+  - the resilient manifest-derived source catalog from `e432dc6` and its
+    retry/deduplication follow-up from `99f1a5ac`, adapted to keep the removed
+    Velora provider out of this Web Store build
+  - removal of retired Trovo and DLive quick-open controls from `3f4af753`
+  - the tested Blaze capture/deduplication chain from `29615222`, `12fa9bfc`,
+    and `23da2c79`; packaged `sources/blaze.js` byte-matches the final beta
+    result for that chain
+- Deferred beta feature work, desktop/Stream Deck/OBS work, new provider and
+  host additions, retention/database behavior changes, and source fixes that
+  depend on broader untested chains.
+- Bumped the Web Store package version from `3.50.4` to `3.50.5`.
+- Permissions remain unchanged: `notifications`, `storage`, `debugger`,
+  `tabs`, `scripting`, and `tabCapture`. No host permissions were added.
+- Built conservative upload artifact:
+  `C:\Users\steve\Code\webstore\social-stream-ninja-chrome-web-store-3.50.5-20260809-conservative-r1.zip`
+- Artifact size: `34,730,367` bytes; SHA-256:
+  `2DD68082C98C28D183F84F063967088163CC12B7075AECBCA36B58CFD1B5F3EF`
+- Extracted ZIP verification:
+  - manifest at ZIP root with version `3.50.5`
+  - `771` expected and extracted files; no missing, extra, or differing files
+  - JSON parse errors: `0`
+  - missing manifest references: `0`
+  - missing local script/style references: `0`
+  - remote executable-code hits: `0`
+  - dynamic executable-code hits: `0`
+  - removed-provider hits: `0`
+- Focused checks passed:
+  - `git diff --check`
+  - JavaScript syntax checks for all edited JavaScript and tests
+  - `npm run lint:js:background:strict`
+  - `npm run test:xss:sanitizer`
+  - `node tests/eventflow-customjs.test.js`
+  - `node tests/webstore-selective-update.test.js`
+  - `node tests/blaze-source.test.js`
+  - real Chromium extension smoke against the extracted package: service
+    worker startup, popup load, retired-control absence, and popup search
+    execution without page errors
+
+Release status: artifact checks are complete. A manual live-site capture test
+in a clean Chrome profile remains recommended before Web Store upload.

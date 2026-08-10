@@ -10581,18 +10581,8 @@ async function openchat(target = null, force = false) {
 		openURL(url, true);
 	}
 
-	if ((target == "trovo" || !target) && settings.trovo_username) {
-		let url = "https://trovo.live/chat/" + settings.trovo_username.textsetting;
-		openURL(url, true);
-	}
-
 	if ((target == "picarto" || !target) && settings.picarto_username) {
 		let url = "https://picarto.tv/chatpopout/" + settings.picarto_username.textsetting + "/public";
-		openURL(url, true);
-	}
-
-	if ((target == "dlive" || !target) && settings.dlive_username) {
-		let url = "https://dlive.tv/c/" + settings.dlive_username.textsetting + "/" + settings.dlive_username.textsetting;
 		openURL(url, true);
 	}
 
