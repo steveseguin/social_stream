@@ -27,6 +27,16 @@ assert.equal(router.isSsappRequest({ action: "ssapp.stopSource" }), true);
 assert.equal(router.isSsappRequest({ action: "customThing", target: "ssapp" }), true);
 assert.equal(router.isSsappRequest({ action: "startSource", target: "overlay" }), false);
 assert.equal(router.isSsappRequest({ action: "nextInQueue" }), false);
+const normalizedHttpRequest = router.normalizeRemoteRequest({
+	action: "setSourceMute",
+	target: "ssapp",
+	value: '{"sourceId":"source-1","isMuted":true}'
+});
+assert.deepEqual(normalizedHttpRequest.value, { sourceId: "source-1", isMuted: true });
+const unchangedSsnJsonString = router.normalizeRemoteRequest({ action: "customThing", value: '{"keep":"string"}' });
+assert.equal(unchangedSsnJsonString.value, '{"keep":"string"}');
+const unchangedInvalidJson = router.normalizeRemoteRequest({ action: "setSourceMute", target: "ssapp", value: "{invalid" });
+assert.equal(unchangedInvalidJson.value, "{invalid");
 assert.equal(router.isSsappActionSupported("startSource", unavailable), false);
 assert.equal(unavailable.ssapp.remoteActions.startSource, false);
 assert.equal(unavailable.ssapp.actionAvailability.startSource.state, "unavailable");

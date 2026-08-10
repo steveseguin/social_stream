@@ -10328,6 +10328,9 @@ async function routeStreamDeckRemoteRequest(request, context) {
 	if (!router || !request || typeof request !== "object") {
 		return null;
 	}
+	if (typeof router.normalizeRemoteRequest === "function") {
+		request = router.normalizeRemoteRequest(request);
+	}
 	context = context || {};
 	if (router.isVersionedRequest(request) && typeof router.validateVersionedRequest === "function") {
 		const validation = router.validateVersionedRequest(request);

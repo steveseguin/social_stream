@@ -226,7 +226,7 @@
                             <td>&mdash;</td>
                             <td>&mdash;</td>
                             <td>&mdash;</td>
-                            <td>OBS stream started/stopped events for Event Flow when <code>actions.html</code> is connected to OBS WebSocket</td>
+                            <td>OBS output, scene, replay-buffer, and media-ended events for Event Flow when <code>actions.html</code> is connected to OBS WebSocket</td>
                         </tr>
                         <tr>
                             <td><strong>Kick &ndash; DOM</strong></td>
@@ -880,6 +880,11 @@
                                 <td class="status-event"><code>scene_changed</code></td>
                                 <td>OBS changes the active program scene.</td>
                                 <td><code>type</code> is <code>obs</code>; <code>meta.sceneName</code> contains the scene name when OBS provides it.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>media_ended</code></td>
+                                <td>An OBS media input finishes playback.</td>
+                                <td><code>type</code> is <code>obs</code>; <code>meta.inputName</code> and <code>meta.inputUuid</code> identify the media input.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>replay_buffer_saved</code></td>

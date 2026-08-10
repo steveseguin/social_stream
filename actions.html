@@ -517,14 +517,16 @@
             // Supports all variables from messageData: {username}, {message}, {source}, {donation},
             // {event}, {membership}, {hasDonation}, {subtitle}, {meta}, etc.
             var text = config.text || '';
-            text = text.replace(/\{(\w+)\}/gi, function(match, key) {
-                var val = messageData[key.toLowerCase()];
-                if (val === undefined || val === null) return '';
-                if (typeof val === 'object') {
-                    try { return JSON.stringify(val); } catch (e) { return ''; }
-                }
-                return String(val);
-            });
+            if (!config.textProcessed) {
+                text = text.replace(/\{(\w+)\}/gi, function(match, key) {
+                    var val = messageData[key.toLowerCase()];
+                    if (val === undefined || val === null) return '';
+                    if (typeof val === 'object') {
+                        try { return JSON.stringify(val); } catch (e) { return ''; }
+                    }
+                    return String(val);
+                });
+            }
 
             if (!text) {
                 console.warn('[showOverlayText] No text to display');
@@ -730,6 +732,15 @@
             if (eventPayload.savedReplayPath !== undefined) {
                 meta.savedReplayPath = eventPayload.savedReplayPath;
             }
+            if (eventPayload.inputName !== undefined) {
+                meta.inputName = eventPayload.inputName;
+            }
+            if (eventPayload.inputUuid !== undefined) {
+                meta.inputUuid = eventPayload.inputUuid;
+            }
+            if (eventPayload.mediaAction !== undefined) {
+                meta.mediaAction = eventPayload.mediaAction;
+            }
             if (extraMeta) {
                 Object.keys(extraMeta).forEach(function(key) {
                     if (extraMeta[key] !== undefined) {
@@ -744,7 +755,9 @@
                 meta.outputState || '',
                 meta.outputActive === undefined ? '' : String(meta.outputActive),
                 meta.sceneName || '',
-                meta.savedReplayPath || ''
+                meta.savedReplayPath || '',
+                meta.inputUuid || meta.inputName || '',
+                meta.mediaAction || ''
             ].join('|');
             if (eventKey === lastObsEventKey && now - lastObsEventAt < 2000) {
                 return;
@@ -796,6 +809,9 @@
             });
             client.on('ReplayBufferSaved', function(eventPayload) {
                 emitObsEvent('replay_buffer_saved', 'ReplayBufferSaved', eventPayload);
+            });
+            client.on('MediaInputPlaybackEnded', function(eventPayload) {
+                emitObsEvent('media_ended', 'MediaInputPlaybackEnded', eventPayload);
             });
         }
 
@@ -1521,7 +1537,128 @@
                         console.warn("[OBS] Source name not provided");
                     }
                     break;
-                
+
+				case 'obsSetText':
+					if (payload.sourceName) {
+						const client = await ensureObsWebSocket();
+						if (!client) {
+							logObsWebSocketUnavailable('Set Text Source');
+							break;
+						}
+
+						try {
+							const inputRef = await resolveObsInputReference(client, payload.sourceName);
+							const inputTarget = inputRef && inputRef.inputUuid
+								? { inputUuid: inputRef.inputUuid }
+								: { inputName: payload.sourceName };
+
+							await client.call('SetInputSettings', Object.assign({}, inputTarget, {
+								inputSettings: { text: payload.text === undefined || payload.text === null ? '' : String(payload.text) },
+								overlay: true
+							}));
+							console.log(`[OBS WebSocket] Text source '${payload.sourceName}' updated`);
+						} catch (err) {
+							console.error(`[OBS WebSocket] Error updating text source '${payload.sourceName}':`, err);
+						}
+					} else {
+						console.warn('[OBS] Text source name not provided');
+					}
+					break;
+
+				case 'obsMediaControl':
+					if (payload.sourceName) {
+						const client = await ensureObsWebSocket();
+						if (!client) {
+							logObsWebSocketUnavailable('Control Media Source');
+							break;
+						}
+
+						const mediaActions = {
+							play: 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_PLAY',
+							pause: 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_PAUSE',
+							stop: 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_STOP',
+							restart: 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_RESTART',
+							next: 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_NEXT',
+							previous: 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_PREVIOUS'
+						};
+						const operation = String(payload.operation || 'restart').toLowerCase();
+						const mediaAction = mediaActions[operation];
+						if (!mediaAction) {
+							console.warn(`[OBS] Unsupported media action '${payload.operation}'`);
+							break;
+						}
+
+						try {
+							const inputRef = await resolveObsInputReference(client, payload.sourceName);
+							const inputTarget = inputRef && inputRef.inputUuid
+								? { inputUuid: inputRef.inputUuid }
+								: { inputName: payload.sourceName };
+
+							await client.call('TriggerMediaInputAction', Object.assign({}, inputTarget, { mediaAction: mediaAction }));
+							console.log(`[OBS WebSocket] Media source '${payload.sourceName}' action: ${operation}`);
+						} catch (err) {
+							console.error(`[OBS WebSocket] Error controlling media source '${payload.sourceName}':`, err);
+						}
+					} else {
+						console.warn('[OBS] Media source name not provided');
+					}
+					break;
+
+				case 'obsSetVolume':
+					if (payload.sourceName) {
+						const client = await ensureObsWebSocket();
+						if (!client) {
+							logObsWebSocketUnavailable('Set Source Volume');
+							break;
+						}
+
+						let volumeDb = Number(payload.volumeDb);
+						if (!Number.isFinite(volumeDb)) {
+							console.warn('[OBS] Source volume must be a number in dB');
+							break;
+						}
+						volumeDb = Math.max(-100, Math.min(26, volumeDb));
+
+						try {
+							const inputRef = await resolveObsInputReference(client, payload.sourceName);
+							const inputTarget = inputRef && inputRef.inputUuid
+								? { inputUuid: inputRef.inputUuid }
+								: { inputName: payload.sourceName };
+
+							await client.call('SetInputVolume', Object.assign({}, inputTarget, { inputVolumeDb: volumeDb }));
+							console.log(`[OBS WebSocket] Source '${payload.sourceName}' volume set to ${volumeDb} dB`);
+						} catch (err) {
+							console.error(`[OBS WebSocket] Error setting source volume '${payload.sourceName}':`, err);
+						}
+					} else {
+						console.warn('[OBS] Audio source name not provided');
+					}
+					break;
+
+				case 'obsRefreshBrowser':
+					if (payload.sourceName) {
+						const client = await ensureObsWebSocket();
+						if (!client) {
+							logObsWebSocketUnavailable('Refresh Browser Source');
+							break;
+						}
+
+						try {
+							const inputRef = await resolveObsInputReference(client, payload.sourceName);
+							const inputTarget = inputRef && inputRef.inputUuid
+								? { inputUuid: inputRef.inputUuid }
+								: { inputName: payload.sourceName };
+
+							await client.call('PressInputPropertiesButton', Object.assign({}, inputTarget, { propertyName: 'refreshnocache' }));
+							console.log(`[OBS WebSocket] Browser source '${payload.sourceName}' refreshed`);
+						} catch (err) {
+							console.error(`[OBS WebSocket] Error refreshing browser source '${payload.sourceName}':`, err);
+						}
+					} else {
+						console.warn('[OBS] Browser source name not provided');
+					}
+					break;
+
                 case 'obsSetSourceFilter':
                     if (payload.sourceName && payload.filterName) {
                         const client = await ensureObsWebSocket();
@@ -1721,7 +1858,36 @@
                     }
                     break;
                     
-                case 'obsReplayBuffer':
+				case 'obsReplayBufferControl':
+					{
+						const replayBufferRequests = {
+							start: 'StartReplayBuffer',
+							stop: 'StopReplayBuffer',
+							toggle: 'ToggleReplayBuffer'
+						};
+						const operation = String(payload.operation || 'start').toLowerCase();
+						const requestName = replayBufferRequests[operation];
+						if (!requestName) {
+							console.warn(`[OBS] Unsupported replay buffer action '${payload.operation}'`);
+							break;
+						}
+
+						const client = await ensureObsWebSocket();
+						if (!client) {
+							logObsWebSocketUnavailable('Control Replay Buffer');
+							break;
+						}
+
+						try {
+							await client.call(requestName);
+							console.log(`[OBS WebSocket] Replay buffer ${operation} command sent`);
+						} catch (err) {
+							console.error(`[OBS WebSocket] Error controlling replay buffer (${operation}):`, err);
+						}
+					}
+					break;
+
+				case 'obsReplayBuffer':
                     {
                         let handled = false;
                         const client = await ensureObsWebSocket();
