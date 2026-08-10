@@ -108,6 +108,22 @@ function toDataURL(url, callback) {
 		try {
 		var name="";
 		var nameEle = ele.querySelector('[property="sender.name"]');
+		var bodyEle = ele.querySelector('[property="body"]');
+		var service = ele.querySelector('[property="service"]')?.getAttribute("value") || "";
+
+		// Beam removed its ChatMessage microdata in 2026. Current rows are direct
+		// children of .scroll, with a data-ts value, a header first, and a body span.
+		if (!nameEle && ele.dataset?.ts && ele.parentElement?.classList.contains("scroll")){
+			var header = ele.firstElementChild;
+			nameEle = header?.querySelector('a[target="_blank"][href]') || null;
+			bodyEle = Array.from(ele.children).find(function(child){
+				return child !== header && child.tagName === "SPAN";
+			}) || null;
+			try {
+				var serviceHost = new URL(nameEle?.href || "").hostname.toLowerCase().replace(/^www\./, "");
+				service = serviceHost.split(".")[0] || "";
+			} catch(e) {}
+		}
 		
 		try {
 			name = nameEle.innerText || "";
@@ -116,7 +132,7 @@ function toDataURL(url, callback) {
 			return;
 		}
 		
-		var msg = getAllContentNodes(ele.querySelector('[property="body"]')) || "";
+		var msg = getAllContentNodes(bodyEle) || "";
 		console.log("..");
 		var contentimg = "";
 		try {
@@ -173,12 +189,11 @@ function toDataURL(url, callback) {
 		data.type = "beamstream";
 		
 		
-		var source = ele.querySelector('[property="service"]')?.getAttribute("value") || "";
-		if (source){
+		if (service){
 			if (settings.ignorealternatives){
 				return;
 			}
-			var sourceImg = "./sources/images/"+source+".png";
+			var sourceImg = "./sources/images/"+service+".png";
 			var normalizedSourceImg = resolveSourceImageUrl(sourceImg);
 			var typeIconUrl = resolveSourceImageUrl("./sources/images/" + data.type + ".png");
 			var finalSourceImg = normalizedSourceImg;

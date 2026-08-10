@@ -271,6 +271,15 @@ let chatClient = null;
 let chatClientOffHandlers = [];
 let tmiClientFactory = null;
 let sendTwitchMessageFromSsn = null;
+let chatSendInFlight = false;
+let chatSendStatusTimer = null;
+let twitchChatWriteAuthorized = false;
+let twitchChatEchoBatchSequence = 0;
+const twitchChatEchoBatches = new Map();
+const twitchChatEchoBatchById = new Map();
+const recentTwitchChatEchoIds = new Map();
+const TWITCH_CHAT_SEND_TIMEOUT_MS = Number(globalThis.__SSAPP_TWITCH_CHAT_SEND_TIMEOUT_MS__) || 15000;
+const TWITCH_CHAT_ECHO_TIMEOUT_MS = Number(globalThis.__SSAPP_TWITCH_CHAT_ECHO_TIMEOUT_MS__) || 10000;
 const twitchDisplayNameByLogin = new Map();
 const TWITCH_DELAYTWITCH_MS = 3000;
 const TWITCH_DELETE_DELAY_BUFFER_MS = 50;
@@ -315,6 +324,173 @@ function setWebsocketReadyState(state) {
   websocketProxy.readyState = state;
 }
 
+function isTwitchChatConnected() {
+  if (websocketProxy.readyState !== WEBSOCKET_READY_STATE.OPEN || !chatClient) {
+    return false;
+  }
+  try {
+    const state = typeof chatClient.getState === 'function' ? chatClient.getState() : null;
+    return state?.status === 'connected' && state?.joined === true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function pruneRecentTwitchChatEchoIds(now = Date.now()) {
+  for (const [messageId, receivedAt] of recentTwitchChatEchoIds) {
+    if (now - receivedAt <= 30000 && recentTwitchChatEchoIds.size <= 100) break;
+    recentTwitchChatEchoIds.delete(messageId);
+  }
+}
+
+function finishTwitchChatEchoBatch(batch, received) {
+  if (!batch || !twitchChatEchoBatches.has(batch.id)) return;
+  clearTimeout(batch.timer);
+  twitchChatEchoBatches.delete(batch.id);
+  for (const messageId of batch.messageIds) {
+    if (twitchChatEchoBatchById.get(messageId) === batch) {
+      twitchChatEchoBatchById.delete(messageId);
+    }
+  }
+  const statusElement = document.getElementById('send-status');
+  if (statusElement?.dataset.source !== batch.source) return;
+  if (received) {
+    setChatSendStatus('Sent and received from Twitch.', 'success', 3000, batch.source);
+  } else {
+    setChatSendStatus(
+      'Accepted by Twitch, but the chat echo was not received locally.',
+      'warning',
+      7000,
+      batch.source
+    );
+  }
+}
+
+function trackAcceptedTwitchChatMessages(messageIds) {
+  const uniqueMessageIds = [...new Set((messageIds || []).filter(Boolean).map(String))];
+  if (!uniqueMessageIds.length) return;
+  pruneRecentTwitchChatEchoIds();
+  const batch = {
+    id: ++twitchChatEchoBatchSequence,
+    source: `send-echo-${twitchChatEchoBatchSequence}`,
+    messageIds: uniqueMessageIds,
+    pendingIds: new Set(uniqueMessageIds.filter(messageId => !recentTwitchChatEchoIds.has(messageId))),
+    timer: null
+  };
+  if (!batch.pendingIds.size) {
+    setChatSendStatus('Sent and received from Twitch.', 'success', 3000, batch.source);
+    return;
+  }
+  twitchChatEchoBatches.set(batch.id, batch);
+  for (const messageId of batch.pendingIds) {
+    twitchChatEchoBatchById.set(messageId, batch);
+  }
+  setChatSendStatus('Accepted by Twitch; waiting for chat echo…', '', 0, batch.source);
+  batch.timer = setTimeout(() => finishTwitchChatEchoBatch(batch, false), TWITCH_CHAT_ECHO_TIMEOUT_MS);
+}
+
+function noteTwitchChatEcho(messageId) {
+  if (!messageId) return;
+  const normalizedId = String(messageId);
+  recentTwitchChatEchoIds.set(normalizedId, Date.now());
+  pruneRecentTwitchChatEchoIds();
+  const batch = twitchChatEchoBatchById.get(normalizedId);
+  if (!batch) return;
+  batch.pendingIds.delete(normalizedId);
+  twitchChatEchoBatchById.delete(normalizedId);
+  if (!batch.pendingIds.size) {
+    finishTwitchChatEchoBatch(batch, true);
+  }
+}
+
+function clearPendingTwitchChatEchoes() {
+  for (const batch of twitchChatEchoBatches.values()) {
+    clearTimeout(batch.timer);
+  }
+  twitchChatEchoBatches.clear();
+  twitchChatEchoBatchById.clear();
+  recentTwitchChatEchoIds.clear();
+}
+
+function setChatSendStatus(message, state = '', clearAfterMs = 0, source = 'send') {
+  if (chatSendStatusTimer) {
+    clearTimeout(chatSendStatusTimer);
+    chatSendStatusTimer = null;
+  }
+  const statusElement = document.getElementById('send-status');
+  if (!statusElement) return;
+  statusElement.textContent = message || '';
+  if (state) {
+    statusElement.dataset.state = state;
+  } else {
+    delete statusElement.dataset.state;
+  }
+  if (message) {
+    statusElement.dataset.source = source;
+  } else {
+    delete statusElement.dataset.source;
+  }
+  if (message && clearAfterMs > 0) {
+    chatSendStatusTimer = setTimeout(() => {
+      if (statusElement.textContent !== message || statusElement.dataset.source !== source) return;
+      statusElement.textContent = '';
+      delete statusElement.dataset.state;
+      delete statusElement.dataset.source;
+      chatSendStatusTimer = null;
+    }, clearAfterMs);
+  }
+}
+
+function updateChatComposerState() {
+  const sendButton = document.getElementById('sendmessage');
+  const inputElement = document.getElementById('input-text');
+  const connected = isTwitchChatConnected();
+  if (sendButton) {
+    sendButton.disabled = !connected || !twitchChatWriteAuthorized || chatSendInFlight;
+    sendButton.textContent = chatSendInFlight ? 'Sending…' : 'Send';
+    sendButton.setAttribute('aria-busy', chatSendInFlight ? 'true' : 'false');
+    sendButton.dataset.chatConnected = connected ? 'true' : 'false';
+    sendButton.dataset.chatAuthorized = twitchChatWriteAuthorized ? 'true' : 'false';
+  }
+  if (inputElement) {
+    inputElement.readOnly = chatSendInFlight;
+    inputElement.setAttribute('aria-busy', chatSendInFlight ? 'true' : 'false');
+  }
+}
+
+function updateChatConnectionStatus(status) {
+  updateChatComposerState();
+  if (chatSendInFlight) return;
+  const statusElement = document.getElementById('send-status');
+  switch (status) {
+    case 'connecting':
+      setChatSendStatus('Connecting to Twitch chat…', '', 0, 'connection');
+      break;
+    case 'connected':
+      if (!isTwitchChatConnected()) {
+        setChatSendStatus('Joining Twitch chat — sending unavailable.', 'warning', 0, 'connection');
+      } else if (!twitchChatWriteAuthorized) {
+        setChatSendStatus(
+          'Twitch sign-in is missing chat permission. Sign out and sign in again.',
+          'error',
+          0,
+          'connection'
+        );
+      } else if (statusElement?.dataset.source === 'connection') {
+        setChatSendStatus('', '', 0, 'connection');
+      }
+      break;
+    case 'disconnected':
+      setChatSendStatus('Reconnecting — sending unavailable.', 'warning', 0, 'connection');
+      break;
+    case 'error':
+      setChatSendStatus('Twitch chat is unavailable. Reconnecting…', 'error', 0, 'connection');
+      break;
+    default:
+      break;
+  }
+}
+
 try{
 	window.websocket = websocketProxy;
 	var isExtensionOn = true;
@@ -325,6 +501,7 @@ try{
 		'chat:read',
 		'chat:edit',
 		'user:write:chat',
+		'channel:bot',
 		'bits:read',
 		'moderator:read:followers',
 		'moderator:read:chatters',
@@ -355,6 +532,15 @@ try{
 	var TWITCH_TOKEN_EXPIRY_KEY = 'twitchOAuthExpiry';
 	var TWITCH_TOKEN_SCOPE_KEY = 'twitchOAuthScope';
 	var TWITCH_TOKEN_CLIENT_ID_KEY = 'twitchOAuthClientId';
+	var TWITCH_BOT_TOKEN_KEY = 'twitchBotOAuthToken';
+	var TWITCH_BOT_REFRESH_TOKEN_KEY = 'twitchBotOAuthRefreshToken';
+	var TWITCH_BOT_TOKEN_EXPIRY_KEY = 'twitchBotOAuthExpiry';
+	var TWITCH_BOT_TOKEN_SCOPE_KEY = 'twitchBotOAuthScope';
+	var TWITCH_BOT_TOKEN_CLIENT_ID_KEY = 'twitchBotOAuthClientId';
+	var TWITCH_BOT_USER_ID_KEY = 'twitchBotUserId';
+	var TWITCH_BOT_LOGIN_KEY = 'twitchBotLogin';
+	var TWITCH_BOT_REQUIRED_SCOPES = ['user:write:chat', 'user:bot'];
+	var TWITCH_BOT_SEND_URL = TWITCH_HOSTED_AUTH_BASE_URL + '/chat/messages';
 	var TWITCH_HOSTED_AUTH_STORAGE_KEY = 'twitchUseHostedOAuth';
 	var TWITCH_TOKEN_VALIDATION_TRANSIENT_ERROR = 'transient_validation_error';
 	var TWITCH_TOKEN_REFRESH_RETRY_BASE_MS = 30000;
@@ -365,6 +551,11 @@ try{
 	var tokenRefreshRetryCount = 0;
 	var lastTokenRefreshFailure = null;
 	var tokenRefreshResumePending = false;
+	var botTokenRefreshTimer = null;
+	var botTokenRefreshPromise = null;
+	var lastBotSendAuthorizationError = '';
+	let currentChannelId = null;
+	let currentAuthUser = null;
 
 	function createTransientTokenValidationError(status, message) {
 		return {
@@ -536,6 +727,127 @@ try{
 	function getTwitchApiClientId() {
 		return getStoredTokenClientId();
 	}
+	function getStoredBotToken() {
+		return localStorage.getItem(TWITCH_BOT_TOKEN_KEY);
+	}
+	function getStoredBotRefreshToken() {
+		return localStorage.getItem(TWITCH_BOT_REFRESH_TOKEN_KEY);
+	}
+	function getStoredBotTokenExpiry() {
+		const value = parseInt(localStorage.getItem(TWITCH_BOT_TOKEN_EXPIRY_KEY) || '', 10);
+		return Number.isFinite(value) ? value : 0;
+	}
+	function getMainBotAuthorizationStatus() {
+		const validatedScopes = Array.isArray(currentAuthUser?.scopes) ? currentAuthUser.scopes : [];
+		const storedScopes = String(localStorage.getItem(TWITCH_TOKEN_SCOPE_KEY) || '')
+			.split(/[,\s]+/)
+			.filter(Boolean);
+		const scopes = validatedScopes.length ? validatedScopes : storedScopes;
+		const mainHasChannelBotScope = scopes.length ? scopes.includes('channel:bot') : null;
+		const tokenClientId = String(currentAuthUser?.client_id || localStorage.getItem(TWITCH_TOKEN_CLIENT_ID_KEY) || '');
+		const mainUsesHostedApp = tokenClientId ? tokenClientId === hostedClientId : null;
+		const mainAccountIsBroadcaster = currentAuthUser?.user_id && currentChannelId
+			? String(currentAuthUser.user_id) === String(currentChannelId)
+			: null;
+		let mainBotAuthorizationReady = null;
+		if (mainHasChannelBotScope === true && mainUsesHostedApp === true && mainAccountIsBroadcaster === true) {
+			mainBotAuthorizationReady = true;
+		} else if (mainHasChannelBotScope === false || mainUsesHostedApp === false || mainAccountIsBroadcaster === false) {
+			mainBotAuthorizationReady = false;
+		}
+
+		return {
+			mainHasChannelBotScope,
+			mainBotAuthorizationReady,
+			mainAccountIsBroadcaster,
+			mainAccountLogin: currentAuthUser?.login || ''
+		};
+	}
+	function getStoredBotAccountStatus(extra = {}) {
+		const login = localStorage.getItem(TWITCH_BOT_LOGIN_KEY) || '';
+		const userId = localStorage.getItem(TWITCH_BOT_USER_ID_KEY) || '';
+		return {
+			connected: !!getStoredBotToken(),
+			login,
+			userId,
+			error: lastBotSendAuthorizationError || null,
+			requiresMainReauthorization: !!lastBotSendAuthorizationError,
+			...getMainBotAuthorizationStatus(),
+			...extra
+		};
+	}
+	function notifyBotAccountStatus(extra = {}) {
+		const status = getStoredBotAccountStatus(extra);
+		try {
+			if (typeof window.ssWssNotifyTwitch === 'function') {
+				window.ssWssNotifyTwitch('bot_account', status.error || '', { botAccount: status });
+			}
+		} catch (_) {}
+		return status;
+	}
+	function setStoredBotToken(token, expiresIn, refreshToken, tokenScope, tokenClientId, identity = {}) {
+		if (token) {
+			localStorage.setItem(TWITCH_BOT_TOKEN_KEY, token);
+		}
+		const expiresInSeconds = Number(expiresIn);
+		if (Number.isFinite(expiresInSeconds) && expiresInSeconds > 0) {
+			localStorage.setItem(TWITCH_BOT_TOKEN_EXPIRY_KEY, String(Date.now() + expiresInSeconds * 1000));
+		}
+		if (refreshToken) {
+			localStorage.setItem(TWITCH_BOT_REFRESH_TOKEN_KEY, refreshToken);
+		}
+		if (Array.isArray(tokenScope)) {
+			localStorage.setItem(TWITCH_BOT_TOKEN_SCOPE_KEY, tokenScope.join(' '));
+		} else if (tokenScope) {
+			localStorage.setItem(TWITCH_BOT_TOKEN_SCOPE_KEY, String(tokenScope));
+		}
+		if (tokenClientId) {
+			localStorage.setItem(TWITCH_BOT_TOKEN_CLIENT_ID_KEY, String(tokenClientId));
+		}
+		if (identity.user_id) {
+			localStorage.setItem(TWITCH_BOT_USER_ID_KEY, String(identity.user_id));
+		}
+		if (identity.login) {
+			localStorage.setItem(TWITCH_BOT_LOGIN_KEY, String(identity.login));
+		}
+		scheduleStoredBotTokenRefresh();
+	}
+	function clearStoredBotToken() {
+		if (botTokenRefreshTimer) {
+			clearTimeout(botTokenRefreshTimer);
+			botTokenRefreshTimer = null;
+		}
+		[
+			TWITCH_BOT_TOKEN_KEY,
+			TWITCH_BOT_REFRESH_TOKEN_KEY,
+			TWITCH_BOT_TOKEN_EXPIRY_KEY,
+			TWITCH_BOT_TOKEN_SCOPE_KEY,
+			TWITCH_BOT_TOKEN_CLIENT_ID_KEY,
+			TWITCH_BOT_USER_ID_KEY,
+			TWITCH_BOT_LOGIN_KEY
+		].forEach(function(key) {
+			localStorage.removeItem(key);
+		});
+	}
+	function scheduleStoredBotTokenRefresh(delayOverride = null) {
+		if (botTokenRefreshTimer) {
+			clearTimeout(botTokenRefreshTimer);
+			botTokenRefreshTimer = null;
+		}
+		if (!getStoredBotRefreshToken()) {
+			return;
+		}
+		const expiresAt = getStoredBotTokenExpiry();
+		const delay = Number.isFinite(delayOverride)
+			? Math.max(0, delayOverride)
+			: (expiresAt ? Math.max(0, expiresAt - Date.now() - 60000) : TWITCH_TOKEN_REFRESH_RETRY_BASE_MS);
+		botTokenRefreshTimer = setTimeout(function() {
+			botTokenRefreshTimer = null;
+			refreshBotAccessToken({ reason: 'scheduled' }).catch(function(error) {
+				console.warn('Scheduled Twitch bot token refresh failed:', error);
+			});
+		}, delay);
+	}
 	function setStoredToken(token, expiresIn, refreshToken, tokenScope, tokenClientId) {
 		if (token) {
 			localStorage.setItem('twitchOAuthToken', token);
@@ -574,6 +886,9 @@ try{
 		localStorage.removeItem(TWITCH_TOKEN_SCOPE_KEY);
 		localStorage.removeItem(TWITCH_TOKEN_CLIENT_ID_KEY);
 		localStorage.removeItem('twitchChannel');
+		twitchChatWriteAuthorized = false;
+		clearPendingTwitchChatEchoes();
+		updateChatComposerState();
 	}
 	function updateStoredTokenExpiry(expiresIn) {
 		const expiresInSeconds = Number(expiresIn);
@@ -850,6 +1165,188 @@ try{
 		});
 		return tokenRefreshPromise;
 	}
+
+	async function validateTwitchBotToken(token) {
+		const response = await fetch('https://id.twitch.tv/oauth2/validate', {
+			headers: {
+				'Authorization': `OAuth ${token}`
+			}
+		});
+		const data = await response.json().catch(function() { return {}; });
+		if (!response.ok) {
+			const error = new Error(data.message || `Twitch bot token validation failed (HTTP ${response.status}).`);
+			error.status = response.status;
+			throw error;
+		}
+		if (data.client_id !== hostedClientId) {
+			const error = new Error('This Twitch bot account was authorized for a different application.');
+			error.status = 403;
+			throw error;
+		}
+		const scopes = Array.isArray(data.scopes) ? data.scopes : [];
+		const missingScopes = TWITCH_BOT_REQUIRED_SCOPES.filter(function(requiredScope) {
+			return !scopes.includes(requiredScope);
+		});
+		if (missingScopes.length) {
+			const error = new Error(`Twitch bot permission missing: ${missingScopes.join(', ')}.`);
+			error.status = 403;
+			throw error;
+		}
+		if (!data.user_id || !data.login) {
+			const error = new Error('Twitch did not identify the bot account.');
+			error.status = 403;
+			throw error;
+		}
+		if (currentAuthUser?.user_id && String(currentAuthUser.user_id) === String(data.user_id)) {
+			const error = new Error('Choose a different Twitch account. The bot account cannot be the main account.');
+			error.status = 409;
+			throw error;
+		}
+		return data;
+	}
+
+	async function refreshBotAccessToken(options = {}) {
+		if (botTokenRefreshPromise) {
+			return botTokenRefreshPromise;
+		}
+		const refreshToken = getStoredBotRefreshToken();
+		if (!refreshToken) {
+			return null;
+		}
+		botTokenRefreshPromise = (async function() {
+			const controller = new AbortController();
+			const timeoutId = setTimeout(function() {
+				controller.abort();
+			}, TWITCH_TOKEN_REFRESH_TIMEOUT_MS);
+			try {
+				const response = await fetch(TWITCH_HOSTED_AUTH_BASE_URL + '/refresh', {
+					method: 'POST',
+					headers: {
+						'Accept': 'application/json',
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ refresh_token: refreshToken }),
+					signal: controller.signal
+				});
+				const data = await response.json().catch(function() { return {}; });
+				if (!response.ok || !data.access_token) {
+					const error = new Error(data.error_description || data.error || data.message || `HTTP ${response.status}`);
+					error.status = response.status;
+					throw error;
+				}
+				const identity = await validateTwitchBotToken(data.access_token);
+				setStoredBotToken(
+					data.access_token,
+					data.expires_in,
+					data.refresh_token || refreshToken,
+					data.scope || identity.scopes,
+					data.client_id || identity.client_id,
+					identity
+				);
+				console.log('Twitch bot token refreshed' + (options.reason ? ` (${options.reason})` : ''));
+				return data.access_token;
+			} catch (error) {
+				if (error && (error.status === 400 || error.status === 401 || error.status === 403 || error.status === 409)) {
+					clearStoredBotToken();
+					notifyBotAccountStatus({ event: 'error', error: error.message || 'Bot account authorization expired.' });
+				} else {
+					scheduleStoredBotTokenRefresh(TWITCH_TOKEN_REFRESH_RETRY_BASE_MS);
+				}
+				console.warn('Unable to refresh Twitch bot token:', error);
+				return null;
+			} finally {
+				clearTimeout(timeoutId);
+			}
+		})().finally(function() {
+			botTokenRefreshPromise = null;
+		});
+		return botTokenRefreshPromise;
+	}
+
+	async function validateStoredBotAccount() {
+		let token = getStoredBotToken();
+		if (!token) {
+			return notifyBotAccountStatus({ event: 'status' });
+		}
+		try {
+			let identity;
+			try {
+				identity = await validateTwitchBotToken(token);
+			} catch (error) {
+				if ((error.status === 401 || error.status === 403) && getStoredBotRefreshToken()) {
+					token = await refreshBotAccessToken({ reason: 'validation' });
+					if (!token) {
+						return getStoredBotAccountStatus({ event: 'error', error: error.message });
+					}
+					identity = await validateTwitchBotToken(token);
+				} else {
+					throw error;
+				}
+			}
+			setStoredBotToken(
+				token,
+				identity.expires_in,
+				getStoredBotRefreshToken(),
+				identity.scopes,
+				identity.client_id,
+				identity
+			);
+			return notifyBotAccountStatus({ event: 'status' });
+		} catch (error) {
+			if (error && (error.status === 401 || error.status === 403 || error.status === 409)) {
+				clearStoredBotToken();
+			}
+			return notifyBotAccountStatus({ event: 'error', error: error?.message || 'Unable to validate the bot account.' });
+		}
+	}
+
+	async function connectTwitchBotAccount() {
+		const startOAuthFn = (window.ninjafy && typeof window.ninjafy.startTwitchOAuth === 'function')
+			? window.ninjafy.startTwitchOAuth
+			: (window.__ssapp && typeof window.__ssapp.startTwitchOAuth === 'function')
+				? window.__ssapp.startTwitchOAuth
+				: null;
+		if (!startOAuthFn) {
+			const error = 'A separate Twitch bot account can only be connected from SSApp WebSocket mode.';
+			return notifyBotAccountStatus({ event: 'error', error });
+		}
+
+		lastBotSendAuthorizationError = '';
+		notifyBotAccountStatus({ event: 'connecting', connecting: true });
+		try {
+			const state = nonce(15) + '@bot';
+			const result = await startOAuthFn({
+				clientId: hostedClientId,
+				scopes: TWITCH_BOT_REQUIRED_SCOPES,
+				state,
+				authBase: TWITCH_HOSTED_AUTH_BASE_URL,
+				authMode: 'hosted',
+				purpose: 'bot'
+			});
+			if (!result || !result.access_token) {
+				throw new Error('Twitch did not return a bot account authorization.');
+			}
+			const identity = await validateTwitchBotToken(result.access_token);
+			setStoredBotToken(
+				result.access_token,
+				result.expires_in || identity.expires_in,
+				result.refresh_token,
+				result.scope || identity.scopes,
+				result.client_id || identity.client_id,
+				identity
+			);
+			return notifyBotAccountStatus({ event: 'connected' });
+		} catch (error) {
+			console.error('Twitch bot account OAuth failed:', error);
+			return notifyBotAccountStatus({ event: 'error', error: error?.message || 'Unable to connect the bot account.' });
+		}
+	}
+
+	function disconnectTwitchBotAccount() {
+		lastBotSendAuthorizationError = '';
+		clearStoredBotToken();
+		return notifyBotAccountStatus({ event: 'disconnected' });
+	}
 	
 	let tokenExpirationHandled = false;
 	function handleTokenExpiration() {
@@ -874,6 +1371,9 @@ try{
 			}
 			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 		}
+		chatSendInFlight = false;
+		updateChatComposerState();
+		setChatSendStatus('Authentication expired. Sign in again to send messages.', 'error', 0, 'connection');
 		clearEventSubKeepaliveTimer();
 		if (reconnectTimeout) {
 			clearTimeout(reconnectTimeout);
@@ -915,6 +1415,7 @@ try{
 		const authElement = document.querySelector('.auth');
 		document.querySelectorAll('.socket').forEach(ele=>ele.classList.remove('hidden'))
 		if (authElement) authElement.classList.add("hidden");
+		updateChatComposerState();
 	}
 	function initializePage() {
 		urlParams = new URLSearchParams(window.location.search);
@@ -985,8 +1486,9 @@ try{
 
 		const inputText = document.querySelector('#input-text');
 		if (inputText) {
-			inputText.addEventListener('keypress', handleEnterKey);
+			inputText.addEventListener('keydown', handleEnterKey);
 		}
+		updateChatComposerState();
 
 		// Load and set up alias
 		const savedAlias = localStorage.getItem('twitchUserAlias');
@@ -1002,6 +1504,12 @@ try{
 
 		// Check authentication state
 		scheduleStoredTokenRefresh();
+		scheduleStoredBotTokenRefresh();
+		setTimeout(function() {
+			validateStoredBotAccount().catch(function(error) {
+				console.warn('Unable to restore Twitch bot account:', error);
+			});
+		}, 50);
 		if (handleHostedAuthCallback()) {
 			return;
 		}
@@ -1626,6 +2134,7 @@ async function ensureChatClientInstance() {
 		}
 		tokenRefreshResumePending = false;
 		currentAuthUser = authUser;
+		twitchChatWriteAuthorized = hasTwitchScope(authUser, 'user:write:chat');
 		token = getStoredToken() || token;
 
 		if (!channel && authUser.login) { channel = authUser.login; }
@@ -1656,6 +2165,7 @@ async function ensureChatClientInstance() {
 			const clientFactory = ensureClientFactory();
 
 			setWebsocketReadyState(WEBSOCKET_READY_STATE.CONNECTING);
+			updateChatConnectionStatus('connecting');
 
 			await chat.connect({
 				channel,
@@ -1669,7 +2179,9 @@ async function ensureChatClientInstance() {
 				clientFactory
 			});
 
-			setWebsocketReadyState(WEBSOCKET_READY_STATE.OPEN);
+			const joined = chat.getState?.().joined === true;
+			setWebsocketReadyState(joined ? WEBSOCKET_READY_STATE.OPEN : WEBSOCKET_READY_STATE.CONNECTING);
+			updateChatConnectionStatus('connected');
 			showSocketInterface();
 			refreshChannelInformation().catch((error) => {
 				console.warn('Unable to refresh Twitch channel information', error);
@@ -1709,6 +2221,7 @@ async function ensureChatClientInstance() {
 		} catch (error) {
 			console.log('Error during connection setup:', error);
 			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
+			updateChatConnectionStatus('error');
 		}
 	}
 
@@ -1716,10 +2229,16 @@ async function ensureChatClientInstance() {
 		switch (status) {
 			case TWITCH_CHAT_STATUS.CONNECTING:
 				setWebsocketReadyState(WEBSOCKET_READY_STATE.CONNECTING);
+				updateChatConnectionStatus('connecting');
 				break;
 			case TWITCH_CHAT_STATUS.CONNECTED: {
-				setWebsocketReadyState(WEBSOCKET_READY_STATE.OPEN);
+				const joined = chatClient?.getState?.().joined === true;
+				setWebsocketReadyState(joined ? WEBSOCKET_READY_STATE.OPEN : WEBSOCKET_READY_STATE.CONNECTING);
 				isDisconnecting = false;
+				updateChatConnectionStatus('connected');
+				if (!joined) {
+					break;
+				}
 				const textarea = document.querySelector("#textarea");
 				const joinedChannel = meta.channel || channel;
 				if (textarea && joinedChannel) {
@@ -1734,12 +2253,14 @@ async function ensureChatClientInstance() {
 			}
 			case TWITCH_CHAT_STATUS.DISCONNECTED:
 				setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
+				updateChatConnectionStatus('disconnected');
 				if (!isDisconnecting) {
 					console.log('Twitch chat disconnected', meta?.reason || '');
 				}
 				break;
 			case TWITCH_CHAT_STATUS.ERROR:
 				setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
+				updateChatConnectionStatus('error');
 				if (meta?.error) {
 					console.error('Twitch chat error', meta.error);
 				}
@@ -1827,6 +2348,7 @@ async function ensureChatClientInstance() {
 		if (!payload) {
 			return;
 		}
+		noteTwitchChatEcho(payload.id);
 		const legacy = convertChatPayloadToLegacyMessage(payload);
 		await processMessage(legacy);
 	}
@@ -1927,6 +2449,7 @@ async function ensureChatClientInstance() {
 		}
 		console.error('Twitch chat client error', error);
 		setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
+		updateChatConnectionStatus('error');
 	}
 
 	// Listen for UI moderation/ad requests from twitch.html
@@ -2031,6 +2554,9 @@ async function ensureChatClientInstance() {
 			}
 			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 		}
+		chatSendInFlight = false;
+		updateChatComposerState();
+		setChatSendStatus('', '', 0, 'connection');
 
 		updateHeaderInfo(null, null);
 		document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'))
@@ -2041,21 +2567,36 @@ async function ensureChatClientInstance() {
 	}
 
 	async function handleSendMessage(event) {
-		event.preventDefault();
+		event?.preventDefault();
 		const inputElement = document.querySelector('#input-text');
+		const sendButton = document.querySelector('#sendmessage');
 		if (inputElement) {
 			var msg = inputElement.value.trim();
 			if (msg) {
-				const sent = await sendMessage(msg);
-				if (sent) {
+				const activeElement = document.activeElement;
+				const restoreComposerFocus = activeElement === inputElement || activeElement === sendButton;
+				const result = await sendMessage(msg);
+				if (result?.ok) {
 					inputElement.value = "";
 					// Server echo will display the message via handleNormalizedChatMessage
+				} else if (typeof result?.remainingMessage === 'string') {
+					inputElement.value = result.remainingMessage;
+				}
+				if (restoreComposerFocus && (
+					document.activeElement === inputElement
+						|| document.activeElement === sendButton
+						|| document.activeElement === document.body
+				)) {
+					inputElement.focus();
 				}
 			}
 		}
 	}
 	function handleEnterKey(event) {
 		if (event.key === 'Enter') {
+			if (event.isComposing || event.keyCode === 229) return;
+			event.preventDefault();
+			if (event.repeat) return;
 			handleSendMessage(event).catch((err) => console.error('Twitch handleSendMessage failed', err));
 		}
 	}
@@ -2150,6 +2691,21 @@ async function ensureChatClientInstance() {
 				if ("state" in request) {
 					isExtensionOn = request.state;
 				}
+				if (request.type === 'TWITCH_BOT_ACCOUNT_STATUS') {
+					sendResponse(getStoredBotAccountStatus({ event: 'status' }));
+					return;
+				}
+				if (request.type === 'TWITCH_BOT_ACCOUNT_CONNECT') {
+					connectTwitchBotAccount().catch(function(error) {
+						console.error('Twitch bot account connection failed', error);
+					});
+					sendResponse({ ok: true, pending: true });
+					return;
+				}
+				if (request.type === 'TWITCH_BOT_ACCOUNT_DISCONNECT') {
+					sendResponse(disconnectTwitchBotAccount());
+					return;
+				}
 				if (request.type === 'SOURCE_CONTROL') {
 					handleSourceControlRequest(request)
 						.then((result) => sendResponse(result))
@@ -2160,8 +2716,8 @@ async function ensureChatClientInstance() {
 					return true;
 				}
 				if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
-					sendMessage(request.message)
-						.then(() => sendResponse(true))
+					sendMessage(request.message, { messageOrigin: request.messageOrigin })
+						.then((result) => sendResponse(result?.ok === true))
 						.catch((err) => {
 							console.error('Twitch extension SEND_MESSAGE failed', err);
 							sendResponse(false);
@@ -2325,28 +2881,51 @@ async function ensureChatClientInstance() {
 		window.__SSAPP_START_TWITCH_AUTH__ = startExternalTwitchAuthFlow;
 	} catch (_) {}
 
-	function splitTwitchChatMessage(message, maxLength = 500) {
-		const chunks = [];
+	function buildTwitchMessageTextPlan(message, maxLength) {
+		const parts = [];
 		let remaining = Array.from(String(message || ''));
 		while (remaining.length > maxLength) {
 			let splitAt = remaining.slice(0, maxLength).lastIndexOf(' ');
 			if (splitAt <= 0) {
 				splitAt = maxLength;
 			}
-			chunks.push(remaining.slice(0, splitAt).join(''));
+			const chunk = remaining.slice(0, splitAt).join('');
 			remaining = remaining.slice(splitAt + (remaining[splitAt] === ' ' ? 1 : 0));
+			parts.push({ message: chunk, remainingText: remaining.join('') });
 		}
 		if (remaining.length) {
-			chunks.push(remaining.join(''));
+			parts.push({ message: remaining.join(''), remainingText: '' });
 		}
-		return chunks;
+		return parts;
+	}
+
+	function buildTwitchChatSendPlan(message, maxLength = 500) {
+		const normalizedMessage = String(message || '');
+		const actionMatch = normalizedMessage.match(/^\/me(?:\s+|$)([\s\S]*)$/i);
+		if (!actionMatch || !actionMatch[1]) {
+			return buildTwitchMessageTextPlan(normalizedMessage, maxLength);
+		}
+
+		const actionPrefix = '/me ';
+		const actionBodyLimit = maxLength - Array.from(actionPrefix).length;
+		if (actionBodyLimit < 1) {
+			return buildTwitchMessageTextPlan(normalizedMessage, maxLength);
+		}
+		return buildTwitchMessageTextPlan(actionMatch[1], actionBodyLimit)
+			.map(part => ({
+				message: actionPrefix + part.message,
+				remainingText: part.remainingText ? actionPrefix + part.remainingText : ''
+			}));
 	}
 
 	function hasTwitchScope(authUser, requiredScope) {
 		return Array.isArray(authUser?.scopes) && authUser.scopes.includes(requiredScope);
 	}
 
-	async function sendTwitchChatChunk(message, allowTokenRetry = true) {
+	async function sendTwitchMainChatChunk(message, allowTokenRetry = true) {
+		if (!isTwitchChatConnected()) {
+			throw new Error('Twitch chat is reconnecting. Message not sent.');
+		}
 		const token = getStoredToken();
 		const senderId = currentAuthUser?.user_id;
 		if (!token || !currentChannelId || !senderId) {
@@ -2357,24 +2936,42 @@ async function ensureChatClientInstance() {
 		}
 
 		const endpoint = 'https://api.twitch.tv/helix/chat/messages';
-		const response = await fetch(endpoint, {
-			method: 'POST',
-			headers: {
-				'Authorization': `Bearer ${token}`,
-				'Client-ID': getTwitchApiClientId(),
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				broadcaster_id: currentChannelId,
-				sender_id: senderId,
-				message: message
-			})
-		});
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), TWITCH_CHAT_SEND_TIMEOUT_MS);
+		let response;
+		try {
+			response = await fetch(endpoint, {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${token}`,
+					'Client-ID': getTwitchApiClientId(),
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					broadcaster_id: currentChannelId,
+					sender_id: senderId,
+					message: message
+				}),
+				signal: controller.signal
+			});
+		} catch (error) {
+			const sendError = new Error(
+				controller.signal.aborted
+					? 'Twitch did not confirm the send before it timed out. Delivery is unknown; check chat before retrying.'
+					: 'The Twitch send connection failed. Delivery is unknown; check chat before retrying.'
+			);
+			sendError.code = controller.signal.aborted ? 'TWITCH_CHAT_SEND_TIMEOUT' : 'TWITCH_CHAT_SEND_NETWORK';
+			sendError.deliveryUnknown = true;
+			sendError.cause = error;
+			throw sendError;
+		} finally {
+			clearTimeout(timeoutId);
+		}
 
 		if (response.status === 401 && allowTokenRetry) {
 			const refreshedToken = await refreshAccessToken({ reason: 'chat-send' });
 			if (refreshedToken && refreshedToken !== token) {
-				return sendTwitchChatChunk(message, false);
+				return sendTwitchMainChatChunk(message, false);
 			}
 		}
 
@@ -2392,56 +2989,175 @@ async function ensureChatClientInstance() {
 		return result.message_id;
 	}
 
-	async function forwardSentTwitchMessage(message, messageId) {
-		const client = await ensureChatClientInstance();
-		const userState = typeof client.getUserState === 'function' ? client.getUserState(channel) : {};
-		const sentAt = Date.now();
-		const login = userState.username || currentAuthUser?.login || username;
-		const displayName = userState['display-name'] || getRememberedTwitchDisplayName(login) || login;
-		const actionMatch = typeof message === 'string' ? message.match(/^\/me(?:\s+|$)([\s\S]*)$/i) : null;
-		const isAction = !!actionMatch;
-		const forwardedMessage = isAction ? actionMatch[1] : message;
-		const tags = Object.assign({}, userState, {
-			id: messageId,
-			username: login,
-			'display-name': displayName,
-			'message-type': isAction ? 'action' : 'chat',
-			'tmi-sent-ts': String(sentAt)
-		});
+	async function sendTwitchBotChatChunk(message, allowTokenRetry = true) {
+		const token = getStoredBotToken();
+		if (!token || !currentChannelId) {
+			throw new Error('The Twitch automatic reply account is not connected.');
+		}
 
-		await handleNormalizedChatMessage({
-			id: messageId,
-			platform: 'twitch',
-			type: 'twitch',
-			chatname: displayName,
-			chatmessage: forwardedMessage,
-			timestamp: sentAt,
-			event: isAction ? 'action' : 'chat',
-			isSelf: true,
-			rawMessage: forwardedMessage,
-			raw: { channel: `#${channel}`, tags: tags }
-		});
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), TWITCH_CHAT_SEND_TIMEOUT_MS);
+		let response;
+		try {
+			response = await fetch(TWITCH_BOT_SEND_URL, {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${token}`,
+					'Accept': 'application/json',
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					broadcaster_id: currentChannelId,
+					message
+				}),
+				signal: controller.signal
+			});
+		} catch (error) {
+			const sendError = new Error(
+				controller.signal.aborted
+					? 'Twitch did not confirm the bot reply before it timed out. Delivery is unknown; check chat before retrying.'
+					: 'The Twitch bot reply connection failed. Delivery is unknown; check chat before retrying.'
+			);
+			sendError.code = controller.signal.aborted ? 'TWITCH_BOT_SEND_TIMEOUT' : 'TWITCH_BOT_SEND_NETWORK';
+			sendError.deliveryUnknown = true;
+			sendError.cause = error;
+			throw sendError;
+		} finally {
+			clearTimeout(timeoutId);
+		}
+
+		if (response.status === 401 && allowTokenRetry) {
+			const refreshedToken = await refreshBotAccessToken({ reason: 'chat-send' });
+			if (refreshedToken && refreshedToken !== token) {
+				return sendTwitchBotChatChunk(message, false);
+			}
+		}
+
+		const responseData = await response.json().catch(() => ({}));
+		if (!response.ok) {
+			const botLogin = localStorage.getItem(TWITCH_BOT_LOGIN_KEY) || '';
+			const botLabel = botLogin ? `@${botLogin}` : 'the bot account';
+			const errorMessage = response.status === 403
+				? `Twitch blocked automatic replies from ${botLabel}. Reconnect this WebSocket source's main Twitch account using the channel owner, or make ${botLabel} a moderator in this channel.`
+				: responseData.message || responseData.error || `Twitch bot reply failed (HTTP ${response.status}).`;
+			if (response.status === 403 && lastBotSendAuthorizationError !== errorMessage) {
+				lastBotSendAuthorizationError = errorMessage;
+				notifyBotAccountStatus({
+					event: 'error',
+					error: errorMessage,
+					requiresMainReauthorization: true
+				});
+			}
+			throw new Error(errorMessage);
+		}
+
+		const result = Array.isArray(responseData.data) ? responseData.data[0] : null;
+		if (!result?.is_sent || !result.message_id) {
+			const dropMessage = result?.drop_reason?.message || 'Twitch did not accept the bot reply.';
+			throw new Error(dropMessage);
+		}
+		if (lastBotSendAuthorizationError) {
+			lastBotSendAuthorizationError = '';
+			notifyBotAccountStatus({ event: 'status', error: null, requiresMainReauthorization: false });
+		}
+		return result.message_id;
 	}
 
-	async function sendMessage(message) {
-		await modulesReady;
-		if (!checkAuthStatus()) {
-			return false;
+	async function sendTwitchChatChunk(message, options = {}) {
+		if (options.useBotAccount) {
+			return sendTwitchBotChatChunk(message);
 		}
+		return sendTwitchMainChatChunk(message);
+	}
+
+	async function sendMessage(message, options = {}) {
+		await modulesReady;
+		const normalizedMessage = String(message || '');
+		const useBotAccount = options.messageOrigin === 'chatbot' && !!getStoredBotToken();
+		const unsentResult = {
+			ok: false,
+			acceptedChunks: 0,
+			totalChunks: 0,
+			remainingMessage: normalizedMessage
+		};
+		if (!checkAuthStatus()) {
+			return unsentResult;
+		}
+		if (chatSendInFlight) {
+			console.warn('Twitch chat send ignored because another send is already in progress.');
+			return unsentResult;
+		}
+		if (!isTwitchChatConnected()) {
+			const socketConnected = chatClient?.getState?.().status === 'connected';
+			const unavailableMessage = socketConnected
+				? 'Joining Twitch chat — sending unavailable.'
+				: 'Reconnecting — sending unavailable.';
+			setChatSendStatus(unavailableMessage, 'warning', 0, 'connection');
+			updateChatComposerState();
+			addEvent(unavailableMessage);
+			return unsentResult;
+		}
+		if (!useBotAccount && !twitchChatWriteAuthorized) {
+			const missingPermissionMessage = 'Twitch sign-in is missing chat permission. Sign out and sign in again.';
+			setChatSendStatus(missingPermissionMessage, 'error', 0, 'connection');
+			updateChatComposerState();
+			addEvent(missingPermissionMessage);
+			return unsentResult;
+		}
+
+		chatSendInFlight = true;
+		updateChatComposerState();
+		setChatSendStatus('Sending…', '', 0, 'send');
+		const plan = buildTwitchChatSendPlan(normalizedMessage);
+		const acceptedMessageIds = [];
+		let acceptedChunks = 0;
 		try {
-			const chunks = splitTwitchChatMessage(message);
-			for (let index = 0; index < chunks.length; index += 1) {
-				const messageId = await sendTwitchChatChunk(chunks[index]);
-				await forwardSentTwitchMessage(chunks[index], messageId);
-				if (index < chunks.length - 1) {
+			for (let index = 0; index < plan.length; index += 1) {
+				const messageId = await sendTwitchChatChunk(plan[index].message, { useBotAccount });
+				acceptedMessageIds.push(messageId);
+				acceptedChunks += 1;
+				if (index < plan.length - 1) {
 					await new Promise(resolve => setTimeout(resolve, 350));
 				}
 			}
-			return chunks.length > 0;
+			if (!plan.length) {
+				setChatSendStatus('', '', 0, 'send');
+				return unsentResult;
+			}
+			trackAcceptedTwitchChatMessages(acceptedMessageIds);
+			return {
+				ok: true,
+				acceptedChunks,
+				totalChunks: plan.length,
+				remainingMessage: '',
+				messageIds: acceptedMessageIds
+			};
 		} catch (error) {
 			console.error('Failed to send Twitch chat message', error);
-			addEvent(error?.message || 'Failed to send Twitch chat message');
-			return false;
+			const remainingMessage = acceptedChunks > 0
+				? plan[acceptedChunks - 1]?.remainingText || ''
+				: normalizedMessage;
+			const errorMessage = error?.message || 'Failed to send Twitch chat message';
+			let failureMessage = errorMessage;
+			if (acceptedChunks > 0) {
+				const acceptedSummary = `${acceptedChunks} of ${plan.length} ${plan.length === 1 ? 'part' : 'parts'} ${acceptedChunks === 1 ? 'was' : 'were'} accepted`;
+				failureMessage = error?.deliveryUnknown
+					? `${acceptedSummary}. Delivery of the next part is unknown; check Twitch before retrying the remaining draft.`
+					: `${acceptedSummary} by Twitch. Only the unsent remainder was kept. ${errorMessage}`;
+			}
+			setChatSendStatus(failureMessage, error?.deliveryUnknown || acceptedChunks > 0 ? 'warning' : 'error', 0, 'send');
+			addEvent(failureMessage);
+			return {
+				ok: false,
+				acceptedChunks,
+				totalChunks: plan.length,
+				remainingMessage,
+				messageIds: acceptedMessageIds,
+				deliveryUnknown: error?.deliveryUnknown === true
+			};
+		} finally {
+			chatSendInFlight = false;
+			updateChatComposerState();
 		}
 	}
 	sendTwitchMessageFromSsn = sendMessage;
@@ -2837,7 +3553,12 @@ async function ensureChatClientInstance() {
 		// Parse subscriber info from badge tags
 		let subscriber = "";
 		let subtitle = "";
-		let mod = false;
+		let mod = normalizedPayload?.isModerator === true
+			|| normalizedPayload?.isOwner === true
+			|| parsedMessage.tags?.mod === true
+			|| parsedMessage.tags?.mod === 1
+			|| parsedMessage.tags?.mod === '1'
+			|| parsedMessage.tags?.mod === 'true';
 		const badgeList = parseBadges(parsedMessage);
 		
 		if (parsedMessage.tags) {
@@ -3310,9 +4031,15 @@ async function ensureChatClientInstance() {
 
 		var request = event.data.__ssappSendToTab;
 		if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
-			sendMessage(request.message).catch(function(err) {
+			sendMessage(request.message, { messageOrigin: request.messageOrigin }).catch(function(err) {
 				console.error('Twitch SEND_MESSAGE via postMessage failed', err);
 			});
+		} else if (request.type === 'TWITCH_BOT_ACCOUNT_CONNECT') {
+			connectTwitchBotAccount().catch(function(err) {
+				console.error('Twitch bot account connection via postMessage failed', err);
+			});
+		} else if (request.type === 'TWITCH_BOT_ACCOUNT_DISCONNECT') {
+			disconnectTwitchBotAccount();
 		}
 	});
 
@@ -3428,8 +4155,6 @@ async function ensureChatClientInstance() {
 	let eventSessionId;
 	let isDisconnecting = false;
 	let reconnectTimeout = null;
-	let currentChannelId = null;
-	let currentAuthUser = null;
 	let activeSubscriptions = new Set();
 	let eventSubRetryCount = 0;
 	let hasPermissionError = [];
@@ -4741,9 +5466,13 @@ async function cleanupCurrentConnection() {
 
     var TAB_ID = (typeof window.__SSAPP_TAB_ID__ !== 'undefined') ? window.__SSAPP_TAB_ID__ : null;
 
-    function __tw_notifyApp(status, message){
+    function __tw_notifyApp(status, message, details){
       try {
-        var payload = { wssStatus: { platform: 'twitch', status: status, message: message } };
+        var statusPayload = Object.assign(
+          { platform: 'twitch', status: status, message: message },
+          details && typeof details === 'object' ? details : {}
+        );
+        var payload = { wssStatus: statusPayload };
         if (window.chrome && window.chrome.runtime && window.chrome.runtime.id) {
           window.chrome.runtime.sendMessage(window.chrome.runtime.id, payload, function(){});
         } else if (window.ninjafy && window.ninjafy.sendMessage) {

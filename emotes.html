@@ -261,6 +261,7 @@
 	var mainOutputWindow = document.getElementById("output");
 	var showdupes = true;
 	var hidereplies = false;
+	var emoteBurstSize = 0;
 
 	try {
 		if ((window.ninjafy || window.electronApi)){ // fix for electron dragging.
@@ -294,6 +295,13 @@
 
 	if (urlParams.has("hidedupes")) {
 		showdupes = false;
+	}
+
+	if (urlParams.has("burst")) {
+		var burstParam = parseInt(urlParams.get("burst"), 10);
+		if (!isNaN(burstParam) && burstParam > 1) {
+			emoteBurstSize = Math.min(burstParam, 100);
+		}
 	}
 	
 	var maxShow = false;
@@ -716,6 +724,55 @@
 		});
 	}
 
+	function expandEmoteBurst(emojis, images, svgs){
+		if (!emoteBurstSize){
+			return;
+		}
+
+		var items = [];
+		var i;
+		for (i = 0; i < emojis.length; i++){
+			items.push({ type: "emoji", value: emojis[i] });
+		}
+		for (i = 0; i < images.length; i++){
+			var imageGroup = [images[i]];
+			while (i + 1 < images.length && images[i + 1].classList.contains("zero-width-emote")){
+				imageGroup.push(images[++i]);
+			}
+			items.push({ type: "image", value: imageGroup });
+		}
+		for (i = 0; i < svgs.length; i++){
+			items.push({ type: "svg", value: svgs[i] });
+		}
+
+		if (!items.length || items.length >= emoteBurstSize){
+			return;
+		}
+
+		var sourceItems = items.slice();
+		var sourceIndex = 0;
+		while (items.length < emoteBurstSize){
+			var sourceItem = sourceItems[sourceIndex % sourceItems.length];
+			if (sourceItem.type === "emoji"){
+				emojis.push(sourceItem.value);
+			} else if (sourceItem.type === "image"){
+				for (i = 0; i < sourceItem.value.length; i++){
+					var sourceImage = sourceItem.value[i];
+					var clonedImage = sourceImage.cloneNode(true);
+					clonedImage.onerror = sourceImage.onerror;
+					if (sourceImage.srcBackup){
+						clonedImage.srcBackup = sourceImage.srcBackup;
+					}
+					images.push(clonedImage);
+				}
+			} else {
+				svgs.push(sourceItem.value.cloneNode(true));
+			}
+			items.push(sourceItem);
+			sourceIndex++;
+		}
+	}
+
 	function processData(data){
 		var invisible = false;
 
@@ -750,6 +807,7 @@
 		let svgs = tmp.querySelectorAll("svg"); // not bothering to check for dupes.
 		let images = tmp.querySelectorAll("img");
 		images = filterTikTokProfileImages(data, images);
+		images = [...images];
 		//console.log(data.chatmessage);
 	
 		try {
@@ -911,7 +969,9 @@
 				}
 			});
 		}
-		
+
+		expandEmoteBurst(emojis, images, svgs);
+
 		if (maxShow){
 			let currentLeft = maxShow - document.querySelectorAll(".emoji").length;
 			if (emojis){

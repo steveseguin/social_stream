@@ -2,10 +2,11 @@
 <html>
 <head>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
+  <script type="text/javascript" src="./translations/page-i18n.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
     <meta content="utf-8" http-equiv="encoding" />
-    <title>Background Service - Social Stream Ninja</title>
+    <title data-page-translate="background-service-document-title">Background Service - Social Stream Ninja</title>
     <meta name="title" content="Social Stream Ninja - Background Service" />
 
     <link rel="icon" href="./favicon.ico" />
@@ -591,21 +592,21 @@
     <div class="container">
         <div class="header">
             <div class="logo">Social Stream Ninja</div>
-            <p><strong>Background Service Dashboard</strong> <span class="badge">Not the main app</span></p>
+            <p><strong data-page-translate="background-service-dashboard">Background Service Dashboard</strong> <span class="badge" data-page-translate="not-the-main-app">Not the main app</span></p>
         </div>
 
         <div class="keep-open-alert">
-            ⚠️ IMPORTANT: You must keep this page open for Social Stream Ninja to work!
+            <span data-page-translate="keep-background-page-open">⚠️ IMPORTANT: You must keep this page open for Social Stream Ninja to work!</span>
         </div>
 
         <div class="info-notice">
             <div class="info-icon">ℹ️</div>
             <div class="info-content">
-                <strong>This is not the main application.</strong> This is just a background service page that powers Social Stream Ninja.
+                <strong data-page-translate="background-not-main-title">This is not the main application.</strong> <span data-page-translate="background-not-main-description">This is just a background service page that powers Social Stream Ninja.</span>
                 <br>
-                All settings and controls are available through the extension popup or main menu.
+                <span data-page-translate="background-controls-description">All settings and controls are available through the extension popup or main menu.</span>
                 <br>
-                <span class="highlight-text">Do not close this page or the extension will stop working.</span>
+                <span class="highlight-text" data-page-translate="background-do-not-close">Do not close this page or the extension will stop working.</span>
             </div>
         </div>
 
@@ -618,36 +619,36 @@
                         <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
                         <line x1="12" y1="20" x2="12" y2="20"></line>
                     </svg>
-                    Connection Status
+                    <span data-page-translate="connection-status">Connection Status</span>
                 </h3>
                 <div class="status-item">
                     <span class="status-indicator" id="websocket-status"></span>
-                    🎮 Remote Control API (ch 1/2): <span id="websocket-status-text">Checking...</span>
+                    🎮 <span data-page-translate="remote-control-api">Remote Control API</span> (ch 1/2): <span id="websocket-status-text" data-page-translate="checking">Checking...</span>
                 </div>
                 <div class="status-item">
                     <span class="status-indicator" id="websocket-dock-status"></span>
-                    📡 Chat to External Apps (ch 3/4): <span id="websocket-dock-status-text">Checking...</span>
+                    📡 <span data-page-translate="chat-to-external-apps">Chat to External Apps</span> (ch 3/4): <span id="websocket-dock-status-text" data-page-translate="checking">Checking...</span>
                 </div>
                 <div class="status-item">
                     <span class="status-indicator" id="signaling-status"></span>
-                    📶 Signaling (VDO.Ninja): <span id="signaling-status-text">Checking...</span>
+                    📶 <span data-page-translate="signaling">Signaling</span> (VDO.Ninja): <span id="signaling-status-text" data-page-translate="checking">Checking...</span>
                 </div>
                 <div class="status-item">
                     <span class="status-indicator" id="webrtc-status"></span>
-                    🔗 WebRTC (P2P): <span id="webrtc-status-text">Checking...</span>
+                    🔗 WebRTC (P2P): <span id="webrtc-status-text" data-page-translate="checking">Checking...</span>
                 </div>
                 <div class="status-item">
                     <span class="status-indicator" id="extension-status"></span>
-                    ⚡ Extension: <span id="extension-status-text">Checking...</span>
+                    ⚡ <span data-page-translate="extension">Extension</span>: <span id="extension-status-text" data-page-translate="checking">Checking...</span>
                 </div>
                 <div class="status-item" id="session-info">
-                    Session ID: <span id="session-id">Loading...</span>
+                    <span data-page-translate="session-id-label">Session ID</span>: <span id="session-id" data-page-translate="loading">Loading...</span>
                 </div>
                 <div class="status-item" id="peer-list" style="margin-top: 10px; font-size: 12px; color: #777;">
                     <div id="peer-list-content"></div>
                 </div>
                 <div class="status-item" style="margin-top: 6px; font-size: 12px; color: #555;">
-                    Note: WebRTC (P2P) is the default transport. The API WebSockets are optional: 🎮 Remote Control for StreamDeck/Bitfocus commands, 📡 Chat Relay to receive chat in external apps (Python/Node).
+                    <span data-page-translate="background-transport-note">Note: WebRTC (P2P) is the default transport. The API WebSockets are optional: 🎮 Remote Control for StreamDeck/Bitfocus commands, 📡 Chat Relay to receive chat in external apps (Python/Node).</span>
                 </div>
             </div>
 
@@ -656,15 +657,15 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                     </svg>
-                    Message Statistics
+                    <span data-page-translate="message-statistics">Message Statistics</span>
                 </h3>
                 <div class="stat-group">
                     <div class="stat-value" id="message-count">0</div>
-                    <div class="stat-label">Messages Processed this Session</div>
+                    <div class="stat-label" data-page-translate="messages-processed-session">Messages Processed this Session</div>
                 </div>
                 <div class="stat-group">
                     <div class="stat-value" id="active-sources">0</div>
-                    <div class="stat-label">Active Sources</div>
+                    <div class="stat-label" data-page-translate="active-sources">Active Sources</div>
                 </div>
             </div>
             <div class="card" id="feature-status">
@@ -673,24 +674,24 @@
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
-                    Active Features
+                    <span data-page-translate="active-features">Active Features</span>
                 </h3>
                 <div id="features-list">
                     <div class="feature-item">
                         <span class="status-indicator" id="midi-status"></span>
-                        🎹 MIDI Support
+                        🎹 <span data-page-translate="midi-support">MIDI Support</span>
                     </div>
                     <div class="feature-item">
                         <span class="status-indicator" id="sentiment-status"></span>
-                        🧠 Sentiment Analysis
+                        🧠 <span data-page-translate="sentiment-analysis">Sentiment Analysis</span>
                     </div>
                     <div class="feature-item">
                         <span class="status-indicator" id="waitlist-status"></span>
-                        📋 Waitlist Mode
+                        📋 <span data-page-translate="waitlist-mode">Waitlist Mode</span>
                     </div>
                     <div class="feature-item">
                         <span class="status-indicator" id="hype-status"></span>
-                        🔥 Hype Mode
+                        🔥 <span data-page-translate="hype-mode">Hype Mode</span>
                     </div>
                     <div class="feature-item">
                         <span class="status-indicator" id="spotify-status"></span>
@@ -702,30 +703,30 @@
                     </div>
                     <div class="feature-item">
                         <span class="status-indicator" id="customjs-status"></span>
-                        🔧 Custom JS
+                        🔧 <span data-page-translate="custom-js">Custom JS</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <div id="debugOutput">
-            <div class="log-message">System initialized. Waiting for events...</div>
+            <div class="log-message" data-page-translate="system-initialized-waiting">System initialized. Waiting for events...</div>
         </div>
 
         <div class="footer">
 		
             <div class="support-links">
-				<div class="action-flow-editor" title="Open the flow editor in a new tab to create custom actions and triggers">
-					<button class="view-btn" id="showEditorViewButton">📝 Open the Action Flow Editor</button>
+				<div class="action-flow-editor" title="Open the flow editor in a new tab to create custom actions and triggers" data-page-title="open-flow-editor-title">
+					<button class="view-btn" id="showEditorViewButton">📝 <span data-page-translate="open-action-flow-editor">Open the Action Flow Editor</span></button>
 				</div>
                 <div class="community-links">
-                    <span data-translate="visit-us-at">Visit us at</span> 
+                    <span data-page-translate="visit-us-at">Visit us at</span>
                     <a href="https://discord.socialstream.ninja" target="_blank">
-                        <span data-translate="discord">Discord</span>
+                        <span data-page-translate="discord">Discord</span>
                         <img class="icon" src="./sources/images/discord.png">
                     </a>
                     <br>
-                    <i><span data-translate="made-with">Made with</span></i> 💖 <i><span data-translate="for-the-community">for the community</span></i>.
+                    <i><span data-page-translate="made-with">Made with</span></i> 💖 <i><span data-page-translate="for-the-community">for the community</span></i>.
                 </div>
 				<a href="https://www.buymeacoffee.com/steveseguin" target="_blank">
                     <img src="./icons/buymeacoffee.png" alt="Buy Me A Coffee" class="bmc-button">

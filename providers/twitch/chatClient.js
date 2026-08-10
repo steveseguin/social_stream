@@ -188,6 +188,7 @@ export function createTwitchChatClient(options = {}) {
   const emitter = createEmitter();
   const state = {
     status: STATUS.IDLE,
+    joined: false,
     channel: normalizeTwitchChannel(opts.channel),
     identity: opts.identity || null,
     token: null,
@@ -256,6 +257,7 @@ export function createTwitchChatClient(options = {}) {
   }
 
   function teardownClient() {
+    state.joined = false;
     if (state.client) {
       clearClientBindings();
       try {
@@ -521,16 +523,19 @@ export function createTwitchChatClient(options = {}) {
       logDebug('Twitch socket connected', { address, port, channel: channelName });
       state.reconnectAttempts = 0;
       state.manualDisconnect = false;
-      updateStatus(STATUS.CONNECTED, { address, port, channel: channelName });
+      state.joined = false;
+      updateStatus(STATUS.CONNECTED, { address, port, channel: channelName, joined: false });
     });
 
     bind('connecting', (address, port) => {
       logDebug('Twitch client connecting', { address, port, channel: channelName });
+      state.joined = false;
       updateStatus(STATUS.CONNECTING, { address, port, channel: channelName, force: true });
     });
 
     bind('disconnected', (reason) => {
       logDebug('Twitch socket disconnected', { reason });
+      state.joined = false;
       updateStatus(STATUS.DISCONNECTED, { reason });
       teardownClient();
       if (!state.manualDisconnect) {
@@ -540,7 +545,30 @@ export function createTwitchChatClient(options = {}) {
 
     bind('reconnect', () => {
       logDebug('Twitch attempting reconnect');
+      state.joined = false;
       updateStatus(STATUS.CONNECTING, { reason: 'reconnect', force: true });
+    });
+
+    bind('join', (joinedChannel, joinedUsername, self) => {
+      if (!self || normalizeTwitchChannel(joinedChannel) !== channelName) {
+        return;
+      }
+      state.joined = true;
+      logDebug('Twitch channel joined', { channel: channelName, username: joinedUsername });
+      updateStatus(STATUS.CONNECTED, { channel: channelName, joined: true, force: true });
+    });
+
+    bind('part', (partedChannel, partedUsername, self) => {
+      if (!self || normalizeTwitchChannel(partedChannel) !== channelName) {
+        return;
+      }
+      state.joined = false;
+      logDebug('Twitch channel parted', { channel: channelName, username: partedUsername });
+      updateStatus(STATUS.DISCONNECTED, { channel: channelName, joined: false, reason: 'parted' });
+      teardownClient();
+      if (!state.manualDisconnect) {
+        scheduleReconnect();
+      }
     });
 
     const processChatEvent = (chan, tags, message, self, fallbackType = null) => {
@@ -628,6 +656,7 @@ export function createTwitchChatClient(options = {}) {
     }
     clearReconnectTimer();
     state.manualDisconnect = Boolean(connectOptions.manual === true);
+    state.joined = false;
     updateStatus(STATUS.CONNECTING);
 
     const channel = normalizeTwitchChannel(connectOptions.channel || state.channel);
@@ -687,7 +716,7 @@ export function createTwitchChatClient(options = {}) {
 
       state.reconnectAttempts = 0;
       state.manualDisconnect = false;
-      updateStatus(STATUS.CONNECTED, { channel, identity: state.identity });
+      updateStatus(STATUS.CONNECTED, { channel, identity: state.identity, joined: state.joined });
       return result;
     } catch (err) {
       state.lastError = err;
@@ -731,20 +760,10 @@ export function createTwitchChatClient(options = {}) {
     return state.client.say(`#${channel}`, message);
   }
 
-  function getUserState(targetChannel = null) {
-    if (!state.client) {
-      return {};
-    }
-    const channel = normalizeTwitchChannel(targetChannel || state.channel);
-    const channelKey = channel ? `#${channel}` : null;
-    const channelState = channelKey && state.client.userstate?.[channelKey];
-    const source = channelState || state.client.globaluserstate || {};
-    return { ...source };
-  }
-
   function getState() {
     return {
       status: state.status,
+      joined: state.joined,
       channel: state.channel,
       identity: state.identity,
       reconnectAttempts: state.reconnectAttempts,
@@ -760,7 +779,6 @@ export function createTwitchChatClient(options = {}) {
     off: emitter.off,
     once: emitter.once,
     sendMessage,
-    getUserState,
     scheduleReconnect,
     updateStatus,
     getState,

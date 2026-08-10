@@ -212,6 +212,13 @@
         relay({ message: data });
     }
 
+    function pushLiveStats(data) {
+        if (!state.isExtensionOn || !data || typeof data !== 'object') {
+            return;
+        }
+        relay({ liveStats: data });
+    }
+
     function pushStatus(status, message, meta) {
         const payload = {
             platform: 'rumble',
@@ -1638,6 +1645,17 @@
         const recentGiftedSubs = snapshot && snapshot.gifted_subs ? combineLatestAndRecent(snapshot.gifted_subs.latest_gifted_sub, snapshot.gifted_subs.recent_gifted_subs, buildGiftKey) : [];
         const entries = [];
         let results;
+
+        const liveStats = {
+            type: 'rumble',
+            viewers: viewers != null ? viewers : 0,
+            followers: sourceFollowers,
+            subscribers: sourceSubscribers,
+            likes: stream ? coerceInteger(stream.likes) : 0,
+            title: stream && stream.title ? String(stream.title) : '',
+            isLive: !!(stream && stream.is_live)
+        };
+        pushLiveStats(liveStats);
 
         updateHeaderChips(snapshot, stream);
         maybeEmitStreamState(stream);

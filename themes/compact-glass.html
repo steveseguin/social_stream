@@ -37,7 +37,8 @@ Keep this file Chrome-80 friendly: no <script type="module">, no top-level impor
 -->
 <html lang="en">
 <head>
-  <script type="text/javascript" src="../js/local-server-url.js"></script>
+<script type="text/javascript" src="../js/local-server-url.js"></script>
+<script type="text/javascript" src="../js/transport-dedupe.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Compact Glass Chat Overlay</title>
@@ -606,10 +607,12 @@ body.ultra .content-img {
     // the websocket relay and the VDO.Ninja bridge; render only the first copy.
     var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
     var recentTransportDeliveries = new Map();
-    function isDuplicateTransportDelivery(data) {
+    var transportDeliveryDedupe = typeof SocialStreamTransportDedupe !== "undefined" ? SocialStreamTransportDedupe.create() : null;
+    function isDuplicateTransportDelivery(data, source) {
         if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) {
             return false;
         }
+        if (transportDeliveryDedupe) return transportDeliveryDedupe(data, source);
         if (!data || typeof data !== "object") {
             return false;
         }
@@ -641,8 +644,8 @@ body.ultra .content-img {
         recentTransportDeliveries.set(key, now);
         return false;
     }
-    function addMessageToOverlay(data) {
-        if (isDuplicateTransportDelivery(data)) {
+    function addMessageToOverlay(data, source) {
+        if (isDuplicateTransportDelivery(data, source)) {
             return;
         }
         if (handleControlPayload(data)) { return; }
@@ -728,7 +731,7 @@ body.ultra .content-img {
         window.addEventListener("message", function (e) {
             if (e.source != iframe.contentWindow) return;
             if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja) {
-                addMessageToOverlay(e.data.dataReceived.overlayNinja);
+                addMessageToOverlay(e.data.dataReceived.overlayNinja, "p2p");
             }
         });
     }
@@ -747,7 +750,7 @@ body.ultra .content-img {
         };
         socketserver.addEventListener('message', function (event) {
             if (event.data) {
-                try { var data = JSON.parse(event.data); if (data) { addMessageToOverlay(data); } }
+                try { var data = JSON.parse(event.data); if (data) { addMessageToOverlay(data, "server"); } }
                 catch (err) { console.error("Error processing WebSocket message:", err); }
             }
         });

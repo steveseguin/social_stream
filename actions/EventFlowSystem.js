@@ -970,6 +970,17 @@ class EventFlowSystem {
         if (!this.nodeStates.has(nodeId)) {
             this.initializeStateNode(nodeId, stateType, config);
         }
+
+		// Keep editable counter settings current without resetting the live count.
+		// Previously, target/mode changes only took effect after creating a new node.
+		if (stateType === 'COUNTER') {
+			const counterState = this.nodeStates.get(nodeId);
+			if (counterState) {
+				counterState.targetCount = config.targetCount !== undefined ? config.targetCount : 10;
+				counterState.resetOnTarget = config.resetOnTarget !== false;
+				counterState.mode = config.mode || 'INCREMENT';
+			}
+		}
         
         // Return object includes both activation state and whether to pass message
         let result = { active: false, passMessage: false, modifiedMessage: null };
@@ -2359,6 +2370,16 @@ class EventFlowSystem {
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
                 const event = (message.event || '').toLowerCase();
                 return event === 'scene_changed' || event === 'obs_scene_changed';
+            }
+
+            case 'obsMediaEnded': {
+                if ((message.type || '').toLowerCase() !== 'obs') return false;
+                const event = (message.event || '').toLowerCase();
+                if (event !== 'media_ended' && event !== 'obs_media_ended') return false;
+                const configuredSource = String(config.sourceName || '').trim().toLowerCase();
+                if (!configuredSource) return true;
+                const eventSource = String(message.meta?.inputName || message.inputName || '').trim().toLowerCase();
+                return eventSource === configuredSource;
             }
 
             case 'obsReplaybufferSaved': {
@@ -3783,7 +3804,7 @@ class EventFlowSystem {
 						borderWidth: config.borderWidth ?? 3,
 						borderColor: config.borderColor || '#ffffff',
 						shadow: config.shadow !== false,
-						duration: config.duration || 5000,
+						duration: config.duration ?? 5000,
 						clearFirst: !!config.clearFirst,
 						messageData: {
 							chatimg: message.chatimg || '',
@@ -3802,11 +3823,10 @@ class EventFlowSystem {
 
 			case 'showText':
 				{
-					const donationNumericValue = this.getDonationNumericValue(message);
-					const donationAmountValue = donationNumericValue !== null ? donationNumericValue : (message.donationAmount || message.donoValue || '');
 					const actionPayload = {
 						actionType: 'show_text',
-						text: config.text || 'Hello {username}!',
+						text: this.replaceTemplateVars(config.text ?? 'Hello {username}!', message),
+						textProcessed: true,
 						x: config.x ?? 50,
 						y: config.y ?? 50,
 						width: config.width ?? 80,
@@ -3822,31 +3842,8 @@ class EventFlowSystem {
 						outlineColor: config.outlineColor || '#000000',
 						animation: config.animation || 'fadeIn',
 						animationDuration: config.animationDuration ?? 500,
-						duration: config.duration || 5000,
-						clearFirst: !!config.clearFirst,
-						messageData: {
-							// Core aliases for backward compatibility
-							username: message.chatname || message.displayname || '',
-							message: message.chatmessage || '',
-							source: (message.type || '').charAt(0).toUpperCase() + (message.type || '').slice(1),
-							donation: message.hasDonation || '',
-							// Extended fields
-							chatname: message.chatname || '',
-							displayname: message.displayname || '',
-							chatmessage: message.chatmessage || '',
-							type: message.type || '',
-							hasdonation: message.hasDonation || '',
-							donationamount: donationAmountValue,
-							donovalue: donationAmountValue,
-							event: message.event || '',
-							membership: message.membership || '',
-							subtitle: message.subtitle || '',
-							userid: message.userid || '',
-							chatimg: message.chatimg || '',
-							contentimg: message.contentimg || '',
-							rewardtitle: message.rewardTitle || '',
-							meta: message.meta || ''
-						}
+						duration: config.duration ?? 5000,
+						clearFirst: !!config.clearFirst
 					};
 					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
 						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
@@ -3958,6 +3955,70 @@ class EventFlowSystem {
                     }
                 }
                 break;
+
+			case 'obsSetText':
+				if (config.sourceName) {
+					const textTemplate = config.text === undefined ? '{message}' : String(config.text);
+					const actionPayload = {
+						actionType: 'obsSetText',
+						sourceName: config.sourceName,
+						text: this.replaceTemplateVars(textTemplate, message)
+					};
+
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+					} else {
+						console.warn('[OBS] sendTargetP2P not available on this instance');
+					}
+				}
+				break;
+
+			case 'obsMediaControl':
+				if (config.sourceName) {
+					const actionPayload = {
+						actionType: 'obsMediaControl',
+						sourceName: config.sourceName,
+						operation: config.operation || 'restart'
+					};
+
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+					} else {
+						console.warn('[OBS] sendTargetP2P not available on this instance');
+					}
+				}
+				break;
+
+			case 'obsSetVolume':
+				if (config.sourceName) {
+					const actionPayload = {
+						actionType: 'obsSetVolume',
+						sourceName: config.sourceName,
+						volumeDb: Number(config.volumeDb ?? 0)
+					};
+
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+					} else {
+						console.warn('[OBS] sendTargetP2P not available on this instance');
+					}
+				}
+				break;
+
+			case 'obsRefreshBrowser':
+				if (config.sourceName) {
+					const actionPayload = {
+						actionType: 'obsRefreshBrowser',
+						sourceName: config.sourceName
+					};
+
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+					} else {
+						console.warn('[OBS] sendTargetP2P not available on this instance');
+					}
+				}
+				break;
             
             case 'obsSetSourceFilter':
                 if (config.sourceName && config.filterName) {
@@ -4039,6 +4100,19 @@ class EventFlowSystem {
                     console.warn('[OBS] sendTargetP2P not available');
                 }
                 break;
+
+			case 'obsReplayBufferControl':
+				const replayBufferControlPayload = {
+					actionType: 'obsReplayBufferControl',
+					operation: config.operation || 'start'
+				};
+
+				if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+					this.sendTargetP2P({ overlayNinja: replayBufferControlPayload }, 'actions');
+				} else {
+					console.warn('[OBS] sendTargetP2P not available');
+				}
+				break;
                 
             case 'obsReplayBuffer':
                 const replayBufferPayload = {

@@ -4318,6 +4318,7 @@ function enableBackgroundKeepAlive() {
 								memberLevelName: giftDetails.memberLevelName,
 								profileImageUrl: item.authorDetails.profileImageUrl,
 								authorChannelId: item.authorDetails.channelId,
+								isChatModerator: item.authorDetails.isChatModerator === true,
 								displayMessage: item.snippet.displayMessage
 							});
 						}
@@ -4344,6 +4345,7 @@ function enableBackgroundKeepAlive() {
 								memberLevelName: giftingDetails.giftMembershipsLevelName,
 								profileImageUrl: item.authorDetails.profileImageUrl,
 								authorChannelId: item.authorDetails.channelId,
+								isChatModerator: item.authorDetails.isChatModerator === true,
 								displayMessage: item.snippet.displayMessage
 							});
 						}
@@ -4381,6 +4383,7 @@ function enableBackgroundKeepAlive() {
 								altText: stickerDetails.superStickerMetadata?.altText,
 								profileImageUrl: item.authorDetails.profileImageUrl,
 								authorChannelId: item.authorDetails.channelId,
+								isChatModerator: item.authorDetails.isChatModerator === true,
 								badges: stickerBadges.length > 0 ? stickerBadges : "",
 								displayMessage: item.snippet.displayMessage
 							});
@@ -4399,6 +4402,7 @@ function enableBackgroundKeepAlive() {
 								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								profileImageUrl: item.authorDetails.profileImageUrl,
 								authorChannelId: item.authorDetails.channelId,
+								isChatModerator: item.authorDetails.isChatModerator === true,
 								badges: giftBadges.length > 0 ? giftBadges : [{"type": "text", "text": "🎁"}],
 								displayMessage: item.snippet.displayMessage,
 								giftName: giftMetadata.giftName,
@@ -4427,6 +4431,7 @@ function enableBackgroundKeepAlive() {
 								tier: item.snippet.superChatDetails.tier,
 								profileImageUrl: item.authorDetails.profileImageUrl,
 								authorChannelId: item.authorDetails.channelId,
+								isChatModerator: item.authorDetails.isChatModerator === true,
 								badges: superChatBadges.length > 0 ? superChatBadges : ""
 							});
 						}
@@ -6688,6 +6693,13 @@ function enableBackgroundKeepAlive() {
 			console.error('Error processing message:', e);
 		}
 	}
+
+	function preserveKnownModerator(payload, sourceData) {
+		if (sourceData && sourceData.isChatModerator === true) {
+			payload.mod = true;
+		}
+		return payload;
+	}
 	
     function processSuperChat(superChatData) {
 		try {
@@ -6716,7 +6728,7 @@ function enableBackgroundKeepAlive() {
 					}
 				}
 			}
-			pushMessage(applySourceIdentity({
+			pushMessage(applySourceIdentity(preserveKnownModerator({
 				chatname: superChatData.authorName,
 				chatbadges: superChatData.badges || "", // Use any badges passed in
 				userid: superChatData.authorChannelId,
@@ -6729,7 +6741,7 @@ function enableBackgroundKeepAlive() {
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "superchat",
 				textonly: settings.textonlymode || false
-			}));
+			}, superChatData)));
 		} catch (e) {
 			console.error('Error processing super chat:', e);
 		}
@@ -6798,6 +6810,7 @@ function enableBackgroundKeepAlive() {
 			if (giftData.giftUrl) {
 				payload.contentimg = giftData.giftUrl;
 			}
+			preserveKnownModerator(payload, giftData);
 			pushMessage(applySourceIdentity(payload));
 		} catch (e) {
 			console.error('Error processing YouTube gift:', e);
@@ -6959,7 +6972,7 @@ function enableBackgroundKeepAlive() {
 				}
 			}
 			
-			pushMessage(applySourceIdentity({
+			pushMessage(applySourceIdentity(preserveKnownModerator({
 				chatname: escapeHtml(giftData.authorName),
 				chatbadges: [{"type": "text", "text": "🎁"}], // Gift emoji for received gifts
 				userid: giftData.authorChannelId,
@@ -6974,7 +6987,7 @@ function enableBackgroundKeepAlive() {
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "giftredemption",
 				textonly: settings.textonlymode || false
-			}));
+			}, giftData)));
 		} catch (e) {
 			console.error('Error processing gift redemption:', e);
 		}
@@ -7014,7 +7027,7 @@ function enableBackgroundKeepAlive() {
 				}
 			}
 			
-			pushMessage(applySourceIdentity({
+			pushMessage(applySourceIdentity(preserveKnownModerator({
 				chatname: escapeHtml(giftData.authorName),
 				chatbadges: [{"type": "text", "text": "💝"}], // Gift giving emoji
 				userid: giftData.authorChannelId,
@@ -7029,7 +7042,7 @@ function enableBackgroundKeepAlive() {
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "giftpurchase",
 				textonly: settings.textonlymode || false
-			}));
+			}, giftData)));
 		} catch (e) {
 			console.error('Error processing gift purchase:', e);
 		}
@@ -7193,7 +7206,7 @@ function enableBackgroundKeepAlive() {
 			// In youtube.js, sticker images are captured from the rendered chat
 			const stickerMessage = actualMessage || stickerData.altText || getTranslation("super-sticker-text", "Super Sticker");
 			
-			pushMessage(applySourceIdentity({
+			pushMessage(applySourceIdentity(preserveKnownModerator({
 				chatname: escapeHtml(stickerData.authorName),
 				chatbadges: stickerData.badges || "",
 				userid: stickerData.authorChannelId,
@@ -7206,7 +7219,7 @@ function enableBackgroundKeepAlive() {
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "supersticker",
 				textonly: settings.textonlymode || false
-			}));
+			}, stickerData)));
 		} catch (e) {
 			console.error('Error processing super sticker:', e);
 		}

@@ -282,6 +282,72 @@
 		chatBadges: "img.chat-badge[src], img.chat-badge[srcset], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset], .ffz-badge, .user-pronoun, img.chat-badge[src]",
 		messageContainer: ".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper, .room-message"
 	};
+	const TWITCH_MODERATOR_BADGE_IMAGE_IDS = new Set([
+		"3267646d-33f0-4b17-b3df-f923a41db1d0"
+	]);
+
+	function isTwitchModeratorBadgeIdentifier(value) {
+		const normalized = String(value || "").trim().toLowerCase();
+		return normalized === "moderator"
+			|| normalized === "global_mod"
+			|| normalized.startsWith("moderator/")
+			|| normalized.startsWith("global_mod/");
+	}
+
+	function isTwitchModeratorBadge(badge) {
+		if (!badge) {
+			return false;
+		}
+
+		// Twitch localizes badge labels, but the badge asset ID is shared across locales.
+		const sourceValues = [
+			badge.src,
+			badge.srcset,
+			badge.getAttribute && badge.getAttribute("data-src"),
+			badge.style && badge.style.backgroundImage
+		];
+		if (badge.classList && badge.classList.contains("ffz-badge")) {
+			try {
+				sourceValues.push(getComputedStyle(badge).backgroundImage);
+			} catch (e) {}
+		}
+		for (const sourceValue of sourceValues) {
+			const matches = String(sourceValue || "").match(/\/badges\/v1\/([^/\s,)]+)/gi) || [];
+			for (const match of matches) {
+				const idMatch = match.match(/\/badges\/v1\/([^/\s,)]+)/i);
+				if (idMatch && TWITCH_MODERATOR_BADGE_IMAGE_IDS.has(idMatch[1].toLowerCase())) {
+					return true;
+				}
+			}
+		}
+
+		const metadataNodes = [badge, badge.parentElement];
+		const metadataAttributes = [
+			"data-a-badge",
+			"data-badge",
+			"data-badge-id",
+			"data-a-badge-id",
+			"data-badge-set-id",
+			"data-set-id"
+		];
+		for (const node of metadataNodes) {
+			if (!node || !node.getAttribute) {
+				continue;
+			}
+			for (const attribute of metadataAttributes) {
+				if (isTwitchModeratorBadgeIdentifier(node.getAttribute(attribute))) {
+					return true;
+				}
+			}
+		}
+
+		// Retain the native English fallback for older or third-party badge markup.
+		const badgeText = (badge.alt || badge.getAttribute("aria-label") || badge.getAttribute("title") || "").trim().toLowerCase();
+		return badgeText === "moderator"
+			|| badgeText === "moderator badge"
+			|| badgeText === "badge moderator"
+			|| badgeText.startsWith("moderator, ");
+	}
 	const trackedTwitchMessageIds = new Map();
 	const MAX_TRACKED_TWITCH_MESSAGE_IDS = 500;
 
@@ -1037,7 +1103,7 @@
 					}
 				}
 
-				if (!mod && loweredBadgeText === "moderator") {
+				if (!mod && isTwitchModeratorBadge(badge)) {
 					mod = true;
 				}
 				if (!vip && loweredBadgeText === "vip") {

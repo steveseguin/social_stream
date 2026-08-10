@@ -510,3 +510,178 @@ details:not([open]) .panel-summary-icon::before {
     border-radius: 3px;
     font-size: 11px;
 }
+
+[hidden] {
+    display: none !important;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.identity-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.identity-item {
+    min-width: 150px;
+    padding: 7px 10px;
+    background: var(--velora-input-bg);
+    border: 1px solid var(--velora-border);
+    border-radius: 5px;
+    display: grid;
+    gap: 1px;
+}
+
+.identity-label {
+    color: var(--velora-muted);
+    font-size: 11px;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.identity-item strong {
+    font-size: 13px;
+    color: var(--velora-text);
+    overflow-wrap: anywhere;
+}
+
+.status-chip.neutral {
+    background: var(--velora-input-bg);
+    color: var(--velora-muted);
+    border-color: var(--velora-border);
+}
+
+.connection-state {
+    border-radius: 5px;
+    border: 1px solid var(--velora-border);
+    background: var(--velora-input-bg);
+    color: var(--velora-muted);
+    font-weight: 600;
+    padding: 10px 12px;
+}
+
+.connection-state.connected {
+    color: var(--velora-success-fg);
+    background: var(--velora-success-bg);
+    border-color: rgba(96, 224, 160, 0.55);
+}
+
+.connection-state.connecting {
+    color: var(--velora-warn-fg);
+    background: var(--velora-warn-bg);
+    border-color: rgba(240, 192, 96, 0.55);
+}
+
+.connection-state.error,
+.connection-state.mismatch {
+    color: var(--velora-danger-fg);
+    background: var(--velora-danger-bg);
+    border-color: rgba(240, 147, 192, 0.6);
+}
+
+.setup-card,
+.notice-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 18px;
+}
+
+.setup-card {
+    padding: 14px;
+    border: 1px solid var(--velora-border);
+    border-radius: 5px;
+    background: linear-gradient(135deg, rgba(155, 95, 224, 0.14), rgba(155, 95, 224, 0.04));
+}
+
+.setup-card h2,
+.setup-card p,
+.notice-box p {
+    margin: 0;
+}
+
+.setup-card h2 {
+    font-size: 15px;
+    margin-bottom: 3px;
+}
+
+.setup-card p,
+.notice-box p {
+    color: var(--velora-muted);
+    font-size: 13px;
+}
+
+.danger-notice {
+    background: var(--velora-danger-bg);
+    border-color: var(--velora-danger-fg);
+    color: var(--velora-danger-fg);
+    font-size: 13px;
+}
+
+.danger-notice p {
+    color: var(--velora-text);
+    margin-top: 3px;
+    max-width: 760px;
+}
+
+.advanced-label {
+    margin-left: 6px;
+    color: var(--velora-muted);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+button {
+    min-height: 38px;
+    padding: 8px 14px;
+}
+
+button:focus-visible,
+textarea:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+    outline: 2px solid var(--velora-purple-bright);
+    outline-offset: 2px;
+}
+
+@media (max-width: 680px) {
+    body {
+        padding: 10px;
+    }
+
+    .identity-row {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .identity-item {
+        flex: 1 1 145px;
+    }
+
+    .setup-card,
+    .notice-box {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .setup-card button,
+    .notice-box button {
+        width: 100%;
+    }
+}

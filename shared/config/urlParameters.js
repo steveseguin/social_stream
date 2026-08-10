@@ -932,6 +932,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Shows the current viewer count indicator"
           },
           {
+            "key": "reserveviewercountspace",
+            "displayName": "reserveviewercountspace",
+            "aliases": [
+              "reserveviewercountspace"
+            ],
+            "values": "boolean",
+            "description": "Reserves vertical space so the viewer count bar does not cover chat messages"
+          },
+          {
             "key": "nocolon",
             "displayName": "nocolon",
             "aliases": [

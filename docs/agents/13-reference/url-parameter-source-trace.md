@@ -212,7 +212,7 @@ Support caveat: these pages usually need event-style payloads, not just normal c
 
 Source-checked page families:
 
-- `emotes.html`: `showtime`, `floatup`, `hidedupes`, `limit`, `max`, `membersonly`, `hidereplies`, `session`, `s`, `id`, `password`, `lanonly`, `css`, base64 CSS aliases, `bademotes`, `myname`, `botlist`, `hidebots`, `scale`, `server`, `server2`, `server3`, `localserver`, `chroma`, `speed`, `darkmode`, `lightmode`, `transparent`, `pagebg`, `pagebackground`, `dockbg`, `js`
+- `emotes.html`: `showtime`, `floatup`, `hidedupes`, `limit`, `max`, `burst`, `membersonly`, `hidereplies`, `session`, `s`, `id`, `password`, `lanonly`, `css`, base64 CSS aliases, `bademotes`, `myname`, `botlist`, `hidebots`, `scale`, `server`, `server2`, `server3`, `localserver`, `chroma`, `speed`, `darkmode`, `lightmode`, `transparent`, `pagebg`, `pagebackground`, `dockbg`, `js`
 - `reactions.html`: `session`, `room`, `password`, `label`, `out`, `outchan`, `in`, `inchan`, `scale`, `speed`, `burst`, `limit`, `pagebg`, `align`, `layout`, `server`, `server2`, `server3`, `localserver`
 - `scoreboard.html`: `session`, `s`, `id`, `password`, `layout`, `theme`, `maxusers`, `minpoints`, `chatpoints`, `donationpoints`, `customtriggers`, `hidepoints`, `hiderank`, `hideavatar`, `hideplatform`, `animations`, `highlightchanges`, `title`, `font`, `googlefont`, `bgcolor`, `textcolor`, `scale`, `server`, `server2`, `server3`, `lanonly`, `preview`, `transparent`
 - `ticker.html`: `session`, `s`, `id`, `password`, `font`, `fontsize`, `googlefont`, `style`, `css`, base64 CSS aliases, `server`, `server2`, `localserver`, `chroma`, `speed`, `speedmode`, `display`, `rotateinterval`, `rotatepause`, `rotateorder`, `separator`, `gap`, `transparent`, `scrollcopies`, `js`

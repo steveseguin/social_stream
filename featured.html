@@ -1,6 +1,7 @@
 <html lang="en" style="font-size: 10px; font-family: Roboto, Arial, sans-serif">
 	<head>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
+  <script type="text/javascript" src="./js/transport-dedupe.js"></script>
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
 		<meta content="utf-8" http-equiv="encoding" />
@@ -2381,6 +2382,20 @@
 			var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja";
 			var reconnectionTimeout = null;
 
+			// Cross-transport dedupe: this page runs socket OR iframe, never both, so
+			// today this is defense-in-depth; it renders only the first copy if the
+			// transports ever overlap, matching the other overlays.
+			var transportDeliveryDedupe = typeof SocialStreamTransportDedupe !== "undefined" ? SocialStreamTransportDedupe.create() : null;
+			function isDuplicateTransportDelivery(data, source) {
+				if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) {
+					return false;
+				}
+				if (!transportDeliveryDedupe) {
+					return false;
+				}
+				return transportDeliveryDedupe(data, source);
+			}
+
 			function setupSocket(allin = false) {
 				if (reconnectionTimeout) {
 					clearTimeout(reconnectionTimeout);
@@ -2439,6 +2454,12 @@
 
 						if (data && "overlayNinja" in data) {
 							data = data.overlayNinja;
+						}
+
+						if (!pid && data && typeof data === "object") {
+							if (isDuplicateTransportDelivery(data, "websocket")) {
+								return;
+							}
 						}
 
 						var resp = false;
@@ -2626,7 +2647,7 @@
 							//console.log(e.data.dataReceived.overlayNinja);
 							if (e.data.dataReceived.overlayNinja && "response" in e.data.dataReceived.overlayNinja) {
 								// pass
-							} else {
+							} else if (!isDuplicateTransportDelivery(e.data.dataReceived.overlayNinja, "p2p")) {
 								processData({ contents: e.data.dataReceived.overlayNinja });
 							}
 						}

@@ -34,6 +34,7 @@ const updateList = [
     "en-us",
     "de",
     "es",
+    "fr",
     "cs",
     "en-uk",
     "pt-br",

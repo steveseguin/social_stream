@@ -1,5 +1,10 @@
 // dashboard.js - Supporting JavaScript for Social Stream Ninja background page
 
+function dashboardTranslation(key, fallback, values) {
+    if (!window.SSNPageI18n || typeof window.SSNPageI18n.t !== 'function') return fallback;
+    return window.SSNPageI18n.t(key, fallback, values);
+}
+
 // Function to update connection status indicators
 function updateConnectionStatus() {
     // Remote Control API WebSocket (ch 1/2) - controlled by socketserver setting
@@ -9,13 +14,13 @@ function updateConnectionStatus() {
     const wsText = document.getElementById('websocket-status-text');
     if (!wsEnabled) {
         wsStatus.className = 'status-indicator status-inactive';
-        wsText.textContent = 'Disabled';
+        wsText.textContent = dashboardTranslation('status-disabled', 'Disabled');
     } else if (wsConnected) {
         wsStatus.className = 'status-indicator status-active';
-        wsText.textContent = 'Connected';
+        wsText.textContent = dashboardTranslation('status-connected', 'Connected');
     } else {
         wsStatus.className = 'status-indicator status-warning';
-        wsText.textContent = 'Connecting...';
+        wsText.textContent = dashboardTranslation('status-connecting', 'Connecting...');
     }
 
     // Chat Relay API WebSocket (ch 3/4) - controlled by server2 setting
@@ -26,13 +31,13 @@ function updateConnectionStatus() {
     if (wsDockStatus && wsDockText) {
         if (!wsDockEnabled) {
             wsDockStatus.className = 'status-indicator status-inactive';
-            wsDockText.textContent = 'Disabled';
+            wsDockText.textContent = dashboardTranslation('status-disabled', 'Disabled');
         } else if (wsDockConnected) {
             wsDockStatus.className = 'status-indicator status-active';
-            wsDockText.textContent = 'Connected';
+            wsDockText.textContent = dashboardTranslation('status-connected', 'Connected');
         } else {
             wsDockStatus.className = 'status-indicator status-warning';
-            wsDockText.textContent = 'Connecting...';
+            wsDockText.textContent = dashboardTranslation('status-connecting', 'Connecting...');
         }
     }
 
@@ -51,10 +56,12 @@ function updateConnectionStatus() {
     if (sigStatusEl && sigTextEl) {
         if (signalingReady) {
             sigStatusEl.className = 'status-indicator status-active';
-            sigTextEl.textContent = window.iframe ? 'Active (iframe)' : 'Connected';
+            sigTextEl.textContent = window.iframe
+                ? dashboardTranslation('status-active-iframe', 'Active (iframe)')
+                : dashboardTranslation('status-connected', 'Connected');
         } else {
             sigStatusEl.className = 'status-indicator status-inactive';
-            sigTextEl.textContent = 'Inactive';
+            sigTextEl.textContent = dashboardTranslation('status-inactive', 'Inactive');
         }
     }
 
@@ -71,16 +78,18 @@ function updateConnectionStatus() {
             if (Object.keys(peerLabels).length > 0) {
                 peerInfo = ' (' + Object.entries(peerLabels).map(([l,c]) => `${l}: ${c}`).join(', ') + ')';
             } else {
-                peerInfo = ` (${peerCount} unlabeled peers)`;
+                peerInfo = ` (${dashboardTranslation('unlabeled-peer-count', '{count} unlabeled peers', { count: peerCount })})`;
             }
-            rtcText.textContent = 'Connected' + peerInfo;
+            rtcText.textContent = dashboardTranslation('status-connected', 'Connected') + peerInfo;
         } else {
             rtcStatus.className = 'status-indicator status-warning';
-            rtcText.textContent = signalingReady ? 'Signaling connected; waiting for peers' : 'Waiting for transport';
+            rtcText.textContent = signalingReady
+                ? dashboardTranslation('status-signaling-waiting-peers', 'Signaling connected; waiting for peers')
+                : dashboardTranslation('status-waiting-transport', 'Waiting for transport');
         }
     } else {
         rtcStatus.className = 'status-indicator status-inactive';
-        rtcText.textContent = 'Transport not initialized';
+        rtcText.textContent = dashboardTranslation('status-transport-not-initialized', 'Transport not initialized');
     }
     
     // Extension status
@@ -90,15 +99,15 @@ function updateConnectionStatus() {
     
     if (extensionActive) {
         extStatus.className = 'status-indicator status-active';
-        extText.textContent = 'Active';
+        extText.textContent = dashboardTranslation('status-active', 'Active');
     } else {
         extStatus.className = 'status-indicator status-inactive';
-        extText.textContent = 'Inactive';
+        extText.textContent = dashboardTranslation('status-inactive', 'Inactive');
     }
     
     // Session ID
     const sessionIdEl = document.getElementById('session-id');
-    sessionIdEl.textContent = window.streamID || 'Not set';
+    sessionIdEl.textContent = window.streamID || dashboardTranslation('status-not-set', 'Not set');
 }
 
 // Function to update message statistics
@@ -185,14 +194,14 @@ function updatePeerList() {
     const peerCount = Object.keys(connectedPeers).length;
     
     if (peerCount === 0) {
-        peerListContent.innerHTML = 'No connected peers';
+        peerListContent.textContent = dashboardTranslation('no-connected-peers', 'No connected peers');
         return;
     }
     
     // Group peers by label
     const peersByLabel = {};
     Object.entries(connectedPeers).forEach(([uuid, label]) => {
-        const peerLabel = label || 'Unlabeled';
+        const peerLabel = label || dashboardTranslation('unlabeled-peer', 'Unlabeled');
         if (!peersByLabel[peerLabel]) {
             peersByLabel[peerLabel] = [];
         }
@@ -201,14 +210,14 @@ function updatePeerList() {
     });
     
     // Create HTML for the peer list
-    let html = '<strong>Connected Peers:</strong><br>';
+    let html = `<strong>${dashboardTranslation('connected-peers-label', 'Connected Peers:')}</strong><br>`;
     
     Object.entries(peersByLabel).forEach(([label, uuids]) => {
         html += `<span style="color: var(--primary-color);">${label}</span> (${uuids.length}): `;
         if (uuids.length <= 3) {
             html += uuids.join(', ');
         } else {
-            html += `${uuids.slice(0, 2).join(', ')} and ${uuids.length - 2} more`;
+            html += `${uuids.slice(0, 2).join(', ')} ${dashboardTranslation('and-more-peer-count', 'and {count} more', { count: uuids.length - 2 })}`;
         }
         html += '<br>';
     });
@@ -348,6 +357,10 @@ function initDashboard() {
     setupConsoleHook();
     setupPeriodicUpdates();
 	setupReturnButton();
+	window.addEventListener('ssn-page-language-changed', function() {
+		updateConnectionStatus();
+		updatePeerList();
+	});
 	
 	// Listen for postMessage from parent window (for cross-origin communication)
 	window.addEventListener('message', function(event) {

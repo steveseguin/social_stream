@@ -43,8 +43,8 @@ This is not configured in the Points System page unless you want SSN's own loyal
    - Add trigger: `User & Source` -> `Channel Point Redemption`.
    - Set `Reward Name` to the Kick reward title, or leave it blank to match any reward.
    - Optional: add `User & Source` -> `From Source`, set it to `Kick`, then combine both triggers with an `AND` node.
-   - Add action: `Overlays & Media` -> `Play Audio Clip`, then paste the audio URL.
-   - Add action: `Overlays & Media` -> `Display Media Overlay`, then paste the image/GIF/video URL.
+   - Add action: `Media & Effects` -> `Play Audio Clip`, then paste the audio URL.
+   - Add action: `Media & Effects` -> `Display Media Overlay`, then paste the image/GIF/video URL.
    - Connect the trigger, or the `AND` node, to the action nodes.
    - Save the flow and make sure it is active.
 

@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
         {
             name: 'VPZone.tv',
             icon: 'vpzone.png',
-            description: 'Live streaming platform with on-page chat capture and an authenticated API page option.',
+            description: 'Live streaming platform with on-page chat capture and an authenticated API page option. Supports Pixels tips as donations, dock delete/block sync, and a stream title/category editor for channel owners.',
             type: 'standard',
             instructions: `
                 <ul>
@@ -1671,6 +1671,19 @@ document.addEventListener('DOMContentLoaded', function() {
 					<li>No pop out needed</li>
 				</ul>
 			`
+		},
+		{
+			name: 'Streamlabs',
+			icon: 'streamlabs.png',
+			description: 'Alert box relay for donations, subs, follows, and more.',
+			type: 'websocket',
+			instructions: `
+				<ul>
+					<li>Open your Streamlabs alert box URL (https://streamlabs.com/alert-box/...) and keep it open</li>
+					<li>Alternatively, use the token-based socket bridge (sources/websocket/streamlabs.html): paste your Socket API token and connect</li>
+				</ul>
+			`,
+			notes: 'Send a test alert from Streamlabs to verify events are flowing.'
 		}
     ];
     
