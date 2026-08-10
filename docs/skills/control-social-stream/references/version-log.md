@@ -21,6 +21,10 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 
 ### 2026-08-09
 
+- Documented and tested Stream Deck relay compatibility for URL-encoded structured SSApp
+  command values. Current Social Stream source normalizes those HTTP fallback values before
+  remote command validation; the loopback control API and MCP schemas remain unchanged
+  (minimum SSApp 0.4.14 for the advertised Stream Deck bridge).
 - Added `elementOrder: "reverse"` to source-page and app-window semantic inspection for
   late-mounted modal controls (API 1.3.1 / MCP 1.2.1, minimum SSApp 0.4.14).
 
