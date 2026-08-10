@@ -398,6 +398,25 @@
 		return { ok: true };
 	}
 
+	function normalizeRemoteRequest(request) {
+		if (!request || typeof request !== "object" || Array.isArray(request) || !isSsappRequest(request) || typeof request.value !== "string") {
+			return request;
+		}
+		const value = request.value.trim();
+		if (!value || (value[0] !== "{" && value[0] !== "[")) {
+			return request;
+		}
+		try {
+			const parsed = JSON.parse(value);
+			if (!parsed || typeof parsed !== "object") {
+				return request;
+			}
+			return { ...request, value: parsed };
+		} catch (error) {
+			return request;
+		}
+	}
+
 	function normalizeAvailability(value, fallbackState, fallbackReason) {
 		if (typeof value === "string") {
 			value = { state: value };
@@ -632,6 +651,7 @@
 		isSsappRequest,
 		isSsappActionSupported,
 		validateRemoteSsappRequest,
+		normalizeRemoteRequest,
 		makeResponse,
 		makeError,
 		normalizeCommandResult

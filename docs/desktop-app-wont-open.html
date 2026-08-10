@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem("darkMode");
+				var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+				if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+					document.documentElement.classList.add("dark-mode");
+				}
+			})();
+		</script>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Desktop App Will Not Open - Social Stream Ninja</title>
+		<link rel="stylesheet" href="css/styles.css" />
+		<link rel="stylesheet" href="css/guides.css" />
+		<link rel="icon" href="../icons/favicon.ico" type="image/x-icon" />
+		<meta name="description" content="How to safely open the Social Stream Ninja desktop app when Windows, macOS, or Linux displays a security warning or blocks it from starting." />
+		<link rel="canonical" href="https://socialstream.ninja/docs/desktop-app-wont-open" />
+		<style>
+			.platform-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+				gap: 18px;
+				margin: 24px 0 8px;
+			}
+
+			.platform-link {
+				display: flex;
+				align-items: center;
+				gap: 14px;
+				padding: 18px;
+				border: 1px solid var(--border-color, #d9dce3);
+				border-radius: 12px;
+				background: var(--card-background, #fff);
+				text-decoration: none;
+			}
+
+			.platform-link:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+			}
+
+			.platform-link img {
+				width: 42px;
+				height: 42px;
+				object-fit: contain;
+			}
+
+			.platform-link strong,
+			.platform-link span {
+				display: block;
+			}
+
+			.platform-link span {
+				margin-top: 3px;
+				color: var(--text-secondary, #5b6472);
+				font-size: 0.9rem;
+			}
+
+			.example-alert {
+				margin: 18px 0;
+				padding: 18px;
+				border: 1px solid #b8c6dd;
+				border-left: 5px solid #3976d2;
+				border-radius: 8px;
+				background: rgba(57, 118, 210, 0.08);
+			}
+
+			.example-alert .example-label {
+				display: block;
+				margin-bottom: 6px;
+				font-size: 0.78rem;
+				font-weight: 700;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+			}
+
+			.example-alert strong {
+				display: block;
+				font-size: 1.08rem;
+			}
+
+			.route-table td:first-child {
+				font-weight: 700;
+			}
+
+			.quick-check {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+				gap: 14px;
+				margin-top: 18px;
+			}
+
+			.quick-check > div {
+				padding: 16px;
+				border-radius: 10px;
+				background: rgba(57, 118, 210, 0.08);
+			}
+
+			.quick-check strong {
+				display: block;
+				margin-bottom: 5px;
+			}
+
+			.dark-mode .platform-link {
+				border-color: rgba(255, 255, 255, 0.16);
+				background: rgba(255, 255, 255, 0.04);
+			}
+
+			.dark-mode .platform-link span {
+				color: rgba(255, 255, 255, 0.72);
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<div class="container">
+				<div class="logo">
+					<a href="../index.html">
+						<img src="../icons/logo.svg" alt="Social Stream Ninja Logo" />
+						<span>Social Stream Ninja</span>
+					</a>
+				</div>
+				<nav>
+					<ul>
+						<li><a href="../index.html">Home</a></li>
+						<li><a href="../docs/features.html">Features</a></li>
+						<li><a href="../docs/download.html">Download</a></li>
+						<li><a href="../docs/guides.html" class="active">Guides</a></li>
+						<li><a href="../docs/commands.html">Commands &amp; API</a></li>
+						<li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+						<li><a href="../docs/templates.html">Templates</a></li>
+						<li><a href="../docs/services.html">Hire</a></li>
+						<li><a href="../docs/support.html">Support</a></li>
+					</ul>
+				</nav>
+				<div class="header-controls">
+					<button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+						<svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+						<svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+							<circle cx="12" cy="12" r="5"></circle>
+							<line x1="12" y1="1" x2="12" y2="3"></line>
+							<line x1="12" y1="21" x2="12" y2="23"></line>
+							<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+							<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+							<line x1="1" y1="12" x2="3" y2="12"></line>
+							<line x1="21" y1="12" x2="23" y2="12"></line>
+							<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+							<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+						</svg>
+					</button>
+					<div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+				</div>
+			</div>
+		</header>
+
+		<section class="page-hero">
+			<div class="container">
+				<h1>The Desktop App Will Not Open</h1>
+				<p>Use the exact message on your screen to safely get Social Stream Ninja running.</p>
+			</div>
+		</section>
+
+		<main class="guide-section">
+			<div class="container">
+				<div class="guide-card">
+					<h2>Start Here</h2>
+					<p>Windows and macOS sometimes ask for extra confirmation before running an app downloaded outside their app stores. This is especially common with a new release, a less frequently downloaded app, or a private/custom build.</p>
+					<div class="warning-note"><strong>Never bypass a security warning unless you are comfortable doing so and fully understand what you are allowing.</strong> Only continue if you downloaded the app from the official Social Stream Ninja releases page or received a custom build from someone you trust. If you are unsure, stop and report the warning instead.</div>
+					<p>If the warning says the app contains malware, will damage your computer, or names a specific threat, do not allow it. Save a screenshot and check the troubleshooting section below.</p>
+					<div class="quick-check">
+						<div><strong>1. Confirm the source</strong><a href="https://github.com/steveseguin/social_stream/releases" target="_blank" rel="noopener">Open the official releases page</a> and download a fresh copy if you are unsure.</div>
+						<div><strong>2. Match the message</strong>The words in the warning determine which steps below apply.</div>
+						<div><strong>3. Keep the warning</strong>Take a screenshot before closing it in case you need support.</div>
+					</div>
+					<div class="platform-grid">
+						<a class="platform-link" href="#windows"><img src="../icons/windows.svg" alt="" /><span><strong>Windows</strong>SmartScreen, Defender, or Smart App Control</span></a>
+						<a class="platform-link" href="#macos"><img src="../icons/macos.svg" alt="" /><span><strong>macOS</strong>Gatekeeper, developer, or notarization warning</span></a>
+						<a class="platform-link" href="#linux"><img src="../icons/linux.svg" alt="" /><span><strong>Linux</strong>AppImage permission or sandbox error</span></a>
+					</div>
+				</div>
+
+				<div class="guide-card" id="windows">
+					<h2>Windows: "Windows Protected Your PC"</h2>
+					<div class="example-alert">
+						<span class="example-label">Example message</span>
+						<strong>Microsoft Defender SmartScreen prevented an unrecognized app from starting.</strong>
+					</div>
+					<p>This warning normally means Windows does not yet have enough reputation information for that exact download. It is not the same as a malware detection.</p>
+					<ol class="guide-steps">
+						<li>Confirm that the file came from the <a href="https://github.com/steveseguin/social_stream/releases" target="_blank" rel="noopener">official releases page</a>.</li>
+						<li>In the blue warning window, select <strong>More info</strong>.</li>
+						<li>Check that the app name is Social Stream Ninja or begins with <strong>socialstreamninja</strong>.</li>
+						<li>If you understand the warning and are comfortable continuing, select <strong>Run anyway</strong>. Otherwise, close the warning and use one of the alternatives below.</li>
+					</ol>
+					<p>Windows builds are self-signed and submitted to VirusTotal as an additional safety and reputation check. A self-signed certificate is not treated the same as a certificate issued by a Windows-trusted commercial authority, so Windows may show <strong>Unknown publisher</strong> or challenge a newly released file again.</p>
+					<p><a href="https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation" target="_blank" rel="noopener">Learn how Microsoft SmartScreen reputation works</a>.</p>
+				</div>
+
+				<div class="guide-card">
+					<h2>Windows: Defender Blocked Or Removed The File</h2>
+					<div class="example-alert">
+						<span class="example-label">Possible messages</span>
+						<strong>Threat found, Potentially unwanted app found, This app has been blocked, or Threat quarantined</strong>
+					</div>
+					<ol class="guide-steps">
+						<li>Open <strong>Windows Security</strong> from the Start menu.</li>
+						<li>Select <strong>Virus &amp; threat protection</strong>, then <strong>Protection history</strong>.</li>
+						<li>Open the entry that mentions the Social Stream Ninja installer or portable app.</li>
+						<li>Read the detection name and affected file path.</li>
+						<li>If it is only an app-reputation or potentially unwanted app warning, the file came from the official releases page, and you fully understand and are comfortable with the choice, select <strong>Actions &gt; Allow on device</strong>. You may need to download the file again.</li>
+					</ol>
+					<div class="warning-note"><strong>Stop if Windows names a specific malware threat.</strong> Do not choose Allow until you have confirmed the download source and shared the detection name or screenshot with support.</div>
+					<p><a href="https://support.microsoft.com/en-us/windows/security/windows-security-protection-history-in-the-windows-security-app" target="_blank" rel="noopener">Microsoft's Protection History instructions</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h2>Windows: Smart App Control Blocked The App</h2>
+					<p>Smart App Control is different from the normal SmartScreen warning. Windows does not provide a one-app <strong>Run anyway</strong> exception for it.</p>
+					<ul class="guide-list">
+						<li>On a work or school computer, ask the administrator to approve the app.</li>
+						<li>On a personal computer, use the <a href="https://chromewebstore.google.com/detail/social-stream-ninja/cppibjhfemifednoimlblfcmjgfhfjeg" target="_blank" rel="noopener">browser extension</a> or <a href="https://socialstream.ninja/lite/" target="_blank" rel="noopener">Lite web app</a> if you do not want to change a device-wide security setting.</li>
+						<li>Smart App Control can be managed under <strong>Windows Security &gt; App &amp; browser control</strong>, but changing it affects protection for all apps. Review Microsoft's explanation before deciding.</li>
+					</ul>
+					<p><a href="https://support.microsoft.com/en-us/windows/security/threat-malware-protection/smart-app-control-frequently-asked-questions" target="_blank" rel="noopener">Microsoft's Smart App Control FAQ</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h2>Other Windows Messages</h2>
+					<table class="guide-table guide-table-stack route-table">
+						<thead><tr><th>Message</th><th>What To Do</th></tr></thead>
+						<tbody>
+							<tr><td data-label="Message">"For security and performance, this mode of Windows only runs Microsoft-verified apps"</td><td data-label="What To Do">The computer is probably in Windows S mode. It only runs Microsoft Store apps. Switching out of S mode is a device-wide, one-way choice, so consider the browser or Lite version first. <a href="https://support.microsoft.com/en-us/windows/experience/platform-variants/switching-out-of-s-mode-in-windows" target="_blank" rel="noopener">Read Microsoft's S mode guide</a>.</td></tr>
+							<tr><td data-label="Message">"This app has been blocked by your system administrator"</td><td data-label="What To Do">A work, school, family, or security policy is controlling the computer. The person who manages it must approve the app.</td></tr>
+							<tr><td data-label="Message">"Windows Defender Firewall has blocked some features of this app"</td><td data-label="What To Do">This concerns network access, not whether the app may start. If you choose to allow access, use trusted private networks only; public-network access is normally unnecessary.</td></tr>
+							<tr><td data-label="Message">"This app can't run on your PC"</td><td data-label="What To Do">Delete that copy and download the current Windows x64 build again. Make sure the download completed and that you did not select a macOS or Linux file.</td></tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div class="guide-card" id="macos">
+					<h2>macOS: Developer Or Notarization Warning</h2>
+					<div class="example-alert">
+						<span class="example-label">Possible messages</span>
+						<strong>Apple cannot check the app for malicious software, or the developer cannot be verified</strong>
+					</div>
+					<p>Official macOS releases are intended to be signed and notarized. A private or custom third-party build might not be notarized, and a newly downloaded app can still require first-open approval.</p>
+					<ol class="guide-steps">
+						<li>Confirm that the app came from the <a href="https://github.com/steveseguin/social_stream/releases" target="_blank" rel="noopener">official releases page</a> or from someone whose custom build you trust.</li>
+						<li>Try to open the app once, then dismiss the warning.</li>
+						<li>Open the <strong>Apple menu &gt; System Settings &gt; Privacy &amp; Security</strong>.</li>
+						<li>Scroll down to the Security section and find the message about the blocked app.</li>
+						<li>If you understand the warning and are comfortable continuing, select <strong>Open Anyway</strong>, authenticate if asked, then select <strong>Open</strong>.</li>
+					</ol>
+					<p>This makes an exception for that app. It does not require turning off Gatekeeper for every application.</p>
+					<p><a href="https://support.apple.com/en-us/102445" target="_blank" rel="noopener">Apple's guide to safely opening downloaded apps</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h2>macOS: "The App Is Damaged" Or "Will Damage Your Computer"</h2>
+					<p>Do not use a Terminal command to strip the app's quarantine information. These messages can mean the download is incomplete or modified, a signature is invalid, or macOS detected a security problem.</p>
+					<ol class="guide-steps">
+						<li>Move that copy to the Trash.</li>
+						<li>Download the current macOS build again from the official releases page.</li>
+						<li>Open the new copy without modifying the app bundle.</li>
+						<li>If the message returns, take a screenshot showing the full wording and the macOS version, then contact support.</li>
+					</ol>
+					<p>If <strong>Open Anyway</strong> is missing, try opening the app once more and check Privacy &amp; Security again. On a managed Mac, the administrator may control this setting.</p>
+				</div>
+
+				<div class="guide-card" id="linux">
+					<h2>Linux: AppImage Will Not Start</h2>
+					<p>The AppImage may need permission to run:</p>
+					<ol class="guide-steps">
+						<li>Right-click the AppImage and open <strong>Properties</strong>.</li>
+						<li>Under Permissions, enable <strong>Allow executing file as program</strong>. The wording varies by desktop.</li>
+						<li>Open the AppImage again.</li>
+					</ol>
+					<p>You can also grant permission from a terminal:</p>
+					<pre><code>chmod +x socialstreamninja_linux_*.AppImage
+./socialstreamninja_linux_*.AppImage</code></pre>
+					<p>If the error mentions <strong>chrome-sandbox</strong>, <strong>SUID sandbox</strong>, AppArmor, or unprivileged namespaces, follow the <a href="index.html?file=appImage.md">AppImage sandbox guide</a>.</p>
+				</div>
+
+				<div class="guide-card">
+					<h2>Safer Alternatives To Bypassing A Warning</h2>
+					<p>You do not have to override an operating-system warning to use Social Stream Ninja.</p>
+					<ul class="guide-list">
+						<li><strong>Report the warning:</strong> send a screenshot and the details listed below so it can be investigated.</li>
+						<li><strong>Try an older official release:</strong> if a new version is the only one being blocked or failing, return to the official releases page and use the most recent older version that worked for you. Export your settings first when possible.</li>
+						<li><strong>Use the Chrome extension:</strong> install the <a href="https://chromewebstore.google.com/detail/social-stream-ninja/cppibjhfemifednoimlblfcmjgfhfjeg" target="_blank" rel="noopener">Chrome Web Store version</a> instead of the desktop app.</li>
+						<li><strong>Use the web app:</strong> open <a href="https://socialstream.ninja/lite/" target="_blank" rel="noopener">Social Stream Ninja Lite</a> when its smaller feature set is enough.</li>
+					</ul>
+					<div class="warning-note">Older releases do not contain the newest fixes. Download them only from the official releases page, and move back to a current version once the problem is understood.</div>
+				</div>
+
+				<div class="guide-card">
+					<h2>If It Still Will Not Open</h2>
+					<p>Send support the following details:</p>
+					<ul class="guide-list">
+						<li>A screenshot showing the complete warning.</li>
+						<li>Your operating system and version.</li>
+						<li>The exact filename you downloaded.</li>
+						<li>Whether this is the installer, portable app, AppImage, official macOS release, or a custom build.</li>
+						<li>Whether the same copy opened successfully before.</li>
+						<li>On Windows, the detection name from Protection History if one appears.</li>
+					</ul>
+					<p><a href="https://discord.socialstream.ninja" target="_blank" rel="noopener" class="btn btn-primary">Ask For Help On Discord</a></p>
+				</div>
+			</div>
+		</main>
+
+		<footer>
+			<div class="container">
+				<div class="footer-bottom">
+					<p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 License.</p>
+				</div>
+			</div>
+		</footer>
+		<script src="js/main.js"></script>
+		<script>
+			document.getElementById("current-year").textContent = new Date().getFullYear();
+		</script>
+	</body>
+</html>

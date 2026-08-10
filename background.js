@@ -106,6 +106,25 @@ function getCachedRoleList(value) {
 	return entries;
 }
 
+function normalizeRoleIdentifier(value) {
+	if (value === undefined || value === null) return "";
+	return String(value).toLowerCase().trim().replace(/^@+/, "");
+}
+
+function matchesConfiguredUser(entry, data, sourceType) {
+	if (!entry || !data) return false;
+	if (entry.type && entry.type !== sourceType) return false;
+
+	const configuredIdentifier = normalizeRoleIdentifier(entry.name);
+	if (!configuredIdentifier) return false;
+
+	const userId = normalizeRoleIdentifier(data.userid);
+	if (userId && configuredIdentifier === userId) return true;
+
+	const chatName = normalizeRoleIdentifier(data.chatname);
+	return !!chatName && configuredIdentifier === chatName;
+}
+
 function getCommandAliases(commandString) {
 	if (!commandString) {
 		return [];
@@ -238,11 +257,12 @@ const HANDLE_STORE_NAME = "handles";
 let fileHandleDBPromise = null;
 const HANDLE_KEYS = {
 	chatLog: "chatLog",
+	liveStats: "liveStats",
 	savedNames: "savedNames",
 	ticker: "tickerFile"
 };
 
-const HANDLE_STATUS_KEYS = ["chatLog", "savedNames", "ticker"];
+const HANDLE_STATUS_KEYS = ["chatLog", "liveStats", "savedNames", "ticker"];
 const HANDLE_STATUS_FIELDS = ["name", "status", "detail", "persisted"];
 const HANDLE_STATUS_STATES = {
 	ACTIVE: "active",
@@ -2406,6 +2426,7 @@ function checkIntervalState(intervalIndex) {
 					//messageTimeout = Date.now();
 					const scheduledMessage = {};
 					scheduledMessage.response = settings["timemessagecommand" + currentIndex].textsetting;
+					scheduledMessage.outgoingOrigin = "chatbot";
 					//sendMessageToTabs(scheduledMessage, false, null, false, antispam);
 					sendMessageToTabs(scheduledMessage, false, null, false, antispam, false);
 				} else if (settings["timemessageinterval" + currentIndex].numbersetting) {
@@ -2424,6 +2445,7 @@ function checkIntervalState(intervalIndex) {
 							//messageTimeout = Date.now();
 							const scheduledMessage = {};
 							scheduledMessage.response = settings["timemessagecommand" + activeIndex].textsetting;
+							scheduledMessage.outgoingOrigin = "chatbot";
 							//sendMessageToTabs(scheduledMessage, false, null, false, antispam);
 							sendMessageToTabs(scheduledMessage, false, null, false, antispam, false);
 						},
@@ -2447,6 +2469,7 @@ function checkIntervalState(intervalIndex) {
 						//messageTimeout = Date.now();
 						const scheduledMessage = {};
 						scheduledMessage.response = settings["timemessagecommand" + activeIndex].textsetting;
+						scheduledMessage.outgoingOrigin = "chatbot";
 						sendMessageToTabs(scheduledMessage, false, null, false, antispam, false);
 					},
 					15 * 60000,
@@ -2725,6 +2748,240 @@ async function overwriteFile(data = false) {
 			await writableStream.close();
 		}
 	}
+}
+
+var liveStatsFileHandle = false;
+var liveStatsWritePromise = Promise.resolve();
+var liveStatsWriterGeneration = 0;
+var liveStatsSnapshot = {
+	version: 1,
+	updatedAt: null,
+	platforms: {}
+};
+
+function normalizeLiveStatsPlatform(value) {
+	var platform = String(value || "")
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9_-]+/g, "-")
+		.replace(/^-+|-+$/g, "");
+	if (["__proto__", "constructor", "prototype"].includes(platform)) {
+		return "";
+	}
+	return platform;
+}
+
+function normalizeLiveStatsCount(value) {
+	if (value === null || value === undefined || value === "") {
+		return null;
+	}
+	if (typeof value === "string") {
+		value = value.replace(/,/g, "").trim();
+		if (!value) {
+			return null;
+		}
+	}
+	var number = Number(value);
+	if (!Number.isFinite(number)) {
+		return null;
+	}
+	return Math.max(0, Math.round(number));
+}
+
+function mergeLiveStatsPlatformUpdate(platform, update) {
+	platform = normalizeLiveStatsPlatform(platform);
+	if (!platform || !update || typeof update !== "object") {
+		return false;
+	}
+
+	var current = liveStatsSnapshot.platforms[platform] || {};
+	var next = Object.assign({}, current);
+	var changed = false;
+	["viewers", "likes", "followers", "subscribers"].forEach(function (field) {
+		if (!Object.prototype.hasOwnProperty.call(update, field)) {
+			return;
+		}
+		var count = normalizeLiveStatsCount(update[field]);
+		if (count !== null && next[field] !== count) {
+			next[field] = count;
+			changed = true;
+		}
+	});
+
+	if (Object.prototype.hasOwnProperty.call(update, "title") && update.title !== null && update.title !== undefined) {
+		var title = String(update.title);
+		if (next.title !== title) {
+			next.title = title;
+			changed = true;
+		}
+	}
+
+	if (typeof update.isLive === "boolean" && next.isLive !== update.isLive) {
+		next.isLive = update.isLive;
+		changed = true;
+	}
+
+	if (changed) {
+		next.updatedAt = new Date().toISOString();
+		liveStatsSnapshot.platforms[platform] = next;
+	}
+	return changed;
+}
+
+function commitLiveStatsSnapshot(changed) {
+	if (!changed) {
+		return false;
+	}
+	liveStatsSnapshot.updatedAt = new Date().toISOString();
+	writeLiveStatsSnapshot();
+	return true;
+}
+
+function updateLiveStatsSnapshot(update) {
+	if (!update || typeof update !== "object") {
+		return false;
+	}
+	var changed = false;
+	if (update.platforms && typeof update.platforms === "object" && !Array.isArray(update.platforms)) {
+		Object.keys(update.platforms).forEach(function (platform) {
+			changed = mergeLiveStatsPlatformUpdate(platform, update.platforms[platform]) || changed;
+		});
+	} else {
+		changed = mergeLiveStatsPlatformUpdate(update.platform || update.type, update);
+	}
+	return commitLiveStatsSnapshot(changed);
+}
+
+function captureLiveStatsFromMessage(message) {
+	if (!message || typeof message !== "object") {
+		return false;
+	}
+
+	var changed = false;
+	var eventName = String(message.event || "").toLowerCase();
+	var platform = normalizeLiveStatsPlatform(message.type);
+	var meta = message.meta;
+	var fieldByEvent = {
+		viewer_update: "viewers",
+		likes_update: "likes",
+		follower_update: "followers",
+		subscriber_update: "subscribers"
+	};
+
+	if (eventName === "viewer_updates" && meta && typeof meta === "object" && !Array.isArray(meta)) {
+		Object.keys(meta).forEach(function (sourceType) {
+			changed = mergeLiveStatsPlatformUpdate(sourceType, { viewers: meta[sourceType] }) || changed;
+		});
+	} else if (platform && fieldByEvent[eventName]) {
+		var metricUpdate = {};
+		metricUpdate[fieldByEvent[eventName]] = meta;
+		changed = mergeLiveStatsPlatformUpdate(platform, metricUpdate) || changed;
+	}
+
+	if (platform && (eventName === "stream_online" || eventName === "stream_offline")) {
+		var streamUpdate = { isLive: eventName === "stream_online" };
+		if (eventName === "stream_offline") {
+			streamUpdate.viewers = 0;
+		}
+		if (meta && typeof meta === "object") {
+			if (meta.title !== undefined) {
+				streamUpdate.title = meta.title;
+			} else if (meta.streamTitle !== undefined) {
+				streamUpdate.title = meta.streamTitle;
+			}
+			if (meta.likes !== undefined) {
+				streamUpdate.likes = meta.likes;
+			}
+		}
+		changed = mergeLiveStatsPlatformUpdate(platform, streamUpdate) || changed;
+	} else if (platform && meta && typeof meta === "object" && meta.streamTitle !== undefined) {
+		changed = mergeLiveStatsPlatformUpdate(platform, { title: meta.streamTitle }) || changed;
+	}
+
+	return commitLiveStatsSnapshot(changed);
+}
+
+function writeLiveStatsSnapshot() {
+	if (!liveStatsFileHandle) {
+		return Promise.resolve(false);
+	}
+	var handle = liveStatsFileHandle;
+	var generation = liveStatsWriterGeneration;
+	var data = JSON.stringify(liveStatsSnapshot, null, 2);
+	if (typeof handle === "string") {
+		ipcRenderer.send("write-to-file", { filePath: handle, data: data });
+		return Promise.resolve(true);
+	}
+
+	liveStatsWritePromise = liveStatsWritePromise
+		.catch(function () {})
+		.then(async function () {
+			if (generation !== liveStatsWriterGeneration || handle !== liveStatsFileHandle) {
+				return false;
+			}
+			var writableStream = await handle.createWritable();
+			await writableStream.write(data);
+			await writableStream.close();
+			return true;
+		})
+		.catch(function (error) {
+			console.warn("Could not write live stats file:", error);
+			updateHandleStatus("liveStats", {
+				status: HANDLE_STATUS_STATES.ERROR,
+				detail: "Could not write live stats file"
+			});
+			return false;
+		});
+	return liveStatsWritePromise;
+}
+
+async function overwriteLiveStatsFile(action = "setup") {
+	if (action === "stop") {
+		liveStatsWriterGeneration += 1;
+		liveStatsFileHandle = false;
+		if (isSSAPP) {
+			localStorage.removeItem("savedLiveStatsFilePath");
+		}
+		await dropBrowserHandle(HANDLE_KEYS.liveStats);
+		await updateHandleStatus("liveStats", {
+			name: null,
+			status: HANDLE_STATUS_STATES.MISSING,
+			detail: "",
+			persisted: false
+		});
+		return;
+	}
+
+	const opts = {
+		suggestedName: "social-stream-live-stats.json",
+		types: [
+			{
+				description: "JSON data",
+				accept: { "application/json": [".json"] }
+			}
+		]
+	};
+	if (!window.showSaveFilePicker) {
+		console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
+	}
+	const restoreTarget = await bringBackgroundPageToFrontForPicker();
+	try {
+		liveStatsFileHandle = await window.showSaveFilePicker(opts);
+	} finally {
+		await restorePreviousTabAfterPicker(restoreTarget);
+	}
+	liveStatsWriterGeneration += 1;
+	await persistBrowserHandle(HANDLE_KEYS.liveStats, liveStatsFileHandle);
+	if (isSSAPP && typeof liveStatsFileHandle === "string") {
+		localStorage.setItem("savedLiveStatsFilePath", liveStatsFileHandle);
+	}
+	await updateHandleStatus("liveStats", {
+		name: getFileHandleDisplayName(liveStatsFileHandle),
+		status: HANDLE_STATUS_STATES.ACTIVE,
+		detail: "",
+		persisted: shouldUseBrowserHandleStore() || isSSAPP
+	});
+	await writeLiveStatsSnapshot();
 }
 
 const MAX_NATIVE_FILE_PATH_LENGTH = 4096;
@@ -5478,6 +5735,11 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (isExtensionOn && (request.delete.type || request.delete.chatname || request.delete.id)) {
 				sendToDestinations({ delete: request.delete });
 			}
+		} else if ("liveStats" in request) {
+			sendResponse({ state: isExtensionOn });
+			if (isExtensionOn) {
+				updateLiveStatsSnapshot(request.liveStats);
+			}
 		} else if ("message" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 
@@ -5906,17 +6168,23 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				const method = String(request.method || "GET").toUpperCase();
 				const isOAuthTokenPost = method === "POST" && parsedUrl.pathname === "/api/oauth/token";
 				const isChatMessagePost = method === "POST" && /^\/api\/v1\/channels\/[^\/]+\/chat$/.test(parsedUrl.pathname);
-				if (method !== "GET" && !isOAuthTokenPost && !isChatMessagePost) {
+				const isChannelPatch = method === "PATCH" && /^\/api\/v1\/channels\/[^\/]+$/.test(parsedUrl.pathname);
+				const isModerationDelete = method === "DELETE" && /^\/api\/v1\/channels\/[^\/]+\/chat\/moderation$/.test(parsedUrl.pathname);
+				const isModerationBanPost = method === "POST" && /^\/api\/v1\/channels\/[^\/]+\/chat\/moderation\/bans$/.test(parsedUrl.pathname);
+				if (method !== "GET" && !isOAuthTokenPost && !isChatMessagePost && !isChannelPatch && !isModerationDelete && !isModerationBanPost) {
 					sendResponse({ ok: false, error: "VPZone fetch method not allowed" });
 					return response;
 				}
+				const hasJsonBody = isChatMessagePost || isChannelPatch || isModerationBanPost;
 				const headers = {
 					Accept: "application/json"
 				};
 				if (isOAuthTokenPost) {
 					headers["Content-Type"] = "application/x-www-form-urlencoded";
-				} else if (isChatMessagePost) {
-					headers["Content-Type"] = "application/json";
+				} else {
+					if (hasJsonBody) {
+						headers["Content-Type"] = "application/json";
+					}
 					if (request.authToken && typeof request.authToken === "string") {
 						headers.Authorization = "Bearer " + request.authToken.replace(/[\r\n]/g, "");
 					}
@@ -5926,7 +6194,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 					cache: "no-store",
 					credentials: "omit",
 					headers,
-					body: method === "POST" ? String(request.body || "") : undefined
+					body: isOAuthTokenPost || hasJsonBody ? String(request.body || "") : undefined
 				});
 				const responseText = await vpzoneResponse.text();
 				let responseJson = {};
@@ -6119,6 +6387,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if (request.cmd && request.cmd === "singlesave") {
 			sendResponse({ state: isExtensionOn });
 			overwriteFile("setup");
+		} else if (request.cmd && request.cmd === "livestatssave") {
+			sendResponse({ state: isExtensionOn });
+			overwriteLiveStatsFile("setup");
 		} else if (request.cmd && request.cmd === "excelsave") {
 			sendResponse({ state: isExtensionOn });
 			overwriteFileExcel("setup");
@@ -6280,6 +6551,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				detail: "",
 				persisted: false
 			});
+		} else if (request.cmd && request.cmd === "livestatssaveStop") {
+			sendResponse({ state: isExtensionOn });
+			await overwriteLiveStatsFile("stop");
 		} else if (request.cmd && request.cmd === "selectwinner") {
 			////console.logrequest);
 			if ("value" in request) {
@@ -6994,7 +7268,13 @@ function hasTargetedMetaPayload(message) {
 
 async function sendToDestinations(message, individualLikeAlreadyRouted) {
 	if (typeof message == "object") {
+		captureLiveStatsFromMessage(message);
+
 		if (message.suppressRelay) {
+			return true;
+		}
+
+		if (message.event === "likes_update" && !getSettingFlag("captureliketotals") && !getSettingFlag("captureyoutubelikes")) {
 			return true;
 		}
 
@@ -7255,6 +7535,7 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
 		const store = transaction.objectStore(messageStoreDB.storeName);
 		const index = store.index("timestamp");
 		const messages = [];
+		const retentionCheckTime = Date.now();
 
 		let range;
 		if (endTimestamp) {
@@ -7268,7 +7549,9 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
 		cursorRequest.onsuccess = event => {
 			const cursor = event.target.result;
 			if (cursor) {
-				messages.push(cursor.value);
+				if (!messageStoreDB.isMessageExpired(cursor.value, retentionCheckTime)) {
+					messages.push(cursor.value);
+				}
 				cursor.continue();
 			} else {
 				if (messages.length === 0) {
@@ -10045,6 +10328,9 @@ async function routeStreamDeckRemoteRequest(request, context) {
 	if (!router || !request || typeof request !== "object") {
 		return null;
 	}
+	if (typeof router.normalizeRemoteRequest === "function") {
+		request = router.normalizeRemoteRequest(request);
+	}
 	context = context || {};
 	if (router.isVersionedRequest(request) && typeof router.validateVersionedRequest === "function") {
 		const validation = router.validateVersionedRequest(request);
@@ -11814,18 +12100,8 @@ async function openchat(target = null, force = false) {
 		openURL(url, true);
 	}
 
-	if ((target == "trovo" || !target) && settings.trovo_username) {
-		let url = "https://trovo.live/chat/" + settings.trovo_username.textsetting;
-		openURL(url, true);
-	}
-
 	if ((target == "picarto" || !target) && settings.picarto_username) {
 		let url = "https://picarto.tv/chatpopout/" + settings.picarto_username.textsetting + "/public";
-		openURL(url, true);
-	}
-
-	if ((target == "dlive" || !target) && settings.dlive_username) {
-		let url = "https://dlive.tv/c/" + settings.dlive_username.textsetting + "/" + settings.dlive_username.textsetting;
 		openURL(url, true);
 	}
 
@@ -14158,8 +14434,7 @@ async function processIncomingRequest(request, UUID = false) {
 					altSourceType = "youtube";
 				}
 
-				const useCaptureNameForRoles = request.value.role == "host" || (request.value.role == "bot" && (altSourceType == "youtube" || altSourceType == "kick"));
-				const storageUsername = useCaptureNameForRoles ? request.value.chatname || request.value.userid || "" : request.value.userid || request.value.chatname || "";
+				const storageUsername = request.value.userid || request.value.chatname || "";
 				const userToMark = { username: storageUsername, type: altSourceType };
 				const dockUserToMark = {
 					username: request.value.chatname || request.value.userid || storageUsername,
@@ -14514,7 +14789,7 @@ function normalizeSourceControlPlatform(type) {
 function getSourceControlPlatforms(type) {
 	const normalized = normalizeSourceControlPlatform(type);
 	if (normalized === "*" || !normalized) {
-		return ["twitch", "kick", "youtube"];
+		return ["twitch", "kick", "youtube", "vpzone"];
 	}
 	return [normalized];
 }
@@ -14532,6 +14807,9 @@ function getWebsocketSourcePlatformFromUrl(url) {
 	}
 	if (lowerUrl.includes("/sources/websocket/youtube.html")) {
 		return "youtube";
+	}
+	if (lowerUrl.includes("/sources/websocket/vpzone.html")) {
+		return "vpzone";
 	}
 	return "";
 }
@@ -15371,13 +15649,14 @@ function isWebsocketSourceTabUrl(url) {
 	return !!(url && url.includes("/sources/websocket/") && (url.includes("socialstream.ninja") || url.startsWith("file://") || url.startsWith("chrome-extension://")));
 }
 
-function relayMessageToWebsocketSourceTab(tabId, message) {
+function relayMessageToWebsocketSourceTab(tabId, message, messageOrigin = "relay") {
 	try {
 		chrome.tabs.sendMessage(
 			tabId,
 			{
 				type: "SEND_MESSAGE",
-				message: message
+				message: message,
+				messageOrigin: messageOrigin
 			},
 			function () {
 				chrome.runtime.lastError;
@@ -15521,7 +15800,7 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 	}
 
 	if (isWebsocketSourceTabUrl(url)) {
-		if (relayMessageToWebsocketSourceTab(tab.id, data.response)) {
+		if (relayMessageToWebsocketSourceTab(tab.id, data.response, messageOrigin)) {
 			relayTabContext.storeMessage(data.response);
 			lastSentMessage = sanitizeMessageForTracking(data.response, false);
 			lastSentTimestamp = now;
@@ -15599,7 +15878,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		return false;
 	}
 
-	const messageOrigin = data.outgoingOrigin || (data.bot ? "chatbot" : data.host ? "host" : "relay");
+	const messageOrigin = data.outgoingOrigin || (data.bot || data.botRoleControlled ? "chatbot" : data.host ? "host" : "relay");
 
 	if (messageOrigin === "host" && getSettingFlag("aiAutoTranslateOutgoing")) {
 		try {
@@ -16889,33 +17168,15 @@ async function applyBotActions(data, tab = false) {
 			altSourceType = "youtube";
 		}
 
-		const normalizeRoleIdentifier = value => {
-			if (value === undefined || value === null) return "";
-			return String(value).toLowerCase().trim().replace(/^@+/, "");
-		};
 		const roleUserIdLower = normalizeRoleIdentifier(data.userid);
 		const roleChatNameLower = normalizeRoleIdentifier(data.chatname);
-		const useCaptureNameForRoles = altSourceType == "youtube" || altSourceType == "kick";
-		const primaryRoleIdentifier = useCaptureNameForRoles ? roleChatNameLower || roleUserIdLower : roleUserIdLower || roleChatNameLower;
-		const roleIdentifierMatches = name => {
-			name = normalizeRoleIdentifier(name);
-			if (!name) return false;
-			if (settings.matchRolesByDisplayName) {
-				return name === roleUserIdLower || name === roleChatNameLower;
-			}
-			return name === primaryRoleIdentifier;
-		};
 
 		if (settings.blacklistuserstoggle && settings.blacklistusers?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return null;
+				if (!roleUserIdLower && !roleChatNameLower) return null;
 
 				const blacklist = getCachedRoleList(settings.blacklistusers.textsetting);
-
-				const isBlocked = blacklist.some(entry => {
-					return entry.type ? entry.name === userIdentifier && entry.type === altSourceType : entry.name === userIdentifier;
-				});
+				const isBlocked = blacklist.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 
 				if (isBlocked) {
 					return null;
@@ -16928,14 +17189,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (settings.whitelistuserstoggle && settings.whitelistusers?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return null;
+				if (!roleUserIdLower && !roleChatNameLower) return null;
 
 				const whitelist = getCachedRoleList(settings.whitelistusers.textsetting);
-
-				const isWhitelisted = whitelist.some(entry => {
-					return entry.type ? entry.name === userIdentifier && entry.type === altSourceType : entry.name === userIdentifier;
-				});
+				const isWhitelisted = whitelist.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 
 				if (!isWhitelisted) {
 					return null;
@@ -16958,12 +17215,7 @@ async function applyBotActions(data, tab = false) {
 
 				const bots = getCachedRoleList(settings.botnamesext.textsetting);
 
-				data.bot = bots.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					return roleIdentifierMatches(entry.name);
-				});
+				data.bot = bots.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 				data.bot = false;
@@ -16978,21 +17230,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.host && settings.hostnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const hosts = getCachedRoleList(settings.hostnamesext.textsetting);
-
-				data.host = hosts.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					if (settings.matchRolesByDisplayName) {
-						return entry.name === userIdLower || entry.name === chatNameLower;
-					}
-					return entry.name === (userIdLower || chatNameLower);
-				});
+				data.host = hosts.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 				data.host = false;
@@ -17031,21 +17272,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.mod && settings.modnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const mods = getCachedRoleList(settings.modnamesext.textsetting);
-
-				data.mod = mods.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					if (settings.matchRolesByDisplayName) {
-						return entry.name === userIdLower || entry.name === chatNameLower;
-					}
-					return entry.name === (userIdLower || chatNameLower);
-				});
+				data.mod = mods.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 				data.mod = false;
@@ -17061,21 +17291,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.admin && settings.adminnames?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const admins = getCachedRoleList(settings.adminnames.textsetting);
-
-				data.admin = admins.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					if (settings.matchRolesByDisplayName) {
-						return entry.name === userIdLower || entry.name === chatNameLower;
-					}
-					return entry.name === (userIdLower || chatNameLower);
-				});
+				data.admin = admins.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 			}
@@ -17083,21 +17302,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.vip && settings.viplistusers?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const vips = getCachedRoleList(settings.viplistusers.textsetting);
-
-				data.vip = vips.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					if (settings.matchRolesByDisplayName) {
-						return entry.name === userIdLower || entry.name === chatNameLower;
-					}
-					return entry.name === (userIdLower || chatNameLower);
-				});
+				data.vip = vips.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 			}
@@ -18589,6 +18797,33 @@ async function initializeFileHandles() {
 			});
 		}
 
+		const savedLiveStatsFilePathRaw = localStorage.getItem("savedLiveStatsFilePath");
+		const savedLiveStatsFilePath = sanitizeNativeFilePath(savedLiveStatsFilePathRaw);
+		if (savedLiveStatsFilePathRaw && !savedLiveStatsFilePath) {
+			console.warn("[LiveStats] Invalid live stats file path detected. Clearing remembered value.");
+			localStorage.removeItem("savedLiveStatsFilePath");
+		}
+		if (savedLiveStatsFilePath) {
+			liveStatsFileHandle = savedLiveStatsFilePath;
+			liveStatsWriterGeneration += 1;
+			await updateHandleStatus("liveStats", {
+				name: getFileHandleDisplayName(savedLiveStatsFilePath),
+				status: HANDLE_STATUS_STATES.ACTIVE,
+				detail: "",
+				persisted: true
+			});
+			if (Object.keys(liveStatsSnapshot.platforms).length) {
+				await writeLiveStatsSnapshot();
+			}
+		} else {
+			await updateHandleStatus("liveStats", {
+				name: null,
+				status: HANDLE_STATUS_STATES.MISSING,
+				detail: "",
+				persisted: false
+			});
+		}
+
 		// Restore saved names file handle
 		const savedNamesFilePathRaw = localStorage.getItem("savedNamesFilePath");
 		const savedNamesFilePath = sanitizeNativeFilePath(savedNamesFilePathRaw);
@@ -18680,6 +18915,32 @@ async function initializeFileHandles() {
 		await updateHandleStatus("chatLog", {
 			status: HANDLE_STATUS_STATES.ERROR,
 			detail: "Could not restore chat log file",
+			persisted: false
+		});
+	}
+
+	try {
+		const restoredLiveStatsHandle = await restoreBrowserHandle(HANDLE_KEYS.liveStats, "readwrite");
+		if (restoredLiveStatsHandle) {
+			liveStatsFileHandle = restoredLiveStatsHandle;
+			liveStatsWriterGeneration += 1;
+			await updateHandleStatus("liveStats", {
+				name: getFileHandleDisplayName(restoredLiveStatsHandle),
+				status: HANDLE_STATUS_STATES.ACTIVE,
+				detail: "",
+				persisted: true
+			});
+			if (Object.keys(liveStatsSnapshot.platforms).length) {
+				await writeLiveStatsSnapshot();
+			}
+		} else {
+			await markHandleNeedsAttention("liveStats", "Select a file to save current live stats");
+		}
+	} catch (error) {
+		console.warn("Could not restore live stats handle:", error);
+		await updateHandleStatus("liveStats", {
+			status: HANDLE_STATUS_STATES.ERROR,
+			detail: "Could not restore live stats file",
 			persisted: false
 		});
 	}

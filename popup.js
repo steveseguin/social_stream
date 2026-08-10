@@ -11,6 +11,7 @@ function normalizePopupTranslationLanguage(lang) {
 	if (lower === "en-gb" || lower === "en-uk") return "en-uk";
 	if (lower === "en" || lower.startsWith("en-")) return "en-us";
 	if (lower === "pt-br" || lower.startsWith("pt")) return "pt-br";
+	if (lower.startsWith("fr")) return "fr";
 	if (lower.startsWith("es")) return "es";
 	if (lower.startsWith("de")) return "de";
 	if (lower.startsWith("cs")) return "cs";
@@ -183,15 +184,17 @@ const HANDLE_STATUS_STATES = {
 	NEEDS_PERMISSION: "needs-permission",
 	ERROR: "error"
 };
-const HANDLE_STATUS_KEYS = ["ticker", "chatLog", "savedNames"];
+const HANDLE_STATUS_KEYS = ["ticker", "chatLog", "liveStats", "savedNames"];
 const HANDLE_STATUS_LABELS = {
 	ticker: "Ticker source",
 	chatLog: "Last message file",
+	liveStats: "Live stats file",
 	savedNames: "Names log"
 };
 const HANDLE_STATUS_HELP = {
 	ticker: "Select a ticker source file to stream text",
 	chatLog: "Choose where the last message should be saved",
+	liveStats: "Choose where the current live stats should be saved",
 	savedNames: "Choose where unique chat names should be stored"
 };
 const popupHandleStatusState = {};
@@ -2711,9 +2714,41 @@ const sourceTypes = ['relaytargets','eventsSources','ttssources'];
 const sourceSelectTagInputs = ['hideViewerCountSources'];
 const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers', 'filterfeaturedusers'];
-const sourcesList = new Set();
+// These are canonical payload types that cannot be inferred reliably from a
+// manifest filename. Keep them available even when a hosted/app manifest is
+// temporarily unavailable.
+const additionalSourceTypes = [
+    'arena',
+    'clouthub',
+    'external',
+    'instagramlive',
+    'meet',
+    'obs',
+    'socialstreamchat',
+    'stageten',
+    'threads',
+    'twitter',
+    'velora',
+    'workplace',
+    'youtubeshorts',
+    'zoom_poll'
+];
+const sourceTypeAliases = {
+    cloudhub: ['clouthub'],
+    facebook: ['workplace'],
+    instafeed: ['instagramlive'],
+    instagram: ['instagramlive'],
+    meets: ['meet'],
+    verticalpixelzone: ['arena'],
+    x: ['twitter'],
+    youtube: ['youtubeshorts'],
+    zoom: ['zoom_poll']
+};
+const retiredSourceTypes = new Set(['dlive']);
+const sourcesList = new Set(additionalSourceTypes);
 var sortedSourcesListCache = null;
 var popupSourceDatalistLoaded = false;
+var sourcesManifestLoaded = false;
 
 function formatSourceLabel(source) {
     source = String(source || "");
@@ -2731,18 +2766,27 @@ function loadSourcesListFromRuntimeManifest() {
     try {
         if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getManifest === 'function') {
             const manifest = chrome.runtime.getManifest();
-            return collectSourcesFromManifest(manifest) > 0;
+            if (manifest && Array.isArray(manifest.content_scripts)) {
+                collectSourcesFromManifest(manifest);
+                sourcesManifestLoaded = true;
+                return true;
+            }
         }
     } catch (error) {
         console.warn('Unable to load sources from chrome.runtime manifest:', error);
     }
-    return sourcesList.size > 0;
+    return sourcesManifestLoaded;
 }
 
 function appendSourceOptions(select) {
     if (!select || select.dataset.sourceOptionsLoaded === "true") return;
     const currentValue = select.value;
+    const existingValues = new Set();
+    for (let i = 0; i < select.options.length; i++) {
+        existingValues.add(select.options[i].value);
+    }
     getSortedSourcesList().forEach(source => {
+        if (existingValues.has(source)) return;
         const option = document.createElement('option');
         option.value = source;
         option.textContent = formatSourceLabel(source);
@@ -2751,7 +2795,9 @@ function appendSourceOptions(select) {
     if (currentValue) {
         select.value = currentValue;
     }
-    select.dataset.sourceOptionsLoaded = "true";
+    // A fill made without the manifest holds only the seeded fallback types;
+    // leave the select open for a retry so a late manifest load completes it.
+    select.dataset.sourceOptionsLoaded = sourcesManifestLoaded ? "true" : "partial";
 }
 
 function populateSourceDatalist() {
@@ -2776,7 +2822,7 @@ function populateSourceDatalist() {
 }
 
 function ensureLazySourcesLoaded(callback) {
-    if (sourcesList.size > 0 || loadSourcesListFromRuntimeManifest()) {
+    if (sourcesManifestLoaded || loadSourcesListFromRuntimeManifest()) {
         if (callback) callback();
         return Promise.resolve(true);
     }
@@ -2857,14 +2903,23 @@ function collectSourcesFromManifest(manifestData) {
                 if (!normalized.startsWith('./sources/') || !normalized.endsWith('.js')) {
                     return;
                 }
-                const sourceName = normalized.replace('./sources/', '').replace('.js', '');
-                if (sourceName) {
+                const relativeName = normalized.replace('./sources/', '').replace('.js', '');
+                if (relativeName.startsWith('inject/')) {
+                    return;
+                }
+                const sourceName = relativeName.split('/').pop();
+                if (retiredSourceTypes.has(sourceName)) {
+                    return;
+                }
+                const names = [sourceName].concat(sourceTypeAliases[sourceName] || []);
+                names.forEach(name => {
+                    if (!name) return;
                     const previousSize = sourcesList.size;
-                    sourcesList.add(sourceName);
+                    sourcesList.add(name);
                     if (sourcesList.size > previousSize) {
                         added++;
                     }
-                }
+                });
             });
         });
     } catch (error) {
@@ -2878,7 +2933,7 @@ function collectSourcesFromManifest(manifestData) {
 }
 
 async function ensureSourcesListLoaded(options = {}) {
-    if (sourcesList.size > 0) {
+    if (sourcesManifestLoaded) {
         return true;
     }
 
@@ -2890,7 +2945,9 @@ async function ensureSourcesListLoaded(options = {}) {
         try {
             const branch = options.branch || urlParams.get('branch') || 'main';
             const manifestData = await window.ssappFallback.readJson('manifest.json', { branch });
-            if (collectSourcesFromManifest(manifestData)) {
+            if (manifestData && Array.isArray(manifestData.content_scripts)) {
+                collectSourcesFromManifest(manifestData);
+                sourcesManifestLoaded = true;
                 return true;
             }
         } catch (error) {
@@ -2903,7 +2960,9 @@ async function ensureSourcesListLoaded(options = {}) {
         const response = await fetch(manifestUrl);
         if (response.ok) {
             const manifestData = await response.json();
-            if (collectSourcesFromManifest(manifestData)) {
+            if (manifestData && Array.isArray(manifestData.content_scripts)) {
+                collectSourcesFromManifest(manifestData);
+                sourcesManifestLoaded = true;
                 return true;
             }
         }
@@ -5644,14 +5703,16 @@ function renderBeginnerWelcomeBanner(container) {
     container = container || document.getElementById("importantChanges");
     if (!container) return;
 
-    const videoGuideText = shouldShowBeginnerChromeVideoGuide() ? ` If stuck getting started, check out this <a href="https://www.youtube.com/watch?v=Zql6Q5H2Eqw" target="_blank" rel="noopener noreferrer">video guide</a>.` : "";
+    const videoGuideText = shouldShowBeginnerChromeVideoGuide()
+        ? getTranslation("beginner-video-guide", ` If stuck getting started, check out this <a href="https://www.youtube.com/watch?v=Zql6Q5H2Eqw" target="_blank" rel="noopener noreferrer">video guide</a>.`)
+        : "";
 
     container.classList.add('show', 'beginner-welcome');
     container.innerHTML = `
         <div class="beginner-welcome-card">
-            <strong>Welcome to Social Stream Ninja</strong>
-            <small>You are in beginner mode, so only the most common setup options are shown.${videoGuideText}</small>
-            <button type="button" id="beginnerWelcomeAdvanced">Switch to full mode</button>
+            <strong>${getTranslation("welcome-to-social-stream-ninja", "Welcome to Social Stream Ninja")}</strong>
+            <small>${getTranslation("beginner-mode-description", "You are in beginner mode, so only the most common setup options are shown.")}${videoGuideText}</small>
+            <button type="button" id="beginnerWelcomeAdvanced">${getTranslation("switch-to-full-mode", "Switch to full mode")}</button>
         </div>
     `;
 
@@ -5805,6 +5866,196 @@ function normalizeGeneratedLinkBase(value) {
 	} catch (e) {
 		return "";
 	}
+}
+
+/**
+ * Keep SSApp history under the app's file:// top-level page. Chromium partitions storage
+ * for the remotely loaded popup/background frames by their top-level site, so a separate
+ * BrowserWindow cannot see that IndexedDB even when it loads the same remote URL.
+ */
+function isSsappUnlimitedDBSettingEnabled(value) {
+	return value === true || !!(value && typeof value === "object" && value.setting === true);
+}
+
+function readSsappUnlimitedDBSetting() {
+	const checkboxValue = () => {
+		const input = document.querySelector('[data-setting="unlimitedDB"]');
+		return !!(input && input.checked);
+	};
+
+	if (popupStartupSettingsHydrated) return Promise.resolve(checkboxValue());
+	if (typeof chrome === "undefined" || !chrome.runtime || typeof chrome.runtime.sendMessage !== "function") {
+		return Promise.resolve(checkboxValue());
+	}
+
+	return new Promise(resolve => {
+		let settled = false;
+		let timeout = null;
+		const finish = value => {
+			if (settled) return;
+			settled = true;
+			if (timeout !== null) clearTimeout(timeout);
+			resolve(value);
+		};
+		timeout = setTimeout(() => finish(checkboxValue()), 3500);
+
+		try {
+			chrome.runtime.sendMessage({ cmd: "getSettings" }, response => {
+				if (chrome.runtime.lastError || !response || !response.settings) {
+					finish(checkboxValue());
+					return;
+				}
+				finish(isSsappUnlimitedDBSettingEnabled(response.settings.unlimitedDB));
+			});
+		} catch (error) {
+			finish(checkboxValue());
+		}
+	});
+}
+
+async function readSsappChatHistorySnapshot() {
+	const unlimitedDB = await readSsappUnlimitedDBSetting();
+	const databases = typeof indexedDB.databases === "function" ? await indexedDB.databases() : null;
+	if (databases && !databases.some(database => database.name === "chatMessagesDB_v3")) {
+		return { messages: [], version: null, stores: [], unlimitedDB };
+	}
+
+	return new Promise((resolve, reject) => {
+		const request = indexedDB.open("chatMessagesDB_v3");
+		request.onerror = () => reject(request.error || new Error("Unable to open the local message database."));
+		request.onsuccess = () => {
+			const database = request.result;
+			const stores = Array.from(database.objectStoreNames);
+			if (!database.objectStoreNames.contains("messages")) {
+				database.close();
+				reject(new Error("The local message database does not contain the messages store."));
+				return;
+			}
+
+			const allMessages = database.transaction("messages", "readonly").objectStore("messages").getAll();
+			allMessages.onerror = () => {
+				database.close();
+				reject(allMessages.error || new Error("Unable to read saved messages."));
+			};
+			allMessages.onsuccess = () => {
+				const snapshot = {
+					messages: Array.isArray(allMessages.result) ? allMessages.result : [],
+					version: database.version,
+					stores,
+					unlimitedDB
+				};
+				database.close();
+				resolve(snapshot);
+			};
+		};
+	});
+}
+
+function createSsappChatHistorySnapshotDocument(historyUrl, snapshot) {
+	const snapshotJson = JSON.stringify(snapshot);
+	const snapshotLiteral = JSON.stringify(snapshotJson).replace(/</g, "\\u003c");
+	const historyUrlLiteral = JSON.stringify(historyUrl.toString()).replace(/</g, "\\u003c");
+	let targetOrigin = "*";
+	try {
+		if (historyUrl.protocol === "http:" || historyUrl.protocol === "https:") targetOrigin = historyUrl.origin;
+	} catch (_) {}
+
+	return `<!doctype html>
+		<html>
+		<head>
+			<meta charset="utf-8">
+			<title>Message Browser</title>
+			<style>
+				html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #fff; }
+				#history-frame { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
+			</style>
+		</head>
+		<body>
+			<iframe id="history-frame" title="Message Browser"></iframe>
+			<script>
+				const snapshot = JSON.parse(${snapshotLiteral});
+				const frame = document.getElementById("history-frame");
+				const targetOrigin = ${JSON.stringify(targetOrigin)};
+				const sendSnapshot = () => frame.contentWindow && frame.contentWindow.postMessage({
+					type: "ssapp-chat-history-snapshot",
+					snapshot
+				}, targetOrigin);
+				window.addEventListener("message", event => {
+					if (event.source !== frame.contentWindow || !event.data) return;
+					if (event.data.type === "ssapp-chat-history-ready") {
+						sendSnapshot();
+					} else if (event.data.type === "ssapp-chat-history-clear") {
+						let ok = false;
+						try {
+							if (window.ninjafy && typeof window.ninjafy.sendMessage === "function") {
+								window.ninjafy.sendMessage(null, {
+									type: "toBackground",
+									data: { action: "clearHistory", value: { confirm: true } }
+								});
+								ok = true;
+							}
+						} catch (_) {}
+						frame.contentWindow.postMessage({
+							type: "ssapp-chat-history-clear-result",
+							requestId: event.data.requestId,
+							ok
+						}, targetOrigin);
+					}
+				});
+				frame.src = ${historyUrlLiteral};
+			</script>
+		</body>
+		</html>`;
+}
+
+function setupSsappChatHistoryPanel() {
+	const historyLink = document.getElementById("chathistory");
+	if (!historyLink) return;
+
+	let historyUrl;
+	try {
+		historyUrl = new URL("./chathistory.html", window.location.href);
+		historyUrl.searchParams.set("ssapp", "1");
+	} catch (error) {
+		console.error("Unable to create the SSApp chat history URL:", error);
+		return;
+	}
+
+	historyUrl.searchParams.set("ssappSnapshot", "1");
+
+	const configureHistoryLink = () => {
+		const currentHistoryLink = document.getElementById("chathistory");
+		if (!currentHistoryLink) return;
+		currentHistoryLink.href = "#";
+		currentHistoryLink.target = "_self";
+	};
+	configureHistoryLink();
+
+	const databaseSettingsRow = document.getElementById("databaseSettingsRow");
+	if (databaseSettingsRow && !databaseSettingsRow.__ssappHistoryLinkObserver) {
+		databaseSettingsRow.__ssappHistoryLinkObserver = new MutationObserver(configureHistoryLink);
+		databaseSettingsRow.__ssappHistoryLinkObserver.observe(databaseSettingsRow, { childList: true, subtree: true });
+	}
+
+	document.addEventListener("click", async event => {
+		const clickedLink = event.target && event.target.closest ? event.target.closest("#chathistory") : null;
+		if (!clickedLink) return;
+		event.preventDefault();
+		if (clickedLink.getAttribute("aria-busy") === "true") return;
+		clickedLink.setAttribute("aria-busy", "true");
+		try {
+			const snapshot = await readSsappChatHistorySnapshot();
+			const html = createSsappChatHistorySnapshotDocument(historyUrl, snapshot);
+			const blobUrl = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+			window.open(blobUrl, "_blank");
+			setTimeout(() => URL.revokeObjectURL(blobUrl), 300000);
+		} catch (error) {
+			console.error("Unable to open the SSApp chat history:", error);
+			window.alert(error && error.message ? error.message : "Unable to open the local message database.");
+		} finally {
+			clickedLink.removeAttribute("aria-busy");
+		}
+	});
 }
 
 // First check if we're on a beta URL (either subdomain or path)
@@ -6229,6 +6480,14 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
 
     if (paramType === "param1" && paramValue === "beepfirsttime") {
         updateFirstTimerUiState();
+    }
+
+    if (sync && paramType === "param1" && paramValue === "showlikecount" && ele.checked) {
+        var likeTotalsToggle = document.querySelector("input[data-setting='captureliketotals']");
+        if (likeTotalsToggle && !likeTotalsToggle.checked) {
+            likeTotalsToggle.checked = true;
+            updateSettings(likeTotalsToggle, true);
+        }
     }
 
     return true;
@@ -10540,10 +10799,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 	if (ssapp){
 		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
-		const basePath = decodeURIComponent(urlParams.get('basePath'));
- 		if (basePath){
- 			document.getElementById("chathistory").href = basePath  + "/chathistory.html?href="+encodeURIComponent(window.location.href);
- 		}
+		setupSsappChatHistoryPanel();
 	} else {
 		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
 	}
@@ -11256,25 +11512,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return index;
 	}
 
-	function preparePopupSearchIndex() {
-		if (popupSearchIndex) {
-			return;
-		}
-		clearPopupSearchHidden();
-		var openStates = [];
-		document.querySelectorAll('input.collapsible-input').forEach(function(input) {
-			openStates.push({
-				input: input,
-				checked: input.checked
-			});
-			input.checked = true;
-		});
-		popupSearchIndex = createPopupSearchIndex();
-		openStates.forEach(function(state) {
-			state.input.checked = state.checked;
-		});
-	}
-
 	function popupSearchRecordMatches(record, terms) {
 		return popupSearchTextMatches(record.text || '', terms);
 	}
@@ -11441,7 +11678,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			searchInput.style.display = 'block';
 			searchInput.style.width = 'calc(100% - 35px)'; // Match this with your CSS width
 			searchInput.focus(); // Optional: Focus on the input field when it's shown
-			setTimeout(preparePopupSearchIndex, 0);
 		} else {
 			searchInput.focus();
 			searchInput.select();

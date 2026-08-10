@@ -365,6 +365,10 @@
             line-height: 1.45;
         }
 
+        #channel-editor.hidden {
+            display: none;
+        }
+
         .runtime-alert.hidden {
             display: none;
         }
@@ -451,12 +455,32 @@
             </form>
             <p class="hint">VPZone page: <a id="channel-link" class="link" href="https://vpzone.tv" target="_blank" rel="noopener">vpzone.tv</a></p>
 
+            <div id="channel-editor" class="hidden">
+                <h2>Stream Info</h2>
+                <div class="setup-grid">
+                    <div>
+                        <label for="stream-title">Stream title</label>
+                        <input id="stream-title" type="text" maxlength="140" autocomplete="off" placeholder="Stream title" />
+                    </div>
+                    <div>
+                        <label for="stream-category">Category</label>
+                        <input id="stream-category" type="text" maxlength="80" autocomplete="off" list="category-list" placeholder="Game / category" />
+                        <datalist id="category-list"></datalist>
+                    </div>
+                </div>
+                <div class="setup-actions">
+                    <button id="update-channel-btn" class="alt">Update Title / Category</button>
+                    <button id="refresh-channel-btn" class="ghost">Refresh Current</button>
+                </div>
+                <p class="hint">Updates the live stream on VPZone. Requires the <code>channel:write</code> scope on the signed-in owner account.</p>
+            </div>
+
             <details class="advanced-options">
                 <summary>Advanced</summary>
                 <div class="advanced-panel">
                     <div>
                         <label for="ws-url">Chat Server</label>
-                        <input id="ws-url" type="text" autocomplete="off" value="wss://chat.nexus-7.vpzone.tv/ws" />
+                        <input id="ws-url" type="text" autocomplete="off" value="wss://chat.vpzone.tv/ws" />
                     </div>
                     <div>
                         <label for="auth-token">Chat Token</label>
@@ -468,9 +492,22 @@
                             <span>Hide metrics</span>
                         </label>
                     </div>
+                    <div>
+                        <label class="setting-toggle">
+                            <input id="sync-delete-messages" type="checkbox" />
+                            <span>Sync dock message deletes to VPZone</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="setting-toggle">
+                            <input id="sync-block-users" type="checkbox" />
+                            <span>Sync dock user blocks to VPZone bans</span>
+                        </label>
+                    </div>
                     <div class="setup-actions" style="margin-top:0;">
                         <button id="save-config" class="ghost">Save advanced settings</button>
                     </div>
+                    <p class="hint">Moderation sync uses the <code>chat:moderate</code> scope and only works when you are signed in as the channel owner.</p>
                 </div>
             </details>
         </section>
@@ -487,6 +524,6 @@
             </section>
         </section>
     </div>
-    <script src="vpzone.js?v=20260615h"></script>
+    <script src="vpzone.js?v=20260804a"></script>
 </body>
 </html>

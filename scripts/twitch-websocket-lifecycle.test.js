@@ -41,6 +41,25 @@ function startServer() {
   });
 }
 
+async function emitTmiEcho(page, responseIndex, message, event = 'chat') {
+  await page.evaluate(({ responseIndex, message, event }) => {
+    const harness = window.__twitchHarness;
+    const client = harness.tmiClients[harness.tmiClients.length - 1];
+    client.emit(
+      event,
+      '#tester',
+      {
+        ...client.userstate['#tester'],
+        id: harness.chatSendResponses[responseIndex].messageId,
+        'message-type': event,
+        'tmi-sent-ts': String(Date.now())
+      },
+      message,
+      false
+    );
+  }, { responseIndex, message, event });
+}
+
 async function run() {
   const { server, origin } = await startServer();
   const browser = await chromium.launch({ headless: true });
@@ -61,12 +80,23 @@ async function run() {
         subscriptionCalls: 0,
         subscriptionTypes: [],
         chatSendRequests: [],
+        chatSendResponses: [],
+        deferChatSend: false,
+        rejectNextChatSend: false,
+        rejectChatSendAtRequest: 0,
+        hangNextChatSend: false,
+        pendingChatSendResolvers: [],
+        deferNextJoin: true,
+        pendingJoinClients: [],
         tmiSayCalls: 0,
         runtimeMessages: [],
         runtimeDeletes: [],
+        runtimeMessageListeners: [],
         failFirstSubscription: true
       };
       window.__twitchHarness = harness;
+      window.__SSAPP_TWITCH_CHAT_SEND_TIMEOUT_MS__ = 150;
+      window.__SSAPP_TWITCH_CHAT_ECHO_TIMEOUT_MS__ = 250;
 
       const nativeSetInterval = window.setInterval.bind(window);
       window.setInterval = (handler, delay, ...args) => {
@@ -80,6 +110,7 @@ async function run() {
       class FakeTmiClient {
         constructor() {
           this.handlers = new Map();
+          this.joinedChannels = [];
           this.userstate = {
             '#tester': {
               username: 'tester',
@@ -108,12 +139,29 @@ async function run() {
           for (const handler of this.handlers.get(event) || []) handler(...args);
         }
 
+        completeJoin() {
+          if (this.joinedChannels.includes('#tester')) return;
+          this.joinedChannels.push('#tester');
+          this.emit('join', '#tester', 'tester', true);
+        }
+
+        getChannels() {
+          return [...this.joinedChannels];
+        }
+
         async connect() {
           this.emit('connected', 'irc.test', 443);
+          if (harness.deferNextJoin) {
+            harness.deferNextJoin = false;
+            harness.pendingJoinClients.push(this);
+          } else {
+            this.completeJoin();
+          }
           return true;
         }
 
         async disconnect() {
+          this.joinedChannels = [];
           return true;
         }
 
@@ -213,9 +261,31 @@ async function run() {
         if (url.includes('/helix/chat/messages')) {
           const body = JSON.parse(init.body || '{}');
           harness.chatSendRequests.push(body);
+          const requestNumber = harness.chatSendRequests.length;
+          const messageId = requestNumber === 1
+            ? '11111111-2222-4333-8444-555555555555'
+            : `11111111-2222-4333-8444-${String(requestNumber).padStart(12, '0')}`;
+          harness.chatSendResponses.push({ messageId });
+          if (harness.hangNextChatSend) {
+            harness.hangNextChatSend = false;
+            return await new Promise((resolve, reject) => {
+              const signal = init.signal;
+              const abort = () => reject(new DOMException('Aborted', 'AbortError'));
+              if (signal?.aborted) abort();
+              else signal?.addEventListener('abort', abort, { once: true });
+            });
+          }
+          if (harness.rejectNextChatSend || harness.rejectChatSendAtRequest === requestNumber) {
+            harness.rejectNextChatSend = false;
+            harness.rejectChatSendAtRequest = 0;
+            return json({ message: 'simulated Twitch rejection' }, 400);
+          }
+          if (harness.deferChatSend) {
+            await new Promise((resolve) => harness.pendingChatSendResolvers.push(resolve));
+          }
           return json({
             data: [{
-              message_id: '11111111-2222-4333-8444-555555555555',
+              message_id: messageId,
               is_sent: true,
               drop_reason: null
             }]
@@ -241,7 +311,9 @@ async function run() {
         id: 'twitch-lifecycle-test',
         lastError: null,
         onMessage: {
-          addListener() {}
+          addListener(listener) {
+            harness.runtimeMessageListeners.push(listener);
+          }
         },
         sendMessage(...args) {
           const message = args.find((value) => value && typeof value === 'object');
@@ -269,6 +341,31 @@ async function run() {
       localStorage.setItem('twitchChannel', 'tester');
     });
     await page.addScriptTag({ url: `${origin}/sources/websocket/twitch.js` });
+
+    await page.waitForFunction(() => window.__twitchHarness.pendingJoinClients.length === 1);
+    assert.deepStrictEqual(
+      await page.evaluate(() => ({
+        readyState: window.websocket.readyState,
+        buttonDisabled: document.getElementById('sendmessage').disabled,
+        connected: document.getElementById('sendmessage').dataset.chatConnected,
+        status: document.getElementById('send-status').textContent
+      })),
+      {
+        readyState: 0,
+        buttonDisabled: true,
+        connected: 'false',
+        status: 'Joining Twitch chat — sending unavailable.'
+      },
+      'Twitch composer became available before the IRC channel JOIN completed'
+    );
+    await page.evaluate(() => {
+      window.__twitchHarness.pendingJoinClients.shift().completeJoin();
+    });
+    await page.waitForFunction(() => (
+      window.websocket.readyState === 1
+      && !document.getElementById('sendmessage').disabled
+      && document.getElementById('sendmessage').dataset.chatConnected === 'true'
+    ));
 
     try {
       await page.waitForFunction(() => window.__twitchHarness.eventSockets.length === 1, null, { timeout: 10000 });
@@ -306,18 +403,79 @@ async function run() {
       'EventSub should use channel.bits.use instead of the duplicate channel.cheer subscription'
     );
 
+    assert.deepStrictEqual(
+      await page.evaluate(() => ({
+        logRole: document.getElementById('textarea').getAttribute('role'),
+        logLive: document.getElementById('textarea').getAttribute('aria-live'),
+        inputLabel: document.querySelector('label[for="input-text"]')?.textContent,
+        inputDescription: document.getElementById('input-text').getAttribute('aria-describedby'),
+        buttonType: document.getElementById('sendmessage').getAttribute('type'),
+        statusRole: document.getElementById('send-status').getAttribute('role'),
+        statusLive: document.getElementById('send-status').getAttribute('aria-live')
+      })),
+      {
+        logRole: 'log',
+        logLive: 'polite',
+        inputLabel: 'Chat message',
+        inputDescription: 'send-status',
+        buttonType: 'button',
+        statusRole: 'status',
+        statusLive: 'polite'
+      },
+      'Twitch chat composer accessibility metadata is incomplete'
+    );
+
+    const imeStart = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
+    await page.fill('#input-text', 'unfinished IME composition');
+    await page.evaluate(() => {
+      const event = new KeyboardEvent('keydown', {
+        key: 'Enter',
+        isComposing: true,
+        cancelable: true,
+        bubbles: true
+      });
+      document.getElementById('input-text').dispatchEvent(event);
+      window.__twitchHarness.imeEnterDefaultPrevented = event.defaultPrevented;
+    });
+    await page.waitForTimeout(100);
+    assert.deepStrictEqual(
+      await page.evaluate(() => ({
+        requests: window.__twitchHarness.chatSendRequests.length,
+        draft: document.getElementById('input-text').value,
+        defaultPrevented: window.__twitchHarness.imeEnterDefaultPrevented
+      })),
+      { requests: imeStart, draft: 'unfinished IME composition', defaultPrevented: false },
+      'Enter sent a Twitch message while an IME composition was active'
+    );
+
     await page.fill('#input-text', 'sent through SSN');
     await page.click('#sendmessage');
+    await page.waitForFunction(() => window.__twitchHarness.chatSendResponses.length > 0);
+    assert.strictEqual(
+      await page.evaluate(() => window.__twitchHarness.runtimeMessages.filter(
+        (message) => message.chatmessage === 'sent through SSN'
+      ).length),
+      0,
+      'SSN created a local chat copy before Twitch echoed the accepted message'
+    );
+    await emitTmiEcho(page, 0, 'sent through SSN');
     await page.waitForFunction(() => (
       window.__twitchHarness.runtimeMessages.some(
         (message) => message.id === '11111111-2222-4333-8444-555555555555'
       )
     ));
+    await page.waitForTimeout(250);
     const sentChatResult = await page.evaluate(() => ({
       request: window.__twitchHarness.chatSendRequests[0],
       message: window.__twitchHarness.runtimeMessages.find(
         (item) => item.id === '11111111-2222-4333-8444-555555555555'
       ),
+      matchingMessages: window.__twitchHarness.runtimeMessages.filter(
+        (item) => item.id === '11111111-2222-4333-8444-555555555555'
+      ).length,
+      matchingRows: [...document.querySelectorAll('#textarea > div')].filter(
+        (row) => row.textContent.includes('Tester: sent through SSN')
+      ).length,
       tmiSayCalls: window.__twitchHarness.tmiSayCalls
     }));
     assert.deepStrictEqual(sentChatResult.request, {
@@ -327,7 +485,193 @@ async function run() {
     });
     assert.strictEqual(sentChatResult.message.chatname, 'Tester');
     assert.strictEqual(sentChatResult.message.chatmessage, 'sent through SSN');
+    assert.strictEqual(sentChatResult.matchingMessages, 1, 'Twitch socket echo was relayed more than once');
+    assert.strictEqual(sentChatResult.matchingRows, 1, 'Twitch socket echo was rendered more than once');
     assert.strictEqual(sentChatResult.tmiSayCalls, 0, 'SSN sent Twitch chat through IRC instead of Helix');
+
+    const inFlightStart = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
+    await page.evaluate(() => {
+      window.__twitchHarness.deferChatSend = true;
+    });
+    await page.fill('#input-text', 'single in-flight send');
+    await page.click('#sendmessage');
+    await page.waitForFunction(
+      (minimum) => window.__twitchHarness.chatSendRequests.length > minimum,
+      inFlightStart
+    );
+    assert.deepStrictEqual(
+      await page.evaluate(() => ({
+        buttonDisabled: document.getElementById('sendmessage').disabled,
+        buttonText: document.getElementById('sendmessage').textContent,
+        inputReadOnly: document.getElementById('input-text').readOnly,
+        status: document.getElementById('send-status').textContent
+      })),
+      {
+        buttonDisabled: true,
+        buttonText: 'Sending…',
+        inputReadOnly: true,
+        status: 'Sending…'
+      },
+      'Twitch composer did not expose and lock the in-flight send state'
+    );
+    await page.evaluate(() => {
+      document.getElementById('input-text').dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'Enter',
+        bubbles: true
+      }));
+    });
+    await page.waitForTimeout(100);
+    assert.strictEqual(
+      await page.evaluate(() => window.__twitchHarness.chatSendRequests.length),
+      inFlightStart + 1,
+      'A second Enter keypress created an overlapping Twitch send'
+    );
+    await page.evaluate(() => {
+      const harness = window.__twitchHarness;
+      harness.deferChatSend = false;
+      harness.pendingChatSendResolvers.splice(0).forEach(resolve => resolve());
+    });
+    await page.waitForFunction(
+      (minimum) => window.__twitchHarness.chatSendResponses.length > minimum,
+      inFlightStart
+    );
+    await emitTmiEcho(page, inFlightStart, 'single in-flight send');
+    await page.waitForFunction(() => (
+      !document.getElementById('sendmessage').disabled
+      && document.activeElement === document.getElementById('input-text')
+      && document.getElementById('send-status').textContent === 'Sent and received from Twitch.'
+    ));
+
+    const rejectedStart = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
+    await page.evaluate(() => {
+      window.__twitchHarness.rejectNextChatSend = true;
+    });
+    await page.fill('#input-text', 'keep this failed draft');
+    await page.click('#sendmessage');
+    await page.waitForFunction(
+      (minimum) => (
+        window.__twitchHarness.chatSendRequests.length > minimum
+        && document.getElementById('send-status').dataset.state === 'error'
+        && !document.getElementById('sendmessage').disabled
+      ),
+      rejectedStart
+    );
+    assert.deepStrictEqual(
+      await page.evaluate(() => ({
+        draft: document.getElementById('input-text').value,
+        focused: document.activeElement === document.getElementById('input-text'),
+        status: document.getElementById('send-status').textContent,
+        matchingMessages: window.__twitchHarness.runtimeMessages.filter(
+          message => message.chatmessage === 'keep this failed draft'
+        ).length
+      })),
+      {
+        draft: 'keep this failed draft',
+        focused: true,
+        status: 'simulated Twitch rejection',
+        matchingMessages: 0
+      },
+      'A failed Twitch send did not preserve the draft and expose the error'
+    );
+
+    const partialMessage = 'q'.repeat(500) + 'r'.repeat(10);
+    const partialStart = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
+    await page.evaluate((rejectedRequestNumber) => {
+      window.__twitchHarness.rejectChatSendAtRequest = rejectedRequestNumber;
+    }, partialStart + 2);
+    await page.fill('#input-text', partialMessage);
+    await page.click('#sendmessage');
+    await page.waitForFunction(
+      (minimum) => (
+        window.__twitchHarness.chatSendRequests.length >= minimum + 2
+        && document.getElementById('send-status').dataset.state === 'warning'
+        && !document.getElementById('sendmessage').disabled
+      ),
+      partialStart
+    );
+    assert.deepStrictEqual(
+      await page.evaluate((firstResponseIndex) => ({
+        draft: document.getElementById('input-text').value,
+        status: document.getElementById('send-status').textContent,
+        firstChunkLocalCopies: window.__twitchHarness.runtimeMessages.filter(
+          message => message.id === window.__twitchHarness.chatSendResponses[firstResponseIndex].messageId
+        ).length
+      }), partialStart),
+      {
+        draft: 'r'.repeat(10),
+        status: '1 of 2 parts was accepted by Twitch. Only the unsent remainder was kept. simulated Twitch rejection',
+        firstChunkLocalCopies: 0
+      },
+      'A partial Twitch send did not retain only the unsent remainder'
+    );
+    await emitTmiEcho(page, partialStart, 'q'.repeat(500));
+    await page.waitForFunction((responseIndex) => {
+      const id = window.__twitchHarness.chatSendResponses[responseIndex].messageId;
+      return window.__twitchHarness.runtimeMessages.filter(message => message.id === id).length === 1;
+    }, partialStart);
+
+    const timeoutMessage = 'keep this unknown-delivery draft';
+    const timeoutStart = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
+    await page.evaluate(() => {
+      window.__twitchHarness.hangNextChatSend = true;
+    });
+    await page.fill('#input-text', timeoutMessage);
+    await page.click('#sendmessage');
+    await page.waitForFunction(
+      (minimum) => (
+        window.__twitchHarness.chatSendRequests.length > minimum
+        && document.getElementById('send-status').dataset.state === 'warning'
+        && document.getElementById('send-status').textContent.includes('Delivery is unknown')
+        && !document.getElementById('sendmessage').disabled
+      ),
+      timeoutStart
+    );
+    assert.deepStrictEqual(
+      await page.evaluate((text) => ({
+        draft: document.getElementById('input-text').value,
+        matchingMessages: window.__twitchHarness.runtimeMessages.filter(
+          message => message.chatmessage === text
+        ).length
+      }), timeoutMessage),
+      { draft: timeoutMessage, matchingMessages: 0 },
+      'An unconfirmed Twitch send did not preserve the draft with unknown-delivery guidance'
+    );
+
+    const repeatedMessage = 'repeat this exact message';
+    const repeatedStart = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
+    for (let index = 0; index < 2; index += 1) {
+      const responseIndex = repeatedStart + index;
+      await page.fill('#input-text', repeatedMessage);
+      await page.click('#sendmessage');
+      await page.waitForFunction(
+        (minimum) => window.__twitchHarness.chatSendResponses.length > minimum,
+        responseIndex
+      );
+      await page.waitForFunction(() => !document.getElementById('sendmessage').disabled);
+      await emitTmiEcho(page, responseIndex, repeatedMessage);
+    }
+    await page.waitForFunction(
+      ({ start, expected }) => window.__twitchHarness.chatSendResponses
+        .slice(start, start + expected)
+        .every(response => window.__twitchHarness.runtimeMessages.some(
+          message => message.id === response.messageId
+        )),
+      { start: repeatedStart, expected: 2 }
+    );
+    await page.waitForTimeout(250);
+    assert.deepStrictEqual(
+      await page.evaluate(({ start, text }) => {
+        const ids = window.__twitchHarness.chatSendResponses.slice(start, start + 2).map(item => item.messageId);
+        return {
+          matchingMessages: window.__twitchHarness.runtimeMessages.filter(message => ids.includes(message.id)).length,
+          matchingRows: [...document.querySelectorAll('#textarea > div')].filter(
+            row => row.textContent.includes(`Tester: ${text}`)
+          ).length
+        };
+      }, { start: repeatedStart, text: repeatedMessage }),
+      { matchingMessages: 2, matchingRows: 2 },
+      'Two legitimate identical Twitch messages were collapsed or duplicated'
+    );
 
     const unicodeBoundaryMessage = 'a'.repeat(499) + '😀';
     const unicodeBoundaryStart = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
@@ -347,6 +691,7 @@ async function run() {
     );
 
     const overLimitMessage = 'b'.repeat(500) + '😀';
+    const overLimitChunks = ['b'.repeat(500), '😀'];
     const overLimitStart = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
     await page.fill('#input-text', overLimitMessage);
     await page.click('#sendmessage');
@@ -358,27 +703,103 @@ async function run() {
       await page.evaluate((start) => (
         window.__twitchHarness.chatSendRequests.slice(start).map((request) => request.message)
       ), overLimitStart),
-      ['b'.repeat(500), '😀'],
+      overLimitChunks,
       'Twitch message splitting corrupted the emoji after the 500-character boundary'
+    );
+    for (let index = 0; index < overLimitChunks.length; index += 1) {
+      await emitTmiEcho(page, overLimitStart + index, overLimitChunks[index]);
+    }
+    await page.waitForFunction(
+      ({ start, expected }) => window.__twitchHarness.chatSendResponses
+        .slice(start, start + expected)
+        .every(response => window.__twitchHarness.runtimeMessages.some(
+          message => message.id === response.messageId
+        )),
+      { start: overLimitStart, expected: overLimitChunks.length }
+    );
+    await page.waitForTimeout(250);
+    assert.strictEqual(
+      await page.evaluate(({ start, expected }) => {
+        const ids = window.__twitchHarness.chatSendResponses.slice(start, start + expected).map(item => item.messageId);
+        return window.__twitchHarness.runtimeMessages.filter(message => ids.includes(message.id)).length;
+      }, { start: overLimitStart, expected: overLimitChunks.length }),
+      overLimitChunks.length,
+      'A split Twitch message chunk was relayed more than once'
     );
 
     const actionStart = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
     await page.fill('#input-text', '/me waves');
     await page.click('#sendmessage');
+    await page.waitForFunction(
+      (minimum) => window.__twitchHarness.chatSendResponses.length > minimum,
+      actionStart
+    );
+    await emitTmiEcho(page, actionStart, 'waves', 'action');
     await page.waitForFunction(() => (
       window.__twitchHarness.runtimeMessages.some(
         (message) => message.event === 'action' && message.chatmessage === 'waves'
       )
     ));
+    await page.waitForTimeout(250);
     const actionResult = await page.evaluate((start) => ({
       request: window.__twitchHarness.chatSendRequests[start],
       message: window.__twitchHarness.runtimeMessages.find(
         (item) => item.event === 'action' && item.chatmessage === 'waves'
-      )
+      ),
+      matchingMessages: window.__twitchHarness.runtimeMessages.filter(
+        (item) => item.id === window.__twitchHarness.chatSendResponses[start].messageId
+      ).length
     }), actionStart);
     assert.strictEqual(actionResult.request.message, '/me waves');
     assert.strictEqual(actionResult.message.chatmessage, 'waves');
     assert.strictEqual(actionResult.message.event, 'action');
+    assert.strictEqual(actionResult.matchingMessages, 1, 'Twitch /me echo was relayed more than once');
+
+    const longActionBody = 'z'.repeat(700);
+    const longActionChunks = [
+      '/me ' + 'z'.repeat(496),
+      '/me ' + 'z'.repeat(204)
+    ];
+    const longActionStart = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
+    await page.fill('#input-text', '/me ' + longActionBody);
+    await page.click('#sendmessage');
+    await page.waitForFunction(
+      ({ start, expected }) => window.__twitchHarness.chatSendRequests.length >= start + expected,
+      { start: longActionStart, expected: longActionChunks.length }
+    );
+    assert.deepStrictEqual(
+      await page.evaluate((start) => (
+        window.__twitchHarness.chatSendRequests.slice(start).map(request => request.message)
+      ), longActionStart),
+      longActionChunks,
+      'Long Twitch /me action chunks did not each retain action semantics'
+    );
+    assert.ok(
+      longActionChunks.every(chunk => Array.from(chunk).length <= 500),
+      'Long Twitch /me action chunk exceeded the 500-character limit'
+    );
+    for (let index = 0; index < longActionChunks.length; index += 1) {
+      await emitTmiEcho(page, longActionStart + index, longActionChunks[index].slice(4), 'action');
+    }
+    await page.waitForFunction(
+      ({ start, expected }) => window.__twitchHarness.chatSendResponses
+        .slice(start, start + expected)
+        .every(response => window.__twitchHarness.runtimeMessages.some(
+          message => message.id === response.messageId && message.event === 'action'
+        )),
+      { start: longActionStart, expected: longActionChunks.length }
+    );
+    await page.waitForTimeout(250);
+    assert.strictEqual(
+      await page.evaluate(({ start, expected }) => {
+        const ids = window.__twitchHarness.chatSendResponses.slice(start, start + expected).map(item => item.messageId);
+        return window.__twitchHarness.runtimeMessages.filter(
+          message => ids.includes(message.id) && message.event === 'action'
+        ).length;
+      }, { start: longActionStart, expected: longActionChunks.length }),
+      longActionChunks.length,
+      'A split Twitch /me echo was relayed more than once'
+    );
 
     await page.evaluate(() => {
       window.__twitchHarness.tmiClients[0].emit(
@@ -398,6 +819,104 @@ async function run() {
         chatname: 'Tester'
       },
       'Twitch delete did not reuse the native ID assigned to the SSN-sent message'
+    );
+
+    const chatClientsBeforeReconnect = await page.evaluate(() => window.__twitchHarness.tmiClients.length);
+    await page.evaluate(() => {
+      const harness = window.__twitchHarness;
+      harness.deferChatSend = true;
+      harness.deferNextJoin = true;
+    });
+    const inFlightDisconnectStart = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
+    await page.fill('#input-text', 'accepted while IRC disconnects');
+    await page.click('#sendmessage');
+    await page.waitForFunction(
+      (minimum) => window.__twitchHarness.chatSendRequests.length > minimum,
+      inFlightDisconnectStart
+    );
+    await page.evaluate(() => {
+      const harness = window.__twitchHarness;
+      harness.tmiClients[harness.tmiClients.length - 1].emit('disconnected', 'simulated reconnect');
+      harness.deferChatSend = false;
+      harness.pendingChatSendResolvers.splice(0).forEach(resolve => resolve());
+    });
+    await page.waitForFunction(() => (
+      document.getElementById('sendmessage').disabled
+      && document.getElementById('send-status').textContent === 'Accepted by Twitch; waiting for chat echo…'
+    ));
+    assert.strictEqual(
+      await page.evaluate((text) => window.__twitchHarness.runtimeMessages.filter(
+        message => message.chatmessage === text
+      ).length, 'accepted while IRC disconnects'),
+      0,
+      'An accepted message created a local copy after IRC disconnected in flight'
+    );
+    await page.waitForFunction(() => (
+      document.getElementById('send-status').textContent
+        === 'Accepted by Twitch, but the chat echo was not received locally.'
+    ));
+
+    await page.waitForFunction(
+      (minimum) => (
+        window.__twitchHarness.tmiClients.length > minimum
+        && window.__twitchHarness.pendingJoinClients.length === 1
+        && document.getElementById('sendmessage').disabled
+        && document.getElementById('send-status').textContent.includes('Joining Twitch chat')
+      ),
+      chatClientsBeforeReconnect,
+      { timeout: 5000 }
+    );
+    const requestsBeforeDisconnectSend = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
+    const disconnectedRuntimeAck = await page.evaluate(async () => {
+      const harness = window.__twitchHarness;
+      const listener = harness.runtimeMessageListeners[0];
+      return await new Promise(resolve => {
+        listener({ type: 'SEND_MESSAGE', message: 'runtime send must fail while joining' }, {}, resolve);
+      });
+    });
+    await page.evaluate(() => {
+      window.websocket.send('PRIVMSG #tester :must not send while disconnected');
+    });
+    await page.waitForTimeout(250);
+    assert.strictEqual(
+      await page.evaluate(() => window.__twitchHarness.chatSendRequests.length),
+      requestsBeforeDisconnectSend,
+      'Twitch accepted a send while its chat receive socket was disconnected'
+    );
+    assert.strictEqual(
+      disconnectedRuntimeAck,
+      false,
+      'Runtime SEND_MESSAGE acknowledged a message that was blocked while IRC was joining'
+    );
+    await page.evaluate(() => {
+      window.__twitchHarness.pendingJoinClients.shift().completeJoin();
+    });
+    await page.waitForFunction(() => !document.getElementById('sendmessage').disabled);
+
+    const postReconnectStart = await page.evaluate(() => window.__twitchHarness.chatSendRequests.length);
+    await page.fill('#input-text', 'sent after reconnect');
+    await page.click('#sendmessage');
+    await page.waitForFunction(
+      (minimum) => window.__twitchHarness.chatSendResponses.length > minimum,
+      postReconnectStart
+    );
+    await page.waitForFunction(() => !document.getElementById('sendmessage').disabled);
+    await emitTmiEcho(page, postReconnectStart, 'sent after reconnect');
+    await page.waitForFunction(
+      (responseIndex) => {
+        const id = window.__twitchHarness.chatSendResponses[responseIndex].messageId;
+        return window.__twitchHarness.runtimeMessages.some(message => message.id === id);
+      },
+      postReconnectStart
+    );
+    await page.waitForTimeout(250);
+    assert.strictEqual(
+      await page.evaluate((responseIndex) => {
+        const id = window.__twitchHarness.chatSendResponses[responseIndex].messageId;
+        return window.__twitchHarness.runtimeMessages.filter(message => message.id === id).length;
+      }, postReconnectStart),
+      1,
+      'The first Twitch message after reconnect was not relayed exactly once'
     );
 
     await page.evaluate(() => {

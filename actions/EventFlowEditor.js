@@ -266,6 +266,7 @@ class EventFlowEditor {
                     { id: 'obsRecordingStarted', name: 'OBS Recording Started' },
                     { id: 'obsRecordingStopped', name: 'OBS Recording Stopped' },
                     { id: 'obsSceneChanged', name: 'OBS Scene Changed' },
+                    { id: 'obsMediaEnded', name: 'OBS Media Ended' },
                     // Matches OBS obs-browser's official replay-buffer event casing.
                     { id: 'obsReplaybufferSaved', name: 'OBS Replay Buffer Saved' }
                 ]
@@ -398,12 +399,17 @@ class EventFlowEditor {
                 actions: [
                     { id: 'obsChangeScene', name: '🎬 Change Scene' },
                     { id: 'obsToggleSource', name: '👁️ Toggle Source' },
+                    { id: 'obsSetText', name: '📝 Set Text Source' },
+                    { id: 'obsMediaControl', name: '⏯️ Control Media Source' },
+                    { id: 'obsSetVolume', name: '🔊 Set Source Volume' },
+                    { id: 'obsRefreshBrowser', name: '🔄 Refresh Browser Source' },
                     { id: 'obsSetSourceFilter', name: '🎨 Toggle Filter' },
                     { id: 'obsMuteSource', name: '🔇 Mute/Unmute Audio' },
                     { id: 'obsStartRecording', name: '🔴 Start Recording' },
                     { id: 'obsStopRecording', name: '⏹️ Stop Recording' },
                     { id: 'obsStartStreaming', name: '📡 Start Streaming' },
                     { id: 'obsStopStreaming', name: '⏹️ Stop Streaming' },
+                    { id: 'obsReplayBufferControl', name: '⏺️ Control Replay Buffer' },
                     { id: 'obsReplayBuffer', name: '💾 Save Replay Buffer' }
                 ]
             },
@@ -1523,6 +1529,11 @@ class EventFlowEditor {
 
             if (flowNameInput) flowNameInput.value = this.currentFlow.name; // Update input field without asterisk AFTER save
             this.markUnsavedChanges(false); // Reset flag AFTER successful save
+
+            const savedNodes = this.currentFlow.nodes || [];
+            if (savedNodes.some(n => n.type === 'action') && !savedNodes.some(n => n.type === 'trigger')) {
+                this.showNotification('This flow has no trigger, so it will never run. Add a trigger node (blue) to start it.', 'warning');
+            }
            // alert('Flow saved successfully!');
             try {
                 await this.loadFlowList(); // Refresh list
@@ -2169,6 +2180,7 @@ class EventFlowEditor {
                 case 'obsRecordingStarted': return 'OBS recording started';
                 case 'obsRecordingStopped': return 'OBS recording stopped';
                 case 'obsSceneChanged': return 'OBS scene changed';
+                case 'obsMediaEnded': return `OBS media ended${node.config.sourceName ? `: ${node.config.sourceName}` : ''}`;
                 case 'obsReplaybufferSaved': return 'OBS replay buffer saved';
                 default: return `${this.getNodeTitle(node)}`;
             }
@@ -2221,12 +2233,23 @@ class EventFlowEditor {
                     const target = node.config.groupName ? ` in ${node.config.groupName}` : node.config.sceneName ? ` in ${node.config.sceneName}` : '';
                     return `${node.config.sourceName || 'Source'}${target}: ${visibility}`;
                 }
+                case 'obsSetText': {
+                    const text = node.config.text || '';
+                    return `${node.config.sourceName || 'Text source'}: "${text.substring(0, 18)}${text.length > 18 ? '...' : ''}"`;
+                }
+                case 'obsMediaControl': {
+                    const operation = node.config.operation || 'restart';
+                    return `${node.config.sourceName || 'Media source'}: ${operation}`;
+                }
+                case 'obsSetVolume': return `${node.config.sourceName || 'Audio source'}: ${node.config.volumeDb ?? 0} dB`;
+                case 'obsRefreshBrowser': return `Refresh: ${node.config.sourceName || 'Browser source'}`;
                 case 'obsSetSourceFilter': return `Filter: ${node.config.filterName || 'Not set'}`;
                 case 'obsMuteSource': return `${node.config.sourceName || 'Source'}: ${node.config.muted === true ? 'Mute' : node.config.muted === false ? 'Unmute' : 'Toggle'}`;
                 case 'obsStartRecording': return 'Start Recording';
                 case 'obsStopRecording': return 'Stop Recording';
                 case 'obsStartStreaming': return 'Start Streaming';
                 case 'obsStopStreaming': return 'Stop Streaming';
+                case 'obsReplayBufferControl': return `${node.config.operation === 'stop' ? 'Stop' : node.config.operation === 'toggle' ? 'Toggle' : 'Start'} Replay Buffer`;
                 case 'obsReplayBuffer': return 'Save Replay Buffer';
                 // Spotify actions
                 case 'spotifySkip': return 'Skip to next track';
@@ -3128,6 +3151,7 @@ class EventFlowEditor {
                 case 'obsRecordingStarted': node.config = {}; break;
                 case 'obsRecordingStopped': node.config = {}; break;
                 case 'obsSceneChanged': node.config = {}; break;
+                case 'obsMediaEnded': node.config = { sourceName: '' }; break;
                 case 'obsReplaybufferSaved': node.config = {}; break;
                 case 'compareProperty': node.config = { property: 'donoValue', operator: 'gt', value: 0 }; break;
                 case 'randomChance': node.config = { probability: 0.1, cooldownMs: 0, maxPerMinute: 0, requireMessage: true }; break;
@@ -3203,6 +3227,18 @@ class EventFlowEditor {
 				case 'obsToggleSource':
 					node.config = { sourceName: 'Source 1', sceneName: '', groupName: '', visible: 'toggle' };
 					break;
+				case 'obsSetText':
+					node.config = { sourceName: 'Text (GDI+)', text: '{username}: {message}' };
+					break;
+				case 'obsMediaControl':
+					node.config = { sourceName: 'Media Source', operation: 'restart' };
+					break;
+				case 'obsSetVolume':
+					node.config = { sourceName: 'Audio Source', volumeDb: 0 };
+					break;
+				case 'obsRefreshBrowser':
+					node.config = { sourceName: 'Browser Source' };
+					break;
 				case 'obsSetSourceFilter':
 					node.config = { sourceName: 'Source 1', filterName: 'Filter 1', enabled: 'toggle' };
 					break;
@@ -3220,6 +3256,9 @@ class EventFlowEditor {
 					break;
 				case 'obsStopStreaming':
 					node.config = {};
+					break;
+				case 'obsReplayBufferControl':
+					node.config = { operation: 'start' };
 					break;
 				case 'obsReplayBuffer':
 					node.config = {};
@@ -3992,6 +4031,21 @@ class EventFlowEditor {
 					Triggers when OBS changes the active program scene.<br><br>
 					The scene name is available as <code>meta.sceneName</code>.
 				</div>`;
+				break;
+
+			case 'obsMediaEnded':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Media Source Name (optional)</label>
+						<input type="text" class="property-input" id="prop-sourceName"
+							value="${this.escapeHtml(node.config.sourceName || '')}" placeholder="Leave blank for any media source">
+						<div class="property-help">Match the exact OBS media input name, or leave blank to trigger for every media source.</div>
+					</div>
+					<div class="property-group" style="background: #e3f2fd; color: #333; padding: 10px; border-radius: 4px;">
+						<strong>OBS Media Ended</strong><br>
+						Triggers when OBS reports that a media input has finished playback. The source name is available as <code>meta.inputName</code>.<br><br>
+						Requires the Flow Actions page connected through OBS WebSocket v5.
+					</div>`;
 				break;
 
 			case 'obsReplaybufferSaved':
@@ -5281,7 +5335,7 @@ class EventFlowEditor {
 					</div>
 					<div class="property-group">
 						<label class="property-label">Duration (ms, 0 = stay until cleared)</label>
-						<input type="number" class="property-input" id="prop-duration" value="${node.config.duration || 5000}" min="0" step="100">
+						<input type="number" class="property-input" id="prop-duration" value="${node.config.duration ?? 5000}" min="0" step="100">
 					</div>
 					<div class="property-group">
 						<label style="display:flex; align-items:center; gap:6px;">
@@ -5406,7 +5460,7 @@ class EventFlowEditor {
 					</div>
 					<div class="property-group">
 						<label class="property-label">Duration (ms, 0 = stay until cleared)</label>
-						<input type="number" class="property-input" id="prop-duration" value="${node.config.duration || 5000}" min="0" step="100">
+						<input type="number" class="property-input" id="prop-duration" value="${node.config.duration ?? 5000}" min="0" step="100">
 					</div>
 					<div class="property-group">
 						<label style="display:flex; align-items:center; gap:6px;">
@@ -5508,7 +5562,87 @@ class EventFlowEditor {
 						Example: <code>actions.html?session=test&obsws=ws://127.0.0.1:4455</code>
 					</div>`;
 				break;
-				
+
+			case 'obsSetText':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Text Source Name</label>
+						<input type="text" class="property-input" id="prop-sourceName"
+							value="${this.escapeHtml(node.config.sourceName || '')}" placeholder="e.g., Counter Text">
+						<div class="property-help">The exact name of an OBS Text (GDI+) or Text (FreeType 2) source</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Text</label>
+						<textarea class="property-input" id="prop-text" rows="4" placeholder="{username}: {message}">${this.escapeHtml(node.config.text ?? '')}</textarea>
+						<div class="property-help">Supports message fields and flow-added placeholders, including {counterValue}, {counterTarget}, and {counterRemaining}.</div>
+					</div>
+					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Requires OBS WebSocket:</strong><br>
+						Enable OBS WebSocket v5 in OBS 28+ and keep the Flow Actions overlay open. The default server URL is <code>ws://127.0.0.1:4455</code>.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
+					</div>`;
+				break;
+
+			case 'obsMediaControl':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Media Source Name</label>
+						<input type="text" class="property-input" id="prop-sourceName"
+							value="${this.escapeHtml(node.config.sourceName || '')}" placeholder="e.g., Intro Video">
+						<div class="property-help">The exact name of an OBS Media Source or VLC Video Source</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Playback Action</label>
+						<select class="property-input" id="prop-operation">
+							<option value="play" ${node.config.operation === 'play' ? 'selected' : ''}>Play / Resume</option>
+							<option value="pause" ${node.config.operation === 'pause' ? 'selected' : ''}>Pause</option>
+							<option value="restart" ${!node.config.operation || node.config.operation === 'restart' ? 'selected' : ''}>Restart</option>
+							<option value="stop" ${node.config.operation === 'stop' ? 'selected' : ''}>Stop</option>
+							<option value="next" ${node.config.operation === 'next' ? 'selected' : ''}>Next playlist item</option>
+							<option value="previous" ${node.config.operation === 'previous' ? 'selected' : ''}>Previous playlist item</option>
+						</select>
+						<div class="property-help">Next and Previous apply to playlist-capable media inputs such as VLC Video Source.</div>
+					</div>
+					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Requires OBS WebSocket v5:</strong><br>
+						Keep the Flow Actions page open and connected to OBS 28+ on port <code>4455</code>.
+					</div>`;
+				break;
+
+			case 'obsSetVolume':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Audio Source Name</label>
+						<input type="text" class="property-input" id="prop-sourceName"
+							value="${this.escapeHtml(node.config.sourceName || '')}" placeholder="e.g., Music">
+						<div class="property-help">The exact name of the OBS input whose volume should change</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Volume (dB)</label>
+						<input type="number" class="property-input" id="prop-volumeDb"
+							value="${node.config.volumeDb ?? 0}" min="-100" max="26" step="0.1">
+						<div class="property-help">OBS accepts -100 dB (silent) through +26 dB. 0 dB is unchanged gain.</div>
+					</div>
+					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Requires OBS WebSocket v5:</strong><br>
+						Keep the Flow Actions page open and connected to OBS 28+ on port <code>4455</code>.
+					</div>`;
+				break;
+
+			case 'obsRefreshBrowser':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Browser Source Name</label>
+						<input type="text" class="property-input" id="prop-sourceName"
+							value="${this.escapeHtml(node.config.sourceName || '')}" placeholder="e.g., Alerts">
+						<div class="property-help">The exact name of the OBS Browser Source to reload without cache</div>
+					</div>
+					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Requires OBS WebSocket v5:</strong><br>
+						This presses the Browser Source <em>Refresh cache of current page</em> action through OBS.
+					</div>`;
+				break;
+
 			case 'obsSetSourceFilter':
 				html += `
 					<div class="property-group">
@@ -5635,6 +5769,23 @@ class EventFlowEditor {
 					</div>`;
 				break;
 				
+			case 'obsReplayBufferControl':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Replay Buffer Action</label>
+						<select class="property-input" id="prop-operation">
+							<option value="start" ${!node.config.operation || node.config.operation === 'start' ? 'selected' : ''}>Start</option>
+							<option value="stop" ${node.config.operation === 'stop' ? 'selected' : ''}>Stop</option>
+							<option value="toggle" ${node.config.operation === 'toggle' ? 'selected' : ''}>Toggle</option>
+						</select>
+						<div class="property-help">Replay Buffer must first be enabled in OBS Settings → Output.</div>
+					</div>
+					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Requires OBS WebSocket v5:</strong><br>
+						Keep the Flow Actions page open and connected to OBS 28+ on port <code>4455</code>.
+					</div>`;
+				break;
+
 			case 'obsReplayBuffer':
 				html += `
 					<div class="property-group">

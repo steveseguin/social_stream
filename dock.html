@@ -23,6 +23,7 @@
 				--font-color-name: var(--author-color, #ddd);
 				--background-color: #36393f;
 				--topbar-background: #0009;
+				--viewer-count-reserved-space: 0px;
 				--locked-chatbar: 0px;
 				--menu-background-color: #2f3136;
 				--menu-border-color: 0 0 5px #000;
@@ -2110,7 +2111,7 @@
 
 			#pinned {
 				position: sticky;
-				top: 0 !important;
+				top: var(--viewer-count-reserved-space) !important;
 				background-color: var(--pinned-bg) !important;
 				left: 0;
 				width: 100%;
@@ -2138,7 +2139,7 @@
 				position: absolute;
 				right: 0px;
 				overflow-y: auto;
-				max-height: 100%;
+				max-height: calc(100% - var(--viewer-count-reserved-space));
 				overflow-x: hidden;
 			}
 
@@ -2585,6 +2586,11 @@
 		#topbar:empty {
 			display:none;
 		}
+		#topbarSpacer {
+			height: var(--viewer-count-reserved-space);
+			width: 100%;
+			pointer-events: none;
+		}
 		
 		.output-container {
 			mask-image: linear-gradient(to top,
@@ -2597,13 +2603,13 @@
 			);
 			display: block;
 			width: 100vw;
-			height: 100vh;
+			height: calc(100vh - var(--viewer-count-reserved-space));
 			overflow-x: hidden;
 			overflow-y: hidden !important;
 			margin-bottom: 0;
 		}
 		.electronDraggable .output-container {
-			height: calc(100vh); 
+			height: calc(100vh - var(--viewer-count-reserved-space)); 
 			scrollbar-width: none; /* Firefox */
 			-ms-overflow-style: none; /* IE and Edge */
 		}
@@ -2679,6 +2685,7 @@
 	</head>
 	<body id="main" class="vanilla notcompactmode">
 		<div id="topbar"></div>
+		<div id="topbarSpacer" aria-hidden="true"></div>
 		<div id="pinned" class="output"></div>
 		<div id="output" class="output"></div>
 		<div id="backToLive" onclick="returnToLive();" style="display:none; position:fixed; bottom:40px; left:50%; transform:translateX(-50%); z-index:9999; background:rgba(0,120,255,0.9); color:#fff; padding:6px 16px; border-radius:20px; cursor:pointer; font-size:14px; font-family:sans-serif; box-shadow:0 2px 8px rgba(0,0,0,0.3); white-space:nowrap;">Back to live (<span id="missedCount">0</span> new)</div>
@@ -3379,6 +3386,9 @@
 				}
 				return true;
 			}
+			function usesLegacyExtensionTransport() {
+				return !versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION);
+			}
 			// Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
 			function hasExclusiveServerTransport(caps) {
 				var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
@@ -3389,7 +3399,7 @@
 			function useServerOnlyTransport() {
 				var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
 				return hasExclusiveServerTransport(caps) &&
-					versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+					!usesLegacyExtensionTransport() &&
 					caps.serverFeed === true &&
 					caps.legacyBridgeRequired !== true &&
 					caps.upstreamCommands !== true &&
@@ -4034,6 +4044,11 @@
 			var showviewercount = false;
 			if (urlParams.has("showviewercount")) {
 				showviewercount = true;
+			}
+			var reserveviewercountspace = showviewercount && urlParams.has("reserveviewercountspace");
+			var showlikecount = false;
+			if (urlParams.has("showlikecount")) {
+				showlikecount = true;
 			}
 			var viewerCountRequestTtl = 70 * 60 * 1000;
 			var viewerCountRequestRefresh = 60 * 60 * 1000;
@@ -4745,8 +4760,9 @@
 				}
 			}
 
+			var beepOnlyMod = urlParams.has("beeponlymod");
 			var beep = false;
-			if (urlParams.has("beep")) {
+			if (urlParams.has("beep") || beepOnlyMod) {
 				// removes HTML from messages, donations, and names.
 				beep = true;
 				let ele = getById("notify");
@@ -4759,6 +4775,10 @@
 			var beepFirstTime = false;
 			if (urlParams.has("beepfirsttime")) {
 				beepFirstTime = true;
+			}
+
+			function shouldDockBeep(data, isMod) {
+				return !!((beep || (beepFirstTime && data.firsttime)) && (!beepOnlyMod || isMod));
 			}
 			
 			var nobeepbot = false;
@@ -5281,7 +5301,7 @@
 					if (event.data && server2) {
 						try {
 							var data = JSON.parse(event.data);
-							if (!isDuplicateTransportDelivery(data)) {
+							if (!isDuplicateTransportDelivery(data, "server")) {
 								processInput(data);
 							}
 						} catch (e) {
@@ -6609,6 +6629,26 @@
 			
 			var topBarElement = getById("topbar");
 
+			if (reserveviewercountspace && topBarElement) {
+				var viewerBarSpaceUpdatePending = false;
+				var updateViewerBarReservedSpace = function() {
+					viewerBarSpaceUpdatePending = false;
+					var height = topBarElement.children.length ? Math.ceil(topBarElement.getBoundingClientRect().height) : 0;
+					document.documentElement.style.setProperty("--viewer-count-reserved-space", height + "px");
+				};
+				var scheduleViewerBarSpaceUpdate = function() {
+					if (viewerBarSpaceUpdatePending) {
+						return;
+					}
+					viewerBarSpaceUpdatePending = true;
+					requestAnimationFrame(updateViewerBarReservedSpace);
+				};
+				var viewerBarSpaceObserver = new MutationObserver(scheduleViewerBarSpaceUpdate);
+				viewerBarSpaceObserver.observe(topBarElement, { childList: true, subtree: true, characterData: true });
+				window.addEventListener("resize", scheduleViewerBarSpaceUpdate);
+				scheduleViewerBarSpaceUpdate();
+			}
+
 			function formatVideoBitrate(bitrateKbps){
 				var bitrate = parseFloat(bitrateKbps);
 				if (isNaN(bitrate) || bitrate <= 0) {
@@ -6671,6 +6711,7 @@
 						followers[data.type] = parseInt(data.meta) || 0;
 						return true;
 					} else if (data.type && data.event == "likes_update"){
+						if (!showlikecount) return true;
 						let likeCount = parseInt(data.meta, 10);
 						if (isNaN(likeCount) || likeCount < 0) return true;
 						let likeType = String(data.type).toLowerCase();
@@ -7523,43 +7564,116 @@
 				return false;
 			}
 
-			// In server2 mode the extension may deliver the same feed message over both the
-			// websocket and the VDO.Ninja bridge (additive delivery); drop the second copy.
+			// The extension may deliver the same feed message over both the websocket and
+			// the VDO.Ninja bridge. IDs support a wider replay window; ID-less payloads are
+			// paired one-for-one only when the other transport follows within one second.
 			var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
+			var IDLESS_CROSS_TRANSPORT_DEDUPE_TTL_MS = 1000;
 			var recentTransportDeliveries = new Map();
-			function isDuplicateTransportDelivery(data) {
-				if (!server2) {
-					return false;
+			var recentIdlessTransportDeliveries = new Map();
+			function stableTransportStringify(value, isRoot) {
+				if (value === null || typeof value !== "object") {
+					var serialized = JSON.stringify(value);
+					return serialized === undefined ? String(value) : serialized;
 				}
+				if (Array.isArray(value)) {
+					return "[" + value.map(function (item) {
+						return stableTransportStringify(item, false);
+					}).join(",") + "]";
+				}
+				var parts = [];
+				Object.keys(value).sort().forEach(function (key) {
+					if (isRoot && key === "out") return;
+					parts.push(JSON.stringify(key) + ":" + stableTransportStringify(value[key], false));
+				});
+				return "{" + parts.join(",") + "}";
+			}
+			function getTransportDeliveryKey(data) {
 				if (!data || typeof data !== "object") {
-					return false;
-				}
-				if (data.id === undefined || data.id === null) {
-					return false;
+					return "";
 				}
 				if ("action" in data || "get" in data || "callback" in data || "mid" in data) {
-					return false;
+					return "";
 				}
-				if (!(data.chatname || data.chatmessage || data.chatimg || data.hasDonation || data.membership || data.event || data.contentimg)) {
-					return false;
+				if (!(data.chatname || data.chatmessage || data.chatimg || data.hasDonation || data.membership || data.event || data.contentimg || data.meta)) {
+					return "";
 				}
-				var key =
-					String(data.id) +
-					"|" + (data.type || "") +
-					"|" + (data.chatname || "") +
-					"|" + String(data.chatmessage || "").slice(0, 100) +
-					"|" + (data.hasDonation || "") +
-					"|" + (data.event || "");
+				if (data.id !== undefined && data.id !== null) {
+					return "id|" + String(data.id) +
+						"|" + (data.type || "") +
+						"|" + (data.chatname || "") +
+						"|" + String(data.chatmessage || "").slice(0, 100) +
+						"|" + (data.hasDonation || "") +
+						"|" + (data.event || "");
+				}
+				return "payload|" + stableTransportStringify(data, true);
+			}
+			function isDuplicateIdlessTransportDelivery(key, source) {
 				var now = Date.now();
-				recentTransportDeliveries.forEach(function (seenAt, seenKey) {
-					if (now - seenAt > CROSS_TRANSPORT_DEDUPE_TTL_MS) {
+				recentIdlessTransportDeliveries.forEach(function (seenSources, seenKey) {
+					Object.keys(seenSources).forEach(function (seenSource) {
+						seenSources[seenSource] = seenSources[seenSource].filter(function (seenAt) {
+							return now - seenAt <= IDLESS_CROSS_TRANSPORT_DEDUPE_TTL_MS;
+						});
+						if (!seenSources[seenSource].length) {
+							delete seenSources[seenSource];
+						}
+					});
+					if (!Object.keys(seenSources).length) {
+						recentIdlessTransportDeliveries.delete(seenKey);
+					}
+				});
+
+				var seenSources = recentIdlessTransportDeliveries.get(key) || {};
+				var sourceNames = Object.keys(seenSources);
+				for (var i = 0; i < sourceNames.length; i++) {
+					var seenSource = sourceNames[i];
+					if (seenSource === source || !seenSources[seenSource].length) continue;
+					seenSources[seenSource].shift();
+					if (!seenSources[seenSource].length) {
+						delete seenSources[seenSource];
+					}
+					if (Object.keys(seenSources).length) {
+						recentIdlessTransportDeliveries.set(key, seenSources);
+					} else {
+						recentIdlessTransportDeliveries.delete(key);
+					}
+					return true;
+				}
+
+				var sourceQueue = seenSources[source] || [];
+				sourceQueue.push(now);
+				seenSources[source] = sourceQueue;
+				recentIdlessTransportDeliveries.set(key, seenSources);
+				return false;
+			}
+			function isDuplicateTransportDelivery(data, source) {
+				var key = getTransportDeliveryKey(data);
+				if (!key) return false;
+				source = source || "unknown";
+				if (key.indexOf("payload|") === 0) {
+					return isDuplicateIdlessTransportDelivery(key, source);
+				}
+				var now = Date.now();
+				recentTransportDeliveries.forEach(function (seenSources, seenKey) {
+					var newestSeenAt = 0;
+					Object.keys(seenSources).forEach(function (seenSource) {
+						newestSeenAt = Math.max(newestSeenAt, seenSources[seenSource]);
+					});
+					if (now - newestSeenAt > CROSS_TRANSPORT_DEDUPE_TTL_MS) {
 						recentTransportDeliveries.delete(seenKey);
 					}
 				});
-				if (recentTransportDeliveries.has(key)) {
+				var seenSources = recentTransportDeliveries.get(key) || {};
+				var duplicate = Object.keys(seenSources).some(function (seenSource) {
+					return seenSource !== source && now - seenSources[seenSource] <= CROSS_TRANSPORT_DEDUPE_TTL_MS;
+				});
+				if (duplicate) {
+					recentTransportDeliveries.delete(key);
 					return true;
 				}
-				recentTransportDeliveries.set(key, now);
+				seenSources[source] = now;
+				recentTransportDeliveries.set(key, seenSources);
 				return false;
 			}
 
@@ -8820,7 +8934,7 @@
 						// raw data
 						if ("overlayNinja" in e.data.dataReceived) {
 							var remotePayload = e.data.dataReceived.overlayNinja;
-							if (!isDuplicateTransportDelivery(remotePayload)) {
+							if (!isDuplicateTransportDelivery(remotePayload, "p2p")) {
 								var remoteExecution = executeRemoteControlDockRequest(remotePayload);
 								if (!remoteExecution.skip && isVersionedRemoteControlRequest(remotePayload) && remotePayload.get) {
 									send2Extension(
@@ -12376,7 +12490,7 @@
 					}
 					
 					if (!suppressLiveSideEffects) {
-						const shouldBeep = beep || (beepFirstTime && data.firsttime);
+						const shouldBeep = shouldDockBeep(data, mod);
 						if (shouldBeep) { 
 							if (!(data.command && doNotTTSBeep) && !(nobeepevent && data.event) && !(nobeepmod && mod) && !(nobeephost && host) && !(nobeepbot && bot)){
 								playtone();
@@ -12537,24 +12651,24 @@
 				send2Extension({ action: "requestViewerCount", value: { ttl: viewerCountRequestTtl } }, uid || null, true);
 			}
 
-			function send2Extension(data, uid = null, force, preferP2P = false) {
-				if (!force && (blockMessageSelecting || blockMessageSelecting3)) {
-					return;
-				}
-
-				if (!preferP2P && socketserverExtension && server3) {
-					try {
-						if (data.out){
-							delete data.out;
-						}
-						socketserverExtension.send(JSON.stringify(data));
-						return;
-					} catch (e) {
-						// if failed, try p2p
-						console.error(e);
+			function sendExtensionDataToServer(data) {
+				if (!socketserverExtension || !server3 || socketserverExtension.readyState !== 1) return false;
+				try {
+					var serverPayload = data;
+					if (data && data.out) {
+						serverPayload = Object.assign({}, data);
+						delete serverPayload.out;
 					}
+					socketserverExtension.send(JSON.stringify(serverPayload));
+					return true;
+				} catch (e) {
+					console.error(e);
+					return false;
 				}
+			}
 
+			function sendExtensionDataToPeers(data, uid) {
+				var sent = false;
 				iframes.forEach(iframe => {
 					if (!uid) {
 						var keys = Object.keys(iframe.connectedPeers);
@@ -12564,6 +12678,7 @@
 								var label = iframe.connectedPeers[UUID];
 								if (label === "SocialStream") {
 									iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs", UUID: UUID }, "*");
+									sent = true;
 								}
 							} catch (e) {}
 						}
@@ -12571,9 +12686,29 @@
 						var label = iframe.connectedPeers[uid];
 						if (label === "SocialStream") {
 							iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs", UUID: uid }, "*");
+							sent = true;
 						}
 					}
 				});
+				return sent;
+			}
+
+			function send2Extension(data, uid = null, force, preferP2P = false) {
+				if (!force && (blockMessageSelecting || blockMessageSelecting3)) {
+					return false;
+				}
+
+				var legacyTransport = usesLegacyExtensionTransport();
+				if (!preferP2P && !legacyTransport && sendExtensionDataToServer(data)) {
+					return true;
+				}
+				if (sendExtensionDataToPeers(data, uid)) {
+					return true;
+				}
+				if (!preferP2P && legacyTransport) {
+					return sendExtensionDataToServer(data);
+				}
+				return false;
 			}
 			
 			function syncDataAny(data, UUID = false, force = false) {

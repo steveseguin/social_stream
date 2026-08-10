@@ -140,6 +140,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `hidenumbers` | boolean | Hides messages that contain only digits |
 | `showsourcename` | boolean | Displays the originating platform label on each card |
 | `showviewercount` | boolean | Shows the current viewer count indicator |
+| `reserveviewercountspace` | boolean | Reserves vertical space so the viewer count bar does not cover chat messages |
 | `nocolon` | boolean | Removes the colon between username and message body |
 | `namefilter` | boolean | Applies filters to usernames instead of message text |
 | `stripreplyto` | boolean | Removes “replying to” prefaces from imported messages |
@@ -255,6 +256,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `nobeephost` | boolean | Disables notification sound for host messages |
 | `nobeepevent` | boolean | Disables notification sound for events |
 | `nobeepmod` | boolean | Disables notification sound for moderator messages |
+| `beeponlymod` | boolean | Enables notification sounds only for moderator messages |
 | `showvipbadge` | boolean | Shows special badge for VIP users |
 | `autofeaturevip` | boolean | Auto-features messages from VIP users |
 | `autofeaturepriv` | boolean | Auto-features messages from privileged users |
@@ -264,6 +266,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | Parameter | Values | Description |
 |-----------|---------|-------------|
 | `beep` | boolean | Enables sound notification for new messages |
+| `beeponlymod` | boolean | Enables sound notifications only for moderator messages |
 | `beepvolume` | 0-100 | Sets volume for notification sound (percentage) |
 | `custombeep` | URL | Custom sound file URL for notifications |
 | `beepwords` | boolean | Replaces asterisks with "beep" in messages |
