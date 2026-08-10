@@ -427,7 +427,7 @@ source, and one overlay URL before upload.
   - Additional checks passed: `npm run lint:js:background:strict`,
     `npm run test:xss:sanitizer`, and `node tests/eventflow-customjs.test.js`
 
-### 2026-08-09 Selective 3.50.5 Update
+### 2026-08-09 Selective 3.50.6 Update
 
 - Reviewed the clean local `beta` checkout at `672a1328` read-only; no beta
   files, refs, or working-tree state were changed and no blanket merge was
@@ -441,18 +441,23 @@ source, and one overlay URL before upload.
   - the tested Blaze capture/deduplication chain from `29615222`, `12fa9bfc`,
     and `23da2c79`; packaged `sources/blaze.js` byte-matches the final beta
     result for that chain
+- Preserved the existing remote Web Store fixes from `55c05eb2` and
+  `edc61217`: working `chrome.identity` Spotify OAuth, duplicate-flow
+  prevention, callback instructions, and the prior `3.50.5` version bump.
 - Deferred beta feature work, desktop/Stream Deck/OBS work, new provider and
   host additions, retention/database behavior changes, and source fixes that
   depend on broader untested chains.
-- Bumped the Web Store package version from `3.50.4` to `3.50.5`.
-- Permissions remain unchanged: `notifications`, `storage`, `debugger`,
-  `tabs`, `scripting`, and `tabCapture`. No host permissions were added.
+- Bumped the Web Store package version from the existing remote `3.50.5` to
+  `3.50.6` so the new upload is strictly newer.
+- Permissions remain unchanged from the existing remote Web Store baseline:
+  `notifications`, `storage`, `debugger`, `tabs`, `scripting`, `tabCapture`,
+  and `identity`. No host permissions were added.
 - Built conservative upload artifact:
-  `C:\Users\steve\Code\webstore\social-stream-ninja-chrome-web-store-3.50.5-20260809-conservative-r1.zip`
-- Artifact size: `34,730,367` bytes; SHA-256:
-  `2DD68082C98C28D183F84F063967088163CC12B7075AECBCA36B58CFD1B5F3EF`
+  `C:\Users\steve\Code\webstore\social-stream-ninja-chrome-web-store-3.50.6-20260809-conservative-r1.zip`
+- Artifact size: `34,731,248` bytes; SHA-256:
+  `B4413015F6ACC97D31169A35C9A32C584692526949A411AC264379873ECC3A68`
 - Extracted ZIP verification:
-  - manifest at ZIP root with version `3.50.5`
+  - manifest at ZIP root with version `3.50.6`
   - `771` expected and extracted files; no missing, extra, or differing files
   - JSON parse errors: `0`
   - missing manifest references: `0`

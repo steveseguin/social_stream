@@ -8,19 +8,27 @@ const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), "u
 const popupSource = read("popup.js");
 const popupHtml = read("popup.html");
 const backgroundSource = read("background.js");
+const serviceWorkerSource = read("service_worker.js");
+const spotifySource = read("spotify.js");
+const spotifyHtml = read("spotify.html");
 const settingsDefinitions = read("shared/config/settingsDefinitions.js");
 const settingsKeyIndex = read("docs/agents/13-reference/settings-key-index.md");
 const manifest = JSON.parse(read("manifest.json"));
 
-assert.equal(manifest.version, "3.50.5");
+assert.equal(manifest.version, "3.50.6");
 assert.deepEqual(manifest.permissions, [
   "notifications",
   "storage",
   "debugger",
   "tabs",
   "scripting",
-  "tabCapture"
+  "tabCapture",
+  "identity"
 ]);
+assert.ok(spotifySource.includes("chrome.identity.launchWebAuthFlow"), "rebased Web Store Spotify OAuth flow is missing");
+assert.ok(spotifySource.includes("chrome.identity.getRedirectURL('spotify')"), "Spotify OAuth no longer uses the extension callback");
+assert.ok(serviceWorkerSource.includes("if (backgroundPageTabIdLoaded)"), "Spotify duplicate-auth guard is missing");
+assert.ok(spotifyHtml.includes("https://cppibjhfemifednoimlblfcmjgfhfjeg.chromiumapp.org/spotify"), "Web Store Spotify callback instructions are missing");
 
 assert.ok(!popupSource.includes("function preparePopupSearchIndex"), "crashing popup search prebuild returned");
 assert.ok(!popupSource.includes("setTimeout(preparePopupSearchIndex"), "popup search still schedules the crashing prebuild");
