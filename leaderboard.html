@@ -837,7 +837,414 @@
             backface-visibility: hidden;
             perspective: 1000;
         }
-        
+
+        /* ========== SUPPORTER SHOWCASE LAYOUT ========== */
+        .supporter-showcase {
+            display: none;
+        }
+
+        body[data-layout="supporters"] {
+            --supporter-accent: #4ee4bd;
+            --supporter-accent-rgb: 78, 228, 189;
+            min-height: 100vh;
+            padding: 16px;
+            background: transparent;
+        }
+
+        body[data-layout="supporters"][data-supporter-category="subscriptions"] {
+            --supporter-accent: #b794ff;
+            --supporter-accent-rgb: 183, 148, 255;
+        }
+
+        body[data-layout="supporters"][data-supporter-category="followers"] {
+            --supporter-accent: #ff82bd;
+            --supporter-accent-rgb: 255, 130, 189;
+        }
+
+        body[data-layout="supporters"] .leaderboard-container {
+            width: calc(100vw - 32px);
+            max-width: 560px;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: var(--container-bg);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 18px;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.38);
+            backdrop-filter: blur(16px);
+        }
+
+        body[data-layout="supporters"] .leaderboard-header,
+        body[data-layout="supporters"] .leaderboard-list {
+            display: none !important;
+        }
+
+        body[data-layout="supporters"] .supporter-showcase {
+            display: block;
+            padding: 18px;
+        }
+
+        .supporter-showcase-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+
+        .supporter-showcase-brand {
+            min-width: 0;
+            color: var(--text-secondary);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .supporter-showcase-live {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+            color: var(--text-secondary);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .supporter-showcase-live-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--supporter-accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(var(--supporter-accent-rgb), 0.8);
+            animation: pulse 2s infinite;
+        }
+
+        .supporter-category-nav {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            padding: 4px;
+            margin-bottom: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        .supporter-category-button {
+            min-width: 0;
+            padding: 8px 6px;
+            overflow: hidden;
+            color: var(--text-secondary);
+            font: inherit;
+            font-size: 11px;
+            font-weight: 700;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            background: transparent;
+            border: 0;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .supporter-category-button.is-active {
+            color: var(--text-primary);
+            background: rgba(var(--supporter-accent-rgb), 0.16);
+            box-shadow: inset 0 0 0 1px rgba(var(--supporter-accent-rgb), 0.28);
+        }
+
+        .supporter-category-button:focus {
+            outline: 2px solid var(--supporter-accent);
+            outline-offset: 1px;
+        }
+
+        .supporter-showcase-main {
+            opacity: 1;
+            transform: translateX(0);
+            transition: opacity 0.22s ease, transform 0.22s ease;
+        }
+
+        body[data-layout="supporters"][data-supporter-transition="fade"] .supporter-showcase-main.is-switching {
+            opacity: 0;
+        }
+
+        body[data-layout="supporters"][data-supporter-transition="slide"] .supporter-showcase-main.is-switching {
+            opacity: 0;
+            transform: translateX(14px);
+        }
+
+        .supporter-category-heading {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 13px;
+        }
+
+        .supporter-category-title {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1;
+        }
+
+        .supporter-category-subtitle {
+            max-width: 260px;
+            color: var(--text-secondary);
+            font-size: 11px;
+            line-height: 1.35;
+            text-align: right;
+        }
+
+        .supporter-top-section {
+            margin-bottom: 16px;
+        }
+
+        .supporter-top-section.is-hidden {
+            display: none;
+        }
+
+        .supporter-section-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .supporter-section-label:after {
+            height: 1px;
+            flex: 1;
+            background: linear-gradient(90deg, rgba(var(--supporter-accent-rgb), 0.45), transparent);
+            content: "";
+        }
+
+        .supporter-top-list {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            list-style: none;
+        }
+
+        .supporter-top-card {
+            position: relative;
+            min-width: 0;
+            min-height: 92px;
+            padding: 12px 10px 10px;
+            overflow: hidden;
+            text-align: center;
+            background: linear-gradient(150deg, rgba(var(--supporter-accent-rgb), 0.16), rgba(255, 255, 255, 0.035));
+            border: 1px solid rgba(var(--supporter-accent-rgb), 0.2);
+            border-radius: 12px;
+        }
+
+        .supporter-top-rank {
+            position: absolute;
+            top: 7px;
+            left: 8px;
+            color: var(--supporter-accent);
+            font-size: 9px;
+            font-weight: 800;
+        }
+
+        .supporter-top-card > .supporter-platform-icon {
+            position: absolute;
+            top: 7px;
+            right: 8px;
+        }
+
+        .supporter-avatar,
+        .supporter-avatar-fallback {
+            width: 32px;
+            height: 32px;
+            margin: 0 auto 6px;
+            border: 2px solid rgba(var(--supporter-accent-rgb), 0.38);
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .supporter-avatar-fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            font-size: 11px;
+            font-weight: 800;
+            background: rgba(var(--supporter-accent-rgb), 0.18);
+        }
+
+        .supporter-top-name {
+            overflow: hidden;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.2;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .supporter-top-value {
+            margin-top: 3px;
+            overflow: hidden;
+            color: var(--supporter-accent);
+            font-size: 11px;
+            font-weight: 800;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .supporter-top-empty,
+        .supporter-recent-empty {
+            padding: 18px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px dashed var(--border-color);
+            border-radius: 11px;
+        }
+
+        .supporter-top-empty {
+            grid-column: 1 / -1;
+        }
+
+        .supporter-recent-list {
+            display: grid;
+            gap: 6px;
+            list-style: none;
+        }
+
+        .supporter-recent-item {
+            display: grid;
+            grid-template-columns: 36px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 10px;
+            min-height: 52px;
+            padding: 7px 10px;
+            background: rgba(255, 255, 255, 0.045);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 11px;
+        }
+
+        .supporter-recent-item .supporter-avatar,
+        .supporter-recent-item .supporter-avatar-fallback {
+            width: 34px;
+            height: 34px;
+            margin: 0;
+        }
+
+        .supporter-recent-copy {
+            min-width: 0;
+        }
+
+        .supporter-recent-name-line {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            gap: 6px;
+        }
+
+        .supporter-recent-name {
+            overflow: hidden;
+            font-size: 12px;
+            font-weight: 700;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .supporter-platform-icon {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+            object-fit: contain;
+            opacity: 0.82;
+        }
+
+        .supporter-recent-detail {
+            margin-top: 2px;
+            overflow: hidden;
+            color: var(--text-secondary);
+            font-size: 10px;
+            line-height: 1.25;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .supporter-recent-time {
+            color: var(--text-secondary);
+            font-size: 9px;
+            white-space: nowrap;
+        }
+
+        body[data-layout="supporters"][data-compact="true"] .supporter-showcase {
+            padding: 14px;
+        }
+
+        body[data-layout="supporters"][data-compact="true"] .supporter-top-card {
+            min-height: 78px;
+            padding-top: 9px;
+        }
+
+        body[data-layout="supporters"][data-compact="true"] .supporter-top-card .supporter-avatar,
+        body[data-layout="supporters"][data-compact="true"] .supporter-top-card .supporter-avatar-fallback {
+            width: 27px;
+            height: 27px;
+            margin-bottom: 4px;
+        }
+
+        body[data-theme="classic"][data-layout="supporters"] .leaderboard-container {
+            border-color: rgba(0, 0, 0, 0.14);
+        }
+
+        body[data-theme="classic"][data-layout="supporters"] .supporter-category-nav,
+        body[data-theme="classic"][data-layout="supporters"] .supporter-recent-item {
+            background: rgba(0, 0, 0, 0.04);
+        }
+
+        @media (max-width: 480px) {
+            body[data-layout="supporters"] {
+                padding: 10px;
+            }
+
+            body[data-layout="supporters"] .leaderboard-container {
+                width: calc(100vw - 20px);
+            }
+
+            body[data-layout="supporters"] .supporter-showcase {
+                padding: 14px;
+            }
+
+            .supporter-category-heading {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .supporter-category-subtitle {
+                max-width: none;
+                text-align: left;
+            }
+
+            .supporter-top-list {
+                gap: 6px;
+            }
+
+            .supporter-top-card {
+                padding-right: 6px;
+                padding-left: 6px;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -853,6 +1260,31 @@
         <ul class="leaderboard-list" id="leaderboard-content">
             <div class="loading-message">Waiting for chat activity...</div>
         </ul>
+        <section class="supporter-showcase" id="supporter-showcase" aria-live="polite">
+            <div class="supporter-showcase-bar">
+                <div class="supporter-showcase-brand" id="supporter-showcase-brand">Supporter Showcase</div>
+                <div class="supporter-showcase-live"><span class="supporter-showcase-live-dot"></span><span>Live activity</span></div>
+            </div>
+            <div class="supporter-category-nav" aria-label="Supporter categories">
+                <button class="supporter-category-button" type="button" data-supporter-category="donations">Donations</button>
+                <button class="supporter-category-button" type="button" data-supporter-category="subscriptions">Subs</button>
+                <button class="supporter-category-button" type="button" data-supporter-category="followers">Followers</button>
+            </div>
+            <div class="supporter-showcase-main" id="supporter-showcase-main">
+                <div class="supporter-category-heading">
+                    <h1 class="supporter-category-title" id="supporter-category-title">Donations</h1>
+                    <p class="supporter-category-subtitle" id="supporter-category-subtitle">Top donors and the latest support across every platform.</p>
+                </div>
+                <section class="supporter-top-section" id="supporter-top-section">
+                    <div class="supporter-section-label" id="supporter-top-label">Top donors</div>
+                    <ol class="supporter-top-list" id="supporter-top-list"></ol>
+                </section>
+                <section class="supporter-recent-section">
+                    <div class="supporter-section-label" id="supporter-recent-label">Recent donations</div>
+                    <ul class="supporter-recent-list" id="supporter-recent-list"></ul>
+                </section>
+            </div>
+        </section>
     </div>
 
     <script>
@@ -900,7 +1332,7 @@
         const password = urlParams.get('password') || 'false';
         const lanonly = urlParams.has('lanonly') ? '&lanonly' : '';
         
-        // Layout mode: corner (default), bar, full
+        // Layout mode: corner (default), bar, topbar, full, supporters
         const layout = urlParams.get('layout') || 'corner';
         document.body.setAttribute('data-layout', layout);
         
@@ -928,6 +1360,26 @@
         let tickerPosition = 0;
         let tickerAnimationId = null;
         let tickerContainer = null;
+
+        // Supporter Showcase state is isolated from the existing leaderboard render paths.
+        const SUPPORTER_CATEGORY_ORDER = ['donations', 'subscriptions', 'followers'];
+        const requestedSupporterCategory = urlParams.get('supportercategory');
+        let supporterCategoryIndex = SUPPORTER_CATEGORY_ORDER.indexOf(requestedSupporterCategory);
+        if (supporterCategoryIndex < 0) supporterCategoryIndex = 0;
+        let supporterCategory = SUPPORTER_CATEGORY_ORDER[supporterCategoryIndex];
+        let supporterRotationTimer = null;
+        let supporterClockTimer = null;
+        let supporterTransitionTimer = null;
+        const supporterActivities = {
+            donations: [],
+            subscriptions: [],
+            followers: []
+        };
+
+        if (layout === 'supporters') {
+            document.body.setAttribute('data-supporter-category', supporterCategory);
+            document.body.setAttribute('data-supporter-transition', urlParams.get('transitionstyle') === 'slide' ? 'slide' : 'fade');
+        }
         
         const GIFT_EVENT_TYPES = new Set([
             'gift',
@@ -961,6 +1413,67 @@
             'upgraded_membership', // → resub
             'membership_upgrade',  // → resub
             'membership_milestone' // → membermilestone
+        ]);
+
+        const FOLLOW_EVENT_TYPES = new Set([
+            'new_follower',
+            'follow',
+            'followed',
+            'channel_followed',
+            'follower_added'
+        ]);
+
+        const SUBSCRIPTION_ACTIVITY_EVENT_TYPES = new Set([
+            'new_subscriber',
+            'resub',
+            'sponsorship',
+            'giftpurchase',
+            'giftredemption',
+            'subscription_gift',
+            'membermilestone',
+            'member_milestone',
+            // Deprecated aliases retained for incoming older payloads.
+            'subscription',
+            'subgift',
+            'membership',
+            'new_member',
+            'new_membership',
+            'newmember',
+            'upgraded_membership',
+            'membership_upgrade',
+            'membership_milestone',
+            'gift_membership',
+            'giftmemberships',
+            'gifted_membership',
+            'gifted_memberships',
+            'membership_gift',
+            'community_gift',
+            'channel_subscription_gifts',
+            'channel_subscription_gift',
+            'channel_subscription_new',
+            'channel_subscription_start',
+            'channel_subscription',
+            'subscription_gifts',
+            'subscription_renewal'
+        ]);
+
+        const SUBSCRIPTION_GIVER_EVENT_TYPES = new Set([
+            'giftpurchase',
+            'subscription_gift',
+            'subgift',
+            'gift_membership',
+            'giftmemberships',
+            'gifted_memberships',
+            'membership_gift',
+            'community_gift',
+            'channel_subscription_gifts',
+            'channel_subscription_gift',
+            'subscription_gifts'
+        ]);
+
+        const SUBSCRIPTION_REDEMPTION_EVENT_TYPES = new Set([
+            'giftredemption',
+            'gifted_membership'
         ]);
 
         const CONTRIBUTION_EVENT_TYPES = new Set([
@@ -1017,6 +1530,27 @@
                         return value;
                     }
                 }
+            }
+            return 1;
+        }
+
+        function extractSubscriptionGiftQuantity(data) {
+            const meta = data && data.meta && typeof data.meta === 'object' ? data.meta : {};
+            const sources = [data || {}, meta];
+            const quantityFields = ['giftCount', 'giftcount', 'total', 'totalGifted', 'count', 'quantity', 'giftQuantity', 'gifts'];
+            for (let sourceIndex = 0; sourceIndex < sources.length; sourceIndex++) {
+                const source = sources[sourceIndex];
+                for (let fieldIndex = 0; fieldIndex < quantityFields.length; fieldIndex++) {
+                    const value = parseInt(source[quantityFields[fieldIndex]], 10);
+                    if (!isNaN(value) && value > 0) return value;
+                }
+            }
+
+            const text = [data && data.subtitle, data && data.chatmessage].filter(Boolean).join(' ');
+            const match = text.match(/(?:gifted\s+)?([0-9][0-9,]*)\s*(?:subs?|subscriptions?|memberships?)/i);
+            if (match) {
+                const parsed = parseInt(match[1].replace(/,/g, ''), 10);
+                if (!isNaN(parsed) && parsed > 0) return parsed;
             }
             return 1;
         }
@@ -1225,20 +1759,20 @@
         // Set category attribute for topbar-specific styling
         if (layout === 'topbar') {
             document.body.setAttribute('data-category', category);
-            if (compact) {
-                document.body.setAttribute('data-compact', 'true');
-            }
             if (tickerMode) {
                 document.body.setAttribute('data-tickerscroll', 'true');
                 const scrollSpeed = urlParams.get('scrollspeed') || 'normal';
                 document.body.setAttribute('data-scrollspeed', scrollSpeed);
             }
         }
+        if (compact && (layout === 'topbar' || layout === 'supporters')) {
+            document.body.setAttribute('data-compact', 'true');
+        }
         
         // Configuration
         // Robustly resolve max entries, in case the URL builder emits both a boolean
         // and a numeric value for the same key (e.g., ?maxentries&maxentries=10).
-        let topCount = (layout === 'topbar' ? 5 : 10);
+        let topCount = (layout === 'topbar' || layout === 'supporters') ? 5 : 10;
         try {
             const maxParams = urlParams.getAll('maxentries');
             let parsedMax = null;
@@ -1255,6 +1789,8 @@
                 if (!isNaN(topParam)) topCount = topParam;
             }
         } catch (e) { /* ignore */ }
+        const supporterRecentCount = Math.max(1, Math.min(topCount, 12));
+        const supporterHistoryLimit = Math.max(30, supporterRecentCount * 4);
         const resetInterval = parseInt(urlParams.get('reset') || '0'); // hours
         const showAvatars = urlParams.has('showavatar') || urlParams.has('avatars');
         const showDonations = urlParams.has('donations');
@@ -1391,6 +1927,8 @@
                 // Recent activity tracking
                 this.lastGiftTime = 0;
                 this.lastDonationTime = 0;
+                this.lastSubscriptionTime = 0;
+                this.subscriptionGiftsGiven = 0;
 
                 // Loyalty points tracking
                 this.loyaltyPoints = 0;
@@ -1525,11 +2063,428 @@
                 }
             });
         }
-        
+
+        function getSupporterCategoryConfig(categoryName) {
+            switch (categoryName) {
+                case 'subscriptions':
+                    return {
+                        title: 'Subscriptions',
+                        subtitle: 'Top gift-sub givers and the latest subscription activity.',
+                        topLabel: 'Top gift-sub givers',
+                        recentLabel: 'Recent subscriptions',
+                        topEmpty: 'No gifted subscriptions yet',
+                        recentEmpty: 'No subscription activity yet'
+                    };
+                case 'followers':
+                    return {
+                        title: 'Followers',
+                        subtitle: 'The newest followers from every connected platform.',
+                        topLabel: '',
+                        recentLabel: 'Recent followers',
+                        topEmpty: '',
+                        recentEmpty: 'No new followers yet'
+                    };
+                case 'donations':
+                default:
+                    return {
+                        title: 'Donations',
+                        subtitle: 'Top donors and the latest support across every platform.',
+                        topLabel: 'Top donors',
+                        recentLabel: 'Recent donations',
+                        topEmpty: 'No donations yet',
+                        recentEmpty: 'No recent donations yet'
+                    };
+            }
+        }
+
+        function getSupporterInitials(name) {
+            const parts = String(name || '?').trim().split(/\s+/).filter(Boolean);
+            if (!parts.length) return '?';
+            if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+            return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        }
+
+        function createSupporterAvatar(name, avatarUrl) {
+            function createFallback() {
+                const fallback = document.createElement('div');
+                fallback.className = 'supporter-avatar-fallback';
+                fallback.textContent = getSupporterInitials(name);
+                return fallback;
+            }
+
+            if (!showAvatars || !avatarUrl) return createFallback();
+
+            const image = document.createElement('img');
+            image.className = 'supporter-avatar';
+            image.src = avatarUrl;
+            image.alt = '';
+            image.addEventListener('error', function () {
+                if (image.parentNode) image.parentNode.replaceChild(createFallback(), image);
+            }, { once: true });
+            return image;
+        }
+
+        function createSupporterPlatformIcon(type) {
+            if (!showSourceIcons || !type) return null;
+            const safeType = String(type).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+            if (!safeType) return null;
+            const image = document.createElement('img');
+            image.className = 'supporter-platform-icon';
+            image.src = './sources/images/' + safeType + '.png';
+            image.alt = String(type);
+            image.title = String(type);
+            image.addEventListener('error', function () {
+                image.style.display = 'none';
+            }, { once: true });
+            return image;
+        }
+
+        function getSupporterEventTimestamp(data) {
+            const meta = data && data.meta && typeof data.meta === 'object' ? data.meta : {};
+            const candidates = [
+                data && data.timestamp,
+                meta.timestamp,
+                meta.createdAt,
+                meta.followedOn,
+                meta.subscribedOn,
+                meta.subscribedAt
+            ];
+
+            for (let i = 0; i < candidates.length; i++) {
+                const value = candidates[i];
+                if (value === undefined || value === null || value === '') continue;
+                let parsed = NaN;
+                if (typeof value === 'number') {
+                    parsed = value < 1000000000000 ? value * 1000 : value;
+                } else {
+                    parsed = Date.parse(value);
+                }
+                if (!isNaN(parsed) && parsed > 0 && parsed <= 8640000000000000) return parsed;
+            }
+            return Date.now();
+        }
+
+        function getSupporterDonationText(data, donationAmount) {
+            const marker = getDonationMarker(data);
+            if (marker !== null && marker !== undefined && marker !== '') return String(marker);
+            return donationAmount > 0 ? '$' + donationAmount.toFixed(2) : 'Donation';
+        }
+
+        function getSupporterSubscriptionMonths(data) {
+            const meta = data && data.meta && typeof data.meta === 'object' ? data.meta : {};
+            const candidates = [
+                data && data.cumulativeMonths,
+                data && data.months,
+                data && data.month,
+                meta.cumulativeMonths,
+                meta.months,
+                meta.streakMonths
+            ];
+            for (let i = 0; i < candidates.length; i++) {
+                const value = parseInt(candidates[i], 10);
+                if (!isNaN(value) && value > 0) return value;
+            }
+            return 0;
+        }
+
+        function getSupporterSubscriptionText(data, normalizedEvent) {
+            if (SUBSCRIPTION_GIVER_EVENT_TYPES.has(normalizedEvent)) {
+                const quantity = extractSubscriptionGiftQuantity(data);
+                return 'Gifted ' + quantity + ' sub' + (quantity === 1 ? '' : 's');
+            }
+            if (SUBSCRIPTION_REDEMPTION_EVENT_TYPES.has(normalizedEvent)) {
+                return 'Received a gifted sub';
+            }
+            const months = getSupporterSubscriptionMonths(data);
+            if (normalizedEvent === 'resub' || normalizedEvent === 'subscription_renewal' || normalizedEvent === 'upgraded_membership' || normalizedEvent === 'membership_upgrade') {
+                return months ? 'Resubscribed · ' + months + ' months' : 'Resubscribed';
+            }
+            if (normalizedEvent === 'membermilestone' || normalizedEvent === 'member_milestone' || normalizedEvent === 'membership_milestone') {
+                return months ? 'Membership milestone · ' + months + ' months' : 'Membership milestone';
+            }
+            return data && data.membership ? 'Subscribed · ' + String(data.membership) : 'Subscribed';
+        }
+
+        function addSupporterActivity(categoryName, data, detail) {
+            if (layout !== 'supporters' || !supporterActivities[categoryName]) return;
+            const activity = {
+                name: String(data.chatname || 'Anonymous'),
+                type: String(data.type || ''),
+                avatarUrl: data.chatimg ? String(data.chatimg) : '',
+                detail: String(detail || ''),
+                timestamp: getSupporterEventTimestamp(data)
+            };
+            supporterActivities[categoryName].push(activity);
+            supporterActivities[categoryName].sort(function (a, b) {
+                return b.timestamp - a.timestamp;
+            });
+            if (supporterActivities[categoryName].length > supporterHistoryLimit) {
+                supporterActivities[categoryName].length = supporterHistoryLimit;
+            }
+        }
+
+        function trackSupporterActivity(data, user, normalizedEvent, donationAmount, isSupporterDonation) {
+            if (layout !== 'supporters') return;
+
+            if (isSupporterDonation) {
+                addSupporterActivity('donations', data, 'Donated ' + getSupporterDonationText(data, donationAmount));
+            }
+
+            if (SUBSCRIPTION_ACTIVITY_EVENT_TYPES.has(normalizedEvent)) {
+                user.lastSubscriptionTime = Date.now();
+                if (SUBSCRIPTION_GIVER_EVENT_TYPES.has(normalizedEvent)) {
+                    user.subscriptionGiftsGiven += extractSubscriptionGiftQuantity(data);
+                }
+                addSupporterActivity('subscriptions', data, getSupporterSubscriptionText(data, normalizedEvent));
+            }
+
+            if (FOLLOW_EVENT_TYPES.has(normalizedEvent)) {
+                addSupporterActivity('followers', data, 'Followed the channel');
+            }
+        }
+
+        function clearSupporterActivities() {
+            SUPPORTER_CATEGORY_ORDER.forEach(function (categoryName) {
+                supporterActivities[categoryName].length = 0;
+            });
+        }
+
+        function getSupporterTopUsers(categoryName) {
+            const eligibleUsers = Array.from(users.values()).filter(function (user) {
+                return user && !user.isBot;
+            });
+
+            if (categoryName === 'donations') {
+                return eligibleUsers
+                    .filter(function (user) { return user.donations > 0; })
+                    .sort(function (a, b) { return b.donations - a.donations; })
+                    .slice(0, 3);
+            }
+
+            if (categoryName === 'subscriptions') {
+                return eligibleUsers
+                    .filter(function (user) { return user.subscriptionGiftsGiven > 0; })
+                    .sort(function (a, b) { return b.subscriptionGiftsGiven - a.subscriptionGiftsGiven; })
+                    .slice(0, 3);
+            }
+
+            return [];
+        }
+
+        function formatSupporterRelativeTime(timestamp) {
+            const elapsed = Math.max(0, Date.now() - Number(timestamp || 0));
+            if (elapsed < 15000) return 'now';
+            const minutes = Math.floor(elapsed / 60000);
+            if (minutes < 1) return '<1m';
+            if (minutes < 60) return minutes + 'm';
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return hours + 'h';
+            return Math.floor(hours / 24) + 'd';
+        }
+
+        function renderSupporterTopCards(categoryName, config) {
+            const list = document.getElementById('supporter-top-list');
+            if (!list) return [];
+            list.textContent = '';
+            const topUsers = getSupporterTopUsers(categoryName);
+
+            if (!topUsers.length) {
+                const empty = document.createElement('li');
+                empty.className = 'supporter-top-empty';
+                empty.textContent = config.topEmpty;
+                list.appendChild(empty);
+                return topUsers;
+            }
+
+            topUsers.forEach(function (user, index) {
+                const card = document.createElement('li');
+                card.className = 'supporter-top-card';
+
+                const rank = document.createElement('span');
+                rank.className = 'supporter-top-rank';
+                rank.textContent = '#' + (index + 1);
+                card.appendChild(rank);
+
+                const platformIcon = createSupporterPlatformIcon(user.type);
+                if (platformIcon) card.appendChild(platformIcon);
+
+                card.appendChild(createSupporterAvatar(user.name, user.avatarUrl));
+
+                const name = document.createElement('div');
+                name.className = 'supporter-top-name';
+                name.textContent = user.name;
+                name.title = user.name;
+                card.appendChild(name);
+
+                const value = document.createElement('div');
+                value.className = 'supporter-top-value';
+                value.textContent = categoryName === 'donations'
+                    ? '$' + user.donations.toFixed(2)
+                    : user.subscriptionGiftsGiven + ' gifted';
+                card.appendChild(value);
+                list.appendChild(card);
+            });
+            return topUsers;
+        }
+
+        function renderSupporterRecentActivities(categoryName, config) {
+            const list = document.getElementById('supporter-recent-list');
+            if (!list) return [];
+            list.textContent = '';
+            const activities = supporterActivities[categoryName].slice(0, supporterRecentCount);
+
+            if (!activities.length) {
+                const empty = document.createElement('li');
+                empty.className = 'supporter-recent-empty';
+                empty.textContent = config.recentEmpty;
+                list.appendChild(empty);
+                return activities;
+            }
+
+            activities.forEach(function (activity) {
+                const item = document.createElement('li');
+                item.className = 'supporter-recent-item';
+                item.appendChild(createSupporterAvatar(activity.name, activity.avatarUrl));
+
+                const copy = document.createElement('div');
+                copy.className = 'supporter-recent-copy';
+
+                const nameLine = document.createElement('div');
+                nameLine.className = 'supporter-recent-name-line';
+                const name = document.createElement('span');
+                name.className = 'supporter-recent-name';
+                name.textContent = activity.name;
+                name.title = activity.name;
+                nameLine.appendChild(name);
+                const platformIcon = createSupporterPlatformIcon(activity.type);
+                if (platformIcon) nameLine.appendChild(platformIcon);
+                copy.appendChild(nameLine);
+
+                const detail = document.createElement('div');
+                detail.className = 'supporter-recent-detail';
+                detail.textContent = activity.detail;
+                detail.title = activity.detail;
+                copy.appendChild(detail);
+                item.appendChild(copy);
+
+                const time = document.createElement('time');
+                time.className = 'supporter-recent-time';
+                time.dateTime = new Date(activity.timestamp).toISOString();
+                time.title = new Date(activity.timestamp).toLocaleString();
+                time.textContent = formatSupporterRelativeTime(activity.timestamp);
+                item.appendChild(time);
+                list.appendChild(item);
+            });
+            return activities;
+        }
+
+        function renderSupporterShowcase() {
+            if (layout !== 'supporters') return;
+            const container = document.getElementById('leaderboard-container');
+            const config = getSupporterCategoryConfig(supporterCategory);
+            const brand = document.getElementById('supporter-showcase-brand');
+            const title = document.getElementById('supporter-category-title');
+            const subtitle = document.getElementById('supporter-category-subtitle');
+            const topSection = document.getElementById('supporter-top-section');
+            const topLabel = document.getElementById('supporter-top-label');
+            const recentLabel = document.getElementById('supporter-recent-label');
+            if (!container || !brand || !title || !subtitle || !topSection || !topLabel || !recentLabel) return;
+
+            const configuredTitle = urlParams.get('title');
+            brand.textContent = configuredTitle && configuredTitle.toLowerCase() !== 'leaderboard'
+                ? configuredTitle
+                : 'Supporter Showcase';
+            title.textContent = config.title;
+            subtitle.textContent = config.subtitle;
+            topLabel.textContent = config.topLabel;
+            recentLabel.textContent = config.recentLabel;
+            topSection.classList.toggle('is-hidden', supporterCategory === 'followers');
+
+            document.querySelectorAll('.supporter-category-button').forEach(function (button) {
+                const active = button.getAttribute('data-supporter-category') === supporterCategory;
+                button.classList.toggle('is-active', active);
+                button.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+
+            const topUsers = supporterCategory === 'followers' ? [] : renderSupporterTopCards(supporterCategory, config);
+            const recent = renderSupporterRecentActivities(supporterCategory, config);
+            if (hideEmpty && !topUsers.length && !recent.length) {
+                container.classList.remove('visible');
+            } else {
+                container.classList.add('visible');
+            }
+        }
+
+        function applySupporterCategory(categoryName) {
+            const nextIndex = SUPPORTER_CATEGORY_ORDER.indexOf(categoryName);
+            if (layout !== 'supporters' || nextIndex < 0) return;
+            supporterCategoryIndex = nextIndex;
+            supporterCategory = SUPPORTER_CATEGORY_ORDER[nextIndex];
+            document.body.setAttribute('data-supporter-category', supporterCategory);
+            renderSupporterShowcase();
+        }
+
+        function setSupporterCategory(categoryName, animate) {
+            if (layout !== 'supporters' || SUPPORTER_CATEGORY_ORDER.indexOf(categoryName) < 0) return;
+            const main = document.getElementById('supporter-showcase-main');
+            if (!animate || !main || categoryName === supporterCategory) {
+                applySupporterCategory(categoryName);
+                return;
+            }
+
+            if (supporterTransitionTimer) clearTimeout(supporterTransitionTimer);
+            main.classList.add('is-switching');
+            supporterTransitionTimer = setTimeout(function () {
+                applySupporterCategory(categoryName);
+                main.classList.remove('is-switching');
+                supporterTransitionTimer = null;
+            }, 220);
+        }
+
+        function restartSupporterRotation() {
+            if (supporterRotationTimer) clearInterval(supporterRotationTimer);
+            if (layout !== 'supporters') return;
+            supporterRotationTimer = setInterval(function () {
+                const nextIndex = (supporterCategoryIndex + 1) % SUPPORTER_CATEGORY_ORDER.length;
+                setSupporterCategory(SUPPORTER_CATEGORY_ORDER[nextIndex], true);
+            }, Math.max(3000, rotateInterval));
+        }
+
+        function loadSupporterDemoData() {
+            const now = Date.now();
+            const demoEvents = [
+                { id: 'showcase-d1', chatname: 'Maya Chen', type: 'youtube', chatimg: './media/user1.jpg', event: 'superchat', hasDonation: '$125.00', donoValue: 125, timestamp: now - 420000 },
+                { id: 'showcase-d2', chatname: 'Kai North', type: 'twitch', chatimg: './media/user2.jpg', event: 'donation', hasDonation: '$48.50', donoValue: 48.5, timestamp: now - 310000 },
+                { id: 'showcase-d3', chatname: 'Jamie Vale', type: 'kick', chatimg: './media/user3.jpg', event: 'donation', hasDonation: '$36.00', donoValue: 36, timestamp: now - 230000 },
+                { id: 'showcase-d4', chatname: 'Nina Park', type: 'tiktok', chatimg: './media/user5.jpg', event: 'gift', hasDonation: '1,200 Coins', donoValue: 12, timestamp: now - 150000 },
+                { id: 'showcase-d5', chatname: 'Maya Chen', type: 'youtube', chatimg: './media/user1.jpg', event: 'supersticker', hasDonation: '$25.00', donoValue: 25, timestamp: now - 45000 },
+
+                { id: 'showcase-s1', chatname: 'Riley Hart', type: 'twitch', chatimg: './media/user2.jpg', event: 'subscription_gift', total: 12, timestamp: now - 390000 },
+                { id: 'showcase-s2', chatname: 'Mina Sol', type: 'youtube', chatimg: './media/user3.jpg', event: 'giftpurchase', membership: 'gift_giver', subtitle: '8 memberships', timestamp: now - 320000 },
+                { id: 'showcase-s3', chatname: 'Dev Cole', type: 'kick', chatimg: './media/user5.jpg', event: 'subscription_gift', meta: { totalGifted: 5 }, timestamp: now - 260000 },
+                { id: 'showcase-s4', chatname: 'Zoe Lane', type: 'twitch', chatimg: './media/user1.jpg', event: 'new_subscriber', membership: 'Tier 1', timestamp: now - 190000 },
+                { id: 'showcase-s5', chatname: 'Eli Brooks', type: 'youtube', chatimg: './media/user2.jpg', event: 'sponsorship', membership: 'Member', timestamp: now - 115000 },
+                { id: 'showcase-s6', chatname: 'Marco Reed', type: 'kick', chatimg: './media/user3.jpg', event: 'resub', membership: 'Subscriber', meta: { cumulativeMonths: 8 }, timestamp: now - 55000 },
+
+                { id: 'showcase-f1', chatname: 'Olivia Stone', type: 'twitch', chatimg: './media/user1.jpg', event: 'new_follower', timestamp: now - 300000 },
+                { id: 'showcase-f2', chatname: 'Noah Kim', type: 'youtube', chatimg: './media/user2.jpg', event: 'new_follower', timestamp: now - 230000 },
+                { id: 'showcase-f3', chatname: 'Ari Lopez', type: 'kick', chatimg: './media/user3.jpg', event: 'new_follower', timestamp: now - 160000 },
+                { id: 'showcase-f4', chatname: 'Sam Rivera', type: 'tiktok', chatimg: './media/user5.jpg', event: 'followed', timestamp: now - 90000 },
+                { id: 'showcase-f5', chatname: 'Taylor Reed', type: 'facebook', chatimg: './media/user1.jpg', event: 'new_follower', timestamp: now - 25000 }
+            ];
+
+            demoEvents.forEach(function (eventData) {
+                processData(eventData);
+            });
+        }
+
         // Persistence functions
         function getStorageKey() {
             // Create a unique key based on session and ranking type
             const session = urlParams.get('session') || 'default';
+            if (layout === 'supporters') {
+                return `leaderboard_${session}_supporters`;
+            }
             return `leaderboard_${session}_${rankingType}`;
         }
         
@@ -1564,6 +2519,7 @@
                         weeklyGifts: user.weeklyGifts,
                         dailyGiftValue: user.dailyGiftValue,
                         weeklyGiftValue: user.weeklyGiftValue,
+                        subscriptionGiftsGiven: layout === 'supporters' ? user.subscriptionGiftsGiven : undefined,
                         loyaltyPoints: user.loyaltyPoints,
                         loyaltySpent: user.loyaltySpent,
                         loyaltyAvailable: user.loyaltyAvailable,
@@ -1574,9 +2530,11 @@
                         lastDailyReset: user.lastDailyReset,
                         lastWeeklyReset: user.lastWeeklyReset,
                         lastGiftTime: user.lastGiftTime,
-                        lastDonationTime: user.lastDonationTime
+                        lastDonationTime: user.lastDonationTime,
+                        lastSubscriptionTime: layout === 'supporters' ? user.lastSubscriptionTime : undefined
                     })),
-                    lastResetTime
+                    lastResetTime,
+                    supporterActivities: layout === 'supporters' ? supporterActivities : undefined
                 };
                 
                 localStorage.setItem(getStorageKey(), JSON.stringify(dataToSave));
@@ -1603,7 +2561,8 @@
                 
                 // Restore users
                 users.clear();
-                data.users.forEach(userData => {
+                const storedUsers = Array.isArray(data.users) ? data.users : [];
+                storedUsers.forEach(userData => {
                     if (userData.isBot) {
                         return;
                     }
@@ -1615,6 +2574,17 @@
                 // Restore reset time
                 if (data.lastResetTime) {
                     lastResetTime = data.lastResetTime;
+                }
+
+                if (layout === 'supporters' && data.supporterActivities && typeof data.supporterActivities === 'object') {
+                    SUPPORTER_CATEGORY_ORDER.forEach(function (categoryName) {
+                        const storedActivities = data.supporterActivities[categoryName];
+                        supporterActivities[categoryName] = Array.isArray(storedActivities)
+                            ? storedActivities.filter(function (activity) {
+                                return activity && typeof activity === 'object' && activity.name;
+                            }).slice(0, supporterHistoryLimit)
+                            : [];
+                    });
                 }
                 
                 return true;
@@ -1700,6 +2670,7 @@
                 
                 if (hoursSinceReset >= resetInterval) {
                     users.clear();
+                    clearSupporterActivities();
                     lastResetTime = now;
                     if (persistData) {
                         localStorage.removeItem(getStorageKey());
@@ -1731,6 +2702,7 @@
 
         function resetLeaderboardData() {
             users.clear();
+            clearSupporterActivities();
             lastResetTime = Date.now();
             lastActivityTime = lastResetTime;
 
@@ -1921,8 +2893,10 @@
             // Only positive hasDonation/donation values count as donations.
             const donationAmount = getDonationAmount(data);
             const isGiftEvent = normalizedEvent && GIFT_EVENT_TYPES.has(normalizedEvent);
+            const isSupporterDonation = donationAmount > 0 && !SUBSCRIPTION_ACTIVITY_EVENT_TYPES.has(normalizedEvent);
 
-            if (donationAmount > 0 && !isGiftEvent && (showDonations || layout === 'topbar')) {
+            if ((donationAmount > 0 && !isGiftEvent && (showDonations || layout === 'topbar')) ||
+                (layout === 'supporters' && isSupporterDonation)) {
                 try {
                     user.donations += donationAmount;
                     user.dailyDonations += donationAmount;
@@ -1933,12 +2907,18 @@
                 }
             }
 
+            trackSupporterActivity(data, user, normalizedEvent, donationAmount, isSupporterDonation);
+
             updateLeaderboard();
             handleAutoHide();
             saveToLocalStorage();
         }
 
         function updateLeaderboard() {
+            if (layout === 'supporters') {
+                renderSupporterShowcase();
+                return;
+            }
             let sortedUsers = Array.from(users.values()).filter(user => !user.isBot);
             
             // Filter and sort based on category
@@ -2478,7 +3458,26 @@
         if (hideEmpty && users.size === 0) {
             document.getElementById('leaderboard-container').classList.remove('visible');
         }
-        
+
+        if (layout === 'supporters') {
+            document.querySelectorAll('.supporter-category-button').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    setSupporterCategory(button.getAttribute('data-supporter-category'), true);
+                    restartSupporterRotation();
+                    button.blur();
+                });
+            });
+
+            if (users.size === 0 && urlParams.has('demo')) {
+                loadSupporterDemoData();
+            } else {
+                renderSupporterShowcase();
+            }
+
+            restartSupporterRotation();
+            supporterClockTimer = setInterval(renderSupporterShowcase, 30000);
+        }
+
         // For ticker mode, ensure animation starts immediately if we have data
         if (layout === 'topbar' && tickerMode) {
             // Force a reflow to ensure animation starts
