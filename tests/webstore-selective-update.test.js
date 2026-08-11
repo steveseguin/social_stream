@@ -11,11 +11,12 @@ const backgroundSource = read("background.js");
 const serviceWorkerSource = read("service_worker.js");
 const spotifySource = read("spotify.js");
 const spotifyHtml = read("spotify.html");
+const vpzoneWebsocketSource = read("sources/websocket/vpzone.js");
 const settingsDefinitions = read("shared/config/settingsDefinitions.js");
 const settingsKeyIndex = read("docs/agents/13-reference/settings-key-index.md");
 const manifest = JSON.parse(read("manifest.json"));
 
-assert.equal(manifest.version, "3.50.6");
+assert.equal(manifest.version, "3.50.7");
 assert.deepEqual(manifest.permissions, [
   "notifications",
   "storage",
@@ -29,6 +30,9 @@ assert.ok(spotifySource.includes("chrome.identity.launchWebAuthFlow"), "rebased 
 assert.ok(spotifySource.includes("chrome.identity.getRedirectURL('spotify')"), "Spotify OAuth no longer uses the extension callback");
 assert.ok(serviceWorkerSource.includes("if (backgroundPageTabIdLoaded)"), "Spotify duplicate-auth guard is missing");
 assert.ok(spotifyHtml.includes("https://cppibjhfemifednoimlblfcmjgfhfjeg.chromiumapp.org/spotify"), "Web Store Spotify callback instructions are missing");
+
+const vpzoneUsernameFirstId = "data.userid = ev.actorUsername || ev.username || (ev.actorUserId != null ? String(ev.actorUserId) : (ev.userId != null ? String(ev.userId) : \"\"));";
+assert.equal(vpzoneWebsocketSource.split(vpzoneUsernameFirstId).length - 1, 2, "VPZone websocket events no longer prefer usernames for user matching");
 
 assert.ok(!popupSource.includes("function preparePopupSearchIndex"), "crashing popup search prebuild returned");
 assert.ok(!popupSource.includes("setTimeout(preparePopupSearchIndex"), "popup search still schedules the crashing prebuild");

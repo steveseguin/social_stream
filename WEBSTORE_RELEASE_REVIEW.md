@@ -479,3 +479,35 @@ source, and one overlay URL before upload.
 
 Release status: artifact checks are complete. A manual live-site capture test
 in a clean Chrome profile remains recommended before Web Store upload.
+
+### 2026-08-10 Selective 3.50.7 Update
+
+- Reviewed the local `beta` checkout read-only, including its two uncommitted
+  files; no beta files, refs, or working-tree state were changed.
+- Synced only the independent VPZone websocket fix that prefers usernames over
+  numeric actor IDs for user matching. Deferred the unrelated French strings
+  for beta-only features that are not packaged in this conservative branch.
+- Bumped the Web Store package version from `3.50.6` to `3.50.7`.
+- Permissions and host access are unchanged.
+- Built conservative upload artifact:
+  `C:\Users\steve\Code\webstore\social-stream-ninja-chrome-web-store-3.50.7-20260810-conservative-r1.zip`
+- Artifact size: `34,731,249` bytes; SHA-256:
+  `8921B0DFC0136D104F88837F0F66D4C4AB12697F515CA5CF0C2DBA2DDEFADAC1`
+- Extracted ZIP verification:
+  - manifest at ZIP root with version `3.50.7`
+  - `771` files, all byte-matching the current branch package set
+  - only `manifest.json` and `sources/websocket/vpzone.js` differ from the
+    verified `3.50.6` artifact
+  - all `19` packaged JSON files parse successfully
+- Focused checks passed:
+  - `git diff --check`
+  - `node --check sources/websocket/vpzone.js`
+  - `node tests/webstore-selective-update.test.js`
+  - `npm run lint:js:background:strict`
+  - `npm run test:xss:sanitizer`
+  - `node tests/eventflow-customjs.test.js`
+  - `node tests/blaze-source.test.js`
+  - real Chromium extension smoke against the extracted `3.50.7` package
+
+Release status: artifact checks are complete. A manual live VPZone capture test
+remains recommended before Web Store upload.

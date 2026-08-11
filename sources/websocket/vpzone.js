@@ -1070,7 +1070,7 @@
 		data.chatbadges = buildBadges(ev);
 		data.membership = ev.metadata && ev.metadata.actorRank ? nice(ev.metadata.actorRank) : (isSubscriber ? "Subscriber" : "");
 		data.nameColor = ev.actorNameColor || ev.nameColor || ev.color || "#c084fc";
-		data.userid = ev.actorUserId != null ? String(ev.actorUserId) : (ev.userId != null ? String(ev.userId) : (ev.actorUsername || ev.username || ""));
+		data.userid = ev.actorUsername || ev.username || (ev.actorUserId != null ? String(ev.actorUserId) : (ev.userId != null ? String(ev.userId) : ""));
 		if (isModerator) data.mod = true;
 		if (isVip) data.vip = true;
 		if (isSubscriber) data.member = true;
@@ -1103,7 +1103,7 @@
 		data.chatbadges = buildBadges(ev);
 		data.membership = ev.metadata && ev.metadata.actorRank ? nice(ev.metadata.actorRank) : (isSubscriber ? "Subscriber" : "");
 		data.nameColor = ev.actorNameColor || ev.nameColor || ev.color || "#c084fc";
-		data.userid = ev.actorUserId != null ? String(ev.actorUserId) : (ev.userId != null ? String(ev.userId) : (ev.actorUsername || ev.username || ""));
+		data.userid = ev.actorUsername || ev.username || (ev.actorUserId != null ? String(ev.actorUserId) : (ev.userId != null ? String(ev.userId) : ""));
 		if (isModerator) data.mod = true;
 		if (isVip) data.vip = true;
 		if (isSubscriber) data.member = true;
