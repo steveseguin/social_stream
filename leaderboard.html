@@ -1547,7 +1547,7 @@
             }
 
             const text = [data && data.subtitle, data && data.chatmessage].filter(Boolean).join(' ');
-            const match = text.match(/(?:gifted\s+)?([0-9][0-9,]*)\s*(?:subs?|subscriptions?|memberships?)/i);
+            const match = text.match(/(?:gifted\s+)?([0-9][0-9,]*)\s*(?:(?:subs?|subscriptions?|memberships?)\b|x\s+\S)/i);
             if (match) {
                 const parsed = parseInt(match[1].replace(/,/g, ''), 10);
                 if (!isNaN(parsed) && parsed > 0) return parsed;
@@ -2098,10 +2098,16 @@
         }
 
         function getSupporterInitials(name) {
-            const parts = String(name || '?').trim().split(/\s+/).filter(Boolean);
+            const parts = decodeSupporterText(name || '?').trim().split(/\s+/).filter(Boolean);
             if (!parts.length) return '?';
             if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
             return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        }
+
+        function decodeSupporterText(value) {
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = String(value === undefined || value === null ? '' : value);
+            return textarea.value;
         }
 
         function createSupporterAvatar(name, avatarUrl) {
@@ -2205,8 +2211,14 @@
             return data && data.membership ? 'Subscribed · ' + String(data.membership) : 'Subscribed';
         }
 
-        function addSupporterActivity(categoryName, data, detail) {
+        function addSupporterActivity(categoryName, data, detail, options) {
             if (layout !== 'supporters' || !supporterActivities[categoryName]) return;
+            options = options || {};
+            if (options.key) {
+                supporterActivities[categoryName] = supporterActivities[categoryName].filter(function (activity) {
+                    return !activity || activity.key !== options.key;
+                });
+            }
             const activity = {
                 name: String(data.chatname || 'Anonymous'),
                 type: String(data.type || ''),
@@ -2214,6 +2226,9 @@
                 detail: String(detail || ''),
                 timestamp: getSupporterEventTimestamp(data)
             };
+            if (options.key) activity.key = options.key;
+            if (options.streakCount) activity.streakCount = options.streakCount;
+            if (options.streakDonationAmount) activity.streakDonationAmount = options.streakDonationAmount;
             supporterActivities[categoryName].push(activity);
             supporterActivities[categoryName].sort(function (a, b) {
                 return b.timestamp - a.timestamp;
@@ -2223,11 +2238,45 @@
             }
         }
 
-        function trackSupporterActivity(data, user, normalizedEvent, donationAmount, isSupporterDonation) {
+        function getSupporterDonationUpdate(data, donationAmount) {
+            const meta = data && data.meta && typeof data.meta === 'object' ? data.meta : {};
+            const streakId = meta.tiktokGiftStreakId;
+            const streakCount = parseInt(meta.tiktokGiftCount, 10);
+            if (!streakId || isNaN(streakCount) || streakCount < 1) {
+                return {
+                    amountToAdd: donationAmount,
+                    activityAmount: donationAmount,
+                    shouldUpdateActivity: true,
+                    activityOptions: null
+                };
+            }
+
+            const activityKey = 'tiktok-gift-streak:' + String(streakId);
+            const existing = supporterActivities.donations.find(function (activity) {
+                return activity && activity.key === activityKey;
+            });
+            const previousCount = existing ? parseInt(existing.streakCount, 10) || 0 : 0;
+            const previousAmount = existing ? Number(existing.streakDonationAmount) || 0 : 0;
+            const nextCount = Math.max(previousCount, streakCount);
+            const nextAmount = Math.max(previousAmount, donationAmount);
+
+            return {
+                amountToAdd: streakCount > previousCount ? Math.max(0, donationAmount - previousAmount) : 0,
+                activityAmount: nextAmount,
+                shouldUpdateActivity: !existing || streakCount > previousCount,
+                activityOptions: {
+                    key: activityKey,
+                    streakCount: nextCount,
+                    streakDonationAmount: nextAmount
+                }
+            };
+        }
+
+        function trackSupporterActivity(data, user, normalizedEvent, donationAmount, isSupporterDonation, donationUpdate) {
             if (layout !== 'supporters') return;
 
-            if (isSupporterDonation) {
-                addSupporterActivity('donations', data, 'Donated ' + getSupporterDonationText(data, donationAmount));
+            if (isSupporterDonation && donationUpdate.shouldUpdateActivity) {
+                addSupporterActivity('donations', data, 'Donated ' + getSupporterDonationText(data, donationUpdate.activityAmount), donationUpdate.activityOptions);
             }
 
             if (SUBSCRIPTION_ACTIVITY_EVENT_TYPES.has(normalizedEvent)) {
@@ -2312,8 +2361,9 @@
 
                 const name = document.createElement('div');
                 name.className = 'supporter-top-name';
-                name.textContent = user.name;
-                name.title = user.name;
+                const displayName = decodeSupporterText(user.name);
+                name.textContent = displayName;
+                name.title = displayName;
                 card.appendChild(name);
 
                 const value = document.createElement('div');
@@ -2353,8 +2403,9 @@
                 nameLine.className = 'supporter-recent-name-line';
                 const name = document.createElement('span');
                 name.className = 'supporter-recent-name';
-                name.textContent = activity.name;
-                name.title = activity.name;
+                const displayName = decodeSupporterText(activity.name);
+                name.textContent = displayName;
+                name.title = displayName;
                 nameLine.appendChild(name);
                 const platformIcon = createSupporterPlatformIcon(activity.type);
                 if (platformIcon) nameLine.appendChild(platformIcon);
@@ -2894,20 +2945,24 @@
             const donationAmount = getDonationAmount(data);
             const isGiftEvent = normalizedEvent && GIFT_EVENT_TYPES.has(normalizedEvent);
             const isSupporterDonation = donationAmount > 0 && !SUBSCRIPTION_ACTIVITY_EVENT_TYPES.has(normalizedEvent);
+            const supporterDonationUpdate = layout === 'supporters'
+                ? getSupporterDonationUpdate(data, donationAmount)
+                : null;
 
             if ((donationAmount > 0 && !isGiftEvent && (showDonations || layout === 'topbar')) ||
                 (layout === 'supporters' && isSupporterDonation)) {
                 try {
-                    user.donations += donationAmount;
-                    user.dailyDonations += donationAmount;
-                    user.weeklyDonations += donationAmount;
+                    const amountToAdd = supporterDonationUpdate ? supporterDonationUpdate.amountToAdd : donationAmount;
+                    user.donations += amountToAdd;
+                    user.dailyDonations += amountToAdd;
+                    user.weeklyDonations += amountToAdd;
                     user.lastDonationTime = Date.now();
                 } catch (error) {
                     console.error(`Error processing donation:`, error);
                 }
             }
 
-            trackSupporterActivity(data, user, normalizedEvent, donationAmount, isSupporterDonation);
+            trackSupporterActivity(data, user, normalizedEvent, donationAmount, isSupporterDonation, supporterDonationUpdate);
 
             updateLeaderboard();
             handleAutoHide();

@@ -130,12 +130,14 @@ async function testSupporterShowcase(baseUrl, browser) {
 			[
 				{ id: "d1", chatname: "Alex One", type: "youtube", chatimg: "./media/user1.jpg", event: "donation", hasDonation: "$20.00", donoValue: 20, timestamp: now - 5000 },
 				{ id: "d2", chatname: "Blair Two", type: "twitch", chatimg: "./media/user2.jpg", event: "donation", hasDonation: "$50.00", donoValue: 50, timestamp: now - 4000 },
-				{ id: "d3", chatname: "Casey Three", type: "kick", chatimg: "./media/user3.jpg", event: "donation", hasDonation: "$30.00", donoValue: 30, timestamp: now - 3000 },
-				{ id: "d4", chatname: "Drew Four", type: "tiktok", chatimg: "./media/user5.jpg", event: "gift", hasDonation: "$10.00", donoValue: 10, timestamp: now - 2000 },
+				{ id: "d3", chatname: "Casey &amp; Three", type: "kick", chatimg: "./media/user3.jpg", event: "donation", hasDonation: "$30.00", donoValue: 30, timestamp: now - 3000 },
+				{ id: "d4a", chatname: "Drew Four", type: "tiktok", chatimg: "./media/user5.jpg", event: "gift", hasDonation: "1 coin", meta: { tiktokGiftStreakId: "rose-streak", tiktokGiftCount: 1 }, timestamp: now - 2000 },
+				{ id: "d4b", chatname: "Drew Four", type: "tiktok", chatimg: "./media/user5.jpg", event: "gift", hasDonation: "2 coins", meta: { tiktokGiftStreakId: "rose-streak", tiktokGiftCount: 2 }, timestamp: now - 1900 },
+				{ id: "d4c", chatname: "Drew Four", type: "tiktok", chatimg: "./media/user5.jpg", event: "gift", hasDonation: "3 coins", meta: { tiktokGiftStreakId: "rose-streak", tiktokGiftCount: 3 }, timestamp: now - 1800 },
 				{ id: "d5", chatname: "Alex One", type: "youtube", chatimg: "./media/user1.jpg", event: "superchat", hasDonation: "$40.00", donoValue: 40, timestamp: now - 1000 },
 
 				{ id: "s1", chatname: "Gift Leader", type: "twitch", chatimg: "./media/user1.jpg", event: "subscription_gift", total: 10, timestamp: now - 5000 },
-				{ id: "s2", chatname: "Member Maker", type: "youtube", chatimg: "./media/user2.jpg", event: "giftpurchase", membership: "gift_giver", subtitle: "7 memberships", timestamp: now - 4000 },
+				{ id: "s2", chatname: "Member Maker", type: "youtube", chatimg: "./media/user2.jpg", event: "giftpurchase", membership: "gift_giver", subtitle: "7 x Gold", timestamp: now - 4000 },
 				{ id: "s3", chatname: "Sub Supporter", type: "kick", chatimg: "./media/user3.jpg", event: "subscription_gift", meta: { totalGifted: 4 }, timestamp: now - 3000 },
 				{ id: "s4", chatname: "Fresh Member", type: "twitch", chatimg: "./media/user5.jpg", event: "new_subscriber", membership: "Tier 1", timestamp: now - 2000 },
 				{ id: "s5", chatname: "Returning Member", type: "kick", chatimg: "./media/user1.jpg", event: "resub", meta: { cumulativeMonths: 8 }, timestamp: now - 1000 },
@@ -144,32 +146,40 @@ async function testSupporterShowcase(baseUrl, browser) {
 				{ id: "f2", chatname: "Follower Two", type: "twitch", chatimg: "./media/user2.jpg", event: "new_follower", timestamp: now - 4000 },
 				{ id: "f3", chatname: "Follower Three", type: "kick", chatimg: "./media/user3.jpg", event: "new_follower", timestamp: now - 3000 },
 				{ id: "f4", chatname: "Follower Four", type: "tiktok", chatimg: "./media/user5.jpg", event: "followed", timestamp: now - 2000 },
-				{ id: "f5", chatname: "<img src=x onerror=window.__unsafe=true>", type: "facebook", event: "new_follower", timestamp: now - 1000 }
+				{ id: "f5", chatname: "&lt;img src=x onerror=window.__unsafe=true&gt;", type: "facebook", event: "new_follower", timestamp: now - 1000 }
 			].forEach(send);
 		});
 
-		const donationState = await page.evaluate(() => ({
-			category: document.body.getAttribute("data-supporter-category"),
-			title: document.getElementById("supporter-category-title").textContent,
-			topNames: Array.from(document.querySelectorAll(".supporter-top-name")).map(element => element.textContent),
-			topValues: Array.from(document.querySelectorAll(".supporter-top-value")).map(element => element.textContent),
-			recentCount: document.querySelectorAll(".supporter-recent-item").length,
-			recentNames: Array.from(document.querySelectorAll(".supporter-recent-name")).map(element => element.textContent),
-			showcaseDisplay: getComputedStyle(document.getElementById("supporter-showcase")).display,
-			legacyListDisplay: getComputedStyle(document.getElementById("leaderboard-content")).display,
-			overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-			storageKeys: Object.keys(localStorage).sort()
-		}));
+		const donationState = await page.evaluate(() => {
+			const stored = JSON.parse(localStorage.getItem("leaderboard_supporter-showcase-contract_supporters"));
+			const drew = stored.users.find(user => user.name === "Drew Four");
+			return {
+				category: document.body.getAttribute("data-supporter-category"),
+				title: document.getElementById("supporter-category-title").textContent,
+				topNames: Array.from(document.querySelectorAll(".supporter-top-name")).map(element => element.textContent),
+				topValues: Array.from(document.querySelectorAll(".supporter-top-value")).map(element => element.textContent),
+				recentCount: document.querySelectorAll(".supporter-recent-item").length,
+				recentNames: Array.from(document.querySelectorAll(".supporter-recent-name")).map(element => element.textContent),
+				showcaseDisplay: getComputedStyle(document.getElementById("supporter-showcase")).display,
+				legacyListDisplay: getComputedStyle(document.getElementById("leaderboard-content")).display,
+				overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+				storageKeys: Object.keys(localStorage).sort(),
+				drewDonations: drew && drew.donations,
+				drewRecentCount: stored.supporterActivities.donations.filter(activity => activity.name === "Drew Four").length
+			};
+		});
 		assert.strictEqual(donationState.category, "donations");
 		assert.strictEqual(donationState.title, "Donations");
-		assert.deepStrictEqual(donationState.topNames, ["Alex One", "Blair Two", "Casey Three"]);
+		assert.deepStrictEqual(donationState.topNames, ["Alex One", "Blair Two", "Casey & Three"]);
 		assert.deepStrictEqual(donationState.topValues, ["$60.00", "$50.00", "$30.00"]);
 		assert.strictEqual(donationState.recentCount, 4);
-		assert.deepStrictEqual(donationState.recentNames, ["Alex One", "Drew Four", "Casey Three", "Blair Two"]);
+		assert.deepStrictEqual(donationState.recentNames, ["Alex One", "Drew Four", "Casey & Three", "Blair Two"]);
 		assert.notStrictEqual(donationState.showcaseDisplay, "none");
 		assert.strictEqual(donationState.legacyListDisplay, "none");
 		assert(donationState.overflow <= 1, "Supporter layout overflowed horizontally");
 		assert.deepStrictEqual(donationState.storageKeys, ["leaderboard_supporter-showcase-contract_supporters"]);
+		assert.strictEqual(donationState.drewDonations, 0.03);
+		assert.strictEqual(donationState.drewRecentCount, 1);
 
 		await page.evaluate(() => window.setSupporterCategory("subscriptions", false));
 		const subscriptionState = await page.evaluate(() => ({
@@ -205,7 +215,7 @@ async function testSupporterShowcase(baseUrl, browser) {
 			topNames: Array.from(document.querySelectorAll(".supporter-top-name")).map(element => element.textContent),
 			recentCount: document.querySelectorAll(".supporter-recent-item").length
 		}));
-		assert.deepStrictEqual(restored.topNames, ["Alex One", "Blair Two", "Casey Three"]);
+		assert.deepStrictEqual(restored.topNames, ["Alex One", "Blair Two", "Casey & Three"]);
 		assert.strictEqual(restored.recentCount, 4);
 		assert.deepStrictEqual(harness.errors, [], "Supporter layout browser errors: " + harness.errors.join("; "));
 	} finally {
