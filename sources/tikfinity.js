@@ -14,6 +14,11 @@
 	var RECENT_MESSAGE_WINDOW_MS = 2500;
 	var MAX_RECENT_MESSAGE_KEYS = 400;
 	var recentMessageMap = new Map();
+	var trackedTikFinityGiftStreaks = new Map();
+	var TIKTOK_GIFT_STREAK_QUIET_MS = 4500;
+	var TIKTOK_GIFT_DUPLICATE_WINDOW_MS = 500;
+	var tikFinityGiftStreakSequence = 0;
+	var tikFinityGiftStreakInstanceId = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
 
 	function escapeHtml(unsafe) {
 		try {
@@ -214,6 +219,99 @@
 		return value === 1 ? "1 coin" : value.toLocaleString() + " coins";
 	}
 
+	function normalizeBooleanFlag(value) {
+		if (value === true || value === 1) {
+			return true;
+		}
+		if (typeof value === "string") {
+			value = value.toLowerCase().trim();
+			return value === "true" || value === "1" || value === "yes";
+		}
+		return false;
+	}
+
+	function normalizeGiftGroupId(value) {
+		if (value === undefined || value === null) {
+			return "";
+		}
+		value = normalizeText(String(value));
+		return value && value !== "0" ? value : "";
+	}
+
+	function getTikFinityGiftStreakIdentity(payload, data) {
+		var repeatCount = Math.max(1, parseInt(payload.repeatCount, 10) || 1);
+		var giftType = parseInt(payload.giftType, 10);
+		var groupId = normalizeGiftGroupId(payload.groupId);
+		var actorKey = normalizeText(
+			payload.uniqueId ||
+			(payload.userId !== undefined && payload.userId !== null ? String(payload.userId) : "") ||
+			(data && data.chatname) ||
+			"unknown"
+		).toLowerCase();
+		var giftKey = normalizeText(
+			payload.giftId !== undefined && payload.giftId !== null
+				? String(payload.giftId)
+				: (payload.giftName || "gift")
+		).toLowerCase();
+		var explicitlyStreakable = normalizeBooleanFlag(payload.streakable)
+			|| normalizeBooleanFlag(payload.isStreakable);
+
+		return {
+			key: actorKey + ":" + giftKey + (groupId ? ":group:" + groupId : ""),
+			quantity: repeatCount,
+			hasStableGroup: !!groupId,
+			streakable: giftType === 1 || explicitlyStreakable || repeatCount > 1 || !!groupId
+		};
+	}
+
+	function markTikFinityGiftStreak(payload, data, meta) {
+		var identity = getTikFinityGiftStreakIdentity(payload, data);
+		var now = Date.now();
+		var tracked = trackedTikFinityGiftStreaks.get(identity.key);
+
+		if (!identity.streakable && !tracked) {
+			return;
+		}
+
+		if (tracked && !identity.hasStableGroup) {
+			var isSameRender =
+				identity.quantity === tracked.quantity &&
+				(now - tracked.updatedAt) <= TIKTOK_GIFT_DUPLICATE_WINDOW_MS;
+			if (!isSameRender && identity.quantity <= tracked.quantity) {
+				if (tracked.timer) {
+					clearTimeout(tracked.timer);
+				}
+				tracked = null;
+			}
+		}
+
+		if (!tracked) {
+			tracked = {
+				id: "tikfinity-gift-" + tikFinityGiftStreakInstanceId + "-" + (++tikFinityGiftStreakSequence),
+				quantity: identity.quantity,
+				updatedAt: now,
+				timer: null
+			};
+			trackedTikFinityGiftStreaks.set(identity.key, tracked);
+		} else {
+			tracked.quantity = identity.quantity;
+			tracked.updatedAt = now;
+			if (tracked.timer) {
+				clearTimeout(tracked.timer);
+			}
+		}
+
+		tracked.timer = setTimeout(function () {
+			if (trackedTikFinityGiftStreaks.get(identity.key) === tracked) {
+				trackedTikFinityGiftStreaks.delete(identity.key);
+			}
+		}, TIKTOK_GIFT_STREAK_QUIET_MS);
+
+		meta.tiktokGiftStreakId = tracked.id;
+		meta.tiktokGiftCount = identity.quantity;
+		meta.tiktokGiftQuietMs = TIKTOK_GIFT_STREAK_QUIET_MS;
+	}
+
 	function formatChatMessageFromPayload(comment, emotes) {
 		comment = comment || "";
 		if (settings.textonlymode || !emotes || !emotes.length) {
@@ -338,11 +436,12 @@
 				meta.groupId = payload.groupId;
 			}
 			if (payload.giftType !== undefined) {
-				meta.streakable = payload.giftType === 1;
+				meta.streakable = parseInt(payload.giftType, 10) === 1;
 			}
 			if (payload.repeatEnd !== undefined) {
-				meta.repeatEnd = !!payload.repeatEnd;
+				meta.repeatEnd = normalizeBooleanFlag(payload.repeatEnd);
 			}
+			markTikFinityGiftStreak(payload, data, meta);
 		} else if (rawType === "follow") {
 			data.event = "followed";
 			if (shouldSkipEvent(data.event)) {
@@ -439,5 +538,11 @@
 
 	window.addEventListener("beforeunload", function () {
 		window.removeEventListener("message", handleWindowMessage, false);
+		trackedTikFinityGiftStreaks.forEach(function (tracked) {
+			if (tracked && tracked.timer) {
+				clearTimeout(tracked.timer);
+			}
+		});
+		trackedTikFinityGiftStreaks.clear();
 	});
 })();

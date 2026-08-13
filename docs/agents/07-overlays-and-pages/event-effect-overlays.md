@@ -22,7 +22,7 @@ Use this page when a user asks about the event dashboard, hype/viewer counter, c
 | Viewer/chatter count by source | `hype.html` | `https://socialstream.ninja/hype.html?session=SESSION_ID` | Yes | Payload contains `hype` or `viewer_updates`; source/app sends viewer counts. |
 | Confetti when waitlist draw winners are selected | `confetti.html` | `https://socialstream.ninja/confetti.html?session=SESSION_ID` | Yes | Waitlist draw payload includes `drawmode` and winners. |
 | Word cloud from chat | `wordcloud.html` | `https://socialstream.ninja/wordcloud.html?session=SESSION_ID` | Yes | Incoming payload has `chatmessage`; default mode only counts single-word messages. |
-| Top chatters, donors, gifters, contributors, or loyalty points | `leaderboard.html` | `https://socialstream.ninja/leaderboard.html?session=SESSION_ID` | Yes | Incoming payload has `chatname` and `type`, or a `points_leaderboard` snapshot. |
+| Top chatters, donors, gifters, contributors, loyalty points, or rotating supporter activity | `leaderboard.html` | `https://socialstream.ninja/leaderboard.html?session=SESSION_ID` | Yes | Incoming payload has `chatname` and `type`, or a `points_leaderboard` snapshot. Add `&layout=supporters` for the opt-in Supporter Showcase. |
 
 ## Shared Transport Pattern
 
@@ -179,7 +179,7 @@ Support checks:
 
 ## `leaderboard.html`
 
-`leaderboard.html` builds a live leaderboard from chat and event payloads. It can rank by combined score, gifts, donations, engagement/messages, or loyalty point snapshots.
+`leaderboard.html` builds a live leaderboard from chat and event payloads. It can rank by combined score, gifts, donations, engagement/messages, or loyalty point snapshots. Its opt-in `layout=supporters` mode presents a rotating supporter activity box without changing the existing layouts.
 
 Important behavior:
 
@@ -194,7 +194,8 @@ Important behavior:
 - Tracks message count, donation amount, gifts, gift values, bits/coins, membership status, mod/VIP/verified state, and event count.
 - Donation amount comes from `hasDonation`, `donation`, `donoValue`, and `currency.js` conversion where available.
 - Gift quantity can come from `giftCount`, `giftcount`, `total`, `count`, `quantity`, `giftQuantity`, or `gifts`.
-- `persistdata` stores state in localStorage using `leaderboard_${session}_${rankingType}`.
+- `persistdata` stores normal-layout state in localStorage using `leaderboard_${session}_${rankingType}`.
+- `layout=supporters` uses the separate `leaderboard_${session}_supporters` key so its history cannot overwrite an existing leaderboard.
 - Persisted data older than seven days is discarded.
 - `reset` is an interval in hours; when reached, it clears users and removes persisted data for that storage key.
 
@@ -209,6 +210,16 @@ URL parameters observed:
 - Display: `showavatar`, `avatars`, `showsource`, `hideempty`, `autohide`, `hidedelay`, `animated`, `updateinterval`.
 - Persistence/reset: `persistdata`, `reset`.
 - Test/demo: `demo`.
+
+Supporter Showcase notes:
+
+- Enable it with `layout=supporters`; the existing `corner`, `bar`, `topbar`, and `full` paths remain unchanged.
+- It rotates through donations, subscriptions, and followers using `rotateinterval` and `transitionstyle`.
+- Donations show the top three cumulative donors plus the latest donation rows, including non-subscription virtual gifts that carry `hasDonation`/`donation` value data.
+- Subscriptions show the top three gift-sub givers plus recent new subs, resubs, memberships, gifted subs, and membership milestones.
+- Followers show recent follower rows only because followers do not have a meaningful cross-platform rank.
+- `maxentries` controls recent-row count (default `5`, maximum `12` in this layout); `showavatar`, `showsource`, `compact`, and `persistdata` are supported.
+- `supportercategory=donations|subscriptions|followers` chooses the initial slide; automatic rotation continues afterward.
 
 Ranking/event notes:
 

@@ -3445,6 +3445,11 @@
 			var reachedOldest = false;
 			var oldestLoadedTimestamp = null;
 			var oldestLoadedDbId = null;
+			var historyVisibleRowsLoaded = 0;
+			var historyPageCount = 0;
+			var historyVisibleLoadTarget = 10;
+			var historyMaxPageCount = 5;
+			var historySuppressScrollUntil = 0;
 			var missedLiveCount = 0;
 			var historyMissedLiveBuffer = [];
 			var historyFlushTimer = null;
@@ -5966,16 +5971,20 @@
 					var distanceFromBottom = historyScrollContainer.scrollHeight - (historyScrollContainer.scrollTop + historyScrollContainer.clientHeight);
 					return distanceFromBottom <= historyLiveEdgeThreshold;
 				};
-				var historyTopIntent = function(forceEnter) {
+				var historyLastScrollTop = historyScrollContainer ? historyScrollContainer.scrollTop : 0;
+				var historyTopIntent = function(forceEnter, scrollDirection) {
 					if (!historyScrollContainer) {
 						return;
 					}
 					if (historyBrowsing) {
-						if (isNearHistoryLiveEdge()) {
+						if (isLoadingHistory || Date.now() < historySuppressScrollUntil) {
+							return;
+						}
+						if (scrollDirection > 0 && isNearHistoryLiveEdge()) {
 							returnToLive();
 							return;
 						}
-						if (historyScrollContainer.scrollTop < 100 && !isLoadingHistory && !reachedOldest) {
+						if (scrollDirection < 0 && historyScrollContainer.scrollTop < 100 && !reachedOldest) {
 							loadOlderMessages();
 						}
 						return;
@@ -5988,12 +5997,14 @@
 					}
 				};
 				var onHistoryScroll = function() {
-					historyTopIntent(false);
+					var currentScrollTop = historyScrollContainer.scrollTop;
+					var scrollDirection = currentScrollTop > historyLastScrollTop ? 1 : (currentScrollTop < historyLastScrollTop ? -1 : 0);
+					historyLastScrollTop = currentScrollTop;
+					historyTopIntent(false, scrollDirection);
 				};
 				var onHistoryWheel = function(event) {
-					if (event.deltaY < 0) {
-						historyTopIntent(true);
-					}
+					var scrollDirection = event.deltaY > 0 ? 1 : (event.deltaY < 0 ? -1 : 0);
+					historyTopIntent(scrollDirection < 0, scrollDirection);
 				};
 				historyScrollContainer.addEventListener("scroll", onHistoryScroll);
 				historyScrollContainer.addEventListener("wheel", onHistoryWheel, { passive: true });
@@ -6276,6 +6287,40 @@
 				}
 
 				node.classList.remove("hidden");
+			}
+
+			function isDockMessageVisible(node) {
+				if (!node || node.classList.contains("hidden")) {
+					return false;
+				}
+				var style = window.getComputedStyle(node);
+				return style.visibility !== "hidden" && style.display !== "none";
+			}
+
+			function selectDockNodesForPruning(nodes, limit, fromBottom) {
+				var visibleNodes = [];
+				var hiddenNodes = [];
+				Array.prototype.forEach.call(nodes, function(node) {
+					if (isDockMessageVisible(node)) {
+						visibleNodes.push(node);
+					} else {
+						hiddenNodes.push(node);
+					}
+				});
+
+				var nodesToRemove = [];
+				[hiddenNodes, visibleNodes].forEach(function(group) {
+					var excess = group.length - limit;
+					if (excess <= 0) {
+						return;
+					}
+					if (fromBottom) {
+						nodesToRemove = nodesToRemove.concat(group.slice(group.length - excess));
+					} else {
+						nodesToRemove = nodesToRemove.concat(group.slice(0, excess));
+					}
+				});
+				return nodesToRemove;
 			}
 
 			var hashCode = s =>
@@ -6938,13 +6983,20 @@
 				historyBrowsing = true;
 				missedLiveCount = 0;
 				reachedOldest = false;
+				historyVisibleRowsLoaded = 0;
+				historyPageCount = 0;
 				getById("backToLive").style.display = "";
 				getById("missedCount").textContent = "0";
 				loadOlderMessages();
 			}
 
-			function loadOlderMessages() {
+			function loadOlderMessages(continueFilteredLoad) {
 				if (reversed || isLoadingHistory || reachedOldest) return;
+				if (!continueFilteredLoad) {
+					historyVisibleRowsLoaded = 0;
+					historyPageCount = 0;
+				}
+				historyPageCount += 1;
 				isLoadingHistory = true;
 				var firstNode = mainOutputWindow.firstElementChild;
 				if (firstNode && firstNode.rawContents && firstNode.rawContents.timestamp) {
@@ -6970,15 +7022,16 @@
 				});
 			}
 
+			function shouldContinueFilteredHistoryLoad(pageLength) {
+				return pageLength > 0 && historyVisibleRowsLoaded < historyVisibleLoadTarget && historyPageCount < historyMaxPageCount && !reachedOldest;
+			}
+
 			function pruneFromBottom() {
 				var nodes = document.querySelectorAll("#output>div:not(.queued)");
 				var limit = customNodeLimit || 200;
-				var excess = nodes.length - limit;
-				if (excess > 0) {
-					for (var i = nodes.length - 1; i >= nodes.length - excess; i--) {
-						nodes[i].remove();
-					}
-				}
+				selectDockNodesForPruning(nodes, limit, true).forEach(function(node) {
+					node.remove();
+				});
 			}
 
 				function returnToLive(options = {}) {
@@ -8066,6 +8119,7 @@
 					var prevScrollTop = hContainer.scrollTop;
 
 					var histMsgs = data.historyBefore;
+					var visibleRowsAdded = 0;
 					if (histMsgs.length && histMsgs[histMsgs.length - 1] && histMsgs[histMsgs.length - 1].timestamp) {
 						var oldestMsg = histMsgs[histMsgs.length - 1];
 						oldestLoadedTimestamp = oldestMsg.timestamp;
@@ -8080,16 +8134,28 @@
 							prependMode = true;
 							processData({contents: normalizedMsg});
 							prependMode = false;
+							var mountedNode = displayId ? document.querySelector(dataAttributeSelector("data-mid", displayId)) : null;
+							if (isDockMessageVisible(mountedNode)) {
+								visibleRowsAdded += 1;
+							}
 						}
 					});
+					historyVisibleRowsLoaded += visibleRowsAdded;
 
 					var newScrollHeight = hContainer.scrollHeight;
 					hContainer.scrollTop = newScrollHeight - (prevScrollHeight - prevScrollTop);
+					historySuppressScrollUntil = Date.now() + 150;
 
 					pruneFromBottom();
 
-					isLoadingHistory = false;
 					if (!data.historyBefore.length) { reachedOldest = true; }
+					isLoadingHistory = false;
+					if (shouldContinueFilteredHistoryLoad(histMsgs.length)) {
+						loadOlderMessages(true);
+					} else {
+						historyVisibleRowsLoaded = 0;
+						historyPageCount = 0;
+					}
 				} else if ("userHistory" in data) {
 					//delete messages, but also block user. remote, so we won't sync,
 					//console.log(data.userHistory);
@@ -10109,36 +10175,34 @@
 					return;
 				}
 				var nodes = document.querySelectorAll("#output>div:not(.queued)");
-				var total2Remove = 0;
+				var nodeLimit = 0;
 				if (isOBSBrowserSource && !doubleLimit) {
 					// This is an OBS browser source, so lets go light on it.
 					if (customNodeLimit) {
-						total2Remove = nodes.length - customNodeLimit;
+						nodeLimit = customNodeLimit;
 					} else if (window.innerHeight > 1600) {
-						total2Remove = nodes.length - 39;
+						nodeLimit = 39;
 					} else if (window.innerHeight > 1200) {
-						total2Remove = nodes.length - 30;
+						nodeLimit = 30;
 					} else if (window.innerHeight > 800) {
-						total2Remove = nodes.length - 22;
+						nodeLimit = 22;
 					} else if (window.innerHeight > 400) {
-						total2Remove = nodes.length - 14;
+						nodeLimit = 14;
 					} else {
-						total2Remove = nodes.length - 10;
+						nodeLimit = 10;
 					}
 				} else if (customNodeLimit) {
-					total2Remove = nodes.length - customNodeLimit;
+					nodeLimit = customNodeLimit;
 				} else if (window.innerHeight > 900) {
-					total2Remove = nodes.length - 80;
+					nodeLimit = 80;
 				} else if (window.innerHeight > 600) {
-					total2Remove = nodes.length - 70;
+					nodeLimit = 70;
 				} else {
-					total2Remove = nodes.length - 60;
+					nodeLimit = 60;
 				}
-				if (total2Remove > 0) {
-					for (var i = total2Remove - 1; i >= 0; i--) {
-						transitionOutNode(nodes[i]);
-					}
-				}
+				selectDockNodesForPruning(nodes, nodeLimit, false).forEach(function(node) {
+					transitionOutNode(node);
+				});
 			}
 
 			function animateCSS(node, animation) {
