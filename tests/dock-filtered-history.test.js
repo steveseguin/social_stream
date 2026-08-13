@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const dock = fs.readFileSync(path.resolve(__dirname, "..", "dock.html"), "utf8");
+const popup = fs.readFileSync(path.resolve(__dirname, "..", "popup.html"), "utf8");
 
 function extractFunction(source, name) {
 	const start = source.indexOf(`function ${name}(`);
@@ -52,5 +53,34 @@ assert.deepEqual(liveRemovals.map(item => item.id), ["hidden-0", "hidden-1", "do
 
 assert.match(dock, /scrollDirection > 0 && isNearHistoryLiveEdge\(\)/, "history should only return live after downward scrolling");
 assert.match(dock, /historyVisibleRowsLoaded < historyVisibleLoadTarget/, "filtered history should page until enough visible rows load");
+
+const autoQueueSource = [
+	extractFunction(dock, "shouldAutoQueueMessage"),
+	"return shouldAutoQueueMessage;"
+].join("\n");
+function createAutoQueueMatcher(autoQueueDonations, autoQueueSuperChats) {
+	return Function(
+		"autoQueueDonations",
+		"autoQueueSuperChats",
+		autoQueueSource
+	)(autoQueueDonations, autoQueueSuperChats);
+}
+
+const superChatOnly = createAutoQueueMatcher(false, true);
+assert.equal(superChatOnly({ event: "superchat", type: "youtube", hasDonation: "$5.00" }), true);
+assert.equal(superChatOnly({ event: "SUPERCHAT", type: "youtubeshorts", hasDonation: "$10.00" }), true);
+assert.equal(superChatOnly({ event: "supersticker", type: "youtube", hasDonation: "$5.00" }), false);
+assert.equal(superChatOnly({ event: "donation", type: "kick", hasDonation: "$5.00" }), false);
+assert.equal(superChatOnly({ type: "youtube", hasDonation: "$5.00" }), false);
+
+const allDonations = createAutoQueueMatcher(true, false);
+assert.equal(allDonations({ event: "superchat", type: "youtube", hasDonation: "$5.00" }), true);
+assert.equal(allDonations({ event: "donation", type: "kick", donation: "$5.00" }), true);
+assert.equal(allDonations({ event: "superchat", type: "youtube" }), false);
+
+const superChatOverride = createAutoQueueMatcher(true, true);
+assert.equal(superChatOverride({ event: "superchat", type: "youtube", hasDonation: "$5.00" }), true);
+assert.equal(superChatOverride({ event: "donation", type: "kick", hasDonation: "$5.00" }), false);
+assert.match(popup, /data-param1="autoqueuesuperchats"/, "Dock settings should expose the Super Chat-only queue toggle");
 
 console.log("dock filtered history tests passed");

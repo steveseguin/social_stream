@@ -80,6 +80,7 @@ Use these when one session has multiple operators, dashboards, or output pages.
 | `autopindonations` | Pins donation cards as they arrive. |
 | `autopinquestions` | Pins question cards as they arrive. |
 | `autoqueuedonations` | Queues donation cards automatically. |
+| `autoqueuesuperchats` | Queues only messages with `event: "superchat"` automatically. |
 | `autoqueuequestions` | Queues question cards automatically. |
 | `selfqueue` | Viewer command(s) that add a user/message to the queue. |
 | `random` | Randomizes which queued message is featured next. |
