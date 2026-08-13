@@ -11272,6 +11272,18 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	}
 
+	function isPopupSearchControl(element) {
+		if (!element || !element.id) {
+			return false;
+		}
+		return element.id === 'searchInput' ||
+			element.id === 'searchIcon' ||
+			element.id === 'popupSearchNoResults' ||
+			element.id === 'activeIcon' ||
+			element.id === 'languageIcon' ||
+			element.id === 'language-selector-container';
+	}
+
 	function isPopupSearchNormallyHidden(element) {
 		var node = element;
 		while (node && node !== document.body) {
@@ -11498,6 +11510,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 
 		document.querySelectorAll('.container > *').forEach(function(element) {
+			if (isPopupSearchControl(element)) {
+				return;
+			}
 			if (element.classList && (element.classList.contains('wrapper') || element.classList.contains('link'))) {
 				return;
 			}
