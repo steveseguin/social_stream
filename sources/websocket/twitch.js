@@ -4922,21 +4922,17 @@ async function cleanupCurrentConnection() {
 					chatname: event.user_name,
 					userid: event.user_id,
 					chatmessage: rewardMessage,
-					reward: {
-						id: event.reward.id,
-						title: rewardTitle,
+					timestamp: event.redeemed_at,
+					meta: {
+						userId: event.user_id,
+						rewardId: event.reward.id,
+						rewardTitle: rewardTitle,
 						cost: rewardCost,
 						prompt: event.reward.prompt,
 						userInput: userInput,
 						backgroundColor: event.reward.background_color,
 						redemptionId: event.id,
-						status: event.status
-					},
-					timestamp: event.redeemed_at,
-					meta: {
-						userId: event.user_id,
-						rewardId: event.reward.id,
-						cost: rewardCost,
+						status: event.status,
 						alias: 'channel_points'
 					},
 					textonly: settings.textonlymode || false
