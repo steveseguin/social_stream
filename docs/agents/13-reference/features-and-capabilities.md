@@ -181,7 +181,7 @@ Check in this order:
 11. `08-platform-sources/popout-chat-only-sources.md` if it is Beamstream, BoltPlus, Chzzk, FloatPlane, GoodGame, Mixcloud, Nimo, Odysee, Parti, Picarto, Piczel, RokFin, Rutube, SoopLive, or VK chat-only capture.
 12. `08-platform-sources/event-and-community-sources.md` if it is Arena Social, Buzzit, CI.ME, Gala Music, LinkedIn Events, LivePush, MegaphoneTV, QuickChannel, Slido, or TradingView.
 13. `08-platform-sources/independent-live-platform-sources.md` if it is BandLab, Bigo.tv, Bitchute, Blaze, Castr, Cherry TV, CloutHub, Cozy.tv, DLive, Estrim, FC2, Jaco.live, LFG.tv, Locals.com, or Loco.gg.
-14. `08-platform-sources/video-broadcast-platform-sources.md` if it is Mixlr, NicoVideo, NonOLive, OpenStreamingPlatform, Owncast, PeerTube, Restream.io Chat, Steam Broadcasts, Trovo, Truffle.vip, TwitCasting, Vimeo, YouNow, or Zap.stream.
+14. `08-platform-sources/video-broadcast-platform-sources.md` if it is Mixlr, NicoVideo, NonOLive, OpenStreamingPlatform, Owncast, PeerTube, Restream.io Chat, Steam Broadcasts, Truffle.vip, TwitCasting, Vimeo, YouNow, or Zap.stream.
 15. `08-platform-sources/community-membership-webapp-sources.md` if it is Circle.so, MeetMe, NextCloud, Patreon, Roll20, Simps, Tellonym, Whop, Wix Live/widgets, or Workplace legacy routing.
 16. `08-platform-sources/regional-and-emerging-platform-sources.md` if it is Bilibili DOM paths, Favorited, Kwai, Pilled, Portal, Pump.fun, Retake, Rooter, SharePlay, SoulBound, Stream.place, Substack, Tikfinity, uScreen, or VK Live. Xeenon is retired.
 17. `08-platform-sources/special-case-platform-and-helper-sources.md` if it is Joystick, Velora, VPZone, X live/static split, Vertical Pixel Zone, Vercel Demo, or top-level YouTube helper copies.

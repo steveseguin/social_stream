@@ -3752,7 +3752,7 @@ class EventFlowEditor {
   'peertube', 'picarto', 'piczel', 'pilled', 'quakenet', 'quickchannel', 'restream', 'riverside', 'rokfin',
   'roll20', 'rooter', 'rumble', 'rutube', 'sessions', 'shareplay', 'slack', 'slido', 'sooplive',
   'soulbound', 'stageten', 'steam', 'substack', 'teams', 'telegram', 'telegramk', 'tellonym', 'tiktok',
-  'tradingview', 'trovo', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
+  'tradingview', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
    'vimeo', 'vklive', 'vkplay', 'vkvideo', 'wavevideo', 'webex', 'webinargeek', 'whatnot', 'whatsapp', 'whop',
   'wix', 'wix2', 'workplace', 'x', 'xeenon', 'xpsync', 'younow', 'youtube', 'youtubeshorts', 'youtube_comments', 'zapstream', 'zoom',
   'bmac', 'fourthwall', 'stripe', 'other'].includes(node.config.source);
@@ -3769,7 +3769,7 @@ class EventFlowEditor {
   'peertube', 'picarto', 'piczel', 'pilled', 'quakenet', 'quickchannel', 'restream', 'riverside', 'rokfin',
   'roll20', 'rooter', 'rumble', 'rutube', 'sessions', 'shareplay', 'slack', 'slido', 'sooplive',
   'soulbound', 'stageten', 'steam', 'substack', 'teams', 'telegram', 'telegramk', 'tellonym', 'tiktok',
-  'tradingview', 'trovo', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
+  'tradingview', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
    'vimeo', 'vklive', 'vkplay', 'vkvideo', 'wavevideo', 'webex', 'webinargeek', 'whatnot', 'whatsapp', 'whop',
   'wix', 'wix2', 'workplace', 'x', 'xeenon', 'xpsync', 'younow', 'youtube', 'youtubeshorts', 'youtube_comments', 'zapstream', 'zoom',
   'bmac', 'fourthwall', 'stripe', 'other'].map(s => `<option value="${s}" ${node.config.source === s ? 'selected' : ''}>${s.charAt(0).toUpperCase()
@@ -4852,7 +4852,6 @@ class EventFlowEditor {
 					{ value: 'rumble', label: 'Rumble' },
 					{ value: 'odysee', label: 'Odysee' },
 					{ value: 'dlive', label: 'DLive' },
-					{ value: 'trovo', label: 'Trovo' },
 					{ value: 'telegram', label: 'Telegram' },
 					{ value: 'whatsapp', label: 'WhatsApp' },
 					{ value: 'zoom', label: 'Zoom' },
@@ -4916,7 +4915,6 @@ class EventFlowEditor {
 					{ value: 'rumble', label: 'Rumble' },
 					{ value: 'odysee', label: 'Odysee' },
 					{ value: 'dlive', label: 'DLive' },
-					{ value: 'trovo', label: 'Trovo' },
 					{ value: 'telegram', label: 'Telegram' },
 					{ value: 'whatsapp', label: 'WhatsApp' },
 					{ value: 'zoom', label: 'Zoom' },

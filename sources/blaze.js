@@ -139,6 +139,11 @@
 	function getMessageBodyElement(ele) {
 		return ele.querySelector(".text-text.pl-1.font-normal, span.block.min-w-0.break-words");
 	}
+
+	function clearStartupBacklog(ele) {
+		delete ele.dataset.ssnBlazeStartupBacklog;
+		delete ele.dataset.ssnBlazeStartupIndex;
+	}
 	
 	function processMessage(ele, seedOnly){
 		//console.log(ele);
@@ -152,6 +157,12 @@
 		//		console.log("no knownSize");
 				return;
 			}
+		}
+
+		var startupBacklog = ele.dataset.ssnBlazeStartupBacklog === "true";
+		if (startupBacklog && ele.dataset.ssnBlazeStartupIndex !== String(getMessageIndex(ele))) {
+			clearStartupBacklog(ele);
+			startupBacklog = false;
 		}
 		
 		var chatimg = ""
@@ -225,21 +236,21 @@
 		var messageIndex = getMessageIndex(ele);
 		var signature = String(messageIndex) + "|" + name + "|" + msg + "|" + dono;
 		if (ele.dataset.ssnBlazeMessageSignature === signature) {
-			if (seedOnly || ele.dataset.ssnBlazeStartupBacklog === "true") {
-				delete ele.dataset.ssnBlazeStartupBacklog;
+			if (seedOnly || startupBacklog) {
+				clearStartupBacklog(ele);
 			}
 			return;
 		}
 		ele.dataset.ssnBlazeMessageSignature = signature;
 		if (emittedSignatures.has(signature)) {
-			if (seedOnly || ele.dataset.ssnBlazeStartupBacklog === "true") {
-				delete ele.dataset.ssnBlazeStartupBacklog;
+			if (seedOnly || startupBacklog) {
+				clearStartupBacklog(ele);
 			}
 			return;
 		}
 		rememberSignature(signature);
-		if (seedOnly || ele.dataset.ssnBlazeStartupBacklog === "true") {
-			delete ele.dataset.ssnBlazeStartupBacklog;
+		if (seedOnly || startupBacklog) {
+			clearStartupBacklog(ele);
 			return;
 		}
 		
@@ -394,6 +405,7 @@
 			rows.forEach(function(row) {
 				if (isInitialBacklog) {
 					row.dataset.ssnBlazeStartupBacklog = "true";
+					row.dataset.ssnBlazeStartupIndex = String(getMessageIndex(row));
 				}
 				processMessage(row, isInitialBacklog);
 			});

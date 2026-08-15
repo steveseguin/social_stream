@@ -128,6 +128,19 @@ async function createHarnessPage(browser, includeChatList) {
       document.getElementById("chat").appendChild(row);
       return row;
     };
+
+    window.__addBlazeSystemEvent = function (index, message) {
+      var row = document.createElement("div");
+      row.dataset.itemIndex = String(index);
+      row.dataset.index = String(index);
+      row.dataset.knownSize = "42";
+      var body = document.createElement("span");
+      body.className = "system-event";
+      body.textContent = message;
+      row.appendChild(body);
+      document.getElementById("chat").appendChild(row);
+      return row;
+    };
   ` });
   return { page, pageErrors };
 }
@@ -152,12 +165,15 @@ async function testBacklogAndSteadyState(browser) {
   await page.evaluate(() => {
     window.__addBlazeMessage(0, "Backlog", "Old message", false);
     window.__addBlazeMessage(1, "Hydrated", "Late backlog", false);
+    window.__addBlazeSystemEvent(2, "took the stage and backed with 75 votes");
   });
   await loadSource(page);
   await waitForSeededRows(page, [0, 1]);
   assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 0, "initial backlog should not send");
 
-  await page.evaluate(() => window.__addBlazeMessage(2, "Streamer", "Owner message", true, { vipBadge: true, subBadge: true, botIcon: true }));
+  assert.strictEqual(await page.locator('[data-item-index="2"]').getAttribute("data-ssn-blaze-startup-backlog"), "true", "startup system rows should retain their backlog marker");
+
+  await page.evaluate(() => window.__addBlazeMessage(3, "Streamer", "Owner message", true, { vipBadge: true, subBadge: true, botIcon: true }));
   await waitForMessageCount(page, 1);
   const ownerMessage = await page.evaluate(() => window.__blazeMessages[0]);
   assert.strictEqual(ownerMessage.type, "blaze");
@@ -171,7 +187,7 @@ async function testBacklogAndSteadyState(browser) {
   assert.strictEqual(ownerMessage.bot, true, "bot icon should set the bot flag");
 
   await page.evaluate(() => {
-    var row = document.querySelector('[data-item-index="2"]');
+    var row = document.querySelector('[data-item-index="3"]');
     row.querySelector("button[title='User actions'] span.truncate").textContent = "Viewer:";
     row.querySelector(".text-text.pl-1.font-normal").textContent = "Recycled message";
   });
@@ -183,14 +199,27 @@ async function testBacklogAndSteadyState(browser) {
   await page.waitForTimeout(600);
   assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 2, "unchanged rows should not duplicate");
 
-  await page.evaluate(() => document.querySelector('[data-item-index="2"]').remove());
+  await page.evaluate(() => document.querySelector('[data-item-index="3"]').remove());
   await page.waitForTimeout(300);
-  await page.evaluate(() => window.__addBlazeMessage(2, "Viewer", "Recycled message", false));
+  await page.evaluate(() => window.__addBlazeMessage(3, "Viewer", "Recycled message", false));
   await page.waitForTimeout(700);
   assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 2, "re-mounted rows should not re-emit");
 
-  await page.evaluate(() => window.__addBlazeMessage(3, "Viewer", "Recycled message", false));
+  await page.evaluate(() => window.__addBlazeMessage(4, "Viewer", "Recycled message", false));
   await waitForMessageCount(page, 3);
+
+  // If Virtuoso reuses a startup-only system row at a new index, it is live.
+  await page.evaluate(() => {
+    var systemRow = document.querySelector('[data-item-index="2"]');
+    var liveRow = window.__addBlazeMessage(5, "Reused", "System row became live", false);
+    systemRow.dataset.itemIndex = "5";
+    systemRow.dataset.index = "5";
+    systemRow.innerHTML = liveRow.innerHTML;
+    liveRow.remove();
+  });
+  await waitForMessageCount(page, 4);
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages[3].chatmessage), "System row became live");
+  assert.strictEqual(await page.locator('[data-item-index="5"]').getAttribute("data-ssn-blaze-startup-backlog"), null, "a recycled row should clear its old startup marker");
   await assertNoPageErrors(pageErrors, "steady-state capture");
   await page.close();
 }

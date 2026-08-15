@@ -219,6 +219,7 @@ Support note: WebSocket source pages can have different event coverage and auth 
 | Vercel Demo | Demo launcher at `https://maestro-launcher.vercel.app/`. |
 | CBOX | Use `https://*.cbox.ws/box/*`. |
 | Wix Live | Use Wix pages and embedded Wix video widget URLs. |
+| Trovo | Retired April 2026; capture code and icon moved to `sources/graveyard/`. |
 | Xeenon | Retired; active manifest route removed after Xeenon hibernation. |
 | Retake.tv | Use `https://retake.tv/live/*`. |
 | Velora.tv | Use `https://velora.tv/*`. |

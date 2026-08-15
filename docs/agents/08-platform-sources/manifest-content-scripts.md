@@ -111,10 +111,9 @@ These manifest entries have `document_start` and/or `all_frames` enabled. They d
 | 136 | `sources/tikfinity.js` | 2 | default | yes | `https://tikfinity.zerody.one/widget/activity-feed*` |
 | 137 | `sources/vdoninja.js` | 3 | default | yes | `https://vdo.ninja/popout.html*` |
 | 139 | `sources/webex.js` | 2 | default | yes | `https://*.webex.com/*` |
-| 143 | `sources/trovo.js` | 1 | `document_start` | yes | `https://trovo.live/chat/*` |
-| 144 | `sources/amazon.js` | 2 | `document_start` | no | `https://www.amazon.com/live*` |
-| 152 | `sources/streamlabs.js` | 2 | default | yes | `https://streamlabs.com/alert-box/*` |
-| 153 | `sources/streamelements.js` | 1 | `document_start` | yes | `https://streamelements.com/overlay/*` |
+| 143 | `sources/amazon.js` | 2 | `document_start` | no | `https://www.amazon.com/live*` |
+| 151 | `sources/streamlabs.js` | 2 | default | yes | `https://streamlabs.com/alert-box/*` |
+| 152 | `sources/streamelements.js` | 1 | `document_start` | yes | `https://streamelements.com/overlay/*` |
 
 ## High-Coverage URL Match Entries
 

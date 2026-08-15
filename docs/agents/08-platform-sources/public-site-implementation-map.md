@@ -69,7 +69,7 @@ Evidence label: `focused-metadata-validation`; not runtime-tested. This map rema
 | WhatsApp Web | toggle | `sources/whatsapp.js` (M116) | `communication-and-sensitive-sources.md` | toggle, reload |
 | Telegram | toggle | `sources/telegram.js` (M140)<br>`sources/telegramk.js` (M141) | `communication-and-sensitive-sources.md` | toggle, reload |
 | VPZone.tv | standard | `sources/vpzone.js` (M41)<br>`sources/inject/vpzone-ws.js` (M42)<br>`sources/websocket/vpzone.js` (M106) | `special-case-platform-and-helper-sources.md` | DOM plus source page |
-| Slack | toggle | `sources/slack.js` (M146) | `communication-and-sensitive-sources.md` | toggle, reload |
+| Slack | toggle | `sources/slack.js` (M145) | `communication-and-sensitive-sources.md` | toggle, reload |
 | LinkedIn Events | standard | `sources/linkedin.js` (M138) | `event-and-community-sources.md` | manifest route |
 | VDO.Ninja | popout | `sources/vdoninja.js` (M137) | `special-case-platform-and-helper-sources.md` | manifest route |
 | Microsoft Teams | standard | `sources/teams.js` (M131) | `communication-and-sensitive-sources.md` | manifest route |
@@ -80,10 +80,10 @@ Evidence label: `focused-metadata-validation`; not runtime-tested. This map rema
 | IRC WebSocket | websocket | `sources/websocket/irc.js` (M107) | `websocket-source-pages.md` | source page |
 | Kick.com | popout | `sources/kick.js` (M90)<br>`sources/kick_new.js` (file-only)<br>`sources/websocket/kick.js` (M101) | `kick.md` | DOM plus source page |
 | GoodGame.ru | popout | `sources/goodgame.js` (M91) | `popout-chat-only-sources.md` | manifest route |
-| Rumble | popout | `sources/rumble.js` (M145)<br>`sources/websocket/rumble.js` (M104) | `rumble.md` | DOM plus source page |
+| Rumble | popout | `sources/rumble.js` (M144)<br>`sources/websocket/rumble.js` (M104) | `rumble.md` | DOM plus source page |
 | Rumble API URL | websocket | `sources/websocket/rumble.js` (M104) | `websocket-source-pages.md` | source page |
 | Odysee | popout | `sources/odysee.js` (M111) | `popout-chat-only-sources.md` | manifest route |
-| Amazon Live | standard | `sources/amazon.js` (M144) | `live-commerce-sources.md` | manifest route |
+| Amazon Live | standard | `sources/amazon.js` (M143) | `live-commerce-sources.md` | manifest route |
 | Vimeo | standard | `sources/vimeo.js` (M127) | `video-broadcast-platform-sources.md` | manifest route |
 | Picarto.tv | popout | `sources/picarto.js` (M112) | `popout-chat-only-sources.md` | manifest route |
 | Crowdcast.io | standard | `sources/crowdcast.js` (M123) | `webinar-and-event-sources.md` | manifest route |
@@ -91,12 +91,12 @@ Evidence label: `focused-metadata-validation`; not runtime-tested. This map rema
 | Bilibili.tv | standard | `sources/bilibili.js` (M95) | `regional-and-emerging-platform-sources.md` | manifest route |
 | Whop | standard | `sources/whop.js` (M32) | `community-membership-webapp-sources.md` | manifest route |
 | Bilibili.com | standard | `sources/bilibilicom.js` (M96) | `regional-and-emerging-platform-sources.md` | manifest route |
-| VK Play Live | popout | `sources/vkvideo.js` (M151)<br>`sources/vkplay.js` (file-only) | `popout-chat-only-sources.md` | current manifest uses `vkvideo.js`; `vkplay.js` is older/file-only |
-| VK Live | standard | `sources/vklive.js` (M150) | `regional-and-emerging-platform-sources.md` | manifest route |
+| VK Play Live | popout | `sources/vkvideo.js` (M150)<br>`sources/vkplay.js` (file-only) | `popout-chat-only-sources.md` | current manifest uses `vkvideo.js`; `vkplay.js` is older/file-only |
+| VK Live | standard | `sources/vklive.js` (M149) | `regional-and-emerging-platform-sources.md` | manifest route |
 | Piczel.tv | popout | `sources/piczel.js` (M98) | `popout-chat-only-sources.md` | manifest route |
 | Locals.com | standard | `sources/locals.js` (M86) | `independent-live-platform-sources.md` | manifest route |
 | Nimo.TV | popout | `sources/nimo.js` (M89) | `popout-chat-only-sources.md` | manifest route |
-| Amazon Chime | standard | `sources/chime.js` (M147) | `communication-and-sensitive-sources.md` | manifest route |
+| Amazon Chime | standard | `sources/chime.js` (M146) | `communication-and-sensitive-sources.md` | manifest route |
 | NonOLive | standard | `sources/nonolive.js` (M63) | `video-broadcast-platform-sources.md` | manifest route |
 | StageTEN.tv | standard | `sources/websocket/stageten.html` (source-page asset)<br>`sources/websocket/stageten.js` (file-only) | `websocket-source-pages.md` | source page; no active third-party content-script row found |
 | Blaze.stream | standard | `sources/blaze.js` (M14) | `independent-live-platform-sources.md` | manifest route |
@@ -155,7 +155,7 @@ Evidence label: `focused-metadata-validation`; not runtime-tested. This map rema
 | MeetMe | standard | `sources/meetme.js` (M7) | `community-membership-webapp-sources.md` | manifest route |
 | SoopLive | popout | `sources/sooplive.js` (M58) | `popout-chat-only-sources.md` | manifest route |
 | Beamstream | popout | `sources/beamstream.js` (M19) | `popout-chat-only-sources.md` | manifest route |
-| CI.ME | standard | `sources/cime.js` (M148) | `event-and-community-sources.md` | manifest route |
+| CI.ME | standard | `sources/cime.js` (M147) | `event-and-community-sources.md` | manifest route |
 | Castr | standard | `sources/castr.js` (M75) | `independent-live-platform-sources.md` | manifest route |
 | Chatroll | standard | `sources/chatroll.js` (M110) | `embedded-chat-widget-sources.md` | manifest route |
 | Tellonym | standard | `sources/tellonym.js` (M73) | `community-membership-webapp-sources.md` | manifest route |
@@ -164,7 +164,7 @@ Evidence label: `focused-metadata-validation`; not runtime-tested. This map rema
 | NextCloud | standard | `sources/nextcloud.js` (M77) | `community-membership-webapp-sources.md` | manifest route |
 | PeerTube | standard | `sources/peertube.js` (M132) | `video-broadcast-platform-sources.md` | manifest route |
 | Bitchute | standard | `sources/bitchute.js` (M97) | `independent-live-platform-sources.md` | manifest route |
-| Buzzit | standard | `sources/buzzit.js` (M149) | `event-and-community-sources.md` | manifest route |
+| Buzzit | standard | `sources/buzzit.js` (M148) | `event-and-community-sources.md` | manifest route |
 | Joystick.tv | standard | `sources/joystick.js` (M67) | `special-case-platform-and-helper-sources.md` | manifest route |
 | Rooter | standard | `sources/rooter.js` (M68) | `independent-live-platform-sources.md` | manifest route |
 | Loco.gg | standard | `sources/loco.js` (M66) | `independent-live-platform-sources.md` | manifest route |
@@ -175,6 +175,7 @@ Evidence label: `focused-metadata-validation`; not runtime-tested. This map rema
 | Vercel Demo | standard | `sources/vercel.js` (M60) | `special-case-platform-and-helper-sources.md` | manifest route |
 | CBOX | standard | `sources/cbox.js` (M62) | `embedded-chat-widget-sources.md` | manifest route |
 | Wix Live | standard | `sources/wix.js` (M88)<br>`sources/wix2.js` (M87) | `community-membership-webapp-sources.md` | manifest route |
+| Trovo | retired | `sources/graveyard/trovo.js` | - | moved to graveyard; service retired April 2026 |
 | Xeenon | retired | `sources/graveyard/xeenon.js` | - | moved to graveyard; site is hibernating |
 | Retake.tv | standard | `sources/retake.js` (M27) | `regional-and-emerging-platform-sources.md` | manifest route |
 | BoltPlus.tv | popout | `sources/boltplus.js` (M55) | `popout-chat-only-sources.md` | manifest route |
