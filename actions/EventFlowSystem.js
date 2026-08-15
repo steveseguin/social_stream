@@ -3070,6 +3070,24 @@ class EventFlowSystem {
 		});
 	}
 
+	/**
+	 * Render Event Flow variables inside JSON string values for a webhook body.
+	 * Bodies without template variables are returned unchanged.
+	 * @param {string} template - Custom webhook JSON body
+	 * @param {Object} message - Message object with field values
+	 * @returns {string} Rendered JSON body
+	 */
+	renderWebhookBody(template, message) {
+		if (typeof template !== 'string' || !/\{\w+\}/i.test(template)) {
+			return template;
+		}
+
+		const parsed = JSON.parse(template);
+		return JSON.stringify(parsed, (_key, value) => {
+			return typeof value === 'string' ? this.replaceTemplateVars(value, message) : value;
+		});
+	}
+
 	sanitizeSendMessage(text, textonly = false, alt = false, mode = 'safe') {
 		if (!text || !text.trim()) {
 			return alt || text;
@@ -3616,13 +3634,25 @@ class EventFlowSystem {
 
 					const method = config.method || 'POST';
 					const headers = { 'Content-Type': 'application/json', ...(config.headers || {}) };
-					const body = config.includeMessage ? JSON.stringify(message) : (config.body || '{}');
 					const webhookTimeout = config.timeout || 8000;
 
 					// Prepare fetch options
 					const fetchOpts = { method, headers };
 					if (method !== 'GET' && method !== 'HEAD') {
-						fetchOpts.body = body;
+						try {
+							fetchOpts.body = config.includeMessage
+								? JSON.stringify(message)
+								: this.renderWebhookBody(config.body || '{}', message);
+						} catch (error) {
+							const errorMessage = `Invalid custom webhook JSON: ${error.message}`;
+							console.error(`[ExecuteAction - webhook] ${errorMessage} for node ${actionNode.id}`);
+							result.message = { ...message, webhookError: errorMessage };
+							result.modified = true;
+							if (config.syncMode && config.blockOnFailure) {
+								result.blocked = true;
+							}
+							break;
+						}
 					}
 
 					if (config.syncMode) {

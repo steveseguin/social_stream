@@ -125,6 +125,7 @@
                                 <li><a href="#younow">YouNow</a></li>
                                 <li><a href="#favorited">Favorited Studio</a></li>
                                 <li><a href="#beamstream">BEAM</a></li>
+								<li><a href="#castyr">Castyr</a></li>
                             </ul>
                         </div>
                     </div>
@@ -297,6 +298,13 @@
 							<td>&mdash;</td>
 							<td>&mdash;</td>
 							<td>Rendered pop-out chat rows plus <code>viewer_update</code> polls when viewer counts are enabled</td>
+						</tr>
+						<tr>
+							<td><strong>Castyr</strong></td>
+							<td>&mdash;</td>
+							<td>&mdash;</td>
+							<td>&mdash;</td>
+							<td>Rendered pop-out chat rows plus opt-in viewer count updates</td>
 						</tr>
                         <tr>
                             <td><strong>FLEX TV</strong></td>
@@ -2070,6 +2078,35 @@
                         </tbody>
                     </table>
                 </article>
+				<article class="platform-card" id="castyr">
+					<h3>Castyr - DOM Capture</h3>
+					<p class="source-note">Implementation: <code>sources/castyr.js</code></p>
+					<ul class="requirements">
+						<li>Reads new rendered chat rows from <code>https://castyr.live/homebeta/popout-chat/*</code> and emits standard chat payloads with <code>type: "castyr"</code>.</li>
+						<li>Existing chat history is skipped when the source attaches.</li>
+					</ul>
+					<table class="event-table">
+						<thead>
+							<tr>
+								<th>Event</th>
+								<th>When it Fires</th>
+								<th>Payload Notes</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>message</code></td>
+								<td>A new <code>.chat-message</code> row appears.</td>
+								<td>Standard chat payload with sender name, rendered message content, and name color when exposed.</td>
+							</tr>
+							<tr>
+								<td class="status-event"><code>viewer_update</code></td>
+								<td>The visible active-chat count changes while <code>showviewercount</code>/<code>hypemode</code> is enabled.</td>
+								<td><code>meta</code> is the integer count read from Castyr's titled active-chat element.</td>
+							</tr>
+						</tbody>
+					</table>
+				</article>
             </section>
 
             <section class="section-summary" id="cross-platform">

@@ -531,7 +531,7 @@ Trigger ──────────────────▲
 
             <section id="template-variables">
                 <h2>6. Template Variables Reference</h2>
-                <p>Several action nodes (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak) support <strong>template variables</strong> that get replaced with event data at runtime. Wrap variable names in curly braces like <code>{username}</code>.</p>
+                <p>Several action nodes (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook) support <strong>template variables</strong> that get replaced with event data at runtime. Wrap variable names in curly braces like <code>{username}</code>.</p>
 
                 <h3>Core Variables (backward compatible)</h3>
                 <table class="var-table">
@@ -575,6 +575,9 @@ Trigger ──────────────────▲
                 <div class="panel">
                     <strong>Flow-added fields also work.</strong> If an earlier action adds a top-level value to the message, later templates can read it directly. This is how <code>Check Counter</code> exposes <code>{counterValue}</code>, <code>{counterTarget}</code>, and <code>{counterRemaining}</code>.
                 </div>
+                <div class="panel">
+                    <strong>Call Webhook JSON:</strong> Template variables work in JSON string values at any nested object or array depth. Object keys are not templated, and a custom body without placeholders is sent unchanged.
+                </div>
 
                 <h3>Example Templates</h3>
                 <ul>
@@ -583,6 +586,7 @@ Trigger ──────────────────▲
                     <li><strong>Relay Chat:</strong> <code>[{source}] {username}: {message}</code></li>
                     <li><strong>TTS:</strong> <code>{username} says {message}</code></li>
                     <li><strong>Donation Alert:</strong> <code>{username} donated {donation} - {subtitle}</code></li>
+                    <li><strong>Discord Call Webhook:</strong> <code>{&quot;content&quot;:&quot;{message}&quot;,&quot;username&quot;:&quot;{username}&quot;,&quot;avatar_url&quot;:&quot;{chatimg}&quot;}</code></li>
                 </ul>
 
                 <div class="callout tip">

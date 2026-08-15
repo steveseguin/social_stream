@@ -1595,19 +1595,43 @@ function replaceEmotesWithImages(text) {
     });
 }
 
-function replaceKickInlineEmotes(text) {
+function normalizeKickAssetType(value) {
+    const type = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    if (type === 'sticker') return 'sticker';
+    if (type === 'emote' || type === 'emoji') return 'emote';
+    return '';
+}
+
+function containsKickInlineAssetToken(value, assetType = '') {
+    if (typeof value !== 'string') {
+        return false;
+    }
+    const normalizedType = normalizeKickAssetType(assetType);
+    if (normalizedType === 'sticker') {
+        return /\[sticker:\d+:[^\]]+\]/i.test(value);
+    }
+    if (normalizedType === 'emote') {
+        return /\[emote:\d+:[^\]]+\]/i.test(value);
+    }
+    return /\[(?:emote|sticker):\d+:[^\]]+\]/i.test(value);
+}
+
+function replaceKickInlineAssets(text, options = {}) {
     if (typeof text !== 'string' || !text) {
         return text;
     }
-    if (isTextOnlyMode()) {
+    if (isTextOnlyMode() && options.forceRich !== true) {
         return text;
     }
-    return text.replace(/\[emote:(\d+):([^\]]+)\]/g, (match, id, name) => {
+    return text.replace(/\[(emote|sticker):(\d+):([^\]]+)\]/gi, (match, type, id, name) => {
         const safeId = id.replace(/[^0-9]/g, '');
         if (!safeId) return escapeHtml(match);
-        const safeName = escapeHtml(name);
+        const safeName = escapeAttribute(name);
         const url = `https://files.kick.com/emotes/${safeId}/fullsize`;
-        return `<img src="${escapeAttribute(url)}" alt="${safeName}" title="${safeName}" class="regular-emote"/>`;
+        const className = normalizeKickAssetType(type) === 'sticker'
+            ? 'regular-emote kick-sticker'
+            : 'regular-emote';
+        return `<img src="${escapeAttribute(url)}" alt="${safeName}" title="${safeName}" class="${className}"/>`;
     });
 }
 
@@ -1620,7 +1644,7 @@ function pickFirstString(candidates, fallback = '') {
     return fallback;
 }
 
-function pickKickEmoteUrl(fragment) {
+function pickKickAssetUrl(fragment, assetType = '') {
     if (!fragment || typeof fragment !== 'object') {
         return '';
     }
@@ -1650,9 +1674,17 @@ function pickKickEmoteUrl(fragment) {
                 'src',
                 'gif',
                 'webp',
+                'webm',
                 'png',
+                'full',
+                'fullsize',
+                'large',
+                'original',
                 'default',
                 'image',
+                'picture',
+                'icon',
+                'path',
                 'light',
                 'dark',
                 '1x',
@@ -1671,24 +1703,42 @@ function pickKickEmoteUrl(fragment) {
         return '';
     }
 
+    const nestedAsset = assetType === 'sticker'
+        ? fragment.sticker
+        : assetType === 'emote'
+            ? fragment.emote
+            : null;
     const candidates = [
+        nestedAsset,
         fragment.url,
         fragment.href,
         fragment.src,
+        fragment.source,
         fragment.cdn,
         fragment.gif,
+        fragment.webp,
+        fragment.webm,
         fragment.image,
         fragment.image_url,
         fragment.imageUrl,
-        fragment.asset?.url,
+        fragment.asset,
         fragment.asset_url,
+        fragment.path,
+        fragment.picture,
+        fragment.icon,
         fragment.images,
         fragment.emote?.image,
         fragment.emote?.image_url,
         fragment.emote?.imageUrl,
         fragment.emote?.images,
+        fragment.sticker?.image,
+        fragment.sticker?.image_url,
+        fragment.sticker?.imageUrl,
+        fragment.sticker?.images,
         fragment.data?.image,
-        fragment.data?.url
+        fragment.data?.url,
+        fragment.data?.sticker,
+        fragment.data?.emote
     ];
 
     for (const value of candidates) {
@@ -1700,9 +1750,23 @@ function pickKickEmoteUrl(fragment) {
     return '';
 }
 
-function pickKickEmoteId(fragment) {
+function pickKickAssetId(fragment, assetType = '') {
+    const nestedAsset = assetType === 'sticker'
+        ? fragment?.sticker
+        : assetType === 'emote'
+            ? fragment?.emote
+            : null;
     const candidates = [
+        nestedAsset?.id,
+        nestedAsset?.sticker_id,
+        nestedAsset?.stickerId,
+        nestedAsset?.emote_id,
+        nestedAsset?.emoteId,
         fragment?.id,
+        fragment?.sticker_id,
+        fragment?.stickerId,
+        fragment?.stickerID,
+        fragment?.kickStickerId,
         fragment?.emote_id,
         fragment?.emoteId,
         fragment?.emoteID,
@@ -1711,7 +1775,12 @@ function pickKickEmoteId(fragment) {
         fragment?.emote?.id,
         fragment?.emote?.emote_id,
         fragment?.emote?.emoteId,
+        fragment?.sticker?.id,
+        fragment?.sticker?.sticker_id,
+        fragment?.sticker?.stickerId,
         fragment?.data?.id,
+        fragment?.data?.sticker_id,
+        fragment?.data?.stickerId,
         fragment?.data?.emote_id,
         fragment?.data?.emoteId
     ];
@@ -1727,7 +1796,13 @@ function pickKickEmoteId(fragment) {
     return '';
 }
 
-function renderKickEmoteFragment(fragment) {
+function renderKickAssetFragment(fragment, assetTypeHint = '') {
+    const assetType = normalizeKickAssetType(assetTypeHint)
+        || normalizeKickAssetType(fragment?.type)
+        || normalizeKickAssetType(fragment?.kind)
+        || (fragment?.sticker ? 'sticker' : '')
+        || (fragment?.emote ? 'emote' : '');
+    const nestedAsset = assetType === 'sticker' ? fragment?.sticker : fragment?.emote;
     const rawName = pickFirstString(
         [
             fragment?.text,
@@ -1736,28 +1811,44 @@ function renderKickEmoteFragment(fragment) {
             fragment?.displayText,
             fragment?.alt,
             fragment?.value,
+            fragment?.label,
+            fragment?.title,
+            fragment?.slug,
+            nestedAsset?.text,
+            nestedAsset?.name,
+            nestedAsset?.code,
+            nestedAsset?.label,
+            nestedAsset?.title,
+            nestedAsset?.slug,
             fragment?.emote?.name,
-            fragment?.emote?.code
+            fragment?.emote?.code,
+            fragment?.sticker?.name,
+            fragment?.sticker?.code
         ],
         ''
     );
     const cleanName = rawName.replace(/^:+|:+$/g, '');
-    const emoteId = pickKickEmoteId(fragment);
-    const alt = escapeHtml(cleanName || rawName || (emoteId ? `kick-${emoteId}` : ''));
+    const assetId = pickKickAssetId(fragment, assetType);
+    const alt = escapeAttribute(cleanName || rawName || (assetId ? `kick-${assetId}` : ''));
     const zeroWidth = Boolean(
         fragment?.zero_width ||
         fragment?.zeroWidth ||
         fragment?.zw ||
         fragment?.metadata?.zero_width ||
-        fragment?.emote?.zero_width
+        fragment?.emote?.zero_width ||
+        fragment?.sticker?.zero_width
     );
-    let url = pickKickEmoteUrl(fragment);
-    if (!url && emoteId) {
-        url = `https://files.kick.com/emotes/${emoteId}/fullsize`;
+    let url = pickKickAssetUrl(fragment, assetType);
+    if (url && typeof normalizeImage === 'function') {
+        url = normalizeImage(url);
+    }
+    if (!url && assetId) {
+        url = `https://files.kick.com/emotes/${assetId}/fullsize`;
     }
     if (url && !isTextOnlyMode()) {
         const safeUrl = escapeAttribute(url);
-        const className = zeroWidth ? 'zero-width-emote-centered' : 'regular-emote';
+        const baseClassName = zeroWidth ? 'zero-width-emote-centered' : 'regular-emote';
+        const className = assetType === 'sticker' ? `${baseClassName} kick-sticker` : baseClassName;
         return `<img src="${safeUrl}" alt="${alt}" title="${alt}" class="${className}"/>`;
     }
     if (cleanName) {
@@ -1765,6 +1856,9 @@ function renderKickEmoteFragment(fragment) {
     }
     if (rawName) {
         return replaceEmotesWithImages(escapeHtml(rawName));
+    }
+    if (assetId) {
+        return escapeHtml(`:${assetType || 'emote'}-${assetId}:`);
     }
     return '';
 }
@@ -1774,14 +1868,18 @@ function renderKickFragmentHtml(fragment) {
         return '';
     }
     if (typeof fragment === 'string') {
-        return replaceEmotesWithImages(replaceKickInlineEmotes(escapeHtml(fragment)));
+        return replaceEmotesWithImages(replaceKickInlineAssets(escapeHtml(fragment)));
     }
     if (typeof fragment.html === 'string' && !isTextOnlyMode()) {
         return fragment.html;
     }
-    const type = typeof fragment.type === 'string' ? fragment.type.toLowerCase() : '';
-    if (type === 'emote' || type === 'emoji') {
-        return renderKickEmoteFragment(fragment);
+    const type = pickFirstString([fragment.type, fragment.kind], '').toLowerCase();
+    const assetType = normalizeKickAssetType(fragment.type)
+        || normalizeKickAssetType(fragment.kind)
+        || (fragment.sticker ? 'sticker' : '')
+        || (fragment.emote ? 'emote' : '');
+    if (assetType) {
+        return renderKickAssetFragment(fragment, assetType);
     }
     if (type === 'link' || type === 'url') {
         const url = pickFirstString([fragment.url, fragment.href, fragment.value, fragment.target], '');
@@ -1831,7 +1929,7 @@ function renderKickFragmentHtml(fragment) {
         ],
         ''
     );
-    return replaceEmotesWithImages(replaceKickInlineEmotes(escapeHtml(fallback)));
+    return replaceEmotesWithImages(replaceKickInlineAssets(escapeHtml(fallback)));
 }
 
 function collectMessageFragments(message) {
@@ -1854,16 +1952,110 @@ function collectMessageFragments(message) {
     return fragments;
 }
 
-function renderKickMessageHtml(message, fallbackText) {
-    const fragments = collectMessageFragments(message);
-    if (fragments.length) {
-        const rendered = fragments.map(renderKickFragmentHtml).join('');
-        if (rendered.trim()) {
-            return rendered;
+function hasKickStickerFragment(fragments) {
+    return (fragments || []).some(fragment => {
+        if (typeof fragment === 'string') {
+            return containsKickInlineAssetToken(fragment, 'sticker');
+        }
+        if (!fragment || typeof fragment !== 'object') {
+            return false;
+        }
+        const assetType = normalizeKickAssetType(fragment.type)
+            || normalizeKickAssetType(fragment.kind)
+            || (fragment.sticker ? 'sticker' : '')
+            || (fragment.emote ? 'emote' : '');
+        if (assetType === 'sticker') {
+            return true;
+        }
+        return [fragment.text, fragment.content, fragment.value].some(
+            value => containsKickInlineAssetToken(value, 'sticker')
+        );
+    });
+}
+
+function findKickStickerAttachment(message, payload) {
+    const roots = [
+        message,
+        message?.metadata,
+        message?.data,
+        message?.data?.metadata,
+        payload,
+        payload?.metadata,
+        payload?.data,
+        payload?.data?.metadata,
+        payload?.payload,
+        payload?.payload?.metadata
+    ];
+    const candidates = [];
+    const seenRoots = new Set();
+
+    for (const root of roots) {
+        if (!root || typeof root !== 'object' || seenRoots.has(root)) {
+            continue;
+        }
+        seenRoots.add(root);
+        if (root.sticker) {
+            candidates.push(root.sticker);
+        }
+        if (Array.isArray(root.stickers)) {
+            candidates.push(...root.stickers);
+        }
+        if (
+            root.asset &&
+            typeof root.asset === 'object' &&
+            (
+                normalizeKickAssetType(root.asset.type) === 'sticker' ||
+                normalizeKickAssetType(root.asset.kind) === 'sticker' ||
+                root.asset.sticker
+            )
+        ) {
+            candidates.push(root.asset);
         }
     }
-    const safeFallback = escapeHtml(typeof fallbackText === 'string' ? fallbackText : '');
-    return replaceEmotesWithImages(replaceKickInlineEmotes(safeFallback));
+
+    for (const candidate of candidates) {
+        if (typeof candidate === 'string' && candidate.trim()) {
+            return { name: candidate.trim() };
+        }
+        if (!candidate || typeof candidate !== 'object') {
+            continue;
+        }
+        const name = pickFirstString(
+            [candidate.name, candidate.code, candidate.text, candidate.label, candidate.title, candidate.slug],
+            ''
+        );
+        if (pickKickAssetId(candidate, 'sticker') || pickKickAssetUrl(candidate, 'sticker') || name) {
+            return candidate;
+        }
+    }
+    return null;
+}
+
+function renderKickMessageHtml(message, fallbackText, payload = message) {
+    const fragments = collectMessageFragments(message);
+    let rendered = '';
+    if (fragments.length) {
+        rendered = fragments.map(renderKickFragmentHtml).join('');
+    }
+    if (!rendered.trim()) {
+        const safeFallback = escapeHtml(typeof fallbackText === 'string' ? fallbackText : '');
+        rendered = replaceEmotesWithImages(replaceKickInlineAssets(safeFallback));
+    }
+
+    const containsSticker = hasKickStickerFragment(fragments)
+        || containsKickInlineAssetToken(fallbackText, 'sticker')
+        || rendered.includes('kick-sticker');
+    if (!containsSticker) {
+        const sticker = findKickStickerAttachment(message, payload);
+        if (sticker) {
+            const stickerHtml = renderKickAssetFragment(sticker, 'sticker');
+            if (stickerHtml) {
+                const separator = rendered && !/\s$/.test(rendered) ? ' ' : '';
+                rendered = `${rendered}${separator}${stickerHtml}`;
+            }
+        }
+    }
+    return rendered;
 }
 
 function consumeThirdPartyPayload(request) {
@@ -6441,7 +6633,7 @@ async function forwardChatMessage(evt, bridgeMeta) {
             payload.event_type ||
             'chat';
         resolvePendingKickChatEcho(resolvedId, content, rawEventType, ids);
-        const chatmessageHtml = renderKickMessageHtml(message, content);
+        const chatmessageHtml = renderKickMessageHtml(message, content, payload);
         const membership = actorProfile.membership || pickFirstString(
             [
                 sender?.membership,
@@ -8709,11 +8901,7 @@ function appendChatFeedMessage(message, plainText = '') {
     // regardless of the extension's text-only mode setting.
     const chatHtml = message.chatmessage || '';
     const richHtml = chatHtml
-        ? chatHtml.replace(/\[emote:(\d+):([^\]]+)\]/g, (m, id, n) => {
-            const safeId = id.replace(/[^0-9]/g, '');
-            if (!safeId) return m;
-            return `<img src="https://files.kick.com/emotes/${safeId}/fullsize" alt="${n}" title="${n}" class="regular-emote"/>`;
-        })
+        ? replaceKickInlineAssets(chatHtml, { forceRich: true })
         : '';
     if (richHtml) {
         body.innerHTML = richHtml;
@@ -8791,12 +8979,32 @@ function extractFragmentText(fragment) {
     if (typeof fragment === 'string') return fragment;
     if (typeof fragment.text === 'string') return fragment.text;
     if (typeof fragment.content === 'string') return fragment.content;
-    if (typeof fragment.name === 'string' && fragment.type === 'emote') {
-        return `:${fragment.name}:`;
-    }
     if (typeof fragment.alt === 'string') return fragment.alt;
     if (fragment.emoji) {
         return fragment.emoji.text || fragment.emoji.name || '';
+    }
+    const assetType = normalizeKickAssetType(fragment.type)
+        || normalizeKickAssetType(fragment.kind)
+        || (fragment.sticker ? 'sticker' : '')
+        || (fragment.emote ? 'emote' : '');
+    if (assetType) {
+        const nestedAsset = assetType === 'sticker' ? fragment.sticker : fragment.emote;
+        const name = pickFirstString(
+            [
+                fragment.name,
+                fragment.code,
+                fragment.value,
+                fragment.label,
+                nestedAsset?.name,
+                nestedAsset?.code,
+                nestedAsset?.text,
+                nestedAsset?.value
+            ],
+            ''
+        ).replace(/^:+|:+$/g, '');
+        if (name) {
+            return `:${name}:`;
+        }
     }
     if (fragment.url) {
         return fragment.url;

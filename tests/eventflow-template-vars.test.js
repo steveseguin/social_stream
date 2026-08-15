@@ -8,6 +8,10 @@ const EFS_SRC = fs.readFileSync(
     path.join(__dirname, '..', 'actions', 'EventFlowSystem.js'),
     'utf8'
 );
+const EDITOR_SRC = fs.readFileSync(
+    path.join(__dirname, '..', 'actions', 'EventFlowEditor.js'),
+    'utf8'
+);
 
 function makeWindow(overrides = {}) {
     return {
@@ -265,6 +269,192 @@ async function runTests() {
         assert(anyMediaEnded === true, 'media-ended trigger supports any OBS media input');
         assert(matchingMediaEnded === true, 'media-ended trigger matches source names case-insensitively');
         assert(otherMediaEnded === false, 'media-ended trigger rejects a different source');
+    }
+
+    console.log('\n[6] webhook JSON renders every documented template variable safely');
+    {
+        const requests = [];
+        const EFS = loadEventFlowSystem({ ssapp: true });
+        const sys = new EFS({
+            fetchWithTimeout: async (url, options) => {
+                requests.push({ url, options });
+                return {
+                    ok: true,
+                    status: 204,
+                    text: async () => ''
+                };
+            }
+        });
+        const specialUsername = 'Erallie "Live"\nBack\\slash';
+        const specialMessage = 'Hello "Discord"\nEmoji 😀 and \\path';
+        const message = {
+            chatname: specialUsername,
+            displayname: 'Display Name',
+            chatmessage: specialMessage,
+            type: 'youtube',
+            hasDonation: '$5.00',
+            donoValue: 5,
+            event: 'cheer',
+            membership: 'MEMBERSHIP',
+            subtitle: 'Member for 3 months',
+            userid: '12345678',
+            chatimg: 'https://example.com/avatar.png',
+            contentimg: 'https://example.com/content.png',
+            rewardTitle: 'Highlight My Message',
+            meta: { viewers: 100 },
+            counterValue: 12,
+            counterTarget: 30,
+            customField: 'dynamic value'
+        };
+        const body = JSON.stringify({
+            username: '{username}',
+            chatname: '{chatname}',
+            message: '{message}',
+            chatmessage: '{chatmessage}',
+            source: '{source}',
+            type: '{type}',
+            donation: '{donation}',
+            hasDonation: '{hasDonation}',
+            displayname: '{displayname}',
+            donoValue: '{donoValue}',
+            donationAmount: '{donationAmount}',
+            event: '{event}',
+            membership: '{membership}',
+            subtitle: '{subtitle}',
+            userid: '{userid}',
+            chatimg: '{chatimg}',
+            contentimg: '{contentimg}',
+            rewardTitle: '{rewardTitle}',
+            meta: '{meta}',
+            counterValue: '{counterValue}',
+            counterTarget: '{counterTarget}',
+            counterRemaining: '{counterRemaining}',
+            nested: ['{USERNAME}', { dynamic: '{CUSTOMFIELD}', missing: '{missingField}' }]
+        });
+
+        await sys.executeAction({
+            id: 'webhook_1',
+            actionType: 'webhook',
+            config: {
+                url: 'http://127.0.0.1:9999/webhook',
+                method: 'POST',
+                body,
+                includeMessage: false,
+                syncMode: true,
+                blockOnFailure: false
+            }
+        }, message);
+
+        assert(requests.length === 1, 'templated webhook sends one request');
+        const rendered = JSON.parse(requests[0].options.body);
+        const expected = {
+            username: specialUsername,
+            chatname: specialUsername,
+            message: specialMessage,
+            chatmessage: specialMessage,
+            source: 'Youtube',
+            type: 'youtube',
+            donation: '$5.00',
+            hasDonation: '$5.00',
+            displayname: 'Display Name',
+            donoValue: '5',
+            donationAmount: '5',
+            event: 'cheer',
+            membership: 'MEMBERSHIP',
+            subtitle: 'Member for 3 months',
+            userid: '12345678',
+            chatimg: 'https://example.com/avatar.png',
+            contentimg: 'https://example.com/content.png',
+            rewardTitle: 'Highlight My Message',
+            meta: '{"viewers":100}',
+            counterValue: '12',
+            counterTarget: '30',
+            counterRemaining: '18'
+        };
+
+        Object.entries(expected).forEach(([key, value]) => {
+            assert(rendered[key] === value, `webhook renders {${key}}`);
+        });
+        assert(rendered.nested[0] === specialUsername, 'webhook variables remain case-insensitive in arrays');
+        assert(rendered.nested[1].dynamic === 'dynamic value', 'webhook renders dynamic fields in nested objects');
+        assert(rendered.nested[1].missing === '', 'webhook replaces missing fields with an empty string');
+    }
+
+    console.log('\n[7] webhook bodies without variables remain byte-for-byte unchanged');
+    {
+        const requests = [];
+        const EFS = loadEventFlowSystem({ ssapp: true });
+        const sys = new EFS({
+            fetchWithTimeout: async (url, options) => {
+                requests.push({ url, options });
+                return {
+                    ok: true,
+                    status: 204,
+                    text: async () => ''
+                };
+            }
+        });
+        const originalBody = '{\n  "literal": "unchanged \\\\ path"\n}\n';
+
+        await sys.executeAction({
+            id: 'webhook_2',
+            actionType: 'webhook',
+            config: {
+                url: 'http://127.0.0.1:9999/webhook',
+                method: 'POST',
+                body: originalBody,
+                includeMessage: false,
+                syncMode: true
+            }
+        }, { chatmessage: 'unused' });
+
+        assert(requests.length === 1, 'non-templated webhook sends one request');
+        assert(requests[0].options.body === originalBody, 'non-templated webhook body is unchanged');
+    }
+
+    console.log('\n[8] invalid templated webhook JSON fails before fetch');
+    {
+        const requests = [];
+        const EFS = loadEventFlowSystem({ ssapp: true });
+        const sys = new EFS({
+            fetchWithTimeout: async (url, options) => {
+                requests.push({ url, options });
+                return {
+                    ok: true,
+                    status: 204,
+                    text: async () => ''
+                };
+            }
+        });
+
+        const result = await sys.executeAction({
+            id: 'webhook_3',
+            actionType: 'webhook',
+            config: {
+                url: 'http://127.0.0.1:9999/webhook',
+                method: 'POST',
+                body: '{"content":"{message}"',
+                includeMessage: false,
+                syncMode: true,
+                blockOnFailure: true
+            }
+        }, { chatmessage: 'hello' });
+
+        assert(requests.length === 0, 'invalid templated JSON does not call fetch');
+        assert(result.modified === true, 'invalid templated JSON attaches an error to the message');
+        assert(result.blocked === true, 'invalid templated JSON follows synchronous block-on-failure behavior');
+        assert(
+            typeof result.message.webhookError === 'string' && result.message.webhookError.startsWith('Invalid custom webhook JSON:'),
+            'invalid templated JSON reports a focused webhook error'
+        );
+    }
+
+    console.log('\n[9] built-in Discord template maps message, username, and avatar fields');
+    {
+        assert(
+            EDITOR_SRC.includes(`body: '{"content": "{message}", "username": "{username}", "avatar_url": "{chatimg}"}'`),
+            'Discord template uses the existing message, username, and avatar variables'
+        );
     }
 
     console.log(`\n${'-'.repeat(50)}`);
