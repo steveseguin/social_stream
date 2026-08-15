@@ -356,7 +356,11 @@
 	}
 
 	function findChatInput() {
-		return document.querySelector("form input[placeholder*='Send a message' i], input[placeholder*='message' i]");
+		var input = document.querySelector("form input[placeholder*='Send a message' i], input[placeholder*='message' i]");
+		if (!input || input.disabled || input.readOnly) {
+			return null;
+		}
+		return input;
 	}
 
 	function requestSettings() {

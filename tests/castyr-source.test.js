@@ -6,7 +6,12 @@ const { chromium } = require("playwright");
 const root = path.resolve(__dirname, "..");
 const source = fs.readFileSync(path.join(root, "sources", "castyr.js"), "utf8");
 const manifest = JSON.parse(fs.readFileSync(path.join(root, "manifest.json"), "utf8"));
-assert.ok(fs.existsSync(path.join(root, "sources", "images", "castyr.png")), "Castyr source icon is missing");
+const iconPath = path.join(root, "sources", "images", "castyr.png");
+assert.ok(fs.existsSync(iconPath), "Castyr source icon is missing");
+const icon = fs.readFileSync(iconPath);
+assert.strictEqual(icon.toString("hex", 0, 8), "89504e470d0a1a0a", "Castyr source icon must be PNG");
+assert.strictEqual(icon.readUInt32BE(16), 128, "Castyr source icon width must be 128px");
+assert.strictEqual(icon.readUInt32BE(20), 128, "Castyr source icon height must be 128px");
 
 const manifestEntry = manifest.content_scripts.find((entry) =>
   entry.js && entry.js.includes("./sources/castyr.js")
@@ -153,6 +158,13 @@ async function installFixture(page, useChromeRuntime) {
   const richMessage = (await chatMessages(extensionPage))[0];
   assert.strictEqual(richMessage.type, "castyr");
   assert.strictEqual(richMessage.chatname, "evarate");
+  assert.strictEqual(richMessage.chatbadges, "");
+  assert.strictEqual(richMessage.backgroundColor, "");
+  assert.strictEqual(richMessage.textColor, "");
+  assert.strictEqual(richMessage.chatimg, "");
+  assert.strictEqual(richMessage.hasDonation, "");
+  assert.strictEqual(richMessage.membership, "");
+  assert.strictEqual(richMessage.contentimg, "");
   assert.strictEqual(richMessage.textonly, false);
   assert.ok(richMessage.chatmessage.includes("Hello &lt;Castyr&gt; friends"), richMessage.chatmessage);
   assert.ok(richMessage.chatmessage.includes('<img src="https://castyr.live/emote.png" alt=":wave:">'));
@@ -198,9 +210,43 @@ async function installFixture(page, useChromeRuntime) {
     window.__castyrMessages.some((message) => message.event === "viewer_update" && message.meta === 2)
   );
 
+  await extensionPage.evaluate(() => {
+    var count = document.getElementById("viewer-count");
+    count.title = "3 active in chat";
+    count.querySelector("span").textContent = "3";
+    return window.__sendCastyrRuntimeMessage({
+      settings: { textonlymode: false, showviewercount: false, hypemode: false }
+    });
+  });
+  await extensionPage.waitForTimeout(300);
+  assert.strictEqual(
+    await extensionPage.evaluate(() =>
+      window.__castyrMessages.some((message) => message.event === "viewer_update" && message.meta === 3)
+    ),
+    false,
+    "viewer count should stay disabled when both viewer settings are off"
+  );
+
+  await extensionPage.evaluate(() =>
+    window.__sendCastyrRuntimeMessage({
+      settings: { textonlymode: false, showviewercount: false, hypemode: true }
+    })
+  );
+  await extensionPage.waitForFunction(() =>
+    window.__castyrMessages.some((message) => message.event === "viewer_update" && message.meta === 3)
+  );
+
   assert.strictEqual(await extensionPage.evaluate(() => window.__sendCastyrRuntimeMessage("getSource")), "castyr");
   assert.strictEqual(await extensionPage.evaluate(() => window.__sendCastyrRuntimeMessage("focusChat")), true);
   assert.strictEqual(await extensionPage.evaluate(() => document.activeElement.id), "chat-input");
+
+  await extensionPage.evaluate(() => {
+    document.getElementById("chat-input").disabled = true;
+  });
+  assert.strictEqual(await extensionPage.evaluate(() => window.__sendCastyrRuntimeMessage("focusChat")), false);
+  await extensionPage.evaluate(() => {
+    document.getElementById("chat-input").disabled = false;
+  });
 
   await extensionPage.evaluate(() =>
     window.__sendCastyrRuntimeMessage({ settings: { textonlymode: true, showviewercount: true } })
@@ -218,7 +264,20 @@ async function installFixture(page, useChromeRuntime) {
   assert.strictEqual(plainMessage.textonly, true);
   assert.strictEqual(plainMessage.chatmessage, "Plain bold :wave:");
 
-  await extensionPage.evaluate(() => window.__sendCastyrRuntimeMessage({ state: false }));
+  await extensionPage.evaluate(() => {
+    var count = document.getElementById("viewer-count");
+    count.title = "4 active in chat";
+    count.querySelector("span").textContent = "4";
+    return window.__sendCastyrRuntimeMessage({ state: false });
+  });
+  await extensionPage.waitForTimeout(300);
+  assert.strictEqual(
+    await extensionPage.evaluate(() =>
+      window.__castyrMessages.some((message) => message.event === "viewer_update" && message.meta === 4)
+    ),
+    false,
+    "disabled source should not send viewer counts"
+  );
   await extensionPage.evaluate(() => {
     window.__addCastyrMessage(
       "2026-08-15T12:37:40.051+00:00",
