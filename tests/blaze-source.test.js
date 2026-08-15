@@ -13,11 +13,22 @@ function waitForMessageCount(page, expected) {
   );
 }
 
-(async () => {
-  const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
+function waitForSeededRows(page, indexes) {
+  return page.waitForFunction(
+    (expectedIndexes) => expectedIndexes.every((index) => {
+      const row = document.querySelector('[data-item-index="' + index + '"]');
+      return row && row.dataset.ssnBlazeMessageSignature;
+    }),
+    indexes,
+    { timeout: 7000 }
+  );
+}
 
-  await page.setContent('<div data-testid="virtuoso-item-list" id="chat"></div>');
+async function createHarnessPage(browser, includeChatList) {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error));
+  await page.setContent(includeChatList ? '<div data-testid="virtuoso-item-list" id="chat"></div>' : '<main id="root"></main>');
   await page.addScriptTag({ content: `
     window.__blazeMessages = [];
     window.chrome = {
@@ -34,6 +45,16 @@ function waitForMessageCount(page, expected) {
         },
         onMessage: { addListener: function () {} }
       }
+    };
+
+    window.__createBlazeChat = function () {
+      var existing = document.getElementById("chat");
+      if (existing) return existing;
+      var chat = document.createElement("div");
+      chat.id = "chat";
+      chat.setAttribute("data-testid", "virtuoso-item-list");
+      document.getElementById("root").appendChild(chat);
+      return chat;
     };
 
     window.__addBlazeMessage = function (index, name, message, includeOwnerButton, opts) {
@@ -108,17 +129,33 @@ function waitForMessageCount(page, expected) {
       return row;
     };
   ` });
+  return { page, pageErrors };
+}
 
-  await page.evaluate(() => window.__addBlazeMessage(0, "Backlog", "Old message", false));
+async function loadSource(page) {
   await page.addScriptTag({ content: source });
-  await page.waitForFunction(() => document.querySelector('[data-item-index="0"]').dataset.ssnBlazeMessageSignature);
-  assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 0, "initial backlog should not send");
+}
 
-  // Rows arriving while the freshly detected list is still hydrating are backlog.
-  await page.evaluate(() => window.__addBlazeMessage(1, "Hydrated", "Late backlog", false));
-  await page.waitForFunction(() => document.querySelector('[data-item-index="1"]').dataset.ssnBlazeMessageSignature);
-  assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 0, "hydrating backlog should not send");
-  await page.waitForTimeout(1500);
+async function waitForChatConnection(page) {
+  await page.waitForFunction(() => {
+    var chat = document.getElementById("chat");
+    return chat && chat.marked === true;
+  }, null, { timeout: 7000 });
+}
+
+async function assertNoPageErrors(pageErrors, scenario) {
+  assert.deepStrictEqual(pageErrors.map((error) => error.message), [], scenario + " should not raise page errors");
+}
+
+async function testBacklogAndSteadyState(browser) {
+  const { page, pageErrors } = await createHarnessPage(browser, true);
+  await page.evaluate(() => {
+    window.__addBlazeMessage(0, "Backlog", "Old message", false);
+    window.__addBlazeMessage(1, "Hydrated", "Late backlog", false);
+  });
+  await loadSource(page);
+  await waitForSeededRows(page, [0, 1]);
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 0, "initial backlog should not send");
 
   await page.evaluate(() => window.__addBlazeMessage(2, "Streamer", "Owner message", true, { vipBadge: true, subBadge: true, botIcon: true }));
   await waitForMessageCount(page, 1);
@@ -127,8 +164,8 @@ function waitForMessageCount(page, expected) {
   assert.strictEqual(ownerMessage.chatname, "Streamer");
   assert.strictEqual(ownerMessage.chatmessage, "Owner message");
   assert.strictEqual(ownerMessage.chatbadges.length, 2, "subscriber svg and VIP image badges should be captured");
-  assert.strictEqual(typeof ownerMessage.chatbadges.find(b => typeof b === "string" && b.includes("vip.png")), "string", "VIP badge should be an image URL");
-  const svgBadge = ownerMessage.chatbadges.find(b => b && b.type === "svg");
+  assert.strictEqual(typeof ownerMessage.chatbadges.find((badge) => typeof badge === "string" && badge.includes("vip.png")), "string", "VIP badge should be an image URL");
+  const svgBadge = ownerMessage.chatbadges.find((badge) => badge && badge.type === "svg");
   assert(svgBadge && svgBadge.html.includes("<svg"), "subscriber badge should be captured as inline svg");
   assert.strictEqual(ownerMessage.vip, true, "VIP badge should set the vip flag");
   assert.strictEqual(ownerMessage.bot, true, "bot icon should set the bot flag");
@@ -146,20 +183,105 @@ function waitForMessageCount(page, expected) {
   await page.waitForTimeout(600);
   assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 2, "unchanged rows should not duplicate");
 
-  // Virtuoso re-mount: an already-captured message returning as a fresh node must not re-emit.
-  await page.evaluate(() => {
-    document.querySelector('[data-item-index="2"]').remove();
-  });
+  await page.evaluate(() => document.querySelector('[data-item-index="2"]').remove());
   await page.waitForTimeout(300);
   await page.evaluate(() => window.__addBlazeMessage(2, "Viewer", "Recycled message", false));
   await page.waitForTimeout(700);
   assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 2, "re-mounted rows should not re-emit");
 
-  // A genuine repeat (same user, same text) at a new index is a new message.
   await page.evaluate(() => window.__addBlazeMessage(3, "Viewer", "Recycled message", false));
   await waitForMessageCount(page, 3);
+  await assertNoPageErrors(pageErrors, "steady-state capture");
+  await page.close();
+}
 
-  await browser.close();
+async function testEmptyChatFirstMessage(browser) {
+  const { page, pageErrors } = await createHarnessPage(browser, true);
+  await loadSource(page);
+  await waitForChatConnection(page);
+  await page.evaluate(() => window.__addBlazeMessage(0, "First", "Do not lose me", false));
+  await waitForMessageCount(page, 1);
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages[0].chatmessage), "Do not lose me");
+  await assertNoPageErrors(pageErrors, "empty chat first message");
+  await page.close();
+}
+
+async function testLazyListFirstMessage(browser) {
+  const { page, pageErrors } = await createHarnessPage(browser, false);
+  await loadSource(page);
+  await page.waitForTimeout(2200);
+  await page.evaluate(() => {
+    window.__createBlazeChat();
+    window.__addBlazeMessage(0, "Lazy", "List and message appeared together", false);
+  });
+  await waitForMessageCount(page, 1);
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages[0].chatname), "Lazy");
+  await assertNoPageErrors(pageErrors, "lazy list first message");
+  await page.close();
+}
+
+async function testDelayedHistoryBatch(browser) {
+  const { page, pageErrors } = await createHarnessPage(browser, true);
+  await loadSource(page);
+  await waitForChatConnection(page);
+  await page.waitForTimeout(1700);
+  await page.evaluate(() => {
+    for (var index = 0; index < 20; index++) {
+      window.__addBlazeMessage(index, "History" + index, "Delayed history " + index, false);
+    }
+  });
+  await waitForSeededRows(page, Array.from({ length: 20 }, (_, index) => index));
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 0, "history arriving after the old timeout should not send");
+  await page.evaluate(() => window.__addBlazeMessage(20, "Live", "After delayed history", false));
+  await waitForMessageCount(page, 1);
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages[0].chatmessage), "After delayed history");
+  await assertNoPageErrors(pageErrors, "delayed history batch");
+  await page.close();
+}
+
+async function testProgressiveHistoryBatch(browser) {
+  const { page, pageErrors } = await createHarnessPage(browser, true);
+  await loadSource(page);
+  await waitForChatConnection(page);
+  await page.evaluate(() => {
+    window.__addBlazeMessage(0, "History0", "Progressive history 0", false);
+    setTimeout(function() {
+      window.__addBlazeMessage(1, "History1", "Progressive history 1", false);
+    }, 150);
+  });
+  await waitForSeededRows(page, [0, 1]);
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 0, "a progressively hydrated history batch should not send");
+  await page.evaluate(() => window.__addBlazeMessage(2, "Live", "After progressive history", false));
+  await waitForMessageCount(page, 1);
+  await assertNoPageErrors(pageErrors, "progressive history batch");
+  await page.close();
+}
+
+async function testAdvancedHistoryIndex(browser) {
+  const { page, pageErrors } = await createHarnessPage(browser, true);
+  await loadSource(page);
+  await waitForChatConnection(page);
+  await page.evaluate(() => window.__addBlazeMessage(17, "History", "Advanced index history", false));
+  await waitForSeededRows(page, [17]);
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 0, "an advanced initial row should be treated as history");
+  await page.evaluate(() => window.__addBlazeMessage(18, "Live", "After advanced history", false));
+  await waitForMessageCount(page, 1);
+  await assertNoPageErrors(pageErrors, "advanced history index");
+  await page.close();
+}
+
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    await testBacklogAndSteadyState(browser);
+    await testEmptyChatFirstMessage(browser);
+    await testLazyListFirstMessage(browser);
+    await testDelayedHistoryBatch(browser);
+    await testProgressiveHistoryBatch(browser);
+    await testAdvancedHistoryIndex(browser);
+  } finally {
+    await browser.close();
+  }
   console.log("Blaze source passed.");
 })().catch((error) => {
   console.error(error);
