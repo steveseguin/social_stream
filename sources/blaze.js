@@ -94,6 +94,10 @@
 	var initialChatSyncComplete = false;
 	var initialChatSyncTimer = null;
 	var INITIAL_CHAT_SETTLE_MS = 400;
+	var initialChatRowsPresentAtAttach = false;
+	var initialChatLoneRowMayBeLive = false;
+	var hasObservedChatContainer = false;
+	var sawMissingChatBeforeFirstContainer = false;
 
 	function rememberSignature(signature) {
 		emittedSignatures.set(signature, Date.now());
@@ -397,9 +401,13 @@
 			}
 
 			// Blaze loads history as a group (or with an already-advanced index).
-			// A lone index-zero row is the first live message on a lazy/empty chat.
+			// A lone index-zero row is live only when the page was already observed
+			// without a chat container; otherwise it may be existing history.
 			var firstIndex = getMessageIndex(messageRows[0]);
-			var isInitialBacklog = rows.length > 1 || (!isNaN(firstIndex) && firstIndex > 0);
+			var isInitialBacklog =
+				(initialChatRowsPresentAtAttach && !initialChatLoneRowMayBeLive) ||
+				rows.length > 1 ||
+				(!isNaN(firstIndex) && firstIndex > 0);
 			initialChatSyncComplete = true;
 
 			rows.forEach(function(row) {
@@ -413,7 +421,7 @@
 	}
 	
 	
-	function onElementInserted(target) {
+	function onElementInserted(target, allowLoneExistingRow) {
 		var scheduleProcess = function(node) {
 			try {
 				if (!node || node.nodeType !== 1) {
@@ -484,18 +492,15 @@
 			clearTimeout(initialChatSyncTimer);
 			initialChatSyncTimer = null;
 		}
+		initialChatSyncComplete = false;
+		initialChatRowsPresentAtAttach = !!target.querySelector("[data-item-index],[data-index]");
+		initialChatLoneRowMayBeLive = !!allowLoneExistingRow;
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
 		observerTarget = target;
-		if (initialChatSyncComplete) {
-			target.querySelectorAll("[data-item-index],[data-index]").forEach(function(item) {
-				scheduleProcess(item);
-			});
-		} else {
-			scheduleInitialChatSync(target);
-		}
+		scheduleInitialChatSync(target);
 	}
 	
 	console.log("social stream injected");
@@ -512,12 +517,19 @@
 		checking = setInterval(function(){
 			try {
 				var container = document.querySelector("[data-testid='virtuoso-item-list']");
+				if (!container && !hasObservedChatContainer) {
+					sawMissingChatBeforeFirstContainer = true;
+				}
 				if (container && (!container.marked || !observer || observerTarget !== container || !container.isConnected)){
 					container.marked=true;
 
 					console.log("CONNECTED chat detected");
 
-					onElementInserted(container);
+					onElementInserted(
+						container,
+						!hasObservedChatContainer && sawMissingChatBeforeFirstContainer
+					);
+					hasObservedChatContainer = true;
 				}
 				checkViewers();
 			} catch(e){}

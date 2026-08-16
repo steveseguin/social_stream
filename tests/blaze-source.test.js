@@ -224,6 +224,49 @@ async function testBacklogAndSteadyState(browser) {
   await page.close();
 }
 
+async function testSingleExistingHistoryRow(browser) {
+  const { page, pageErrors } = await createHarnessPage(browser, true);
+  await page.evaluate(() => window.__addBlazeMessage(0, "Backlog", "Only existing row", false));
+  await loadSource(page);
+  await waitForSeededRows(page, [0]);
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 0, "a lone existing index-zero row should be seeded as history");
+
+  await page.evaluate(() => window.__addBlazeMessage(1, "Live", "After lone history", false));
+  await waitForMessageCount(page, 1);
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages[0].chatmessage), "After lone history");
+  await assertNoPageErrors(pageErrors, "single existing history row");
+  await page.close();
+}
+
+async function testReplacementContainerHistory(browser) {
+  const { page, pageErrors } = await createHarnessPage(browser, true);
+  await page.evaluate(() => {
+    window.__addBlazeMessage(0, "Original0", "Original history 0", false);
+    window.__addBlazeMessage(1, "Original1", "Original history 1", false);
+  });
+  await loadSource(page);
+  await waitForSeededRows(page, [0, 1]);
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 0, "initial history should not send");
+
+  await page.evaluate(() => {
+    var replacement = document.createElement("div");
+    replacement.id = "chat";
+    replacement.setAttribute("data-testid", "virtuoso-item-list");
+    document.getElementById("chat").replaceWith(replacement);
+    window.__addBlazeMessage(0, "Replacement0", "Replacement history 0", false);
+    window.__addBlazeMessage(1, "Replacement1", "Replacement history 1", false);
+  });
+  await waitForSeededRows(page, [0, 1]);
+  await page.waitForTimeout(500);
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 0, "replacement-container history should be reseeded");
+
+  await page.evaluate(() => window.__addBlazeMessage(2, "Live", "After replacement history", false));
+  await waitForMessageCount(page, 1);
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages[0].chatmessage), "After replacement history");
+  await assertNoPageErrors(pageErrors, "replacement chat container");
+  await page.close();
+}
+
 async function testEmptyChatFirstMessage(browser) {
   const { page, pageErrors } = await createHarnessPage(browser, true);
   await loadSource(page);
@@ -303,6 +346,8 @@ async function testAdvancedHistoryIndex(browser) {
   const browser = await chromium.launch({ headless: true });
   try {
     await testBacklogAndSteadyState(browser);
+    await testSingleExistingHistoryRow(browser);
+    await testReplacementContainerHistory(browser);
     await testEmptyChatFirstMessage(browser);
     await testLazyListFirstMessage(browser);
     await testDelayedHistoryBatch(browser);
