@@ -69,8 +69,9 @@ async function captureMessage(chatClient, fakeClient, tags, message) {
 		},
 		fallbackText
 	);
-	assert.equal(ircPayload.chatmessage, fallbackText);
+	assert.equal(ircPayload.chatmessage, "");
 	assert.equal(ircPayload.contentimg, gifUrl, "IRC GIF URL must be forwarded without modification");
+	assert.deepEqual(ircPayload.meta, { gifLabel: fallbackText });
 	assert.equal(ircPayload.event, "chat");
 
 	const eventSubUrl = "https://media0.giphy.com/media/example/giphy.gif?cid=eventsub&rid=giphy.gif";
@@ -89,11 +90,12 @@ async function captureMessage(chatClient, fakeClient, tags, message) {
 			],
 		}
 	);
-	assert.equal(eventSubPayload.chatmessage, "[Good Morning Coffee GIF by VeeFriends]");
+	assert.equal(eventSubPayload.chatmessage, "");
 	assert.equal(eventSubPayload.contentimg, eventSubUrl, "EventSub GIF URL must be forwarded without modification");
+	assert.deepEqual(eventSubPayload.meta, { gifLabel: "[Good Morning Coffee GIF by VeeFriends]" });
 
 	chatClient.destroy();
-	console.log("PASS: Twitch IRC and EventSub GIF messages expose their supplied asset URL as contentimg.");
+	console.log("PASS: Twitch IRC and EventSub GIF messages use contentimg and preserve their label in meta.");
 })().catch((error) => {
 	console.error(error);
 	process.exitCode = 1;

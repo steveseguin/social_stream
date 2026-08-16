@@ -777,7 +777,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Dedupe and deletion logic uses message IDs; messages sent through SSN use the native <code>message_id</code> from Twitch's IRC echo in <code>data.id</code>.</p>
+                    <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Twitch GIF messages put the Giphy asset in <code>contentimg</code>, leave <code>chatmessage</code> empty, and preserve Twitch's fallback label in <code>meta.gifLabel</code>. Dedupe and deletion logic uses message IDs; messages sent through SSN use the native <code>message_id</code> from Twitch's IRC echo in <code>data.id</code>.</p>
 
                     <h4>Twitch Hype Train Metadata</h4>
                     <p class="field-highlights"><code>hype_train</code> is metadata-only and does not include <code>chatname</code> or <code>chatmessage</code>. Dashboards should update an existing train display by <code>meta.id</code> instead of appending each progress update as chat. The Meta Data Bar (<code>meta.html</code>) renders these events as a top progress bar.</p>

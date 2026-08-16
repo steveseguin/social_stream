@@ -383,6 +383,7 @@ export function createTwitchChatClient(options = {}) {
     const displayName = tags?.['display-name'] || twitchLogin || 'Twitch User';
     const messageText = getTwitchMessageText(message);
     const sanitizedMessage = formatters.sanitize(messageText);
+    const gifUrl = getTwitchGifUrl(tags, message);
     const badgeMap = extractBadgeMap(tags);
     const normalizedType = messageType || tags?.['message-type'] || null;
     const event = tags?.bits
@@ -391,13 +392,13 @@ export function createTwitchChatClient(options = {}) {
         ? 'action'
         : normalizedType || 'message';
 
-    return {
+    const payload = {
       id: resolveMessageId(channelName, tags, event),
       platform: 'twitch',
       type: 'twitch',
       chatname: displayName,
-      chatmessage: sanitizedMessage,
-      contentimg: getTwitchGifUrl(tags, message),
+      chatmessage: gifUrl ? '' : sanitizedMessage,
+      contentimg: gifUrl,
       chatimg: formatters.avatarUrl(twitchLogin || displayName),
       timestamp: Number(tags?.['tmi-sent-ts'] || formatters.now()),
       chatbadges: badgeMapToChatBadges(badgeMap),
@@ -412,6 +413,12 @@ export function createTwitchChatClient(options = {}) {
       rawMessage: typeof messageText === 'string' ? messageText : '',
       raw: { channel: channelName, tags }
     };
+    if (gifUrl) {
+      payload.meta = {
+        gifLabel: typeof messageText === 'string' ? messageText : ''
+      };
+    }
+    return payload;
   }
 
   function normalizeSubscription(channelName, username, methods, message, userstate, eventType) {
