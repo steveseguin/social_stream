@@ -3670,6 +3670,7 @@ async function ensureChatClientInstance() {
 		}
 		data.chatname = resolvedDisplayName;
 		data.username = user;
+		data.contentimg = normalizedPayload?.contentimg || "";
 		
 		// Convert badge URLs to badge objects
 		data.chatbadges = badgeList.map(url => ({ type: "img", src: url }));
