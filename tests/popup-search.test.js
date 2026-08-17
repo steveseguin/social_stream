@@ -41,5 +41,42 @@ assert.match(
 	/if \(isPopupSearchControl\(element\)\)\s*{\s*return;/,
 	"Popup search controls must be excluded from the searchable top-level index"
 );
+assert.doesNotMatch(
+	createIndexSource,
+	/isPopupSearchNormallyHidden/,
+	"Building the search index must not force computed-style reads across the popup"
+);
+assert.match(
+	createIndexSource,
+	/new Set\(rowElements\)/,
+	"Nested search rows must be indexed without pairwise containment checks"
+);
+
+const applySearchSource = extractFunction(popupSource, "applyPopupSearchNow");
+assert.doesNotMatch(
+	applySearchSource,
+	/openPopupSearchSections/,
+	"Searching must not expand every settings section"
+);
+assert.match(
+	applySearchSource,
+	/openPopupSearchSection\(wrapper\)/,
+	"Searching should expand only matching settings sections"
+);
+assert.doesNotMatch(
+	applySearchSource,
+	/setPopupSearchHidden\(rowRecord\.element/,
+	"Searching must not hide every nonmatching option row individually"
+);
+assert.match(
+	applySearchSource,
+	/setPopupSearchMatch\(matchElement\)/,
+	"Matching options should be highlighted within their visible section"
+);
+assert.match(
+	popupSource,
+	/applyPopupSearchNow\(value\);\s*\}, 200\);/,
+	"Popup search must debounce typing long enough to avoid rerendering on every keystroke"
+);
 
 console.log("popup search tests passed");

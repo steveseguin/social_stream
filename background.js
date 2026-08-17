@@ -1686,6 +1686,9 @@ function loadSettings(item, resave = false) {
 		if (syncLikeTotalSettings(settings)) {
 			normalizedSettings = true;
 		}
+		if (settings.showlikecount && syncLikeTotalSettings(settings, true)) {
+			normalizedSettings = true;
+		}
 
 		Object.keys(patterns).forEach(pattern => {
 			settings[pattern] = findExistingEvents(pattern, { settings });
@@ -5283,6 +5286,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (request.setting === "captureliketotals" || request.setting === "captureyoutubelikes") {
 				syncLikeTotalSettings(settings, !!request.value);
 			}
+			if (request.setting === "showlikecount" && request.value) {
+				syncLikeTotalSettings(settings, true);
+			}
 
 			pruneSettingsObjects(settings);
 
@@ -5652,7 +5658,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				}
 				pushSettingChange();
 			}
-			if (request.setting == "showviewercount") {
+			if (request.setting == "showviewercount" || request.setting == "showlikecount") {
 				pushSettingChange();
 			}
 			if (request.setting == "hideViewerCountSources") {

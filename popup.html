@@ -643,6 +643,12 @@ body {
     display: none !important;
 }
 
+.popup-search-match {
+    background: rgba(255, 215, 0, 0.16);
+    box-shadow: inset 3px 0 0 rgba(255, 215, 0, 0.9);
+    border-radius: 4px;
+}
+
 /* Keep room below the fixed search bar so the first matched result is visible */
 body.popup-searching .container {
     padding-top: 44px;
@@ -10403,7 +10409,7 @@ input:checked + .slider:before {
 						<li>Zoom reaction icons float up directly from the captured reaction graphic</li>
 						<li>TikTok like events become floating heart bursts</li>
 						<li>Transparent background so you can place it anywhere in OBS</li>
-						<li>Optional URL params: <code>&amp;align=right</code>, <code>&amp;layout=fountain</code>, <code>&amp;scale=1.2</code>, <code>&amp;burst=8</code>, <code>&amp;speed=1.1</code>, <code>&amp;triple</code>, <code>&amp;pagebg=%23000000</code></li>
+						<li>Optional URL params: <code>&amp;align=right</code>, <code>&amp;layout=fountain</code>, <code>&amp;centerorigin</code>, <code>&amp;scale=1.2</code>, <code>&amp;burst=8</code>, <code>&amp;speed=1.1</code>, <code>&amp;triple</code>, <code>&amp;pagebg=%23000000</code></li>
 					</ul>
 				</div>
 				<div id="reactions" data-raw="" class="single_message"><a href="" id="reactionslink"></a></div>
@@ -10451,6 +10457,13 @@ input:checked + .slider:before {
 										</select>
 									</span>
 								</div>
+								<div title="Make every reaction appear from the same point at the bottom-center of the screen.">
+									<label class="switch">
+										<input type="checkbox" id="reactions-center-origin-toggle" data-param27="centerorigin" />
+										<span class="slider round"></span>
+									</label>
+									<span>Spawn reactions from the center</span>
+								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" id="reactions-triple-toggle" data-param27="triple" />
@@ -10467,8 +10480,8 @@ input:checked + .slider:before {
 									</label>
 									<span>
 										🔍 Emoji scale
-										<input type="range" id="reactions-scale-range" min="0.3" max="4" step="0.05" value="1" style="width: 150px;" data-numbersetting27="scale" data-range-display="reactions-scale-display" data-range-suffix="x" />
-										<span class="range-value" id="reactions-scale-display">1.00x</span>
+										<input type="range" id="reactions-scale-range" min="0.3" max="4" step="0.05" value="3" style="width: 150px;" data-numbersetting27="scale" data-range-display="reactions-scale-display" data-range-suffix="x" />
+										<span class="range-value" id="reactions-scale-display">3.00x</span>
 									</span>
 								</div>
 								<div>

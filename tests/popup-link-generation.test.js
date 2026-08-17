@@ -76,11 +76,18 @@ assert.ok(viewerCountOptionIndex !== -1 && likeCountOptionIndex > viewerCountOpt
 assert.ok(likeCountOptionIndex < reserveViewerSpaceOptionIndex, "like totals must be directly below viewer counts");
 assert.ok(popupHtml.includes('aria-hidden="true">❤️</span> Show like totals'), "like totals must use the full-width heart icon");
 
-{
-  const handleElementParam = extractFunction("handleElementParam");
-  assert.ok(handleElementParam.includes('paramValue === "showlikecount" && ele.checked'), "dock like totals must enable capture");
-  assert.ok(handleElementParam.includes("input[data-setting='captureliketotals']"), "dock like totals must target the global capture setting");
-}
+assert.ok(
+  backgroundSource.includes('if (settings.showlikecount && syncLikeTotalSettings(settings, true))'),
+  "saved dock like-total state must repair global capture settings"
+);
+assert.ok(
+  backgroundSource.includes('request.setting === "showlikecount" && request.value'),
+  "enabling dock like totals must enable global capture in the background"
+);
+assert.ok(
+  backgroundSource.includes('request.setting == "showviewercount" || request.setting == "showlikecount"'),
+  "enabling dock like totals must refresh source settings"
+);
 
 {
   const start = popupSource.indexOf("const sourceTypes = ['relaytargets','eventsSources','ttssources'];");

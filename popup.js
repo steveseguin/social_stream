@@ -6482,14 +6482,6 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
         updateFirstTimerUiState();
     }
 
-    if (sync && paramType === "param1" && paramValue === "showlikecount" && ele.checked) {
-        var likeTotalsToggle = document.querySelector("input[data-setting='captureliketotals']");
-        if (likeTotalsToggle && !likeTotalsToggle.checked) {
-            likeTotalsToggle.checked = true;
-            updateSettings(likeTotalsToggle, true);
-        }
-    }
-
     return true;
 }
 function handleExclusiveCases(ele, paramType, paramValue, sync) {
@@ -11130,6 +11122,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	var popupSearchUserToggles = null;
 	var popupSearchAnchor = null;
 	var popupSearchScrollY = null;
+	var popupSearchHiddenElements = new Set();
+	var popupSearchMatchedElements = new Set();
 
 	function normalizePopupSearchText(value) {
 		return String(value || '').toLowerCase().replace(/[_\-\u2010-\u2015]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -11154,7 +11148,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		var walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
 		var node;
 		while ((node = walker.nextNode())) {
-			if (node.parentElement && !shouldSkipPopupSearchText(node.parentElement) && !isPopupSearchNormallyHidden(node.parentElement)) {
+			if (node.parentElement && !shouldSkipPopupSearchText(node.parentElement) && !isPopupSearchExplicitlyHidden(node.parentElement)) {
 				addPopupSearchPart(parts, node.nodeValue);
 			}
 		}
@@ -11256,9 +11250,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 
 	function clearPopupSearchHidden() {
-		document.querySelectorAll('.' + popupSearchHiddenClass).forEach(function(element) {
+		popupSearchHiddenElements.forEach(function(element) {
 			element.classList.remove(popupSearchHiddenClass);
 		});
+		popupSearchHiddenElements.clear();
 	}
 
 	function setPopupSearchHidden(element, hidden) {
@@ -11267,9 +11262,26 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		if (hidden) {
 			element.classList.add(popupSearchHiddenClass);
+			popupSearchHiddenElements.add(element);
 		} else {
 			element.classList.remove(popupSearchHiddenClass);
+			popupSearchHiddenElements.delete(element);
 		}
+	}
+
+	function clearPopupSearchMatches() {
+		popupSearchMatchedElements.forEach(function(element) {
+			element.classList.remove('popup-search-match');
+		});
+		popupSearchMatchedElements.clear();
+	}
+
+	function setPopupSearchMatch(element) {
+		if (!element) {
+			return;
+		}
+		element.classList.add('popup-search-match');
+		popupSearchMatchedElements.add(element);
 	}
 
 	function isPopupSearchControl(element) {
@@ -11292,6 +11304,27 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				continue;
 			}
 			if (window.getComputedStyle(node).display === 'none') {
+				return true;
+			}
+			node = node.parentElement;
+		}
+		return false;
+	}
+
+	function isPopupSearchExplicitlyHidden(element) {
+		var node = element;
+		var beginnerMode = document.body && document.body.classList.contains('beginner-mode');
+		while (node && node !== document.body) {
+			if ((node.classList && node.classList.contains('hidden')) ||
+				node.hidden ||
+				node.getAttribute('aria-hidden') === 'true' ||
+				(node.style && node.style.display === 'none')) {
+				return true;
+			}
+			if (beginnerMode && node.classList &&
+				(node.classList.contains('beginner-advanced') ||
+					node.classList.contains('beginner-advanced-option') ||
+					node.classList.contains('beginner-static-advanced-option'))) {
 				return true;
 			}
 			node = node.parentElement;
@@ -11342,10 +11375,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return fallback;
 	}
 
-	function openPopupSearchSections() {
-		document.querySelectorAll('input.collapsible-input').forEach(function(input) {
+	function openPopupSearchSection(wrapper) {
+		var input = wrapper ? wrapper.querySelector('input.collapsible-input') : null;
+		if (input) {
 			input.checked = true;
-		});
+		}
 	}
 
 	function restorePopupSearchOpenState() {
@@ -11475,7 +11509,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		};
 
 		document.querySelectorAll('.link').forEach(function(link) {
-			if (!isPopupSearchNormallyHidden(link)) {
+			if (!isPopupSearchExplicitlyHidden(link)) {
 				index.links.push({
 					element: link,
 					text: getPopupSearchText(link)
@@ -11484,28 +11518,36 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 
 		document.querySelectorAll('.wrapper').forEach(function(wrapper) {
-			if (isPopupSearchNormallyHidden(wrapper)) {
+			if (isPopupSearchExplicitlyHidden(wrapper)) {
 				return;
 			}
 			var rowElements = getPopupSearchRows(wrapper).filter(function(row) {
-				return !isPopupSearchNormallyHidden(row);
+				return !isPopupSearchExplicitlyHidden(row);
+			});
+			var rowElementSet = new Set(rowElements);
+			var containerOnlyElements = new Set();
+			rowElements.forEach(function(row) {
+				var parent = row.parentElement;
+				while (parent && parent !== wrapper) {
+					if (rowElementSet.has(parent)) {
+						containerOnlyElements.add(parent);
+					}
+					parent = parent.parentElement;
+				}
 			});
 			var rows = rowElements.map(function(row) {
+				var containerOnly = containerOnlyElements.has(row);
 				return {
 					element: row,
-					text: getPopupSearchText(row),
-					containerOnly: false
+					text: containerOnly ? '' : getPopupSearchText(row),
+					containerOnly: containerOnly
 				};
-			});
-			rows.forEach(function(rowRecord) {
-				rowRecord.containerOnly = rows.some(function(otherRecord) {
-					return rowRecord.element !== otherRecord.element && rowRecord.element.contains(otherRecord.element);
-				});
 			});
 			index.wrappers.push({
 				element: wrapper,
 				sectionText: getPopupSectionSearchText(wrapper),
-				rows: rows
+				rows: rows,
+				rowElementSet: rowElementSet
 			});
 		});
 
@@ -11516,7 +11558,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			if (element.classList && (element.classList.contains('wrapper') || element.classList.contains('link'))) {
 				return;
 			}
-			if (!isPopupSearchNormallyHidden(element)) {
+			if (!isPopupSearchExplicitlyHidden(element)) {
 				index.topLevel.push({
 					element: element,
 					text: getPopupSearchText(element)
@@ -11529,21 +11571,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	function popupSearchRecordMatches(record, terms) {
 		return popupSearchTextMatches(record.text || '', terms);
-	}
-
-	function updatePopupSearchGroups(wrapper) {
-		wrapper.querySelectorAll('.options_group').forEach(function(group) {
-			if (isPopupSearchNormallyHidden(group)) {
-				return;
-			}
-			var visibleRows = 0;
-			group.querySelectorAll(':scope > div').forEach(function(row) {
-				if (!isPopupSearchNormallyHidden(row) && !row.classList.contains(popupSearchHiddenClass)) {
-					visibleRows += 1;
-				}
-			});
-			setPopupSearchHidden(group, visibleRows === 0);
-		});
 	}
 
 	function updatePopupSearchTopLevel(terms) {
@@ -11568,9 +11595,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	function applyPopupSearchNow(value) {
 		var terms = getPopupSearchTerms(value);
-		clearPopupSearchHidden();
+		clearPopupSearchMatches();
 
 		if (!terms.length) {
+			clearPopupSearchHidden();
 			setPopupSearchActive(false, false);
 			restorePopupSearchOpenState();
 			unlockPopupSearchWidth();
@@ -11581,7 +11609,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		setPopupSearchActive(true, false);
 		savePopupSearchOpenState();
 		lockPopupSearchWidth();
-		openPopupSearchSections();
 		if (!popupSearchIndex) {
 			popupSearchIndex = createPopupSearchIndex();
 		}
@@ -11606,25 +11633,22 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					matchedRows.push(rowRecord);
 				}
 			});
-			rows.forEach(function(rowRecord) {
-				var keep = matchedRows.indexOf(rowRecord) !== -1;
-				for (var i = 0; !keep && i < matchedRows.length; i++) {
-					keep = rowRecord.element.contains(matchedRows[i].element);
-				}
-				setPopupSearchHidden(rowRecord.element, !keep);
-			});
 			matchedRows.forEach(function(rowRecord) {
-				var parent = rowRecord.element.parentElement;
+				var matchElement = rowRecord.element;
+				var parent = matchElement.parentElement;
 				while (parent && parent !== wrapper) {
-					parent.classList.remove(popupSearchHiddenClass);
+					if (wrapperRecord.rowElementSet.has(parent)) {
+						matchElement = parent;
+					}
 					parent = parent.parentElement;
 				}
+				setPopupSearchMatch(matchElement);
 			});
-			updatePopupSearchGroups(wrapper);
 
 			var wrapperVisible = !(matchedRows.length === 0 && !(rows.length === 0 && sectionMatches));
 			setPopupSearchHidden(wrapper, !wrapperVisible);
 			if (wrapperVisible) {
+				openPopupSearchSection(wrapper);
 				totalMatches += 1;
 			}
 		});
@@ -11640,7 +11664,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		popupSearchTimer = setTimeout(function() {
 			popupSearchTimer = null;
 			applyPopupSearchNow(value);
-		}, 60);
+		}, 200);
 	}
 
 	function closePopupSearch() {
@@ -11654,6 +11678,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			popupSearchInput.style.width = '0';
 		}
 		clearPopupSearchHidden();
+		clearPopupSearchMatches();
 		setPopupSearchActive(false, false);
 		restorePopupSearchOpenState();
 		unlockPopupSearchWidth();

@@ -158,13 +158,14 @@ body {
 	var label = urlParams.get("label") || "reactions";
 	var outChannel = parseInt(urlParams.get("out") || urlParams.get("outchan") || "3", 10);
 	var inChannel = parseInt(urlParams.get("in") || urlParams.get("inchan") || "4", 10);
-	var scaleSetting = parseFloat(urlParams.get("scale") || "1");
+	var scaleSetting = parseFloat(urlParams.get("scale") || "3");
 	var speedSetting = parseFloat(urlParams.get("speed") || "1");
 	var burstSetting = parseInt(urlParams.get("burst") || "6", 10);
 	var limitSetting = parseInt(urlParams.get("limit") || "60", 10);
 	var pageBackground = urlParams.get("pagebg");
 	var alignSetting = normalizeAlign(urlParams.get("align"));
 	var layoutSetting = normalizeLayout(urlParams.get("layout"));
+	var centerOriginSetting = readBooleanParam("centerorigin");
 	var tripleSetting = readBooleanParam("triple");
 	var stage = document.getElementById("stage");
 	var setupNote = document.getElementById("setup-note");
@@ -178,7 +179,7 @@ body {
 		inChannel = 4;
 	}
 	if (!isFinite(scaleSetting) || scaleSetting <= 0) {
-		scaleSetting = 1;
+		scaleSetting = 3;
 	}
 	if (!isFinite(speedSetting) || speedSetting <= 0) {
 		speedSetting = 1;
@@ -337,7 +338,25 @@ body {
 		var durationMax = kind === "like" ? 5.8 : 4.9;
 		var spinRange = 18;
 
-		if (layoutSetting === "column") {
+		if (centerOriginSetting) {
+			left = 50;
+			if (layoutSetting === "column") {
+				driftMin = -4;
+				driftMax = 4;
+				durationMin += 0.3;
+				durationMax += 0.5;
+				spinRange = 8;
+			} else if (layoutSetting === "fountain") {
+				driftMin = -20;
+				driftMax = 20;
+				durationMin -= 0.2;
+				durationMax -= 0.1;
+				spinRange = 22;
+			} else {
+				driftMin = -16;
+				driftMax = 16;
+			}
+		} else if (layoutSetting === "column") {
 			left = randomBetween(Math.max(bounds.min, anchor - 6), Math.min(bounds.max, anchor + 6));
 			driftMin = -4;
 			driftMax = 4;
@@ -396,6 +415,7 @@ body {
 			spin: options.spin,
 			align: alignSetting || "full",
 			layout: layoutSetting,
+			centerOrigin: centerOriginSetting,
 			event: options.event || ""
 		});
 		if (spawnHistory.length > 400) {
@@ -416,6 +436,9 @@ body {
 		item.style.width = size + "px";
 		item.style.height = size + "px";
 		item.style.left = left + "vw";
+		if (centerOriginSetting) {
+			item.style.marginLeft = (-size / 2) + "px";
+		}
 		item.style.animationDuration = duration + "s";
 		item.style.setProperty("--drift", drift + "vw");
 		item.style.setProperty("--spin", spin + "deg");
@@ -423,6 +446,7 @@ body {
 		item.dataset.drift = String(drift);
 		item.dataset.layout = layoutSetting;
 		item.dataset.align = alignSetting || "full";
+		item.dataset.centerOrigin = centerOriginSetting ? "true" : "false";
 
 		content.className = "reaction-content" + (className ? " " + className : "");
 		content.innerHTML = markup;
@@ -696,6 +720,7 @@ body {
 				pageBackground: pageBackground || "",
 				align: alignSetting || "full",
 				layout: layoutSetting,
+				centerOrigin: centerOriginSetting,
 				triple: tripleSetting
 			};
 		},

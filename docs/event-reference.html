@@ -542,12 +542,12 @@
                             <tr>
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>Streaming stats (concurrent viewers) when viewer reporting is enabled.</td>
-                                <td><code>meta</code> is integer count; mirrors DOM scripting so downstream consumers can merge both flows.</td>
+                                <td><code>meta</code> is integer count; mirrors DOM scripting so downstream consumers can merge both flows. A dock using <code>&amp;showviewercount</code> requests viewer-count collection for 70 minutes and renews that request hourly without permanently changing the global setting.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>likes_update</code></td>
                                 <td>Official video statistics poll when <strong>Send platform like totals</strong> is enabled.</td>
-                                <td><code>meta</code> is the current video like-count integer. It emits when the count changes and periodically while unchanged so consumers stay fresh. The global <code>captureliketotals</code> setting enables this; legacy <code>captureyoutubelikes</code> remains a compatibility alias. Dock rendering additionally requires the per-dock <code>&amp;showlikecount</code> URL option.</td>
+                                <td><code>meta</code> is the current video like-count integer. It emits when the count changes and periodically while unchanged so consumers stay fresh. The global <code>captureliketotals</code> setting enables this; legacy <code>captureyoutubelikes</code> remains a compatibility alias. Enabling the popup's per-dock <code>&amp;showlikecount</code> option also persistently enables those global capture settings, while adding the URL parameter manually controls rendering only. Turning the display option off does not disable global collection.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>subscriber_update</code></td>
