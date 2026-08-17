@@ -669,6 +669,15 @@ TTS.playAudioBlobAndWait = async function(audioBlob) {
         }
 
         function onPause() {
+            // Chromium fires "pause" immediately before "ended" when playback reaches the end.
+            // Let the ended handler settle natural completion so finishedAudio() only runs once.
+            if (audio.ended || (
+                Number.isFinite(audio.duration) &&
+                audio.duration > 0 &&
+                audio.currentTime >= audio.duration
+            )) {
+                return;
+            }
             cleanup(false);
         }
 
