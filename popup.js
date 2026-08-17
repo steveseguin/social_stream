@@ -5109,6 +5109,48 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'#midiConfig',
 		'#midiCommands'
 	],
+	"wrapper-global-message-processing-options": [
+		'[data-setting="pronounscombined"]',
+		'[data-setting="discordmemberships"]',
+		'[data-setting="limitedyoutubememberchat"]',
+		'[data-setting="limitedtwitchmemberchat"]',
+		'[data-setting="addkarma"]',
+		'[data-setting="pumpTheNumbers"]'
+	],
+	"wrapper-global-connections-integrations-options": [
+		'[data-textsetting="printerName"]',
+		'[data-setting="sharestreamid"]',
+		'[data-setting="disableRelayThrottle"]',
+		'[data-setting="disablehost"]',
+		'[data-setting="socketserver"]',
+		'[data-setting="server2additivedelivery"]',
+		'[data-setting="lanonly"]',
+		'[data-setting="ssc"]',
+		'[data-textsetting="sscapikey"]',
+		'[data-setting="videostatspoller"]',
+		'[data-textsetting="videostatsurl"]',
+		'[data-textsetting="videostatspublisher"]',
+		'[data-textsetting="videostatsapplication"]',
+		'[data-textsetting="videostatskey"]',
+		'[data-textsetting="videostatsapikey"]',
+		'[data-textsetting="videostatsusername"]',
+		'[data-textsetting="videostatspassword"]',
+		'[data-numbersetting="videostatsinterval"]',
+		'[data-textsetting="videostatslabel"]',
+		'[data-setting="streamerbot"]',
+		'[data-textsetting="streamerbotendpoint"]',
+		'[data-textsetting="streamerbotpassword"]',
+		'[data-textsetting="streamerbotactionid"]',
+		'[data-setting="h2r"]',
+		'[data-textsetting="h2rserver"]',
+		'[data-setting="post"]',
+		'[data-textsetting="postserver"]',
+		'[data-setting="postalldiscord"]',
+		'[data-textsetting="postallserverdiscord"]',
+		'[data-setting="postdiscord"]',
+		'[data-textsetting="postserverdiscord"]',
+		'[data-setting="webhookrelay"]'
+	],
 	"wrapper-global-message-visibility-options": [
 		'[data-setting="hideallreplies"]',
 		'[data-setting="firstsourceonly"]',
@@ -5135,7 +5177,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 
 var BEGINNER_ADVANCED_OPTION_HEADINGS = {
 	"wrapper-chat-message-styling-options": ["Text Glow"],
-	"wrapper-global-mechanics-options": ["Printer Control"]
+	"wrapper-global-connections-integrations-options": ["Printer Control"]
 };
 
 var BEGINNER_ADVANCED_OPTION_HEADING_SECTIONS = {

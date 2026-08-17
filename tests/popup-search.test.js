@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const popupSource = fs.readFileSync(path.resolve(__dirname, "..", "popup.js"), "utf8");
+const popupHtml = fs.readFileSync(path.resolve(__dirname, "..", "popup.html"), "utf8");
 
 function extractFunction(source, name) {
 	const start = source.indexOf(`function ${name}(`);
@@ -78,5 +79,13 @@ assert.match(
 	/applyPopupSearchNow\(value\);\s*\}, 200\);/,
 	"Popup search must debounce typing long enough to avoid rerendering on every keystroke"
 );
+
+[
+	["wrapper-global-mechanics-options", "Events &amp; Capture"],
+	["wrapper-global-message-processing-options", "Message Processing"],
+	["wrapper-global-connections-integrations-options", "Connections &amp; Integrations"]
+].forEach(([id, label]) => {
+	assert.match(popupHtml, new RegExp(`id="${id}"[\\s\\S]*?for="${id}"[\\s\\S]*?${label}`), `${label} section is missing`);
+});
 
 console.log("popup search tests passed");
