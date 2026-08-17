@@ -11156,6 +11156,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	setupLazySystemVoiceDropdowns();
 
 	var popupSearchInput = document.getElementById('searchInput');
+	var popupSearchResults = document.getElementById('popupSearchResults');
 	var popupSearchHiddenClass = 'popup-search-hidden';
 	var popupSearchOpenState = null;
 	var popupSearchLockedWidth = null;
@@ -11168,7 +11169,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	var popupSearchMatchedElements = new Set();
 
 	function normalizePopupSearchText(value) {
-		return String(value || '').toLowerCase().replace(/[_\-\u2010-\u2015]+/g, ' ').replace(/\s+/g, ' ').trim();
+		return String(value || '').replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase().replace(/[_\-\u2010-\u2015]+/g, ' ').replace(/\s+/g, ' ').trim();
 	}
 
 	function getPopupSearchTerms(value) {
@@ -11236,6 +11237,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				addPopupSearchPart(parts, attr.value);
 				continue;
 			}
+			if (/^data-(?:setting(?:-old)?|textsetting|numbersetting|optionsetting|both|param\d+|textparam\d+|numberparam\d+|optionparam\d+)$/.test(attr.name)) {
+				addPopupSearchPart(parts, attr.value);
+				continue;
+			}
 			if (attr.name === 'title' || attr.name === 'aria-label' || attr.name === 'alt' || attr.name === 'placeholder') {
 				if (attr.name === 'title' && /(must first interact|lookup first)/i.test(attr.value || '')) {
 					continue;
@@ -11243,6 +11248,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				addPopupSearchPart(parts, attr.value);
 			}
 		}
+	}
+
+	function addPopupSearchSelectOptions(parts, element) {
+		if (!element || !element.querySelectorAll) {
+			return;
+		}
+		var selects = [];
+		if (element.tagName && element.tagName.toLowerCase() === 'select') {
+			selects.push(element);
+		}
+		element.querySelectorAll('select').forEach(function(select) {
+			selects.push(select);
+		});
+		selects.forEach(function(select) {
+			select.querySelectorAll('option').forEach(function(option) {
+				addPopupSearchPart(parts, option.textContent);
+				addPopupSearchPart(parts, option.value);
+			});
+		});
 	}
 
 	function getPopupSearchText(element) {
@@ -11257,6 +11281,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		searchable.forEach(function(child) {
 			addPopupSearchAttributes(parts, child);
 		});
+		addPopupSearchSelectOptions(parts, element);
 		addPopupSearchSynonyms(parts);
 		return parts.join(' ');
 	}
@@ -11326,6 +11351,117 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		popupSearchMatchedElements.add(element);
 	}
 
+	function clearPopupSearchResults() {
+		if (popupSearchResults) {
+			popupSearchResults.textContent = '';
+		}
+	}
+
+	function getPopupSearchResultLabel(element) {
+		if (!element) {
+			return 'Open matching option';
+		}
+		var preferred = element.querySelector ? element.querySelector('label:not(.switch), h3, h4, h5, button span, a, span') : null;
+		var label = (preferred && preferred.textContent) || element.textContent || element.getAttribute('title') || element.getAttribute('placeholder') || '';
+		label = String(label).replace(/\s+/g, ' ').trim();
+		if (!label) {
+			label = 'Open matching option';
+		}
+		return label.length > 180 ? label.slice(0, 177) + '...' : label;
+	}
+
+	function getPopupSearchResultSection(wrapper) {
+		var label = wrapper ? wrapper.querySelector('.collapsible-label') : null;
+		return label ? String(label.textContent || '').replace(/\s+/g, ' ').trim() : '';
+	}
+
+	function getPopupSearchTargetKeys(element) {
+		if (!element) {
+			return '';
+		}
+		var keys = [];
+		var seen = new Set();
+		var controls = [element];
+		if (element.querySelectorAll) {
+			element.querySelectorAll('input, select, textarea, button, [id]').forEach(function(control) {
+				controls.push(control);
+			});
+		}
+		controls.forEach(function(control) {
+			if (control.id && !seen.has(control.id)) {
+				seen.add(control.id);
+				keys.push(control.id);
+			}
+			if (!control.attributes) {
+				return;
+			}
+			for (var i = 0; i < control.attributes.length; i++) {
+				var attr = control.attributes[i];
+				if (attr && /^data-(?:setting|textsetting|numbersetting|optionsetting|both|param\d+|textparam\d+|numberparam\d+|optionparam\d+)$/.test(attr.name) && attr.value && !seen.has(attr.value)) {
+					seen.add(attr.value);
+					keys.push(attr.value);
+				}
+			}
+		});
+		return keys.join('|');
+	}
+
+	function revealPopupSearchResult(record) {
+		var target = record && record.element;
+		var wrapper = record && record.wrapper;
+		closePopupSearch();
+		if (wrapper) {
+			openPopupSearchSection(wrapper);
+		}
+		if (!target || !document.contains(target)) {
+			return;
+		}
+		setPopupSearchMatch(target);
+		target.scrollIntoView({block: 'center'});
+		setTimeout(function() {
+			target.classList.remove('popup-search-match');
+			popupSearchMatchedElements.delete(target);
+		}, 2500);
+	}
+
+	function renderPopupSearchResults(records, totalMatches) {
+		clearPopupSearchResults();
+		if (!popupSearchResults) {
+			return;
+		}
+		if (!totalMatches) {
+			var empty = document.createElement('div');
+			empty.className = 'popup-search-result-summary';
+			var emptySource = document.getElementById('popupSearchNoResults');
+			empty.textContent = emptySource ? emptySource.textContent : 'No matching options found';
+			popupSearchResults.appendChild(empty);
+			return;
+		}
+		var summary = document.createElement('div');
+		summary.className = 'popup-search-result-summary';
+		summary.textContent = totalMatches > records.length ? 'Showing ' + records.length + ' of ' + totalMatches + ' matches' : totalMatches + (totalMatches === 1 ? ' match' : ' matches');
+		popupSearchResults.appendChild(summary);
+		records.forEach(function(record) {
+			var button = document.createElement('button');
+			button.type = 'button';
+			button.className = 'popup-search-result';
+			button.setAttribute('role', 'listitem');
+			button.setAttribute('data-search-targets', getPopupSearchTargetKeys(record.element));
+			button.textContent = getPopupSearchResultLabel(record.element);
+			var sectionText = getPopupSearchResultSection(record.wrapper);
+			if (sectionText) {
+				var section = document.createElement('span');
+				section.className = 'popup-search-result-section';
+				section.textContent = sectionText;
+				button.appendChild(section);
+			}
+			button.addEventListener('click', function() {
+				revealPopupSearchResult(record);
+			});
+			popupSearchResults.appendChild(button);
+		});
+	}
+
 	function isPopupSearchControl(element) {
 		if (!element || !element.id) {
 			return false;
@@ -11333,6 +11469,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return element.id === 'searchInput' ||
 			element.id === 'searchIcon' ||
 			element.id === 'popupSearchNoResults' ||
+			element.id === 'popupSearchResults' ||
 			element.id === 'activeIcon' ||
 			element.id === 'languageIcon' ||
 			element.id === 'language-selector-container';
@@ -11581,7 +11718,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				var containerOnly = containerOnlyElements.has(row);
 				return {
 					element: row,
-					text: containerOnly ? '' : getPopupSearchText(row),
+					text: getPopupSearchText(row),
 					containerOnly: containerOnly
 				};
 			});
@@ -11638,65 +11775,67 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	function applyPopupSearchNow(value) {
 		var terms = getPopupSearchTerms(value);
 		clearPopupSearchMatches();
+		clearPopupSearchResults();
 
 		if (!terms.length) {
-			clearPopupSearchHidden();
 			setPopupSearchActive(false, false);
-			restorePopupSearchOpenState();
-			unlockPopupSearchWidth();
-			restorePopupSearchScrollContext();
 			return;
 		}
 
 		setPopupSearchActive(true, false);
-		savePopupSearchOpenState();
-		lockPopupSearchWidth();
 		if (!popupSearchIndex) {
 			popupSearchIndex = createPopupSearchIndex();
 		}
 
-		var totalMatches = 0;
-
-		popupSearchIndex.links.forEach(function(record) {
-			var isMatch = popupSearchRecordMatches(record, terms);
-			setPopupSearchHidden(record.element, !isMatch);
-			if (isMatch) {
-				totalMatches += 1;
+		var matches = [];
+		var matchedElements = new Set();
+		var resultLimit = 60;
+		function addResult(element, wrapper) {
+			if (!element || matchedElements.has(element)) {
+				return;
 			}
-		});
+			matchedElements.add(element);
+			if (matches.length < resultLimit) {
+				matches.push({element: element, wrapper: wrapper || null});
+			}
+		}
 
 		popupSearchIndex.wrappers.forEach(function(wrapperRecord) {
 			var wrapper = wrapperRecord.element;
 			var rows = wrapperRecord.rows;
-			var matchedRows = [];
 			var sectionMatches = popupSearchTextMatches(wrapperRecord.sectionText, terms);
 			rows.forEach(function(rowRecord) {
-				if (!rowRecord.containerOnly && popupSearchRecordMatches(rowRecord, terms)) {
-					matchedRows.push(rowRecord);
-				}
-			});
-			matchedRows.forEach(function(rowRecord) {
-				var matchElement = rowRecord.element;
-				var parent = matchElement.parentElement;
-				while (parent && parent !== wrapper) {
-					if (wrapperRecord.rowElementSet.has(parent)) {
-						matchElement = parent;
+				if (popupSearchRecordMatches(rowRecord, terms)) {
+					var matchElement = rowRecord.element;
+					var parent = matchElement.parentElement;
+					while (parent && parent !== wrapper) {
+						if (wrapperRecord.rowElementSet.has(parent)) {
+							matchElement = parent;
+						}
+						parent = parent.parentElement;
 					}
-					parent = parent.parentElement;
+					addResult(matchElement, wrapper);
 				}
-				setPopupSearchMatch(matchElement);
 			});
-
-			var wrapperVisible = !(matchedRows.length === 0 && !(rows.length === 0 && sectionMatches));
-			setPopupSearchHidden(wrapper, !wrapperVisible);
-			if (wrapperVisible) {
-				openPopupSearchSection(wrapper);
-				totalMatches += 1;
+			if (sectionMatches) {
+				addResult(wrapper.querySelector('.collapsible-label') || wrapper, wrapper);
 			}
 		});
-		totalMatches += updatePopupSearchTopLevel(terms);
 
-		setPopupSearchActive(true, totalMatches === 0);
+		popupSearchIndex.links.forEach(function(record) {
+			if (popupSearchRecordMatches(record, terms)) {
+				addResult(record.element, null);
+			}
+		});
+
+		popupSearchIndex.topLevel.forEach(function(record) {
+			if (popupSearchRecordMatches(record, terms)) {
+				addResult(record.element, null);
+			}
+		});
+
+		renderPopupSearchResults(matches, matchedElements.size);
+		setPopupSearchActive(true, matchedElements.size === 0);
 	}
 
 	function applyPopupSearch(value) {
@@ -11721,6 +11860,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		clearPopupSearchHidden();
 		clearPopupSearchMatches();
+		clearPopupSearchResults();
 		setPopupSearchActive(false, false);
 		restorePopupSearchOpenState();
 		unlockPopupSearchWidth();

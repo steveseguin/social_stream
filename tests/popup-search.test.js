@@ -27,6 +27,7 @@ const isPopupSearchControl = Function(`${controlSource}\nreturn isPopupSearchCon
 	"searchInput",
 	"searchIcon",
 	"popupSearchNoResults",
+	"popupSearchResults",
 	"activeIcon",
 	"languageIcon",
 	"language-selector-container"
@@ -52,33 +53,36 @@ assert.match(
 	/new Set\(rowElements\)/,
 	"Nested search rows must be indexed without pairwise containment checks"
 );
+assert.match(
+	createIndexSource,
+	/text: getPopupSearchText\(row\)/,
+	"Grouped rows must retain their own searchable controls"
+);
 
 const applySearchSource = extractFunction(popupSource, "applyPopupSearchNow");
 assert.doesNotMatch(
 	applySearchSource,
-	/openPopupSearchSections/,
-	"Searching must not expand every settings section"
+	/openPopupSearchSection|setPopupSearchHidden|setPopupSearchMatch/,
+	"Typing in search must not mutate the live settings UI"
 );
 assert.match(
 	applySearchSource,
-	/openPopupSearchSection\(wrapper\)/,
-	"Searching should expand only matching settings sections"
+	/renderPopupSearchResults\(matches, matchedElements\.size\)/,
+	"Search matches must render in the isolated results panel"
 );
 assert.doesNotMatch(
 	applySearchSource,
-	/setPopupSearchHidden\(rowRecord\.element/,
-	"Searching must not hide every nonmatching option row individually"
-);
-assert.match(
-	applySearchSource,
-	/setPopupSearchMatch\(matchElement\)/,
-	"Matching options should be highlighted within their visible section"
+	/!rowRecord\.containerOnly/,
+	"Controls nested directly in grouped rows must remain searchable"
 );
 assert.match(
 	popupSource,
 	/applyPopupSearchNow\(value\);\s*\}, 200\);/,
 	"Popup search must debounce typing long enough to avoid rerendering on every keystroke"
 );
+assert.match(popupHtml, /id="popupSearchResults"/, "Popup search results panel is missing");
+assert.match(popupSource, /addPopupSearchSelectOptions\(parts, element\)/, "Dropdown choices must be searchable");
+assert.match(popupSource, /data-\(\?:setting/, "Setting keys must be searchable as a fallback");
 
 [
 	["wrapper-global-mechanics-options", "Events &amp; Capture"],
