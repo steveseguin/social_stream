@@ -691,6 +691,35 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
     assert(Math.abs(imageScaleSnapshot.imageWidth - imageScaleSnapshot.itemWidth) <= 0.75, 'Inline image width ignored the scale-adjusted wrapper size.');
     assert(Math.abs(imageScaleSnapshot.imageHeight - imageScaleSnapshot.itemWidth) <= 0.75, 'Inline image height ignored the scale-adjusted wrapper size.');
 
+    const emojiScaleUrl = new URL(popupUrl.toString());
+    emojiScaleUrl.searchParams.set('scale', '4');
+    emojiScaleUrl.searchParams.delete('triple');
+    await loadOverlay(overlayPage, emojiScaleUrl.toString());
+    const emojiScaleSnapshot = await overlayPage.evaluate(async () => {
+      const overlay = window.__reactionsOverlay;
+
+      overlay.clearStage();
+      overlay.processPayload({
+        event: 'reaction',
+        type: 'youtube',
+        id: 'emoji-scale',
+        chatmessage: '<span class="reaction-heart">👍</span>'
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 120));
+
+      const item = document.querySelector('.reaction');
+      const emoji = item && item.querySelector('.reaction-heart');
+      return {
+        itemWidth: item ? parseFloat(item.style.width) : 0,
+        emojiFontSize: emoji ? parseFloat(getComputedStyle(emoji).fontSize) : 0
+      };
+    });
+
+    assert(emojiScaleSnapshot.itemWidth >= 152 && emojiScaleSnapshot.itemWidth <= 240, 'Emoji reaction did not receive the 4x wrapper size.');
+    assert(Math.abs(emojiScaleSnapshot.emojiFontSize - emojiScaleSnapshot.itemWidth) <= 0.75, 'Emoji glyph ignored the 4x scale setting.');
+    await loadOverlay(overlayPage, popupUrl.toString());
+
     const contentImageSnapshot = await getOverlaySnapshot(overlayPage, {
       event: 'reaction',
       type: 'youtube',
