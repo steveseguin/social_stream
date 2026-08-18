@@ -158,7 +158,7 @@ body {
 	var label = urlParams.get("label") || "reactions";
 	var outChannel = parseInt(urlParams.get("out") || urlParams.get("outchan") || "3", 10);
 	var inChannel = parseInt(urlParams.get("in") || urlParams.get("inchan") || "4", 10);
-	var scaleSetting = parseFloat(urlParams.get("scale") || "3");
+	var scaleSetting = parseFloat(urlParams.get("scale") || "1");
 	var speedSetting = parseFloat(urlParams.get("speed") || "1");
 	var burstSetting = parseInt(urlParams.get("burst") || "6", 10);
 	var limitSetting = parseInt(urlParams.get("limit") || "60", 10);
@@ -179,7 +179,7 @@ body {
 		inChannel = 4;
 	}
 	if (!isFinite(scaleSetting) || scaleSetting <= 0) {
-		scaleSetting = 3;
+		scaleSetting = 1;
 	}
 	if (!isFinite(speedSetting) || speedSetting <= 0) {
 		speedSetting = 1;

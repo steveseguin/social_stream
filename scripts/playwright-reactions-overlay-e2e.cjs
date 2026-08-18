@@ -821,8 +821,8 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
       chatmessage: '<span>ðŸ”¥</span>'
     }, 250);
 
-    assert(defaultSizeSnapshot.config.scale === 3, 'Default reaction scale should be 3x.');
-    assert(defaultSizeSnapshot.history[0].size >= 114 && defaultSizeSnapshot.history[0].size <= 216, 'Default reaction size is not 3x larger.');
+    assert(defaultSizeSnapshot.config.scale === 1, 'Default reaction scale should be 1x.');
+    assert(defaultSizeSnapshot.history[0].size >= 38 && defaultSizeSnapshot.history[0].size <= 72, 'Default reaction size is not 1x.');
 
     const serverModeChecks = [
       {
