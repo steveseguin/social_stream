@@ -457,6 +457,53 @@ async function runTests() {
         );
     }
 
+    console.log('\n[10] duplicated flows receive independent node IDs');
+    {
+        const EFS = loadEventFlowSystem({ ssapp: true });
+        const sys = new EFS();
+        const original = {
+            id: 'flow_original',
+            name: 'LOSS_CONTROL',
+            nodes: [
+                { id: 'trigger_1', type: 'trigger', triggerType: 'messageEquals', config: { text: '!loss' } },
+                { id: 'counter_1', type: 'state', stateType: 'COUNTER', config: { name: 'LOSSCOUNT' } },
+                { id: 'reset_1', type: 'action', actionType: 'setCounter', config: { targetNodeId: 'counter_1', value: 0 } }
+            ],
+            connections: [
+                { from: 'trigger_1', to: 'counter_1' },
+                { from: 'counter_1', to: 'reset_1' }
+            ]
+        };
+
+        sys.flows = [original];
+        sys.getFlowById = async id => id === original.id ? original : null;
+        sys.saveFlow = async flow => flow;
+
+        const duplicate = await sys.duplicateFlow(original.id);
+        const duplicateTrigger = duplicate.nodes.find(node => node.type === 'trigger');
+        const duplicateCounter = duplicate.nodes.find(node => node.type === 'state');
+        const duplicateReset = duplicate.nodes.find(node => node.actionType === 'setCounter');
+        const originalIds = new Set(original.nodes.map(node => node.id));
+
+        assert(
+            duplicate.nodes.every(node => !originalIds.has(node.id)),
+            'Duplicate Flow regenerates every node ID'
+        );
+        assert(
+            duplicate.connections[0].from === duplicateTrigger.id && duplicate.connections[0].to === duplicateCounter.id &&
+                duplicate.connections[1].from === duplicateCounter.id && duplicate.connections[1].to === duplicateReset.id,
+            'Duplicate Flow remaps connection endpoints'
+        );
+        assert(
+            duplicateReset.config.targetNodeId === duplicateCounter.id,
+            'Duplicate Flow remaps state-node action targets'
+        );
+        assert(
+            original.nodes[2].config.targetNodeId === 'counter_1',
+            'duplicating does not mutate the original flow'
+        );
+    }
+
     console.log(`\n${'-'.repeat(50)}`);
     console.log(`Results: ${passed} passed, ${failed} failed`);
     if (failed > 0) {
