@@ -628,7 +628,8 @@
 	    const password = urlParams.get('password') || 'false';
 	    const lanonly = urlParams.has('lanonly') ? '&lanonly' : '';
 	    const persistCredits = urlParams.has('persistcredits');
-	    const creditsStorageSession = (urlParams.get('session') || 'local').split(',')[0] || 'local';
+	    const creditsSession = (urlParams.get('session') || '').split(',')[0].trim();
+	    const creditsStorageSession = creditsSession || 'local';
 	    const creditsStorageKey = 'ssn-credits-users-v1:' + creditsStorageSession;
 	    function getCreditsFilterMode() {
 	        if (urlParams.has('onlydonors')) return 'onlydonors';
@@ -640,10 +641,11 @@
 	        if (typeof value !== "string") return null;
 	        const trimmed = value.trim();
 	        if (!trimmed) return null;
-	        if (/^[0-9a-fA-F]{3,8}$/.test(trimmed)) {
-	            return "#" + trimmed;
+	        const normalized = /^[0-9a-fA-F]{3,8}$/.test(trimmed) ? "#" + trimmed : trimmed;
+	        if (window.CSS && typeof window.CSS.supports === 'function' && !window.CSS.supports('color', normalized)) {
+	            return null;
 	        }
-	        return trimmed;
+	        return normalized;
 	    }
 	    const pageBgParam = normalizeColorParam(urlParams.get('pagebg') || urlParams.get('pagebackground') || urlParams.get('dockbg'));
 
@@ -664,6 +666,68 @@
 
 	// User tracking
 	const users = new Map();
+	const MEMBERSHIP_EVENT_TYPES = new Set([
+		'sponsorship',
+		'membermilestone',
+		'member_milestone',
+		'new_subscriber',
+		'resub',
+		'subscription',
+		'membership',
+		'new_member',
+		'new_membership',
+		'newmember',
+		'upgraded_membership',
+		'membership_upgrade',
+		'membership_milestone',
+		'giftpurchase',
+		'giftredemption',
+		'subscription_gift',
+		'subgift',
+		'gift_membership',
+		'giftmemberships',
+		'gifted_membership',
+		'gifted_memberships',
+		'membership_gift',
+		'community_gift',
+		'channel_subscription_gifts',
+		'channel_subscription_gift',
+		'channel_subscription_new',
+		'channel_subscription_start',
+		'channel_subscription',
+		'subscription_gifts',
+		'subscription_renewal'
+	]);
+
+	function normalizeCreditsEvent(value) {
+		return typeof value === 'string' ? value.toLowerCase().trim().replace(/[\s.-]+/g, '_') : '';
+	}
+
+	function hasDonationSignal(data) {
+		return !!(data && data.hasDonation);
+	}
+
+	function hasMembershipSignal(data) {
+		return !!(data && (data.membership || MEMBERSHIP_EVENT_TYPES.has(normalizeCreditsEvent(data.event))));
+	}
+
+	function normalizeSourceType(value) {
+		const sourceType = String(value || '').trim().toLowerCase();
+		return /^[a-z0-9_-]+$/.test(sourceType) ? sourceType : '';
+	}
+
+	function normalizeImageUrl(value) {
+		if (typeof value !== 'string' || !value.trim()) return '';
+		const trimmed = value.trim();
+		if (/^data:image\/[a-z0-9.+-]+(?:;[^,]*)?,/i.test(trimmed)) return trimmed;
+		try {
+			const parsed = new URL(trimmed, window.location.href);
+			if (parsed.protocol === 'http:' || parsed.protocol === 'https:' || parsed.protocol === 'blob:') {
+				return parsed.href;
+			}
+		} catch (_) {}
+		return '';
+	}
 
 	class User {
 		constructor(name, type) {
@@ -684,35 +748,52 @@
 			);
 		}
 
-		get displayName() {
-			let badges = [];
+		get badges() {
+			const badges = [];
 			if (this.isMember) badges.push('👑');
 			if (this.hasDonationActivity || this.donations > 0) badges.push('💝');
 			if (this.messageCount > 10) badges.push('💬');
-			
-			const nameDisplay = this.name;
-			const badgesDisplay = badges.length > 0 ? badges.join(' ') : '';
-			
-			const showsourcetype = !urlParams.has('nosourcetype');
-			const typeImage = showsourcetype ? `<img src="./sources/images/${this.type}.png" alt="${this.type}" class="source-type-img">` : '';
-			
-			const showamounts = urlParams.has('showamounts');
-			const donationDisplay = (showamounts && this.donations > 0) ? ` ($${this.donations.toFixed(2)})` : '';
-			
-			return `${nameDisplay} ${badgesDisplay}${typeImage}${donationDisplay}`;
+			return badges;
 		}
 
-		generateHtml() {
+		generateElement() {
+			const entry = document.createElement('div');
+			entry.className = 'user-entry';
 			const showAvatars = urlParams.has('showavatar') || urlParams.has('showavatars');
-			
-			if (showAvatars && this.avatarUrl) {
-				return `<div class="user-entry with-avatar">
-					<img src="${this.avatarUrl}" alt="${this.name}" class="avatar">
-					<span class="user-info">${this.displayName}</span>
-				</div>`;
-			} else {
-				return `<div class="user-entry">${this.displayName}</div>`;
+			const avatarUrl = showAvatars ? normalizeImageUrl(this.avatarUrl) : '';
+			if (avatarUrl) {
+				entry.classList.add('with-avatar');
+				const avatar = document.createElement('img');
+				avatar.src = avatarUrl;
+				avatar.alt = String(this.name || '');
+				avatar.className = 'avatar';
+				entry.appendChild(avatar);
 			}
+
+			const userInfo = document.createElement('span');
+			userInfo.className = 'user-info';
+			userInfo.appendChild(document.createTextNode(String(this.name || '')));
+
+			const badges = this.badges;
+			if (badges.length) {
+				userInfo.appendChild(document.createTextNode(' ' + badges.join(' ')));
+			}
+
+			const sourceType = normalizeSourceType(this.type);
+			if (!urlParams.has('nosourcetype') && sourceType) {
+				const sourceImage = document.createElement('img');
+				sourceImage.src = `./sources/images/${sourceType}.png`;
+				sourceImage.alt = sourceType;
+				sourceImage.className = 'source-type-img';
+				userInfo.appendChild(sourceImage);
+			}
+
+			if (urlParams.has('showamounts') && this.donations > 0) {
+				userInfo.appendChild(document.createTextNode(` ($${this.donations.toFixed(2)})`));
+			}
+
+			entry.appendChild(userInfo);
+			return entry;
 		}
 	}
 
@@ -725,7 +806,7 @@
 	}
 
 	function hasSupporterSignal(data) {
-		return !!(data && (data.hasDonation || data.membership));
+		return hasDonationSignal(data) || hasMembershipSignal(data);
 	}
 
 	function getPositiveDonationAmount(value) {
@@ -822,7 +903,7 @@
 		if (!data.chatname || !data.type) return;
 
 		const onlydonors = urlParams.has('onlydonors');
-		if (onlydonors && !data.hasDonation) return;
+		if (onlydonors && !hasDonationSignal(data)) return;
 		if (!onlydonors && urlParams.has('onlysupporters') && !hasSupporterSignal(data)) return;
 
 		const user = getOrCreateUser(data.chatname, data.type);
@@ -833,11 +914,11 @@
 			user.avatarUrl = data.chatimg;
 		}
 
-		if (data.membership) {
+		if (hasMembershipSignal(data)) {
 			user.isMember = true;
 		}
 
-		if (data.hasDonation) {
+		if (hasDonationSignal(data)) {
 			user.hasDonationActivity = true;
 			try {
 				const source = data.type ? data.type.toLowerCase() : '';
@@ -850,22 +931,41 @@
 					user.donations += donationAmount;
 					console.log(`Added donation of ${donationAmount} for ${data.chatname}`);
 				} else {
-					user.donations += 0.01;
-					console.warn(`Using minimum donation value for ${data.chatname}:`, data.hasDonation);
+					console.warn(`Could not determine donation value for ${data.chatname}:`, data.hasDonation);
 				}
 			} catch (error) {
 				console.error(`Error processing donation for ${data.chatname}:`, error, data.hasDonation);
-				user.donations += 0.01;
 			}
 		}
 
 		savePersistedCredits();
 	}
 
-	function generateCreditsContent() {
-		let sortedUsers = Array.from(users.values());
-		sortedUsers = filterCreditsUsersForSupporters(sortedUsers);
-		
+	function getCreditsUsersForDisplay() {
+		return filterCreditsUsersForSupporters(Array.from(users.values()));
+	}
+
+	function appendCreditsSection(fragment, title, sectionUsers, addSpacing) {
+		if (!sectionUsers.length) return;
+		if (!urlParams.has('hidecategories')) {
+			const header = document.createElement('div');
+			header.classList.add('category-header', creditsStyle);
+			header.textContent = title;
+			fragment.appendChild(header);
+		}
+		sectionUsers.forEach(function(user) {
+			fragment.appendChild(user.generateElement());
+		});
+		if (addSpacing) {
+			fragment.appendChild(document.createElement('br'));
+			fragment.appendChild(document.createElement('br'));
+		}
+	}
+
+	function renderCreditsContent(userList) {
+		let sortedUsers = Array.isArray(userList) ? userList.slice() : getCreditsUsersForDisplay();
+		const fragment = document.createDocumentFragment();
+
 		if (donationPriority) {
 			// Separate users into donors and non-donors
 			const donors = sortedUsers.filter(userHasDonationActivity)
@@ -888,25 +988,9 @@
 			const participants = sortedUsers.filter(u => !userHasDonationActivity(u) && !u.isMember)
 				.sort((a, b) => b.messageCount - a.messageCount);
 
-			const hidecategories = urlParams.has('hidecategories');
-			let content = '';
-			
-			if (donors.length > 0) {
-				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Stream Donors</div>`;
-				content += donors.map(u => u.generateHtml()).join('') + '<br><br>';
-			}
-			
-			if (members.length > 0) {
-				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Channel Members</div>`;
-				content += members.map(u => u.generateHtml()).join('') + '<br><br>';
-			}
-			
-			if (participants.length > 0) {
-				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Stream Participants</div>`;
-				content += participants.map(u => u.generateHtml()).join('');
-			}
-			
-			return content;
+			appendCreditsSection(fragment, 'Stream Donors', donors, members.length > 0 || participants.length > 0);
+			appendCreditsSection(fragment, 'Channel Members', members, participants.length > 0);
+			appendCreditsSection(fragment, 'Stream Participants', participants, false);
 		} else {
 			// Original scoring system
 			sortedUsers.sort((a, b) => b.score - a.score);
@@ -915,30 +999,23 @@
 			const regulars = sortedUsers.filter(u => u.score >= 50 && u.score < 150);
 			const participants = sortedUsers.filter(u => u.score < 50);
 			
-			const hidecategories = urlParams.has('hidecategories');
-			let content = '';
-			
-			if (vips.length > 0) {
-				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">VIP Supporters</div>`;
-				content += vips.map(u => u.generateHtml()).join('') + '<br><br>';
-			}
-			
-			if (regulars.length > 0) {
-				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Regular Supporters</div>`;
-				content += regulars.map(u => u.generateHtml()).join('') + '<br><br>';
-			}
-			
-			if (participants.length > 0) {
-				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Stream Participants</div>`;
-				content += participants.map(u => u.generateHtml()).join('');
-			}
-			
-			return content;
+			appendCreditsSection(fragment, 'VIP Supporters', vips, regulars.length > 0 || participants.length > 0);
+			appendCreditsSection(fragment, 'Regular Supporters', regulars, participants.length > 0);
+			appendCreditsSection(fragment, 'Stream Participants', participants, false);
 		}
+
+		creditsContent.textContent = '';
+		creditsContent.appendChild(fragment);
 	}
 
-	function savePersistedCredits() {
+	let persistedCreditsSaveTimer = null;
+
+	function flushPersistedCredits() {
 		if (!persistCredits) return;
+		if (persistedCreditsSaveTimer) {
+			clearTimeout(persistedCreditsSaveTimer);
+			persistedCreditsSaveTimer = null;
+		}
 		try {
 			const savedUsers = [];
 			users.forEach(function(user) {
@@ -961,6 +1038,14 @@
 		} catch (e) {
 			console.warn('Could not save persisted credits:', e);
 		}
+	}
+
+	function savePersistedCredits() {
+		if (!persistCredits) return;
+		if (persistedCreditsSaveTimer) {
+			clearTimeout(persistedCreditsSaveTimer);
+		}
+		persistedCreditsSaveTimer = setTimeout(flushPersistedCredits, 250);
 	}
 
 	function loadPersistedCredits() {
@@ -988,6 +1073,10 @@
 	}
 
 	function clearPersistedCredits() {
+		if (persistedCreditsSaveTimer) {
+			clearTimeout(persistedCreditsSaveTimer);
+			persistedCreditsSaveTimer = null;
+		}
 		try {
 			localStorage.removeItem(creditsStorageKey);
 		} catch (e) {
@@ -1000,18 +1089,19 @@
 		clearPersistedCredits();
 		const content = document.getElementById('credits-content');
 		if (content) {
-			content.innerHTML = generateCreditsContent();
+			renderCreditsContent([]);
 		}
 	}
 
 	loadPersistedCredits();
+	window.addEventListener('pagehide', flushPersistedCredits);
 
 	// IFRAME setup for Social Stream Ninja
     const filename = "dock";
     let iframe = null;
     if (!useServerOnlyTransport()) {
         iframe = document.createElement("iframe");
-        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" + encodeURIComponent(password) + lanonly + "&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label=" + filename + "&cleanoutput&room=" + urlParams.get('session');
+	        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" + encodeURIComponent(password) + lanonly + "&solo&view=" + encodeURIComponent(creditsSession) + "&novideo&noaudio&label=" + filename + "&cleanoutput&room=" + encodeURIComponent(creditsSession);
         iframe.style.width = "0px";
         iframe.style.height = "0px";
         iframe.style.position = "fixed";
@@ -1030,7 +1120,9 @@
 	
 
 	// Apply style classes
-	const creditsStyle = urlParams.get('style') || "starwars";
+	const supportedCreditsStyles = new Set(['starwars', 'standard', 'minimal', 'elegant']);
+	const requestedCreditsStyle = String(urlParams.get('style') || 'starwars').toLowerCase();
+	const creditsStyle = supportedCreditsStyles.has(requestedCreditsStyle) ? requestedCreditsStyle : 'starwars';
 	const appElement = document.getElementById('app');
 	appElement.classList.add(creditsStyle);
 	
@@ -1096,7 +1188,8 @@
 
 
 	// Set animation speed
-	const speed = parseFloat(urlParams.get('speed') || "1");
+	const requestedSpeed = parseFloat(urlParams.get('speed') || "1");
+	const speed = Number.isFinite(requestedSpeed) && requestedSpeed > 0 ? requestedSpeed : 1;
 	const durationParam = parseFloat(urlParams.get('duration') || "");
 
 	// Duration has priority over speed if provided
@@ -1117,23 +1210,24 @@
 		document.documentElement.style.setProperty('--standard-speed', '60s');
 	}
 	
-	const textColor = urlParams.get('textcolor');
+	const textColor = normalizeColorParam(urlParams.get('textcolor'));
 
 	if (textColor) {
 		document.documentElement.style.setProperty('--text-color', textColor);
 		
-		// Create matching text shadow for custom color
-		const r = parseInt(textColor.slice(1, 3), 16);
-		const g = parseInt(textColor.slice(3, 5), 16);
-		const b = parseInt(textColor.slice(5, 7), 16);
-		
-		// Generate a glow effect based on the custom color
-		const textShadow = `0 0 16px rgba(${r}, ${g}, ${b}, 0.6), 0 0 3px rgba(${r}, ${g}, ${b}, 0.8), 0 0 10px rgba(255, 255, 255, 0.3)`;
-		document.documentElement.style.setProperty('--custom-text-shadow', textShadow);
-		
-		// Apply shadow to all text elements including footer
-		const footerText = document.querySelector('.footer-text');
-		footerText.style.textShadow = textShadow;
+		const hexMatch = textColor.match(/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i);
+		if (hexMatch) {
+			let hex = hexMatch[1];
+			if (hex.length === 3) {
+				hex = hex.split('').map(value => value + value).join('');
+			}
+			const r = parseInt(hex.slice(0, 2), 16);
+			const g = parseInt(hex.slice(2, 4), 16);
+			const b = parseInt(hex.slice(4, 6), 16);
+			const textShadow = `0 0 16px rgba(${r}, ${g}, ${b}, 0.6), 0 0 3px rgba(${r}, ${g}, ${b}, 0.8), 0 0 10px rgba(255, 255, 255, 0.3)`;
+			document.documentElement.style.setProperty('--custom-text-shadow', textShadow);
+			footerText.style.textShadow = textShadow;
+		}
 	}
 
 
@@ -1200,14 +1294,27 @@
     // Optional: Extension server relay (server2/server3) for dock-labeled pages
     (function setupExtensionSocket(){
         if (!(urlParams.has('server2') || urlParams.has('server3'))) return;
-        let serverURL = urlParams.has('server2') ? (urlParams.get('server2') || 'wss://io.socialstream.ninja/extension') : (urlParams.get('server3') || 'wss://io.socialstream.ninja/extension');
+		const defaultServerURL = 'wss://io.socialstream.ninja/extension';
+		const requestedServerURL = urlParams.has('server2') ? urlParams.get('server2') : urlParams.get('server3');
+		let serverURL = defaultServerURL;
+		try {
+			const parsedServerURL = new URL(requestedServerURL || defaultServerURL);
+			if (parsedServerURL.protocol === 'ws:' || parsedServerURL.protocol === 'wss:') {
+				serverURL = parsedServerURL.href;
+			}
+		} catch (_) {}
         let socket = null;
         let attempts = 1;
         function connect(){
             if (socket) {
                 socket.onclose = null; try { socket.close(); } catch(e){}
             }
-            socket = new WebSocket(serverURL);
+			try {
+				socket = new WebSocket(serverURL);
+			} catch (_) {
+				setTimeout(connect, 100 * attempts++);
+				return;
+			}
             socket.onopen = function(){
                 attempts = 1;
                 const session = (urlParams.get('session') || '').split(',')[0];
@@ -1234,6 +1341,7 @@
 
 	// Shared helpers for visibility toggles
 	const creditsContent = document.getElementById('credits-content');
+	let activeRollSnapshot = null;
 
 	function applyAdaptiveOffsets() {
 		try {
@@ -1260,7 +1368,11 @@
 	}
 
 	function startCredits() {
-		creditsContent.innerHTML = generateCreditsContent();
+		const displayedUsers = getCreditsUsersForDisplay();
+		activeRollSnapshot = new Map(displayedUsers.map(function(user) {
+			return [`${user.name}-${user.type}`, user.messageCount];
+		}));
+		renderCreditsContent(displayedUsers);
 		document.body.classList.add('visible');
 		appElement.classList.add('visible');
 
@@ -1362,6 +1474,9 @@
 
 	document.addEventListener('visibilitychange', function () {
 		const isVisible = !document.hidden;
+		if (!isVisible) {
+			flushPersistedCredits();
+		}
 		// Clear instructions on first hide
 		if (!isVisible && !hasBeenHiddenOnce) {
 			hasBeenHiddenOnce = true;
@@ -1404,16 +1519,24 @@
 		// If loop is enabled, restart the animation
 		if (loopCredits) {
 			// Update content with any new users that joined during the animation
-			creditsContent.innerHTML = generateCreditsContent();
+			renderCreditsContent();
 			applyAdaptiveOffsets();
 			restartScrollAnimation();
 			return;
 		}
 
-		// Clear collected names when animation completes (unless in preview mode)
+		// Clear entries shown in this roll, but retain users who had new activity while it was running.
 		if (!previewMode && !persistCredits) {
-			users.clear();
+			if (activeRollSnapshot) {
+				activeRollSnapshot.forEach(function(displayedMessageCount, key) {
+					const currentUser = users.get(key);
+					if (currentUser && currentUser.messageCount === displayedMessageCount) {
+						users.delete(key);
+					}
+				});
+			}
 		}
+		activeRollSnapshot = null;
 
 		// Apply fadeout class
 		this.classList.add('fadeout');
