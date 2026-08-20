@@ -4608,11 +4608,11 @@ class EventFlowEditor {
 				if (node.type === 'trigger') {
 					 html += `<div class="property-group"><label class="property-label" for="prop-code">JavaScript Code</label><textarea class="property-input" id="prop-code" rows="10" spellcheck="false"></textarea>
 							 <button type="button" class="btn btn-primary custom-code-editor-launch" id="open-custom-code-editor-btn">Open Code Editor</button>
-							 <div class="property-help">Return true/false. \`message\` object is available.</div></div>`;
+							 <div class="property-help">Return true/false. \`message\` and \`convertCurrency(value, target, source)\` are available.</div></div>`;
 				} else if (node.type === 'action') { // Custom JS Action
 					 html += `<div class="property-group"><label class="property-label" for="prop-code">JavaScript Code</label><textarea class="property-input" id="prop-code" rows="10" spellcheck="false"></textarea>
 							 <button type="button" class="btn btn-primary custom-code-editor-launch" id="open-custom-code-editor-btn">Open Code Editor</button>
-							 <div class="property-help">\`message\` and \`result\` objects are available. Return an object like \`{ modified: boolean, message: object, blocked: boolean }\`.</div></div>`;
+							 <div class="property-help">\`message\`, \`result\`, and \`convertCurrency(value, target, source)\` are available. Return an object like \`{ modified: boolean, message: object, blocked: boolean }\`.</div></div>`;
 				}
 				// Potentially add a case for customJs if it were a logic node type
 				break;

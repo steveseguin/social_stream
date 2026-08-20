@@ -107,7 +107,7 @@ assert.ok(
 
   sandbox.catalog.collectSourcesFromManifest(manifest);
   assert.ok(!sandbox.catalog.sourcesList.has('dlive'), 'DLive must not appear in source dropdowns');
-  assert.ok(sandbox.catalog.sourcesList.has('trovo'), 'Trovo must remain in source dropdowns');
+  assert.ok(!sandbox.catalog.sourcesList.has('trovo'), 'retired Trovo must not appear in source dropdowns');
   for (const expected of [
     'arena', 'clouthub', 'external', 'instagramlive', 'meet', 'obs', 'socialstreamchat',
     'stageten', 'threads', 'twitter', 'velora', 'workplace', 'youtubeshorts', 'zoom_poll'

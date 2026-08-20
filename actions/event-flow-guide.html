@@ -667,7 +667,7 @@ Trigger ──────────────────▲
                 <div class="panel">
                     <strong>Signature:</strong> your code runs as <code>function(message) { ... }</code><br>
                     <strong>Must return:</strong> a boolean — <code>true</code> to let the flow continue, <code>false</code> to stop it.<br>
-                    <strong>Available:</strong> the <code>message</code> object (see <a href="#custom-js-message-api">message API</a> below).
+                    <strong>Available:</strong> the <code>message</code> object (see <a href="#custom-js-message-api">message API</a> below), plus <code>convertCurrency(value, targetCurrency, source)</code> and <code>convertToUSD(value, source)</code>.
                 </div>
 
                 <!-- ─── Action ─── -->
@@ -688,7 +688,7 @@ Trigger ──────────────────▲
                 <div class="panel">
                     <strong>Signature:</strong> your code runs as <code>function(message, result) { ... }</code><br>
                     <strong>Should return:</strong> an object merged into <code>result</code> — see <a href="#custom-js-result-api">result API</a>.<br>
-                    <strong>Available:</strong> <code>message</code> (the event payload) and <code>result</code> (current flow result state).
+                    <strong>Available:</strong> <code>message</code> (the event payload), <code>result</code> (current flow result state), plus <code>convertCurrency(value, targetCurrency, source)</code> and <code>convertToUSD(value, source)</code>.
                 </div>
 
                 <!-- ─── Both nodes on canvas ─── -->
@@ -722,6 +722,10 @@ Trigger ──────────────────▲
                         <tr><td><code>message.meta</code></td><td>object</td><td>Arbitrary structured data attached to the event</td><td><code>{ viewers: 120 }</code></td></tr>
                     </tbody>
                 </table>
+
+                <div class="panel">
+                    <strong>Currency conversion:</strong> use <code>convertCurrency(message.hasDonation, 'EUR', message.type)</code> to convert the formatted donation label into EUR. It returns a number, or <code>null</code> when the requested target currency is unsupported. The converter uses Social Stream Ninja's approximate internal rates; it does not contact an external exchange service.
+                </div>
 
                 <!-- ─── result API ─── -->
                 <h3 id="custom-js-result-api">What the action returns</h3>
@@ -769,6 +773,19 @@ return (message.chatmessage || '').toLowerCase().includes('!hello');</div>
   ? Number(message.donoValue)
   : (typeof convertToUSD === 'function' ? convertToUSD(message.hasDonation || '', message.type || '') : Number(String(message.hasDonation || '').replace(/[^0-9.]/g, '') || 0));
 return amount >= 5;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">YouTube Super Chat or Super Sticker in a EUR range</div>
+                    <div class="snippet-desc">Convert the standard YouTube donation label to EUR, exclude Jewels/Gifts, and select one sound or visual range.</div>
+                    <div class="code-js">var eventName = String(message.event || '').toLowerCase();
+if (eventName !== 'superchat' &amp;&amp; eventName !== 'supersticker') return false;
+
+var eurValue = convertCurrency(message.hasDonation || '', 'EUR', message.type || '');
+if (typeof eurValue !== 'number' || !isFinite(eurValue)) return false;
+
+message.eurValue = eurValue;
+return eurValue &gt;= 10 &amp;&amp; eurValue &lt; 25;</div>
                 </div>
 
                 <div class="snippet-block">

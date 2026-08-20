@@ -27,6 +27,10 @@ const EDITOR_SRC = fs.readFileSync(
     path.join(__dirname, '..', 'actions', 'EventFlowEditor.js'),
     'utf8'
 );
+const CURRENCY_SRC = fs.readFileSync(
+    path.join(__dirname, '..', 'currency.js'),
+    'utf8'
+);
 
 // ---- Minimal stubs required by EventFlowSystem constructor ----
 function makeWindow(overrides = {}) {
@@ -46,7 +50,7 @@ function makeWindow(overrides = {}) {
     };
 }
 
-function loadEventFlowSystem(windowOverrides = {}, globals = {}) {
+function loadEventFlowSystem(windowOverrides = {}, globals = {}, options = {}) {
     const sandbox = vm.createContext({
         window: makeWindow(windowOverrides),
         console,
@@ -61,6 +65,10 @@ function loadEventFlowSystem(windowOverrides = {}, globals = {}) {
         indexedDB: { open: () => ({}) },
         ...globals,
     });
+
+    if (options.loadCurrency) {
+        vm.runInContext(CURRENCY_SRC, sandbox);
+    }
 
     // class declarations don't auto-attach to the vm global; expose it explicitly
     vm.runInContext(EFS_SRC + '\nwindow.EventFlowSystem = EventFlowSystem;', sandbox);
@@ -188,6 +196,41 @@ console.log('\n[5] Custom JS action execution (SSApp mode)');
     const result = await sys.executeAction(actionNode, message);
     assert(result.modified === true, 'customJs action: result.modified set to true');
     assert(message.chatmessage === 'hi there [edited]', 'customJs action: message mutated correctly');
+}
+
+console.log('\n[5b] Custom JS can convert donation labels to EUR');
+{
+    const EFS = loadEventFlowSystem({ ssapp: true }, {}, { loadCurrency: true });
+    const sys = new EFS({ allowEvalCustomJs: true });
+    const triggerNode = {
+        id: 'trig-currency',
+        triggerType: 'customJs',
+        config: {
+            code: `var eventName = String(message.event || '').toLowerCase();
+if (eventName !== 'superchat' && eventName !== 'supersticker') return false;
+var eurValue = convertCurrency(message.hasDonation || '', 'EUR', message.type || '');
+message.eurValue = eurValue;
+return eurValue >= 6 && eurValue < 7;`
+        }
+    };
+    const message = {
+        type: 'youtube',
+        event: 'superchat',
+        hasDonation: 'CA$10.00',
+        textonly: true
+    };
+
+    const matchesRange = await sys.evaluateTrigger(triggerNode, message);
+    assert(matchesRange === true, 'customJs trigger: internal converter selects the EUR range');
+    assert(Math.abs(message.eurValue - (7.4 / 1.17)) < 1e-9, 'customJs trigger: exposes the converted EUR value');
+
+    const jewelMatches = await sys.evaluateTrigger(triggerNode, {
+        type: 'youtube',
+        event: 'jeweldonation',
+        hasDonation: '1000 Jewels',
+        textonly: true
+    });
+    assert(jewelMatches === false, 'customJs trigger: example excludes YouTube Jewels');
 }
 
 console.log('\n[6] Custom JS blocked when allowEvalCustomJs=false');
