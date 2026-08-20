@@ -1,5 +1,8 @@
 var Currencies = { usd: { d: 2, s: "$" }, cad: { d: 2, s: "$" }, eur: { d: 2, s: "€" }, aed: { d: 2, s: "د.إ.‏" }, afn: { d: 0, s: "؋" }, all: { d: 0, s: "Lek" }, amd: { d: 0, s: "դր." }, ars: { d: 2, s: "$" }, aud: { d: 2, s: "$" }, azn: { d: 2, s: "ман." }, bam: { d: 2, s: "KM" }, bdt: { d: 2, s: "৳" }, bgn: { d: 2, s: "лв." }, bhd: { d: 3, s: "د.ب.‏" }, bif: { d: 0, s: "FBu" }, bnd: { d: 2, s: "$" }, bob: { d: 2, s: "Bs" }, brl: { d: 2, s: "R$" }, bwp: { d: 2, s: "P" }, byn: { d: 2, s: "руб." }, bzd: { d: 2, s: "$" }, cdf: { d: 2, s: "FrCD" }, chf: { d: 2, s: "CHF" }, clp: { d: 0, s: "$" }, cny: { d: 2, s: "CN¥" }, cop: { d: 0, s: "$" }, crc: { d: 0, s: "₡" }, cve: { d: 2, s: "CV$" }, czk: { d: 2, s: "Kč" }, djf: { d: 0, s: "Fdj" }, dkk: { d: 2, s: "kr" }, dop: { d: 2, s: "RD$" }, dzd: { d: 2, s: "د.ج.‏" }, eek: { d: 2, s: "kr" }, egp: { d: 2, s: "ج.م.‏" }, ern: { d: 2, s: "Nfk" }, etb: { d: 2, s: "Br" }, gbp: { d: 2, s: "£" }, gel: { d: 2, s: "GEL" }, ghs: { d: 2, s: "GH₵" }, gnf: { d: 0, s: "FG" }, gtq: { d: 2, s: "Q" }, hkd: { d: 2, s: "$" }, hnl: { d: 2, s: "L" }, hrk: { d: 2, s: "kn" }, huf: { d: 0, s: "Ft" }, idr: { d: 0, s: "Rp" }, ils: { d: 2, s: "₪" }, inr: { d: 2, s: "টকা" }, iqd: { d: 0, s: "د.ع.‏" }, irr: { d: 0, s: "﷼" }, isk: { d: 0, s: "kr" }, jmd: { d: 2, s: "$" }, jod: { d: 3, s: "د.أ.‏" }, jpy: { d: 0, s: "￥" }, kes: { d: 2, s: "Ksh" }, khr: { d: 2, s: "៛" }, kmf: { d: 0, s: "FC" }, krw: { d: 0, s: "₩" }, kwd: { d: 3, s: "د.ك.‏" }, kzt: { d: 2, s: "тңг." }, lbp: { d: 0, s: "ل.ل.‏" }, lkr: { d: 2, s: "SL Re" }, ltl: { d: 2, s: "Lt" }, lvl: { d: 2, s: "Ls" }, lyd: { d: 3, s: "د.ل.‏" }, mad: { d: 2, s: "د.م.‏" }, mdl: { d: 2, s: "MDL" }, mga: { d: 0, s: "MGA" }, mkd: { d: 2, s: "MKD" }, mmk: { d: 0, s: "K" }, mop: { d: 2, s: "MOP$" }, mur: { d: 0, s: "MURs" }, mxn: { d: 2, s: "$" }, myr: { d: 2, s: "RM" }, mzn: { d: 2, s: "MTn" }, nad: { d: 2, s: "N$" }, ngn: { d: 2, s: "₦" }, nio: { d: 2, s: "C$" }, nok: { d: 2, s: "kr" }, npr: { d: 2, s: "नेरू" }, nzd: { d: 2, s: "$" }, omr: { d: 3, s: "ر.ع.‏" }, pab: { d: 2, s: "B/." }, pen: { d: 2, s: "S/." }, php: { d: 2, s: "₱" }, pkr: { d: 0, s: "₨" }, pln: { d: 2, s: "zł" }, pyg: { d: 0, s: "₲" }, qar: { d: 2, s: "ر.ق.‏" }, ron: { d: 2, s: "RON" }, rsd: { d: 0, s: "дин." }, rub: { d: 2, s: "₽." }, rwf: { d: 0, s: "FR" }, sar: { d: 2, s: "ر.س.‏" }, sdg: { d: 2, s: "SDG" }, sek: { d: 2, s: "kr" }, sgd: { d: 2, s: "$" }, sos: { d: 0, s: "Ssh" }, syp: { d: 0, s: "ل.س.‏" }, thb: { d: 2, s: "฿" }, tnd: { d: 3, s: "د.ت.‏" }, top: { d: 2, s: "T$" }, try: { d: 2, s: "TL" }, ttd: { d: 2, s: "$" }, twd: { d: 2, s: "NT$" }, tzs: { d: 0, s: "TSh" }, uah: { d: 2, s: "₴" }, ugx: { d: 0, s: "USh" }, uyu: { d: 2, s: "$" }, uzs: { d: 0, s: "UZS" }, vef: { d: 2, s: "Bs.F." }, vnd: { d: 0, s: "₫" }, xaf: { d: 0, s: "FCFA" }, xof: { d: 0, s: "CFA" }, yer: { d: 0, s: "ر.ي.‏" }, zar: { d: 2, s: "R" }, zmk: { d: 0, s: "ZK" }, zwl: { d: 0, s: "ZWL$" } };
 
+Currencies.ang = { d: 2, s: "NAf" };
+Currencies.xcg = { d: 2, s: "Cg" };
+
 function convertToUSD(valueStr, source = '') {
   // USD value of one currency unit. Floating rates are recent 90-day averages
   // through 2026-08-19 (ECB daily reference rates where available, otherwise
@@ -54,7 +57,18 @@ function convertToUSD(valueStr, source = '') {
     DKK: 0.153843,
     PLN: 0.268296,
     THB: 0.0301876,
-    IDR: 0.000055802
+    IDR: 0.000055802,
+    CZK: 0.0474876,
+    HUF: 0.00321237,
+    ILS: 0.336315,
+    ISK: 0.00802586,
+    MYR: 0.245899,
+    PHP: 0.0162977,
+    RON: 0.219400,
+    SGD: 0.777235,
+    TRY: 0.0213601,
+    TWD: 0.0313415,
+    ZAR: 0.0610452
   };
 
   // Platform-specific virtual currencies
@@ -342,7 +356,9 @@ function convertToUSD(valueStr, source = '') {
     NAF: 'ANG',
     'ANTILLEAN GUILDER': 'ANG',
     'NETHERLANDS ANTILLEAN GUILDER': 'ANG',
-    'CARIBBEAN GUILDER': 'ANG'
+    XCG: 'XCG',
+    CG: 'XCG',
+    'CARIBBEAN GUILDER': 'XCG'
   };
 
   function hasCurrencyTerm(term) {
@@ -370,6 +386,8 @@ function convertToUSD(valueStr, source = '') {
     { pattern: /\bAU?\s*\$/i, currency: 'AUD' },
     { pattern: /\bNZ\s*\$/i, currency: 'NZD' },
     { pattern: /\bHK\s*\$/i, currency: 'HKD' },
+    { pattern: /\b(?:SG|S)\s*\$/i, currency: 'SGD' },
+    { pattern: /\bNT\s*\$/i, currency: 'TWD' },
     { pattern: /\bCN\s*[¥￥]/i, currency: 'CNY' },
     { pattern: /\bJP\s*[¥￥]/i, currency: 'JPY' },
     { pattern: /\bBZ\s*\$/i, currency: 'BZD' },
@@ -388,6 +406,12 @@ function convertToUSD(valueStr, source = '') {
     { pattern: /\bL(?=\s*\d)/i, currency: 'HNL' },
     { pattern: /\u20a1/i, currency: 'CRC' },
     { pattern: /\u20b2/i, currency: 'PYG' },
+    { pattern: /\u20b1/i, currency: 'PHP' },
+    { pattern: /\u20aa/i, currency: 'ILS' },
+    { pattern: /\u20ba/i, currency: 'TRY' },
+    { pattern: /\bRM(?=\s*\d)/i, currency: 'MYR' },
+    { pattern: /\bK\u010d(?=\s*\d)/i, currency: 'CZK' },
+    { pattern: /\bFt(?=\s*\d)/i, currency: 'HUF' },
     { pattern: /\u0192|Afl\.?/i, currency: 'AWG' },
     { pattern: /\bNAf\.?/i, currency: 'ANG' }
   ];
@@ -461,7 +485,9 @@ function convertCurrency(valueStr, targetCurrency = 'USD', source = '') {
     PYG: true, VES: true, CRC: true, GTQ: true, HNL: true, DOP: true, NIO: true,
     PAB: true, AWG: true, BBD: true, BMD: true, BSD: true, BZD: true, CUP: true,
     GYD: true, HTG: true, JMD: true, KYD: true, SRD: true, TTD: true, XCD: true,
-    ANG: true, SEK: true, NOK: true, DKK: true, PLN: true, THB: true, IDR: true
+    ANG: true, XCG: true, SEK: true, NOK: true, DKK: true, PLN: true, THB: true, IDR: true,
+    CZK: true, HUF: true, ILS: true, ISK: true, MYR: true, PHP: true, RON: true,
+    SGD: true, TRY: true, TWD: true, ZAR: true
   };
   const target = String(targetCurrency || '').trim().toUpperCase();
   if (!supportedTargets[target]) return null;

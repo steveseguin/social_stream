@@ -222,7 +222,7 @@ return eurValue >= 6 && eurValue < 7;`
 
     const matchesRange = await sys.evaluateTrigger(triggerNode, message);
     assert(matchesRange === true, 'customJs trigger: internal converter selects the EUR range');
-    assert(Math.abs(message.eurValue - (7.4 / 1.17)) < 1e-9, 'customJs trigger: exposes the converted EUR value');
+    assert(Math.abs(message.eurValue - (7.12925 / 1.149944)) < 1e-9, 'customJs trigger: exposes the converted EUR value');
 
     const jewelMatches = await sys.evaluateTrigger(triggerNode, {
         type: 'youtube',
