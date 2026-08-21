@@ -4395,6 +4395,30 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
     }
 }
 
+function syncCreditsControlUi() {
+	var triggerMode = document.getElementById('creditsTriggerModeSelect');
+	var startButton = document.getElementById('creditsStartBtn');
+	var previewButton = document.getElementById('creditsPreviewBtn');
+	var testButton = document.getElementById('creditsBackgroundTestBtn');
+	var hint = document.getElementById('creditsControlHint');
+	var mode = triggerMode ? triggerMode.value : 'auto';
+	var buttonTriggered = mode === 'manual' || mode === 'background';
+
+	if (startButton) startButton.hidden = !buttonTriggered;
+	if (previewButton) previewButton.hidden = !buttonTriggered;
+	if (testButton) testButton.hidden = mode !== 'background';
+
+	if (hint) {
+		if (mode === 'background') {
+			hint.textContent = 'Collects credits in the background; use Start Credits when your ending scene is ready.';
+		} else if (mode === 'manual') {
+			hint.textContent = 'Use Start Credits when you are ready to run the saved credits.';
+		} else {
+			hint.textContent = 'Starts automatically when the credits source becomes visible.';
+		}
+	}
+}
+
 
 function update(response, sync = true) {
     log("update-> response: ", response);
@@ -4539,6 +4563,8 @@ function update(response, sync = true) {
                         console.error(`Error processing setting ${key}:`, e);
                     }
                 }
+
+				syncCreditsControlUi();
 
                 if ("translation" in response.settings) {
                     translation = response.settings["translation"];
@@ -10674,8 +10700,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const creditsPreviewBtn = document.getElementById('creditsPreviewBtn');
 	const creditsBackgroundTestBtn = document.getElementById('creditsBackgroundTestBtn');
 	const creditsResetBtn = document.getElementById('creditsResetBtn');
-	const creditsTriggerMode = document.querySelector('select[data-optionparam13="triggermode"]');
-	const creditsActionsDiv = document.querySelector('.credits-actions');
+	const creditsTriggerMode = document.getElementById('creditsTriggerModeSelect');
 	const creditsOptionsGroup = document.querySelector('.options_group.credits');
 	const setCreditsPresetParams = function(paramsToEnable, paramsToDisable) {
 		const findCreditsParamInput = function(paramName) {
@@ -10760,18 +10785,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
-	// Show/hide credits buttons based on trigger mode
-	if (creditsTriggerMode && creditsActionsDiv) {
-		const updateCreditsButtonsVisibility = () => {
-			const buttonTriggered = creditsTriggerMode.value === 'manual' || creditsTriggerMode.value === 'background';
-			creditsActionsDiv.style.display = buttonTriggered ? 'flex' : 'none';
-			if (creditsBackgroundTestBtn) {
-				creditsBackgroundTestBtn.style.display = creditsTriggerMode.value === 'background' ? 'block' : 'none';
-			}
-		};
-		creditsTriggerMode.addEventListener('change', updateCreditsButtonsVisibility);
-		updateCreditsButtonsVisibility(); // Set initial state
+	if (creditsTriggerMode) {
+		creditsTriggerMode.addEventListener('change', syncCreditsControlUi);
 	}
+	syncCreditsControlUi();
 
 	// Add event listeners for OpenAI custom voice/model dropdowns
 	const setupOpenAICustomInputs = (voiceSelectId, modelSelectId, customVoiceId, customModelId) => {

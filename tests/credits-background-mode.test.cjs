@@ -21,6 +21,9 @@ assert.ok(creditsStateStart >= 0 && creditsStateEnd > creditsStateStart, "backgr
 const remoteHandlerStart = backgroundSource.indexOf("async function handleStreamDeckBackgroundRequest(request)");
 const remoteHandlerEnd = backgroundSource.indexOf("function sendStreamDeckPeerResult", remoteHandlerStart);
 assert.ok(remoteHandlerStart >= 0 && remoteHandlerEnd > remoteHandlerStart, "remote-control background router is missing");
+const creditsUiSyncStart = popupSource.indexOf("function syncCreditsControlUi()");
+const creditsUiSyncEnd = popupSource.indexOf("\n\nfunction update(", creditsUiSyncStart);
+assert.ok(creditsUiSyncStart >= 0 && creditsUiSyncEnd > creditsUiSyncStart, "credits UI sync function is missing");
 
 function createBackgroundHarness(initialStorage = {}) {
 	const storage = Object.assign({}, initialStorage);
@@ -84,6 +87,36 @@ function createBackgroundHarness(initialStorage = {}) {
 }
 
 (async function run() {
+	const creditsUiElements = {
+		creditsTriggerModeSelect: { value: "manual" },
+		creditsStartBtn: { hidden: true },
+		creditsPreviewBtn: { hidden: true },
+		creditsBackgroundTestBtn: { hidden: true },
+		creditsResetBtn: { hidden: false },
+		creditsControlHint: { textContent: "" }
+	};
+	const creditsUiSandbox = {
+		document: { getElementById: id => creditsUiElements[id] || null }
+	};
+	vm.runInNewContext(
+		popupSource.slice(creditsUiSyncStart, creditsUiSyncEnd) + "\nsyncCreditsControlUi();",
+		creditsUiSandbox,
+		{ filename: "popup-credits-ui.js" }
+	);
+	assert.strictEqual(creditsUiElements.creditsStartBtn.hidden, false);
+	assert.strictEqual(creditsUiElements.creditsPreviewBtn.hidden, false);
+	assert.strictEqual(creditsUiElements.creditsBackgroundTestBtn.hidden, true);
+	creditsUiElements.creditsTriggerModeSelect.value = "background";
+	creditsUiSandbox.syncCreditsControlUi();
+	assert.strictEqual(creditsUiElements.creditsStartBtn.hidden, false);
+	assert.strictEqual(creditsUiElements.creditsPreviewBtn.hidden, false);
+	assert.strictEqual(creditsUiElements.creditsBackgroundTestBtn.hidden, false);
+	creditsUiElements.creditsTriggerModeSelect.value = "auto";
+	creditsUiSandbox.syncCreditsControlUi();
+	assert.strictEqual(creditsUiElements.creditsStartBtn.hidden, true);
+	assert.strictEqual(creditsUiElements.creditsPreviewBtn.hidden, true);
+	assert.strictEqual(creditsUiElements.creditsBackgroundTestBtn.hidden, true);
+
 	const harness = createBackgroundHarness();
 	harness.api.resetBackgroundCreditsCollection();
 	harness.api.captureBackgroundCreditsMessage({ chatname: "Chatter", type: "youtube", chatmessage: "hello" });
@@ -146,7 +179,12 @@ function createBackgroundHarness(initialStorage = {}) {
 
 	assert.ok(popupHtml.includes('<option value="background">Background collection (button-triggered)</option>'));
 	assert.ok(popupHtml.includes('id="creditsBackgroundTestBtn"'));
+	assert.ok(popupHtml.includes('id="creditsStartBtn" class="credits-control-button primary" hidden'));
+	assert.ok(!popupHtml.includes('id="creditsStartBtn" class="glowingButton"'));
 	assert.ok(popupSource.includes('cmd: "creditsBackgroundTest"'));
+	assert.ok(popupSource.includes('function syncCreditsControlUi()'));
+	assert.ok(popupSource.includes("startButton.hidden = !buttonTriggered"));
+	assert.ok(popupSource.includes("testButton.hidden = mode !== 'background'"));
 	assert.ok(creditsSource.includes('replaceCreditsUsersFromSnapshot(data.creditsSnapshot)'));
 	assert.ok(creditsSource.includes('startCredits(creditsUsersFromSnapshot(data.creditsSnapshot))'));
 
