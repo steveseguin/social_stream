@@ -115,7 +115,7 @@ These counts are reference signals, not user-facing guarantees.
 | AI chatbot/moderation/cohost | SSN integration is included | Local model or provider account/API key, prompts/settings, privacy review | `09-api-and-integrations/ai-features.md` |
 | AI cohost stage and generated overlays | SSN integration is included | Correct page pair, session, label, Private Chat Bot/provider, and OBS audio if speaking | `07-overlays-and-pages/ai-cohost-pages.md` |
 | Polls, waitlist, giveaway, games | Yes | Page-specific setup, URL parameters, OBS/browser-source workflow, and game-specific command/input rules | `07-overlays-and-pages/waitlist-polls-games.md` plus `07-overlays-and-pages/game-pages.md` |
-| Tip jar and credits roll | Yes | Donation/supporter source data, page open, session, and persistence choices | `07-overlays-and-pages/tipjar-credits.md` |
+| Tip jar and credits roll | Yes | Donation/supporter source data, session, and either a running page or background credits mode | `07-overlays-and-pages/tipjar-credits.md` |
 | Event dashboard, hype counts, word cloud, leaderboard, and confetti | Yes | Correct event/chat/waitlist/viewer-count payloads, page open, session, and page-specific filters/persistence | `07-overlays-and-pages/event-effect-overlays.md` |
 | Emotes, reactions, scoreboard, ticker, and map utilities | Yes | Matching chat/event/ticker/location payloads, page open, session, and page-specific URL options | `07-overlays-and-pages/live-display-utilities.md` |
 | Specialized/legacy overlay pages | Depends | Page-specific purpose: redirect helper, alert skin, YouTube-style renderer, or product-list display | `07-overlays-and-pages/specialized-legacy-pages.md` |

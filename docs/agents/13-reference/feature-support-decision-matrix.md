@@ -71,7 +71,7 @@ Use this page to answer "can SSN do X?" quickly. It is a decision matrix, not a 
 | Show Spotify now playing | Depends/External | `spotify-overlay.html` | Spotify payload sender, session/label, optional provider/account setup | `07-overlays-and-pages/diagnostic-helper-pages.md` |
 | Test giveaway page communication | Yes | `test-giveaway-webrtc.html` | Same browser context, same session/password, giveaway pages open | `07-overlays-and-pages/diagnostic-helper-pages.md` |
 | Show donation/tip jars/goals | Yes/External | Tip jar/donation webhook pages | External donation platform and private webhook URL | `07-overlays-and-pages/tipjar-credits.md` |
-| Show credits/supporter roll | Yes | `credits.html` | Credits page open during chat or `persistcredits` saved state | `07-overlays-and-pages/tipjar-credits.md` |
+| Show credits/supporter roll | Yes | `credits.html` | Credits page open during chat, or app-background collection enabled | `07-overlays-and-pages/tipjar-credits.md` |
 | Use Stripe/Ko-Fi/BMAC/Fourthwall webhooks | External | Inbound donation webhook endpoints | External account and private session/webhook URL | `13-reference/free-paid-and-support-boundaries.md` |
 | Print chat/messages | Depends | Printer settings | Printer setup and exact setting path | `13-reference/settings-key-index.md` |
 | Use Spotify/now-playing actions | Depends/External | Spotify settings/Event Flow | Spotify account/OAuth/path support | Event Flow and app integration docs |

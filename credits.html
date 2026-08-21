@@ -888,6 +888,14 @@
 
 		// Handle command messages from dock
 		if (data.creditsCommand) {
+			if (data.creditsCommand === "test") {
+				previewMode = true;
+				startCredits(creditsUsersFromSnapshot(data.creditsSnapshot));
+				return;
+			}
+			if (Array.isArray(data.creditsSnapshot)) {
+				replaceCreditsUsersFromSnapshot(data.creditsSnapshot);
+			}
 			if (data.creditsCommand === "start") {
 				previewMode = false;
 				startCredits();
@@ -1091,6 +1099,28 @@
 		if (content) {
 			renderCreditsContent([]);
 		}
+	}
+
+	function creditsUsersFromSnapshot(snapshotUsers) {
+		if (!Array.isArray(snapshotUsers)) return [];
+		return snapshotUsers.map(function(item) {
+			if (!item || !item.name || !item.type) return null;
+			const user = new User(String(item.name), String(item.type));
+			user.messageCount = Math.max(0, Number(item.messageCount) || 0);
+			user.donations = Math.max(0, Number(item.donations) || 0);
+			user.hasDonationActivity = !!item.hasDonationActivity || user.donations > 0;
+			user.isMember = !!item.isMember;
+			user.avatarUrl = item.avatarUrl || null;
+			return user;
+		}).filter(Boolean);
+	}
+
+	function replaceCreditsUsersFromSnapshot(snapshotUsers) {
+		users.clear();
+		creditsUsersFromSnapshot(snapshotUsers).forEach(function(user) {
+			users.set(`${user.name}-${user.type}`, user);
+		});
+		savePersistedCredits();
 	}
 
 	loadPersistedCredits();
@@ -1367,8 +1397,8 @@
 		textContainer.classList.add('animate');
 	}
 
-	function startCredits() {
-		const displayedUsers = getCreditsUsersForDisplay();
+	function startCredits(userList) {
+		const displayedUsers = Array.isArray(userList) ? filterCreditsUsersForSupporters(userList) : getCreditsUsersForDisplay();
 		activeRollSnapshot = new Map(displayedUsers.map(function(user) {
 			return [`${user.name}-${user.type}`, user.messageCount];
 		}));
@@ -1408,7 +1438,8 @@
 		let html = '';
 
 		const envLabel = env.isOBS ? 'OBS Studio' : (env.isElectron ? 'Electron App' : 'Browser');
-		html += `<p><strong>Detected:</strong> ${envLabel} <span class="mode-badge">${mode === 'auto' ? 'Auto Mode' : 'Manual Mode'}</span></p>`;
+		const modeLabel = mode === 'auto' ? 'Auto Mode' : (mode === 'background' ? 'Background Mode' : 'Manual Mode');
+		html += `<p><strong>Detected:</strong> ${envLabel} <span class="mode-badge">${modeLabel}</span></p>`;
 
 		// Electron warning
 		if (env.isElectron && mode === 'auto') {
@@ -1425,6 +1456,12 @@
 				<li><span class="highlight">Keep this page running but hidden</span></li>
 				<li>Chat messages will be collected in the background</li>
 				<li>When you <span class="highlight">make the page visible</span>, credits auto-start</li>
+				${refreshNote}</ul>`;
+		} else if (mode === 'background') {
+			html += `<p><strong>How Background Mode Works:</strong></p><ul>
+				<li>The Social Stream app collects credits even while this page is closed</li>
+				<li>Open or reveal this page, then use the extension menu to click <span class="highlight">Start Credits</span></li>
+				<li>Use <span class="highlight">Test Background Mode</span> to verify delivery without changing the saved list</li>
 				${refreshNote}</ul>`;
 		} else {
 			html += `<p><strong>How Manual Mode Works:</strong></p><ul>

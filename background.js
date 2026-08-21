@@ -1950,6 +1950,277 @@ function getSettingField(settingKey, fieldKey, fallback) {
 	return fallback;
 }
 
+const BACKGROUND_CREDITS_STORAGE_KEY = "creditsBackgroundState";
+const BACKGROUND_CREDITS_MAX_USERS = 5000;
+const CREDITS_REMOTE_ACTIONS = new Set(["creditsStart", "creditsPreview", "creditsTest", "creditsReset"]);
+const BACKGROUND_CREDITS_MEMBERSHIP_EVENTS = new Set([
+	"sponsorship",
+	"membermilestone",
+	"member_milestone",
+	"new_subscriber",
+	"resub",
+	"subscription",
+	"membership",
+	"new_member",
+	"new_membership",
+	"newmember",
+	"upgraded_membership",
+	"membership_upgrade",
+	"membership_milestone",
+	"giftpurchase",
+	"giftredemption",
+	"subscription_gift",
+	"subgift",
+	"gift_membership",
+	"giftmemberships",
+	"gifted_membership",
+	"gifted_memberships",
+	"membership_gift",
+	"community_gift",
+	"channel_subscription_gifts",
+	"channel_subscription_gift",
+	"channel_subscription_new",
+	"channel_subscription_start",
+	"channel_subscription",
+	"subscription_gifts",
+	"subscription_renewal"
+]);
+var backgroundCreditsUsers = new Map();
+var backgroundCreditsSession = "";
+var backgroundCreditsUpdated = 0;
+var backgroundCreditsLoaded = false;
+var backgroundCreditsLoadPromise = null;
+var backgroundCreditsSaveTimer = null;
+
+function getCreditsTriggerModeSetting() {
+	return String(getSettingField("triggermode", "optionparam13", "auto") || "auto").toLowerCase();
+}
+
+function isBackgroundCreditsModeEnabled() {
+	return getCreditsTriggerModeSetting() === "background";
+}
+
+function getBackgroundCreditsSession() {
+	return String(streamID || "local").trim() || "local";
+}
+
+function normalizeBackgroundCreditsEvent(value) {
+	return typeof value === "string" ? value.toLowerCase().trim().replace(/[\s.-]+/g, "_") : "";
+}
+
+function hasBackgroundCreditsMembershipSignal(data) {
+	return !!(data && (data.membership || BACKGROUND_CREDITS_MEMBERSHIP_EVENTS.has(normalizeBackgroundCreditsEvent(data.event))));
+}
+
+function getBackgroundCreditsDonationAmount(data) {
+	var amount = parseFloat(String((data && data.donoValue) || "").replace(/,/g, ""));
+	if (Number.isFinite(amount) && amount > 0) {
+		return amount;
+	}
+	try {
+		if (data && data.hasDonation && typeof convertToUSD === "function") {
+			amount = Number(convertToUSD(data.hasDonation, String(data.type || "").toLowerCase()));
+			if (Number.isFinite(amount) && amount > 0) {
+				return amount;
+			}
+		}
+	} catch (e) {}
+	return 0;
+}
+
+function serializeBackgroundCreditsUsers() {
+	return Array.from(backgroundCreditsUsers.values()).map(function(user) {
+		return {
+			name: user.name,
+			type: user.type,
+			messageCount: user.messageCount,
+			donations: user.donations,
+			hasDonationActivity: !!user.hasDonationActivity,
+			isMember: !!user.isMember,
+			avatarUrl: user.avatarUrl || null
+		};
+	});
+}
+
+function persistBackgroundCreditsState() {
+	if (backgroundCreditsSaveTimer) {
+		clearTimeout(backgroundCreditsSaveTimer);
+		backgroundCreditsSaveTimer = null;
+	}
+	var stored = {};
+	stored[BACKGROUND_CREDITS_STORAGE_KEY] = {
+		version: 1,
+		session: backgroundCreditsSession || getBackgroundCreditsSession(),
+		updated: backgroundCreditsUpdated || Date.now(),
+		users: serializeBackgroundCreditsUsers()
+	};
+	try {
+		chrome.storage.local.set(stored);
+	} catch (e) {
+		console.warn("Could not save background credits:", e);
+	}
+}
+
+function scheduleBackgroundCreditsSave() {
+	if (backgroundCreditsSaveTimer) {
+		clearTimeout(backgroundCreditsSaveTimer);
+	}
+	backgroundCreditsSaveTimer = setTimeout(persistBackgroundCreditsState, 250);
+}
+
+function ensureBackgroundCreditsLoaded() {
+	if (backgroundCreditsLoaded) {
+		return Promise.resolve();
+	}
+	if (backgroundCreditsLoadPromise) {
+		return backgroundCreditsLoadPromise;
+	}
+	backgroundCreditsLoadPromise = new Promise(function(resolve) {
+		try {
+			chrome.storage.local.get([BACKGROUND_CREDITS_STORAGE_KEY], function(result) {
+				try {
+					var saved = result && result[BACKGROUND_CREDITS_STORAGE_KEY];
+					var activeSession = getBackgroundCreditsSession();
+					backgroundCreditsSession = activeSession;
+					if (saved && saved.session === activeSession && Array.isArray(saved.users)) {
+						saved.users.slice(0, BACKGROUND_CREDITS_MAX_USERS).forEach(function(item) {
+							if (!item || !item.name || !item.type) return;
+							var user = {
+								name: String(item.name),
+								type: String(item.type),
+								messageCount: Math.max(0, Number(item.messageCount) || 0),
+								donations: Math.max(0, Number(item.donations) || 0),
+								hasDonationActivity: !!item.hasDonationActivity || Number(item.donations) > 0,
+								isMember: !!item.isMember,
+								avatarUrl: item.avatarUrl || null
+							};
+							backgroundCreditsUsers.set(user.name + "-" + user.type, user);
+						});
+						backgroundCreditsUpdated = Number(saved.updated) || 0;
+					}
+				} catch (e) {
+					console.warn("Could not load background credits:", e);
+				}
+				backgroundCreditsLoaded = true;
+				backgroundCreditsLoadPromise = null;
+				resolve();
+			});
+		} catch (e) {
+			backgroundCreditsSession = getBackgroundCreditsSession();
+			backgroundCreditsLoaded = true;
+			backgroundCreditsLoadPromise = null;
+			resolve();
+		}
+	});
+	return backgroundCreditsLoadPromise;
+}
+
+function resetBackgroundCreditsCollection() {
+	backgroundCreditsUsers.clear();
+	backgroundCreditsSession = getBackgroundCreditsSession();
+	backgroundCreditsUpdated = Date.now();
+	backgroundCreditsLoaded = true;
+	backgroundCreditsLoadPromise = null;
+	persistBackgroundCreditsState();
+}
+
+function captureBackgroundCreditsMessage(data) {
+	if (!isBackgroundCreditsModeEnabled() || !data || !data.chatname || !data.type) {
+		return;
+	}
+	ensureBackgroundCreditsLoaded().then(function() {
+		if (!isBackgroundCreditsModeEnabled()) return;
+		var activeSession = getBackgroundCreditsSession();
+		if (backgroundCreditsSession !== activeSession) {
+			backgroundCreditsUsers.clear();
+			backgroundCreditsSession = activeSession;
+		}
+		var name = String(data.chatname);
+		var type = String(data.type);
+		var key = name + "-" + type;
+		var user = backgroundCreditsUsers.get(key);
+		if (!user) {
+			if (backgroundCreditsUsers.size >= BACKGROUND_CREDITS_MAX_USERS) return;
+			user = {
+				name: name,
+				type: type,
+				messageCount: 0,
+				donations: 0,
+				hasDonationActivity: false,
+				isMember: false,
+				avatarUrl: null
+			};
+			backgroundCreditsUsers.set(key, user);
+		}
+		user.messageCount += 1;
+		if (data.chatimg) user.avatarUrl = data.chatimg;
+		if (hasBackgroundCreditsMembershipSignal(data)) user.isMember = true;
+		if (data.hasDonation) {
+			user.hasDonationActivity = true;
+			user.donations += getBackgroundCreditsDonationAmount(data);
+		}
+		backgroundCreditsUpdated = Date.now();
+		scheduleBackgroundCreditsSave();
+	});
+}
+
+async function getBackgroundCreditsSnapshot() {
+	await ensureBackgroundCreditsLoaded();
+	var activeSession = getBackgroundCreditsSession();
+	if (backgroundCreditsSession !== activeSession) {
+		backgroundCreditsUsers.clear();
+		backgroundCreditsSession = activeSession;
+		backgroundCreditsUpdated = Date.now();
+		persistBackgroundCreditsState();
+	}
+	return serializeBackgroundCreditsUsers();
+}
+
+function getBackgroundCreditsTestSnapshot() {
+	return [
+		{ name: "Test Participant", type: "youtube", messageCount: 4, donations: 0, hasDonationActivity: false, isMember: false, avatarUrl: null },
+		{ name: "Test Member", type: "twitch", messageCount: 2, donations: 0, hasDonationActivity: false, isMember: true, avatarUrl: null },
+		{ name: "Test Donor", type: "youtube", messageCount: 1, donations: 10, hasDonationActivity: true, isMember: false, avatarUrl: null }
+	];
+}
+
+function sendCreditsCommandPacket(packet) {
+	return sendTargetP2P(packet, "credits").then(function(sent) {
+		if (sent) return true;
+		return sendTargetP2P(packet, "dock", { retry: true, timeoutMs: 5000, intervalMs: 250 });
+	});
+}
+
+function isCreditsRemoteAction(action) {
+	return CREDITS_REMOTE_ACTIONS.has(String(action || ""));
+}
+
+async function runCreditsCommand(action) {
+	action = String(action || "");
+	var packet;
+	if (action === "creditsStart" || action === "creditsPreview") {
+		packet = { creditsCommand: action === "creditsStart" ? "start" : "preview" };
+		if (isBackgroundCreditsModeEnabled()) {
+			packet.creditsSnapshot = await getBackgroundCreditsSnapshot();
+		}
+	} else if (action === "creditsTest") {
+		packet = { creditsCommand: "test", creditsSnapshot: getBackgroundCreditsTestSnapshot() };
+	} else if (action === "creditsReset") {
+		resetBackgroundCreditsCollection();
+		packet = { creditsCommand: "reset" };
+	} else {
+		return { action: action, success: false, delivered: false, error: "Unsupported credits command" };
+	}
+
+	var delivered = await sendCreditsCommandPacket(packet);
+	return {
+		action: action,
+		success: action === "creditsReset" || !!delivered,
+		delivered: !!delivered,
+		creditsCount: packet.creditsSnapshot ? packet.creditsSnapshot.length : action === "creditsReset" ? 0 : undefined
+	};
+}
+
 function getVideoStatsConfig() {
 	const source = String(getSettingField("videostatssource", "optionsetting", VIDEO_STATS_DEFAULTS.source) || VIDEO_STATS_DEFAULTS.source).trim() || VIDEO_STATS_DEFAULTS.source;
 	let intervalSeconds = parseInt(getSettingField("videostatsinterval", "numbersetting", VIDEO_STATS_DEFAULTS.intervalSeconds), 10);
@@ -5289,6 +5560,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (request.setting === "showlikecount" && request.value) {
 				syncLikeTotalSettings(settings, true);
 			}
+			if (request.setting === "triggermode" && request.type === "optionparam13" && request.value === "background") {
+				resetBackgroundCreditsCollection();
+			}
 
 			pruneSettingsObjects(settings);
 
@@ -6692,18 +6966,17 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 
 			triggerFakeMetaMessage(request.value);
 		} else if (request.cmd && request.cmd === "creditsStart") {
-			sendResponse({ state: isExtensionOn });
-			// credits.html currently listens on the dock feed for chat collection.
-			sendTargetP2P({ creditsCommand: "start" }, "credits");
-			sendTargetP2P({ creditsCommand: "start" }, "dock");
+			var creditsStartResult = await runCreditsCommand("creditsStart");
+			sendResponse(Object.assign({ state: isExtensionOn }, creditsStartResult));
 		} else if (request.cmd && request.cmd === "creditsPreview") {
-			sendResponse({ state: isExtensionOn });
-			sendTargetP2P({ creditsCommand: "preview" }, "credits");
-			sendTargetP2P({ creditsCommand: "preview" }, "dock");
+			var creditsPreviewResult = await runCreditsCommand("creditsPreview");
+			sendResponse(Object.assign({ state: isExtensionOn }, creditsPreviewResult));
+		} else if (request.cmd && request.cmd === "creditsBackgroundTest") {
+			var creditsTestResult = await runCreditsCommand("creditsTest");
+			sendResponse(Object.assign({ state: isExtensionOn }, creditsTestResult));
 		} else if (request.cmd && request.cmd === "creditsReset") {
-			sendResponse({ state: isExtensionOn });
-			sendTargetP2P({ creditsCommand: "reset" }, "credits");
-			sendTargetP2P({ creditsCommand: "reset" }, "dock");
+			var creditsResetResult = await runCreditsCommand("creditsReset");
+			sendResponse(Object.assign({ state: isExtensionOn }, creditsResetResult));
 		} else if (request.action === "startReplay") {
 			// Handle replay messages from timestamp
 			console.log("Received startReplay request:", request);
@@ -7430,6 +7703,12 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 
 	if (message && typeof message === "object" && typeof sanitizeRelayPayloadFields === "function") {
 		message = sanitizeRelayPayloadFields(message) || message;
+	}
+
+	try {
+		captureBackgroundCreditsMessage(message);
+	} catch (e) {
+		console.warn("Could not collect background credits:", e);
 	}
 
 	var reactionEventName = normalizeEventName(message);
@@ -10278,6 +10557,13 @@ async function handleStreamDeckBackgroundRequest(request) {
 	}
 
 	const action = router.normalizeAction(request.action);
+	if (action === "creditsStart" || action === "creditsPreview" || action === "creditsTest" || action === "creditsReset") {
+		const result = await runCreditsCommand(action);
+		if (!result.success) {
+			return router.makeError(request, "TARGET_UNAVAILABLE", "No connected Credits page accepted the command.");
+		}
+		return router.makeResponse(request, result);
+	}
 	if (action === "sendChat") {
 		if (typeof request.value !== "string" || !request.value.trim()) {
 			return router.makeError(request, "INVALID_VALUE", "A non-empty chat message is required.");
@@ -10360,7 +10646,7 @@ async function routeStreamDeckRemoteRequest(request, context) {
 			result: await handleStreamDeckSsappRequest(request)
 		};
 	}
-	if (router.isVersionedRequest(request) && router.isRemoteSsnRequest(request, "background")) {
+	if ((router.isVersionedRequest(request) || isCreditsRemoteAction(request.action)) && router.isRemoteSsnRequest(request, "background")) {
 		return {
 			kind: "command",
 			result: await handleStreamDeckBackgroundRequest(request)

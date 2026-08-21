@@ -441,6 +441,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `onlydonors` | boolean | Only includes users with donation payloads |
 | `donationpriority` | boolean | Groups/sorts donors first, then members, then participants |
 | `showamounts` | boolean | Shows donation totals next to donors |
+| `triggermode` | `auto`, `manual`, `background` | Starts on visibility, by button using page-local collection, or by button using app-background collection |
 
 ## Other options for other overlays.
 

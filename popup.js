@@ -10672,6 +10672,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	// Add event listeners for credits roll buttons and trigger mode
 	const creditsStartBtn = document.getElementById('creditsStartBtn');
 	const creditsPreviewBtn = document.getElementById('creditsPreviewBtn');
+	const creditsBackgroundTestBtn = document.getElementById('creditsBackgroundTestBtn');
 	const creditsResetBtn = document.getElementById('creditsResetBtn');
 	const creditsTriggerMode = document.querySelector('select[data-optionparam13="triggermode"]');
 	const creditsActionsDiv = document.querySelector('.credits-actions');
@@ -10737,6 +10738,22 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
+	if (creditsBackgroundTestBtn) {
+		creditsBackgroundTestBtn.addEventListener('click', function() {
+			const originalLabel = creditsBackgroundTestBtn.textContent;
+			creditsBackgroundTestBtn.disabled = true;
+			creditsBackgroundTestBtn.textContent = 'Testing...';
+			chrome.runtime.sendMessage({ cmd: "creditsBackgroundTest" }, function(response) {
+				const delivered = !!(response && response.success);
+				creditsBackgroundTestBtn.textContent = delivered ? 'Test sent' : 'No credits source connected';
+				setTimeout(function() {
+					creditsBackgroundTestBtn.disabled = false;
+					creditsBackgroundTestBtn.textContent = originalLabel;
+				}, 2000);
+			});
+		});
+	}
+
 	if (creditsResetBtn) {
 		creditsResetBtn.addEventListener('click', function() {
 			chrome.runtime.sendMessage({ cmd: "creditsReset" });
@@ -10746,7 +10763,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	// Show/hide credits buttons based on trigger mode
 	if (creditsTriggerMode && creditsActionsDiv) {
 		const updateCreditsButtonsVisibility = () => {
-			creditsActionsDiv.style.display = creditsTriggerMode.value === 'manual' ? 'flex' : 'none';
+			const buttonTriggered = creditsTriggerMode.value === 'manual' || creditsTriggerMode.value === 'background';
+			creditsActionsDiv.style.display = buttonTriggered ? 'flex' : 'none';
+			if (creditsBackgroundTestBtn) {
+				creditsBackgroundTestBtn.style.display = creditsTriggerMode.value === 'background' ? 'block' : 'none';
+			}
 		};
 		creditsTriggerMode.addEventListener('change', updateCreditsButtonsVisibility);
 		updateCreditsButtonsVisibility(); // Set initial state

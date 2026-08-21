@@ -351,6 +351,13 @@ When a message is sent, it goes to the specified output channel. Those who have 
     - Get Presets: `{"action": "getpollpresets"}`
     - Create New: `{"action": "createpoll", "value": {"settings": {"pollQuestion": "New Poll", "pollType": "freeform"}}}`
 
+17. **Credits Operations**
+    - Start the credits roll: `{"action": "creditsStart"}`
+    - Preview the current credits: `{"action": "creditsPreview"}`
+    - Show test participant, member, and donor entries: `{"action": "creditsTest"}`
+    - Clear the collected credits: `{"action": "creditsReset"}`
+    - Start and Preview include the stored participant snapshot when **Background collection** is selected. A Credits page must be connected for Start, Preview, or Test to display.
+
 ### Channel-Specific Messaging
 
 You can send messages to specific channels using the `content` action with a channel number:
