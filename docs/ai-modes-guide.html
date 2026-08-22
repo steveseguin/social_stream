@@ -19,6 +19,7 @@
     <meta name="description" content="Choose and configure Social Stream Ninja AI features: voice cohosts, public and private chat bots, ChatGPT browser companion mode, moderation, translation, RAG, summaries, TTS, and AI-built overlays.">
 </head>
 <body>
+	<a class="skip-link" href="#main-content">Skip to main content</a>
     <header>
         <div class="container">
             <div class="logo">
@@ -27,7 +28,7 @@
                     <span>Social Stream Ninja</span>
                 </a>
             </div>
-            <nav>
+            <nav id="site-navigation">
                 <ul>
                     <li><a href="../index.html">Home</a></li>
                     <li><a href="../docs/features.html">Features</a></li>
@@ -57,7 +58,7 @@
                         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                     </svg>
                 </button>
-                <div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+                <button type="button" class="mobile-nav-toggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="site-navigation"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span></button>
             </div>
         </div>
     </header>
@@ -69,7 +70,7 @@
         </div>
     </section>
 
-    <main class="guide-section">
+    <main class="guide-section" id="main-content">
         <div class="container">
             <div class="guide-card">
                 <h2>Choose the Result You Want</h2>
@@ -127,7 +128,17 @@
                 <div class="warning-note">
                     <p><strong>Experimental:</strong> web-page controls can change, relay-all can flood a conversation, and ChatGPT Voice mode may not accept injected text like the regular text page. Use filters or a test stream before sending every viewer message.</p>
                 </div>
-                <p><strong>Claude and other AI websites:</strong> the current Claude page script only adjusts page styling; it does not capture Claude conversations. Do not treat it as a live-chat source.</p>
+                <h3>AI Website Capture Status</h3>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Website</th><th>Current Support</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Website">ChatGPT</td><td data-label="Current Support">Experimental capture of new text turns; existing history is ignored. Generic browser relay can target its prompt composer.</td></tr>
+                        <tr><td data-label="Website">Claude</td><td data-label="Current Support">No conversation capture. The packaged Claude script is a page-style helper only.</td></tr>
+                        <tr><td data-label="Website">Gemini, Copilot, Perplexity, and other AI sites</td><td data-label="Current Support">No dedicated website capture source currently ships with SSN. Their APIs may still be usable where listed as an SSN provider.</td></tr>
+                    </tbody>
+                </table>
             </div>
 
             <div class="guide-card" id="providers">
@@ -163,12 +174,14 @@
                 <ol class="guide-steps">
                     <li>Open <code>cohost.html?session=YOUR_SESSION</code>.</li>
                     <li>Select a voice/realtime provider or the LLM configured in the SSN popup.</li>
-                    <li>Select your microphone and <strong>Audio Response</strong>, then press <strong>Start and Connect</strong>.</li>
-                    <li>Change Live Chat from <strong>Monitor only</strong> to <strong>Questions and mentions</strong> or <strong>Every message</strong>.</li>
-                    <li>Add <code>cohost-overlay.html?session=YOUR_SESSION&amp;tts</code> to OBS if you want the stage avatar, speech bubble, and browser audio.</li>
+					<li>Explicitly select your microphone and <strong>Audio Response</strong>, then press <strong>Start Co-host</strong>.</li>
+					<li>With OpenAI Realtime, leave Live Chat on <strong>Context only - answer when asked</strong> when you want the AI to remember recent viewer messages without interrupting. Choose <strong>Questions and mentions</strong> or <strong>Every message</strong> for spoken automatic replies; these modes do not post into platform chat.</li>
+					<li>For OpenAI Realtime, capture the audio from the co-host browser/app in OBS and use <code>cohost-overlay.html?session=YOUR_SESSION</code> for the stage avatar and speech bubble. The overlay does not receive the same WebRTC voice stream. Use the co-host output-device selector for a virtual cable when supported; <code>&amp;forcetts</code> deliberately adds a separate overlay voice.</li>
+					<li>Optional stream tools are off by default. Enable Spotify, an allowlist of OBS scene names, or featured-chat control in the SSN popup, then arm the same tools under <strong>Co-host Stream Controls</strong> on the co-host page.</li>
+					<li>Keep the speech bubble visible, or provide captions, so viewers do not need to hear the AI voice to follow the conversation.</li>
                 </ol>
                 <div class="guide-note">
-                    <p>This creates an SSN cohost session. It does not take over an existing conversation in the ChatGPT website or ChatGPT desktop app.</p>
+					<p>OpenAI Realtime uses the OpenAI project key configured under <strong>ChatGPT API</strong> in the SSN popup. The standard key stays in the SSN extension/Desktop background, which creates a short-lived Realtime client secret for the co-host page. Microphone and AI voice audio then travel over WebRTC. Replies are capped at 512 output tokens and Diagnostics shows cumulative usage. This creates an SSN cohost session; it does not take over an existing conversation in the ChatGPT website or ChatGPT desktop app.</p>
                 </div>
                 <p><a href="ai-cohost-guide.html" class="btn btn-primary">Open the Detailed AI Cohost Guide</a></p>
             </div>
@@ -225,7 +238,7 @@
                 <h2>Common Fixes</h2>
                 <ul class="guide-list">
                     <li><strong>Connected, but no live reply:</strong> enable the Primary bot or the specific AI feature; provider setup alone does not process chat.</li>
-                    <li><strong>Cohost sees chat but stays quiet:</strong> switch Live Chat from Monitor only to Questions and mentions or Every message.</li>
+                    <li><strong>Cohost sees chat but stays quiet:</strong> Context only intentionally waits for the streamer to ask about chat. Switch to Questions and mentions or Every message for automatic replies.</li>
                     <li><strong>ChatGPT browser source is silent:</strong> enable the ChatGPT opt-in, reload <code>chatgpt.com</code>, and test with a new turn instead of existing history.</li>
                     <li><strong>Bot skips most messages:</strong> check trigger words, moderator-only mode, rate limits, and the model's instruction to reply selectively.</li>
                     <li><strong>Text appears but no sound:</strong> confirm the TTS-producing page is open and OBS is capturing that page's audio.</li>

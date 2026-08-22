@@ -1488,7 +1488,10 @@ function createMockAlertPayload(category, overrides = {}) {
         event: 'new_subscriber',
         membership: 'Tier 1',
         subtitle: 'Tier 1 subscription',
-        chatmessage: 'Welcome to the squad!'
+        chatmessage: formatTranslation('twitch-subscribed-at-tier-message', '{name} has subscribed at tier {tier}', {
+          name: baseName,
+          tier: '1'
+        })
       };
       break;
     case ALERT_CATEGORIES.DONATION:

@@ -102,11 +102,10 @@ It is listed as a [setup type] source. Start by [setup instruction]. If that doe
 | WhatsApp Web | Enable the WhatsApp toggle, then use `https://web.whatsapp.com`; no avatar support is listed. |
 | Telegram | Enable the Telegram toggle, then use web Telegram in stream mode. |
 | Slack | Enable the Slack toggle, then use `https://app.slack.com/`. |
-| ChatGPT | Enable the ChatGPT toggle, then use `https://chat.openai.com/chat` or current ChatGPT web path if supported by manifest. |
-| Claude.ai | Enable the Claude toggle, then use `https://claude.ai/*`. |
+| ChatGPT | Enable the ChatGPT toggle, reload `https://chatgpt.com/`, and keep a regular text conversation open. New user and completed ChatGPT turns are captured; existing history is ignored. |
 | Patreon | Enable the Patreon toggle, then use `https://patreon.com/*`. |
 
-Support note: after enabling a toggle, reload the target site. If capture still fails, check whether the current manifest entry covers the exact domain/path.
+Support note: after enabling a toggle, reload the target site. If capture still fails, check whether the current manifest entry covers the exact domain/path. Claude currently has a page-style helper only and is not a supported capture source.
 
 ## Manual Sources
 

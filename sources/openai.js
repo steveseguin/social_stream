@@ -4,6 +4,8 @@
 	var observer = null;
 	var startupMode = true;
 	var startupTimer = null;
+	var startupMinimumEnd = 0;
+	var startupDeadline = 0;
 	var lastUrl = window.location.href;
 	var sentNodes = new WeakSet();
 	var sentMessageKeys = {};
@@ -35,19 +37,19 @@
 		for (i = 0; i < element.childNodes.length; i++) {
 			node = element.childNodes[i];
 			if (node.nodeType === 3 && node.textContent && node.textContent.trim()) {
-				response += escapeHtml(node.textContent);
+				response += escapeHtml(node.textContent.trim()) + " ";
 			} else if (node.nodeType === 1) {
 				if (node.nodeName === "BUTTON" || node.getAttribute("aria-hidden") === "true") {
 					continue;
 				}
 				if (node.childNodes && node.childNodes.length) {
-					response += getAllContentNodes(node);
+					response += getAllContentNodes(node) + " ";
 				} else if (node.nodeName === "IMG" && node.getAttribute("alt")) {
-					response += escapeHtml(node.getAttribute("alt"));
+					response += escapeHtml(node.getAttribute("alt")) + " ";
 				}
 			}
 		}
-		return response;
+		return response.replace(/\s+/g, " ").trim();
 	}
 
 	function getMessageRole(element) {
@@ -265,17 +267,31 @@
 		}
 	}
 
-	function beginStartupWindow(duration) {
-		startupMode = true;
+	function finishStartupWindow() {
+		seedExistingMessages(document);
+		startupMode = false;
+		startupTimer = null;
+		document.documentElement.setAttribute("data-ssn-openai-ready", "true");
+	}
+
+	function scheduleStartupEnd(quietDuration) {
+		var now = Date.now();
+		var target = Math.max(startupMinimumEnd, now + (quietDuration || 0));
+		target = Math.min(target, startupDeadline);
 		if (startupTimer) {
 			clearTimeout(startupTimer);
 		}
+		startupTimer = setTimeout(finishStartupWindow, Math.max(0, target - now));
+	}
+
+	function beginStartupWindow(duration) {
+		var now = Date.now();
+		startupMode = true;
+		document.documentElement.removeAttribute("data-ssn-openai-ready");
+		startupMinimumEnd = now + (duration || 5500);
+		startupDeadline = now + 10000;
 		seedExistingMessages(document);
-		startupTimer = setTimeout(function () {
-			seedExistingMessages(document);
-			startupMode = false;
-			document.documentElement.setAttribute("data-ssn-openai-ready", "true");
-		}, duration || 1400);
+		scheduleStartupEnd(0);
 	}
 
 	function startObserver() {
@@ -286,8 +302,27 @@
 			var i;
 			var j;
 			var mutation;
+			var startupMessagesChanged = false;
+			if (window.location.href !== lastUrl) {
+				lastUrl = window.location.href;
+				beginStartupWindow(3500);
+			}
 			if (startupMode) {
+				for (i = 0; i < mutations.length; i++) {
+					mutation = mutations[i];
+					if (mutation.type === "characterData" && mutation.target && mutation.target.parentElement && mutation.target.parentElement.closest(MESSAGE_SELECTOR)) {
+						startupMessagesChanged = true;
+					}
+					for (j = 0; j < mutation.addedNodes.length; j++) {
+						if (getMessageElements(mutation.addedNodes[j]).length) {
+							startupMessagesChanged = true;
+						}
+					}
+				}
 				seedExistingMessages(document);
+				if (startupMessagesChanged) {
+					scheduleStartupEnd(1200);
+				}
 				return;
 			}
 			for (i = 0; i < mutations.length; i++) {
@@ -301,7 +336,7 @@
 			}
 		});
 		observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-		beginStartupWindow(1400);
+		beginStartupWindow(5500);
 	}
 
 	function getPromptInput() {
@@ -364,7 +399,7 @@
 		}
 		if (window.location.href !== lastUrl) {
 			lastUrl = window.location.href;
-			beginStartupWindow(1200);
+			beginStartupWindow(3500);
 		}
 	}, 300);
 

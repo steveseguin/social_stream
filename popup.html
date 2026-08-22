@@ -1199,7 +1199,24 @@ h2 {
 }
 .cohost-tool-row .switch {
     flex: 0 0 auto;
+    width: 44px;
+    height: 24px;
     margin-top: 1px;
+}
+.cohost-tool-row .switch .slider:before {
+    width: 20px;
+    height: 20px;
+    left: 2px;
+    bottom: 2px;
+}
+.cohost-tool-row .switch input:checked + .slider:before {
+    -webkit-transform: translateX(20px);
+    -ms-transform: translateX(20px);
+    transform: translateX(20px);
+}
+.cohost-tool-row .switch input:focus-visible + .slider {
+    outline: 2px solid #2196f3;
+    outline-offset: 2px;
 }
 .cohost-tool-copy {
     display: flex;
@@ -6761,6 +6778,36 @@ input:checked + .slider:before {
             </div>
             <a href="" id="global-settings-and-tools-options"></a>
 
+			<div class="wrapper beginner-basic">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-custom-translation-options" />
+					<label class="collapsible-label" for="wrapper-custom-translation-options">🌐 <span data-translate="custom-event-translations">Custom event translations</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<small style="display:block; margin-bottom:12px; opacity:0.8;"><span data-translate="custom-event-translations-description">Override Twitch event wording from the selected language. Leave a field blank to use the translated default. Supported placeholders are shown in each label.</span></small>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" id="customTwitchFollowMessage" class="textInput" autocomplete="off" placeholder=" " data-textsetting="customTwitchFollowMessage" />
+									<label for="customTwitchFollowMessage">&gt; <span data-translate="custom-twitch-follow-message">Twitch follow message ({name})</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" id="customTwitchSubscribedAtTierMessage" class="textInput" autocomplete="off" placeholder=" " data-textsetting="customTwitchSubscribedAtTierMessage" />
+									<label for="customTwitchSubscribedAtTierMessage">&gt; <span data-translate="custom-twitch-subscription-tier-message">Twitch subscription message ({name}, {tier})</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" id="customTwitchSubscribedMessage" class="textInput" autocomplete="off" placeholder=" " data-textsetting="customTwitchSubscribedMessage" />
+									<label for="customTwitchSubscribedMessage">&gt; <span data-translate="custom-twitch-subscription-without-tier-message">Twitch subscription without tier ({name})</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" id="customTwitchResubscribedMessage" class="textInput" autocomplete="off" placeholder=" " data-textsetting="customTwitchResubscribedMessage" />
+									<label for="customTwitchResubscribedMessage">&gt; <span data-translate="custom-twitch-resubscription-message">Twitch resubscription message ({name})</span></label>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-beta-sdk-options" />
@@ -10167,7 +10214,7 @@ input:checked + .slider:before {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group streaming_chat ai-tool-card">
-								<h3 data-translate="virtual-cohost">A virtual co-host that can both listen, see, and talk back</h3>
+								<h3 data-translate="virtual-cohost">A virtual co-host that can listen and talk back</h3>
 
 								<div class="link ai-tool-link" title="Open the multimodal co-host page.">
 									<div id="cohost" data-raw="" class="single_message">
@@ -10175,22 +10222,44 @@ input:checked + .slider:before {
 									</div>
 								</div>
 
-								<p class="ai-tool-copy">This work-in-progress AI co-host can view your screen or webcam, listen to your voice, and respond by text or audio.</p>
-								<p class="ai-tool-copy"><strong>Voice input:</strong> SSN Desktop uses local Whisper with the selected microphone (about a 42 MB first-use download, then offline). The Chrome extension link opens the hosted co-host page, where Chrome Speech Recognition uses the system-default microphone and may require internet. Other browsers can still use typed chat when voice recognition is unavailable.</p>
-								<p class="ai-tool-copy">With a session link, it can also receive the SSN live chat feed; it defaults to monitor-only, and the Live Chat panel can opt into answering questions.</p>
-								<p class="ai-tool-copy">For the SSN Configured LLM provider, enable the <a href="#wrapper-chatbot-private-options">private chat bot option</a> above.</p>
+								<p class="ai-tool-copy">The co-host can listen through the microphone you choose and respond by text or audio. Gemini and supported multimodal LLMs can also use a selected screen or webcam; OpenAI Realtime currently uses microphone and live-chat context only.</p>
+								<p class="ai-tool-copy"><strong>Voice input:</strong> OpenAI Realtime uses WebRTC and a short-lived client secret created from the ChatGPT API key configured above; the standard key never enters the co-host page. SSN Desktop can use local Whisper for text-response providers (about a 42 MB first-use download, then offline). Chrome Speech Recognition may be used as a fallback for other providers.</p>
+								<p class="ai-tool-copy">With a session link, it can also receive the SSN live chat feed. OpenAI Realtime defaults to keeping recent chat as silent context until you ask about it; automatic modes speak replies but do not post them into platform chat.</p>
+								<p class="ai-tool-copy">OpenAI Realtime uses the private capability in the popup-generated co-host link; it does not require the separate Private Chat Bot option.</p>
 								<p class="ai-tool-copy"><a href="https://socialstream.ninja/docs/ai-cohost-guide.html" target="_blank">AI co-host guide</a></p>
-								<p class="ai-tool-copy">Future tool permissions can add live chat, OBS, stream events, games, and other interactive controls.</p>
+								<p class="ai-tool-copy">OpenAI Realtime can optionally control Spotify, approved OBS scenes, and the featured chat overlay. SSN Configured LLM currently supports Spotify only. Each tool is blocked unless enabled here and armed on the co-host page.</p>
 								<div class="cohost-tool-panel">
 									<h4>Co-host tool permissions</h4>
 									<div class="cohost-tool-row">
 										<label class="switch">
-											<input type="checkbox" id="cohostSpotifyControl" data-setting="cohostSpotifyControl" />
+											<input type="checkbox" id="cohostSpotifyControl" data-setting="cohostSpotifyControl" aria-labelledby="cohostSpotifyControlLabel" aria-describedby="cohostSpotifyControlDescription" />
 											<span class="slider round"></span>
 										</label>
 										<div class="cohost-tool-copy">
-											<span class="cohost-tool-title">Spotify controls</span>
-											<span class="cohost-tool-note">Allow the co-host to pause, resume, skip, queue, and check songs when Spotify is enabled and connected.</span>
+											<span class="cohost-tool-title" id="cohostSpotifyControlLabel">Spotify controls</span>
+											<span class="cohost-tool-note" id="cohostSpotifyControlDescription">Allow the co-host to pause, resume, skip, queue, and check songs when Spotify is enabled and connected.</span>
+										</div>
+									</div>
+									<div class="cohost-tool-row">
+										<label class="switch">
+											<input type="checkbox" id="cohostObsControl" data-setting="cohostObsControl" aria-labelledby="cohostObsControlLabel" aria-describedby="cohostObsControlDescription" />
+											<span class="slider round"></span>
+										</label>
+										<div class="cohost-tool-copy">
+											<span class="cohost-tool-title" id="cohostObsControlLabel">OBS scene controls</span>
+											<span class="cohost-tool-note" id="cohostObsControlDescription">Allow the co-host to switch only the OBS scenes listed below.</span>
+											<label class="cohost-tool-note" for="cohostObsScenes">Allowed scene names (comma-separated)</label>
+											<input type="text" id="cohostObsScenes" class="textInput" data-textsetting="cohostObsScenes" placeholder="Intro, Main, BRB" />
+										</div>
+									</div>
+									<div class="cohost-tool-row">
+										<label class="switch">
+											<input type="checkbox" id="cohostFeaturedChatControl" data-setting="cohostFeaturedChatControl" aria-labelledby="cohostFeaturedChatControlLabel" aria-describedby="cohostFeaturedChatControlDescription" />
+											<span class="slider round"></span>
+										</label>
+										<div class="cohost-tool-copy">
+											<span class="cohost-tool-title" id="cohostFeaturedChatControlLabel">Featured chat controls</span>
+											<span class="cohost-tool-note" id="cohostFeaturedChatControlDescription">Allow the co-host to feature a recent message or clear the featured overlay.</span>
 										</div>
 									</div>
 									<p class="cohost-tool-note">Disabled tools are blocked by the background service even if the co-host asks for them.</p>
@@ -10220,18 +10289,18 @@ input:checked + .slider:before {
 								<p class="ai-tool-copy"><a href="https://socialstream.ninja/docs/ai-cohost-guide.html" target="_blank">AI co-host and stage overlay guide</a></p>
 								<div style="display: inline-block;" title="Optional: also send primary chat bot replies to the AI stage overlay. This is not needed for dock right-click co-host actions.">
 									<label class="switch">
-										<input type="checkbox" id="aiOverlayFromChatBot" data-setting="aiOverlayFromChatBot" />
+										<input type="checkbox" id="aiOverlayFromChatBot" data-setting="aiOverlayFromChatBot" aria-labelledby="aiOverlayFromChatBotLabel" aria-describedby="aiOverlayFromChatBotDescription" />
 										<span class="slider round"></span>
 									</label>
-									<span>Also send primary chat bot replies to this overlay</span>
-									<small style="display:block; margin:4px 0 0 50px; opacity:0.75;">Not needed for dock right-click co-host actions.</small>
+									<span id="aiOverlayFromChatBotLabel">Also send primary chat bot replies to this overlay</span>
+									<small id="aiOverlayFromChatBotDescription" style="display:block; margin:4px 0 0 50px; opacity:0.75;">Not needed for dock right-click co-host actions.</small>
 								</div>
 								<div style="display: inline-block;" title="Let the AI stage overlay speak using browser text-to-speech. Default is off to avoid doubled audio.">
 									<label class="switch">
-										<input type="checkbox" id="aiOverlayTts" data-setting="aiOverlayTts" />
+										<input type="checkbox" id="aiOverlayTts" data-setting="aiOverlayTts" aria-labelledby="aiOverlayTtsLabel" />
 										<span class="slider round"></span>
 									</label>
-									<span>Enable overlay TTS</span>
+									<span id="aiOverlayTtsLabel">Enable overlay TTS</span>
 								</div>
 								<div class="textInputContainer" style="width: 95%;">
 									<input type="text" id="aiOverlayLabel" class="textInput" autocomplete="off" placeholder="cohost-overlay" data-textsetting="aiOverlayLabel" />

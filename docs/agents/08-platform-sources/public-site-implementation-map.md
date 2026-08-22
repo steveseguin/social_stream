@@ -127,7 +127,6 @@ Evidence label: `focused-metadata-validation`; not runtime-tested. This map rema
 | On24 | standard | `sources/on24.js` (M129) | `webinar-and-event-sources.md` | manifest route |
 | Chaturbate | standard | `sources/chaturbate.js` (M10) | `creator-live-cam-sources.md` | manifest route |
 | Cherry TV | standard | `sources/cherrytv.js` (M13) | `independent-live-platform-sources.md` | manifest route |
-| Claude.ai | toggle | `sources/static/claude.js` (M69) | `communication-and-sensitive-sources.md` | toggle, reload |
 | SoulBound.tv | standard | `sources/soulbound.js` (file-only) | `regional-and-emerging-platform-sources.md` | source exists; no manifest row found |
 | Truffle.vip | standard | `sources/truffle.js` (M28) | `video-broadcast-platform-sources.md` | manifest route |
 | Favorited | popout | `sources/favorited.js` (M30) | `popout-chat-only-sources.md` | manifest route |

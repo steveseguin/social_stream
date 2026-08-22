@@ -3143,6 +3143,7 @@ function createTabsFromSettings(response) {
 
 var streamID = false;
 var lastResponse = false;
+var cohostAccessCapability = "";
 
 function getPopupVersionParam() {
   try {
@@ -3696,7 +3697,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     const currentUrl = new URL(window.location.href);
     
     // List of parameters to ignore (TTS-related and standard ones)
-    const ignoreParams = ['session', 'password', 'localserver', 'localserverport'];
+    const ignoreParams = ['session', 'password', 'cohostauth', 'localserver', 'localserverport'];
   const ttsRelatedParams = [
     'ttsprovider', 'lang', 'voice', 'rate', 'pitch',
     'elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency', 'elevenstability', 
@@ -3740,7 +3741,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "wordcloud", path: "wordcloud.html" },
     { id: "poll", path: "poll.html" },
     { id: "chatbot", path: "bot.html", linkPath: "chatbot.html" },
-	{ id: "cohost", path: "cohost.html" },
+	{ id: "cohost", path: "cohost.html", capability: true },
     { id: "giveaway", path: "giveaway.html" },
     { id: "credits", path: "credits.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
@@ -3775,14 +3776,16 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     
     const linkPath = page.linkPath || page.path;
     const pageDefaultParams = page.defaultParams || "";
-    const generatedParams = `session=${encodeURIComponent(streamID)}${password}${customParams}${pageDefaultParams}${versionParam}`;
-    const fullURL = buildGeneratedUrl(page.path, generatedParams, baseURL);
-    const displayURL = buildGeneratedUrl(linkPath, generatedParams, baseURL);
+	const capabilityFragment = page.capability && cohostAccessCapability ? `#cohostauth=${encodeURIComponent(cohostAccessCapability)}` : "";
+	const generatedParams = `session=${encodeURIComponent(streamID)}${password}${customParams}${pageDefaultParams}${versionParam}`;
+	const fullURL = buildGeneratedUrl(page.path, generatedParams, baseURL) + capabilityFragment;
+	const displayURL = buildGeneratedUrl(linkPath, generatedParams, baseURL);
+	const visibleURL = page.capability && capabilityFragment ? displayURL + "#private-cohost-access" : displayURL;
     const element = document.getElementById(page.id);
     
     if (element) {
       const linkStyle = page.style ? `style="${page.style}"` : "";
-      element.innerHTML = `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${hideLinks ? "Click to open link" : displayURL}</a>`;
+	  element.innerHTML = `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${hideLinks ? "Click to open link" : visibleURL}</a>`;
       element.raw = fullURL;
       syncSupportedServerParamsForTarget(page.id, element, serverParamTokenSource, page.path, serverParamTokens);
     }
@@ -4430,6 +4433,7 @@ function update(response, sync = true) {
     }
     
     if (response !== undefined) {
+		if (response.cohostCapability) cohostAccessCapability = response.cohostCapability;
         applyPopupBeginnerMode(getPopupBeginnerMode(response));
 
         // Load profiles if they weren't loaded during init (e.g., due to startup timing)
@@ -8123,6 +8127,15 @@ function getMultiAlertPreviewPlatformKey() {
     return document.getElementById('multi-alert-preview-platform')?.value || 'tiktok';
 }
 
+function formatCustomEventTranslation(settingKey, fallback, values = {}) {
+    const input = document.querySelector(`[data-textsetting="${settingKey}"]`);
+    let template = input && typeof input.value === 'string' && input.value.trim() ? input.value.trim() : fallback;
+    Object.keys(values).forEach((key) => {
+        template = template.replace(new RegExp(`\\{${key}\\}`, 'g'), String(values[key] ?? ''));
+    });
+    return template;
+}
+
 function buildMultiAlertPreviewDescriptor(category) {
     const platformKey = getMultiAlertPreviewPlatformKey();
     const profile = MULTI_ALERT_PREVIEW_PLATFORMS[platformKey] || MULTI_ALERT_PREVIEW_PLATFORMS.tiktok;
@@ -8132,6 +8145,12 @@ function buildMultiAlertPreviewDescriptor(category) {
         chatname: profile.chatname,
         chatimg: createPreviewAvatarDataUri(profile.avatarLabel, profile.accent)
     };
+    const followMessage = platformKey === 'twitch'
+        ? formatCustomEventTranslation('customTwitchFollowMessage', `${profile.chatname} has started following`, { name: profile.chatname })
+        : `${profile.chatname} has started following`;
+    const subscriptionMessage = platformKey === 'twitch'
+        ? formatCustomEventTranslation('customTwitchSubscribedAtTierMessage', `${profile.chatname} has subscribed at tier 1`, { name: profile.chatname, tier: '1' })
+        : `${profile.chatname} has subscribed`;
 
     switch (category) {
         case 'follow':
@@ -8140,7 +8159,7 @@ function buildMultiAlertPreviewDescriptor(category) {
                 overrides: {
                     ...commonOverrides,
                     event: 'new_follower',
-                    chatmessage: `${profile.chatname} has started following`
+                    chatmessage: followMessage
                 }
             };
         case 'subscription':
@@ -8151,7 +8170,7 @@ function buildMultiAlertPreviewDescriptor(category) {
                     event: 'new_subscriber',
                     membership: profile.subscriptionLabel,
                     subtitle: profile.subscriptionSubtitle,
-                    chatmessage: 'Welcome to the squad!'
+                    chatmessage: subscriptionMessage
                 }
             };
         case 'donation':
@@ -8227,7 +8246,7 @@ function buildTestAlertPayload(category, overrides = {}) {
             event: 'new_subscriber',
             chatname: 'Markus',
             chatimg: 'https://socialstream.ninja/media/user2.jpg',
-            chatmessage: 'Welcome to the squad!',
+			chatmessage: 'Markus has subscribed at tier 1',
             membership: 'Tier 1',
             subtitle: 'Tier 1 subscription'
         },
@@ -10673,7 +10692,34 @@ function initHotkeys() {
     });
 }
 
+function reorderGlobalSettingsSections() {
+    const globalAnchor = document.getElementById('global-settings-and-tools-options');
+    const globalContainer = globalAnchor?.parentNode;
+    if (!globalContainer) return;
+
+    const commonSectionIds = [
+        'wrapper-profiles-options',
+        'wrapper-privhostbot-options-ext',
+        'wrapper-session-options',
+        'wrapper-export-options'
+    ];
+    let insertionPoint = globalAnchor;
+    commonSectionIds.forEach((id) => {
+        const wrapper = document.getElementById(id)?.closest('.wrapper');
+        if (!wrapper || wrapper.parentNode !== globalContainer) return;
+        globalContainer.insertBefore(wrapper, insertionPoint.nextSibling);
+        insertionPoint = wrapper;
+    });
+
+    const translationWrapper = document.getElementById('wrapper-custom-translation-options')?.closest('.wrapper');
+    const lowPriorityAnchor = document.getElementById('wrapper-chatbot-ai-overlay-options')?.closest('.wrapper');
+    if (translationWrapper && lowPriorityAnchor && translationWrapper.parentNode === lowPriorityAnchor.parentNode) {
+        lowPriorityAnchor.parentNode.insertBefore(translationWrapper, lowPriorityAnchor.nextSibling);
+    }
+}
+
 document.addEventListener("DOMContentLoaded", async function(event) {
+    reorderGlobalSettingsSections();
     loadSourcesListFromRuntimeManifest();
     setupDynamicCustomUrlControls();
 
