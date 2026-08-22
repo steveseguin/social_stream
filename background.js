@@ -534,6 +534,7 @@ var FacebookDupes = "";
 var FacebookDupesTime = null;
 
 var fetchNode = false;
+var fetchNodeAsync = false;
 var postNode = false;
 var putNode = false;
 
@@ -838,12 +839,23 @@ if (typeof chrome.runtime == "undefined") {
 		});
 	});
 
-	fetchNode = function (URL, headers = {}, method = "GET", body = null) {
+	fetchNode = function (URL, headers = {}, method = "GET", body = null, diagnostics = null) {
 		return ipcRenderer.sendSync("nodefetch", {
 			url: URL,
 			headers: headers,
 			method: method,
-			body: body
+			body: body,
+			diagnostics: diagnostics
+		});
+	};
+
+	fetchNodeAsync = function (URL, headers = {}, method = "GET", body = null, diagnostics = null) {
+		return ipcRenderer.invoke("nodefetch", {
+			url: URL,
+			headers: headers,
+			method: method,
+			body: body,
+			diagnostics: diagnostics
 		});
 	};
 
@@ -5477,7 +5489,11 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 						status: error.status,
 						code: error.code,
 						message: error.message,
-						hint: error.hint || null
+						hint: error.hint || null,
+						requestId: error.requestId || null,
+						organization: error.organization || null,
+						project: error.project || null,
+						missingScope: error.missingScope || null
 					};
 				} else {
 					payload = {

@@ -5399,8 +5399,20 @@ function formatLLMProviderTestError(error) {
     if (error.code) {
         parts.push(`Code: ${error.code}`);
     }
+    if (error.missingScope) {
+        parts.push(`Missing scope: ${error.missingScope}`);
+    }
     if (error.message) {
         parts.push(`Message: ${error.message}`);
+    }
+    if (error.requestId) {
+        parts.push(`Request ID: ${error.requestId}`);
+    }
+    if (error.organization) {
+        parts.push(`OpenAI organization: ${error.organization}`);
+    }
+    if (error.project) {
+        parts.push(`OpenAI project: ${error.project}`);
     }
     if (error.hint) {
         parts.push(`Hint: ${error.hint}`);
