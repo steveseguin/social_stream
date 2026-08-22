@@ -1965,7 +1965,14 @@ function hasKickStickerFragment(fragments) {
             || (fragment.sticker ? 'sticker' : '')
             || (fragment.emote ? 'emote' : '');
         if (assetType === 'sticker') {
-            return true;
+            if (isTextOnlyMode()) {
+                return true;
+            }
+            return Boolean(
+                pickKickAssetId(fragment, 'sticker')
+                || pickKickAssetUrl(fragment, 'sticker')
+                || (typeof fragment.html === 'string' && fragment.html.trim())
+            );
         }
         return [fragment.text, fragment.content, fragment.value].some(
             value => containsKickInlineAssetToken(value, 'sticker')

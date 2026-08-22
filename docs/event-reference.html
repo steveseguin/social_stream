@@ -1631,6 +1631,7 @@
                     <p class="source-note">Implementation: <code>sources/worldswave.js</code></p>
                     <ul class="requirements">
                         <li>Supports WorldsWave live pages and chat-only URLs such as <code>https://worldswave.com/kn_livecmd.php?cmd=viewStream&amp;streamId=STREAM_ID&amp;chatonly=1</code>.</li>
+                        <li>Uses the stable <code>data-ww-*</code>/<code>ww-chat-*</code> markup when available, while retaining the legacy kontackt selectors for chat-only pages and older layouts.</li>
                         <li>Existing chat history is skipped when capture attaches; test with a new message.</li>
                         <li>Viewer counts require <strong>Show viewer count</strong> or hype mode. Gifts, tips, and send-back are not normalized by this source yet.</li>
                     </ul>
@@ -1646,12 +1647,12 @@
                             <tr>
                                 <td><code>message</code></td>
                                 <td>A new rendered WorldsWave chat row appears.</td>
-                                <td>Standard chat payload with <code>type: "worldswave"</code>, sender name, avatar, optional user ID and name color, plus sanitized inline message images when text-only mode is disabled.</td>
+                                <td>Standard chat payload with <code>type: "worldswave"</code>, sender name, avatar, optional user ID, name color, badges, moderator state, membership, donation value, attachment, and channel identity. Stable WorldsWave message IDs are exposed as <code>meta.messageId</code> and deduplicated across simultaneous preview/full-chat panels. Inline message images remain sanitized when text-only mode is disabled.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>The visible live viewer total changes while viewer-count capture or hype mode is enabled.</td>
-                                <td><code>meta</code> is the integer viewer count; compact values such as <code>1.2K</code> are normalized.</td>
+                                <td><code>meta</code> is the integer viewer count. The stable <code>data-ww-viewer-count</code> value is preferred; compact legacy values such as <code>1.2K</code> are normalized as a fallback.</td>
                             </tr>
                         </tbody>
                     </table>

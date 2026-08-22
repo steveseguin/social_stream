@@ -1691,102 +1691,6 @@ input:checked + .slider:before {
     transition: background 0.08s ease-out, box-shadow 0.08s ease-out, border-color 0.08s ease-out;
 }
 
-.credits-control-panel {
-	margin: 0 0 14px;
-	padding: 12px;
-	border: 1px solid var(--collapsible-border-color);
-	border-radius: 6px;
-	background: var(--color-accent-subtle);
-}
-
-.credits-control-fields,
-.credits-control-grid {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 8px;
-}
-
-.credits-control-field {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-	min-width: 0;
-}
-
-.credits-control-field > span,
-.credits-control-label {
-	font-size: 12px;
-	font-weight: 600;
-	opacity: 0.82;
-}
-
-.credits-control-field select {
-	width: 100%;
-	min-width: 0;
-	min-height: 32px;
-	margin: 0;
-}
-
-.credits-control-section {
-	margin-top: 12px;
-}
-
-.credits-control-label {
-	display: block;
-	margin-bottom: 6px;
-}
-
-.credits-control-button {
-	min-width: 0;
-	min-height: 32px;
-	padding: 6px 10px;
-	border: 1px solid var(--collapsible-border-color);
-	border-radius: 4px;
-	background: var(--button-background);
-	color: var(--default-text-color);
-	font: inherit;
-	font-weight: 600;
-	cursor: pointer;
-}
-
-.credits-control-button:hover,
-.credits-control-button:focus {
-	border-color: var(--credits-color);
-	box-shadow: 0 0 0 1px var(--credits-color) inset;
-	outline: none;
-}
-
-.credits-control-button.primary {
-	border-color: var(--credits-color);
-}
-
-.credits-control-button.danger {
-	border-color: #b85c5c;
-}
-
-.credits-control-button:disabled {
-	cursor: wait;
-	opacity: 0.55;
-}
-
-.credits-control-button[hidden] {
-	display: none;
-}
-
-.credits-control-hint {
-	display: block;
-	margin-top: 8px;
-	line-height: 1.35;
-	opacity: 0.75;
-}
-
-@media (max-width: 520px) {
-	.credits-control-fields,
-	.credits-control-grid {
-		grid-template-columns: 1fr;
-	}
-}
-
 .sticky-action-row {
     display: flex;
     width: 100%;
@@ -10874,7 +10778,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="enable-the-hype-meters-processing">🚦 Enable the hype meter's processing </span>
                                 </div>
-								<h3>Credits settings</h3>
+								<h3><span data-translate="other-customization-options">Other customization options</span></h3>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param4="alignright" />
@@ -12997,46 +12901,40 @@ input:checked + .slider:before {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group credits">
-                                <h3><span data-translate="other-customization-options">Other customization options</span></h3>
+								<h3>Credits settings <small><a class="lightblue" target="_blank" rel="noopener" href="https://socialstream.ninja/beta/docs/credits-roll-guide.html">[guide]</a></small></h3>
 								<div>
-									<div class="credits-control-panel">
-										<div class="credits-control-fields">
-											<label class="credits-control-field" for="creditsStyleSelect">
-												<span data-translate="display-style-credits">Credits Style</span>
-												<select id="creditsStyleSelect" data-optionparam13="style">
-													<option value="starwars">Star Wars</option>
-													<option value="standard">Standard Roll</option>
-													<option value="minimal">Minimal</option>
-													<option value="elegant">Elegant</option>
-												</select>
-											</label>
-											<label class="credits-control-field" for="creditsTriggerModeSelect">
-												<span data-translate="trigger-mode">Trigger Mode</span>
-												<select id="creditsTriggerModeSelect" data-optionparam13="triggermode">
-													<option value="auto">Auto (visibility-based)</option>
-													<option value="manual">Manual (button-triggered)</option>
-													<option value="background">Background collection (button-triggered)</option>
-												</select>
-											</label>
-										</div>
-										<div class="credits-control-section">
-											<span class="credits-control-label">Quick setup</span>
-											<div class="credits-control-grid">
-												<button type="button" class="credits-control-button" data-credits-preset="supporters">Continuous supporter roll</button>
-												<button type="button" class="credits-control-button" data-credits-preset="donors">Donors-only roll</button>
-											</div>
-										</div>
-										<div class="credits-control-section">
-											<span class="credits-control-label">Controls</span>
-											<div class="credits-actions credits-control-grid">
-												<button type="button" id="creditsStartBtn" class="credits-control-button primary" hidden>Start Credits</button>
-												<button type="button" id="creditsPreviewBtn" class="credits-control-button" hidden>Preview</button>
-												<button type="button" id="creditsBackgroundTestBtn" class="credits-control-button" hidden>Test Background Mode</button>
-												<button type="button" id="creditsResetBtn" class="credits-control-button danger">Reset saved credits</button>
-											</div>
-											<small id="creditsControlHint" class="credits-control-hint"></small>
-										</div>
-									</div>
+									<span data-translate="display-style-credits">Credits Style</span>
+									<select id="creditsStyleSelect" data-optionparam13="style">
+										<option value="starwars">Star Wars</option>
+										<option value="standard">Standard Roll</option>
+										<option value="minimal">Minimal</option>
+										<option value="elegant">Elegant</option>
+									</select>
+								</div>
+								<br>
+								<div>
+									<span data-translate="trigger-mode">Trigger Mode</span>
+									<select id="creditsTriggerModeSelect" data-optionparam13="triggermode">
+										<option value="auto">Auto (visibility-based)</option>
+										<option value="manual">Manual (button-triggered)</option>
+										<option value="background">Background collection (button-triggered)</option>
+									</select>
+								</div>
+								<br>
+								<div class="credits-actions" style="display:flex; gap:8px; flex-wrap:wrap">
+									<button type="button" id="creditsStartBtn" class="glowingButton" hidden><span>Start Credits</span></button>
+									<button type="button" id="creditsPreviewBtn" class="glowingButton" hidden><span>Preview</span></button>
+									<button type="button" id="creditsBackgroundTestBtn" class="glowingButton" hidden><span>Test credits</span></button>
+									<button type="button" id="creditsResetBtn" class="glowingButton"><span>Reset saved credits</span></button>
+								</div>
+								<small id="creditsControlHint" style="display:block; margin-top:6px;"></small>
+								<h3>Quick setup</h3>
+								<div style="display:flex; gap:8px; flex-wrap:wrap">
+									<button type="button" class="glowingButton" data-credits-preset="supporters"><span>Loop supporters</span></button>
+									<button type="button" class="glowingButton" data-credits-preset="donors"><span>Donors only</span></button>
+								</div>
+								<br>
+								<div>
 									<div>
 										<label class="switch">
 											<input type="checkbox" data-param13="onlydonors" />

@@ -113,6 +113,15 @@ function findImage(result, className) {
 		assert.strictEqual(result.images.length, 1);
 		assert.strictEqual(result.text.trim(), "metadata sticker");
 
+		const partialFragmentPayload = {
+			message: { fragments: [{ type: "sticker", text: "Party" }] },
+			metadata: { sticker: { id: 654321, name: "Party" } }
+		};
+		result = await inspect(partialFragmentPayload.message, "Party", partialFragmentPayload);
+		sticker = findImage(result, "kick-sticker");
+		assert.ok(sticker, "incomplete sticker fragments must fall back to metadata");
+		assert.strictEqual(sticker.src, "https://files.kick.com/emotes/654321/fullsize");
+
 		const tokenAndMetadata = {
 			message: { content: "[sticker:246:Once]" },
 			metadata: { sticker: { id: 246, name: "Once" } }

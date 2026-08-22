@@ -27,25 +27,35 @@ const source = fs.readFileSync(path.resolve(__dirname, "..", "sources", "vkvideo
         onMessage: { addListener: function () {} }
       }
     };
+    window.__addVkMessage = function (name, message, color) {
+      var row = document.createElement("div");
+      row.className = "ChatMessage_root_current MessagesList_message_current";
+      document.getElementById("chat").appendChild(row);
+
+      var author = document.createElement("span");
+      author.className = "ChatMessageAuthorPanel_name_current";
+      author.style.color = color || "";
+      author.textContent = name + ":";
+      row.appendChild(author);
+
+      var content = document.createElement("div");
+      content.dataset.role = "messageMainContent";
+      content.textContent = message;
+      row.appendChild(content);
+      return row;
+    };
   ` });
   await page.addScriptTag({ content: source });
   await page.waitForFunction(() => document.getElementById("chat").marked === true);
 
   await page.evaluate(() => {
-    var row = document.createElement("div");
-    row.className = "ChatMessage_root_current MessagesList_message_current";
-    document.getElementById("chat").appendChild(row);
+    window.__addVkMessage("History", "Hydrated backlog", "");
+  });
+  await page.waitForTimeout(2200);
+  assert.strictEqual(await page.evaluate(() => window.__vkMessages.length), 0, "hydrated startup history should not send");
 
-    var author = document.createElement("span");
-    author.className = "ChatMessageAuthorPanel_name_current";
-    author.style.color = "rgb(10, 20, 30)";
-    author.textContent = "PumychPlay:";
-    row.appendChild(author);
-
-    var content = document.createElement("div");
-    content.dataset.role = "messageMainContent";
-    content.textContent = "VK popup works";
-    row.appendChild(content);
+  await page.evaluate(() => {
+    window.__addVkMessage("PumychPlay", "VK popup works", "rgb(10, 20, 30)");
   });
 
   await page.waitForFunction(() => window.__vkMessages.length === 1);

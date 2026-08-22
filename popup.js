@@ -10765,15 +10765,16 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	if (creditsBackgroundTestBtn) {
 		creditsBackgroundTestBtn.addEventListener('click', function() {
-			const originalLabel = creditsBackgroundTestBtn.textContent;
+			const label = creditsBackgroundTestBtn.querySelector('span');
+			const originalLabel = label ? label.textContent : creditsBackgroundTestBtn.textContent;
 			creditsBackgroundTestBtn.disabled = true;
-			creditsBackgroundTestBtn.textContent = 'Testing...';
+			if (label) label.textContent = 'Testing...';
 			chrome.runtime.sendMessage({ cmd: "creditsBackgroundTest" }, function(response) {
 				const delivered = !!(response && response.success);
-				creditsBackgroundTestBtn.textContent = delivered ? 'Test sent' : 'No credits source connected';
+				if (label) label.textContent = delivered ? 'Test sent' : 'No credits source connected';
 				setTimeout(function() {
 					creditsBackgroundTestBtn.disabled = false;
-					creditsBackgroundTestBtn.textContent = originalLabel;
+					if (label) label.textContent = originalLabel;
 				}, 2000);
 			});
 		});

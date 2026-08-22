@@ -276,6 +276,9 @@
 	
 	
 	function onElementInserted(target) {
+		target.querySelectorAll(messageSelector).forEach(function(messageElement) {
+			messageElement.ssnProcessed = true;
+		});
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
@@ -310,7 +313,11 @@
 
 				console.log("CONNECTED chat detected");
 
-				onElementInserted(container);
+				setTimeout(function(){
+					if (container && container.isConnected){
+						onElementInserted(container);
+					}
+				},2000);
 			}
 			checkViewers();
 		} catch(e){}
