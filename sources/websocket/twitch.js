@@ -3670,6 +3670,7 @@ async function ensureChatClientInstance() {
 		}
 		data.chatname = resolvedDisplayName;
 		data.username = user;
+		data.contentimg = normalizedPayload?.contentimg || "";
 		
 		// Convert badge URLs to badge objects
 		data.chatbadges = badgeList.map(url => ({ type: "img", src: url }));
@@ -3706,6 +3707,16 @@ async function ensureChatClientInstance() {
 			}
 		} else {
 			data.chatmessage = replaceEmotesWithImages(message, twitchEmotes, isBitMessage);
+		}
+		if (data.contentimg) {
+			data.chatmessage = "";
+			const normalizedMeta = normalizedPayload && normalizedPayload.meta;
+			data.meta = normalizedMeta && typeof normalizedMeta === "object" && !Array.isArray(normalizedMeta)
+				? Object.assign({}, normalizedMeta)
+				: {};
+			if (!("gifLabel" in data.meta)) {
+				data.meta.gifLabel = message || "";
+			}
 		}
 		
 		data.membership = markSubscriberAsMembership ? subscriber : "";

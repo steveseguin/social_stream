@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const popupSource = fs.readFileSync(path.resolve(__dirname, "..", "popup.js"), "utf8");
+const popupHtml = fs.readFileSync(path.resolve(__dirname, "..", "popup.html"), "utf8");
 
 function extractFunction(source, name) {
 	const start = source.indexOf(`function ${name}(`);
@@ -26,6 +27,7 @@ const isPopupSearchControl = Function(`${controlSource}\nreturn isPopupSearchCon
 	"searchInput",
 	"searchIcon",
 	"popupSearchNoResults",
+	"popupSearchResults",
 	"activeIcon",
 	"languageIcon",
 	"language-selector-container"
@@ -41,5 +43,53 @@ assert.match(
 	/if \(isPopupSearchControl\(element\)\)\s*{\s*return;/,
 	"Popup search controls must be excluded from the searchable top-level index"
 );
+assert.doesNotMatch(
+	createIndexSource,
+	/isPopupSearchNormallyHidden/,
+	"Building the search index must not force computed-style reads across the popup"
+);
+assert.match(
+	createIndexSource,
+	/new Set\(rowElements\)/,
+	"Nested search rows must be indexed without pairwise containment checks"
+);
+assert.match(
+	createIndexSource,
+	/text: getPopupSearchText\(row\)/,
+	"Grouped rows must retain their own searchable controls"
+);
+
+const applySearchSource = extractFunction(popupSource, "applyPopupSearchNow");
+assert.doesNotMatch(
+	applySearchSource,
+	/openPopupSearchSection|setPopupSearchHidden|setPopupSearchMatch/,
+	"Typing in search must not mutate the live settings UI"
+);
+assert.match(
+	applySearchSource,
+	/renderPopupSearchResults\(matches, matchedElements\.size\)/,
+	"Search matches must render in the isolated results panel"
+);
+assert.doesNotMatch(
+	applySearchSource,
+	/!rowRecord\.containerOnly/,
+	"Controls nested directly in grouped rows must remain searchable"
+);
+assert.match(
+	popupSource,
+	/applyPopupSearchNow\(value\);\s*\}, 200\);/,
+	"Popup search must debounce typing long enough to avoid rerendering on every keystroke"
+);
+assert.match(popupHtml, /id="popupSearchResults"/, "Popup search results panel is missing");
+assert.match(popupSource, /addPopupSearchSelectOptions\(parts, element\)/, "Dropdown choices must be searchable");
+assert.match(popupSource, /data-\(\?:setting/, "Setting keys must be searchable as a fallback");
+
+[
+	["wrapper-global-mechanics-options", "Events &amp; Capture"],
+	["wrapper-global-message-processing-options", "Message Processing"],
+	["wrapper-global-connections-integrations-options", "Connections &amp; Integrations"]
+].forEach(([id, label]) => {
+	assert.match(popupHtml, new RegExp(`id="${id}"[\\s\\S]*?for="${id}"[\\s\\S]*?${label}`), `${label} section is missing`);
+});
 
 console.log("popup search tests passed");

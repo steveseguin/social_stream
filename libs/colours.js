@@ -252,8 +252,6 @@ function getColorFromType(source) {
         case "kick":
         case "kick_new":
             return "#00AB00"; // Kick’s bright green
-        case "trovo":
-            return "#1FBF4E"; // Trovo Green
         case "dlive":
             return "#FDF300"; // DLive Yellow
         case "odyssey":

@@ -14,7 +14,6 @@ This page covers:
 - PeerTube
 - Restream.io Chat
 - Steam Broadcasts
-- Trovo
 - Truffle.vip
 - TwitCasting
 - Vimeo
@@ -52,7 +51,6 @@ Do not assume:
 | PeerTube | `sources/peertube.js` | Public says use livechat plugin room URLs; manifest includes plugin router and room query URL forms. | Converse/PeerTube livechat author, message, and avatar when not generic SVG data. | If no access token and no chat content, source can prompt the user to sign in on the PeerTube site. | Confirm livechat plugin room URL and login state on that instance. |
 | Restream.io Chat | `sources/restream.js` | Public setup uses `https://chat.restream.io/chat`; manifest matches `https://chat.restream.io/*`. | Aggregated chat name, name color, avatar, and message. | Can include `sourceImg` for upstream platform icon; type remains `restream`. | Ask whether the issue is Restream chat capture or upstream-platform identity; verify Restream chat page is open. |
 | Steam Broadcasts | `sources/steam.js` | Public and manifest use `https://steamcommunity.com/broadcast/chatonly/*`; manifest uses `all_frames`. | Chat name, message, and avatar fetched through Steam miniprofile lookup. | `focusChat` targets the `ChatOnly` iframe textarea. | Confirm chat-only URL and frame loaded; avatar fetch can fail separately from message capture. |
-| Trovo | `sources/trovo.js` | Manifest matches `https://trovo.live/chat/*` with `document_start` and `all_frames`; no public card mapping found in this pass. | Name, name color, avatar, message, and badge images. | Avatar URL is rewritten from small/webp style to larger jpg-style URL; `nosubcolor` setting can suppress name color. | Treat as manifest/source evidence until public card routing is reconciled; verify exact chat URL. |
 | Truffle.vip | `sources/truffle.js` | Public and manifest use `https://chat.truffle.vip/chat/*`. | Name, name color, message, badges, optional Twitch avatar. | Payload `type` can be `truffle`, `twitch`, or `youtube` based on platform icon; duplicate suppression by user/message. | Do not assume all Truffle messages arrive as `type: "truffle"`. Check upstream platform icon behavior. |
 | TwitCasting | `sources/twitcasting.js` | Public says use `twitcasting.tv` pages; manifest includes `https://*.twitcasting.tv/*` and `https://twitcasting.tv/*`. | Comment avatar, name, and message. | Basic rendered chat payload `type: "twitcasting"`. | Confirm correct TwitCasting page and comment list; no rich event path found. |
 | Vimeo | `sources/vimeo.js` | Public says Vimeo event/live-chat pages; manifest covers live and event URL shapes with `all_frames`. | Chat author, message, avatar, and Q&A item text. | Q&A/sidebar rows set `question: true`; avatar may be converted to a data URL before forwarding. | Ask whether the user expects chat or Q&A; verify the interaction sidebar is open. |
@@ -77,7 +75,6 @@ Do not assume:
 | Restream source icon | Restream can include `sourceImg` for the upstream platform icon while keeping `type: "restream"`. |
 | Owncast badges | Owncast captures badge images/SVGs, but current payload leaves `chatimg` blank. |
 | PeerTube login prompt | PeerTube can prompt sign-in when the livechat room is not accessible. |
-| Trovo badges/name color | Trovo captures badge images and name color unless `nosubcolor` disables color. |
 | NonOLive donations | A donation variable exists, but donation extraction is commented out in inspected source. |
 | Steam avatar lookup | Steam fetches avatars through miniprofile lookup; message capture and avatar capture can fail independently. |
 
@@ -87,7 +84,6 @@ Do not assume:
    - Steam needs `steamcommunity.com/broadcast/chatonly/*`.
    - PeerTube needs a livechat plugin room URL.
    - OpenStreamingPlatform uses the demo `chatOnly=True` URL in the manifest.
-   - Trovo uses `trovo.live/chat/*`.
 2. Whether the user is in the Chrome extension, standalone app, Firefox, or a hosted page only.
 3. Whether chat is visible and a new row was sent after SSN connected.
 4. Whether the user expects plain chat, Q&A, badges, upstream source identity, donations, avatars, or send-back.
@@ -122,7 +118,6 @@ Truffle and Restream can expose upstream platform identity in different ways. Tr
 
 ## Do Not Promise Yet
 
-- Trovo as a public supported-site card until public-card routing is reconciled.
 - OpenStreamingPlatform as a general OSP support promise beyond the manifest demo chat-only URL.
 - NonOLive donations.
 - Vimeo event analytics, attendee data, or full moderation support.
@@ -134,6 +129,6 @@ Truffle and Restream can expose upstream platform identity in different ways. Tr
 
 - Live/browser validation for each source in this group.
 - App source-window validation for exact source URLs, iframe behavior, and login/cookie state.
-- Public support reconciliation for Trovo and OpenStreamingPlatform.
+- Public support reconciliation for OpenStreamingPlatform.
 - Controlled payload samples for Vimeo Q&A, Truffle upstream type, Restream `sourceImg`, Owncast badges, PeerTube login-gated chat, and Steam avatar lookup.
 - Source-control/send-back validation against background handlers before answering send-message questions.

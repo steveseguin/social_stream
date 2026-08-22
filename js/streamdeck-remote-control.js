@@ -112,7 +112,11 @@
 		closepoll: true,
 		startmap: true,
 		pausemap: true,
-		resetmap: true
+		resetmap: true,
+		creditsStart: true,
+		creditsPreview: true,
+		creditsTest: true,
+		creditsReset: true
 	};
 
 	const REMOTE_SSN_ACTION_DESCRIPTORS = {
@@ -199,6 +203,42 @@
 			category: "timer",
 			label: "Get timer state",
 			risk: "read-only",
+			callback: "guaranteed"
+		},
+		creditsStart: {
+			owner: "background",
+			phase: 1,
+			category: "credits",
+			label: "Start credits",
+			risk: "mutating",
+			requires: ["creditsPage"],
+			callback: "guaranteed"
+		},
+		creditsPreview: {
+			owner: "background",
+			phase: 1,
+			category: "credits",
+			label: "Preview credits",
+			risk: "mutating",
+			requires: ["creditsPage"],
+			callback: "guaranteed"
+		},
+		creditsTest: {
+			owner: "background",
+			phase: 1,
+			category: "credits",
+			label: "Test credits",
+			risk: "mutating",
+			requires: ["creditsPage"],
+			callback: "guaranteed"
+		},
+		creditsReset: {
+			owner: "background",
+			phase: 1,
+			category: "credits",
+			label: "Reset credits",
+			risk: "destructive",
+			requires: ["creditsPage"],
 			callback: "guaranteed"
 		}
 	};
@@ -453,6 +493,12 @@
 			if (action === "sendChat") {
 				availability[action] = backgroundAvailable
 					? { state: "unknown", reason: "Requires at least one writable capture source." }
+					: { state: "unavailable", reason: "Social Stream remote control is unavailable." };
+				return;
+			}
+			if (descriptor.requires && descriptor.requires.indexOf("creditsPage") !== -1) {
+				availability[action] = backgroundAvailable
+					? { state: "unknown", reason: "Requires a connected Credits page." }
 					: { state: "unavailable", reason: "Social Stream remote control is unavailable." };
 				return;
 			}

@@ -165,6 +165,7 @@ body {
 	var pageBackground = urlParams.get("pagebg");
 	var alignSetting = normalizeAlign(urlParams.get("align"));
 	var layoutSetting = normalizeLayout(urlParams.get("layout"));
+	var centerOriginSetting = readBooleanParam("centerorigin");
 	var tripleSetting = readBooleanParam("triple");
 	var stage = document.getElementById("stage");
 	var setupNote = document.getElementById("setup-note");
@@ -337,7 +338,25 @@ body {
 		var durationMax = kind === "like" ? 5.8 : 4.9;
 		var spinRange = 18;
 
-		if (layoutSetting === "column") {
+		if (centerOriginSetting) {
+			left = 50;
+			if (layoutSetting === "column") {
+				driftMin = -4;
+				driftMax = 4;
+				durationMin += 0.3;
+				durationMax += 0.5;
+				spinRange = 8;
+			} else if (layoutSetting === "fountain") {
+				driftMin = -20;
+				driftMax = 20;
+				durationMin -= 0.2;
+				durationMax -= 0.1;
+				spinRange = 22;
+			} else {
+				driftMin = -16;
+				driftMax = 16;
+			}
+		} else if (layoutSetting === "column") {
 			left = randomBetween(Math.max(bounds.min, anchor - 6), Math.min(bounds.max, anchor + 6));
 			driftMin = -4;
 			driftMax = 4;
@@ -396,6 +415,7 @@ body {
 			spin: options.spin,
 			align: alignSetting || "full",
 			layout: layoutSetting,
+			centerOrigin: centerOriginSetting,
 			event: options.event || ""
 		});
 		if (spawnHistory.length > 400) {
@@ -415,7 +435,11 @@ body {
 		item.className = "reaction";
 		item.style.width = size + "px";
 		item.style.height = size + "px";
+		item.style.fontSize = size + "px";
 		item.style.left = left + "vw";
+		if (centerOriginSetting) {
+			item.style.marginLeft = (-size / 2) + "px";
+		}
 		item.style.animationDuration = duration + "s";
 		item.style.setProperty("--drift", drift + "vw");
 		item.style.setProperty("--spin", spin + "deg");
@@ -423,6 +447,7 @@ body {
 		item.dataset.drift = String(drift);
 		item.dataset.layout = layoutSetting;
 		item.dataset.align = alignSetting || "full";
+		item.dataset.centerOrigin = centerOriginSetting ? "true" : "false";
 
 		content.className = "reaction-content" + (className ? " " + className : "");
 		content.innerHTML = markup;
@@ -696,6 +721,7 @@ body {
 				pageBackground: pageBackground || "",
 				align: alignSetting || "full",
 				layout: layoutSetting,
+				centerOrigin: centerOriginSetting,
 				triple: tripleSetting
 			};
 		},

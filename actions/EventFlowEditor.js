@@ -7,7 +7,7 @@ const FLOW_TEMPLATES = {
         description: 'Forward chat messages to a Discord webhook',
         nodes: [
             { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 100, y: 50, config: {} },
-            { id: 'action_1', type: 'action', actionType: 'webhook', x: 100, y: 230, config: { url: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN', method: 'POST', body: '{"content": "{username}: {message}"}', includeMessage: false, syncMode: false, blockOnFailure: false } }
+            { id: 'action_1', type: 'action', actionType: 'webhook', x: 100, y: 230, config: { url: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN', method: 'POST', body: '{"content": "{message}", "username": "{username}", "avatar_url": "{chatimg}"}', includeMessage: false, syncMode: false, blockOnFailure: false } }
         ],
         connections: [{ from: 'trigger_1', to: 'action_1' }]
     },
@@ -3752,7 +3752,7 @@ class EventFlowEditor {
   'peertube', 'picarto', 'piczel', 'pilled', 'quakenet', 'quickchannel', 'restream', 'riverside', 'rokfin',
   'roll20', 'rooter', 'rumble', 'rutube', 'sessions', 'shareplay', 'slack', 'slido', 'sooplive',
   'soulbound', 'stageten', 'steam', 'substack', 'teams', 'telegram', 'telegramk', 'tellonym', 'tiktok',
-  'tradingview', 'trovo', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
+  'tradingview', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
    'vimeo', 'vklive', 'vkplay', 'vkvideo', 'wavevideo', 'webex', 'webinargeek', 'whatnot', 'whatsapp', 'whop',
   'wix', 'wix2', 'workplace', 'x', 'xeenon', 'xpsync', 'younow', 'youtube', 'youtubeshorts', 'youtube_comments', 'zapstream', 'zoom',
   'bmac', 'fourthwall', 'stripe', 'other'].includes(node.config.source);
@@ -3769,7 +3769,7 @@ class EventFlowEditor {
   'peertube', 'picarto', 'piczel', 'pilled', 'quakenet', 'quickchannel', 'restream', 'riverside', 'rokfin',
   'roll20', 'rooter', 'rumble', 'rutube', 'sessions', 'shareplay', 'slack', 'slido', 'sooplive',
   'soulbound', 'stageten', 'steam', 'substack', 'teams', 'telegram', 'telegramk', 'tellonym', 'tiktok',
-  'tradingview', 'trovo', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
+  'tradingview', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
    'vimeo', 'vklive', 'vkplay', 'vkvideo', 'wavevideo', 'webex', 'webinargeek', 'whatnot', 'whatsapp', 'whop',
   'wix', 'wix2', 'workplace', 'x', 'xeenon', 'xpsync', 'younow', 'youtube', 'youtubeshorts', 'youtube_comments', 'zapstream', 'zoom',
   'bmac', 'fourthwall', 'stripe', 'other'].map(s => `<option value="${s}" ${node.config.source === s ? 'selected' : ''}>${s.charAt(0).toUpperCase()
@@ -4608,11 +4608,11 @@ class EventFlowEditor {
 				if (node.type === 'trigger') {
 					 html += `<div class="property-group"><label class="property-label" for="prop-code">JavaScript Code</label><textarea class="property-input" id="prop-code" rows="10" spellcheck="false"></textarea>
 							 <button type="button" class="btn btn-primary custom-code-editor-launch" id="open-custom-code-editor-btn">Open Code Editor</button>
-							 <div class="property-help">Return true/false. \`message\` object is available.</div></div>`;
+							 <div class="property-help">Return true/false. \`message\` and \`convertCurrency(value, target, source)\` are available.</div></div>`;
 				} else if (node.type === 'action') { // Custom JS Action
 					 html += `<div class="property-group"><label class="property-label" for="prop-code">JavaScript Code</label><textarea class="property-input" id="prop-code" rows="10" spellcheck="false"></textarea>
 							 <button type="button" class="btn btn-primary custom-code-editor-launch" id="open-custom-code-editor-btn">Open Code Editor</button>
-							 <div class="property-help">\`message\` and \`result\` objects are available. Return an object like \`{ modified: boolean, message: object, blocked: boolean }\`.</div></div>`;
+							 <div class="property-help">\`message\`, \`result\`, and \`convertCurrency(value, target, source)\` are available. Return an object like \`{ modified: boolean, message: object, blocked: boolean }\`.</div></div>`;
 				}
 				// Potentially add a case for customJs if it were a logic node type
 				break;
@@ -4852,7 +4852,6 @@ class EventFlowEditor {
 					{ value: 'rumble', label: 'Rumble' },
 					{ value: 'odysee', label: 'Odysee' },
 					{ value: 'dlive', label: 'DLive' },
-					{ value: 'trovo', label: 'Trovo' },
 					{ value: 'telegram', label: 'Telegram' },
 					{ value: 'whatsapp', label: 'WhatsApp' },
 					{ value: 'zoom', label: 'Zoom' },
@@ -4916,7 +4915,6 @@ class EventFlowEditor {
 					{ value: 'rumble', label: 'Rumble' },
 					{ value: 'odysee', label: 'Odysee' },
 					{ value: 'dlive', label: 'DLive' },
-					{ value: 'trovo', label: 'Trovo' },
 					{ value: 'telegram', label: 'Telegram' },
 					{ value: 'whatsapp', label: 'WhatsApp' },
 					{ value: 'zoom', label: 'Zoom' },
@@ -4993,7 +4991,7 @@ class EventFlowEditor {
 				html += `<div class="property-group"><label class="property-label">URL</label><input type="url" class="property-input" id="prop-url" value="${node.config.url || ''}"></div>
 						 <div class="property-group"><label class="property-label">Method</label><select class="property-input" id="prop-method">${['POST', 'GET', 'PUT', 'DELETE', 'PATCH'].map(m => `<option value="${m}" ${node.config.method === m ? 'selected' : ''}>${m}</option>`).join('')}</select></div>
 						 <div class="property-group"><label class="property-label"><input type="checkbox" class="property-input" id="prop-includeMessage" ${node.config.includeMessage !== false ? 'checked' : ''}> Include full message object as JSON body</label></div>
-						 <div class="property-group" id="webhook-body-group" style="${node.config.includeMessage !== false ? 'display: none;' : ''};"><label class="property-label">Custom Body (JSON)</label><textarea class="property-input" id="prop-body" rows="5">${node.config.body || '{}'}</textarea><div class="property-help">Used if "Include full message" is unchecked.</div></div>
+						 <div class="property-group" id="webhook-body-group" style="${node.config.includeMessage !== false ? 'display: none;' : ''};"><label class="property-label">Custom Body (JSON)</label><textarea class="property-input" id="prop-body" rows="5">${node.config.body || '{}'}</textarea><div class="property-help">Used if "Include full message" is unchecked. Event Flow template variables work in JSON string values, such as <code>{username}</code>, <code>{message}</code>, <code>{source}</code>, and <code>{chatimg}</code>.</div></div>
 						 <div class="property-group"><label class="property-label"><input type="checkbox" class="property-input" id="prop-syncMode" ${node.config.syncMode ? 'checked' : ''}> Synchronous mode (await webhook)</label><div class="property-help">When enabled, the flow waits for the webhook to finish. With "Block on error" enabled, a non-2xx or network error blocks this message; otherwise it proceeds and attaches any response.</div></div>
 						 <div class="property-group"><label class="property-label"><input type="checkbox" class="property-input" id="prop-blockOnFailure" ${node.config.blockOnFailure ? 'checked' : ''}> Block on error (4xx/5xx or network)</label><div class="property-help">If "Synchronous mode" is OFF, the message is never blocked by webhook results. If ON, failures block the message when this is enabled.</div></div>`;
 				break;

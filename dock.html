@@ -4581,6 +4581,10 @@
 				return scrollHeight < scrollTop + clientHeight + threshold;
 			}
 
+			function shouldEnterHistoryBrowsing(forceEnter, scrollDirection, scrollTop, hasMessages) {
+				return scrollTop < 50 && (forceEnter || (scrollDirection < 0 && !!hasMessages));
+			}
+
 			if (urlParams.has("autoscroll") && !manualScrollMode) {
 				forceAutoscroll = false;
 				jumptoBottom();
@@ -6006,7 +6010,7 @@
 					if (reversed) {
 						return;
 					}
-					if (!horizontal && historyScrollContainer.scrollTop < 50 && (forceEnter || mainOutputWindow.firstElementChild)) {
+					if (!horizontal && shouldEnterHistoryBrowsing(forceEnter, scrollDirection, historyScrollContainer.scrollTop, mainOutputWindow.firstElementChild)) {
 						enterHistoryMode();
 					}
 				};

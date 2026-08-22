@@ -300,7 +300,8 @@ async function getOverlaySnapshot(page, payload, waitMs) {
       count: overlay.getStageCount(),
       history: overlay.getHistory(),
       items: Array.from(document.querySelectorAll('.reaction')).map((item) => ({
-        imageCount: item.querySelectorAll('img').length
+        imageCount: item.querySelectorAll('img').length,
+        marginLeft: parseFloat(item.style.marginLeft) || 0
       })),
       background: getComputedStyle(document.body).backgroundColor,
       config: overlay.getConfig()
@@ -561,6 +562,7 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
     await setControlValue(popupPage, '#reactions-align-select', 'right', ['change']);
     await setCheckboxValue(popupPage, "[data-param27='layout']", true);
     await setControlValue(popupPage, '#reactions-layout-select', 'fountain', ['change']);
+    await setCheckboxValue(popupPage, '#reactions-center-origin-toggle', true);
     await setCheckboxValue(popupPage, '#reactions-triple-toggle', true);
     await setCheckboxValue(popupPage, "[data-param27='scale']", true);
     await setControlValue(popupPage, '#reactions-scale-range', '1.35', ['input', 'change']);
@@ -580,6 +582,7 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
     assert(popupUrl.searchParams.get('password') === 'pw', 'Reactions popup link is missing the password.');
     assert(popupUrl.searchParams.get('align') === 'right', 'Reactions popup link is missing align=right.');
     assert(popupUrl.searchParams.get('layout') === 'fountain', 'Reactions popup link is missing layout=fountain.');
+    assert(popupUrl.searchParams.has('centerorigin'), 'Reactions popup link is missing the center-origin flag.');
     assert(popupUrl.searchParams.get('scale') === '1.35', 'Reactions popup link is missing scale=1.35.');
     assert(popupUrl.searchParams.get('speed') === '1.25', 'Reactions popup link is missing speed=1.25.');
     assert(popupUrl.searchParams.get('burst') === '7', 'Reactions popup link is missing burst=7.');
@@ -594,6 +597,7 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
     const overlayConfig = await overlayPage.evaluate(() => window.__reactionsOverlay.getConfig());
     assert(overlayConfig.align === 'right', 'Reactions page did not parse align=right.');
     assert(overlayConfig.layout === 'fountain', 'Reactions page did not parse layout=fountain.');
+    assert(overlayConfig.centerOrigin === true, 'Reactions page did not parse the center-origin flag.');
     assert(overlayConfig.scale === 1.35, 'Reactions page did not parse scale=1.35.');
     assert(overlayConfig.speed === 1.25, 'Reactions page did not parse speed=1.25.');
     assert(overlayConfig.burst === 7, 'Reactions page did not parse burst=7.');
@@ -649,12 +653,14 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
     assert(fountainSnapshot.count === 3, 'Triple reaction mode should release three reaction items.');
     assert(fountainSnapshot.history.length === 3, 'Triple reaction mode did not create three recorded items.');
     assert(fountainSnapshot.background === 'rgb(18, 52, 86)', 'Page background setting was not applied.');
-    fountainSnapshot.history.forEach((item) => {
+    fountainSnapshot.history.forEach((item, index) => {
       assert(item.align === 'right', 'Recorded reaction item lost the right alignment setting.');
       assert(item.layout === 'fountain', 'Recorded reaction item lost the fountain layout setting.');
-      assert(item.left >= 64 && item.left <= 94, 'Right-aligned reactions spawned outside the right-side lane.');
-      assert(item.drift >= -24 && item.drift <= 4, 'Fountain layout drift is outside the expected right-side range.');
+      assert(item.left === 50, 'Center-origin reactions did not spawn from the center point.');
+      assert(item.centerOrigin === true, 'Recorded reaction item lost the center-origin setting.');
+      assert(item.drift >= -20 && item.drift <= 20, 'Center-origin fountain drift is outside the expected range.');
       assert(item.size >= 51.2 && item.size <= 97.3, 'Scale setting did not affect reaction size as expected.');
+      assert(Math.abs(fountainSnapshot.items[index].marginLeft + (item.size / 2)) <= 0.1, 'Center-origin reaction was not visually centered on its spawn point.');
       assert(item.duration >= 2.3 && item.duration <= 3.9, 'Speed setting did not affect reaction duration as expected.');
     });
 
@@ -684,6 +690,35 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
     assert(imageScaleSnapshot.itemWidth >= 51.2 && imageScaleSnapshot.itemWidth <= 97.3, 'Image reaction did not receive the scale-adjusted wrapper size.');
     assert(Math.abs(imageScaleSnapshot.imageWidth - imageScaleSnapshot.itemWidth) <= 0.75, 'Inline image width ignored the scale-adjusted wrapper size.');
     assert(Math.abs(imageScaleSnapshot.imageHeight - imageScaleSnapshot.itemWidth) <= 0.75, 'Inline image height ignored the scale-adjusted wrapper size.');
+
+    const emojiScaleUrl = new URL(popupUrl.toString());
+    emojiScaleUrl.searchParams.set('scale', '4');
+    emojiScaleUrl.searchParams.delete('triple');
+    await loadOverlay(overlayPage, emojiScaleUrl.toString());
+    const emojiScaleSnapshot = await overlayPage.evaluate(async () => {
+      const overlay = window.__reactionsOverlay;
+
+      overlay.clearStage();
+      overlay.processPayload({
+        event: 'reaction',
+        type: 'youtube',
+        id: 'emoji-scale',
+        chatmessage: '<span class="reaction-heart">👍</span>'
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 120));
+
+      const item = document.querySelector('.reaction');
+      const emoji = item && item.querySelector('.reaction-heart');
+      return {
+        itemWidth: item ? parseFloat(item.style.width) : 0,
+        emojiFontSize: emoji ? parseFloat(getComputedStyle(emoji).fontSize) : 0
+      };
+    });
+
+    assert(emojiScaleSnapshot.itemWidth >= 152 && emojiScaleSnapshot.itemWidth <= 240, 'Emoji reaction did not receive the 4x wrapper size.');
+    assert(Math.abs(emojiScaleSnapshot.emojiFontSize - emojiScaleSnapshot.itemWidth) <= 0.75, 'Emoji glyph ignored the 4x scale setting.');
+    await loadOverlay(overlayPage, popupUrl.toString());
 
     const contentImageSnapshot = await getOverlaySnapshot(overlayPage, {
       event: 'reaction',
@@ -734,6 +769,7 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
       const alignUrl = new URL(popupUrl.toString());
       alignUrl.searchParams.set('align', align);
       alignUrl.searchParams.set('layout', 'column');
+      alignUrl.searchParams.delete('centerorigin');
       alignUrl.searchParams.delete('triple');
       await loadOverlay(overlayPage, alignUrl.toString());
       const alignSnapshot = await getOverlaySnapshot(overlayPage, {
@@ -758,6 +794,7 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
     const spreadUrl = new URL(popupUrl.toString());
     spreadUrl.searchParams.set('align', 'center');
     spreadUrl.searchParams.set('layout', 'spread');
+    spreadUrl.searchParams.delete('centerorigin');
     spreadUrl.searchParams.delete('triple');
     await loadOverlay(overlayPage, spreadUrl.toString());
     const spreadSnapshot = await getOverlaySnapshot(overlayPage, {
@@ -771,6 +808,21 @@ async function runTikTokIncrementalChatCaptureCheck(context) {
     assert(spreadSnapshot.history[0].layout === 'spread', 'Spread layout was not applied.');
     assert(spreadSnapshot.history[0].left >= 32 && spreadSnapshot.history[0].left <= 68, 'Spread layout escaped the centered lane.');
     assert(Math.abs(spreadSnapshot.history[0].drift) <= 16.1, 'Spread layout drift exceeded the expected range.');
+
+    const defaultUrl = new URL(popupUrl.toString());
+    defaultUrl.searchParams.delete('scale');
+    defaultUrl.searchParams.delete('centerorigin');
+    defaultUrl.searchParams.delete('triple');
+    await loadOverlay(overlayPage, defaultUrl.toString());
+    const defaultSizeSnapshot = await getOverlaySnapshot(overlayPage, {
+      event: 'reaction',
+      type: 'zoom',
+      chatname: 'Tester',
+      chatmessage: '<span>ðŸ”¥</span>'
+    }, 250);
+
+    assert(defaultSizeSnapshot.config.scale === 1, 'Default reaction scale should be 1x.');
+    assert(defaultSizeSnapshot.history[0].size >= 38 && defaultSizeSnapshot.history[0].size <= 72, 'Default reaction size is not 1x.');
 
     const serverModeChecks = [
       {

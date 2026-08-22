@@ -484,9 +484,9 @@ Remember that SSN overlays are highly customizable via URL parameters. Your cust
   - `&hidesource=1`: To hide the source platform icon/name.
   - `&showtime=MILLISECONDS`: How long to display a message before auto-hiding (if implemented).
   - `&fadeout=1`: To enable fade-out animations.
-  - `&showviewercount`: Show per-source viewer totals in the dock's top-right bar.
+  - `&showviewercount`: Show per-source viewer totals in the dock's top-right bar. An open dock requests viewer-count collection for 70 minutes and renews that request hourly, so a direct dock URL can enable collection without permanently changing the global setting.
   - `&reserveviewercountspace`: Reserve space above the chat for that viewer count bar; off by default.
-  - `&showlikecount`: Show per-source like totals in the dock's top-right bar. Like updates must also be enabled globally with **Send platform like totals**.
+  - `&showlikecount`: Show per-source like totals in the dock's top-right bar. Enabling this through the popup also persistently enables global **Send platform like totals** (`captureliketotals` plus its legacy alias); turning the display option off does not disable global collection. Adding the URL parameter manually controls rendering only, so manual URLs still need the global setting enabled.
   - Filtering params: `&onlytype=`, `&hidetype=`, `&sources=`, `&hidesources=`, `&sourceids=`, `&hidesourceids=`, `&donationsonly=1`, `&eventsonly=1`, `&hidebots=1`, etc.
 
 Your JavaScript can parse these using `URLSearchParams` and adjust behavior accordingly.

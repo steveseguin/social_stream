@@ -167,17 +167,16 @@ For the inverse lookup from public site card to manifest row/source file, use `p
 | 140 | `sources/telegram.js` | top-level source | 2 | - | `https://*.telegram.org/z/*` | Telegram | toggle |
 | 141 | `sources/telegramk.js` | top-level source | 1 | - | `https://*.telegram.org/k/*` | Telegram | toggle |
 | 142 | `sources/restream.js` | top-level source | 1 | - | `https://chat.restream.io/*` | Restream.io Chat | - |
-| 143 | `sources/trovo.js` | top-level source | 1 | document_start, all_frames | `https://trovo.live/chat/*` | - | - |
-| 144 | `sources/amazon.js` | top-level source | 2 | document_start | `https://www.amazon.com/live*` | Amazon Live / Amazon Chime | - |
-| 145 | `sources/rumble.js` | top-level source | 4 | - | `https://rumble.com/chat/popup/*` | Rumble | popout/websocket |
-| 146 | `sources/slack.js` | top-level source | 1 | - | `https://app.slack.com/client/*` | Slack | toggle |
-| 147 | `sources/chime.js` | top-level source | 1 | - | `https://app.chime.aws/meetings/*` | Amazon Chime | - |
-| 148 | `sources/cime.js` | top-level source | 2 | - | `https://ci.me/*` | CI.ME | - |
-| 149 | `sources/buzzit.js` | top-level source | 1 | - | `https://www.buzzit.ca/event/*/chat` | Buzzit | - |
-| 150 | `sources/vklive.js` | top-level source | 1 | - | `https://vk.com/*` | VK Live | - |
-| 151 | `sources/vkvideo.js` | top-level source | 3 | - | `https://live.vkplay.ru/*/only-chat?*` | - | - |
-| 152 | `sources/streamlabs.js` | top-level source | 2 | all_frames | `https://streamlabs.com/alert-box/*` | Streamlabs | - |
-| 153 | `sources/streamelements.js` | top-level source | 1 | document_start, all_frames | `https://streamelements.com/overlay/*` | StreamElements | - |
+| 143 | `sources/amazon.js` | top-level source | 2 | document_start | `https://www.amazon.com/live*` | Amazon Live / Amazon Chime | - |
+| 144 | `sources/rumble.js` | top-level source | 4 | - | `https://rumble.com/chat/popup/*` | Rumble | popout/websocket |
+| 145 | `sources/slack.js` | top-level source | 1 | - | `https://app.slack.com/client/*` | Slack | toggle |
+| 146 | `sources/chime.js` | top-level source | 1 | - | `https://app.chime.aws/meetings/*` | Amazon Chime | - |
+| 147 | `sources/cime.js` | top-level source | 2 | - | `https://ci.me/*` | CI.ME | - |
+| 148 | `sources/buzzit.js` | top-level source | 1 | - | `https://www.buzzit.ca/event/*/chat` | Buzzit | - |
+| 149 | `sources/vklive.js` | top-level source | 1 | - | `https://vk.com/*` | VK Live | - |
+| 150 | `sources/vkvideo.js` | top-level source | 3 | - | `https://live.vkplay.ru/*/only-chat?*` | - | - |
+| 151 | `sources/streamlabs.js` | top-level source | 2 | all_frames | `https://streamlabs.com/alert-box/*` | Streamlabs | - |
+| 152 | `sources/streamelements.js` | top-level source | 1 | document_start, all_frames | `https://streamelements.com/overlay/*` | StreamElements | - |
 
 ## Follow-Up Tasks
 

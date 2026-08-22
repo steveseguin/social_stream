@@ -431,7 +431,7 @@ Also check:
 
 Use `docs/agents/08-platform-sources/independent-live-platform-sources.md` for the grouped behavior and caveats.
 
-### Vimeo, Restream, PeerTube, Steam, Trovo, Truffle, or another video/broadcast source is not working. What should I ask?
+### Vimeo, Restream, PeerTube, Steam, Truffle, or another video/broadcast source is not working. What should I ask?
 
 Start with the exact supported URL and whether the chat panel is visibly rendering new rows. These sources are mostly rendered chat parsers, not full platform APIs.
 
@@ -442,7 +442,7 @@ Also check:
 - Vimeo users clarify whether they expect normal chat or Q&A rows; Q&A can set `question: true`, but that is not full event analytics.
 - Truffle and Restream users clarify whether they care about upstream platform identity; Truffle may emit `type: "twitch"` or `type: "youtube"`, while Restream may include `sourceImg`.
 - PeerTube and Mixlr users confirm login/access/paywall state.
-- Trovo and OpenStreamingPlatform are source/manifest-backed in this pass, but public-card routing still needs reconciliation.
+- OpenStreamingPlatform is source/manifest-backed in this pass, but public-card routing still needs reconciliation.
 
 Use `docs/agents/08-platform-sources/video-broadcast-platform-sources.md` for the grouped behavior and caveats.
 
