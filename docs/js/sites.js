@@ -596,14 +596,17 @@ document.addEventListener('DOMContentLoaded', function() {
         {
             name: 'ChatGPT',
             icon: 'openai.png',
-            description: 'OpenAI\'s conversational AI platform.',
+            description: 'Capture new User and ChatGPT turns from an open browser conversation, or use the tab as an experimental relay companion.',
             type: 'toggle',
             instructions: `
                 <ul>
-                    <li>REQUIRES the TOGGLE in menu to enable it</li>
-                    <li>URL: https://chat.openai.com/chat</li>
+                    <li>Enable the ChatGPT opt-in toggle in the Social Stream Ninja menu</li>
+                    <li>Open or reload https://chatgpt.com/ after enabling it</li>
+                    <li>Only new conversation turns are captured; existing history is ignored</li>
+                    <li>For experimental companion mode, set relay destinations to <code>openai</code></li>
                 </ul>
-            `
+            `,
+            notes: 'No OpenAI API key is used for browser capture. This is separate from the ChatGPT API provider. Regular text chat is the most reliable target; ChatGPT Voice mode and page controls can change. See the <a href="ai-modes-guide.html#browser-companion">ChatGPT browser companion guide</a>.'
         },
         {
             name: 'Livestorm.io',
@@ -883,18 +886,6 @@ document.addEventListener('DOMContentLoaded', function() {
 				<ul>
 					<li>URL: https://cherry.tv/*</li>
 					<li>No pop out needed</li>
-				</ul>
-			`
-		},
-		{
-			name: 'Claude.ai',
-			icon: 'claude.png',
-			description: 'Anthropic\'s conversational AI platform.',
-			type: 'toggle',
-			instructions: `
-				<ul>
-					<li>REQUIRES the TOGGLE in menu to enable it</li>
-					<li>URL: https://claude.ai/*</li>
 				</ul>
 			`
 		},
