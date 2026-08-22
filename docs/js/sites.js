@@ -1256,6 +1256,19 @@ document.addEventListener('DOMContentLoaded', function() {
 			notes: 'Captures new chat messages, emotes, avatars, name colors, user/message IDs, and optional viewer-count updates.'
 		},
 		{
+			name: 'Castyr',
+			icon: 'castyr.png',
+			description: 'Live streaming platform with standalone pop-out chat.',
+			type: 'popout',
+			instructions: `
+				<ul>
+					<li>URL: https://castyr.live/homebeta/popout-chat/USERNAME</li>
+					<li>Open the streamer's pop-out chat</li>
+				</ul>
+			`,
+			notes: 'Captures new rendered chat messages, name colors, inline emotes, and optional viewer-count updates.'
+		},
+		{
 			name: 'CI.ME',
 			icon: 'cime.png',
 			description: 'Korean live streaming platform.',

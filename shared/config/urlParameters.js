@@ -2909,6 +2909,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Shows donation totals next to donors"
+          },
+          {
+            "key": "triggermode",
+            "displayName": "triggermode",
+            "aliases": [
+              "triggermode"
+            ],
+            "values": "auto, manual, background",
+            "description": "Starts on visibility, by button using page-local collection, or by button using app-background collection"
           }
         ]
       }

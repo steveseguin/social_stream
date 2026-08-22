@@ -219,7 +219,7 @@ Optional extension socket relay:
 - Socket join payload uses `{ join: session, out: 3, in: 4 }`.
 - If an inbound socket message includes `get`, the page replies with a callback result.
 
-Support rule: credits needs the page open while messages arrive, unless `persistcredits` has already saved prior users for the same session.
+Support rule: auto/manual credits need the page open while messages arrive. `triggermode=background` instead collects inside the app background and sends the saved snapshot when Start or Preview is clicked.
 
 ## Credits URL Options
 
@@ -243,7 +243,7 @@ Support rule: credits needs the page open while messages arrive, unless `persist
 | `googlefont` | Loads a Google font by name. |
 | `nobg` | Forces transparent/no background behavior. |
 | `pagebg` / `pagebackground` / `dockbg` | Sets page/background color. |
-| `triggermode` | `auto` by default; use `manual` for dock/command-triggered start workflows. |
+| `triggermode` | `auto` by default; `manual` uses button-triggered page-local collection; `background` uses button-triggered app-background collection. |
 | `noinstructions` | Hides instruction overlay. |
 
 ## Credits Commands
@@ -255,10 +255,21 @@ Support rule: credits needs the page open while messages arrive, unless `persist
 | `start` | Starts credits in normal mode. |
 | `preview` | Starts credits in preview mode. |
 | `reset` | Clears collected users and persisted localStorage data. |
+| `test` | Previews built-in participant/member/donor fixtures without changing the collected list. |
+
+Public API and Stream Deck presets map to those page commands:
+
+| API action | Page command |
+| --- | --- |
+| `creditsStart` | `start` |
+| `creditsPreview` | `preview` |
+| `creditsTest` | `test` |
+| `creditsReset` | `reset` |
 
 Manual mode support:
 
 - In `triggermode=manual`, keep the page running and send a start command from the extension/menu/dock path.
+- In `triggermode=background`, the app records participants and supporters even if OBS unloads the page; Start/Preview sends that snapshot to the page.
 - In `triggermode=auto`, credits start when the page becomes visible. Source comments warn auto mode may not work as expected in Electron/app contexts.
 
 ## Credits Scoring And Sorting
@@ -303,6 +314,7 @@ The stored data includes:
 When `persistcredits` is not set:
 
 - Refreshing the page loses collected users.
+- Background mode can resend the app-held snapshot after a refresh.
 - After the animation completes, users are cleared unless the run was a preview.
 
 ## Common Support Issues
@@ -330,7 +342,7 @@ Tip jar reset/set amount does nothing:
 
 Credits roll is empty:
 
-- Keep `credits.html` open before the stream ends so it can collect users.
+- Keep `credits.html` open before the stream ends, or use `triggermode=background` and the Start button if OBS unloads it.
 - Confirm the same `session` as the source/dock.
 - If `onlydonors` is set, make sure donation payloads are arriving.
 - If the page was refreshed without `persistcredits`, collected names were lost.

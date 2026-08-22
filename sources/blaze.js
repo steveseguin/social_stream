@@ -91,7 +91,13 @@
 	// messages (new index) still emit.
 	var emittedSignatures = new Map();
 	var EMITTED_SIGNATURE_LIMIT = 2000;
-	var liveEmitAfter = 0;
+	var initialChatSyncComplete = false;
+	var initialChatSyncTimer = null;
+	var INITIAL_CHAT_SETTLE_MS = 400;
+	var initialChatRowsPresentAtAttach = false;
+	var initialChatLoneRowMayBeLive = false;
+	var hasObservedChatContainer = false;
+	var sawMissingChatBeforeFirstContainer = false;
 
 	function rememberSignature(signature) {
 		emittedSignatures.set(signature, Date.now());
@@ -133,6 +139,15 @@
 		}
 		return "";
 	}
+
+	function getMessageBodyElement(ele) {
+		return ele.querySelector(".text-text.pl-1.font-normal, span.block.min-w-0.break-words");
+	}
+
+	function clearStartupBacklog(ele) {
+		delete ele.dataset.ssnBlazeStartupBacklog;
+		delete ele.dataset.ssnBlazeStartupIndex;
+	}
 	
 	function processMessage(ele, seedOnly){
 		//console.log(ele);
@@ -146,6 +161,12 @@
 		//		console.log("no knownSize");
 				return;
 			}
+		}
+
+		var startupBacklog = ele.dataset.ssnBlazeStartupBacklog === "true";
+		if (startupBacklog && ele.dataset.ssnBlazeStartupIndex !== String(getMessageIndex(ele))) {
+			clearStartupBacklog(ele);
+			startupBacklog = false;
 		}
 		
 		var chatimg = ""
@@ -199,7 +220,7 @@
 
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector(".text-text.pl-1.font-normal, span.block.min-w-0.break-words")).trim();
+			msg = getAllContentNodes(getMessageBodyElement(ele)).trim();
 		} catch(e){
 		}
 		
@@ -219,16 +240,21 @@
 		var messageIndex = getMessageIndex(ele);
 		var signature = String(messageIndex) + "|" + name + "|" + msg + "|" + dono;
 		if (ele.dataset.ssnBlazeMessageSignature === signature) {
+			if (seedOnly || startupBacklog) {
+				clearStartupBacklog(ele);
+			}
 			return;
 		}
 		ele.dataset.ssnBlazeMessageSignature = signature;
 		if (emittedSignatures.has(signature)) {
+			if (seedOnly || startupBacklog) {
+				clearStartupBacklog(ele);
+			}
 			return;
 		}
 		rememberSignature(signature);
-		// Rows seen while the freshly detected list is still hydrating are
-		// backlog, not live chat.
-		if (seedOnly || Date.now() < liveEmitAfter) {
+		if (seedOnly || startupBacklog) {
+			clearStartupBacklog(ele);
 			return;
 		}
 		
@@ -352,9 +378,50 @@
 	var lastURL =  "";
 	var observer = null;
 	var observerTarget = null;
+
+	function scheduleInitialChatSync(target) {
+		if (initialChatSyncComplete || !target || !target.isConnected) {
+			return;
+		}
+		if (initialChatSyncTimer) {
+			clearTimeout(initialChatSyncTimer);
+		}
+		initialChatSyncTimer = setTimeout(function() {
+			initialChatSyncTimer = null;
+			if (initialChatSyncComplete || observerTarget !== target || !target.isConnected) {
+				return;
+			}
+
+			var rows = Array.prototype.slice.call(target.querySelectorAll("[data-item-index],[data-index]"));
+			var messageRows = rows.filter(function(row) {
+				return !!getMessageName(row) && !!getMessageBodyElement(row);
+			});
+			if (!messageRows.length) {
+				return;
+			}
+
+			// Blaze loads history as a group (or with an already-advanced index).
+			// A lone index-zero row is live only when the page was already observed
+			// without a chat container; otherwise it may be existing history.
+			var firstIndex = getMessageIndex(messageRows[0]);
+			var isInitialBacklog =
+				(initialChatRowsPresentAtAttach && !initialChatLoneRowMayBeLive) ||
+				rows.length > 1 ||
+				(!isNaN(firstIndex) && firstIndex > 0);
+			initialChatSyncComplete = true;
+
+			rows.forEach(function(row) {
+				if (isInitialBacklog) {
+					row.dataset.ssnBlazeStartupBacklog = "true";
+					row.dataset.ssnBlazeStartupIndex = String(getMessageIndex(row));
+				}
+				processMessage(row, isInitialBacklog);
+			});
+		}, INITIAL_CHAT_SETTLE_MS);
+	}
 	
 	
-	function onElementInserted(target) {
+	function onElementInserted(target, allowLoneExistingRow) {
 		var scheduleProcess = function(node) {
 			try {
 				if (!node || node.nodeType !== 1) {
@@ -380,6 +447,10 @@
 		};
 
 		var onMutationsObserved = function(mutations) {
+			if (!initialChatSyncComplete) {
+				scheduleInitialChatSync(target);
+				return;
+			}
 			mutations.forEach(function(mutation) {
 				if (mutation.type === "attributes" || mutation.type === "characterData") {
 					scheduleProcess(mutation.target.nodeType === 1 ? mutation.target : mutation.target.parentElement);
@@ -417,11 +488,19 @@
 				observer.disconnect();
 			} catch(e){}
 		}
+		if (initialChatSyncTimer) {
+			clearTimeout(initialChatSyncTimer);
+			initialChatSyncTimer = null;
+		}
+		initialChatSyncComplete = false;
+		initialChatRowsPresentAtAttach = !!target.querySelector("[data-item-index],[data-index]");
+		initialChatLoneRowMayBeLive = !!allowLoneExistingRow;
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
 		observerTarget = target;
+		scheduleInitialChatSync(target);
 	}
 	
 	console.log("social stream injected");
@@ -438,16 +517,19 @@
 		checking = setInterval(function(){
 			try {
 				var container = document.querySelector("[data-testid='virtuoso-item-list']");
+				if (!container && !hasObservedChatContainer) {
+					sawMissingChatBeforeFirstContainer = true;
+				}
 				if (container && (!container.marked || !observer || observerTarget !== container || !container.isConnected)){
 					container.marked=true;
 
 					console.log("CONNECTED chat detected");
 
-					liveEmitAfter = Date.now() + 1200;
-					container.querySelectorAll("[data-item-index],[data-index]").forEach(function(item){
-						processMessage(item, true);
-					});
-					onElementInserted(container);
+					onElementInserted(
+						container,
+						!hasObservedChatContainer && sawMissingChatBeforeFirstContainer
+					);
+					hasObservedChatContainer = true;
 				}
 				checkViewers();
 			} catch(e){}

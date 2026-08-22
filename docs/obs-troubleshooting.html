@@ -77,6 +77,33 @@
                 </figure>
             </div>
 
+            <div class="guide-card" id="replace-url-and-cache">
+                <h2>Replace The Saved OBS URL And Refresh Its Cache</h2>
+                <p>Do these in this order. Refreshing the cache alone does not add a changed session, password, or server-routing option to an old URL.</p>
+                <ol class="guide-steps">
+                    <li>In Social Stream Ninja, copy a freshly generated link for the exact Dock or overlay you use. Copy the whole link instead of editing its parameters by hand.</li>
+                    <li>In OBS, find the Social Stream source in <strong>Sources</strong>, right-click it, and choose <strong>Properties</strong>.</li>
+                    <li>Make sure <strong>Local file</strong> is not selected. Select everything in <strong>URL</strong>, then paste the new link over the old one.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="images/guides/obs-browser-source-url.png" alt="OBS Browser Source Properties showing the Local file checkbox and URL field" class="guide-image">
+                    <figcaption>Replace the entire URL with the freshly generated Social Stream link. Screenshot from the <a href="https://obsproject.com/kb/browser-source">official OBS Browser Source guide</a>.</figcaption>
+                </figure>
+                <ol class="guide-steps" start="4">
+                    <li>Scroll to the bottom of the Properties window and click <strong>Refresh cache of current page</strong>.</li>
+                    <li>Click <strong>OK</strong>, then send one fake test message from Social Stream Ninja.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="images/guides/obs-browser-source-refresh-cache.png" alt="Bottom of OBS Browser Source Properties with Refresh cache of current page highlighted" class="guide-image guide-image-medium">
+                    <figcaption>The cache button is near the bottom of Browser Source Properties. UI example cropped from <a href="https://spinandwheel.com/obs-setup/">Spin and Wheel's OBS setup page</a>.</figcaption>
+                </figure>
+                <div class="guide-note">
+                    <p><strong>If it is still stale:</strong> close Properties, open it again, and repeat the test. Removing and recreating the Browser Source with the fresh link is the last resort.</p>
+                </div>
+                <h3>Reopen A Dock Link</h3>
+                <p>Close the old Dock page or window, then click the newly generated <strong>Dock</strong> link in Social Stream Ninja. If it is saved as an OBS Custom Browser Dock, open <strong>Docks &rarr; Custom Browser Docks</strong>, replace its URL, apply the change, and reopen that dock.</p>
+            </div>
+
             <div class="guide-card">
                 <h2>Decision Tree</h2>
                 <table class="guide-table guide-table-stack">
@@ -114,17 +141,17 @@
             <div class="guide-card">
                 <h2>Common Fixes</h2>
                 <ul class="guide-list">
-                    <li>Refresh the OBS Browser Source after changing URL parameters.</li>
-                    <li>Clear OBS browser source cache if an old page keeps loading.</li>
+                    <li><a href="#replace-url-and-cache">Replace the saved URL, then refresh the Browser Source cache</a>.</li>
                     <li>Make the source visible and check that width/height are not tiny.</li>
                     <li>Temporarily remove custom OBS CSS to rule out hidden text or opacity.</li>
                     <li>Open the same OBS URL in a normal browser to separate OBS issues from Social Stream Ninja issues.</li>
                 </ul>
+                <p>If support has confirmed a Windows privilege mismatch, follow <a href="windows-administrator-mode.html">Run OBS and Social Stream as Administrator</a>. Administrator mode is not a normal fix for a blank Dock.</p>
                 <p>Still stuck? <a href="export-settings-for-support.html">Export your Social Stream Ninja settings and OBS scene collection for support</a>.</p>
             </div>
         </div>
     </main>
-    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
     <script src="js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

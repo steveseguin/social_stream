@@ -141,7 +141,6 @@ These are the main `sources/*.js` files. Most are normal extension/app content s
 | `sources/tikfinity.js` | - | - | 1 | all_frames | quick/heavy | Tikfinity read-only activity-feed ingest normalized as TikTok events; see `regional-and-emerging-platform-sources.md`. |
 | `sources/tiktok.js` | TikTok Live | standard | 1 | - | heavy | Intense parser/event/setup validation. |
 | `sources/tradingview.js` | TradingView Streams | standard | 1 | - | quick/heavy | TradingView Streams rendered chat capture; see `event-and-community-sources.md`. |
-| `sources/trovo.js` | - | - | 1 | document_start, all_frames | quick/heavy | Trovo chat URL capture with badges/name color; public routing needs reconciliation; see `video-broadcast-platform-sources.md`. |
 | `sources/truffle.js` | Truffle.vip | standard | 1 | - | quick/heavy | Truffle chat capture with upstream Twitch/YouTube type behavior; see `video-broadcast-platform-sources.md`. |
 | `sources/twitcasting.js` | TwitCasting | standard | 1 | - | quick/heavy | TwitCasting rendered comment capture; see `video-broadcast-platform-sources.md`. |
 | `sources/twitch.js` | Twitch; Twitch IRC WebSocket | popout, websocket | 1 | document_start | heavy | Intense parser/event/setup validation. |
@@ -165,6 +164,7 @@ These are the main `sources/*.js` files. Most are normal extension/app content s
 | `sources/wix2.js` | - | - | 1 | all_frames | quick/heavy | Embedded Wix/Annoto widget capture that emits `type: "wix"`; see `community-membership-webapp-sources.md`. |
 | `sources/workplace.js` | - | - | 0 | - | quick/heavy | Legacy/unreferenced Workplace parser; current Workplace routing starts in `facebook.md`; see `community-membership-webapp-sources.md`. |
 | `sources/x.js` | X Live (Twitter); X Static Posts | popout, manual | 1 | - | quick/heavy | X live/broadcast chat capture; static/manual post capture is separate; see `special-case-platform-and-helper-sources.md`. |
+| `sources/graveyard/trovo.js` | Trovo | retired | - | - | quick/heavy | Retired April 2026; capture code retained in the graveyard. |
 | `sources/graveyard/xeenon.js` | Xeenon | retired | - | - | quick/heavy | Retired rendered chat capture; active manifest route removed after Xeenon hibernation. |
 | `sources/younow.js` | YouNow | standard | 1 | - | quick/heavy | YouNow rendered chat and badge capture; see `video-broadcast-platform-sources.md`. |
 | `sources/youtube.js` | YouTube Live; YouTube Static Comments | popout, manual | 2 | all_frames | heavy | Intense parser/event/setup validation. |

@@ -4395,6 +4395,30 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
     }
 }
 
+function syncCreditsControlUi() {
+	var triggerMode = document.getElementById('creditsTriggerModeSelect');
+	var startButton = document.getElementById('creditsStartBtn');
+	var previewButton = document.getElementById('creditsPreviewBtn');
+	var testButton = document.getElementById('creditsBackgroundTestBtn');
+	var hint = document.getElementById('creditsControlHint');
+	var mode = triggerMode ? triggerMode.value : 'auto';
+	var buttonTriggered = mode === 'manual' || mode === 'background';
+
+	if (startButton) startButton.hidden = !buttonTriggered;
+	if (previewButton) previewButton.hidden = !buttonTriggered;
+	if (testButton) testButton.hidden = mode !== 'background';
+
+	if (hint) {
+		if (mode === 'background') {
+			hint.textContent = 'Collects credits in the background; use Start Credits when your ending scene is ready.';
+		} else if (mode === 'manual') {
+			hint.textContent = 'Use Start Credits when you are ready to run the saved credits.';
+		} else {
+			hint.textContent = 'Starts automatically when the credits source becomes visible.';
+		}
+	}
+}
+
 
 function update(response, sync = true) {
     log("update-> response: ", response);
@@ -4539,6 +4563,8 @@ function update(response, sync = true) {
                         console.error(`Error processing setting ${key}:`, e);
                     }
                 }
+
+				syncCreditsControlUi();
 
                 if ("translation" in response.settings) {
                     translation = response.settings["translation"];
@@ -5109,6 +5135,48 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'#midiConfig',
 		'#midiCommands'
 	],
+	"wrapper-global-message-processing-options": [
+		'[data-setting="pronounscombined"]',
+		'[data-setting="discordmemberships"]',
+		'[data-setting="limitedyoutubememberchat"]',
+		'[data-setting="limitedtwitchmemberchat"]',
+		'[data-setting="addkarma"]',
+		'[data-setting="pumpTheNumbers"]'
+	],
+	"wrapper-global-connections-integrations-options": [
+		'[data-textsetting="printerName"]',
+		'[data-setting="sharestreamid"]',
+		'[data-setting="disableRelayThrottle"]',
+		'[data-setting="disablehost"]',
+		'[data-setting="socketserver"]',
+		'[data-setting="server2additivedelivery"]',
+		'[data-setting="lanonly"]',
+		'[data-setting="ssc"]',
+		'[data-textsetting="sscapikey"]',
+		'[data-setting="videostatspoller"]',
+		'[data-textsetting="videostatsurl"]',
+		'[data-textsetting="videostatspublisher"]',
+		'[data-textsetting="videostatsapplication"]',
+		'[data-textsetting="videostatskey"]',
+		'[data-textsetting="videostatsapikey"]',
+		'[data-textsetting="videostatsusername"]',
+		'[data-textsetting="videostatspassword"]',
+		'[data-numbersetting="videostatsinterval"]',
+		'[data-textsetting="videostatslabel"]',
+		'[data-setting="streamerbot"]',
+		'[data-textsetting="streamerbotendpoint"]',
+		'[data-textsetting="streamerbotpassword"]',
+		'[data-textsetting="streamerbotactionid"]',
+		'[data-setting="h2r"]',
+		'[data-textsetting="h2rserver"]',
+		'[data-setting="post"]',
+		'[data-textsetting="postserver"]',
+		'[data-setting="postalldiscord"]',
+		'[data-textsetting="postallserverdiscord"]',
+		'[data-setting="postdiscord"]',
+		'[data-textsetting="postserverdiscord"]',
+		'[data-setting="webhookrelay"]'
+	],
 	"wrapper-global-message-visibility-options": [
 		'[data-setting="hideallreplies"]',
 		'[data-setting="firstsourceonly"]',
@@ -5135,7 +5203,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 
 var BEGINNER_ADVANCED_OPTION_HEADINGS = {
 	"wrapper-chat-message-styling-options": ["Text Glow"],
-	"wrapper-global-mechanics-options": ["Printer Control"]
+	"wrapper-global-connections-integrations-options": ["Printer Control"]
 };
 
 var BEGINNER_ADVANCED_OPTION_HEADING_SECTIONS = {
@@ -6480,14 +6548,6 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
 
     if (paramType === "param1" && paramValue === "beepfirsttime") {
         updateFirstTimerUiState();
-    }
-
-    if (sync && paramType === "param1" && paramValue === "showlikecount" && ele.checked) {
-        var likeTotalsToggle = document.querySelector("input[data-setting='captureliketotals']");
-        if (likeTotalsToggle && !likeTotalsToggle.checked) {
-            likeTotalsToggle.checked = true;
-            updateSettings(likeTotalsToggle, true);
-        }
     }
 
     return true;
@@ -10638,9 +10698,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	// Add event listeners for credits roll buttons and trigger mode
 	const creditsStartBtn = document.getElementById('creditsStartBtn');
 	const creditsPreviewBtn = document.getElementById('creditsPreviewBtn');
+	const creditsBackgroundTestBtn = document.getElementById('creditsBackgroundTestBtn');
 	const creditsResetBtn = document.getElementById('creditsResetBtn');
-	const creditsTriggerMode = document.querySelector('select[data-optionparam13="triggermode"]');
-	const creditsActionsDiv = document.querySelector('.credits-actions');
+	const creditsTriggerMode = document.getElementById('creditsTriggerModeSelect');
 	const creditsOptionsGroup = document.querySelector('.options_group.credits');
 	const setCreditsPresetParams = function(paramsToEnable, paramsToDisable) {
 		const findCreditsParamInput = function(paramName) {
@@ -10703,20 +10763,32 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
+	if (creditsBackgroundTestBtn) {
+		creditsBackgroundTestBtn.addEventListener('click', function() {
+			const originalLabel = creditsBackgroundTestBtn.textContent;
+			creditsBackgroundTestBtn.disabled = true;
+			creditsBackgroundTestBtn.textContent = 'Testing...';
+			chrome.runtime.sendMessage({ cmd: "creditsBackgroundTest" }, function(response) {
+				const delivered = !!(response && response.success);
+				creditsBackgroundTestBtn.textContent = delivered ? 'Test sent' : 'No credits source connected';
+				setTimeout(function() {
+					creditsBackgroundTestBtn.disabled = false;
+					creditsBackgroundTestBtn.textContent = originalLabel;
+				}, 2000);
+			});
+		});
+	}
+
 	if (creditsResetBtn) {
 		creditsResetBtn.addEventListener('click', function() {
 			chrome.runtime.sendMessage({ cmd: "creditsReset" });
 		});
 	}
 
-	// Show/hide credits buttons based on trigger mode
-	if (creditsTriggerMode && creditsActionsDiv) {
-		const updateCreditsButtonsVisibility = () => {
-			creditsActionsDiv.style.display = creditsTriggerMode.value === 'manual' ? 'flex' : 'none';
-		};
-		creditsTriggerMode.addEventListener('change', updateCreditsButtonsVisibility);
-		updateCreditsButtonsVisibility(); // Set initial state
+	if (creditsTriggerMode) {
+		creditsTriggerMode.addEventListener('change', syncCreditsControlUi);
 	}
+	syncCreditsControlUi();
 
 	// Add event listeners for OpenAI custom voice/model dropdowns
 	const setupOpenAICustomInputs = (voiceSelectId, modelSelectId, customVoiceId, customModelId) => {
@@ -11122,6 +11194,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	setupLazySystemVoiceDropdowns();
 
 	var popupSearchInput = document.getElementById('searchInput');
+	var popupSearchResults = document.getElementById('popupSearchResults');
 	var popupSearchHiddenClass = 'popup-search-hidden';
 	var popupSearchOpenState = null;
 	var popupSearchLockedWidth = null;
@@ -11130,9 +11203,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	var popupSearchUserToggles = null;
 	var popupSearchAnchor = null;
 	var popupSearchScrollY = null;
+	var popupSearchHiddenElements = new Set();
+	var popupSearchMatchedElements = new Set();
 
 	function normalizePopupSearchText(value) {
-		return String(value || '').toLowerCase().replace(/[_\-\u2010-\u2015]+/g, ' ').replace(/\s+/g, ' ').trim();
+		return String(value || '').replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase().replace(/[_\-\u2010-\u2015]+/g, ' ').replace(/\s+/g, ' ').trim();
 	}
 
 	function getPopupSearchTerms(value) {
@@ -11154,7 +11229,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		var walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
 		var node;
 		while ((node = walker.nextNode())) {
-			if (node.parentElement && !shouldSkipPopupSearchText(node.parentElement) && !isPopupSearchNormallyHidden(node.parentElement)) {
+			if (node.parentElement && !shouldSkipPopupSearchText(node.parentElement) && !isPopupSearchExplicitlyHidden(node.parentElement)) {
 				addPopupSearchPart(parts, node.nodeValue);
 			}
 		}
@@ -11200,6 +11275,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				addPopupSearchPart(parts, attr.value);
 				continue;
 			}
+			if (/^data-(?:setting(?:-old)?|textsetting|numbersetting|optionsetting|both|param\d+|textparam\d+|numberparam\d+|optionparam\d+)$/.test(attr.name)) {
+				addPopupSearchPart(parts, attr.value);
+				continue;
+			}
 			if (attr.name === 'title' || attr.name === 'aria-label' || attr.name === 'alt' || attr.name === 'placeholder') {
 				if (attr.name === 'title' && /(must first interact|lookup first)/i.test(attr.value || '')) {
 					continue;
@@ -11207,6 +11286,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				addPopupSearchPart(parts, attr.value);
 			}
 		}
+	}
+
+	function addPopupSearchSelectOptions(parts, element) {
+		if (!element || !element.querySelectorAll) {
+			return;
+		}
+		var selects = [];
+		if (element.tagName && element.tagName.toLowerCase() === 'select') {
+			selects.push(element);
+		}
+		element.querySelectorAll('select').forEach(function(select) {
+			selects.push(select);
+		});
+		selects.forEach(function(select) {
+			select.querySelectorAll('option').forEach(function(option) {
+				addPopupSearchPart(parts, option.textContent);
+				addPopupSearchPart(parts, option.value);
+			});
+		});
 	}
 
 	function getPopupSearchText(element) {
@@ -11221,6 +11319,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		searchable.forEach(function(child) {
 			addPopupSearchAttributes(parts, child);
 		});
+		addPopupSearchSelectOptions(parts, element);
 		addPopupSearchSynonyms(parts);
 		return parts.join(' ');
 	}
@@ -11256,9 +11355,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 
 	function clearPopupSearchHidden() {
-		document.querySelectorAll('.' + popupSearchHiddenClass).forEach(function(element) {
+		popupSearchHiddenElements.forEach(function(element) {
 			element.classList.remove(popupSearchHiddenClass);
 		});
+		popupSearchHiddenElements.clear();
 	}
 
 	function setPopupSearchHidden(element, hidden) {
@@ -11267,9 +11367,137 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		if (hidden) {
 			element.classList.add(popupSearchHiddenClass);
+			popupSearchHiddenElements.add(element);
 		} else {
 			element.classList.remove(popupSearchHiddenClass);
+			popupSearchHiddenElements.delete(element);
 		}
+	}
+
+	function clearPopupSearchMatches() {
+		popupSearchMatchedElements.forEach(function(element) {
+			element.classList.remove('popup-search-match');
+		});
+		popupSearchMatchedElements.clear();
+	}
+
+	function setPopupSearchMatch(element) {
+		if (!element) {
+			return;
+		}
+		element.classList.add('popup-search-match');
+		popupSearchMatchedElements.add(element);
+	}
+
+	function clearPopupSearchResults() {
+		if (popupSearchResults) {
+			popupSearchResults.textContent = '';
+		}
+	}
+
+	function getPopupSearchResultLabel(element) {
+		if (!element) {
+			return 'Open matching option';
+		}
+		var preferred = element.querySelector ? element.querySelector('label:not(.switch), h3, h4, h5, button span, a, span') : null;
+		var label = (preferred && preferred.textContent) || element.textContent || element.getAttribute('title') || element.getAttribute('placeholder') || '';
+		label = String(label).replace(/\s+/g, ' ').trim();
+		if (!label) {
+			label = 'Open matching option';
+		}
+		return label.length > 180 ? label.slice(0, 177) + '...' : label;
+	}
+
+	function getPopupSearchResultSection(wrapper) {
+		var label = wrapper ? wrapper.querySelector('.collapsible-label') : null;
+		return label ? String(label.textContent || '').replace(/\s+/g, ' ').trim() : '';
+	}
+
+	function getPopupSearchTargetKeys(element) {
+		if (!element) {
+			return '';
+		}
+		var keys = [];
+		var seen = new Set();
+		var controls = [element];
+		if (element.querySelectorAll) {
+			element.querySelectorAll('input, select, textarea, button, [id]').forEach(function(control) {
+				controls.push(control);
+			});
+		}
+		controls.forEach(function(control) {
+			if (control.id && !seen.has(control.id)) {
+				seen.add(control.id);
+				keys.push(control.id);
+			}
+			if (!control.attributes) {
+				return;
+			}
+			for (var i = 0; i < control.attributes.length; i++) {
+				var attr = control.attributes[i];
+				if (attr && /^data-(?:setting|textsetting|numbersetting|optionsetting|both|param\d+|textparam\d+|numberparam\d+|optionparam\d+)$/.test(attr.name) && attr.value && !seen.has(attr.value)) {
+					seen.add(attr.value);
+					keys.push(attr.value);
+				}
+			}
+		});
+		return keys.join('|');
+	}
+
+	function revealPopupSearchResult(record) {
+		var target = record && record.element;
+		var wrapper = record && record.wrapper;
+		closePopupSearch();
+		if (wrapper) {
+			openPopupSearchSection(wrapper);
+		}
+		if (!target || !document.contains(target)) {
+			return;
+		}
+		setPopupSearchMatch(target);
+		target.scrollIntoView({block: 'center'});
+		setTimeout(function() {
+			target.classList.remove('popup-search-match');
+			popupSearchMatchedElements.delete(target);
+		}, 2500);
+	}
+
+	function renderPopupSearchResults(records, totalMatches) {
+		clearPopupSearchResults();
+		if (!popupSearchResults) {
+			return;
+		}
+		if (!totalMatches) {
+			var empty = document.createElement('div');
+			empty.className = 'popup-search-result-summary';
+			var emptySource = document.getElementById('popupSearchNoResults');
+			empty.textContent = emptySource ? emptySource.textContent : 'No matching options found';
+			popupSearchResults.appendChild(empty);
+			return;
+		}
+		var summary = document.createElement('div');
+		summary.className = 'popup-search-result-summary';
+		summary.textContent = totalMatches > records.length ? 'Showing ' + records.length + ' of ' + totalMatches + ' matches' : totalMatches + (totalMatches === 1 ? ' match' : ' matches');
+		popupSearchResults.appendChild(summary);
+		records.forEach(function(record) {
+			var button = document.createElement('button');
+			button.type = 'button';
+			button.className = 'popup-search-result';
+			button.setAttribute('role', 'listitem');
+			button.setAttribute('data-search-targets', getPopupSearchTargetKeys(record.element));
+			button.textContent = getPopupSearchResultLabel(record.element);
+			var sectionText = getPopupSearchResultSection(record.wrapper);
+			if (sectionText) {
+				var section = document.createElement('span');
+				section.className = 'popup-search-result-section';
+				section.textContent = sectionText;
+				button.appendChild(section);
+			}
+			button.addEventListener('click', function() {
+				revealPopupSearchResult(record);
+			});
+			popupSearchResults.appendChild(button);
+		});
 	}
 
 	function isPopupSearchControl(element) {
@@ -11279,6 +11507,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return element.id === 'searchInput' ||
 			element.id === 'searchIcon' ||
 			element.id === 'popupSearchNoResults' ||
+			element.id === 'popupSearchResults' ||
 			element.id === 'activeIcon' ||
 			element.id === 'languageIcon' ||
 			element.id === 'language-selector-container';
@@ -11292,6 +11521,27 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				continue;
 			}
 			if (window.getComputedStyle(node).display === 'none') {
+				return true;
+			}
+			node = node.parentElement;
+		}
+		return false;
+	}
+
+	function isPopupSearchExplicitlyHidden(element) {
+		var node = element;
+		var beginnerMode = document.body && document.body.classList.contains('beginner-mode');
+		while (node && node !== document.body) {
+			if ((node.classList && node.classList.contains('hidden')) ||
+				node.hidden ||
+				node.getAttribute('aria-hidden') === 'true' ||
+				(node.style && node.style.display === 'none')) {
+				return true;
+			}
+			if (beginnerMode && node.classList &&
+				(node.classList.contains('beginner-advanced') ||
+					node.classList.contains('beginner-advanced-option') ||
+					node.classList.contains('beginner-static-advanced-option'))) {
 				return true;
 			}
 			node = node.parentElement;
@@ -11342,10 +11592,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return fallback;
 	}
 
-	function openPopupSearchSections() {
-		document.querySelectorAll('input.collapsible-input').forEach(function(input) {
+	function openPopupSearchSection(wrapper) {
+		var input = wrapper ? wrapper.querySelector('input.collapsible-input') : null;
+		if (input) {
 			input.checked = true;
-		});
+		}
 	}
 
 	function restorePopupSearchOpenState() {
@@ -11475,7 +11726,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		};
 
 		document.querySelectorAll('.link').forEach(function(link) {
-			if (!isPopupSearchNormallyHidden(link)) {
+			if (!isPopupSearchExplicitlyHidden(link)) {
 				index.links.push({
 					element: link,
 					text: getPopupSearchText(link)
@@ -11484,28 +11735,36 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 
 		document.querySelectorAll('.wrapper').forEach(function(wrapper) {
-			if (isPopupSearchNormallyHidden(wrapper)) {
+			if (isPopupSearchExplicitlyHidden(wrapper)) {
 				return;
 			}
 			var rowElements = getPopupSearchRows(wrapper).filter(function(row) {
-				return !isPopupSearchNormallyHidden(row);
+				return !isPopupSearchExplicitlyHidden(row);
+			});
+			var rowElementSet = new Set(rowElements);
+			var containerOnlyElements = new Set();
+			rowElements.forEach(function(row) {
+				var parent = row.parentElement;
+				while (parent && parent !== wrapper) {
+					if (rowElementSet.has(parent)) {
+						containerOnlyElements.add(parent);
+					}
+					parent = parent.parentElement;
+				}
 			});
 			var rows = rowElements.map(function(row) {
+				var containerOnly = containerOnlyElements.has(row);
 				return {
 					element: row,
 					text: getPopupSearchText(row),
-					containerOnly: false
+					containerOnly: containerOnly
 				};
-			});
-			rows.forEach(function(rowRecord) {
-				rowRecord.containerOnly = rows.some(function(otherRecord) {
-					return rowRecord.element !== otherRecord.element && rowRecord.element.contains(otherRecord.element);
-				});
 			});
 			index.wrappers.push({
 				element: wrapper,
 				sectionText: getPopupSectionSearchText(wrapper),
-				rows: rows
+				rows: rows,
+				rowElementSet: rowElementSet
 			});
 		});
 
@@ -11516,7 +11775,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			if (element.classList && (element.classList.contains('wrapper') || element.classList.contains('link'))) {
 				return;
 			}
-			if (!isPopupSearchNormallyHidden(element)) {
+			if (!isPopupSearchExplicitlyHidden(element)) {
 				index.topLevel.push({
 					element: element,
 					text: getPopupSearchText(element)
@@ -11529,21 +11788,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	function popupSearchRecordMatches(record, terms) {
 		return popupSearchTextMatches(record.text || '', terms);
-	}
-
-	function updatePopupSearchGroups(wrapper) {
-		wrapper.querySelectorAll('.options_group').forEach(function(group) {
-			if (isPopupSearchNormallyHidden(group)) {
-				return;
-			}
-			var visibleRows = 0;
-			group.querySelectorAll(':scope > div').forEach(function(row) {
-				if (!isPopupSearchNormallyHidden(row) && !row.classList.contains(popupSearchHiddenClass)) {
-					visibleRows += 1;
-				}
-			});
-			setPopupSearchHidden(group, visibleRows === 0);
-		});
 	}
 
 	function updatePopupSearchTopLevel(terms) {
@@ -11568,69 +11812,68 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	function applyPopupSearchNow(value) {
 		var terms = getPopupSearchTerms(value);
-		clearPopupSearchHidden();
+		clearPopupSearchMatches();
+		clearPopupSearchResults();
 
 		if (!terms.length) {
 			setPopupSearchActive(false, false);
-			restorePopupSearchOpenState();
-			unlockPopupSearchWidth();
-			restorePopupSearchScrollContext();
 			return;
 		}
 
 		setPopupSearchActive(true, false);
-		savePopupSearchOpenState();
-		lockPopupSearchWidth();
-		openPopupSearchSections();
 		if (!popupSearchIndex) {
 			popupSearchIndex = createPopupSearchIndex();
 		}
 
-		var totalMatches = 0;
-
-		popupSearchIndex.links.forEach(function(record) {
-			var isMatch = popupSearchRecordMatches(record, terms);
-			setPopupSearchHidden(record.element, !isMatch);
-			if (isMatch) {
-				totalMatches += 1;
+		var matches = [];
+		var matchedElements = new Set();
+		var resultLimit = 60;
+		function addResult(element, wrapper) {
+			if (!element || matchedElements.has(element)) {
+				return;
 			}
-		});
+			matchedElements.add(element);
+			if (matches.length < resultLimit) {
+				matches.push({element: element, wrapper: wrapper || null});
+			}
+		}
 
 		popupSearchIndex.wrappers.forEach(function(wrapperRecord) {
 			var wrapper = wrapperRecord.element;
 			var rows = wrapperRecord.rows;
-			var matchedRows = [];
 			var sectionMatches = popupSearchTextMatches(wrapperRecord.sectionText, terms);
 			rows.forEach(function(rowRecord) {
-				if (!rowRecord.containerOnly && popupSearchRecordMatches(rowRecord, terms)) {
-					matchedRows.push(rowRecord);
+				if (popupSearchRecordMatches(rowRecord, terms)) {
+					var matchElement = rowRecord.element;
+					var parent = matchElement.parentElement;
+					while (parent && parent !== wrapper) {
+						if (wrapperRecord.rowElementSet.has(parent)) {
+							matchElement = parent;
+						}
+						parent = parent.parentElement;
+					}
+					addResult(matchElement, wrapper);
 				}
 			});
-			rows.forEach(function(rowRecord) {
-				var keep = matchedRows.indexOf(rowRecord) !== -1;
-				for (var i = 0; !keep && i < matchedRows.length; i++) {
-					keep = rowRecord.element.contains(matchedRows[i].element);
-				}
-				setPopupSearchHidden(rowRecord.element, !keep);
-			});
-			matchedRows.forEach(function(rowRecord) {
-				var parent = rowRecord.element.parentElement;
-				while (parent && parent !== wrapper) {
-					parent.classList.remove(popupSearchHiddenClass);
-					parent = parent.parentElement;
-				}
-			});
-			updatePopupSearchGroups(wrapper);
-
-			var wrapperVisible = !(matchedRows.length === 0 && !(rows.length === 0 && sectionMatches));
-			setPopupSearchHidden(wrapper, !wrapperVisible);
-			if (wrapperVisible) {
-				totalMatches += 1;
+			if (sectionMatches) {
+				addResult(wrapper.querySelector('.collapsible-label') || wrapper, wrapper);
 			}
 		});
-		totalMatches += updatePopupSearchTopLevel(terms);
 
-		setPopupSearchActive(true, totalMatches === 0);
+		popupSearchIndex.links.forEach(function(record) {
+			if (popupSearchRecordMatches(record, terms)) {
+				addResult(record.element, null);
+			}
+		});
+
+		popupSearchIndex.topLevel.forEach(function(record) {
+			if (popupSearchRecordMatches(record, terms)) {
+				addResult(record.element, null);
+			}
+		});
+
+		renderPopupSearchResults(matches, matchedElements.size);
+		setPopupSearchActive(true, matchedElements.size === 0);
 	}
 
 	function applyPopupSearch(value) {
@@ -11640,7 +11883,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		popupSearchTimer = setTimeout(function() {
 			popupSearchTimer = null;
 			applyPopupSearchNow(value);
-		}, 60);
+		}, 200);
 	}
 
 	function closePopupSearch() {
@@ -11654,6 +11897,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			popupSearchInput.style.width = '0';
 		}
 		clearPopupSearchHidden();
+		clearPopupSearchMatches();
+		clearPopupSearchResults();
 		setPopupSearchActive(false, false);
 		restorePopupSearchOpenState();
 		unlockPopupSearchWidth();

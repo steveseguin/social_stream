@@ -54,6 +54,18 @@ assert.deepEqual(liveRemovals.map(item => item.id), ["hidden-0", "hidden-1", "do
 assert.match(dock, /scrollDirection > 0 && isNearHistoryLiveEdge\(\)/, "history should only return live after downward scrolling");
 assert.match(dock, /historyVisibleRowsLoaded < historyVisibleLoadTarget/, "filtered history should page until enough visible rows load");
 
+const historyEntrySource = [
+	extractFunction(dock, "shouldEnterHistoryBrowsing"),
+	"return shouldEnterHistoryBrowsing;"
+].join("\n");
+const shouldEnterHistoryBrowsing = Function(historyEntrySource)();
+
+assert.equal(shouldEnterHistoryBrowsing(false, 1, 20, true), false, "downward auto-scroll near the top must stay live");
+assert.equal(shouldEnterHistoryBrowsing(false, 0, 0, true), false, "layout scroll events must stay live");
+assert.equal(shouldEnterHistoryBrowsing(false, -1, 20, true), true, "upward scrolling should enter history");
+assert.equal(shouldEnterHistoryBrowsing(true, -1, 0, false), true, "an upward wheel at the top should load history");
+assert.equal(shouldEnterHistoryBrowsing(false, -1, 50, true), false, "history should only activate near the top");
+
 const autoQueueSource = [
 	extractFunction(dock, "shouldAutoQueueMessage"),
 	"return shouldAutoQueueMessage;"

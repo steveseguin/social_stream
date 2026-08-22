@@ -643,14 +643,55 @@ body {
     display: none !important;
 }
 
-/* Keep room below the fixed search bar so the first matched result is visible */
-body.popup-searching .container {
-    padding-top: 44px;
+.popup-search-match {
+    background: rgba(255, 215, 0, 0.16);
+    box-shadow: inset 3px 0 0 rgba(255, 215, 0, 0.9);
+    border-radius: 4px;
 }
 
-/* Prevent the popup from collapsing below the fixed search bar while searching */
-body.popup-searching {
-    min-height: 200px;
+#popupSearchResults {
+    display: none;
+    position: fixed;
+    top: 92px;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    z-index: 99;
+    overflow-y: auto;
+    padding: 8px;
+    border: 1px solid var(--collapsible-border-color);
+    border-radius: 6px;
+    background: var(--body-background-color);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+}
+
+body.popup-searching #popupSearchResults {
+    display: block;
+}
+
+.popup-search-result {
+    display: block;
+    width: 100%;
+    margin: 0 0 6px;
+    padding: 8px 10px;
+    border: 1px solid var(--collapsible-border-color);
+    border-radius: 4px;
+    background: var(--options-group-background-color);
+    color: var(--options-group-text-color);
+    text-align: left;
+    cursor: pointer;
+}
+
+.popup-search-result-section {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+.popup-search-result-summary {
+    margin: 4px 2px 10px;
+    opacity: 0.75;
 }
 
 #popupSearchNoResults {
@@ -659,10 +700,6 @@ body.popup-searching {
     text-align: center;
     opacity: 0.7;
     font-style: italic;
-}
-
-body.popup-search-empty #popupSearchNoResults {
-    display: block;
 }
 
 body.extension-disabled {
@@ -1654,6 +1691,102 @@ input:checked + .slider:before {
     transition: background 0.08s ease-out, box-shadow 0.08s ease-out, border-color 0.08s ease-out;
 }
 
+.credits-control-panel {
+	margin: 0 0 14px;
+	padding: 12px;
+	border: 1px solid var(--collapsible-border-color);
+	border-radius: 6px;
+	background: var(--color-accent-subtle);
+}
+
+.credits-control-fields,
+.credits-control-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.credits-control-field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.credits-control-field > span,
+.credits-control-label {
+	font-size: 12px;
+	font-weight: 600;
+	opacity: 0.82;
+}
+
+.credits-control-field select {
+	width: 100%;
+	min-width: 0;
+	min-height: 32px;
+	margin: 0;
+}
+
+.credits-control-section {
+	margin-top: 12px;
+}
+
+.credits-control-label {
+	display: block;
+	margin-bottom: 6px;
+}
+
+.credits-control-button {
+	min-width: 0;
+	min-height: 32px;
+	padding: 6px 10px;
+	border: 1px solid var(--collapsible-border-color);
+	border-radius: 4px;
+	background: var(--button-background);
+	color: var(--default-text-color);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.credits-control-button:hover,
+.credits-control-button:focus {
+	border-color: var(--credits-color);
+	box-shadow: 0 0 0 1px var(--credits-color) inset;
+	outline: none;
+}
+
+.credits-control-button.primary {
+	border-color: var(--credits-color);
+}
+
+.credits-control-button.danger {
+	border-color: #b85c5c;
+}
+
+.credits-control-button:disabled {
+	cursor: wait;
+	opacity: 0.55;
+}
+
+.credits-control-button[hidden] {
+	display: none;
+}
+
+.credits-control-hint {
+	display: block;
+	margin-top: 8px;
+	line-height: 1.35;
+	opacity: 0.75;
+}
+
+@media (max-width: 520px) {
+	.credits-control-fields,
+	.credits-control-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
 .sticky-action-row {
     display: flex;
     width: 100%;
@@ -2348,6 +2481,7 @@ input:checked + .slider:before {
         <input type="search" id="searchInput" placeholder="Search all options by keyword..." data-translate="placeholder-search-options" />
         <div id="searchIcon" title="Search all options by keyword">🔍</div>
         <div id="popupSearchNoResults" data-translate="search-no-results">No matching options found</div>
+		<div id="popupSearchResults" role="list" aria-label="Search results"></div>
 		<div id="activeIcon" title="Show only enabled options">🔰</div>
         <div id="languageIcon" title="Select language">🌐</div>
         <!-- Language Selector (hidden by default) -->
@@ -2457,7 +2591,7 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span>
-                                        🔍 Font Size (Scale)
+										🔍 Chat Output Scale
                                         <input type="range" id="dock-scale-range" min="0.3" max="4" step="0.05" value="1" style="width: 150px;" data-numbersetting="scale" data-range-display="dock-scale-display" data-range-suffix="x" />
                                         <span class="range-value" id="dock-scale-display">1.00x</span>
                                     </span>
@@ -7044,7 +7178,7 @@ input:checked + .slider:before {
             <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-global-mechanics-options" />
-                    <label class="collapsible-label" for="wrapper-global-mechanics-options"><span data-translate="mechanics">⚙️ Mechanics</span></label>
+                    <label class="collapsible-label" for="wrapper-global-mechanics-options"><span><span data-translate="mechanics">⚙️ Mechanics</span> - Events &amp; Capture</span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group">
@@ -7184,9 +7318,22 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-setting="delaytwitch" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <img class="icon" src="./sources/images/twitch.png" style="display: inline-block;" />
+									<img class="icon" src="./sources/images/twitch.png" style="display: inline-block;" />
                                     <span data-translate="delay-twitch"> Delay twitch to give mods/bots time to delete</span>
                                 </div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="wrapper beginner-basic">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-global-message-processing-options" />
+					<label class="collapsible-label" for="wrapper-global-message-processing-options"><span><span data-translate="mechanics">⚙️ Mechanics</span> - Message Processing</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
                                 <div title="Enable BTTV emotes - YT/TW channels + globals">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="bttv" />
@@ -7258,6 +7405,19 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="pump-the-numbers">📈 Multiply viewer count by 1.75x</span>
                                 </div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="wrapper beginner-basic">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-global-connections-integrations-options" />
+					<label class="collapsible-label" for="wrapper-global-connections-integrations-options"><span><span data-translate="mechanics">⚙️ Mechanics</span> - Connections &amp; Integrations</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
 								<div>
 									<h3>Printer Control</h3>
 									<div class="textInputContainer" style="display: inline-block; width: 250px;">
@@ -10403,7 +10563,7 @@ input:checked + .slider:before {
 						<li>Zoom reaction icons float up directly from the captured reaction graphic</li>
 						<li>TikTok like events become floating heart bursts</li>
 						<li>Transparent background so you can place it anywhere in OBS</li>
-						<li>Optional URL params: <code>&amp;align=right</code>, <code>&amp;layout=fountain</code>, <code>&amp;scale=1.2</code>, <code>&amp;burst=8</code>, <code>&amp;speed=1.1</code>, <code>&amp;triple</code>, <code>&amp;pagebg=%23000000</code></li>
+						<li>Optional URL params: <code>&amp;align=right</code>, <code>&amp;layout=fountain</code>, <code>&amp;centerorigin</code>, <code>&amp;scale=1.2</code>, <code>&amp;burst=8</code>, <code>&amp;speed=1.1</code>, <code>&amp;triple</code>, <code>&amp;pagebg=%23000000</code></li>
 					</ul>
 				</div>
 				<div id="reactions" data-raw="" class="single_message"><a href="" id="reactionslink"></a></div>
@@ -10450,6 +10610,13 @@ input:checked + .slider:before {
 											<option value="fountain">Fountain burst</option>
 										</select>
 									</span>
+								</div>
+								<div title="Make every reaction appear from the same point at the bottom-center of the screen.">
+									<label class="switch">
+										<input type="checkbox" id="reactions-center-origin-toggle" data-param27="centerorigin" />
+										<span class="slider round"></span>
+									</label>
+									<span>Spawn reactions from the center</span>
 								</div>
 								<div>
 									<label class="switch">
@@ -10707,7 +10874,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="enable-the-hype-meters-processing">🚦 Enable the hype meter's processing </span>
                                 </div>
-                                <h3><span data-translate="other-customization-options">Other customization options</span></h3>
+								<h3>Credits settings</h3>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param4="alignright" />
@@ -12832,9 +12999,43 @@ input:checked + .slider:before {
 							<div class="options_group credits">
                                 <h3><span data-translate="other-customization-options">Other customization options</span></h3>
 								<div>
-									<div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
-										<button type="button" class="overlayButton" data-credits-preset="supporters" style="flex: 1 1 190px;">Continuous supporter roll</button>
-										<button type="button" class="overlayButton" data-credits-preset="donors" style="flex: 1 1 190px;">Donors-only roll</button>
+									<div class="credits-control-panel">
+										<div class="credits-control-fields">
+											<label class="credits-control-field" for="creditsStyleSelect">
+												<span data-translate="display-style-credits">Credits Style</span>
+												<select id="creditsStyleSelect" data-optionparam13="style">
+													<option value="starwars">Star Wars</option>
+													<option value="standard">Standard Roll</option>
+													<option value="minimal">Minimal</option>
+													<option value="elegant">Elegant</option>
+												</select>
+											</label>
+											<label class="credits-control-field" for="creditsTriggerModeSelect">
+												<span data-translate="trigger-mode">Trigger Mode</span>
+												<select id="creditsTriggerModeSelect" data-optionparam13="triggermode">
+													<option value="auto">Auto (visibility-based)</option>
+													<option value="manual">Manual (button-triggered)</option>
+													<option value="background">Background collection (button-triggered)</option>
+												</select>
+											</label>
+										</div>
+										<div class="credits-control-section">
+											<span class="credits-control-label">Quick setup</span>
+											<div class="credits-control-grid">
+												<button type="button" class="credits-control-button" data-credits-preset="supporters">Continuous supporter roll</button>
+												<button type="button" class="credits-control-button" data-credits-preset="donors">Donors-only roll</button>
+											</div>
+										</div>
+										<div class="credits-control-section">
+											<span class="credits-control-label">Controls</span>
+											<div class="credits-actions credits-control-grid">
+												<button type="button" id="creditsStartBtn" class="credits-control-button primary" hidden>Start Credits</button>
+												<button type="button" id="creditsPreviewBtn" class="credits-control-button" hidden>Preview</button>
+												<button type="button" id="creditsBackgroundTestBtn" class="credits-control-button" hidden>Test Background Mode</button>
+												<button type="button" id="creditsResetBtn" class="credits-control-button danger">Reset saved credits</button>
+											</div>
+											<small id="creditsControlHint" class="credits-control-hint"></small>
+										</div>
 									</div>
 									<div>
 										<label class="switch">
@@ -12883,26 +13084,6 @@ input:checked + .slider:before {
 									</div>
 									<br>
 
-									<div>
-										<span data-translate="display-style-credits">
-											Credits Style
-										</span>
-										<select data-optionparam13="style">
-											<option value="starwars">Star Wars</option>
-											<option value="standard">Standard Roll</option>
-											<option value="minimal">Minimal</option>
-											<option value="elegant">Elegant</option>
-										</select>
-									</div>
-									<div>
-										<span data-translate="trigger-mode">
-											Trigger Mode
-										</span>
-										<select data-optionparam13="triggermode">
-											<option value="auto">Auto (visibility-based)</option>
-											<option value="manual">Manual (button-triggered)</option>
-										</select>
-									</div>
 									<div title="Hides the on-screen setup instructions that appear when the credits page loads">
 										<label class="switch">
 											<input type="checkbox" data-param13="noinstructions" />
@@ -12924,14 +13105,6 @@ input:checked + .slider:before {
 										</label>
 										<span>Save credits list in this overlay</span>
 									</div>
-									<div class="credits-actions" style="margin-top: 10px; display: flex; gap: 10px;">
-										<button id="creditsStartBtn" class="overlayButton" style="flex: 1;">Start Credits</button>
-										<button id="creditsPreviewBtn" class="overlayButton" style="flex: 1;">Preview</button>
-									</div>
-									<div style="margin-top: 10px; display: flex; gap: 10px;">
-										<button id="creditsResetBtn" class="overlayButton" style="flex: 1;">Reset saved credits</button>
-									</div>
-									<br>
 										<div title="Hides page backgrounds; keeps star field on Star Wars style">
 											<label class="switch">
 												<input type="checkbox" data-param13="nobg" />

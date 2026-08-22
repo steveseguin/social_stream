@@ -241,7 +241,6 @@ These are active source extraction targets. Start with the high-volume platforms
 - `sources/tikfinity.js`
 - `sources/tiktok.js`
 - `sources/tradingview.js`
-- `sources/trovo.js`
 - `sources/truffle.js`
 - `sources/twitcasting.js`
 - `sources/twitch.js`
@@ -265,6 +264,7 @@ These are active source extraction targets. Start with the high-volume platforms
 - `sources/wix2.js`
 - `sources/workplace.js`
 - `sources/x.js`
+- `sources/graveyard/trovo.js`
 - `sources/graveyard/xeenon.js`
 - `sources/younow.js`
 - `sources/youtube.js`

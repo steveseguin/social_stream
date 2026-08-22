@@ -125,6 +125,7 @@
                                 <li><a href="#younow">YouNow</a></li>
                                 <li><a href="#favorited">Favorited Studio</a></li>
                                 <li><a href="#beamstream">BEAM</a></li>
+								<li><a href="#castyr">Castyr</a></li>
                             </ul>
                         </div>
                     </div>
@@ -297,6 +298,13 @@
 							<td>&mdash;</td>
 							<td>&mdash;</td>
 							<td>Rendered pop-out chat rows plus <code>viewer_update</code> polls when viewer counts are enabled</td>
+						</tr>
+						<tr>
+							<td><strong>Castyr</strong></td>
+							<td>&mdash;</td>
+							<td>&mdash;</td>
+							<td>&mdash;</td>
+							<td>Rendered pop-out chat rows plus opt-in viewer count updates</td>
 						</tr>
                         <tr>
                             <td><strong>FLEX TV</strong></td>
@@ -534,12 +542,12 @@
                             <tr>
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>Streaming stats (concurrent viewers) when viewer reporting is enabled.</td>
-                                <td><code>meta</code> is integer count; mirrors DOM scripting so downstream consumers can merge both flows.</td>
+                                <td><code>meta</code> is integer count; mirrors DOM scripting so downstream consumers can merge both flows. A dock using <code>&amp;showviewercount</code> requests viewer-count collection for 70 minutes and renews that request hourly without permanently changing the global setting.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>likes_update</code></td>
                                 <td>Official video statistics poll when <strong>Send platform like totals</strong> is enabled.</td>
-                                <td><code>meta</code> is the current video like-count integer. It emits when the count changes and periodically while unchanged so consumers stay fresh. The global <code>captureliketotals</code> setting enables this; legacy <code>captureyoutubelikes</code> remains a compatibility alias. Dock rendering additionally requires the per-dock <code>&amp;showlikecount</code> URL option.</td>
+                                <td><code>meta</code> is the current video like-count integer. It emits when the count changes and periodically while unchanged so consumers stay fresh. The global <code>captureliketotals</code> setting enables this; legacy <code>captureyoutubelikes</code> remains a compatibility alias. Enabling the popup's per-dock <code>&amp;showlikecount</code> option also persistently enables those global capture settings, while adding the URL parameter manually controls rendering only. Turning the display option off does not disable global collection.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>subscriber_update</code></td>
@@ -769,7 +777,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Dedupe and deletion logic uses message IDs; messages sent through SSN use the native <code>message_id</code> from Twitch's IRC echo in <code>data.id</code>.</p>
+                    <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Twitch GIF messages put the Giphy asset in <code>contentimg</code>, leave <code>chatmessage</code> empty, and preserve Twitch's fallback label in <code>meta.gifLabel</code>. Dedupe and deletion logic uses message IDs; messages sent through SSN use the native <code>message_id</code> from Twitch's IRC echo in <code>data.id</code>.</p>
 
                     <h4>Twitch Hype Train Metadata</h4>
                     <p class="field-highlights"><code>hype_train</code> is metadata-only and does not include <code>chatname</code> or <code>chatmessage</code>. Dashboards should update an existing train display by <code>meta.id</code> instead of appending each progress update as chat. The Meta Data Bar (<code>meta.html</code>) renders these events as a top progress bar.</p>
@@ -2070,6 +2078,35 @@
                         </tbody>
                     </table>
                 </article>
+				<article class="platform-card" id="castyr">
+					<h3>Castyr - DOM Capture</h3>
+					<p class="source-note">Implementation: <code>sources/castyr.js</code></p>
+					<ul class="requirements">
+						<li>Reads new rendered chat rows from <code>https://castyr.live/homebeta/popout-chat/*</code> and emits standard chat payloads with <code>type: "castyr"</code>.</li>
+						<li>Existing chat history is skipped when the source attaches.</li>
+					</ul>
+					<table class="event-table">
+						<thead>
+							<tr>
+								<th>Event</th>
+								<th>When it Fires</th>
+								<th>Payload Notes</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>message</code></td>
+								<td>A new <code>.chat-message</code> row appears.</td>
+								<td>Standard chat payload with sender name, rendered message content, and name color when exposed.</td>
+							</tr>
+							<tr>
+								<td class="status-event"><code>viewer_update</code></td>
+								<td>The visible active-chat count changes while <code>showviewercount</code>/<code>hypemode</code> is enabled.</td>
+								<td><code>meta</code> is the integer count read from Castyr's titled active-chat element.</td>
+							</tr>
+						</tbody>
+					</table>
+				</article>
             </section>
 
             <section class="section-summary" id="cross-platform">

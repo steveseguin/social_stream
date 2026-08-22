@@ -113,6 +113,10 @@ Required toggles:
 | `drawmode` | Dock/waitlist/giveaway | Toggles draw/giveaway style mode. |
 | `emoteonly` | Filtering | Toggles or sets global emote-only filtering. |
 | `toggleTTS` / `tts` | Dock/featured | Toggles or sets TTS state. |
+| `creditsStart` | Credits | Starts the connected Credits page, including the stored snapshot in background mode. |
+| `creditsPreview` | Credits | Previews the current credits. |
+| `creditsTest` | Credits | Shows participant/member/donor test entries. |
+| `creditsReset` | Credits/background | Clears the collected credits. |
 
 Use `sampleapi.html?session=SESSION_ID` for a quick manual command test.
 

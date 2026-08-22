@@ -73,8 +73,51 @@
 	// settings.captureevents
 	
 	var channelName = "";
+	var messageSelector = "[class*='ChatMessage_root_']";
+
+	function getMessageElements(ele) {
+		var messages = [];
+		if (!ele) {
+			return messages;
+		}
+		if (ele.nodeType !== 1) {
+			ele = ele.parentElement;
+		}
+		if (!ele) {
+			return messages;
+		}
+
+		var closest = ele.closest ? ele.closest(messageSelector) : null;
+		if (closest) {
+			messages.push(closest);
+		}
+		if (ele.matches && ele.matches(messageSelector) && messages.indexOf(ele) === -1) {
+			messages.push(ele);
+		}
+		if (ele.querySelectorAll) {
+			ele.querySelectorAll(messageSelector).forEach(function(message) {
+				if (messages.indexOf(message) === -1) {
+					messages.push(message);
+				}
+			});
+		}
+		return messages;
+	}
 	
 	function processMessage(ele){
+		var messageElements = getMessageElements(ele);
+		if (!messageElements.length) {
+			return;
+		}
+		messageElements.forEach(function(messageElement) {
+			processMessageElement(messageElement);
+		});
+	}
+
+	function processMessageElement(ele){
+		if (ele.ssnProcessed) {
+			return;
+		}
 		
 		var chatimg = ""
 
@@ -124,6 +167,7 @@
 		if (!msg || !name){
 			return;
 		}
+		ele.ssnProcessed = true;
 		
 		
 		
@@ -239,9 +283,7 @@
 						try {
 							if (mutation.addedNodes[i].skip){continue;}
 
-							mutation.addedNodes[i].skip = true;
-
-							processMessage(mutation.addedNodes[i]); // maybe here
+							processMessage(mutation.addedNodes[i]);
 							
 						} catch(e){}
 					}
@@ -263,14 +305,12 @@
 	setInterval(function(){
 		try {
 			var container = document.querySelector("[class^='Chat_root']");
-			if (!container.marked){
+			if (container && !container.marked){
 				container.marked=true;
 
 				console.log("CONNECTED chat detected");
 
-				setTimeout(function(){
-					onElementInserted(container);
-				},2000);
+				onElementInserted(container);
 			}
 			checkViewers();
 		} catch(e){}

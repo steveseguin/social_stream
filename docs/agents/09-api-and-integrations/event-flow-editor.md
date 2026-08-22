@@ -419,6 +419,18 @@ Templates can use common SSN payload fields such as:
 
 Tests also verify dynamic top-level fields can render in templates. For counters, `counterRemaining` is derived from `counterTarget - counterValue`.
 
+The Call Webhook action uses the same template renderer for string values in its Custom Body JSON, including values nested inside objects and arrays. JSON object keys are not templated, and bodies without placeholders are sent unchanged.
+
+Discord example:
+
+```json
+{
+  "content": "{message}",
+  "username": "{username}",
+  "avatar_url": "{chatimg}"
+}
+```
+
 ## Custom JS
 
 Custom JS exists as both a trigger (`customJs`) and an action (`customJs`).

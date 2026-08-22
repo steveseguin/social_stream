@@ -24,6 +24,37 @@ function defaultAvatarUrl(username) {
   return `https://api.socialstream.ninja/twitch/large?username=${encodeURIComponent(username)}`;
 }
 
+function getTwitchGifUrl(tags, message) {
+  if (message && typeof message === 'object' && Array.isArray(message.fragments)) {
+    const gifFragment = message.fragments.find(
+      (fragment) => fragment?.type === 'gif' && typeof fragment.gif?.url === 'string' && fragment.gif.url
+    );
+    if (gifFragment) {
+      return gifFragment.gif.url;
+    }
+  }
+
+  const rawGifs = tags?.gifs || tags?.['gifs-raw'];
+  if (typeof rawGifs !== 'string' || !rawGifs) {
+    return '';
+  }
+
+  const firstEntry = rawGifs.split(/,(?=\d+-\d+\|)/)[0];
+  const firstSeparator = firstEntry.indexOf('|');
+  const secondSeparator = firstEntry.indexOf('|', firstSeparator + 1);
+  if (firstSeparator < 1 || secondSeparator < firstSeparator + 2) {
+    return '';
+  }
+  return firstEntry.slice(secondSeparator + 1);
+}
+
+function getTwitchMessageText(message) {
+  if (message && typeof message === 'object' && typeof message.text === 'string') {
+    return message.text;
+  }
+  return message ?? '';
+}
+
 const DEFAULT_FORMATTERS = {
   sanitize: defaultSanitize,
   avatarUrl: defaultAvatarUrl,
@@ -350,7 +381,9 @@ export function createTwitchChatClient(options = {}) {
   function normalizeChatMessage(channelName, tags, message, isSelf = false, messageType = null) {
     const twitchLogin = normalizeTwitchChannel(tags?.username || tags?.login);
     const displayName = tags?.['display-name'] || twitchLogin || 'Twitch User';
-    const sanitizedMessage = formatters.sanitize(message ?? '');
+    const messageText = getTwitchMessageText(message);
+    const sanitizedMessage = formatters.sanitize(messageText);
+    const gifUrl = getTwitchGifUrl(tags, message);
     const badgeMap = extractBadgeMap(tags);
     const normalizedType = messageType || tags?.['message-type'] || null;
     const event = tags?.bits
@@ -359,12 +392,13 @@ export function createTwitchChatClient(options = {}) {
         ? 'action'
         : normalizedType || 'message';
 
-    return {
+    const payload = {
       id: resolveMessageId(channelName, tags, event),
       platform: 'twitch',
       type: 'twitch',
       chatname: displayName,
-      chatmessage: sanitizedMessage,
+      chatmessage: gifUrl ? '' : sanitizedMessage,
+      contentimg: gifUrl,
       chatimg: formatters.avatarUrl(twitchLogin || displayName),
       timestamp: Number(tags?.['tmi-sent-ts'] || formatters.now()),
       chatbadges: badgeMapToChatBadges(badgeMap),
@@ -376,9 +410,15 @@ export function createTwitchChatClient(options = {}) {
       userId: tags?.['user-id'] || null,
       event,
       isSelf: Boolean(isSelf),
-      rawMessage: typeof message === 'string' ? message : '',
+      rawMessage: typeof messageText === 'string' ? messageText : '',
       raw: { channel: channelName, tags }
     };
+    if (gifUrl) {
+      payload.meta = {
+        gifLabel: typeof messageText === 'string' ? messageText : ''
+      };
+    }
+    return payload;
   }
 
   function normalizeSubscription(channelName, username, methods, message, userstate, eventType) {

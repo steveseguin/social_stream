@@ -376,7 +376,6 @@ tellonym.js
 tikfinity.js
 tiktok.js
 tradingview.js
-trovo.js
 truffle.js
 twitcasting.js
 twitch.js
@@ -426,7 +425,7 @@ Observed graveyard examples include:
 - Soulbound old variant
 - StageTEN old variant
 - Theta
-- Trovo old variant
+- Trovo (retired April 2026)
 - Twitter old variant
 - Vimm
 - Vstream

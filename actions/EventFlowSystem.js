@@ -1393,12 +1393,45 @@ class EventFlowSystem {
     async duplicateFlow(flowId) {
         const flow = await this.getFlowById(flowId);
         if (!flow) return null;
-        
-        const newFlow = {
-            ...flow,
-            id: null,
-            name: `${flow.name} (Copy)`,
-        };
+
+        const newFlow = JSON.parse(JSON.stringify(flow));
+        const idMap = new Map();
+        const usedNodeIds = new Set();
+
+        for (const existingFlow of this.flows || []) {
+            for (const node of existingFlow.nodes || []) {
+                if (node && node.id) usedNodeIds.add(node.id);
+            }
+        }
+
+        (newFlow.nodes || []).forEach((node, index) => {
+            if (!node || !node.id) return;
+
+            const oldId = node.id;
+            let attempt = 0;
+            let newId;
+            do {
+                newId = `node_${Date.now()}_${Math.floor(Math.random() * 1000000)}_${index}_${attempt++}`;
+            } while (usedNodeIds.has(newId));
+
+            idMap.set(oldId, newId);
+            usedNodeIds.add(newId);
+            node.id = newId;
+        });
+
+        newFlow.connections = (newFlow.connections || []).map(connection => ({
+            ...connection,
+            from: idMap.get(connection.from) || connection.from,
+            to: idMap.get(connection.to) || connection.to
+        }));
+
+        (newFlow.nodes || []).forEach(node => {
+            if (!node || !node.config || !node.config.targetNodeId) return;
+            node.config.targetNodeId = idMap.get(node.config.targetNodeId) || node.config.targetNodeId;
+        });
+
+        newFlow.id = null;
+        newFlow.name = `${flow.name} (Copy)`;
         
         return this.saveFlow(newFlow);
     }
@@ -3070,6 +3103,24 @@ class EventFlowSystem {
 		});
 	}
 
+	/**
+	 * Render Event Flow variables inside JSON string values for a webhook body.
+	 * Bodies without template variables are returned unchanged.
+	 * @param {string} template - Custom webhook JSON body
+	 * @param {Object} message - Message object with field values
+	 * @returns {string} Rendered JSON body
+	 */
+	renderWebhookBody(template, message) {
+		if (typeof template !== 'string' || !/\{\w+\}/i.test(template)) {
+			return template;
+		}
+
+		const parsed = JSON.parse(template);
+		return JSON.stringify(parsed, (_key, value) => {
+			return typeof value === 'string' ? this.replaceTemplateVars(value, message) : value;
+		});
+	}
+
 	sanitizeSendMessage(text, textonly = false, alt = false, mode = 'safe') {
 		if (!text || !text.trim()) {
 			return alt || text;
@@ -3616,13 +3667,25 @@ class EventFlowSystem {
 
 					const method = config.method || 'POST';
 					const headers = { 'Content-Type': 'application/json', ...(config.headers || {}) };
-					const body = config.includeMessage ? JSON.stringify(message) : (config.body || '{}');
 					const webhookTimeout = config.timeout || 8000;
 
 					// Prepare fetch options
 					const fetchOpts = { method, headers };
 					if (method !== 'GET' && method !== 'HEAD') {
-						fetchOpts.body = body;
+						try {
+							fetchOpts.body = config.includeMessage
+								? JSON.stringify(message)
+								: this.renderWebhookBody(config.body || '{}', message);
+						} catch (error) {
+							const errorMessage = `Invalid custom webhook JSON: ${error.message}`;
+							console.error(`[ExecuteAction - webhook] ${errorMessage} for node ${actionNode.id}`);
+							result.message = { ...message, webhookError: errorMessage };
+							result.modified = true;
+							if (config.syncMode && config.blockOnFailure) {
+								result.blocked = true;
+							}
+							break;
+						}
 					}
 
 					if (config.syncMode) {
