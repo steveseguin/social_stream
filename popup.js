@@ -10712,9 +10712,9 @@ function reorderGlobalSettingsSections() {
     });
 
     const translationWrapper = document.getElementById('wrapper-custom-translation-options')?.closest('.wrapper');
-    const lowPriorityAnchor = document.getElementById('wrapper-chatbot-ai-overlay-options')?.closest('.wrapper');
-    if (translationWrapper && lowPriorityAnchor && translationWrapper.parentNode === lowPriorityAnchor.parentNode) {
-        lowPriorityAnchor.parentNode.insertBefore(translationWrapper, lowPriorityAnchor.nextSibling);
+    const quickOpenWrapper = document.getElementById('wrapper-quick-open-chats-options')?.closest('.wrapper');
+    if (translationWrapper && quickOpenWrapper && translationWrapper.parentNode === quickOpenWrapper.parentNode) {
+        quickOpenWrapper.parentNode.insertBefore(translationWrapper, quickOpenWrapper.nextSibling);
     }
 }
 

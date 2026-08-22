@@ -43,6 +43,7 @@ assert.ok(backgroundSource.includes("settings.translation = applyCustomTranslati
 assert.ok(popupSource.includes("formatCustomEventTranslation('customTwitchSubscribedAtTierMessage'"));
 assert.ok(popupSource.includes("const commonSectionIds = ["));
 assert.ok(popupSource.includes("'wrapper-profiles-options',\n        'wrapper-privhostbot-options-ext',\n        'wrapper-session-options',\n        'wrapper-export-options'"));
+assert.ok(popupSource.includes("document.getElementById('wrapper-quick-open-chats-options')"));
 assert.ok(popupSource.includes("reorderGlobalSettingsSections();"));
 assert.ok(!popupSource.includes("Welcome to the squad!"));
 assert.ok(!multiAlertsSource.includes("Welcome to the squad!"));
