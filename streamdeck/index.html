@@ -48,6 +48,7 @@
 		.session-value { min-width: 0; padding: 13px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); color: var(--text); font: 700 16px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 		.button { display: inline-flex; align-items: center; justify-content: center; min-height: 43px; padding: 0 17px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: white; font-weight: 700; text-decoration: none; cursor: pointer; transition: background 150ms ease, border-color 150ms ease; }
 		.button:hover { background: #2563eb; border-color: #2563eb; }
+		.button:focus-visible { outline: 3px solid #bfdbfe; outline-offset: 3px; }
 		.button:disabled { cursor: default; filter: grayscale(.7); opacity: .45; }
 		.button.secondary { border: 1px solid var(--line); background: #1e3047; color: var(--text); }
 		.button.secondary:hover { border-color: rgba(59,130,246,.45); background: #243a54; }
@@ -75,6 +76,9 @@
 		.note { margin: 16px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
 		.toast { position: fixed; right: 18px; bottom: 18px; padding: 11px 14px; border: 1px solid rgba(34,197,94,.4); border-radius: 8px; background: #153629; color: #dcfce7; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .18s ease; }
 		.toast.show { opacity: 1; transform: translateY(0); }
+		@media (prefers-reduced-motion: reduce) {
+			.button, .toast { transition: none; }
+		}
 		@media (max-width: 760px) {
 			.shell { width: min(100% - 22px, 620px); padding-top: 24px; }
 			.status-grid, .step-list { grid-template-columns: 1fr; }

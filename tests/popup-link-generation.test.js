@@ -488,7 +488,7 @@ assert.ok(popupSource.includes('input.value = currentLinkElement && currentLinkE
 assert.ok(popupSource.includes("input.select();"));
 assert.ok(popupSource.includes("refreshGeneratedConnectionLinks('session', xsx);"));
 assert.ok(popupSource.includes("refreshGeneratedConnectionLinks('password', ele.value || '');"));
-assert.ok(popupSource.includes("${hideLinks ? \"Click to open link\" : displayURL}</a>"));
+assert.ok(popupSource.includes("${hideLinks ? \"Click to open link\" : visibleURL}</a>"));
 assert.ok(popupSource.includes("setGeneratedLink(existingOverlay, existingOverlay.raw);"));
 assert.ok(!popupSource.includes(".wrapper:has(.options_group.single_message)"));
 
