@@ -170,6 +170,10 @@ if (urlParams.has("ssapp")) {
 	ssapp = true;
 }
 
+if (ssapp) {
+	document.documentElement.classList.remove("extension-popup-surface");
+}
+
 if (typeof window !== "undefined") {
 	window.ssapp = ssapp;
 }
@@ -11265,6 +11269,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	var popupSearchHiddenElements = new Set();
 	var popupSearchMatchedElements = new Set();
 
+	function getPopupScrollElement() {
+		if (document.documentElement.classList.contains('extension-popup-surface') && document.body) {
+			return document.body;
+		}
+		return document.scrollingElement || document.documentElement;
+	}
+
+	function getPopupScrollTop() {
+		return getPopupScrollElement().scrollTop || 0;
+	}
+
+	function restorePopupScrollTop(scrollTop) {
+		var scrollElement = getPopupScrollElement();
+		var previousBehavior = scrollElement.style.scrollBehavior;
+		scrollElement.style.scrollBehavior = 'auto';
+		scrollElement.scrollTop = scrollTop;
+		scrollElement.style.scrollBehavior = previousBehavior || '';
+	}
+
 	function normalizePopupSearchText(value) {
 		return String(value || '').replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase().replace(/[_\-\u2010-\u2015]+/g, ' ').replace(/\s+/g, ' ').trim();
 	}
@@ -11615,7 +11638,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		popupSearchOpenState = [];
 		popupSearchUserToggles = null;
 		popupSearchAnchor = null;
-		popupSearchScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+		popupSearchScrollY = getPopupScrollTop();
 		document.querySelectorAll('input.collapsible-input').forEach(function(input) {
 			popupSearchOpenState.push({
 				input: input,
@@ -11684,11 +11707,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			var target = anchor.querySelector('.collapsible-label') || anchor;
 			target.scrollIntoView({block: 'start'});
 		} else if (typeof scrollY === 'number') {
-			var htmlStyle = document.documentElement.style;
-			var previousBehavior = htmlStyle.scrollBehavior;
-			htmlStyle.scrollBehavior = 'auto';
-			window.scrollTo(0, scrollY);
-			htmlStyle.scrollBehavior = previousBehavior || '';
+			restorePopupScrollTop(scrollY);
 		}
 	}
 
@@ -12039,7 +12058,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					checked: ele.checked
 				});
 			});
-			activeToggleScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+			activeToggleScrollY = getPopupScrollTop();
 			// Open all collapsible sections
 			document.querySelectorAll('input.collapsible-input').forEach(ele => {
 				ele.checked = true;
@@ -12108,11 +12127,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				ele.style.display = "";
 			});
 			if (typeof activeToggleScrollY === 'number') {
-				var htmlStyle = document.documentElement.style;
-				var previousBehavior = htmlStyle.scrollBehavior;
-				htmlStyle.scrollBehavior = 'auto';
-				window.scrollTo(0, activeToggleScrollY);
-				htmlStyle.scrollBehavior = previousBehavior || '';
+				restorePopupScrollTop(activeToggleScrollY);
 				activeToggleScrollY = null;
 			}
 		}

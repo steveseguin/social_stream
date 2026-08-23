@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="extension-popup-surface">
     <head>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
         <title>Menu</title>
@@ -601,6 +601,19 @@ div {
 }
 
 html {
+    scroll-padding-top: 2em;
+    scroll-behavior: smooth;
+}
+
+/* Keep overflow inside the extension popup to avoid Chromium's popup autosize loop. */
+html.extension-popup-surface {
+    overflow: hidden;
+}
+
+html.extension-popup-surface body {
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: hidden;
     scroll-padding-top: 2em;
     scroll-behavior: smooth;
 }
