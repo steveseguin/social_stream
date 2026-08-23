@@ -14,7 +14,7 @@
 			--line: rgba(255,255,255,.13);
 			--text: #eef2f7;
 			--muted: #94a3b8;
-			--accent: #3b82f6;
+			--accent: #2563eb;
 			--accent-soft: #60a5fa;
 			--good: #22c55e;
 			--warn: #f59e0b;
@@ -46,8 +46,9 @@
 		.dot.ready { background: var(--good); box-shadow: 0 0 10px rgba(34,197,94,.45); }
 		.session-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; margin-top: 18px; }
 		.session-value { min-width: 0; padding: 13px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); color: var(--text); font: 700 16px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+		.chrome-note { margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
 		.button { display: inline-flex; align-items: center; justify-content: center; min-height: 43px; padding: 0 17px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: white; font-weight: 700; text-decoration: none; cursor: pointer; transition: background 150ms ease, border-color 150ms ease; }
-		.button:hover { background: #2563eb; border-color: #2563eb; }
+		.button:hover { background: #1d4ed8; border-color: #1d4ed8; }
 		.button:focus-visible { outline: 3px solid #bfdbfe; outline-offset: 3px; }
 		.button:disabled { cursor: default; filter: grayscale(.7); opacity: .45; }
 		.button.secondary { border: 1px solid var(--line); background: #1e3047; color: var(--text); }
@@ -69,12 +70,13 @@
 		.shot img { display: block; width: 100%; height: auto; }
 		.shot.inspector { width: min(100%, 420px); margin-left: auto; margin-right: auto; }
 		.shot figcaption { margin-top: 8px; color: var(--muted); font-size: 12px; line-height: 1.45; }
-		.feature-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 16px; }
+		.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 16px; }
 		.feature { padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); }
 		.feature strong { display: block; margin-bottom: 5px; font-size: 14px; }
 		.feature span { color: var(--muted); font-size: 12px; line-height: 1.4; }
 		.note { margin: 16px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
 		.toast { position: fixed; right: 18px; bottom: 18px; padding: 11px 14px; border: 1px solid rgba(34,197,94,.4); border-radius: 8px; background: #153629; color: #dcfce7; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .18s ease; }
+		.toast.error { border-color: rgba(248,113,113,.55); background: #491b1b; color: #fee2e2; }
 		.toast.show { opacity: 1; transform: translateY(0); }
 		@media (prefers-reduced-motion: reduce) {
 			.button, .toast { transition: none; }
@@ -113,11 +115,12 @@
 		<section class="status-grid" aria-labelledby="connection-setup-title">
 			<div class="card card-body">
 				<div id="connection-setup-title" class="eyebrow" data-page-translate="your-connection">Your connection</div>
-				<div class="connection"><span id="connectionDot" class="dot"></span><span id="connectionText" data-page-translate="streamdeck-open-inside-ssapp">Open this page inside SSApp to detect your session.</span></div>
+				<div class="connection" role="status" aria-live="polite" aria-atomic="true"><span id="connectionDot" class="dot" aria-hidden="true"></span><span id="connectionText" data-page-translate="streamdeck-open-inside-ssapp">Open this page inside SSApp to detect your session.</span></div>
 				<div class="session-row">
 					<div id="sessionValue" class="session-value" data-page-translate="session-id-available-ssapp">Session ID available in SSApp</div>
 					<button id="copySession" class="button" type="button" disabled data-page-translate="copy-button">Copy</button>
 				</div>
+				<p class="chrome-note" data-page-translate="chrome-extension-session-id">Using the Chrome extension? Copy your unique session ID from Settings, then paste it into the plugin.</p>
 				<div class="meta">
 					<div class="meta-row"><span>SSApp</span><strong id="appVersion" data-page-translate="not-detected">Not detected</strong></div>
 					<div class="meta-row"><span data-page-translate="control-bridge">Control bridge</span><strong id="apiVersion" data-page-translate="not-detected">Not detected</strong></div>
@@ -163,6 +166,7 @@
 				<div class="feature"><strong data-page-translate="chat-overlays">Chat and overlays</strong><span data-page-translate="chat-overlays-description">Feature, unpin, clear, and move through queued messages.</span></div>
 				<div class="feature"><strong data-page-translate="timers-polls">Timers and polls</strong><span data-page-translate="timers-polls-description">Start, pause, reset, adjust time, and manage live polls.</span></div>
 				<div class="feature"><strong data-page-translate="ssapp-sources">SSApp sources</strong><span data-page-translate="ssapp-sources-description">Start, stop, restart, mute, reveal, and change supported source modes.</span></div>
+				<div class="feature"><strong data-page-translate="credits-controls">Credits</strong><span data-page-translate="credits-controls-description">Start, preview, test, and reset credits from a key.</span></div>
 				<div class="feature"><strong>Stream Deck +</strong><span data-page-translate="streamdeck-plus-description">Turn knobs for timer changes and browse recent chat on the touch strip.</span></div>
 			</div>
 			<p id="compatibilityNote" data-page-translate="compatibility-note">The plugin checks the running SSApp version and only shows controls it supports.</p>
@@ -225,10 +229,10 @@
 				}
 			}
 
-			function showToast(message) {
+			function showToast(message, isError) {
 				var toast = document.getElementById("toast");
 				text("toast", message);
-				toast.className = "toast show";
+				toast.className = isError ? "toast error show" : "toast show";
 				clearTimeout(toastTimer);
 				toastTimer = setTimeout(function () { toast.className = "toast"; }, 1800);
 			}
@@ -252,14 +256,16 @@
 					navigator.clipboard.writeText(sessionId).then(function () {
 						showToast(translate("session-id-copied", "Session ID copied"));
 					}).catch(function () {
-						showToast(fallbackCopy(sessionId)
+						var copied = fallbackCopy(sessionId);
+						showToast(copied
 							? translate("session-id-copied", "Session ID copied")
-							: translate("copy-failed", "Copy failed"));
+							: translate("copy-failed", "Copy failed"), !copied);
 					});
 				} else {
-					showToast(fallbackCopy(sessionId)
+					var copied = fallbackCopy(sessionId);
+					showToast(copied
 						? translate("session-id-copied", "Session ID copied")
-						: translate("copy-failed", "Copy failed"));
+						: translate("copy-failed", "Copy failed"), !copied);
 				}
 			});
 
