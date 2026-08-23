@@ -45,6 +45,14 @@ for (const expected of platformConfigs) {
   }
 
   assert.strictEqual(config.kick.signin.enforceSigninCSP, false);
+
+  for (const sourceName of ["tiktok", "x"]) {
+    assert.strictEqual(
+      config[sourceName].signin.googleOAuthCompatibility,
+      true,
+      `${expected.file} ${sourceName} must opt into the scoped Google OAuth compatibility policy`
+    );
+  }
 }
 
 console.log("Sign-in compatibility config tests passed.");
