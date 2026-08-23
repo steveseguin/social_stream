@@ -107,9 +107,9 @@ EventSub events documented/confirmed include:
 
 ## OAuth And Standalone App Auth
 
-### Windows embedded Google sign-in note
+### Embedded Google sign-in note
 
-Verified in SSApp `0.4.14` on Windows on 2026-08-09: Twitch's embedded **Continue with Google** flow can fail with Google's "This browser or app may not be secure" message when the sign-in window advertises an older or incomplete Chrome identity. It worked when `settings/config_0.json` scoped a current Chrome user agent and matching `mockUserAgentData` client hints to `twitch.signin` only (`Chrome/151.0.0.0` with full version `151.0.7922.77`, using the `mock` sign-in preload). Keep the UA and client-hint versions aligned and current. Do not apply this globally or to Twitch capture windows; the override is specifically for the Windows Twitch sign-in window.
+Verified in SSApp `0.4.14` on Windows on 2026-08-09: Twitch's embedded **Continue with Google** flow can fail with Google's "This browser or app may not be secure" message when the sign-in window advertises an older or incomplete Chrome identity. It worked when the platform config scoped a current Chrome user agent and matching `mockUserAgentData` client hints to `twitch.signin` only (`Chrome/151.0.0.0` with full version `151.0.7922.77`, using the `mock` sign-in preload). The Windows, macOS, and Linux sign-in configs now keep that identity aligned, while SSApp derives CPU architecture and bitness from the running build for Intel/Apple Silicon correctness; macOS and Linux still require live platform verification. Do not apply the override globally or to Twitch capture windows.
 
 The standalone app handler `ssapp/resources/electron-twitch-handler.js`:
 

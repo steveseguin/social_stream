@@ -2055,6 +2055,17 @@ function assertOpenAIRealtimeBrokerAvailable() {
 	}
 }
 
+function supportsOpenAIRealtimeReasoning(model) {
+	return !/^gpt-realtime(?:$|-1(?:[.-]|$))/i.test(String(model || ""));
+}
+
+function isOpenAIRealtimeReasoningCompatibilityError(status, payload) {
+	if (status !== 400 && status !== 422) return false;
+	const error = payload && payload.error ? payload.error : {};
+	const identity = [error.param, error.code, error.type, error.message, payload && payload.message].filter(Boolean).join(" ");
+	return /reasoning/i.test(identity) && /(unsupported|unknown|invalid|not supported|unrecognized)/i.test(identity);
+}
+
 async function createOpenAIRealtimeClientSecret(request = {}) {
 	const apiKey = String(settings?.chatgptApiKey?.textsetting || "").trim();
 	if (!apiKey) {
@@ -2064,43 +2075,65 @@ async function createOpenAIRealtimeClientSecret(request = {}) {
 	const model = /^gpt-realtime(?:-[a-z0-9.-]+)?$/i.test(requestedModel) ? requestedModel : "gpt-realtime-2.1";
 	const instructions = String(request.instructions || "").trim().slice(0, 12000);
 	const outputModalities = request.outputModalities === "text" ? ["text"] : ["audio"];
+	const requestedReasoningEffort = String(request.reasoningEffort || "").trim().toLowerCase();
+	const reasoningEffort = ["minimal", "low", "medium", "high", "xhigh"].includes(requestedReasoningEffort) ? requestedReasoningEffort : "";
+	const requestedVadEagerness = String(request.vadEagerness || "auto").trim().toLowerCase();
+	const vadEagerness = ["low", "medium", "high", "auto"].includes(requestedVadEagerness) ? requestedVadEagerness : "auto";
 	const safetyIdentifier = await getOpenAIRealtimeSafetyIdentifier();
 	const headers = {
 		Authorization: "Bearer " + apiKey,
 		"Content-Type": "application/json"
 	};
 	if (safetyIdentifier) headers["OpenAI-Safety-Identifier"] = safetyIdentifier;
-	const response = await fetchWithTimeout(
-		"https://api.openai.com/v1/realtime/client_secrets",
-		{
-			method: "POST",
-			headers,
-			body: JSON.stringify({
-				session: {
-					type: "realtime",
-					model,
-					instructions,
-					output_modalities: outputModalities,
-					max_output_tokens: 512,
-					audio: {
-						input: {
-							turn_detection: {
-								type: "semantic_vad",
-								create_response: false,
-								interrupt_response: true
-							}
-						},
-						output: { voice: "marin" }
+	const buildRequestBody = includeReasoning => ({
+		session: {
+			type: "realtime",
+			model,
+			instructions,
+			output_modalities: outputModalities,
+			max_output_tokens: 512,
+			...(includeReasoning ? { reasoning: { effort: reasoningEffort } } : {}),
+			audio: {
+				input: {
+					transcription: { model: "gpt-4o-mini-transcribe" },
+					turn_detection: {
+						type: "semantic_vad",
+						eagerness: vadEagerness,
+						create_response: false,
+						interrupt_response: true
 					}
-				}
-			})
-		},
-		15000
-	);
-	let payload = null;
-	try {
-		payload = await response.json();
-	} catch (_error) {}
+				},
+				output: { voice: "marin" }
+			}
+		}
+	});
+	const requestSecret = async includeReasoning => {
+		const response = await fetchWithTimeout(
+			"https://api.openai.com/v1/realtime/client_secrets",
+			{
+				method: "POST",
+				headers,
+				body: JSON.stringify(buildRequestBody(includeReasoning))
+			},
+			15000
+		);
+		let payload = null;
+		try {
+			payload = await response.json();
+		} catch (_error) {}
+		return { response, payload };
+	};
+	let reasoningSupported = true;
+	let includeReasoning = !!reasoningEffort && supportsOpenAIRealtimeReasoning(model);
+	if (reasoningEffort && !includeReasoning) reasoningSupported = false;
+	let result = await requestSecret(includeReasoning);
+	if (!result.response.ok && includeReasoning && isOpenAIRealtimeReasoningCompatibilityError(result.response.status, result.payload)) {
+		includeReasoning = false;
+		reasoningSupported = false;
+		result = await requestSecret(false);
+	}
+	const response = result.response;
+	const payload = result.payload;
 	if (!response.ok) {
 		const message = payload?.error?.message || payload?.message || "OpenAI could not create a Realtime client secret.";
 		throw new Error("OpenAI Realtime setup failed (" + response.status + "): " + message);
@@ -2111,7 +2144,8 @@ async function createOpenAIRealtimeClientSecret(request = {}) {
 	return {
 		value: payload.value,
 		expires_at: payload.expires_at || null,
-		model
+		model,
+		reasoning_supported: reasoningSupported
 	};
 }
 

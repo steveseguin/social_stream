@@ -25,7 +25,7 @@ const { chromium } = require("playwright");
             clientSecret: {
               value: "ek_test_short_lived",
               expires_at: Date.now() + 60000,
-              model: "gpt-realtime-2.1"
+              model: request.model || "gpt-realtime-2.1"
             }
           });
         }
@@ -86,8 +86,10 @@ const { chromium } = require("playwright");
       class FakePeerConnection {
         constructor() {
           this.connectionState = "new";
+          this.iceConnectionState = "new";
           this.ontrack = null;
           this.onconnectionstatechange = null;
+          this.oniceconnectionstatechange = null;
           this.senders = [];
           this.channel = null;
         }
@@ -148,6 +150,9 @@ const { chromium } = require("playwright");
     await page.goto(url);
     await page.waitForFunction(() => document.getElementById("providerSelect"));
     await page.selectOption("#providerSelect", "chatgpt");
+    await page.selectOption("#openaiRealtimeModel", "gpt-realtime-2.1-mini");
+    await page.selectOption("#openaiRealtimeReasoning", "low");
+    await page.selectOption("#openaiRealtimeVadEagerness", "high");
     await page.selectOption("#audioSource", "test-mic");
     await page.click("#startButton");
     await page.waitForFunction(() => document.getElementById("startButton").textContent.trim() === "Stop Co-host");
@@ -160,10 +165,17 @@ const { chromium } = require("playwright");
       status: document.getElementById("startButton").textContent.trim()
     }));
     assert.strictEqual(running.runtimeRequests[0].cmd, "createOpenAIRealtimeClientSecret");
+    assert.strictEqual(running.runtimeRequests[0].model, "gpt-realtime-2.1-mini");
+    assert.strictEqual(running.runtimeRequests[0].reasoningEffort, "low");
+    assert.strictEqual(running.runtimeRequests[0].vadEagerness, "high");
     assert.strictEqual(running.fetchRequests[0].authorization, "Bearer ek_test_short_lived");
     assert.strictEqual(running.fetchRequests[0].contentType, "application/sdp");
     assert.strictEqual(running.fetchRequests[0].body, "fake-offer-sdp");
     assert(running.dataChannelMessages.some(event => event.type === "session.update"));
+    const initialSessionUpdate = running.dataChannelMessages.find(event => event.type === "session.update");
+    assert.strictEqual(initialSessionUpdate.session.reasoning.effort, "low");
+    assert.strictEqual(initialSessionUpdate.session.audio.input.transcription.model, "gpt-4o-mini-transcribe");
+    assert.strictEqual(initialSessionUpdate.session.audio.input.turn_detection.eagerness, "high");
     assert.strictEqual(running.keyValue, "");
     assert.strictEqual(running.status, "Stop Co-host");
 
@@ -182,6 +194,12 @@ const { chromium } = require("playwright");
 	assert.strictEqual(await page.$eval('audio[aria-hidden="true"]', audio => audio.volume), 0.25);
 	await page.click("#muteAudio");
 	assert.strictEqual(await page.$eval('audio[aria-hidden="true"]', audio => audio.muted), false);
+
+	const tokenRequestsBeforeLiveTuning = await page.evaluate(() => window.__runtimeRequests.filter(request => request.cmd === "createOpenAIRealtimeClientSecret").length);
+	await page.selectOption("#openaiRealtimeReasoning", "minimal");
+	await page.selectOption("#openaiRealtimeVadEagerness", "auto");
+	await page.waitForFunction(() => window.__dataChannelMessages.some(event => event.type === "session.update" && event.session.reasoning && event.session.reasoning.effort === "minimal" && event.session.audio.input.turn_detection.eagerness === "auto"));
+	assert.strictEqual(await page.evaluate(() => window.__runtimeRequests.filter(request => request.cmd === "createOpenAIRealtimeClientSecret").length), tokenRequestsBeforeLiveTuning, "Reasoning and VAD changes should apply without reconnecting");
 
 	await page.evaluate(() => {
 	  window.__testDataChannel.onmessage({ data: JSON.stringify({ type: "response.created", response: { id: "response-test" } }) });
@@ -202,6 +220,62 @@ const { chromium } = require("playwright");
 
 	await page.selectOption("#audioSource", "test-mic-2");
 	await page.waitForFunction(() => window.__replaceTrackCount > 0);
+
+	await page.fill(".message-input", "Remember the reconnect codeword ORCHID.");
+	await page.click("#sendButton");
+	await page.waitForFunction(() => window.__dataChannelMessages.some(event => event.type === "response.create" && event.response && event.response.metadata && event.response.metadata.ssn_source === "streamer_text"));
+	await page.evaluate(() => {
+	  window.__testDataChannel.onmessage({ data: JSON.stringify({ type: "response.created", response: { id: "continuity-response", metadata: { ssn_source: "streamer_text" } } }) });
+	  window.__testDataChannel.onmessage({ data: JSON.stringify({
+		type: "response.done",
+		response: {
+		  id: "continuity-response",
+		  status: "completed",
+		  metadata: { ssn_source: "streamer_text" },
+		  output: [{ type: "message", role: "assistant", content: [{ type: "output_text", text: "I will remember ORCHID." }] }]
+		}
+	  }) });
+	});
+	await page.waitForFunction(() => document.getElementById("openaiRealtimeContinuitySummary").textContent.includes("2 recent messages"));
+
+	const tokenRequestsBeforeRecovery = await page.evaluate(() => window.__runtimeRequests.filter(request => request.cmd === "createOpenAIRealtimeClientSecret").length);
+	const recoveryEventStart = await page.evaluate(() => window.__dataChannelMessages.length);
+	await page.evaluate(() => window.__testDataChannel.onerror());
+	await page.waitForFunction(expected => window.__runtimeRequests.filter(request => request.cmd === "createOpenAIRealtimeClientSecret").length > expected, tokenRequestsBeforeRecovery);
+	await page.waitForFunction(() => document.getElementById("diagEvent").textContent === "reconnect.success.memory.restored:2");
+	assert.strictEqual(await page.$eval("#startButton", button => button.textContent.trim()), "Stop Co-host");
+	const restoredConversation = await page.evaluate(start => window.__dataChannelMessages.slice(start).filter(event => event.type === "conversation.item.create").map(event => event.item), recoveryEventStart);
+	assert.deepStrictEqual(restoredConversation.map(item => item.role), ["user", "assistant"]);
+	assert.strictEqual(restoredConversation[0].content[0].type, "input_text");
+	assert.strictEqual(restoredConversation[0].content[0].text, "Remember the reconnect codeword ORCHID.");
+	assert.strictEqual(restoredConversation[1].content[0].type, "output_text");
+	assert.strictEqual(restoredConversation[1].content[0].text, "I will remember ORCHID.");
+
+	const contextEventStart = await page.evaluate(() => {
+	  handleCohostLiveChatPayload({ id: "context-test", chatname: "Test Viewer", chatmessage: "The chat code word is ORCHID.", type: "youtube" });
+	  return window.__dataChannelMessages.length;
+	});
+	await page.fill(".message-input", "Give me a very short latency test.");
+	await page.click("#sendButton");
+	await page.waitForFunction(start => window.__dataChannelMessages.slice(start).some(event => event.type === "response.create" && event.response && event.response.metadata && event.response.metadata.ssn_source === "streamer_text"), contextEventStart);
+	await page.evaluate(() => {
+	  window.__testDataChannel.onmessage({ data: JSON.stringify({ type: "response.created", response: { id: "latency-response", metadata: { ssn_source: "streamer_text" } } }) });
+	  setTimeout(() => window.__testDataChannel.onmessage({ data: JSON.stringify({ type: "response.output_audio.delta", item_id: "latency-item", content_index: 0, delta: "AAAA" }) }), 25);
+	  setTimeout(() => window.__testDataChannel.onmessage({ data: JSON.stringify({ type: "response.done", response: { id: "latency-response", status: "completed" } }) }), 40);
+	});
+	await page.waitForFunction(() => document.getElementById("diagLatency").textContent.includes("audio"));
+	await page.waitForFunction(() => window.__dataChannelMessages.some(event => event.type === "conversation.item.delete"));
+	const contextOrdering = await page.evaluate(start => {
+	  const events = window.__dataChannelMessages.slice(start);
+	  return {
+		context: events.findIndex(event => event.type === "conversation.item.create" && event.item && String(event.item.id || "").startsWith("cohost_context_")),
+		prompt: events.findIndex(event => event.type === "conversation.item.create" && event.item && event.item.content && event.item.content.some(part => part.text === "Give me a very short latency test.")),
+		response: events.findIndex(event => event.type === "response.create"),
+		deleted: events.some(event => event.type === "conversation.item.delete")
+	  };
+	}, contextEventStart);
+	assert(contextOrdering.context >= 0 && contextOrdering.context < contextOrdering.prompt && contextOrdering.prompt < contextOrdering.response, "Recent live chat should be ordered before the streamer prompt and response request");
+	assert.strictEqual(contextOrdering.deleted, true, "Temporary live-chat context should be removed after the response");
 
     await page.click("#startButton");
     await page.waitForFunction(() => document.getElementById("startButton").textContent.trim() === "Start Co-host");

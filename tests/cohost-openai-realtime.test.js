@@ -18,6 +18,10 @@ assert(cohost.includes("Authorization: \"Bearer \" + clientSecret.value"), "Only
 assert(cohost.includes("if (clientSecret.model) this.model = clientSecret.model"), "The co-host should use the broker-approved Realtime model");
 assert(cohost.includes("audioSender.replaceTrack(microphoneTrack)"), "Changing microphones should replace the active WebRTC sender track");
 assert(cohost.includes('type: "semantic_vad"'), "OpenAI native audio should use server-side voice activity detection");
+assert(cohost.includes('id="openaiRealtimeModel"'), "OpenAI Realtime should expose full and mini model choices");
+assert(cohost.includes('id="openaiRealtimeReasoning"'), "OpenAI Realtime should expose reasoning latency control");
+assert(cohost.includes('id="openaiRealtimeVadEagerness"'), "OpenAI Realtime should expose turn-taking latency control");
+assert(cohost.includes('id="diagLatency"'), "OpenAI Realtime should display measured first-output latency");
 assert(cohost.includes('create_response: false'), "OpenAI voice activity should wait until chat context is ordered on the data channel");
 assert(cohost.includes('case "input_audio_buffer.committed":'), "OpenAI should wait for the committed voice turn");
 assert(cohost.includes('this.createResponse({ origin: "streamer_voice", allowTools: true, eventPrefix: "voice_response_create" })'), "OpenAI should explicitly request the trusted voice response after context is attached");
@@ -35,6 +39,11 @@ assert(cohost.includes('case "session.updated":'), "OpenAI startup should wait f
 assert(cohost.includes("Connection timed out waiting for the OpenAI WebRTC session"), "OpenAI startup must wait for the configured WebRTC session");
 assert(cohost.includes("webrtc.interruption.server-managed"), "WebRTC interruption should rely on OpenAI's server-managed output buffer");
 assert(cohost.includes("this.maxReconnectAttempts = 5"), "OpenAI Realtime should use bounded reconnection attempts");
+assert(cohost.includes('this.handleWebRTCTransportFailure("webrtc.data.error"'), "OpenAI data-channel errors should trigger recovery");
+assert(cohost.includes('this.handleWebRTCTransportFailure("webrtc.peer.failed"'), "OpenAI peer failures should trigger recovery");
+assert(cohost.includes('this.scheduleReconnect("session.health.timeout")'), "Open-but-unresponsive OpenAI sessions should be recovered");
+assert(cohost.includes('session: { type: "realtime" }'), "Idle OpenAI sessions should receive a lightweight health probe");
+assert(!cohost.includes("this.cohostToolStatus = await requestCohostToolStatus"), "Optional stream-tool discovery must not delay the Realtime connection");
 assert(cohost.includes("55 * 60 * 1000"), "OpenAI Realtime should roll over before the session limit");
 assert(cohost.includes('type: "conversation.item.delete"'), "Temporary live-chat context should be removed after the turn");
 const localBrowserPublisherSource = cohost.slice(cohost.indexOf("class LocalBrowserPublisher"), cohost.indexOf("class ConfiguredLLMPublisher"));

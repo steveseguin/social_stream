@@ -25,6 +25,7 @@ const { chromium } = require("playwright");
             }
           },
           ws: { readyState: WebSocket.OPEN, send: value => sent.push(JSON.parse(value)) },
+          sessionConfigured: true,
           responseActive: false,
           currentResponseText: "",
           manualResponseStopPending: false,

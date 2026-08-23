@@ -393,6 +393,36 @@
 				font-size: 12px;
 			}
 
+			.openai-performance-panel {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+				background: #181818;
+				border: 1px solid #2a2a2a;
+				border-radius: 10px;
+				padding: 10px 12px;
+			}
+
+			.openai-performance-grid {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 10px;
+			}
+
+			.openai-performance-field {
+				display: flex;
+				flex-direction: column;
+				gap: 5px;
+			}
+
+			.openai-performance-field:first-child {
+				grid-column: 1 / -1;
+			}
+
+			.openai-performance-summary {
+				color: #aaa;
+			}
+
 			.live-chat-actions {
 				display: grid;
 				grid-template-columns: 1fr auto;
@@ -1387,6 +1417,9 @@
 				.control-row {
 					grid-template-columns: 1fr;
 				}
+				.openai-performance-grid {
+					grid-template-columns: 1fr;
+				}
 				.message {
 					max-width: 92%;
 				}
@@ -1516,6 +1549,41 @@
 						<button id="configuredLLMTest" type="button">Test Configured LLM</button>
 						<div class="api-key-info" id="configuredLLMInfo"></div>
 					</div>
+					<div id="openaiRealtimePerformance" class="openai-performance-panel" style="display: none">
+						<div class="field-label">OpenAI Realtime performance</div>
+						<div class="openai-performance-grid">
+							<div class="openai-performance-field">
+								<label for="openaiRealtimeModel" class="field-label">Model</label>
+								<select id="openaiRealtimeModel">
+									<option value="gpt-realtime-2.1">Full quality - higher API cost</option>
+									<option value="gpt-realtime-2.1-mini">Mini - faster and lower API cost</option>
+									<option value="custom">Custom model override</option>
+								</select>
+							</div>
+							<div class="openai-performance-field">
+								<label for="openaiRealtimeReasoning" class="field-label">Reasoning effort</label>
+				<select id="openaiRealtimeReasoning">
+									<option value="minimal">Minimal - fastest</option>
+									<option value="low">Low - responsive</option>
+									<option value="medium" selected>Medium - balanced (default)</option>
+									<option value="high">High - slower, deeper</option>
+									<option value="xhigh">Extra high - slowest, deepest</option>
+								</select>
+							</div>
+							<div class="openai-performance-field">
+								<label for="openaiRealtimeVadEagerness" class="field-label">Turn-taking speed</label>
+				<select id="openaiRealtimeVadEagerness">
+									<option value="auto" selected>Balanced - waits up to about 4 seconds (default)</option>
+									<option value="high">Fast - waits up to about 2 seconds</option>
+									<option value="low">Patient - waits up to about 8 seconds</option>
+								</select>
+							</div>
+						</div>
+						<div id="openaiRealtimePerformanceSummary" class="api-key-info openai-performance-summary" role="status"></div>
+						<div class="api-key-info">Lower reasoning is faster and usually uses fewer billed output tokens. Higher reasoning can improve complex answers but increases latency and cost. Faster turn-taking may interrupt natural pauses. <a href="https://developers.openai.com/api/docs/models/gpt-realtime-2.1" target="_blank" rel="noopener">OpenAI model details</a></div>
+						<label class="checkbox-label" for="openaiRealtimeContinuity"><input type="checkbox" id="openaiRealtimeContinuity" checked /> Preserve recent conversation when reconnecting</label>
+						<div id="openaiRealtimeContinuitySummary" class="api-key-info" role="status">Recent text turns are kept only in this page and replayed after a reconnect. Voice transcription is billed separately by OpenAI.</div>
+					</div>
 					<label for="modelOverride" class="field-label">Model override (optional)</label>
 					<input type="text" id="modelOverride" placeholder="Optional model override" class="model-override" />
 					<label class="checkbox-label" for="greetOnConnect"><input type="checkbox" id="greetOnConnect" /> Speak a greeting when connected</label>
@@ -1573,6 +1641,7 @@
 							<div class="diagnostics-line"><span class="diag-label">Time:</span><span id="diagUpdated" class="diag-value">-</span></div>
 							<div class="diagnostics-line"><span class="diag-label">Chat:</span><span id="diagChat" class="diag-value">off</span></div>
 							<div class="diagnostics-line"><span class="diag-label">Usage:</span><span id="diagUsage" class="diag-value">-</span></div>
+							<div class="diagnostics-line"><span class="diag-label">Latency:</span><span id="diagLatency" class="diag-value">-</span></div>
 						</div>
 						<div class="diagnostics-line" style="margin-top: 4px"><span class="diag-label">Err:</span><span id="diagError" class="diag-value">-</span></div>
 						<div class="diagnostics-actions">
@@ -2276,6 +2345,7 @@
 				lastEvent: "init",
 				lastError: "-",
 				usage: "-",
+				latency: "-",
 				updated: Date.now()
 			};
 			const diagnosticsHistory = [];
@@ -2296,6 +2366,86 @@
 			const COHOST_LIVE_CHAT_CONTEXT_MAX_CHARS = 6000;
 			const COHOST_LIVE_CHAT_MESSAGE_MAX_CHARS = 500;
 			const COHOST_GREETING_STORAGE_KEY = "cohostGreetOnConnect";
+			const OPENAI_CONTINUITY_STORAGE_KEY = "openAIRealtimeContinuity";
+			const OPENAI_CONTINUITY_MAX_ENTRIES = 24;
+			const OPENAI_CONTINUITY_MAX_CHARS = 12000;
+			const OPENAI_CONTINUITY_ENTRY_MAX_CHARS = 3000;
+			let openAIContinuityTurnCounter = 0;
+			let openAIContinuityEntryCounter = 0;
+			let openAIContinuityHistory = [];
+			function isOpenAIContinuityEnabled() {
+				const checkbox = document.getElementById("openaiRealtimeContinuity");
+				if (checkbox) return checkbox.checked;
+				return localStorage.getItem(OPENAI_CONTINUITY_STORAGE_KEY) !== "false";
+			}
+			function nextOpenAIContinuityTurn() {
+				openAIContinuityTurnCounter += 1;
+				return openAIContinuityTurnCounter;
+			}
+			function normalizeOpenAIContinuityText(value) {
+				return String(value || "").replace(/\s+/g, " ").trim().slice(0, OPENAI_CONTINUITY_ENTRY_MAX_CHARS);
+			}
+			function trimOpenAIContinuityHistory() {
+				openAIContinuityHistory.sort(function (left, right) {
+					if (left.turn !== right.turn) return left.turn - right.turn;
+					if (left.role !== right.role) return left.role === "user" ? -1 : 1;
+					return left.order - right.order;
+				});
+				let totalChars = openAIContinuityHistory.reduce(function (total, entry) { return total + entry.text.length; }, 0);
+				while (openAIContinuityHistory.length > OPENAI_CONTINUITY_MAX_ENTRIES || totalChars > OPENAI_CONTINUITY_MAX_CHARS) {
+					const removed = openAIContinuityHistory.shift();
+					totalChars -= removed ? removed.text.length : 0;
+				}
+			}
+			function renderOpenAIContinuitySummary(restoredCount) {
+				const summary = document.getElementById("openaiRealtimeContinuitySummary");
+				if (!summary) return;
+				if (!isOpenAIContinuityEnabled()) {
+					summary.textContent = "Conversation continuity is off. A reconnect starts a fresh AI conversation.";
+					return;
+				}
+				const count = openAIContinuityHistory.length;
+				const restored = Math.max(0, Number(restoredCount) || 0);
+				summary.textContent = (restored ? "Restored " + restored + " recent message" + (restored === 1 ? "" : "s") + ". " : "") + (count ? count + " recent message" + (count === 1 ? " is" : "s are") + " held in this page for reconnects." : "Recent text turns will be held in this page for reconnects.") + " Voice transcription is billed separately by OpenAI.";
+			}
+			function rememberOpenAIContinuityEntry(role, text, turn, source, itemId) {
+				if (!isOpenAIContinuityEnabled() || (role !== "user" && role !== "assistant")) return null;
+				const normalized = normalizeOpenAIContinuityText(text);
+				if (!normalized) return null;
+				const stableId = String(itemId || "");
+				const existing = stableId ? openAIContinuityHistory.find(function (entry) { return entry.itemId === stableId && entry.role === role; }) : null;
+				if (existing) {
+					existing.text = normalized;
+					existing.turn = Number(turn) || existing.turn;
+					existing.source = source || existing.source;
+				} else {
+					openAIContinuityEntryCounter += 1;
+					openAIContinuityHistory.push({
+						role,
+						text: normalized,
+						turn: Number(turn) || nextOpenAIContinuityTurn(),
+						source: String(source || ""),
+						itemId: stableId,
+						order: openAIContinuityEntryCounter
+					});
+				}
+				trimOpenAIContinuityHistory();
+				renderOpenAIContinuitySummary();
+				return stableId || "continuity_" + openAIContinuityEntryCounter;
+			}
+			function getOpenAIContinuitySnapshot() {
+				if (!isOpenAIContinuityEnabled()) return [];
+				trimOpenAIContinuityHistory();
+				return openAIContinuityHistory.map(function (entry) {
+					return { role: entry.role, text: entry.text, turn: entry.turn };
+				});
+			}
+			function clearOpenAIContinuityHistory() {
+				openAIContinuityHistory = [];
+				openAIContinuityTurnCounter = 0;
+				openAIContinuityEntryCounter = 0;
+				renderOpenAIContinuitySummary();
+			}
 			function shouldCohostGreetOnConnect() {
 				const checkbox = document.getElementById("greetOnConnect");
 				return checkbox ? checkbox.checked : localStorage.getItem(COHOST_GREETING_STORAGE_KEY) === "true";
@@ -2621,7 +2771,8 @@
 			function rememberCohostLiveChatMessage(message) {
 				if (!message || !message.key) return false;
 				if (cohostLiveChatSeen.has(message.key)) return false;
-				cohostLiveChatSeen.set(message.key, Date.now());
+				message.receivedAt = Date.now();
+				cohostLiveChatSeen.set(message.key, message.receivedAt);
 				if (cohostLiveChatSeen.size > 120) {
 					const keys = Array.from(cohostLiveChatSeen.keys());
 					for (let i = 0; i < keys.length - 80; i++) {
@@ -2633,6 +2784,23 @@
 					cohostLiveChatRecentMessages.splice(0, cohostLiveChatRecentMessages.length - 30);
 				}
 				return true;
+			}
+			function restoreRecentCohostLiveChatContext() {
+				if (cohostLiveChatMode !== "monitor" || !cohostLiveChatRecentMessages.length) return 0;
+				const now = Date.now();
+				const queuedIds = new Set(cohostLiveChatContextQueue.map(function (message) { return message.cohostId; }));
+				const recent = cohostLiveChatRecentMessages.filter(function (message) {
+					return now - (message.receivedAt || 0) <= COHOST_LIVE_CHAT_CONTEXT_MAX_AGE_MS && !queuedIds.has(message.cohostId);
+				});
+				recent.forEach(function (message) {
+					message.contextQueuedAt = message.receivedAt || now;
+					cohostLiveChatContextQueue.push(message);
+				});
+				if (cohostLiveChatContextQueue.length > COHOST_LIVE_CHAT_CONTEXT_MAX_QUEUE) {
+					cohostLiveChatContextQueue.splice(0, cohostLiveChatContextQueue.length - COHOST_LIVE_CHAT_CONTEXT_MAX_QUEUE);
+				}
+				if (recent.length) renderCohostLiveChatStatus();
+				return recent.length;
 			}
 			function shouldPromptFromCohostLiveChat(message) {
 				if (!message || cohostLiveChatMode === "off" || cohostLiveChatMode === "monitor") return false;
@@ -2714,12 +2882,12 @@
 				const streamStarted = document.getElementById("startButton")?.dataset?.started === "true";
 				const state = String(diagnosticsState.state || "").toLowerCase();
 				const recentlyResponded = Date.now() - cohostLiveChatLastResponseAt < COHOST_LIVE_CHAT_RESPONSE_SETTLE_MS;
-				const connected = !publisher || typeof publisher.isConnected !== "function" || publisher.isConnected();
+				const connected = !publisher || (typeof publisher.isHealthy === "function" ? publisher.isHealthy() : typeof publisher.isConnected !== "function" || publisher.isConnected());
 				return !!publisher && connected && streamStarted && !cohostStreamerSpeaking && !manualSendBusy && !cohostLiveChatPromptBusy && !publisher.responseActive && !recentlyResponded && state !== "responding" && state !== "starting" && state !== "connecting" && state !== "loading" && state !== "restarting";
 			}
 			function isCohostLiveChatStreamActive() {
 				const streamStarted = document.getElementById("startButton")?.dataset?.started === "true";
-				const connected = !publisher || typeof publisher.isConnected !== "function" || publisher.isConnected();
+				const connected = !publisher || (typeof publisher.isHealthy === "function" ? publisher.isHealthy() : typeof publisher.isConnected !== "function" || publisher.isConnected());
 				return !!publisher && connected && streamStarted;
 			}
 			function clearCohostLiveChatQueue() {
@@ -3050,6 +3218,7 @@
 				document.getElementById("diagEvent").textContent = diagnosticsState.lastEvent || "-";
 				document.getElementById("diagError").textContent = diagnosticsState.lastError || "-";
 				document.getElementById("diagUsage").textContent = diagnosticsState.usage || "-";
+				document.getElementById("diagLatency").textContent = diagnosticsState.latency || "-";
 				document.getElementById("diagUpdated").textContent = formatDiagnosticsTime(diagnosticsState.updated);
 				renderCohostLiveChatStatus();
 				renderGeminiSessionStatus();
@@ -3066,7 +3235,8 @@
 					connected: diagnosticsState.connected,
 					event: diagnosticsState.lastEvent,
 					error: diagnosticsState.lastError,
-					usage: diagnosticsState.usage
+					usage: diagnosticsState.usage,
+					latency: diagnosticsState.latency
 				});
 				if (diagnosticsHistory.length > MAX_DIAGNOSTIC_HISTORY) {
 					diagnosticsHistory.splice(0, diagnosticsHistory.length - MAX_DIAGNOSTIC_HISTORY);
@@ -3075,7 +3245,7 @@
 			function updateDiagnostics(patch = {}) {
 				Object.assign(diagnosticsState, patch);
 				diagnosticsState.updated = Date.now();
-				const signature = [diagnosticsState.provider, diagnosticsState.state, diagnosticsState.model, diagnosticsState.connected, diagnosticsState.lastEvent, diagnosticsState.lastError, diagnosticsState.usage].join("|");
+				const signature = [diagnosticsState.provider, diagnosticsState.state, diagnosticsState.model, diagnosticsState.connected, diagnosticsState.lastEvent, diagnosticsState.lastError, diagnosticsState.usage, diagnosticsState.latency].join("|");
 				if (signature !== lastDiagnosticsSignature) {
 					pushDiagnosticsHistory();
 					lastDiagnosticsSignature = signature;
@@ -3180,7 +3350,7 @@
 			renderDiagnostics();
 			renderVoiceTelemetry();
 			pushDiagnosticsHistory();
-			lastDiagnosticsSignature = [diagnosticsState.provider, diagnosticsState.state, diagnosticsState.model, diagnosticsState.connected, diagnosticsState.lastEvent, diagnosticsState.lastError, diagnosticsState.usage].join("|");
+			lastDiagnosticsSignature = [diagnosticsState.provider, diagnosticsState.state, diagnosticsState.model, diagnosticsState.connected, diagnosticsState.lastEvent, diagnosticsState.lastError, diagnosticsState.usage, diagnosticsState.latency].join("|");
 			const diagnosticsCopyButton = document.getElementById("diagCopyButton");
 			if (diagnosticsCopyButton) {
 				diagnosticsCopyButton.addEventListener("click", copyDiagnosticsToClipboard);
@@ -4428,6 +4598,8 @@
 					model: String(options.model || ""),
 					instructions: String(options.instructions || ""),
 					outputModalities: options.outputModalities === "text" ? "text" : "audio",
+					reasoningEffort: String(options.reasoningEffort || ""),
+					vadEagerness: String(options.vadEagerness || "auto"),
 					capability: cohostBridgeCapability
 				};
 				if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id && typeof chrome.runtime.sendMessage === "function") {
@@ -6250,6 +6422,9 @@
 					this.reconnectTimeout = null;
 					this._reconnectPromise = null;
 					this.sessionRolloverTimer = null;
+					this.sessionHealthTimer = null;
+					this.sessionHealthProbeAt = 0;
+					this.sessionStartedAt = 0;
 					this.audioBackpressureDrops = 0;
 					this.contextItemIds = [];
 					this.contextItemCounter = 0;
@@ -6273,6 +6448,15 @@
 					this.usageInputTokens = 0;
 					this.usageOutputTokens = 0;
 					this.usageTotalTokens = 0;
+					this.currentTurnInputAt = 0;
+					this.currentResponseRequestedAt = 0;
+					this.currentFirstOutputAt = 0;
+					this.currentTurnSequence = 0;
+					this.activeResponseTurnSequence = 0;
+					this.pendingVoiceTurnSequence = 0;
+					this.voiceItemTurns = new Map();
+					this.continuityRestored = false;
+					this.lastContinuityRestoredCount = 0;
 					updateDiagnostics({
 						provider: this.config.label,
 						model: this.model || "server default",
@@ -6345,6 +6529,40 @@
 						usage: totalLabel + " tokens (" + Math.round(this.usageInputTokens) + " in / " + Math.round(this.usageOutputTokens) + " out)"
 					});
 				}
+				extractCompletedResponseText(responseObject) {
+					if (!responseObject || !Array.isArray(responseObject.output)) return "";
+					const parts = [];
+					responseObject.output.forEach(function (item) {
+						if (!item || !Array.isArray(item.content)) return;
+						item.content.forEach(function (content) {
+							const value = content && (content.transcript || content.text);
+							if (value) parts.push(String(value));
+						});
+					});
+					return normalizeOpenAIContinuityText(parts.join(" "));
+				}
+				restoreOpenAIContinuity() {
+					if (this.provider !== "chatgpt" || this.continuityRestored || !this.isConnected()) return 0;
+					this.continuityRestored = true;
+					const history = getOpenAIContinuitySnapshot();
+					history.forEach(entry => {
+						this.ws.send(JSON.stringify({
+							type: "conversation.item.create",
+							event_id: this.nextEventId("continuity_replay"),
+							item: {
+								type: "message",
+								role: entry.role,
+								content: [{ type: entry.role === "assistant" ? "output_text" : "input_text", text: entry.text }]
+							}
+						}));
+					});
+					this.lastContinuityRestoredCount = history.length;
+					if (history.length) {
+						renderOpenAIContinuitySummary(history.length);
+						queueCohostStatusAnnouncement("realtime-memory", "OpenAI reconnected with " + history.length + " recent conversation messages restored");
+					}
+					return history.length;
+				}
 				clearRealtimeTimers() {
 					if (this.connectTimeout) {
 						clearTimeout(this.connectTimeout);
@@ -6358,6 +6576,12 @@
 						clearTimeout(this.sessionRolloverTimer);
 						this.sessionRolloverTimer = null;
 					}
+					if (this.sessionHealthTimer) {
+						clearInterval(this.sessionHealthTimer);
+						this.sessionHealthTimer = null;
+					}
+					this.sessionHealthProbeAt = 0;
+					this.sessionStartedAt = 0;
 					if (this.responseCancelTimeout) {
 						clearTimeout(this.responseCancelTimeout);
 						this.responseCancelTimeout = null;
@@ -6388,6 +6612,33 @@
 						this.reconnect().catch(error => showError("OpenAI session rollover failed: " + (error.message || error)));
 					}, delayMs);
 				}
+				startSessionHealthMonitor() {
+					if (this.provider !== "chatgpt" || this.sessionHealthTimer) return;
+					this.lastActivityTime = Date.now();
+					this.sessionHealthTimer = setInterval(() => {
+						if (this.stopped || !this.sessionConfigured || !this.isConnected()) return;
+						const now = Date.now();
+						if (this.sessionHealthProbeAt) {
+							if (now - this.sessionHealthProbeAt > 12000) {
+								this.sessionConfigured = false;
+								this.sessionHealthProbeAt = 0;
+								this.scheduleReconnect("session.health.timeout");
+							}
+							return;
+						}
+						if (now - this.lastActivityTime < 30000 || this.responseActive || cohostStreamerSpeaking) return;
+						this.sessionHealthProbeAt = now;
+						this.ws.send(JSON.stringify({
+							type: "session.update",
+							event_id: this.nextEventId("session_health"),
+							session: { type: "realtime" }
+						}));
+						updateDiagnostics({ state: "connected", connected: "yes", lastEvent: "session.health.probe" });
+					}, 10000);
+				}
+				isHealthy() {
+					return !!(this.isConnected() && this.sessionConfigured);
+				}
 				scheduleReconnect(reason) {
 					if (this.stopped || this.reconnectTimeout || this.reconnectAttempts >= this.maxReconnectAttempts) return;
 					const delay = Math.min(15000, 1000 * Math.pow(2, this.reconnectAttempts));
@@ -6402,6 +6653,14 @@
 					this.currentAssistantContentIndex = 0;
 					this.currentAssistantAudioReceivedMs = 0;
 					this.currentAssistantAudioStartedAt = 0;
+				}
+				recordFirstResponseOutput(kind) {
+					if (this.currentFirstOutputAt) return;
+					this.currentFirstOutputAt = Date.now();
+					const modelMs = this.currentResponseRequestedAt ? Math.max(0, this.currentFirstOutputAt - this.currentResponseRequestedAt) : 0;
+					const totalMs = this.currentTurnInputAt ? Math.max(0, this.currentFirstOutputAt - this.currentTurnInputAt) : modelMs;
+					const label = (kind === "audio" ? "audio " : "text ") + totalMs + "ms total" + (modelMs && modelMs !== totalMs ? " / " + modelMs + "ms model" : "");
+					updateDiagnostics({ latency: label });
 				}
 				trackAssistantAudio(response, base64Chunk) {
 					if (response && response.item_id) this.currentAssistantItemId = response.item_id;
@@ -6547,7 +6806,7 @@
 					this.resetAssistantAudioTracking();
 				}
 				createResponse(options = {}) {
-					if (!this.isConnected()) return;
+					if (!this.isHealthy()) return;
 					if (this.responseActive) {
 						console.log("Response already active, not creating a new one");
 						return;
@@ -6581,6 +6840,8 @@
 					this.manualResponseStopPending = false;
 					this.responseActive = true;
 					this.currentResponseText = "";
+					this.currentResponseRequestedAt = Date.now();
+					this.currentFirstOutputAt = 0;
 					this.pendingResponseOrigins.push(origin);
 					this.ws.send(JSON.stringify(payload));
 					updateDiagnostics({
@@ -6671,6 +6932,7 @@
 							return;
 						}
 						this.lastActivityTime = Date.now();
+						this.sessionHealthProbeAt = 0;
 						const type = response.type || "";
 						updateDiagnostics({
 							lastEvent: type || "message",
@@ -6682,6 +6944,7 @@
 							case "session.updated":
 								this.sessionConfigured = true;
 								this.reconnectAttempts = 0;
+								this.restoreOpenAIContinuity();
 								clearError();
 								if (this.connectTimeout) {
 									clearTimeout(this.connectTimeout);
@@ -6693,7 +6956,11 @@
 									this.sessionReadyReject = null;
 									resolveReady();
 								}
-								this.scheduleSessionRollover();
+								if (!this.sessionStartedAt) {
+									this.sessionStartedAt = Date.now();
+									this.scheduleSessionRollover();
+								}
+								this.startSessionHealthMonitor();
 								if (this.pendingGreeting) {
 									this.pendingGreeting = false;
 									if (shouldCohostGreetOnConnect()) this.sendPrompt("Hi, introduce yourself in a sentence for me. Be friendly to me.", "greeting");
@@ -6708,6 +6975,7 @@
 							case "response.text.delta":
 							case "response.output_audio_transcript.delta":
 							case "response.audio_transcript.delta":
+								if (response.delta) this.recordFirstResponseOutput("text");
 								this.appendModelText(response.delta || "");
 								break;
 							case "response.output_text.done":
@@ -6715,11 +6983,13 @@
 							case "response.output_audio_transcript.done":
 							case "response.audio_transcript.done":
 								if (response.text) {
+									this.recordFirstResponseOutput("text");
 									this.appendModelText(response.text);
 								}
 								break;
 							case "response.output_audio.delta":
 							case "response.audio.delta":
+								if (response.delta) this.recordFirstResponseOutput("audio");
 								this.trackAssistantAudio(response, response.delta || "");
 								await this.processAudioDelta(response.delta);
 								break;
@@ -6729,6 +6999,8 @@
 								break;
 							case "input_audio_buffer.speech_started":
 								cohostStreamerSpeaking = true;
+								this.pendingVoiceTurnSequence = nextOpenAIContinuityTurn();
+								this.currentTurnSequence = this.pendingVoiceTurnSequence;
 								this.pendingVoiceResponse = false;
 								if (this.voiceCommitFallbackTimer) {
 									clearTimeout(this.voiceCommitFallbackTimer);
@@ -6745,6 +7017,7 @@
 								break;
 							case "input_audio_buffer.speech_stopped":
 								cohostStreamerSpeaking = false;
+								this.currentTurnInputAt = Date.now();
 								if (this.manualVoiceResponse) {
 									this.pendingVoiceResponse = true;
 									this.voiceCommitFallbackTimer = setTimeout(() => this.requestManualVoiceResponse("voice.response.commit.timeout"), 1500);
@@ -6754,7 +7027,25 @@
 								updateVoiceTelemetry({ inputState: "Thinking" });
 								break;
 							case "input_audio_buffer.committed":
+								if (!this.pendingVoiceTurnSequence) this.pendingVoiceTurnSequence = nextOpenAIContinuityTurn();
+								this.currentTurnSequence = this.pendingVoiceTurnSequence;
+								if (response.item_id) this.voiceItemTurns.set(String(response.item_id), this.pendingVoiceTurnSequence);
+								this.pendingVoiceTurnSequence = 0;
 								this.requestManualVoiceResponse("voice.response.committed");
+								break;
+							case "conversation.item.input_audio_transcription.completed": {
+								const transcriptionItemId = String(response.item_id || "");
+								const transcriptionTurn = this.voiceItemTurns.get(transcriptionItemId) || this.currentTurnSequence || nextOpenAIContinuityTurn();
+								const transcript = normalizeOpenAIContinuityText(response.transcript || "");
+								if (transcript) {
+									rememberOpenAIContinuityEntry("user", transcript, transcriptionTurn, "streamer_voice", transcriptionItemId);
+									updateVoiceTelemetry({ inputState: "Listening (OpenAI WebRTC)", inputPreview: transcript });
+								}
+								if (transcriptionItemId) this.voiceItemTurns.delete(transcriptionItemId);
+								break;
+							}
+							case "conversation.item.input_audio_transcription.failed":
+								updateDiagnostics({ lastEvent: "input.transcription.failed", connected: "yes" });
 								break;
 							case "response.created":
 								this.pendingVoiceResponse = false;
@@ -6762,6 +7053,7 @@
 								this.activeResponseId = response.response && response.response.id ? response.response.id : "";
 								const pendingResponseOrigin = this.pendingResponseOrigins.shift() || "";
 								this.activeResponseOrigin = response.response && response.response.metadata && response.response.metadata.ssn_source ? String(response.response.metadata.ssn_source) : pendingResponseOrigin || this.activeResponseOrigin;
+								this.activeResponseTurnSequence = this.currentTurnSequence;
 								if (this.manualResponseStopPending && this.activeResponseId) {
 									this.manuallyStoppedResponseIds.add(this.activeResponseId);
 									this.manualResponseStopPending = false;
@@ -6775,7 +7067,7 @@
 								this.resetAssistantAudioTracking();
 								this.onResponseCreated(response);
 								break;
-							case "response.done":
+							case "response.done": {
 								const responseStatus = response.response && response.response.status ? response.response.status : "completed";
 								const responseStatusDetails = response.response && response.response.status_details ? response.response.status_details : null;
 								const completedResponseId = response.response && response.response.id ? response.response.id : this.activeResponseId;
@@ -6786,12 +7078,18 @@
 								this.manualResponseStopPending = false;
 								if (!completedResponseId || completedResponseId === this.activeResponseId) this.activeResponseId = "";
 								const responseSettledNormally = responseStatus === "completed" || responseStatus === "cancelled" || wasManuallyStopped;
+								const completedAssistantText = this.extractCompletedResponseText(response.response) || normalizeOpenAIContinuityText(this.currentResponseText);
+								const continuityOrigin = responseOrigin === "streamer_text" || responseOrigin === "streamer_voice" || responseOrigin === "tool_result";
+								if (responseStatus === "completed" && continuityOrigin && this.activeResponseTurnSequence && completedAssistantText) {
+									rememberOpenAIContinuityEntry("assistant", completedAssistantText, this.activeResponseTurnSequence, responseOrigin, completedResponseId);
+								}
 								this.recordResponseUsage(response.response && response.response.usage);
 								this.audioPlayer.complete();
 								this.finalizeResponse();
 								const handledToolCalls = responseSettledNormally ? await this.handleCohostFunctionCalls(response.response, responseOrigin) : false;
 								if (!handledToolCalls && responseOrigin === "tool_result") this.toolContinuationDepth = 0;
 								this.activeResponseOrigin = "";
+								this.activeResponseTurnSequence = 0;
 								updateDiagnostics({
 									state: responseSettledNormally ? "connected" : "error",
 									lastEvent: wasManuallyStopped ? "response.done:stopped" : "response.done:" + responseStatus,
@@ -6805,20 +7103,26 @@
 									updateVoiceTelemetry({ outputState: "Stopped by streamer" });
 								}
 								break;
+							}
 							case "rate_limits.updated":
 								updateDiagnostics({ lastEvent: "rate_limits.updated", connected: "yes" });
 								break;
 							case "error": {
+								if (typeof this.handleRecoverableProviderError === "function" && this.handleRecoverableProviderError(response)) break;
 								const errorMessage = response.error?.message || response.message || "Realtime provider returned an error.";
+								const errorIdentity = String(response.error?.type || response.error?.code || "") + " " + errorMessage;
+								const connectionFailure = /(connection|session).*(closed|expired|failed|error)|server_error/i.test(errorIdentity);
 								console.error(`[${this.config.label}]`, response.error || response);
 								showError(errorMessage);
 								this.finalizeResponse();
+								if (connectionFailure) this.sessionConfigured = false;
 								updateDiagnostics({
 									state: "error",
-									connected: "no",
+									connected: this.isHealthy() ? "yes" : "no",
 									lastEvent: "provider.error",
 									lastError: errorMessage
 								});
+								if (connectionFailure && !this.stopped && document.getElementById("startButton")?.dataset?.started === "true") this.scheduleReconnect("provider.connection.error");
 								break;
 							}
 							default:
@@ -6831,7 +7135,7 @@
 						console.error("Error handling realtime message:", err);
 						updateDiagnostics({
 							state: "error",
-							connected: "no",
+							connected: this.isHealthy() ? "yes" : "no",
 							lastEvent: "message.exception",
 							lastError: err.message || "Unhandled realtime message error"
 						});
@@ -6843,6 +7147,8 @@
 						console.log("Already connected");
 						return;
 					}
+					this.continuityRestored = false;
+					this.lastContinuityRestoredCount = 0;
 					updateDiagnostics({
 						provider: this.config.label,
 						model: this.model || "server default",
@@ -7110,7 +7416,7 @@
 				sendContext(text) {
 					const context = String(text || "").trim();
 					if (!context) return;
-					if (!this.isConnected()) throw new Error("Realtime connection is not ready");
+					if (!this.isHealthy()) throw new Error("Realtime connection is not ready");
 					const itemId = "cohost_context_" + Date.now() + "_" + (++this.contextItemCounter);
 					this.contextItemIds.push(itemId);
 					this.ws.send(
@@ -7130,7 +7436,7 @@
 					return itemId;
 				}
 				sendPrompt(text, source = "streamer_text") {
-					if (!this.isConnected()) {
+					if (!this.isHealthy()) {
 						console.error("Realtime connection is not ready");
 						updateDiagnostics({
 							state: "disconnected",
@@ -7141,11 +7447,17 @@
 						return;
 					}
 					flushCohostLiveChatContext();
+					this.currentTurnInputAt = Date.now();
+					const directStreamerTurn = source === "streamer_text" || source === "streamer_voice";
+					const promptItemId = "ssn_prompt_" + Date.now() + "_" + (++this.contextItemCounter);
+					this.currentTurnSequence = directStreamerTurn ? nextOpenAIContinuityTurn() : 0;
+					if (directStreamerTurn) rememberOpenAIContinuityEntry("user", text, this.currentTurnSequence, source, promptItemId);
 					this.ws.send(
 						JSON.stringify({
 							type: "conversation.item.create",
 							event_id: this.nextEventId("prompt_create"),
 							item: {
+								id: promptItemId,
 								type: "message",
 								role: "user",
 								content: [
@@ -7184,8 +7496,11 @@
 						this.responseActive = false;
 						this.currentResponseText = "";
 						this.pendingVoiceResponse = false;
-						this.pendingVoiceResponse = false;
 						this.contextItemIds = [];
+						this.currentTurnSequence = 0;
+						this.activeResponseTurnSequence = 0;
+						this.pendingVoiceTurnSequence = 0;
+						this.voiceItemTurns.clear();
 						this.resetAssistantAudioTracking();
 						cohostStreamerSpeaking = false;
 						if (this.audioPlayer) this.audioPlayer.stop();
@@ -7202,9 +7517,9 @@
 						}
 						await this.connect();
 						if (this.nativeAudioInput && hasCohostSpeechInput(this.stream)) await this.setupAudioProcessing();
+						restoreRecentCohostLiveChatContext();
 						this.reconnectAttempts = 0;
-						updateDiagnostics({ state: "connected", connected: "yes", lastEvent: "reconnect.success.memory.reset", lastError: "-" });
-						queueCohostStatusAnnouncement("realtime-memory", "OpenAI reconnected. Earlier spoken conversation is no longer in the AI session");
+						updateDiagnostics({ state: "connected", connected: "yes", lastEvent: "reconnect.success.memory.restored:" + this.lastContinuityRestoredCount, lastError: "-" });
 						return true;
 					})().catch(error => {
 						this.reconnectAttempts += 1;
@@ -7311,6 +7626,10 @@
 					this.finalTranscript = "";
 					this.currentResponseText = "";
 					this.contextItemIds = [];
+					this.currentTurnSequence = 0;
+					this.activeResponseTurnSequence = 0;
+					this.pendingVoiceTurnSequence = 0;
+					this.voiceItemTurns.clear();
 					this.resetAssistantAudioTracking();
 					clearTimeout(this.recognitionTimeout);
 					resetVoiceTelemetry({
@@ -7332,32 +7651,60 @@
 					this.remoteAudio = null;
 					this.transportAdapter = null;
 					this.peerDisconnectTimer = null;
+					this.toolStatusRequestId = 0;
 					this.manualVoiceResponse = true;
 					this.resumeRemoteAudioOnNextResponse = false;
+					this.reasoningSupported = true;
+					this.reasoningFallbackAttempted = false;
 				}
-				createSessionUpdate() {
+				createSessionUpdate(options = {}) {
 					const responseTypeValue = document.getElementById("responseType").value;
-					return {
-						type: "session.update",
-						event_id: this.nextEventId("session_update"),
-						session: {
-							type: "realtime",
-							model: this.model,
-							instructions: document.getElementById("systemPrompt").value,
-							output_modalities: responseTypeValue === "audio" ? ["audio"] : ["text"],
-							max_output_tokens: 512,
-							audio: {
-								input: {
-									turn_detection: {
-										type: "semantic_vad",
-										create_response: false,
-										interrupt_response: true
-									}
-								},
-								output: { voice: "marin" }
+					const reasoningEffort = getOpenAIRealtimeReasoningEffort();
+					const performanceOnly = options.performanceOnly === true;
+					const includeReasoning = options.includeReasoning !== false && this.reasoningSupported !== false && !!reasoningEffort;
+					const session = {
+						type: "realtime",
+						...(includeReasoning ? { reasoning: { effort: reasoningEffort } } : {}),
+						audio: {
+							input: {
+								...(!performanceOnly ? { transcription: { model: "gpt-4o-mini-transcribe" } } : {}),
+								turn_detection: {
+									type: "semantic_vad",
+									eagerness: getOpenAIRealtimeVadEagerness(),
+									create_response: false,
+									interrupt_response: true
+								}
 							}
 						}
 					};
+					if (!performanceOnly) {
+						session.instructions = document.getElementById("systemPrompt").value;
+						session.output_modalities = responseTypeValue === "audio" ? ["audio"] : ["text"];
+						session.max_output_tokens = 512;
+					}
+					return {
+						type: "session.update",
+						event_id: this.nextEventId("session_update"),
+						session
+					};
+				}
+				updatePerformanceSettings() {
+					if (!this.isConnected()) return false;
+					this.ws.send(JSON.stringify(this.createSessionUpdate({ performanceOnly: true })));
+					updateDiagnostics({ state: "connected", connected: "yes", lastEvent: "session.performance.update.sent", lastError: "-" });
+					return true;
+				}
+				handleRecoverableProviderError(response) {
+					const error = response && response.error ? response.error : {};
+					const identity = [error.param, error.code, error.type, error.message, response && response.message].filter(Boolean).join(" ");
+					if (this.reasoningSupported === false || this.reasoningFallbackAttempted || !/reasoning/i.test(identity) || !/(unsupported|unknown|invalid|not supported|unrecognized)/i.test(identity)) return false;
+					this.reasoningSupported = false;
+					this.reasoningFallbackAttempted = true;
+					this.ws.send(JSON.stringify(this.createSessionUpdate({ performanceOnly: true, includeReasoning: false })));
+					clearError();
+					updateDiagnostics({ state: "connecting", connected: "yes", lastEvent: "session.reasoning.fallback", lastError: "-" });
+					queueCohostStatusAnnouncement("realtime-reasoning", "This OpenAI model does not support reasoning controls. SSN continued without reasoning");
+					return true;
 				}
 				setOutputMuted(muted) {
 					super.setOutputMuted(muted);
@@ -7423,6 +7770,7 @@
 					if (this.peerConnection) {
 						this.peerConnection.ontrack = null;
 						this.peerConnection.onconnectionstatechange = null;
+						this.peerConnection.oniceconnectionstatechange = null;
 						try { this.peerConnection.close(); } catch (_error) {}
 						this.peerConnection = null;
 					}
@@ -7434,6 +7782,24 @@
 					}
 					if (this.ws === this.transportAdapter) this.ws = null;
 					this.transportAdapter = null;
+				}
+				handleWebRTCTransportFailure(reason, message) {
+					if (this.stopped) return;
+					const rejectReady = this.sessionConfigured ? null : this.sessionReadyReject;
+					if (this.connectTimeout) {
+						clearTimeout(this.connectTimeout);
+						this.connectTimeout = null;
+					}
+					this.sessionReadyResolve = null;
+					this.sessionReadyReject = null;
+					this.sessionConfigured = false;
+					this.cleanupWebRTCTransport();
+					updateDiagnostics({ state: "error", connected: "no", lastEvent: reason, lastError: message });
+					if (rejectReady) {
+						rejectReady(new Error(message));
+						return;
+					}
+					if (document.getElementById("startButton")?.dataset?.started === "true") this.scheduleReconnect(reason);
 				}
 				async setupAudioProcessing() {
 					const microphoneTrack = this.stream && this.stream.getAudioTracks().find(track => track.readyState === "live");
@@ -7458,6 +7824,9 @@
 					if (this.isConnected() && this.sessionConfigured) return;
 					this.cleanupWebRTCTransport();
 					this.sessionConfigured = false;
+					this.continuityRestored = false;
+					this.lastContinuityRestoredCount = 0;
+					this.reasoningFallbackAttempted = false;
 					updateDiagnostics({
 						provider: this.config.label,
 						model: this.model,
@@ -7466,20 +7835,26 @@
 						lastEvent: "webrtc.token.request",
 						lastError: "-"
 					});
-					try {
-						this.cohostToolStatus = await requestCohostToolStatus({ cacheMs: 30000 });
-						renderCohostToolPermissionStatus(this.cohostToolStatus, "");
-					} catch (toolStatusError) {
+					const toolStatusRequestId = ++this.toolStatusRequestId;
+					requestCohostToolStatus({ cacheMs: 30000, probeTimeoutMs: 5000, timeoutMs: 5000 }).then(status => {
+						if (this.stopped || toolStatusRequestId !== this.toolStatusRequestId) return;
+						this.cohostToolStatus = status;
+						renderCohostToolPermissionStatus(status, "");
+					}).catch(toolStatusError => {
+						if (this.stopped || toolStatusRequestId !== this.toolStatusRequestId) return;
 						this.cohostToolStatus = null;
 						renderCohostToolPermissionStatus(null, toolStatusError && toolStatusError.message ? toolStatusError.message : "SSN bridge unavailable");
-					}
+					});
 					const responseTypeValue = document.getElementById("responseType").value;
 					const clientSecret = await requestOpenAIRealtimeClientSecret({
 						model: this.model,
 						instructions: document.getElementById("systemPrompt").value,
-						outputModalities: responseTypeValue
+						outputModalities: responseTypeValue,
+						reasoningEffort: getOpenAIRealtimeReasoningEffort(),
+						vadEagerness: getOpenAIRealtimeVadEagerness()
 					});
 					if (clientSecret.model) this.model = clientSecret.model;
+					this.reasoningSupported = clientSecret.reasoning_supported !== false;
 					const microphoneTrack = this.stream && this.stream.getAudioTracks().find(track => track.readyState === "live");
 					if (!microphoneTrack) throw new Error("Select a microphone for OpenAI Realtime.");
 					const peer = new RTCPeerConnection();
@@ -7541,25 +7916,31 @@
 					};
 					channel.onerror = () => {
 						if (this.dataChannel !== channel) return;
-						updateDiagnostics({ state: "error", connected: "no", lastEvent: "webrtc.data.error", lastError: "OpenAI WebRTC data channel failed" });
+						this.handleWebRTCTransportFailure("webrtc.data.error", "OpenAI WebRTC data channel failed");
 					};
 					channel.onclose = () => {
 						if (this.dataChannel !== channel) return;
-						this.sessionConfigured = false;
-						updateDiagnostics({ state: this.stopped ? "stopped" : "disconnected", connected: "no", lastEvent: "webrtc.data.close" });
-						if (!this.stopped && document.getElementById("startButton")?.dataset?.started === "true") this.scheduleReconnect("webrtc.data.close");
+						this.handleWebRTCTransportFailure("webrtc.data.close", "OpenAI WebRTC data channel closed");
 					};
 					peer.onconnectionstatechange = () => {
 						if (this.peerConnection !== peer) return;
 						const state = peer.connectionState;
 						updateDiagnostics({ connected: state === "connected" ? "yes" : "no", lastEvent: "webrtc.peer." + state });
-						if (state === "failed") this.scheduleReconnect("webrtc.peer.failed");
+						if (state === "connected" && this.peerDisconnectTimer) {
+							clearTimeout(this.peerDisconnectTimer);
+							this.peerDisconnectTimer = null;
+						}
+						if (state === "failed") this.handleWebRTCTransportFailure("webrtc.peer.failed", "OpenAI WebRTC peer connection failed");
 						if (state === "disconnected" && !this.peerDisconnectTimer) {
 							this.peerDisconnectTimer = setTimeout(() => {
 								this.peerDisconnectTimer = null;
-								if (this.peerConnection === peer && peer.connectionState === "disconnected") this.scheduleReconnect("webrtc.peer.disconnected");
+								if (this.peerConnection === peer && peer.connectionState === "disconnected") this.handleWebRTCTransportFailure("webrtc.peer.disconnected", "OpenAI WebRTC peer connection stayed disconnected");
 							}, 2500);
 						}
+					};
+					peer.oniceconnectionstatechange = () => {
+						if (this.peerConnection !== peer || peer.iceConnectionState !== "failed") return;
+						this.handleWebRTCTransportFailure("webrtc.ice.failed", "OpenAI WebRTC ICE connection failed");
 					};
 					try {
 						const offer = await peer.createOffer();
@@ -9180,12 +9561,20 @@
 			const customModelsRefreshButton = document.getElementById("customModelsRefresh");
 			const configuredLLMTestContainer = document.getElementById("configuredLLMTestContainer");
 			const configuredLLMTestButton = document.getElementById("configuredLLMTest");
+			const openAIRealtimePerformancePanel = document.getElementById("openaiRealtimePerformance");
+			const openAIRealtimeModelSelect = document.getElementById("openaiRealtimeModel");
+			const openAIRealtimeReasoningSelect = document.getElementById("openaiRealtimeReasoning");
+			const openAIRealtimeVadEagernessSelect = document.getElementById("openaiRealtimeVadEagerness");
+			const openAIRealtimePerformanceSummary = document.getElementById("openaiRealtimePerformanceSummary");
+			const openAIRealtimeContinuityToggle = document.getElementById("openaiRealtimeContinuity");
+			const modelOverrideLabel = document.querySelector('label[for="modelOverride"]');
 			const ttsProviderSelect = document.getElementById("ttsProviderSelect");
 			const geminiReconnectNowButton = document.getElementById("geminiReconnectNow");
 			const geminiResetContextButton = document.getElementById("geminiResetContext");
 			let customModelList = [];
 			let customModelsLoading = false;
 			let customModelsQueuedRefresh = false;
+			if (openAIRealtimeContinuityToggle) openAIRealtimeContinuityToggle.checked = localStorage.getItem(OPENAI_CONTINUITY_STORAGE_KEY) !== "false";
 
 			function getStoredCohostTtsProvider() {
 				return localStorage.getItem("cohostTtsProvider") || "system";
@@ -9287,6 +9676,48 @@
 				} else {
 					localStorage.removeItem(`modelOverride_${providerName}`);
 				}
+			}
+
+			function getOpenAIRealtimeReasoningEffort() {
+				const storedValue = localStorage.getItem("openaiRealtimeReasoningEffort");
+				const value = String(storedValue !== null ? storedValue : openAIRealtimeReasoningSelect?.value || "medium");
+				return ["minimal", "low", "medium", "high", "xhigh"].includes(value) ? value : "medium";
+			}
+
+			function getOpenAIRealtimeVadEagerness() {
+				const storedValue = localStorage.getItem("openaiRealtimeVadEagerness");
+				const value = String(storedValue !== null ? storedValue : openAIRealtimeVadEagernessSelect?.value || "auto");
+				return ["low", "medium", "high", "auto"].includes(value) ? value : "auto";
+			}
+
+			function renderOpenAIRealtimePerformanceSummary() {
+				if (!openAIRealtimePerformanceSummary) return;
+				const model = getEffectiveModelForProvider("chatgpt");
+				const reasoning = getOpenAIRealtimeReasoningEffort();
+				const eagerness = getOpenAIRealtimeVadEagerness();
+				const modelText = model === "gpt-realtime-2.1-mini" ? "Mini lowers latency and API price, with less capability than the full model." : model === "gpt-realtime-2.1" ? "Full quality costs more and may respond more slowly." : "Custom model behavior and pricing depend on that model.";
+				const reasoningText = reasoning + " reasoning";
+				const waitText = eagerness === "high" ? "fast turn-taking (up to about 2s)" : eagerness === "low" ? "patient turn-taking (up to about 8s)" : "balanced turn-taking (up to about 4s)";
+				openAIRealtimePerformanceSummary.textContent = modelText + " Current: " + reasoningText + ", " + waitText + ".";
+			}
+
+			function syncOpenAIRealtimePerformanceControls(providerName) {
+				const isOpenAIRealtime = providerName === "chatgpt";
+				if (openAIRealtimePerformancePanel) openAIRealtimePerformancePanel.style.display = isOpenAIRealtime ? "flex" : "none";
+				if (!isOpenAIRealtime) {
+					if (modelOverrideLabel) modelOverrideLabel.style.display = "block";
+					if (modelOverrideInput) modelOverrideInput.style.display = "block";
+					return;
+				}
+				const model = getEffectiveModelForProvider("chatgpt");
+				if (openAIRealtimeModelSelect) openAIRealtimeModelSelect.value = model === "gpt-realtime-2.1" || model === "gpt-realtime-2.1-mini" ? model : "custom";
+				if (openAIRealtimeReasoningSelect) openAIRealtimeReasoningSelect.value = getOpenAIRealtimeReasoningEffort();
+				if (openAIRealtimeVadEagernessSelect) openAIRealtimeVadEagernessSelect.value = getOpenAIRealtimeVadEagerness();
+				renderOpenAIContinuitySummary();
+				const customModel = openAIRealtimeModelSelect && openAIRealtimeModelSelect.value === "custom";
+				if (modelOverrideLabel) modelOverrideLabel.style.display = customModel ? "block" : "none";
+				if (modelOverrideInput) modelOverrideInput.style.display = customModel ? "block" : "none";
+				renderOpenAIRealtimePerformanceSummary();
 			}
 
 			function getStoredCustomEndpoint(providerName) {
@@ -10577,6 +11008,13 @@
 					sendButton.title = "Start the co-host before you can interact with the AI";
 					return;
 				}
+				const publisherHealthy = typeof publisher.isHealthy === "function" ? publisher.isHealthy() : typeof publisher.isConnected !== "function" || publisher.isConnected();
+				if (!publisherHealthy) {
+					sendButton.disabled = true;
+					sendButton.textContent = "Reconnecting...";
+					sendButton.title = "Wait for the co-host connection to recover";
+					return;
+				}
 				if (providerBusy || currentState === "responding") {
 					sendButton.disabled = true;
 					sendButton.textContent = "Waiting...";
@@ -11049,6 +11487,7 @@
 				if (configuredLLMTestContainer) {
 					configuredLLMTestContainer.style.display = isConfiguredLLMProvider ? "flex" : "none";
 				}
+				syncOpenAIRealtimePerformanceControls(providerName);
 				syncGeminiProviderPanel(providerName);
 				if (isCustomOpenAIProvider) {
 					const endpointValue = getEffectiveCustomEndpoint(providerName);
@@ -11132,6 +11571,40 @@
 					event.preventDefault();
 					modelOverrideInput.blur();
 				}
+			});
+			if (openAIRealtimeModelSelect) {
+				openAIRealtimeModelSelect.addEventListener("change", async function () {
+					if (providerSelect.value !== "chatgpt") return;
+					if (this.value === "custom") {
+						if (modelOverrideLabel) modelOverrideLabel.style.display = "block";
+						modelOverrideInput.style.display = "block";
+						modelOverrideInput.focus();
+						renderOpenAIRealtimePerformanceSummary();
+						return;
+					}
+					modelOverrideInput.value = this.value === REALTIME_PROVIDER_CONFIG.chatgpt.defaultModel ? "" : this.value;
+					saveModelOverride("chatgpt", modelOverrideInput.value);
+					modelOverrideInput.style.display = "none";
+					if (modelOverrideLabel) modelOverrideLabel.style.display = "none";
+					renderOpenAIRealtimePerformanceSummary();
+					await restartActivePublisher();
+				});
+			}
+			async function applyOpenAIRealtimePerformanceSelection() {
+				if (providerSelect.value !== "chatgpt") return;
+				localStorage.setItem("openaiRealtimeReasoningEffort", openAIRealtimeReasoningSelect?.value || "");
+				localStorage.setItem("openaiRealtimeVadEagerness", openAIRealtimeVadEagernessSelect?.value || "auto");
+				renderOpenAIRealtimePerformanceSummary();
+				if (publisher && typeof publisher.updatePerformanceSettings === "function" && publisher.isConnected()) {
+					publisher.updatePerformanceSettings();
+				}
+			}
+			if (openAIRealtimeReasoningSelect) openAIRealtimeReasoningSelect.addEventListener("change", applyOpenAIRealtimePerformanceSelection);
+			if (openAIRealtimeVadEagernessSelect) openAIRealtimeVadEagernessSelect.addEventListener("change", applyOpenAIRealtimePerformanceSelection);
+			if (openAIRealtimeContinuityToggle) openAIRealtimeContinuityToggle.addEventListener("change", function () {
+				localStorage.setItem(OPENAI_CONTINUITY_STORAGE_KEY, this.checked ? "true" : "false");
+				if (!this.checked) clearOpenAIContinuityHistory();
+				renderOpenAIContinuitySummary();
 			});
 			if (customEndpointInput) {
 				customEndpointInput.addEventListener("change", async function () {
@@ -11399,7 +11872,8 @@
 					}
 					monitoringInterval = setInterval(() => {
 						if (startButton.dataset.started !== "true" || !publisher) return;
-						if (!publisher.isConnected()) {
+						const publisherHealthy = typeof publisher.isHealthy === "function" ? publisher.isHealthy() : publisher.isConnected();
+						if (!publisherHealthy) {
 							console.log("Stream should be active but connection is closed, attempting to reconnect");
 							if (publisher.reconnectAttempts < publisher.maxReconnectAttempts) {
 								publisher.reconnect().catch(err => {
@@ -11433,7 +11907,8 @@
 				}
 				window.addEventListener("online", () => {
 					console.log("Network connection restored");
-					if (publisher && !publisher.isConnected() && startButton.dataset.started === "true") {
+					const publisherHealthy = publisher && (typeof publisher.isHealthy === "function" ? publisher.isHealthy() : publisher.isConnected());
+					if (publisher && !publisherHealthy && startButton.dataset.started === "true") {
 						console.log("Attempting to reconnect after network restoration");
 						showError("Network connection restored. Reconnecting...");
 						publisher.reconnect().catch(err => {
@@ -11448,7 +11923,8 @@
 				document.addEventListener("visibilitychange", () => {
 					if (document.visibilityState === "visible") {
 						console.log("Tab became visible");
-						if (publisher && startButton.dataset.started === "true" && !publisher.isConnected()) {
+						const publisherHealthy = publisher && (typeof publisher.isHealthy === "function" ? publisher.isHealthy() : publisher.isConnected());
+						if (publisher && startButton.dataset.started === "true" && !publisherHealthy) {
 							console.log("Disconnected while hidden, reconnecting");
 							publisher.reconnect().catch(err => {
 								console.error("Failed to reconnect after tab became visible:", err);
@@ -11493,6 +11969,7 @@
 					clearConfirmPending = false;
 					clearButton.textContent = "Clear Chat History";
 					clearButton.style.background = "#6c1c1c";
+					clearOpenAIContinuityHistory();
 					if (publisher && typeof publisher.clearConversationHistory === "function") {
 						publisher.clearConversationHistory();
 					} else {

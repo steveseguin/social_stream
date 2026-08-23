@@ -201,10 +201,20 @@
 					<li>Capture the audio from the co-host browser/app in OBS. The native OpenAI voice plays only from <code>cohost.html</code>; <code>cohost-overlay.html</code> receives the avatar and text, not that same audio stream. When supported, choose a virtual cable under <strong>Co-host output</strong> for isolated OBS routing.</li>
 					<li>Keep the stage overlay's speech bubble visible, or provide captions, so the AI response is not available through audio alone.</li>
                 </ol>
-                <div class="guide-note">
-					<p>This uses OpenAI API billing and creates one SSN Realtime conversation over WebRTC, separate from <code>chatgpt.com</code>. Replies are capped at 512 output tokens and cumulative token usage appears in Diagnostics. OpenAI automatically truncates unplayed audio when the streamer interrupts. SSN retains at most 20 recent chat messages for up to 90 seconds, including paid-support, membership, moderator, event, and source-channel context, then removes that temporary context. OpenAI sessions are rolled over before the 60-minute limit; SSN announces that the new session starts without the previous spoken conversation.</p>
-                </div>
+				<div class="guide-note">
+					<p>This uses OpenAI API billing and creates one SSN Realtime conversation over WebRTC, separate from <code>chatgpt.com</code>. Replies are capped at 512 output tokens; Diagnostics shows cumulative token usage and measured first-output latency. OpenAI automatically truncates unplayed audio when the streamer interrupts. SSN retains at most 20 recent chat messages for up to 90 seconds, including paid-support, membership, moderator, event, and source-channel context, then removes that temporary context. SSN checks quiet sessions, reconnects failed transports, and rolls sessions over before the 60-minute limit. A recovered session reapplies the system instructions and performance settings, but starts without the previous spoken conversation.</p>
+				</div>
             </div>
+
+			<div class="guide-card">
+				<h2>OpenAI Speed, Quality, And Cost</h2>
+				<ul class="guide-list">
+					<li><strong>Model:</strong> Mini is normally faster and costs less. Full quality is more capable and costs more.</li>
+					<li><strong>Reasoning effort:</strong> Minimal or Low normally lowers response delay and billed output usage. High or Extra high can improve complex answers but may respond more slowly and cost more. Changes apply while connected.</li>
+					<li><strong>Turn-taking speed:</strong> Fast waits up to about 2 seconds for the end of a thought; Balanced about 4 seconds; Patient about 8 seconds. Fast feels more responsive but can interrupt a natural pause.</li>
+					<li><strong>Diagnostics:</strong> Latency reports the time from the end of the turn to first text or audio, and separates model delay when possible. Network conditions and provider load can still vary between otherwise similar requests.</li>
+				</ul>
+			</div>
 
 			<div class="guide-card">
 				<h2>Optional Stream Controls</h2>
@@ -294,6 +304,8 @@
 					<li>If Desktop shows <strong>Listening (Desktop Whisper)</strong> but never fills <strong>Heard</strong>, confirm the selected microphone is not muted and allow the first model download to finish.</li>
 					<li>If Chrome never fills <strong>Heard</strong>, allow microphone permission, check the operating system's default microphone, confirm internet access, and verify that Chrome Speech Recognition is available.</li>
 					<li>If OpenAI Realtime text appears but no audio plays, verify <strong>Audio Response</strong>, browser audio permissions, and OBS browser/app audio capture. Use <code>&amp;tts</code> only for the separate text-overlay workflow.</li>
+					<li>If OpenAI Realtime replies are slow, try Mini, Low reasoning, and Fast turn-taking, then compare the Latency line in Diagnostics. Higher reasoning and Patient turn-taking deliberately trade speed for depth or longer pauses.</li>
+					<li>If OpenAI Realtime disconnects, leave the co-host running while it retries. Diagnostics identifies the data, peer, provider, or health-check failure. A recovered session keeps the selected system instructions and performance settings but cannot recover the previous spoken conversation.</li>
 					<li>If an Answer, Light Roast, or SSN Configured LLM request times out, check that Social Stream is on, the session matches, Private Chat Bot is enabled, and the selected LLM provider is reachable. OpenAI Realtime does not require Private Chat Bot.</li>
                     <li>If Local Gemma cannot download its model files from the default asset host, set the asset host to your own mirrored Gemma folder.</li>
                     <li>If the hosted trial AI stops responding, it may be disabled or rate-limited; switch to your own token, Ollama, or Custom API.</li>
