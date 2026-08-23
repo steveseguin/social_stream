@@ -1124,7 +1124,10 @@ h2 {
 }
 
 .streaming_chat_title .title-group {
-    white-space: nowrap;
+    flex: 1 1 220px;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .streaming_chat_title .heading-actions {
@@ -1724,6 +1727,8 @@ input:checked + .slider:before {
 .sticky-action-row {
     display: flex;
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     padding: 0;
     margin: 1px 0 0 0;
     border: 0;
@@ -1763,6 +1768,8 @@ input:checked + .slider:before {
 .textInputContainer {
     position: relative;
     width: 200px;
+    max-width: 100%;
+    box-sizing: border-box;
     margin-top: 10px;
     margin-bottom: 4px;
 	display: inline-block;
@@ -1793,6 +1800,7 @@ input:checked + .slider:before {
 .textInput {
     width: 100%;
     height: 100%;
+    box-sizing: border-box;
     padding: 2px;
     background-color: var(--color-accent-subtle);
     color: var(--default-text-color);
@@ -2121,6 +2129,8 @@ input:checked + .slider:before {
 
 	body.ssapp .container {
 		max-width: 1100px; /* Allow the main container to expand */
+		width: 100%;
+		box-sizing: border-box;
 		margin: 0 auto; /* Center the container */
 		padding: 0 1em; /* Add some padding on the sides */
 	}
@@ -2266,6 +2276,55 @@ input:checked + .slider:before {
 	body.ssapp .wrapper.ssapp h3 {
 		 grid-column: 1 / -1; /* Make headers span full width */
 		 margin-bottom: 0.5em;
+	}
+}
+
+/* Keep translated file controls readable in the narrow extension and SSApp panels. */
+.grid .glowingButton,
+.grid3 .glowingButton {
+	width: 100%;
+	min-width: 0 !important;
+	height: auto;
+	min-height: 36px;
+	margin: 0;
+}
+
+.grid .glowingButton span,
+.grid3 .glowingButton span {
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	height: auto;
+	min-height: 36px;
+	line-height: 1.2;
+	letter-spacing: 0.3px;
+	white-space: normal;
+	overflow-wrap: anywhere;
+	overflow: visible;
+	text-overflow: clip;
+}
+
+.donation-thank-you-input {
+	width: min(320px, calc(100% - 50px));
+	max-width: calc(100% - 50px);
+	margin-inline-start: 50px;
+}
+
+#games-preset-select {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+@media (max-width: 440px) {
+	.donation-thank-you-input {
+		width: 100%;
+		max-width: 100%;
+		margin-inline-start: 0;
+	}
+
+	.grid3 {
+		grid-template-columns: 1fr;
 	}
 }
 
@@ -2903,7 +2962,7 @@ input:checked + .slider:before {
                                     <span data-translate="skip-donation-data-from-messages">🏷️🦘 Skip messages containing donations </span>
                                 </div>
 								<div data-keywords="custom donation thank you fallback superchat tip message text">
-									<div class="textInputContainer" style="display: inline-block; width: 320px; margin-left: 50px; margin-top: 6px;">
+									<div class="textInputContainer donation-thank-you-input" style="display: inline-block; margin-top: 6px;">
 										<input type="text" id="customDonationThankYou" class="textInput" autocomplete="off" placeholder="Thank you for your donation!" data-textsetting="customDonationThankYou" />
 										<label for="customDonationThankYou"><span>&gt; Custom donation thank-you text</span></label>
 									</div>
@@ -8869,7 +8928,7 @@ input:checked + .slider:before {
                                 <div class="file-handle-status" data-handle-status="chatLog" data-status="missing" data-persisted="false" role="status" aria-live="polite">
                                     <div class="status-row">
                                         <span class="status-dot" aria-hidden="true"></span>
-                                        <span class="status-label">No file selected.</span>
+                                        <span class="status-label" data-translate="file-status-none">No file selected</span>
                                     </div>
                                     <span class="status-detail"></span>
                                 </div>
@@ -8887,7 +8946,7 @@ input:checked + .slider:before {
 								<div class="file-handle-status" data-handle-status="liveStats" data-status="missing" data-persisted="false" role="status" aria-live="polite">
 									<div class="status-row">
 										<span class="status-dot" aria-hidden="true"></span>
-										<span class="status-label">No file selected.</span>
+										<span class="status-label" data-translate="file-status-none">No file selected</span>
 									</div>
 									<span class="status-detail"></span>
 								</div>
@@ -8923,7 +8982,7 @@ input:checked + .slider:before {
                                 <div class="file-handle-status" data-handle-status="savedNames" data-status="missing" data-persisted="false" role="status" aria-live="polite">
                                     <div class="status-row">
                                         <span class="status-dot" aria-hidden="true"></span>
-                                        <span class="status-label">No file selected.</span>
+                                        <span class="status-label" data-translate="file-status-none">No file selected</span>
                                     </div>
                                     <span class="status-detail"></span>
                                 </div>
@@ -14480,7 +14539,7 @@ input:checked + .slider:before {
 									<div class="file-handle-status" data-handle-status="ticker" data-status="missing" data-persisted="false" role="status" aria-live="polite">
 										<div class="status-row">
 											<span class="status-dot" aria-hidden="true"></span>
-											<span class="status-label">No file selected.</span>
+											<span class="status-label" data-translate="file-status-none">No file selected</span>
 										</div>
 										<span class="status-detail"></span>
 									</div>

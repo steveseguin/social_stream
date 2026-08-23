@@ -120,6 +120,29 @@ async function createHarnessPage(browser) {
 
     assert.deepStrictEqual(pageErrors.map((error) => error.message), []);
     await page.close();
+
+    const earlyHarness = await createHarnessPage(browser);
+    await earlyHarness.page.evaluate(() => window.__addOpenAiTurn(0, "user", "Old conversation history", false));
+    await earlyHarness.page.addScriptTag({ content: source });
+    await earlyHarness.page.waitForTimeout(100);
+    await earlyHarness.page.evaluate(() => {
+      document.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      window.__addOpenAiTurn(1, "user", "Submitted during startup", false);
+      window.__addOpenAiTurn(2, "assistant", "Captured after early submission", false);
+    });
+    await waitForMessageCount(earlyHarness.page, 2);
+    const earlyMessages = await earlyHarness.page.evaluate(() => window.__openAiMessages);
+    assert.deepStrictEqual(earlyMessages.map((item) => item.chatmessage), [
+      "Submitted during startup",
+      "Captured after early submission"
+    ]);
+    assert.strictEqual(
+      await earlyHarness.page.evaluate(() => document.documentElement.getAttribute("data-ssn-openai-ready")),
+      "true",
+      "a real prompt submission should end history suppression"
+    );
+    assert.deepStrictEqual(earlyHarness.pageErrors.map((error) => error.message), []);
+    await earlyHarness.page.close();
   } finally {
     await browser.close();
   }

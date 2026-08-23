@@ -4,7 +4,7 @@
   <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moderator Dashboard</title>
+    <title>Events Dashboard</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
 <style>
 @import url('https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap');
@@ -616,7 +616,7 @@ body.light-mode .meta-value.badge {
 <body>
 <div id="topbar"></div>
 <div id="header">
-    <h1 class="large">Stream Events & Donations Dashboard</h1>
+    <h1 class="large">Events Dashboard</h1>
 	<h1 class="small">Events Dashboard</h1>
 </div>
 <div id="chat-container">
@@ -701,9 +701,24 @@ body.light-mode .meta-value.badge {
 	}
 
 	function applyStaticTranslations() {
-		document.title = getTranslation('events-dashboard-title', document.title || 'Events Dashboard');
+		const dashboardTitle = getTranslation('events-dashboard-title', 'Events Dashboard');
+		document.title = dashboardTitle;
+		document.querySelectorAll('#header h1').forEach(function(heading) {
+			heading.textContent = dashboardTitle;
+		});
 		if (noEventsMessage) {
 			noEventsMessage.textContent = getTranslation('events-waiting-message', 'Waiting for stream events and donations...');
+		}
+	}
+
+	function applyDocumentLanguage(lang) {
+		const normalized = String(lang || '').trim().replace(/_/g, '-');
+		const languageTag = normalized.toLowerCase() === 'en-uk' ? 'en-GB' : normalized;
+		if (!languageTag) return;
+		document.documentElement.lang = languageTag;
+		document.documentElement.dir = /^ar(?:-|$)/i.test(languageTag) ? 'rtl' : 'ltr';
+		if (document.body) {
+			document.body.dir = document.documentElement.dir;
 		}
 	}
 
@@ -712,6 +727,7 @@ body.light-mode .meta-value.badge {
 		if (!lang) {
 			return Promise.resolve();
 		}
+		applyDocumentLanguage(lang);
 		return fetch('./translations/' + encodeURIComponent(lang) + '.json', { cache: 'no-store' })
 			.then(function(response) {
 				if (response.ok) {

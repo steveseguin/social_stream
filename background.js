@@ -7311,11 +7311,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				initTransport(streamID, password);
 			}
 
-			if (isSSAPP) {
-				sendResponse({ state: isExtensionOn });
-			} else {
-				sendResponse({ state: isExtensionOn, streamID: streamID, password: password, cohostCapability: await getOpenAIRealtimeCohostCapability() });
-			}
+			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, cohostCapability: await getOpenAIRealtimeCohostCapability() });
 		} else if (request.cmd && request.cmd === "uploadCustomJs") {
 			localStorage.setItem("customJavaScript", request.data);
 			try {

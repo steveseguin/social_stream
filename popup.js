@@ -30,7 +30,7 @@ let appliedImmediateTranslationLanguage = "";
 function applyPopupTextDirection(lang) {
 	const normalized = normalizePopupTranslationLanguage(lang);
 	const isRtl = normalized === "ar";
-	document.documentElement.lang = normalized || "en";
+	document.documentElement.lang = normalized === "en-uk" ? "en-GB" : (normalized || "en");
 	document.documentElement.dir = isRtl ? "rtl" : "ltr";
 	if (document.body) {
 		document.body.dir = document.documentElement.dir;
@@ -71,6 +71,7 @@ function applyPopupTranslationLanguageImmediately(lang) {
 			}
 			applyPopupTextDirection(normalized);
 			miniTranslate(document.body);
+			renderHandleStatus();
 		})
 		.catch(function(error) {
 			if (requestedImmediateTranslationLanguage === normalized) {
@@ -190,16 +191,16 @@ const HANDLE_STATUS_STATES = {
 };
 const HANDLE_STATUS_KEYS = ["ticker", "chatLog", "liveStats", "savedNames"];
 const HANDLE_STATUS_LABELS = {
-	ticker: "Ticker source",
-	chatLog: "Last message file",
-	liveStats: "Live stats file",
-	savedNames: "Names log"
+	ticker: ["file-status-ticker-source", "Ticker source"],
+	chatLog: ["file-status-last-message", "Last message file"],
+	liveStats: ["file-status-live-stats", "Live stats file"],
+	savedNames: ["file-status-names-log", "Names log"]
 };
 const HANDLE_STATUS_HELP = {
-	ticker: "Select a ticker source file to stream text",
-	chatLog: "Choose where the last message should be saved",
-	liveStats: "Choose where the current live stats should be saved",
-	savedNames: "Choose where unique chat names should be stored"
+	ticker: ["file-status-help-ticker", "Select a ticker source file to stream text"],
+	chatLog: ["file-status-help-chat-log", "Choose where the last message should be saved"],
+	liveStats: ["file-status-help-live-stats", "Choose where the current live stats should be saved"],
+	savedNames: ["file-status-help-names-log", "Choose where unique chat names should be stored"]
 };
 const popupHandleStatusState = {};
 HANDLE_STATUS_KEYS.forEach((key) => {
@@ -239,20 +240,31 @@ function mergeHandleStatusFromBackground(statusMap = {}) {
 	}
 }
 
+function getHandleStatusTranslation(key, fallback, values = {}) {
+	return String(getTranslation(key, fallback)).replace(/\{(\w+)\}/g, function(match, name) {
+		return Object.prototype.hasOwnProperty.call(values, name) ? values[name] : match;
+	});
+}
+
 function getHandleStatusLabel(key, entry) {
-	const fallback = HANDLE_STATUS_LABELS[key] || "Selected file";
+	const label = HANDLE_STATUS_LABELS[key] || ["file-status-selected-file", "Selected file"];
+	const fallback = getHandleStatusTranslation(label[0], label[1]);
 	const fileName = entry.name || fallback;
 	switch (entry.status) {
 		case HANDLE_STATUS_STATES.ACTIVE:
-			return `Active: ${fileName}`;
+			return getHandleStatusTranslation("file-status-active", "Active: {file}", { file: fileName });
 		case HANDLE_STATUS_STATES.READY:
-			return `Ready: ${fileName}`;
+			return getHandleStatusTranslation("file-status-ready", "Ready: {file}", { file: fileName });
 		case HANDLE_STATUS_STATES.NEEDS_PERMISSION:
-			return entry.name ? `Needs permission: ${entry.name}` : "Needs permission";
+			return entry.name
+				? getHandleStatusTranslation("file-status-needs-permission-file", "Needs permission: {file}", { file: entry.name })
+				: getHandleStatusTranslation("file-status-needs-permission", "Needs permission");
 		case HANDLE_STATUS_STATES.ERROR:
-			return entry.name ? `Error: ${entry.name}` : "File error";
+			return entry.name
+				? getHandleStatusTranslation("file-status-error-file", "Error: {file}", { file: entry.name })
+				: getHandleStatusTranslation("file-status-file-error", "File error");
 		default:
-			return "No file selected";
+			return getHandleStatusTranslation("file-status-none", "No file selected");
 	}
 }
 
@@ -261,10 +273,11 @@ function getHandleStatusDetail(key, entry) {
 		return entry.detail;
 	}
 	if (entry.status === HANDLE_STATUS_STATES.MISSING) {
-		return HANDLE_STATUS_HELP[key] || "";
+		const help = HANDLE_STATUS_HELP[key];
+		return help ? getHandleStatusTranslation(help[0], help[1]) : "";
 	}
 	if (!entry.persisted && (entry.status === HANDLE_STATUS_STATES.ACTIVE || entry.status === HANDLE_STATUS_STATES.READY)) {
-		return "Needs to be selected again after reloading.";
+		return getHandleStatusTranslation("file-status-reselect-after-reload", "Needs to be selected again after reloading.");
 	}
 	return "";
 }
@@ -7074,7 +7087,7 @@ function handleSpecialSettings(ele, sync) {
                 streamID: xsx
             }, function (response) { 
 				log("Password updated");
-				if (response.streamID || response.password){
+				if (response && (response.streamID || response.password || response.cohostCapability)){
 					update(response, false);
 				}
 			});
@@ -7090,7 +7103,7 @@ function handleSpecialSettings(ele, sync) {
             password: ele.value || ""
         }, function (response) {
 			log("Password updated");
-			if (response.streamID || response.password){
+			if (response && (response.streamID || response.password || response.cohostCapability)){
 				update(response, false);
 			}
 		});

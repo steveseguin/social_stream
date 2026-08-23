@@ -268,6 +268,9 @@
 	}
 
 	function finishStartupWindow() {
+		if (startupTimer) {
+			clearTimeout(startupTimer);
+		}
 		seedExistingMessages(document);
 		startupMode = false;
 		startupTimer = null;
@@ -346,6 +349,42 @@
 			document.querySelector('[contenteditable="true"][data-lexical-editor="true"]') ||
 			document.querySelector('form [contenteditable="true"]');
 	}
+
+	function isPromptSubmissionEvent(event) {
+		var prompt = getPromptInput();
+		var form;
+		var target;
+		var button;
+		if (!event || !prompt) {
+			return false;
+		}
+		form = prompt.closest ? prompt.closest("form") : null;
+		if (event.type === "submit") {
+			return !!(form && event.target === form);
+		}
+		target = event.target;
+		if (event.type === "keydown") {
+			if (event.key !== "Enter" || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey || event.isComposing) {
+				return false;
+			}
+			return target === prompt || !!(prompt.contains && prompt.contains(target));
+		}
+		if (event.type === "click") {
+			button = target && target.closest ? target.closest('button[type="submit"], button[data-testid="send-button"], button[data-testid="composer-submit-button"]') : null;
+			return !!(form && button && form.contains(button));
+		}
+		return false;
+	}
+
+	function finishStartupForPromptSubmission(event) {
+		if (startupMode && isPromptSubmissionEvent(event)) {
+			finishStartupWindow();
+		}
+	}
+
+	document.addEventListener("submit", finishStartupForPromptSubmission, true);
+	document.addEventListener("keydown", finishStartupForPromptSubmission, true);
+	document.addEventListener("click", finishStartupForPromptSubmission, true);
 
 	chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
 		if (chrome.runtime.lastError || !response) {
