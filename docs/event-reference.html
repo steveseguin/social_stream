@@ -1369,9 +1369,12 @@
                 </article>
 
                 <article class="platform-card" id="joystick-ws">
-                    <h3>Joystick - Bot WebSocket</h3>
-                    <p class="source-note">Implementation: <code>sources/websocket/joystick.js</code></p>
+                    <h3>Joystick</h3>
+                    <p class="source-note">Implementations: <code>sources/joystick.js</code>, <code>sources/inject/joystick-ws.js</code>, and <code>sources/websocket/joystick.js</code></p>
                     <ul class="requirements">
+                        <li>The normal Joystick 2.0 website source runs on the signed-in <code>/u/&lt;channel&gt;/chat</code> page. It reads the page's <code>ChatChannel</code>, <code>WhisperChatChannel</code>, <code>EventLogChannel</code>, and <code>SystemEventChannel</code> Action Cable frames, with a rendered-row fallback for Electron and reconnect cases.</li>
+                        <li>Website chat messages use the same core fields as YouTube, Twitch, and Kick: native <code>id</code>, <code>chatname</code>, <code>chatmessage</code>, <code>chatimg</code>, <code>chatbadges</code>, <code>nameColor</code>, <code>membership</code>, <code>mod</code>, <code>private</code>, <code>username</code>/<code>userid</code>, and <code>timestamp</code> when Joystick supplies them. When the socket omits a username color, the rendered row supplies the same <code>nameColor</code> field used by color-enabled docks.</li>
+                        <li>Website-side message edits replace the matching dock row; deletes, mutes, and blocks remove matching rows using the native ID or username.</li>
                         <li>Uses Joystick bot credentials (<code>client_id</code> + <code>client_secret</code>), not direct user chat credentials.</li>
                         <li>Authorizes on <code>https://joystick.tv/api/oauth/authorize</code>, then exchanges/refreshes tokens at <code>https://api.joystick.tv/api/oauth/token</code>.</li>
                         <li>Connects to <code>wss://api.joystick.tv/cable</code> and subscribes to <code>GatewayChannel</code>.</li>
@@ -1389,18 +1392,23 @@
                         <tbody>
                             <tr>
                                 <td><code>message</code></td>
-                                <td>Joystick <code>ChatMessage</code> / <code>new_message</code>.</td>
-                                <td><code>chatname</code>, <code>chatmessage</code>, <code>chatimg</code>, role badges, <code>userid</code>, and optional <code>sourceName</code>/<code>sourceImg</code> are normalized for overlays; Joystick-specific IDs and role booleans stay in <code>meta</code>.</td>
+                                <td>Joystick <code>ChatMessage</code>, <code>BotMessage</code>, <code>new_message</code>, <code>bot_message</code>, <code>event_bot_message</code>, <code>pvp_message</code>, and whispers.</td>
+                                <td>Regular chat has no <code>event</code>. The native ID is placed in top-level <code>id</code> and <code>meta.messageId</code>; roles and private state use the established top-level/badge fields.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>new_follower</code></td>
                                 <td>Joystick <code>StreamEvent</code> with type <code>Followed</code>.</td>
-                                <td>Mapped into standard follower event shape with extra details in <code>meta</code>.</td>
+                                <td>Uses the standard follower shape and is deduplicated against Joystick's matching bot row. Optional <code>meta.userId</code>/<code>meta.followedAt</code> are included only when Joystick supplies them.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>new_subscriber</code> / <code>subscription_gift</code></td>
+                                <td>Joystick event types <code>NewSubscription</code> / <code>GiftedSubscription</code>.</td>
+                                <td>Uses the Kick-compatible subscription metadata keys: <code>eventType</code>, <code>subscriber</code>, <code>gifter</code>, <code>totalGifted</code>, <code>duration</code>, and <code>plan</code>.</td>
                             </tr>
                             <tr>
                                 <td><code>donation</code></td>
                                 <td>Joystick <code>StreamEvent</code> types <code>Tipped</code> / <code>TipMenu</code>.</td>
-                                <td><code>hasDonation</code> is populated when token amount can be inferred from metadata/text; <code>meta.amount</code>, <code>meta.currency</code>, <code>meta.supporter</code>, and tip menu details carry structured data.</td>
+                                <td><code>hasDonation</code> and numeric <code>donoValue</code> are populated when the token amount is available, and the matching Joystick bot row is deduplicated. <code>meta</code> uses the established Kick support-event keys: <code>eventType</code>, <code>supporter</code>, <code>amount</code>, <code>currency</code>, <code>message</code>, <code>giftName</code>, <code>giftType</code>, and <code>tier</code>.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>stream_online</code> / <code>stream_offline</code></td>
@@ -1411,6 +1419,21 @@
                                 <td><code>user_enter</code> / <code>user_leave</code></td>
                                 <td>Joystick <code>UserPresence</code> types <code>enter_stream</code> / <code>leave_stream</code>.</td>
                                 <td>Presence notifications are emitted as event messages and can be suppressed by hide-events settings. Hide-events also suppresses non-donation stream events.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>The signed-in website source receives <code>ViewerCountUpdated</code> through <code>EventLogChannel</code>.</td>
+                                <td>Uses a plain integer <code>meta</code>, matching YouTube, Twitch, and Kick. Emitted only when viewer-count or hype mode is enabled. The separate bot-credential source still does not receive viewer counts.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>follower_update</code> / <code>subscriber_update</code></td>
+                                <td>Joystick follower/subscriber count-update events.</td>
+                                <td>Uses a plain integer <code>meta</code>, matching the Twitch counter contract.</td>
+                            </tr>
+                            <tr>
+                                <td>Ignored internal notifications</td>
+                                <td><code>ChatMessageReceived</code>, device state, and unmapped widget refreshes such as tip-goal/PvP/subathon state.</td>
+                                <td>These are transport or page-state notifications, not Social Stream events. They are not converted into invented <code>snake_case</code> event names; the real <code>ChatChannel/new_message</code> row remains the single chat payload.</td>
                             </tr>
                         </tbody>
                     </table>
