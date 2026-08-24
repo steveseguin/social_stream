@@ -161,7 +161,7 @@ Important URL/query behavior:
 
 | Parameter | Behavior |
 | --- | --- |
-| `session` | Required for SSN live chat and configured popup LLM bridge. |
+| `session` | Required for SSN live chat, the configured popup LLM bridge, and hosted OpenAI Realtime client-secret requests. |
 | `password` | Optional session password. |
 | `aioverlay` / `overlaylabel` / `cohostOverlayLabel` | Target label for mirrored overlay payloads; default `cohost-overlay`. |
 | `noaioverlay` / `nooverlay` | Stops mirroring cohost output to the stage overlay. |
@@ -174,7 +174,7 @@ Live Chat mode:
 | Mode | Behavior |
 | --- | --- |
 | `off` | Does not process SSN chat feed. |
-| `monitor` | Receives and displays last chat status but does not prompt the AI. This is the default. |
+| `monitor` | Adds recent viewer messages to supported realtime AI context without triggering a reply. The AI waits until the streamer asks about chat. This is the default. |
 | `questions` | Prompts the AI for questions, mentions, or messages containing cohost/host/AI/bot language. |
 | `all` | Prompts the AI for every received message, subject to queue/rate checks. |
 
@@ -185,6 +185,7 @@ Live Chat state:
 - Prompt age limit is 45 seconds.
 - Minimum prompt interval is 3500 ms.
 - Response settle time is 1200 ms.
+- Context-only mode batches up to 20 recent messages, expires them after 90 seconds, and does not create a model response.
 
 Live Chat transport:
 
@@ -197,6 +198,16 @@ Configured LLM bridge:
 - `cohost.html` can use the SSN popup's configured LLM provider through a hidden bridge labeled `cohost-llm`.
 - If no `session` is present, the configured LLM bridge cannot reach the SSN background service.
 - Timeouts tell the user to check that SSN is on, the same session is used, and Chat Bot - Private Interface is enabled.
+
+OpenAI Realtime bridge:
+
+- The standard OpenAI key remains in the extension/Desktop background under `chatgptApiKey`.
+- `cohost.html` requests a short-lived client secret through the capability-protected SSN session bridge, then connects to OpenAI using WebRTC and a Realtime data channel.
+- OpenAI Realtime does not require the separate Private Chat Bot setting. Hosted requests require the popup-generated 256-bit capability, which is scoped to the SSN session, expires after 12 hours, and is rate limited.
+- WebRTC playback interruption and truncation are server-managed. The legacy WebSocket audio-buffer path remains for other realtime providers.
+- Native OpenAI Realtime function tools are attached only to direct `streamer_voice` and `streamer_text` responses. Viewer-chat, greeting, context, and tool-result turns receive an explicit no-tools response configuration.
+- Tool execution remains capability-gated in `background.js`, requires a persistent popup permission plus a controller-page opt-in, resolves at most one mutating call per streamer turn, and returns a `function_call_output` before a no-tools continuation response.
+- Spotify, OBS scene switching, and feature/clear chat are the initial allowlisted tools. OBS scene names must match `cohostObsScenes`; feature/clear routes through the connected Streaming Chat dock.
 
 Stage mirroring:
 
@@ -377,7 +388,7 @@ Build and save the overlay in `aiprompt.html?session=YOUR_SESSION`, then open th
 For cohost live chat:
 
 ```text
-Open `cohost.html?session=YOUR_SESSION`. Live Chat defaults to monitor mode; switch to Questions or All if the cohost should answer. The AI provider and Private Chat Bot bridge must be configured before it can generate responses.
+Open the popup-generated `cohost.html?session=YOUR_SESSION` link. Live Chat defaults to context-only monitor mode: the AI receives recent viewer messages silently and answers about them when the streamer asks. Switch to Questions or All for automatic spoken replies. Configure normal providers on the co-host page. For OpenAI Realtime, configure ChatGPT API in the SSN popup; the generated link's private capability authorizes the short-lived WebRTC client secret without enabling Private Chat Bot.
 ```
 
 ## Do Not Overclaim

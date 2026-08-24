@@ -39,7 +39,7 @@ Support answers should include:
 
 | Source | Public Setup | Generated Setting | Manifest Matches | Captures | Bridge Notes |
 | --- | --- | --- | --- | --- | --- |
-| ChatGPT/OpenAI page | Toggle-required ChatGPT card | `openai` | `https://chat.openai.com/*`, `https://chatgpt.com/*` | ChatGPT conversation rows, with user/assistant name inference and assistant icon fallback | `getSource` returns `openai`; `focusChat` targets `#prompt-textarea`; waits for streaming responses before sending. |
+| ChatGPT/OpenAI page | Toggle-required ChatGPT card | `openai` | `https://chat.openai.com/*`, `https://chatgpt.com/*` | New user and ChatGPT turns; existing history and in-progress assistant output are ignored | `getSource` returns `openai`; `focusChat` targets the current prompt composer; completed responses are emitted after streaming settles. |
 | Slack | Toggle-required Slack card | `slack` | `https://app.slack.com/client/*` | Message text, sender, avatar, images/emotes preserved when not in text-only mode | `getSource` returns `slack`; focuses contenteditable textbox; dedupes by Slack virtual-list IDs and recent sender/message state. |
 | Telegram | Toggle-required Telegram card | `telegram` | `https://*.telegram.org/z/*`, `https://*.telegram.org/a/*`, `https://*.telegram.org/k/*` | Web Telegram messages, images/content images, chat title/avatar fallback | `telegram.js` handles `/z` and `/a`; `telegramk.js` handles `/k`; both return source/type `telegram`. |
 | WhatsApp Web | Toggle-required WhatsApp card | `whatsapp` | `https://web.whatsapp.com/` | Rendered WhatsApp messages, excluding quoted/reply text where possible | `getSource` returns `whatsapp`; focuses footer textbox; public docs note no avatar support; script includes a hidden-tab keepalive. |
@@ -63,7 +63,7 @@ These are not ordinary public stream-chat sources:
 
 ### ChatGPT/OpenAI Page
 
-`sources/openai.js` watches the ChatGPT page for added conversation groups and ignores assistant messages that are still streaming. It emits `type: "openai"` with `chatname` inferred as `User` or `ChatGPT`.
+`sources/openai.js` watches semantic ChatGPT conversation roles, ignores already-rendered history, and waits until assistant streaming settles. It emits `type: "openai"` with `chatname` set to `User` or `ChatGPT`. Navigating to another conversation reseeds the history guard so old turns are not replayed into SSN.
 
 Do not confuse this with SSN's OpenAI API/LLM integration. This is page capture from `chat.openai.com` or `chatgpt.com`, not the provider used by SSN AI features.
 
@@ -148,8 +148,9 @@ For the scripts inspected in this pass:
 - All implement `getSource`.
 - All inspected scripts implement or attempt `focusChat`.
 - None implements a source-level `SEND_MESSAGE` handler.
+- The extension's generic debugger relay can still type into a source that implements `focusChat`. ChatGPT is therefore an experimental relay destination when `relayall` is enabled and `relaytargets` includes `openai`; this is a background automation path, not a direct source-script send API.
 
-That means a user seeing chat in SSN does not prove SSN can reply into Slack, Telegram, WhatsApp, Meet, Teams, Zoom, Webex, Chime, or ChatGPT through these content scripts.
+That means a user seeing chat in SSN does not by itself prove that browser relay works for that site. Verify focus, typing, submission, and site-specific rate limits in the actual extension runtime before promising two-way support.
 
 If a feature appears to send back through some other automation path, source-check that exact background/dock/debugger path before documenting it.
 

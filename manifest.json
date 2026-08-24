@@ -347,7 +347,14 @@
 		},
 		{
 			"js": ["./sources/joystick.js"],
-			"matches": ["https://joystick.tv/u/*/chat"]
+			"matches": ["https://joystick.tv/u/*/chat"],
+			"run_at": "document_start"
+		},
+		{
+			"js": ["./sources/inject/joystick-ws.js"],
+			"matches": ["https://joystick.tv/u/*/chat"],
+			"run_at": "document_start",
+			"world": "MAIN"
 		},
 		{
 			"js": ["./sources/rooter.js"],

@@ -64,6 +64,10 @@ class LLMServiceError extends Error {
         this.endpoint = details.endpoint || null;
         this.hint = details.hint || null;
         this.details = details.details || null;
+        this.requestId = details.requestId || null;
+        this.organization = details.organization || null;
+        this.project = details.project || null;
+        this.missingScope = details.missingScope || null;
         this.reported = false;
     }
 }
@@ -72,6 +76,11 @@ function getLLMHint(status, code, details = {}) {
     const provider = details.provider || '';
     const model = details.model || '';
     const message = String(details.message || '').toLowerCase();
+    const normalizedCode = String(code || '').toLowerCase();
+
+    if (provider === 'chatgpt' && (normalizedCode === 'missing_scope' || details.missingScope || message.includes('missing scope'))) {
+        return 'OpenAI rejected the credential\'s effective model-request permission. This is not a missing request field. Confirm this is a standard project API key and that your project role permits model requests. If a newly created unrestricted key still fails, test it directly against OpenAI and include the Request ID when contacting OpenAI support.';
+    }
 
     if (provider === 'hostedllm' && (message.includes('failed to fetch') || message.includes('networkerror') || message.includes('network error'))) {
         return 'The SSN hosted trial endpoint is unavailable from this browser. Try again later, use Ollama, or enter your own hosted token/endpoint.';
@@ -150,6 +159,35 @@ function createLLMError(baseDetails, extra = {}) {
     const err = new LLMServiceError(merged);
     reportLLMError(err);
     return err;
+}
+
+function getLLMResponseHeader(headers, name) {
+    if (!headers) return null;
+    if (typeof headers.get === 'function') {
+        return headers.get(name) || null;
+    }
+    const target = String(name || '').toLowerCase();
+    for (const key in headers) {
+        if (String(key).toLowerCase() === target) {
+            return headers[key] || null;
+        }
+    }
+    return null;
+}
+
+function getLLMResponseMetadata(headers, errorData) {
+    const errorPayload = errorData?.error && typeof errorData.error === 'object' ? errorData.error : errorData;
+    let missingScope = errorPayload?.missing_scope || errorPayload?.missingScope || null;
+    if (!missingScope && typeof errorPayload?.message === 'string') {
+        const match = errorPayload.message.match(/missing\s+scope\s*:\s*([a-zA-Z0-9._:-]+)/i);
+        if (match) missingScope = match[1].replace(/[.,;:]+$/, '');
+    }
+    return {
+        requestId: getLLMResponseHeader(headers, 'x-request-id'),
+        organization: getLLMResponseHeader(headers, 'openai-organization'),
+        project: getLLMResponseHeader(headers, 'openai-project'),
+        missingScope
+    };
 }
 
 function stripLLMReasoningOutput(response) {
@@ -1813,11 +1851,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 								streamProcessor.flush();
 								resolve(stripLLMReasoningOutput(fullResponse));
 							} else if (typeof chunk === 'object' && chunk.error) {
+								const responseMetadata = getLLMResponseMetadata(chunk.headers, chunk);
 								const err = createLLMError(buildContext(), {
 									status: chunk.status || chunk.error?.status || null,
 									code: chunk.code || chunk.error?.code || null,
 									message: chunk.message || chunk.error?.message || 'Streaming response returned an error.',
-									details: chunk
+									details: chunk,
+									...responseMetadata
 								});
 								reject(err);
 							} else {
@@ -1829,7 +1869,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 							channelId,
 							url: endpoint,
 							body: message,
-							headers
+							headers,
+							diagnostics: { kind: 'llm', provider, model: message.model }
 						});
 
 						if (abortController) {
@@ -1839,7 +1880,12 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						}
 					});
 				} else {
-					const response = await fetchNode(endpoint, headers, 'POST', message);
+					const electronFetch = typeof fetchNodeAsync === 'function' ? fetchNodeAsync : fetchNode;
+					const response = await electronFetch(endpoint, headers, 'POST', message, {
+						kind: 'llm',
+						provider,
+						model: message.model
+					});
 					
 					if (response.status !== 200) {
 						let errorMessage = '';
@@ -1850,11 +1896,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						} catch(e) {
 							errorMessage = `HTTP error! status: ${response.status}`;
 						}
+						const responseMetadata = getLLMResponseMetadata(response.headers, errorData);
 						throw createLLMError(buildContext(), {
 							status: response.status,
 							code: errorData?.error?.code || errorData?.error?.type || errorData?.code || null,
 							message: errorMessage,
-							details: errorData || response.data
+							details: errorData || response.data,
+							...responseMetadata
 						});
 					}
 
@@ -1879,11 +1927,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						} catch(e) {
 							// ignore parse issue; keep default message
 						}
+						const responseMetadata = getLLMResponseMetadata(response.headers, errorPayload);
 						throw createLLMError(buildContext(), {
 							status: response.status,
 							code: errorPayload?.error?.code || errorPayload?.error?.type || errorPayload?.code || null,
 							message: errorMessage,
-							details: errorPayload
+							details: errorPayload,
+							...responseMetadata
 						});
 					}
 
@@ -1925,11 +1975,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						} catch(e) {
 							errorMessage = `HTTP error! status: ${response.status}`;
 						}
+						const responseMetadata = getLLMResponseMetadata(response.headers, errorData);
 						throw createLLMError(buildContext(), {
 							status: response.status,
 							code: errorData?.error?.code || errorData?.error?.type || errorData?.code || null,
 							message: errorMessage,
-							details: errorData
+							details: errorData,
+							...responseMetadata
 						});
 					}
 

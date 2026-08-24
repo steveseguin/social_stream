@@ -547,7 +547,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         {
             name: 'StageTEN.tv',
-            icon: 'stageten.png',
+            icon: 'generic.png',
             description: 'Interactive live streaming platform.',
             type: 'standard',
             instructions: `
@@ -596,14 +596,17 @@ document.addEventListener('DOMContentLoaded', function() {
         {
             name: 'ChatGPT',
             icon: 'openai.png',
-            description: 'OpenAI\'s conversational AI platform.',
+            description: 'Capture new User and ChatGPT turns from an open browser conversation, or use the tab as an experimental relay companion.',
             type: 'toggle',
             instructions: `
                 <ul>
-                    <li>REQUIRES the TOGGLE in menu to enable it</li>
-                    <li>URL: https://chat.openai.com/chat</li>
+                    <li>Enable the ChatGPT opt-in toggle in the Social Stream Ninja menu</li>
+                    <li>Open or reload https://chatgpt.com/ after enabling it</li>
+                    <li>Only new conversation turns are captured; existing history is ignored</li>
+                    <li>For experimental companion mode, set relay destinations to <code>openai</code></li>
                 </ul>
-            `
+            `,
+            notes: 'No OpenAI API key is used for browser capture. This is separate from the ChatGPT API provider. Regular text chat is the most reliable target; ChatGPT Voice mode and page controls can change. See the <a href="ai-modes-guide.html#browser-companion">ChatGPT browser companion guide</a>.'
         },
         {
             name: 'Livestorm.io',
@@ -887,30 +890,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			`
 		},
 		{
-			name: 'Claude.ai',
-			icon: 'claude.png',
-			description: 'Anthropic\'s conversational AI platform.',
-			type: 'toggle',
-			instructions: `
-				<ul>
-					<li>REQUIRES the TOGGLE in menu to enable it</li>
-					<li>URL: https://claude.ai/*</li>
-				</ul>
-			`
-		},
-		{
-			name: 'SoulBound.tv',
-			icon: 'soulbound.png',
-			description: 'Live streaming platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>URL: https://soulbound.tv/*</li>
-					<li>No pop out needed</li>
-				</ul>
-			`
-		},
-		{
 			name: 'Truffle.vip',
 			icon: 'truffle.png',
 			description: 'Chat platform for creators.',
@@ -983,19 +962,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			notes: 'Keep the coin page open with the live chat visible.'
 		},
 		{
-			name: 'Noice',
-			icon: 'noice.png',
-			description: 'Audio streaming platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>URL: https://noice.com/*</li>
-					<li>Uses main video chat</li>
-				</ul>
-			`,
-			notes: 'Also works with: https://studio.noice.com/popout/*'
-		},
-		{
 			name: 'NicoVideo',
 			icon: 'nicovideo.png',
 			description: 'Japanese video streaming platform.',
@@ -1019,17 +985,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			`
 		},
 		{
-			name: 'Moonbeam',
-			icon: 'moonbeam.png',
-			description: 'Streaming platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>URL: https://www.moonbeam.stream/*</li>
-				</ul>
-			`
-		},
-		{
 			name: 'FC2',
 			icon: 'fc2.png',
 			description: 'Japanese content platform with streaming.',
@@ -1043,7 +998,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		},
 		{
 			name: 'Vertical Pixel Zone',
-			icon: 'verticalpixelzone.png',
+			icon: 'generic.png',
 			description: 'Streaming platform.',
 			type: 'standard',
 			instructions: `
@@ -1089,7 +1044,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		},
 		{
 			name: 'Circle.so',
-			icon: 'circle.png',
+			icon: 'generic.png',
 			description: 'Community platform.',
 			type: 'standard',
 			instructions: `
@@ -1304,7 +1259,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		},
 		{
 			name: 'Tellonym',
-			icon: 'tellonym.png',
+			icon: 'generic.png',
 			description: 'Anonymous messaging platform.',
 			type: 'standard',
 			instructions: `
@@ -1432,19 +1387,8 @@ document.addEventListener('DOMContentLoaded', function() {
 			`
 		},
 		{
-			name: 'Blaze',
-			icon: 'blaze.png',
-			description: 'Social streaming platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>URL: https://blaze.stream/*</li>
-				</ul>
-			`
-		},
-		{
 			name: 'Versus.cam',
-			icon: 'versuscam.png',
+			icon: 'generic.png',
 			description: 'Testing platform.',
 			type: 'standard',
 			instructions: `
@@ -1456,7 +1400,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		},
 		{
 			name: 'Vercel Demo',
-			icon: 'vercel.png',
+			icon: 'generic.png',
 			description: 'Social Stream Ninja demo.',
 			type: 'standard',
 			instructions: `
@@ -1614,18 +1558,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			`
 		},
 		{
-			name: 'Rozy.tv',
-			icon: 'generic.png',
-			description: 'Live streaming platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>URL: https://play.rozy.tv/*</li>
-					<li>No pop out needed</li>
-				</ul>
-			`
-		},
-		{
 			name: 'QuickChannel',
 			icon: 'quickchannel.png',
 			description: 'Live streaming and video platform.',
@@ -1682,6 +1614,79 @@ document.addEventListener('DOMContentLoaded', function() {
 				<ul>
 					<li>URL: https://lfg.tv/*</li>
 					<li>No pop out needed</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Kwai Studio',
+			icon: 'kwai.png',
+			description: 'Kwai live-streaming studio chat and activity feed.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://studio.kwai.com/*</li>
+					<li>Keep the chat or activity-feed panel visible</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Livestream.com',
+			icon: 'livestream.png',
+			description: 'Live video and event streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://livestream.com/accounts/*</li>
+					<li>Open the event page with chat visible</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Open Streaming Platform',
+			icon: 'openstreamingplatform.png',
+			description: 'Open-source video streaming platform with chat-only views.',
+			type: 'popout',
+			instructions: `
+				<ul>
+					<li>Open the chat-only view ending in chatOnly=True</li>
+					<li>Example: https://demo.openstreamingplatform.com/view/*chatOnly=True*</li>
+				</ul>
+			`
+		},
+		{
+			name: 'StreamElements',
+			icon: 'streamelements.png',
+			description: 'Overlay relay for tips, subscriptions, follows, and other alerts.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>Open your https://streamelements.com/overlay/* page</li>
+					<li>Keep the overlay page open while streaming</li>
+				</ul>
+			`
+		},
+		{
+			name: 'TikFinity Activity Feed',
+			icon: 'tikfinity.png',
+			description: 'Read-only TikTok chat and event ingestion through TikFinity.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>Open the TikFinity activity-feed widget</li>
+					<li>URL: https://tikfinity.zerody.one/widget/activity-feed*</li>
+				</ul>
+			`,
+			notes: 'Events are normalized as TikTok events; chat send-back is not supported through this feed.'
+		},
+		{
+			name: 'XP Sync',
+			icon: 'xpsync.png',
+			description: 'Live chat platform with replies, follows, Sparks, and viewer updates.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://xpsync.com/* or https://www.xpsync.com/*</li>
+					<li>Open the live page with chat visible</li>
 				</ul>
 			`
 		},

@@ -24,17 +24,52 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (mobileNavToggle) {
-        mobileNavToggle.addEventListener('click', function() {
-            this.classList.toggle('active');
-            nav.classList.toggle('active');
-        });
+		var mobileNavIsButton = mobileNavToggle.tagName === 'BUTTON';
+		if (!mobileNavIsButton) {
+			mobileNavToggle.setAttribute('role', 'button');
+			mobileNavToggle.setAttribute('tabindex', '0');
+		}
+		if (nav && !nav.id) nav.id = 'site-navigation';
+		mobileNavToggle.setAttribute('aria-label', 'Open navigation menu');
+		mobileNavToggle.setAttribute('aria-controls', nav ? nav.id : 'site-navigation');
+		mobileNavToggle.setAttribute('aria-expanded', 'false');
+		var setMobileNavOpen = function(open) {
+			mobileNavToggle.classList.toggle('active', open);
+			if (nav) nav.classList.toggle('active', open);
+			mobileNavToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+			mobileNavToggle.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
+		};
+		mobileNavToggle.addEventListener('click', function() {
+			setMobileNavOpen(!(nav && nav.classList.contains('active')));
+		});
+		if (!mobileNavIsButton) {
+			mobileNavToggle.addEventListener('keydown', function(event) {
+				if (event.key === 'Enter' || event.key === ' ') {
+					event.preventDefault();
+					this.click();
+				}
+			});
+		}
+		if (nav) {
+			nav.addEventListener('click', function(event) {
+				if (event.target && event.target.closest && event.target.closest('a')) setMobileNavOpen(false);
+			});
+		}
+		document.addEventListener('keydown', function(event) {
+			if (event.key === 'Escape' && nav && nav.classList.contains('active')) {
+				setMobileNavOpen(false);
+				mobileNavToggle.focus();
+			}
+		});
     }
 
     // Close mobile nav when clicking outside
     document.addEventListener('click', function(e) {
-        if (nav.classList.contains('active') && !nav.contains(e.target) && !mobileNavToggle.contains(e.target)) {
-            nav.classList.remove('active');
-            mobileNavToggle.classList.remove('active');
+		if (nav && mobileNavToggle && nav.classList.contains('active') && !nav.contains(e.target) && !mobileNavToggle.contains(e.target)) {
+			mobileNavToggle.classList.remove('active');
+			nav.classList.remove('active');
+			mobileNavToggle.setAttribute('aria-expanded', 'false');
+			mobileNavToggle.setAttribute('aria-label', 'Open navigation menu');
         }
     });
 

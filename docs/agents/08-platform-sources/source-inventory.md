@@ -75,7 +75,6 @@ Support note: if one of these sources is not capturing, first verify that the us
 ## Public Toggle-Required Entries
 
 - ChatGPT
-- Claude.ai
 - Discord
 - Google Meet
 - Instagram Post Comments

@@ -116,6 +116,20 @@
                 <div class="guide-note">
                     <p><strong>Ollama keep-alive:</strong> <code>0</code> unloads the model after a request. It does not disable the bot, but every later reply may need another cold start.</p>
                 </div>
+
+                <h3>OpenAI / ChatGPT API Setup</h3>
+                <p>Use a standard OpenAI API key for model requests. An OpenAI Admin API key is intended for organization administration endpoints, not normal model calls. The key must belong to the project you intend to bill and its effective permissions must allow model requests.</p>
+                <ol class="guide-steps">
+                    <li>Create or review the key in the <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">OpenAI Platform API keys page</a>. Never paste the key into a support message or diagnostic report.</li>
+                    <li>In Social Stream, select <strong>ChatGPT API</strong>, paste the complete key, enter a model available to that project, and select <strong>Test selected chat bot</strong>.</li>
+                    <li>If the test reports <code>Status: 401</code>, <code>Code: missing_scope</code>, and <code>Missing scope: model.request</code>, OpenAI rejected the credential because its effective access does not include model requests. <code>model.request</code> is a permission named by the server, not a setting to add to the prompt or model name.</li>
+                    <li>Confirm that this is a standard project API key, that the expected project is selected, and that the key is unrestricted or explicitly allowed to make model requests. If uncertain, create a new standard key in the correct project and replace the saved key in Social Stream.</li>
+                    <li>If automatic browser translation is active on the OpenAI Platform and the permission controls or labels behave unexpectedly, switch to the original English page before reviewing and saving the key settings. This helped one reported setup, but it is not a documented universal cause of OpenAI 401 errors.</li>
+                </ol>
+                <div class="warning-note">
+                    <p><strong>Credits and permissions are separate:</strong> adding API credit does not grant a missing key scope. OpenAI documents invalid credentials and endpoint permissions as 401 errors, while exhausted quota is normally a 429 error. See OpenAI's <a href="https://developers.openai.com/api/docs/guides/error-codes" target="_blank" rel="noopener">API error guide</a> and <a href="https://developers.openai.com/api/reference/overview#start-here" target="_blank" rel="noopener">authentication reference</a>.</p>
+                </div>
+                <p>If the error continues, copy the status, code, missing scope, and Request ID shown by Social Stream, then send the in-app diagnostic report soon after reproducing it. The report records safe request metadata but excludes API keys and prompt content. Provide the Request ID and timestamp to OpenAI support if the credential and project settings look correct.</p>
             </div>
 
             <div class="guide-card">
@@ -146,7 +160,7 @@
                 <h2>3. Run a Safe End-to-End Test</h2>
                 <ol class="guide-steps">
                     <li>Turn Social Stream on and confirm the live source is open.</li>
-                    <li>Send a normal message from a second viewer account and confirm it appears in the Social Stream dock.</li>
+                    <li>Send a normal message from a second viewer account directly in the source platform's chat, such as YouTube or Twitch, and confirm it appears in the Social Stream dock. Do not use a message typed into the dock or host-chat controls for this first test; reflected bot or host messages can be skipped to prevent reply loops.</li>
                     <li>Confirm the provider test says <strong>Connected</strong>.</li>
                     <li>Use the first-test Primary bot settings above, including overlay-only mode.</li>
                     <li>Open the <code>bot.html</code> link shown under <strong>Overlay Page and TTS for Chat Bot</strong>. Use the generated link so it has the same session.</li>
@@ -224,8 +238,11 @@
                     </thead>
                     <tbody>
                         <tr><td data-label="What You See">Provider test fails</td><td data-label="Likely Area">Provider setup</td><td data-label="What to Check">Endpoint, API key, model name, local service status, CORS/firewall, provider quota, and the exact error below the test button.</td></tr>
+                        <tr><td data-label="What You See"><code>401 missing_scope</code> / <code>model.request</code></td><td data-label="Likely Area">OpenAI key permissions</td><td data-label="What to Check">Use a standard key from the intended project, not an Admin key; verify that model requests are allowed; replace any old saved key; and retry from the original English OpenAI Platform page if automatic translation made the controls unreliable. Credits do not add this permission.</td></tr>
+                        <tr><td data-label="What You See"><code>401 invalid_api_key</code> or incorrect API key</td><td data-label="Likely Area">OpenAI credential</td><td data-label="What to Check">Look for a missing character or space, confirm the key was not deleted or deactivated, confirm the intended organization/project, and make sure Social Stream is not still using an older saved key.</td></tr>
+                        <tr><td data-label="What You See"><code>429</code> quota or rate-limit error</td><td data-label="Likely Area">Provider billing or limits</td><td data-label="What to Check">Confirm API billing and project budget separately from ChatGPT subscriptions, then reduce request rate or wait if the provider reports a temporary rate limit.</td></tr>
                         <tr><td data-label="What You See">Connected, but the viewer message is missing from Dock</td><td data-label="Likely Area">Chat capture</td><td data-label="What to Check">Social Stream on/off state, source window, platform login, source allow/filter settings, and whether the correct live chat is open.</td></tr>
-                        <tr><td data-label="What You See">Message reaches Dock, but no reply reaches the bot overlay</td><td data-label="Likely Area">Primary bot decision</td><td data-label="What to Check">Primary enable toggle, trigger match, moderator-only mode, custom bot name, busy/cooldown limits, additional instructions, and temporary unscreened-reply mode.</td></tr>
+                        <tr><td data-label="What You See">Message reaches Dock, but no reply reaches the bot overlay</td><td data-label="Likely Area">Primary bot decision</td><td data-label="What to Check">Confirm the message came directly from the source chat, then check the Primary enable toggle, trigger match, moderator-only mode, custom bot name, busy/cooldown limits, additional instructions, and temporary unscreened-reply mode.</td></tr>
                         <tr><td data-label="What You See">Reply reaches the overlay, but not platform chat</td><td data-label="Likely Area">Send-back routing</td><td data-label="What to Check">Overlay-only mode, platform/source write support, account authorization, chat input availability, account-role routing, and the Disable host chat setting.</td></tr>
                         <tr><td data-label="What You See">Reply remains visible after TTS</td><td data-label="Likely Area">Bot overlay timing</td><td data-label="What to Check">Enable Hide after TTS, length-based auto-hide, or a fixed display time under the bot overlay options. Use <code>clearBotOverlay</code> for manual API clearing.</td></tr>
                         <tr><td data-label="What You See"><code>!bot</code> does nothing</td><td data-label="Likely Area">Command filtering</td><td data-label="What to Check">Use a plain-word trigger or allow that command through the global command filter.</td></tr>

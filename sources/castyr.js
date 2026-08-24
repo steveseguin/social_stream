@@ -238,10 +238,16 @@
 			return;
 		}
 
+		var isStartupBacklogRow = row.dataset && row.dataset.ssnCastyrStartupBacklog === "true";
 		markRow(row, identity);
-		if (Date.now() < backlogSuppressUntil) {
+		if (isStartupBacklogRow && Date.now() < backlogSuppressUntil) {
 			hasSeenOrRemember(identity);
 			return;
+		}
+		if (isStartupBacklogRow) {
+			try {
+				delete row.dataset.ssnCastyrStartupBacklog;
+			} catch (e) {}
 		}
 		if (hasSeenOrRemember(identity)) {
 			return;
@@ -285,6 +291,9 @@
 	function markExistingMessages(container) {
 		var rows = container.querySelectorAll(CHAT_MESSAGE_SELECTOR);
 		for (var i = 0; i < rows.length; i++) {
+			try {
+				rows[i].dataset.ssnCastyrStartupBacklog = "true";
+			} catch (e) {}
 			rememberRow(rows[i]);
 		}
 	}

@@ -30,7 +30,7 @@ let appliedImmediateTranslationLanguage = "";
 function applyPopupTextDirection(lang) {
 	const normalized = normalizePopupTranslationLanguage(lang);
 	const isRtl = normalized === "ar";
-	document.documentElement.lang = normalized || "en";
+	document.documentElement.lang = normalized === "en-uk" ? "en-GB" : (normalized || "en");
 	document.documentElement.dir = isRtl ? "rtl" : "ltr";
 	if (document.body) {
 		document.body.dir = document.documentElement.dir;
@@ -71,6 +71,7 @@ function applyPopupTranslationLanguageImmediately(lang) {
 			}
 			applyPopupTextDirection(normalized);
 			miniTranslate(document.body);
+			renderHandleStatus();
 		})
 		.catch(function(error) {
 			if (requestedImmediateTranslationLanguage === normalized) {
@@ -170,6 +171,10 @@ if (urlParams.has("ssapp")) {
 	ssapp = true;
 }
 
+if (ssapp) {
+	document.documentElement.classList.remove("extension-popup-surface");
+}
+
 if (typeof window !== "undefined") {
 	window.ssapp = ssapp;
 }
@@ -186,16 +191,16 @@ const HANDLE_STATUS_STATES = {
 };
 const HANDLE_STATUS_KEYS = ["ticker", "chatLog", "liveStats", "savedNames"];
 const HANDLE_STATUS_LABELS = {
-	ticker: "Ticker source",
-	chatLog: "Last message file",
-	liveStats: "Live stats file",
-	savedNames: "Names log"
+	ticker: ["file-status-ticker-source", "Ticker source"],
+	chatLog: ["file-status-last-message", "Last message file"],
+	liveStats: ["file-status-live-stats", "Live stats file"],
+	savedNames: ["file-status-names-log", "Names log"]
 };
 const HANDLE_STATUS_HELP = {
-	ticker: "Select a ticker source file to stream text",
-	chatLog: "Choose where the last message should be saved",
-	liveStats: "Choose where the current live stats should be saved",
-	savedNames: "Choose where unique chat names should be stored"
+	ticker: ["file-status-help-ticker", "Select a ticker source file to stream text"],
+	chatLog: ["file-status-help-chat-log", "Choose where the last message should be saved"],
+	liveStats: ["file-status-help-live-stats", "Choose where the current live stats should be saved"],
+	savedNames: ["file-status-help-names-log", "Choose where unique chat names should be stored"]
 };
 const popupHandleStatusState = {};
 HANDLE_STATUS_KEYS.forEach((key) => {
@@ -235,20 +240,31 @@ function mergeHandleStatusFromBackground(statusMap = {}) {
 	}
 }
 
+function getHandleStatusTranslation(key, fallback, values = {}) {
+	return String(getTranslation(key, fallback)).replace(/\{(\w+)\}/g, function(match, name) {
+		return Object.prototype.hasOwnProperty.call(values, name) ? values[name] : match;
+	});
+}
+
 function getHandleStatusLabel(key, entry) {
-	const fallback = HANDLE_STATUS_LABELS[key] || "Selected file";
+	const label = HANDLE_STATUS_LABELS[key] || ["file-status-selected-file", "Selected file"];
+	const fallback = getHandleStatusTranslation(label[0], label[1]);
 	const fileName = entry.name || fallback;
 	switch (entry.status) {
 		case HANDLE_STATUS_STATES.ACTIVE:
-			return `Active: ${fileName}`;
+			return getHandleStatusTranslation("file-status-active", "Active: {file}", { file: fileName });
 		case HANDLE_STATUS_STATES.READY:
-			return `Ready: ${fileName}`;
+			return getHandleStatusTranslation("file-status-ready", "Ready: {file}", { file: fileName });
 		case HANDLE_STATUS_STATES.NEEDS_PERMISSION:
-			return entry.name ? `Needs permission: ${entry.name}` : "Needs permission";
+			return entry.name
+				? getHandleStatusTranslation("file-status-needs-permission-file", "Needs permission: {file}", { file: entry.name })
+				: getHandleStatusTranslation("file-status-needs-permission", "Needs permission");
 		case HANDLE_STATUS_STATES.ERROR:
-			return entry.name ? `Error: ${entry.name}` : "File error";
+			return entry.name
+				? getHandleStatusTranslation("file-status-error-file", "Error: {file}", { file: entry.name })
+				: getHandleStatusTranslation("file-status-file-error", "File error");
 		default:
-			return "No file selected";
+			return getHandleStatusTranslation("file-status-none", "No file selected");
 	}
 }
 
@@ -257,10 +273,11 @@ function getHandleStatusDetail(key, entry) {
 		return entry.detail;
 	}
 	if (entry.status === HANDLE_STATUS_STATES.MISSING) {
-		return HANDLE_STATUS_HELP[key] || "";
+		const help = HANDLE_STATUS_HELP[key];
+		return help ? getHandleStatusTranslation(help[0], help[1]) : "";
 	}
 	if (!entry.persisted && (entry.status === HANDLE_STATUS_STATES.ACTIVE || entry.status === HANDLE_STATUS_STATES.READY)) {
-		return "Needs to be selected again after reloading.";
+		return getHandleStatusTranslation("file-status-reselect-after-reload", "Needs to be selected again after reloading.");
 	}
 	return "";
 }
@@ -3143,6 +3160,7 @@ function createTabsFromSettings(response) {
 
 var streamID = false;
 var lastResponse = false;
+var cohostAccessCapability = "";
 
 function getPopupVersionParam() {
   try {
@@ -3696,7 +3714,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     const currentUrl = new URL(window.location.href);
     
     // List of parameters to ignore (TTS-related and standard ones)
-    const ignoreParams = ['session', 'password', 'localserver', 'localserverport'];
+    const ignoreParams = ['session', 'password', 'cohostauth', 'localserver', 'localserverport'];
   const ttsRelatedParams = [
     'ttsprovider', 'lang', 'voice', 'rate', 'pitch',
     'elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency', 'elevenstability', 
@@ -3740,7 +3758,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "wordcloud", path: "wordcloud.html" },
     { id: "poll", path: "poll.html" },
     { id: "chatbot", path: "bot.html", linkPath: "chatbot.html" },
-	{ id: "cohost", path: "cohost.html" },
+	{ id: "cohost", path: "cohost.html", capability: true },
     { id: "giveaway", path: "giveaway.html" },
     { id: "credits", path: "credits.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
@@ -3775,14 +3793,16 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     
     const linkPath = page.linkPath || page.path;
     const pageDefaultParams = page.defaultParams || "";
-    const generatedParams = `session=${encodeURIComponent(streamID)}${password}${customParams}${pageDefaultParams}${versionParam}`;
-    const fullURL = buildGeneratedUrl(page.path, generatedParams, baseURL);
-    const displayURL = buildGeneratedUrl(linkPath, generatedParams, baseURL);
+	const capabilityFragment = page.capability && cohostAccessCapability ? `#cohostauth=${encodeURIComponent(cohostAccessCapability)}` : "";
+	const generatedParams = `session=${encodeURIComponent(streamID)}${password}${customParams}${pageDefaultParams}${versionParam}`;
+	const fullURL = buildGeneratedUrl(page.path, generatedParams, baseURL) + capabilityFragment;
+	const displayURL = buildGeneratedUrl(linkPath, generatedParams, baseURL);
+	const visibleURL = page.capability && capabilityFragment ? displayURL + "#private-cohost-access" : displayURL;
     const element = document.getElementById(page.id);
     
     if (element) {
       const linkStyle = page.style ? `style="${page.style}"` : "";
-      element.innerHTML = `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${hideLinks ? "Click to open link" : displayURL}</a>`;
+	  element.innerHTML = `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${hideLinks ? "Click to open link" : visibleURL}</a>`;
       element.raw = fullURL;
       syncSupportedServerParamsForTarget(page.id, element, serverParamTokenSource, page.path, serverParamTokens);
     }
@@ -4430,6 +4450,7 @@ function update(response, sync = true) {
     }
     
     if (response !== undefined) {
+		if (response.cohostCapability) cohostAccessCapability = response.cohostCapability;
         applyPopupBeginnerMode(getPopupBeginnerMode(response));
 
         // Load profiles if they weren't loaded during init (e.g., due to startup timing)
@@ -5399,8 +5420,20 @@ function formatLLMProviderTestError(error) {
     if (error.code) {
         parts.push(`Code: ${error.code}`);
     }
+    if (error.missingScope) {
+        parts.push(`Missing scope: ${error.missingScope}`);
+    }
     if (error.message) {
         parts.push(`Message: ${error.message}`);
+    }
+    if (error.requestId) {
+        parts.push(`Request ID: ${error.requestId}`);
+    }
+    if (error.organization) {
+        parts.push(`OpenAI organization: ${error.organization}`);
+    }
+    if (error.project) {
+        parts.push(`OpenAI project: ${error.project}`);
     }
     if (error.hint) {
         parts.push(`Hint: ${error.hint}`);
@@ -7054,7 +7087,7 @@ function handleSpecialSettings(ele, sync) {
                 streamID: xsx
             }, function (response) { 
 				log("Password updated");
-				if (response.streamID || response.password){
+				if (response && (response.streamID || response.password || response.cohostCapability)){
 					update(response, false);
 				}
 			});
@@ -7070,7 +7103,7 @@ function handleSpecialSettings(ele, sync) {
             password: ele.value || ""
         }, function (response) {
 			log("Password updated");
-			if (response.streamID || response.password){
+			if (response && (response.streamID || response.password || response.cohostCapability)){
 				update(response, false);
 			}
 		});
@@ -8111,6 +8144,15 @@ function getMultiAlertPreviewPlatformKey() {
     return document.getElementById('multi-alert-preview-platform')?.value || 'tiktok';
 }
 
+function formatCustomEventTranslation(settingKey, fallback, values = {}) {
+    const input = document.querySelector(`[data-textsetting="${settingKey}"]`);
+    let template = input && typeof input.value === 'string' && input.value.trim() ? input.value.trim() : fallback;
+    Object.keys(values).forEach((key) => {
+        template = template.replace(new RegExp(`\\{${key}\\}`, 'g'), String(values[key] ?? ''));
+    });
+    return template;
+}
+
 function buildMultiAlertPreviewDescriptor(category) {
     const platformKey = getMultiAlertPreviewPlatformKey();
     const profile = MULTI_ALERT_PREVIEW_PLATFORMS[platformKey] || MULTI_ALERT_PREVIEW_PLATFORMS.tiktok;
@@ -8120,6 +8162,12 @@ function buildMultiAlertPreviewDescriptor(category) {
         chatname: profile.chatname,
         chatimg: createPreviewAvatarDataUri(profile.avatarLabel, profile.accent)
     };
+    const followMessage = platformKey === 'twitch'
+        ? formatCustomEventTranslation('customTwitchFollowMessage', `${profile.chatname} has started following`, { name: profile.chatname })
+        : `${profile.chatname} has started following`;
+    const subscriptionMessage = platformKey === 'twitch'
+        ? formatCustomEventTranslation('customTwitchSubscribedAtTierMessage', `${profile.chatname} has subscribed at tier 1`, { name: profile.chatname, tier: '1' })
+        : `${profile.chatname} has subscribed`;
 
     switch (category) {
         case 'follow':
@@ -8128,7 +8176,7 @@ function buildMultiAlertPreviewDescriptor(category) {
                 overrides: {
                     ...commonOverrides,
                     event: 'new_follower',
-                    chatmessage: `${profile.chatname} has started following`
+                    chatmessage: followMessage
                 }
             };
         case 'subscription':
@@ -8139,7 +8187,7 @@ function buildMultiAlertPreviewDescriptor(category) {
                     event: 'new_subscriber',
                     membership: profile.subscriptionLabel,
                     subtitle: profile.subscriptionSubtitle,
-                    chatmessage: 'Welcome to the squad!'
+                    chatmessage: subscriptionMessage
                 }
             };
         case 'donation':
@@ -8215,7 +8263,7 @@ function buildTestAlertPayload(category, overrides = {}) {
             event: 'new_subscriber',
             chatname: 'Markus',
             chatimg: 'https://socialstream.ninja/media/user2.jpg',
-            chatmessage: 'Welcome to the squad!',
+			chatmessage: 'Markus has subscribed at tier 1',
             membership: 'Tier 1',
             subtitle: 'Tier 1 subscription'
         },
@@ -10661,7 +10709,34 @@ function initHotkeys() {
     });
 }
 
+function reorderGlobalSettingsSections() {
+    const globalAnchor = document.getElementById('global-settings-and-tools-options');
+    const globalContainer = globalAnchor?.parentNode;
+    if (!globalContainer) return;
+
+    const commonSectionIds = [
+        'wrapper-profiles-options',
+        'wrapper-privhostbot-options-ext',
+        'wrapper-session-options',
+        'wrapper-export-options'
+    ];
+    let insertionPoint = globalAnchor;
+    commonSectionIds.forEach((id) => {
+        const wrapper = document.getElementById(id)?.closest('.wrapper');
+        if (!wrapper || wrapper.parentNode !== globalContainer) return;
+        globalContainer.insertBefore(wrapper, insertionPoint.nextSibling);
+        insertionPoint = wrapper;
+    });
+
+    const translationWrapper = document.getElementById('wrapper-custom-translation-options')?.closest('.wrapper');
+    const quickOpenWrapper = document.getElementById('wrapper-quick-open-chats-options')?.closest('.wrapper');
+    if (translationWrapper && quickOpenWrapper && translationWrapper.parentNode === quickOpenWrapper.parentNode) {
+        quickOpenWrapper.parentNode.insertBefore(translationWrapper, quickOpenWrapper.nextSibling);
+    }
+}
+
 document.addEventListener("DOMContentLoaded", async function(event) {
+    reorderGlobalSettingsSections();
     loadSourcesListFromRuntimeManifest();
     setupDynamicCustomUrlControls();
 
@@ -10765,15 +10840,16 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	if (creditsBackgroundTestBtn) {
 		creditsBackgroundTestBtn.addEventListener('click', function() {
-			const originalLabel = creditsBackgroundTestBtn.textContent;
+			const label = creditsBackgroundTestBtn.querySelector('span');
+			const originalLabel = label ? label.textContent : creditsBackgroundTestBtn.textContent;
 			creditsBackgroundTestBtn.disabled = true;
-			creditsBackgroundTestBtn.textContent = 'Testing...';
+			if (label) label.textContent = 'Testing...';
 			chrome.runtime.sendMessage({ cmd: "creditsBackgroundTest" }, function(response) {
 				const delivered = !!(response && response.success);
-				creditsBackgroundTestBtn.textContent = delivered ? 'Test sent' : 'No credits source connected';
+				if (label) label.textContent = delivered ? 'Test sent' : 'No credits source connected';
 				setTimeout(function() {
 					creditsBackgroundTestBtn.disabled = false;
-					creditsBackgroundTestBtn.textContent = originalLabel;
+					if (label) label.textContent = originalLabel;
 				}, 2000);
 			});
 		});
@@ -11206,6 +11282,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	var popupSearchHiddenElements = new Set();
 	var popupSearchMatchedElements = new Set();
 
+	function getPopupScrollElement() {
+		if (document.documentElement.classList.contains('extension-popup-surface') && document.body) {
+			return document.body;
+		}
+		return document.scrollingElement || document.documentElement;
+	}
+
+	function getPopupScrollTop() {
+		return getPopupScrollElement().scrollTop || 0;
+	}
+
+	function restorePopupScrollTop(scrollTop) {
+		var scrollElement = getPopupScrollElement();
+		var previousBehavior = scrollElement.style.scrollBehavior;
+		scrollElement.style.scrollBehavior = 'auto';
+		scrollElement.scrollTop = scrollTop;
+		scrollElement.style.scrollBehavior = previousBehavior || '';
+	}
+
 	function normalizePopupSearchText(value) {
 		return String(value || '').replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase().replace(/[_\-\u2010-\u2015]+/g, ' ').replace(/\s+/g, ' ').trim();
 	}
@@ -11556,7 +11651,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		popupSearchOpenState = [];
 		popupSearchUserToggles = null;
 		popupSearchAnchor = null;
-		popupSearchScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+		popupSearchScrollY = getPopupScrollTop();
 		document.querySelectorAll('input.collapsible-input').forEach(function(input) {
 			popupSearchOpenState.push({
 				input: input,
@@ -11625,11 +11720,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			var target = anchor.querySelector('.collapsible-label') || anchor;
 			target.scrollIntoView({block: 'start'});
 		} else if (typeof scrollY === 'number') {
-			var htmlStyle = document.documentElement.style;
-			var previousBehavior = htmlStyle.scrollBehavior;
-			htmlStyle.scrollBehavior = 'auto';
-			window.scrollTo(0, scrollY);
-			htmlStyle.scrollBehavior = previousBehavior || '';
+			restorePopupScrollTop(scrollY);
 		}
 	}
 
@@ -11980,7 +12071,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					checked: ele.checked
 				});
 			});
-			activeToggleScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+			activeToggleScrollY = getPopupScrollTop();
 			// Open all collapsible sections
 			document.querySelectorAll('input.collapsible-input').forEach(ele => {
 				ele.checked = true;
@@ -12049,11 +12140,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				ele.style.display = "";
 			});
 			if (typeof activeToggleScrollY === 'number') {
-				var htmlStyle = document.documentElement.style;
-				var previousBehavior = htmlStyle.scrollBehavior;
-				htmlStyle.scrollBehavior = 'auto';
-				window.scrollTo(0, activeToggleScrollY);
-				htmlStyle.scrollBehavior = previousBehavior || '';
+				restorePopupScrollTop(activeToggleScrollY);
 				activeToggleScrollY = null;
 			}
 		}

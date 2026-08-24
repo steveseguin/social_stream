@@ -65,6 +65,7 @@
     </style>
 </head>
 <body>
+	<a class="skip-link" href="#main-content">Skip to main content</a>
     <header>
         <div class="container">
             <div class="logo">
@@ -73,7 +74,7 @@
                     <span>Social Stream Ninja</span>
                 </a>
             </div>
-            <nav>
+            <nav id="site-navigation">
                 <ul>
                     <li><a href="../index.html">Home</a></li>
                     <li><a href="../docs/features.html">Features</a></li>
@@ -103,11 +104,11 @@
                         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                     </svg>
                 </button>
-                <div class="mobile-nav-toggle">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
+                <button type="button" class="mobile-nav-toggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="site-navigation">
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                </button>
             </div>
         </div>
     </header>
@@ -119,11 +120,11 @@
         </div>
     </section>
 
-    <main class="guide-section">
+    <main class="guide-section" id="main-content">
         <div class="container">
             <div class="guide-card">
                 <h2>What It Does</h2>
-                <p>The AI co-host is split into a control side and a playout side. The streamer controls it from <code>dock.html</code>, while OBS captures <code>cohost-overlay.html</code> as the on-stream avatar and speech bubble.</p>
+				<p>There are two co-host workflows: a continuous voice companion in <code>cohost.html</code>, and manual dock actions that send approved lines to <code>cohost-overlay.html</code>.</p>
                 <div class="cohost-guide-grid">
                     <div class="cohost-guide-card">
                         <h3>Dock Controls</h3>
@@ -139,27 +140,26 @@
                     </div>
                     <div class="cohost-guide-card">
                         <h3>Multimodal Co-host</h3>
-                        <p><code>cohost.html</code> connects to the SSN live chat feed when opened with the same <code>session</code>. It defaults to monitor-only; use its Live Chat panel to let it answer questions.</p>
+                        <p><code>cohost.html</code> connects to the SSN live chat feed when opened with the same <code>session</code>. Its default context-only mode lets the AI remember recent viewer messages and discuss them when the streamer asks.</p>
                     </div>
                 </div>
             </div>
 
             <div class="guide-card">
-                <h2>Basic Setup</h2>
-                <ol class="guide-steps">
-                    <li>Open the Streaming Chat dock with your session: <code>dock.html?session=YOUR_SESSION_ID</code>.</li>
-                    <li>For the default multimodal co-host, open <code>cohost.html?session=YOUR_SESSION_ID</code> and check the Live Chat status panel. It will monitor chat by default.</li>
-                    <li>Add the AI stage overlay to OBS: <code>cohost-overlay.html?session=YOUR_SESSION_ID&amp;tts</code>.</li>
+				<h2>Dock Right-click Co-host Setup</h2>
+				<ol class="guide-steps">
+					<li>Open the Streaming Chat dock with your session: <code>dock.html?session=YOUR_SESSION_ID</code>.</li>
+					<li>Add the AI stage overlay to OBS: <code>cohost-overlay.html?session=YOUR_SESSION_ID</code>. Add <code>&amp;tts</code> only for a text-response workflow.</li>
                     <li>For AI answers, configure an LLM provider in the popup. For quick testing, choose <strong>SSN Hosted Trial LLM</strong>, which uses <code>llm.socialstream.ninja</code>.</li>
                     <li>Enable <strong>Chat Bots and AI services &gt; Chat Bot - Private Interface &gt; Enable private chat bot option</strong>.</li>
-                    <li>Right-click a dock message and select <strong>Co-host</strong>. The menu is hidden until the stage overlay is detected.</li>
+					<li>Right-click a dock message and select <strong>Co-host</strong>. The menu is hidden until the stage overlay is detected. Dock message rows do not yet expose this context menu to the keyboard; keyboard users can use the typed message field or voice controls on <code>cohost.html</code>.</li>
                 </ol>
                 <figure class="guide-figure">
                     <img src="images/guides/guide-ai-cohost-controls.png" alt="cohost.html control page showing media devices, AI provider settings, system instructions, and live chat status" class="guide-image guide-image-medium">
                     <figcaption>The <code>cohost.html</code> control page: pick your camera and microphone, choose an AI provider, set system instructions, and watch the Live Chat status panel.</figcaption>
                 </figure>
                 <div class="guide-note">
-                    <p><strong>Tip:</strong> Use the same <code>session</code> value for the dock and co-host overlay. If audio is wanted from OBS, include <code>&amp;tts</code> on the overlay URL. The "Send primary chat bot replies to this overlay" option is not required for right-click co-host actions.</p>
+					<p><strong>Tip:</strong> Use the same <code>session</code> value for the dock and co-host overlay. <code>&amp;tts</code> applies to text-overlay workflows. When native controller audio is active, SSN suppresses duplicate overlay TTS; <code>&amp;forcetts</code> deliberately overrides that protection.</p>
                 </div>
             </div>
 
@@ -177,14 +177,58 @@
             <div class="guide-card">
                 <h2>Voice Conversation Support</h2>
                 <ul class="guide-list">
+                    <li><strong>OpenAI Realtime:</strong> Streams the microphone selected on <code>cohost.html</code> directly to OpenAI for one native speech-to-speech conversation. The spoken conversation and live-chat context stay in the same co-host session.</li>
                     <li><strong>SSN Desktop:</strong> Uses local Whisper with the microphone selected on <code>cohost.html</code>. The first use downloads about 42 MB; later transcription runs offline.</li>
-                    <li><strong>Chrome / Chrome extension link:</strong> The extension opens the hosted co-host page in a Chrome tab. Voice input uses Chrome Speech Recognition and the system-default microphone, may require internet, and does not use Desktop Whisper.</li>
+					<li><strong>Chrome / Chrome extension link:</strong> The extension opens the hosted co-host page in a Chrome tab. OpenAI Realtime uses WebRTC with a short-lived client secret; text-response providers use Chrome Speech Recognition and may require internet.</li>
                     <li><strong>Other browsers:</strong> Voice recognition is not guaranteed. Typed co-host chat, live-chat input, camera/screen input, and configured LLM responses can still work without speech recognition.</li>
                 </ul>
-                <div class="guide-note">
-                    <p>The microphone meter only confirms that the page captured an audio stream. In Chrome, speech recognition separately uses Chrome's system-default microphone. In SSN Desktop, Diagnostics should show <strong>Listening (Desktop Whisper)</strong> and then the recognized text under <strong>Heard</strong>.</p>
-                </div>
+				<div class="guide-note">
+					<p>With OpenAI Realtime, Diagnostics should show <strong>Listening (OpenAI WebRTC)</strong>. With Desktop Whisper, it should show <strong>Listening (Desktop Whisper)</strong> and then the recognized text under <strong>Heard</strong>.</p>
+				</div>
+				<div class="warning-note">
+					<p><strong>Privacy:</strong> the selected microphone and any viewer messages shared by the chosen Live Chat mode are sent to that AI provider. Viewer messages are treated as untrusted context and cannot authorize co-host tools. Open the generated co-host controller link from the popup and keep it private; its private capability expires after 12 hours, is scoped to the current SSN session, and is removed from the address bar after the page loads.</p>
+				</div>
             </div>
+
+            <div class="guide-card">
+                <h2>OpenAI Realtime Setup</h2>
+				<ol class="guide-steps">
+					<li>In the SSN popup, choose <strong>ChatGPT API</strong>, add your OpenAI project API key, and use <strong>Test selected chat bot</strong>.</li>
+					<li>Open the generated <code>cohost.html?session=YOUR_SESSION_ID</code> link from the popup. Its private, expiring co-host capability authorizes Realtime without enabling the separate Private Chat Bot option.</li>
+					<li>Select <strong>OpenAI Realtime</strong>. The standard key stays in the SSN extension/Desktop background; the co-host page receives only a short-lived Realtime client secret.</li>
+					<li>Explicitly choose the microphone you talk into, keep <strong>Audio Response</strong> selected, and press <strong>Start Co-host</strong>.</li>
+                    <li>Leave Live Chat on <strong>Context only - answer when asked</strong>. Ask “What is chat saying?” to have the same spoken AI discuss recent viewer messages.</li>
+					<li>Capture the audio from the co-host browser/app in OBS. The native OpenAI voice plays only from <code>cohost.html</code>; <code>cohost-overlay.html</code> receives the avatar and text, not that same audio stream. When supported, choose a virtual cable under <strong>Co-host output</strong> for isolated OBS routing.</li>
+					<li>Keep the stage overlay's speech bubble visible, or provide captions, so the AI response is not available through audio alone.</li>
+                </ol>
+				<div class="guide-note">
+					<p>This uses OpenAI API billing and creates one SSN Realtime conversation over WebRTC, separate from <code>chatgpt.com</code>. Replies are capped at 512 output tokens; Diagnostics shows cumulative token usage and measured first-output latency. OpenAI automatically truncates unplayed audio when the streamer interrupts. SSN retains at most 20 recent chat messages for up to 90 seconds, including paid-support, membership, moderator, event, and source-channel context, then removes that temporary context. SSN checks quiet sessions, reconnects failed transports, and rolls sessions over before the 60-minute limit. A recovered session reapplies the system instructions and performance settings, but starts without the previous spoken conversation.</p>
+				</div>
+            </div>
+
+			<div class="guide-card">
+				<h2>OpenAI Speed, Quality, And Cost</h2>
+				<ul class="guide-list">
+					<li><strong>Model:</strong> Mini is normally faster and costs less. Full quality is more capable and costs more.</li>
+					<li><strong>Reasoning effort:</strong> Minimal or Low normally lowers response delay and billed output usage. High or Extra high can improve complex answers but may respond more slowly and cost more. Changes apply while connected.</li>
+					<li><strong>Turn-taking speed:</strong> Fast waits up to about 2 seconds for the end of a thought; Balanced about 4 seconds; Patient about 8 seconds. Fast feels more responsive but can interrupt a natural pause.</li>
+					<li><strong>Diagnostics:</strong> Latency reports the time from the end of the turn to first text or audio, and separates model delay when possible. Network conditions and provider load can still vary between otherwise similar requests.</li>
+				</ul>
+			</div>
+
+			<div class="guide-card">
+				<h2>Optional Stream Controls</h2>
+				<p>OpenAI Realtime supports the Spotify, OBS scene, and featured-chat tools below. SSN Configured LLM currently supports Spotify only; other co-host providers do not yet expose these tools.</p>
+				<ol class="guide-steps">
+					<li>In the SSN popup, enable only the co-host tools you want: Spotify, OBS scenes, or featured chat.</li>
+					<li>For OBS, enter the exact allowed scene names as a comma-separated list and keep <code>actions.html</code> connected to OBS, or use an OBS browser source with Full Permissions.</li>
+					<li>On <code>cohost.html</code>, open <strong>Co-host Stream Controls</strong> and arm the same tools for that controller.</li>
+					<li>Ask directly, for example “switch to BRB,” “feature that last message,” or “clear the featured chat.” Viewer messages cannot authorize tools, and only one stream-changing tool runs per direct streamer request.</li>
+				</ol>
+				<div class="warning-note">
+					<p>Tool access is allowlisted, not general API access. OBS can select only scenes named in SSN settings. Feature requests use a recent captured chat message and require the Streaming Chat dock; tool replies report delivery, not proof that OBS or the overlay completed the action.</p>
+				</div>
+			</div>
 
             <div class="guide-card">
                 <h2>How The Pages Talk</h2>
@@ -251,11 +295,18 @@
                     <li>If the Co-host menu is missing, the co-host overlay is not detected in the same session.</li>
                     <li>If Answer or Light Roast is disabled, the SSN bridge or Private Chat Bot is not available.</li>
                     <li>The primary chat bot overlay toggle is optional and does not enable dock right-click co-host actions.</li>
-                    <li>If <code>cohost.html</code> is not seeing chat, confirm the URL has the same <code>session</code> as the popup and that the Live Chat mode is Monitor, Questions, or All.</li>
+					<li>If <code>cohost.html</code> is not seeing chat, confirm the URL has the same <code>session</code> as the popup and that Live Chat is set to Context, Questions, or All.</li>
+					<li><strong>Context only</strong> currently shares chat with the AI only for OpenAI Realtime. Other providers monitor the feed without injecting it into the model.</li>
+					<li><strong>Mute microphone</strong> stops audio sent to the co-host. <strong>Mute co-host voice</strong>, the volume slider, output-device selector, and <strong>Stop speaking</strong> control playout. <strong>Mute shared system audio</strong> is separate and appears for screen-capable providers.</li>
+					<li>If a stream-control tool is unavailable, enable it in both the SSN popup and <strong>Co-host Stream Controls</strong>. OBS also needs at least one exact scene name in its allowlist.</li>
+					<li>Use <strong>Test overlay</strong> to send a harmless visible test line, then confirm it appears in the AI Stage Overlay in OBS.</li>
+					<li>If the co-host knows chat but stays quiet, that is expected in <strong>Context only</strong>: ask it what chat is saying. Questions or All speak automatic replies from the co-host page; they do not post those replies into YouTube, Twitch, or Kick chat.</li>
 					<li>If Desktop shows <strong>Listening (Desktop Whisper)</strong> but never fills <strong>Heard</strong>, confirm the selected microphone is not muted and allow the first model download to finish.</li>
 					<li>If Chrome never fills <strong>Heard</strong>, allow microphone permission, check the operating system's default microphone, confirm internet access, and verify that Chrome Speech Recognition is available.</li>
-                    <li>If text appears but no audio plays, add <code>&amp;tts</code> or <code>&amp;speak=1</code> to the overlay URL.</li>
-                    <li>If AI requests time out, check that Social Stream is on, the session matches, Private Chat Bot is enabled, and the selected LLM provider is reachable.</li>
+					<li>If OpenAI Realtime text appears but no audio plays, verify <strong>Audio Response</strong>, browser audio permissions, and OBS browser/app audio capture. Use <code>&amp;tts</code> only for the separate text-overlay workflow.</li>
+					<li>If OpenAI Realtime replies are slow, try Mini, Low reasoning, and Fast turn-taking, then compare the Latency line in Diagnostics. Higher reasoning and Patient turn-taking deliberately trade speed for depth or longer pauses.</li>
+					<li>If OpenAI Realtime disconnects, leave the co-host running while it retries. Diagnostics identifies the data, peer, provider, or health-check failure. A recovered session keeps the selected system instructions and performance settings but cannot recover the previous spoken conversation.</li>
+					<li>If an Answer, Light Roast, or SSN Configured LLM request times out, check that Social Stream is on, the session matches, Private Chat Bot is enabled, and the selected LLM provider is reachable. OpenAI Realtime does not require Private Chat Bot.</li>
                     <li>If Local Gemma cannot download its model files from the default asset host, set the asset host to your own mirrored Gemma folder.</li>
                     <li>If the hosted trial AI stops responding, it may be disabled or rate-limited; switch to your own token, Ollama, or Custom API.</li>
                     <li>If multiple overlays are open, make sure the overlay label matches the dock target. The default label is <code>cohost-overlay</code>.</li>
@@ -266,7 +317,8 @@
                 <h2>Useful URL Parameters</h2>
                 <ul class="guide-list">
                     <li><code>session=YOUR_SESSION_ID</code> - required for the dock and overlay to share a room.</li>
-                    <li><code>tts</code> or <code>speak=1</code> - lets the overlay speak with browser TTS.</li>
+					<li><code>tts</code> or <code>speak=1</code> - lets the overlay speak with browser TTS.</li>
+					<li><code>forcetts</code> - allows overlay TTS even when the co-host controller is already playing audio; this intentionally creates a second voice.</li>
                     <li><code>label=cohost-overlay</code> - sets the overlay target label.</li>
                     <li><code>name=NinjaBot</code> - sets the display name on the overlay.</li>
                     <li><code>avatar=https://...</code> - uses a custom avatar image.</li>
@@ -279,7 +331,7 @@
             <div class="guide-card">
                 <h2>Design Notes</h2>
                 <ul class="guide-list">
-                    <li>The overlay is the playout source, so OBS captures the visual and audio output.</li>
+					<li>For dock/manual text workflows, the overlay is the visual and optional TTS playout source. For native OpenAI voice, capture <code>cohost.html</code> audio separately; the stage overlay does not replay that same WebRTC audio.</li>
                     <li>The dock is the control surface, so streamer approval stays off-stream.</li>
                     <li>Generated responses are not auto-spoken; the streamer must approve them first.</li>
                     <li>Non-standard command details live inside <code>meta</code>, keeping payloads predictable for overlays and automations.</li>

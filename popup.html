@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="extension-popup-surface">
     <head>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
         <title>Menu</title>
@@ -605,6 +605,19 @@ html {
     scroll-behavior: smooth;
 }
 
+/* Keep overflow inside the extension popup to avoid Chromium's popup autosize loop. */
+html.extension-popup-surface {
+    overflow: hidden;
+}
+
+html.extension-popup-surface body {
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-padding-top: 2em;
+    scroll-behavior: smooth;
+}
+
 body {
     padding: 0;
     margin: 0;
@@ -1111,7 +1124,10 @@ h2 {
 }
 
 .streaming_chat_title .title-group {
-    white-space: nowrap;
+    flex: 1 1 220px;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .streaming_chat_title .heading-actions {
@@ -1199,7 +1215,24 @@ h2 {
 }
 .cohost-tool-row .switch {
     flex: 0 0 auto;
+    width: 44px;
+    height: 24px;
     margin-top: 1px;
+}
+.cohost-tool-row .switch .slider:before {
+    width: 20px;
+    height: 20px;
+    left: 2px;
+    bottom: 2px;
+}
+.cohost-tool-row .switch input:checked + .slider:before {
+    -webkit-transform: translateX(20px);
+    -ms-transform: translateX(20px);
+    transform: translateX(20px);
+}
+.cohost-tool-row .switch input:focus-visible + .slider {
+    outline: 2px solid #2196f3;
+    outline-offset: 2px;
 }
 .cohost-tool-copy {
     display: flex;
@@ -1691,105 +1724,11 @@ input:checked + .slider:before {
     transition: background 0.08s ease-out, box-shadow 0.08s ease-out, border-color 0.08s ease-out;
 }
 
-.credits-control-panel {
-	margin: 0 0 14px;
-	padding: 12px;
-	border: 1px solid var(--collapsible-border-color);
-	border-radius: 6px;
-	background: var(--color-accent-subtle);
-}
-
-.credits-control-fields,
-.credits-control-grid {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 8px;
-}
-
-.credits-control-field {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-	min-width: 0;
-}
-
-.credits-control-field > span,
-.credits-control-label {
-	font-size: 12px;
-	font-weight: 600;
-	opacity: 0.82;
-}
-
-.credits-control-field select {
-	width: 100%;
-	min-width: 0;
-	min-height: 32px;
-	margin: 0;
-}
-
-.credits-control-section {
-	margin-top: 12px;
-}
-
-.credits-control-label {
-	display: block;
-	margin-bottom: 6px;
-}
-
-.credits-control-button {
-	min-width: 0;
-	min-height: 32px;
-	padding: 6px 10px;
-	border: 1px solid var(--collapsible-border-color);
-	border-radius: 4px;
-	background: var(--button-background);
-	color: var(--default-text-color);
-	font: inherit;
-	font-weight: 600;
-	cursor: pointer;
-}
-
-.credits-control-button:hover,
-.credits-control-button:focus {
-	border-color: var(--credits-color);
-	box-shadow: 0 0 0 1px var(--credits-color) inset;
-	outline: none;
-}
-
-.credits-control-button.primary {
-	border-color: var(--credits-color);
-}
-
-.credits-control-button.danger {
-	border-color: #b85c5c;
-}
-
-.credits-control-button:disabled {
-	cursor: wait;
-	opacity: 0.55;
-}
-
-.credits-control-button[hidden] {
-	display: none;
-}
-
-.credits-control-hint {
-	display: block;
-	margin-top: 8px;
-	line-height: 1.35;
-	opacity: 0.75;
-}
-
-@media (max-width: 520px) {
-	.credits-control-fields,
-	.credits-control-grid {
-		grid-template-columns: 1fr;
-	}
-}
-
 .sticky-action-row {
     display: flex;
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     padding: 0;
     margin: 1px 0 0 0;
     border: 0;
@@ -1829,6 +1768,8 @@ input:checked + .slider:before {
 .textInputContainer {
     position: relative;
     width: 200px;
+    max-width: 100%;
+    box-sizing: border-box;
     margin-top: 10px;
     margin-bottom: 4px;
 	display: inline-block;
@@ -1859,6 +1800,7 @@ input:checked + .slider:before {
 .textInput {
     width: 100%;
     height: 100%;
+    box-sizing: border-box;
     padding: 2px;
     background-color: var(--color-accent-subtle);
     color: var(--default-text-color);
@@ -2187,6 +2129,8 @@ input:checked + .slider:before {
 
 	body.ssapp .container {
 		max-width: 1100px; /* Allow the main container to expand */
+		width: 100%;
+		box-sizing: border-box;
 		margin: 0 auto; /* Center the container */
 		padding: 0 1em; /* Add some padding on the sides */
 	}
@@ -2332,6 +2276,55 @@ input:checked + .slider:before {
 	body.ssapp .wrapper.ssapp h3 {
 		 grid-column: 1 / -1; /* Make headers span full width */
 		 margin-bottom: 0.5em;
+	}
+}
+
+/* Keep translated file controls readable in the narrow extension and SSApp panels. */
+.grid .glowingButton,
+.grid3 .glowingButton {
+	width: 100%;
+	min-width: 0 !important;
+	height: auto;
+	min-height: 36px;
+	margin: 0;
+}
+
+.grid .glowingButton span,
+.grid3 .glowingButton span {
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	height: auto;
+	min-height: 36px;
+	line-height: 1.2;
+	letter-spacing: 0.3px;
+	white-space: normal;
+	overflow-wrap: anywhere;
+	overflow: visible;
+	text-overflow: clip;
+}
+
+.donation-thank-you-input {
+	width: min(320px, calc(100% - 50px));
+	max-width: calc(100% - 50px);
+	margin-inline-start: 50px;
+}
+
+#games-preset-select {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+@media (max-width: 440px) {
+	.donation-thank-you-input {
+		width: 100%;
+		max-width: 100%;
+		margin-inline-start: 0;
+	}
+
+	.grid3 {
+		grid-template-columns: 1fr;
 	}
 }
 
@@ -2969,7 +2962,7 @@ input:checked + .slider:before {
                                     <span data-translate="skip-donation-data-from-messages">🏷️🦘 Skip messages containing donations </span>
                                 </div>
 								<div data-keywords="custom donation thank you fallback superchat tip message text">
-									<div class="textInputContainer" style="display: inline-block; width: 320px; margin-left: 50px; margin-top: 6px;">
+									<div class="textInputContainer donation-thank-you-input" style="display: inline-block; margin-top: 6px;">
 										<input type="text" id="customDonationThankYou" class="textInput" autocomplete="off" placeholder="Thank you for your donation!" data-textsetting="customDonationThankYou" />
 										<label for="customDonationThankYou"><span>&gt; Custom donation thank-you text</span></label>
 									</div>
@@ -6857,6 +6850,36 @@ input:checked + .slider:before {
             </div>
             <a href="" id="global-settings-and-tools-options"></a>
 
+			<div class="wrapper beginner-basic">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-custom-translation-options" />
+					<label class="collapsible-label" for="wrapper-custom-translation-options">🌐 <span data-translate="custom-event-translations">Custom event translations</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<small style="display:block; margin-bottom:12px; opacity:0.8;"><span data-translate="custom-event-translations-description">Override Twitch event wording from the selected language. Leave a field blank to use the translated default. Supported placeholders are shown in each label.</span></small>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" id="customTwitchFollowMessage" class="textInput" autocomplete="off" placeholder=" " data-textsetting="customTwitchFollowMessage" />
+									<label for="customTwitchFollowMessage">&gt; <span data-translate="custom-twitch-follow-message">Twitch follow message ({name})</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" id="customTwitchSubscribedAtTierMessage" class="textInput" autocomplete="off" placeholder=" " data-textsetting="customTwitchSubscribedAtTierMessage" />
+									<label for="customTwitchSubscribedAtTierMessage">&gt; <span data-translate="custom-twitch-subscription-tier-message">Twitch subscription message ({name}, {tier})</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" id="customTwitchSubscribedMessage" class="textInput" autocomplete="off" placeholder=" " data-textsetting="customTwitchSubscribedMessage" />
+									<label for="customTwitchSubscribedMessage">&gt; <span data-translate="custom-twitch-subscription-without-tier-message">Twitch subscription without tier ({name})</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" id="customTwitchResubscribedMessage" class="textInput" autocomplete="off" placeholder=" " data-textsetting="customTwitchResubscribedMessage" />
+									<label for="customTwitchResubscribedMessage">&gt; <span data-translate="custom-twitch-resubscription-message">Twitch resubscription message ({name})</span></label>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-beta-sdk-options" />
@@ -8905,7 +8928,7 @@ input:checked + .slider:before {
                                 <div class="file-handle-status" data-handle-status="chatLog" data-status="missing" data-persisted="false" role="status" aria-live="polite">
                                     <div class="status-row">
                                         <span class="status-dot" aria-hidden="true"></span>
-                                        <span class="status-label">No file selected.</span>
+                                        <span class="status-label" data-translate="file-status-none">No file selected</span>
                                     </div>
                                     <span class="status-detail"></span>
                                 </div>
@@ -8923,7 +8946,7 @@ input:checked + .slider:before {
 								<div class="file-handle-status" data-handle-status="liveStats" data-status="missing" data-persisted="false" role="status" aria-live="polite">
 									<div class="status-row">
 										<span class="status-dot" aria-hidden="true"></span>
-										<span class="status-label">No file selected.</span>
+										<span class="status-label" data-translate="file-status-none">No file selected</span>
 									</div>
 									<span class="status-detail"></span>
 								</div>
@@ -8959,7 +8982,7 @@ input:checked + .slider:before {
                                 <div class="file-handle-status" data-handle-status="savedNames" data-status="missing" data-persisted="false" role="status" aria-live="polite">
                                     <div class="status-row">
                                         <span class="status-dot" aria-hidden="true"></span>
-                                        <span class="status-label">No file selected.</span>
+                                        <span class="status-label" data-translate="file-status-none">No file selected</span>
                                     </div>
                                     <span class="status-detail"></span>
                                 </div>
@@ -9275,6 +9298,9 @@ input:checked + .slider:before {
 									<span id="testSelectedLLMProviderStatus" style="display: inline-block; margin-left: 10px; font-size: 0.9em; opacity: 0.9;"></span>
 								</div>
 								<div id="testSelectedLLMProviderOutput" style="display: none; width: 95%; margin: 8px 0 0 0; padding: 10px 12px; border-radius: 8px; background: rgba(255,255,255,0.06); white-space: pre-wrap; word-break: break-word; font-size: 0.92em;"></div>
+								<p style="width: 95%; margin: 10px 0 0 0; font-size: 0.92em;">
+									Need help connecting a provider? <a href="https://socialstream.ninja/docs/chatbot-basics-guide.html" class="lightblue" target="_blank" rel="noopener" data-chatbot-guide-link="provider">Open the AI chat bot setup and troubleshooting guide</a>.
+								</p>
 
 							</div>
 						</div>
@@ -9356,6 +9382,7 @@ input:checked + .slider:before {
 							<div class="options_group streaming_chat">
 								<h3 title="Chat bots can reply to the chat"><span data-translate="local-chat-bot">Chat bot 🤖💬</span></h3>
 								<i>This bot has access to the live streaming chat and can either respond to users in chat or respond its own special chat overlay</i><br/>
+								<a href="https://socialstream.ninja/docs/chatbot-basics-guide.html" class="lightblue" target="_blank" rel="noopener" data-chatbot-guide-link="primary">Primary bot setup, safe testing, and troubleshooting guide</a><br/>
 								<br>
 								<div style="display: inline-block;" title="Enable the LLM AI Bot responder.">
 									<label class="switch">
@@ -10259,7 +10286,7 @@ input:checked + .slider:before {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group streaming_chat ai-tool-card">
-								<h3 data-translate="virtual-cohost">A virtual co-host that can both listen, see, and talk back</h3>
+								<h3 data-translate="virtual-cohost">A virtual co-host that can listen and talk back</h3>
 
 								<div class="link ai-tool-link" title="Open the multimodal co-host page.">
 									<div id="cohost" data-raw="" class="single_message">
@@ -10267,22 +10294,44 @@ input:checked + .slider:before {
 									</div>
 								</div>
 
-								<p class="ai-tool-copy">This work-in-progress AI co-host can view your screen or webcam, listen to your voice, and respond by text or audio.</p>
-								<p class="ai-tool-copy"><strong>Voice input:</strong> SSN Desktop uses local Whisper with the selected microphone (about a 42 MB first-use download, then offline). The Chrome extension link opens the hosted co-host page, where Chrome Speech Recognition uses the system-default microphone and may require internet. Other browsers can still use typed chat when voice recognition is unavailable.</p>
-								<p class="ai-tool-copy">With a session link, it can also receive the SSN live chat feed; it defaults to monitor-only, and the Live Chat panel can opt into answering questions.</p>
-								<p class="ai-tool-copy">For the SSN Configured LLM provider, enable the <a href="#wrapper-chatbot-private-options">private chat bot option</a> above.</p>
+								<p class="ai-tool-copy">The co-host can listen through the microphone you choose and respond by text or audio. Gemini and supported multimodal LLMs can also use a selected screen or webcam; OpenAI Realtime currently uses microphone and live-chat context only.</p>
+								<p class="ai-tool-copy"><strong>Voice input:</strong> OpenAI Realtime uses WebRTC and a short-lived client secret created from the ChatGPT API key configured above; the standard key never enters the co-host page. SSN Desktop can use local Whisper for text-response providers (about a 42 MB first-use download, then offline). Chrome Speech Recognition may be used as a fallback for other providers.</p>
+								<p class="ai-tool-copy">With a session link, it can also receive the SSN live chat feed. OpenAI Realtime defaults to keeping recent chat as silent context until you ask about it; automatic modes speak replies but do not post them into platform chat.</p>
+								<p class="ai-tool-copy">OpenAI Realtime uses the private capability in the popup-generated co-host link; it does not require the separate Private Chat Bot option.</p>
 								<p class="ai-tool-copy"><a href="https://socialstream.ninja/docs/ai-cohost-guide.html" target="_blank">AI co-host guide</a></p>
-								<p class="ai-tool-copy">Future tool permissions can add live chat, OBS, stream events, games, and other interactive controls.</p>
+								<p class="ai-tool-copy">OpenAI Realtime can optionally control Spotify, approved OBS scenes, and the featured chat overlay. SSN Configured LLM currently supports Spotify only. Each tool is blocked unless enabled here and armed on the co-host page.</p>
 								<div class="cohost-tool-panel">
 									<h4>Co-host tool permissions</h4>
 									<div class="cohost-tool-row">
 										<label class="switch">
-											<input type="checkbox" id="cohostSpotifyControl" data-setting="cohostSpotifyControl" />
+											<input type="checkbox" id="cohostSpotifyControl" data-setting="cohostSpotifyControl" aria-labelledby="cohostSpotifyControlLabel" aria-describedby="cohostSpotifyControlDescription" />
 											<span class="slider round"></span>
 										</label>
 										<div class="cohost-tool-copy">
-											<span class="cohost-tool-title">Spotify controls</span>
-											<span class="cohost-tool-note">Allow the co-host to pause, resume, skip, queue, and check songs when Spotify is enabled and connected.</span>
+											<span class="cohost-tool-title" id="cohostSpotifyControlLabel">Spotify controls</span>
+											<span class="cohost-tool-note" id="cohostSpotifyControlDescription">Allow the co-host to pause, resume, skip, queue, and check songs when Spotify is enabled and connected.</span>
+										</div>
+									</div>
+									<div class="cohost-tool-row">
+										<label class="switch">
+											<input type="checkbox" id="cohostObsControl" data-setting="cohostObsControl" aria-labelledby="cohostObsControlLabel" aria-describedby="cohostObsControlDescription" />
+											<span class="slider round"></span>
+										</label>
+										<div class="cohost-tool-copy">
+											<span class="cohost-tool-title" id="cohostObsControlLabel">OBS scene controls</span>
+											<span class="cohost-tool-note" id="cohostObsControlDescription">Allow the co-host to switch only the OBS scenes listed below.</span>
+											<label class="cohost-tool-note" for="cohostObsScenes">Allowed scene names (comma-separated)</label>
+											<input type="text" id="cohostObsScenes" class="textInput" data-textsetting="cohostObsScenes" placeholder="Intro, Main, BRB" />
+										</div>
+									</div>
+									<div class="cohost-tool-row">
+										<label class="switch">
+											<input type="checkbox" id="cohostFeaturedChatControl" data-setting="cohostFeaturedChatControl" aria-labelledby="cohostFeaturedChatControlLabel" aria-describedby="cohostFeaturedChatControlDescription" />
+											<span class="slider round"></span>
+										</label>
+										<div class="cohost-tool-copy">
+											<span class="cohost-tool-title" id="cohostFeaturedChatControlLabel">Featured chat controls</span>
+											<span class="cohost-tool-note" id="cohostFeaturedChatControlDescription">Allow the co-host to feature a recent message or clear the featured overlay.</span>
 										</div>
 									</div>
 									<p class="cohost-tool-note">Disabled tools are blocked by the background service even if the co-host asks for them.</p>
@@ -10312,18 +10361,18 @@ input:checked + .slider:before {
 								<p class="ai-tool-copy"><a href="https://socialstream.ninja/docs/ai-cohost-guide.html" target="_blank">AI co-host and stage overlay guide</a></p>
 								<div style="display: inline-block;" title="Optional: also send primary chat bot replies to the AI stage overlay. This is not needed for dock right-click co-host actions.">
 									<label class="switch">
-										<input type="checkbox" id="aiOverlayFromChatBot" data-setting="aiOverlayFromChatBot" />
+										<input type="checkbox" id="aiOverlayFromChatBot" data-setting="aiOverlayFromChatBot" aria-labelledby="aiOverlayFromChatBotLabel" aria-describedby="aiOverlayFromChatBotDescription" />
 										<span class="slider round"></span>
 									</label>
-									<span>Also send primary chat bot replies to this overlay</span>
-									<small style="display:block; margin:4px 0 0 50px; opacity:0.75;">Not needed for dock right-click co-host actions.</small>
+									<span id="aiOverlayFromChatBotLabel">Also send primary chat bot replies to this overlay</span>
+									<small id="aiOverlayFromChatBotDescription" style="display:block; margin:4px 0 0 50px; opacity:0.75;">Not needed for dock right-click co-host actions.</small>
 								</div>
 								<div style="display: inline-block;" title="Let the AI stage overlay speak using browser text-to-speech. Default is off to avoid doubled audio.">
 									<label class="switch">
-										<input type="checkbox" id="aiOverlayTts" data-setting="aiOverlayTts" />
+										<input type="checkbox" id="aiOverlayTts" data-setting="aiOverlayTts" aria-labelledby="aiOverlayTtsLabel" />
 										<span class="slider round"></span>
 									</label>
-									<span>Enable overlay TTS</span>
+									<span id="aiOverlayTtsLabel">Enable overlay TTS</span>
 								</div>
 								<div class="textInputContainer" style="width: 95%;">
 									<input type="text" id="aiOverlayLabel" class="textInput" autocomplete="off" placeholder="cohost-overlay" data-textsetting="aiOverlayLabel" />
@@ -10874,7 +10923,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="enable-the-hype-meters-processing">🚦 Enable the hype meter's processing </span>
                                 </div>
-								<h3>Credits settings</h3>
+								<h3><span data-translate="other-customization-options">Other customization options</span></h3>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param4="alignright" />
@@ -12997,46 +13046,40 @@ input:checked + .slider:before {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group credits">
-                                <h3><span data-translate="other-customization-options">Other customization options</span></h3>
+								<h3>Credits settings <small><a class="lightblue" target="_blank" rel="noopener" href="https://socialstream.ninja/beta/docs/credits-roll-guide.html">[guide]</a></small></h3>
 								<div>
-									<div class="credits-control-panel">
-										<div class="credits-control-fields">
-											<label class="credits-control-field" for="creditsStyleSelect">
-												<span data-translate="display-style-credits">Credits Style</span>
-												<select id="creditsStyleSelect" data-optionparam13="style">
-													<option value="starwars">Star Wars</option>
-													<option value="standard">Standard Roll</option>
-													<option value="minimal">Minimal</option>
-													<option value="elegant">Elegant</option>
-												</select>
-											</label>
-											<label class="credits-control-field" for="creditsTriggerModeSelect">
-												<span data-translate="trigger-mode">Trigger Mode</span>
-												<select id="creditsTriggerModeSelect" data-optionparam13="triggermode">
-													<option value="auto">Auto (visibility-based)</option>
-													<option value="manual">Manual (button-triggered)</option>
-													<option value="background">Background collection (button-triggered)</option>
-												</select>
-											</label>
-										</div>
-										<div class="credits-control-section">
-											<span class="credits-control-label">Quick setup</span>
-											<div class="credits-control-grid">
-												<button type="button" class="credits-control-button" data-credits-preset="supporters">Continuous supporter roll</button>
-												<button type="button" class="credits-control-button" data-credits-preset="donors">Donors-only roll</button>
-											</div>
-										</div>
-										<div class="credits-control-section">
-											<span class="credits-control-label">Controls</span>
-											<div class="credits-actions credits-control-grid">
-												<button type="button" id="creditsStartBtn" class="credits-control-button primary" hidden>Start Credits</button>
-												<button type="button" id="creditsPreviewBtn" class="credits-control-button" hidden>Preview</button>
-												<button type="button" id="creditsBackgroundTestBtn" class="credits-control-button" hidden>Test Background Mode</button>
-												<button type="button" id="creditsResetBtn" class="credits-control-button danger">Reset saved credits</button>
-											</div>
-											<small id="creditsControlHint" class="credits-control-hint"></small>
-										</div>
-									</div>
+									<span data-translate="display-style-credits">Credits Style</span>
+									<select id="creditsStyleSelect" data-optionparam13="style">
+										<option value="starwars">Star Wars</option>
+										<option value="standard">Standard Roll</option>
+										<option value="minimal">Minimal</option>
+										<option value="elegant">Elegant</option>
+									</select>
+								</div>
+								<br>
+								<div>
+									<span data-translate="trigger-mode">Trigger Mode</span>
+									<select id="creditsTriggerModeSelect" data-optionparam13="triggermode">
+										<option value="auto">Auto (visibility-based)</option>
+										<option value="manual">Manual (button-triggered)</option>
+										<option value="background">Background collection (button-triggered)</option>
+									</select>
+								</div>
+								<br>
+								<div class="credits-actions" style="display:flex; gap:8px; flex-wrap:wrap">
+									<button type="button" id="creditsStartBtn" class="glowingButton" hidden><span>Start Credits</span></button>
+									<button type="button" id="creditsPreviewBtn" class="glowingButton" hidden><span>Preview</span></button>
+									<button type="button" id="creditsBackgroundTestBtn" class="glowingButton" hidden><span>Test credits</span></button>
+									<button type="button" id="creditsResetBtn" class="glowingButton"><span>Reset saved credits</span></button>
+								</div>
+								<small id="creditsControlHint" style="display:block; margin-top:6px;"></small>
+								<h3>Quick setup</h3>
+								<div style="display:flex; gap:8px; flex-wrap:wrap">
+									<button type="button" class="glowingButton" data-credits-preset="supporters"><span>Loop supporters</span></button>
+									<button type="button" class="glowingButton" data-credits-preset="donors"><span>Donors only</span></button>
+								</div>
+								<br>
+								<div>
 									<div>
 										<label class="switch">
 											<input type="checkbox" data-param13="onlydonors" />
@@ -14496,7 +14539,7 @@ input:checked + .slider:before {
 									<div class="file-handle-status" data-handle-status="ticker" data-status="missing" data-persisted="false" role="status" aria-live="polite">
 										<div class="status-row">
 											<span class="status-dot" aria-hidden="true"></span>
-											<span class="status-label">No file selected.</span>
+											<span class="status-label" data-translate="file-status-none">No file selected</span>
 										</div>
 										<span class="status-detail"></span>
 									</div>

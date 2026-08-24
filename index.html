@@ -19,24 +19,24 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Social Stream Ninja | Live Social Messaging for Content Creators</title>
-    <meta name="description" content="Social Stream Ninja consolidates live social messaging from YouTube, Twitch, Facebook, TikTok and more into a customizable dashboard. Enhance your live streaming with chat overlays, bot actions, and text-to-speech. Free and easy to use.">
-    <meta name="keywords" content="social stream, live chat, OBS overlay, chat relay, multi-platform chat, content creators, live streaming tools, youtube chat, twitch chat, facebook live">
+    <title>Social Stream Ninja | One Live Chat for Every Platform</title>
+    <meta name="description" content="Bring live chat from YouTube, Twitch, TikTok, Facebook, Kick, and 100+ sources into one dashboard with OBS overlays, TTS, automation, and optional AI cohosts. Free and open source.">
+    <meta name="keywords" content="social stream, live chat, OBS overlay, AI cohost, chat bot, text to speech, chat relay, multi-platform chat, content creators, live streaming tools, youtube chat, twitch chat, facebook live">
     <meta name="author" content="Social Stream Ninja">
     <link rel="canonical" href="https://socialstream.ninja" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://socialstream.ninja">
-    <meta property="og:title" content="Social Stream Ninja | Enhance Your Live Streaming">
-    <meta property="og:description" content="Easily integrate chat messages from various platforms like YouTube, Twitch, and Facebook into your live streams with Social Stream Ninja.">
+    <meta property="og:title" content="Social Stream Ninja | One Live Chat for Every Platform">
+    <meta property="og:description" content="Combine 100+ live-chat sources with OBS overlays, TTS, automation, and optional AI cohosts. Free and open source.">
     <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://socialstream.ninja">
-    <meta property="twitter:title" content="Social Stream Ninja | Live Chat Integration for Streamers">
-    <meta property="twitter:description" content="Social Stream Ninja, a free tool for streamers, integrates live chat from multiple platforms directly into OBS.">
+    <meta property="twitter:title" content="Social Stream Ninja | One Live Chat for Every Platform">
+    <meta property="twitter:description" content="Combine 100+ live-chat sources with OBS overlays, TTS, automation, and optional AI cohosts.">
     <meta property="twitter:image" content="https://socialstream.ninja/media/logo.png">
     
     <link rel="icon" href="./icons/favicon.ico" type="image/x-icon">
@@ -44,6 +44,84 @@
 	<style>
 	.header-controls {
 		width: 94px;
+	}
+	.hero .hero-buttons {
+		justify-content: flex-start;
+	}
+	.hero-proof {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem;
+		margin-top: 2.8rem;
+	}
+	.hero-proof span {
+		padding: .65rem 1.1rem;
+		border: 1px solid var(--border-color);
+		border-radius: 999px;
+		background: var(--card-background);
+		color: var(--text-secondary);
+		font-size: 1.4rem;
+		font-weight: 600;
+	}
+	.ai-showcase {
+		padding: 8rem 0;
+		background: var(--background-dark);
+	}
+	.ai-showcase-header {
+		max-width: 84rem;
+		margin: 0 auto 4rem;
+		text-align: center;
+	}
+	.ai-showcase-header p {
+		color: var(--text-secondary);
+		font-size: 1.9rem;
+	}
+	.ai-options-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 2rem;
+		margin-bottom: 3.5rem;
+	}
+	.ai-option {
+		padding: 2.8rem;
+		border: 1px solid var(--border-color);
+		border-radius: var(--radius-lg);
+		background: var(--card-background);
+		box-shadow: var(--shadow-sm);
+	}
+	.ai-option-label {
+		display: inline-block;
+		margin-bottom: 1.6rem;
+		padding: .45rem .9rem;
+		border-radius: 999px;
+		background: var(--accent-soft);
+		color: var(--primary-color);
+		font-size: 1.3rem;
+		font-weight: 700;
+		letter-spacing: .04em;
+		text-transform: uppercase;
+	}
+	.ai-option p {
+		color: var(--text-secondary);
+	}
+	.ai-showcase-actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 1.5rem;
+	}
+	@media (max-width: 900px) {
+		.ai-options-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+	@media (max-width: 768px) {
+		.hero .hero-buttons {
+			justify-content: center;
+		}
+		.hero-proof {
+			justify-content: center;
+		}
 	}
 	</style>
 </head>
@@ -103,11 +181,16 @@
     <section class="hero">
         <div class="container">
             <div class="hero-content">
-                <h1>Consolidate Your Live Social Messaging Streams</h1>
-                <p>Connect with your audience across Facebook, Youtube, Twitch, Zoom, and dozens more platforms - all in one place.</p>
+                <h1>One live chat. Every platform. Your stream, your way.</h1>
+                <p>Bring messages from YouTube, Twitch, TikTok, Facebook, Kick, and more into one dashboard—then display, speak, relay, moderate, or answer them with AI.</p>
                 <div class="hero-buttons">
-                    <a href="./docs/download.html" class="btn btn-primary">Download Now</a>
-                    <a href="./docs/guides.html" class="btn btn-secondary">View Guides</a>
+                    <a href="./docs/download.html" class="btn btn-primary">Get Social Stream Ninja</a>
+                    <a href="./docs/guides.html" class="btn btn-secondary">See What It Can Do</a>
+                </div>
+                <div class="hero-proof" aria-label="Product highlights">
+                    <span>100+ sources</span>
+                    <span>Free &amp; open source</span>
+                    <span>Chrome &amp; desktop</span>
                 </div>
             </div>
             <div class="hero-image">
@@ -145,8 +228,8 @@
                     <div class="feature-icon">
                         <img src="./icons/llm-support.png" alt="AI Icon">
                     </div>
-                    <h3>LLM Support</h3>
-                    <p>Integrate with Ollama for AI-powered moderation, chat, and custom instructions.</p>
+                    <h3>AI Cohosts &amp; Chat Bots</h3>
+                    <p>Use local or cloud AI for a voice cohost, chat replies, moderation, translation, summaries, and more.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
@@ -184,7 +267,36 @@
             </div>
         </div>
     </section>
-	
+
+	<section class="ai-showcase" id="ai">
+		<div class="container">
+			<div class="ai-showcase-header">
+				<h2>Use AI the way your stream needs it</h2>
+				<p>Talk with a voice cohost, run a separate chat bot, or capture a ChatGPT browser conversation as another source. Each mode is optional.</p>
+			</div>
+			<div class="ai-options-grid">
+				<article class="ai-option">
+					<span class="ai-option-label">Live companion</span>
+					<h3>Voice AI Cohost</h3>
+					<p>Share your microphone and selected live-chat messages with the same cohost session, then broadcast its spoken responses.</p>
+				</article>
+				<article class="ai-option">
+					<span class="ai-option-label">No API key</span>
+					<h3>ChatGPT Browser Source</h3>
+					<p>Open a normal ChatGPT conversation in Chrome and capture new user and completed ChatGPT turns in Social Stream Ninja.</p>
+				</article>
+				<article class="ai-option">
+					<span class="ai-option-label">Automation</span>
+					<h3>Bots &amp; Processing</h3>
+					<p>Generate chat replies, moderate or censor messages, translate, summarize, use RAG context, and build overlays with AI.</p>
+				</article>
+			</div>
+			<div class="ai-showcase-actions">
+				<a href="./docs/ai-modes-guide.html" class="btn btn-primary">Explore Every AI Option</a>
+				<a href="./docs/ai-cohost-guide.html" class="btn btn-secondary">Set Up a Voice Cohost</a>
+			</div>
+		</div>
+	</section>
 
 <section class="platforms">
     <div class="container">
@@ -201,6 +313,7 @@
             <img src="./sources/images/kick.png" alt="Kick">
             <img src="./sources/images/rumble.png" alt="Rumble">
 			<img src="./sources/images/x.png" alt="X">
+			<img src="./sources/images/openai.png" alt="ChatGPT">
             
             <!-- Added 25 more popular platforms -->
             <img src="./sources/images/linkedin.png" alt="LinkedIn">

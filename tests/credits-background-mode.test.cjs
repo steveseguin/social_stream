@@ -10,6 +10,7 @@ const backgroundSource = fs.readFileSync(path.join(repoRoot, "background.js"), "
 const creditsSource = fs.readFileSync(path.join(repoRoot, "credits.html"), "utf8");
 const popupSource = fs.readFileSync(path.join(repoRoot, "popup.js"), "utf8");
 const popupHtml = fs.readFileSync(path.join(repoRoot, "popup.html"), "utf8");
+const creditsGuideSource = fs.readFileSync(path.join(repoRoot, "docs", "credits-roll-guide.html"), "utf8");
 
 for (const match of creditsSource.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)) {
 	if (match[1].trim()) new vm.Script(match[1], { filename: "credits-inline.js" });
@@ -179,14 +180,19 @@ function createBackgroundHarness(initialStorage = {}) {
 
 	assert.ok(popupHtml.includes('<option value="background">Background collection (button-triggered)</option>'));
 	assert.ok(popupHtml.includes('id="creditsBackgroundTestBtn"'));
-	assert.ok(popupHtml.includes('id="creditsStartBtn" class="credits-control-button primary" hidden'));
-	assert.ok(!popupHtml.includes('id="creditsStartBtn" class="glowingButton"'));
+	assert.ok(popupHtml.includes('id="creditsStartBtn" class="glowingButton" hidden'));
+	assert.ok(!popupHtml.includes('class="credits-control-panel"'));
+	assert.ok(popupHtml.includes('https://socialstream.ninja/beta/docs/credits-roll-guide.html'));
 	assert.ok(popupSource.includes('cmd: "creditsBackgroundTest"'));
 	assert.ok(popupSource.includes('function syncCreditsControlUi()'));
 	assert.ok(popupSource.includes("startButton.hidden = !buttonTriggered"));
 	assert.ok(popupSource.includes("testButton.hidden = mode !== 'background'"));
 	assert.ok(creditsSource.includes('replaceCreditsUsersFromSnapshot(data.creditsSnapshot)'));
 	assert.ok(creditsSource.includes('startCredits(creditsUsersFromSnapshot(data.creditsSnapshot))'));
+	assert.ok(creditsSource.includes('>View Credits Guide</a>'));
+	assert.ok(creditsGuideSource.includes('credits-settings-background-mode.png'));
+	assert.ok(creditsGuideSource.includes('credits-roll-preview.png'));
+	assert.ok(creditsGuideSource.includes('https://io.socialstream.ninja/SESSION_ID/creditsStart'));
 
 	console.log("Credits background collection checks passed.");
 })().catch(error => {
