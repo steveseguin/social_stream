@@ -31,9 +31,9 @@
 </head>
 <body>
     <h1>Privacy Policy for Social Stream Ninja</h1>
-    <p><strong>Last Updated: April 11, 2026</strong></p>
+    <p><strong>Last Updated: August 23, 2026</strong></p>
 
-    <p>Social Stream Ninja is open-source software for capturing, relaying, displaying, and automating live chat and related stream events. This policy applies to the Social Stream Ninja browser extension, the hosted Social Stream Ninja pages and overlays, and the standalone desktop app commonly referred to as SSAPP, which loads substantially the same Social Stream logic.</p>
+    <p>Social Stream Ninja is open-source software for capturing, relaying, displaying, and automating live chat and related stream events. This policy applies to the Social Stream Ninja browser extension, the hosted Social Stream Ninja pages and overlays, the standalone desktop app commonly referred to as SSAPP, and the native Social Stream Ninja plugin for Elgato Stream Deck.</p>
 
     <h2>1. Scope and General Approach</h2>
     <p>Social Stream Ninja does not require a central user account to use the core software. However, depending on how you configure it, the software may access, process, store, and transmit information that may qualify as personal information under some laws.</p>
@@ -66,6 +66,7 @@
     <p>Social Stream Ninja stores a significant amount of working data locally on the user's device. Depending on the surface in use, this may include browser storage, localStorage, sessionStorage, IndexedDB, extension storage, Electron app storage, and optional files chosen by the user.</p>
     <p>This local data may include settings, connected source details, cached channel or profile lookups, message history if the user enables it, and authentication/session data needed for enabled features.</p>
     <p>The standalone desktop app may also keep local recovery backups of settings and source storage on the device. Those local backups may include OAuth tokens or other session state so the app can restore a previous working session after restart or failure.</p>
+    <p>The Stream Deck plugin stores its Social Stream Ninja session ID and connection preferences in Stream Deck's local plugin settings. Removing the plugin or clearing its settings removes that plugin configuration from Stream Deck.</p>
 
     <h2>5. When Data May Leave Your Device</h2>
     <p>Depending on how you use the software, information may be transmitted off-device in the following situations:</p>
@@ -73,7 +74,8 @@
     <p><strong>Social Stream Ninja is not designed to transfer user data beyond the transmissions described in this policy, which may occur when you use connected platforms, user-enabled features, user-configured destinations, required helper or service providers, or when security or legal obligations require it.</strong></p>
     <ul>
         <li><strong>Connected platforms and APIs</strong>: When you connect YouTube, Twitch, Kick, Facebook, Discord, or other supported services, the software sends requests to those platforms and may receive or transmit chat, event, profile, and auth-related data.</li>
-        <li><strong>Hosted helper services</strong>: Some features use helper endpoints or hosted pages for auth, lookups, transport, chat, or fallback assets. Examples in current builds include Social Stream Ninja or related helper domains used for auth exchange, lookups, or hosted pages.</li>
+      <li><strong>Hosted helper services</strong>: Some features use helper endpoints or hosted pages for auth, lookups, transport, chat, or fallback assets. Examples in current builds include Social Stream Ninja or related helper domains used for auth exchange, lookups, or hosted pages.</li>
+      <li><strong>Stream Deck controls</strong>: The Stream Deck plugin sends the configured session ID and requested command data to the Social Stream Ninja websocket or HTTP endpoint selected by the user. When HTTP fallback is enabled, command data may be encoded in the request URL.</li>
         <li><strong>User-configured destinations</strong>: If you enable webhooks, relays, bots, AI providers, TTS providers, streamer tools, websocket servers, or other integrations, the software may forward message content, usernames, avatars, event payloads, and related metadata to those destinations.</li>
         <li><strong>Peer or transport services</strong>: If you use VDO.Ninja, WebRTC, TURN relays, hidden iframe bridges, or websocket-based transports, data may pass through those systems. Optional websocket transport may not be end-to-end encrypted.</li>
     </ul>

@@ -47,7 +47,7 @@ This includes:
 
 | Source | Manifest/Load Path | What It Captures Or Does | Source Identity | Support Notes |
 | --- | --- | --- | --- | --- |
-| Joystick DOM chat | `sources/joystick.js` on `https://joystick.tv/u/*/chat` | Watches `#chat-messages` for new `.chat-message` rows. Extracts name, message, streamer badge, notice rows, bot rows, and focuses `input[flow-id="chat-message-text-input"]`. | Payload `type: "joystick"` and `getSource` returns `joystick`. | This is rendered-page capture and can fail before parsing if Joystick/Cloudflare blocks the app session. Joystick bot Gateway/OAuth/send-back belongs to `sources/websocket/joystick.*` and `websocket-source-pages.md`. |
+| Joystick website chat | `sources/joystick.js` plus `sources/inject/joystick-ws.js` on `https://joystick.tv/u/*/chat` | Captures Joystick 2.0 Action Cable chat, whisper, event-log, and system channels, including standard role/private/ID/color fields, edits/deletes, tips, follows, subscriptions, and viewer/follower counters. The socket path enriches missing colors from rendered rows, and a `.chat-message` observer remains the Electron/reconnect fallback. Transport-only `ChatMessageReceived` and unmapped widget state are ignored. | Payload `type: "joystick"` and `getSource` returns `joystick`. | Requires the actual signed-in Joystick chat page. The browser extension installs the interceptor at document start; Electron can fall back to the rendered 2.0 rows. Joystick bot Gateway/OAuth/send-back remains a separate mode in `sources/websocket/joystick.*`. |
 | Velora rendered site | `sources/velora.js` on `https://velora.tv/*` | Watches rendered chat rows, extracts badges before the username button, messages, name color, donation/Volts text, channel-points style "says" events, subscription rows, and viewer counts when viewer-count/hype settings are enabled. | Payload `type: "velora"` and `getSource` returns `velora`. | This DOM path is separate from the Velora OAuth/API source page. Do not promise send-back from the DOM script; send-back belongs to the source-page API path. |
 | Vercel demo launcher | `sources/vercel.js` on `https://maestro-launcher.vercel.app/` | Requests the current SSN stream/session ID from the extension, prompts the user unless `sharestreamid` is already allowed, writes the ID into `#roomId`, and calls the page's `updatedChatID` hook if present. | No chat payload source. | Treat as a demo/helper bridge for session access. It is not chat capture and not a supported social platform parser. |
 | Vertical Pixel Zone | `sources/verticalpixelzone.js` on `https://verticalpixelzone.com/*` | Attempts to watch a rendered chat container and extracts avatar, `.message-username`, and `.message-text-inner` content. Focuses `.input > input[type="text"][name^="chat_"]`. | `getSource` returns `verticalpixelzone`, but emitted payload `type` is `arena` in the inspected file. | Source identity mismatch is important for filters and support answers. The active observer selector looks fragile and needs live validation before promising current support. |
@@ -62,7 +62,7 @@ Joystick, Velora, and VPZone each have two different kinds of support:
 
 | Platform | Rendered Site Script | Source Page / API Script |
 | --- | --- | --- |
-| Joystick | `sources/joystick.js` captures visible chat rows on `joystick.tv/u/*/chat`. | `sources/websocket/joystick.*` handles bot GatewayChannel auth, event normalization, and send-back. |
+| Joystick | `sources/joystick.js` plus `sources/inject/joystick-ws.js` captures the signed-in Joystick 2.0 chat/event channels with a rendered-row fallback. | `sources/websocket/joystick.*` handles bot GatewayChannel auth, event normalization, and send-back. |
 | Velora | `sources/velora.js` captures rendered chat and selected DOM activity rows on `velora.tv/*`. | `sources/websocket/velora.*` handles OAuth/API events, token refresh, viewer updates, and send-back. |
 | VPZone | `sources/vpzone.js` captures rendered rows and consumes intercepted VPZone WebSocket frames from the actual VPZone site. | `sources/websocket/vpzone.*` handles source-page channel/token/OAuth setup, API/socket events, viewer updates, and send-back. |
 
@@ -96,7 +96,7 @@ For support answers, ask which mode the user is using before troubleshooting. A 
 
 ## Extraction Caveats
 
-- This pass was source inspection only, not live browser testing.
+- Joystick 2.0 was validated against the live signed-in <code>/u/*/chat</code> page on 2026-08-23; other platform notes in this page still need their own live validation.
 - `sources/verticalpixelzone.js` has a payload/source identity mismatch and fragile-looking observer selectors; validate live before making strong support claims.
 - `sources/youtube_static.js` is explicitly marked in source comments as a temporary copy. It should not be treated as the canonical static helper while `sources/static/youtube_static.js` is the manifest-loaded helper.
 - `sources/youtube_comments.js` may still be useful as historical context, but no current manifest row loads it.

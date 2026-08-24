@@ -1074,7 +1074,11 @@
 			setEmotion(meta.emotion || meta.mood || state.emotion, meta.talking !== false);
 			showStage();
 			if (meta.tts || meta.speak) {
-				speak(state.text);
+				if (meta.controllerAudio && !urlParams.has("forcetts")) {
+					setStatus("text shown; native co-host audio stays on the controller page");
+				} else {
+					speak(state.text);
+				}
 			} else {
 				setStatus("text shown");
 			}

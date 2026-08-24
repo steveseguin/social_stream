@@ -31,7 +31,8 @@ function waitForChatCount(page, expected) {
   );
 }
 
-async function installFixture(page, useChromeRuntime) {
+async function installFixture(page, useChromeRuntime, waitForStartup) {
+  if (typeof waitForStartup === "undefined") waitForStartup = true;
   await page.setContent(`
     <!doctype html>
     <html>
@@ -131,7 +132,7 @@ async function installFixture(page, useChromeRuntime) {
 
   await page.addScriptTag({ content: source });
   await page.waitForFunction(() => document.getElementById("backlog").dataset.ssnCastyrMessageKey);
-  await page.waitForTimeout(900);
+  if (waitForStartup) await page.waitForTimeout(900);
 }
 
 (async () => {
@@ -288,6 +289,24 @@ async function installFixture(page, useChromeRuntime) {
   });
   await extensionPage.waitForTimeout(400);
   assert.strictEqual((await chatMessages(extensionPage)).length, 3, "disabled source should not send chat");
+
+  const attachmentPage = await browser.newPage();
+  await installFixture(attachmentPage, true, false);
+  await attachmentPage.evaluate(() => {
+    window.__addCastyrMessage(
+      "2026-08-21T12:00:00.000+00:00",
+      "fast-user",
+      "Arrived during attachment",
+      ""
+    );
+  });
+  await attachmentPage.waitForTimeout(900);
+  assert.strictEqual(
+    (await chatMessages(attachmentPage)).length,
+    1,
+    "a live message arriving during attachment must not be dropped"
+  );
+  await attachmentPage.close();
 
   const electronPage = await browser.newPage();
   await installFixture(electronPage, false);

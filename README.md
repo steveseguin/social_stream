@@ -208,11 +208,9 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - sealteamsloth.com (open the pop-out chat: https://sealteamsloth.com/popout-chat/*)
 - on24.com ( Q&A - questions supported)
 - meetme
-- moonbeam.stream (no pop out)
 - music.gala.com (no pop out)
 - WebinarGeek (no pop out ; chat only)
 - live.fc2.com (no pop out)
-- noice.com (main video chat)
 - mixlr (paywalled. cannot support going forward until that's fixed)
 - parti.com (pop out chat)
 - live.nicovideo.jp (no pop out chat)
@@ -228,7 +226,6 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - nextcloud (requires domain added)
 - favorited (studio pop out chat)
 - simps.com/app (open https://simps.com/app/* for chat capture)
-- xeenon (not pop out ; dashboard)
 - streamelements (overlay page)
 - versus.cam (test chat page at https://versus.cam/?testchat)
 - patreon
@@ -257,6 +254,7 @@ Past supported sites that have ceased to exist or been retired.
 - 🪦 soulbound.tv (RIP Nov 2025)
 - 🪦 trovo.live (RIP April 2026)
 - 🪦 dlive.tv (RIP April 2026)
+- 🪦 noice.com (retired)
 - 🪦 Mobcrush (RIP August 2022)
 - 🪦 AfreecaTV / sooplive.co.kr (merged into sooplive.com)
 - 🪦 ArenaTV (livestreaming system shut down)

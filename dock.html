@@ -8676,6 +8676,15 @@
 						// or just send data=false
 						sendDataP2P(false);
 						return isVersionedRemoteControlRequest(data) ? { cleared: true } : true;
+					} else if (data.action == "cohostFeatureMessage") {
+						var cohostMessage = data.value && typeof data.value === "object" ? data.value : null;
+						if (!cohostMessage) return false;
+						var cohostMessageId = cohostMessage.id || cohostMessage.mid;
+						var cohostMessageElement = cohostMessageId ? document.querySelector(dataAttributeSelector("data-mid", cohostMessageId)) : null;
+						if (!cohostMessageElement) cohostMessageElement = processInput(cohostMessage, true);
+						if (!cohostMessageElement) return false;
+						selectedMessage(false, cohostMessageElement);
+						return isVersionedRemoteControlRequest(data) ? { featured: true, messageId: cohostMessageElement.dataset.mid || null } : true;
 					} else if (data.action == "clearBotOverlay") {
 						sendDataP2P({ action: "clearBotOverlay", target: "bot" });
 						return true;

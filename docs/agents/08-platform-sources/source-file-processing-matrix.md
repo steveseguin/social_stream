@@ -179,7 +179,7 @@ These are helper/manual/static source scripts. They often require a toggle or ex
 
 | File | Public Site Card Heuristic | Public Type | Manifest Refs | Flags | Current Depth | Next Extraction Need |
 | --- | --- | --- | ---: | --- | --- | --- |
-| `sources/static/claude.js` | Claude.ai | toggle | 1 | - | quick/heavy | Claude page font/helper behavior; see `manual-static-and-helper-sources.md`. |
+| `sources/static/claude.js` | - | helper | 1 | - | quick/heavy | Claude page font helper only; it does not capture conversations; see `manual-static-and-helper-sources.md`. |
 | `sources/static/kick_chatroom_scout.js` | - | - | 1 | document_start | quick/heavy | Kick chatroom lookup/cache scout, not chat capture; see `manual-static-and-helper-sources.md`. |
 | `sources/static/threads.js` | Threads.net | manual | 1 | - | quick/heavy | Threads manual/static capture helper; see `manual-static-and-helper-sources.md`. |
 | `sources/static/twitch_points.js` | - | - | 1 | document_start | quick/heavy | Twitch channel-points/ad helper, not chat parser; see `manual-static-and-helper-sources.md`. |

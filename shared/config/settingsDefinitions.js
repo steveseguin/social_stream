@@ -239,6 +239,26 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "configure_llm_api",
     description: "OpenAI API key used when the ChatGPT provider is selected."
   },
+  "cohostSpotifyControl": {
+    type: "boolean",
+    category: "configure_llm_api",
+    description: "Allow explicitly requested co-host Spotify controls."
+  },
+  "cohostObsControl": {
+    type: "boolean",
+    category: "configure_llm_api",
+    description: "Allow explicitly requested co-host OBS scene changes."
+  },
+  "cohostObsScenes": {
+    type: "text",
+    category: "configure_llm_api",
+    description: "Comma-separated OBS scene names the co-host is allowed to select."
+  },
+  "cohostFeaturedChatControl": {
+    type: "boolean",
+    category: "configure_llm_api",
+    description: "Allow explicitly requested co-host feature and clear chat actions."
+  },
   "chatgptmodel": {
     type: "text",
     category: "configure_llm_api",
@@ -1588,6 +1608,26 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     type: "select",
     category: "miscellaneous",
     description: "Choose a different translation. Note: Re-open menu to apply any langugage changes to it."
+  },
+  "customTwitchFollowMessage": {
+    type: "text",
+    category: "miscellaneous",
+    description: "Override the selected translation for Twitch follow event messages. Supports {name}."
+  },
+  "customTwitchSubscribedAtTierMessage": {
+    type: "text",
+    category: "miscellaneous",
+    description: "Override the selected translation for Twitch subscription event messages with a tier. Supports {name} and {tier}."
+  },
+  "customTwitchSubscribedMessage": {
+    type: "text",
+    category: "miscellaneous",
+    description: "Override the selected translation for Twitch subscription event messages without a tier. Supports {name}."
+  },
+  "customTwitchResubscribedMessage": {
+    type: "text",
+    category: "miscellaneous",
+    description: "Override the selected translation for Twitch resubscription fallback messages. Supports {name}."
   },
   "trimname": {
     type: "number",

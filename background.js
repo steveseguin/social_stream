@@ -534,6 +534,7 @@ var FacebookDupes = "";
 var FacebookDupesTime = null;
 
 var fetchNode = false;
+var fetchNodeAsync = false;
 var postNode = false;
 var putNode = false;
 
@@ -838,12 +839,23 @@ if (typeof chrome.runtime == "undefined") {
 		});
 	});
 
-	fetchNode = function (URL, headers = {}, method = "GET", body = null) {
+	fetchNode = function (URL, headers = {}, method = "GET", body = null, diagnostics = null) {
 		return ipcRenderer.sendSync("nodefetch", {
 			url: URL,
 			headers: headers,
 			method: method,
-			body: body
+			body: body,
+			diagnostics: diagnostics
+		});
+	};
+
+	fetchNodeAsync = function (URL, headers = {}, method = "GET", body = null, diagnostics = null) {
+		return ipcRenderer.invoke("nodefetch", {
+			url: URL,
+			headers: headers,
+			method: method,
+			body: body,
+			diagnostics: diagnostics
 		});
 	};
 
@@ -1795,8 +1807,9 @@ function loadSettings(item, resave = false) {
 		relaytargets = false;
 	}
 
-	if (settings.translationlanguage) {
-		changeLg(settings.translationlanguage.optionsetting);
+	const selectedTranslationLanguage = settings.translationlanguage?.optionsetting || "";
+	if (selectedTranslationLanguage || hasCustomTranslationOverrides()) {
+		changeLg(selectedTranslationLanguage);
 	}
 	/////
 	const customJs = localStorage.getItem("customJavaScript");
@@ -1824,6 +1837,38 @@ var miscTranslations = {
 	someonesaid: "Someone said: ",
 	someone: "Someone"
 };
+
+const CUSTOM_TRANSLATION_SETTINGS = Object.freeze({
+	customTwitchFollowMessage: "twitch-started-following-message",
+	customTwitchSubscribedMessage: "twitch-subscribed-message",
+	customTwitchSubscribedAtTierMessage: "twitch-subscribed-at-tier-message",
+	customTwitchResubscribedMessage: "twitch-resubscribed-message"
+});
+
+function getCustomTranslationOverrides() {
+	const overrides = {};
+	Object.keys(CUSTOM_TRANSLATION_SETTINGS).forEach(function(settingKey) {
+		const value = settings[settingKey]?.textsetting;
+		if (typeof value === "string" && value.trim()) {
+			overrides[CUSTOM_TRANSLATION_SETTINGS[settingKey]] = value.trim();
+		}
+	});
+	return overrides;
+}
+
+function hasCustomTranslationOverrides() {
+	return Object.keys(getCustomTranslationOverrides()).length > 0;
+}
+
+function applyCustomTranslationOverrides(baseTranslation) {
+	const overrides = getCustomTranslationOverrides();
+	if (!Object.keys(overrides).length) {
+		return baseTranslation || false;
+	}
+	const translationData = baseTranslation && typeof baseTranslation === "object" ? baseTranslation : {};
+	translationData.innerHTML = Object.assign({}, translationData.innerHTML || {}, overrides);
+	return translationData;
+}
 // In background.js or a shared utility file
 async function fetchWithTimeout(url, optionsOrTimeout = {}, timeoutOrHeaders = 8000) {
 	const argCount = arguments.length;
@@ -1908,6 +1953,201 @@ async function fetchWithTimeout(url, optionsOrTimeout = {}, timeoutOrHeaders = 8
 }
 // Make it globally available if needed by other parts of background.js, or export if using modules
 window.fetchWithTimeout = fetchWithTimeout;
+
+let openAIRealtimeSafetyIdentifierPromise = null;
+let openAIRealtimeCohostCapabilityPromise = null;
+let openAIRealtimeCohostCapabilityRecord = null;
+let openAIRealtimeCohostCapabilityMustRotate = false;
+const openAIRealtimeMintTimes = new Map();
+const COHOST_CAPABILITY_STORAGE_KEY = "cohostAccessCapability";
+const COHOST_CAPABILITY_LIFETIME_MS = 12 * 60 * 60 * 1000;
+function getOpenAIRealtimeSafetyIdentifier() {
+	if (openAIRealtimeSafetyIdentifierPromise) return openAIRealtimeSafetyIdentifierPromise;
+	openAIRealtimeSafetyIdentifierPromise = (async () => {
+		if (!globalThis.crypto?.subtle || typeof TextEncoder === "undefined") return "";
+		const source = "ssn-realtime:" + String(streamID || "local-user");
+		const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(source));
+		return Array.from(new Uint8Array(digest)).map(value => value.toString(16).padStart(2, "0")).join("");
+	})().catch(() => "");
+	return openAIRealtimeSafetyIdentifierPromise;
+}
+
+function getOpenAIRealtimeCohostCapability() {
+	const now = Date.now();
+	const scope = String(streamID || "");
+	const mustRotate = openAIRealtimeCohostCapabilityMustRotate;
+	if (
+		openAIRealtimeCohostCapabilityRecord &&
+		openAIRealtimeCohostCapabilityRecord.scope === scope &&
+		openAIRealtimeCohostCapabilityRecord.expiresAt > now
+	) {
+		return Promise.resolve(openAIRealtimeCohostCapabilityRecord.value);
+	}
+	if (openAIRealtimeCohostCapabilityPromise) return openAIRealtimeCohostCapabilityPromise;
+	openAIRealtimeCohostCapabilityPromise = new Promise(resolve => {
+		const createCapability = () => {
+			if (!globalThis.crypto || typeof globalThis.crypto.getRandomValues !== "function") return "";
+			const bytes = new Uint8Array(32);
+			globalThis.crypto.getRandomValues(bytes);
+			return Array.from(bytes).map(value => value.toString(16).padStart(2, "0")).join("");
+		};
+		const finish = storedValue => {
+			const storedRecord = storedValue && typeof storedValue === "object" ? storedValue : null;
+			const existing = String(storedRecord?.value || "");
+			const existingExpiresAt = Number(storedRecord?.expiresAt || 0);
+			if (!mustRotate && /^[a-f0-9]{64}$/i.test(existing) && storedRecord.scope === scope && existingExpiresAt > Date.now()) {
+				openAIRealtimeCohostCapabilityRecord = {
+					value: existing,
+					scope,
+					expiresAt: existingExpiresAt
+				};
+				resolve(existing);
+				return;
+			}
+			const created = createCapability();
+			const createdRecord = {
+				value: created,
+				scope,
+				expiresAt: Date.now() + COHOST_CAPABILITY_LIFETIME_MS
+			};
+			openAIRealtimeCohostCapabilityRecord = createdRecord;
+			openAIRealtimeCohostCapabilityMustRotate = false;
+			if (!created || typeof chrome === "undefined" || !chrome.storage?.local?.set) {
+				resolve(created);
+				return;
+			}
+			chrome.storage.local.set({ [COHOST_CAPABILITY_STORAGE_KEY]: createdRecord }, () => resolve(created));
+		};
+		if (typeof chrome === "undefined" || !chrome.storage?.local?.get) {
+			finish("");
+			return;
+		}
+		chrome.storage.local.get([COHOST_CAPABILITY_STORAGE_KEY], item => {
+			finish(item && item[COHOST_CAPABILITY_STORAGE_KEY]);
+		});
+	})
+		.catch(() => "")
+		.finally(() => {
+			openAIRealtimeCohostCapabilityPromise = null;
+		});
+	return openAIRealtimeCohostCapabilityPromise;
+}
+
+function enforceOpenAIRealtimeMintRateLimit(peerId, capability) {
+	const keys = ["peer:" + String(peerId || "unknown")];
+	if (capability) keys.push("capability:" + String(capability));
+	const now = Date.now();
+	for (const key of keys) {
+		const previous = openAIRealtimeMintTimes.get(key) || 0;
+		if (now - previous < 5000) throw new Error("Wait a few seconds before creating another OpenAI Realtime session.");
+	}
+	for (const key of keys) openAIRealtimeMintTimes.set(key, now);
+	if (openAIRealtimeMintTimes.size > 100) {
+		for (const [entryKey, timestamp] of openAIRealtimeMintTimes.entries()) {
+			if (now - timestamp > 5 * 60 * 1000) openAIRealtimeMintTimes.delete(entryKey);
+		}
+	}
+}
+
+function assertOpenAIRealtimeBrokerAvailable() {
+	if (!isExtensionOn) {
+		throw new Error("Turn on Social Stream Ninja before starting OpenAI Realtime.");
+	}
+}
+
+function supportsOpenAIRealtimeReasoning(model) {
+	return !/^gpt-realtime(?:$|-1(?:[.-]|$))/i.test(String(model || ""));
+}
+
+function isOpenAIRealtimeReasoningCompatibilityError(status, payload) {
+	if (status !== 400 && status !== 422) return false;
+	const error = payload && payload.error ? payload.error : {};
+	const identity = [error.param, error.code, error.type, error.message, payload && payload.message].filter(Boolean).join(" ");
+	return /reasoning/i.test(identity) && /(unsupported|unknown|invalid|not supported|unrecognized)/i.test(identity);
+}
+
+async function createOpenAIRealtimeClientSecret(request = {}) {
+	const apiKey = String(settings?.chatgptApiKey?.textsetting || "").trim();
+	if (!apiKey) {
+		throw new Error("Add your OpenAI API key under Chat Bots and AI services before starting OpenAI Realtime.");
+	}
+	const requestedModel = String(request.model || "").trim();
+	const model = /^gpt-realtime(?:-[a-z0-9.-]+)?$/i.test(requestedModel) ? requestedModel : "gpt-realtime-2.1";
+	const instructions = String(request.instructions || "").trim().slice(0, 12000);
+	const outputModalities = request.outputModalities === "text" ? ["text"] : ["audio"];
+	const requestedReasoningEffort = String(request.reasoningEffort || "").trim().toLowerCase();
+	const reasoningEffort = ["minimal", "low", "medium", "high", "xhigh"].includes(requestedReasoningEffort) ? requestedReasoningEffort : "";
+	const requestedVadEagerness = String(request.vadEagerness || "auto").trim().toLowerCase();
+	const vadEagerness = ["low", "medium", "high", "auto"].includes(requestedVadEagerness) ? requestedVadEagerness : "auto";
+	const safetyIdentifier = await getOpenAIRealtimeSafetyIdentifier();
+	const headers = {
+		Authorization: "Bearer " + apiKey,
+		"Content-Type": "application/json"
+	};
+	if (safetyIdentifier) headers["OpenAI-Safety-Identifier"] = safetyIdentifier;
+	const buildRequestBody = includeReasoning => ({
+		session: {
+			type: "realtime",
+			model,
+			instructions,
+			output_modalities: outputModalities,
+			max_output_tokens: 512,
+			...(includeReasoning ? { reasoning: { effort: reasoningEffort } } : {}),
+			audio: {
+				input: {
+					transcription: { model: "gpt-4o-mini-transcribe" },
+					turn_detection: {
+						type: "semantic_vad",
+						eagerness: vadEagerness,
+						create_response: false,
+						interrupt_response: true
+					}
+				},
+				output: { voice: "marin" }
+			}
+		}
+	});
+	const requestSecret = async includeReasoning => {
+		const response = await fetchWithTimeout(
+			"https://api.openai.com/v1/realtime/client_secrets",
+			{
+				method: "POST",
+				headers,
+				body: JSON.stringify(buildRequestBody(includeReasoning))
+			},
+			15000
+		);
+		let payload = null;
+		try {
+			payload = await response.json();
+		} catch (_error) {}
+		return { response, payload };
+	};
+	let reasoningSupported = true;
+	let includeReasoning = !!reasoningEffort && supportsOpenAIRealtimeReasoning(model);
+	if (reasoningEffort && !includeReasoning) reasoningSupported = false;
+	let result = await requestSecret(includeReasoning);
+	if (!result.response.ok && includeReasoning && isOpenAIRealtimeReasoningCompatibilityError(result.response.status, result.payload)) {
+		includeReasoning = false;
+		reasoningSupported = false;
+		result = await requestSecret(false);
+	}
+	const response = result.response;
+	const payload = result.payload;
+	if (!response.ok) {
+		const message = payload?.error?.message || payload?.message || "OpenAI could not create a Realtime client secret.";
+		throw new Error("OpenAI Realtime setup failed (" + response.status + "): " + message);
+	}
+	if (!payload || typeof payload.value !== "string" || !payload.value) {
+		throw new Error("OpenAI returned an invalid Realtime client secret response.");
+	}
+	return {
+		value: payload.value,
+		expires_at: payload.expires_at || null,
+		model,
+		reasoning_supported: reasoningSupported
+	};
+}
 
 let videoStatsPollTimer = null;
 let videoStatsPollInFlight = false;
@@ -2623,7 +2863,7 @@ async function changeLg(lang) {
 	log("changeLg: " + lang);
 	if (!lang) {
 		log("DISABLING TRANSLATIONS");
-		settings.translation = false;
+		settings.translation = applyCustomTranslationOverrides(false);
 		chrome.storage.local.set({
 			settings: settings
 		});
@@ -2646,7 +2886,7 @@ async function changeLg(lang) {
 							});
 						}
 						data.miscellaneous = miscTranslations;
-						settings.translation = data;
+						settings.translation = applyCustomTranslationOverrides(data);
 						chrome.storage.local.set({
 							settings: settings
 						});
@@ -5445,12 +5685,13 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			sendResponse({ state: isExtensionOn, dockTransportHealth: getDockTransportHealth() });
 		} else if (request.cmd && request.cmd === "getSettings") {
 			ensureHandleStatusCache();
+			const cohostCapability = await getOpenAIRealtimeCohostCapability();
 			let responseData;
 			try {
-				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode(), documents: documentsRAG, handleStatus: getHandleStatusSnapshot() };
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode(), documents: documentsRAG, handleStatus: getHandleStatusSnapshot(), cohostCapability };
 			} catch (e) {
 				console.warn("Error including documentsRAG:", e);
-				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode(), handleStatus: getHandleStatusSnapshot() };
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode(), handleStatus: getHandleStatusSnapshot(), cohostCapability };
 			}
 			sendResponse(responseData);
 		} else if (request.cmd && request.cmd === "claimInstagramInboxPoller") {
@@ -5465,6 +5706,14 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				request.accountId,
 				request.storyKeys
 			));
+		} else if (request.cmd && request.cmd === "createOpenAIRealtimeClientSecret") {
+			try {
+				assertOpenAIRealtimeBrokerAvailable();
+				const clientSecret = await createOpenAIRealtimeClientSecret(request);
+				sendResponse({ success: true, clientSecret });
+			} catch (error) {
+				sendResponse({ success: false, error: { message: error?.message || "OpenAI Realtime setup failed." } });
+			}
 		} else if (request.cmd && request.cmd === "testLLMProvider") {
 			try {
 				const llmResponse = await callLLMAPI(request.prompt || "Reply with one short sentence confirming this chatbot connection works.", null, null, null, null, null, { settings: request.settingsOverride || null });
@@ -5477,7 +5726,11 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 						status: error.status,
 						code: error.code,
 						message: error.message,
-						hint: error.hint || null
+						hint: error.hint || null,
+						requestId: error.requestId || null,
+						organization: error.organization || null,
+						project: error.project || null,
+						missingScope: error.missingScope || null
 					};
 				} else {
 					payload = {
@@ -5574,18 +5827,13 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				settings[pattern] = findExistingEvents(pattern, { settings });
 			});
 
-			// For language changes, wait for storage AND translation file load to complete
+			// Translation files are the defaults; custom event wording is merged on top.
 			// This prevents race conditions where popup reloads before translation is ready
-			if (request.setting === "translationlanguage") {
+			if (request.setting === "translationlanguage" || Object.prototype.hasOwnProperty.call(CUSTOM_TRANSLATION_SETTINGS, request.setting)) {
 				chrome.storage.local.set({ settings: settings }, async () => {
 					chrome.runtime.lastError;
-					// Wait for changeLg to complete - it fetches the translation file
-					// and saves settings.translation to storage
-					if (settings.translationlanguage && settings.translationlanguage.optionsetting) {
-						await changeLg(settings.translationlanguage.optionsetting);
-					} else {
-						await changeLg(request.value);
-					}
+					const selectedLanguage = settings.translationlanguage?.optionsetting || "";
+					await changeLg(request.setting === "translationlanguage" ? (selectedLanguage || request.value) : selectedLanguage);
 					sendResponse({ state: isExtensionOn, saved: true });
 				});
 				return true; // Keep message channel open for async response
@@ -7002,6 +7250,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			updateReplaySpeed(request.sessionId, request.speed);
 			sendResponse({ success: true, state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "sidUpdated") {
+			const previousCohostCapabilityScope = String(streamID || "") + "\n" + String(password || "");
 			if (request.streamID) {
 				streamID = request.streamID;
 
@@ -7043,6 +7292,12 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if ("state" in request) {
 				isExtensionOn = request.state;
 			}
+			const nextCohostCapabilityScope = String(streamID || "") + "\n" + String(password || "");
+			if (previousCohostCapabilityScope !== nextCohostCapabilityScope) {
+				openAIRealtimeCohostCapabilityRecord = null;
+				openAIRealtimeCohostCapabilityPromise = null;
+				openAIRealtimeCohostCapabilityMustRotate = true;
+			}
 			persistSession({ streamId: streamID, state: isExtensionOn });
 			if (iframe) {
 				if (iframe.src) {
@@ -7056,11 +7311,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				initTransport(streamID, password);
 			}
 
-			if (isSSAPP) {
-				sendResponse({ state: isExtensionOn });
-			} else {
-				sendResponse({ state: isExtensionOn, streamID: streamID, password: password });
-			}
+			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, cohostCapability: await getOpenAIRealtimeCohostCapability() });
 		} else if (request.cmd && request.cmd === "uploadCustomJs") {
 			localStorage.setItem("customJavaScript", request.data);
 			try {
@@ -13249,13 +13500,34 @@ async function handleSpotifyAction(msg) {
 	return result;
 }
 
+function getCohostObsSceneAllowlist() {
+	const raw = settings.cohostObsScenes && typeof settings.cohostObsScenes.textsetting === "string" ? settings.cohostObsScenes.textsetting : "";
+	return raw.split(",").map(function (scene) {
+		return scene.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 120);
+	}).filter(function (scene, index, scenes) {
+		return !!scene && scenes.map(function (value) { return value.toLowerCase(); }).indexOf(scene.toLowerCase()) === index;
+	}).slice(0, 50);
+}
+
 function getCohostToolStatus() {
+	const obsScenes = getCohostObsSceneAllowlist();
 	return {
 		tools: {
 			spotify: {
 				enabled: !!settings.cohostSpotifyControl,
 				configured: !!(settings.spotifyEnabled && spotify),
 				available: !!(settings.cohostSpotifyControl && settings.spotifyEnabled && spotify)
+			},
+			obs: {
+				enabled: !!settings.cohostObsControl,
+				configured: obsScenes.length > 0,
+				available: !!settings.cohostObsControl && obsScenes.length > 0,
+				scenes: obsScenes
+			},
+			featuredChat: {
+				enabled: !!settings.cohostFeaturedChatControl,
+				configured: true,
+				available: !!settings.cohostFeaturedChatControl
 			}
 		}
 	};
@@ -13326,24 +13598,85 @@ function normalizeCohostSpotifyRequest(request) {
 }
 
 async function handleCohostToolRequest(request) {
-	if (!request || request.tool !== "spotify") {
-		return { tool: request && request.tool ? request.tool : "", command: request && request.command ? request.command : "", success: false, message: "Unsupported co-host tool." };
+	const tool = request && request.tool ? String(request.tool) : "";
+	const command = request && request.command ? String(request.command) : "";
+	if (tool === "spotify") {
+		if (!settings.cohostSpotifyControl) {
+			return { tool, command, success: false, message: "Co-host Spotify control is disabled in the popup." };
+		}
+		const normalized = normalizeCohostSpotifyRequest(request);
+		if (normalized.error) {
+			return { tool, command, success: false, message: normalized.error };
+		}
+		const result = await handleSpotifyAction(normalized.msg);
+		return {
+			tool,
+			command: command || normalized.msg.spotifyAction,
+			success: !!(result && result.success),
+			message: result && result.message ? result.message : result && result.success ? "Spotify command completed." : "Spotify command failed.",
+			track: result && result.track ? result.track : null
+		};
 	}
-	if (!settings.cohostSpotifyControl) {
-		return { tool: "spotify", command: request.command || "", success: false, message: "Co-host Spotify control is disabled in the popup." };
+	if (tool === "obs") {
+		if (!settings.cohostObsControl) {
+			return { tool, command, success: false, message: "Co-host OBS scene control is disabled in the popup." };
+		}
+		if (command !== "switchScene") {
+			return { tool, command, success: false, message: "Unsupported OBS command." };
+		}
+		const requestedSceneName = String(request.value && request.value.sceneName || "").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 120);
+		if (!requestedSceneName) {
+			return { tool, command, success: false, message: "An OBS scene name is required." };
+		}
+		const allowedScenes = getCohostObsSceneAllowlist();
+		const sceneName = allowedScenes.find(function (scene) { return scene.toLowerCase() === requestedSceneName.toLowerCase(); });
+		if (!sceneName) {
+			return { tool, command, success: false, message: "That OBS scene is not in the co-host allowlist." };
+		}
+		const sentToActions = await sendTargetP2P({ actionType: "obsChangeScene", sceneName }, "actions", { retry: false });
+		return {
+			tool,
+			command,
+			success: sentToActions,
+			message: sentToActions ? "OBS scene change request delivered to Flow Actions." : "Flow Actions is not connected; open actions.html with the same SSN session and connect it to OBS.",
+			sceneName
+		};
 	}
-	const normalized = normalizeCohostSpotifyRequest(request);
-	if (normalized.error) {
-		return { tool: "spotify", command: request.command || "", success: false, message: normalized.error };
+	if (tool === "featuredChat") {
+		if (!settings.cohostFeaturedChatControl) {
+			return { tool, command, success: false, message: "Co-host featured chat control is disabled in the popup." };
+		}
+		if (command === "clear") {
+			const cleared = await sendTargetP2P({ action: "clearOverlay" }, "dock", { retry: false });
+			return { tool, command, success: cleared, message: cleared ? "Featured chat clear request delivered to the dock." : "No Streaming Chat dock is connected." };
+		}
+		if (command !== "feature") {
+			return { tool, command, success: false, message: "Unsupported featured chat command." };
+		}
+		const value = request.value && typeof request.value === "object" ? request.value : {};
+		const sourceMessage = value.message && typeof value.message === "object" ? value.message : null;
+		if (!sourceMessage) {
+			return { tool, command, success: false, message: "A recent chat message is required." };
+		}
+		const allowedKeys = ["id", "mid", "chatname", "chatmessage", "chatimg", "chatbadges", "type", "platform", "nameColor", "backgroundColor", "textColor", "hasDonation", "donoValue", "membership", "subtitle", "contentimg", "event", "textonly", "meta"];
+		const featuredMessage = {};
+		allowedKeys.forEach(function (key) {
+			if (Object.prototype.hasOwnProperty.call(sourceMessage, key)) featuredMessage[key] = sourceMessage[key];
+		});
+		if (typeof featuredMessage.chatname !== "string" || typeof featuredMessage.chatmessage !== "string" || !featuredMessage.chatmessage.trim()) {
+			return { tool, command, success: false, message: "The selected chat message is invalid." };
+		}
+		featuredMessage.chatname = featuredMessage.chatname.slice(0, 80);
+		featuredMessage.chatmessage = featuredMessage.chatmessage.slice(0, 500);
+		featuredMessage.textonly = true;
+		if (JSON.stringify(featuredMessage).length > 24000) {
+			return { tool, command, success: false, message: "The selected chat message is too large to feature." };
+		}
+		const safeMessage = typeof sanitizeRelayPayloadFields === "function" ? sanitizeRelayPayloadFields(featuredMessage) : featuredMessage;
+		const featured = await sendTargetP2P({ action: "cohostFeatureMessage", value: safeMessage }, "dock", { retry: false });
+		return { tool, command, success: featured, message: featured ? "Feature request for " + featuredMessage.chatname + " was delivered to the dock." : "No Streaming Chat dock is connected." };
 	}
-	const result = await handleSpotifyAction(normalized.msg);
-	return {
-		tool: "spotify",
-		command: request.command || normalized.msg.spotifyAction,
-		success: !!(result && result.success),
-		message: result && result.message ? result.message : result && result.success ? "Spotify command completed." : "Spotify command failed.",
-		track: result && result.track ? result.track : null
-	};
+	return { tool, command, success: false, message: "Unsupported co-host tool." };
 }
 
 function sendTickerP2P(data, uid = null) {
@@ -14875,10 +15208,39 @@ async function processIncomingRequest(request, UUID = false) {
 				);
 			}
 		} else if (request.action === "cohostToolStatus" && UUID) {
-			const status = getCohostToolStatus();
-			sendDataP2P({ cohostToolStatus: { target: request.target || null, value: status, tools: status.tools } }, UUID);
+			const expectedCapability = await getOpenAIRealtimeCohostCapability();
+			if (!expectedCapability || String(request.capability || "") !== expectedCapability) {
+				sendDataP2P({ cohostToolStatus: { target: request.target || null, error: "Co-host access denied. Reopen the co-host link from the SSN popup." } }, UUID);
+			} else {
+				const status = getCohostToolStatus();
+				sendDataP2P({ cohostToolStatus: { target: request.target || null, value: status, tools: status.tools } }, UUID);
+			}
+		} else if (request.action === "openaiRealtimeClientSecret" && UUID) {
+			try {
+				assertOpenAIRealtimeBrokerAvailable();
+				const expectedCapability = await getOpenAIRealtimeCohostCapability();
+				const suppliedCapability = String(request.value?.capability || "");
+				if (!expectedCapability || suppliedCapability !== expectedCapability) {
+					throw new Error("OpenAI Realtime access denied. Reopen the co-host link from the SSN popup.");
+				}
+				enforceOpenAIRealtimeMintRateLimit(UUID, suppliedCapability);
+				const clientSecret = await createOpenAIRealtimeClientSecret(request.value || {});
+				sendDataP2P({ openaiRealtimeClientSecret: Object.assign({ target: request.target || null, success: true }, clientSecret) }, UUID);
+			} catch (error) {
+				sendDataP2P({
+					openaiRealtimeClientSecret: {
+						target: request.target || null,
+						success: false,
+						error: { message: error?.message || "OpenAI Realtime setup failed." }
+					}
+				}, UUID);
+			}
 		} else if (request.action === "cohostTool" && UUID) {
 			try {
+				const expectedCapability = await getOpenAIRealtimeCohostCapability();
+				if (!expectedCapability || String(request.capability || "") !== expectedCapability) {
+					throw new Error("Co-host access denied. Reopen the co-host link from the SSN popup.");
+				}
 				const result = await handleCohostToolRequest(request);
 				sendDataP2P({ cohostToolResponse: Object.assign({ target: request.target || null }, result) }, UUID);
 			} catch (error) {

@@ -23,6 +23,7 @@ function findImage(result, className) {
 		await page.addScriptTag({ content: source });
 		await page.addScriptTag({
 			content: `
+				applyKickCoreFallbacks();
 				window.__kickAssetTest = {
 					render: function (message, fallback, payload) {
 						return renderKickMessageHtml(message, fallback, payload);
@@ -32,6 +33,61 @@ function findImage(result, className) {
 					},
 					setTextOnly: function (value) {
 						extension.settings.textonlymode = { setting: value === true };
+					},
+					setChannelIds: function (chatroomId, channelId) {
+						state.socket.chatroomId = chatroomId;
+						state.socket.channelId = channelId;
+						state.channelId = channelId;
+						state.channelSlug = 'kick-gift-test';
+						return getPusherSubscriptionChannels();
+					},
+					resolveFromBridge: async function (response) {
+						const originalFetch = window.fetch;
+						state.channelSlug = 'kick-gift-test';
+						state.channelId = null;
+						state.socket.chatroomId = null;
+						state.socket.channelId = null;
+						state.socket.userId = null;
+						window.fetch = async function () {
+							return { ok: true, json: async function () { return response; } };
+						};
+						try {
+							await resolveChannelForPusher();
+							return {
+								broadcasterUserId: state.channelId,
+								chatroomId: state.socket.chatroomId,
+								channelId: state.socket.channelId,
+								userId: state.socket.userId,
+							};
+						} finally {
+							window.fetch = originalFetch;
+						}
+					},
+					resetGiftState: function () {
+						state.recentGiftEventIds.clear();
+						state.recentGiftSignatures.clear();
+					},
+					capturePusherFrame: function (frame) {
+						const messages = [];
+						const originalPushMessage = pushMessage;
+						pushMessage = function (data) { messages.push(data); };
+						try {
+							handlePusherMessage({ data: JSON.stringify(frame) });
+						} finally {
+							pushMessage = originalPushMessage;
+						}
+						return messages;
+					},
+					captureBridgePacket: function (packet) {
+						const messages = [];
+						const originalPushMessage = pushMessage;
+						pushMessage = function (data) { messages.push(data); };
+						try {
+							processBridgeEvent(packet);
+						} finally {
+							pushMessage = originalPushMessage;
+						}
+						return messages;
 					}
 				};
 			`
@@ -113,6 +169,15 @@ function findImage(result, className) {
 		assert.strictEqual(result.images.length, 1);
 		assert.strictEqual(result.text.trim(), "metadata sticker");
 
+		const partialFragmentPayload = {
+			message: { fragments: [{ type: "sticker", text: "Party" }] },
+			metadata: { sticker: { id: 654321, name: "Party" } }
+		};
+		result = await inspect(partialFragmentPayload.message, "Party", partialFragmentPayload);
+		sticker = findImage(result, "kick-sticker");
+		assert.ok(sticker, "incomplete sticker fragments must fall back to metadata");
+		assert.strictEqual(sticker.src, "https://files.kick.com/emotes/654321/fullsize");
+
 		const tokenAndMetadata = {
 			message: { content: "[sticker:246:Once]" },
 			metadata: { sticker: { id: 246, name: "Once" } }
@@ -134,6 +199,107 @@ function findImage(result, className) {
 		);
 		assert.ok(!escapedForcedRichHtml.includes("<svg"), "forced-rich sticker labels must remain escaped");
 		assert.ok(escapedForcedRichHtml.includes("&quot;&gt;&lt;svg"));
+
+		const resolvedIds = await page.evaluate(() => window.__kickAssetTest.resolveFromBridge({
+			slug: "kick-gift-test",
+			broadcaster_user_id: "987654321",
+			channel_id: 15462911,
+			chatroom_id: 15250312,
+			chatroom_source: "client",
+		}));
+		assert.deepStrictEqual(resolvedIds, {
+			broadcasterUserId: 987654321,
+			chatroomId: "15250312",
+			channelId: "15462911",
+			userId: "987654321",
+		});
+
+		const subscriptionChannels = await page.evaluate(() =>
+			window.__kickAssetTest.setChannelIds(15250312, 15462911)
+		);
+		assert.deepStrictEqual(subscriptionChannels, [
+			"chatrooms.15250312.v2",
+			"channel.15462911",
+			"channel_15462911",
+		]);
+
+		const kicksGift = {
+			// Captured basic KICK Gift shape; these can omit gift_transaction_id.
+			message: "",
+			sender: { id: 27183991, username: "RubyRiotYT", username_color: "#FF9D00" },
+			gift: {
+				gift_id: "hell_yeah",
+				name: "Hell Yeah",
+				amount: 1,
+				type: "kicks",
+				tier: "tier_1",
+				pinned_time: 0,
+			},
+			created_at: "2026-07-14T22:00:00Z",
+		};
+		const makeGiftFrame = (channel, payload) => ({
+			event: "KicksGifted",
+			channel,
+			data: JSON.stringify(payload),
+		});
+
+		await page.evaluate(() => window.__kickAssetTest.resetGiftState());
+		let captured = await page.evaluate(
+			(frame) => window.__kickAssetTest.capturePusherFrame(frame),
+			makeGiftFrame("channel.15462911", kicksGift)
+		);
+		assert.deepStrictEqual(captured, [], "KicksGifted must be ignored on the legacy dot channel");
+
+		captured = await page.evaluate(
+			(frame) => window.__kickAssetTest.capturePusherFrame(frame),
+			makeGiftFrame("channel_15462911", kicksGift)
+		);
+		assert.strictEqual(captured.length, 1, "KicksGifted must be forwarded from the underscore channel");
+		const giftMessage = captured[0];
+		assert.ok(!Object.prototype.hasOwnProperty.call(giftMessage, "id"));
+		assert.strictEqual(giftMessage.type, "kick");
+		assert.strictEqual(giftMessage.chatname, "RubyRiotYT");
+		assert.strictEqual(giftMessage.chatmessage, "1 KICK - Hell Yeah");
+		assert.strictEqual(giftMessage.hasDonation, "1 KICK");
+		assert.strictEqual(giftMessage.contentimg, "https://files.kick.com/kicks/gifts/hell-yeah.webp");
+		assert.ok(!Object.prototype.hasOwnProperty.call(giftMessage, "event"));
+		assert.strictEqual(giftMessage.meta.giftId, "hell_yeah");
+
+		captured = await page.evaluate((body) => window.__kickAssetTest.captureBridgePacket({
+			type: "kicks.gifted",
+			messageId: "webhook-event-1",
+			body,
+		}), {
+			broadcaster: { user_id: 15462911, username: "kick-gift-test" },
+			sender: { user_id: 27183991, username: "RubyRiotYT" },
+			gift: { amount: 1, name: "Hell Yeah", type: "kicks", tier: "tier_1", message: "" },
+			created_at: "2026-07-14T22:00:00Z",
+		});
+		assert.deepStrictEqual(captured, [], "the bridge copy of a Pusher Gift must be suppressed");
+
+		await page.evaluate(() => window.__kickAssetTest.resetGiftState());
+		const transactionGift = {
+			...kicksGift,
+			gift_transaction_id: "340003001122334",
+			message: "rock on",
+		};
+		captured = await page.evaluate(
+			(frame) => window.__kickAssetTest.capturePusherFrame(frame),
+			makeGiftFrame("channel_15462911", transactionGift)
+		);
+		assert.strictEqual(captured.length, 1);
+		assert.strictEqual(captured[0].id, transactionGift.gift_transaction_id);
+		captured = await page.evaluate(
+			(frame) => window.__kickAssetTest.capturePusherFrame(frame),
+			makeGiftFrame("channel_15462911", transactionGift)
+		);
+		assert.deepStrictEqual(captured, [], "a repeated transaction ID must be suppressed");
+
+		captured = await page.evaluate(
+			(frame) => window.__kickAssetTest.capturePusherFrame(frame),
+			makeGiftFrame("channel_15462911", { ...transactionGift, gift_transaction_id: "340003001122335" })
+		);
+		assert.strictEqual(captured.length, 1, "a second real Gift with identical content must remain visible");
 
 		await page.close();
 		console.log("kick-websocket-assets: all assertions passed");

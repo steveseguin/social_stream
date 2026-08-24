@@ -482,13 +482,53 @@ assert.ok(
   assert.ok(saved.some((message) => message.setting === "font" && message.value === ""));
 }
 
+{
+  let updatedResponse = null;
+  let refreshedPassword = null;
+  const { functions } = loadFunctions(["handleSpecialSettings"], {
+    chrome: {
+      storage: { sync: { set: () => {} } },
+      runtime: {
+        sendMessage: (message, callback) => {
+          assert.strictEqual(message.cmd, "sidUpdated");
+          callback({ state: true, cohostCapability: "rotated-capability" });
+        },
+      },
+    },
+    refreshGeneratedConnectionLinks: (name, value) => {
+      if (name === "password") refreshedPassword = value;
+    },
+    update: (response) => { updatedResponse = response; },
+    log: () => {},
+  });
+  functions.handleSpecialSettings({ dataset: { special: "password" }, value: "new-password" }, true);
+  assert.strictEqual(refreshedPassword, "new-password");
+  assert.deepStrictEqual(updatedResponse, { state: true, cohostCapability: "rotated-capability" });
+}
+
+{
+  const sidUpdatedStart = backgroundSource.indexOf('} else if (request.cmd && request.cmd === "sidUpdated")');
+  const sidUpdatedEnd = backgroundSource.indexOf('} else if (request.cmd && request.cmd === "uploadCustomJs")', sidUpdatedStart);
+  assert.notStrictEqual(sidUpdatedStart, -1, "sidUpdated handler is missing");
+  assert.notStrictEqual(sidUpdatedEnd, -1, "sidUpdated handler end marker is missing");
+  const sidUpdatedHandler = backgroundSource.slice(sidUpdatedStart, sidUpdatedEnd);
+  assert.ok(
+    sidUpdatedHandler.includes("cohostCapability: await getOpenAIRealtimeCohostCapability()"),
+    "sidUpdated must return the rotated cohost capability"
+  );
+  assert.ok(
+    !/if\s*\(isSSAPP\)\s*\{\s*sendResponse\(\{\s*state:\s*isExtensionOn\s*\}\)/.test(sidUpdatedHandler),
+    "SSApp must not receive a reduced sidUpdated response"
+  );
+}
+
 assert.ok(popupHtml.includes('data-edit-link="dock"'));
 assert.ok(popupHtml.includes('id="dock-edit-status"'));
 assert.ok(popupSource.includes('input.value = currentLinkElement && currentLinkElement.raw ? currentLinkElement.raw : "";'));
 assert.ok(popupSource.includes("input.select();"));
 assert.ok(popupSource.includes("refreshGeneratedConnectionLinks('session', xsx);"));
 assert.ok(popupSource.includes("refreshGeneratedConnectionLinks('password', ele.value || '');"));
-assert.ok(popupSource.includes("${hideLinks ? \"Click to open link\" : displayURL}</a>"));
+assert.ok(popupSource.includes("${hideLinks ? \"Click to open link\" : visibleURL}</a>"));
 assert.ok(popupSource.includes("setGeneratedLink(existingOverlay, existingOverlay.raw);"));
 assert.ok(!popupSource.includes(".wrapper:has(.options_group.single_message)"));
 

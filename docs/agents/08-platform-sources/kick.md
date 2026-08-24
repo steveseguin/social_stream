@@ -83,6 +83,8 @@ The standalone app handler `ssapp/resources/electron-kick-handler.js`:
 - Local auth window can use app preload variants, including a Kasada preload path.
 - Shows a port-conflict dialog if both loopback ports are unavailable.
 
+For embedded standard and Google sign-in, keep each platform's `kick.signin` configuration on the `mock` preload with a current, matching Chrome user agent and `mockUserAgentData`. SSApp treats that configuration adaptively: Kick pages receive the Kasada preload while Google pages receive the restricted mock preload. A direct `kasada` sign-in configuration bypasses that adaptive Google path. SSApp derives CPU architecture and bitness from the running build so universal macOS packages do not claim the wrong Intel/Apple Silicon identity. Windows was verified with Chrome 151 settings; macOS and Linux use aligned platform-specific settings but still require live platform verification.
+
 Support implication: if Kick OAuth fails in app, check loopback ports, whether auth opened externally or locally, and whether Kick is blocking with human verification/CAPTCHA.
 
 ## Channel Rewards And Event Flow
