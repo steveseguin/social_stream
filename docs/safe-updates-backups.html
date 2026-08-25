@@ -70,11 +70,12 @@
             </div>
 
             <div class="guide-card">
-                <h2>Browser Extension Backup</h2>
+                <h2>Browser Extension Backup (Chrome, Edge, Firefox)</h2>
                 <ol class="guide-steps">
-                    <li>Open Social Stream Ninja and go to <strong>Global settings and tools</strong>.</li>
+                    <li>Open the Social Stream Ninja control panel and scroll to <strong>Global settings and tools</strong>.</li>
                     <li>Open <strong>Export / import</strong>.</li>
-                    <li>Select <strong>Export to disk</strong> and keep the resulting <code>.data</code> file.</li>
+                    <li>Select <strong>Export to disk</strong>, choose a safe location, and keep the <code>.data</code> extension on the filename.</li>
+                    <li>Confirm that the saved <code>.data</code> file is present before updating, uninstalling, or resetting anything.</li>
                     <li>Use <strong>Import settings</strong> to restore that file later.</li>
                 </ol>
                 <figure class="guide-figure">
@@ -82,8 +83,12 @@
                     <figcaption>The current Export / import panel. Export before using Reset all settings.</figcaption>
                 </figure>
                 <div class="guide-note">
+                    <p><strong>Chrome Web Store and other store-installed extensions:</strong> updates normally install in place and preserve settings. Do not uninstall and reinstall the extension just to force an update.</p>
+                </div>
+                <div class="guide-note">
                     <p><strong>Manual unpacked update:</strong> download and extract the new build, replace the old extension files, then select <strong>Reload</strong> on <code>chrome://extensions</code>. Keep the unpacked folder in place and reload open chat tabs. See <a href="download.html#manual-install">manual installation</a>.</p>
                 </div>
+                <div class="warning-note"><strong>Keep backup files private.</strong> A settings export can contain a session password, webhook or source URLs, and other private configuration. Do not post it publicly.</div>
             </div>
 
             <div class="guide-card">
@@ -105,9 +110,9 @@
                         </tr>
                     </tbody>
                 </table>
-                <p>The normal settings export is the right choice for most updates. Full Session Transfer is larger and replaces the target profile during restore; the app first keeps a <code>pre-restore-*</code> copy of the current profile.</p>
+                <p>The normal settings export is the right choice for most updates. Full Session Transfer is available only in the desktop app; it is larger and replaces the target profile during restore. The app first keeps a <code>pre-restore-*</code> copy of the current profile.</p>
                 <div class="guide-note">
-                    <p><strong>Automatic app updates should preserve the existing profile.</strong> Still export before manually reinstalling, moving between portable and installed builds, changing channels, or trying a reset.</p>
+                    <p><strong>The desktop app does not update itself automatically.</strong> Installing a newer version over the existing installation should preserve the existing profile. Still export first, especially before reinstalling, moving between portable and installed builds, changing channels, or trying a reset.</p>
                 </div>
             </div>
 
@@ -132,7 +137,7 @@
                     <li>The Social Stream session ID and optional session password.</li>
                     <li>Selected desktop preferences used by the app.</li>
                 </ul>
-                <p>A normal settings export is not a complete copy of every browser cookie or site login. Use Full Session Transfer when the entire desktop profile must move.</p>
+                <p>A browser-extension <code>.data</code> backup does not include browser cookies or site login sessions. In the desktop app, a normal settings export also does not copy every cookie or site login; use the desktop-only Full Session Transfer when the entire app profile must move.</p>
             </div>
 
             <template data-copy-markdown-extra>
