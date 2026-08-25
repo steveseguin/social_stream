@@ -99,6 +99,8 @@ Common dock display parameters:
 - `notime`
 - `hidesource`
 - `showsourcename`
+- `showchannelname`
+- `largechannelicon`
 - `noavatar`
 - `nobadges`
 - `striplinks`
@@ -109,6 +111,8 @@ Common dock display parameters:
 - `hidetwitch`
 - `showonlymods`
 - `showonlyvips`
+- `blockedwords`
+- `exactblockedmessages`
 - `showonlydonos`
 - `showonlymembers`
 - `filterevents`

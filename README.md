@@ -970,6 +970,8 @@ When using system TTS, the audio plays through your default system output device
 There is a toggle that lets you show the source of the chat messages.
 
 - &branded will show the channel-icon; Youtube and Twitch channels supported.  Use with the dock or featured file.
+- &largechannelicon enlarges that channel icon in the dock or featured overlay.
+- &showchannelname displays the originating channel name when the source provides one.
 - &showsource can be added to the featured.file, to show the main site the source is from; ie: Youtube, Facebook.
 
 ![image](https://user-images.githubusercontent.com/2575698/166864138-00cd1e1c-2149-473f-be8d-d07a8d400c07.png)

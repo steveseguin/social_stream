@@ -131,7 +131,7 @@ Entries: 9.
 
 ### Message Display
 
-Entries: 24.
+Entries: 26.
 
 | Parameter | Aliases | Values | Short Description |
 | --- | --- | --- | --- |
@@ -154,6 +154,8 @@ Entries: 24.
 | `onlyquestions` | `onlyquestions` | boolean | Shows only messages that contain question metadata |
 | `hidenumbers` | `hidenumbers` | boolean | Hides messages that contain only digits |
 | `showsourcename` | `showsourcename` | boolean | Displays the originating platform label on each card |
+| `showchannelname` | `showchannelname` | boolean | Displays the originating channel name from `sourceName` |
+| `largechannelicon` | `largechannelicon` | boolean | Enlarges the originating channel icon from `sourceImg` |
 | `showviewercount` | `showviewercount` | boolean | Shows the current viewer count indicator |
 | `nocolon` | `nocolon` | boolean | Removes the colon between username and message body |
 | `namefilter` | `namefilter` | boolean | Applies filters to usernames instead of message text |
@@ -162,7 +164,7 @@ Entries: 24.
 
 ### Filtering
 
-Entries: 16.
+Entries: 18.
 
 | Parameter | Aliases | Values | Short Description |
 | --- | --- | --- | --- |
@@ -181,6 +183,8 @@ Entries: 16.
 | `badkarma` | `badkarma` | 0.0-1.0 | Filters messages based on sentiment score |
 | `showonlymods` | `showonlymods` | boolean | Shows messages from moderators only |
 | `showonlyvips` | `showonlyvips` | boolean | Shows messages from VIPs only |
+| `blockedwords` | `blockedwords` | comma-separated strings | Hides messages when their text or username contains a listed value |
+| `exactblockedmessages` | `exactblockedmessages` | comma-separated strings | Hides messages whose full text matches a listed value, ignoring case and surrounding spaces |
 | `excludefiltered` | `excludefiltered` | boolean | Prevents filtered messages from being auto-featured |
 
 ### Message Selection & Queue
@@ -364,7 +368,7 @@ Entries: 8.
 
 ### Google Cloud TTS
 
-Entries: 4.
+Entries: 6.
 
 | Parameter | Aliases | Values | Short Description |
 | --- | --- | --- | --- |
@@ -442,6 +446,8 @@ Entries: 4.
 | `notobs` | `notobs` | boolean | Disables OBS studio detection |
 | `filtertid` | `filtertid` | comma-separated numbers | Filter by thread IDs |
 | `branded` | `branded` | boolean | Shows channel icon |
+| `showchannelname` | `showchannelname` | boolean | Shows the originating channel name |
+| `largechannelicon` | `largechannelicon` | boolean | Enlarges the originating channel icon |
 
 ## Other options for other overlays.
 

@@ -211,7 +211,7 @@ hr {
     border-radius: 3px;
     flex-direction: row;
 }
-.remove-username, .remove-source {
+.remove-username, .remove-source, .remove-user-display-alias {
 	cursor: pointer;
 	color: var(--danger-text);
 	font-weight: bold;
@@ -220,7 +220,8 @@ hr {
 
 /* Source tags keep a dark background in both themes, so their remove buttons need a light red */
 .username-tag .remove-source,
-.username-tag .remove-username {
+.username-tag .remove-username,
+.username-tag .remove-user-display-alias {
 	color: #ffb3b3;
 }
 
@@ -2937,7 +2938,7 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param1="blockedwords" />
 										<span class="slider round"></span>
 									</label>
-									<span>🚫 Block messages containing specific words/phrases</span>
+									<span>🚫 Contains text or name</span>
 									<div class="isolate" style="margin-left: 50px; margin-top: 5px;">
 										<div class="blockedwords-list-container source-list-container" id="blockedwordsList"></div>
 										<div class="add-blockedword-container">
@@ -2945,6 +2946,18 @@ input:checked + .slider:before {
 											<button id="addBlockedWord">Add</button>
 										</div>
 										<input type="text" id="blockedwordsInput" class="textInput hidden" data-textparam1="blockedwords" style="display: none;" />
+									</div>
+								</div>
+								<div data-keywords="filter block hide exact message text moderation blacklist blocklist mute suppress">
+									<label class="switch">
+										<input type="checkbox" data-param1="exactblockedmessages" />
+										<span class="slider round"></span>
+									</label>
+									<span>🚫 Exact message</span>
+									<div style="margin-left: 50px; margin-top: 5px;">
+										<div class="textInputContainer" style="display: none;">
+											<input type="text" id="exactblockedmessages" class="textInput" data-textparam1="exactblockedmessages" />
+										</div>
 									</div>
 								</div>
 								<div data-keywords="donation scrub anonymize remove tip amount hide value private">
@@ -3997,6 +4010,20 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="show-channel-icon">📺 Show channel icon </span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="largechannelicon" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🔎 Use a larger channel icon</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="showchannelname" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>📺 Show originating channel name</span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -5949,6 +5976,20 @@ input:checked + .slider:before {
                                 </div>
                                 <div>
                                     <label class="switch">
+                                        <input type="checkbox" data-param2="largechannelicon" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🔎 Use a larger channel icon</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="showchannelname" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>📺 Show originating channel name</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
                                         <input type="checkbox" data-param2="noavatar" />
                                         <span class="slider round"></span>
                                     </label>
@@ -7212,6 +7253,14 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="hide-stream-events"> Hide stream events (follows, likes, subs) </span>
                                 </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="showtwitchwatchstreaks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <img class="icon" src="./sources/images/twitch.png" style="display: inline-block;" />
+                                    <span> Show Twitch Watch Streaks</span>
+                                </div>
                                 <div id="databaseSettingsRow" title="By default all inbound messages are saved to a local database for later look-up reference">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="disableDB" />
@@ -8455,6 +8504,17 @@ input:checked + .slider:before {
 									>
 										<input type="text" id="viplistusers" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="viplistusers" />
 										⭐ <span data-translate="viplistusers">Identify by name who are <b>VIPs</b></span>
+									</div>
+								</div>
+								<h3>User display names</h3>
+								<p>Show a preferred name while keeping the original username for user actions.</p>
+								<div class="isolate">
+									<div id="userDisplayAliasesList" class="username-list-container"></div>
+									<div id="addUserDisplayAliasContainer" class="add-username-container">
+										<input type="text" id="newUserDisplayAliasIdentifier" autocomplete="off" placeholder="Username or user ID" />
+										<input type="text" id="newUserDisplayAliasDisplayName" autocomplete="off" placeholder="Display as" />
+										<input type="text" id="newUserDisplayAliasType" autocomplete="off" placeholder="Source type (optional)" list="popupSourceTypesList" />
+										<button type="button" id="addUserDisplayAlias">Add</button>
 									</div>
 								</div>
 								<div>
