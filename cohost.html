@@ -8472,7 +8472,7 @@
 							this.responseActive = true;
 							const parts = serverContent.modelTurn.parts;
 							parts.forEach(part => {
-								if (part.text) {
+								if (part.text && part.thought !== true) {
 									this.pendingModelTextResponse += part.text;
 
 									window.dispatchEvent(
@@ -8481,7 +8481,7 @@
 										})
 									);
 								}
-								if (part.inlineData && part.inlineData.mimeType.startsWith("audio/")) {
+								if (part.inlineData && part.inlineData.mimeType.startsWith("audio/") && document.getElementById("responseType")?.value !== "text") {
 									this.pendingAudioResponse = true;
 									try {
 										const rateMatch = part.inlineData.mimeType.match(/rate=(\d+)/);
@@ -8494,6 +8494,17 @@
 									}
 								}
 							});
+						}
+
+						const outputTranscription = serverContent && (serverContent.outputTranscription || serverContent.output_transcription);
+						if (!responseInterrupted && outputTranscription?.text) {
+							this.responseActive = true;
+							this.pendingModelTextResponse += outputTranscription.text;
+							window.dispatchEvent(
+								new CustomEvent("modelResponse", {
+									detail: { text: outputTranscription.text }
+								})
+							);
 						}
 
 						if (!responseInterrupted && (serverContent?.turnComplete || serverContent?.generationComplete)) {
@@ -8756,14 +8767,19 @@
 						}
 
 						if (event.code === 1007) {
-							// Handle invalid JSON payload error specially
+							// Reconnecting cannot repair a payload that Google rejected.
 							if (event.reason && event.reason.includes("Invalid JSON payload")) {
-								console.warn("Invalid JSON payload error, attempting to reconnect");
-								errorMsg = "Connection reset. Reconnecting...";
-								if (!this.stopped) {
-									// For JSON payload errors, try to reconnect with a short delay
-									setTimeout(() => this.reconnect(), 2000);
-								}
+								console.error("Gemini rejected the setup payload:", event.reason);
+								errorMsg = "Gemini rejected the connection setup. Please update Social Stream Ninja or check the model override.";
+								showError(errorMsg);
+								updateDiagnostics({
+									state: "error",
+									connected: "no",
+									lastEvent: "ws.close:1007",
+									lastError: event.reason || errorMsg
+								});
+								this.handleConnectionFailure();
+								return;
 							} else if (event.reason && event.reason.includes("API key")) {
 								errorMsg = "Invalid API key. Please check your key and try again.";
 								this.handleConnectionFailure();
@@ -8806,11 +8822,7 @@
 							errorMsg += " Attempting to reconnect...";
 						}
 
-						// Only show error message to user for permanent failures
-						if (event.code === 1007 && event.reason && event.reason.includes("Invalid JSON payload")) {
-							// Don't show error for temporary JSON issues - these will auto-reconnect
-							console.log("Suppressing error message for automatic reconnection");
-						} else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+						if (this.reconnectAttempts >= this.maxReconnectAttempts) {
 							showError("Connection lost after multiple reconnection attempts. Please restart the co-host.");
 						} else {
 							showError(errorMsg);
@@ -8857,7 +8869,9 @@
 											topK: 1,
 											topP: 1,
 											candidateCount: 1,
-											responseModalities: [responseType.value === "audio" ? "AUDIO" : "TEXT"],
+											// Native-audio Live models only accept AUDIO here. Text-only UI output
+											// is provided by outputAudioTranscription while playback stays muted.
+											responseModalities: ["AUDIO"],
 											...(responseType.value === "audio" && {
 												speechConfig: {
 													voiceConfig: {
@@ -8868,6 +8882,7 @@
 												}
 											})
 										},
+										outputAudioTranscription: {},
 										// Google Live API: {} starts a fresh resumable session; reconnects send { handle }. See https://ai.google.dev/api/live
 										sessionResumption: this.sessionResumptionHandle ? { handle: this.sessionResumptionHandle } : {},
 										contextWindowCompression: {
@@ -9175,7 +9190,7 @@
 							return;
 						}
 						const now = Date.now();
-						if (now - this.lastImageTime >= this.imageInterval) {
+						if (!this.responseActive && now - this.lastImageTime >= this.imageInterval) {
 							this.canvasContext.drawImage(videoElement, 0, 0, this.imageWidth, this.imageHeight);
 							const base64Image = canvas.toDataURL("image/jpeg", 0.8).split(",")[1];
 							this.sendMediaChunk([
