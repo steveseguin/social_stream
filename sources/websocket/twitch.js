@@ -4738,11 +4738,22 @@ async function cleanupCurrentConnection() {
 		return '';
 	}
 
+	function getEventSubUserAvatarUrl(event) {
+		if (!event || event.is_anonymous === true) {
+			return '';
+		}
+		const login = event.user_login || event.user_name || '';
+		return login
+			? `https://api.socialstream.ninja/twitch/large?username=${encodeURIComponent(login)}`
+			: '';
+	}
+
 	function forwardEventSubCheer(event) {
 		pushMessage({
 			type: "twitch",
 			event: 'cheer',
 			chatname: event.user_name || 'Anonymous',
+			chatimg: getEventSubUserAvatarUrl(event),
 			userid: event.user_id,
 			bits: event.bits,
 			chatmessage: getEventSubMessageText(event.message),
