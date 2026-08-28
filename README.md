@@ -612,6 +612,8 @@ There's a link to this page in the Social Stream Ninja options menu itself, but 
 
 https://socialstream.ninja/sampleapi.html?session=xxxxxxxxxx (replacing xxxxxxxx with your Social Stream Ninja session ID to have it work)
 
+For a compact OBS Custom Browser Dock with Credits, featured-chat, timer, and waitlist controls, use https://socialstream.ninja/obs-control-dock.html?session=xxxxxxxxxx. Setup details are in [the OBS Control Dock guide](docs/obs-control-dock-guide.html).
+
 Referring to the source code of the sampleapi.html page is useful if you wish to develop your own API integration, or get a better understanding of the basics.
 
 Most, but not all, API commands are listed there. Referring to the source code or asking Steve on Discord (socialstream.discord.vdo) can help with options not listed.

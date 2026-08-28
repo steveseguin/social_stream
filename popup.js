@@ -3897,6 +3897,11 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     remoteControlUrl.href = buildGeneratedUrl("sampleapi.html", `session=${encodeURIComponent(streamID)}${password}${customParams}${versionParam}`, baseURL);
   }
 
+  const obsControlDockUrl = document.getElementById("obs_control_dock_url");
+  if (obsControlDockUrl) {
+    obsControlDockUrl.href = buildGeneratedUrl("obs-control-dock.html", `session=${encodeURIComponent(streamID)}`, baseURL);
+  }
+
   syncAllOverlayPreviews();
 }
 
@@ -4580,6 +4585,10 @@ function update(response, sync = true) {
 			}
 			
             document.getElementById("remote_control_url").href = baseURL + "sampleapi.html?session=" + response.streamID + password;
+            const obsControlDockUrl = document.getElementById("obs_control_dock_url");
+            if (obsControlDockUrl) {
+                obsControlDockUrl.href = baseURL + "obs-control-dock.html?session=" + encodeURIComponent(response.streamID);
+            }
             // The hideLinks variable is not reset to false globally here, its state is managed by the checkbox and classList.
 
             // Refresh all page links.
@@ -7136,7 +7145,7 @@ function refreshGeneratedConnectionLinks(paramName, value) {
         setGeneratedLink(element, replaceGeneratedConnectionParam(element.raw, paramName, value));
     });
 
-    ['sampleoverlay', 'remote_control_url'].forEach(function(elementId) {
+    ['sampleoverlay', 'remote_control_url', 'obs_control_dock_url'].forEach(function(elementId) {
         const link = document.getElementById(elementId);
         if (!link || !link.href) return;
         link.href = replaceGeneratedConnectionParam(link.href, paramName, value);
@@ -8620,6 +8629,10 @@ function refreshLinks(){
     const remoteCtrlUrlElement = document.getElementById("remote_control_url");
     if (remoteCtrlUrlElement && remoteCtrlUrlElement.href) {
       remoteCtrlUrlElement.href = removeTTSProviderParams(remoteCtrlUrlElement.href);
+    }
+    const obsControlDockUrlElement = document.getElementById("obs_control_dock_url");
+    if (obsControlDockUrlElement && obsControlDockUrlElement.href) {
+      obsControlDockUrlElement.href = removeTTSProviderParams(obsControlDockUrlElement.href);
     }
   } catch (e) {
     console.error("Error cleaning TTS params from links:", e);
