@@ -3920,6 +3920,47 @@ input:checked + .slider:before {
                 </div>
             </div>
 
+            <div class="wrapper beginner-basic">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-chat-name-color-options" />
+                    <label class="collapsible-label" for="wrapper-chat-name-color-options"><span>💬 Username colors</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group streaming_chat">
+                                <div id="colorizename" title="Show username colors supplied by the source. Sources such as YouTube may not supply one.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="color" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="color-names-if-color-info-available">📛 Use source-provided username colors</span>
+                                </div>
+                                <div title="Keep source-provided username colors and generate a consistent color when one is missing.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="randomcolor" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="add-a-random-color-to-uncolored-names">🌈👤 Generate colors for uncolored names</span>
+                                </div>
+                                <div title="Generate a consistent username color in this Dock, replacing colors supplied by the source.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="randomcolorall" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="override-all-name-colors-with-a-random-color">🌈🌈 Generate colors for every name</span>
+                                </div>
+                                <div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+                                    <div class="textInputContainer" style="flex:1; margin-right:5px;">
+                                        <input type="text" id="dock_name_color" class="textInput instant" autocomplete="off" placeholder="e.g. #ffffff" data-textparam1="namecolor" data-palette="dock_name_color_palette" />
+                                        <label for="dock_name_color"><span data-translate="default-name-font-color">&gt; Default name font color</span></label>
+                                    </div>
+                                    <input type="color" data-color="dock_name_color" id="dock_name_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-visibility-options" />
@@ -3927,13 +3968,6 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group streaming_chat">
-								<div id="colorizename">
-                                    <label class="switch">
-                                        <input type="checkbox" data-param1="color" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="color-names-if-color-info-available">📛 Color names if color info available </span>
-                                </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="hidesource" />

@@ -3580,6 +3580,7 @@
 			}
 			var showbadges = true;
 			var colorized = false;
+			var nameColorMode = "none";
 			var horizontal = false;
 			var horizontalReverse = false;
 			var horizontalTickerState = null;
@@ -5071,9 +5072,14 @@
 				doNotAutoshowFiltered = true;
 			}
 
-			if (urlParams.has("colorednames") || urlParams.has("color")) {
-				colorized = true;
+			if (urlParams.has("randomcolorall")) {
+				nameColorMode = "all";
+			} else if (urlParams.has("randomcolor")) {
+				nameColorMode = "missing";
+			} else if (urlParams.has("colorednames") || urlParams.has("color")) {
+				nameColorMode = "supplied";
 			}
+			colorized = nameColorMode !== "none";
 
 			if (urlParams.has("largecontent")) {
 				getById("output").classList.add("largeContent");
@@ -6951,6 +6957,20 @@
 					out = rainbow(out);
 				}
 				return out;
+			}
+
+			function getDockNameColor(data) {
+				if (!data || !data.chatname || !colorized) {
+					return "";
+				}
+
+				var suppliedColor = data.nameColor || "";
+				if (nameColorMode === "all" || (nameColorMode === "missing" && !suppliedColor)) {
+					var identity = data.userid || data.username || data.chatname;
+					return getColorFromString(String(identity).toLowerCase());
+				}
+
+				return suppliedColor;
 			}
 			
 			function deleteMessages(data, deleteOnlyLast=false) {
@@ -11978,10 +11998,11 @@
 					}
 
 					var nameColor = "";
-					if (data.nameColor && colorized) {
-						nameColor = "style='color:" + data.nameColor + ";'";
+					var dockNameColor = getDockNameColor(data);
+					if (dockNameColor) {
+						nameColor = "style='color:" + dockNameColor + ";'";
 						if (largeavatar){
-							nameColor = "style='color:" + data.nameColor + ";display: flex;'";
+							nameColor = "style='color:" + dockNameColor + ";display: flex;'";
 						}
 					} else if (largeavatar){
 						nameColor = "style='display: flex;'";

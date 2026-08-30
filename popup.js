@@ -6681,7 +6681,10 @@ function handleExclusiveCases(ele, paramType, paramValue, sync) {
             'darkmode': 'lightmode',
             'lightmode': 'darkmode',
             'onlytwitch': 'hidetwitch',
-            'hidetwitch': 'onlytwitch'
+            'hidetwitch': 'onlytwitch',
+            'color': ['randomcolor', 'randomcolorall'],
+            'randomcolor': ['color', 'randomcolorall'],
+            'randomcolorall': ['color', 'randomcolor']
         },
         param2: {
             'transparent': 'chroma',

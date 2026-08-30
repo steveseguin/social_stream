@@ -54,7 +54,9 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `nooutline` | boolean | Removes text outline effects |
 | `font` | string | Sets custom font family |
 | `googlefont` | string | Loads and uses a Google Font |
-| `color` or `colorednames` | boolean | Uses platform accent colors for usernames |
+| `color` or `colorednames` | boolean | Displays username colors supplied by the source |
+| `randomcolor` | boolean | Preserves supplied username colors and deterministically generates a color when one is missing |
+| `randomcolorall` | boolean | Deterministically generates every username color, overriding supplied colors |
 | `fontcolor` | hex color | Overrides the body text color |
 | `namecolor` | hex color | Overrides the username text color |
 | `fontweight` | number or keyword | Sets font weight for message text |

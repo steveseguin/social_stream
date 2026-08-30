@@ -97,6 +97,10 @@ Common dock display parameters:
 - `compact`
 - `showtime`
 - `notime`
+- `color` / `colorednames`
+- `randomcolor`
+- `randomcolorall`
+- `namecolor`
 - `hidesource`
 - `showsourcename`
 - `showchannelname`
