@@ -269,7 +269,25 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
               "colorednames"
             ],
             "values": "boolean",
-            "description": "Uses platform accent colors for usernames"
+            "description": "Displays username colors supplied by the source"
+          },
+          {
+            "key": "randomcolor",
+            "displayName": "randomcolor",
+            "aliases": [
+              "randomcolor"
+            ],
+            "values": "boolean",
+            "description": "Preserves supplied username colors and deterministically generates a color when one is missing"
+          },
+          {
+            "key": "randomcolorall",
+            "displayName": "randomcolorall",
+            "aliases": [
+              "randomcolorall"
+            ],
+            "values": "boolean",
+            "description": "Deterministically generates every username color, overriding supplied colors"
           },
           {
             "key": "fontcolor",
@@ -1798,6 +1816,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Disables notification sound for moderator messages"
           },
           {
+            "key": "beeponlymod",
+            "displayName": "beeponlymod",
+            "aliases": [
+              "beeponlymod"
+            ],
+            "values": "boolean",
+            "description": "Enables notification sounds only for moderator messages"
+          },
+          {
             "key": "showvipbadge",
             "displayName": "showvipbadge",
             "aliases": [
@@ -1839,6 +1866,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Enables sound notification for new messages"
+          },
+          {
+            "key": "beeponlymod",
+            "displayName": "beeponlymod",
+            "aliases": [
+              "beeponlymod"
+            ],
+            "values": "boolean",
+            "description": "Enables sound notifications only for moderator messages"
           },
           {
             "key": "beepvolume",

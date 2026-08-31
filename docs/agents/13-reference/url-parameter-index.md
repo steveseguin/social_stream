@@ -1,16 +1,16 @@
 # URL Parameter Index
 
-Status: generated lookup pass from `shared/config/urlParameters.js` on 2026-06-24.
+Status: generated lookup pass from `shared/config/urlParameters.js`, updated 2026-08-30.
 
 Use this page to find exact URL parameter names, aliases, and accepted value hints quickly. For behavior, verify against `parameters.md`, `url-parameter-source-trace.md`, and the target page code.
 
 ## Counts
 
-- Total generated parameter entries: 255
-- Groups: 2
-- Sections: 23
-- Lookup entries: 302
-- Alias strings: 304
+- Total generated parameter entries: 298
+- Groups: 4
+- Sections: 25
+- Lookup entries: 353
+- Alias strings: 356
 
 ## Focused Validation Note
 
@@ -46,7 +46,7 @@ Entries: 10.
 
 ### Visual Style
 
-Entries: 42.
+Entries: 44.
 
 | Parameter | Aliases | Values | Short Description |
 | --- | --- | --- | --- |
@@ -63,7 +63,9 @@ Entries: 42.
 | `nooutline` | `nooutline` | boolean | Removes text outline effects |
 | `font` | `font` | string | Sets custom font family |
 | `googlefont` | `googlefont` | string | Loads and uses a Google Font |
-| `color` | `color`, `colorednames` | boolean | Uses platform accent colors for usernames |
+| `color` | `color`, `colorednames` | boolean | Displays username colors supplied by the source |
+| `randomcolor` | `randomcolor` | boolean | Preserves supplied username colors and generates missing colors in the Dock |
+| `randomcolorall` | `randomcolorall` | boolean | Generates every username color in the Dock, overriding supplied colors |
 | `fontcolor` | `fontcolor` | hex color | Overrides the body text color |
 | `namecolor` | `namecolor` | hex color | Overrides the username text color |
 | `fontweight` | `fontweight` | number or keyword | Sets font weight for message text |
@@ -131,7 +133,7 @@ Entries: 9.
 
 ### Message Display
 
-Entries: 24.
+Entries: 26.
 
 | Parameter | Aliases | Values | Short Description |
 | --- | --- | --- | --- |
@@ -154,6 +156,8 @@ Entries: 24.
 | `onlyquestions` | `onlyquestions` | boolean | Shows only messages that contain question metadata |
 | `hidenumbers` | `hidenumbers` | boolean | Hides messages that contain only digits |
 | `showsourcename` | `showsourcename` | boolean | Displays the originating platform label on each card |
+| `showchannelname` | `showchannelname` | boolean | Displays the originating channel name from `sourceName` |
+| `largechannelicon` | `largechannelicon` | boolean | Enlarges the originating channel icon from `sourceImg` |
 | `showviewercount` | `showviewercount` | boolean | Shows the current viewer count indicator |
 | `nocolon` | `nocolon` | boolean | Removes the colon between username and message body |
 | `namefilter` | `namefilter` | boolean | Applies filters to usernames instead of message text |
@@ -162,7 +166,7 @@ Entries: 24.
 
 ### Filtering
 
-Entries: 16.
+Entries: 18.
 
 | Parameter | Aliases | Values | Short Description |
 | --- | --- | --- | --- |
@@ -181,6 +185,8 @@ Entries: 16.
 | `badkarma` | `badkarma` | 0.0-1.0 | Filters messages based on sentiment score |
 | `showonlymods` | `showonlymods` | boolean | Shows messages from moderators only |
 | `showonlyvips` | `showonlyvips` | boolean | Shows messages from VIPs only |
+| `blockedwords` | `blockedwords` | comma-separated strings | Hides messages when their text or username contains a listed value |
+| `exactblockedmessages` | `exactblockedmessages` | comma-separated strings | Hides messages whose full text matches a listed value, ignoring case and surrounding spaces |
 | `excludefiltered` | `excludefiltered` | boolean | Prevents filtered messages from being auto-featured |
 
 ### Message Selection & Queue
@@ -364,7 +370,7 @@ Entries: 8.
 
 ### Google Cloud TTS
 
-Entries: 4.
+Entries: 6.
 
 | Parameter | Aliases | Values | Short Description |
 | --- | --- | --- | --- |
@@ -442,6 +448,8 @@ Entries: 4.
 | `notobs` | `notobs` | boolean | Disables OBS studio detection |
 | `filtertid` | `filtertid` | comma-separated numbers | Filter by thread IDs |
 | `branded` | `branded` | boolean | Shows channel icon |
+| `showchannelname` | `showchannelname` | boolean | Shows the originating channel name |
+| `largechannelicon` | `largechannelicon` | boolean | Enlarges the originating channel icon |
 
 ## Other options for other overlays.
 

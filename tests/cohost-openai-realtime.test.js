@@ -27,6 +27,10 @@ assert(cohost.includes('case "input_audio_buffer.committed":'), "OpenAI should w
 assert(cohost.includes('this.createResponse({ origin: "streamer_voice", allowTools: true, eventPrefix: "voice_response_create" })'), "OpenAI should explicitly request the trusted voice response after context is attached");
 assert(cohost.includes('interrupt_response: true'), "The streamer should be able to interrupt the co-host");
 assert(cohost.includes('const selectedVideoValue = videoSelect.disabled ? "none" : videoSelect.value'), "OpenAI Realtime should not request a disabled camera");
+assert(cohost.includes('defaultVideoSelection: "none"'), "OpenAI visual input should remain off by default");
+assert(cohost.includes('videoStorageKey: "selectedOpenAIRealtimeVideoId"'), "OpenAI visual input should use a provider-specific opt-in");
+assert(cohost.includes('{ type: "input_image", image_url: imageDataUrl, detail: "auto" }'), "OpenAI direct turns should accept an optional current image frame");
+assert(cohost.includes('this.sendVisualContext("streamer_voice")'), "OpenAI voice turns should receive an opted-in current image frame");
 assert(cohost.includes('responseTypeValue === "audio" ? ["audio"] : ["text"]'), "Realtime sessions must request one output modality");
 assert(cohost.includes('Context only - answer when asked (default)'), "Live chat should expose context-only mode clearly");
 assert(cohost.includes("function formatCohostLiveChatContext(messages)"), "Live-chat context should be added without an automatic response");

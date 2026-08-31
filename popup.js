@@ -1745,6 +1745,81 @@ function updateUsernameList(type = 'blacklistusers') {
   `).join('');
 }
 
+var userDisplayAliases = [];
+
+function normalizeUserDisplayAliasSource(sourceType) {
+  sourceType = String(sourceType || '').toLowerCase().trim();
+  return sourceType === 'youtubeshorts' ? 'youtube' : sourceType;
+}
+
+function normalizeUserDisplayAliasEntry(entry) {
+  if (!entry || typeof entry !== 'object') return null;
+  const identifier = String(entry.identifier || '').trim();
+  const displayName = String(entry.displayName || '').trim();
+  const type = normalizeUserDisplayAliasSource(entry.type);
+  if (!identifier || !displayName) return null;
+  return { identifier, displayName, type };
+}
+
+function updateUserDisplayAliasesList() {
+  const list = document.getElementById('userDisplayAliasesList');
+  if (!list) return;
+
+  list.innerHTML = userDisplayAliases.map((entry, index) => `
+    <div class="username-tag">
+      <span>${escapeHtml(entry.identifier)} → ${escapeHtml(entry.displayName)}${entry.type ? `<span class="source-type"><img class="icon" src="./sources/images/${escapeHtml(entry.type)}.png" /></span>` : '<span class="source-type">All sources</span>'}</span>
+      <button class="remove-user-display-alias" data-index="${index}">×</button>
+    </div>
+  `).join('');
+}
+
+function saveUserDisplayAliases() {
+  chrome.runtime.sendMessage({
+    cmd: 'saveSetting',
+    type: 'json',
+    setting: 'userdisplayaliases',
+    value: JSON.stringify(userDisplayAliases)
+  }, function () {});
+}
+
+function addUserDisplayAlias() {
+  const identifierInput = document.getElementById('newUserDisplayAliasIdentifier');
+  const displayNameInput = document.getElementById('newUserDisplayAliasDisplayName');
+  const sourceInput = document.getElementById('newUserDisplayAliasType');
+  const entry = normalizeUserDisplayAliasEntry({
+    identifier: identifierInput?.value,
+    displayName: displayNameInput?.value,
+    type: sourceInput?.value
+  });
+  if (!entry) return;
+
+  const existingIndex = userDisplayAliases.findIndex(existing =>
+    existing.identifier.toLowerCase() === entry.identifier.toLowerCase() && existing.type === entry.type
+  );
+  if (existingIndex === -1) {
+    userDisplayAliases.push(entry);
+  } else {
+    userDisplayAliases[existingIndex] = entry;
+  }
+
+  identifierInput.value = '';
+  displayNameInput.value = '';
+  sourceInput.value = '';
+  updateUserDisplayAliasesList();
+  saveUserDisplayAliases();
+}
+
+function loadUserDisplayAliases(value) {
+  try {
+    const entries = Array.isArray(value) ? value : JSON.parse(value || '[]');
+    userDisplayAliases = entries.map(normalizeUserDisplayAliasEntry).filter(Boolean);
+  } catch (e) {
+    console.error('Error parsing user display aliases:', e);
+    userDisplayAliases = [];
+  }
+  updateUserDisplayAliasesList();
+}
+
 function addSourceType(sourceType, type) {
     let input = document.getElementById(type);
     if (!input) {
@@ -2729,7 +2804,7 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 
 const sourceTypes = ['relaytargets','eventsSources','ttssources'];
 const sourceSelectTagInputs = ['hideViewerCountSources'];
-const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents'];
+const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents', 'exactblockedmessages'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers', 'filterfeaturedusers'];
 // These are canonical payload types that cannot be inferred reliably from a
 // manifest filename. Keep them available even when a hosted/app manifest is
@@ -3822,6 +3897,11 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     remoteControlUrl.href = buildGeneratedUrl("sampleapi.html", `session=${encodeURIComponent(streamID)}${password}${customParams}${versionParam}`, baseURL);
   }
 
+  const obsControlDockUrl = document.getElementById("obs_control_dock_url");
+  if (obsControlDockUrl) {
+    obsControlDockUrl.href = buildGeneratedUrl("obs-control-dock.html", `session=${encodeURIComponent(streamID)}`, baseURL);
+  }
+
   syncAllOverlayPreviews();
 }
 
@@ -4407,6 +4487,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 });
             }
         } catch(e) { console.error("Error parsing customGifCommands JSON:", e); }
+    } else if (key === 'userdisplayaliases') {
+        loadUserDisplayAliases(settingObj.object || settingObj.json || []);
     } else if (key === 'savedPolls' && settingObj.json) {
         try {
             PollManager.savedPolls = JSON.parse(settingObj.json || '[]'); // Assuming PollManager is defined
@@ -4503,6 +4585,10 @@ function update(response, sync = true) {
 			}
 			
             document.getElementById("remote_control_url").href = baseURL + "sampleapi.html?session=" + response.streamID + password;
+            const obsControlDockUrl = document.getElementById("obs_control_dock_url");
+            if (obsControlDockUrl) {
+                obsControlDockUrl.href = baseURL + "obs-control-dock.html?session=" + encodeURIComponent(response.streamID);
+            }
             // The hideLinks variable is not reset to false globally here, its state is managed by the checkbox and classList.
 
             // Refresh all page links.
@@ -5030,6 +5116,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-textparam1="selfqueue"]'
 	],
 	"wrapper-chat-message-styling-options": [
+		'[data-param1="inline"]',
 		'[data-param1="donationright"]',
 		'[data-param1="nooutline"]',
 		'[data-param1="bolder"]',
@@ -6595,7 +6682,10 @@ function handleExclusiveCases(ele, paramType, paramValue, sync) {
             'darkmode': 'lightmode',
             'lightmode': 'darkmode',
             'onlytwitch': 'hidetwitch',
-            'hidetwitch': 'onlytwitch'
+            'hidetwitch': 'onlytwitch',
+            'color': ['randomcolor', 'randomcolorall'],
+            'randomcolor': ['color', 'randomcolorall'],
+            'randomcolorall': ['color', 'randomcolor']
         },
         param2: {
             'transparent': 'chroma',
@@ -7059,7 +7149,7 @@ function refreshGeneratedConnectionLinks(paramName, value) {
         setGeneratedLink(element, replaceGeneratedConnectionParam(element.raw, paramName, value));
     });
 
-    ['sampleoverlay', 'remote_control_url'].forEach(function(elementId) {
+    ['sampleoverlay', 'remote_control_url', 'obs_control_dock_url'].forEach(function(elementId) {
         const link = document.getElementById(elementId);
         if (!link || !link.href) return;
         link.href = replaceGeneratedConnectionParam(link.href, paramName, value);
@@ -8543,6 +8633,10 @@ function refreshLinks(){
     const remoteCtrlUrlElement = document.getElementById("remote_control_url");
     if (remoteCtrlUrlElement && remoteCtrlUrlElement.href) {
       remoteCtrlUrlElement.href = removeTTSProviderParams(remoteCtrlUrlElement.href);
+    }
+    const obsControlDockUrlElement = document.getElementById("obs_control_dock_url");
+    if (obsControlDockUrlElement && obsControlDockUrlElement.href) {
+      obsControlDockUrlElement.href = removeTTSProviderParams(obsControlDockUrlElement.href);
     }
   } catch (e) {
     console.error("Error cleaning TTS params from links:", e);
@@ -11157,6 +11251,33 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			console.error(e);
 		  }
 		});
+
+		const userDisplayAliasList = document.getElementById('userDisplayAliasesList');
+		const addUserDisplayAliasButton = document.getElementById('addUserDisplayAlias');
+		const userDisplayAliasSource = document.getElementById('newUserDisplayAliasType');
+		if (userDisplayAliasSource) {
+			setupLazySourceInput(userDisplayAliasSource);
+		}
+		if (userDisplayAliasList) {
+			userDisplayAliasList.addEventListener('click', function(e) {
+				if (!e.target.classList.contains('remove-user-display-alias')) return;
+				const index = parseInt(e.target.dataset.index, 10);
+				if (!Number.isInteger(index) || index < 0 || index >= userDisplayAliases.length) return;
+				userDisplayAliases.splice(index, 1);
+				updateUserDisplayAliasesList();
+				saveUserDisplayAliases();
+			});
+		}
+		if (addUserDisplayAliasButton) {
+			addUserDisplayAliasButton.addEventListener('click', addUserDisplayAlias);
+		}
+		document.getElementById('newUserDisplayAliasDisplayName')?.addEventListener('keypress', function(e) {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				addUserDisplayAlias();
+			}
+		});
+		updateUserDisplayAliasesList();
 		
 	} catch(e){
 		console.error(e);

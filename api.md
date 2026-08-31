@@ -153,6 +153,8 @@ ws.onopen = () => {
 
 See the [StreamDeck Integration Guide](#streamdeck-integration-guide-for-social-stream-ninja) and [Bitfocus Companion](#using-bitfocus-companion-with-social-stream-ninja) sections below for detailed setup.
 
+For clickable Credits, featured-chat, timer, and waitlist controls inside OBS, add `https://socialstream.ninja/obs-control-dock.html?session=SESSION_ID` as a Custom Browser Dock. See the [OBS Control Dock guide](docs/obs-control-dock-guide.html). The control dock only requires **Enable remote API control of extension**; it does not require `&server` or OBS WebSocket Server.
+
 ---
 
 ### Quick Start: Receiving Chat Messages (Python / Node.js)

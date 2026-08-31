@@ -120,6 +120,7 @@ Support notes:
 | `actions.html` | `https://socialstream.ninja/actions.html?session=SESSION_ID` | Event Flow output/actions overlay for media, audio, OBS, and visual actions. | `09-api-and-integrations/event-flow-editor.md` |
 | Event Flow editor | `https://socialstream.ninja/actions/` or related actions guide/editor paths | Build visual automation flows. | `09-api-and-integrations/event-flow-editor.md` |
 | `sampleapi.html` | `https://socialstream.ninja/sampleapi.html?session=SESSION_ID` | Test and generate common API commands. | `09-api-and-integrations/websocket-http-api.md` |
+| `obs-control-dock.html` | `https://socialstream.ninja/obs-control-dock.html?session=SESSION_ID` | Compact OBS Custom Browser Dock for Credits, featured chat, timer, and waitlist actions. | `../../obs-control-dock-guide.html` |
 | `streamerbot.html` | `https://socialstream.ninja/streamerbot.html?session=SESSION_ID` | Streamer.bot integration/setup surface. | `09-api-and-integrations/streamerbot.md` |
 | `obs-websocket-test.html` | Local/hosted test page where available | OBS WebSocket diagnostics. | `09-api-and-integrations/obs.md` |
 

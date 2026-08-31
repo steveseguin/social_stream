@@ -178,6 +178,19 @@
 				left: 122px;
 				top: calc(var(--author-avatar-size) - 47px);
 			}
+			.sourcetype.channel-source-icon.large-channel-icon {
+				max-width: 56px !important;
+				max-height: 56px !important;
+				left: 66px;
+				top: calc(var(--author-avatar-size) - 42px);
+			}
+			.channel-source-name {
+				font-size: 0.55em;
+				font-weight: 600;
+				margin-left: 10px;
+				opacity: 0.8;
+				white-space: nowrap;
+			}
 
 			.noavatar-source {
 				bottom: -4px;
@@ -818,6 +831,13 @@
 		  display: inline-block;
 		  margin-left: 5px !important;
 		  vertical-align: middle;
+		}
+		.no-avatar .sourcetype.channel-source-icon.large-channel-icon {
+		  position: relative;
+		  top: auto;
+		  left: auto;
+		  max-width: 60px !important;
+		  max-height: 60px !important;
 		}
 
 		/* When stacked with no avatar */
@@ -1478,6 +1498,8 @@
 			if (urlParams.has("branded")) {
 				customSource = true;
 			}
+			var largeChannelIcon = urlParams.has("largechannelicon");
+			var showChannelName = urlParams.has("showchannelname");
 			
 			var fontfit = false;
 			if (urlParams.has("fontfit")) {
@@ -2987,11 +3009,15 @@
 					}
 
 					var resolvedSourceImg = data.sourceImg ? resolveSourceImageUrl(data.sourceImg) : "";
+					var channelIconSizeClass = largeChannelIcon ? " large-channel-icon" : "";
 					if (resolvedSourceImg && customSource && avatarForMessage) {
-					  showType += '<img src="' + escapeAttributeValue(resolvedSourceImg) + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
+					  showType += '<img src="' + escapeAttributeValue(resolvedSourceImg) + '" class="icon sourcetype channel-source-icon ' + customSourceClass + channelIconSizeClass + '"  onerror="this.style.display=\'none\'" />';
 					} else if (resolvedSourceImg && customSource && !avatarForMessage) {
-					  showType += '<img src="' + escapeAttributeValue(resolvedSourceImg) + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
+					  showType += '<img src="' + escapeAttributeValue(resolvedSourceImg) + '" class="icon sourcetype channel-source-icon ' + customSourceClass + ' noavatar-source' + channelIconSizeClass + '" onerror="this.style.display=\'none\'" />';
 					}
+					var channelSourceName = showChannelName && data.sourceName
+					  ? '<span class="channel-source-name">' + escapeHtml(data.sourceName) + '</span>'
+					  : '';
 
 					if (hideNames) {
 					  data.chatname = "";
@@ -3260,7 +3286,7 @@
 					  }
 					  
 					  // Put name and badges in the name div
-					  nameDiv.innerHTML = data.chatname + chatbadges;
+					  nameDiv.innerHTML = data.chatname + chatbadges + channelSourceName;
 					  messageContainer.appendChild(nameDiv);
 
 					  const messageDiv = document.createElement('div');
@@ -3333,7 +3359,7 @@
 					} else {
 					  // Original non-stacking behavior with no-avatar class added
 					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat' + noAvatarClass + '" id="newmessage" data-source-type="' + safeDataType + '">' +
-						'<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" +
+						'<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + channelSourceName + "</div>" +
 						'<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" +
 						avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
 					  activeNameDiv = document.getElementById("nameDIV");

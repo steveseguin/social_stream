@@ -199,6 +199,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "custom_injection",
     description: "Block stream events (follows, likes, subs) from appearing anywhere."
   },
+  "showtwitchwatchstreaks": {
+    type: "boolean",
+    category: "custom_injection",
+    description: "Opt in to Twitch Watch Streak notices shared by viewers."
+  },
   "capturejoinedevent": {
     type: "boolean",
     category: "custom_injection",

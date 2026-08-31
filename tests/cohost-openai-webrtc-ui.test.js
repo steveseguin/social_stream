@@ -133,14 +133,25 @@ const { chromium } = require("playwright");
       oscillator.connect(destination);
       oscillator.start();
       window.__testMicrophoneStream = destination.stream;
+	  const screenCanvas = document.createElement("canvas");
+	  screenCanvas.width = 640;
+	  screenCanvas.height = 360;
+	  const screenContext = screenCanvas.getContext("2d");
+	  screenContext.fillStyle = "#112233";
+	  screenContext.fillRect(0, 0, screenCanvas.width, screenCanvas.height);
+	  screenContext.fillStyle = "#ffffff";
+	  screenContext.font = "24px sans-serif";
+	  screenContext.fillText("OpenAI screen-share test", 30, 60);
+	  window.__testScreenStream = screenCanvas.captureStream(1);
       Object.defineProperty(navigator, "mediaDevices", {
         configurable: true,
         value: {
 		  enumerateDevices: async () => [
 			{ kind: "audioinput", deviceId: "test-mic", label: "Test microphone" },
 			{ kind: "audioinput", deviceId: "test-mic-2", label: "Second test microphone" }
-		  ],
+          ],
           getUserMedia: async () => window.__testMicrophoneStream.clone(),
+		  getDisplayMedia: async () => window.__testScreenStream.clone(),
           addEventListener() {}
         }
       });
@@ -150,6 +161,9 @@ const { chromium } = require("playwright");
     await page.goto(url);
     await page.waitForFunction(() => document.getElementById("providerSelect"));
     await page.selectOption("#providerSelect", "chatgpt");
+	await page.waitForFunction(() => Array.from(document.getElementById("videoSource").options).some(option => option.value === "screen"));
+	assert.strictEqual(await page.$eval("#videoSource", select => select.disabled), false);
+	assert.strictEqual(await page.inputValue("#videoSource"), "none", "OpenAI visual input should be off by default");
     await page.selectOption("#openaiRealtimeModel", "gpt-realtime-2.1-mini");
     await page.selectOption("#openaiRealtimeReasoning", "low");
     await page.selectOption("#openaiRealtimeVadEagerness", "high");
@@ -221,9 +235,20 @@ const { chromium } = require("playwright");
 	await page.selectOption("#audioSource", "test-mic-2");
 	await page.waitForFunction(() => window.__replaceTrackCount > 0);
 
+	const visualEventStart = await page.evaluate(() => window.__dataChannelMessages.length);
+	await page.selectOption("#videoSource", "screen");
+	await page.waitForFunction(() => {
+	  const preview = document.getElementById("preview");
+	  return preview && preview.readyState >= 2 && preview.videoWidth > 0;
+	});
 	await page.fill(".message-input", "Remember the reconnect codeword ORCHID.");
 	await page.click("#sendButton");
 	await page.waitForFunction(() => window.__dataChannelMessages.some(event => event.type === "response.create" && event.response && event.response.metadata && event.response.metadata.ssn_source === "streamer_text"));
+	const visualItem = await page.evaluate(start => window.__dataChannelMessages.slice(start).find(event => event.type === "conversation.item.create" && event.item && String(event.item.id || "").startsWith("cohost_visual_")), visualEventStart);
+	assert(visualItem, "An opted-in OpenAI direct turn should include a visual context item");
+	assert.strictEqual(visualItem.item.content[1].type, "input_image");
+	assert.strictEqual(visualItem.item.content[1].detail, "auto");
+	assert.match(visualItem.item.content[1].image_url, /^data:image\/jpeg;base64,/);
 	await page.evaluate(() => {
 	  window.__testDataChannel.onmessage({ data: JSON.stringify({ type: "response.created", response: { id: "continuity-response", metadata: { ssn_source: "streamer_text" } } }) });
 	  window.__testDataChannel.onmessage({ data: JSON.stringify({
@@ -264,7 +289,7 @@ const { chromium } = require("playwright");
 	  setTimeout(() => window.__testDataChannel.onmessage({ data: JSON.stringify({ type: "response.done", response: { id: "latency-response", status: "completed" } }) }), 40);
 	});
 	await page.waitForFunction(() => document.getElementById("diagLatency").textContent.includes("audio"));
-	await page.waitForFunction(() => window.__dataChannelMessages.some(event => event.type === "conversation.item.delete"));
+	await page.waitForFunction(start => window.__dataChannelMessages.slice(start).some(event => event.type === "conversation.item.delete"), contextEventStart);
 	const contextOrdering = await page.evaluate(start => {
 	  const events = window.__dataChannelMessages.slice(start);
 	  return {

@@ -968,6 +968,7 @@ async function run() {
           subscription: { type: 'channel.bits.use' },
           event: {
             user_id: '2',
+            user_login: 'kibathebarbarian',
             user_name: 'KibaTheBarbarian',
             bits: 100,
             type: 'cheer',
@@ -980,6 +981,11 @@ async function run() {
     const cheerResult = await page.evaluate(() => window.__twitchHarness.runtimeMessages.find((message) => message.event === 'cheer'));
     assert.strictEqual(cheerResult.chatmessage, 'Cheer100 nice');
     assert.strictEqual(cheerResult.hasDonation, '100 bits');
+    assert.strictEqual(
+      cheerResult.chatimg,
+      'https://api.socialstream.ninja/twitch/large?username=kibathebarbarian',
+      'Twitch EventSub cheer did not include the cheering user avatar'
+    );
 
     await page.evaluate(() => window.__twitchHarness.eventSockets[0].close());
     await page.waitForFunction(() => window.__twitchHarness.eventSockets.length === 2, null, { timeout: 4000 });

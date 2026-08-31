@@ -60,9 +60,15 @@ assert.strictEqual(
   "leading @ and casing should be normalized"
 );
 
+assert.strictEqual(
+  matchesConfiguredUser({ name: "clive_login", type: "twitch" }, { username: "Clive_Login", chatname: "Clive" }, "twitch"),
+  true,
+  "a source username should match independently of the display name"
+);
+
 assert.ok(
-  backgroundSource.includes('const storageUsername = request.value.userid || request.value.chatname || "";'),
-  "right-click role additions should store the captured user ID when available"
+  backgroundSource.includes('const storageUsername = request.value.userid || request.value.username || request.value.chatname || "";'),
+  "right-click role additions should prefer the captured user ID or username"
 );
 assert.ok(!backgroundSource.includes("settings.matchRolesByDisplayName"), "role matching should no longer require an optional toggle");
 assert.ok(!popupSource.includes('data-setting="matchRolesByDisplayName"'), "the obsolete display-name toggle should not remain in the popup");

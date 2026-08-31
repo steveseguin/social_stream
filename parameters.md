@@ -48,13 +48,16 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `blur` or `blurred` | number | Applies blur effect to messages (value in pixels) |
 | `noblur` | boolean | Disables blur rendering (including hidden-source blur and timed-out blur) |
 | `compact` or `overlaymode` | boolean | Enables compact mode with less spacing |
+| `inline` | boolean | In the standard row layout, keeps normal spacing while allowing the message to start beside the username and wrap naturally below. Specialized layouts such as `compact`, `horizontal`, `twolines`, `split`, `largeavatar`, and `bubble` take precedence |
 | `padding` | number | Sets padding between messages in pixels |
 | `largeavatar` | boolean | Shows larger user avatars on the left side |
 | `emoji` or `emojis` | number | Sets emoji size scaling (percentage, default: 140) |
 | `nooutline` | boolean | Removes text outline effects |
 | `font` | string | Sets custom font family |
 | `googlefont` | string | Loads and uses a Google Font |
-| `color` or `colorednames` | boolean | Uses platform accent colors for usernames |
+| `color` or `colorednames` | boolean | Displays username colors supplied by the source |
+| `randomcolor` | boolean | Preserves supplied username colors and deterministically generates a color when one is missing |
+| `randomcolorall` | boolean | Deterministically generates every username color, overriding supplied colors |
 | `fontcolor` | hex color | Overrides the body text color |
 | `namecolor` | hex color | Overrides the username text color |
 | `fontweight` | number or keyword | Sets font weight for message text |

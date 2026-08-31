@@ -186,7 +186,7 @@
 					<p>With OpenAI Realtime, Diagnostics should show <strong>Listening (OpenAI WebRTC)</strong>. With Desktop Whisper, it should show <strong>Listening (Desktop Whisper)</strong> and then the recognized text under <strong>Heard</strong>.</p>
 				</div>
 				<div class="warning-note">
-					<p><strong>Privacy:</strong> the selected microphone and any viewer messages shared by the chosen Live Chat mode are sent to that AI provider. Viewer messages are treated as untrusted context and cannot authorize co-host tools. Open the generated co-host controller link from the popup and keep it private; its private capability expires after 12 hours, is scoped to the current SSN session, and is removed from the address bar after the page loads.</p>
+					<p><strong>Privacy:</strong> the selected microphone, any explicitly selected camera/screen frames, and viewer messages shared by the chosen Live Chat mode are sent to that AI provider. Viewer messages are treated as untrusted context and cannot authorize co-host tools. Open the generated co-host controller link from the popup and keep it private; its private capability expires after 12 hours, is scoped to the current SSN session, and is removed from the address bar after the page loads.</p>
 				</div>
             </div>
 
@@ -197,6 +197,7 @@
 					<li>Open the generated <code>cohost.html?session=YOUR_SESSION_ID</code> link from the popup. Its private, expiring co-host capability authorizes Realtime without enabling the separate Private Chat Bot option.</li>
 					<li>Select <strong>OpenAI Realtime</strong>. The standard key stays in the SSN extension/Desktop background; the co-host page receives only a short-lived Realtime client secret.</li>
 					<li>Explicitly choose the microphone you talk into, keep <strong>Audio Response</strong> selected, and press <strong>Start Co-host</strong>.</li>
+					<li>Optional: leave Video source on <strong>No Video</strong> (the default), or explicitly choose <strong>Screen Share</strong> or a camera. OpenAI receives one current image with each direct spoken or typed request rather than continuous video; this can add API cost and latency.</li>
                     <li>Leave Live Chat on <strong>Context only - answer when asked</strong>. Ask “What is chat saying?” to have the same spoken AI discuss recent viewer messages.</li>
 					<li>Capture the audio from the co-host browser/app in OBS. The native OpenAI voice plays only from <code>cohost.html</code>; <code>cohost-overlay.html</code> receives the avatar and text, not that same audio stream. When supported, choose a virtual cable under <strong>Co-host output</strong> for isolated OBS routing.</li>
 					<li>Keep the stage overlay's speech bubble visible, or provide captions, so the AI response is not available through audio alone.</li>

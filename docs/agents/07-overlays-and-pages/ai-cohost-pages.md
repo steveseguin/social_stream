@@ -206,6 +206,7 @@ OpenAI Realtime bridge:
 - OpenAI Realtime does not require the separate Private Chat Bot setting. Hosted requests require the popup-generated 256-bit capability, which is scoped to the SSN session, expires after 12 hours, and is rate limited.
 - WebRTC playback interruption and truncation are server-managed. The legacy WebSocket audio-buffer path remains for other realtime providers.
 - Native OpenAI Realtime function tools are attached only to direct `streamer_voice` and `streamer_text` responses. Viewer-chat, greeting, context, and tool-result turns receive an explicit no-tools response configuration.
+- OpenAI camera/screen input is provider-specific and defaults to `No Video`. When explicitly selected, a temporary JPEG `input_image` item is captured for each direct streamer voice or text request and deleted after the response; SSN does not stream continuous video to OpenAI.
 - Tool execution remains capability-gated in `background.js`, requires a persistent popup permission plus a controller-page opt-in, resolves at most one mutating call per streamer turn, and returns a `function_call_output` before a no-tools continuation response.
 - Spotify, OBS scene switching, and feature/clear chat are the initial allowlisted tools. OBS scene names must match `cohostObsScenes`; feature/clear routes through the connected Streaming Chat dock.
 

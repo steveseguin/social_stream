@@ -211,7 +211,7 @@ hr {
     border-radius: 3px;
     flex-direction: row;
 }
-.remove-username, .remove-source {
+.remove-username, .remove-source, .remove-user-display-alias {
 	cursor: pointer;
 	color: var(--danger-text);
 	font-weight: bold;
@@ -220,7 +220,8 @@ hr {
 
 /* Source tags keep a dark background in both themes, so their remove buttons need a light red */
 .username-tag .remove-source,
-.username-tag .remove-username {
+.username-tag .remove-username,
+.username-tag .remove-user-display-alias {
 	color: #ffb3b3;
 }
 
@@ -2937,7 +2938,7 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param1="blockedwords" />
 										<span class="slider round"></span>
 									</label>
-									<span>🚫 Block messages containing specific words/phrases</span>
+									<span>🚫 Contains text or name</span>
 									<div class="isolate" style="margin-left: 50px; margin-top: 5px;">
 										<div class="blockedwords-list-container source-list-container" id="blockedwordsList"></div>
 										<div class="add-blockedword-container">
@@ -2945,6 +2946,18 @@ input:checked + .slider:before {
 											<button id="addBlockedWord">Add</button>
 										</div>
 										<input type="text" id="blockedwordsInput" class="textInput hidden" data-textparam1="blockedwords" style="display: none;" />
+									</div>
+								</div>
+								<div data-keywords="filter block hide exact message text moderation blacklist blocklist mute suppress">
+									<label class="switch">
+										<input type="checkbox" data-param1="exactblockedmessages" />
+										<span class="slider round"></span>
+									</label>
+									<span>🚫 Exact message</span>
+									<div style="margin-left: 50px; margin-top: 5px;">
+										<div class="textInputContainer" style="display: none;">
+											<input type="text" id="exactblockedmessages" class="textInput" data-textparam1="exactblockedmessages" />
+										</div>
 									</div>
 								</div>
 								<div data-keywords="donation scrub anonymize remove tip amount hide value private">
@@ -3907,6 +3920,47 @@ input:checked + .slider:before {
                 </div>
             </div>
 
+            <div class="wrapper beginner-basic">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-chat-name-color-options" />
+                    <label class="collapsible-label" for="wrapper-chat-name-color-options"><span>💬 Username colors</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group streaming_chat">
+                                <div id="colorizename" title="Show username colors supplied by the source. Sources such as YouTube may not supply one.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="color" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="color-names-if-color-info-available">📛 Use source-provided username colors</span>
+                                </div>
+                                <div title="Keep source-provided username colors and generate a consistent color when one is missing.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="randomcolor" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="add-a-random-color-to-uncolored-names">🌈👤 Generate colors for uncolored names</span>
+                                </div>
+                                <div title="Generate a consistent username color in this Dock, replacing colors supplied by the source.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="randomcolorall" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="override-all-name-colors-with-a-random-color">🌈🌈 Generate colors for every name</span>
+                                </div>
+                                <div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+                                    <div class="textInputContainer" style="flex:1; margin-right:5px;">
+                                        <input type="text" id="dock_name_color" class="textInput instant" autocomplete="off" placeholder="e.g. #ffffff" data-textparam1="namecolor" data-palette="dock_name_color_palette" />
+                                        <label for="dock_name_color"><span data-translate="default-name-font-color">&gt; Default name font color</span></label>
+                                    </div>
+                                    <input type="color" data-color="dock_name_color" id="dock_name_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-visibility-options" />
@@ -3914,13 +3968,6 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group streaming_chat">
-								<div id="colorizename">
-                                    <label class="switch">
-                                        <input type="checkbox" data-param1="color" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="color-names-if-color-info-available">📛 Color names if color info available </span>
-                                </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="hidesource" />
@@ -3997,6 +4044,20 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="show-channel-icon">📺 Show channel icon </span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="largechannelicon" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🔎 Use a larger channel icon</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="showchannelname" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>📺 Show originating channel name</span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -4294,9 +4355,16 @@ input:checked + .slider:before {
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-styling-options" />
                     <label class="collapsible-label" for="wrapper-chat-message-styling-options"><span data-translate="message---styling">💬 Message - 🎨 Styling</span></label>
                     <div class="collapsible-text">
-                        <div class="options">
-                            <div class="options_group streaming_chat">
-                                <div title="Puts the name and the message on the same line (dense IRC/Twitch-style), instead of the name on its own line above the message. This is for very short messages — longer messages will keep flowing on that single line. For a dedicated dense layout, use one of the 'Compact' overlay styles in the style dropdown instead. NOTE: this is the same as adding &compact to the dock URL.">
+						<div class="options">
+							<div class="options_group streaming_chat">
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="inline" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="inline-name-and-message-keep-normal-spacing">↔️ Inline name and message (keep normal spacing)</span>
+								</div>
+								<div title="Puts the name and the message on the same line (dense IRC/Twitch-style), instead of the name on its own line above the message. This is for very short messages — longer messages will keep flowing on that single line. For a dedicated dense layout, use one of the 'Compact' overlay styles in the style dropdown instead. NOTE: this is the same as adding &compact to the dock URL.">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="compact" />
                                         <span class="slider round"></span>
@@ -5949,6 +6017,20 @@ input:checked + .slider:before {
                                 </div>
                                 <div>
                                     <label class="switch">
+                                        <input type="checkbox" data-param2="largechannelicon" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🔎 Use a larger channel icon</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="showchannelname" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>📺 Show originating channel name</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
                                         <input type="checkbox" data-param2="noavatar" />
                                         <span class="slider round"></span>
                                     </label>
@@ -7212,6 +7294,14 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="hide-stream-events"> Hide stream events (follows, likes, subs) </span>
                                 </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="showtwitchwatchstreaks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <img class="icon" src="./sources/images/twitch.png" style="display: inline-block;" />
+                                    <span> Show Twitch Watch Streaks</span>
+                                </div>
                                 <div id="databaseSettingsRow" title="By default all inbound messages are saved to a local database for later look-up reference">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="disableDB" />
@@ -7480,6 +7570,10 @@ input:checked + .slider:before {
 										<span data-translate="remote-httpwss-api-control-extension">remote API control of extension</span>
 									</a>
 									<span> (required for inbound donation webhooks)</span>
+									<small style="display:block; margin:6px 0 8px 44px;">
+										<a target="_blank" rel="noopener" id="obs_control_dock_url" href="https://socialstream.ninja/obs-control-dock.html">Open OBS control dock</a>
+										&middot; <a target="_blank" rel="noopener" href="https://socialstream.ninja/beta/docs/obs-control-dock-guide.html">setup guide</a>
+									</small>
 								</div>
                                 <div title="Connects the Dock/Featured pages to the API server for remote control. Needed if you want to send commands (clear, feature, nextInQueue, etc.) directly to the Dock via HTTP/WebSocket.">
                                     <label class="switch">
@@ -8455,6 +8549,17 @@ input:checked + .slider:before {
 									>
 										<input type="text" id="viplistusers" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="viplistusers" />
 										⭐ <span data-translate="viplistusers">Identify by name who are <b>VIPs</b></span>
+									</div>
+								</div>
+								<h3>User display names</h3>
+								<p>Show a preferred name while keeping the original username for user actions.</p>
+								<div class="isolate">
+									<div id="userDisplayAliasesList" class="username-list-container"></div>
+									<div id="addUserDisplayAliasContainer" class="add-username-container">
+										<input type="text" id="newUserDisplayAliasIdentifier" autocomplete="off" placeholder="Username or user ID" />
+										<input type="text" id="newUserDisplayAliasDisplayName" autocomplete="off" placeholder="Display as" />
+										<input type="text" id="newUserDisplayAliasType" autocomplete="off" placeholder="Source type (optional)" list="popupSourceTypesList" />
+										<button type="button" id="addUserDisplayAlias">Add</button>
 									</div>
 								</div>
 								<div>
