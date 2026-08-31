@@ -1,0 +1,222 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Viewer Counts</title>
+<style>
+  :root {
+    --bg-color: rgba(0, 0, 0, 0.75);
+    --text-color: #ffffff;
+    --accent-color: #00ff88;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-size: 24px;
+    --padding: 10px 20px;
+    --border-radius: 8px;
+    --gap: 15px;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: transparent; /* OBS needs this */
+    font-family: var(--font-family);
+    color: var(--text-color);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: flex-end; /* Bottom bar */
+    justify-content: center;
+  }
+
+  #container {
+    background-color: var(--bg-color);
+    padding: var(--padding);
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap);
+    align-items: center;
+    margin-bottom: 20px; /* Space from bottom of OBS */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: opacity 0.3s ease;
+  }
+
+  .platform-stat {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .platform-name {
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.8em;
+    color: #aaa;
+    letter-spacing: 1px;
+  }
+
+  .platform-count {
+    font-size: var(--font-size);
+    font-weight: 800;
+    color: var(--accent-color);
+  }
+
+  .total-stat {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    border-left: 2px solid #444;
+    padding-left: var(--gap);
+    margin-left: 5px;
+  }
+
+  .total-count {
+    font-size: calc(var(--font-size) * 1.2);
+    font-weight: 900;
+    color: #ffffff;
+  }
+
+  /* Animation for count changes */
+  .pop {
+    animation: pop-anim 0.3s ease-out;
+  }
+
+  @keyframes pop-anim {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+</style>
+</head>
+<body>
+
+<div id="container">
+  <!-- Dynamic Content Injected Here -->
+</div>
+
+<!-- VDO.Ninja Bridge -->
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+<script>
+(function () {
+  // 1. Setup Bridge
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_viewers_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+  
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  // 2. State Management
+  var currentCounts = {}; // { youtube: 100, twitch: 50 }
+  var container = document.getElementById("container");
+
+  // 3. Render Logic
+  function renderCounts() {
+    container.innerHTML = ""; // Clear current
+    
+    var platforms = Object.keys(currentCounts);
+    var total = 0;
+
+    // If no data, hide container or show 0
+    if (platforms.length === 0) {
+      // Optional: Show a placeholder or hide
+      // container.style.display = 'none'; 
+      return;
+    }
+
+    // Render individual platforms
+    platforms.forEach(function(p) {
+      var count = currentCounts[p];
+      total += count;
+
+      var statDiv = document.createElement("div");
+      statDiv.className = "platform-stat";
+
+      var nameSpan = document.createElement("span");
+      nameSpan.className = "platform-name";
+      nameSpan.textContent = p;
+
+      var countSpan = document.createElement("span");
+      countSpan.className = "platform-count";
+      countSpan.textContent = count.toLocaleString();
+
+      statDiv.appendChild(nameSpan);
+      statDiv.appendChild(countSpan);
+      container.appendChild(statDiv);
+    });
+
+    // Render Total
+    var totalDiv = document.createElement("div");
+    totalDiv.className = "total-stat";
+
+    var totalName = document.createElement("span");
+    totalName.className = "platform-name";
+    totalName.textContent = "Total";
+
+    var totalCountSpan = document.createElement("span");
+    totalCountSpan.className = "total-count";
+    totalCountSpan.textContent = total.toLocaleString();
+
+    totalDiv.appendChild(totalName);
+    totalDiv.appendChild(totalCountSpan);
+    container.appendChild(totalDiv);
+  }
+
+  // 4. Message Handler
+  function handlePayload(data) {
+    // We only care about viewer_updates snapshots
+    if (data && data.event === "viewer_updates" && data.meta) {
+      var newMeta = data.meta;
+      
+      // Check if data actually changed to trigger animations
+      var changed = false;
+      var newKeys = Object.keys(newMeta);
+      var oldKeys = Object.keys(currentCounts);
+      
+      if (newKeys.length !== oldKeys.length) changed = true;
+      else {
+        for (var i = 0; i < newKeys.length; i++) {
+          if (newMeta[newKeys[i]] !== currentCounts[newKeys[i]]) {
+            changed = true;
+            break;
+          }
+        }
+      }
+
+      currentCounts = newMeta;
+      renderCounts();
+
+      // Simple animation trigger: re-add class to counts if changed
+      if (changed) {
+        var countEls = container.querySelectorAll(".platform-count, .total-count");
+        countEls.forEach(function(el) {
+          el.classList.remove("pop");
+          void el.offsetWidth; // trigger reflow
+          el.classList.add("pop");
+        });
+      }
+    }
+  }
+
+  // 5. Event Listeners
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") handlePayload(payload);
+  });
+
+  // Allow manual testing via console
+  window.handleOverlayPayload = handlePayload;
+
+})();
+</script>
+</body>
+</html>
+```

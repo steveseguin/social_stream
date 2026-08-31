@@ -1,0 +1,203 @@
+#!/usr/bin/env node
+
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
+
+const CHAT_CLIENT_SRC = fs.readFileSync(
+  path.join(__dirname, '..', 'providers', 'twitch', 'chatClient.js'),
+  'utf8'
+);
+
+function loadChatClientModule() {
+  const sandbox = vm.createContext({
+    console,
+    setTimeout,
+    clearTimeout,
+    Date,
+    Math
+  });
+  const compiled = `${CHAT_CLIENT_SRC.replace(/^export\s+/gm, '')}
+this.createTwitchChatClient = createTwitchChatClient;
+this.TWITCH_CHAT_EVENTS = TWITCH_CHAT_EVENTS;`;
+  vm.runInContext(compiled, sandbox);
+  return {
+    createTwitchChatClient: sandbox.createTwitchChatClient,
+    TWITCH_CHAT_EVENTS: sandbox.TWITCH_CHAT_EVENTS
+  };
+}
+
+class FakeTmiClient {
+  constructor() {
+    this.handlers = new Map();
+  }
+
+  on(event, handler) {
+    if (!this.handlers.has(event)) {
+      this.handlers.set(event, new Set());
+    }
+    this.handlers.get(event).add(handler);
+  }
+
+  removeListener(event, handler) {
+    const set = this.handlers.get(event);
+    if (!set) {
+      return;
+    }
+    set.delete(handler);
+  }
+
+  async connect() {
+    return true;
+  }
+
+  async disconnect() {
+    return true;
+  }
+
+  emit(event, ...args) {
+    const set = this.handlers.get(event);
+    if (!set) {
+      return;
+    }
+    for (const handler of set) {
+      handler(...args);
+    }
+  }
+}
+
+function assert(condition, message) {
+  if (!condition) {
+    throw new Error(message);
+  }
+}
+
+async function waitFor(check, message, timeoutMs = 1000) {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    if (check()) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+  throw new Error(message);
+}
+
+async function run() {
+  const { createTwitchChatClient, TWITCH_CHAT_EVENTS } = loadChatClientModule();
+  const fakeClient = new FakeTmiClient();
+  const messages = [];
+  const chatClient = createTwitchChatClient({
+    channel: 'socialstream',
+    clientFactory: async () => fakeClient,
+    logger: null,
+    formatters: {
+      sanitize: (value) => String(value ?? ''),
+      avatarUrl: (value) => `avatar:${value}`,
+      now: () => 1000
+    }
+  });
+
+  chatClient.on(TWITCH_CHAT_EVENTS.MEMBERSHIP, (payload) => {
+    messages.push(payload);
+  });
+
+  await chatClient.connect();
+  assert(chatClient.getState().joined === false, 'Twitch chat client reported JOIN before the self join event');
+  fakeClient.emit('join', '#socialstream', 'socialstream', true);
+  assert(chatClient.getState().joined === true, 'Twitch chat client did not record the self join event');
+
+  fakeClient.emit(
+    'subgift',
+    '#socialstream',
+    'THErealNEDRYERSON',
+    7,
+    'abookwitch',
+    { prime: false, plan: '1000', planName: 'Channel Subscription (Tier 1)' },
+    {
+      'display-name': 'THErealNEDRYERSON',
+      username: 'therealnedryerson',
+      'tmi-sent-ts': '1712435520000'
+    }
+  );
+
+  fakeClient.emit(
+    'anonsubgift',
+    '#socialstream',
+    1,
+    'quietviewer',
+    { prime: false, plan: '1000', planName: 'Channel Subscription (Tier 1)' },
+    {
+      'tmi-sent-ts': '1712435530000'
+    }
+  );
+
+  assert(messages.length === 2, `Expected 2 membership events, received ${messages.length}`);
+
+  const directGift = messages[0];
+  assert(directGift.chatname === 'THErealNEDRYERSON', `Expected gifter name, received ${directGift.chatname}`);
+  assert(
+    directGift.chatmessage === 'THErealNEDRYERSON gifted a sub to abookwitch!',
+    `Unexpected direct gift message: ${directGift.chatmessage}`
+  );
+  assert(
+    directGift.hasDonation === 'THErealNEDRYERSON gifted a sub to abookwitch',
+    `Unexpected direct gift donation summary: ${directGift.hasDonation}`
+  );
+
+  const anonGift = messages[1];
+  assert(anonGift.chatname === 'Anonymous', `Expected Anonymous, received ${anonGift.chatname}`);
+  assert(
+    anonGift.chatmessage === 'Anonymous gifted a sub to quietviewer!',
+    `Unexpected anonymous gift message: ${anonGift.chatmessage}`
+  );
+
+  let latestToken = 'initial-token';
+  const reconnectClients = [];
+  const factoryCalls = [];
+  const reconnectingClient = createTwitchChatClient({
+    channel: 'socialstream',
+    tokenProvider: async () => latestToken,
+    reconnect: { minDelayMs: 1, maxDelayMs: 1, factor: 1 },
+    clientFactory: async (options) => {
+      factoryCalls.push(options);
+      const client = new FakeTmiClient();
+      reconnectClients.push(client);
+      return client;
+    },
+    logger: null
+  });
+
+  await reconnectingClient.connect({
+    credentials: {
+      token: latestToken,
+      identity: { login: 'socialstream', userId: '1234' }
+    }
+  });
+  latestToken = 'refreshed-token';
+  reconnectClients[0].emit('disconnected', 'test disconnect');
+  await waitFor(() => factoryCalls.length === 2, 'Twitch chat client did not reconnect');
+
+  assert(factoryCalls[1].token === 'refreshed-token', 'Reconnect did not use the newest Twitch token');
+  assert(factoryCalls[1].identity.login === 'socialstream', 'Reconnect lost the Twitch login identity');
+  assert(factoryCalls[1].identity.userId === '1234', 'Reconnect lost the Twitch user ID');
+  reconnectingClient.disconnect();
+
+  for (const vendorFile of ['tmi.js', 'tmi.module.js']) {
+    const vendorSource = fs.readFileSync(
+      path.join(__dirname, '..', 'shared', 'vendor', vendorFile),
+      'utf8'
+    );
+    assert(
+      /if \(this\.reconnect\) \{\s*setTimeout\(\(\) => this\.connect/.test(vendorSource),
+      `${vendorFile} can still start a competing reconnect when wrapper reconnects are enabled`
+    );
+  }
+
+  console.log('twitch-chatClient-subgift.test.js passed');
+}
+
+run().catch((err) => {
+  console.error(err.message || err);
+  process.exit(1);
+});

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Chat Overlay</title>
+<style>
+  :root {
+    --bg-color: rgba(0, 0, 0, 0.6);
+    --text-color: #ffffff;
+    --accent-color: #007bff;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --max-width: 600px;
+    --row-height: 40px;
+    --gap: 8px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--font-family);
+    color: var(--text-color);
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: flex-end; /* Align to bottom */
+    justify-content: flex-start; /* Align to left */
+  }
+
+  #chat-container {
+    width: var(--max-width);
+    height: 80vh; /* Occupy 80% of height */
+    max-height: 600px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Stack from bottom */
+    padding: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .chat-row {
+    display: flex;
+    align-items: center;
+    background: var(--bg-color);
+    padding: 6px 10px;
+    border-radius: 8px;
+    margin-bottom: var(--gap);
+    animation: fadeIn 0.3s ease-out;
+    font-size: 16px;
+    line-height: 1.2;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    opacity: 0;
+    animation-fill-mode: forwards;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 10px;
+    background-color: #333;
+    flex-shrink: 0;
+    object-fit: cover;
+  }
+
+  .username {
+    font-weight: bold;
+    color: var(--accent-color);
+    margin-right: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+  }
+
+  .message {
+    color: var(--text-color);
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div id="chat-container"></div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+<script>
+(function () {
+  // --- Configuration & State ---
+  var params = new URLSearchParams(location.search);
+  var limit = parseInt(params.get("limit")) || 10;
+  var chatRows = []; // Stores DOM elements to manage the limit
+
+  // --- DOM Elements ---
+  var container = document.getElementById("chat-container");
+  var bridge = document.getElementById("ssn_bridge");
+
+  // --- Bridge Setup ---
+  (function initBridge() {
+    var roomID = params.get("session") || "";
+    var password = params.get("password") || "false";
+    var label = params.get("label") || "custom_overlay_chat_" + Date.now();
+
+    if (roomID) {
+      bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+        encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+        "&label=" + encodeURIComponent(label) +
+        "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+    }
+
+    window.addEventListener("message", function (event) {
+      var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+      if (typeof payload !== "undefined") {
+        handlePayload(payload);
+      }
+    });
+  })();
+
+  // --- Core Logic ---
+  function handlePayload(data) {
+    // 1. Filter: Must be chat, not a bot, and not an event
+    if (!data.chatname || !data.chatmessage) return;
+    if (data.event) return; // Skip system events
+    if (data.bot) return;   // Skip bots
+
+    // 2. Create Row
+    addChatRow(data);
+  }
+
+  function addChatRow(data) {
+    var row = document.createElement("div");
+    row.className = "chat-row";
+
+    // Avatar
+    var img = document.createElement("img");
+    img.className = "avatar";
+    img.src = data.chatimg || "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"; // 1x1 transparent gif fallback
+    img.onerror = function() { this.style.display = 'none'; };
+    if (!data.chatimg) img.style.display = 'none';
+
+    // Username
+    var nameSpan = document.createElement("span");
+    nameSpan.className = "username";
+    nameSpan.textContent = data.chatname;
+
+    // Message
+    var msgSpan = document.createElement("span");
+    msgSpan.className = "message";
+    msgSpan.textContent = data.chatmessage;
+
+    // Assemble
+    row.appendChild(img);
+    row.appendChild(nameSpan);
+    row.appendChild(msgSpan);
+
+    // Add to DOM
+    container.appendChild(row);
+    chatRows.push(row);
+
+    // Enforce Limit
+    while (chatRows.length > limit) {
+      var oldRow = chatRows.shift();
+      if (oldRow && oldRow.parentNode) {
+        oldRow.parentNode.removeChild(oldRow);
+      }
+    }
+  }
+
+  // --- Testing Helper ---
+  // Allows the builder to send test events via console: window.handleOverlayPayload({...})
+  window.handleOverlayPayload = handlePayload;
+
+})();
+</script>
+</body>
+</html>

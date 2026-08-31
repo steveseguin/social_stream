@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SSN Viewer Count Bottom Bar</title>
+<style>
+  :root {
+    --bar-bg: rgba(0, 0, 0, 0.75);
+    --bar-height: 42px;
+    --bar-padding: 0 16px;
+    --text-color: #ffffff;
+    --text-muted: #aaaaaa;
+    --font-family: "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+    --font-size: 14px;
+    --font-size-total: 16px;
+    --font-weight: 600;
+    --font-weight-total: 700;
+    --gap: 18px;
+    --separator: " | ";
+    --separator-color: #555555;
+    --total-color: #ffcc00;
+    --platform-colors: #ff0000, #9146ff, #53fc18, #fe2c55, #0057ff, #2d2d2d;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--font-family);
+    width: 100vw;
+    height: 100vh;
+  }
+
+  #viewer-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--bar-height);
+    background: var(--bar-bg);
+    display: flex;
+    align-items: center;
+    padding: var(--bar-padding);
+    gap: var(--gap);
+    z-index: 9999;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .platform-count {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    font-size: var(--font-size);
+    font-weight: var(--font-weight);
+    color: var(--text-color);
+  }
+
+  .platform-count .label {
+    color: var(--text-muted);
+    text-transform: capitalize;
+    font-weight: 400;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  .platform-count .count {
+    font-variant-numeric: tabular-nums;
+    transition: opacity 0.3s ease;
+  }
+
+  .platform-count .count.flash {
+    animation: flashPulse 0.4s ease-out;
+  }
+
+  @keyframes flashPulse {
+    0%   { transform: scale(1.35); color: #ffffff; }
+    100% { transform: scale(1);   color: var(--text-color); }
+  }
+
+  .separator {
+    color: var(--separator-color);
+    font-size: var(--font-size);
+    user-select: none;
+  }
+
+  .total-count {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    margin-left: auto;
+    font-size: var(--font-size-total);
+    font-weight: var(--font-weight-total);
+    color: var(--total-color);
+  }
+
+  .total-count .label {
+    color: var(--text-muted);
+    font-weight: 400;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  .total-count .count {
+    font-variant-numeric: tabular-nums;
+    transition: opacity 0.3s ease;
+  }
+
+  .total-count .count.flash {
+    animation: flashPulse 0.4s ease-out;
+  }
+
+  /* Hide bar initially until first data arrives */
+  #viewer-bar.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  #viewer-bar.visible {
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+
+<div id="viewer-bar" class="hidden">
+  <div id="platforms"></div>
+  <span class="separator">|</span>
+  <div class="total-count">
+    <span class="label">TOTAL</span>
+    <span class="count" id="total-count">0</span>
+  </div>
+</div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---- VDO.Ninja Bridge ---- */
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "viewer_bar_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  /* ---- State ---- */
+  var platformCounts = {};   // { youtube: 800, twitch: 200, ... }
+  var prevTotal = 0;
+
+  /* ---- DOM refs ---- */
+  var bar = document.getElementById("viewer-bar");
+  var platformsEl = document.getElementById("platforms");
+  var totalCountEl = document.getElementById("total-count");
+
+  /* ---- Helpers ---- */
+  function escapeText(str) {
+    var div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function formatNumber(n) {
+    return Number(n || 0).toLocaleString("en-US");
+  }
+
+  function getTotal() {
+    var total = 0;
+    var keys = Object.keys(platformCounts);
+    for (var i = 0; i < keys.length; i++) {
+      total += Number(platformCounts[keys[i]]) || 0;
+    }
+    return total;
+  }
+
+  /* ---- Render ---- */
+  function render() {
+    var total = getTotal();
+
+    // Build platform list
+    var keys = Object.keys(platformCounts).sort();
+    platformsEl.innerHTML = "";
+
+    for (var i = 0; i < keys.length; i++) {
+      var platform = keys[i];
+      var count = Number(platformCounts[platform]) || 0;
+
+      var span = document.createElement("span");
+      span.className = "platform-count";
+
+      var labelSpan = document.createElement("span");
+      labelSpan.className = "label";
+      labelSpan.textContent = platform;
+
+      var countSpan = document.createElement("span");
+      countSpan.className = "count";
+      countSpan.textContent = formatNumber(count);
+
+      span.appendChild(labelSpan);
+      span.appendChild(countSpan);
+      platformsEl.appendChild(span);
+
+      // Flash animation if count changed
+      if (prevTotal !== total && count > 0) {
+        // Trigger reflow then add class
+        void countSpan.offsetWidth;
+        countSpan.classList.add("flash");
+        setTimeout(function (el) {
+          el.classList.remove("flash");
+        }, 450, countSpan);
+      }
+    }
+
+    // Update total
+    totalCountEl.textContent = formatNumber(total);
+
+    if (prevTotal !== total && total > 0) {
+      void totalCountEl.offsetWidth;
+      totalCountEl.classList.add("flash");
+      setTimeout(function (el) {
+        el.classList.remove("flash");
+      }, 450, totalCountEl);
+    }
+
+    // Show bar on first data
+    if (total > 0) {
+      bar.classList.remove("hidden");
+      bar.classList.add("visible");
+    }
+
+    prevTotal = total;
+  }
+
+  /* ---- Message Handler ---- */
+  function handlePayload(data) {
+    if (!data || typeof data !== "object") return;
+
+    // Only handle viewer_updates snapshot payloads
+    if (data.event !== "viewer_updates") return;
+    if (!data.meta || typeof data.meta !== "object") return;
+
+    // Replace state entirely (snapshot semantics)
+    platformCounts = {};
+    var keys = Object.keys(data.meta);
+    for (var i = 0; i < keys.length; i++) {
+      var platform = keys[i];
+      var value = data.meta[platform];
+      if (typeof value === "number" && value >= 0) {
+        platformCounts[platform] = value;
+      }
+    }
+
+    render();
+  }
+
+  // Listen for messages from the bridge iframe
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handlePayload(payload);
+    }
+  });
+
+  // Expose for testing / builder
+  window.handleOverlayPayload = handlePayload;
+
+  // Initial render (empty state)
+  render();
+
+})();
+</script>
+</body>
+</html>

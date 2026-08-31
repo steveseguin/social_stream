@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tip Jar and Goal Meter Guide - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Set up the Social Stream Ninja Tip Jar and Goal Meter and troubleshoot missing donations, memberships, and gifted memberships.">
+    <style>
+        .quick-note {
+            background: rgba(26, 115, 232, 0.08);
+            border-left: 4px solid #1a73e8;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 1.4rem 1.6rem;
+            margin: 1.5rem 0;
+        }
+        .dark-mode .quick-note { background: rgba(26, 115, 232, 0.18); }
+        .warning-note { background: rgba(251, 188, 5, 0.14); border-left-color: #f9ab00; }
+        .dark-mode .warning-note { background: rgba(251, 188, 5, 0.2); }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands & API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <div class="mobile-nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Tip Jar and Goal Meter Guide</h1>
+            <p>Choose what counts, assign supporter values, add the overlay to OBS, and troubleshoot totals that look wrong.</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <h3>Donation mode or Hype scoring?</h3>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>Mode</th><th>What it counts</th><th>Best for</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Mode">Normal Tip Jar</td><td data-label="What it counts">Super Chats, Cheers/Bits, tips, and other payloads with a donation amount</td><td data-label="Best for">Money or native-unit goals</td></tr>
+                            <tr><td data-label="Mode">Hype Cup Scoring</td><td data-label="What it counts">Donations, memberships/subscriptions, renewals, and gifted memberships/subscriptions</td><td data-label="Best for">One combined supporter-points goal</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="quick-note"><strong>Changing Jar to Bar only changes the appearance.</strong> Enable Hype Cup Scoring when memberships or subscriptions should move the goal.</div>
+                    <figure class="guide-figure">
+                        <img src="images/guides/tip-jar-donation-celebration.png" alt="Tip jar overlay celebrating a $20 tip with confetti and a toast showing Ryu tipped $20.00" class="guide-image guide-image-medium">
+                        <figcaption>Jar style: each qualifying donation fires a celebration and updates the goal total.</figcaption>
+                    </figure>
+                    <figure class="guide-figure">
+                        <img src="images/guides/goal-meter-bar-demo.png" alt="Goal meter bar overlay showing $63.50 of a $100 goal with recent supporters listed below" class="guide-image guide-image-medium">
+                        <figcaption>Bar style (<code>style=meter</code>): the same goal shown as a progress bar with recent supporters.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Set it up</h3>
+                    <ol class="guide-steps">
+                        <li>Activate the YouTube, Twitch, or other source in Social Stream Ninja.</li>
+                        <li>Open <strong>Tip Jar and Goal Meter</strong>, then open its options.</li>
+                        <li>Leave Hype Cup Scoring off for a donation-only goal. Enable it for a mixed supporter goal.</li>
+                        <li>Choose the display style, goal, title, filters, and persistence behavior.</li>
+                        <li>Copy the updated Tip Jar link and add it to OBS as a Browser Source.</li>
+                    </ol>
+                    <div class="quick-note warning-note"><strong>Session check:</strong> The source and copied overlay URL must use the same session ID. Keep session and password values private.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>How Hype values work</h3>
+                    <ul class="guide-list">
+                        <li><strong>Sub/member points:</strong> fixed points for each new membership/subscription or renewal.</li>
+                        <li><strong>Gifted sub/member points:</strong> fixed points for each gift. A bundle of 5 contributes <code>5 × giftpoints</code>.</li>
+                        <li><strong>Donation points per USD:</strong> multiplier applied after supported cash donations are converted to USD.</li>
+                        <li><strong>Point unit label:</strong> changes the displayed label. Using <code>$</code> does not make membership points an exact cash value.</li>
+                    </ul>
+                    <div class="quick-note warning-note"><strong>Mixed-goal filter:</strong> Leave <strong>Donation type filter</strong> on <strong>All donations</strong> when memberships and gifts should also count. A specific donation-unit filter currently limits Hype scoring to matching donation rows.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>YouTube gifts are not all the same</h3>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>YouTube event</th><th>Meaning</th><th>How it counts</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="YouTube event">Super Chat / Super Sticker</td><td data-label="Meaning">A paid message with a currency amount</td><td data-label="How it counts">Normal or Hype mode</td></tr>
+                            <tr><td data-label="YouTube event">Gifted memberships</td><td data-label="Meaning">Someone bought memberships for other viewers</td><td data-label="How it counts">Hype mode uses gift count × configured gift points</td></tr>
+                            <tr><td data-label="YouTube event">Gift recipient</td><td data-label="Meaning">One viewer received a membership from the bundle</td><td data-label="How it counts">Ignored for points by default to prevent double counting</td></tr>
+                            <tr><td data-label="YouTube event">Jewels / virtual gifts</td><td data-label="Meaning">A separate virtual-gift event with a native-unit amount</td><td data-label="How it counts">Use the matching native-unit filter</td></tr>
+                        </tbody>
+                    </table>
+                    <p>Gifted-membership events provide the number of memberships and membership level, but not the purchase price or creator's net revenue. Their exact cash value cannot be calculated from the event.</p>
+                    <div class="quick-note warning-note"><strong>Avoid double counting:</strong> Enable <strong>Count individual gift recipients too</strong> only when recipient points should be added on top of the original gift bundle.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Goal completion and saved totals</h3>
+                    <ul class="guide-list">
+                        <li>Normal donation goals retain their total unless a reset is requested.</li>
+                        <li>Hype goals reset after completion by default; the completion delay controls how long the completed value stays visible.</li>
+                        <li><strong>Carry extra points</strong> preserves points beyond the completed goal.</li>
+                        <li><strong>Keep total and advance target</strong> creates a cumulative rolling goal.</li>
+                        <li><strong>Recurring goal increment</strong> creates repeating levels.</li>
+                        <li><strong>Keep amount between sessions</strong> stores the amount and history in that browser or OBS profile.</li>
+                    </ul>
+                    <div class="quick-note">Persistent totals are separated by normal/Hype mode and active source/unit filters, but not by Social Stream session ID. Reset the saved amount before reusing the same browser profile for a different goal.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Troubleshooting</h3>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>Symptom</th><th>What to check</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Symptom">Nothing updates</td><td data-label="What to check">Source is active, overlay is open, session IDs match, and filters match the event.</td></tr>
+                            <tr><td data-label="Symptom">Super Chats count but memberships do not</td><td data-label="What to check">Enable Hype Cup Scoring and leave donation type on All donations.</td></tr>
+                            <tr><td data-label="Symptom">Gifted memberships add less than expected</td><td data-label="What to check">They use fixed gift points, not an unavailable purchase price.</td></tr>
+                            <tr><td data-label="Symptom">Total drops after reaching the goal</td><td data-label="What to check">Hype resets by default; use a rolling goal for a cumulative total.</td></tr>
+                            <tr><td data-label="Symptom">An old amount returns</td><td data-label="What to check">Persistence is enabled in the same browser or OBS profile.</td></tr>
+                            <tr><td data-label="Symptom">Gift memberships appear twice</td><td data-label="What to check">Disable individual gift-recipient counting.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>The popup's test buttons currently test donation rows. For membership or gift issues, use the Dock or Events Dashboard with the same session to confirm the event arrives before troubleshooting the goal.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo"><img src="../media/logo.png" alt="Social Stream Ninja logo"><span>Social Stream Ninja</span></div>
+                <div class="footer-links"><div class="footer-section"><h4>Resources</h4><ul><li><a href="guides.html">Guides</a></li><li><a href="event-reference.html">Event Reference</a></li><li><a href="support.html">Support</a></li></ul></div></div>
+            </div>
+            <div class="footer-bottom"><p>&copy; 2026 Social Stream Ninja. All rights reserved.</p></div>
+        </div>
+    </footer>
+    <script src="js/main.js"></script>
+</body>
+</html>

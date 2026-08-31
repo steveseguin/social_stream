@@ -1,0 +1,235 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Social Stream Ninja — Chat Overlay</title>
+<style>
+  :root {
+    --chat-bg: rgba(0, 0, 0, 0.55);
+    --chat-radius: 8px;
+    --chat-font: 15px/1.35 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --chat-max-width: 520px;
+    --avatar-size: 36px;
+    --name-color: #1a9fff;
+    --text-color: #f0f0f0;
+    --gap: 6px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: transparent;
+    overflow: hidden;
+    font: var(--chat-font);
+    color: var(--text-color);
+  }
+
+  #chat-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-width: var(--chat-max-width);
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+    pointer-events: none;
+  }
+
+  .chat-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--chat-bg);
+    border-radius: var(--chat-radius);
+    padding: 8px 12px;
+    animation: chatFadeIn 0.35s ease-out;
+    pointer-events: auto;
+    will-change: opacity, transform;
+  }
+
+  .chat-row.fade-out {
+    animation: chatFadeOut 0.5s ease-in forwards;
+  }
+
+  .chat-avatar {
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #333;
+  }
+
+  .chat-avatar-placeholder {
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: #ccc;
+  }
+
+  .chat-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .chat-name {
+    font-weight: 700;
+    color: var(--name-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chat-message {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+  }
+
+  @keyframes chatFadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes chatFadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-10px); }
+  }
+</style>
+</head>
+<body>
+
+<div id="chat-container"></div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+<script>
+(function () {
+  /* ---- config ---- */
+  var params = new URLSearchParams(location.search);
+  var limit  = parseInt(params.get("limit"), 10) || 10;
+  var container = document.getElementById("chat-container");
+  var rows = [];
+
+  /* ---- bridge setup ---- */
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_chat_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") handlePayload(payload);
+  });
+
+  /* ---- helpers ---- */
+  function esc(str) {
+    var d = document.createElement("div");
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function isChatMessage(data) {
+    if (data.event) return false;
+    if (data.bot === true) return false;
+    if (!data.chatname && !data.chatmessage) return false;
+    return true;
+  }
+
+  /* ---- render ---- */
+  function addRow(data) {
+    var row = document.createElement("div");
+    row.className = "chat-row";
+
+    /* avatar */
+    if (data.chatimg) {
+      var img = document.createElement("img");
+      img.className = "chat-avatar";
+      img.src = data.chatimg;
+      img.alt = "";
+      img.onerror = function () {
+        img.parentNode.removeChild(img);
+        var ph = document.createElement("div");
+        ph.className = "chat-avatar-placeholder";
+        ph.textContent = (data.chatname || "?").charAt(0).toUpperCase();
+        row.insertBefore(ph, row.firstChild);
+      };
+      row.appendChild(img);
+    } else {
+      var ph = document.createElement("div");
+      ph.className = "chat-avatar-placeholder";
+      ph.textContent = (data.chatname || "?").charAt(0).toUpperCase();
+      row.appendChild(ph);
+    }
+
+    /* content */
+    var content = document.createElement("div");
+    content.className = "chat-content";
+
+    var nameEl = document.createElement("span");
+    nameEl.className = "chat-name";
+    nameEl.textContent = data.chatname;
+    content.appendChild(nameEl);
+
+    if (data.chatmessage) {
+      var msgEl = document.createElement("span");
+      msgEl.className = "chat-message";
+      msgEl.textContent = data.chatmessage;
+      content.appendChild(msgEl);
+    }
+
+    row.appendChild(content);
+
+    /* insert at top */
+    container.insertBefore(row, container.firstChild);
+    rows.push(row);
+
+    /* enforce limit */
+    while (rows.length > limit) {
+      var old = rows.shift();
+      old.parentNode.removeChild(old);
+    }
+
+    /* auto-dismiss oldest after 15 s */
+    setTimeout(function () {
+      if (old.parentNode) {
+        old.classList.add("fade-out");
+        old.addEventListener("animationend", function () {
+          if (old.parentNode) old.parentNode.removeChild(old);
+          var idx = rows.indexOf(old);
+          if (idx > -1) rows.splice(idx, 1);
+        });
+      }
+    }, 15000);
+  }
+
+  /* ---- main handler ---- */
+  function handlePayload(data) {
+    if (!isChatMessage(data)) return;
+    addRow(data);
+  }
+
+  /* expose for testing */
+  window.handleOverlayPayload = handlePayload;
+})();
+</script>
+</body>
+</html>
+```

@@ -1,0 +1,32 @@
+
+=========================================================
+Round: round-1776574203524
+Endpoint: http://10.0.0.214:8000/v1/chat/completions   model: qwen3.6-35b-a3b-fp8
+=========================================================
+
+--- chat-overlay ---
+  generated 5391 chars in 5890ms
+  [✓] three chat messages appear in DOM
+  [✓] bot messages are filtered out
+  [✓] system events are filtered out of chat
+  [✓] message content is rendered
+
+--- alert-banner ---
+  generated 6926 chars in 7705ms
+  [✓] follower alert appears with the name
+  [✓] subscriber alert appears with the name
+  [✓] gifted-sub alert appears with the name
+  [✗] donation alert appears with name and amount — donation alert missing name
+  [✓] raid alert appears with the raider name
+
+--- viewer-ticker ---
+  generated 6791 chars in 7197ms
+  [✓] renders platform counts from viewer_updates
+  [✗] shows a combined total — combined total 150 not rendered
+  [✗] updates when a new viewer_updates arrives — updated count 9999 missing
+
+--- round summary ---
+  chat-overlay: 4/4
+  alert-banner: 4/5
+  viewer-ticker: 1/3
+  TOTAL: 9/12

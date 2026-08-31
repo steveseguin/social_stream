@@ -1,0 +1,261 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Alert Banner Overlay</title>
+<style>
+  :root {
+    --alert-bg: rgba(0, 0, 0, 0.85);
+    --alert-border: #00d2ff;
+    --alert-text: #ffffff;
+    --alert-accent: #00d2ff;
+    --alert-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --alert-width: 450px;
+    --alert-height: 100px;
+    --alert-radius: 12px;
+    --alert-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    --alert-duration: 4s;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--alert-font);
+    width: 100vw;
+    height: 100vh;
+  }
+
+  #alert-container {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .alert-card {
+    width: var(--alert-width);
+    height: var(--alert-height);
+    background: var(--alert-bg);
+    border: 2px solid var(--alert-border);
+    border-radius: var(--alert-radius);
+    box-shadow: var(--alert-shadow);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    box-sizing: border-box;
+    color: var(--alert-text);
+    opacity: 0;
+    transform: translateY(-20px) scale(0.9);
+    animation: slideIn var(--alert-duration) ease-out forwards;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .alert-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: translateX(-100%);
+    animation: shimmer 2s infinite;
+  }
+
+  .alert-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid var(--alert-accent);
+    margin-right: 15px;
+    object-fit: cover;
+    background: #333;
+  }
+
+  .alert-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .alert-name {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--alert-accent);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .alert-message {
+    font-size: 0.9em;
+    margin: 4px 0 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #ddd;
+  }
+
+  .alert-type-icon {
+    font-size: 2em;
+    margin-left: 15px;
+    color: var(--alert-accent);
+  }
+
+  @keyframes slideIn {
+    0% {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.9);
+    }
+    10% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    80% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.9);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+</style>
+</head>
+<body>
+
+<div id="alert-container"></div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") handlePayload(payload);
+  });
+
+  function handlePayload(data) {
+    if (!data) return;
+
+    var alertType = null;
+    var message = "";
+    var name = data.chatname || "Unknown User";
+    var avatar = data.chatimg || "";
+    var donation = data.hasDonation || "";
+    var membership = data.membership || "";
+    var subtitle = data.subtitle || "";
+    var eventType = data.event || "";
+
+    // Determine alert type and message
+    if (eventType === "new_follower") {
+      alertType = "follow";
+      message = "just followed!";
+    } else if (eventType === "subscriber" || (data.membership && eventType !== "subscription_gift" && eventType !== "gifted")) {
+      alertType = "subscribe";
+      message = "subscribed!";
+      if (membership) message += " (" + membership + ")";
+    } else if (eventType === "subscription_gift" || eventType === "gifted") {
+      alertType = "gifted_sub";
+      message = "gifted a subscription!";
+      if (subtitle) message += " - " + subtitle;
+    } else if (donation) {
+      alertType = "donation";
+      message = "donated " + donation + "!";
+      if (data.chatmessage) message += " - " + data.chatmessage;
+    } else if (eventType === "raid") {
+      alertType = "raid";
+      message = "is raiding with " + (subtitle || "viewers") + "!";
+    }
+
+    if (alertType) {
+      showAlert(name, message, avatar, alertType);
+    }
+  }
+
+  function showAlert(name, message, avatar, type) {
+    var container = document.getElementById("alert-container");
+    var alertCard = document.createElement("div");
+    alertCard.className = "alert-card";
+
+    var avatarImg = document.createElement("img");
+    avatarImg.className = "alert-avatar";
+    avatarImg.src = avatar || "https://via.placeholder.com/60";
+    avatarImg.onerror = function() { this.src = "https://via.placeholder.com/60"; };
+
+    var contentDiv = document.createElement("div");
+    contentDiv.className = "alert-content";
+
+    var nameP = document.createElement("p");
+    nameP.className = "alert-name";
+    nameP.textContent = name;
+
+    var messageP = document.createElement("p");
+    messageP.className = "alert-message";
+    messageP.textContent = message;
+
+    contentDiv.appendChild(nameP);
+    contentDiv.appendChild(messageP);
+
+    var iconDiv = document.createElement("div");
+    iconDiv.className = "alert-type-icon";
+    switch(type) {
+      case "follow": iconDiv.textContent = "👤"; break;
+      case "subscribe": iconDiv.textContent = "⭐"; break;
+      case "gifted_sub": iconDiv.textContent = "🎁"; break;
+      case "donation": iconDiv.textContent = "💰"; break;
+      case "raid": iconDiv.textContent = "🚀"; break;
+    }
+
+    alertCard.appendChild(avatarImg);
+    alertCard.appendChild(contentDiv);
+    alertCard.appendChild(iconDiv);
+
+    container.appendChild(alertCard);
+
+    // Remove alert after animation completes
+    setTimeout(function() {
+      if (alertCard.parentNode) {
+        alertCard.parentNode.removeChild(alertCard);
+      }
+    }, 4000);
+  }
+
+  window.handleOverlayPayload = handlePayload;
+})();
+</script>
+</body>
+</html>
+```

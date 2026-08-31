@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<!-- AI GUIDANCE FOR EDITING THIS OVERLAY -->
+<!--
+This is a Social Stream Ninja (SSN) chat overlay that displays messages like MOVIE END CREDITS.
+Messages appear at the bottom edge of the screen and scroll upward continuously at a constant
+speed until they leave through the top, like a film credit roll.
+
+1. CORE FUNCTIONALITY:
+   - Messages arrive via WebRTC (iframe) or WebSocket (if &server parameter is used)
+   - Session ID is crucial - users must provide &session in URL parameters
+   - Message structure includes: {chatname, chatmessage, chatimg, type, contentimg, etc.}
+   - "type" field indicates source platform (youtube, twitch, x, kick, etc.)
+
+2. CREDIT ROLL MECHANISM:
+   - A requestAnimationFrame loop increases scrollOffset at a constant px/sec rate and applies
+     it as a translateY transform on #message-list-wrapper
+   - New messages get a margin-top so their top edge starts at (or below) the bottom of the
+     viewport, then ride the roll upward
+   - When a message has fully passed the top edge it is removed from the DOM; the height it
+     freed is measured (before/after offsetTop of the next message) and subtracted from
+     scrollOffset so nothing on screen jumps
+   - Moderation deletions hide the message in place (visibility) instead of removing it, so
+     the roll never stutters; the hidden block exits naturally at the top
+   - DO NOT modify the scroll/compensation logic without thorough testing
+
+3. STYLING GUIDELINES:
+   - Cinematic look: centered column, serif fonts, gold names, transparent background
+   - Background is transparent (#0000) for OBS overlay compatibility
+   - A mask-image fades messages out near the top edge, like credits dissolving into darkness
+
+4. URL PARAMETERS:
+   - &speed=80        scroll speed in pixels per second
+   - &limit=50        maximum messages kept in the roll/queue
+   - &nofade          disable the fade-out near the top edge
+   - &hideavatars, &hidenames, &hidesource, &hidebadges
+   - Common tweaks: &hidebots, &chroma=00FF00, &font=18, &fontfamily=Roboto
+-->
+<html lang="en">
+<head>
+<script type="text/javascript" src="../js/local-server-url.js"></script>
+<script type="text/javascript" src="../js/transport-dedupe.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Credits Chat Overlay</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap">
+    <!-- Links to Social Stream Ninja resources -->
+    <link rel="canonical" href="https://socialstream.ninja/">
+    <meta name="generator" content="Social Stream Ninja - https://github.com/steveseguin/social_stream">
+<style>
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
+    background-color: #0000; /* Transparent background for overlay */
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+#chat-container {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 640px;
+    height: 100vh;
+    overflow: hidden;
+    padding: 0 25px;
+    box-sizing: border-box;
+}
+
+#chat-container.top-fade {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 100%);
+}
+
+#message-list-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    will-change: transform;
+}
+
+.message {
+    color: #f5f2ea;
+    text-align: center;
+    margin: 0 0 30px 0;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85), 0 0 2px rgba(0, 0, 0, 0.9);
+}
+
+.message.redacted {
+    visibility: hidden;
+}
+
+.credit-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.avatar-wrapper {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid rgba(230, 195, 106, 0.7);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    flex-shrink: 0;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+}
+
+.name {
+    font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
+    font-weight: 600;
+    font-size: 1em;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #e6c36a;
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.source-icon {
+    width: 16px;
+    height: 16px;
+    opacity: 0.85;
+    flex-shrink: 0;
+}
+
+.badge {
+    display: inline-block;
+    height: 1em;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.membership-status {
+    font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
+    color: #ffd700;
+    font-weight: 600;
+    font-size: 0.7em;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+
+.text {
+    font-size: 1.25em;
+    line-height: 1.45;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.text img,
+.text svg {
+    max-height: 1.4em;
+    max-width: 100px;
+    vertical-align: text-bottom;
+}
+
+.donation {
+    font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
+    color: #ffcf5c;
+    font-weight: 700;
+    font-size: 0.95em;
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+}
+
+.large-image {
+    max-width: 80%;
+    max-height: 220px;
+    height: auto;
+    margin-top: 10px;
+    border-radius: 6px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+}
+
+.badge.svg { overflow: hidden; }
+.badge.svg svg { display: block; width: auto !important; height: 100% !important; max-width: 100px !important; max-height: 100% !important; }
+</style>
+</head>
+<body>
+<div id="chat-container" class="top-fade">
+    <div id="message-list-wrapper"></div>
+</div>
+<script>
+    var urlParams = new URLSearchParams(window.location.search);
+    var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+    // Transport migration guard: only pages with full server parity may skip the legacy bridge.
+    var TRANSPORT_CAPABILITIES = {
+        serverFeed: true,
+        serverTargeted: false,
+        upstreamCommands: false,
+        customChannel: false,
+        legacyBridgeRequired: false,
+        exclusiveServerParams: { server: false, server2: true, server3: false }
+    };
+    function versionAtLeast(value, minimum) {
+        var a = String(value || "").split(".");
+        var b = String(minimum || "").split(".");
+        var len = Math.max(a.length, b.length);
+        for (var i = 0; i < len; i++) {
+            var av = parseInt(a[i], 10) || 0;
+            var bv = parseInt(b[i], 10) || 0;
+            if (av > bv) return true;
+            if (av < bv) return false;
+        }
+        return true;
+    }
+    // Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+    function hasExclusiveServerTransport(caps) {
+        var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+        return (params.server === true && urlParams.has("server")) ||
+            (params.server2 !== false && urlParams.has("server2")) ||
+            (params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+    }
+    function useServerOnlyTransport() {
+        var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+        return hasExclusiveServerTransport(caps) &&
+            versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+            caps.serverFeed === true &&
+            caps.legacyBridgeRequired !== true &&
+            caps.upstreamCommands !== true &&
+            caps.customChannel !== true;
+    }
+    var roomID = "iWWnKL28tQ";
+    if (urlParams.has("session")) {
+        roomID = urlParams.get("session");
+    }
+    var password = urlParams.get("password") || urlParams.get("pass") || urlParams.get("pw") || "false";
+    var featuredMode = false;
+    var deleteOnlyLast = urlParams.has("deleteonlylast");
+
+    // Scroll speed of the credit roll, in pixels per second
+    var scrollSpeed = 80;
+    if (urlParams.has("speed")) {
+        var _sp = parseFloat(urlParams.get("speed"));
+        if (!isNaN(_sp) && _sp > 0) { scrollSpeed = Math.min(_sp, 1000); }
+    }
+
+    // Simple URL parameters for customization
+    var hideAvatars = urlParams.has("hideavatars") || urlParams.has("noavatars");
+    var hideNames = urlParams.has("hidenames") || urlParams.has("nonames");
+    var hideSource = urlParams.has("hidesource");
+    var hideBadges = urlParams.has("hidebadges") || urlParams.has("nobadges");
+
+    // --- Common overlay tweaks (shared across themes) ---
+    var hideBots = urlParams.has("hidebots");
+    if (urlParams.has("chroma")) {
+        var _c = urlParams.get("chroma") || "";
+        document.body.style.backgroundColor = _c.charAt(0) === "#" ? _c : "#" + _c;
+    }
+    if (urlParams.has("font")) {
+        var _fs = parseInt(urlParams.get("font"), 10);
+        if (!isNaN(_fs) && _fs > 0) {
+            document.documentElement.style.fontSize = _fs + "px";
+            document.body.style.fontSize = _fs + "px";
+        }
+    }
+    if (urlParams.has("fontfamily")) {
+        var _ff = (urlParams.get("fontfamily") || "").trim();
+        if (_ff) {
+            var _safe = _ff.replace(/['"\\;{}<>]/g, "");
+            var _gf = document.createElement("link");
+            _gf.rel = "stylesheet";
+            _gf.href = "https://fonts.googleapis.com/css2?family=" +
+                encodeURIComponent(_safe).replace(/%20/g, "+") + ":wght@400;500;600;700&display=swap";
+            document.head.appendChild(_gf);
+            document.body.style.fontFamily = "'" + _safe + "', serif";
+            // Let the chosen family win over the theme's serif classes too
+            var _ffStyle = document.createElement("style");
+            _ffStyle.textContent = ".name, .text, .membership-status, .donation { font-family: inherit !important; }";
+            document.head.appendChild(_ffStyle);
+        }
+    }
+
+    const chatContainer = document.getElementById('chat-container');
+    const messageListWrapper = document.getElementById('message-list-wrapper');
+    const MAX_MESSAGES = urlParams.has("limit") ? parseInt(urlParams.get("limit")) : 50;
+    const messageTimestamps = new Map();
+    var overlayMessageCounter = 0;
+    var localBlockUserList = {};
+    var timedOutUsers = {};
+
+    if (urlParams.has("nofade")) {
+        chatContainer.classList.remove("top-fade");
+    }
+
+    // --- Credit roll engine ---
+    // scrollOffset is how far (in px) the column has rolled upward. The wrapper is
+    // translated by -scrollOffset every frame. All positional math (entry point of new
+    // messages, exit point of old ones) is done in wrapper/layout space against it.
+    var scrollOffset = 0;
+    var lastFrameTime = null;
+
+    function getOverlayMessages() {
+        return Array.from(messageListWrapper.children).filter(function(child) {
+            return child.classList.contains('message');
+        });
+    }
+
+    // Remove the oldest (first) message and shrink scrollOffset by exactly the layout
+    // space it freed, measured via the next message's offsetTop, so the visible roll
+    // does not jump.
+    function removeFirstMessageCompensated() {
+        var messages = getOverlayMessages();
+        if (!messages.length) {
+            return;
+        }
+        var first = messages[0];
+        var anchor = messages.length > 1 ? messages[1] : null;
+        var beforeTop = anchor ? anchor.offsetTop : 0;
+        messageTimestamps.delete(first.id);
+        if (first.parentNode) {
+            first.parentNode.removeChild(first);
+        }
+        if (anchor) {
+            scrollOffset -= (beforeTop - anchor.offsetTop);
+        } else {
+            scrollOffset = 0;
+        }
+    }
+
+    function tick(now) {
+        if (lastFrameTime === null) {
+            lastFrameTime = now;
+        }
+        var dt = (now - lastFrameTime) / 1000;
+        lastFrameTime = now;
+        if (dt > 0.5) { dt = 0.5; } // Tab was throttled/paused; don't jump the roll
+
+        var messages = getOverlayMessages();
+        if (!messages.length) {
+            if (scrollOffset !== 0) {
+                scrollOffset = 0;
+                messageListWrapper.style.transform = "translate3d(0, 0, 0)";
+            }
+            requestAnimationFrame(tick);
+            return;
+        }
+
+        scrollOffset += scrollSpeed * dt;
+
+        // Retire messages that have fully rolled past the top edge
+        var first = messages[0];
+        while (first && (first.offsetTop + first.offsetHeight) < scrollOffset) {
+            removeFirstMessageCompensated();
+            messages = getOverlayMessages();
+            first = messages.length ? messages[0] : null;
+        }
+
+        messageListWrapper.style.transform = "translate3d(0, " + (-scrollOffset) + "px, 0)";
+        requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+
+    // --- Message identity / moderation helpers ---
+    function getPayloadMessageId(data) {
+        if (data.mid !== undefined && data.mid !== null && data.mid !== "") {
+            return String(data.mid);
+        }
+        if (data.id !== undefined && data.id !== null && data.id !== "") {
+            return String(data.id);
+        }
+        if (data.messageId !== undefined && data.messageId !== null && data.messageId !== "") {
+            return String(data.messageId);
+        }
+        if (data.message_id !== undefined && data.message_id !== null && data.message_id !== "") {
+            return String(data.message_id);
+        }
+        if (data.meta && data.meta.messageId !== undefined && data.meta.messageId !== null && data.meta.messageId !== "") {
+            return String(data.meta.messageId);
+        }
+        if (data.meta && data.meta.message_id !== undefined && data.meta.message_id !== null && data.meta.message_id !== "") {
+            return String(data.meta.message_id);
+        }
+        overlayMessageCounter += 1;
+        return 'msg-' + Date.now() + '-' + overlayMessageCounter;
+    }
+
+    // Moderation removals hide the message in place instead of pulling it out of the
+    // flow; removing it would make the whole roll jump. The hidden block keeps its
+    // height and exits naturally at the top.
+    function redactOverlayMessage(message) {
+        if (!message) {
+            return;
+        }
+        message.classList.add('redacted');
+    }
+
+    function getNewestMessage(messages) {
+        return messages.reduce(function(newest, message) {
+            const newestNumber = Number(newest.dataset.mid);
+            const messageNumber = Number(message.dataset.mid);
+            if (!Number.isNaN(newestNumber) && !Number.isNaN(messageNumber)) {
+                return newestNumber > messageNumber ? newest : message;
+            }
+            return (messageTimestamps.get(newest.id) || 0) > (messageTimestamps.get(message.id) || 0) ? newest : message;
+        });
+    }
+
+    function redactMatchingMessages(matches, onlyLast) {
+        const messages = getOverlayMessages().filter(matches);
+        if (!messages.length) {
+            return false;
+        }
+        if (onlyLast) {
+            redactOverlayMessage(getNewestMessage(messages));
+        } else {
+            messages.forEach(redactOverlayMessage);
+        }
+        return true;
+    }
+
+    function deleteMessageById(id) {
+        if (id === undefined || id === null || id === "") {
+            return false;
+        }
+        const idString = String(id);
+        return redactMatchingMessages(function(message) {
+            return message.dataset.mid === idString || message.id === idString;
+        }, true);
+    }
+
+    function deleteMessages(data, onlyLast) {
+        if (!data.delete || typeof data.delete !== "object") {
+            return false;
+        }
+        const deleteData = data.delete;
+        return redactMatchingMessages(function(message) {
+            if (deleteData.id !== undefined && deleteData.id !== null && deleteData.id !== "") {
+                const idString = String(deleteData.id);
+                return message.dataset.mid === idString || message.id === idString;
+            }
+            if (deleteData.chatname && message.dataset.chatname !== String(deleteData.chatname)) {
+                return false;
+            }
+            if (deleteData.type && message.dataset.sourceType !== String(deleteData.type)) {
+                return false;
+            }
+            return !!(deleteData.chatname || deleteData.type);
+        }, onlyLast || deleteData.onlyLast);
+    }
+
+    function removeUserMessages(username, type) {
+        if (!username) {
+            return false;
+        }
+        username = String(username);
+        type = type ? String(type) : "";
+        return redactMatchingMessages(function(message) {
+            if (message.dataset.chatname !== username) {
+                return false;
+            }
+            if (!type) {
+                return true;
+            }
+            return message.dataset.sourceType === type || (type === "youtube" && message.dataset.sourceType === "youtubeshorts");
+        }, false);
+    }
+
+    function addLocalBlock(username, type) {
+        if (!username) {
+            return;
+        }
+        username = String(username);
+        const types = type ? [String(type)] : ["*"];
+        if (type === "youtube") {
+            types.push("youtubeshorts");
+        }
+        if (!localBlockUserList[username]) {
+            localBlockUserList[username] = [];
+        }
+        types.forEach(function(blockType) {
+            if (!localBlockUserList[username].includes(blockType)) {
+                localBlockUserList[username].push(blockType);
+            }
+        });
+        setTimeout(function() {
+            if (!localBlockUserList[username]) {
+                return;
+            }
+            types.forEach(function(blockType) {
+                const index = localBlockUserList[username].indexOf(blockType);
+                if (index !== -1) {
+                    localBlockUserList[username].splice(index, 1);
+                }
+            });
+            if (!localBlockUserList[username].length) {
+                delete localBlockUserList[username];
+            }
+        }, 10000);
+    }
+
+    function isMessageBlocked(data) {
+        if (!data.chatname) {
+            return false;
+        }
+        const chatname = String(data.chatname);
+        const type = data.type ? String(data.type) : "";
+        if (localBlockUserList[chatname] && (localBlockUserList[chatname].includes(type) || localBlockUserList[chatname].includes("*"))) {
+            return true;
+        }
+        if (type && timedOutUsers[chatname + ":" + type]) {
+            if (timedOutUsers[chatname + ":" + type] < Date.now()) {
+                delete timedOutUsers[chatname + ":" + type];
+            } else {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function clearAllMessages() {
+        getOverlayMessages().forEach(function(message) {
+            messageTimestamps.delete(message.id);
+            if (message.parentNode) {
+                message.parentNode.removeChild(message);
+            }
+        });
+        scrollOffset = 0;
+        messageListWrapper.style.transform = "translate3d(0, 0, 0)";
+    }
+
+    function handleControlPayload(data) {
+        if (!data || typeof data !== "object") {
+            return false;
+        }
+        if ("deleteMessage" in data) {
+            deleteMessageById(data.deleteMessage);
+            return true;
+        }
+        if ("clearAll" in data || data.action === "clear" || data.action === "clearAll") {
+            clearAllMessages();
+            return true;
+        }
+        if ("delete" in data) {
+            deleteMessages(data, deleteOnlyLast);
+            return true;
+        }
+        if ("timeoutUser" in data && data.timeoutUser) {
+            const timeoutName = data.timeoutUser.username || data.timeoutUser.chatname;
+            if (timeoutName && data.timeoutUser.type && data.timeoutUser.duration) {
+                timedOutUsers[String(timeoutName) + ":" + String(data.timeoutUser.type)] = Date.now() + (Number(data.timeoutUser.duration) * 1000);
+            }
+            removeUserMessages(timeoutName, data.timeoutUser.type);
+            return true;
+        }
+        if ("blockUser" in data && data.blockUser) {
+            const blockName = data.blockUser.chatname || data.blockUser.username;
+            addLocalBlock(blockName, data.blockUser.type);
+            removeUserMessages(blockName, data.blockUser.type);
+            return true;
+        }
+        return false;
+    }
+
+    // ── Local output escaping ─────────────────────────────────────────────────
+    // The normal relay path sanitizes these fields in background.js, but this overlay
+    // can also receive payloads pushed directly into the session transport. Escape every
+    // interpolated field locally (defense-in-depth), matching dock.html / featured.html.
+    function escapeHtml(unsafe) {
+        if (unsafe == null) { return ""; }
+        return String(unsafe)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+    function escapeAttributeValue(value) {
+        return escapeHtml(value == null ? "" : String(value));
+    }
+    function cssAttributeValue(value) {
+        return String(value == null ? "" : value)
+            .replace(/\\/g, "\\\\")
+            .replace(/"/g, '\\"')
+            .replace(/'/g, "\\'")
+            .replace(/\r/g, "\\D ")
+            .replace(/\n/g, "\\A ")
+            .replace(/\f/g, "\\C ")
+            .replace(/[<>]/g, "");
+    }
+
+    // Cross-transport dedupe: in server mode the same feed message can arrive over both
+    // the websocket relay and the VDO.Ninja bridge; render only the first copy.
+    var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
+    var recentTransportDeliveries = new Map();
+    var transportDeliveryDedupe = typeof SocialStreamTransportDedupe !== "undefined" ? SocialStreamTransportDedupe.create() : null;
+    function isDuplicateTransportDelivery(data, source) {
+        if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) {
+            return false;
+        }
+        if (transportDeliveryDedupe) return transportDeliveryDedupe(data, source);
+        if (!data || typeof data !== "object") {
+            return false;
+        }
+        if (data.id === undefined || data.id === null) {
+            return false;
+        }
+        if ("action" in data || "get" in data || "callback" in data || "mid" in data) {
+            return false;
+        }
+        if (!(data.chatname || data.chatmessage || data.chatimg || data.hasDonation || data.membership || data.event || data.contentimg)) {
+            return false;
+        }
+        var key =
+            String(data.id) +
+            "|" + (data.type || "") +
+            "|" + (data.chatname || "") +
+            "|" + String(data.chatmessage || "").slice(0, 100) +
+            "|" + (data.hasDonation || "") +
+            "|" + (data.event || "");
+        var now = Date.now();
+        recentTransportDeliveries.forEach(function (seenAt, seenKey) {
+            if (now - seenAt > CROSS_TRANSPORT_DEDUPE_TTL_MS) {
+                recentTransportDeliveries.delete(seenKey);
+            }
+        });
+        if (recentTransportDeliveries.has(key)) {
+            return true;
+        }
+        recentTransportDeliveries.set(key, now);
+        return false;
+    }
+    function addMessageToOverlay(data, source) {
+        if (isDuplicateTransportDelivery(data, source)) {
+            return;
+        }
+        if (handleControlPayload(data)) {
+            return;
+        }
+        if (!data || typeof data !== "object") {
+            return;
+        }
+        if (hideBots && data.bot) {
+            return;
+        }
+        if (isMessageBlocked(data)) {
+            return;
+        }
+
+        if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg){
+            return;
+        }
+
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+
+        // Generate unique ID and track timestamp
+        const messageId = getPayloadMessageId(data);
+        messageDiv.id = messageId;
+        messageDiv.dataset.mid = messageId;
+        if (data.chatname) {
+            messageDiv.dataset.chatname = data.chatname;
+        }
+        if (data.type) {
+            messageDiv.dataset.sourceType = data.type;
+        }
+        messageTimestamps.set(messageId, Date.now());
+
+        var chatbadgesHtml = "";
+        if (!hideBadges && data.chatbadges) {
+            data.chatbadges.forEach(badge => {
+                if (typeof badge === "object") {
+                    if (badge.type === "img" && badge.src) {
+                        chatbadgesHtml += `<img class='badge' src='${escapeAttributeValue(badge.src)}' alt='badge'>`;
+                    } else if (badge.type === "svg" && badge.html) {
+                        // Trusted SVG badge markup, sanitized upstream (matches dock.html / featured.html).
+                        chatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;
+                    }
+                } else {
+                    chatbadgesHtml += `<img class='badge' src='${escapeAttributeValue(badge)}' alt='badge'>`;
+                }
+            });
+        }
+
+        // Text-only chatmessage is deliberately left un-escaped upstream (see background.js), so it must be
+        // rendered as literal text here; HTML mode keeps the sanitized markup (emotes, etc.). chatname is
+        // filterXSS'd upstream, matching the trusted-upstream contract used by dock.html / featured.html.
+        const renderedChatMessage = data.textonly ? escapeHtml(data.chatmessage) : data.chatmessage;
+
+        const sourceIconHtml = (!hideSource && data.type) ? `<img src="https://socialstream.ninja/sources/images/${escapeAttributeValue(data.type)}.png" alt="Source" class="source-icon">` : '';
+        const avatarHtml = (!hideAvatars && data.chatimg) ?
+            `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${cssAttributeValue(data.chatimg)}');"></div></div>` : '';
+        const nameHtml = (!hideNames && data.chatname) ? `<div class="name" ${data.nameColor ? `style="color: ${escapeAttributeValue(data.nameColor)}"` : ''}>${data.chatname}</div>` : '';
+        const membershipHtml = data.membership ? `<div class="membership-status">${escapeHtml(data.membership)}</div>` : '';
+        const messageTextHtml = data.chatmessage ? `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${renderedChatMessage}</div>` : '';
+        const donationHtml = data.hasDonation ? `<div class="donation">${escapeHtml(data.hasDonation)}</div>` : '';
+        const contentImgHtml = data.contentimg ?
+            `<img src="${escapeAttributeValue(data.contentimg)}" alt="" class="large-image" onerror="this.style.display='none';">` : '';
+
+        const headerHtml = (avatarHtml || nameHtml || sourceIconHtml || chatbadgesHtml) ?
+            `<div class="credit-header">${avatarHtml}${nameHtml}${sourceIconHtml}${chatbadgesHtml}</div>` : '';
+
+        messageDiv.innerHTML = `
+            ${headerHtml}
+            ${membershipHtml}
+            ${messageTextHtml}
+            ${donationHtml}
+            ${contentImgHtml}
+        `;
+
+        messageListWrapper.appendChild(messageDiv);
+
+        // Enter like a credit line: the top of the message must start at the bottom edge
+        // of the viewport (or below it, queued behind earlier messages).
+        var naturalTop = messageDiv.offsetTop;
+        var enterLine = scrollOffset + chatContainer.clientHeight;
+        if (naturalTop < enterLine) {
+            messageDiv.style.marginTop = (enterLine - naturalTop) + "px";
+        }
+
+        // Cap the roll/queue length; drop the oldest if a burst backs things up
+        while (getOverlayMessages().length > MAX_MESSAGES) {
+            removeFirstMessageCompensated();
+        }
+    }
+
+    if (!useServerOnlyTransport()) {
+        var iframe = document.createElement("iframe");
+        if (featuredMode){
+            iframe.src = `https://vdo.socialstream.ninja/?ln&password=${encodeURIComponent(password)}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+        } else {
+            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+encodeURIComponent(password)+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID;
+        }
+        iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+        document.body.appendChild(iframe);
+        window.addEventListener("message", function (e) {
+            if (e.source != iframe.contentWindow) return;
+            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja) {
+                addMessageToOverlay(e.data.dataReceived.overlayNinja, "p2p");
+            }
+        });
+    }
+
+    var conCon = 1;
+    var socketserver = false;
+    var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja";
+
+    function setupSocket(){
+        socketserver.onclose = function (){
+            setTimeout(function(){
+                conCon+=1;
+                socketserver = new WebSocket(serverURL);
+                setupSocket();
+            },100*conCon);
+        };
+        socketserver.onopen = function (){
+            conCon = 1;
+            socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+        };
+        socketserver.addEventListener('message', function (event) {
+            if (event.data){
+                try {
+                    var data = JSON.parse(event.data);
+                    if (data) {
+                        addMessageToOverlay(data, "server");
+                    }
+                } catch (error) {
+                    console.error("Error processing WebSocket message:", error, "Data:", event.data);
+                }
+            }
+        });
+    }
+
+    if (urlParams.has("server") || urlParams.has("server2")){
+        serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
+        socketserver = new WebSocket(serverURL);
+        setupSocket();
+    }
+</script>
+</body>
+</html>
