@@ -4355,9 +4355,16 @@ input:checked + .slider:before {
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-styling-options" />
                     <label class="collapsible-label" for="wrapper-chat-message-styling-options"><span data-translate="message---styling">💬 Message - 🎨 Styling</span></label>
                     <div class="collapsible-text">
-                        <div class="options">
-                            <div class="options_group streaming_chat">
-                                <div title="Puts the name and the message on the same line (dense IRC/Twitch-style), instead of the name on its own line above the message. This is for very short messages — longer messages will keep flowing on that single line. For a dedicated dense layout, use one of the 'Compact' overlay styles in the style dropdown instead. NOTE: this is the same as adding &compact to the dock URL.">
+						<div class="options">
+							<div class="options_group streaming_chat">
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="inline" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="inline-name-and-message-keep-normal-spacing">↔️ Inline name and message (keep normal spacing)</span>
+								</div>
+								<div title="Puts the name and the message on the same line (dense IRC/Twitch-style), instead of the name on its own line above the message. This is for very short messages — longer messages will keep flowing on that single line. For a dedicated dense layout, use one of the 'Compact' overlay styles in the style dropdown instead. NOTE: this is the same as adding &compact to the dock URL.">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="compact" />
                                         <span class="slider round"></span>

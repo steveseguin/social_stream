@@ -48,6 +48,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `blur` or `blurred` | number | Applies blur effect to messages (value in pixels) |
 | `noblur` | boolean | Disables blur rendering (including hidden-source blur and timed-out blur) |
 | `compact` or `overlaymode` | boolean | Enables compact mode with less spacing |
+| `inline` | boolean | Keeps normal row spacing while allowing the message to start beside the username and wrap naturally below |
 | `padding` | number | Sets padding between messages in pixels |
 | `largeavatar` | boolean | Shows larger user avatars on the left side |
 | `emoji` or `emojis` | number | Sets emoji size scaling (percentage, default: 140) |

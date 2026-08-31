@@ -1374,6 +1374,28 @@
 					min-width: unset;
 				}
 			}
+
+			body.vanilla.notcompactmode.inlinechat .highlight-chat {
+				display: block;
+			}
+
+			body.vanilla.notcompactmode.inlinechat .highlight-chat > .queueid {
+				display: inline-block;
+			}
+
+			body.vanilla.notcompactmode.inlinechat .highlight-chat > .hl-name {
+				min-width: unset;
+			}
+
+			body.vanilla.notcompactmode.inlinechat .highlight-chat > .hl-message:not(.bubble) {
+				display: inline;
+				padding-left: 0;
+			}
+
+			body.vanilla.notcompactmode.inlinechat.alignright .highlight-chat {
+				text-align: right;
+			}
+
 			@media only screen and (max-width: 360px) {
 				.OBS .time-arrived {
 					display: none !important;
@@ -3444,6 +3466,7 @@
 			var applyCustomActions = false;
 			var showsource = true;
 			var compactmode = false;
+			var inlinechat = urlParams.has("inline");
 			var darkmode = null;
 			var scale = 1;
 			var forceAutoscroll = false;
@@ -5406,6 +5429,10 @@
 				document.body.classList.remove("notcompactmode");
 				document.documentElement.style.setProperty("--padding-rows", "2px");
 				document.documentElement.style.setProperty("--list-or-horizontal", "flex");
+			}
+
+			if (inlinechat) {
+				document.body.classList.add("inlinechat");
 			}
 
 			if (urlParams.has("padding")) {
@@ -12159,7 +12186,7 @@
 								chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + chatname + afterName + "</div>";
 							}
 						} else {
-							chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + chatbadges + chatname + "</div>";
+							chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + chatbadges + chatname + (inlinechat ? afterName : "") + "</div>";
 						}
 					} else if (specialMessage && compactmode) {
 						chatname = '<div dir="' + textDirection + '" class="hl-name' + splitMode + '"></div>';

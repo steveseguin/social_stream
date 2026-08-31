@@ -5116,6 +5116,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-textparam1="selfqueue"]'
 	],
 	"wrapper-chat-message-styling-options": [
+		'[data-param1="inline"]',
 		'[data-param1="donationright"]',
 		'[data-param1="nooutline"]',
 		'[data-param1="bolder"]',
