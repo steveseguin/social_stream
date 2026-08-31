@@ -612,6 +612,8 @@ There's a link to this page in the Social Stream Ninja options menu itself, but 
 
 https://socialstream.ninja/sampleapi.html?session=xxxxxxxxxx (replacing xxxxxxxx with your Social Stream Ninja session ID to have it work)
 
+For a compact OBS Custom Browser Dock with Credits, featured-chat, timer, and waitlist controls, use https://socialstream.ninja/obs-control-dock.html?session=xxxxxxxxxx. Setup details are in [the OBS Control Dock guide](docs/obs-control-dock-guide.html).
+
 Referring to the source code of the sampleapi.html page is useful if you wish to develop your own API integration, or get a better understanding of the basics.
 
 Most, but not all, API commands are listed there. Referring to the source code or asking Steve on Discord (socialstream.discord.vdo) can help with options not listed.
@@ -970,6 +972,8 @@ When using system TTS, the audio plays through your default system output device
 There is a toggle that lets you show the source of the chat messages.
 
 - &branded will show the channel-icon; Youtube and Twitch channels supported.  Use with the dock or featured file.
+- &largechannelicon enlarges that channel icon in the dock or featured overlay.
+- &showchannelname displays the originating channel name when the source provides one.
 - &showsource can be added to the featured.file, to show the main site the source is from; ie: Youtube, Facebook.
 
 ![image](https://user-images.githubusercontent.com/2575698/166864138-00cd1e1c-2149-473f-be8d-d07a8d400c07.png)

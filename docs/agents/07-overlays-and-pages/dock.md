@@ -97,8 +97,14 @@ Common dock display parameters:
 - `compact`
 - `showtime`
 - `notime`
+- `color` / `colorednames`
+- `randomcolor`
+- `randomcolorall`
+- `namecolor`
 - `hidesource`
 - `showsourcename`
+- `showchannelname`
+- `largechannelicon`
 - `noavatar`
 - `nobadges`
 - `striplinks`
@@ -109,6 +115,8 @@ Common dock display parameters:
 - `hidetwitch`
 - `showonlymods`
 - `showonlyvips`
+- `blockedwords`
+- `exactblockedmessages`
 - `showonlydonos`
 - `showonlymembers`
 - `filterevents`

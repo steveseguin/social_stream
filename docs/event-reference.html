@@ -334,6 +334,21 @@
                             <td>string</td>
                             <td>Source identifier used by overlays, filters, and Event Flow. Instagram keeps live chat as <code>instagramlive</code> and non-live comments as <code>instagram</code>. See the <a href="source-types-guide.html">Source Types Guide</a> for variants, generic sources, and outbound routing.</td>
                         </tr>
+						<tr>
+							<td><code>data.chatname</code></td>
+							<td>string</td>
+							<td>Display name shown by docks, overlays, TTS, relays, and Event Flow. A configured user display-name alias may replace the source-provided value.</td>
+						</tr>
+						<tr>
+							<td><code>data.username</code></td>
+							<td>string</td>
+							<td>Source username when available. If a display-name alias is applied and neither <code>userid</code> nor <code>username</code> exists, this preserves the original <code>chatname</code> for user actions.</td>
+						</tr>
+						<tr>
+							<td><code>data.userid</code></td>
+							<td>string</td>
+							<td>Platform-specific user identifier. User actions prefer this value over <code>username</code> and <code>chatname</code>.</td>
+						</tr>
                         <tr>
                             <td><code>data.event</code></td>
                             <td>string | boolean</td>
@@ -632,6 +647,7 @@
                         <li>Requires Twitch chat open with the user logged in. Membership/user notice elements only render for broadcaster accounts or moderators.</li>
                         <li>Viewer count requests hit <code>https://api.socialstream.ninja/twitch/viewers</code> every 30 seconds.</li>
                         <li><strong>For follower alerts, raids, and full event support</strong>, enable WebSocket mode in extension settings.</li>
+						<li>Viewer-shared Watch Streak notices are disabled by default and require the <strong>Show Twitch Watch Streaks</strong> setting.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -677,6 +693,11 @@
                                 <td>Stream Together collaboration invites displayed above chat.</td>
                                 <td><code>chatmessage</code> contains the invite text; <code>chatname</code> is derived from the alert user when available.</td>
                             </tr>
+							<tr>
+								<td><code>watch_streak</code></td>
+								<td>Opt-in viewer-shared Watch Streak notice rendered in Twitch chat.</td>
+								<td><code>meta.streakCount</code> contains the visible count when detected; <code>meta.milestoneId</code> uses the DOM notice identifier when available.</td>
+							</tr>
                         </tbody>
                     </table>
                     <p class="field-highlights">Bits/Cheers populate <code>hasDonation</code> (for example “500 bits”) even though <code>data.event</code> remains empty; rely on that field when rendering donation widgets. Subscriber streak information appears in <code>subtitle</code> when badges expose months.</p>
@@ -690,6 +711,7 @@
                         <li>Events delivered by EventSub, plus Helix polling for viewer/follower/subscriber totals.</li>
                         <li><strong>WebSocket mode provides real-time</strong> follower alerts, subscription events, raids, cheers, Power-ups, channel point redemptions, and hype train metadata.</li>
                         <li>Shared Chat rows use Twitch IRC <code>source-room-id</code> to populate <code>sourceName</code>/<code>sourceImg</code> with the originating channel when it differs from the connected channel.</li>
+						<li>Viewer-shared Watch Streak notices are disabled by default and require the <strong>Show Twitch Watch Streaks</strong> setting.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -703,7 +725,7 @@
                             <tr>
                                 <td class="donation-event"><code>cheer</code></td>
                                 <td>Cheer notifications from EventSub <code>channel.bits.use</code>.</td>
-                                <td><code>hasDonation</code> “N bits”; <code>meta.bits</code> numeric; <code>chatmessage</code> preserves raw message.</td>
+                                <td><code>hasDonation</code> “N bits”; <code>meta.bits</code> numeric; <code>chatmessage</code> preserves raw message; identified cheerers include <code>chatimg</code>.</td>
                             </tr>
                             <tr>
                                 <td><code>powerup</code></td>
@@ -735,6 +757,11 @@
                                 <td>EventSub <code>channel.raid</code> or USERNOTICE <code>msg-id=raid</code>.</td>
                                 <td><code>meta</code> = { fromId, fromLogin, viewers }.</td>
                             </tr>
+							<tr>
+								<td><code>watch_streak</code></td>
+								<td>Opt-in Twitch IRC USERNOTICE with <code>msg-id=viewermilestone</code> and <code>msg-param-category=watch-streak</code>.</td>
+								<td>Includes the viewer in <code>chatname</code>, Twitch's notice text in <code>chatmessage</code>, and <code>meta.streakCount</code>/<code>meta.milestoneId</code>. Other generic USERNOTICE types remain ignored.</td>
+							</tr>
                             <tr>
                                 <td class="status-event"><code>new_follower</code></td>
                                 <td><code>channel.follow</code> EventSub notifications.</td>

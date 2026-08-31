@@ -23,6 +23,7 @@ var sentimentAnalysisLoaded = false;
 const commandAliasCache = new Map();
 const settingCommaListCache = new Map();
 const settingRoleListCache = new Map();
+const settingUserDisplayAliasCache = new Map();
 const DEFAULT_QUESTION_KEYWORDS = ["?", "Q:", "question:", "Question:", "how", "what", "when", "where", "why", "who", "which", "could", "would", "should", "can", "will"];
 
 function trimSettingCache(cache) {
@@ -111,6 +112,45 @@ function normalizeRoleIdentifier(value) {
 	return String(value).toLowerCase().trim().replace(/^@+/, "");
 }
 
+function normalizeConfiguredUserSourceType(sourceType) {
+	const normalizedType = normalizeSourceType(sourceType);
+	return normalizedType === "youtubeshorts" ? "youtube" : normalizedType;
+}
+
+function getCachedUserDisplayAliases(value) {
+	let raw = "";
+	if (typeof value === "string") {
+		raw = value;
+	} else {
+		try {
+			raw = JSON.stringify(value || []);
+		} catch (e) {
+			return [];
+		}
+	}
+	const cached = settingUserDisplayAliasCache.get(raw);
+	if (cached) {
+		return cached;
+	}
+
+	let parsed = [];
+	try {
+		parsed = JSON.parse(raw || "[]");
+	} catch (e) {}
+	const entries = Array.isArray(parsed)
+		? parsed
+			.map(entry => ({
+				name: String(entry?.identifier || "").trim(),
+				displayName: String(entry?.displayName || "").trim(),
+				type: normalizeConfiguredUserSourceType(entry?.type)
+			}))
+			.filter(entry => entry.name && entry.displayName)
+		: [];
+	trimSettingCache(settingUserDisplayAliasCache);
+	settingUserDisplayAliasCache.set(raw, entries);
+	return entries;
+}
+
 function matchesConfiguredUser(entry, data, sourceType) {
 	if (!entry || !data) return false;
 	if (entry.type && entry.type !== sourceType) return false;
@@ -121,8 +161,42 @@ function matchesConfiguredUser(entry, data, sourceType) {
 	const userId = normalizeRoleIdentifier(data.userid);
 	if (userId && configuredIdentifier === userId) return true;
 
+	const username = normalizeRoleIdentifier(data.username);
+	if (username && configuredIdentifier === username) return true;
+
 	const chatName = normalizeRoleIdentifier(data.chatname);
 	return !!chatName && configuredIdentifier === chatName;
+}
+
+function getMessageUserIdentity(data) {
+	if (!data) return "";
+	return data.userid || data.username || data.chatname || "";
+}
+
+function getUserDisplayAliasEntries() {
+	const configured = settings.userdisplayaliases;
+	if (!configured) return [];
+	return getCachedUserDisplayAliases(configured.object || configured.json || configured);
+}
+
+function findUserDisplayAlias(data, sourceType) {
+	if (!data || !(data.userid || data.username || data.chatname)) return null;
+	const normalizedType = normalizeConfiguredUserSourceType(sourceType || data.type);
+	return getUserDisplayAliasEntries().find(entry => matchesConfiguredUser(entry, data, normalizedType)) || null;
+}
+
+function applyUserDisplayAlias(data) {
+	if (!data || !data.chatname) return false;
+	const alias = findUserDisplayAlias(data, data.type);
+	if (!alias) return false;
+
+	if (!data.userid && !data.username) {
+		data.username = data.chatname;
+	}
+	data.chatname = typeof filterXSS === "function"
+		? filterXSS(alias.displayName.slice(0, 80))
+		: alias.displayName.slice(0, 80);
+	return true;
 }
 
 function getCommandAliases(commandString) {
@@ -6261,7 +6335,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if ("delete" in request) {
 			sendResponse({ state: isExtensionOn });
 			if (isExtensionOn && (request.delete.type || request.delete.chatname || request.delete.id)) {
-				sendToDestinations({ delete: request.delete });
+				const deletePayload = Object.assign({}, request.delete);
+				applyUserDisplayAlias(deletePayload);
+				sendToDestinations({ delete: deletePayload });
 			}
 		} else if ("liveStats" in request) {
 			sendResponse({ state: isExtensionOn });
@@ -7849,8 +7925,8 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 			//}
 		}
 
-		if (settings.pronouns && message.type == "twitch" && message.chatname) {
-			let pronoun = await getPronounsNames(message.chatname);
+		if (settings.pronouns && message.type == "twitch" && (message.username || message.chatname)) {
+			let pronoun = await getPronounsNames(message.username || message.chatname);
 			if (!Pronouns && pronoun) {
 				await getPronouns();
 			}
@@ -7874,9 +7950,9 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 		}
 
 		if (settings.randomcolor && message && !message.nameColor && message.chatname) {
-			message.nameColor = getColorFromName(message.chatname, settings);
+			message.nameColor = getColorFromName(getMessageUserIdentity(message), settings);
 		} else if (settings.randomcolorall && message && message.chatname) {
-			message.nameColor = getColorFromName(message.chatname, settings);
+			message.nameColor = getColorFromName(getMessageUserIdentity(message), settings);
 		} else if (settings.colorofsource && message && message.chatname) {
 			message.nameColor = getColorFromType(message.type);
 		}
@@ -8304,8 +8380,8 @@ function sendToH2R(data) {
 			}
 			msg.authorDetails = {};
 			msg.authorDetails.displayName = data.chatname || "";
-			if (data.type && data.type == "twitch" && !data.chatimg && data.chatname) {
-				msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
+			if (data.type && data.type == "twitch" && !data.chatimg && (data.username || data.chatname)) {
+				msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.username || data.chatname); // 150x150
 			} else if (data.type && (data.type == "youtube" || data.type == "youtubeshorts") && data.chatimg) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
 				msg.authorDetails.profileImageUrl = chatimg.replace("=s64-", "=s256-");
@@ -9948,8 +10024,8 @@ function sendToPost(data) {
 				postServer = "https://" + settings.postserver.textsetting; // Just going to assume they meant https
 			}
 
-			if (data.type && !data.chatimg && data.type == "twitch" && data.chatname) {
-				data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
+			if (data.type && !data.chatimg && data.type == "twitch" && (data.username || data.chatname)) {
+				data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.username || data.chatname); // 150x150
 			} else if (data.type && (data.type == "youtube" || data.type == "youtubeshorts") && data.chatimg) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
 				data.chatimg = chatimg.replace("=s64-", "=s256-");
@@ -12810,9 +12886,10 @@ function processHype(data) {
 
 	let newSource = false;
 
-	if (users[sourceType] && data.chatname) {
+	const userIdentity = getMessageUserIdentity(data);
+	if (users[sourceType] && userIdentity) {
 		// Site exists
-		if (!users[sourceType][data.chatname]) {
+		if (!users[sourceType][userIdentity]) {
 			// New user for this site
 			if (hype[sourceType]) {
 				hype[sourceType] += 1;
@@ -12821,11 +12898,11 @@ function processHype(data) {
 				newSource = true;
 			}
 		}
-		users[sourceType][data.chatname] = Date.now() + 60000 * 5;
-	} else if (data.chatname) {
+		users[sourceType][userIdentity] = Date.now() + 60000 * 5;
+	} else if (userIdentity) {
 		// New site
 		var site = {};
-		site[data.chatname] = Date.now() + 60000 * 5;
+		site[userIdentity] = Date.now() + 60000 * 5;
 		users[sourceType] = site;
 		hype[sourceType] = 1;
 		newSource = true;
@@ -13844,10 +13921,11 @@ function processWaitlistControlCommand(data) {
 
 function forgetWaitlistUser(entry) {
 	try {
-		if (!entry || !entry.type || !entry.chatname || !waitListUsers[entry.type]) {
+		const userIdentity = getMessageUserIdentity(entry);
+		if (!entry || !entry.type || !userIdentity || !waitListUsers[entry.type]) {
 			return;
 		}
-		delete waitListUsers[entry.type][entry.chatname];
+		delete waitListUsers[entry.type][userIdentity];
 		if (!Object.keys(waitListUsers[entry.type]).length) {
 			delete waitListUsers[entry.type];
 		}
@@ -13873,16 +13951,17 @@ function processWaitlist(data) {
 		data.waitlistTrigger = trigger;
 		data.waitlistJoinMessage = extractWaitlistMessage(data.chatmessage, trigger);
 
+		const userIdentity = getMessageUserIdentity(data);
 		var update = false;
 		if (waitListUsers[data.type]) {
-			if (!waitListUsers[data.type][data.chatname]) {
+			if (!waitListUsers[data.type][userIdentity]) {
 				update = true;
-				waitListUsers[data.type][data.chatname] = Date.now();
+				waitListUsers[data.type][userIdentity] = Date.now();
 				waitlist.push(data);
 			}
 		} else {
 			var site = {};
-			site[data.chatname] = Date.now();
+			site[userIdentity] = Date.now();
 			waitListUsers[data.type] = site;
 			waitlist.push(data);
 			update = true;
@@ -14355,8 +14434,8 @@ function sendToDisk(data) {
 					data.chatimg = data.chatimg.replace("=s64-", "=s512-");
 				}
 
-				if (data.type && data.type == "twitch" && !data.chatimg && data.chatname) {
-					data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
+				if (data.type && data.type == "twitch" && !data.chatimg && (data.username || data.chatname)) {
+					data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.username || data.chatname); // 150x150
 				}
 
 				overwriteFile(JSON.stringify(data));
@@ -14373,8 +14452,8 @@ function sendToDisk(data) {
 					data.chatimg = data.chatimg.replace("=s64-", "=s256-");
 				}
 
-				if (data.type && data.type == "twitch" && !data.chatimg && data.chatname) {
-					data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
+				if (data.type && data.type == "twitch" && !data.chatimg && (data.username || data.chatname)) {
+					data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.username || data.chatname); // 150x150
 				}
 				overwriteFileExcel(data);
 			}
@@ -15020,7 +15099,7 @@ async function processIncomingRequest(request, UUID = false) {
 				altSourceType = "youtube";
 			}
 
-			const userToVIP = { username: request.value.userid || request.value.chatname, type: altSourceType };
+			const userToVIP = { username: request.value.userid || request.value.username || request.value.chatname, type: altSourceType };
 			const isAlreadyVIP = viplist.some(({ username, type }) => userToVIP.username === username && (userToVIP.type === type || type === ""));
 
 			if (!isAlreadyVIP) {
@@ -15033,7 +15112,7 @@ async function processIncomingRequest(request, UUID = false) {
 			}
 
 			if (isExtensionOn) {
-				sendToDestinations({ vipUser: userToVIP });
+				sendToDestinations({ vipUser: { username: request.value.chatname, type: altSourceType } });
 			}
 		} else if (request.action === "markUser" && request.value && request.value.chatname && request.value.type && request.value.role) {
 			let settingsKey = "";
@@ -15059,7 +15138,7 @@ async function processIncomingRequest(request, UUID = false) {
 					altSourceType = "youtube";
 				}
 
-				const storageUsername = request.value.userid || request.value.chatname || "";
+				const storageUsername = request.value.userid || request.value.username || request.value.chatname || "";
 				const userToMark = { username: storageUsername, type: altSourceType };
 				const dockUserToMark = {
 					username: request.value.chatname || request.value.userid || storageUsername,
@@ -15576,7 +15655,7 @@ function blockUser(data) {
 			altSourceType = "youtube";
 		}
 
-		const userToBlock = { username: data.userid || data.chatname, type: altSourceType };
+		const userToBlock = { username: data.userid || data.username || data.chatname, type: altSourceType };
 		if (data.chatname && data.chatname !== userToBlock.username) {
 			userToBlock.chatname = data.chatname;
 		}
@@ -15611,7 +15690,10 @@ function blockUser(data) {
 		if (isExtensionOn) {
 			sendToDestinations({ blockUser: userToBlock });
 		}
-		forwardSourceControlToWebsocketPages("blockUser", userToBlock);
+		const sourceControlUser = Object.assign({}, userToBlock, {
+			chatname: data.username || data.chatname
+		});
+		forwardSourceControlToWebsocketPages("blockUser", sourceControlUser);
 	} catch (e) {
 		console.error(e);
 		return false;
@@ -18011,6 +18093,7 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		prependFirstTimerBadge(data);
+		applyUserDisplayAlias(data);
 
 		const returningBeepEnabled = !!(settings.beepreturning?.setting ?? settings.beepreturning);
 		const hasChatFields = typeof data.chatname === "string" && data.chatname.trim() !== "" && typeof data.chatmessage === "string" && data.chatmessage.trim() !== "";

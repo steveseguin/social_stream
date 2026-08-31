@@ -41,7 +41,7 @@ These pages have large or complex parser surfaces. Use their dedicated docs befo
 
 | Page | Detected Params | Primary Follow-Up |
 | --- | ---: | --- |
-| `dock.html` | 263 | `url-parameter-index.md`, `url-parameter-source-trace.md`, `07-overlays-and-pages/dock.md` |
+| `dock.html` | 265 | `url-parameter-index.md`, `url-parameter-source-trace.md`, `07-overlays-and-pages/dock.md` |
 | `featured.html` | 86 | `url-parameter-source-trace.md`, `07-overlays-and-pages/featured.md` |
 | `bot.html` | 77 | Inspect current source; appears featured-like but needs a dedicated pass before public guidance. |
 

@@ -63,6 +63,9 @@ Common parameters:
 | `typewriter` | Types message text letter by letter. |
 | `queuetime` | Queues featured messages and displays them sequentially. |
 | `center` | README mentions centered featured messages for the featured overlay. |
+| `branded` | Shows the originating channel icon when `sourceImg` is available. |
+| `largechannelicon` | Enlarges that channel icon. |
+| `showchannelname` | Shows the originating channel name from `sourceName`. |
 
 Example:
 

@@ -6512,6 +6512,7 @@
 						this.voiceCommitFallbackTimer = null;
 					}
 					flushCohostLiveChatContext();
+					if (typeof this.sendVisualContext === "function") this.sendVisualContext("streamer_voice");
 					this.manualResponseStopPending = false;
 					this.createResponse({ origin: "streamer_voice", allowTools: true, eventPrefix: "voice_response_create" });
 					updateDiagnostics({ state: "responding", lastEvent: lastEvent || "voice.response.requested", connected: "yes" });
@@ -7447,6 +7448,7 @@
 						return;
 					}
 					flushCohostLiveChatContext();
+					if (typeof this.sendVisualContext === "function") this.sendVisualContext(source);
 					this.currentTurnInputAt = Date.now();
 					const directStreamerTurn = source === "streamer_text" || source === "streamer_voice";
 					const promptItemId = "ssn_prompt_" + Date.now() + "_" + (++this.contextItemCounter);
@@ -7656,6 +7658,60 @@
 					this.resumeRemoteAudioOnNextResponse = false;
 					this.reasoningSupported = true;
 					this.reasoningFallbackAttempted = false;
+				}
+				setupVideoProcessing() {
+					console.log("OpenAI visual input will capture one frame for each direct request");
+					return Promise.resolve();
+				}
+				captureVisualFrameDataUrl() {
+					const videoSource = document.getElementById("videoSource");
+					if (!videoSource || videoSource.value === "none") return "";
+					const liveTrack = this.stream && this.stream.getVideoTracks().find(track => track.readyState === "live" && track.enabled);
+					const preview = document.getElementById("preview");
+					if (!liveTrack || !preview || preview.readyState < 2 || !preview.videoWidth || !preview.videoHeight) return "";
+					try {
+						const maxDimension = 1280;
+						let scale = Math.min(1, maxDimension / preview.videoWidth, maxDimension / preview.videoHeight);
+						const canvas = document.createElement("canvas");
+						const context = canvas.getContext("2d");
+						if (!context) return "";
+						let imageDataUrl = "";
+						for (let attempt = 0; attempt < 4; attempt++) {
+							canvas.width = Math.max(1, Math.floor(preview.videoWidth * scale));
+							canvas.height = Math.max(1, Math.floor(preview.videoHeight * scale));
+							context.drawImage(preview, 0, 0, canvas.width, canvas.height);
+							imageDataUrl = canvas.toDataURL("image/jpeg", Math.max(0.55, 0.8 - attempt * 0.08));
+							if (imageDataUrl.length <= 220000) break;
+							scale *= 0.8;
+						}
+						return imageDataUrl;
+					} catch (error) {
+						console.warn("Could not capture OpenAI visual context:", error);
+						return "";
+					}
+				}
+				sendVisualContext(source) {
+					if (source !== "streamer_voice" && source !== "streamer_text") return "";
+					if (!this.isHealthy()) return "";
+					const imageDataUrl = this.captureVisualFrameDataUrl();
+					if (!imageDataUrl) return "";
+					const itemId = "cohost_visual_" + Date.now() + "_" + (++this.contextItemCounter);
+					this.contextItemIds.push(itemId);
+					this.ws.send(JSON.stringify({
+						type: "conversation.item.create",
+						event_id: this.nextEventId("visual_create"),
+						item: {
+							id: itemId,
+							type: "message",
+							role: "user",
+							content: [
+								{ type: "input_text", text: "Current camera or shared-screen frame for this request." },
+								{ type: "input_image", image_url: imageDataUrl, detail: "auto" }
+							]
+						}
+					}));
+					this.lastActivityTime = Date.now();
+					return itemId;
 				}
 				createSessionUpdate(options = {}) {
 					const responseTypeValue = document.getElementById("responseType").value;
@@ -7990,6 +8046,8 @@
 					this.model = modelOverride || GEMINI_DEFAULT_LIVE_MODEL;
 					this.ws = null;
 					this.audioContext = null;
+					this.audioInputSource = null;
+					this.audioInputProcessor = null;
 					this.videoProcessor = null;
 					this.canvasContext = null;
 					this.lastImageTime = 0;
@@ -7997,7 +8055,7 @@
 					this.imageWidth = 640;
 					this.imageHeight = 360;
 					this.handleMessage = this.handleMessage.bind(this);
-					this.audioPlayer = new AudioPlayer();
+					this.audioPlayer = new AudioPlayer(setGeminiOutputPlaybackActive);
 					this.connectionWatchdog = null;
 					this.lastActivityTime = Date.now();
 					this.inactivityThreshold = 30000;
@@ -8022,6 +8080,8 @@
 					this.responseActive = false;
 					this.pendingAudioResponse = false;
 					this.pendingModelTextResponse = "";
+					this.setupComplete = false;
+					this.hasCompletedInitialSetup = false;
 					this.maxTokens = 20000; // Set below the 32K limit
 					this.loadConversationHistory();
 					updateDiagnostics({
@@ -8190,12 +8250,20 @@
 					}
 					return 0;
 				}
+				isQuotaCloseReason(reason) {
+					return /(?:resource[_\s-]*exhausted|quota|rate[_\s-]*limit|too many requests|\b429\b)/i.test(String(reason || ""));
+				}
+				usesRealtimeTextInput() {
+					return String(this.model || "")
+						.replace(/^models\//, "")
+						.indexOf("gemini-3.1-flash-live") === 0;
+				}
 				getRealtimeInputTokenRate() {
 					let rate = 0;
 					if (this.stream && this.stream.getAudioTracks && this.stream.getAudioTracks().some(track => track.readyState !== "ended")) {
 						rate += GEMINI_AUDIO_TOKENS_PER_SECOND;
 					}
-					if (this.stream && this.stream.getVideoTracks && this.stream.getVideoTracks().some(track => track.readyState !== "ended")) {
+					if (this.stream && this.stream.getVideoTracks && this.stream.getVideoTracks().some(track => track.readyState !== "ended" && track.__ssnCohostPlaceholder !== true)) {
 						rate += GEMINI_VIDEO_TOKENS_PER_SECOND;
 					}
 					return rate;
@@ -8364,21 +8432,47 @@
 						// Process based on message type
 						if (response.setupComplete) {
 							console.log("Setup complete received");
+							this.setupComplete = true;
 							updateDiagnostics({
 								state: "connected",
 								connected: "yes",
 								lastEvent: "setup.complete"
 							});
-							if (shouldCohostGreetOnConnect()) this.sendPrompt("Hi, introduce yourself in a sentence for me. Be friendly to me.", "greeting");
+							if (!this.hasCompletedInitialSetup && shouldCohostGreetOnConnect()) {
+								this.sendPrompt("Hi, introduce yourself in a sentence for me. Be friendly to me.", "greeting");
+							}
+							this.hasCompletedInitialSetup = true;
 						}
 
 						const serverContent = response.serverContent;
+						const responseInterrupted = serverContent && serverContent.interrupted === true;
+
+						if (responseInterrupted) {
+							// Gemini cancels the current generation on barge-in. Discard queued
+							// playback immediately so stale audio cannot resume afterward.
+							this.audioPlayer.stop();
+							this.pendingAudioResponse = false;
+							if (this.pendingModelTextResponse) {
+								this.addAssistantMessage(this.pendingModelTextResponse);
+								this.pendingModelTextResponse = "";
+							}
+							this.responseActive = false;
+							if (messageFormatter && !messageFormatter.messageComplete) {
+								messageFormatter.finalizeMessage();
+							}
+							updateDiagnostics({
+								state: "connected",
+								connected: "yes",
+								lastEvent: "response.interrupted"
+							});
+						}
 
 						// Handle model content
-						if (serverContent?.modelTurn?.parts) {
+						if (!responseInterrupted && serverContent?.modelTurn?.parts) {
+							this.responseActive = true;
 							const parts = serverContent.modelTurn.parts;
 							parts.forEach(part => {
-								if (part.text) {
+								if (part.text && part.thought !== true) {
 									this.pendingModelTextResponse += part.text;
 
 									window.dispatchEvent(
@@ -8387,14 +8481,14 @@
 										})
 									);
 								}
-								if (part.inlineData && part.inlineData.mimeType.startsWith("audio/")) {
+								if (part.inlineData && part.inlineData.mimeType.startsWith("audio/") && document.getElementById("responseType")?.value !== "text") {
 									this.pendingAudioResponse = true;
 									try {
 										const rateMatch = part.inlineData.mimeType.match(/rate=(\d+)/);
 										const sampleRate = rateMatch ? parseInt(rateMatch[1]) : 24000;
 										this.audioPlayer.resume();
 										const audioData = base64ToArrayBuffer(part.inlineData.data);
-										this.audioPlayer.addPCM16(new Uint8Array(audioData));
+										this.audioPlayer.addPCM16(new Uint8Array(audioData), sampleRate);
 									} catch (err) {
 										console.error("Error processing audio:", err);
 									}
@@ -8402,7 +8496,18 @@
 							});
 						}
 
-						if (serverContent?.turnComplete) {
+						const outputTranscription = serverContent && (serverContent.outputTranscription || serverContent.output_transcription);
+						if (!responseInterrupted && outputTranscription?.text) {
+							this.responseActive = true;
+							this.pendingModelTextResponse += outputTranscription.text;
+							window.dispatchEvent(
+								new CustomEvent("modelResponse", {
+									detail: { text: outputTranscription.text }
+								})
+							);
+						}
+
+						if (!responseInterrupted && (serverContent?.turnComplete || serverContent?.generationComplete)) {
 							if (this.pendingAudioResponse) {
 								console.log("Turn complete, finalizing audio");
 								this.audioPlayer.complete();
@@ -8487,21 +8592,19 @@
 						this.responseActive = true;
 						this.pendingAudioResponse = false;
 						this.pendingModelTextResponse = "";
-						const message = {
-							clientContent: {
-								turns: [
-									{
-										role: "user",
-										parts: [
+						const message = this.usesRealtimeTextInput()
+							? { realtimeInput: { text } }
+							: {
+									clientContent: {
+										turns: [
 											{
-												text
+												role: "user",
+												parts: [{ text }]
 											}
-										]
+										],
+										turnComplete: true
 									}
-								],
-								turnComplete: true
-							}
-						};
+								};
 						console.log("Sending prompt");
 						this.ws.send(JSON.stringify(message));
 						updateDiagnostics({
@@ -8520,8 +8623,8 @@
 						});
 					}
 				}
-				sendMediaChunk(mediaChunks) {
-					if (this.ws?.readyState === WebSocket.OPEN) {
+					sendMediaChunk(mediaChunks) {
+					if (this.setupComplete && this.ws?.readyState === WebSocket.OPEN) {
 						if (!Array.isArray(mediaChunks) || mediaChunks.length === 0) {
 							return;
 						}
@@ -8615,11 +8718,12 @@
 						clearInterval(this.pingInterval);
 						this.pingInterval = null;
 					}
+					this.setupComplete = false;
 					this.ws = new WebSocket(uri);
 					this.ws.onmessage = this.handleMessage;
 					this.ws.onerror = error => {
 						console.error("WebSocket error:", error);
-						const errorMsg = "Connection error occurred. Please check your API key and try again.";
+						const errorMsg = "Gemini connection error. Waiting for connection details...";
 						showError(errorMsg);
 						updateDiagnostics({
 							state: "error",
@@ -8636,6 +8740,9 @@
 					this.ws.onclose = event => {
 						console.log("WebSocket closed:", event.code, event.reason);
 						let errorMsg = "Connection closed.";
+						if (!event.target || event.target === this.ws) {
+							this.setupComplete = false;
+						}
 
 						// Don't show error for intentional closing (when stopping)
 						if (this.stopped) {
@@ -8660,14 +8767,19 @@
 						}
 
 						if (event.code === 1007) {
-							// Handle invalid JSON payload error specially
+							// Reconnecting cannot repair a payload that Google rejected.
 							if (event.reason && event.reason.includes("Invalid JSON payload")) {
-								console.warn("Invalid JSON payload error, attempting to reconnect");
-								errorMsg = "Connection reset. Reconnecting...";
-								if (!this.stopped) {
-									// For JSON payload errors, try to reconnect with a short delay
-									setTimeout(() => this.reconnect(), 2000);
-								}
+								console.error("Gemini rejected the setup payload:", event.reason);
+								errorMsg = "Gemini rejected the connection setup. Please update Social Stream Ninja or check the model override.";
+								showError(errorMsg);
+								updateDiagnostics({
+									state: "error",
+									connected: "no",
+									lastEvent: "ws.close:1007",
+									lastError: event.reason || errorMsg
+								});
+								this.handleConnectionFailure();
+								return;
 							} else if (event.reason && event.reason.includes("API key")) {
 								errorMsg = "Invalid API key. Please check your key and try again.";
 								this.handleConnectionFailure();
@@ -8684,7 +8796,7 @@
 								this.attemptReconnect();
 								errorMsg += " Attempting to reconnect...";
 							}
-						} else if (event.code === 1011 || (event.reason && (event.reason.includes("quota") || event.reason.includes("resource_exhausted") || event.reason.includes("exceeded")))) {
+						} else if (this.isQuotaCloseReason(event.reason)) {
 							// Show error message
 							showError("API quota exceeded. Please try again manually.");
 
@@ -8699,16 +8811,18 @@
 							// Force manual restart
 							this.handleConnectionFailure();
 							return; // Prevent auto-reconnect
+						} else if (event.code === 1011) {
+							errorMsg = event.reason ? `Gemini service error: ${event.reason}.` : "Gemini reported an internal service error.";
+							if (!this.stopped) {
+								this.attemptReconnect();
+								errorMsg += " Attempting to reconnect...";
+							}
 						} else if (!this.stopped) {
 							this.attemptReconnect();
 							errorMsg += " Attempting to reconnect...";
 						}
 
-						// Only show error message to user for permanent failures
-						if (event.code === 1007 && event.reason && event.reason.includes("Invalid JSON payload")) {
-							// Don't show error for temporary JSON issues - these will auto-reconnect
-							console.log("Suppressing error message for automatic reconnection");
-						} else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+						if (this.reconnectAttempts >= this.maxReconnectAttempts) {
 							showError("Connection lost after multiple reconnection attempts. Please restart the co-host.");
 						} else {
 							showError(errorMsg);
@@ -8755,7 +8869,9 @@
 											topK: 1,
 											topP: 1,
 											candidateCount: 1,
-											responseModalities: [responseType.value === "audio" ? "AUDIO" : "TEXT"],
+											// Native-audio Live models only accept AUDIO here. Text-only UI output
+											// is provided by outputAudioTranscription while playback stays muted.
+											responseModalities: ["AUDIO"],
 											...(responseType.value === "audio" && {
 												speechConfig: {
 													voiceConfig: {
@@ -8766,6 +8882,7 @@
 												}
 											})
 										},
+										outputAudioTranscription: {},
 										// Google Live API: {} starts a fresh resumable session; reconnects send { handle }. See https://ai.google.dev/api/live
 										sessionResumption: this.sessionResumptionHandle ? { handle: this.sessionResumptionHandle } : {},
 										contextWindowCompression: {
@@ -8806,50 +8923,18 @@
 				startHeartbeat() {
 					if (this.pingInterval) {
 						clearInterval(this.pingInterval);
+						this.pingInterval = null;
 					}
-
 					this.lastHeartbeatResponse = Date.now();
 					this.lastActivityTime = Date.now();
-
-					// Monitor the connection health, but don't send heartbeats
-					this.pingInterval = setInterval(() => {
-						if (this.isConnected()) {
-							// Only check for heartbeat response timeout
-							const elapsed = Date.now() - this.lastHeartbeatResponse;
-							if (elapsed > 60000) {
-								console.warn("No heartbeat response for 60 seconds, reconnecting");
-								this.reconnect();
-							}
-						} else {
-							clearInterval(this.pingInterval);
-							this.pingInterval = null;
-							if (!this.stopped) {
-								this.attemptReconnect();
-							}
-						}
-					}, 30000);
-
-					this.startConnectionWatchdog();
+					// Gemini does not send application heartbeats while an idle session is
+					// healthy. Recovery is driven by close/error and GoAway events.
 				}
 				startConnectionWatchdog() {
 					if (this.connectionWatchdog) {
 						clearInterval(this.connectionWatchdog);
+						this.connectionWatchdog = null;
 					}
-					this.connectionWatchdog = setInterval(() => {
-						const inactiveTime = Date.now() - this.lastActivityTime;
-						if (inactiveTime > this.inactivityThreshold && this.isConnected()) {
-							console.warn(`Connection inactive for ${inactiveTime / 1000} seconds, attempting reconnection`);
-							if (this.inactivityReconnectAttempts < this.maxInactivityReconnects) {
-								this.inactivityReconnectAttempts++;
-								console.log(`Inactivity reconnection attempt ${this.inactivityReconnectAttempts}/${this.maxInactivityReconnects}`);
-								this.reconnect();
-							} else {
-								console.error("Max inactivity reconnection attempts reached");
-								showError("Connection appears to be inactive. Please restart the co-host manually.");
-								this.handleConnectionFailure();
-							}
-						}
-					}, 10000);
 				}
 				attemptReconnect() {
 					if (this.stopped || this.reconnectTimeout) return;
@@ -8901,7 +8986,7 @@
 						try {
 							await this.connect();
 							console.log("Successfully reconnected");
-							showError("Connection restored!");
+							clearError();
 							updateDiagnostics({
 								state: "connected",
 								connected: "yes",
@@ -8992,23 +9077,66 @@
 						throw err;
 					}
 				}
+				usesNativeAudioInput() {
+					return true;
+				}
+				stopAudioProcessing(sendStreamEnd) {
+					const hadAudioInput = !!this.audioInputProcessor;
+					if (sendStreamEnd && hadAudioInput && this.setupComplete && this.isConnected()) {
+						try {
+							this.ws.send(JSON.stringify({ realtimeInput: { audioStreamEnd: true } }));
+						} catch (_error) {}
+					}
+					if (this.audioInputProcessor) {
+						this.audioInputProcessor.port.onmessage = null;
+						try {
+							this.audioInputProcessor.disconnect();
+						} catch (_error) {}
+						this.audioInputProcessor = null;
+					}
+					if (this.audioInputSource) {
+						try {
+							this.audioInputSource.disconnect();
+						} catch (_error) {}
+						this.audioInputSource = null;
+					}
+					if (this.audioContext) {
+						try {
+							Promise.resolve(this.audioContext.close()).catch(() => {});
+						} catch (_error) {}
+						this.audioContext = null;
+					}
+				}
 				async setupAudioProcessing() {
+					this.stopAudioProcessing(true);
 					if (!this.stream.getAudioTracks().length) {
 						console.log("No audio tracks available, skipping audio processing setup");
 						return;
 					}
 
-					this.audioContext = new AudioContext({
+					const audioContext = new AudioContext({
 						sampleRate: 16000
 					});
+					this.audioContext = audioContext;
 					const workletBlob = new Blob([`registerProcessor('audio-processor', ${AudioProcessingWorklet})`], {
 						type: "application/javascript"
 					});
 					const workletUrl = URL.createObjectURL(workletBlob);
-					await this.audioContext.audioWorklet.addModule(workletUrl);
-					URL.revokeObjectURL(workletUrl);
-					const source = this.audioContext.createMediaStreamSource(this.stream);
-					const processor = new AudioWorkletNode(this.audioContext, "audio-processor");
+					try {
+						await audioContext.audioWorklet.addModule(workletUrl);
+					} finally {
+						URL.revokeObjectURL(workletUrl);
+					}
+					if (this.stopped || this.audioContext !== audioContext) {
+						try {
+							await audioContext.close();
+						} catch (_error) {}
+						return;
+					}
+					const source = audioContext.createMediaStreamSource(this.stream);
+					const processor = new AudioWorkletNode(audioContext, "audio-processor");
+					this.audioInputSource = source;
+					this.audioInputProcessor = processor;
 					processor.port.onmessage = event => {
 						if (event.data.data?.int16arrayBuffer) {
 							const base64Audio = btoa(String.fromCharCode(...new Uint8Array(event.data.data.int16arrayBuffer)));
@@ -9022,9 +9150,25 @@
 					};
 					source.connect(processor);
 				}
+				stopVideoProcessing() {
+					const processor = this.videoProcessor;
+					this.videoProcessor = null;
+					this.canvasContext = null;
+					if (!processor) return;
+					if (processor.animationFrame) {
+						cancelAnimationFrame(processor.animationFrame);
+					}
+					if (processor.videoElement) {
+						try {
+							processor.videoElement.pause();
+						} catch (_error) {}
+						processor.videoElement.srcObject = null;
+					}
+				}
 				setupVideoProcessing() {
+					this.stopVideoProcessing();
 					const videoTrack = this.stream.getVideoTracks()[0];
-					if (!videoTrack) {
+					if (!videoTrack || videoTrack.__ssnCohostPlaceholder === true) {
 						console.log("No video track available - skipping video processing");
 						return;
 					}
@@ -9035,16 +9179,18 @@
 					const videoElement = document.createElement("video");
 					videoElement.srcObject = new MediaStream([videoTrack]);
 					videoElement.autoplay = true;
-					let animationFrame;
+					const processor = { videoElement, animationFrame: null };
+					this.videoProcessor = processor;
 					const captureFrame = () => {
-						if (this.stopped || !this.canvasContext) {
-							if (animationFrame) {
-								cancelAnimationFrame(animationFrame);
-							}
+						if (this.videoProcessor !== processor) {
+							return;
+						}
+						if (this.stopped || !this.canvasContext || videoTrack.readyState === "ended") {
+							this.stopVideoProcessing();
 							return;
 						}
 						const now = Date.now();
-						if (now - this.lastImageTime >= this.imageInterval) {
+						if (!this.responseActive && now - this.lastImageTime >= this.imageInterval) {
 							this.canvasContext.drawImage(videoElement, 0, 0, this.imageWidth, this.imageHeight);
 							const base64Image = canvas.toDataURL("image/jpeg", 0.8).split(",")[1];
 							this.sendMediaChunk([
@@ -9055,10 +9201,12 @@
 							]);
 							this.lastImageTime = now;
 						}
-						animationFrame = requestAnimationFrame(captureFrame);
+						processor.animationFrame = requestAnimationFrame(captureFrame);
 					};
 					videoElement.addEventListener("loadedmetadata", () => {
-						animationFrame = requestAnimationFrame(captureFrame);
+						if (this.videoProcessor === processor) {
+							processor.animationFrame = requestAnimationFrame(captureFrame);
+						}
 					});
 				}
 				stop() {
@@ -9084,15 +9232,12 @@
 						} catch (_e) {}
 						this.ws = null;
 					}
-					if (this.audioContext) {
-						this.audioContext.close();
-						this.audioContext = null;
-					}
+					this.stopAudioProcessing(false);
 					if (this.audioPlayer) {
 						this.audioPlayer.stop();
 					}
-					this.videoProcessor = null;
-					this.canvasContext = null;
+					this.stopVideoProcessing();
+					this.setupComplete = false;
 					updateDiagnostics({
 						state: "stopped",
 						connected: "no",
@@ -9101,7 +9246,7 @@
 				}
 			}
 			class AudioPlayer {
-				constructor() {
+				constructor(onPlaybackStateChange = null) {
 					this.context = new AudioContext({ sampleRate: 24000 });
 					this.gainNode = this.context.createGain();
 					this.outputMuted = false;
@@ -9112,8 +9257,24 @@
 					this.nextTime = 0;
 					this.completeCalled = false;
 					this.timeout = null;
+					this.inputSampleRate = 24000;
+					this.playbackActive = false;
+					this.onPlaybackStateChange = typeof onPlaybackStateChange === "function" ? onPlaybackStateChange : null;
 				}
-				addPCM16(chunk) {
+				setPlaybackActive(active) {
+					const nextActive = !!active;
+					if (this.playbackActive === nextActive) return;
+					this.playbackActive = nextActive;
+					if (this.onPlaybackStateChange) {
+						try {
+							this.onPlaybackStateChange(nextActive);
+						} catch (_error) {}
+					}
+				}
+				addPCM16(chunk, sampleRate = 24000) {
+					if (isFinite(sampleRate) && sampleRate > 0) {
+						this.inputSampleRate = sampleRate;
+					}
 					const float32Array = new Float32Array(chunk.length / 2);
 					const dataView = new DataView(chunk.buffer);
 					for (let i = 0; i < chunk.length / 2; i++) {
@@ -9130,7 +9291,8 @@
 				play() {
 					if (this.samples.length === 0) return;
 					this.isPlaying = true;
-					const buffer = this.context.createBuffer(1, this.samples.length, this.context.sampleRate);
+					this.setPlaybackActive(true);
+					const buffer = this.context.createBuffer(1, this.samples.length, this.inputSampleRate);
 					buffer.getChannelData(0).set(this.samples);
 					const source = this.context.createBufferSource();
 					source.buffer = buffer;
@@ -9144,9 +9306,11 @@
 						if (this.samples.length > 0) {
 							this.play();
 						} else if (this.completeCalled) {
+							this.setPlaybackActive(false);
 							this.completeCalled = false;
 							avatar.setEmotion("happy", false);
 						} else {
+							this.setPlaybackActive(false);
 							this.clearAndSetTimeout(() => {
 								avatar.setEmotion("happy", false);
 							}, 200);
@@ -9190,6 +9354,7 @@
 					this.isPlaying = false;
 					this.nextTime = 0;
 					this.completeCalled = false;
+					this.setPlaybackActive(false);
 					this.gainNode.disconnect();
 					this.gainNode = this.context.createGain();
 					this.gainNode.connect(this.context.destination);
@@ -9337,7 +9502,7 @@
 			}
 			const AudioProcessingWorklet = `
 		class AudioProcessor extends AudioWorkletProcessor {
-		  buffer = new Int16Array(2048);
+		  buffer = new Int16Array(512);
 		  bufferWriteIndex = 0;
 		  process(inputs) {
 			if (inputs[0].length) {
@@ -9390,6 +9555,7 @@
 			let speechInputStream = null;
 			let mixedAudioResources = null;
 			let standaloneSystemAudioTrack = null;
+			let geminiOutputPlaybackActive = false;
 			function stopMixedAudioResources() {
 				if (!mixedAudioResources) return;
 				const resources = mixedAudioResources;
@@ -9469,9 +9635,12 @@
 			}
 			function applySystemAudioMutedState(muted) {
 				const enabled = !muted;
+				const sendEnabled = enabled && !geminiOutputPlaybackActive;
 				let changed = false;
 				if (mixedAudioResources) {
-					changed = setGainEnabled(mixedAudioResources.systemGain, enabled) || changed;
+					// Keep the raw track alive for the meter, but suppress it from Gemini
+					// while Gemini's own voice is playing to prevent a feedback/VAD loop.
+					changed = setGainEnabled(mixedAudioResources.systemGain, sendEnabled) || changed;
 					(mixedAudioResources.systemTracks || []).forEach(track => {
 						changed = setTrackEnabled(track, enabled) || changed;
 					});
@@ -9480,10 +9649,16 @@
 					stream.getAudioTracks().forEach(track => {
 						if (mixedAudioResources && track === mixedAudioResources.mixedTrack) return;
 						if (track !== standaloneSystemAudioTrack && (!track.label || !track.label.toLowerCase().includes("system"))) return;
-						changed = setTrackEnabled(track, enabled) || changed;
+						changed = setTrackEnabled(track, sendEnabled) || changed;
 					});
 				}
 				return changed;
+			}
+			function setGeminiOutputPlaybackActive(active) {
+				const nextActive = !!active;
+				if (geminiOutputPlaybackActive === nextActive) return;
+				geminiOutputPlaybackActive = nextActive;
+				applySystemAudioMutedState(audioMuted);
 			}
 			function applyCohostOutputMutedState(muted) {
 				if (publisher && typeof publisher.setOutputMuted === "function") {
@@ -10248,9 +10423,16 @@
 				container.appendChild(systemIndicator);
 				preview.insertAdjacentElement("afterend", container);
 				currentAudioIndicator = container;
-				stream.getAudioTracks().forEach(track => {
+				const meterTracks = mixedAudioResources
+					? [].concat(mixedAudioResources.micTracks || [], mixedAudioResources.systemTracks || [])
+					: stream.getAudioTracks();
+				meterTracks.forEach(track => {
 					const source = currentAudioContext.createMediaStreamSource(new MediaStream([track]));
-					if (track.label && track.label.toLowerCase().includes("system")) {
+					const isSystemTrack =
+						(mixedAudioResources && (mixedAudioResources.systemTracks || []).indexOf(track) !== -1) ||
+						track === standaloneSystemAudioTrack ||
+						(track.label && track.label.toLowerCase().includes("system"));
+					if (isSystemTrack) {
 						source.connect(analyserSystem);
 					} else {
 						source.connect(analyserMic);
@@ -10276,8 +10458,12 @@
 				}
 				updateIndicators();
 			}
+			function getVideoSelectionStorageKey(providerName = providerSelect.value) {
+				const config = providerUIConfig[providerName] || {};
+				return config.videoStorageKey || "selectedVideoId";
+			}
 			videoSelect.addEventListener("change", async () => {
-				localStorage.setItem("selectedVideoId", videoSelect.value);
+				localStorage.setItem(getVideoSelectionStorageKey(), videoSelect.value);
 				renderCohostPreflight();
 				await updateMediaStream();
 			});
@@ -10316,7 +10502,9 @@
 						cohostOutputDeviceSelect.value = outputDeviceFound ? savedOutputDevice : "default";
 						if (!outputDeviceFound) localStorage.removeItem("cohostOutputDevice");
 					}
-					const previousVideoId = localStorage.getItem("selectedVideoId");
+					const activeProviderConfig = providerUIConfig[providerSelect.value] || providerUIConfig.gemini;
+					const videoStorageKey = getVideoSelectionStorageKey();
+					const previousVideoId = localStorage.getItem(videoStorageKey);
 					const previousAudioId = localStorage.getItem("selectedAudioId");
 					audioSelect.dataset.userSelected = previousAudioId ? "true" : "false";
 					let videoDeviceFound = false;
@@ -10333,6 +10521,13 @@
 									break;
 								}
 							}
+						}
+					}
+					if (!videoDeviceFound && activeProviderConfig.defaultVideoSelection) {
+						const defaultVideoOption = Array.from(videoSelect.options).find(option => option.value === activeProviderConfig.defaultVideoSelection);
+						if (defaultVideoOption) {
+							videoSelect.value = defaultVideoOption.value;
+							videoDeviceFound = true;
 						}
 					}
 					if (previousAudioId) {
@@ -10366,9 +10561,9 @@
 					if (videoSelect.disabled) {
 						videoSelect.value = "none";
 					} else if (videoDeviceFound) {
-						localStorage.setItem("selectedVideoId", videoSelect.value);
+						localStorage.setItem(videoStorageKey, videoSelect.value);
 					} else {
-						localStorage.removeItem("selectedVideoId");
+						localStorage.removeItem(videoStorageKey);
 					}
 					if (audioDeviceFound) {
 						localStorage.setItem("selectedAudioId", audioSelect.value);
@@ -10573,6 +10768,7 @@
 						} catch (err) {
 							console.error("Screen share failed:", err);
 							videoSelect.value = "none";
+							localStorage.setItem(getVideoSelectionStorageKey(), "none");
 						}
 					} else if (selectedVideoValue !== "none") {
 						try {
@@ -10582,7 +10778,7 @@
 							});
 							const videoTrack = videoStream.getVideoTracks()[0];
 							if (videoTrack) {
-								updateSelectedDeviceFromTrack(videoSelect, "selectedVideoId", videoTrack);
+								updateSelectedDeviceFromTrack(videoSelect, getVideoSelectionStorageKey(), videoTrack);
 								outputStream.getVideoTracks().forEach(track => {
 									outputStream.removeTrack(track);
 									track.stop();
@@ -10598,7 +10794,7 @@
 									});
 									const fallbackTrack = videoStream.getVideoTracks()[0];
 									if (fallbackTrack) {
-										updateSelectedDeviceFromTrack(videoSelect, "selectedVideoId", fallbackTrack);
+										updateSelectedDeviceFromTrack(videoSelect, getVideoSelectionStorageKey(), fallbackTrack);
 										outputStream.getVideoTracks().forEach(track => {
 											outputStream.removeTrack(track);
 											track.stop();
@@ -10609,12 +10805,12 @@
 									console.warn("Default camera fallback failed:", fallbackError);
 									showError("Camera failed to start: " + fallbackError.message);
 									videoSelect.value = "none";
-									localStorage.removeItem("selectedVideoId");
+									localStorage.removeItem(getVideoSelectionStorageKey());
 								}
 							} else {
 								showError("Camera failed to start: " + err.message);
 								videoSelect.value = "none";
-								localStorage.removeItem("selectedVideoId");
+								localStorage.removeItem(getVideoSelectionStorageKey());
 							}
 						}
 					}
@@ -10739,6 +10935,7 @@
 
 						const dummyStream = canvas.captureStream(1); // 1 fps
 						const videoTrack = dummyStream.getVideoTracks()[0];
+						videoTrack.__ssnCohostPlaceholder = true;
 						outputStream.addTrack(videoTrack);
 					}
 					return outputStream;
@@ -11256,8 +11453,11 @@
 					...REALTIME_PROVIDER_CONFIG.chatgpt,
 					apiKeyLabel: "Credential source",
 					modelPlaceholder: `Optional model override (default ${REALTIME_PROVIDER_CONFIG.chatgpt.defaultModel})`,
-					disableVideoSelection: true,
+					disableVideoSelection: false,
+					defaultVideoSelection: "none",
+					videoStorageKey: "selectedOpenAIRealtimeVideoId",
 					disableAudioSelection: false,
+					deviceNotice: "Camera and Screen Share are optional and off by default. OpenAI receives one current image with each direct spoken or typed request, not continuous video; images can add API cost and latency.",
 					requiresApiKey: false,
 					supportsAudioResponse: true,
 					requiresExplicitAudioSelection: true,
@@ -11449,15 +11649,18 @@
 				if (disableVideoSelection) {
 					videoSelect.value = "none";
 				} else {
-					const savedVideoId = localStorage.getItem("selectedVideoId");
+					const savedVideoId = localStorage.getItem(getVideoSelectionStorageKey(providerName));
+					let videoSelectionRestored = false;
 					if (savedVideoId) {
 						for (const option of videoSelect.options) {
 							if (option.value === savedVideoId) {
 								videoSelect.value = savedVideoId;
+								videoSelectionRestored = true;
 								break;
 							}
 						}
 					}
+					if (!videoSelectionRestored && config.defaultVideoSelection) videoSelect.value = config.defaultVideoSelection;
 				}
 				if (audioSelect.value === "none" && config.requiresExplicitAudioSelection !== true && (!disableAudioSelection || config.disableCaptureSelection === true)) {
 					const firstAudioOption = Array.from(audioSelect.options).find(option => option.value !== "none");

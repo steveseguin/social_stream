@@ -174,7 +174,7 @@
     <section class="page-hero">
         <div class="container">
             <h1>Give Chat Names Different Colors</h1>
-            <p>Turn on one general color option, then allow the Dock to display those colors.</p>
+            <p>Choose how the Dock should display or generate username colors.</p>
         </div>
     </section>
 
@@ -184,22 +184,14 @@
                 <div class="guide-card">
                     <h3>Quick setup</h3>
                     <div class="required-note">
-                        <strong>Both controls are required:</strong> choose a name-color option in <strong>Message - Styling</strong>, then turn on <strong>Color names if color info available</strong> in <strong>Message - Visibility</strong>.
+                        <strong>No global setting is required:</strong> choose one option in the Dock's <strong>Username colors</strong> section.
                     </div>
                     <ol class="guide-steps">
                         <li>Open the Social Stream Ninja extension or desktop app settings.</li>
-                        <li>Expand <strong>Message - Styling</strong>.</li>
-                        <li>Turn on <strong>Add a random color to uncolored names</strong>. This is the recommended choice because it keeps colors supplied by the chat platform and fills in missing ones.</li>
-                        <li>Expand <strong>Message - Visibility</strong>.</li>
-                        <li>Turn on <strong>Color names if color info available</strong>. This adds <code>&amp;color</code> to the Dock URL.</li>
-                        <li>Use the updated Dock link. Existing Dock or OBS browser-source URLs also work if you add <code>&amp;color</code> and refresh them.</li>
+                        <li>Under <strong>Main chat overlay &amp; control dock</strong>, expand <strong>Username colors</strong>.</li>
+                        <li>Turn on <strong>Generate colors for uncolored names</strong>. This keeps colors supplied by the chat platform and fills in missing ones.</li>
+                        <li>Use the updated Dock link. Existing Dock or OBS browser-source URLs also work if you add <code>&amp;randomcolor</code> and refresh them.</li>
                     </ol>
-                    <figure class="guide-figure">
-                        <div class="menu-crop">
-                            <img src="images/guides/ssn-global-settings-export-menu.png" alt="Social Stream Ninja settings menu showing the Message Visibility and Message Styling sections next to each other">
-                        </div>
-                        <figcaption>Open <strong>Message - Styling</strong> for the general color choice and <strong>Message - Visibility</strong> for the Dock display toggle.</figcaption>
-                    </figure>
                 </div>
 
                 <div class="guide-card">
@@ -208,40 +200,30 @@
                     <table class="option-table">
                         <thead>
                             <tr>
-                                <th>General setting</th>
+                                <th>Dock option</th>
                                 <th>Result</th>
                                 <th>Best for</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td><strong>Add a random color to uncolored names</strong></td>
+                                <td><strong>Generate colors for uncolored names</strong></td>
                                 <td>Keeps platform-provided name colors and assigns a consistent color when one is missing.</td>
                                 <td>Most users</td>
                             </tr>
                             <tr>
-                                <td><strong>Override all name colors with a random color</strong></td>
+                                <td><strong>Generate colors for every name</strong></td>
                                 <td>Assigns every username a consistent generated color, replacing colors from the platform.</td>
                                 <td>A fully mixed-color chat</td>
                             </tr>
                             <tr>
-                                <td><strong>Set username color to match the site's branding</strong></td>
-                                <td>Uses the platform color, such as YouTube red or Twitch purple. People on the same platform share a color.</td>
-                                <td>Quickly identifying platforms</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Lighten and desaturate name colors</strong></td>
-                                <td>Adjusts the selected or supplied colors so they are easier to read on dark backgrounds.</td>
-                                <td>Dark Dock themes</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Do not color names based on member status</strong></td>
-                                <td>Stops membership or subscriber status from choosing the name color.</td>
-                                <td>Keeping your chosen palette consistent</td>
+                                <td><strong>Use source-provided username colors</strong></td>
+                                <td>Displays a color only when the chat platform supplies one.</td>
+                                <td>Platforms such as Twitch that provide username colors</td>
                             </tr>
                         </tbody>
                     </table>
-                    <p><strong>Max number of random colors</strong> controls the palette size. A smaller value repeats fewer colors. <strong>Seed value</strong> changes which generated color each name receives.</p>
+                    <p>The generated colors are stable: the Dock hashes the user ID, username, or display name so the same person keeps the same color. The global color settings remain available when colors need to be added to outbound payloads and other surfaces.</p>
                     <figure class="guide-figure">
                         <img src="images/guides/twitch-colored-names-source.png" alt="Real Twitch chat showing usernames in clearly different colors" class="guide-image source-example">
                         <figcaption>Real Twitch chat showing source-provided username colors. With the Dock color toggle on, Social Stream Ninja preserves these <code>nameColor</code> values.</figcaption>
@@ -251,9 +233,9 @@
                 <div class="guide-card">
                     <h3>If the names are still one color</h3>
                     <ol class="guide-steps">
-                        <li>Confirm one color option is on under <strong>Message - Styling</strong>.</li>
-                        <li>Confirm <strong>Color names if color info available</strong> is on under <strong>Message - Visibility</strong>.</li>
-                        <li>Check that the Dock URL contains <code>&amp;color</code> or <code>&amp;colorednames</code>.</li>
+                        <li>Confirm one option is on under the Dock's <strong>Username colors</strong> section.</li>
+                        <li>For platforms without username colors, choose <strong>Generate colors for uncolored names</strong>.</li>
+                        <li>Check that the Dock URL contains <code>&amp;color</code>, <code>&amp;randomcolor</code>, or <code>&amp;randomcolorall</code>.</li>
                         <li>Refresh any Dock tab or OBS Browser Source that was already open.</li>
                         <li>Check your custom CSS for a rule that forces every <code>.hl-name</code> to the same color.</li>
                     </ol>

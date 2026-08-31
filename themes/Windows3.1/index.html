@@ -240,6 +240,47 @@ body.retro { filter: contrast(1.08) saturate(0.92) sepia(0.12); }
 	var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
 	var recentTransportDeliveries = new Map();
 	var transportDeliveryDedupe = typeof SocialStreamTransportDedupe !== "undefined" ? SocialStreamTransportDedupe.create() : null;
+	function getPayloadMessageId(data) {
+		var candidates = [
+			data.mid,
+			data.id,
+			data.messageId,
+			data.message_id,
+			data.meta && data.meta.messageId,
+			data.meta && data.meta.message_id
+		];
+		for (var i = 0; i < candidates.length; i++) {
+			if (candidates[i] !== undefined && candidates[i] !== null && candidates[i] !== "") {
+				return String(candidates[i]);
+			}
+		}
+		return "";
+	}
+	function deleteMessageById(id) {
+		if (id === undefined || id === null || id === "") {
+			return false;
+		}
+		var idString = String(id);
+		var messages = chatContainer.querySelectorAll(".message");
+		var removed = false;
+		for (var i = messages.length - 1; i >= 0; i--) {
+			if (messages[i].getAttribute("data-mid") === idString || messages[i].id === idString) {
+				messages[i].remove();
+				removed = true;
+			}
+		}
+		return removed;
+	}
+	function handleControlPayload(data) {
+		if (!data || typeof data !== "object") {
+			return false;
+		}
+		if ("deleteMessage" in data) {
+			deleteMessageById(data.deleteMessage);
+			return true;
+		}
+		return false;
+	}
 	function isDuplicateTransportDelivery(data, source) {
 		if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) {
 			return false;
@@ -277,13 +318,20 @@ body.retro { filter: contrast(1.08) saturate(0.92) sepia(0.12); }
 		return false;
 	}
 	function addMessageToOverlay(data, source) {
+		if (handleControlPayload(data)) {
+			return;
+		}
 		if (isDuplicateTransportDelivery(data, source)) {
 			return;
 		}
 		if (hideBots && data.bot) { return; }
 		const messageDiv = document.createElement('div');
 		messageDiv.classList.add('message');
-		if (data.mid){messageDiv.id = data.mid;}
+		var messageId = getPayloadMessageId(data);
+		if (messageId) {
+			messageDiv.id = messageId;
+			messageDiv.setAttribute("data-mid", messageId);
+		}
 		data.sourceicon = "https://socialstream.ninja/sources/images/"+data.type+".png";
 		
 		if (!data.hasDonation && !data.chatmessage && !data.contentimg){

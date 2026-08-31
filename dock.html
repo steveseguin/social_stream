@@ -955,6 +955,25 @@
 			.icon.hl-source-type {
 				vertical-align: middle;
 			}
+			.channel-source-icon.large-channel-icon {
+				max-width: 48px !important;
+				max-height: 36px !important;
+			}
+			.hl-leftside .channel-source-icon.large-channel-icon.avatar-badge {
+				width: 44% !important;
+				height: 44% !important;
+				max-width: 33px !important;
+				max-height: 33px !important;
+			}
+			.channel-source-name {
+				font-size: 11px;
+				display: inline-block;
+				margin: auto 2px auto 5px;
+				white-space: nowrap;
+				vertical-align: middle;
+				color: inherit;
+				opacity: 0.85;
+			}
 			.hl-righttopline .hl-badge {
 				max-height: 16px;
 				vertical-align: middle;
@@ -1355,6 +1374,28 @@
 					min-width: unset;
 				}
 			}
+
+			body.vanilla.notcompactmode.inlinechat .highlight-chat {
+				display: block;
+			}
+
+			body.vanilla.notcompactmode.inlinechat .highlight-chat > .queueid {
+				display: inline-block;
+			}
+
+			body.vanilla.notcompactmode.inlinechat .highlight-chat > .hl-name {
+				min-width: unset;
+			}
+
+			body.vanilla.notcompactmode.inlinechat .highlight-chat > .hl-message:not(.bubble) {
+				display: inline;
+				padding-left: 0;
+			}
+
+			body.vanilla.notcompactmode.inlinechat.alignright .highlight-chat {
+				text-align: right;
+			}
+
 			@media only screen and (max-width: 360px) {
 				.OBS .time-arrived {
 					display: none !important;
@@ -3425,6 +3466,15 @@
 			var applyCustomActions = false;
 			var showsource = true;
 			var compactmode = false;
+			// Specialized layouts own their row structure; inline flow only applies to the standard layout.
+			var inlinechat = urlParams.has("inline") &&
+				!urlParams.has("compact") &&
+				!urlParams.has("overlaymode") &&
+				!urlParams.has("horizontal") &&
+				!urlParams.has("twolines") &&
+				!urlParams.has("split") &&
+				!urlParams.has("largeavatar") &&
+				!urlParams.has("bubble");
 			var darkmode = null;
 			var scale = 1;
 			var forceAutoscroll = false;
@@ -3561,6 +3611,7 @@
 			}
 			var showbadges = true;
 			var colorized = false;
+			var nameColorMode = "none";
 			var horizontal = false;
 			var horizontalReverse = false;
 			var horizontalTickerState = null;
@@ -3781,6 +3832,14 @@
 			var blockedWords = [];
 			if (urlParams.get("blockedwords")) {
 				blockedWords = urlParams.get("blockedwords").toLowerCase().split(",").map(w => w.trim()).filter(w => w);
+			}
+			var exactBlockedMessages = [];
+			if (urlParams.get("exactblockedmessages")) {
+				exactBlockedMessages = urlParams.get("exactblockedmessages").toLowerCase().split(",").map(function (message) {
+					return message.trim();
+				}).filter(function (message) {
+					return message;
+				});
 			}
 
 			var trivialevents = false;
@@ -5044,9 +5103,14 @@
 				doNotAutoshowFiltered = true;
 			}
 
-			if (urlParams.has("colorednames") || urlParams.has("color")) {
-				colorized = true;
+			if (urlParams.has("randomcolorall")) {
+				nameColorMode = "all";
+			} else if (urlParams.has("randomcolor")) {
+				nameColorMode = "missing";
+			} else if (urlParams.has("colorednames") || urlParams.has("color")) {
+				nameColorMode = "supplied";
 			}
+			colorized = nameColorMode !== "none";
 
 			if (urlParams.has("largecontent")) {
 				getById("output").classList.add("largeContent");
@@ -5360,6 +5424,8 @@
 			if (urlParams.has("branded")) {
 				customSource = true;
 			}
+			var largeChannelIcon = urlParams.has("largechannelicon");
+			var showChannelName = urlParams.has("showchannelname");
 			
 			if (urlParams.has("chroma")) {
 				var chroma = urlParams.get("chroma") || "0F0";
@@ -5371,6 +5437,10 @@
 				document.body.classList.remove("notcompactmode");
 				document.documentElement.style.setProperty("--padding-rows", "2px");
 				document.documentElement.style.setProperty("--list-or-horizontal", "flex");
+			}
+
+			if (inlinechat) {
+				document.body.classList.add("inlinechat");
 			}
 
 			if (urlParams.has("padding")) {
@@ -6923,6 +6993,20 @@
 				}
 				return out;
 			}
+
+			function getDockNameColor(data) {
+				if (!data || !data.chatname || !colorized) {
+					return "";
+				}
+
+				var suppliedColor = data.nameColor || "";
+				if (nameColorMode === "all" || (nameColorMode === "missing" && !suppliedColor)) {
+					var identity = data.userid || data.username || data.chatname;
+					return getColorFromString(String(identity).toLowerCase());
+				}
+
+				return suppliedColor;
+			}
 			
 			function deleteMessages(data, deleteOnlyLast=false) {
 				let selector = "";
@@ -6951,10 +7035,11 @@
 			
 			function getUserHistory(element) {
 				var chatName = element.dataset.chatname;
+				var userId = element.dataset.userid || "";
 				var type = element.dataset.sourceType;
 
 				if (chatName && type) {
-					send2Extension({ action: "getUserHistory", value: { chatname: chatName, type: type } });
+					send2Extension({ action: "getUserHistory", value: { chatname: chatName, userid: userId, type: type } });
 				}
 			}
 			
@@ -9631,6 +9716,7 @@
 				const sourceTabId = rawContents.tid;
 				const chatName = element.dataset.chatname || rawContents.chatname || "";
 				const userId = rawContents.userid || rawContents.userId || rawContents.authorChannelId || "";
+				const username = rawContents.username || element.dataset.username || "";
 				const chatImg = element.dataset.chatimg || rawContents.chatimg || "";
 				if (sourceTabId !== undefined && sourceTabId !== null && sourceTabId !== "") {
 					payload.tid = sourceTabId;
@@ -9640,6 +9726,9 @@
 				}
 				if (userId) {
 					payload.userid = userId;
+				}
+				if (username) {
+					payload.username = username;
 				}
 				if (chatImg) {
 					payload.chatimg = chatImg;
@@ -9727,6 +9816,7 @@
 				try{
 					var blockUnavailableReason = getBlockUserUnavailableReason();
 					var chatName = element.dataset.chatname;
+					var username = element.dataset.username || "";
 					var chatImg = element.dataset.chatimg || "";
 					var type = element.dataset.sourceType;
 					
@@ -9757,6 +9847,9 @@
 
 						if (element.rawContents && (element.rawContents.userid || element.rawContents.userId || element.rawContents.authorChannelId)) {
 							sendBlob.userid = element.rawContents.userid || element.rawContents.userId || element.rawContents.authorChannelId;
+						}
+						if (username) {
+							sendBlob.username = username;
 						}
 						if (chatImg) {
 							sendBlob.chatimg = chatImg;
@@ -9827,7 +9920,9 @@
 					|| element.dataset.userid
 					|| (rawContents && (rawContents.chatname || rawContents.userid))
 					|| "";
+				const rawMentionName = (rawContents && rawContents.username) || rawChatName;
 				const chatName = (typeof unescapeHtml === "function") ? unescapeHtml(rawChatName) : rawChatName;
+				const mentionName = (typeof unescapeHtml === "function") ? unescapeHtml(rawMentionName) : rawMentionName;
 				const type = element.dataset.sourceType;
 				const tid = rawContents ? rawContents.tid : null;
 				
@@ -9924,7 +10019,7 @@
 
 					if (!response.startsWith("@")) {
 						// Don't add @ if username already starts with @
-						const prefix = chatName.startsWith("@") ? chatName : `@${chatName}`;
+						const prefix = mentionName.startsWith("@") ? mentionName : `@${mentionName}`;
 						response = `${prefix} ${response}`;
 					}
 					
@@ -9985,22 +10080,25 @@
 			function markUserAs(element, role) {
 				const chatName = element.getAttribute("data-chatname");
 				const userId = element.getAttribute("data-userid") || "";
+				const username = element.getAttribute("data-username") || "";
 				const userType = element.getAttribute("data-source-type");
 				
 				if (chatName && userType) {
 					applyRoleMarker(chatName, userType, role);
-					send2Extension({ action: "markUser", value: { chatname: chatName, userid: userId, type: userType, role: role} });
+					send2Extension({ action: "markUser", value: { chatname: chatName, userid: userId, username: username, type: userType, role: role} });
 				
 				}
 			}
 		 
 
 			function toggleVIPUser(element) {
-				const userId = element.getAttribute("data-chatname");
+				const chatName = element.getAttribute("data-chatname");
+				const userId = element.getAttribute("data-userid") || "";
+				const username = element.getAttribute("data-username") || "";
 				const userType = element.getAttribute("data-source-type");
 
-				if (userId && userType) {
-					send2Extension({ action: "toggleVIPUser", value: { chatname: userId, type: userType } });
+				if (chatName && userType) {
+					send2Extension({ action: "toggleVIPUser", value: { chatname: chatName, userid: userId, username: username, type: userType } });
 				}
 			}
 
@@ -10342,6 +10440,13 @@
 				let tmp = document.createElement("DIV");
 				tmp.innerHTML = html;
 				return removeHtmlTagsFromPlainTextField(tmp.textContent || tmp.innerText || "");
+			}
+
+			function isExactBlockedMessage(data, blockedMessages) {
+				if (!data || !blockedMessages || !blockedMessages.length) return false;
+				var messageText = data.textContent || data.chatmessage || "";
+				messageText = stripHtmlFunction(messageText).trim().toLowerCase();
+				return blockedMessages.indexOf(messageText) !== -1;
 			}
 
 			function sanitizePlainTextAlertFields(data) {
@@ -11457,6 +11562,14 @@
 						}
 					}
 
+					if (isExactBlockedMessage(data, exactBlockedMessages)) {
+						if (blurred) {
+							makeBlurred = true;
+						} else {
+							return;
+						}
+					}
+
 					if (data.chatmessage && data.chatmessage.startsWith("!")) {
 						if (filtercommands){
 							return;
@@ -11861,11 +11974,18 @@
 
 					if (data.sourceImg && customSource) {
 						var safeSourceImg = escapeAttributeValue(data.sourceImg);
+						var channelIconSizeClass = largeChannelIcon ? " large-channel-icon" : "";
 						if (largeavatar) {
-							showType += '<img src="' + safeSourceImg + '" class="icon hl-source-type  avatar-badge" onerror="this.style.display=\'none\'" />';
+							showType += '<img src="' + safeSourceImg + '" class="icon hl-source-type channel-source-icon avatar-badge' + channelIconSizeClass + '" onerror="this.style.display=\'none\'" />';
 						} else {
-							showType += '<img src="' + safeSourceImg + '" class="icon hl-source-type" onerror="this.style.display=\'none\'" />';
+							showType += '<img src="' + safeSourceImg + '" class="icon hl-source-type channel-source-icon' + channelIconSizeClass + '" onerror="this.style.display=\'none\'" />';
 						}
+					}
+					var channelSourceName = showChannelName && data.sourceName
+						? '<span class="channel-source-name">' + escapeHtml(data.sourceName) + '</span>'
+						: '';
+					if (!largeavatar) {
+						showType += channelSourceName;
 					}
 
 					var timeArrived = "";
@@ -11913,10 +12033,11 @@
 					}
 
 					var nameColor = "";
-					if (data.nameColor && colorized) {
-						nameColor = "style='color:" + data.nameColor + ";'";
+					var dockNameColor = getDockNameColor(data);
+					if (dockNameColor) {
+						nameColor = "style='color:" + dockNameColor + ";'";
 						if (largeavatar){
-							nameColor = "style='color:" + data.nameColor + ";display: flex;'";
+							nameColor = "style='color:" + dockNameColor + ";display: flex;'";
 						}
 					} else if (largeavatar){
 						nameColor = "style='display: flex;'";
@@ -12038,6 +12159,7 @@
 						//timeArrived = "";
 						chatImg = "";
 						showType = "";
+						channelSourceName = "";
 						chatbadges = "";
 						//if (datestamp) {
 						//	timeArrived = "<div class='time-arrived'></div>";
@@ -12072,7 +12194,7 @@
 								chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + chatname + afterName + "</div>";
 							}
 						} else {
-							chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + chatbadges + chatname + "</div>";
+							chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + chatbadges + chatname + (inlinechat ? afterName : "") + "</div>";
 						}
 					} else if (specialMessage && compactmode) {
 						chatname = '<div dir="' + textDirection + '" class="hl-name' + splitMode + '"></div>';
@@ -12115,7 +12237,7 @@
 					
 					// Trusted relay HTML: chatname/chatmessage are sanitized upstream in background.js before rendering here.
 					if (largeavatar) {
-						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + safeDataType + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + timeArrived  +  "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
+						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + safeDataType + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + channelSourceName + timeArrived  +  "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
 					} else if (twoLines) {
 						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + '<div class="hl-firstline">' + "" + "<div class='queueid'></div>" + showType + chatImg + chatname + '</div><div class="hl-message"><span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">'+ timeArrived  + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");
 					} else if (splitMode) {
@@ -12193,6 +12315,9 @@
 					
 					if (data.userid){
 						node.dataset.userid = data.userid;
+					}
+					if (data.username){
+						node.dataset.username = data.username;
 					}
 					
 					if (data.hasDonation) {

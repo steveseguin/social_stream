@@ -1983,6 +1983,11 @@ async function ensureChatClientInstance() {
 				console.error('Twitch normalized chat handler failed', err);
 			});
 		});
+		add(TWITCH_CHAT_EVENTS.WATCH_STREAK, (payload) => {
+			handleNormalizedWatchStreak(payload).catch((err) => {
+				console.error('Twitch watch streak handler failed', err);
+			});
+		});
 		add(TWITCH_CHAT_EVENTS.MEMBERSHIP, (payload) => {
 			handleNormalizedMembership(payload).catch((err) => {
 				console.error('Twitch membership handler failed', err);
@@ -2351,6 +2356,13 @@ async function ensureChatClientInstance() {
 		noteTwitchChatEcho(payload.id);
 		const legacy = convertChatPayloadToLegacyMessage(payload);
 		await processMessage(legacy);
+	}
+
+	async function handleNormalizedWatchStreak(payload) {
+		if (!payload || !settings.showtwitchwatchstreaks || settings.hideevents) {
+			return;
+		}
+		await handleNormalizedChatMessage(payload);
 	}
 
 	async function handleNormalizedMembership(payload) {
@@ -3670,7 +3682,14 @@ async function ensureChatClientInstance() {
 		}
 		data.chatname = resolvedDisplayName;
 		data.username = user;
+		if (normalizedPayload?.userId) {
+			data.userid = normalizedPayload.userId;
+		}
 		data.contentimg = normalizedPayload?.contentimg || "";
+		const normalizedMeta = normalizedPayload && normalizedPayload.meta;
+		if (normalizedMeta && typeof normalizedMeta === "object" && !Array.isArray(normalizedMeta)) {
+			data.meta = Object.assign({}, normalizedMeta);
+		}
 		
 		// Convert badge URLs to badge objects
 		data.chatbadges = badgeList.map(url => ({ type: "img", src: url }));
@@ -3710,10 +3729,7 @@ async function ensureChatClientInstance() {
 		}
 		if (data.contentimg) {
 			data.chatmessage = "";
-			const normalizedMeta = normalizedPayload && normalizedPayload.meta;
-			data.meta = normalizedMeta && typeof normalizedMeta === "object" && !Array.isArray(normalizedMeta)
-				? Object.assign({}, normalizedMeta)
-				: {};
+			data.meta = data.meta || {};
 			if (!("gifLabel" in data.meta)) {
 				data.meta.gifLabel = message || "";
 			}
@@ -4722,11 +4738,22 @@ async function cleanupCurrentConnection() {
 		return '';
 	}
 
+	function getEventSubUserAvatarUrl(event) {
+		if (!event || event.is_anonymous === true) {
+			return '';
+		}
+		const login = event.user_login || event.user_name || '';
+		return login
+			? `https://api.socialstream.ninja/twitch/large?username=${encodeURIComponent(login)}`
+			: '';
+	}
+
 	function forwardEventSubCheer(event) {
 		pushMessage({
 			type: "twitch",
 			event: 'cheer',
 			chatname: event.user_name || 'Anonymous',
+			chatimg: getEventSubUserAvatarUrl(event),
 			userid: event.user_id,
 			bits: event.bits,
 			chatmessage: getEventSubMessageText(event.message),

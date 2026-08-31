@@ -83,6 +83,7 @@ const EVENTS = {
   STATUS: 'status',
   MESSAGE: 'message',
   NOTICE: 'notice',
+  WATCH_STREAK: 'watch_streak',
   MEMBERSHIP: 'membership',
   RAID: 'raid',
   CLEAR_CHAT: 'clear_chat',
@@ -448,6 +449,36 @@ export function createTwitchChatClient(options = {}) {
     };
   }
 
+  function normalizeWatchStreak(channelName, userstate, message) {
+    const twitchLogin = normalizeTwitchChannel(userstate?.username || userstate?.login || null);
+    const displayName = userstate?.['display-name'] || twitchLogin || 'Twitch Viewer';
+    const streakCount = ensureNumber(userstate?.['msg-param-value'], 0);
+    const fallback = streakCount > 0
+      ? `${displayName} watched ${streakCount} consecutive streams and sparked a watch streak!`
+      : `${displayName} shared a watch streak!`;
+    const noticeText = userstate?.['system-msg'] || getTwitchMessageText(message) || fallback;
+
+    return {
+      id: resolveMessageId(channelName, userstate, 'watch_streak'),
+      platform: 'twitch',
+      type: 'twitch',
+      chatname: displayName,
+      username: twitchLogin || '',
+      userId: userstate?.['user-id'] || null,
+      chatmessage: formatters.sanitize(noticeText),
+      chatimg: formatters.avatarUrl(twitchLogin || displayName),
+      timestamp: Number(userstate?.['tmi-sent-ts'] || formatters.now()),
+      hasDonation: '',
+      event: 'watch_streak',
+      meta: {
+        streakCount,
+        milestoneId: userstate?.['msg-param-id'] || ''
+      },
+      rawMessage: noticeText,
+      raw: { channel: channelName, userstate, message }
+    };
+  }
+
   function normalizeGift(channelName, recipient, userstate, anonymous) {
     const gifter = anonymous
       ? 'Anonymous'
@@ -638,6 +669,16 @@ export function createTwitchChatClient(options = {}) {
 
     bind('notice', (channel, msgid, message) => {
       emitter.emit(EVENTS.NOTICE, normalizeNotice(channel || channelName, msgid, message));
+    });
+
+    bind('usernotice', (msgid, channel, userstate, message) => {
+      if (msgid !== 'viewermilestone' || userstate?.['msg-param-category'] !== 'watch-streak') {
+        return;
+      }
+      emitter.emit(
+        EVENTS.WATCH_STREAK,
+        normalizeWatchStreak(channel || channelName, userstate, message)
+      );
     });
 
     bind('clearchat', (channel, user, duration) => {

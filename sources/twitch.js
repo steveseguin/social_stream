@@ -1668,6 +1668,27 @@
 		//console.log(EMOTELIST);
 	}
 
+	function getWatchStreakCount(message) {
+		var plainMessage = String(message || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+		var match = plainMessage.match(/watched\s+(\d+)\s+consecutive\s+streams?.*watch\s+streak/i)
+			|| plainMessage.match(/(\d+).*watch\s+streak/i);
+		return match ? parseInt(match[1], 10) || 0 : 0;
+	}
+
+	function isWatchStreakNotice(ele, message) {
+		var marker = "";
+		try {
+			marker = [
+				ele && ele.getAttribute("data-a-target"),
+				ele && ele.getAttribute("data-test-selector"),
+				ele && ele.className
+			].filter(Boolean).join(" ").toLowerCase();
+		} catch (e) {}
+		return marker.indexOf("watch-streak") !== -1
+			|| marker.indexOf("watch_streak") !== -1
+			|| /watch\s+streak/i.test(String(message || "").replace(/<[^>]*>/g, " "));
+	}
+
 	function processEvent(ele) {
 		
 		ele.dataset.ignore = true;
@@ -1696,8 +1717,19 @@
 			return;
 		}
 		
+		var isWatchStreak = isWatchStreakNotice(ele, data.chatmessage);
+		if (isWatchStreak && !settings.showtwitchwatchstreaks) {
+			return;
+		}
+
 		// channel-points-reward-line__icon
-		if (ele.querySelector("[class*='channel-points-reward']")){
+		if (isWatchStreak) {
+			data.event = "watch_streak";
+			data.meta = {
+				streakCount: getWatchStreakCount(data.chatmessage),
+				milestoneId: ele.getAttribute("data-id") || ele.id || ""
+			};
+		} else if (ele.querySelector("[class*='channel-points-reward']")){
 			data.event = "reward";
 		} else if (data.chatmessage.includes(" gifting ") && data.chatmessage.includes(" Sub")) {
 			data.event = "giftpurchase";
