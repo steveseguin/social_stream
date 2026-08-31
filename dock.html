@@ -3466,7 +3466,15 @@
 			var applyCustomActions = false;
 			var showsource = true;
 			var compactmode = false;
-			var inlinechat = urlParams.has("inline");
+			// Specialized layouts own their row structure; inline flow only applies to the standard layout.
+			var inlinechat = urlParams.has("inline") &&
+				!urlParams.has("compact") &&
+				!urlParams.has("overlaymode") &&
+				!urlParams.has("horizontal") &&
+				!urlParams.has("twolines") &&
+				!urlParams.has("split") &&
+				!urlParams.has("largeavatar") &&
+				!urlParams.has("bubble");
 			var darkmode = null;
 			var scale = 1;
 			var forceAutoscroll = false;
