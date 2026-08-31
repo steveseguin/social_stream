@@ -7,6 +7,7 @@ const SocialStreamLocalServer = require("../js/local-server-url.js");
 const popupSource = fs.readFileSync(path.resolve(__dirname, "..", "popup.js"), "utf8");
 const popupHtml = fs.readFileSync(path.resolve(__dirname, "..", "popup.html"), "utf8");
 const dockHtml = fs.readFileSync(path.resolve(__dirname, "..", "dock.html"), "utf8");
+const windowsOverlayHtml = fs.readFileSync(path.resolve(__dirname, "..", "themes", "Windows3.1", "index.html"), "utf8");
 const backgroundSource = fs.readFileSync(path.resolve(__dirname, "..", "background.js"), "utf8");
 const parametersSource = fs.readFileSync(path.resolve(__dirname, "..", "parameters.md"), "utf8");
 const urlParameterConfig = fs.readFileSync(path.resolve(__dirname, "..", "shared", "config", "urlParameters.js"), "utf8");
@@ -68,6 +69,16 @@ assert.ok(dockHtml.includes('--viewer-count-reserved-space: 0px;'), "reserved sp
 assert.ok(dockHtml.includes('new MutationObserver(scheduleViewerBarSpaceUpdate)'), "viewer bar height tracking is missing");
 assert.ok(parametersSource.includes('| `reserveviewercountspace` | boolean |'), "parameter documentation is missing");
 assert.ok(urlParameterConfig.includes('"key": "reserveviewercountspace"'), "generated parameter metadata is missing");
+
+const windowsConfigStart = popupHtml.indexOf('id="Windows3-overlay-config"');
+const windowsConfigEnd = popupHtml.indexOf('id="t3nk3y-overlay-config"', windowsConfigStart);
+const windowsConfigHtml = popupHtml.slice(windowsConfigStart, windowsConfigEnd);
+assert.ok(windowsConfigHtml.includes('data-param30="showtime"'), "Windows 3.1 auto-hide toggle is missing");
+assert.ok(
+  windowsConfigHtml.includes('value="30000"') && windowsConfigHtml.includes('data-numbersetting30="showtime"'),
+  "Windows 3.1 auto-hide duration must default to 30 seconds"
+);
+assert.ok(windowsOverlayHtml.includes('urlParams.has("showtime")'), "Windows 3.1 overlay must consume showtime");
 
 const viewerCountOptionIndex = popupHtml.indexOf('data-param1="showviewercount"');
 const likeCountOptionIndex = popupHtml.indexOf('data-param1="showlikecount"');
