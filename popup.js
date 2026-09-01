@@ -8412,7 +8412,7 @@ function buildTipJarTestDonationPayload(kind) {
         'youtube-superchat': {
             type: 'youtube',
             platform: 'youtube',
-            event: 'donation',
+            event: 'superchat',
             chatname: 'SuperChat Fan',
             chatmessage: 'Testing a Super Chat donation',
             hasDonation: '$10.00',
@@ -13462,7 +13462,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					});
 				}
 			} else if (msg.cmd == "resettipjar"){
-				var confirmResetTipJar = confirm("Reset the connected Tip Jar/Goal amount to $0?");
+				var confirmResetTipJar = confirm("Reset the connected Tip Jar/Goal to 0?");
 				if (confirmResetTipJar){
 					chrome.runtime.sendMessage(msg, function (response) {
 						log("ignore callback for this action");
@@ -13476,11 +13476,19 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				}
 				var tipjarSourceSelect = document.querySelector('[data-optionparam12="tipjarsource"]');
 				var tipjarTypeSelect = document.querySelector('[data-optionparam12="tipjartype"]');
+				var tipjarMetricSelect = document.querySelector('[data-optionparam12="goalmetric"]');
+				var tipjarEventSelect = document.querySelector('[data-optionparam12="tipjarevent"]');
 				if (tipjarSourceSelect && tipjarSourceSelect.value) {
 					msg.tipjarsource = tipjarSourceSelect.value;
 				}
 				if (tipjarTypeSelect && tipjarTypeSelect.value) {
 					msg.tipjartype = tipjarTypeSelect.value;
+				}
+				if (tipjarMetricSelect && tipjarMetricSelect.value) {
+					msg.goalmetric = tipjarMetricSelect.value;
+				}
+				if (tipjarEventSelect && tipjarEventSelect.value) {
+					msg.tipjarevent = tipjarEventSelect.value;
 				}
 				chrome.runtime.sendMessage(msg, function (response) {
 					log("ignore callback for this action");

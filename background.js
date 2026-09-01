@@ -7181,7 +7181,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 					cmd: "settipjaramount",
 					value: request.value,
 					tipjarsource: request.tipjarsource || "",
-					tipjartype: request.tipjartype || ""
+					tipjartype: request.tipjartype || "",
+					goalmetric: request.goalmetric || "",
+					tipjarevent: request.tipjarevent || ""
 				},
 				"tipjar"
 			);
@@ -11249,7 +11251,9 @@ function setupSocket() {
 						cmd: "settipjaramount",
 						value: data.value,
 						tipjarsource: data.tipjarsource || "",
-						tipjartype: data.tipjartype || ""
+						tipjartype: data.tipjartype || "",
+						goalmetric: data.goalmetric || "",
+						tipjarevent: data.tipjarevent || ""
 					},
 					"tipjar"
 				);

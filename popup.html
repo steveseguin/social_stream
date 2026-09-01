@@ -11547,6 +11547,7 @@ input:checked + .slider:before {
 					<p>Normal mode counts donations and paid messages. Enable Hype Cup scoring to also count memberships and subscriptions.</p>
 					<ul>
 						<li>Running total of all donations</li>
+						<li>Optional count goals for Super Chats and Super Stickers</li>
 						<li>Optional membership and subscription scoring</li>
 						<li>Visual progress bar display</li>
 						<li>Supports multiple donation platforms</li>
@@ -11643,6 +11644,37 @@ input:checked + .slider:before {
                                     <input type="number" data-optionparam12="donationpoints" class="textInput" placeholder="1" min="0" step="0.1" />
                                 </div>
                                 <div>
+                                    <strong>Exclude from Hype scoring:</strong>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="notips" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Donations and paid messages</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="nosubs" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>New memberships and subscriptions</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="noresubs" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Renewals and resubscriptions</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="nogifts" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Gifted memberships and subscriptions</span>
+                                </div>
+                                <div>
                                     <label>Point unit label:</label>
                                     <input type="text" data-optionparam12="unit" class="textInput" placeholder="pts" />
                                 </div>
@@ -11717,7 +11749,28 @@ input:checked + .slider:before {
 
                                 <h3>🎯 <span data-translate="goal-settings">Goal Settings</span></h3>
                                 <div>
-                                    <label><span data-translate="goal-amount">Goal Amount ($):</span></label>
+                                    <label>Goal measures:</label>
+                                    <select data-optionparam12="goalmetric" class="textInput">
+                                        <option value="" selected>Total donation value (default)</option>
+                                        <option value="count">Number of qualifying donations</option>
+                                    </select>
+                                    <small style="display: block; opacity: 0.8;">Count goals take priority over Hype scoring.</small>
+                                </div>
+                                <div>
+                                    <label>Paid event filter:</label>
+                                    <select data-optionparam12="tipjarevent" class="textInput">
+                                        <option value="" selected>All donation events</option>
+                                        <option value="superchat">Super Chats only</option>
+                                        <option value="supersticker">Super Stickers only</option>
+                                        <option value="superchat,supersticker">Super Chats + Super Stickers</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Count unit label:</label>
+                                    <input type="text" data-optionparam12="countlabel" class="textInput" placeholder="Auto (for example, Super Chats)" />
+                                </div>
+                                <div>
+                                    <label><span data-translate="goal-amount">Goal target:</span></label>
                                     <input type="number" data-optionparam12="goal" class="textInput" placeholder="250" value="250" min="1" step="1" />
                                 </div>
                                 <div>
