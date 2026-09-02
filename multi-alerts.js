@@ -1640,14 +1640,6 @@ function normalizeColor(value) {
 function resolveAccent(category, sourceKey = '') {
   if (settings.colorByPlatform) {
     const normalizedSource = normalizeSourceKey(sourceKey);
-    const sourceOverride = Object.prototype.hasOwnProperty.call(settings.sourceAccents, normalizedSource)
-      ? settings.sourceAccents[normalizedSource]
-      : normalizedSource === 'youtubeshorts'
-        ? settings.sourceAccents.youtube
-        : '';
-    if (sourceOverride) {
-      return sourceOverride;
-    }
     if (KNOWN_SOURCES.has(normalizedSource) && typeof getColorFromType === 'function') {
       const sourceColor = normalizeColor(getColorFromType(normalizedSource));
       if (sourceColor) {
@@ -1743,10 +1735,6 @@ function readSettings() {
     cardRadius: urlParams.has('radius') ? Math.max(0, Math.min(48, parseNumberParam('radius', 7))) : null,
     accent: normalizeColor(urlParams.get('accent')),
     colorByPlatform: urlParams.has('platformcolors'),
-    sourceAccents: {
-      twitch: normalizeColor(urlParams.get('twitchaccent')),
-      youtube: normalizeColor(urlParams.get('youtubeaccent'))
-    },
     categoryAccents: Object.fromEntries(
       Object.entries(CATEGORY_ACCENT_PARAMS).map(([cat, param]) => [cat, normalizeColor(urlParams.get(param))])
     ),
@@ -2669,7 +2657,6 @@ window.__multiAlertsOverlay = {
       cardRadius: settings.cardRadius,
       accent: settings.accent,
       colorByPlatform: settings.colorByPlatform,
-      sourceAccents: Object.assign({}, settings.sourceAccents),
       categoryAccents: Object.assign({}, settings.categoryAccents),
       cardBg: settings.cardBg,
       textColor: settings.textColor,

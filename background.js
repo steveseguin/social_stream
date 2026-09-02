@@ -8655,24 +8655,40 @@ function isEmoji(char) {
 	return emojiRegex.test(trimmed);
 }
 
-// Helper to preserve emoji from img alt attributes before stripping HTML
-// Used by reflection filter to properly compare messages with emoji
-function preserveEmojiFromImgAlt(html) {
-	if (!html || typeof html !== "string") return html;
-	try {
-		const tempDiv = document.createElement("div");
-		tempDiv.innerHTML = html;
-		const imgElements = tempDiv.querySelectorAll("img");
-		imgElements.forEach(img => {
-			const altText = img.getAttribute("alt");
-			if (altText && isEmoji(altText)) {
-				img.outerHTML = altText;
-			}
-		});
-		return tempDiv.innerHTML;
-	} catch (e) {
-		return html;
+// Build the same reflection key for plain text and platform-rendered rich text.
+// Private-use markers let us remove whitespace inserted between an emote image
+// and adjacent punctuation without changing intentional spacing in plain text.
+function normalizeMessageForTracking(msg, textonly = false) {
+	if (msg === undefined || msg === null) return "";
+
+	let normalized = String(msg);
+	const imageStartMarker = "\uE000";
+	const imageEndMarker = "\uE001";
+	const unknownImageMarker = "\uE002";
+
+	if (textonly) {
+		normalized = normalized.replace(/<\/?[^>]+(>|$)/g, "");
+	} else {
+		try {
+			const doc = new DOMParser().parseFromString(normalized, "text/html");
+			doc.querySelectorAll("img").forEach(img => {
+				const replacement = (img.getAttribute("alt") || img.getAttribute("title") || unknownImageMarker).trim();
+				img.parentNode.replaceChild(doc.createTextNode(imageStartMarker + replacement + imageEndMarker), img);
+			});
+			normalized = doc.body.textContent || "";
+		} catch (e) {}
 	}
+
+	try {
+		normalized = normalized.normalize("NFC");
+	} catch (e) {}
+
+	return normalized
+		.replace(/[\uFE0E\uFE0F]/g, "")
+		.replace(/\uE001\s+([.,!?])/g, "\uE001$1")
+		.replace(/[\uE000\uE001]/g, "")
+		.replace(/\s+/g, " ")
+		.trim();
 }
 
 const messageStore = {};
@@ -8687,17 +8703,7 @@ function checkExactDuplicateAlreadyRelayed(msg, sanitized = true, tabid = false,
 		}
 	}
 
-	// Preserve emoji from img alt attributes before processing (fixes reflection filter for emoji)
-	msg = preserveEmojiFromImgAlt(msg);
-
-	if (!sanitized) {
-		var textArea = document.createElement("textarea");
-		textArea.innerHTML = msg;
-		msg = textArea.value.replace(/\s\s+/g, " ").trim();
-	} else {
-		msg = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
-		msg = msg.replace(/\s\s+/g, " ").trim();
-	}
+	msg = normalizeMessageForTracking(msg, sanitized);
 
 	if (save) {
 		return msg;
@@ -8734,17 +8740,7 @@ function checkExactDuplicateAlreadyReceived(msg, sanitized = true, tabid = false
 		return false;
 	}
 
-	// Preserve emoji from img alt attributes before processing (fixes reflection filter for emoji)
-	msg = preserveEmojiFromImgAlt(msg);
-
-	if (!sanitized) {
-		var textArea = document.createElement("textarea");
-		textArea.innerHTML = msg;
-		msg = textArea.value.replace(/\s\s+/g, " ").trim();
-	} else {
-		msg = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
-		msg = msg.replace(/\s\s+/g, " ").trim();
-	}
+	msg = normalizeMessageForTracking(msg, sanitized);
 
 	if (!msg || !tabid) {
 		return false;
@@ -16791,22 +16787,7 @@ function handleMessageStore(tabId, msg2Save, now, relayMode, origin = "relay") {
 }
 function sanitizeMessageForTracking(msg, sanitized = true) {
 	try {
-		if (!msg) {
-			return "";
-		}
-
-		// Preserve emoji from img alt attributes before processing (fixes reflection filter for emoji)
-		msg = preserveEmojiFromImgAlt(msg);
-
-		let normalized;
-		if (!sanitized) {
-			const textArea = document.createElement("textarea");
-			textArea.innerHTML = msg;
-			normalized = textArea.value;
-		} else {
-			normalized = msg.replace(/<\/?[^>]+(>|$)/g, "");
-		}
-		return normalized.replace(/\s\s+/g, " ").trim();
+		return normalizeMessageForTracking(msg, sanitized);
 	} catch (e) {
 		errorlog(e);
 		return "";

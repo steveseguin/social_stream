@@ -161,7 +161,6 @@ Category accent colors (optional overrides; hex like `ff2d5e` or any CSS color):
 - `accent`: overrides the accent color for every category when platform colors are disabled and remains the fallback for unknown platforms.
 - `followaccent`, `subaccent`, `donoaccent`, `bitsaccent`, `raidaccent`, `auctionaccent`, `hypeaccent`: per-category overrides that beat `accent`.
 - `platformcolors`: opt in to platform-based colors instead of category colors. Known platforms use their standard platform color.
-- `twitchaccent`, `youtubeaccent`: optional Twitch and YouTube platform color overrides. `youtubeaccent` also applies to YouTube Shorts. These are used only when `platformcolors` is enabled.
 
 Category disable/enable:
 
