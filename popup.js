@@ -3320,7 +3320,7 @@ function updateAiOverlayGeneratedLinks(hideLinks, baseURL, streamID, password, v
     cohostElement.raw = cleanURL(cohostUrl);
     if (cohostLink) {
       cohostLink.href = cohostElement.raw;
-      cohostLink.innerText = hideLinks ? "Click to open link" : cohostElement.raw;
+      cohostLink.innerText = hideLinks ? "Click to open link" : getGeneratedLinkDisplayUrl(cohostElement, cohostElement.raw);
     }
   }
 }
@@ -3660,6 +3660,15 @@ function getGeneratedLinkParams(primaryElement, fallbackElement) {
   return "";
 }
 
+function getGeneratedLinkDisplayUrl(element, url) {
+  const value = typeof url === "string" ? url : "";
+  const elementId = element && element.id ? element.id : "";
+  if (elementId === "cohost" || elementId === "cohostlink") {
+    return value.replace(/#cohostauth=[^&\s]*/i, "#private-cohost-access");
+  }
+  return value;
+}
+
 function setGeneratedLink(element, url) {
   if (!element) return;
   element.raw = cleanURL(url);
@@ -3670,12 +3679,12 @@ function setGeneratedLink(element, url) {
     link = element.querySelector("a");
   }
   if (!link) {
-    element.innerHTML = `<a target='_blank' id='${linkId}' href='${element.raw}'>${document.body.classList.contains("hidelinks") ? "Click to open link" : element.raw}</a>`;
+    element.innerHTML = `<a target='_blank' id='${linkId}' href='${element.raw}'>${document.body.classList.contains("hidelinks") ? "Click to open link" : getGeneratedLinkDisplayUrl(element, element.raw)}</a>`;
     return;
   }
 
   link.href = element.raw;
-  link.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : element.raw;
+  link.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : getGeneratedLinkDisplayUrl(element, element.raw);
 }
 
 function moveChatOverlayThemeOptions() {
@@ -4617,7 +4626,7 @@ function update(response, sync = true) {
                         const cleanedUrl = removeTTSProviderParams(originalHref);
                         linkElement.href = cleanedUrl;
                         if (linkElement.innerText !== "Click to open link" || !currentHideLinks) { // Avoid overwriting "Click to open" if links are hidden
-                           linkElement.innerText = currentHideLinks ? "Click to open link" : cleanedUrl;
+                           linkElement.innerText = currentHideLinks ? "Click to open link" : getGeneratedLinkDisplayUrl(linkElement, cleanedUrl);
                         }
                         // If your old `sourceElement.raw` was important, you might need to update a similar attribute
                         // if (linkElement.raw) linkElement.raw = cleanedUrl;
@@ -8626,7 +8635,7 @@ function refreshLinks(){
         linkElement.href = cleanedUrl; // Update the link's href
 
         // Update link's text based on hideLinks status
-        linkElement.innerText = currentHideLinks ? "Click to open link" : cleanedUrl;
+        linkElement.innerText = currentHideLinks ? "Click to open link" : getGeneratedLinkDisplayUrl(divElement, cleanedUrl);
       }
     });
 

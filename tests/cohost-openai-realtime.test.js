@@ -8,6 +8,25 @@ const background = fs.readFileSync(path.join(root, "background.js"), "utf8");
 const popup = fs.readFileSync(path.join(root, "popup.js"), "utf8");
 const guide = fs.readFileSync(path.join(root, "docs", "ai-modes-guide.html"), "utf8");
 
+function extractFunction(source, name) {
+    const start = source.indexOf(`function ${name}(`);
+    assert.notStrictEqual(start, -1, `Missing ${name}`);
+    const bodyStart = source.indexOf("{", start);
+    let depth = 0;
+    for (let index = bodyStart; index < source.length; index += 1) {
+        if (source[index] === "{") depth += 1;
+        if (source[index] === "}") {
+            depth -= 1;
+            if (depth === 0) return source.slice(start, index + 1);
+        }
+    }
+    throw new Error(`Could not extract ${name}`);
+}
+
+const getGeneratedLinkDisplayUrl = new Function(
+    `${extractFunction(popup, "getGeneratedLinkDisplayUrl")}; return getGeneratedLinkDisplayUrl;`
+)();
+
 assert(cohost.includes('defaultModel: "gpt-realtime-2.1"'), "OpenAI Realtime should use the current model by default");
 assert(!cohost.includes("openai-beta.realtime-v1"), "OpenAI Realtime should not advertise the retired beta protocol");
 assert(cohost.includes("class OpenAIWebRTCPublisher extends RealtimePublisher"), "OpenAI Realtime should use its WebRTC publisher");
@@ -96,6 +115,28 @@ assert(background.includes('tool === "featuredChat"'), "The guarded broker shoul
 assert(background.includes("COHOST_CAPABILITY_LIFETIME_MS = 12 * 60 * 60 * 1000"), "Hosted co-host capabilities should expire");
 assert(popup.includes('`#cohostauth=${encodeURIComponent(cohostAccessCapability)}`'), "The popup-generated co-host link should keep its private capability out of the query string");
 assert(popup.includes('displayURL + "#private-cohost-access"'), "The popup must not visibly print the bearer capability");
+assert(popup.includes('function getGeneratedLinkDisplayUrl(element, url)'), "Generated links should centralize capability redaction");
+assert(popup.includes('value.replace(/#cohostauth=[^&\\s]*/i, "#private-cohost-access")'), "Cohost link text should redact the bearer capability");
+assert(popup.includes('getGeneratedLinkDisplayUrl(cohostElement, cohostElement.raw)'), "AI overlay link updates must preserve cohost capability redaction");
+assert(popup.includes('getGeneratedLinkDisplayUrl(linkElement, cleanedUrl)'), "Popup link cleanup must preserve cohost capability redaction");
+assert(popup.includes('getGeneratedLinkDisplayUrl(divElement, cleanedUrl)'), "Popup link refresh must preserve cohost capability redaction");
+const cohostCapabilityUrl = "https://socialstream.ninja/cohost.html?session=test#a=1&cohostauth=" + "a".repeat(64);
+assert.strictEqual(
+    getGeneratedLinkDisplayUrl({ id: "cohost" }, cohostCapabilityUrl),
+    cohostCapabilityUrl,
+    "Unrecognized fragments must remain unchanged"
+);
+const standardCohostCapabilityUrl = "https://socialstream.ninja/cohost.html?session=test#cohostauth=" + "a".repeat(64);
+assert.strictEqual(
+    getGeneratedLinkDisplayUrl({ id: "cohost" }, standardCohostCapabilityUrl),
+    "https://socialstream.ninja/cohost.html?session=test#private-cohost-access",
+    "Cohost link text must not expose the bearer capability"
+);
+assert.strictEqual(
+    getGeneratedLinkDisplayUrl({ id: "dock" }, standardCohostCapabilityUrl),
+    standardCohostCapabilityUrl,
+    "Capability redaction must remain scoped to the cohost link"
+);
 assert(cohost.includes('sessionStorage.setItem("cohostAccessCapability", cohostBridgeCapability)'), "The hosted co-host should retain the fragment capability only for its tab session");
 assert(cohost.includes("history.replaceState"), "The hosted co-host should scrub the capability from the address bar");
 assert(background.includes('request.cmd === "createOpenAIRealtimeClientSecret"'), "Extension/Desktop pages should be able to request a client secret directly");

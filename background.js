@@ -6150,6 +6150,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (request.setting == "delaytwitch") {
 				pushSettingChange();
 			}
+			if (request.setting == "pluralmind") {
+				pushSettingChange();
+			}
 			if (request.setting == "customtwitchaccount") {
 				pushSettingChange();
 			}
@@ -7928,21 +7931,26 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 		}
 
 		if (settings.pronouns && message.type == "twitch" && (message.username || message.chatname)) {
-			let pronoun = await getPronounsNames(message.username || message.chatname);
-			if (!Pronouns && pronoun) {
-				await getPronouns();
-			}
-			if (Pronouns && pronoun && pronoun.pronoun_id) {
-				if (pronoun.pronoun_id in Pronouns) {
-					if (!message.chatbadges) {
-						message.chatbadges = [];
+			var hasPluralmindPronouns = settings.pluralmind && Array.isArray(message.chatbadges) && message.chatbadges.some(function (badge) {
+				return badge && typeof badge === "object" && badge.source === "pluralmind";
+			});
+			if (!hasPluralmindPronouns) {
+				let pronoun = await getPronounsNames(message.username || message.chatname);
+				if (!Pronouns && pronoun) {
+					await getPronouns();
+				}
+				if (Pronouns && pronoun && pronoun.pronoun_id) {
+					if (pronoun.pronoun_id in Pronouns) {
+						if (!message.chatbadges) {
+							message.chatbadges = [];
+						}
+						var bage = {};
+						bage.text = Pronouns[pronoun.pronoun_id];
+						bage.type = "text";
+						bage.bgcolor = "#000";
+						bage.color = "#FFF";
+						message.chatbadges.push(bage);
 					}
-					var bage = {};
-					bage.text = Pronouns[pronoun.pronoun_id];
-					bage.type = "text";
-					bage.bgcolor = "#000";
-					bage.color = "#FFF";
-					message.chatbadges.push(bage);
 				}
 			}
 		}

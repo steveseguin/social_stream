@@ -1319,6 +1319,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "printer_control",
     description: "Local printer name to use when printing chat from the dock."
   },
+  "pluralmind": {
+    type: "boolean",
+    category: "custom_injection",
+    description: "Identify PluralMind members in Twitch chat. Looks up Twitch user IDs or usernames via pluralmind.chat; message matching stays local."
+  },
   "pronouns": {
     type: "boolean",
     category: "custom_injection",
