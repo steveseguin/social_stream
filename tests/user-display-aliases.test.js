@@ -8,6 +8,9 @@ const backgroundSource = fs.readFileSync(path.join(repoRoot, "background.js"), "
 const popupSource = fs.readFileSync(path.join(repoRoot, "popup.js"), "utf8");
 const popupHtml = fs.readFileSync(path.join(repoRoot, "popup.html"), "utf8");
 const dockSource = fs.readFileSync(path.join(repoRoot, "dock.html"), "utf8");
+const pollSource = fs.readFileSync(path.join(repoRoot, "poll.html"), "utf8");
+const mapSource = fs.readFileSync(path.join(repoRoot, "map.html"), "utf8");
+const reactionsSource = fs.readFileSync(path.join(repoRoot, "reactions.html"), "utf8");
 
 function extractFunction(source, name) {
   const marker = `function ${name}(`;
@@ -129,6 +132,9 @@ assert.ok(dockSource.includes("node.dataset.username = data.username;"), "the do
 assert.ok(dockSource.includes("username: username, type: type"), "history requests should use the retained source username");
 assert.ok(dockSource.includes("sendBlob.username = username;"), "block actions should return the source username");
 assert.ok(dockSource.includes("username: username, type: userType"), "VIP actions should return the source username");
+assert.ok(pollSource.includes("payload.uid || payload.username || null"), "poll voting should prefer the stable source username over an alias");
+assert.ok(mapSource.includes("data.uid || data.username"), "map voting should prefer the stable source username over an alias");
+assert.ok(reactionsSource.includes("payload.userid || payload.username || payload.chatname"), "reaction deduplication should prefer stable identity over an alias");
 
 (async () => {
   const canonicalMessage = { type: "twitch", chatname: "beastfighter1", chatmessage: "hello" };
