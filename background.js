@@ -8667,6 +8667,16 @@ function normalizeMessageForTracking(msg, textonly = false) {
 	const unknownImageMarker = "\uE002";
 
 	if (textonly) {
+		if (/<img\b/i.test(normalized)) {
+			try {
+				const doc = new DOMParser().parseFromString(normalized, "text/html");
+				doc.querySelectorAll("img").forEach(img => {
+					const replacement = (img.getAttribute("alt") || img.getAttribute("title") || unknownImageMarker).trim();
+					img.parentNode.replaceChild(doc.createTextNode(imageStartMarker + replacement + imageEndMarker), img);
+				});
+				normalized = doc.body.innerHTML || "";
+			} catch (e) {}
+		}
 		normalized = normalized.replace(/<\/?[^>]+(>|$)/g, "");
 	} else {
 		try {
