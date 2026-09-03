@@ -7054,10 +7054,11 @@
 			function getUserHistory(element) {
 				var chatName = element.dataset.chatname;
 				var userId = element.dataset.userid || "";
+				var username = element.dataset.username || "";
 				var type = element.dataset.sourceType;
 
 				if (chatName && type) {
-					send2Extension({ action: "getUserHistory", value: { chatname: chatName, userid: userId, type: type } });
+					send2Extension({ action: "getUserHistory", value: { chatname: chatName, userid: userId, username: username, type: type } });
 				}
 			}
 			

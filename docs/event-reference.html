@@ -337,12 +337,12 @@
 						<tr>
 							<td><code>data.chatname</code></td>
 							<td>string</td>
-							<td>Display name shown by docks, overlays, TTS, relays, and Event Flow. A configured user display-name alias may replace the source-provided value.</td>
+							<td>Source-provided display name used by message processing and non-overlay outputs. A configured user display-name alias may replace this value only in copied dock and overlay transport payloads.</td>
 						</tr>
 						<tr>
 							<td><code>data.username</code></td>
 							<td>string</td>
-							<td>Source username when available. If a display-name alias is applied and neither <code>userid</code> nor <code>username</code> exists, this preserves the original <code>chatname</code> for user actions.</td>
+							<td>Source username when available. An aliased dock or overlay payload may add this field to preserve the original <code>chatname</code> for user actions; the canonical message remains unchanged.</td>
 						</tr>
 						<tr>
 							<td><code>data.userid</code></td>

@@ -127,6 +127,7 @@ function simulateBackgroundDelivery(build, payload, options) {
 		getSettingFlag(setting) {
 			return setting === "server2additivedelivery" && !!options.additive;
 		},
+		getOverlayDisplayPayload(data) { return data; },
 		markP2PFailure() {},
 		console: {
 			error() {},

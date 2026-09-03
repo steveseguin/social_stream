@@ -168,11 +168,6 @@ function matchesConfiguredUser(entry, data, sourceType) {
 	return !!chatName && configuredIdentifier === chatName;
 }
 
-function getMessageUserIdentity(data) {
-	if (!data) return "";
-	return data.userid || data.username || data.chatname || "";
-}
-
 function getUserDisplayAliasEntries() {
 	const configured = settings.userdisplayaliases;
 	if (!configured) return [];
@@ -197,6 +192,31 @@ function applyUserDisplayAlias(data) {
 		? filterXSS(alias.displayName.slice(0, 80))
 		: alias.displayName.slice(0, 80);
 	return true;
+}
+
+function getOverlayDisplayMessage(data) {
+	if (!data || typeof data !== "object") return data;
+	const displayMessage = Object.assign({}, data);
+	return applyUserDisplayAlias(displayMessage) ? displayMessage : data;
+}
+
+function getOverlayDisplayPayload(data) {
+	if (!data || typeof data !== "object") return data;
+	if (!getUserDisplayAliasEntries().length) return data;
+	let displayPayload = getOverlayDisplayMessage(data);
+	["userHistory", "recentHistory", "historyBefore"].forEach(key => {
+		if (!Array.isArray(data[key])) return;
+		if (displayPayload === data) displayPayload = Object.assign({}, data);
+		displayPayload[key] = data[key].map(getOverlayDisplayMessage);
+	});
+	if (data.delete && typeof data.delete === "object") {
+		const displayDelete = getOverlayDisplayMessage(data.delete);
+		if (displayDelete !== data.delete) {
+			if (displayPayload === data) displayPayload = Object.assign({}, data);
+			displayPayload.delete = displayDelete;
+		}
+	}
+	return displayPayload;
 }
 
 function getCommandAliases(commandString) {
@@ -6338,9 +6358,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if ("delete" in request) {
 			sendResponse({ state: isExtensionOn });
 			if (isExtensionOn && (request.delete.type || request.delete.chatname || request.delete.id)) {
-				const deletePayload = Object.assign({}, request.delete);
-				applyUserDisplayAlias(deletePayload);
-				sendToDestinations({ delete: deletePayload });
+				sendToDestinations({ delete: request.delete });
 			}
 		} else if ("liveStats" in request) {
 			sendResponse({ state: isExtensionOn });
@@ -7930,12 +7948,12 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 			//}
 		}
 
-		if (settings.pronouns && message.type == "twitch" && (message.username || message.chatname)) {
+		if (settings.pronouns && message.type == "twitch" && message.chatname) {
 			var hasPluralmindPronouns = settings.pluralmind && Array.isArray(message.chatbadges) && message.chatbadges.some(function (badge) {
 				return badge && typeof badge === "object" && badge.source === "pluralmind";
 			});
 			if (!hasPluralmindPronouns) {
-				let pronoun = await getPronounsNames(message.username || message.chatname);
+				let pronoun = await getPronounsNames(message.chatname);
 				if (!Pronouns && pronoun) {
 					await getPronouns();
 				}
@@ -7960,9 +7978,9 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 		}
 
 		if (settings.randomcolor && message && !message.nameColor && message.chatname) {
-			message.nameColor = getColorFromName(getMessageUserIdentity(message), settings);
+			message.nameColor = getColorFromName(message.chatname, settings);
 		} else if (settings.randomcolorall && message && message.chatname) {
-			message.nameColor = getColorFromName(getMessageUserIdentity(message), settings);
+			message.nameColor = getColorFromName(message.chatname, settings);
 		} else if (settings.colorofsource && message && message.chatname) {
 			message.nameColor = getColorFromType(message.type);
 		}
@@ -8390,8 +8408,8 @@ function sendToH2R(data) {
 			}
 			msg.authorDetails = {};
 			msg.authorDetails.displayName = data.chatname || "";
-			if (data.type && data.type == "twitch" && !data.chatimg && (data.username || data.chatname)) {
-				msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.username || data.chatname); // 150x150
+			if (data.type && data.type == "twitch" && !data.chatimg && data.chatname) {
+				msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
 			} else if (data.type && (data.type == "youtube" || data.type == "youtubeshorts") && data.chatimg) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
 				msg.authorDetails.profileImageUrl = chatimg.replace("=s64-", "=s256-");
@@ -10040,8 +10058,8 @@ function sendToPost(data) {
 				postServer = "https://" + settings.postserver.textsetting; // Just going to assume they meant https
 			}
 
-			if (data.type && !data.chatimg && data.type == "twitch" && (data.username || data.chatname)) {
-				data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.username || data.chatname); // 150x150
+			if (data.type && !data.chatimg && data.type == "twitch" && data.chatname) {
+				data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
 			} else if (data.type && (data.type == "youtube" || data.type == "youtubeshorts") && data.chatimg) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
 				data.chatimg = chatimg.replace("=s64-", "=s256-");
@@ -12776,6 +12794,7 @@ async function openchat(target = null, force = false) {
 
 function sendDataP2P(data, UUID = false) {
 	// function to send data to the DOCk via the VDO.Ninja API
+	data = getOverlayDisplayPayload(data);
 
 	// TODO after 2026-09-01: make the server2 dock send additive by default.
 	// Overlay links generated from 3.52.0+ are prepared to use socket-only
@@ -12904,10 +12923,9 @@ function processHype(data) {
 
 	let newSource = false;
 
-	const userIdentity = getMessageUserIdentity(data);
-	if (users[sourceType] && userIdentity) {
+	if (users[sourceType] && data.chatname) {
 		// Site exists
-		if (!users[sourceType][userIdentity]) {
+		if (!users[sourceType][data.chatname]) {
 			// New user for this site
 			if (hype[sourceType]) {
 				hype[sourceType] += 1;
@@ -12916,11 +12934,11 @@ function processHype(data) {
 				newSource = true;
 			}
 		}
-		users[sourceType][userIdentity] = Date.now() + 60000 * 5;
-	} else if (userIdentity) {
+		users[sourceType][data.chatname] = Date.now() + 60000 * 5;
+	} else if (data.chatname) {
 		// New site
 		var site = {};
-		site[userIdentity] = Date.now() + 60000 * 5;
+		site[data.chatname] = Date.now() + 60000 * 5;
 		users[sourceType] = site;
 		hype[sourceType] = 1;
 		newSource = true;
@@ -13224,6 +13242,7 @@ async function trySendTargetP2P(data, target) {
 }
 
 async function sendTargetP2P(data, target, options) {
+	data = getOverlayDisplayPayload(data);
 	options = options || {};
 	var retry = typeof options.retry === "boolean" ? options.retry : target === "actions";
 	var timeoutMs = Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : 10000;
@@ -13939,11 +13958,10 @@ function processWaitlistControlCommand(data) {
 
 function forgetWaitlistUser(entry) {
 	try {
-		const userIdentity = getMessageUserIdentity(entry);
-		if (!entry || !entry.type || !userIdentity || !waitListUsers[entry.type]) {
+		if (!entry || !entry.type || !entry.chatname || !waitListUsers[entry.type]) {
 			return;
 		}
-		delete waitListUsers[entry.type][userIdentity];
+		delete waitListUsers[entry.type][entry.chatname];
 		if (!Object.keys(waitListUsers[entry.type]).length) {
 			delete waitListUsers[entry.type];
 		}
@@ -13969,17 +13987,16 @@ function processWaitlist(data) {
 		data.waitlistTrigger = trigger;
 		data.waitlistJoinMessage = extractWaitlistMessage(data.chatmessage, trigger);
 
-		const userIdentity = getMessageUserIdentity(data);
 		var update = false;
 		if (waitListUsers[data.type]) {
-			if (!waitListUsers[data.type][userIdentity]) {
+			if (!waitListUsers[data.type][data.chatname]) {
 				update = true;
-				waitListUsers[data.type][userIdentity] = Date.now();
+				waitListUsers[data.type][data.chatname] = Date.now();
 				waitlist.push(data);
 			}
 		} else {
 			var site = {};
-			site[userIdentity] = Date.now();
+			site[data.chatname] = Date.now();
 			waitListUsers[data.type] = site;
 			waitlist.push(data);
 			update = true;
@@ -14452,8 +14469,8 @@ function sendToDisk(data) {
 					data.chatimg = data.chatimg.replace("=s64-", "=s512-");
 				}
 
-				if (data.type && data.type == "twitch" && !data.chatimg && (data.username || data.chatname)) {
-					data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.username || data.chatname); // 150x150
+				if (data.type && data.type == "twitch" && !data.chatimg && data.chatname) {
+					data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
 				}
 
 				overwriteFile(JSON.stringify(data));
@@ -14470,8 +14487,8 @@ function sendToDisk(data) {
 					data.chatimg = data.chatimg.replace("=s64-", "=s256-");
 				}
 
-				if (data.type && data.type == "twitch" && !data.chatimg && (data.username || data.chatname)) {
-					data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.username || data.chatname); // 150x150
+				if (data.type && data.type == "twitch" && !data.chatimg && data.chatname) {
+					data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
 				}
 				overwriteFileExcel(data);
 			}
@@ -15081,7 +15098,7 @@ async function processIncomingRequest(request, UUID = false) {
 			});
 		} else if (request.action === "getUserHistory" && request.value && request.value.chatname && request.value.type) {
 			if (isExtensionOn) {
-				getMessagesDB(request.value.userid || request.value.chatname, request.value.type, (page = 0), (pageSize = 100), function (response) {
+				getMessagesDB(request.value.userid || request.value.username || request.value.chatname, request.value.type, (page = 0), (pageSize = 100), function (response) {
 					if (isExtensionOn) {
 						sendDataP2P({ userHistory: response }, UUID);
 					}
@@ -18096,7 +18113,6 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		prependFirstTimerBadge(data);
-		applyUserDisplayAlias(data);
 
 		const returningBeepEnabled = !!(settings.beepreturning?.setting ?? settings.beepreturning);
 		const hasChatFields = typeof data.chatname === "string" && data.chatname.trim() !== "" && typeof data.chatmessage === "string" && data.chatmessage.trim() !== "";
