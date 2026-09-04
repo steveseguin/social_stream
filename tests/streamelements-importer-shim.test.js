@@ -41,12 +41,15 @@ async function run() {
 			{
 				name: "fields.txt",
 				mimeType: "application/json",
-				buffer: Buffer.from("{}")
+				buffer: Buffer.from(JSON.stringify({
+					autoRemoveAfterSeconds: { label: "Duration (second)", type: "number", value: 5 },
+					maxMessages: { label: "Max Messages", type: "number", value: 5, min: 1, max: 20 }
+				}))
 			},
 			{
 				name: "data.txt",
 				mimeType: "application/json",
-				buffer: Buffer.from("{}")
+				buffer: Buffer.from(JSON.stringify({ autoRemoveAfterSeconds: 12, maxMessages: 6 }))
 			},
 			{
 				name: "js.txt",
@@ -112,12 +115,21 @@ async function run() {
 		await frame.evaluate(() => window.SSNSECompat.receive({ deleteMessage: "emote-message-1" }));
 		assert.strictEqual(await frame.locator(".chat-row").count(), 0, "deleteMessage should remove a row that ignores the delete event");
 
+		assert.strictEqual(await page.locator("#messageSettings").isVisible(), true, "recognized message settings should be shown");
+		assert.strictEqual(await page.locator("#messageDuration").inputValue(), "12");
+		assert.strictEqual(await page.locator("#maxMessages").inputValue(), "6");
+		await page.locator("#keepMessagesVisible").check();
+		await page.locator("#maxMessages").fill("20");
+		await page.locator("#maxMessages").press("Tab");
+
 		const downloadPromise = page.waitForEvent("download");
 		await page.locator("#exportBtn").click();
 		const download = await downloadPromise;
 		const exportedHTML = fs.readFileSync(await download.path(), "utf8");
 		assert.ok(exportedHTML.includes('"session":"test-session"'), "export should embed the session supplied by the popup URL");
 		assert.ok(exportedHTML.includes('"password":"test-password"'), "export should embed the optional session password");
+		assert.ok(exportedHTML.includes('"autoRemoveAfterSeconds":0'), "export should preserve the user's disabled auto-hide setting");
+		assert.ok(exportedHTML.includes('"maxMessages":20'), "export should preserve the user's message-limit setting");
 		assert.ok(exportedHTML.includes("window.SSNSECompat.start()"), "export should include and start the compatibility runtime");
 		assert.ok(await page.locator("#exportModal").evaluate(element => element.classList.contains("open")), "export should show the OBS handoff steps");
 		assert.ok((await page.locator("#exportModal").innerText()).includes("Enable Local file"));

@@ -12792,9 +12792,57 @@ async function openchat(target = null, force = false) {
 	}
 }
 
+function sendDataToStreamDeckPeersP2P(data) {
+	var sent = false;
+	if (ninjaBridge && ninjaBridge.isReady()) {
+		try {
+			var peers = typeof ninjaBridge.getPeers === "function" ? ninjaBridge.getPeers() : {};
+			for (var peerId in peers) {
+				if (peers[peerId] === "streamdeck") {
+					sent = true;
+					break;
+				}
+			}
+			if (sent) {
+				var result = ninjaBridge.sendToLabel(data, "streamdeck");
+				if (result && typeof result.catch === "function") {
+					result.catch(function () {
+						markP2PFailure("streamDeckFeedSend");
+					});
+				} else if (result === false) {
+					markP2PFailure("streamDeckFeedSend");
+				}
+				return true;
+			}
+		} catch (e) {
+			markP2PFailure("streamDeckFeedSend");
+		}
+	}
+
+	if (iframe && connectedPeers) {
+		var keys = Object.keys(connectedPeers);
+		for (var i = 0; i < keys.length; i++) {
+			var UUID = keys[i];
+			if (connectedPeers[UUID] !== "streamdeck") {
+				continue;
+			}
+			try {
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+				sent = true;
+			} catch (e) {
+				console.error(e);
+			}
+		}
+	}
+	return sent;
+}
+
 function sendDataP2P(data, UUID = false) {
 	// function to send data to the DOCk via the VDO.Ninja API
 	data = getOverlayDisplayPayload(data);
+	// Stream Deck can explicitly remain on P2P while a Dock uses the hosted
+	// WebSocket relay. Deliver its feed before the server2 early return below.
+	var streamDeckPeerSent = !UUID && sendDataToStreamDeckPeersP2P(data);
 
 	// TODO after 2026-09-01: make the server2 dock send additive by default.
 	// Overlay links generated from 3.52.0+ are prepared to use socket-only
@@ -12859,7 +12907,7 @@ function sendDataP2P(data, UUID = false) {
 				trackSdkSendResult(ninjaBridge.sendToLabel(data, "aioverlay"));
 				trackSdkSendResult(ninjaBridge.sendToLabel(data, "cohost"));
 				trackSdkSendResult(ninjaBridge.sendToLabel(data, "tipjar"));
-			} else {
+			} else if (!streamDeckPeerSent) {
 				trackSdkSendResult(ninjaBridge.send(data)); // broadcast
 			}
 			return;

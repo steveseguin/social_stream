@@ -14,7 +14,9 @@
 				detected: null,
 				warnings: [],
 				manualParts: {},
-				lastExportFileName: ""
+				lastExportFileName: "",
+				messageSettingKeys: {},
+				previewMode: ""
 			};
 
 			var zipInput = document.getElementById("zipInput");
@@ -47,6 +49,12 @@
 			var fieldsPartSelect = document.getElementById("fieldsPartSelect");
 			var dataPartSelect = document.getElementById("dataPartSelect");
 			var applyFileSelectionBtn = document.getElementById("applyFileSelectionBtn");
+			var messageSettings = document.getElementById("messageSettings");
+			var messageDurationRow = document.getElementById("messageDurationRow");
+			var keepMessagesVisible = document.getElementById("keepMessagesVisible");
+			var messageDuration = document.getElementById("messageDuration");
+			var maxMessagesRow = document.getElementById("maxMessagesRow");
+			var maxMessages = document.getElementById("maxMessages");
 
 			loadSavedSession();
 			updateSessionWarning();
@@ -132,6 +140,9 @@
 				refreshButtons();
 			});
 			passwordInput.addEventListener("input", refreshButtons);
+			if (keepMessagesVisible) keepMessagesVisible.addEventListener("change", updateMessageDurationSetting);
+			if (messageDuration) messageDuration.addEventListener("change", updateMessageDurationSetting);
+			if (maxMessages) maxMessages.addEventListener("change", updateMaxMessagesSetting);
 
 			function resetState() {
 				state = {
@@ -149,12 +160,15 @@
 					detected: null,
 					warnings: [],
 					manualParts: {},
-					lastExportFileName: ""
+					lastExportFileName: "",
+					messageSettingKeys: {},
+					previewMode: ""
 				};
 				previewFrame.removeAttribute("srcdoc");
 				emptyPreview.style.display = "";
 				statusBox.textContent = "Waiting for overlay files.";
 				fileList.innerHTML = "";
+				if (messageSettings) messageSettings.hidden = true;
 				populateFileSelectors(null);
 				refreshButtons();
 			}
@@ -454,6 +468,7 @@
 				var fields = parseJSONSafe(detected.fieldsText || "{}");
 				var data = parseJSONSafe(detected.dataText || "{}");
 				state.fieldData = mergeFieldDefaults(fields, data);
+				setupMessageSettings(fields);
 				state.html = normalizeProtocolRelative(replaceAssets(resolveTemplate(detected.htmlText || '<div class="main-container"></div>', state.fieldData)));
 				state.css = normalizeProtocolRelative(replaceAssets(resolveTemplate(detected.cssText || "", state.fieldData)));
 				state.js = normalizeProtocolRelative(replaceScriptAssets(resolveTemplate(detected.jsText || "", state.fieldData)));
@@ -761,6 +776,83 @@
 				return output;
 			}
 
+			function setupMessageSettings(fields) {
+				var durationKey = findFieldKey(["autoRemoveAfterSeconds", "hideAfter", "messageDurationSeconds", "messageDuration"]);
+				var maxKey = findFieldKey(["maxMessages", "messagesLimit", "eventsLimit"]);
+				state.messageSettingKeys = { duration: durationKey, max: maxKey };
+				if (!messageSettings) return;
+				messageSettings.hidden = !durationKey && !maxKey;
+
+				if (messageDurationRow) messageDurationRow.hidden = !durationKey;
+				if (durationKey && messageDuration && keepMessagesVisible) {
+					var durationValue = parseFloat(state.fieldData[durationKey]);
+					if (!isFinite(durationValue)) durationValue = 0;
+					keepMessagesVisible.checked = durationValue <= 0 || (durationKey.toLowerCase() === "hideafter" && durationValue === 999);
+					messageDuration.value = durationValue > 0 ? durationValue : 10;
+					messageDuration.disabled = keepMessagesVisible.checked;
+					applyNumberBounds(messageDuration, fields && fields[durationKey], 1);
+				}
+
+				if (maxMessagesRow) maxMessagesRow.hidden = !maxKey;
+				if (maxKey && maxMessages) {
+					var maxValue = parseInt(state.fieldData[maxKey], 10);
+					if (!maxValue || maxValue < 1) maxValue = 20;
+					maxMessages.value = maxValue;
+					applyNumberBounds(maxMessages, fields && fields[maxKey], 1);
+				}
+			}
+
+			function findFieldKey(candidates) {
+				var keys = Object.keys(state.fieldData || {});
+				for (var i = 0; i < candidates.length; i += 1) {
+					for (var j = 0; j < keys.length; j += 1) {
+						if (keys[j].toLowerCase() === candidates[i].toLowerCase()) return keys[j];
+					}
+				}
+				return "";
+			}
+
+			function applyNumberBounds(input, definition, fallbackMin) {
+				var min = definition && definition.min;
+				var max = definition && definition.max;
+				input.min = isFinite(parseFloat(min)) ? min : fallbackMin;
+				if (isFinite(parseFloat(max))) input.max = max;
+				else input.removeAttribute("max");
+			}
+
+			function updateMessageDurationSetting() {
+				var key = state.messageSettingKeys && state.messageSettingKeys.duration;
+				if (!key || !messageDuration || !keepMessagesVisible) return;
+				messageDuration.disabled = keepMessagesVisible.checked;
+				var value = keepMessagesVisible.checked ? getDisabledDurationValue(key) : parseFloat(messageDuration.value);
+				if (!isFinite(value) || value < 1) value = 1;
+				if (keepMessagesVisible.checked) value = getDisabledDurationValue(key);
+				state.fieldData[key] = value;
+				refreshPreviewForSettings();
+			}
+
+			function getDisabledDurationValue(key) {
+				return String(key || "").toLowerCase() === "hideafter" ? 999 : 0;
+			}
+
+			function updateMaxMessagesSetting() {
+				var key = state.messageSettingKeys && state.messageSettingKeys.max;
+				if (!key || !maxMessages) return;
+				var value = parseInt(maxMessages.value, 10);
+				var min = parseInt(maxMessages.min || "1", 10);
+				var max = parseInt(maxMessages.max || "", 10);
+				if (!value || value < min) value = min;
+				if (max && value > max) value = max;
+				maxMessages.value = value;
+				state.fieldData[key] = value;
+				refreshPreviewForSettings();
+			}
+
+			function refreshPreviewForSettings() {
+				if (state.previewMode === "live") renderLivePreview();
+				else if (state.html || state.css || state.js) renderPreview();
+			}
+
 			function resolveTemplate(text, fieldData) {
 				var output = String(text || "").replace(/{{\s*([\w.-]+)\s*}}/g, function (full, key) {
 					if (Object.prototype.hasOwnProperty.call(fieldData, key)) {
@@ -989,6 +1081,7 @@
 
 			function renderPreview() {
 				if (!(state.html || state.css || state.js)) return;
+				state.previewMode = "demo";
 				previewFrame.srcdoc = buildExportHTML({ preview: true });
 				emptyPreview.style.display = "none";
 			}
@@ -1000,6 +1093,7 @@
 					sessionInput.focus();
 					return;
 				}
+				state.previewMode = "live";
 				previewFrame.srcdoc = buildExportHTML({ preview: false });
 				emptyPreview.style.display = "none";
 				updateFileList(state.detected, ["Live preview is listening for SSN session: " + (sessionInput.value || "").trim()]);

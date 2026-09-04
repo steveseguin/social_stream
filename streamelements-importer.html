@@ -279,6 +279,36 @@
 			color: var(--accent-2);
 		}
 
+		.widget-settings {
+			border: 1px solid rgba(90, 164, 255, 0.45);
+			background: rgba(90, 164, 255, 0.08);
+			border-radius: 8px;
+			padding: 10px;
+		}
+
+		.widget-settings[hidden],
+		.setting-row[hidden] {
+			display: none;
+		}
+
+		.widget-settings-title {
+			font-weight: 700;
+			font-size: 13px;
+			margin-bottom: 4px;
+		}
+
+		.check-row {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			color: var(--text);
+		}
+
+		.check-row input {
+			width: auto;
+			margin: 0;
+		}
+
 		.info-panel select {
 			width: 100%;
 			border: 1px solid var(--line);
@@ -534,6 +564,23 @@
 				<input class="hidden-input" id="zipInput" type="file" accept=".zip">
 				<input class="hidden-input" id="fileInput" type="file" multiple>
 				<input class="hidden-input" id="folderInput" type="file" multiple webkitdirectory>
+			</div>
+
+			<div class="widget-settings" id="messageSettings" hidden>
+				<div class="widget-settings-title">Message history</div>
+				<div class="hint">These are the widget's own StreamElements settings. Changes apply to previews and the downloaded OBS file.</div>
+				<div class="setting-row" id="messageDurationRow" hidden>
+					<label class="check-row" for="keepMessagesVisible">
+						<input id="keepMessagesVisible" type="checkbox">
+						<span>Keep messages visible (turn off auto-hide)</span>
+					</label>
+					<label for="messageDuration">Or remove each message after this many seconds</label>
+					<input id="messageDuration" type="number" min="1" step="1">
+				</div>
+				<div class="setting-row" id="maxMessagesRow" hidden>
+					<label for="maxMessages">Maximum messages kept on screen</label>
+					<input id="maxMessages" type="number" min="1" step="1">
+				</div>
 			</div>
 
 			<label for="sessionInput">Your SSN Session ID / Stream ID</label>
