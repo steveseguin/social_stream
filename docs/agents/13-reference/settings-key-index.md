@@ -456,6 +456,7 @@ Category key: `printer_control`. Settings: 21.
 | `postserverdiscord` | text | Discord webhook URL that receives donation events. |
 | `printerName` | text | Local printer name to use when printing chat from the dock. |
 | `printerPaperWidth` | number | Thermal printer paper width in millimetres. |
+| `printerLabelHeight` | number | Fixed thermal label length in millimetres; zero uses content-sized receipt paper. |
 | `printerMarginLeft` | number | Extra left safe margin for thermal printing in millimetres. |
 | `printerMarginRight` | number | Extra right safe margin for thermal printing in millimetres. |
 | `printerMarginTop` | number | Extra top safe margin for thermal printing in millimetres. |

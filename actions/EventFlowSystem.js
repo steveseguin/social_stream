@@ -13,6 +13,7 @@ class EventFlowSystem {
         this.sanitizeRelay = options.sanitizeRelay || window.sanitizeRelay || null;
 		this.checkExactDuplicateAlreadyRelayed = options.checkExactDuplicateAlreadyRelayed || window.checkExactDuplicateAlreadyRelayed || null;
 		this.sendTargetP2P = options.sendTargetP2P || window.sendTargetP2P || null;
+		this.printThermal = options.printThermal || window.printThermal || null;
 		// For sending messages to background.js (e.g., Spotify actions)
 		this.sendMessageToBackground = options.sendMessageToBackground || ((msg) => {
 			if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
@@ -2309,7 +2310,7 @@ class EventFlowSystem {
 
             case 'eventDonation': {
                 const event = (message.event || '').toLowerCase();
-                const eventMatch = event === 'superchat' || event === 'donation' || event === 'cheer' || event === 'supersticker' || event === 'jeweldonation';
+				const eventMatch = !!message.hasDonation || event === 'superchat' || event === 'donation' || event === 'cheer' || event === 'supersticker' || event === 'jeweldonation';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
 
                 // Check minimum amount if specified
@@ -3103,6 +3104,28 @@ class EventFlowSystem {
 		});
 	}
 
+	escapeThermalPrintText(value) {
+		return String(value ?? '')
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#39;');
+	}
+
+	resolveThermalPrinter() {
+		if (typeof this.printThermal === 'function') return this.printThermal;
+		try {
+			if (typeof window.printThermal === 'function') return window.printThermal;
+		} catch (e) {}
+		try {
+			if (window.ninjafy && typeof window.ninjafy.printThermal === 'function') {
+				return window.ninjafy.printThermal.bind(window.ninjafy);
+			}
+		} catch (e) {}
+		return null;
+	}
+
 	/**
 	 * Render Event Flow variables inside JSON string values for a webhook body.
 	 * Bodies without template variables are returned unchanged.
@@ -3818,6 +3841,46 @@ class EventFlowSystem {
                     console.error('Error in custom JS action:', e);
                 }
                 break;
+
+			case 'printThermal': {
+				const printer = this.resolveThermalPrinter();
+				let printResult;
+				if (!printer) {
+					printResult = {
+						success: false,
+						code: 'SSAPP_PRINT_UNAVAILABLE',
+						error: 'Thermal printing requires the Social Stream standalone app.'
+					};
+				} else {
+					const renderedText = this.replaceTemplateVars(config.text || '{username}', message || {});
+					const fontSize = Math.max(6, Math.min(96, Number(config.fontSize) || 18));
+					const lineHeight = Math.max(0.8, Math.min(3, Number(config.lineHeight) || 1.15));
+					const fontWeight = config.fontWeight === 'normal' ? 'normal' : 'bold';
+					const textAlign = ['left', 'center', 'right'].includes(config.textAlign) ? config.textAlign : 'center';
+					const fontFamily = String(config.fontFamily || 'monospace').replace(/[^\w\s,'"-]/g, '') || 'monospace';
+					const html = `<div style="white-space:pre-wrap;font-family:${fontFamily};font-size:${fontSize}pt;font-weight:${fontWeight};line-height:${lineHeight};text-align:${textAlign}">${this.escapeThermalPrintText(renderedText)}</div>`;
+					const printOptions = {
+						copies: Math.max(1, Math.min(99, Math.floor(Number(config.copies) || 1)))
+					};
+					if (String(config.printerName || '').trim()) printOptions.printerName = String(config.printerName).trim();
+					if (Number(config.labelHeight) > 0) printOptions.height = `${Math.max(20, Math.min(4000, Number(config.labelHeight)))}mm`;
+					try {
+						printResult = await printer(html, printOptions);
+					} catch (error) {
+						printResult = {
+							success: false,
+							code: error?.code || 'SSAPP_PRINT_FAILED',
+							error: error?.message || String(error)
+						};
+					}
+				}
+				result.message = {
+					...(message || {}),
+					thermalPrintResult: printResult
+				};
+				result.modified = true;
+				break;
+			}
 				
 			case 'playTenorGiphy':
 				if (config.mediaUrl || (config.sourceType === 'local' && config.localAssetId)) {

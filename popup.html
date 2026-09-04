@@ -7554,6 +7554,7 @@ input:checked + .slider:before {
 									<button type="button" id="refreshThermalPrinters">Find printers</button>
 									<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:end;">
 										<label>Paper width (mm)<br><input type="number" min="20" max="120" step="0.1" value="58" class="textInput" style="width:90px" data-numbersetting="printerPaperWidth"></label>
+										<label>Fixed label length<br><input type="number" min="0" max="4000" step="0.1" value="0" class="textInput" style="width:90px" data-numbersetting="printerLabelHeight"></label>
 										<label>Left safe margin<br><input type="number" min="0" max="25" step="0.1" value="2" class="textInput" style="width:90px" data-numbersetting="printerMarginLeft"></label>
 										<label>Right safe margin<br><input type="number" min="0" max="25" step="0.1" value="2" class="textInput" style="width:90px" data-numbersetting="printerMarginRight"></label>
 										<label>Top safe margin<br><input type="number" min="0" max="25" step="0.1" value="0" class="textInput" style="width:90px" data-numbersetting="printerMarginTop"></label>
@@ -7562,7 +7563,7 @@ input:checked + .slider:before {
 										<label>Driver margins<br><select class="textInput" data-optionsetting="printerMarginMode"><option value="printableArea" selected>Use printable area</option><option value="none">Use full paper</option></select></label>
 									</div>
 									<div style="margin-top:10px;"><button type="button" id="testThermalPrinter">Print alignment test</button> <span id="thermalPrinterStatus" role="status"></span></div>
-									<p>SSApp uses the printer driver's printable area, then applies these safe margins. If either edge of the alignment box is missing, increase that side's margin. Browser-extension printing still uses the system print dialog unless the browser is started with <i>--kiosk --kiosk-printing</i>.</p>
+									<p>SSApp uses the printer driver's printable area, then applies these safe margins. Fixed label length is in millimetres; leave it at 0 for content-sized receipt paper. If either edge of the alignment box is missing, increase that side's margin. <a href="./docs/thermal-printer-guide.html" target="_blank">Open the thermal printer guide</a>.</p>
 								</div>
                                 <div title="Some sites may wish to access your stream ID for custom third party integrations">
                                     <label class="switch">

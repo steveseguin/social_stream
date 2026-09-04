@@ -1404,6 +1404,8 @@ async function printThermal(htmlContent, options = {}) {
 		lineHeight: "1.2",
 		printerName: settings.printerName?.textsetting || null
 	};
+	const configuredLabelHeight = getNumberSetting("printerLabelHeight", 0, 0, 4000);
+	if (configuredLabelHeight > 0) defaultOptions.height = `${configuredLabelHeight}mm`;
 
 	const printOptions = { ...defaultOptions, ...options };
 	if (Object.prototype.hasOwnProperty.call(options, "margin")) {
@@ -1454,7 +1456,7 @@ async function printThermal(htmlContent, options = {}) {
 		frameDoc.open();
 		const printStyles = `
 			@page {
-				size: ${printOptions.width} auto;
+				size: ${printOptions.width} ${printOptions.height || 'auto'};
 				margin: 0;
 			}
 			body {
@@ -20344,6 +20346,7 @@ let tmp = new EventFlowSystem({
 	messageStore: messageStore || {}, // Share the message store for duplicate detection
 	handleMessageStore: handleMessageStore || null, // Share the message store handler
 	sendTargetP2P: window.sendTargetP2P || null, // Add sendTargetP2P for OBS and other actions
+	printThermal: printThermal,
 	// Handle Spotify actions locally since we're already in background.js
 	sendMessageToBackground: async msg => {
 		if (!msg || typeof msg !== "object") return;

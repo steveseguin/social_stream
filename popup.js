@@ -5180,6 +5180,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-setting="pumpTheNumbers"]',
 		'[data-textsetting="printerName"]',
 		'[data-numbersetting="printerPaperWidth"]',
+		'[data-numbersetting="printerLabelHeight"]',
 		'[data-numbersetting="printerMarginLeft"]',
 		'[data-numbersetting="printerMarginRight"]',
 		'[data-numbersetting="printerMarginTop"]',
@@ -5275,6 +5276,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 	"wrapper-global-connections-integrations-options": [
 		'[data-textsetting="printerName"]',
 		'[data-numbersetting="printerPaperWidth"]',
+		'[data-numbersetting="printerLabelHeight"]',
 		'[data-numbersetting="printerMarginLeft"]',
 		'[data-numbersetting="printerMarginRight"]',
 		'[data-numbersetting="printerMarginTop"]',
@@ -10908,7 +10910,8 @@ function getThermalPrinterOptionsFromPopup() {
 		const value = Number(document.querySelector(`[data-numbersetting="${setting}"]`)?.value);
 		return Number.isFinite(value) ? value : fallback;
 	};
-	return {
+	const labelHeight = getNumber('printerLabelHeight', 0);
+	const options = {
 		printerName: document.getElementById('printerName')?.value?.trim() || '',
 		width: `${getNumber('printerPaperWidth', 58)}mm`,
 		marginLeft: `${getNumber('printerMarginLeft', 2)}mm`,
@@ -10918,6 +10921,8 @@ function getThermalPrinterOptionsFromPopup() {
 		feed: `${getNumber('printerFeed', 1)}mm`,
 		marginType: document.querySelector('[data-optionsetting="printerMarginMode"]')?.value || 'printableArea'
 	};
+	if (labelHeight > 0) options.height = `${labelHeight}mm`;
+	return options;
 }
 
 function setThermalPrinterStatus(message, isError) {

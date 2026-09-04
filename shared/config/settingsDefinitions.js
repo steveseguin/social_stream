@@ -1324,6 +1324,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "printer_control",
     description: "Thermal printer paper width in millimetres."
   },
+  "printerLabelHeight": {
+    type: "number",
+    category: "printer_control",
+    description: "Fixed thermal label length in millimetres; zero uses content-sized receipt paper."
+  },
   "printerMarginLeft": {
     type: "number",
     category: "printer_control",

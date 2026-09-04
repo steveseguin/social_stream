@@ -249,7 +249,7 @@ class EventFlowEditor {
                     { id: 'eventNewSubscriber', name: '⭐ New Subscriber' },
                     { id: 'eventResub', name: '🔄 Resub/Renewal' },
                     { id: 'eventGiftSub', name: '🎁 Gift Sub' },
-                    { id: 'eventDonation', name: '💰 Specific Donation Event' },
+                    { id: 'eventDonation', name: '💰 Donation / Tip' },
                     { id: 'eventRaid', name: '🚀 Raid' },
                     { id: 'eventCheer', name: '💎 Cheer/Bits' },
                     { id: 'eventOther', name: '📋 Other Event...' },
@@ -374,6 +374,7 @@ class EventFlowEditor {
                 expanded: true,
                 actions: [
                     { id: 'customJs', name: 'Execute Custom Code' },
+					{ id: 'printThermal', name: '🖨️ Print Thermal Label' },
                     { id: 'webhook', name: '🌐 Call Webhook' },
                     { id: 'addPoints', name: '⬆️ Add Points' },
                     { id: 'spendPoints', name: '⬇️ Spend Points' }
@@ -2216,6 +2217,10 @@ class EventFlowEditor {
                 }
                 case 'sendMessage': return `Send to: ${node.config.destination || 'All'}`;
                 case 'relay': return `Relay to: ${node.config.destination || 'All'}`;
+				case 'printThermal': {
+					const text = node.config.text || '{username}';
+					return `Print ${node.config.fontSize || 18}pt: "${text.substring(0, 18)}${text.length > 18 ? '...' : ''}"`;
+				}
                 case 'reflectionFilter': {
                     const policyMap = { 'block-all': 'Block All', 'allow-first': 'Allow First', 'allow-all': 'Allow All' };
                     const srcMode = node.config.sourceMode || 'none';
@@ -3194,6 +3199,8 @@ class EventFlowEditor {
 					node.config = { destination: '', template: '[{source}] {username}: {message}', timeout: 0 }; break;
                 case 'webhook':
 					node.config = { url: 'https://example.com/hook', method: 'POST', body: '{}', includeMessage: true, syncMode: false, blockOnFailure: false }; break;
+				case 'printThermal':
+					node.config = { text: '{username}\n{donation}', fontSize: 18, fontFamily: 'monospace', fontWeight: 'bold', textAlign: 'center', lineHeight: 1.15, copies: 1, printerName: '', labelHeight: 0 }; break;
                 case 'addPoints':
 					node.config = { amount: 100 }; break;
                 case 'spendPoints':
@@ -3936,9 +3943,8 @@ class EventFlowEditor {
 						<div class="property-help">Set to 0 to trigger on any matched event amount</div>
 					</div>
 					<div class="property-group" style="background: #fff8e1; color: #333; padding: 10px; border-radius: 4px;">
-						<strong>💰 Specific Donation Event</strong><br>
-						Matches specific event names: <code>superchat</code>, legacy <code>donation</code>, <code>cheer</code>, <code>supersticker</code>, and <code>jeweldonation</code>.<br>
-						For normal value-only tips or donations with no event name, use <strong>Has Donation</strong> instead.<br><br>
+						<strong>💰 Donation / Tip</strong><br>
+						Matches any row with <code>hasDonation</code>, plus named <code>superchat</code>, legacy <code>donation</code>, <code>cheer</code>, <code>supersticker</code>, and <code>jeweldonation</code> events.<br><br>
 						<strong>⚡ Supported platforms:</strong><br>
 						• <strong>YouTube:</strong> Super Chat, Super Stickers, Jewels/Gifts<br>
 						• <strong>Twitch:</strong> Cheers/Bits (WebSocket mode)<br>
@@ -4987,6 +4993,37 @@ class EventFlowEditor {
                         </div>`;
                 }
                 break;
+			case 'printThermal':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Label text</label>
+						<textarea class="property-input" id="prop-text" rows="4" placeholder="{username}\n{donation}">${this.escapeHtml(node.config.text ?? '{username}\n{donation}')}</textarea>
+						<div class="property-help">Use placeholders such as {username}, {donation}, {donationAmount}, {message}, {source}, and values created by earlier nodes. New lines print as separate lines.</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Text appearance</label>
+						<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+							<label>Size (pt)<input type="number" class="property-input" id="prop-fontSize" value="${node.config.fontSize ?? 18}" min="6" max="96" step="1"></label>
+							<label>Line spacing<input type="number" class="property-input" id="prop-lineHeight" value="${node.config.lineHeight ?? 1.15}" min="0.8" max="3" step="0.05"></label>
+							<label>Font<input type="text" class="property-input" id="prop-fontFamily" value="${this.escapeHtml(node.config.fontFamily || 'monospace')}"></label>
+							<label>Weight<select class="property-input" id="prop-fontWeight"><option value="bold" ${node.config.fontWeight !== 'normal' ? 'selected' : ''}>Bold</option><option value="normal" ${node.config.fontWeight === 'normal' ? 'selected' : ''}>Normal</option></select></label>
+							<label>Alignment<select class="property-input" id="prop-textAlign"><option value="left" ${node.config.textAlign === 'left' ? 'selected' : ''}>Left</option><option value="center" ${node.config.textAlign !== 'left' && node.config.textAlign !== 'right' ? 'selected' : ''}>Center</option><option value="right" ${node.config.textAlign === 'right' ? 'selected' : ''}>Right</option></select></label>
+							<label>Copies<input type="number" class="property-input" id="prop-copies" value="${node.config.copies ?? 1}" min="1" max="99" step="1"></label>
+						</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Printer override (optional)</label>
+						<input type="text" class="property-input" id="prop-printerName" list="eventflow-thermal-printers" value="${this.escapeHtml(node.config.printerName || '')}" placeholder="Use Printer Control setting">
+						<datalist id="eventflow-thermal-printers"></datalist>
+						<div class="property-help">Leave blank to use Printer Control during live flows, or the Windows default while testing directly in the editor.</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Fixed label length override (mm)</label>
+						<input type="number" class="property-input" id="prop-labelHeight" value="${node.config.labelHeight ?? 0}" min="0" max="4000" step="0.1">
+						<div class="property-help">0 uses the global setting or content-sized receipt paper. For die-cut labels, enter their exact feed-direction length; fixed labels do not add extra feed.</div>
+					</div>
+					<div class="property-help">Connect a <strong>Donation / Tip</strong> trigger to print only donations. Its Minimum Amount field can restrict printing to donations at or above a chosen value. Use the editor's Test Flow panel to send a physical test label.</div>`;
+				break;
 			case 'webhook':
 				html += `<div class="property-group"><label class="property-label">URL</label><input type="url" class="property-input" id="prop-url" value="${node.config.url || ''}"></div>
 						 <div class="property-group"><label class="property-label">Method</label><select class="property-input" id="prop-method">${['POST', 'GET', 'PUT', 'DELETE', 'PATCH'].map(m => `<option value="${m}" ${node.config.method === m ? 'selected' : ''}>${m}</option>`).join('')}</select></div>
@@ -6281,6 +6318,18 @@ class EventFlowEditor {
 		}
 
 		propertiesContent.innerHTML = html;
+		if (node.type === 'action' && node.actionType === 'printThermal' && window.ninjafy?.listThermalPrinters) {
+			window.ninjafy.listThermalPrinters().then(printers => {
+				const datalist = document.getElementById('eventflow-thermal-printers');
+				if (!datalist || !Array.isArray(printers)) return;
+				datalist.replaceChildren(...printers.map(printer => {
+					const option = document.createElement('option');
+					option.value = printer.name;
+					option.label = `${printer.displayName || printer.name}${printer.isDefault ? ' (default)' : ''}`;
+					return option;
+				}));
+			}).catch(error => console.warn('[EventFlowEditor] Printer discovery failed:', error?.message || error));
+		}
 		if (this.isCustomCodeNode(node)) {
 			const codeInput = document.getElementById('prop-code');
 			if (codeInput) codeInput.value = this.getCustomCode(node);
