@@ -507,7 +507,7 @@
 	<div class="app">
 		<aside class="sidebar">
 			<div class="brand"><span class="dot"></span><span>StreamElements Widget Importer</span></div>
-			<div class="hint">Turn a StreamElements or Streamlabs chat overlay zip into one HTML file for OBS. No code copy/paste is needed.</div>
+			<div class="hint">Choose the widget, confirm your SSN session, then download one ready-to-use HTML file for OBS. No coding or URL editing is needed.</div>
 			<div class="compat-banner"><strong>Works with both SSN versions:</strong> use either the Windows desktop app or the Chrome extension to capture chat. The downloaded HTML file displays that chat in OBS.</div>
 
 			<details class="info-panel simple-steps" open>
@@ -515,10 +515,10 @@
 				<ol>
 					<li>Open SSN and confirm a real chat message appears in its dock.</li>
 					<li>Choose the widget <strong>zip</strong>, folder, or files below.</li>
-					<li>Check the <strong>SSN Session ID / Stream ID</strong> below. It is filled automatically when you open this importer from SSN.</li>
+					<li>Check the <strong>SSN Session ID / Stream ID</strong> below. It is filled automatically when you open this importer from SSN and saved inside the downloaded file.</li>
 					<li>Use <strong>Demo Preview</strong> to check the design, then <strong>Live Preview</strong> to check real chat.</li>
 					<li>Click <strong>Download OBS HTML</strong>.</li>
-					<li>In OBS, add a <strong>Browser Source</strong>, enable <strong>Local file</strong>, and select the downloaded HTML file.</li>
+					<li>In OBS, add a <strong>Browser Source</strong>, enable <strong>Local file</strong>, and select the downloaded HTML file. <strong>Do not add the session ID in OBS.</strong></li>
 				</ol>
 				<div style="margin-top: 8px;">Keep the SSN app or extension running while streaming. You may close this importer and StreamElements after downloading.</div>
 				<div style="margin-top: 8px;"><a class="guide-link" href="./docs/templates.html#streamelements-importer-guide" target="_blank" rel="noopener">Open the full illustrated checklist</a></div>
@@ -538,6 +538,7 @@
 
 			<label for="sessionInput">Your SSN Session ID / Stream ID</label>
 			<input id="sessionInput" placeholder="Example: DMFJUmUXEv">
+			<div class="hint"><strong>Enter it once here.</strong> It is saved inside the downloaded file, so there is nothing to paste into OBS.</div>
 			<div class="session-warning" id="sessionWarning">No session ID detected. Open this importer from the SSN popup to fill it automatically, or paste the ID from Session Options.</div>
 			<details class="session-help">
 				<summary>Where do I find this?</summary>
@@ -664,7 +665,7 @@ Test viewer, VIP/mod/subscriber, donation, badge, media, delete, clear, empty-me
 	<div class="modal-backdrop" id="exportModal" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
 		<div class="export-modal">
 			<h2 id="exportModalTitle">Exported HTML is ready</h2>
-			<p class="plain-note">Use the downloaded HTML file in OBS. This works whether chat comes from the SSN Windows app or Chrome extension.</p>
+			<p class="plain-note"><strong>Your SSN session is already saved inside the downloaded file.</strong> You do not need to paste a session ID or edit a URL in OBS.</p>
 			<ol>
 				<li>Keep Social Stream Ninja running and confirm chat appears in its dock.</li>
 				<li>In OBS, add a new <strong>Browser Source</strong>.</li>
@@ -672,15 +673,9 @@ Test viewer, VIP/mod/subscriber, donation, badge, media, delete, clear, empty-me
 				<li>Set the source size for your layout, then click OK.</li>
 			</ol>
 			<p id="exportSessionMessage"></p>
-			<p>If live chat does not appear, add this to the end of the file URL:</p>
-			<div class="url-box" id="exportSessionHint">?session=YOUR_SESSION_ID</div>
-			<p>Example URL:</p>
-			<div class="url-box" id="exportObsUrlHint">ssn-imported-overlay.html?session=YOUR_SESSION_ID</div>
 			<p>For a quick visual test without live chat, open the file with <code>?demo</code>.</p>
 			<div class="export-summary" id="exportSummary"></div>
 			<div class="modal-actions">
-				<button id="copySessionHintBtn" type="button">Copy URL Ending</button>
-				<button id="copyObsUrlBtn" type="button">Copy Example URL</button>
 				<button id="downloadReadmeBtn" type="button">Download README</button>
 				<button id="closeExportModalBtn" type="button">Close</button>
 			</div>

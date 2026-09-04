@@ -16,6 +16,7 @@ async function run() {
 		assert.ok(setupText.includes("Windows desktop app"), "importer should name desktop-app support");
 		assert.ok(setupText.includes("Chrome extension"), "importer should name extension support");
 		assert.ok(setupText.includes("enable Local file"), "importer should explain the OBS local-file step");
+		assert.ok(setupText.includes("Do not add the session ID in OBS"), "importer should say the session is not added in OBS");
 		assert.strictEqual(await page.locator("#previewBtn").innerText(), "Demo Preview");
 		assert.strictEqual(await page.locator("#livePreviewBtn").innerText(), "Live Preview");
 		assert.strictEqual(await page.locator("#sessionInput").getAttribute("value"), null);
@@ -120,6 +121,8 @@ async function run() {
 		assert.ok(exportedHTML.includes("window.SSNSECompat.start()"), "export should include and start the compatibility runtime");
 		assert.ok(await page.locator("#exportModal").evaluate(element => element.classList.contains("open")), "export should show the OBS handoff steps");
 		assert.ok((await page.locator("#exportModal").innerText()).includes("Enable Local file"));
+		assert.ok((await page.locator("#exportModal").innerText()).includes("do not need to paste a session ID or edit a URL in OBS"));
+		assert.strictEqual(await page.locator("#exportSessionHint").count(), 0, "simple OBS handoff should not show a URL override");
 
 		console.log("StreamElements importer shim regression tests passed");
 	} finally {

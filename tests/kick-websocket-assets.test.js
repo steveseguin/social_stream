@@ -7,12 +7,26 @@ const source = fs.readFileSync(
 	path.resolve(__dirname, "..", "sources", "websocket", "kick.js"),
 	"utf8"
 );
+const coreSource = fs.readFileSync(
+	path.resolve(__dirname, "..", "providers", "kick", "core.js"),
+	"utf8"
+);
 
 function findImage(result, className) {
 	return result.images.find((image) => image.classes.includes(className));
 }
 
 (async () => {
+	const kickCore = await import(`data:text/javascript;base64,${Buffer.from(coreSource).toString("base64")}`);
+	assert.deepStrictEqual(kickCore.mapBadges([
+		{ type: "moderator", text: "Moderator" },
+		{ name: "level", image_url: "https://ext.cdn.kick.com/chat/badges/16.png", selected: true },
+		{ name: "level", image_url: "https://ext.cdn.kick.com/chat/badges/22.png", selected: false }
+	]), [
+		{ type: "text", text: "Moderator" },
+		"https://ext.cdn.kick.com/chat/badges/16.png"
+	]);
+
 	const browser = await chromium.launch({ headless: true });
 	try {
 		const page = await browser.newPage();

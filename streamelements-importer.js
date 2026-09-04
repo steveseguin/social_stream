@@ -37,12 +37,8 @@
 			var copyPromptBtn = document.getElementById("copyPromptBtn");
 			var promptCopyStatus = document.getElementById("promptCopyStatus");
 			var exportModal = document.getElementById("exportModal");
-			var exportSessionHint = document.getElementById("exportSessionHint");
-			var exportObsUrlHint = document.getElementById("exportObsUrlHint");
 			var exportSessionMessage = document.getElementById("exportSessionMessage");
 			var exportSummary = document.getElementById("exportSummary");
-			var copySessionHintBtn = document.getElementById("copySessionHintBtn");
-			var copyObsUrlBtn = document.getElementById("copyObsUrlBtn");
 			var downloadReadmeBtn = document.getElementById("downloadReadmeBtn");
 			var closeExportModalBtn = document.getElementById("closeExportModalBtn");
 			var htmlPartSelect = document.getElementById("htmlPartSelect");
@@ -112,14 +108,6 @@
 				copyPromptBtn.addEventListener("click", copyFallbackPrompt);
 			}
 
-			if (copySessionHintBtn) {
-				copySessionHintBtn.addEventListener("click", copySessionHint);
-			}
-
-			if (copyObsUrlBtn) {
-				copyObsUrlBtn.addEventListener("click", copyObsUrl);
-			}
-
 			if (downloadReadmeBtn) {
 				downloadReadmeBtn.addEventListener("click", downloadReadme);
 			}
@@ -181,7 +169,7 @@
 				var hasBuild = !!(state.html || state.css || state.js);
 				previewBtn.disabled = !hasBuild || state.processing;
 				if (livePreviewBtn) livePreviewBtn.disabled = !hasBuild || state.processing || !(sessionInput.value || "").trim();
-				exportBtn.disabled = !hasBuild || state.processing;
+				exportBtn.disabled = !hasBuild || state.processing || !(sessionInput.value || "").trim();
 			}
 
 			function getPageParam(names) {
@@ -288,20 +276,10 @@
 			}
 
 			function showExportModal(fileName) {
-				if (!exportModal || !exportSessionHint || !exportSessionMessage) return;
+				if (!exportModal || !exportSessionMessage) return;
 				var session = (sessionInput.value || "").trim();
-				var password = (passwordInput.value || "").trim();
-				var suffix = session ? "?session=" + encodeURIComponent(session) : "?session=YOUR_SESSION_ID";
-				if (password) suffix += "&password=" + encodeURIComponent(password);
-				var exampleUrl = fileName + suffix;
 				state.lastExportFileName = fileName;
-				exportSessionHint.textContent = suffix;
-				if (exportObsUrlHint) exportObsUrlHint.textContent = exampleUrl;
-				if (session) {
-					exportSessionMessage.textContent = "Your session ID was saved inside " + fileName + ". Select that file in OBS and keep the SSN app or extension running. No URL editing is required.";
-				} else {
-					exportSessionMessage.textContent = "No session ID was saved. For the easiest setup, close this message, paste your SSN session ID, and download the HTML again.";
-				}
+				exportSessionMessage.textContent = "Select " + fileName + " as the Local file in OBS and keep the SSN app or extension running.";
 				if (exportSummary) exportSummary.textContent = buildExportSummary(fileName);
 				exportModal.classList.add("open");
 				if (closeExportModalBtn) closeExportModalBtn.focus();
@@ -309,32 +287,6 @@
 
 			function hideExportModal() {
 				if (exportModal) exportModal.classList.remove("open");
-			}
-
-			function copySessionHint() {
-				if (!exportSessionHint) return;
-				copyText(exportSessionHint.textContent || "?session=YOUR_SESSION_ID", function () {
-					if (copySessionHintBtn) {
-						var oldText = copySessionHintBtn.textContent;
-						copySessionHintBtn.textContent = "Copied";
-						setTimeout(function () {
-							copySessionHintBtn.textContent = oldText;
-						}, 1600);
-					}
-				});
-			}
-
-			function copyObsUrl() {
-				if (!exportObsUrlHint) return;
-				copyText(exportObsUrlHint.textContent || "", function () {
-					if (copyObsUrlBtn) {
-						var oldText = copyObsUrlBtn.textContent;
-						copyObsUrlBtn.textContent = "Copied";
-						setTimeout(function () {
-							copyObsUrlBtn.textContent = oldText;
-						}, 1600);
-					}
-				});
 			}
 
 			function downloadReadme() {
@@ -379,8 +331,6 @@
 			}
 
 			function buildReadmeText(fileName) {
-				var suffix = exportSessionHint ? exportSessionHint.textContent : "?session=YOUR_SESSION_ID";
-				var hasSession = suffix.indexOf("YOUR_SESSION_ID") === -1;
 				var lines = [
 					"Social Stream Ninja Imported Overlay",
 					"",
@@ -395,13 +345,7 @@
 					"1. Confirm a real chat message appears in the SSN dock.",
 					"2. Add a Browser Source in OBS.",
 					"3. Enable Local file and browse to the exported HTML file.",
-					hasSession
-						? "4. Your SSN session ID is already saved inside the file; no URL edit is needed."
-						: "4. No session was saved. Return to the importer, paste it, and export again. Advanced URL override:",
-					hasSession ? "" : suffix,
-					"",
-					hasSession ? "Backup URL override:" : "Example URL:",
-					fileName + suffix,
+					"4. Your SSN session ID is already saved inside the file; do not add it in OBS.",
 					"",
 					"Optional URL overrides:",
 					"- Add &limit=30 to cap chat rows.",
@@ -1062,6 +1006,11 @@
 			}
 
 			function exportOverlay() {
+				if (!(sessionInput.value || "").trim()) {
+					updateSessionWarning();
+					sessionInput.focus();
+					return;
+				}
 				var html = buildExportHTML({ preview: false });
 				var fileName = (outputName.value || "ssn-imported-overlay.html").trim();
 				if (!/\.html?$/i.test(fileName)) {
@@ -1131,7 +1080,7 @@
 				return [
 					"<!--",
 					"Social Stream Ninja imported overlay",
-					"Live use: add this file as an OBS Browser Source and append " + suffix + " to the file URL if a session was not embedded.",
+					"Live use: add this file as an OBS Browser Source with Local file enabled. The session is embedded; no URL editing is needed.",
 					"Optional overrides: &limit=30, &direction=top, &direction=bottom, &hideAfter=20.",
 					"Demo use: open this file with ?demo to show sample messages without SSN traffic.",
 					"Generated by streamelements-importer.html",
