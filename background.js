@@ -10940,6 +10940,27 @@ async function handleStreamDeckBackgroundRequest(request) {
 			"accepted"
 		);
 	}
+	if (action === "clearHistory") {
+		const clearHistoryResult = await clearSavedMessageHistory(request.value);
+		if (!clearHistoryResult.ok) {
+			const errorCode = isClearHistoryConfirmed(request.value) ? "TARGET_UNAVAILABLE" : "CONFIRMATION_REQUIRED";
+			return router.makeError(request, errorCode, clearHistoryResult.error || "Failed to clear saved message history.");
+		}
+		const historyClearedPayload = {
+			action: "historyCleared",
+			ok: true,
+			deleted: clearHistoryResult.deleted || 0
+		};
+		if (request.target) {
+			historyClearedPayload.target = request.target;
+		}
+		sendDataP2P(historyClearedPayload);
+		return router.makeResponse(request, clearHistoryResult);
+	}
+	if (action === "getpollpresets") {
+		const presets = await new Promise(resolve => getPollPresets(resolve));
+		return router.makeResponse(request, presets);
+	}
 
 	if (isStreamDeckTimerAction(action)) {
 		if (action === "resettimer" && !isStreamDeckResetConfirmed(request.value)) {
