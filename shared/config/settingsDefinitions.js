@@ -1299,6 +1299,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "printer_control",
     description: "Discord webhook URL that receives every captured message."
   },
+  "postallserverdiscordsimple": {
+    type: "boolean",
+    category: "printer_control",
+    description: "Post all-message Discord webhooks without embeds, timestamps, or platform thumbnails."
+  },
   "postdiscord": {
     type: "boolean",
     category: "printer_control",

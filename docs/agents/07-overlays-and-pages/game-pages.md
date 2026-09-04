@@ -116,6 +116,7 @@ Chicken Royale is the largest game page in this group.
 - `jointime` is clamped from 10 to 600 seconds; default is 45 seconds.
 - `maxplayers` is clamped from 2 to 200; default is 100.
 - `autojoin` lets any chatter enter during lobby.
+- The HUD keeps join instructions hidden until a chat transport is connected, shows when auto-join is active, and warns while reconnecting.
 - `!start` shortens the lobby when there are at least 2 players. Non-mod users must already be in the lobby.
 - During battle, ordinary chat from a living player boosts that player's chicken. Donation payloads with `hasDonation` grant a larger boost.
 - Career wins are stored in localStorage as `chickenRoyaleDinners`.

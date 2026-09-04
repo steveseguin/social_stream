@@ -9846,6 +9846,36 @@ function handleStreamerBotSettingsChange() {
 	}
 }
 
+function buildAllMessagesDiscordPayload(data, simpleFormat = false) {
+	const avatarUrl = validateImageUrl(data.chatimg);
+	const username = (data.chatname || "Unknown") + " @ " + capitalizeFirstLetter(data.type);
+	const description = decodeAndCleanHtml(data.chatmessage || "");
+
+	if (simpleFormat) {
+		return {
+			content: description.slice(0, 2000),
+			username: username,
+			avatar_url: avatarUrl || "https://socialstream.ninja/sources/images/unknown.png"
+		};
+	}
+
+	return {
+		username: username,
+		avatar_url: avatarUrl || "https://socialstream.ninja/sources/images/unknown.png",
+		embeds: [
+			{
+				description: description,
+				color: 0xffffff,
+				timestamp: new Date().toISOString(),
+				thumbnail: {
+					url: data.type ? `https://socialstream.ninja/sources/images/${data.type}.png` : null
+				},
+				fields: []
+			}
+		]
+	};
+}
+
 function sendAllToDiscord(data) {
 	if (!settings.postalldiscord || !settings.postallserverdiscord) {
 		return;
@@ -9856,24 +9886,7 @@ function sendAllToDiscord(data) {
 
 	try {
 		let postServerDiscord = normalizeWebhookUrl(settings.postallserverdiscord.textsetting);
-
-		const avatarUrl = validateImageUrl(data.chatimg);
-
-		const payload = {
-			username: (data.chatname || "Unknown") + " @ " + capitalizeFirstLetter(data.type), // Custom webhook name
-			avatar_url: avatarUrl || "https://socialstream.ninja/sources/images/unknown.png",
-			embeds: [
-				{
-					description: decodeAndCleanHtml(data.chatmessage || ""),
-					color: 0xffffff, // Green color for donations
-					timestamp: new Date().toISOString(),
-					thumbnail: {
-						url: data.type ? `https://socialstream.ninja/sources/images/${data.type}.png` : null
-					},
-					fields: []
-				}
-			]
-		};
+		const payload = buildAllMessagesDiscordPayload(data, getSettingFlag("postallserverdiscordsimple"));
 		fetch(postServerDiscord, {
 			method: "POST",
 			headers: {

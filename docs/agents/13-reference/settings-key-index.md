@@ -440,7 +440,7 @@ Category key: `custom_injection`. Settings: 26.
 
 ## Printer Control
 
-Category key: `printer_control`. Settings: 22.
+Category key: `printer_control`. Settings: 23.
 
 | Key | Type | Short Description |
 | --- | --- | --- |
@@ -451,6 +451,7 @@ Category key: `printer_control`. Settings: 22.
 | `post` | boolean | Forward all captured events to the custom POST endpoint below. |
 | `postalldiscord` | boolean | Forward all captured messages to the Discord webhook URL. |
 | `postallserverdiscord` | text | Discord webhook URL that receives every captured message. |
+| `postallserverdiscordsimple` | boolean | Post all-message Discord webhooks without embeds, timestamps, or platform thumbnails. |
 | `postdiscord` | boolean | Forward only donation events to the Discord webhook URL. |
 | `postserver` | text | Custom HTTP endpoint or identifier to receive forwarded events. |
 | `postserverdiscord` | text | Discord webhook URL that receives donation events. |

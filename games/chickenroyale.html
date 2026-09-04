@@ -33,6 +33,9 @@
         #status-panel { top: 20px; left: 20px; min-width: 230px; }
         #status-line { font-size: 26px; font-weight: bold; color: #FFD700; }
         #status-sub { font-size: 16px; margin-top: 4px; opacity: 0.9; }
+        #connection-line { font-size: 13px; margin-top: 7px; color: #ffd966; }
+        #connection-line.connected { color: #7CFC00; }
+        #connection-line.disconnected { color: #ff8a8a; }
         #alive-line { font-size: 16px; margin-top: 6px; }
         #alive-line b { color: #7CFC00; }
 
@@ -146,7 +149,8 @@
 
     <div id="status-panel" class="hud-panel">
         <div id="status-line">🐔 CHICKEN ROYALE</div>
-        <div id="status-sub">Waiting for chickens...</div>
+        <div id="status-sub">Connecting to chat...</div>
+        <div id="connection-line">● Connecting to chat...</div>
         <div id="alive-line"></div>
     </div>
 
@@ -154,7 +158,7 @@
 
     <div id="roster" class="hud-panel">
         <h4>🐔 Lobby <span id="roster-count">(0)</span></h4>
-        <div id="roster-list">Type <b style="color:#7CFC00">!join</b> in chat</div>
+        <div id="roster-list">Connecting to chat...</div>
     </div>
 
     <div id="event-banner"></div>
@@ -167,7 +171,7 @@
         <div id="winner-podium"></div>
     </div>
 
-    <div id="instructions">
+    <div id="instructions" style="display:none;">
         <div><strong>🍗 Chicken Royale - How to Play:</strong></div>
         <div>Type <b>!join</b> to enter as a chicken. Last bird standing wins the CHICKEN DINNER!</div>
         <div style="margin-top: 4px; font-size: 13px; opacity: 0.8;">Chat while alive to boost your chicken • Stay inside the storm circle • <b>!start</b> to begin early</div>
@@ -1101,6 +1105,7 @@
     const el = {
         statusLine: document.getElementById('status-line'),
         statusSub: document.getElementById('status-sub'),
+        connectionLine: document.getElementById('connection-line'),
         aliveLine: document.getElementById('alive-line'),
         killfeed: document.getElementById('killfeed'),
         roster: document.getElementById('roster'),
@@ -1115,6 +1120,47 @@
         instructions: document.getElementById('instructions')
     };
 
+    const configuredTransports = {
+        p2p: !useServerOnlyTransport(),
+        server: urlParams.has('server'),
+        extension: urlParams.has('server2'),
+        demo: urlParams.has('demo')
+    };
+    const connectedTransports = { p2p: false, server: false, extension: false, demo: false };
+    let chatTransportWasReady = false;
+
+    function isChatTransportReady() {
+        return Object.keys(configuredTransports).some(name => configuredTransports[name] && connectedTransports[name]);
+    }
+
+    function updateConnectionHUD() {
+        const ready = isChatTransportReady();
+        if (ready) chatTransportWasReady = true;
+
+        el.connectionLine.className = ready ? 'connected' : (chatTransportWasReady ? 'disconnected' : 'connecting');
+        el.connectionLine.textContent = ready
+            ? '● Chat connected' + (AUTO_JOIN ? ' • Auto-join ON' : '')
+            : (chatTransportWasReady ? '● Chat disconnected • Reconnecting...' : '● Connecting to chat...');
+        el.instructions.style.display = ready ? '' : 'none';
+    }
+
+    function setTransportConnected(name, connected) {
+        if (!configuredTransports[name] || connectedTransports[name] === connected) return;
+        connectedTransports[name] = connected;
+        updateConnectionHUD();
+        updateHUD();
+        updateRoster();
+    }
+
+    window.getChickenRoyaleTransportState = function () {
+        return {
+            ready: isChatTransportReady(),
+            wasReady: chatTransportWasReady,
+            configured: Object.assign({}, configuredTransports),
+            connected: Object.assign({}, connectedTransports)
+        };
+    };
+
     function aliveChickens() {
         const arr = [];
         G.players.forEach(p => { if (p.alive) arr.push(p); });
@@ -1124,7 +1170,9 @@
     function updateHUD() {
         if (G.mode === 'lobby') {
             el.statusLine.textContent = '🐔 CHICKEN ROYALE';
-            if (G.players.size === 0) {
+            if (!isChatTransportReady()) {
+                el.statusSub.textContent = chatTransportWasReady ? 'Reconnecting to chat...' : 'Connecting to chat...';
+            } else if (G.players.size === 0) {
                 el.statusSub.textContent = 'Waiting for chickens... type !join';
             } else if (G.countdownEnd > 0) {
                 const left = Math.max(0, Math.ceil((G.countdownEnd - performance.now()) / 1000));
@@ -1156,7 +1204,9 @@
     function updateRoster() {
         el.rosterCount.textContent = '(' + G.players.size + ')';
         if (G.players.size === 0) {
-            el.rosterList.innerHTML = 'Type <b style="color:#7CFC00">!join</b> in chat';
+            el.rosterList.innerHTML = isChatTransportReady()
+                ? 'Type <b style="color:#7CFC00">!join</b> in chat'
+                : (chatTransportWasReady ? 'Reconnecting to chat...' : 'Connecting to chat...');
             return;
         }
         el.rosterList.textContent = '';
@@ -1176,6 +1226,9 @@
             el.rosterList.appendChild(more);
         }
     }
+
+    updateConnectionHUD();
+    if (configuredTransports.demo) setTransportConnected('demo', true);
 
     const feedEntries = [];
     function addFeedLine(htmlBuilder) {
@@ -2019,6 +2072,21 @@
     window.processData = processData; // exposed for integrations & testing
 
     // Setup iframe communication (same as petrace.html / games.html)
+    const p2pConnectedPeers = {};
+    function updateP2PConnectionState(data) {
+        if (!data || typeof data !== 'object' || !data.UUID || !data.action) return;
+        const isConnectionAction = data.action === 'push-connection' || data.action === 'view-connection';
+        const isConnectionInfo = data.action === 'push-connection-info' || data.action === 'view-connection-info';
+        if (isConnectionInfo || (isConnectionAction && data.value)) {
+            p2pConnectedPeers[data.UUID] = true;
+        } else if (isConnectionAction && 'value' in data && !data.value) {
+            delete p2pConnectedPeers[data.UUID];
+        } else {
+            return;
+        }
+        setTransportConnected('p2p', Object.keys(p2pConnectedPeers).length > 0);
+    }
+
     if (!useServerOnlyTransport()) {
         const iframe = document.createElement("iframe");
         iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}${lanonly}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
@@ -2032,8 +2100,10 @@
 
         window.addEventListener("message", function (e) {
             if (e.source !== iframe.contentWindow) return;
+            updateP2PConnectionState(e.data);
             if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
                 if ("overlayNinja" in e.data.dataReceived) {
+                    setTransportConnected('p2p', true);
                     processData(e.data.dataReceived.overlayNinja);
                 }
             }
@@ -2046,9 +2116,17 @@
         let socket = null; let attempts = 1;
         function connect() {
             if (socket) { socket.onclose = null; try { socket.close(); } catch (e) {} }
+            setTransportConnected('server', false);
             socket = new WebSocket(serverURL);
-            socket.onopen = function () { attempts = 1; socket.send(JSON.stringify({ join: sessionId.split(",")[0], out: 2, in: 1 })); };
-            socket.onclose = function () { setTimeout(connect, 100 * attempts++); };
+            socket.onopen = function () {
+                attempts = 1;
+                socket.send(JSON.stringify({ join: sessionId.split(",")[0], out: 2, in: 1 }));
+                setTransportConnected('server', true);
+            };
+            socket.onclose = function () {
+                setTransportConnected('server', false);
+                setTimeout(connect, 100 * attempts++);
+            };
             socket.onerror = function () { try { socket.close(); } catch (e) {} };
             socket.onmessage = function (event) {
                 if (!event.data) return;
@@ -2065,9 +2143,17 @@
         let socket = null; let attempts = 1;
         function connect() {
             if (socket) { socket.onclose = null; try { socket.close(); } catch (e) {} }
+            setTransportConnected('extension', false);
             socket = new WebSocket(serverURL);
-            socket.onopen = function () { attempts = 1; socket.send(JSON.stringify({ join: sessionId.split(',')[0], out: 3, in: 4 })); };
-            socket.onclose = function () { setTimeout(connect, 100 * attempts++); };
+            socket.onopen = function () {
+                attempts = 1;
+                socket.send(JSON.stringify({ join: sessionId.split(',')[0], out: 3, in: 4 }));
+                setTransportConnected('extension', true);
+            };
+            socket.onclose = function () {
+                setTransportConnected('extension', false);
+                setTimeout(connect, 100 * attempts++);
+            };
             socket.onerror = function () { try { socket.close(); } catch (e) {} };
             socket.addEventListener('message', function (event) {
                 if (!event.data) return;
