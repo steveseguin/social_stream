@@ -10889,10 +10889,87 @@ function reorderGlobalSettingsSections() {
     }
 }
 
+function getThermalPrinterOptionsFromPopup() {
+	const getNumber = function (setting, fallback) {
+		const value = Number(document.querySelector(`[data-numbersetting="${setting}"]`)?.value);
+		return Number.isFinite(value) ? value : fallback;
+	};
+	return {
+		printerName: document.getElementById('printerName')?.value?.trim() || '',
+		width: `${getNumber('printerPaperWidth', 58)}mm`,
+		marginLeft: `${getNumber('printerMarginLeft', 2)}mm`,
+		marginRight: `${getNumber('printerMarginRight', 2)}mm`,
+		marginTop: `${getNumber('printerMarginTop', 2)}mm`,
+		marginBottom: `${getNumber('printerMarginBottom', 2)}mm`,
+		feed: `${getNumber('printerFeed', 3)}mm`,
+		marginType: document.querySelector('[data-optionsetting="printerMarginMode"]')?.value || 'printableArea'
+	};
+}
+
+function setThermalPrinterStatus(message, isError) {
+	const status = document.getElementById('thermalPrinterStatus');
+	if (!status) return;
+	status.textContent = message;
+	status.style.color = isError ? '#c62828' : '';
+}
+
+async function refreshThermalPrinterList() {
+	if (!window.ninjafy || typeof window.ninjafy.listThermalPrinters !== 'function') {
+		setThermalPrinterStatus('Printer discovery is available in SSApp.', true);
+		return [];
+	}
+	setThermalPrinterStatus('Finding printers...', false);
+	try {
+		const response = await window.ninjafy.listThermalPrinters();
+		const printers = Array.isArray(response) ? response : [];
+		const datalist = document.getElementById('thermalPrinterNames');
+		if (datalist) {
+			datalist.replaceChildren(...printers.map(function (printer) {
+				const option = document.createElement('option');
+				option.value = printer.name;
+				option.label = `${printer.displayName || printer.name}${printer.isDefault ? ' (default)' : ''}`;
+				return option;
+			}));
+		}
+		setThermalPrinterStatus(printers.length ? `${printers.length} printer${printers.length === 1 ? '' : 's'} found.` : 'No printers found.', !printers.length);
+		return printers;
+	} catch (error) {
+		setThermalPrinterStatus(error?.message || 'Could not list printers.', true);
+		return [];
+	}
+}
+
+async function testThermalPrinterAlignment() {
+	if (!window.ninjafy || typeof window.ninjafy.printThermal !== 'function') {
+		setThermalPrinterStatus('Silent test printing is available in SSApp.', true);
+		return;
+	}
+	const button = document.getElementById('testThermalPrinter');
+	if (button) button.disabled = true;
+	setThermalPrinterStatus('Sending alignment test...', false);
+	try {
+		const html = '<div style="border:1px solid #000;padding:2mm">' +
+			'<div style="display:flex;justify-content:space-between;font-size:8pt"><b>| LEFT</b><b>RIGHT |</b></div>' +
+			'<div style="font-size:16pt;font-weight:bold;text-align:center;margin:2mm 0">PRINT ALIGNMENT</div>' +
+			'<div style="text-align:center">Both vertical edges and all text should be visible.</div></div>';
+		const result = await window.ninjafy.printThermal(html, getThermalPrinterOptionsFromPopup());
+		setThermalPrinterStatus(result?.success ? 'Alignment test sent.' : (result?.error || 'Print failed.'), !result?.success);
+	} catch (error) {
+		setThermalPrinterStatus(error?.message || 'Print failed.', true);
+	} finally {
+		if (button) button.disabled = false;
+	}
+}
+
 document.addEventListener("DOMContentLoaded", async function(event) {
     reorderGlobalSettingsSections();
     loadSourcesListFromRuntimeManifest();
-    setupDynamicCustomUrlControls();
+	setupDynamicCustomUrlControls();
+	document.getElementById('refreshThermalPrinters')?.addEventListener('click', refreshThermalPrinterList);
+	document.getElementById('testThermalPrinter')?.addEventListener('click', testThermalPrinterAlignment);
+	if (window.ninjafy && typeof window.ninjafy.listThermalPrinters === 'function') {
+		refreshThermalPrinterList();
+	}
 
     // Initialize hotkey system
     initHotkeys();

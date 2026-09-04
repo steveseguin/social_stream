@@ -7548,10 +7548,21 @@ input:checked + .slider:before {
 								<div>
 									<h3>Printer Control</h3>
 									<div class="textInputContainer" style="display: inline-block; width: 250px;">
-										<input type="text" id="printerName" class="textInput" autocomplete="off" data-textsetting="printerName" placeholder="Enter printer name (e.g., 'POS-58')" />
-
+										<input type="text" id="printerName" class="textInput" autocomplete="off" data-textsetting="printerName" list="thermalPrinterNames" placeholder="Enter printer name (e.g., 'POS-58')" />
+										<datalist id="thermalPrinterNames"></datalist>
 									</div>
-									<p>SSApp can print silently to the exact Windows printer name. Browser-extension printing still uses the system print dialog unless the browser is started with <i>--kiosk --kiosk-printing</i>.</p>
+									<button type="button" id="refreshThermalPrinters">Find printers</button>
+									<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:end;">
+										<label>Paper width (mm)<br><input type="number" min="20" max="120" step="0.1" value="58" class="textInput" style="width:90px" data-numbersetting="printerPaperWidth"></label>
+										<label>Left safe margin<br><input type="number" min="0" max="25" step="0.1" value="2" class="textInput" style="width:90px" data-numbersetting="printerMarginLeft"></label>
+										<label>Right safe margin<br><input type="number" min="0" max="25" step="0.1" value="2" class="textInput" style="width:90px" data-numbersetting="printerMarginRight"></label>
+										<label>Top safe margin<br><input type="number" min="0" max="25" step="0.1" value="2" class="textInput" style="width:90px" data-numbersetting="printerMarginTop"></label>
+										<label>Bottom safe margin<br><input type="number" min="0" max="25" step="0.1" value="2" class="textInput" style="width:90px" data-numbersetting="printerMarginBottom"></label>
+										<label>Extra feed (mm)<br><input type="number" min="0" max="25" step="0.1" value="3" class="textInput" style="width:90px" data-numbersetting="printerFeed"></label>
+										<label>Driver margins<br><select class="textInput" data-optionsetting="printerMarginMode"><option value="printableArea" selected>Use printable area</option><option value="none">Use full paper</option></select></label>
+									</div>
+									<div style="margin-top:10px;"><button type="button" id="testThermalPrinter">Print alignment test</button> <span id="thermalPrinterStatus" role="status"></span></div>
+									<p>SSApp uses the printer driver's printable area, then applies these safe margins. If either edge of the alignment box is missing, increase that side's margin. Browser-extension printing still uses the system print dialog unless the browser is started with <i>--kiosk --kiosk-printing</i>.</p>
 								</div>
                                 <div title="Some sites may wish to access your stream ID for custom third party integrations">
                                     <label class="switch">

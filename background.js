@@ -1386,9 +1386,19 @@ function resetCustomJs() {
 }
 //////////////
 async function printThermal(htmlContent, options = {}) {
+	const getNumberSetting = function (key, fallback, minimum, maximum) {
+		const value = Number(settings[key]?.numbersetting);
+		if (!Number.isFinite(value)) return fallback;
+		return Math.max(minimum, Math.min(maximum, value));
+	};
 	const defaultOptions = {
-		width: "58mm",
-		margin: "0mm",
+		width: `${getNumberSetting("printerPaperWidth", 58, 20, 120)}mm`,
+		marginTop: `${getNumberSetting("printerMarginTop", 2, 0, 25)}mm`,
+		marginRight: `${getNumberSetting("printerMarginRight", 2, 0, 25)}mm`,
+		marginBottom: `${getNumberSetting("printerMarginBottom", 2, 0, 25)}mm`,
+		marginLeft: `${getNumberSetting("printerMarginLeft", 2, 0, 25)}mm`,
+		feed: `${getNumberSetting("printerFeed", 3, 0, 25)}mm`,
+		marginType: settings.printerMarginMode?.optionsetting === "none" ? "none" : "printableArea",
 		fontSize: "10pt",
 		fontFamily: "monospace",
 		lineHeight: "1.2",
@@ -1396,6 +1406,11 @@ async function printThermal(htmlContent, options = {}) {
 	};
 
 	const printOptions = { ...defaultOptions, ...options };
+	if (Object.prototype.hasOwnProperty.call(options, "margin")) {
+		["marginTop", "marginRight", "marginBottom", "marginLeft"].forEach(function (side) {
+			if (!Object.prototype.hasOwnProperty.call(options, side)) printOptions[side] = options.margin;
+		});
+	}
 
 	// SSApp can submit a silent job to the selected native printer. Browser
 	// window.print() cannot select a device by name, even when options are passed.
@@ -1440,7 +1455,7 @@ async function printThermal(htmlContent, options = {}) {
 		const printStyles = `
 			@page {
 				size: ${printOptions.width} auto;
-				margin: ${printOptions.margin};
+				margin: 0;
 			}
 			body {
 				width: ${printOptions.width};
@@ -1448,7 +1463,7 @@ async function printThermal(htmlContent, options = {}) {
 				font-size: ${printOptions.fontSize};
 				line-height: ${printOptions.lineHeight};
 				margin: 0;
-				padding: 0;
+				padding: ${printOptions.marginTop} ${printOptions.marginRight} ${printOptions.marginBottom} ${printOptions.marginLeft};
 			}
 			* {
 				box-sizing: border-box;
