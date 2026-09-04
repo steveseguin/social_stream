@@ -1314,46 +1314,46 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "printer_control",
     description: "Discord webhook URL that receives donation events."
   },
-    "printerName": {
-      type: "text",
-      category: "printer_control",
-      description: "Local printer name to use when printing chat from the dock."
-    },
-    "printerPaperWidth": {
-      type: "number",
-      category: "printer_control",
-      description: "Thermal printer paper width in millimetres."
-    },
-    "printerMarginLeft": {
-      type: "number",
-      category: "printer_control",
-      description: "Extra left safe margin for thermal printing in millimetres."
-    },
-    "printerMarginRight": {
-      type: "number",
-      category: "printer_control",
-      description: "Extra right safe margin for thermal printing in millimetres."
-    },
-    "printerMarginTop": {
-      type: "number",
-      category: "printer_control",
-      description: "Extra top safe margin for thermal printing in millimetres."
-    },
-    "printerMarginBottom": {
-      type: "number",
-      category: "printer_control",
-      description: "Extra bottom safe margin for thermal printing in millimetres."
-    },
-    "printerFeed": {
-      type: "number",
-      category: "printer_control",
-      description: "Extra paper feed after each thermal print in millimetres."
-    },
-    "printerMarginMode": {
-      type: "select",
-      category: "printer_control",
-      description: "Use the printer driver's printable area or the full configured paper width."
-    },
+  "printerName": {
+    type: "text",
+    category: "printer_control",
+    description: "Local printer name to use when printing chat from the dock."
+  },
+  "printerPaperWidth": {
+    type: "number",
+    category: "printer_control",
+    description: "Thermal printer paper width in millimetres."
+  },
+  "printerMarginLeft": {
+    type: "number",
+    category: "printer_control",
+    description: "Extra left safe margin for thermal printing in millimetres."
+  },
+  "printerMarginRight": {
+    type: "number",
+    category: "printer_control",
+    description: "Extra right safe margin for thermal printing in millimetres."
+  },
+  "printerMarginTop": {
+    type: "number",
+    category: "printer_control",
+    description: "Extra top safe margin for thermal printing in millimetres."
+  },
+  "printerMarginBottom": {
+    type: "number",
+    category: "printer_control",
+    description: "Extra bottom safe margin for thermal printing in millimetres."
+  },
+  "printerFeed": {
+    type: "number",
+    category: "printer_control",
+    description: "Extra paper feed after each thermal print in millimetres."
+  },
+  "printerMarginMode": {
+    type: "select",
+    category: "printer_control",
+    description: "Use the printer driver's printable area or the full configured paper width."
+  },
   "pluralmind": {
     type: "boolean",
     category: "custom_injection",
