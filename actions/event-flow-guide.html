@@ -692,7 +692,7 @@ Trigger ──────────────────▲
                 </div>
 
                 <div class="panel">
-                    <strong>Thermal printing in SSApp:</strong> set the printer name under <em>Printer Control</em>, then return <code>printThermal('&lt;strong&gt;' + message.chatname + '&lt;/strong&gt;', { width: '58mm' })</code>. SSApp queues the job silently through the native Windows printer API. Returning the Promise lets Event Flow wait for submission and report errors.
+                    <strong>Thermal printing in SSApp:</strong> choose the printer and calibrate its paper width and safe margins under <em>Printer Control</em>, then return <code>printThermal('&lt;strong&gt;' + message.chatname + '&lt;/strong&gt;')</code>. SSApp queues the job silently through the native Windows printer API and uses those saved settings. A flow can override them with options such as <code>{ width: '58mm', marginLeft: '3mm', marginRight: '3mm', marginTop: '2mm', marginBottom: '2mm', feed: '3mm', marginType: 'printableArea' }</code>. Returning the Promise lets Event Flow wait for submission and report errors.
                 </div>
 
                 <!-- ─── Both nodes on canvas ─── -->

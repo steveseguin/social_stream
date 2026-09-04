@@ -10913,9 +10913,9 @@ function getThermalPrinterOptionsFromPopup() {
 		width: `${getNumber('printerPaperWidth', 58)}mm`,
 		marginLeft: `${getNumber('printerMarginLeft', 2)}mm`,
 		marginRight: `${getNumber('printerMarginRight', 2)}mm`,
-		marginTop: `${getNumber('printerMarginTop', 2)}mm`,
-		marginBottom: `${getNumber('printerMarginBottom', 2)}mm`,
-		feed: `${getNumber('printerFeed', 3)}mm`,
+		marginTop: `${getNumber('printerMarginTop', 0)}mm`,
+		marginBottom: `${getNumber('printerMarginBottom', 0)}mm`,
+		feed: `${getNumber('printerFeed', 1)}mm`,
 		marginType: document.querySelector('[data-optionsetting="printerMarginMode"]')?.value || 'printableArea'
 	};
 }

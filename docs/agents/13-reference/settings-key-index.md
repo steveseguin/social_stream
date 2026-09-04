@@ -455,6 +455,13 @@ Category key: `printer_control`. Settings: 21.
 | `postserver` | text | Custom HTTP endpoint or identifier to receive forwarded events. |
 | `postserverdiscord` | text | Discord webhook URL that receives donation events. |
 | `printerName` | text | Local printer name to use when printing chat from the dock. |
+| `printerPaperWidth` | number | Thermal printer paper width in millimetres. |
+| `printerMarginLeft` | number | Extra left safe margin for thermal printing in millimetres. |
+| `printerMarginRight` | number | Extra right safe margin for thermal printing in millimetres. |
+| `printerMarginTop` | number | Extra top safe margin for thermal printing in millimetres. |
+| `printerMarginBottom` | number | Extra bottom safe margin for thermal printing in millimetres. |
+| `printerFeed` | number | Extra paper feed after each thermal print in millimetres. |
+| `printerMarginMode` | select | Use the printer driver's printable area or the full configured paper width. |
 | `s10` | boolean | Enable the Stage TEN Chat API relay. |
 | `s10apikey` | text | Stage TEN API key used when the relay is enabled. |
 | `s10relay` | boolean | Relay messages from other sites to Stage TEN |

@@ -1393,11 +1393,11 @@ async function printThermal(htmlContent, options = {}) {
 	};
 	const defaultOptions = {
 		width: `${getNumberSetting("printerPaperWidth", 58, 20, 120)}mm`,
-		marginTop: `${getNumberSetting("printerMarginTop", 2, 0, 25)}mm`,
+		marginTop: `${getNumberSetting("printerMarginTop", 0, 0, 25)}mm`,
 		marginRight: `${getNumberSetting("printerMarginRight", 2, 0, 25)}mm`,
-		marginBottom: `${getNumberSetting("printerMarginBottom", 2, 0, 25)}mm`,
+		marginBottom: `${getNumberSetting("printerMarginBottom", 0, 0, 25)}mm`,
 		marginLeft: `${getNumberSetting("printerMarginLeft", 2, 0, 25)}mm`,
-		feed: `${getNumberSetting("printerFeed", 3, 0, 25)}mm`,
+		feed: `${getNumberSetting("printerFeed", 1, 0, 25)}mm`,
 		marginType: settings.printerMarginMode?.optionsetting === "none" ? "none" : "printableArea",
 		fontSize: "10pt",
 		fontFamily: "monospace",
