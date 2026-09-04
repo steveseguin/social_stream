@@ -280,6 +280,10 @@
       return Object.assign({}, this.labelsByUUID);
     }
 
+    identifyPeer(uuid, label) {
+      return this._setPeerLabel(uuid, label, 4);
+    }
+
     // Send to a specific UUID or broadcast to all peers with an optional label filter
     async send(data, uuid = null) {
       if (!this.isReady()) throw new Error('NinjaBridge not ready');

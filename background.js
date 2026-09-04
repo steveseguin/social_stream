@@ -14692,7 +14692,7 @@ async function initTransport(roomStreamID, pass = false) {
 						if (!data) return;
 						if (typeof data !== "object") return;
 						let payload = data.overlayNinja || null;
-						if (!payload && (data.action || "response" in data)) {
+						if (!payload && (data.action || data.callback || "response" in data || data.type === "ssnPeerHello")) {
 							payload = data;
 						}
 						if (payload) {
@@ -15047,7 +15047,11 @@ async function processIncomingRequest(request, UUID = false) {
 	if (request && request.type === "ssnPeerHello" && request.label && UUID) {
 		var announcedLabel = String(request.label).trim().slice(0, 100);
 		if (announcedLabel) {
-			markP2PPeerConnected(String(UUID), announcedLabel);
+			if (ninjaBridge && typeof ninjaBridge.identifyPeer === "function") {
+				ninjaBridge.identifyPeer(String(UUID), announcedLabel);
+			} else {
+				markP2PPeerConnected(String(UUID), announcedLabel);
+			}
 		}
 		return true;
 	}
