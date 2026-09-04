@@ -14772,6 +14772,16 @@ async function ensureNinjaSDKLoaded() {
 		} else {
 			await dynamicLoadScript("./thirdparty/vdoninja-sdk.js");
 		}
+		// Electron exposes CommonJS globals in this renderer. The browser SDK then
+		// publishes itself through module.exports instead of creating its normal
+		// window globals, so adopt that export before loading NinjaBridge.
+		if (typeof window.VDONinjaSDK === "undefined" && typeof module !== "undefined" && module.exports) {
+			var exportedSDK = module.exports.default || module.exports.VDONinjaSDK || module.exports.VDONinja || module.exports;
+			if (typeof exportedSDK === "function") {
+				window.VDONinjaSDK = exportedSDK;
+				window.VDONinja = exportedSDK;
+			}
+		}
 	}
 	if (typeof window.NinjaBridge === "undefined") {
 		if (typeof window.loadScript === "function") {
@@ -15034,6 +15044,13 @@ async function processEventFlowBridgeEvent(value) {
 
 async function processIncomingRequest(request, UUID = false) {
 	// from the dock or chat bot, etc.
+	if (request && request.type === "ssnPeerHello" && request.label && UUID) {
+		var announcedLabel = String(request.label).trim().slice(0, 100);
+		if (announcedLabel) {
+			markP2PPeerConnected(String(UUID), announcedLabel);
+		}
+		return true;
+	}
 	if (handleStreamDeckDockCallback(request)) {
 		return true;
 	}
