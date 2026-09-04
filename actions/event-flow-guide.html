@@ -687,8 +687,12 @@ Trigger ──────────────────▲
 
                 <div class="panel">
                     <strong>Signature:</strong> your code runs as <code>function(message, result) { ... }</code><br>
-                    <strong>Should return:</strong> an object merged into <code>result</code> — see <a href="#custom-js-result-api">result API</a>.<br>
-                    <strong>Available:</strong> <code>message</code> (the event payload), <code>result</code> (current flow result state), plus <code>convertCurrency(value, targetCurrency, source)</code> and <code>convertToUSD(value, source)</code>.
+                    <strong>Should return:</strong> an object or Promise merged into <code>result</code> — see <a href="#custom-js-result-api">result API</a>.<br>
+                    <strong>Available:</strong> <code>message</code> (the event payload), <code>result</code> (current flow result state), <code>printThermal(html, options)</code>, plus <code>convertCurrency(value, targetCurrency, source)</code> and <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <div class="panel">
+                    <strong>Thermal printing in SSApp:</strong> set the printer name under <em>Printer Control</em>, then return <code>printThermal('&lt;strong&gt;' + message.chatname + '&lt;/strong&gt;', { width: '58mm' })</code>. SSApp queues the job silently through the native Windows printer API. Returning the Promise lets Event Flow wait for submission and report errors.
                 </div>
 
                 <!-- ─── Both nodes on canvas ─── -->

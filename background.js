@@ -1385,9 +1385,7 @@ function resetCustomJs() {
 	console.log("Custom JavaScript function reset to default");
 }
 //////////////
-function printThermal(htmlContent, options = {}) {
-	// --kiosk --kiosk-printing
-	// Default options
+async function printThermal(htmlContent, options = {}) {
 	const defaultOptions = {
 		width: "58mm",
 		margin: "0mm",
@@ -1397,95 +1395,79 @@ function printThermal(htmlContent, options = {}) {
 		printerName: settings.printerName?.textsetting || null
 	};
 
-	// Merge provided options with defaults
 	const printOptions = { ...defaultOptions, ...options };
 
-	// Create an iframe to handle the print job
-	const printFrame = document.createElement("iframe");
-
-	// Make iframe invisible
-	printFrame.style.position = "fixed";
-	printFrame.style.width = "0";
-	printFrame.style.height = "0";
-	printFrame.style.border = "0";
-	printFrame.style.opacity = "0";
-
-	document.body.appendChild(printFrame);
-
-	// Get iframe's document object
-	const frameDoc = printFrame.contentWindow.document;
-
-	// Open document and write HTML
-	frameDoc.open();
-
-	// Create style for printing
-	const printStyles = `
-    @page {
-      size: ${printOptions.width} auto;
-      margin: ${printOptions.margin};
-    }
-    body {
-      width: ${printOptions.width};
-      font-family: ${printOptions.fontFamily};
-      font-size: ${printOptions.fontSize};
-      line-height: ${printOptions.lineHeight};
-      margin: 0;
-      padding: 0;
-    }
-    * {
-      box-sizing: border-box;
-    }
-  `;
-
-	// Write HTML to iframe with styles
-	frameDoc.write(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Print</title>
-        <style>${printStyles}</style>
-      </head>
-      <body>
-        ${htmlContent}
-      </body>
-    </html>
-  `);
-
-	frameDoc.close();
-
-	// Wait for content to load before printing
-	printFrame.onload = function () {
-		const printWindow = printFrame.contentWindow;
-
-		// If a specific printer name is provided, attempt to use it
-		if (printOptions.printerName) {
-			// Use the print API with specific printer
-			const printOpts = {
-				printer: printOptions.printerName,
-				silent: true
+	// SSApp can submit a silent job to the selected native printer. Browser
+	// window.print() cannot select a device by name, even when options are passed.
+	if (window.ninjafy && typeof window.ninjafy.printThermal === "function") {
+		try {
+			return await window.ninjafy.printThermal(htmlContent, printOptions);
+		} catch (error) {
+			console.error("[ThermalPrint] Native print failed:", error?.message || error);
+			return {
+				success: false,
+				error: error?.message || String(error),
+				code: error?.code || "SSAPP_PRINT_FAILED"
 			};
-
-			// Print with specified options
-			if (printWindow.navigator && printWindow.navigator.serviceWorker) {
-				printWindow.print(printOpts).catch(error => {
-					console.warn("Failed to select printer:", error);
-					// Fallback to default print
-					printWindow.print();
-				});
-			} else {
-				// Fallback to default print
-				printWindow.print();
-			}
-		} else {
-			// Use default print dialog
-			printWindow.print();
 		}
+	}
 
-		// Remove iframe after printing is complete
-		setTimeout(() => {
-			document.body.removeChild(printFrame);
-		}, 1000);
-	};
+	return await new Promise(resolve => {
+		// Create an iframe to handle the browser print dialog fallback.
+		const printFrame = document.createElement("iframe");
+		printFrame.style.position = "fixed";
+		printFrame.style.width = "0";
+		printFrame.style.height = "0";
+		printFrame.style.border = "0";
+		printFrame.style.opacity = "0";
+		document.body.appendChild(printFrame);
+
+		const frameDoc = printFrame.contentWindow.document;
+		printFrame.onload = function () {
+			const printWindow = printFrame.contentWindow;
+			if (printOptions.printerName) {
+				console.warn("[ThermalPrint] Browser printing cannot select a printer by name; opening the print dialog instead.");
+			}
+			printWindow.print();
+
+			setTimeout(() => {
+				printFrame.remove();
+				resolve({ success: true, native: false });
+			}, 1000);
+		};
+
+		frameDoc.open();
+		const printStyles = `
+			@page {
+				size: ${printOptions.width} auto;
+				margin: ${printOptions.margin};
+			}
+			body {
+				width: ${printOptions.width};
+				font-family: ${printOptions.fontFamily};
+				font-size: ${printOptions.fontSize};
+				line-height: ${printOptions.lineHeight};
+				margin: 0;
+				padding: 0;
+			}
+			* {
+				box-sizing: border-box;
+			}
+		`;
+
+		frameDoc.write(`
+			<!DOCTYPE html>
+			<html>
+				<head>
+					<title>Print</title>
+					<style>${printStyles}</style>
+				</head>
+				<body>${htmlContent}</body>
+			</html>
+		`);
+
+		frameDoc.close();
+	});
 }
 ////////
 

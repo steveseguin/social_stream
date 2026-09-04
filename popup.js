@@ -9829,6 +9829,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         }
 
         try {
+            if (settings.volume <= 0) {
+                throw new Error("TTS volume is set to 0. Increase it under More TTS options before testing.");
+            }
             // Check for required API keys if using premium services
             if (provider === 'google' && !settings.google.key) {
                 throw new Error('Google Cloud API key is required');
@@ -9893,7 +9896,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                     await this.kittenTTS(text, settings, section);
                 }
             } else if (!settings.service || (settings.service == "system")) {
-                this.systemTTS(text, settings);
+                this.systemTTS(text, settings, section);
             } else if (allow) {
                 this.showFeedback(`${this.getServiceName(section)} is not configured for testing`, 'error', section);
                 this.finishedAudio();
@@ -9905,7 +9908,52 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         }
     },
     
-    systemTTS(text, settings) {
+    async systemTTS(text, settings, section = this.currentTtsSection || "") {
+        let desktopBridge = window.ninjafy || window.electronApi;
+        try {
+            desktopBridge = desktopBridge || window.parent?.ninjafy || window.parent?.electronApi;
+        } catch (_) {}
+
+        if (ssapp && desktopBridge && typeof desktopBridge.systemTts === "function") {
+            try {
+                this.premiumQueueActive = true;
+                this.setTestRunning(section, true, "Generating...");
+                const response = await desktopBridge.systemTts(text, {
+                    voice: settings.system.voice,
+                    lang: settings.system.lang,
+                    rate: settings.system.rate,
+                    pitch: settings.system.pitch
+                });
+                this.lastDesktopSystemTts = {
+                    voice: response?.voice || "",
+                    lang: response?.lang || ""
+                };
+                if (this.cancelRequested) return;
+
+                const wavBuffer = response?.wavBuffer || response;
+                const audioBlob = new Blob([wavBuffer], { type: "audio/wav" });
+                const audioElement = document.createElement("audio");
+                this.activeAudioElement = audioElement;
+                this.activeAudioUrl = URL.createObjectURL(audioBlob);
+                audioElement.src = this.activeAudioUrl;
+                audioElement.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
+                audioElement.onended = () => {
+                    this.showFeedback("System TTS test completed successfully", "success", section);
+                    this.finishedAudio(section);
+                };
+                audioElement.onerror = () => {
+                    this.showFeedback("System TTS audio could not be played", "error", section);
+                    this.finishedAudio(section);
+                };
+                this.setTestRunning(section, true, "Playing...");
+                await audioElement.play();
+                return;
+            } catch (error) {
+                console.warn("Desktop System TTS failed; falling back to Web Speech:", error);
+                this.finishedAudio(section);
+            }
+        }
+
         if (!window.speechSynthesis) return;
         
         const utterance = new SpeechSynthesisUtterance(text);
@@ -9954,9 +10002,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                         this.finishedAudio(section);
                     };
 					
-					// Set volume if needed
-					//const settings = { volume: 0.8 }; // Replace with your actual settings
-					//if (settings.volume) audioElement.volume = settings.volume;
+					audioElement.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
 					
 					await audioElement.play();
 					return;

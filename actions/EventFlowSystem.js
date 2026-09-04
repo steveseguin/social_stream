@@ -3806,7 +3806,7 @@ class EventFlowSystem {
                 }
                 try {
                     const evalFunction = new Function('message', 'result', config.code);
-                    const customResult = evalFunction(message, { ...result });
+                    const customResult = await Promise.resolve(evalFunction(message, { ...result }));
                     
                     if (customResult && typeof customResult === 'object') {
                         result = {
