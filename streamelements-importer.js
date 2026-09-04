@@ -787,8 +787,9 @@
 				if (durationKey && messageDuration && keepMessagesVisible) {
 					var durationValue = parseFloat(state.fieldData[durationKey]);
 					if (!isFinite(durationValue)) durationValue = 0;
-					keepMessagesVisible.checked = durationValue <= 0 || (durationKey.toLowerCase() === "hideafter" && durationValue === 999);
-					messageDuration.value = durationValue > 0 ? durationValue : 10;
+					var durationDisabled = durationValue <= 0 || (durationKey.toLowerCase() === "hideafter" && durationValue === 999);
+					keepMessagesVisible.checked = durationDisabled;
+					messageDuration.value = durationDisabled ? 10 : durationValue;
 					messageDuration.disabled = keepMessagesVisible.checked;
 					applyNumberBounds(messageDuration, fields && fields[durationKey], 1);
 				}
@@ -824,7 +825,7 @@
 				var key = state.messageSettingKeys && state.messageSettingKeys.duration;
 				if (!key || !messageDuration || !keepMessagesVisible) return;
 				messageDuration.disabled = keepMessagesVisible.checked;
-				var value = keepMessagesVisible.checked ? getDisabledDurationValue(key) : parseFloat(messageDuration.value);
+				var value = parseFloat(messageDuration.value);
 				if (!isFinite(value) || value < 1) value = 1;
 				if (keepMessagesVisible.checked) value = getDisabledDurationValue(key);
 				state.fieldData[key] = value;

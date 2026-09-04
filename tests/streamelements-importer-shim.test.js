@@ -136,6 +136,32 @@ async function run() {
 		assert.ok((await page.locator("#exportModal").innerText()).includes("do not need to paste a session ID or edit a URL in OBS"));
 		assert.strictEqual(await page.locator("#exportSessionHint").count(), 0, "simple OBS handoff should not show a URL override");
 
+		await page.locator("#closeExportModalBtn").click();
+		await page.setInputFiles("#fileInput", [
+			{
+				name: "html.txt",
+				mimeType: "text/plain",
+				buffer: Buffer.from('<div id="chat-container"></div>')
+			},
+			{
+				name: "fields.txt",
+				mimeType: "application/json",
+				buffer: Buffer.from(JSON.stringify({ hideAfter: { type: "number", value: 999 } }))
+			},
+			{
+				name: "data.txt",
+				mimeType: "application/json",
+				buffer: Buffer.from(JSON.stringify({ hideAfter: 999 }))
+			}
+		]);
+		await page.waitForFunction(() => {
+			return document.getElementById("keepMessagesVisible").checked && document.getElementById("messageDuration").value === "10";
+		});
+		assert.strictEqual(await page.locator("#messageDuration").inputValue(), "10", "re-enabling standard hideAfter should start from a useful duration");
+		assert.strictEqual(await page.locator("#messageDuration").isEnabled(), false);
+		await page.locator("#keepMessagesVisible").uncheck();
+		assert.strictEqual(await page.locator("#messageDuration").isEnabled(), true);
+
 		console.log("StreamElements importer shim regression tests passed");
 	} finally {
 		await browser.close();
