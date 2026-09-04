@@ -440,7 +440,7 @@ Category key: `custom_injection`. Settings: 26.
 
 ## Printer Control
 
-Category key: `printer_control`. Settings: 21.
+Category key: `printer_control`. Settings: 22.
 
 | Key | Type | Short Description |
 | --- | --- | --- |
