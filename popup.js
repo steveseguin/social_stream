@@ -3911,6 +3911,11 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     obsControlDockUrl.href = buildGeneratedUrl("obs-control-dock.html", `session=${encodeURIComponent(streamID)}`, baseURL);
   }
 
+	const streamElementsImporterUrl = document.getElementById("streamelements_importer_link");
+	if (streamElementsImporterUrl) {
+		streamElementsImporterUrl.href = buildGeneratedUrl("streamelements-importer.html", `session=${encodeURIComponent(streamID)}${password}`, baseURL);
+	}
+
   syncAllOverlayPreviews();
 }
 

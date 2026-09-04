@@ -298,9 +298,9 @@
 				exportSessionHint.textContent = suffix;
 				if (exportObsUrlHint) exportObsUrlHint.textContent = exampleUrl;
 				if (session) {
-					exportSessionMessage.textContent = "Your session ID was saved inside " + fileName + ". In OBS, you can use the downloaded HTML file directly. The URL ending below is only a backup or override.";
+					exportSessionMessage.textContent = "Your session ID was saved inside " + fileName + ". Select that file in OBS and keep the SSN app or extension running. No URL editing is required.";
 				} else {
-					exportSessionMessage.textContent = "No session ID was saved in this file. Easiest fix: close this, paste your SSN session ID, and export again. Or append the URL ending below.";
+					exportSessionMessage.textContent = "No session ID was saved. For the easiest setup, close this message, paste your SSN session ID, and download the HTML again.";
 				}
 				if (exportSummary) exportSummary.textContent = buildExportSummary(fileName);
 				exportModal.classList.add("open");
@@ -384,18 +384,20 @@
 				var lines = [
 					"Social Stream Ninja Imported Overlay",
 					"",
-					"You do not add the original zip or code to Social Stream Ninja.",
-					"Use the exported HTML file as an OBS Browser Source.",
+					"Works with the Social Stream Ninja Windows desktop app and Chrome extension.",
+					"Keep your chosen SSN version running while streaming.",
+					"Use the exported HTML file as an OBS Browser Source; do not use the original zip or importer page.",
 					"",
 					"HTML file:",
 					fileName,
 					"",
 					"OBS setup:",
-					"1. Add a Browser Source.",
-					"2. Choose or paste the exported HTML file.",
+					"1. Confirm a real chat message appears in the SSN dock.",
+					"2. Add a Browser Source in OBS.",
+					"3. Enable Local file and browse to the exported HTML file.",
 					hasSession
-						? "3. Your SSN session ID is already saved inside the file."
-						: "3. Add your SSN session to the end of the file URL:",
+						? "4. Your SSN session ID is already saved inside the file; no URL edit is needed."
+						: "4. No session was saved. Return to the importer, paste it, and export again. Advanced URL override:",
 					hasSession ? "" : suffix,
 					"",
 					hasSession ? "Backup URL override:" : "Example URL:",
@@ -523,13 +525,18 @@
 					state.remoteAssetsEmbedded = stats.embedded;
 					state.remoteAssetsFailed = stats.failed;
 					state.processing = false;
-					updateFileList(detected);
+					updateFileList(detected, [(sessionInput.value || "").trim()
+						? "Ready. Demo Preview is loaded. Click Live Preview to test real SSN chat, then download the OBS HTML."
+						: "Ready. Demo Preview is loaded. Paste your SSN session ID next so Live Preview and the downloaded file can receive chat."]);
 					refreshButtons();
 					renderPreview();
 				}).catch(function (error) {
 					state.remoteAssetsFailed += 1;
 					state.processing = false;
-					updateFileList(detected, ["Remote asset check failed: " + String(error && error.message || error)]);
+					updateFileList(detected, [
+						"Ready with a remote asset warning. The demo may still work, but verify fonts and artwork.",
+						"Remote asset check failed: " + String(error && error.message || error)
+					]);
 					refreshButtons();
 					renderPreview();
 				});
@@ -760,6 +767,11 @@
 
 			function updateFileList(detected, extraLines) {
 				var lines = [];
+				if (extraLines && extraLines.length) {
+					extraLines.forEach(function (line) {
+						lines.push(line);
+					});
+				}
 				lines.push("Detected HTML: " + (detected.htmlFiles.join(", ") || "generated fallback"));
 				lines.push("Detected CSS: " + (detected.cssFiles.join(", ") || "none"));
 				lines.push("Detected JS: " + (detected.jsFiles.join(", ") || "none"));
@@ -771,10 +783,10 @@
 				if (state.remoteAssetsFailed) lines.push("Remote assets left as URLs: " + state.remoteAssetsFailed);
 				if (detected.ignoredFiles && detected.ignoredFiles.length) lines.push("Ignored generated/export files: " + detected.ignoredFiles.length);
 				if (detected.unusedPartFiles && detected.unusedPartFiles.length) lines.push("Other source-like files not used: " + detected.unusedPartFiles.length);
-				if (state.warnings && state.warnings.length) lines.push("Possible manual fixes: " + state.warnings.length);
-				if (extraLines && extraLines.length) {
-					extraLines.forEach(function (line) {
-						lines.push(line);
+				if (state.warnings && state.warnings.length) {
+					lines.push("Possible manual fixes: " + state.warnings.length);
+					state.warnings.forEach(function (warning) {
+						lines.push("- " + warning);
 					});
 				}
 				setStatus(lines);
@@ -1392,12 +1404,64 @@
 								return;
 							}
 							var eventData = mapSSNToSEMessage(payload);
+							var existingRows = snapshotLikelyMessageRows();
 							window.dispatchEvent(new CustomEvent("onEventReceived", {
 								detail: {
 									listener: "message",
 									event: eventData
 								}
 							}));
+							tagNewMessageRows(existingRows, eventData, payload);
+						}
+
+						var renderedRowsByMessageId = {};
+						function getLikelyMessageContainers() {
+							var selectors = [".main-container", "#main-container", "#log", ".chat-container", "#chat-container"];
+							var containers = [];
+							selectors.forEach(function (selector) {
+								Array.prototype.slice.call(document.querySelectorAll(selector)).forEach(function (container) {
+									if (containers.indexOf(container) === -1) containers.push(container);
+								});
+							});
+							return containers;
+						}
+
+						function snapshotLikelyMessageRows() {
+							var rows = [];
+							getLikelyMessageContainers().forEach(function (container) {
+								Array.prototype.slice.call(container.children || []).forEach(function (child) {
+									if (rows.indexOf(child) === -1) rows.push(child);
+								});
+							});
+							return rows;
+						}
+
+						function tagNewMessageRows(existingRows, eventData, payload) {
+							var msgId = String(eventData && eventData.data && eventData.data.msgId || "");
+							if (!msgId) return;
+							pruneTrackedMessageRows();
+							var displayName = String(payload.chatname || payload.name || "Viewer");
+							var sourceType = String(payload.type || payload.platform || "ssn");
+							var tagged = [];
+							snapshotLikelyMessageRows().forEach(function (row) {
+								if (existingRows.indexOf(row) !== -1) return;
+								if (/^(SCRIPT|STYLE|LINK|IFRAME)$/i.test(row.tagName || "")) return;
+								if (!row.hasAttribute("data-mid")) row.setAttribute("data-mid", msgId);
+								if (!row.hasAttribute("data-chatname")) row.setAttribute("data-chatname", displayName);
+								if (!row.hasAttribute("data-source-type")) row.setAttribute("data-source-type", sourceType);
+								tagged.push(row);
+							});
+							if (tagged.length) renderedRowsByMessageId[msgId] = tagged;
+						}
+
+						function pruneTrackedMessageRows() {
+							Object.keys(renderedRowsByMessageId).forEach(function (msgId) {
+								var connectedRows = renderedRowsByMessageId[msgId].filter(function (row) {
+									return row && document.documentElement.contains(row);
+								});
+								if (connectedRows.length) renderedRowsByMessageId[msgId] = connectedRows;
+								else delete renderedRowsByMessageId[msgId];
+							});
 						}
 
 						function handleControlPayload(payload) {
@@ -1525,6 +1589,11 @@
 						function removeByMessageId(id) {
 							id = String(id || "");
 							if (!id) return;
+							var trackedRows = renderedRowsByMessageId[id] || [];
+							trackedRows.forEach(function (row) {
+								if (row && row.parentNode) row.parentNode.removeChild(row);
+							});
+							delete renderedRowsByMessageId[id];
 							removeMatching('[data-mid="' + cssEscape(id) + '"], [data-id="' + cssEscape(id) + '"], [data-msgid="' + cssEscape(id) + '"]');
 						}
 
@@ -1557,13 +1626,15 @@
 									while (element.firstChild) element.removeChild(element.firstChild);
 								});
 							});
+							renderedRowsByMessageId = {};
 						}
 
 						function mapSSNToSEMessage(payload) {
 							var displayName = String(payload.chatname || payload.name || "Viewer");
 							var msgId = String(payload.mid || payload.id || payload.messageId || payload.message_id || (payload.meta && (payload.meta.messageId || payload.meta.message_id)) || ("ssn-" + Date.now() + "-" + Math.floor(Math.random() * 100000)));
 							var textHTML = String(payload.chatmessage || payload.message || "");
-							var plainText = stripHTML(textHTML);
+							var messageParts = extractMessageParts(textHTML);
+							var plainText = messageParts.text;
 							var role = getRole(payload);
 							var badges = mapBadges(payload.chatbadges, role);
 							var userId = userIdForName(displayName);
@@ -1587,13 +1658,37 @@
 									channel: roomID || "ssn",
 									text: eventText,
 									isAction: !!payload.event,
-									emotes: [],
+									emotes: messageParts.emotes,
 									msgId: msgId,
 									attachment: attachment,
 									amount: payload.hasDonation || payload.donation || "",
 									role: role,
 									rawSSN: payload
 								}
+							};
+						}
+
+						function extractMessageParts(html) {
+							var container = document.createElement("div");
+							container.innerHTML = String(html || "");
+							var emotes = [];
+							Array.prototype.slice.call(container.querySelectorAll("img")).forEach(function (image, index) {
+								var name = String(image.getAttribute("alt") || image.getAttribute("title") || "").trim();
+								var url = String(image.getAttribute("src") || "").trim();
+								if (!name) name = "emote-" + (index + 1);
+								if (url) {
+									emotes.push({
+										type: "ssn",
+										name: name,
+										url: url,
+										urls: { "1": url, "2": url, "4": url }
+									});
+								}
+								image.parentNode.replaceChild(document.createTextNode(name), image);
+							});
+							return {
+								text: (container.textContent || container.innerText || "").trim(),
+								emotes: emotes
 							};
 						}
 

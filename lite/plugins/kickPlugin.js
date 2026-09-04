@@ -958,7 +958,10 @@ export class KickPlugin extends BasePlugin {
       let displayName = sender.username || sender.slug || sender.display_name || sender.name || 'Kick viewer';
       const baseAvatar = normalizeImage(sender.profile_picture || sender.profile_pic || sender.profile_pic_url || sender.avatar);
       const baseNameColor = sender.identity?.color || sender.color;
-      const baseBadges = mapBadges(sender.identity?.badges || sender.badges);
+      let baseBadges = mapBadges(sender.identity?.badges);
+      baseBadges = mergeBadges(baseBadges, mapBadges(sender.identity?.badges_v2));
+      baseBadges = mergeBadges(baseBadges, mapBadges(sender.badges));
+      baseBadges = mergeBadges(baseBadges, mapBadges(sender.badges_v2));
 
       const enrichment = await this.resolveSenderDetails(sender);
       const avatar = normalizeImage(enrichment?.avatar || baseAvatar);
@@ -1378,7 +1381,10 @@ export class KickPlugin extends BasePlugin {
       details.nameColor = directColor;
     }
 
-    const directBadges = mapBadges(sender.identity?.badges || sender.badges);
+    let directBadges = mapBadges(sender.identity?.badges);
+    directBadges = mergeBadges(directBadges, mapBadges(sender.identity?.badges_v2));
+    directBadges = mergeBadges(directBadges, mapBadges(sender.badges));
+    directBadges = mergeBadges(directBadges, mapBadges(sender.badges_v2));
     if (directBadges.length) {
       details.badges = mergeBadges(details.badges, directBadges);
     }
@@ -1582,8 +1588,14 @@ export class KickPlugin extends BasePlugin {
       if (obj.identity?.badges) {
         profile.badges = mergeBadges(profile.badges, mapBadges(obj.identity.badges));
       }
+      if (obj.identity?.badges_v2) {
+        profile.badges = mergeBadges(profile.badges, mapBadges(obj.identity.badges_v2));
+      }
       if (obj.badges) {
         profile.badges = mergeBadges(profile.badges, mapBadges(obj.badges));
+      }
+      if (obj.badges_v2) {
+        profile.badges = mergeBadges(profile.badges, mapBadges(obj.badges_v2));
       }
       if (obj.badge_collection) {
         profile.badges = mergeBadges(profile.badges, mapBadges(obj.badge_collection));

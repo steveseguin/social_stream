@@ -396,16 +396,22 @@ Deeper docs: `07-overlays-and-pages/diagnostic-helper-pages.md`, `url-parameter-
 
 ## Import A StreamElements Or Streamlabs Chat Widget
 
-1. Open `streamelements-importer.html`.
-2. Choose the widget zip, folder, or files.
-3. Paste the SSN session ID if the exported file should work without URL edits.
-4. Click Preview, then Download OBS HTML.
-5. Add the downloaded HTML file to OBS as a Browser Source.
-6. Test with `?demo`, then test live with `?session=YOUR_SESSION` if needed.
+This works with either the SSN Windows desktop app or Chrome extension.
+
+1. Confirm a real chat message appears in the SSN dock.
+2. Open `streamelements-importer.html`.
+3. Choose the original widget zip, folder, or files. A screenshot or StreamElements URL alone is not enough.
+4. Check the session ID. Opening the importer from the SSN popup fills the session/password automatically; otherwise copy them from Session Options.
+5. Use Demo Preview to check the design, then Live Preview to check real chat.
+6. Click Download OBS HTML.
+7. In OBS, add a Browser Source, enable Local file, and choose the downloaded HTML file.
+8. Keep the SSN app or extension running; the importer and StreamElements may be closed.
 
 Checks:
 
 - The importer page is not the OBS overlay; the downloaded HTML file is.
+- If Demo Preview works but Live Preview does not, verify that the dock receives chat and the session/password match.
+- If Live Preview works but OBS does not, verify that OBS is loading the downloaded HTML file and refresh the Browser Source.
 - Widgets that depend on private StreamElements/Streamlabs APIs or overlay-store state may need manual edits.
 
 Deeper docs: `07-overlays-and-pages/diagnostic-helper-pages.md`, `07-overlays-and-pages/custom-overlays.md`.

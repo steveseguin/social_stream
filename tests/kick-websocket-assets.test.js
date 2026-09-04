@@ -88,6 +88,9 @@ function findImage(result, className) {
 							pushMessage = originalPushMessage;
 						}
 						return messages;
+					},
+					collectBadges: function (source) {
+						return collectBadgesFromSources(source);
 					}
 				};
 			`
@@ -222,6 +225,28 @@ function findImage(result, className) {
 			"channel.15462911",
 			"channel_15462911",
 		]);
+
+		const badgePayload = {
+			identity: {
+				badges: [
+					{ type: "moderator", text: "Moderator" },
+					{ type: "subscriber", text: "Subscriber", count: 3 }
+				],
+				badges_v2: [
+					{ name: "level", image_url: "https://ext.cdn.kick.com/chat/badges/16.png", selected: true },
+					{ name: "level", image_url: "https://ext.cdn.kick.com/chat/badges/22.png", selected: false }
+				]
+			}
+		};
+		const collectedBadges = await page.evaluate(
+			(payload) => window.__kickAssetTest.collectBadges(payload),
+			badgePayload
+		);
+		assert.deepStrictEqual(collectedBadges, [
+			{ type: "text", text: "Moderator" },
+			{ type: "text", text: "Subscriber" },
+			"https://ext.cdn.kick.com/chat/badges/16.png"
+		], "legacy badges and the selected v2 badge must be merged");
 
 		const kicksGift = {
 			// Captured basic KICK Gift shape; these can omit gift_transaction_id.
