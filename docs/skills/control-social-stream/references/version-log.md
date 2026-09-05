@@ -4,6 +4,7 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |
+| 1.3.1 / MCP 1.2.2 | 0.4.23 | Returns SSAPP_UNREACHABLE for interrupted HTTP response bodies and drains queued stdout before exiting after client stdin closes; tool schemas and commands are unchanged |
 | 1.3.1 / MCP 1.2.1 | 0.4.22 | Removes the inactive global YouTube sync settings from capabilities and getSettings; updateSettings rejects youtubeAutoAdd, youtubeAutoCleanup, and youtubeCheckInterval. Group Auto-activate remains the supported discovery path. |
 | 1.3.1 / MCP 1.2.1 | 0.4.14 | Adds opt-in reverse document-order semantic inspection so late-mounted modal controls remain reachable when a page exceeds the bounded element limit |
 | 1.3.0 / MCP 1.2.0 | 0.4.14 | Adds SSApp-owned window listing, built-in screenshots, semantic inspection and confirmed interaction, visibility control, blocking-safe JavaScript/Electron dialog discovery and response, bounded dialog waiting, and user-confirmed open/save paths; ordinary dialogs keep their native behavior until MCP app-window/dialog control is armed |
@@ -19,6 +20,12 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
 ## Skill revisions
+
+### 2026-09-05
+
+- Documented interrupted-response recovery and complete output draining in MCP 1.2.2
+  (minimum SSApp 0.4.23). After a transport failure, inspect state before retrying mutations;
+  stdin EOF does not replace reading the full stdout response.
 
 ### 2026-09-04
 
