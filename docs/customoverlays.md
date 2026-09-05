@@ -20,6 +20,12 @@ Before diving into custom page creation, let's revisit some core SSN concepts fr
   - **`password` (Optional):** If your SSN session is password-protected, you'll need this.
   - **Message Structure:** Incoming data will be JSON objects. Refer to the "Message Structure" section in the AI integration document for a detailed list of common fields (e.g., `id`, `type`, `chatname`, `chatmessage`, `hasDonation`, `event`).
 
+### Image-only chat and Twitch GIFs
+
+Render `data.contentimg` independently of `data.chatmessage`. Twitch GIF messages can have an empty `chatmessage` and put their descriptive label in `data.meta.gifLabel`. Do not discard a chat message just because it has `meta`; skip metadata-only updates only when they have no displayable content. `textonly` controls chat text rendering, not attachments.
+
+Use an `<img>` for image/GIF URLs, assign its `src` as a DOM property, and size it separately from inline emotes. Preserve the image aspect ratio; compact tickers should reserve a fixed image slot so loading an image does not change message spacing mid-animation.
+
 ## 4\. Connection Methods for Custom Overlays
 
 Custom overlay pages primarily connect to the Social Stream Ninja backend to receive messages. There are two main ways:

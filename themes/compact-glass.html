@@ -652,7 +652,7 @@ body.ultra .content-img {
         if (!data || typeof data !== "object") { return; }
         if (isMessageBlocked(data)) { return; }
         if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg) { return; }
-        if (!data.chatname && data.meta) { return; }
+        if (!data.chatname && data.meta && !data.chatmessage && !data.contentimg && !data.hasDonation && !data.donation) { return; }
 
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message');
