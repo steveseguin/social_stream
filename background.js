@@ -16672,7 +16672,7 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 		return;
 	}
 
-	if (isWebsocketSourceTabUrl(url)) {
+	if (isWebsocketSourceTabUrl(url) || (isSSAPP && tab.virtualSourceTarget === "discord")) {
 		if (relayMessageToWebsocketSourceTab(tab.id, data.response, messageOrigin)) {
 			relayTabContext.storeMessage(data.response);
 			lastSentMessage = sanitizeMessageForTracking(data.response, false);

@@ -1764,7 +1764,7 @@ class EventFlowEditor {
             }
 
             // Import the flow
-            const savedFlow = await this.eventFlowSystem.saveFlow(cleanFlow);
+            const savedFlow = await this.eventFlowSystem.importFlow(cleanFlow);
 
             // Return the saved flow if requested, otherwise return success boolean
             if (returnFlow) {
@@ -2111,7 +2111,7 @@ class EventFlowEditor {
                     return `${prop} ${opSymbols[op] || op} ${val}`;
                 }
                 case 'randomChance': {
-                    const prob = Math.round((node.config.probability || 0.1) * 100);
+                    const prob = Math.round((node.config.probability ?? 0.1) * 100);
                     const cooldown = node.config.cooldownMs ? ` (${node.config.cooldownMs/1000}s cooldown)` : '';
                     const rateLimit = node.config.maxPerMinute ? ` max ${node.config.maxPerMinute}/min` : '';
                     return `${prob}% chance${cooldown}${rateLimit}`;
@@ -2346,7 +2346,7 @@ class EventFlowEditor {
                 case 'AND': return 'All inputs must be true.';
                 case 'OR': return 'Any input can be true.';
                 case 'NOT': return 'Inverts the input signal.';
-                case 'RANDOM': return `${node.config?.probability || 50}% chance`;
+                case 'RANDOM': return `${node.config?.probability ?? 50}% chance`;
                 case 'CHECK_BAD_WORDS': return 'Bad words? → TRUE/FALSE';
                 default: return 'Logic Gate';
             }
@@ -3706,7 +3706,7 @@ class EventFlowEditor {
 			case 'timeOfDay':
 				html += `<div class="property-group">
 					<label class="property-label">Times (HH:MM format, comma separated)</label>
-					<input type="text" class="property-input" id="prop-times" value="${(node.config.times || ['12:00']).join(', ')}" placeholder="09:00, 12:00, 18:00">
+					<input type="text" class="property-input" id="prop-times" value="${this.escapeHtml(Array.isArray(node.config.times) ? node.config.times.join(', ') : (node.config.times ?? '12:00'))}" placeholder="09:00, 12:00, 18:00">
 				</div>
 				<p class="property-help">Triggers at specific times of day.</p>`;
 				break;
@@ -4181,7 +4181,7 @@ class EventFlowEditor {
 					</div>`;
 				break;
 			case 'randomChance': // Random trigger
-				const probability = (node.config.probability || 0.1) * 100; // Convert to percentage for display
+				const probability = (node.config.probability ?? 0.1) * 100; // Convert to percentage for display
 				html += `
 					<div class="property-group">
 						<label class="property-label">Trigger Probability</label>
@@ -4211,7 +4211,7 @@ class EventFlowEditor {
 					
 					<div class="property-group">
 						<label class="property-label">
-							<input type="checkbox" id="prop-requireMessage" 
+							<input type="checkbox" class="property-input" id="prop-requireMessage"
 								${node.config.requireMessage !== false ? 'checked' : ''}>
 							Require Chat Message
 						</label>
@@ -4492,7 +4492,7 @@ class EventFlowEditor {
 					
 					<div class="property-group">
 						<label class="property-label">
-							<input type="checkbox" id="prop-resetOnFull" 
+							<input type="checkbox" class="property-input" id="prop-resetOnFull"
 								${node.config.resetOnFull ? 'checked' : ''}>
 							Auto-reset when full
 						</label>
@@ -4581,7 +4581,7 @@ class EventFlowEditor {
 					
 					<div class="property-group">
 						<label class="property-label">
-							<input type="checkbox" id="prop-autoReset" 
+							<input type="checkbox" class="property-input" id="prop-autoReset"
 								${node.config.autoReset ? 'checked' : ''}>
 							Auto-reset after trigger
 						</label>
@@ -5054,7 +5054,7 @@ class EventFlowEditor {
 			case 'RANDOM':
 				html += `<div class="property-group">
 					<label class="property-label">Probability (%)</label>
-					<input type="number" class="property-input" id="prop-probability" value="${node.config?.probability || 50}" min="0" max="100">
+					<input type="number" class="property-input" id="prop-probability" value="${node.config?.probability ?? 50}" min="0" max="100">
 				</div>
 				<p class="property-help">This gate randomly passes or blocks the input signal based on the probability. For example, 25% means the signal will pass through roughly 1 in 4 times.</p>`;
 				break;
@@ -6124,7 +6124,7 @@ class EventFlowEditor {
 				</div>
 				<div class="property-group">
 					<label class="property-label">Velocity (0-127)</label>
-					<input type="number" class="property-input" id="prop-velocity" value="${node.config.velocity || 127}" min="0" max="127">
+					<input type="number" class="property-input" id="prop-velocity" value="${node.config.velocity ?? 127}" min="0" max="127">
 				</div>
 				<div class="property-group">
 					<label class="property-label">Duration (ms)</label>
@@ -6393,6 +6393,8 @@ class EventFlowEditor {
                     }
                 } else if (e.target.type === 'number') {
                     nodeData.config[propId] = parseFloat(e.target.value) || 0;
+                } else if (nodeData.triggerType === 'timeOfDay' && propId === 'times') {
+                    nodeData.config.times = e.target.value.split(',').map(time => time.trim()).filter(Boolean);
                 } else {
                     nodeData.config[propId] = e.target.value;
                 }
@@ -6461,12 +6463,6 @@ class EventFlowEditor {
                 }
                 this.markUnsavedChanges(true);
                 this.renderNodeOnCanvas(nodeData.id);
-                if (propId === 'targetNodeId') {
-                    this.renderStateReferences();
-                    this.highlightStateReferenceGroup(nodeData.id);
-                } else if (nodeData.type === 'state' && nodeData.stateType === 'USER_MEMORY' && propId === 'name') {
-                    this.renderFlow();
-                }
             });
         }
 
@@ -6480,14 +6476,10 @@ class EventFlowEditor {
                 }
                 if (nodeData && nodeData.config) {
                     nodeData.config.sanitizeMode = e.target.value;
-                    }
-                    this.markUnsavedChanges(true);
-                    this.renderNodeOnCanvas(nodeData.id);
-                    if (propId === 'targetNodeId') {
-                        this.renderStateReferences();
-                        this.highlightStateReferenceGroup(nodeData.id);
-                    }
-                });
+                }
+                this.markUnsavedChanges(true);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
         }
 
         // Special handling for compareProperty - show/hide custom property input

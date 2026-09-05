@@ -485,10 +485,17 @@
 			}
 			
 
+			.largeContent .hl-imgContent {
+				max-width: 100%;
+				min-width: 0;
+			}
 			.largeContent .hl-imgContent img, .largeContent .hl-imgContent video {
-				max-width: 160px !important;
+				width: 240px;
+				max-width: calc(100% - 4px) !important;
 				margin: 0 2px;
-				max-height: 80px !important;
+				height: auto !important;
+				max-height: 240px !important;
+				object-fit: contain;
 			}
 			.largeContent .hl-content {
 				margin: 4px 1px;
@@ -2518,8 +2525,8 @@
 				flex-wrap: nowrap;
 			}
 
-			body:not(.twoLines) .horizontal .hl-imgContent img,
-			body:not(.twoLines) .horizontal .hl-imgContent video {
+			body:not(.twoLines) .horizontal:not(.largeContent) .hl-imgContent img,
+			body:not(.twoLines) .horizontal:not(.largeContent) .hl-imgContent video {
 				height: 24px !important;
 				max-height: 24px !important;
 			}

@@ -8,10 +8,17 @@
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
+  <aside id="overlay-setup-bar" hidden>
+    <strong>Standalone OBS overlay · experimental</strong>
+    <p>This source captures and displays chat itself. Configure sources below, then hide setup before going live. In OBS Interact, press Escape to reopen setup. Do not capture the same channel in a Lite dock at the same time.</p>
+    <button id="overlay-show" type="button" class="btn">Show overlay</button>
+    <button id="overlay-test" type="button" class="btn btn--ghost">Send test message</button>
+    <a href="./guide.html#obs" target="_blank" rel="noopener">OBS setup guide</a>
+  </aside>
   <main class="layout">
     <header class="masthead">
       <div class="masthead__title"><span style="color:#eaeafc">Social Stream Ninja</span> <span style="font-weight:400">Lite</span></div>
-      <p class="masthead__subtitle">Lightweight web-first control panel for relaying chats to overlays.</p>
+      <p class="masthead__subtitle">Bring YouTube, Twitch, and Kick chat into one overlay. No extension required.</p>
     </header>
 
     <nav class="mobile-nav" aria-label="Primary sections">
@@ -36,11 +43,33 @@
         </div>
       </div>
       <div class="session__content">
+        <details id="quick-start" class="quick-start" open>
+          <summary>Quick start · chat in your overlay</summary>
+          <ol>
+            <li><strong>Connect a source below.</strong> Sign in for YouTube or Twitch; use Options to choose a channel or configure Kick.</li>
+            <li><strong>Add your overlay.</strong> Copy the link into an OBS Browser Source, or open it in a browser tab.</li>
+            <li><strong>Check delivery.</strong> Send a test message and look for it in that overlay.</li>
+          </ol>
+          <p>Keep this Lite page open while streaming. Use the same session ID as your existing Social Stream setup to share its overlays.</p>
+        </details>
+        <label class="field session__url">
+          <span class="field__label">Your overlay URL</span>
+          <input id="session-url" type="text" readonly spellcheck="false" aria-describedby="session-link-help" />
+        </label>
         <div class="session__link-row">
           <a id="session-open" class="btn" href="#" target="_blank" rel="noopener">Open dock overlay</a>
           <button type="button" id="session-copy" class="btn btn--ghost">Copy link</button>
           <button type="button" id="session-test" class="btn btn--ghost">Send test message</button>
         </div>
+        <p id="session-link-help" class="session__help">Paste this URL into OBS → Sources → Browser → URL. <a href="./guide.html" target="_blank" rel="noopener">Setup guide &amp; troubleshooting</a></p>
+        <details class="obs-setup">
+          <summary>Run entirely inside OBS</summary>
+          <p><strong>Dock + overlay:</strong> add this URL under OBS's Custom Browser Docks, configure your sources in the dock, then paste the overlay URL above into a Browser Source. Keep the dock loaded; no separate browser tab is needed.</p>
+          <label class="field"><span class="field__label">OBS custom dock URL</span><input id="obs-dock-url" readonly type="text" /></label>
+          <p><strong>Single Browser Source (experimental):</strong> this version captures and displays chat itself. Configure it through Interact, then choose Show overlay. Escape reopens setup. Sign-ins made elsewhere may not be shared with this source.</p>
+          <label class="field"><span class="field__label">Standalone capture + overlay URL</span><input id="obs-overlay-url" readonly type="text" /></label>
+          <p>Use one capture location per channel. <a href="./guide.html#obs" target="_blank" rel="noopener">OBS instructions and limitations</a></p>
+        </details>
         <div class="session__status-row">
           <output id="session-status" class="session__status" role="status" aria-live="polite" hidden></output>
         </div>
@@ -48,6 +77,7 @@
           <label class="field">
             <span class="field__label">Custom Session ID</span>
             <input id="session-id" name="session" type="text" autocomplete="off" spellcheck="false" placeholder="Enter a custom session ID" />
+            <span class="session__help">Save or press Enter to switch sessions. Then update the URL in your overlay. Leave blank to generate a new ID.</span>
           </label>
           <div class="session__actions">
             <button type="button" id="session-apply" class="btn">Save session ID</button>
@@ -77,7 +107,7 @@
         <h2 id="sources-heading">Sources</h2>
       </div>
       <div id="source-list" class="sources__grid" role="list"></div>
-      <p class="sources__footnote">Need additional platforms? The standalone app or browser extension support over 100 sources.</p>
+      <p class="sources__footnote">Already capturing a channel in the app or extension? Connect it in only one place for this session to avoid duplicate messages. <a href="../" target="_blank" rel="noopener">Explore the full app</a> for more sources and controls.</p>
     </section>
 
     <section id="activity" class="card activity" aria-labelledby="activity-heading">

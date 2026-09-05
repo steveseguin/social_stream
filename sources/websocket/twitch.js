@@ -642,12 +642,12 @@ try{
 		try {
 			const parsed = JSON.parse(localStorage.getItem(TWITCH_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
 			return {
-				syncDeleteMessages: !!parsed.syncDeleteMessages,
+				syncDeleteMessages: parsed.syncDeleteMessages !== false,
 				syncBlockUsers: !!parsed.syncBlockUsers
 			};
 		} catch (_) {
 			return {
-				syncDeleteMessages: false,
+				syncDeleteMessages: true,
 				syncBlockUsers: false
 			};
 		}

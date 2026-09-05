@@ -4,6 +4,7 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |
+| 1.3.1 / MCP 1.2.1 | 0.4.22 | Removes the inactive global YouTube sync settings from capabilities and getSettings; updateSettings rejects youtubeAutoAdd, youtubeAutoCleanup, and youtubeCheckInterval. Group Auto-activate remains the supported discovery path. |
 | 1.3.1 / MCP 1.2.1 | 0.4.14 | Adds opt-in reverse document-order semantic inspection so late-mounted modal controls remain reachable when a page exceeds the bounded element limit |
 | 1.3.0 / MCP 1.2.0 | 0.4.14 | Adds SSApp-owned window listing, built-in screenshots, semantic inspection and confirmed interaction, visibility control, blocking-safe JavaScript/Electron dialog discovery and response, bounded dialog waiting, and user-confirmed open/save paths; ordinary dialogs keep their native behavior until MCP app-window/dialog control is armed |
 | 1.2.0 / MCP 1.1.0 | 0.4.13 | Maps every approved API command to a stable offline MCP tool list; adds bounded captured events and waiting, source/page/process diagnostics with renderer PID/type plus `privateKb` and `residentSetKb` memory in KiB for shared-process de-duplication, secret-safe embedded URL redaction in normalized source errors, screenshots as MCP image content, semantic page inspection, confirmed opaque-reference interaction, page reload, human handoff, strict schemas, and loopback-only adapter enforcement |
@@ -18,6 +19,10 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
 ## Skill revisions
+
+### 2026-09-04
+
+- Updated controllable settings and examples for SSApp 0.4.22; retired global YouTube sync settings no longer claim to change runtime behavior.
 
 ### 2026-08-09
 

@@ -47,7 +47,7 @@ export class TwitchPlugin extends BasePlugin {
       ...options,
       id: 'twitch',
       name: 'Twitch',
-      description: 'Authorize with Twitch to pull chat directly via tmi.js and relay new events.'
+      description: 'Sign in to read Twitch chat. Your own channel is selected by default; choose another channel in Options.'
     });
 
     this.clientIdInput = null;
@@ -107,7 +107,7 @@ export class TwitchPlugin extends BasePlugin {
   }
 
   renderSettings(container) {
-    const channelRow = document.createElement('div');
+    const channelRow = document.createElement('label');
     channelRow.className = 'field';
 
     const channelLabel = document.createElement('span');
@@ -164,6 +164,9 @@ export class TwitchPlugin extends BasePlugin {
       const needsAuth = !this.isTokenValid();
       this.authButton.hidden = !needsAuth;
       this.authButton.disabled = this.state === 'connecting';
+    }
+    if (this.connectBtn) {
+      this.connectBtn.hidden = !this.isTokenValid() || this.state === 'connected';
     }
   }
 

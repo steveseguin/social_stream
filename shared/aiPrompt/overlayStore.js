@@ -64,7 +64,8 @@
 		var overlays = pack && pack.overlays ? pack.overlays : {};
 		var order = pack && pack.order && pack.order.length ? pack.order.slice() : Object.keys(overlays);
 		var wanted = requestedOverlay || (pack && pack.activeOverlay) || order[0] || "";
-		var key = /^[0-9]+$/.test(wanted) ? order[parseInt(wanted, 10) - 1] : normalizeOverlayKey(wanted);
+		// Only explicit selectors are positions; saved active/order values are keys.
+		var key = requestedOverlay && /^[0-9]+$/.test(wanted) ? order[parseInt(wanted, 10) - 1] : normalizeOverlayKey(wanted);
 		if (key && overlays[key]) return overlays[key];
 		for (var i = 0; i < order.length; i++) {
 			var item = overlays[order[i]];

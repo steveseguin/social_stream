@@ -130,6 +130,7 @@ export function createYouTubeLiveChat(options = {}) {
     streamAbortController: null,
     streamReader: null,
     manualStop: false,
+    generation: 0,
     lastStartOptions: {},
     fetchImpl: null
   };
@@ -164,11 +165,14 @@ export function createYouTubeLiveChat(options = {}) {
       startOptions: sanitizeStartOptions(startOptions)
     });
     state.manualStop = false;
+    const generation = ++state.generation;
     state.lastStartOptions = { ...startOptions };
     updateStatus(STATUS.STARTING, { mode: state.mode });
     try {
-      await ensureChatId(startOptions);
-      await ensureToken(startOptions);
+      await ensureChatId(startOptions, generation);
+      if (generation !== state.generation) return;
+      await ensureToken(startOptions, generation);
+      if (generation !== state.generation) return;
       logDebug('Live chat start prerequisites satisfied', {
         chatId: state.chatId,
         tokenPresent: Boolean(state.token?.accessToken)
@@ -181,6 +185,7 @@ export function createYouTubeLiveChat(options = {}) {
       error.code = 'NOT_IMPLEMENTED';
       throw error;
     } catch (err) {
+      if (generation !== state.generation) return;
       state.lastError = err;
       updateStatus(STATUS.ERROR, { error: err });
       emitter.emit(EVENTS.ERROR, err);
@@ -191,6 +196,7 @@ export function createYouTubeLiveChat(options = {}) {
   }
 
   function stop(options = {}) {
+    state.generation++;
     state.manualStop = true;
     logDebug('Stopping YouTube live chat client', { suppressStatus: options.suppressStatus });
     cleanupStream();
@@ -207,6 +213,9 @@ export function createYouTubeLiveChat(options = {}) {
     if (!options.suppressStatus) {
       updateStatus(STATUS.STOPPING);
       updateStatus(STATUS.IDLE);
+    } else {
+      // Suppress notifications, not the state change needed for a later start.
+      state.status = STATUS.IDLE;
     }
   }
 
@@ -229,14 +238,16 @@ export function createYouTubeLiveChat(options = {}) {
     state.streamReader = null;
   }
 
-  async function ensureChatId(startOptions = {}) {
+  async function ensureChatId(startOptions = {}, generation = state.generation) {
     if (startOptions.chatId) {
       state.chatId = startOptions.chatId;
       logDebug('Chat ID supplied via start options');
       return;
     }
     if (typeof opts.chatIdResolver === 'function') {
-      state.chatId = await opts.chatIdResolver();
+      const chatId = await opts.chatIdResolver();
+      if (generation !== state.generation) return;
+      state.chatId = chatId;
       logDebug('Resolved chat ID via resolver', { chatId: state.chatId });
     }
     if (!state.chatId) {
@@ -246,7 +257,7 @@ export function createYouTubeLiveChat(options = {}) {
     }
   }
 
-  async function ensureToken(startOptions = {}) {
+  async function ensureToken(startOptions = {}, generation = state.generation) {
     const startToken = normalizeToken(startOptions.token);
     if (startToken) {
       state.token = startToken;
@@ -260,7 +271,9 @@ export function createYouTubeLiveChat(options = {}) {
     }
 
     if (typeof opts.tokenProvider === 'function') {
-      state.token = normalizeToken(await opts.tokenProvider());
+      const token = normalizeToken(await opts.tokenProvider());
+      if (generation !== state.generation) return;
+      state.token = token;
       logDebug('Fetched token via provider', {
         tokenPresent: Boolean(state.token?.accessToken)
       });
@@ -307,7 +320,6 @@ export function createYouTubeLiveChat(options = {}) {
     const fetchImpl = resolveFetchImplementation();
     const controller = createAbortController();
     state.streamAbortController = controller;
-    state.retryCount = 0;
     logDebug('Starting streaming loop', {
       endpoint: opts.streaming.endpoint,
       chatId: state.chatId,
@@ -327,7 +339,8 @@ export function createYouTubeLiveChat(options = {}) {
       }
       handleStreamError(error);
     } finally {
-      cleanupStream();
+      // An older aborted request must not tear down a newly started stream.
+      if (state.streamAbortController === controller) cleanupStream();
     }
   }
 
@@ -355,6 +368,7 @@ export function createYouTubeLiveChat(options = {}) {
       mode: 'cors',
       credentials: 'omit'
     });
+    if (signal.aborted) return;
 
     if (res.status === 401) {
       const authError = new Error('YouTube authentication expired. Please reconnect.');
@@ -392,12 +406,14 @@ export function createYouTubeLiveChat(options = {}) {
       throw new Error('Environment does not support streaming responses for YouTube live chat.');
     }
 
-    state.streamReader = res.body.getReader();
+    const reader = res.body.getReader();
+    state.streamReader = reader;
     const decoder = new TextDecoder();
     let buffer = '';
 
     while (state.status === STATUS.RUNNING && !signal.aborted) {
-      const { value, done } = await state.streamReader.read();
+      const { value, done } = await reader.read();
+      if (signal.aborted) return;
       if (done) {
         logDebug('Streaming reader reported completion');
         break;
@@ -449,6 +465,8 @@ export function createYouTubeLiveChat(options = {}) {
       return;
     }
 
+    // A new attempt is not recovery: reset backoff only after receiving data.
+    state.retryCount = 0;
     state.pageToken = payload.nextPageToken || null;
     emitter.emit(EVENTS.DEBUG, { type: 'stream_chunk', payload });
 
@@ -484,6 +502,12 @@ export function createYouTubeLiveChat(options = {}) {
   }
 
   function handleStreamError(error) {
+    if (error && error.code === 'TOKEN_EXPIRED') {
+      // Retrying the same rejected credentials cannot recover. Let the caller
+      // reconnect explicitly with a new token, as the error message requests.
+      stop({ suppressStatus: true });
+      state.token = null;
+    }
     state.lastError = error;
     emitter.emit(EVENTS.ERROR, error);
     updateStatus(STATUS.ERROR, { error });
@@ -699,7 +723,8 @@ export function createYouTubeLiveChat(options = {}) {
     logDebug('Scheduling live chat retry', { attempt, delay });
     state.retryTimer = setTimeout(() => {
       state.retryTimer = null;
-      updateStatus(STATUS.STARTING, { mode: state.mode, attempt, retry: true });
+      // Let start() enter STARTING itself; it ignores an already-starting client.
+      updateStatus(STATUS.IDLE, { mode: state.mode, attempt, retry: true });
       start(state.lastStartOptions || {}).catch((err) => {
         logDebug('Retry failed', err);
         handleStreamError(err);

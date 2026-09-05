@@ -62,6 +62,11 @@ export function mapBadges(badges) {
       if (badge.svg) {
         return { type: 'svg', html: badge.svg };
       }
+      // Profile collection already converts SVG badges to this shape.
+      // Display formatting normalizes that collection again.
+      if (badge.type === 'svg' && badge.html) {
+        return { type: 'svg', html: badge.html };
+      }
       if (badge.text) {
         return { type: 'text', text: badge.text };
       }

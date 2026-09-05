@@ -119,7 +119,7 @@ export class KickPlugin extends BasePlugin {
       ...options,
       id: 'kick',
       name: 'Kick',
-      description: 'Connect to Kick chat directly and relay messages to your overlays.'
+      description: 'Enter a Kick channel in Options, then connect. If channel lookup fails, Options also includes manual chatroom settings.'
     });
 
     this.channelInput = null;

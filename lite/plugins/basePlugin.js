@@ -106,6 +106,11 @@ export class BasePlugin {
     status.textContent = STATE_LABEL[this.state] || this.state;
 
     const settingsButton = createSettingsButton(`Show ${this.name} options`);
+    settingsButton.classList.add('source-options');
+    settingsButton.setAttribute('aria-label', `${this.name} options`);
+    const optionsLabel = document.createElement('span');
+    optionsLabel.textContent = 'Options';
+    settingsButton.appendChild(optionsLabel);
 
     headerControls.append(status, settingsButton);
     header.append(identity, headerControls);
@@ -204,6 +209,7 @@ export class BasePlugin {
     this.settingsToggle = settingsButton;
 
     container.appendChild(wrapper);
+    if (typeof this.refreshStatus === 'function') this.refreshStatus();
   }
 
   renderBody() {

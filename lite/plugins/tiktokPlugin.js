@@ -111,7 +111,7 @@ export class TikTokPlugin extends BasePlugin {
       ...options,
       id: 'tiktok',
       name: 'TikTok',
-      description: 'Relay TikTok LIVE chat via a TikTok Chat Reader compatible proxy.'
+      description: 'Enter a TikTok username in Options, then connect. Requires a working TikTok Chat Reader proxy; its URL is also in Options.'
     });
 
     this.uniqueIdInput = null;
@@ -375,6 +375,7 @@ export class TikTokPlugin extends BasePlugin {
 
       // User cancelled the prompt
       if (response === null) {
+        this.setState('idle');
         return;
       }
 
