@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+    <title>LLM Chat Bot</title>
+	<link rel="icon" href="./icons/bot.png" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2a2a2a, #3a3a3a);
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+			max-height: 100vh;
+			overflow: hidden;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: rgba(40, 40, 40, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            color: #f0f0f0;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            font-size: min(200%, 10vh);
+        }
+        #bot-status {
+            color: #9a9a9a;
+            font-size: 12px;
+            margin: 0 0 12px;
+            min-height: 15px;
+            overflow: hidden;
+            text-align: center;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        #bot-status.status-warning {
+            color: #ffb885;
+        }
+        #chat-container {
+            height: max(400px, 70vh);
+            border: 1px solid #4a4a4a;
+            border-radius: 15px;
+            overflow-y: auto;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: rgba(30, 30, 30, 0.6);
+            max-height: calc(100vh - 215px);
+        }
+        #input-container {
+            display: flex;
+            gap: 10px;
+        }
+        #user-input {
+            flex-grow: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(60, 60, 60, 0.8);
+            color: #f0f0f0;
+            font-size: 16px;
+            min-width: 0;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #6a5acd, #4b0082);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            white-space: nowrap;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(75, 0, 130, 0.4);
+        }
+        #send-button.stop-mode {
+            background: linear-gradient(45deg, #b03030, #7a1f1f);
+        }
+        #send-button.stop-mode:hover {
+            box-shadow: 0 5px 15px rgba(130, 0, 0, 0.4);
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word;
+        }
+        .user {
+            background: linear-gradient(45deg, #4a4a4a, #5a5a5a);
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        .assistant {
+            background: linear-gradient(45deg, #3a3a3a, #4a4a4a);
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 30, 30, 0.6);
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(80, 80, 80, 0.8);
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 100, 100, 0.8);
+        }
+        .waiting .msg-content {
+            align-items: center;
+            color: #888;
+            display: flex;
+            font-style: italic;
+        }
+        .error-message .msg-content {
+            color: #ffb3b3;
+            white-space: pre-wrap;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #888;
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                align-items: flex-start;
+                padding: 20px 0;
+            }
+            .container {
+                width: 100%;
+                height: calc(100vh - 50px);
+                border-radius: 0;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+            }
+            h1 {
+                font-size: 1.2em;
+                margin-bottom: 4px;
+            }
+            #chat-container {
+                flex-grow: 1;
+                height: 0;
+                margin-bottom: 10px;
+            }
+            #input-container {
+                flex-wrap: wrap;
+            }
+            #user-input {
+                width: 100%;
+                order: -1;
+            }
+            button {
+                flex-grow: 1;
+                padding: 10px;
+                font-size: 14px;
+            }
+        }
+        #mic-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin: auto auto;
+			top: 1px;
+			position: relative;
+        }
+        #mic-icon {
+            width: 24px;
+            height: 24px;
+            fill: #6a5acd;
+            transition: fill 0.3s ease;
+        }
+        #mic-button:hover #mic-icon {
+            fill: #4b0082;
+        }
+        #mic-button.active #mic-icon {
+            fill: #ff0000;
+        }
+		.image-preview-container {
+            position: relative;
+            display: inline-block;
+            margin: 0;
+        }
+
+        .image-preview {
+            max-height: 30px;
+            border-radius: 10px;
+            border: 2px solid rgba(74, 74, 74, 1);
+        }
+
+        .remove-image {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4444;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .remove-image:hover {
+            background: #ff0000;
+        }
+
+        .image-upload-button {
+            background: rgba(60, 60, 60, 0.8);
+            border: none;
+            border-radius: 25px;
+            padding: 8px 15px;
+            color: #f0f0f0;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        .image-upload-button:hover {
+            background: rgba(80, 80, 80, 0.8);
+        }
+
+        #image-input {
+            display: none;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+        }
+		.message.user .msg-content {
+			white-space: pre-wrap;
+		}
+		.attached-image {
+			border-radius: 8px;
+			display: block;
+			margin-top: 8px;
+			max-height: 180px;
+			max-width: min(100%, 220px);
+		}
+		.image-note {
+			color: #a8a8a8;
+			font-size: 12px;
+			margin-top: 6px;
+		}
+		.msg-actions {
+			display: flex;
+			gap: 8px;
+			margin-top: 8px;
+		}
+		.msg-btn {
+			background: rgba(255, 255, 255, 0.08);
+			border-radius: 6px;
+			color: #c9c9c9;
+			font-size: 12px;
+			padding: 4px 10px;
+		}
+		.msg-btn:hover {
+			background: rgba(255, 255, 255, 0.18);
+			box-shadow: none;
+			color: #fff;
+			transform: none;
+		}
+		.msg-actions .regen {
+			display: none;
+		}
+		.message.assistant:last-child .msg-actions .regen {
+			display: inline-block;
+		}
+		.code-copy {
+			background: rgba(255, 255, 255, 0.1);
+			border-radius: 5px;
+			color: #ccc;
+			font-size: 11px;
+			padding: 3px 8px;
+			position: absolute;
+			right: 6px;
+			top: 6px;
+		}
+		.code-copy:hover {
+			background: rgba(255, 255, 255, 0.22);
+			box-shadow: none;
+			transform: none;
+		}
+		.message p {
+			margin: 0 0 0.75em;
+		}
+		.message p:last-child {
+			margin-bottom: 0;
+		}
+		.message ul,
+		.message ol {
+			margin: 0.45em 0 0.75em 1.35em;
+			padding-left: 1em;
+		}
+		.message li {
+			margin: 0.25em 0;
+		}
+		.message h1,
+		.message h2,
+		.message h3,
+		.message h4 {
+			margin: 0.7em 0 0.35em;
+			line-height: 1.2;
+		}
+		.message h1 { font-size: 1.35em; }
+		.message h2 { font-size: 1.22em; }
+		.message h3 { font-size: 1.1em; }
+		.message h4 { font-size: 1em; }
+		.message code {
+			background: rgba(0, 0, 0, 0.35);
+			border-radius: 4px;
+			padding: 0.1em 0.35em;
+			font-family: Consolas, Monaco, "Courier New", monospace;
+			font-size: 0.94em;
+		}
+		.message pre {
+			background: rgba(0, 0, 0, 0.45);
+			border: 1px solid rgba(255, 255, 255, 0.08);
+			border-radius: 8px;
+			margin: 0.65em 0;
+			overflow: auto;
+			padding: 10px 12px;
+			position: relative;
+			white-space: pre;
+		}
+		.message pre code {
+			background: transparent;
+			border-radius: 0;
+			padding: 0;
+		}
+		.message blockquote {
+			border-left: 3px solid rgba(154, 183, 255, 0.65);
+			color: #cfcfe6;
+			margin: 0.6em 0;
+			padding: 0.15em 0 0.15em 0.8em;
+		}
+		.message a {
+			color: #9ec5ff;
+		}
+		.thinking {
+			background: rgba(255, 255, 255, 0.06);
+			border: 1px solid rgba(255, 255, 255, 0.08);
+			border-left: 3px solid rgba(255, 255, 255, 0.28);
+			border-radius: 8px;
+			color: #c7c7c7;
+			display: block;
+			font-size: 0.92em;
+			font-style: normal;
+			margin: 0.55em 0;
+			padding: 0.5em 0.75em;
+		}
+		.thinking summary {
+			cursor: pointer;
+			font-weight: 600;
+		}
+		.thinking-body {
+			margin-top: 0.45em;
+			opacity: 0.9;
+		}
+		.thinking:empty {
+			display: none;
+		}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ask me anything! I'm a LLM Chat Bot</h1>
+        <div id="bot-status"></div>
+        <div id="chat-container"></div>
+        <div id="input-container">
+            <input type="text" id="user-input" placeholder="Type your message or question here..." autocomplete="off" enterkeyhint="send">
+            <button id="send-button" onclick="handleSendClick()">Send</button>
+            <button id="mic-button" onclick="toggleSpeechRecognition()" title="Use your default mic to talk to the bot instead of by typing">
+                <svg id="mic-icon" viewBox="0 0 24 24">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1 1.93c-3.94-.49-7-3.85-7-7.93h2c0 3.31 2.69 6 6 6s6-2.69 6-6h2c0 4.08-3.06 7.44-7 7.93V22h-2v-6.07z"/>
+                </svg>
+            </button>
+            <button onclick="newConversation()" title="Clear the current chat and start a fresh new one">New Chat</button>
+        </div>
+    </div>
+	<script type="text/javascript" src="tts.js"></script>
+    <script>
+
+		var iframe = null;
+		var urlParams = new URLSearchParams(window.location.search);
+		var roomID = false;
+		var password = "false";
+		var conversationHistory = [];
+		let currentImage = null;
+		let imageSupport = false;
+		if (urlParams.has("img")){
+			imageSupport = true;
+		}
+
+		if (urlParams.has("session")) {
+			roomID = urlParams.get("session");
+		} else {
+			roomID = prompt("Enter you session ID");
+			if (!roomID){
+				alert("you need to have a session ID for this page to work..");
+			}
+		}
+
+		if (urlParams.has("password")) {
+			password = urlParams.get("password");
+		}
+		if (window.TTS && typeof TTS.configure === "function") {
+			TTS.configure(urlParams);
+		}
+		let currentID = 0
+
+		var capabilities = null;
+		var capabilityAttempts = 0;
+		var activeRequestId = 0;
+		var stoppedIds = {};
+		var persistEnabled = !urlParams.has("nosave");
+		var storageKey = "ssn-chatbot-history-" + roomID;
+
+		const inputContainer = document.getElementById('input-container');
+		const chatContainer = document.getElementById('chat-container');
+		const userInput = document.getElementById('user-input');
+		const sendButton = document.getElementById('send-button');
+		const botStatus = document.getElementById('bot-status');
+		userInput.focus();
+		window.onload = ()=> {
+			userInput.focus();
+		};
+		// Create new elements
+		const imageInput = document.createElement('input');
+		imageInput.type = 'file';
+		imageInput.id = 'image-input';
+		imageInput.accept = 'image/*';
+
+		const imagePreviewContainer = document.createElement('div');
+		imagePreviewContainer.className = 'image-preview-container';
+		imagePreviewContainer.style.display = 'none';
+
+		const imagePreview = document.createElement('img');
+		imagePreview.className = 'image-preview';
+
+		const removeButton = document.createElement('button');
+		removeButton.className = 'remove-image';
+		removeButton.innerHTML = '&times;';
+
+		const uploadButton = document.createElement('button');
+		uploadButton.className = 'image-upload-button';
+		uploadButton.innerHTML = `
+			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+				<circle cx="12" cy="13" r="4"/>
+			</svg>
+		`;
+		uploadButton.title = "Requires an LLM model that supports images";
+
+		if (!imageSupport){
+			uploadButton.style.display = "none";
+		}
+
+		//Restructure the input container for image input
+		const inputRow = document.createElement('div');
+		inputRow.className = 'input-row';
+
+		//Move existing elements to the new structure
+		inputContainer.insertBefore(imageInput, inputContainer.firstChild);
+		imagePreviewContainer.appendChild(imagePreview);
+		imagePreviewContainer.appendChild(removeButton);
+		inputContainer.insertBefore(imagePreviewContainer, inputContainer.firstChild);
+
+		//Rearrange elements
+		inputRow.appendChild(uploadButton);
+		const existingButtons = Array.from(inputContainer.children).filter(
+			child => child.tagName === 'BUTTON'
+		);
+		existingButtons.forEach(button => inputRow.appendChild(button));
+
+		//Insert the input row after the user input
+		userInput.parentNode.insertBefore(inputRow, userInput.nextSibling);
+
+		function postToIframe(data) {
+			if (!iframe || !iframe.contentWindow) return;
+			try {
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs" }, "*");
+			} catch (e) {
+				console.error(e);
+			}
+		}
+
+		function setBusy(busy) {
+			if (busy) {
+				sendButton.textContent = 'Stop';
+				sendButton.classList.add('stop-mode');
+				sendButton.title = 'Stop the current response';
+			} else {
+				sendButton.textContent = 'Send';
+				sendButton.classList.remove('stop-mode');
+				sendButton.title = '';
+				activeRequestId = 0;
+			}
+		}
+
+		function handleSendClick() {
+			if (activeRequestId) {
+				stopCurrentResponse();
+			} else {
+				sendMessage();
+			}
+		}
+
+		function isNearBottom() {
+			return chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 80;
+		}
+
+		function saveHistory() {
+			if (!persistEnabled) return;
+			try {
+				var trimmed = conversationHistory.slice(-60).map(function(m) {
+					return m && m.hadImage
+						? { role: m.role, content: m.content, hadImage: true }
+						: { role: m.role, content: m.content };
+				});
+				localStorage.setItem(storageKey, JSON.stringify({ v: 1, saved: Date.now(), messages: trimmed }));
+			} catch (e) {}
+		}
+
+		function loadHistory() {
+			if (!persistEnabled) return [];
+			try {
+				var raw = localStorage.getItem(storageKey);
+				if (!raw) return [];
+				var parsed = JSON.parse(raw);
+				if (!parsed || !Array.isArray(parsed.messages)) return [];
+				return parsed.messages.filter(function(m) {
+					return m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string';
+				});
+			} catch (e) {
+				return [];
+			}
+		}
+
+		function clearSavedHistory() {
+			try {
+				localStorage.removeItem(storageKey);
+			} catch (e) {}
+		}
+
+		async function sendMessage() {
+			const message = finalTranscript || userInput.value.trim();
+			if (!message && !currentImageFile) return;
+
+			if (activeRequestId) {
+				// sending something new interrupts the response in progress
+				stopCurrentResponse();
+			}
+
+			let imagePayload = null;
+			let thumbnailSrc = null;
+
+			try {
+				// Process image if one is selected
+				if (currentImageFile) {
+					try {
+						imagePayload = await processImageForWebRTC(currentImageFile, 262144, 1120, message);
+						thumbnailSrc = 'data:image/jpeg;base64,' + imagePayload;
+					} catch (error) {
+						alert('Error processing image. The image may be too large with the current message. Try a smaller image or shorter message.');
+						return;
+					}
+				}
+
+				finalTranscript = '';
+				userInput.value = '';
+				addMessageToChat('user', message, thumbnailSrc, false);
+
+				// Add the user's message to the conversation history
+				if (imagePayload) {
+					conversationHistory.push({ role: 'user', content: message, hadImage: true, imagePayloads: [imagePayload] });
+				} else {
+					conversationHistory.push({ role: 'user', content: message });
+				}
+				saveHistory();
+				clearAttachedImage();
+
+				requestResponse(imagePayload ? [imagePayload] : null);
+			} catch (error) {
+				console.error('Error sending message:', error);
+				alert('Error sending message. Please try again.');
+			}
+		}
+
+		function requestResponse(images) {
+			var messageID = parseInt(Math.random() * 99999999, 10);
+			addWaitingMessage(messageID);
+			activeRequestId = messageID;
+			setBusy(true);
+
+			var data = {};
+			data.value = formatConversationForLlama(conversationHistory);
+			data.target = messageID;
+			data.action = "chatbot";
+			data.turbo = false;
+			if (images && images.length) {
+				data.images = images;
+			}
+
+			if (!capabilities) {
+				postToIframe({ action: "chatbotCapabilities", target: "caps" });
+			}
+			postToIframe(data);
+		}
+
+		function getLastUserImages() {
+			for (var i = conversationHistory.length - 1; i >= 0; i--) {
+				var message = conversationHistory[i];
+				if (message && message.role === 'user') {
+					return Array.isArray(message.imagePayloads) && message.imagePayloads.length ? message.imagePayloads : null;
+				}
+			}
+			return null;
+		}
+
+		function stopCurrentResponse() {
+			var id = activeRequestId;
+			if (!id) return;
+			stoppedIds[id] = true;
+			postToIframe({ action: "chatbotStop", target: id });
+
+			var el = document.querySelector('[data-response-id="' + id + '"]');
+			var partial = messageChunks[id] ? messageChunks[id].join("") : "";
+			delete messageChunks[id];
+			if (el) {
+				if (partial.trim()) {
+					el.classList.remove('waiting');
+					var contentDiv = el.querySelector('.msg-content') || el;
+					contentDiv.innerHTML = renderChatbotResponse(partial, false);
+					conversationHistory.push({ role: 'assistant', content: partial });
+					saveHistory();
+					finalizeAssistantMessage(el, partial, false);
+				} else if (el.parentNode) {
+					el.parentNode.removeChild(el);
+				}
+			}
+			setBusy(false);
+			setTimeout(function() {
+				delete stoppedIds[id];
+			}, 60000);
+		}
+
+		function regenerateLast() {
+			if (activeRequestId) return;
+			var lastIndex = -1;
+			for (var i = conversationHistory.length - 1; i >= 0; i--) {
+				if (conversationHistory[i].role === 'assistant') {
+					lastIndex = i;
+					break;
+				}
+			}
+			if (lastIndex === -1) return;
+			conversationHistory.splice(lastIndex, 1);
+			saveHistory();
+			var messages = chatContainer.querySelectorAll('.message.assistant');
+			if (messages.length) {
+				var lastEl = messages[messages.length - 1];
+				if (lastEl.parentNode) {
+					lastEl.parentNode.removeChild(lastEl);
+				}
+			}
+			requestResponse(getLastUserImages());
+		}
+
+		function formatConversationForLlama(history) {
+			return history.map(msg => `${msg.role}: ${msg.content}`).join('\n') + '\nassistant:';
+		}
+
+		function addMessageToChat(role, content, imageSrc, hadImage) {
+			const messageDiv = document.createElement('div');
+			messageDiv.classList.add('message', role);
+			const contentDiv = document.createElement('div');
+			contentDiv.className = 'msg-content';
+			contentDiv.textContent = content;
+			messageDiv.appendChild(contentDiv);
+			if (imageSrc) {
+				const img = document.createElement('img');
+				img.className = 'attached-image';
+				img.src = imageSrc;
+				messageDiv.appendChild(img);
+			} else if (hadImage) {
+				const note = document.createElement('div');
+				note.className = 'image-note';
+				note.textContent = 'image attached';
+				messageDiv.appendChild(note);
+			}
+			chatContainer.appendChild(messageDiv);
+			chatContainer.scrollTop = chatContainer.scrollHeight;
+		}
+
+		var messageChunks = {};
+
+		function parseChatbotErrorMessage(content) {
+			var text = content == null ? "" : String(content);
+			var trimmed = text.trim();
+			if (trimmed.charAt(0) === "{" && trimmed.indexOf('"error"') !== -1) {
+				try {
+					var parsed = JSON.parse(trimmed);
+					var error = parsed && parsed.error;
+					var message = error && (error.message || error.error || error.detail);
+					if (message) {
+						var extras = [];
+						if (error.provider) extras.push(error.provider);
+						if (error.status) extras.push("HTTP " + error.status);
+						if (extras.length) {
+							message += " (" + extras.join(", ") + ")";
+						}
+						if (error.hint) {
+							message += "\n" + error.hint;
+						}
+						return message;
+					}
+				} catch (e) {}
+			}
+			return null;
+		}
+
+		function normalizeChatbotContent(content) {
+			var errorMessage = parseChatbotErrorMessage(content);
+			if (errorMessage !== null) {
+				return "Error: " + errorMessage;
+			}
+			return content == null ? "" : String(content);
+		}
+
+		function escapeHtml(value) {
+			return String(value == null ? "" : value)
+				.replace(/&/g, "&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+				.replace(/"/g, "&quot;")
+				.replace(/'/g, "&#39;");
+		}
+
+		function escapeAttribute(value) {
+			return escapeHtml(value).replace(/`/g, "&#96;");
+		}
+
+		function sanitizeMarkdownUrl(value) {
+			var url = String(value || "").trim();
+			if (/^(https?:\/\/|mailto:)/i.test(url)) {
+				return url;
+			}
+			return "";
+		}
+
+		function formatInlineMarkdown(text) {
+			var codeSpans = [];
+			var links = [];
+			var output = String(text == null ? "" : text);
+
+			output = output.replace(/`([^`\n]+)`/g, function(match, code) {
+				var token = "%%CHATBOT_CODE_" + codeSpans.length + "%%";
+				codeSpans.push("<code>" + escapeHtml(code) + "</code>");
+				return token;
+			});
+
+			output = output.replace(/\[([^\]\n]+)\]\(([^)\s]+)\)/g, function(match, label, url) {
+				var safeUrl = sanitizeMarkdownUrl(url);
+				if (!safeUrl) return match;
+				var token = "%%CHATBOT_LINK_" + links.length + "%%";
+				links.push('<a href="' + escapeAttribute(safeUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(label) + "</a>");
+				return token;
+			});
+
+			output = escapeHtml(output);
+
+			output = output.replace(/(^|[\s(])((?:https?:\/\/|mailto:)[^\s<]+)/gi, function(match, prefix, url) {
+				var trailing = "";
+				while (/[),.;!?]$/.test(url)) {
+					trailing = url.slice(-1) + trailing;
+					url = url.slice(0, -1);
+				}
+				return prefix + '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + "</a>" + trailing;
+			});
+
+			output = output
+				.replace(/\*\*\*([^*\n][\s\S]*?)\*\*\*/g, "<strong><em>$1</em></strong>")
+				.replace(/\*\*([^*\n][\s\S]*?)\*\*/g, "<strong>$1</strong>")
+				.replace(/__([^_\n][\s\S]*?)__/g, "<strong>$1</strong>")
+				.replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+
+			for (var i = 0; i < links.length; i++) {
+				output = output.split("%%CHATBOT_LINK_" + i + "%%").join(links[i]);
+			}
+			for (var j = 0; j < codeSpans.length; j++) {
+				output = output.split("%%CHATBOT_CODE_" + j + "%%").join(codeSpans[j]);
+			}
+
+			return output;
+		}
+
+		function renderMarkdown(text) {
+			var value = String(text == null ? "" : text).replace(/\r\n?/g, "\n");
+			var lines = value.split("\n");
+			var html = [];
+			var paragraph = [];
+			var listType = "";
+			var inCode = false;
+			var codeLines = [];
+			var codeLanguage = "";
+
+			function flushParagraph() {
+				if (!paragraph.length) return;
+				var text = paragraph.join("\n").trim();
+				if (text) {
+					html.push("<p>" + formatInlineMarkdown(text).replace(/\n/g, "<br>") + "</p>");
+				}
+				paragraph = [];
+			}
+
+			function closeList() {
+				if (listType) {
+					html.push("</" + listType + ">");
+					listType = "";
+				}
+			}
+
+			function openList(type) {
+				if (listType !== type) {
+					closeList();
+					listType = type;
+					html.push("<" + listType + ">");
+				}
+			}
+
+			function flushCode() {
+				var lang = codeLanguage ? ' data-lang="' + escapeAttribute(codeLanguage) + '"' : "";
+				html.push("<pre><code" + lang + ">" + escapeHtml(codeLines.join("\n")) + "</code></pre>");
+				codeLines = [];
+				codeLanguage = "";
+			}
+
+			for (var i = 0; i < lines.length; i++) {
+				var line = lines[i];
+				var trimmed = line.trim();
+				var match;
+
+				if (inCode) {
+					if (/^\s*```\s*$/.test(line)) {
+						flushCode();
+						inCode = false;
+					} else {
+						codeLines.push(line);
+					}
+					continue;
+				}
+
+				match = line.match(/^\s*```([A-Za-z0-9_.+-]*)\s*$/);
+				if (match) {
+					flushParagraph();
+					closeList();
+					inCode = true;
+					codeLanguage = match[1] || "";
+					continue;
+				}
+
+				if (!trimmed) {
+					flushParagraph();
+					closeList();
+					continue;
+				}
+
+				match = line.match(/^(#{1,4})\s+(.+)$/);
+				if (match) {
+					flushParagraph();
+					closeList();
+					var level = match[1].length;
+					html.push("<h" + level + ">" + formatInlineMarkdown(match[2].trim()) + "</h" + level + ">");
+					continue;
+				}
+
+				if (/^\s*(---|\*\*\*)\s*$/.test(line)) {
+					flushParagraph();
+					closeList();
+					html.push("<hr>");
+					continue;
+				}
+
+				match = line.match(/^\s*[-*+]\s+(.+)$/);
+				if (match) {
+					flushParagraph();
+					openList("ul");
+					html.push("<li>" + formatInlineMarkdown(match[1].trim()) + "</li>");
+					continue;
+				}
+
+				match = line.match(/^\s*\d+[.)]\s+(.+)$/);
+				if (match) {
+					flushParagraph();
+					openList("ol");
+					html.push("<li>" + formatInlineMarkdown(match[1].trim()) + "</li>");
+					continue;
+				}
+
+				match = line.match(/^\s*>\s?(.*)$/);
+				if (match) {
+					flushParagraph();
+					closeList();
+					html.push("<blockquote>" + formatInlineMarkdown(match[1]) + "</blockquote>");
+					continue;
+				}
+
+				closeList();
+				paragraph.push(line);
+			}
+
+			if (inCode) {
+				flushCode();
+			}
+			flushParagraph();
+			closeList();
+
+			return html.join("");
+		}
+
+		function splitThinkingSections(text) {
+			var value = String(text == null ? "" : text);
+			var parts = [];
+			var tagPattern = /<\/?\s*(think|thinking|thought|reasoning)\b[^>]*>/ig;
+			var lastIndex = 0;
+			var thinkingStart = 0;
+			var inThinking = false;
+			var match;
+
+			while ((match = tagPattern.exec(value)) !== null) {
+				var tag = match[0];
+				var isCloseTag = /^<\//.test(tag);
+
+				if (!inThinking) {
+					if (isCloseTag) {
+						if (match.index > lastIndex) {
+							parts.push({ type: "normal", text: value.slice(lastIndex, match.index) });
+						}
+						lastIndex = tagPattern.lastIndex;
+						continue;
+					}
+					if (match.index > lastIndex) {
+						parts.push({ type: "normal", text: value.slice(lastIndex, match.index) });
+					}
+					inThinking = true;
+					thinkingStart = tagPattern.lastIndex;
+					lastIndex = tagPattern.lastIndex;
+				} else if (isCloseTag) {
+					parts.push({ type: "thinking", text: value.slice(thinkingStart, match.index), open: false });
+					inThinking = false;
+					lastIndex = tagPattern.lastIndex;
+				}
+			}
+
+			if (inThinking) {
+				parts.push({ type: "thinking", text: value.slice(thinkingStart), open: true });
+			} else if (lastIndex < value.length) {
+				parts.push({ type: "normal", text: value.slice(lastIndex) });
+			}
+
+			return parts;
+		}
+
+		function stripThinkingSections(text) {
+			var parts = splitThinkingSections(text);
+			var out = [];
+			for (var i = 0; i < parts.length; i++) {
+				if (parts[i].type === "normal") {
+					out.push(parts[i].text);
+				}
+			}
+			var joined = out.join("").trim();
+			return joined || String(text == null ? "" : text).trim();
+		}
+
+		function renderThinkingBlock(text, open) {
+			var content = String(text == null ? "" : text).trim();
+			if (!content) return "";
+			return '<details class="thinking"' + (open ? " open" : "") + '><summary>' + (open ? "Thinking..." : "Thinking") + '</summary><div class="thinking-body">' + renderMarkdown(content) + "</div></details>";
+		}
+
+		function renderChatbotResponse(content, isStreaming) {
+			var text = normalizeChatbotContent(content).replace(/^[\n\s]+/, "");
+			var parts = splitThinkingSections(text);
+			var html = [];
+
+			for (var i = 0; i < parts.length; i++) {
+				if (parts[i].type === "thinking") {
+					html.push(renderThinkingBlock(parts[i].text, isStreaming || parts[i].open));
+				} else {
+					html.push(renderMarkdown(parts[i].text));
+				}
+			}
+
+			return html.join("");
+		}
+
+		function copyTextToClipboard(text, button) {
+			var markCopied = function() {
+				if (!button) return;
+				var original = button.textContent;
+				button.textContent = 'Copied!';
+				setTimeout(function() {
+					button.textContent = original;
+				}, 1200);
+			};
+			var fallback = function() {
+				var textarea = document.createElement('textarea');
+				textarea.value = text;
+				textarea.style.cssText = 'position:fixed;left:-1000px;top:-1000px;opacity:0;';
+				document.body.appendChild(textarea);
+				textarea.select();
+				try {
+					document.execCommand('copy');
+					markCopied();
+				} catch (e) {}
+				document.body.removeChild(textarea);
+			};
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(text).then(markCopied, fallback);
+			} else {
+				fallback();
+			}
+		}
+
+		function addCodeCopyButtons(el) {
+			var blocks = el.querySelectorAll('pre');
+			for (var i = 0; i < blocks.length; i++) {
+				(function(pre) {
+					if (pre.querySelector('.code-copy')) return;
+					var code = pre.querySelector('code');
+					if (!code) return;
+					var btn = document.createElement('button');
+					btn.className = 'code-copy';
+					btn.type = 'button';
+					btn.textContent = 'Copy';
+					btn.addEventListener('click', function() {
+						copyTextToClipboard(code.textContent, btn);
+					});
+					pre.appendChild(btn);
+				})(blocks[i]);
+			}
+		}
+
+		function finalizeAssistantMessage(el, rawText, isError) {
+			var existing = el.querySelector('.msg-actions');
+			if (existing && existing.parentNode) {
+				existing.parentNode.removeChild(existing);
+			}
+			var actions = document.createElement('div');
+			actions.className = 'msg-actions';
+			if (isError) {
+				var retryBtn = document.createElement('button');
+				retryBtn.className = 'msg-btn';
+				retryBtn.type = 'button';
+				retryBtn.textContent = 'Retry';
+				retryBtn.addEventListener('click', function() {
+					if (activeRequestId) return;
+					if (el.parentNode) {
+						el.parentNode.removeChild(el);
+					}
+					if (conversationHistory.length) {
+						requestResponse(getLastUserImages());
+					}
+				});
+				actions.appendChild(retryBtn);
+			} else {
+				var copyBtn = document.createElement('button');
+				copyBtn.className = 'msg-btn';
+				copyBtn.type = 'button';
+				copyBtn.textContent = 'Copy';
+				copyBtn.addEventListener('click', function() {
+					copyTextToClipboard(stripThinkingSections(rawText), copyBtn);
+				});
+				actions.appendChild(copyBtn);
+
+				var regenBtn = document.createElement('button');
+				regenBtn.className = 'msg-btn regen';
+				regenBtn.type = 'button';
+				regenBtn.textContent = 'Regenerate';
+				regenBtn.addEventListener('click', regenerateLast);
+				actions.appendChild(regenBtn);
+
+				addCodeCopyButtons(el);
+			}
+			el.appendChild(actions);
+		}
+
+		function speakChatbotResponse(html) {
+			if (!window.TTS || !TTS.speech || !html) {
+				return;
+			}
+			try {
+				var tempContainer = document.createElement("div");
+				tempContainer.innerHTML = html;
+				tempContainer.querySelectorAll(".thinking, script, style").forEach(function(node) {
+					if (node && node.parentNode) {
+						node.parentNode.removeChild(node);
+					}
+				});
+				var text = tempContainer.textContent || tempContainer.innerText || "";
+				text = text.replace(/\s{2,}/g, " ").trim();
+				if (text) {
+					TTS.speak(text, true);
+				}
+			} catch (e) {
+				console.error(e);
+			}
+		}
+
+		function addWaitingMessage(id) {
+			const waitingDiv = document.createElement('div');
+			waitingDiv.classList.add('message', 'assistant', 'waiting');
+			waitingDiv.setAttribute('data-response-id', id);
+			const contentDiv = document.createElement('div');
+			contentDiv.className = 'msg-content';
+			contentDiv.innerHTML = '<div class="spinner"></div>Waiting for response...';
+			waitingDiv.appendChild(contentDiv);
+			chatContainer.appendChild(waitingDiv);
+			if (currentID in messageChunks){
+				// a previous stream never finalized; keep whatever we received
+				var leftover = messageChunks[currentID].join("");
+				if (leftover) {
+					conversationHistory.push({ role: 'assistant', content: leftover });
+					saveHistory();
+				}
+				messageChunks = {};
+			}
+			currentID = id;
+			messageChunks[id] = [];
+			chatContainer.scrollTop = chatContainer.scrollHeight;
+
+			setTimeout(()=>{
+				if (waitingDiv.classList.contains("waiting")){
+					contentDiv.innerHTML = 'Warning: The bot may be unavailable right now. Keep waiting or try again.';
+				}
+			},10000);
+		}
+
+		function updateWaitingMessage(id, content, chunk=false) {
+			if (stoppedIds[id]) {
+				if (!chunk) {
+					delete messageChunks[id];
+					delete stoppedIds[id];
+				}
+				return;
+			}
+			const waitingMessage = document.querySelector(`[data-response-id="${id}"]`);
+			if (!waitingMessage) return;
+
+			const stick = isNearBottom();
+			waitingMessage.classList.remove('waiting');
+			const contentDiv = waitingMessage.querySelector('.msg-content') || waitingMessage;
+
+			let processedContent = content;
+			let errorMessage = null;
+
+			if (chunk) {
+				if (messageChunks[id]) {
+					messageChunks[id].push(content);
+					processedContent = messageChunks[id].join("");
+				}
+			} else {
+				if (messageChunks[id]) {
+					if (!content) {
+						content = messageChunks[id].join("");
+					}
+					delete messageChunks[id];
+				}
+				errorMessage = parseChatbotErrorMessage(content);
+				processedContent = normalizeChatbotContent(content);
+				if (errorMessage === null && !String(processedContent).trim()) {
+					// nothing came back (e.g. aborted remotely); drop the bubble
+					if (waitingMessage.parentNode) {
+						waitingMessage.parentNode.removeChild(waitingMessage);
+					}
+					if (id === activeRequestId) {
+						setBusy(false);
+					}
+					return;
+				}
+				if (errorMessage === null) {
+					conversationHistory.push({ role: 'assistant', content: processedContent });
+					saveHistory();
+				}
+			}
+
+			processedContent = normalizeChatbotContent(processedContent);
+			var renderedContent = renderChatbotResponse(processedContent, chunk);
+			contentDiv.innerHTML = renderedContent;
+			if (!chunk) {
+				if (errorMessage !== null) {
+					waitingMessage.classList.add('error-message');
+				}
+				finalizeAssistantMessage(waitingMessage, processedContent, errorMessage !== null);
+				if (id === activeRequestId) {
+					setBusy(false);
+				}
+				if (errorMessage === null) {
+					speakChatbotResponse(renderedContent);
+				}
+			}
+			if (stick) {
+				chatContainer.scrollTop = chatContainer.scrollHeight;
+			}
+		}
+
+		function newConversation() {
+			if (conversationHistory.length && !confirm("Start a new chat? This clears the current conversation.")) {
+				return;
+			}
+			if (activeRequestId) {
+				stopCurrentResponse();
+			}
+			chatContainer.innerHTML = '';
+			currentID = 0;
+			messageChunks = {};
+			stoppedIds = {};
+			conversationHistory = []; // Clear the conversation history
+			clearSavedHistory();
+			userInput.focus();
+		}
+
+		function restoreHistory() {
+			var saved = loadHistory();
+			if (!saved.length) return;
+			conversationHistory = saved.map(function(m) {
+				return m.hadImage ? { role: m.role, content: m.content, hadImage: true } : { role: m.role, content: m.content };
+			});
+			for (var i = 0; i < saved.length; i++) {
+				if (saved[i].role === 'user') {
+					addMessageToChat('user', saved[i].content, null, !!saved[i].hadImage);
+				} else {
+					var div = document.createElement('div');
+					div.classList.add('message', 'assistant');
+					var contentDiv = document.createElement('div');
+					contentDiv.className = 'msg-content';
+					contentDiv.innerHTML = renderChatbotResponse(saved[i].content, false);
+					div.appendChild(contentDiv);
+					chatContainer.appendChild(div);
+					finalizeAssistantMessage(div, saved[i].content, false);
+				}
+			}
+			chatContainer.scrollTop = chatContainer.scrollHeight;
+		}
+
+		function applyCapabilities(caps) {
+			if (!caps || typeof caps !== 'object') return;
+			capabilities = caps;
+			if (caps.enabled === false) {
+				botStatus.textContent = 'The private chat bot is disabled. In the Social Stream Ninja menu, enable "Enable private chat bot option" under Chat Bot - Private Interface.';
+				botStatus.classList.add('status-warning');
+			} else {
+				var bits = [];
+				if (caps.provider) bits.push(caps.provider);
+				if (caps.model) bits.push(caps.model);
+				if (caps.imageInput === true) bits.push('vision');
+				botStatus.textContent = bits.join(' - ');
+				botStatus.title = botStatus.textContent;
+				botStatus.classList.remove('status-warning');
+			}
+			if (!urlParams.has('img')) {
+				if (caps.imageInput === false) {
+					uploadButton.style.display = 'none';
+					imageSupport = false;
+				} else {
+					uploadButton.style.display = '';
+					imageSupport = true;
+					uploadButton.title = caps.imageInput === true
+						? 'Attach an image'
+						: 'Attach an image; requires a vision-capable model';
+				}
+			}
+		}
+
+		function requestCapabilities() {
+			if (capabilities) return;
+			if (capabilityAttempts >= 10) {
+				if (!botStatus.textContent || botStatus.textContent === 'Connecting...') {
+					botStatus.textContent = 'Still connecting... make sure the Social Stream Ninja extension or app is running.';
+					botStatus.classList.add('status-warning');
+				}
+				return;
+			}
+			capabilityAttempts++;
+			postToIframe({ action: "chatbotCapabilities", target: "caps" });
+			setTimeout(requestCapabilities, 2500);
+		}
+
+		function setAttachedImage(file) {
+			currentImageFile = file;
+			const reader = new FileReader();
+			reader.onloadend = function() {
+				imagePreview.src = reader.result;
+				imagePreviewContainer.style.display = 'inline-block';
+			};
+			reader.readAsDataURL(file);
+		}
+
+		function clearAttachedImage() {
+			imagePreviewContainer.style.display = 'none';
+			imageInput.value = '';
+			currentImageFile = null;
+			currentImage = null;
+		}
+
+		userInput.addEventListener('keypress', function(e) {
+			if (e.key === 'Enter') {
+				sendMessage();
+			}
+		});
+
+		userInput.addEventListener('paste', function(event) {
+			if (!imageSupport) return;
+			var items = event.clipboardData && event.clipboardData.items;
+			if (!items) return;
+			for (var i = 0; i < items.length; i++) {
+				if (items[i].kind === 'file' && items[i].type.indexOf('image/') === 0) {
+					var file = items[i].getAsFile();
+					if (file) {
+						event.preventDefault();
+						setAttachedImage(file);
+					}
+					return;
+				}
+			}
+		});
+
+		document.addEventListener('DOMContentLoaded', () => {
+			restoreHistory();
+			botStatus.textContent = 'Connecting...';
+
+			iframe = document.createElement("iframe");
+			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${encodeURIComponent(password)}&salt=vdo.ninja&label=chatbot&view=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+
+			iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+			iframe.addEventListener('load', function() {
+				setTimeout(requestCapabilities, 1000);
+			});
+			document.body.appendChild(iframe);
+			window.addEventListener("message", function (e) {
+				if (e.source != iframe.contentWindow) return;
+				if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja && e.data.dataReceived.overlayNinja.chatbotChunk && ("value" in e.data.dataReceived.overlayNinja.chatbotChunk)) {
+					const response = e.data.dataReceived.overlayNinja.chatbotChunk;
+					updateWaitingMessage(response.target, response.value || "", true);
+				} else if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja && e.data.dataReceived.overlayNinja.chatbotResponse && ("value" in e.data.dataReceived.overlayNinja.chatbotResponse)) {
+					const response = e.data.dataReceived.overlayNinja.chatbotResponse;
+					updateWaitingMessage(response.target, response.value || "");
+				} else if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja && e.data.dataReceived.overlayNinja.chatbotCapabilities) {
+					applyCapabilities(e.data.dataReceived.overlayNinja.chatbotCapabilities.value || null);
+				}
+			});
+
+			// Event Listeners
+			uploadButton.addEventListener('click', () => imageInput.click());
+
+			imageInput.addEventListener('change', function(event) {
+				const file = event.target.files[0];
+				if (file && file.type.startsWith('image/')) {
+					setAttachedImage(file);
+				}
+			});
+
+			removeButton.addEventListener('click', function() {
+				clearAttachedImage();
+			});
+
+		});
+
+		// Helper function to estimate final message size including base64 overhead
+		function estimateMessageSize(base64Image, userMessage = '') {
+			// base64 encoding increases size by roughly 4/3
+			const base64Overhead = Math.ceil(base64Image.length * (4/3));
+			// Account for the rest of the message structure
+			return base64Overhead + (userMessage?.length || 0) + 100; // 100 bytes buffer for json structure
+		}
+
+		async function processImageForWebRTC(file, maxMessageSize = 262144, maxDimension = 1120, userMessage = '') {
+			return new Promise((resolve, reject) => {
+				const img = new Image();
+				const reader = new FileReader();
+
+				reader.onload = function(e) {
+					img.src = e.target.result;
+				};
+
+				img.onload = async function() {
+					let quality = 0.9; // Start with high quality
+					let width = img.width;
+					let height = img.height;
+
+					// Scale dimensions while maintaining aspect ratio
+					if (width > maxDimension || height > maxDimension) {
+						const ratio = Math.min(maxDimension / width, maxDimension / height);
+						width = Math.floor(width * ratio);
+						height = Math.floor(height * ratio);
+					}
+
+					const canvas = document.createElement('canvas');
+					canvas.width = width;
+					canvas.height = height;
+					const ctx = canvas.getContext('2d');
+					ctx.drawImage(img, 0, 0, width, height);
+
+					// Binary search for optimal quality
+					let minQuality = 0.1;
+					let maxQuality = 0.9;
+					let bestResult = null;
+					let attempts = 0;
+					const maxAttempts = 8; // Prevent infinite loops
+
+					while (attempts < maxAttempts) {
+						try {
+							const blob = await new Promise(resolve => {
+								canvas.toBlob(resolve, 'image/jpeg', quality);
+							});
+
+							const base64 = await new Promise((resolve) => {
+								const reader = new FileReader();
+								reader.onloadend = () => resolve(reader.result.split(',')[1]);
+								reader.readAsDataURL(blob);
+							});
+
+							const totalSize = estimateMessageSize(base64, userMessage);
+
+							if (totalSize <= maxMessageSize) {
+								bestResult = base64;
+								if (maxQuality - minQuality < 0.05) break; // Sufficient precision reached
+								minQuality = quality;
+							} else {
+								maxQuality = quality;
+							}
+
+							quality = (minQuality + maxQuality) / 2;
+						} catch (error) {
+							reject(error);
+							return;
+						}
+						attempts++;
+					}
+
+					if (bestResult) {
+						resolve(bestResult);
+					} else {
+						reject(new Error('Could not compress image to target size'));
+					}
+				};
+
+				img.onerror = () => reject(new Error('Failed to load image'));
+				reader.readAsDataURL(file);
+			});
+		}
+
+		// Store the original image file for later processing
+		let currentImageFile = null;
+
+		let recognition;
+		const micButton = document.getElementById('mic-button');
+		let finalTranscript = '';
+
+		function toggleSpeechRecognition() {
+			if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+				alert("Speech recognition is not supported by your browser.\n\nPlease use a supported browser like Chrome or Edge.");
+				return;
+			}
+
+			if (!recognition) {
+				startSpeechRecognition();
+			} else {
+				stopSpeechRecognition();
+			}
+		}
+
+		function startSpeechRecognition() {
+			recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+			recognition.lang = 'en-US';
+			recognition.interimResults = true;
+			recognition.continuous = true;
+
+			recognition.onstart = () => {
+				micButton.classList.add('active');
+				finalTranscript = '';
+				userInput.value = '';
+			};
+
+			recognition.onresult = (event) => {
+				let interimTranscript = '';
+				for (let i = event.resultIndex; i < event.results.length; ++i) {
+					if (event.results[i].isFinal) {
+						finalTranscript += event.results[i][0].transcript;
+						sendMessage();
+					} else {
+						interimTranscript += event.results[i][0].transcript;
+					}
+				}
+				userInput.value = finalTranscript + interimTranscript;
+			};
+
+			recognition.onend = () => {
+				micButton.classList.remove('active');
+				if (finalTranscript) {
+					sendMessage();
+				}
+			};
+
+			recognition.onerror = (event) => {
+				console.error('Speech recognition error', event.error);
+				stopSpeechRecognition();
+				alert("There was an error with speech recognition.\n\nClose other browser tabs and then try again.");
+			};
+
+			recognition.start();
+		}
+
+		function stopSpeechRecognition() {
+			if (recognition) {
+				recognition.stop();
+				recognition = null;
+			}
+			micButton.classList.remove('active');
+		}
+    </script>
+</body>
+</html>

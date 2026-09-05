@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Social Stream Ninja Docs</title>
+  <meta name="description" content="Social Stream Ninja documentation, guides, knowledge base, support workflows, and AI agent notes.">
+  <link rel="canonical" href="https://socialstream.ninja/docs/">
+  <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+  <script>
+    // Honor the sitewide theme toggle stored by the other docs pages.
+    (function() {
+      var saved = localStorage.getItem('darkMode');
+      if (saved === 'true') {
+        document.documentElement.classList.add('dark-mode');
+      } else if (saved === 'false') {
+        document.documentElement.classList.add('light-mode');
+      }
+    })();
+  </script>
+  <script defer src="../thirdparty/marked.umd.min.js"></script>
+  <script defer src="js/copy-markdown.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&family=Roboto+Mono:wght@400;500&display=swap">
+  <style>
+    /* Palette mirrors docs/css/styles.css so the Markdown viewer and the
+       hand-written guide pages read as one site. */
+    :root {
+      color-scheme: light;
+      --bg: #f3f5f9;
+      --panel: #ffffff;
+      --panel-translucent: rgba(255, 255, 255, 0.86);
+      --panel-soft: #f6f8fc;
+      --text: #15181f;
+      --muted: #5a6474;
+      --line: #e3e8f0;
+      --line-strong: #ccd4e0;
+      --accent: #7c3aed;
+      --accent-strong: #5b21b6;
+      --accent-soft: rgba(124, 58, 237, 0.09);
+      --code-bg: #f4f6fa;
+      --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+      --shadow: 0 4px 14px rgba(16, 24, 40, 0.08);
+      --sidebar-width: 312px;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-head: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'Roboto Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --bg: #0f1116;
+        --panel: #14161d;
+        --panel-translucent: rgba(20, 22, 29, 0.86);
+        --panel-soft: #1b1e27;
+        --text: #e9edf5;
+        --muted: #98a3b4;
+        --line: #282d38;
+        --line-strong: #3b4250;
+        --accent: #a78bfa;
+        --accent-strong: #c4b5fd;
+        --accent-soft: rgba(167, 139, 250, 0.14);
+        --code-bg: #10131a;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+        --shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+      }
+    }
+
+    :root.dark-mode {
+      color-scheme: dark;
+      --bg: #0f1116;
+      --panel: #14161d;
+      --panel-translucent: rgba(20, 22, 29, 0.86);
+      --panel-soft: #1b1e27;
+      --text: #e9edf5;
+      --muted: #98a3b4;
+      --line: #282d38;
+      --line-strong: #3b4250;
+      --accent: #a78bfa;
+      --accent-strong: #c4b5fd;
+      --accent-soft: rgba(167, 139, 250, 0.14);
+      --code-bg: #10131a;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+      --shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    }
+
+    :root.light-mode {
+      color-scheme: light;
+      --bg: #f3f5f9;
+      --panel: #ffffff;
+      --panel-translucent: rgba(255, 255, 255, 0.86);
+      --panel-soft: #f6f8fc;
+      --text: #15181f;
+      --muted: #5a6474;
+      --line: #e3e8f0;
+      --line-strong: #ccd4e0;
+      --accent: #7c3aed;
+      --accent-strong: #5b21b6;
+      --accent-soft: rgba(124, 58, 237, 0.09);
+      --code-bg: #f4f6fa;
+      --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+      --shadow: 0 4px 14px rgba(16, 24, 40, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    ::selection {
+      background: var(--accent-soft);
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: var(--accent-strong);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      padding: 20px 16px 32px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--line-strong) transparent;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--line-strong);
+      border-radius: 6px;
+      border: 3px solid var(--panel);
+    }
+
+    .brand {
+      display: flex;
+      gap: 11px;
+      align-items: center;
+      padding-bottom: 18px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      flex: 0 0 auto;
+    }
+
+    .brand strong {
+      display: block;
+      font-family: var(--font-head);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    .brand span {
+      display: block;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.35;
+      margin-top: 3px;
+    }
+
+    .search-field {
+      position: relative;
+      margin-bottom: 6px;
+    }
+
+    .search-field::before {
+      content: "";
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      width: 14px;
+      height: 14px;
+      margin-top: -7px;
+      background-color: var(--muted);
+      -webkit-mask: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.6-3.6'/%3E%3C/svg%3E");
+      mask: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.6-3.6'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    .search {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--panel-soft);
+      color: var(--text);
+      border-radius: 9px;
+      padding: 9px 12px 9px 34px;
+      font: inherit;
+      font-size: 14px;
+    }
+
+    .search::placeholder {
+      color: var(--muted);
+    }
+
+    .search:focus {
+      border-color: var(--accent);
+      outline: 2px solid var(--accent-soft);
+      outline-offset: 0;
+      background: var(--panel);
+    }
+
+    .search-status {
+      min-height: 18px;
+      margin: 0 2px 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .search-results {
+      display: grid;
+      gap: 4px;
+      margin-bottom: 16px;
+    }
+
+    .search-result {
+      display: block;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      padding: 9px 10px;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .search-result:hover,
+    .search-result.selected {
+      border-color: var(--line);
+      background: var(--panel-soft);
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .search-result-title {
+      display: block;
+      color: var(--accent);
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .search-result-meta,
+    .search-result-description {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .search-result-meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .search-result-description {
+      display: -webkit-box;
+      overflow: hidden;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    .search-empty {
+      border: 1px dashed var(--line);
+      border-radius: 9px;
+      padding: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .nav-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    button,
+    .button {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--panel-soft);
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      padding: 7px 10px;
+      font: inherit;
+      font-size: 13.5px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    }
+
+    button:hover,
+    .button:hover {
+      border-color: var(--line-strong);
+      background: var(--panel);
+      color: var(--accent);
+      text-decoration: none;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sidebar-content {
+      font-size: 13.5px;
+    }
+
+    /* The sitemap opens with agent-facing prose; the sidebar only needs the
+       navigation itself. */
+    .sidebar-content > p {
+      display: none;
+    }
+
+    .sidebar-content h1,
+    .sidebar-content h2,
+    .sidebar-content h3 {
+      margin: 22px 0 6px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.09em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .sidebar-content h1:first-child,
+    .sidebar-content h2:first-child,
+    .sidebar-content h3:first-child {
+      margin-top: 0;
+    }
+
+    .sidebar-content ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .sidebar-content li {
+      margin: 1px 0;
+    }
+
+    .sidebar-content li ul {
+      margin-left: 10px;
+      padding-left: 10px;
+      border-left: 1px solid var(--line);
+    }
+
+    .sidebar-content a {
+      display: block;
+      border-radius: 7px;
+      color: var(--text);
+      padding: 5px 9px;
+      text-decoration: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sidebar-content a:hover {
+      background: var(--panel-soft);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .sidebar-content a.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .sidebar-content .hidden {
+      display: none;
+    }
+
+    .main {
+      min-width: 0;
+      padding: 24px 28px 56px;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: var(--shadow-sm);
+      padding: 8px 10px;
+      margin-bottom: 20px;
+    }
+
+    @supports ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
+      .toolbar {
+        background: var(--panel-translucent);
+        -webkit-backdrop-filter: blur(12px) saturate(150%);
+        backdrop-filter: blur(12px) saturate(150%);
+      }
+    }
+
+    .toolbar-path {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--muted);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13.5px;
+      padding-left: 4px;
+    }
+
+    .toolbar-path.is-path {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+    }
+
+    .toolbar-buttons {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .content {
+      max-width: 920px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      padding: 36px 40px 44px;
+      font-size: 15.5px;
+    }
+
+    .content.loading,
+    .content.error {
+      color: var(--muted);
+    }
+
+    .content h1,
+    .content h2,
+    .content h3,
+    .content h4 {
+      font-family: var(--font-head);
+      font-weight: 600;
+      line-height: 1.25;
+      letter-spacing: -0.015em;
+      margin: 32px 0 12px;
+    }
+
+    .content h1:first-child {
+      margin-top: 0;
+    }
+
+    .content h1 {
+      font-size: 30px;
+      letter-spacing: -0.025em;
+    }
+
+    .content h2 {
+      border-top: 1px solid var(--line);
+      padding-top: 26px;
+      font-size: 22px;
+    }
+
+    .content h3 {
+      font-size: 17.5px;
+    }
+
+    .content h4 {
+      font-size: 15.5px;
+    }
+
+    .content .header-link {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .content .header-link:hover {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .content p,
+    .content li {
+      color: var(--text);
+    }
+
+    .content ul,
+    .content ol {
+      padding-left: 22px;
+    }
+
+    .content li {
+      margin: 3px 0;
+    }
+
+    .content li::marker {
+      color: var(--muted);
+    }
+
+    .content hr {
+      border: 0;
+      border-top: 1px solid var(--line);
+      margin: 28px 0;
+    }
+
+    .content table {
+      display: block;
+      width: 100%;
+      overflow-x: auto;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 14px;
+      border: 1px solid var(--line);
+    }
+
+    .content th,
+    .content td {
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      padding: 9px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .content tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .content tbody tr:nth-child(even) {
+      background: var(--panel-soft);
+    }
+
+    .content th {
+      background: var(--panel-soft);
+      border-bottom: 1px solid var(--line-strong);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .content code {
+      background: var(--code-bg);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0.1em 0.4em;
+      font-family: var(--font-mono);
+      font-size: 0.88em;
+    }
+
+    .content pre {
+      background: var(--code-bg);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow-x: auto;
+      padding: 16px 18px;
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+
+    .content pre code {
+      background: transparent;
+      border: 0;
+      padding: 0;
+      font-size: 1em;
+    }
+
+    .content blockquote {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      margin: 20px 0;
+      padding: 12px 18px;
+      background: var(--panel-soft);
+      color: var(--muted);
+    }
+
+    .content blockquote > :first-child {
+      margin-top: 0;
+    }
+
+    .content blockquote > :last-child {
+      margin-bottom: 0;
+    }
+
+    .content img {
+      max-width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+
+    .landing-intro {
+      max-width: 720px;
+      margin-bottom: 8px;
+    }
+
+    .landing-intro h1 {
+      font-family: var(--font-head);
+      font-size: 32px;
+      letter-spacing: -0.025em;
+      margin: 0 0 10px;
+    }
+
+    .landing-intro p {
+      color: var(--muted);
+      font-size: 16.5px;
+      margin: 0;
+    }
+
+    .landing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(238px, 1fr));
+      gap: 12px;
+      margin: 26px 0 0;
+    }
+
+    .landing-card {
+      display: block;
+      min-height: 128px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--panel-soft);
+      padding: 16px 17px;
+      color: var(--text);
+      text-decoration: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    }
+
+    .landing-card:hover {
+      border-color: var(--line-strong);
+      box-shadow: var(--shadow);
+      transform: translateY(-2px);
+      text-decoration: none;
+    }
+
+    .landing-card strong {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--accent);
+      font-family: var(--font-head);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .landing-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 13.5px;
+      line-height: 1.5;
+    }
+
+    .mobile-toggle {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+        position: fixed;
+        z-index: 10;
+        width: min(92vw, 360px);
+        box-shadow: var(--shadow);
+      }
+
+      body.nav-open .sidebar {
+        display: block;
+      }
+
+      .mobile-toggle {
+        display: inline-flex;
+      }
+
+      .main {
+        padding: 14px 14px 40px;
+      }
+
+      .toolbar {
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .content {
+        padding: 22px 20px 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <img src="../icons/logo.svg" alt="Social Stream Ninja logo">
+        <div>
+          <strong>Social Stream Ninja</strong>
+          <span>Guides, support notes, and agent references</span>
+        </div>
+      </div>
+      <div class="search-field">
+        <input class="search" id="search" type="search" placeholder="Search all docs (/)" autocomplete="off" aria-label="Search all documentation" aria-controls="searchResults" aria-expanded="false">
+      </div>
+      <div class="search-status" id="searchStatus" aria-live="polite"></div>
+      <div class="search-results" id="searchResults" role="listbox" aria-label="Documentation search results" hidden></div>
+      <div class="nav-actions" id="navActions">
+        <a class="button" href="../index.html">Home</a>
+        <a class="button" href="guides.html">Guides</a>
+        <a class="button" href="knowledge-base.html">Knowledge Base</a>
+        <a class="button" href="support.html">Support</a>
+        <a class="button" href="https://github.com/steveseguin/social_stream" target="_blank" rel="noopener">GitHub</a>
+        <button id="themeToggle" type="button">Theme</button>
+      </div>
+      <nav class="sidebar-content" id="sidebarContent" aria-label="Documentation navigation">Loading sitemap...</nav>
+    </aside>
+
+    <main class="main">
+      <div class="toolbar">
+        <button class="mobile-toggle" id="toggleNav" type="button">Menu</button>
+        <div class="toolbar-path" id="currentPath">Loading...</div>
+        <div class="toolbar-buttons">
+          <button id="copyLink" type="button">Copy Link</button>
+          <a class="button" id="rawLink" href="#" target="_blank" rel="noopener">Raw</a>
+        </div>
+      </div>
+      <article class="content loading" id="content">Loading documentation...</article>
+    </main>
+  </div>
+
+  <script>
+    const DEFAULT_FILE = "agents/common-guides.md";
+    const SITEMAP_FILE = "agents/SITEMAP.md";
+    const SEARCH_INDEX_FILE = "search-index.json";
+    const state = {
+      currentFile: DEFAULT_FILE,
+      currentMarkdown: "",
+      searchIndex: null,
+      searchIndexStatus: "loading",
+      searchTerms: [],
+      searchResults: [],
+      selectedSearchResult: -1
+    };
+
+    const elements = {
+      content: document.getElementById("content"),
+      sidebarContent: document.getElementById("sidebarContent"),
+      currentPath: document.getElementById("currentPath"),
+      rawLink: document.getElementById("rawLink"),
+      copyLink: document.getElementById("copyLink"),
+      search: document.getElementById("search"),
+      searchStatus: document.getElementById("searchStatus"),
+      searchResults: document.getElementById("searchResults"),
+      navActions: document.getElementById("navActions"),
+      themeToggle: document.getElementById("themeToggle"),
+      toggleNav: document.getElementById("toggleNav")
+    };
+
+    function isDarkTheme() {
+      if (document.documentElement.classList.contains("dark-mode")) return true;
+      if (document.documentElement.classList.contains("light-mode")) return false;
+      return Boolean(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    }
+
+    function updateThemeButton() {
+      const dark = isDarkTheme();
+      elements.themeToggle.textContent = dark ? "Light mode" : "Dark mode";
+      elements.themeToggle.setAttribute("aria-pressed", dark ? "true" : "false");
+    }
+
+    function toggleTheme() {
+      const useDark = !isDarkTheme();
+      document.documentElement.classList.toggle("dark-mode", useDark);
+      document.documentElement.classList.toggle("light-mode", !useDark);
+      localStorage.setItem("darkMode", useDark ? "true" : "false");
+      updateThemeButton();
+    }
+
+    function stripHash(path) {
+      return String(path || "").split("#")[0];
+    }
+
+    function getHash(path) {
+      const value = String(path || "");
+      const index = value.indexOf("#");
+      return index === -1 ? "" : value.slice(index);
+    }
+
+    function splitLocalLink(path) {
+      const value = String(path || "");
+      const hash = getHash(value);
+      const withoutHash = hash ? value.slice(0, -hash.length) : value;
+      const queryIndex = withoutHash.indexOf("?");
+      return {
+        path: queryIndex === -1 ? withoutHash : withoutHash.slice(0, queryIndex),
+        query: queryIndex === -1 ? "" : withoutHash.slice(queryIndex),
+        hash
+      };
+    }
+
+    function normalizeDocPath(path, baseFile) {
+      if (!path) return DEFAULT_FILE;
+      if (/^(https?:|mailto:|tel:)/i.test(path)) return path;
+      const cleaned = splitLocalLink(path).path.replace(/\\/g, "/");
+      const baseDir = baseFile && baseFile.includes("/") ? baseFile.split("/").slice(0, -1).join("/") + "/" : "";
+      const url = new URL(cleaned, "https://docs.local/" + baseDir);
+      const normalized = decodeURIComponent(url.pathname).replace(/^\/+/, "");
+      if (!normalized || normalized.split("/").includes("..")) return DEFAULT_FILE;
+      if (normalized.endsWith("/")) return normalized + "index.md";
+      return normalized;
+    }
+
+    function resolveViewerLink(path, baseFile) {
+      if (!path || /^(https?:|mailto:|tel:)/i.test(path)) return null;
+      const parts = splitLocalLink(path);
+      const cleaned = parts.path.replace(/\\/g, "/");
+      const baseDir = baseFile && baseFile.includes("/") ? baseFile.split("/").slice(0, -1).join("/") + "/" : "";
+      const url = new URL(cleaned, "https://docs.local/docs/" + baseDir);
+      const pathname = decodeURIComponent(url.pathname);
+      if (pathname.startsWith("/docs/")) {
+        const docsPath = pathname.slice("/docs/".length);
+        if (!docsPath || docsPath.split("/").includes("..")) return null;
+        const normalized = docsPath.endsWith("/") ? docsPath + "index.md" : docsPath;
+        return {
+          docPath: normalized,
+          href: normalized + parts.query + parts.hash
+        };
+      }
+      return {
+        docPath: "",
+        href: ".." + pathname + parts.query + parts.hash
+      };
+    }
+
+    function fileFromLocation() {
+      const params = new URLSearchParams(window.location.search);
+      return normalizeDocPath(params.get("file") || DEFAULT_FILE);
+    }
+
+    function hasRequestedFile() {
+      return new URLSearchParams(window.location.search).has("file");
+    }
+
+    function renderDocsHome() {
+      state.currentFile = "";
+      state.currentMarkdown = "";
+      elements.content.className = "content";
+      elements.currentPath.className = "toolbar-path";
+      elements.currentPath.textContent = "Docs home";
+      elements.rawLink.style.display = "none";
+      elements.content.innerHTML = `
+        <div class="landing-intro">
+          <h1>Social Stream Ninja Docs</h1>
+          <p>Start with the public guides for setup and troubleshooting. Use the advanced support library when you need deeper notes for support workflows or AI agents.</p>
+        </div>
+        <div class="landing-grid">
+          <a class="landing-card" href="overlay-gallery.html"><strong>Visual Overlay Gallery</strong><span>Browse every chat, featured-message and multi-alert style with screenshots and ready-to-use links.</span></a>
+          <a class="landing-card" href="guides.html"><strong>Guide Directory</strong><span>Searchable guide tree for OBS, platforms, AI, TTS, overlays, and automation.</span></a>
+          <a class="landing-card" href="knowledge-base.html"><strong>Knowledge Base</strong><span>Short fixes for blank overlays, wrong sessions, OBS audio, bots, YouTube, and TikTok.</span></a>
+          <a class="landing-card" href="safe-updates-backups.html"><strong>Safe Updates &amp; Recovery</strong><span>Back up settings, update without losing data, and recover session details.</span></a>
+          <a class="landing-card" href="obs-quick-start.html"><strong>OBS Quick Start</strong><span>Session, dock URL, overlay URL, and first browser source setup.</span></a>
+          <a class="landing-card" href="obs-troubleshooting.html"><strong>OBS Troubleshooting</strong><span>Replace saved URLs, refresh Browser Source cache, and diagnose blank overlays.</span></a>
+          <a class="landing-card" href="windows-administrator-mode.html"><strong>Windows Administrator Mode</strong><span>Test or persist matching privileges for OBS and the Social Stream desktop app.</span></a>
+          <a class="landing-card" href="events-alerts-compatibility.html"><strong>Events &amp; Alerts</strong><span>YouTube, Twitch, and Kick compatibility across alerts, TTS, goals, and Event Flow.</span></a>
+          <a class="landing-card" href="platform-setup-picker.html"><strong>Platform Setup Picker</strong><span>Choose browser chat, popout chat, source page, desktop app, or API mode.</span></a>
+          <a class="landing-card" href="name-colors.html"><strong>Chat Name Colors</strong><span>Enable different username colors in the Dock and customize them with CSS.</span></a>
+          <a class="landing-card" href="tts-setup-guide.html"><strong>TTS Setup Guide</strong><span>OBS-safe voice setup, provider choices, Kokoro notes, and audio routing.</span></a>
+          <a class="landing-card" href="ai-modes-guide.html"><strong>Complete AI Guide</strong><span>Voice cohosts, ChatGPT browser companion mode, chat bots, providers, moderation, translation, RAG, TTS, and overlay building.</span></a>
+          <a class="landing-card" href="?file=agents/common-guides.md"><strong>Advanced Support Library</strong><span>Detailed Markdown notes for support work, maintainers, and AI agents.</span></a>
+        </div>
+      `;
+    }
+
+    function updateUrl(path) {
+      const cleanPath = stripHash(path);
+      const hash = getHash(path);
+      const url = new URL(window.location.href);
+      url.searchParams.set("file", cleanPath);
+      url.hash = hash.replace(/^#/, "");
+      history.pushState({ file: cleanPath }, "", url);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function fallbackMarkdown(markdown) {
+      const lines = markdown.split(/\r?\n/);
+      let inCode = false;
+      let html = "";
+      let inList = false;
+      for (const line of lines) {
+        if (line.startsWith("```")) {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          html += inCode ? "</code></pre>" : "<pre><code>";
+          inCode = !inCode;
+          continue;
+        }
+        if (inCode) {
+          html += escapeHtml(line) + "\n";
+          continue;
+        }
+        const heading = line.match(/^(#{1,4})\s+(.*)$/);
+        if (heading) {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          const level = heading[1].length;
+          html += `<h${level}>${inlineMarkdown(heading[2])}</h${level}>`;
+          continue;
+        }
+        const bullet = line.match(/^\s*[-*]\s+(.*)$/);
+        if (bullet) {
+          if (!inList) {
+            html += "<ul>";
+            inList = true;
+          }
+          html += `<li>${inlineMarkdown(bullet[1])}</li>`;
+          continue;
+        }
+        if (!line.trim()) {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          continue;
+        }
+        html += `<p>${inlineMarkdown(line)}</p>`;
+      }
+      if (inList) html += "</ul>";
+      if (inCode) html += "</code></pre>";
+      return html;
+    }
+
+    function inlineMarkdown(value) {
+      return escapeHtml(value)
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+    }
+
+    function renderMarkdown(markdown) {
+      if (window.marked && window.marked.parse) {
+        return window.marked.parse(markdown, { gfm: true, breaks: false });
+      }
+      return fallbackMarkdown(markdown);
+    }
+
+    function slugify(text) {
+      return String(text)
+        .toLowerCase()
+        .replace(/<[^>]+>/g, "")
+        .replace(/[^a-z0-9\s-]/g, "")
+        .trim()
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-");
+    }
+
+    function addHeadingLinks() {
+      const used = new Set();
+      elements.content.querySelectorAll("h1, h2, h3, h4").forEach(heading => {
+        let id = heading.id || slugify(heading.textContent);
+        if (!id) return;
+        let unique = id;
+        let count = 2;
+        while (used.has(unique)) {
+          unique = `${id}-${count}`;
+          count += 1;
+        }
+        used.add(unique);
+        heading.id = unique;
+        if (!heading.querySelector(".header-link")) {
+          const text = heading.innerHTML;
+          heading.innerHTML = `<a class="header-link" href="#${unique}">${text}</a>`;
+        }
+      });
+    }
+
+    function rewriteContentLinks() {
+      elements.content.querySelectorAll("a[href]").forEach(link => {
+        const href = link.getAttribute("href");
+        if (!href || href.startsWith("#")) return;
+        if (/^(https?:|mailto:|tel:)/i.test(href)) {
+          link.target = "_blank";
+          link.rel = "noopener";
+          return;
+        }
+        const target = resolveViewerLink(href, state.currentFile);
+        if (!target) return;
+        if (target.docPath.endsWith(".md")) {
+          link.href = `?file=${encodeURIComponent(stripHash(target.docPath))}${getHash(href)}`;
+          link.addEventListener("click", event => {
+            event.preventDefault();
+            loadDoc(target.docPath + getHash(href), true);
+          });
+        } else {
+          link.href = target.href;
+        }
+      });
+    }
+
+    function setActiveLink(path) {
+      const cleanPath = stripHash(path);
+      elements.sidebarContent.querySelectorAll("a").forEach(link => {
+        // Sitemap links are rewritten to "?file=..." so the href alone no longer
+        // resolves back to a doc path; loadSitemap stashes the original target.
+        const target = link.dataset.doc || normalizeDocPath(link.getAttribute("href"), SITEMAP_FILE);
+        link.classList.toggle("active", stripHash(target) === cleanPath);
+      });
+    }
+
+    async function loadDoc(path, push) {
+      const normalized = normalizeDocPath(path || DEFAULT_FILE);
+      if (/^https?:/i.test(normalized)) {
+        window.open(normalized, "_blank", "noopener");
+        return;
+      }
+      const cleanPath = stripHash(normalized);
+      const hash = getHash(normalized);
+      state.currentFile = cleanPath;
+      state.currentMarkdown = "";
+      elements.content.className = "content loading";
+      elements.content.textContent = "Loading documentation...";
+      elements.currentPath.className = "toolbar-path is-path";
+      elements.currentPath.textContent = cleanPath;
+      elements.rawLink.href = cleanPath;
+      elements.rawLink.style.display = "";
+      setActiveLink(cleanPath);
+      if (push) updateUrl(cleanPath + hash);
+      try {
+        const response = await fetch(cleanPath, { cache: "no-cache" });
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        const markdown = await response.text();
+        state.currentMarkdown = markdown;
+        elements.content.innerHTML = renderMarkdown(markdown);
+        elements.content.className = "content";
+        addHeadingLinks();
+        rewriteContentLinks();
+        if (hash) {
+          requestAnimationFrame(() => {
+            const target = document.getElementById(hash.slice(1));
+            if (target) target.scrollIntoView();
+          });
+        } else {
+          window.scrollTo({ top: 0 });
+        }
+      } catch (error) {
+        state.currentMarkdown = "";
+        elements.content.className = "content error";
+        elements.content.innerHTML = `<h1>Unable to load document</h1><p>${escapeHtml(cleanPath)}</p><p>${escapeHtml(error.message)}</p>`;
+      }
+    }
+
+    // Sitemap rows read "[Title](file.md) - what it covers". The trailing prose
+    // makes a narrow sidebar unreadable, so move it onto the link as a tooltip.
+    function compactSitemapEntries() {
+      elements.sidebarContent.querySelectorAll("li").forEach(item => {
+        const link = item.querySelector(":scope > a");
+        if (!link) return;
+        const trailing = [];
+        let node = link.nextSibling;
+        while (node) {
+          const next = node.nextSibling;
+          if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "UL") break;
+          trailing.push(node.textContent || "");
+          item.removeChild(node);
+          node = next;
+        }
+        const description = trailing.join("").replace(/^[\s–—-]+/, "").trim();
+        if (description) link.title = `${link.textContent.trim()} — ${description}`;
+      });
+    }
+
+    async function loadSitemap() {
+      try {
+        const response = await fetch(SITEMAP_FILE, { cache: "no-cache" });
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        const markdown = await response.text();
+        elements.sidebarContent.innerHTML = renderMarkdown(markdown);
+        compactSitemapEntries();
+        elements.sidebarContent.querySelectorAll("a[href]").forEach(link => {
+          const href = link.getAttribute("href");
+          const target = normalizeDocPath(href, SITEMAP_FILE);
+          if (target.endsWith(".md")) {
+            link.dataset.doc = stripHash(target);
+            link.href = `?file=${encodeURIComponent(stripHash(target))}${getHash(href)}`;
+            link.addEventListener("click", event => {
+              event.preventDefault();
+              document.body.classList.remove("nav-open");
+              loadDoc(target + getHash(href), true);
+            });
+          }
+        });
+      } catch (error) {
+        elements.sidebarContent.innerHTML = `<p>Unable to load sitemap.</p><p><a href="?file=${encodeURIComponent(DEFAULT_FILE)}">${DEFAULT_FILE}</a></p>`;
+      }
+    }
+
+    async function loadSearchIndex() {
+      try {
+        const response = await fetch(SEARCH_INDEX_FILE, { cache: "no-cache" });
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        const index = await response.json();
+        if (!Array.isArray(index.documents) || !index.terms || typeof index.terms !== "object") {
+          throw new Error("Invalid search index");
+        }
+        state.searchIndex = index;
+        state.searchIndexStatus = "ready";
+        state.searchTerms = Object.keys(index.terms);
+        if (elements.search.value.trim()) runSearch(elements.search.value);
+      } catch (_) {
+        state.searchIndex = null;
+        state.searchIndexStatus = "unavailable";
+        state.searchTerms = [];
+        if (elements.search.value.trim()) runSearch(elements.search.value);
+      }
+    }
+
+    function normalizeSearchText(value) {
+      let normalized = String(value || "");
+      if (normalized.normalize) normalized = normalized.normalize("NFKD");
+      return normalized
+        .toLowerCase()
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim()
+        .replace(/\s+/g, " ");
+    }
+
+    function searchTokens(value) {
+      const seen = {};
+      return normalizeSearchText(value).split(" ").filter(token => {
+        if (token.length < 2 || seen[token]) return false;
+        seen[token] = true;
+        return true;
+      });
+    }
+
+    function commonPrefixLength(left, right) {
+      const limit = Math.min(left.length, right.length);
+      let index = 0;
+      while (index < limit && left[index] === right[index]) index += 1;
+      return index;
+    }
+
+    function relatedSearchTerms(token) {
+      const related = [];
+      const terms = state.searchIndex.terms;
+      if (terms[token]) related.push({ term: token, factor: 1 });
+      if (token.length < 3) return related;
+
+      for (const term of state.searchTerms) {
+        if (term === token) continue;
+        let factor = 0;
+        if (term.startsWith(token)) {
+          factor = 0.65;
+        } else if (token.length >= 6 && term.length >= 6) {
+          const shared = commonPrefixLength(token, term);
+          if (shared >= 6 && shared >= Math.min(token.length, term.length) - 2) {
+            factor = 0.35;
+          }
+        }
+        if (factor) related.push({ term, factor });
+        if (related.length >= 40) break;
+      }
+      return related;
+    }
+
+    function searchDocuments(query) {
+      if (!state.searchIndex) return [];
+      const tokens = searchTokens(query);
+      const scores = {};
+      let activeTokenCount = 0;
+
+      tokens.forEach(token => {
+        const related = relatedSearchTerms(token);
+        if (!related.length) return;
+        activeTokenCount += 1;
+        const bestForToken = {};
+
+        related.forEach(match => {
+          state.searchIndex.terms[match.term].forEach(posting => {
+            const documentId = posting[0];
+            const weightedScore = posting[1] * match.factor;
+            if (!bestForToken[documentId] || weightedScore > bestForToken[documentId]) {
+              bestForToken[documentId] = weightedScore;
+            }
+          });
+        });
+
+        Object.keys(bestForToken).forEach(documentId => {
+          if (!scores[documentId]) scores[documentId] = { score: 0, matches: 0 };
+          scores[documentId].score += bestForToken[documentId];
+          scores[documentId].matches += 1;
+        });
+      });
+
+      if (!activeTokenCount) return [];
+      const phrase = normalizeSearchText(query);
+      return Object.keys(scores)
+        .map(documentId => {
+          const document = state.searchIndex.documents[Number(documentId)];
+          const entry = scores[documentId];
+          const coverage = entry.matches / activeTokenCount;
+          const title = normalizeSearchText(document.title);
+          const headings = normalizeSearchText((document.headings || []).join(" "));
+          const description = normalizeSearchText(document.description);
+          let phraseBonus = 0;
+          if (phrase && title.includes(phrase)) phraseBonus = 120;
+          else if (phrase && headings.includes(phrase)) phraseBonus = 60;
+          else if (phrase && description.includes(phrase)) phraseBonus = 25;
+          return {
+            document,
+            coverage,
+            score: entry.score * (0.5 + coverage) + phraseBonus + (document.kind === "Guide" ? 10 : 0)
+          };
+        })
+        .filter(result => activeTokenCount < 3 || result.coverage >= 0.5)
+        .sort((left, right) => {
+          if (right.coverage !== left.coverage) return right.coverage - left.coverage;
+          if (right.score !== left.score) return right.score - left.score;
+          return left.document.title.localeCompare(right.document.title);
+        });
+    }
+
+    function searchResultDescription(document, tokens) {
+      let bestHeading = "";
+      let bestMatches = 0;
+      (document.headings || []).forEach(heading => {
+        const normalized = normalizeSearchText(heading);
+        const matches = tokens.filter(token => normalized.includes(token)).length;
+        if (matches > bestMatches && normalizeSearchText(document.title) !== normalized) {
+          bestHeading = heading;
+          bestMatches = matches;
+        }
+      });
+      if (bestHeading && document.description) return `${bestHeading} — ${document.description}`;
+      return bestHeading || document.description || "";
+    }
+
+    function setSearchMode(active) {
+      elements.searchResults.hidden = !active;
+      elements.navActions.hidden = active;
+      elements.sidebarContent.hidden = active;
+      elements.search.setAttribute("aria-expanded", active ? "true" : "false");
+      if (!active) elements.search.removeAttribute("aria-activedescendant");
+    }
+
+    function renderSearchResults(query, results) {
+      const visibleResults = results.slice(0, 20);
+      const tokens = searchTokens(query);
+      state.searchResults = visibleResults;
+      state.selectedSearchResult = -1;
+      elements.searchResults.textContent = "";
+      setSearchMode(true);
+
+      elements.searchStatus.textContent = results.length > visibleResults.length
+        ? `Top ${visibleResults.length} of ${results.length} results`
+        : `${results.length} result${results.length === 1 ? "" : "s"}`;
+
+      if (!visibleResults.length) {
+        const empty = document.createElement("div");
+        empty.className = "search-empty";
+        empty.textContent = "No matching documentation found.";
+        elements.searchResults.appendChild(empty);
+        return;
+      }
+
+      visibleResults.forEach((result, index) => {
+        const documentEntry = result.document;
+        const link = document.createElement("a");
+        const title = document.createElement("span");
+        const meta = document.createElement("span");
+        const description = document.createElement("span");
+        const isMarkdown = documentEntry.path.toLowerCase().endsWith(".md");
+
+        link.id = `searchResult-${index}`;
+        link.className = "search-result";
+        link.setAttribute("role", "option");
+        link.setAttribute("aria-selected", "false");
+        link.href = isMarkdown
+          ? `?file=${encodeURIComponent(documentEntry.path)}`
+          : documentEntry.path;
+
+        title.className = "search-result-title";
+        title.textContent = documentEntry.title;
+        meta.className = "search-result-meta";
+        meta.textContent = `${documentEntry.kind} · ${documentEntry.path}`;
+        description.className = "search-result-description";
+        description.textContent = searchResultDescription(documentEntry, tokens);
+
+        link.appendChild(title);
+        link.appendChild(meta);
+        if (description.textContent) link.appendChild(description);
+        if (isMarkdown) {
+          link.addEventListener("click", event => {
+            event.preventDefault();
+            document.body.classList.remove("nav-open");
+            loadDoc(documentEntry.path, true);
+          });
+        }
+        elements.searchResults.appendChild(link);
+      });
+    }
+
+    function runSearch(query) {
+      const term = query.trim();
+      if (!term) {
+        state.searchResults = [];
+        state.selectedSearchResult = -1;
+        elements.searchStatus.textContent = "";
+        setSearchMode(false);
+        filterSidebar("");
+        return;
+      }
+
+      if (!state.searchIndex) {
+        setSearchMode(false);
+        elements.searchStatus.textContent = state.searchIndexStatus === "loading"
+          ? "Filtering page titles while the full index loads."
+          : "Full-text search is unavailable; filtering page titles.";
+        filterSidebar(term);
+        return;
+      }
+
+      if (normalizeSearchText(term).length < 2) {
+        renderSearchResults(term, []);
+        elements.searchStatus.textContent = "Type at least two characters.";
+        return;
+      }
+
+      renderSearchResults(term, searchDocuments(term));
+    }
+
+    function selectSearchResult(index) {
+      const links = elements.searchResults.querySelectorAll(".search-result");
+      if (!links.length) return;
+      const selected = Math.max(0, Math.min(index, links.length - 1));
+      links.forEach((link, linkIndex) => {
+        const active = linkIndex === selected;
+        link.classList.toggle("selected", active);
+        link.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      state.selectedSearchResult = selected;
+      elements.search.setAttribute("aria-activedescendant", links[selected].id);
+      links[selected].scrollIntoView({ block: "nearest" });
+    }
+
+    function filterSidebar(query) {
+      const term = query.trim().toLowerCase();
+      elements.sidebarContent.querySelectorAll("li").forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.classList.toggle("hidden", Boolean(term) && !text.includes(term));
+      });
+    }
+
+    let searchTimer = 0;
+    elements.search.addEventListener("input", event => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => runSearch(event.target.value), 60);
+    });
+    elements.search.addEventListener("keydown", event => {
+      if (elements.searchResults.hidden) return;
+      const links = elements.searchResults.querySelectorAll(".search-result");
+      if (event.key === "ArrowDown" && links.length) {
+        event.preventDefault();
+        selectSearchResult(state.selectedSearchResult + 1);
+      } else if (event.key === "ArrowUp" && links.length) {
+        event.preventDefault();
+        selectSearchResult(state.selectedSearchResult <= 0 ? links.length - 1 : state.selectedSearchResult - 1);
+      } else if (event.key === "Enter" && links.length) {
+        event.preventDefault();
+        links[state.selectedSearchResult < 0 ? 0 : state.selectedSearchResult].click();
+      } else if (event.key === "Escape") {
+        elements.search.value = "";
+        runSearch("");
+      }
+    });
+    elements.themeToggle.addEventListener("click", toggleTheme);
+    elements.toggleNav.addEventListener("click", () => document.body.classList.toggle("nav-open"));
+    document.addEventListener("keydown", event => {
+      const target = event.target;
+      const isEditing = target && (
+        target.isContentEditable ||
+        /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)
+      );
+      if (event.key === "/" && !isEditing && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+        document.body.classList.add("nav-open");
+        elements.search.focus();
+      }
+    });
+    elements.copyLink.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        elements.copyLink.textContent = "Copied";
+        setTimeout(() => { elements.copyLink.textContent = "Copy Link"; }, 1200);
+      } catch (_) {
+        elements.copyLink.textContent = "Copy Failed";
+        setTimeout(() => { elements.copyLink.textContent = "Copy Link"; }, 1200);
+      }
+    });
+
+    window.SSN_COPY_MARKDOWN_SOURCE = function () {
+      if (!state.currentFile || !state.currentMarkdown) return null;
+      const heading = elements.content.querySelector("h1");
+      const indexedDocument = state.searchIndex && state.searchIndex.documents
+        ? state.searchIndex.documents.find(documentEntry => documentEntry.path === state.currentFile)
+        : null;
+      return {
+        title: heading ? heading.textContent.trim() : state.currentFile,
+        description: indexedDocument ? indexedDocument.description : "",
+        documentPath: state.currentFile,
+        source: window.location.href.split("#")[0],
+        markdown: state.currentMarkdown
+      };
+    };
+
+    window.addEventListener("popstate", () => {
+      if (hasRequestedFile()) {
+        loadDoc(fileFromLocation(), false);
+      } else {
+        renderDocsHome();
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      updateThemeButton();
+      loadSearchIndex();
+      await loadSitemap();
+      if (hasRequestedFile()) {
+        loadDoc(fileFromLocation() + window.location.hash, false);
+      } else {
+        renderDocsHome();
+      }
+    });
+  </script>
+</body>
+</html>

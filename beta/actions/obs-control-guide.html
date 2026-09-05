@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Control Guide - Social Stream Ninja</title>
+    <link rel="canonical" href="https://socialstream.ninja/actions/obs-control-guide">
+    <style>
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 24px;
+            color: #172033;
+            background: linear-gradient(145deg, #090d18, #172554 48%, #3b0764);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        }
+        .shell {
+            max-width: 1160px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 20px;
+            background: #fbfcff;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+        }
+        header {
+            padding: 58px 58px 48px;
+            color: #fff;
+            background: radial-gradient(circle at 85% 10%, rgba(168, 85, 247, 0.5), transparent 32%),
+                        linear-gradient(135deg, #172554, #5b21b6);
+        }
+        header h1 { margin: 0 0 12px; font-size: 2.8rem; line-height: 1.08; }
+        header p { max-width: 720px; margin: 0; font-size: 1.15rem; line-height: 1.6; opacity: 0.94; }
+        .quick-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+        .quick-links a {
+            padding: 9px 13px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 999px;
+            color: #fff;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        main { padding: 44px 58px 70px; }
+        section { margin: 0 0 58px; }
+        h2 { margin: 0 0 16px; color: #312e81; font-size: 2rem; }
+        h3 { margin: 28px 0 10px; color: #4c1d95; font-size: 1.35rem; }
+        p, li { line-height: 1.62; }
+        p { margin: 0 0 13px; }
+        ol, ul { margin: 14px 0; padding-left: 25px; }
+        li { margin: 7px 0; }
+        a { color: #4338ca; }
+        code {
+            padding: 2px 6px;
+            border-radius: 5px;
+            color: #3730a3;
+            background: #eef2ff;
+            font-family: Consolas, "Courier New", monospace;
+            overflow-wrap: anywhere;
+        }
+        .lead {
+            margin: -8px 0 24px;
+            color: #475569;
+            font-size: 1.08rem;
+        }
+        .panel, .callout {
+            margin: 20px 0;
+            padding: 20px 23px;
+            border-radius: 13px;
+            border: 1px solid #dbe3f3;
+            background: #f7f9ff;
+        }
+        .callout { border-left: 5px solid #4f46e5; }
+        .callout.warning { border-left-color: #d97706; background: #fffbeb; }
+        .callout.danger { border-left-color: #dc2626; background: #fef2f2; }
+        .diagram {
+            margin: 22px 0;
+            padding: 20px 22px;
+            overflow-x: auto;
+            border-radius: 13px;
+            color: #e0e7ff;
+            background: #111827;
+            font-family: Consolas, "Courier New", monospace;
+            line-height: 1.65;
+            white-space: pre;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .card {
+            padding: 20px;
+            border: 1px solid #e1e7f2;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(30, 41, 59, 0.07);
+        }
+        .card h3 { margin-top: 0; }
+        .table-wrap { margin: 20px 0; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 720px; }
+        th, td { padding: 12px 14px; border-bottom: 1px solid #dde4f0; text-align: left; vertical-align: top; line-height: 1.5; }
+        th { color: #312e81; background: #eef2ff; }
+        tbody tr:nth-child(even) { background: #fafbff; }
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 999px;
+            color: #155e75;
+            background: #cffafe;
+            font-size: 0.78rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        figure { margin: 24px 0; text-align: center; }
+        figure img {
+            max-width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            box-shadow: 0 12px 34px rgba(30, 41, 59, 0.14);
+        }
+        figcaption { margin-top: 9px; color: #64748b; font-size: 0.9rem; }
+        footer { padding: 23px 58px; color: #c7d2fe; background: #111827; }
+        footer a { color: #a5f3fc; }
+        @media (max-width: 720px) {
+            body { padding: 0; }
+            .shell { border-radius: 0; }
+            header, main, footer { padding-left: 22px; padding-right: 22px; }
+            header { padding-top: 40px; }
+            header h1 { font-size: 2.15rem; }
+            h2 { font-size: 1.65rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <header>
+            <h1>OBS Control with Social Stream Ninja</h1>
+            <p>Control OBS directly from Event Flow—no Streamer.bot required. This guide covers setup, every OBS trigger and action, practical recipes, and the older dock/browser-source controls.</p>
+            <nav class="quick-links" aria-label="Guide sections">
+                <a href="#setup">Setup</a>
+                <a href="#triggers">Triggers</a>
+                <a href="#actions">Actions</a>
+                <a href="#recipes">Recipes</a>
+                <a href="#other-controls">Other controls</a>
+                <a href="#troubleshooting">Troubleshooting</a>
+            </nav>
+        </header>
+
+        <main>
+            <section id="setup">
+                <h2>1. Connect Flow Actions to OBS</h2>
+                <p class="lead">OBS WebSocket v5 is built into OBS 28 and newer. Social Stream Ninja uses it for full OBS control and media events.</p>
+                <ol>
+                    <li>In OBS, open <strong>Tools → WebSocket Server Settings</strong>.</li>
+                    <li>Enable the WebSocket server. Keep the default port <code>4455</code>; set a password if wanted.</li>
+                    <li>In Social Stream Ninja, open the <strong>Flow Actions</strong> section and set the OBS WebSocket URL and optional password.</li>
+                    <li>Copy the Flow Actions URL and keep it open. An OBS Browser Source is recommended for overlay/audio actions.</li>
+                    <li>Use the <a href="../obs-websocket-test.html" target="_blank" rel="noopener">OBS WebSocket Tester</a> to confirm the connection before building a flow.</li>
+                </ol>
+
+                <div class="panel">
+                    <strong>Direct URL example</strong><br>
+                    <code>https://socialstream.ninja/actions.html?session=YOUR_SESSION&amp;obsws=ws://127.0.0.1:4455</code><br><br>
+                    Add <code>&amp;obspw=YOUR_PASSWORD</code> only when OBS requires authentication. Add <code>&amp;obsdebug=1</code> to show a small connection-status badge while diagnosing problems.
+                </div>
+
+                <div class="callout warning">
+                    <strong>Keep the Flow Actions page running.</strong> It is the bridge that receives Event Flow actions and sends OBS WebSocket requests. If it is an OBS Browser Source, turn off <em>Shutdown source when not visible</em> when the source must keep controlling OBS while hidden.
+                </div>
+
+                <div class="diagram">Chat / stream event
+        │
+        ▼
+Social Stream Ninja Event Flow
+        │  same session ID
+        ▼
+Flow Actions page (actions.html)
+        │  OBS WebSocket v5 · ws://127.0.0.1:4455
+        ▼
+OBS Studio</div>
+
+                <h3>Two OBS connection modes</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Mode</th><th>What it supports</th><th>Requirement</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>OBS WebSocket v5</strong></td><td>Every trigger and action in this guide.</td><td>OBS 28+, WebSocket server enabled, Flow Actions page open.</td></tr>
+                            <tr><td><strong>OBS Browser Source API</strong></td><td>Fallback for scene changes, start/stop streaming, start/stop recording, and saving replay buffer.</td><td>Flow Actions loaded inside OBS with Advanced Access Level. Source, filter, text, volume, media, refresh, and media-ended features still require WebSocket.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="build-flow">
+                <h2>2. Add OBS nodes to a flow</h2>
+                <ol>
+                    <li>Open the <a href="index.html" target="_blank" rel="noopener">Event Flow Editor</a> and create or edit a flow.</li>
+                    <li>Drag a trigger onto the canvas.</li>
+                    <li>Expand <strong>OBS Studio</strong> in the Actions list and drag in the OBS action you need.</li>
+                    <li>Connect the trigger to the action, configure the exact OBS scene/source names, save, and enable the flow.</li>
+                </ol>
+                <figure>
+                    <img src="img/obs-control-actions.png" alt="OBS Studio action list in the Social Stream Ninja Event Flow Editor">
+                    <figcaption>The OBS Studio group contains scene, source, text, media, audio, filter, output, and replay-buffer controls.</figcaption>
+                </figure>
+                <div class="callout">
+                    OBS names must match exactly, including spaces and punctuation. Source actions target the OBS input name, not the scene-item label if it was renamed independently.
+                </div>
+            </section>
+
+            <section id="triggers">
+                <h2>3. OBS triggers</h2>
+                <p>These start a flow when OBS reports a matching event. They arrive as <code>type: "obs"</code>; OBS-specific details are under <code>meta</code>.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Trigger</th><th>When it fires</th><th>Useful data</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>OBS Stream Started</strong></td><td>Streaming reaches the started state.</td><td><code>meta.outputState</code>, <code>meta.outputActive</code></td></tr>
+                            <tr><td><strong>OBS Stream Stopped</strong></td><td>Streaming reaches the stopped state.</td><td><code>meta.outputState</code>, <code>meta.outputActive</code></td></tr>
+                            <tr><td><strong>OBS Recording Started</strong></td><td>Recording starts.</td><td><code>meta.outputState</code></td></tr>
+                            <tr><td><strong>OBS Recording Stopped</strong></td><td>Recording stops.</td><td><code>meta.outputState</code></td></tr>
+                            <tr><td><strong>OBS Scene Changed</strong></td><td>The active program scene changes.</td><td><code>meta.sceneName</code></td></tr>
+                            <tr><td><strong>OBS Media Ended</strong> <span class="tag">WebSocket</span></td><td>A media input finishes playback. Optionally filter by exact Media Source Name.</td><td><code>meta.inputName</code>, <code>meta.inputUuid</code></td></tr>
+                            <tr><td><strong>OBS Replay Buffer Saved</strong></td><td>OBS finishes saving a replay.</td><td><code>meta.savedReplayPath</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="actions">
+                <h2>4. OBS actions</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Action</th><th>Configuration and behavior</th><th>Connection</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Change Scene</strong></td><td>Switches the active program scene by exact scene name.</td><td>WebSocket or Browser Source API fallback</td></tr>
+                            <tr><td><strong>Toggle Source</strong></td><td>Show, hide, or toggle a scene item. Scene and Group are optional targeting fields.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Set Text Source</strong></td><td>Updates Text (GDI+) or Text (FreeType 2), with template placeholders.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Control Media Source</strong></td><td>Play/resume, pause, restart, stop, next, or previous.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Set Source Volume</strong></td><td>Sets an input from <code>-100</code> to <code>+26</code> dB.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Refresh Browser Source</strong></td><td>Reloads a Browser Source without cache.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Toggle Filter</strong></td><td>Enable, disable, or toggle a named source filter.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Mute/Unmute Audio</strong></td><td>Mute, unmute, or toggle an input.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Start Recording</strong></td><td>Starts OBS recording.</td><td>WebSocket or Browser Source API fallback</td></tr>
+                            <tr><td><strong>Stop Recording</strong></td><td>Stops OBS recording.</td><td>WebSocket or Browser Source API fallback</td></tr>
+                            <tr><td><strong>Start Streaming</strong></td><td>Starts the configured OBS stream output.</td><td>WebSocket or Browser Source API fallback</td></tr>
+                            <tr><td><strong>Stop Streaming</strong></td><td>Stops the OBS stream output.</td><td>WebSocket or Browser Source API fallback</td></tr>
+                            <tr><td><strong>Control Replay Buffer</strong></td><td>Start, stop, or toggle the replay buffer.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Save Replay Buffer</strong></td><td>Saves the currently running replay buffer.</td><td>WebSocket or Browser Source API fallback</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Set Text Source and flow variables</h3>
+                <p>The text field supports normal message placeholders such as <code>{username}</code>, <code>{message}</code>, <code>{source}</code>, and <code>{donation}</code>, plus values added by earlier flow nodes such as <code>{counterValue}</code>, <code>{counterTarget}</code>, and <code>{counterRemaining}</code>.</p>
+                <div class="panel"><code>{username}: now {counterValue}, need {counterTarget}</code></div>
+                <figure>
+                    <img src="img/obs-set-text-properties.png" alt="Set Text Source properties with counter template variables">
+                    <figcaption>Set Text Source writes the resolved value straight into the named OBS text input.</figcaption>
+                </figure>
+                <div class="callout warning">
+                    For a Text (GDI+) or Text (FreeType 2) source, turn off <em>Read from file</em>. Otherwise OBS may continue displaying the file contents instead of the text sent by Event Flow.
+                </div>
+
+                <h3>Media Source controls</h3>
+                <div class="grid">
+                    <div class="card"><h3>Play / Pause</h3><p><strong>Play</strong> resumes paused media. <strong>Pause</strong> holds its current position.</p></div>
+                    <div class="card"><h3>Restart / Stop</h3><p><strong>Restart</strong> starts from the beginning. <strong>Stop</strong> ends playback and resets the input.</p></div>
+                    <div class="card"><h3>Next / Previous</h3><p>Moves through playlist-capable inputs, such as VLC Video Source. A single-file Media Source may ignore these actions.</p></div>
+                </div>
+
+                <h3>Volume, mute, and filters</h3>
+                <p><strong>Set Source Volume</strong> uses dB, matching the OBS mixer scale: <code>0 dB</code> is unchanged gain, negative values are quieter, and <code>-100 dB</code> is effectively silent. Mute is a separate state. Toggle Filter changes only the enabled state of an existing filter; it does not edit filter settings.</p>
+
+                <h3>Replay Buffer</h3>
+                <p>First enable Replay Buffer in <strong>OBS Settings → Output</strong>. Use <strong>Control Replay Buffer</strong> to start/stop it, then <strong>Save Replay Buffer</strong> to write the recent buffered segment to disk.</p>
+
+                <div class="callout danger">
+                    <strong>Live-output warning:</strong> Start/Stop Streaming and Start/Stop Recording act immediately. Use restrictive triggers, permissions, and cooldowns so ordinary chat messages cannot fire them accidentally.
+                </div>
+            </section>
+
+            <section id="recipes">
+                <h2>5. Useful recipes</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Counter text in OBS</h3>
+                        <p>Place <strong>Set Text Source</strong> after the counter/check path and use:</p>
+                        <p><code>{username}: now {counterValue}, need {counterTarget}</code></p>
+                    </div>
+                    <div class="card">
+                        <h3>Run something after a video</h3>
+                        <p><strong>OBS Media Ended</strong> (filter to <code>Intro Video</code>) → <strong>Change Scene</strong> to <code>Main</code>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Chat-controlled media restart</h3>
+                        <p><strong>Message Equals</strong> <code>!replayintro</code> → permission condition → <strong>Control Media Source: Restart</strong>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Refresh an alert page</h3>
+                        <p><strong>Message Equals</strong> <code>!refreshalerts</code> → moderator condition → <strong>Refresh Browser Source</strong>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Duck music for an alert</h3>
+                        <p><strong>Set Source Volume</strong> to <code>-24 dB</code> → alert action → Delay → restore to <code>0 dB</code>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Replay workflow</h3>
+                        <p><strong>OBS Stream Started</strong> → <strong>Control Replay Buffer: Start</strong>; a separate trusted command runs <strong>Save Replay Buffer</strong>.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="other-controls">
+                <h2>6. Other built-in OBS controls</h2>
+                <p>Social Stream Ninja also has older OBS Browser Source controls in the Streaming Chat dock. These do not use the Flow Actions WebSocket bridge.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Option</th><th>What it does</th><th>Requirement</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Current OBS scene indicator</strong></td><td>Shows the active scene in the Streaming Chat dock.</td><td>Dock loaded inside OBS with read permission.</td></tr>
+                            <tr><td><strong>Guests can use !cycle</strong></td><td>Cycles to the next OBS scene, rate-limited to once per 10 seconds.</td><td>Enable the popup option; dock loaded inside OBS with Advanced access.</td></tr>
+                            <tr><td><strong>Privileged users can use !start / !stop</strong></td><td>Starts or stops streaming from trusted chat users.</td><td>Enable the popup option; dock loaded inside OBS with Full/Advanced control permission.</td></tr>
+                            <tr><td><strong>Remote OBS control panel</strong></td><td>Displays scenes and can switch scenes or toggle streaming/recording when the target OBS dock grants the required control level.</td><td>Streaming Chat dock paired to a dock running inside OBS.</td></tr>
+                            <tr><td><strong>OBS WebSocket Tester</strong></td><td>Checks version, connection, scenes, and individual requests before using Event Flow.</td><td><a href="../obs-websocket-test.html" target="_blank" rel="noopener">Open tester</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="troubleshooting">
+                <h2>7. Troubleshooting</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Problem</th><th>Check</th></tr></thead>
+                        <tbody>
+                            <tr><td>Nothing happens</td><td>Flow is saved and enabled; Flow Actions is open; both use the same session ID.</td></tr>
+                            <tr><td>OBS will not connect</td><td>WebSocket server is enabled, URL is <code>ws://127.0.0.1:4455</code>, and password matches. Port <code>4444</code> is the obsolete v4 default.</td></tr>
+                            <tr><td>Scene/source/filter is not found</td><td>Copy the exact OBS name. For visibility, set Scene or Group when the item is nested or outside the current scene.</td></tr>
+                            <tr><td>Text does not change</td><td>Use Text (GDI+) or Text (FreeType 2), confirm the input name, and disable <em>Read from file</em>.</td></tr>
+                            <tr><td>Media Ended never fires</td><td>Use OBS WebSocket v5 and a real media input. Looping media does not reach an ended state.</td></tr>
+                            <tr><td>Next/Previous does nothing</td><td>Use a playlist-capable source such as VLC Video Source.</td></tr>
+                            <tr><td>Replay save fails</td><td>Enable Replay Buffer in OBS Output settings and start it before saving.</td></tr>
+                            <tr><td>Actions stop when a scene changes</td><td>Disable <em>Shutdown source when not visible</em> on the Flow Actions Browser Source, or keep the page open elsewhere.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="panel">
+                    Diagnostic order: open the <a href="../obs-websocket-test.html" target="_blank" rel="noopener">tester</a> → confirm <code>GetVersion</code> → confirm scenes/inputs → test the individual request → test the full Event Flow.
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            More help: <a href="event-flow-guide.html">Event Flow Guide</a> · <a href="../docs/event-reference.html#obs-flow-actions">OBS event payload reference</a> · <a href="../obs-websocket-test.html">OBS WebSocket Tester</a>
+        </footer>
+    </div>
+</body>
+</html>

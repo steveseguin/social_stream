@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title data-page-translate="streamdeck-setup-document-title">Stream Deck Setup | Social Stream Ninja</title>
+	<script src="../translations/page-i18n.js"></script>
+	<style>
+		:root {
+			color-scheme: dark;
+			--bg: #0a1520;
+			--panel: #19293a;
+			--panel-2: #111e2b;
+			--line: rgba(255,255,255,.13);
+			--text: #eef2f7;
+			--muted: #94a3b8;
+			--accent: #2563eb;
+			--accent-soft: #60a5fa;
+			--good: #22c55e;
+			--warn: #f59e0b;
+		}
+		* { box-sizing: border-box; }
+		html, body { min-height: 100%; }
+		body {
+			margin: 0;
+			font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+			background: linear-gradient(160deg, #111e2b 0%, var(--bg) 55%, #0c1a27 100%);
+			color: var(--text);
+		}
+		button, a { font: inherit; }
+		.shell { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 48px; }
+		.hero { display: grid; grid-template-columns: 68px 1fr; gap: 18px; align-items: center; margin-bottom: 26px; }
+		.mark {
+			width: 68px; height: 68px; display: grid; place-items: center; border: 1px solid rgba(59,130,246,.45);
+			border-radius: 12px; background: #1e3047; box-shadow: 0 4px 16px rgba(0,0,0,.4);
+		}
+		.mark svg { width: 42px; height: 42px; }
+		h1 { margin: 0 0 5px; font-size: clamp(25px, 4vw, 36px); letter-spacing: -.02em; }
+		.hero p { margin: 0; color: var(--muted); font-size: 16px; }
+		.status-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(250px, .75fr); gap: 16px; }
+		.card { border: 1px solid var(--line); border-radius: 12px; background: rgba(25,41,58,.94); box-shadow: 0 4px 16px rgba(0,0,0,.32); }
+		.card-body { padding: 22px; }
+		.eyebrow { color: var(--accent-soft); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+		.connection { display: flex; align-items: center; gap: 9px; margin-top: 8px; font-size: 14px; font-weight: 700; }
+		.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 10px rgba(245,158,11,.45); }
+		.dot.ready { background: var(--good); box-shadow: 0 0 10px rgba(34,197,94,.45); }
+		.session-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; margin-top: 18px; }
+		.session-value { min-width: 0; padding: 13px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); color: var(--text); font: 700 16px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+		.chrome-note { margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+		.button { display: inline-flex; align-items: center; justify-content: center; min-height: 43px; padding: 0 17px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: white; font-weight: 700; text-decoration: none; cursor: pointer; transition: background 150ms ease, border-color 150ms ease; }
+		.button:hover { background: #1d4ed8; border-color: #1d4ed8; }
+		.button:focus-visible { outline: 3px solid #bfdbfe; outline-offset: 3px; }
+		.button:disabled { cursor: default; filter: grayscale(.7); opacity: .45; }
+		.button.secondary { border: 1px solid var(--line); background: #1e3047; color: var(--text); }
+		.button.secondary:hover { border-color: rgba(59,130,246,.45); background: #243a54; }
+		.meta { display: grid; gap: 12px; margin-top: 17px; }
+		.meta-row { display: flex; justify-content: space-between; gap: 18px; color: var(--muted); font-size: 13px; }
+		.meta-row strong { color: var(--text); font-weight: 700; text-align: right; }
+		.install h2, .steps h2, .screenshots h2, .capabilities h2 { margin: 6px 0 8px; font-size: 19px; }
+		.install p, .step p, .screenshots p, .capabilities p { color: var(--muted); line-height: 1.5; }
+		.install .button { width: 100%; margin-top: 9px; }
+		.steps, .screenshots, .capabilities { margin-top: 16px; }
+		.step-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+		.step { min-height: 132px; padding: 17px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); }
+		.step-number { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; background: rgba(59,130,246,.16); color: var(--accent-soft); font-weight: 800; }
+		.step h3 { margin: 13px 0 5px; font-size: 15px; }
+		.step p { margin: 0; font-size: 13px; }
+		.shot { margin: 16px 0 0; }
+		.shot-frame { overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+		.shot img { display: block; width: 100%; height: auto; }
+		.shot.inspector { width: min(100%, 420px); margin-left: auto; margin-right: auto; }
+		.shot figcaption { margin-top: 8px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+		.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 16px; }
+		.feature { padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); }
+		.feature strong { display: block; margin-bottom: 5px; font-size: 14px; }
+		.feature span { color: var(--muted); font-size: 12px; line-height: 1.4; }
+		.note { margin: 16px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
+		.toast { position: fixed; right: 18px; bottom: 18px; padding: 11px 14px; border: 1px solid rgba(34,197,94,.4); border-radius: 8px; background: #153629; color: #dcfce7; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .18s ease; }
+		.toast.error { border-color: rgba(248,113,113,.55); background: #491b1b; color: #fee2e2; }
+		.toast.show { opacity: 1; transform: translateY(0); }
+		@media (prefers-reduced-motion: reduce) {
+			.button, .toast { transition: none; }
+		}
+		@media (max-width: 760px) {
+			.shell { width: min(100% - 22px, 620px); padding-top: 24px; }
+			.status-grid, .step-list { grid-template-columns: 1fr; }
+			.feature-grid { grid-template-columns: repeat(2, 1fr); }
+		}
+		@media (max-width: 430px) {
+			.hero { grid-template-columns: 52px 1fr; }
+			.mark { width: 52px; height: 52px; border-radius: 14px; }
+			.mark svg { width: 33px; height: 33px; }
+			.session-row { grid-template-columns: 1fr; }
+			.feature-grid { grid-template-columns: 1fr; }
+		}
+	</style>
+</head>
+<body>
+	<main class="shell">
+		<header class="hero">
+			<div class="mark" aria-hidden="true">
+				<svg viewBox="0 0 48 48" fill="none">
+					<rect x="5" y="7" width="16" height="16" rx="4" stroke="#60a5fa" stroke-width="3"/>
+					<rect x="27" y="7" width="16" height="16" rx="4" stroke="#22c55e" stroke-width="3"/>
+					<circle cx="14" cy="34" r="7" stroke="#22c55e" stroke-width="3"/>
+					<circle cx="35" cy="34" r="7" stroke="#60a5fa" stroke-width="3"/>
+				</svg>
+			</div>
+			<div>
+				<h1 data-page-translate="setup-stream-deck">Set up Stream Deck</h1>
+				<p data-page-translate="streamdeck-setup-intro">Connect your Stream Deck to Social Stream Ninja in a couple of minutes.</p>
+			</div>
+		</header>
+
+		<section class="status-grid" aria-labelledby="connection-setup-title">
+			<div class="card card-body">
+				<div id="connection-setup-title" class="eyebrow" data-page-translate="your-connection">Your connection</div>
+				<div class="connection" role="status" aria-live="polite" aria-atomic="true"><span id="connectionDot" class="dot" aria-hidden="true"></span><span id="connectionText" data-page-translate="streamdeck-open-inside-ssapp">Open this page inside SSApp to detect your session.</span></div>
+				<div class="session-row">
+					<div id="sessionValue" class="session-value" data-page-translate="session-id-available-ssapp">Session ID available in SSApp</div>
+					<button id="copySession" class="button" type="button" disabled data-page-translate="copy-button">Copy</button>
+				</div>
+				<p class="chrome-note" data-page-translate="chrome-extension-session-id">Using the Chrome extension? Copy your unique session ID from Settings, then paste it into the plugin.</p>
+				<div class="meta">
+					<div class="meta-row"><span>SSApp</span><strong id="appVersion" data-page-translate="not-detected">Not detected</strong></div>
+					<div class="meta-row"><span data-page-translate="control-bridge">Control bridge</span><strong id="apiVersion" data-page-translate="not-detected">Not detected</strong></div>
+					<div class="meta-row"><span data-page-translate="available-controls">Available controls</span><strong id="supportSummary" data-page-translate="detected-after-connection">Detected after connection</strong></div>
+				</div>
+			</div>
+
+			<div class="card card-body install">
+				<div class="eyebrow" data-page-translate="install-step">1 · Install</div>
+				<h2 data-page-translate="get-plugin">Get the plugin</h2>
+				<p data-page-translate="install-streamdeck-plugin">Install the Social Stream Ninja plugin, then open the Stream Deck desktop app.</p>
+				<a class="button secondary" href="https://github.com/steveseguin/ssn-streamdeck/releases/latest" target="_blank" rel="noopener" data-page-translate="download-plugin">Download plugin</a>
+			</div>
+		</section>
+
+		<section class="card card-body steps">
+			<div class="eyebrow" data-page-translate="connect-step">2 · Connect</div>
+			<h2 data-page-translate="same-session-both-apps">Use the same session on both apps</h2>
+			<div class="step-list">
+				<div class="step"><span class="step-number">1</span><h3 data-page-translate="copy-id">Copy the ID</h3><p data-page-translate="copy-id-description">Use the Copy button above. This is the active Social Stream Ninja session.</p></div>
+				<div class="step"><span class="step-number">2</span><h3 data-page-translate="select-action">Select an action</h3><p data-page-translate="select-action-description">In the Stream Deck desktop app, drag in Setup, Timer Dial, or another SSN action.</p></div>
+				<div class="step"><span class="step-number">3</span><h3 data-page-translate="paste-test">Paste and test</h3><p data-page-translate="paste-test-description">Paste the ID into Setup and choose Test Connection. The status should turn green.</p></div>
+			</div>
+		</section>
+
+		<section class="card card-body screenshots">
+			<div class="eyebrow" data-page-translate="what-to-look-for">What to look for</div>
+			<h2 data-page-translate="two-places-use">The two places you will use</h2>
+			<figure class="shot">
+				<div class="shot-frame"><img src="images/ssapp-streamdeck-tab.png" alt="SSApp navigation with the Stream Deck Setup tab selected" data-page-alt="alt-ssapp-streamdeck-nav"></div>
+				<figcaption data-page-translate="ssapp-streamdeck-instruction">In SSApp, choose Stream Deck Setup. File → Set Up Stream Deck opens the same page.</figcaption>
+			</figure>
+			<figure class="shot inspector">
+				<div class="shot-frame"><img src="images/streamdeck-paste-session.png" alt="Stream Deck property inspector showing the session field and Test Connection button" data-page-alt="alt-streamdeck-session-field"></div>
+				<figcaption data-page-translate="streamdeck-paste-instruction">In the Stream Deck desktop app, paste the copied ID and choose Test Connection.</figcaption>
+			</figure>
+		</section>
+
+		<section class="card card-body capabilities">
+			<div class="eyebrow" data-page-translate="what-it-can-do">What it can do</div>
+			<h2 data-page-translate="controls-live-workflow">Controls that fit a live workflow</h2>
+			<div class="feature-grid">
+				<div class="feature"><strong data-page-translate="chat-overlays">Chat and overlays</strong><span data-page-translate="chat-overlays-description">Feature, unpin, clear, and move through queued messages.</span></div>
+				<div class="feature"><strong data-page-translate="timers-polls">Timers and polls</strong><span data-page-translate="timers-polls-description">Start, pause, reset, adjust time, and manage live polls.</span></div>
+				<div class="feature"><strong data-page-translate="ssapp-sources">SSApp sources</strong><span data-page-translate="ssapp-sources-description">Start, stop, restart, mute, reveal, and change supported source modes.</span></div>
+				<div class="feature"><strong data-page-translate="credits-controls">Credits</strong><span data-page-translate="credits-controls-description">Start, preview, test, and reset collected credits from a key.</span></div>
+				<div class="feature"><strong>Stream Deck +</strong><span data-page-translate="streamdeck-plus-description">Turn knobs for timer changes and browse recent chat on the touch strip.</span></div>
+			</div>
+			<p id="compatibilityNote" data-page-translate="compatibility-note">The plugin checks the running SSApp version and only shows controls it supports.</p>
+		</section>
+
+		<p class="note" data-page-translate="session-id-privacy-note">Your session ID stays on your computer unless you use it to connect Social Stream Ninja services.</p>
+	</main>
+	<div id="toast" class="toast" role="status" aria-live="polite" data-page-translate="session-id-copied">Session ID copied</div>
+
+	<script>
+		(function () {
+			"use strict";
+			var sessionId = "";
+			var toastTimer = null;
+			var lastSetupPayload = {};
+			var copyButton = document.getElementById("copySession");
+
+			function translate(key, fallback, values) {
+				if (window.SSNPageI18n && typeof window.SSNPageI18n.t === "function") {
+					return window.SSNPageI18n.t(key, fallback, values);
+				}
+				return fallback;
+			}
+
+			function text(id, value) {
+				var element = document.getElementById(id);
+				if (element) element.textContent = value;
+			}
+
+			function countEnabled(value) {
+				var count = 0;
+				if (!value || typeof value !== "object") return count;
+				Object.keys(value).forEach(function (key) {
+					if (value[key] === true) count += 1;
+					else if (value[key] && typeof value[key] === "object") count += countEnabled(value[key]);
+				});
+				return count;
+			}
+
+			function applySetup(payload) {
+				payload = payload || {};
+				lastSetupPayload = payload;
+				sessionId = String(payload.sessionId || "").trim();
+				text("sessionValue", sessionId || translate("session-id-loading", "Session ID is still loading"));
+				copyButton.disabled = !sessionId;
+				text("appVersion", payload.appVersion ? "v" + payload.appVersion : translate("detected", "Detected"));
+				var apiLabel = payload.apiVersion || payload.bridgeVersion;
+				text("apiVersion", apiLabel ? "v" + apiLabel : translate("available", "Available"));
+				var supported = countEnabled(payload.capabilities || {});
+				text("supportSummary", supported
+					? translate("detected-features", "{count} detected features", { count: supported })
+					: translate("core-controls-available", "Core controls available"));
+				var dot = document.getElementById("connectionDot");
+				if (sessionId) {
+					dot.className = "dot ready";
+					text("connectionText", translate("ssapp-detected-copy-id", "SSApp detected — copy this ID into the Stream Deck plugin."));
+				} else {
+					dot.className = "dot";
+					text("connectionText", translate("ssapp-creating-session", "SSApp is creating your session. Keep this page open for a moment."));
+				}
+			}
+
+			function showToast(message, isError) {
+				var toast = document.getElementById("toast");
+				text("toast", message);
+				toast.className = isError ? "toast error show" : "toast show";
+				clearTimeout(toastTimer);
+				toastTimer = setTimeout(function () { toast.className = "toast"; }, 1800);
+			}
+
+			function fallbackCopy(value) {
+				var input = document.createElement("textarea");
+				input.value = value;
+				input.setAttribute("readonly", "readonly");
+				input.style.position = "fixed";
+				input.style.opacity = "0";
+				document.body.appendChild(input);
+				input.select();
+				var copied = document.execCommand("copy");
+				document.body.removeChild(input);
+				return copied;
+			}
+
+			copyButton.addEventListener("click", function () {
+				if (!sessionId) return;
+				if (navigator.clipboard && navigator.clipboard.writeText) {
+					navigator.clipboard.writeText(sessionId).then(function () {
+						showToast(translate("session-id-copied", "Session ID copied"));
+					}).catch(function () {
+						var copied = fallbackCopy(sessionId);
+						showToast(copied
+							? translate("session-id-copied", "Session ID copied")
+							: translate("copy-failed", "Copy failed"), !copied);
+					});
+				} else {
+					var copied = fallbackCopy(sessionId);
+					showToast(copied
+						? translate("session-id-copied", "Session ID copied")
+						: translate("copy-failed", "Copy failed"), !copied);
+				}
+			});
+
+			window.addEventListener("ssn-page-language-changed", function () {
+				applySetup(lastSetupPayload);
+			});
+
+			window.addEventListener("message", function (event) {
+				if (event.source !== window.parent || !event.data || event.data.type !== "ssapp-streamdeck-setup") return;
+				applySetup(event.data.payload);
+			});
+
+			if (window.parent !== window) {
+				window.parent.postMessage({ type: "ssapp-streamdeck-ready" }, "*");
+			}
+		})();
+	</script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Local Servers and Services Explained - Social Stream Ninja</title>
+	<meta name="description" content="Choose the correct Social Stream Ninja local service: the WebSocket relay, local control API and MCP, headless hosting, or Event Flow media server.">
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/guides.css">
+	<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+</head>
+<body class="guides-page">
+	<header>
+		<div class="container">
+			<div class="logo">
+				<a href="../index.html">
+					<img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+					<span>Social Stream Ninja</span>
+				</a>
+			</div>
+			<nav>
+				<ul>
+					<li><a href="../index.html">Home</a></li>
+					<li><a href="../docs/features.html">Features</a></li>
+					<li><a href="../docs/download.html">Download</a></li>
+					<li><a href="../docs/guides.html" class="active">Guides</a></li>
+					<li><a href="../docs/commands.html">Commands &amp; API</a></li>
+					<li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+					<li><a href="../docs/templates.html">Templates</a></li>
+					<li><a href="../docs/services.html">Hire</a></li>
+					<li><a href="../docs/support.html">Support</a></li>
+				</ul>
+			</nav>
+			<div class="header-controls">
+				<button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+					<svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+					<svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
+				</button>
+				<div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+			</div>
+		</div>
+	</header>
+
+	<section class="page-hero">
+		<div class="container">
+			<h1>Local Servers and Services Explained</h1>
+			<p>Social Stream Ninja uses several different local services. Choose the one that matches what you want to do.</p>
+		</div>
+	</section>
+
+	<main class="guide-section">
+		<div class="container">
+			<div class="guide-card">
+				<h2>Quick Chooser</h2>
+				<table class="guide-table guide-table-stack">
+					<thead>
+						<tr><th>I Want To</th><th>Use</th><th>Default Address</th></tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td data-label="I Want To"><span>Relay chat and supported commands between Social Stream pages without the normal remote transport</span></td>
+							<td data-label="Use"><span><a href="local-websocket-server-guide.html"><strong>Enable Local Server</strong></a></span></td>
+							<td data-label="Default Address"><span><code>ws://127.0.0.1:3003</code><br>Older upgraded installs may use <code>3000</code>.</span></td>
+						</tr>
+						<tr>
+							<td data-label="I Want To"><span>Let an AI tool or local script inspect and control the desktop app</span></td>
+							<td data-label="Use"><span><a href="llm-control-guide.html"><strong>Local Control API and MCP</strong></a></span></td>
+							<td data-label="Default Address"><span><code>http://127.0.0.1:17777</code></span></td>
+						</tr>
+						<tr>
+							<td data-label="I Want To"><span>Run the complete desktop app on a Linux home server or VPS without a monitor</span></td>
+							<td data-label="Use"><span><a href="headless-server-guide.html"><strong>Headless SSApp hosting</strong></a></span></td>
+							<td data-label="Default Address"><span>No new public API; remote control uses the normal Social Stream session.</span></td>
+						</tr>
+						<tr>
+							<td data-label="I Want To"><span>Play an approved local audio, image, or video file in Event Flow</span></td>
+							<td data-label="Use"><span><a href="media-hosting-event-flow.html"><strong>Local media server</strong></a></span></td>
+							<td data-label="Default Address"><span><code>http://127.0.0.1:3001</code></span></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="guide-card">
+				<h2>1. Enable Local Server</h2>
+				<p>This File-menu option starts a room- and channel-aware WebSocket relay inside the desktop app. Supported Social Stream pages can use it to exchange chat and commands on the same computer. It is an alternative endpoint for page-specific server routing.</p>
+				<p>It does not host the Social Stream website, capture a platform by itself, or provide the HTTP automation API. Start with the <a href="local-websocket-server-guide.html">Enable Local Server guide</a>.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>2. Local Control API and MCP</h2>
+				<p>This opt-in loopback API lets programs on the SSApp computer manage supported sources and settings, read status and diagnostics, inspect app or source windows, and follow captured events. The bundled MCP adapter presents those operations as tools to compatible AI clients.</p>
+				<p>Enable it under <strong>File &gt; Local AI / Automation</strong>. It is separate from <strong>Enable Local Server</strong>. See the <a href="llm-control-guide.html">Local Control API and MCP guide</a>.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>3. Headless Home Server or VPS</h2>
+				<p>Headless mode runs the full Electron desktop app with its source windows hidden. On Linux it still needs a display backend such as Xvfb. This is useful when a dedicated computer should keep capturing chat without a monitor attached.</p>
+				<p>Headless mode does not create a public control API. Remote control uses Social Stream's normal WebRTC or WebSocket transport. See the <a href="headless-server-guide.html">headless hosting guide</a>.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>4. Local Media Server</h2>
+				<p>The desktop app starts this automatically when local Event Flow media is available. It serves only files approved through SSApp and selected runtime assets through a random per-profile token path.</p>
+				<p>It is not a general web or file server. See <a href="media-hosting-event-flow.html">Media Files for Event Flow</a> to choose between local files, uploads, and cloud hosting.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Server Fallback Is Different</h2>
+				<p>Settings such as <strong>Send chat messages to API server</strong> and <strong>Dock sends its commands to Extension via server</strong> choose how chat and commands are routed. Their generated URL flags include <code>server</code>, <code>server2</code>, and <code>server3</code>.</p>
+				<p>Those settings normally use Social Stream's hosted WebSocket service. When a supported page also has <code>localserver</code>, it uses the desktop app's local relay instead. See <a href="sessions-passwords-relay-modes.html">Sessions, Passwords, Relay, and Server Modes</a> for the routing controls.</p>
+				<div class="warning-note">
+					<p><strong>Use freshly generated links.</strong> Routing flags are page-specific. Do not copy a server flag from one page to another and assume it has the same meaning.</p>
+				</div>
+			</div>
+
+			<div class="guide-card">
+				<h2>Other Temporary Local Ports</h2>
+				<p>Some sign-in and account-link workflows briefly open a loopback callback port and close it when the workflow ends. These temporary listeners are not general SSN servers or automation APIs.</p>
+			</div>
+		</div>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+	<script src="js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

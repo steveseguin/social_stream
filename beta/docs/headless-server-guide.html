@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Run Social Stream Ninja Headlessly - Social Stream Ninja</title>
+	<meta name="description" content="Run the Social Stream Ninja desktop app on an Ubuntu or Debian home server or VPS with Xvfb, persistent settings, remote control, and optional local AI automation.">
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/guides.css">
+	<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+</head>
+<body class="guides-page">
+	<header>
+		<div class="container">
+			<div class="logo"><a href="../index.html"><img src="../icons/logo.svg" alt="Social Stream Ninja Logo"><span>Social Stream Ninja</span></a></div>
+			<nav>
+				<ul>
+					<li><a href="../index.html">Home</a></li>
+					<li><a href="../docs/features.html">Features</a></li>
+					<li><a href="../docs/download.html">Download</a></li>
+					<li><a href="../docs/guides.html" class="active">Guides</a></li>
+					<li><a href="../docs/commands.html">Commands &amp; API</a></li>
+					<li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+					<li><a href="../docs/templates.html">Templates</a></li>
+					<li><a href="../docs/services.html">Hire</a></li>
+					<li><a href="../docs/support.html">Support</a></li>
+				</ul>
+			</nav>
+			<div class="header-controls">
+				<button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+					<svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+					<svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
+				</button>
+				<div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+			</div>
+		</div>
+	</header>
+
+	<section class="page-hero">
+		<div class="container">
+			<h1>Run Social Stream Ninja Headlessly</h1>
+			<p>Keep the full desktop app capturing on an Ubuntu or Debian home server or VPS without a physical monitor.</p>
+		</div>
+	</section>
+
+	<main class="guide-section">
+		<div class="container">
+			<div class="guide-card">
+				<h2>What Headless Means</h2>
+				<p>Headless mode keeps SSApp's Electron windows hidden, but the source pages are still real browser windows. Linux therefore needs a virtual display such as Xvfb. This is not a small background-only chat daemon.</p>
+				<div class="guide-note">
+					<p><strong>Headless mode does not create a public control API.</strong> A controller on another computer uses the same Social Stream session and normal WebRTC or hosted WebSocket transport as other remote-control workflows.</p>
+				</div>
+			</div>
+
+			<div class="guide-card">
+				<h2>Before You Start</h2>
+				<ul class="guide-list">
+					<li>Use Ubuntu 22.04+, Debian 12+, or a similar Linux distribution.</li>
+					<li>Allow at least 2 GB of memory for a small setup and more for several source windows.</li>
+					<li>Choose a persistent profile directory for settings, sources, sessions, and browser data.</li>
+					<li>Plan a one-time desktop or VNC session for sign-ins and other private setup.</li>
+				</ul>
+				<p>Public source URLs that do not require sign-in are the easiest to operate remotely. OAuth, CAPTCHA, passwords, cookies, and account setup still require a person.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>1. Install Xvfb and the AppImage</h2>
+				<pre><code>sudo apt-get update
+sudo apt-get install -y xvfb x11-utils
+sudo mkdir -p /opt/socialstream
+sudo mv socialstreamninja_linux_*.AppImage /opt/socialstream/socialstreamninja.AppImage
+sudo chmod 755 /opt/socialstream/socialstreamninja.AppImage</code></pre>
+				<p>Download the current Linux AppImage from the <a href="download.html#standalone">Social Stream Ninja download page</a>. A source checkout and separate Node installation are not required.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>2. Prepare the Profile and Session</h2>
+				<ol class="guide-steps">
+					<li>Choose a persistent directory such as <code>/var/lib/ssapp</code> or <code>$HOME/.local/share/ssapp-headless</code>.</li>
+					<li>Open SSApp once through a desktop or temporary VNC connection.</li>
+					<li>Set the Social Stream session ID and optional password used by the remote controller.</li>
+					<li>Add sources and complete any platform sign-ins that need a visible human workflow.</li>
+					<li>Keep the same <code>SSAPP_USER_DATA_DIR</code> for every later launch.</li>
+				</ol>
+				<p>Use <code>SSAPP_USER_DATA_DIR</code>, not Chromium's <code>--user-data-dir</code> flag.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>3. Start the App Headlessly</h2>
+				<pre><code>export SSAPP_USER_DATA_DIR="$HOME/.local/share/ssapp-headless"
+xvfb-run -a -s "-screen 0 1920x1080x24 -nolisten tcp -extension GLX" \
+  /opt/socialstream/socialstreamninja.AppImage \
+  --ssapp-headless-control --no-hwa</code></pre>
+				<p>The <code>--ssapp-headless-control</code> flag hides the app windows and enables the normal remote-control bridge. The main application still needs Xvfb; <code>--ozone-platform=headless</code> is not a replacement for the virtual display.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>4. Control It from Another Computer</h2>
+				<p>Use the same Social Stream session ID and optional password on the headless app and the remote controller. WebRTC is the normal transport. If it is unsuitable for the environment, use Social Stream's hosted WebSocket server mode.</p>
+				<p>Supported remote controls can add, start, stop, restart, mute, and hide public sources. They do not remotely complete sign-in, OAuth, CAPTCHA, cookies, credentials, or other private account setup.</p>
+				<p>See <a href="sessions-passwords-relay-modes.html">Sessions, Passwords, Relay, and Server Modes</a> when the remote controller connects but messages or commands do not arrive.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Optional Local AI on the Server</h2>
+				<p>If an AI tool or automation script runs on the same Linux server as SSApp, explicitly add <code>--ssapp-control-api</code>:</p>
+				<pre><code>xvfb-run -a -s "-screen 0 1920x1080x24 -nolisten tcp -extension GLX" \
+  /opt/socialstream/socialstreamninja.AppImage \
+  --ssapp-headless-control --ssapp-control-api --no-hwa</code></pre>
+				<p>The API remains on <code>127.0.0.1:17777</code>. Do not forward or publish it for remote users. Follow the <a href="llm-control-guide.html">Local Control API and MCP guide</a> to register the downloaded AppImage with a compatible AI client.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Keep It Running with systemd</h2>
+				<pre><code>[Unit]
+Description=Social Stream Ninja (headless)
+After=network-online.target
+
+[Service]
+Type=simple
+User=ssapp
+WorkingDirectory=/opt/socialstream
+Environment=SSAPP_USER_DATA_DIR=/var/lib/ssapp
+ExecStart=/usr/bin/xvfb-run -a -s "-screen 0 1920x1080x24 -nolisten tcp -extension GLX" /opt/socialstream/socialstreamninja.AppImage --ssapp-headless-control --no-hwa
+Restart=on-failure
+RestartSec=10
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+				<pre><code>sudo systemctl daemon-reload
+sudo systemctl enable --now ssapp
+journalctl -u ssapp -f</code></pre>
+				<p>Save the unit as <code>/etc/systemd/system/ssapp.service</code>. Create the <code>ssapp</code> user and profile directory with permissions appropriate for that account before starting it.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Troubleshooting</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Problem</th><th>What To Check</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Problem"><span><code>Missing X server or $DISPLAY</code></span></td><td data-label="What To Check"><span>Launch through <code>xvfb-run</code> or start Xvfb and set <code>DISPLAY</code>.</span></td></tr>
+						<tr><td data-label="Problem"><span>Xvfb exits immediately</span></td><td data-label="What To Check"><span>Keep <code>-extension GLX</code> in the Xvfb arguments; some installed GPU drivers break its GLX startup.</span></td></tr>
+						<tr><td data-label="Problem"><span>The AppImage will not mount</span></td><td data-label="What To Check"><span>Install <code>libfuse2</code> or extract the AppImage and run its extracted executable.</span></td></tr>
+						<tr><td data-label="Problem"><span>Remote commands do not arrive</span></td><td data-label="What To Check"><span>Confirm both sides use the same session and password and that WebRTC or the hosted WebSocket mode is connected.</span></td></tr>
+						<tr><td data-label="Problem"><span>Sources or settings mix between instances</span></td><td data-label="What To Check"><span>Give every instance a different <code>SSAPP_USER_DATA_DIR</code> and virtual display.</span></td></tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="guide-card">
+				<h2>Related Guides</h2>
+				<ul class="guide-list">
+					<li><a href="local-services-guide.html">Local Servers and Services Explained</a></li>
+					<li><a href="llm-control-guide.html">Local Control API and MCP</a></li>
+					<li><a href="standalone-app-modes.html">Standalone App Modes</a></li>
+				</ul>
+			</div>
+		</div>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+	<script src="js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

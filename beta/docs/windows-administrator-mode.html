@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+	<head>
+    <meta name="robots" content="noindex">
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem("darkMode");
+				var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+				if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+					document.documentElement.classList.add("dark-mode");
+				}
+			})();
+		</script>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Run OBS and Social Stream as Administrator on Windows - Social Stream Ninja</title>
+		<link rel="stylesheet" href="css/styles.css" />
+		<link rel="stylesheet" href="css/guides.css" />
+		<link rel="icon" href="../icons/favicon.ico" type="image/x-icon" />
+		<meta name="description" content="How to test or permanently enable Windows administrator mode for OBS Studio and the Social Stream Ninja desktop app, and how to turn it off again." />
+		<link rel="canonical" href="https://socialstream.ninja/docs/windows-administrator-mode" />
+		<style>
+			.admin-screenshot {
+				width: min(100%, 43.2rem);
+				margin-left: auto;
+				margin-right: auto;
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<div class="container">
+				<div class="logo">
+					<a href="../index.html">
+						<img src="../icons/logo.svg" alt="Social Stream Ninja Logo" />
+						<span>Social Stream Ninja</span>
+					</a>
+				</div>
+				<nav>
+					<ul>
+						<li><a href="../index.html">Home</a></li>
+						<li><a href="../docs/features.html">Features</a></li>
+						<li><a href="../docs/download.html">Download</a></li>
+						<li><a href="../docs/guides.html" class="active">Guides</a></li>
+						<li><a href="../docs/commands.html">Commands &amp; API</a></li>
+						<li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+						<li><a href="../docs/templates.html">Templates</a></li>
+						<li><a href="../docs/services.html">Hire</a></li>
+						<li><a href="../docs/support.html">Support</a></li>
+					</ul>
+				</nav>
+				<div class="header-controls">
+					<button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+						<svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+						<svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
+					</button>
+					<div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+				</div>
+			</div>
+		</header>
+
+		<section class="page-hero">
+			<div class="container">
+				<h1>Run OBS and Social Stream as Administrator</h1>
+				<p>Windows steps for a one-time test or a persistent setting, with matching examples for both apps.</p>
+			</div>
+		</section>
+
+		<main class="guide-section">
+			<div class="container">
+				<div class="guide-card">
+					<h2>Only Use This For A Confirmed Permission Problem</h2>
+					<div class="warning-note">
+						<p><strong>OBS and Social Stream normally should not need administrator access.</strong> Start both normally unless a Windows privilege mismatch has been confirmed or support has specifically asked you to test this.</p>
+					</div>
+					<p>A blank unified chat, an old Browser Source URL, or a stale OBS cache is usually fixed by <a href="obs-troubleshooting.html#replace-url-and-cache">replacing the URL and refreshing the cache</a>, not by administrator mode.</p>
+					<p>If one app is elevated and the other is not, Windows can limit how they interact. For a permission-mismatch test, close both apps first and run both at the same privilege level.</p>
+				</div>
+
+				<div class="guide-card">
+					<h2>One-Time Administrator Test</h2>
+					<ol class="guide-steps">
+						<li>Close OBS Studio and the Social Stream desktop app.</li>
+						<li>Right-click the OBS Studio shortcut and choose <strong>Run as administrator</strong>.</li>
+						<li>Approve the Windows User Account Control prompt.</li>
+						<li>If you are testing a mismatch between the two apps, right-click the Social Stream shortcut, choose <strong>Run as administrator</strong>, and approve its prompt too.</li>
+						<li>Repeat the exact workflow that previously failed. When finished, close both apps; the one-time elevation ends when they exit.</li>
+					</ol>
+					<div class="guide-note">
+						<p><strong>Prefer this test first.</strong> It confirms whether elevation matters without permanently changing either app.</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="persistent-admin">
+					<h2>Always Run Social Stream As Administrator</h2>
+					<ol class="guide-steps">
+						<li>Close Social Stream.</li>
+						<li>Right-click its shortcut and choose <strong>Open file location</strong>. If Windows opens another shortcut, right-click that shortcut and choose <strong>Open file location</strong> again.</li>
+						<li>Right-click <strong>socialstream.exe</strong> and choose <strong>Properties</strong>.</li>
+						<li>Open the <strong>Compatibility</strong> tab.</li>
+						<li>Select <strong>Run this program as an administrator</strong>, then choose <strong>Apply</strong> and <strong>OK</strong>.</li>
+					</ol>
+					<figure class="guide-figure">
+						<img src="images/guides/windows-admin-ssapp-compatibility.jpg" alt="Windows Compatibility tab for socialstream.exe showing Run this program as an administrator" class="guide-image admin-screenshot" />
+						<figcaption>Select the unchecked administrator checkbox shown for the Social Stream desktop app. This screenshot was captured from the current Windows app properties without changing the setting.</figcaption>
+					</figure>
+					<p>A typical per-user installation is:</p>
+					<pre><code>%LOCALAPPDATA%\Programs\socialstream\socialstream.exe</code></pre>
+					<p>Your path may differ if you chose another installation location.</p>
+				</div>
+
+				<div class="guide-card">
+					<h2>Always Run OBS As Administrator</h2>
+					<ol class="guide-steps">
+						<li>Close OBS Studio.</li>
+						<li>Right-click the OBS Studio shortcut and choose <strong>Open file location</strong>.</li>
+						<li>Right-click <strong>obs64.exe</strong> and choose <strong>Properties</strong>.</li>
+						<li>Open the <strong>Compatibility</strong> tab.</li>
+						<li>Select <strong>Run this program as an administrator</strong>, then choose <strong>Apply</strong> and <strong>OK</strong>.</li>
+					</ol>
+					<figure class="guide-figure">
+						<img src="images/guides/windows-admin-obs-compatibility.jpg" alt="Windows Compatibility tab for obs64.exe showing Run this program as an administrator" class="guide-image admin-screenshot" />
+						<figcaption>Select the unchecked administrator checkbox shown for OBS Studio. This screenshot was captured from the current Windows app properties without changing the setting.</figcaption>
+					</figure>
+					<p>The default 64-bit OBS path is commonly:</p>
+					<pre><code>%ProgramFiles%\obs-studio\bin\64bit\obs64.exe</code></pre>
+					<p>Your path may differ for portable or custom installations.</p>
+				</div>
+
+				<div class="guide-card">
+					<h2>Turn Administrator Mode Off Again</h2>
+					<ol class="guide-steps">
+						<li>Close the app.</li>
+						<li>Open the executable's <strong>Properties &rarr; Compatibility</strong> tab.</li>
+						<li>Clear <strong>Run this program as an administrator</strong>, then choose <strong>Apply</strong> and <strong>OK</strong>.</li>
+						<li>Do the same for the other app so OBS and Social Stream return to the same normal privilege level.</li>
+					</ol>
+					<p>Do not disable User Account Control. For background on elevated applications, see <a href="https://learn.microsoft.com/en-us/windows/powertoys/administrator">Microsoft's administrator mode explanation</a>.</p>
+				</div>
+			</div>
+		</main>
+
+		<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+		<script src="js/main.js"></script>
+		<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+	</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remove the Grey Dock Background Outside OBS - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Remove the grey Social Stream Ninja Dock background and bottom menu when using MELD, the desktop app, or another non-OBS browser container.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands &amp; API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Remove the Grey Dock Background</h1>
+            <p>Make the chat Dock transparent and hide its bottom menu when you are not using OBS.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>The Problem</h2>
+                <p>If the Dock URL is opened in MELD, the Social Stream desktop app, or another browser container, it may show a large grey rectangle and a bottom menu bar. The Dock is working; its page background is simply not transparent yet.</p>
+                <figure class="guide-figure">
+                    <img src="images/transparent-dock-guide/grey-box-not-transparent.png" alt="A Social Stream Ninja Dock displayed as a large grey box over a video because transparency is disabled" class="guide-image">
+                    <figcaption>The large grey box means the Dock background is still enabled.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Turn On These Two Settings</h2>
+                <ol class="guide-steps">
+                    <li>Open Social Stream Ninja settings and find <strong>Main chat overlay &amp; control dock</strong>.</li>
+                    <li>Expand <strong>Bottom Dock Menu Bar</strong> and enable <strong>Hide menu bar</strong>.</li>
+                    <li>Expand <strong>Overlay</strong> and enable <strong>Force transparent background</strong>.</li>
+                    <li>Copy the updated Dock URL and replace the old URL in the app where you display it. If it is already open, reload it.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="images/transparent-dock-guide/transparency-and-hide-menu-toggles.png" alt="Social Stream Ninja settings with Hide menu bar and Force transparent background enabled" class="guide-image" loading="lazy">
+                    <figcaption>Both blue switches should be on. The session ID in this screenshot has been hidden for privacy.</figcaption>
+                </figure>
+                <div class="guide-note">
+                    <p>The updated URL should contain both <code>transparent</code> and <code>hidemenu</code>. Keep your own <code>session</code> value unchanged.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>What You Should See</h2>
+                <p>The grey page and bottom menu disappear. Chat messages remain visible over the video or content behind the Dock.</p>
+                <p>OBS Browser Sources are transparent by default, so this manual setting is mainly needed for MELD, desktop overlay windows, and other non-OBS browser containers.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>If the Grey Box Remains</h2>
+                <ul class="guide-list">
+                    <li>Confirm the URL you are displaying contains <code>transparent</code> and <code>hidemenu</code>.</li>
+                    <li>Reload the page or remove and re-add it after replacing the URL.</li>
+                    <li>Leave <strong>Translucent page background</strong>, <strong>Green page background</strong>, <strong>White page background</strong>, <strong>Light mode</strong>, and <strong>Dark mode</strong> turned off.</li>
+                    <li>Check that the app displaying the URL supports transparent browser backgrounds.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+    <script src="js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Credits Roll Guide - Social Stream Ninja</title>
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/guides.css">
+	<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Collect stream participants, donors, members, and subscribers, then run a Social Stream Ninja credits roll in OBS, SSApp, or by remote control.">
+</head>
+<body>
+	<header>
+		<div class="container">
+			<div class="logo">
+				<a href="../index.html">
+					<img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+					<span>Social Stream Ninja</span>
+				</a>
+			</div>
+			<nav>
+				<ul>
+					<li><a href="../index.html">Home</a></li>
+					<li><a href="../docs/features.html">Features</a></li>
+					<li><a href="../docs/download.html">Download</a></li>
+					<li><a href="../docs/guides.html" class="active">Guides</a></li>
+					<li><a href="../docs/commands.html">Commands &amp; API</a></li>
+					<li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+					<li><a href="../docs/templates.html">Templates</a></li>
+					<li><a href="../docs/services.html">Hire</a></li>
+					<li><a href="../docs/support.html">Support</a></li>
+				</ul>
+			</nav>
+			<div class="header-controls">
+				<button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+					<svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+					<svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="4.22" x2="19.78" y2="5.64"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line></svg>
+				</button>
+				<div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+			</div>
+		</div>
+	</header>
+
+	<section class="page-hero">
+		<div class="container">
+			<h1>Credits Roll Guide</h1>
+			<p>Collect the people who took part in your stream, then thank them in an end-of-stream credits roll.</p>
+		</div>
+	</section>
+
+	<main class="guide-section">
+		<div class="container">
+			<div class="guide-card">
+				<h2>Recommended setup for an ending scene</h2>
+				<p>Use <strong>Background collection</strong> when the Credits Browser Source exists only in an ending scene or may be unloaded while hidden. The app or extension collects activity during the stream, so the Credits page does not need to stay open.</p>
+				<ol class="guide-steps">
+					<li>Keep Social Stream Ninja active and keep your normal chat sources capturing throughout the stream.</li>
+					<li>Open <strong>Credits roll</strong> &rarr; <strong>Enable and customize</strong>.</li>
+					<li>Choose a display style and set <strong>Trigger Mode</strong> to <strong>Background collection</strong> before the stream begins.</li>
+					<li>Copy the updated Credits link and add it to OBS as a Browser Source in your ending scene.</li>
+					<li>Use <strong>Test credits</strong> while the Browser Source is loaded to confirm the connection and appearance.</li>
+					<li>At the end of the stream, switch to the ending scene so OBS loads or reveals the Credits source.</li>
+					<li>Select <strong>Start Credits</strong>, or trigger <code>creditsStart</code> from Stream Deck or the API.</li>
+				</ol>
+				<div class="warning-note"><strong>Order matters:</strong> if OBS shuts the Browser Source down while it is hidden, reveal the ending scene before selecting <strong>Start Credits</strong>. Collection still works in Background mode, but the source must be connected to receive the start command.</div>
+				<figure class="guide-figure">
+					<img src="images/guides/credits-settings-background-mode.png" alt="Credits settings with Background collection selected and Start Credits, Preview, Test credits, Reset saved credits, and quick setup controls visible" class="guide-image guide-image-medium">
+					<figcaption>Background collection is the simplest mode when Credits is only used in a separate ending scene.</figcaption>
+				</figure>
+			</div>
+
+			<div class="guide-card">
+				<h2>Choose the correct trigger mode</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Mode</th><th>Where activity is collected</th><th>How the roll starts</th><th>Best use</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Mode">Auto</td><td data-label="Where activity is collected">Inside the loaded Credits page</td><td data-label="How the roll starts">Automatically when OBS or the browser makes the page visible</td><td data-label="Best use">The source remains loaded for the entire stream</td></tr>
+						<tr><td data-label="Mode">Manual</td><td data-label="Where activity is collected">Inside the loaded Credits page</td><td data-label="How the roll starts">Start button, Stream Deck, or API</td><td data-label="Best use">The page stays loaded, but you want exact start timing</td></tr>
+						<tr><td data-label="Mode">Background collection</td><td data-label="Where activity is collected">Inside the Social Stream app or extension</td><td data-label="How the roll starts">Start button, Stream Deck, or API</td><td data-label="Best use">A separate ending scene or a source that is closed/unloaded during the stream</td></tr>
+					</tbody>
+				</table>
+				<div class="guide-note"><strong>Set the mode before the stream.</strong> Auto/Manual page data and Background collection data are separate. Changing modes midway through a stream does not transfer names already collected by the other mode.</div>
+			</div>
+
+			<div class="guide-card">
+				<h2>What the four controls do</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Control</th><th>Result</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Control">Start Credits</td><td data-label="Result">Runs the real collected list. In Auto/Manual mode, displayed entries are removed when the roll finishes unless saving or looping is enabled. New activity received during the roll remains for the next run. Background data remains saved until reset.</td></tr>
+						<tr><td data-label="Control">Preview</td><td data-label="Result">Runs the current real list without consuming it. Use this to check the layout before going live.</td></tr>
+						<tr><td data-label="Control">Test credits</td><td data-label="Result">Sends built-in participant, member, and donor examples. It does not add to, replace, or clear the real saved list.</td></tr>
+						<tr><td data-label="Control">Reset saved credits</td><td data-label="Result">Clears the saved Background list and tells a connected Credits page to clear its local list.</td></tr>
+					</tbody>
+				</table>
+				<p>If <strong>Test credits</strong> reports that no Credits source is connected, load or reveal the OBS Browser Source and try again.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Who appears in the roll</h2>
+				<p>Credits can recognize captured chat participants, memberships/subscriptions, and donation-style activity. A person needs a captured event with a name and platform type; Social Stream cannot list silent viewers whom the platform never reports.</p>
+				<ul class="guide-list">
+					<li><strong>Participant:</strong> a captured message or named activity event.</li>
+					<li><strong>Member/subscriber:</strong> a captured membership field or supported subscription/membership event.</li>
+					<li><strong>Donor:</strong> a captured item with a donation value. Supported currency values are normalized for sorting and optional amount display.</li>
+					<li><strong>Identity:</strong> the same display name on two different platforms is treated as two source identities.</li>
+				</ul>
+				<p>With the default ranking, each captured activity adds 1 point, membership adds 50 points, and each normalized donation dollar adds 100 points. The list is grouped into VIP Supporters, Regular Supporters, and Stream Participants. Enable <strong>Prioritize donations</strong> to use the clearer Stream Donors, Channel Members, and Stream Participants groups instead.</p>
+				<figure class="guide-figure">
+					<img src="images/guides/credits-roll-preview.png" alt="Standard credits roll showing a Stream Donors category with donor names, support badges, source icons, and donation amounts" class="guide-image guide-image-medium">
+					<figcaption>A paused moment from the Standard Roll style with donation priority and donation amounts enabled.</figcaption>
+				</figure>
+			</div>
+
+			<div class="guide-card">
+				<h2>Quick setup, filters, and saved data</h2>
+				<ul class="guide-list">
+					<li><strong>Loop supporters:</strong> enables looping, saved overlay data, supporter-only filtering, donation priority, and donation amounts.</li>
+					<li><strong>Donors only:</strong> enables looping, saved overlay data, donor-only filtering, and donation amounts.</li>
+					<li><strong>Only include supporters:</strong> includes donors and recognized members/subscribers, but excludes chat-only participants.</li>
+					<li><strong>Only include donors:</strong> requires a captured donation signal.</li>
+					<li><strong>Save credits list in this overlay:</strong> preserves Auto/Manual page collection across refreshes and source toggles and prevents a completed Start run from consuming the list.</li>
+					<li><strong>Loop credits continuously:</strong> restarts the animation and incorporates newly collected activity at the next loop.</li>
+				</ul>
+				<div class="guide-note">Background collection is already stored by the app/extension for the current session. It survives the Credits page closing and remains available until <strong>Reset saved credits</strong> is used.</div>
+			</div>
+
+			<div class="guide-card">
+				<h2>OBS setup details</h2>
+				<ol class="guide-steps">
+					<li>Finish the Credits options first, then copy the Credits URL so the selected URL parameters are included.</li>
+					<li>Add that URL as an OBS Browser Source. A normal 1920 &times; 1080 source works well for full-screen styles.</li>
+					<li>If using Auto or Manual, keep the source loaded for the full stream. Reusing the same OBS source in each scene is safer than creating unrelated copies.</li>
+					<li>If using Background collection, the source may be absent or unloaded during the stream. It only needs to be connected before Start, Preview, or Test is sent.</li>
+					<li>Use Preview or Test to check font size, speed, categories, transparency, and the end message before going live.</li>
+				</ol>
+				<div class="warning-note"><strong>OBS option:</strong> “Shutdown source when not visible” stops Auto/Manual collection because their collector lives in the page. It is compatible with Background collection as long as you reveal the source before sending the start command.</div>
+			</div>
+
+			<div class="guide-card">
+				<h2>Stream Deck and API control</h2>
+				<p>The official Stream Deck plugin exposes Start, Preview, Test, and Reset actions for Credits. The same commands are available through Social Stream's remote-control API:</p>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Action</th><th>HTTP example</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Action"><code>creditsStart</code></td><td data-label="HTTP example"><code>https://io.socialstream.ninja/SESSION_ID/creditsStart</code></td></tr>
+						<tr><td data-label="Action"><code>creditsPreview</code></td><td data-label="HTTP example"><code>https://io.socialstream.ninja/SESSION_ID/creditsPreview</code></td></tr>
+						<tr><td data-label="Action"><code>creditsTest</code></td><td data-label="HTTP example"><code>https://io.socialstream.ninja/SESSION_ID/creditsTest</code></td></tr>
+						<tr><td data-label="Action"><code>creditsReset</code></td><td data-label="HTTP example"><code>https://io.socialstream.ninja/SESSION_ID/creditsReset</code></td></tr>
+					</tbody>
+				</table>
+				<p>Replace <code>SESSION_ID</code> with the active Social Stream session. Enable <strong>remote API control of extension</strong> under Global settings &rarr; Mechanics. The Credits Browser Source must be connected for Start, Preview, or Test to appear on screen.</p>
+				<p><a href="../obs-control-dock.html" class="btn btn-primary">Open the OBS Control Dock</a> <a href="obs-control-dock-guide.html" class="btn btn-secondary">View Setup Guide</a></p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Common problems</h2>
+				<ul class="guide-list">
+					<li><strong>Test works, but the real list is empty:</strong> test entries are built in and do not prove that activity was collected. Confirm the intended trigger mode was selected before the stream and that chat sources were capturing.</li>
+					<li><strong>No controls appear after reopening settings:</strong> Start and Preview are shown for Manual and Background modes. Auto starts through visibility instead.</li>
+					<li><strong>No Credits source connected:</strong> load/reveal the OBS source, confirm it has the current copied URL and session, then retry.</li>
+					<li><strong>Chatters are missing:</strong> Auto/Manual requires the Credits page to have remained loaded. Use Background collection for a separate ending scene.</li>
+					<li><strong>Members or donors are missing:</strong> confirm the platform source emitted a named membership or donation event and that Only donors/Only supporters is not excluding it.</li>
+					<li><strong>Names vanished after a completed roll:</strong> enable <strong>Save credits list in this overlay</strong>, use Preview, or use Background mode. A normal page-collected Start run consumes displayed entries when saving and looping are off.</li>
+					<li><strong>Old names remain:</strong> select <strong>Reset saved credits</strong> before the next stream. Background data is stored per Social Stream session until reset.</li>
+				</ul>
+			</div>
+		</div>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+	<script src="js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

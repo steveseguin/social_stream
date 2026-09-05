@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Control API and MCP - Social Stream Ninja</title>
+    <meta name="description" content="Use Social Stream Ninja's opt-in localhost control API and bundled MCP adapter from a local AI tool or same-machine automation script.">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="alternate" type="text/plain" href="../llms.txt" title="LLM setup index">
+    <link rel="alternate" type="text/markdown" href="skills/control-social-stream/SKILL.md" title="Control Social Stream skill">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+</head>
+<body class="guides-page">
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands & API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <div class="mobile-nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Local Control API and MCP</h1>
+            <p>Let an AI tool or script on the same computer inspect and control the Social Stream Ninja desktop app.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Choose This Service When</h2>
+                <p>Use the Local Control API when software on the SSApp computer needs approved app and source controls. Use the bundled MCP adapter when a compatible AI client should receive those controls as tools.</p>
+                <p>This is separate from <strong>File &gt; Enable Local Server</strong>, which starts a WebSocket relay for Social Stream pages. See <a href="local-services-guide.html">Local Servers and Services Explained</a> if you are not sure which service you need.</p>
+            </div>
+            <div class="guide-card">
+                <h2>1. Download the normal desktop app</h2>
+                <p>Install the current Social Stream Ninja release from the <a href="download.html#standalone">Windows, macOS, or Linux downloads</a>. MCP support is included in the downloaded app. You do not need the source repository, Node, Python, or a separate MCP package.</p>
+            </div>
+            <div class="guide-card">
+                <h2>2. Enable local AI control</h2>
+                <ol class="guide-list">
+                    <li>Open <strong>File &gt; Local AI / Automation</strong>.</li>
+                    <li>Enable <strong>Local Control API</strong> and let the app restart.</li>
+                    <li>Return to the same menu and choose <strong>Copy MCP Setup</strong>.</li>
+                    <li>Paste the copied JSON into the MCP settings used by the AI tool, then restart that tool.</li>
+                </ol>
+                <p>The copied setup contains the exact installed executable path, port, and platform-specific arguments. The downloaded Social Stream Ninja executable starts its own lightweight MCP adapter when the AI client launches it with <code>--ssapp-mcp</code>.</p>
+            </div>
+            <div class="guide-card">
+                <h2>3. Let MCP perform discovery</h2>
+                <p>Once connected, the MCP client automatically asks Social Stream Ninja for its tools. The adapter reads the running app's live capabilities and gives the LLM the supported tool schemas, app/API versions, and operating instructions. The agent should call capabilities first, then status, and use the stable source IDs returned by the app.</p>
+                <p>No website scraping or skill installation is required for normal MCP use. A user can simply ask the connected agent to inspect or control Social Stream Ninja.</p>
+            </div>
+            <div class="guide-card">
+                <h2>Available local controls</h2>
+                <ul class="guide-list">
+                    <li>List, inspect, add, update, and remove sources.</li>
+                    <li>Start, stop, or reload one source or a filtered set.</li>
+                    <li>Change source visibility, mute state, and connection mode.</li>
+                    <li>Read and update the supported global settings returned by capability discovery.</li>
+                    <li>Read app, session, source, process, capture, and local-media status.</li>
+                    <li>Follow bounded captured-source events and resumable operation or status events.</li>
+                    <li>Capture and safely inspect supported source pages and SSApp-owned windows.</li>
+                    <li>Perform approved page, window, and dialog interactions with confirmation.</li>
+                    <li>Reload or gracefully shut down the app with explicit confirmation.</li>
+                </ul>
+                <p>The running app's capabilities are authoritative. Older versions may expose fewer controls.</p>
+            </div>
+            <div class="guide-card">
+                <h2>Direct HTTP access for local scripts</h2>
+                <p>Scripts on the same computer can use the loopback API without MCP. It listens only on <code>127.0.0.1</code> and does not require a token.</p>
+                <pre><code>GET http://127.0.0.1:17777/api/v1/capabilities
+GET http://127.0.0.1:17777/api/v1/status
+GET http://127.0.0.1:17777/api/v1/events
+POST http://127.0.0.1:17777/api/v1/command</code></pre>
+                <p>Use the advertised capabilities instead of assuming every app version has the same controls.</p>
+            </div>
+            <div class="guide-card">
+                <h2>Local AI on an Ubuntu VPS</h2>
+                <p>The API can also serve an AI tool running on the same Linux server as a headless SSApp instance. Keep it bound to loopback and use the downloaded AppImage as the MCP command.</p>
+                <p>Follow <a href="headless-server-guide.html">Run Social Stream Ninja Headlessly</a> for Xvfb, persistent profiles, startup commands, systemd, and the separate remote-control path.</p>
+            </div>
+            <div class="guide-card">
+                <h2>Optional agent skill</h2>
+                <p>Agents that support installable skills can <a href="skills/control-social-stream.zip">download the complete Control Social Stream skill</a>. You can also <a href="index.html?file=skills/control-social-stream/SKILL.md">read its instructions online</a>, with the <a href="skills/control-social-stream/references/control-api.md">API reference</a> and <a href="skills/control-social-stream/references/version-log.md">version log</a>. The skill adds workflow guidance but is not needed for MCP connectivity.</p>
+                <p>Machine-readable discovery links are also listed in <a href="../llms.txt">llms.txt</a>.</p>
+            </div>
+            <div class="guide-card">
+                <h2>Local only</h2>
+                <p>This interface is for AI and automation running on the same computer as SSApp. Do not expose or tunnel it as a cloud remote-control API. Remote users and Stream Deck should use Social Stream's existing WebRTC or WebSocket connection. The local API does not provide arbitrary JavaScript execution, cookies, sign-in secrets, unrestricted settings, or raw filesystem access.</p>
+                <p>For the complete endpoints, command schemas, version discovery, and security boundaries, see the <a href="https://github.com/steveseguin/ssn_app/blob/main/docs/AUTOMATION.md">technical automation reference</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

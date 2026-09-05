@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings Reference - Social Stream Ninja</title>
+    <meta name="description" content="Complete reference for every setting in the Social Stream Ninja popup, including scopes, surfaces, and behavior.">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/settings.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands & API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <div class="mobile-nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Settings Reference</h1>
+            <p>Browse every toggle, text field, and dropdown from the Social Stream Ninja popup with contextual descriptions and scopes.</p>
+        </div>
+    </section>
+
+    <main class="container page-content">
+        <section class="reference-tabs" aria-label="Reference views">
+            <div class="tab-buttons" role="tablist">
+                <button type="button" id="tab-settings" class="tab-button is-active" data-panel="settings" role="tab" aria-selected="true" aria-controls="panel-settings">
+                    Popup settings
+                </button>
+                <button type="button" id="tab-parameters" class="tab-button" data-panel="parameters" role="tab" aria-selected="false" aria-controls="panel-parameters">
+                    URL parameters
+                </button>
+            </div>
+            <p class="tab-hint">
+                Switch between the popup controls catalogue and the overlay URL parameter index. Both views pull from the shared configuration for consistency.
+            </p>
+        </section>
+
+        <section class="reference-panel settings-panel" id="panel-settings" data-panel="settings" role="tabpanel" aria-labelledby="tab-settings">
+            <div class="panel-intro">
+                <p>
+                    This page pulls live data from <code>popup.html</code> to stay in sync with the extension and desktop app.
+                    Use the search field to filter by keyword, or open the settings definition file at
+                    <code>shared/config/settingsDefinitions.js</code> to expand descriptions and scopes.
+                </p>
+                <p>Trying to give each chatter a different color? Follow the <a href="name-colors.html">chat name colors guide</a>; the general color option and Dock display toggle must both be enabled.</p>
+            </div>
+            <div class="reference-controls">
+                <div class="control">
+                    <label for="setting-search" class="control-label">Search settings</label>
+                    <input type="search" id="setting-search" class="setting-search" placeholder="Search by name, key, or behavior…">
+                </div>
+                <div class="control">
+                    <label for="group-mode" class="control-label">Group by</label>
+                    <select id="group-mode" class="group-select">
+                        <option value="section" selected>Popup section</option>
+                        <option value="category">Setting category</option>
+                    </select>
+                </div>
+                <div class="control">
+                    <button type="button" id="reload-settings" class="refresh-button">
+                        <span class="refresh-icon" aria-hidden="true">⟳</span>
+                        Reload from popup.html
+                    </button>
+                </div>
+            </div>
+            <section id="settings-root" class="settings-root" aria-live="polite">
+                <div class="loading-state">
+                    <div class="spinner" aria-hidden="true"></div>
+                    <p>Loading settings from popup.html…</p>
+                </div>
+            </section>
+        </section>
+
+        <section class="reference-panel parameters-panel" id="panel-parameters" data-panel="parameters" role="tabpanel" aria-labelledby="tab-parameters" hidden>
+            <div class="panel-intro">
+                <p>
+                    Need to tune the overlays via query string? Browse the complete list of URL switches, grouped by surface and category.
+                    The data is generated from <code>parameters.md</code> and exported through <code>shared/config/urlParameters.js</code> so it can power docs and in-app helpers.
+                </p>
+                <p id="parameter-target-context" class="panel-context"></p>
+            </div>
+            <div class="reference-controls">
+                <div class="control">
+                    <label for="parameter-search" class="control-label">Search parameters</label>
+                    <input type="search" id="parameter-search" class="setting-search" placeholder="Search by name, alias, or description…">
+                </div>
+                <div class="control">
+                    <label for="parameter-target" class="control-label">Overlay</label>
+                    <select id="parameter-target" class="group-select">
+                        <option value="all" selected>All overlays</option>
+                    </select>
+                </div>
+                <div class="control">
+                    <label for="parameter-section" class="control-label">Category</label>
+                    <select id="parameter-section" class="group-select" disabled>
+                        <option value="all" selected>All categories</option>
+                    </select>
+                </div>
+            </div>
+            <section id="parameters-root" class="parameters-root" aria-live="polite">
+                <div class="loading-state">
+                    <div class="spinner" aria-hidden="true"></div>
+                    <p>Loading URL parameter index…</p>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <footer class="page-footer">
+        <div class="container">
+            <p>
+                Missing details or spotted something outdated? Update the reference by editing
+                <code>shared/config/settingsDefinitions.js</code> or by filing an issue on GitHub.
+            </p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script type="module" src="js/settings.js"></script>
+</body>
+</html>

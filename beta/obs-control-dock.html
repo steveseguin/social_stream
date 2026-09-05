@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Social Stream Control Dock</title>
+	<meta name="robots" content="noindex">
+	<link rel="icon" href="./icons/favicon.ico" type="image/x-icon">
+	<style>
+		:root {
+			color-scheme: dark;
+			--bg: #11151b;
+			--panel: #1a2029;
+			--panel-2: #222a35;
+			--border: #343f4e;
+			--text: #f3f5f7;
+			--muted: #aeb8c5;
+			--accent: #55a7ff;
+			--accent-hover: #75b8ff;
+			--success: #55d68b;
+			--warning: #ffcb66;
+			--danger: #ff7373;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		html,
+		body {
+			margin: 0;
+			min-width: 260px;
+			min-height: 100%;
+			background: var(--bg);
+			color: var(--text);
+			font: 14px/1.4 "Segoe UI", Arial, sans-serif;
+		}
+
+		body {
+			padding: 12px;
+		}
+
+		button,
+		input {
+			font: inherit;
+		}
+
+		button {
+			border: 1px solid var(--border);
+			border-radius: 7px;
+			background: var(--panel-2);
+			color: var(--text);
+			min-height: 42px;
+			padding: 9px 10px;
+			cursor: pointer;
+			transition: background-color 120ms ease, border-color 120ms ease, opacity 120ms ease;
+		}
+
+		button:hover,
+		button:focus-visible {
+			border-color: var(--accent);
+			background: #29384a;
+			outline: none;
+		}
+
+		button:disabled {
+			cursor: wait;
+			opacity: 0.55;
+		}
+
+		button.primary {
+			border-color: #2f82d8;
+			background: #1769b5;
+		}
+
+		button.primary:hover,
+		button.primary:focus-visible {
+			background: #207bcf;
+		}
+
+		button.danger {
+			color: #ffd9d9;
+		}
+
+		a {
+			color: var(--accent);
+		}
+
+		.dock-header {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: space-between;
+			gap: 10px;
+			margin-bottom: 10px;
+		}
+
+		.dock-header h1 {
+			margin: 0;
+			font-size: 17px;
+			font-weight: 650;
+		}
+
+		.connection {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			color: var(--muted);
+			font-size: 12px;
+			white-space: nowrap;
+		}
+
+		.connection-dot {
+			width: 9px;
+			height: 9px;
+			border-radius: 50%;
+			background: var(--danger);
+			box-shadow: 0 0 0 2px rgba(255, 115, 115, 0.12);
+		}
+
+		.connection.connecting .connection-dot {
+			background: var(--warning);
+			box-shadow: 0 0 0 2px rgba(255, 203, 102, 0.12);
+		}
+
+		.connection.connected .connection-dot {
+			background: var(--success);
+			box-shadow: 0 0 0 2px rgba(85, 214, 139, 0.12);
+		}
+
+		.panel,
+		details {
+			margin-bottom: 10px;
+			border: 1px solid var(--border);
+			border-radius: 9px;
+			background: var(--panel);
+			overflow: hidden;
+		}
+
+		.session-panel {
+			padding: 10px;
+		}
+
+		.session-form {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			gap: 7px;
+		}
+
+		.session-form label {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			padding: 0;
+			margin: -1px;
+			overflow: hidden;
+			clip: rect(0, 0, 0, 0);
+			white-space: nowrap;
+			border: 0;
+		}
+
+		.session-form input {
+			width: 100%;
+			min-height: 40px;
+			border: 1px solid var(--border);
+			border-radius: 7px;
+			background: #0f1319;
+			color: var(--text);
+			padding: 8px 10px;
+		}
+
+		.session-form input:focus {
+			border-color: var(--accent);
+			outline: none;
+		}
+
+		.setup-hint {
+			margin: 8px 0 0;
+			color: var(--muted);
+			font-size: 12px;
+		}
+
+		summary {
+			padding: 11px 12px;
+			font-weight: 650;
+			cursor: pointer;
+			user-select: none;
+		}
+
+		details[open] summary {
+			border-bottom: 1px solid var(--border);
+		}
+
+		.controls {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 8px;
+			padding: 10px;
+		}
+
+		.controls .wide {
+			grid-column: 1 / -1;
+		}
+
+		.section-note {
+			grid-column: 1 / -1;
+			margin: 0;
+			color: var(--muted);
+			font-size: 12px;
+		}
+
+		.command-status {
+			min-height: 38px;
+			margin-bottom: 10px;
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			background: #0e1217;
+			color: var(--muted);
+			padding: 9px 10px;
+			font-size: 12px;
+		}
+
+		.command-status.success {
+			border-color: rgba(85, 214, 139, 0.55);
+			color: var(--success);
+		}
+
+		.command-status.error {
+			border-color: rgba(255, 115, 115, 0.55);
+			color: var(--danger);
+		}
+
+		.dock-footer {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px 12px;
+			color: var(--muted);
+			font-size: 12px;
+		}
+
+		@media (max-width: 300px) {
+			body {
+				padding: 8px;
+			}
+
+			.controls {
+				grid-template-columns: 1fr;
+			}
+
+			.controls .wide,
+			.section-note {
+				grid-column: 1;
+			}
+		}
+
+		@media (max-width: 400px) {
+			.session-form {
+				grid-template-columns: 1fr;
+			}
+		}
+	</style>
+</head>
+<body>
+	<header class="dock-header">
+		<h1>Social Stream Controls</h1>
+		<div class="connection disconnected" id="connectionStatus" role="status" aria-live="polite">
+			<span class="connection-dot" aria-hidden="true"></span>
+			<span id="connectionText">Not connected</span>
+		</div>
+	</header>
+
+	<section class="panel session-panel" aria-label="Connection settings">
+		<form class="session-form" id="sessionForm">
+			<label for="sessionInput">Session ID</label>
+			<input id="sessionInput" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="Session ID">
+			<button type="submit" id="connectButton">Save &amp; connect</button>
+		</form>
+		<p class="setup-hint">Use the same Session ID shown in Social Stream and in your overlay links.</p>
+	</section>
+
+	<details open>
+		<summary>Credits</summary>
+		<div class="controls">
+			<button type="button" class="primary wide" data-action="creditsStart">Start Credits</button>
+			<button type="button" data-action="creditsPreview">Preview</button>
+			<button type="button" data-action="creditsTest">Test Credits</button>
+			<button type="button" class="danger wide" data-action="creditsReset" data-confirm="Clear all saved credits for this Social Stream session?">Reset Saved Credits</button>
+			<p class="section-note">Reveal or load the Credits Browser Source before Start, Preview, or Test.</p>
+		</div>
+	</details>
+
+	<details open>
+		<summary>Featured Chat</summary>
+		<div class="controls">
+			<button type="button" data-action="nextInQueue">Next In Queue</button>
+			<button type="button" data-action="nextPinned">Feature Pinned</button>
+			<button type="button" data-action="clearOverlay">Clear Featured</button>
+			<button type="button" class="danger" data-action="clearDock" data-confirm="Clear the messages currently shown in the Dock?">Clear Dock</button>
+			<p class="section-note">These need the normal Streaming Chat Dock to be connected on the same session.</p>
+		</div>
+	</details>
+
+	<details>
+		<summary>Timer</summary>
+		<div class="controls">
+			<button type="button" class="primary" data-action="starttimer">Start</button>
+			<button type="button" data-action="pausetimer">Pause</button>
+			<button type="button" class="danger wide" data-action="resettimer" data-value="{&quot;confirm&quot;:true}" data-confirm="Reset the timer?">Reset Timer</button>
+			<p class="section-note">The timer page must use the same session.</p>
+		</div>
+	</details>
+
+	<details>
+		<summary>Waitlist &amp; Giveaway</summary>
+		<div class="controls">
+			<button type="button" class="primary" data-action="startentries">Open Entries</button>
+			<button type="button" data-action="stopentries">Close Entries</button>
+			<button type="button" data-action="selectwinner" data-value="1">Select Winner</button>
+			<button type="button" class="danger" data-action="resetwaitlist" data-confirm="Clear the waitlist and reopen entries?">Reset Waitlist</button>
+		</div>
+	</details>
+
+	<div class="command-status" id="commandStatus" role="status" aria-live="polite">Connect to send a command.</div>
+
+	<footer class="dock-footer">
+		<a href="./docs/obs-control-dock-guide.html" target="_blank" rel="noopener">Setup guide</a>
+		<a href="./sampleapi.html" id="fullApiLink" target="_blank" rel="noopener">Full API sandbox</a>
+	</footer>
+
+	<script>
+		(function() {
+			"use strict";
+
+			var STORAGE_KEY = "ssn-obs-control-session-v1";
+			var WEBSOCKET_URL = "wss://io.socialstream.ninja:443";
+			var socket = null;
+			var sessionId = "";
+			var reconnectTimer = null;
+			var reconnectDelay = 1000;
+			var shouldReconnect = true;
+			var requestCounter = 0;
+			var pendingRequests = {};
+			var sessionForm = document.getElementById("sessionForm");
+			var sessionInput = document.getElementById("sessionInput");
+			var connectionStatus = document.getElementById("connectionStatus");
+			var connectionText = document.getElementById("connectionText");
+			var commandStatus = document.getElementById("commandStatus");
+			var fullApiLink = document.getElementById("fullApiLink");
+
+			function getUrlParams() {
+				return new URLSearchParams(window.location.search);
+			}
+
+			function normalizeSession(value) {
+				return String(value || "").split(",")[0].trim().replace(/[\s/?#&]+/g, "");
+			}
+
+			function getSavedSession() {
+				var params = getUrlParams();
+				var value = params.get("session") || params.get("s") || params.get("id") || "";
+				if (!value) {
+					try {
+						value = localStorage.getItem(STORAGE_KEY) || "";
+					} catch (error) {}
+				}
+				return normalizeSession(value);
+			}
+
+			function saveSession(value) {
+				try {
+					localStorage.setItem(STORAGE_KEY, value);
+				} catch (error) {}
+				try {
+					var url = new URL(window.location.href);
+					url.searchParams.set("session", value);
+					url.searchParams.delete("s");
+					url.searchParams.delete("id");
+					window.history.replaceState(null, "", url.toString());
+				} catch (error) {}
+			}
+
+			function setConnectionState(state, message) {
+				connectionStatus.className = "connection " + state;
+				connectionText.textContent = message;
+			}
+
+			function setCommandStatus(message, type) {
+				commandStatus.textContent = message;
+				commandStatus.className = "command-status" + (type ? " " + type : "");
+			}
+
+			function clearReconnectTimer() {
+				if (reconnectTimer) {
+					clearTimeout(reconnectTimer);
+					reconnectTimer = null;
+				}
+			}
+
+			function scheduleReconnect() {
+				if (!shouldReconnect || !sessionId || reconnectTimer) return;
+				setConnectionState("connecting", "Reconnecting");
+				reconnectTimer = setTimeout(function() {
+					reconnectTimer = null;
+					connect(sessionId);
+				}, reconnectDelay);
+				reconnectDelay = Math.min(reconnectDelay * 2, 15000);
+			}
+
+			function failPendingRequests(message) {
+				Object.keys(pendingRequests).forEach(function(requestId) {
+					var pending = pendingRequests[requestId];
+					clearTimeout(pending.timer);
+					if (pending.button) pending.button.disabled = false;
+					delete pendingRequests[requestId];
+				});
+				if (message) setCommandStatus(message, "error");
+			}
+
+			function resultError(result) {
+				if (!result || result.ok !== false) return "";
+				if (result.error && result.error.message) return String(result.error.message);
+				if (result.error && typeof result.error === "string") return result.error;
+				return "The command failed.";
+			}
+
+			function resultMessage(action, result) {
+				var error = resultError(result);
+				var payload = result && result.payload ? result.payload : result;
+				if (error) return { message: error, type: "error" };
+				if (payload && typeof payload.creditsCount === "number") {
+					if (action === "creditsReset") return { message: "Saved credits cleared.", type: "success" };
+					return { message: "Credits command completed with " + payload.creditsCount + " collected name" + (payload.creditsCount === 1 ? "" : "s") + ".", type: "success" };
+				}
+				return { message: "Command sent: " + action, type: "success" };
+			}
+
+			function handleSocketMessage(event) {
+				var data;
+				try {
+					data = JSON.parse(event.data);
+				} catch (error) {
+					return;
+				}
+				if (!data || !data.callback || !data.callback.get) return;
+				var requestId = String(data.callback.get);
+				var pending = pendingRequests[requestId];
+				if (!pending) return;
+				clearTimeout(pending.timer);
+				if (pending.button) pending.button.disabled = false;
+				delete pendingRequests[requestId];
+				var status = resultMessage(pending.action, data.callback.result);
+				setCommandStatus(status.message, status.type);
+			}
+
+			function connect(value) {
+				var nextSession = normalizeSession(value);
+				if (!nextSession) {
+					setConnectionState("disconnected", "Session needed");
+					setCommandStatus("Enter the Social Stream Session ID first.", "error");
+					return;
+				}
+
+				sessionId = nextSession;
+				sessionInput.value = sessionId;
+				fullApiLink.href = "./sampleapi.html?session=" + encodeURIComponent(sessionId);
+				shouldReconnect = true;
+				clearReconnectTimer();
+				if (socket) {
+					socket.onclose = null;
+					try { socket.close(); } catch (error) {}
+					socket = null;
+				}
+
+				setConnectionState("connecting", "Connecting");
+				setCommandStatus("Connecting to Social Stream...", "");
+				var currentSocket;
+				try {
+					currentSocket = new WebSocket(WEBSOCKET_URL);
+				} catch (error) {
+					setConnectionState("disconnected", "Connection failed");
+					scheduleReconnect();
+					return;
+				}
+				socket = currentSocket;
+
+				currentSocket.onopen = function() {
+					if (socket !== currentSocket) return;
+					currentSocket.send(JSON.stringify({ join: sessionId, out: 1, in: 2 }));
+					reconnectDelay = 1000;
+					setConnectionState("connected", "Connected");
+					setCommandStatus("Ready.", "success");
+				};
+
+				currentSocket.onmessage = handleSocketMessage;
+
+				currentSocket.onerror = function() {
+					if (socket !== currentSocket) return;
+					setConnectionState("disconnected", "Connection error");
+				};
+
+				currentSocket.onclose = function() {
+					if (socket !== currentSocket) return;
+					socket = null;
+					failPendingRequests("Connection lost; command status is unknown.");
+					setConnectionState("disconnected", "Disconnected");
+					scheduleReconnect();
+				};
+			}
+
+			function parseButtonValue(button) {
+				var raw = button.getAttribute("data-value");
+				if (raw === null) return undefined;
+				try {
+					return JSON.parse(raw);
+				} catch (error) {
+					return raw;
+				}
+			}
+
+			function sendAction(button) {
+				var action = button.getAttribute("data-action");
+				var confirmation = button.getAttribute("data-confirm");
+				if (confirmation && !window.confirm(confirmation)) return;
+				if (!sessionId || !socket || socket.readyState !== WebSocket.OPEN) {
+					setCommandStatus("Not connected. Save the correct Session ID and try again.", "error");
+					return;
+				}
+
+				requestCounter += 1;
+				var requestId = "obs-dock-" + Date.now() + "-" + requestCounter;
+				var message = {
+					action: action,
+					apiid: sessionId,
+					get: requestId
+				};
+				var value = parseButtonValue(button);
+				if (value !== undefined) message.value = value;
+
+				button.disabled = true;
+				setCommandStatus("Sending " + action + "...", "");
+				pendingRequests[requestId] = {
+					action: action,
+					button: button,
+					timer: setTimeout(function() {
+						var pending = pendingRequests[requestId];
+						if (!pending) return;
+						if (pending.button) pending.button.disabled = false;
+						delete pendingRequests[requestId];
+						setCommandStatus("Command sent, but no confirmation returned.", "");
+					}, 5000)
+				};
+
+				try {
+					socket.send(JSON.stringify(message));
+				} catch (error) {
+					clearTimeout(pendingRequests[requestId].timer);
+					delete pendingRequests[requestId];
+					button.disabled = false;
+					setCommandStatus("Could not send the command.", "error");
+				}
+			}
+
+			sessionForm.addEventListener("submit", function(event) {
+				event.preventDefault();
+				var value = normalizeSession(sessionInput.value);
+				if (!value) {
+					connect("");
+					return;
+				}
+				saveSession(value);
+				connect(value);
+			});
+
+			document.querySelectorAll("button[data-action]").forEach(function(button) {
+				button.addEventListener("click", function() {
+					sendAction(button);
+				});
+			});
+
+			window.addEventListener("beforeunload", function() {
+				shouldReconnect = false;
+				clearReconnectTimer();
+			});
+
+			var initialSession = getSavedSession();
+			if (initialSession) {
+				sessionInput.value = initialSession;
+				connect(initialSession);
+			} else {
+				setConnectionState("disconnected", "Session needed");
+			}
+		})();
+	</script>
+</body>
+</html>

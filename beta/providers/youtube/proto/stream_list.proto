@@ -1,0 +1,230 @@
+syntax = "proto2";
+
+package youtube.api.v3;
+
+import "google/protobuf/duration.proto";
+
+service V3DataLiveChatMessageService {
+  // Allows a user to load live chat through a server-streamed RPC.
+  rpc StreamList(LiveChatMessageListRequest)
+      returns (stream LiveChatMessageListResponse) {}
+}
+
+message LiveChatMessageListRequest {
+  optional string live_chat_id = 1;
+  optional string hl = 2;
+  optional uint32 profile_image_size = 3;
+  optional uint32 max_results = 98;
+  optional string page_token = 99;
+  repeated string part = 100;
+}
+
+message LiveChatMessageListResponse {
+  optional string kind = 200;
+  optional string etag = 201;
+  optional string offline_at = 2;
+  optional PageInfo page_info = 1004;
+  optional string next_page_token = 100602;
+  repeated LiveChatMessage items = 1007;
+  optional LiveChatMessage active_poll_item = 1008;
+}
+
+message LiveChatMessage {
+  optional string kind = 200;
+  optional string etag = 201;
+  optional string id = 101;
+  optional LiveChatMessageSnippet snippet = 2;
+  optional LiveChatMessageAuthorDetails author_details = 3;
+}
+
+message LiveChatMessageAuthorDetails {
+  optional string channel_id = 10101;
+  optional string channel_url = 102;
+  optional string display_name = 103;
+  optional string profile_image_url = 104;
+  optional bool is_verified = 4;
+  optional bool is_chat_owner = 5;
+  optional bool is_chat_sponsor = 6;
+  optional bool is_chat_moderator = 7;
+}
+
+message LiveChatMessageSnippet {
+  message TypeWrapper {
+    enum Type {
+      INVALID_TYPE = 0;
+      TEXT_MESSAGE_EVENT = 1;
+      TOMBSTONE = 2;
+      FAN_FUNDING_EVENT = 3;
+      CHAT_ENDED_EVENT = 4;
+      SPONSOR_ONLY_MODE_STARTED_EVENT = 5;
+      SPONSOR_ONLY_MODE_ENDED_EVENT = 6;
+      NEW_SPONSOR_EVENT = 7;
+      MEMBER_MILESTONE_CHAT_EVENT = 17;
+      MEMBERSHIP_GIFTING_EVENT = 18;
+      GIFT_MEMBERSHIP_RECEIVED_EVENT = 19;
+      MESSAGE_DELETED_EVENT = 8;
+      MESSAGE_RETRACTED_EVENT = 9;
+      USER_BANNED_EVENT = 10;
+      SUPER_CHAT_EVENT = 15;
+      SUPER_STICKER_EVENT = 16;
+      POLL_EVENT = 20;
+      GIFT_EVENT = 21;
+    }
+  }
+
+  optional TypeWrapper.Type type = 1;
+  optional string live_chat_id = 201;
+  optional string author_channel_id = 301;
+  optional string published_at = 4;
+  optional bool has_display_content = 17;
+  optional string display_message = 16;
+
+  oneof displayed_content {
+    LiveChatTextMessageDetails text_message_details = 19;
+    LiveChatMessageDeletedDetails message_deleted_details = 20;
+    LiveChatMessageRetractedDetails message_retracted_details = 21;
+    LiveChatUserBannedMessageDetails user_banned_details = 22;
+    LiveChatSuperChatDetails super_chat_details = 27;
+    LiveChatSuperStickerDetails super_sticker_details = 28;
+    LiveChatNewSponsorDetails new_sponsor_details = 29;
+    LiveChatMemberMilestoneChatDetails member_milestone_chat_details = 30;
+    LiveChatMembershipGiftingDetails membership_gifting_details = 31;
+    LiveChatGiftMembershipReceivedDetails gift_membership_received_details = 32;
+    LiveChatPollDetails poll_details = 33;
+    LiveChatGiftDetails gift_details = 34;
+  }
+}
+
+message LiveChatTextMessageDetails {
+  optional string message_text = 1;
+}
+
+message LiveChatMessageDeletedDetails {
+  optional string deleted_message_id = 101;
+}
+
+message LiveChatMessageRetractedDetails {
+  optional string retracted_message_id = 201;
+}
+
+message LiveChatUserBannedMessageDetails {
+  message BanTypeWrapper {
+    enum BanType {
+      PERMANENT = 1;
+      TEMPORARY = 2;
+    }
+  }
+
+  optional ChannelProfileDetails banned_user_details = 1;
+  optional BanTypeWrapper.BanType ban_type = 2;
+  optional uint64 ban_duration_seconds = 4;
+}
+
+message LiveChatSuperChatDetails {
+  optional uint64 amount_micros = 1;
+  optional string currency = 2;
+  optional string amount_display_string = 3;
+  optional string user_comment = 4;
+  optional uint32 tier = 5;
+}
+
+message LiveChatSuperStickerDetails {
+  optional uint64 amount_micros = 1;
+  optional string currency = 2;
+  optional string amount_display_string = 3;
+  optional uint32 tier = 4;
+  optional SuperStickerMetadata super_sticker_metadata = 5;
+}
+
+message LiveChatFanFundingEventDetails {
+  optional uint64 amount_micros = 1;
+  optional string currency = 2;
+  optional string amount_display_string = 3;
+  optional string user_comment = 4;
+}
+
+message LiveChatNewSponsorDetails {
+  optional string member_level_name = 1;
+  optional bool is_upgrade = 2;
+}
+
+message LiveChatMemberMilestoneChatDetails {
+  optional string member_level_name = 1;
+  optional uint32 member_month = 2;
+  optional string user_comment = 3;
+}
+
+message LiveChatMembershipGiftingDetails {
+  optional int32 gift_memberships_count = 1;
+  optional string gift_memberships_level_name = 2;
+}
+
+message LiveChatGiftMembershipReceivedDetails {
+  optional string member_level_name = 1;
+  optional string gifter_channel_id = 2;
+  optional string associated_membership_gifting_message_id = 3;
+}
+
+message LiveChatPollDetails {
+  message PollMetadata {
+    message PollOption {
+      optional string option_text = 1;
+      optional int64 tally = 2;
+    }
+    optional string question_text = 1;
+    repeated PollOption options = 2;
+  }
+
+  message PollStatusWrapper {
+    enum PollStatus {
+      UNKNOWN = 0;
+      ACTIVE = 1;
+      CLOSED = 2;
+    }
+  }
+
+  optional PollMetadata metadata = 1;
+  optional PollStatusWrapper.PollStatus status = 2;
+}
+
+message LiveChatGiftDetails {
+  optional string gift_name = 1;
+  optional google.protobuf.Duration gift_duration = 2;
+  optional int32 jewels_amount = 3;
+  optional string gift_url = 4;
+  optional string alt_text = 5;
+  optional string language = 6;
+  optional bool has_visual_effect = 7;
+  optional int32 combo_count = 8;
+}
+
+message SuperChatEventSnippet {
+  optional string channel_id = 101;
+  optional ChannelProfileDetails supporter_details = 2;
+  optional string comment_text = 3;
+  optional string created_at = 4;
+  optional uint64 amount_micros = 5;
+  optional string currency = 6;
+  optional string display_string = 7;
+  optional uint32 message_type = 8;
+  optional bool is_super_sticker_event = 11;
+  optional SuperStickerMetadata super_sticker_metadata = 12;
+}
+
+message SuperStickerMetadata {
+  optional string sticker_id = 1;
+  optional string alt_text = 2;
+  optional string alt_text_language = 3;
+}
+
+message ChannelProfileDetails {
+  optional string channel_id = 101;
+  optional string channel_url = 2;
+  optional string display_name = 3;
+  optional string profile_image_url = 4;
+}
+
+message PageInfo {
+  optional int32 total_results = 1;
+  optional int32 results_per_page = 2;
+}

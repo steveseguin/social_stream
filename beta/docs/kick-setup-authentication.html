@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kick Setup and Authentication - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Connect Kick chat and alerts to Social Stream Ninja, choose Standard or WebSocket mode, sign in safely, and fix channel slug or OAuth problems.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo"><a href="../index.html"><img src="../icons/logo.svg" alt="Social Stream Ninja Logo"><span>Social Stream Ninja</span></a></div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands &amp; API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
+                </button>
+                <div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Kick Setup and Authentication</h1>
+            <p>Use the exact channel URL slug, then choose simple page capture or the richer WebSocket alert source.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Choose A Kick Source Mode</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Mode</th><th>Best For</th><th>Sign-In</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Mode">Standard</td>
+                            <td data-label="Best For">Reading visible Kick chat from the normal or popout chat page.</td>
+                            <td data-label="Sign-In">Usually not required for public chat capture. The page still must load and show chat.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Mode">WebSocket</td>
+                            <td data-label="Best For">Structured chat plus official follow, subscription, reward, KICKs, moderation, and live-status events.</td>
+                            <td data-label="Sign-In">Public chat can connect separately, but OAuth is required for official event subscriptions, sending chat, and channel/moderation controls.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Use The URL Slug, Not The Display Name</h2>
+                <p>For <code>https://kick.com/example-channel</code>, the source value is <code>example-channel</code>. You may paste the full URL or enter only that slug.</p>
+                <div class="warning-note">
+                    <p><strong>Kick display names can differ from URL slugs.</strong> A display name may contain underscores while the URL uses hyphens. Copy the slug from the address bar instead of retyping the displayed name.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Desktop App Setup</h2>
+                <ol class="guide-steps">
+                    <li>Select <strong>Add source → Kick</strong>.</li>
+                    <li>Paste the full Kick channel URL or enter its URL slug.</li>
+                    <li>Leave <strong>WebSocket</strong> selected for structured alerts. Kick currently defaults to WebSocket mode in the app.</li>
+                    <li>Select <strong>Activate source</strong>.</li>
+                    <li>In the Kick source window, select <strong>Sign in with Kick</strong> and approve the requested permissions.</li>
+                    <li>Keep the source window open and check the Channel, Chat socket, Bridge, and Subscriptions status chips.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="images/guides/kick-authentication-source.png" alt="Kick Alerts for Social Stream source showing channel status, chat socket, bridge, subscription status, authentication methods, and channel slug input" class="guide-image">
+                    <figcaption>A fresh Kick WebSocket source before sign-in. In the desktop app, External browser is usually easiest when embedded login is blocked or a CAPTCHA appears.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Browser Extension WebSocket Setup</h2>
+                <ol class="guide-steps">
+                    <li>Install and enable the current Social Stream Ninja extension.</li>
+                    <li>Open the <a href="https://socialstream.ninja/sources/websocket/kick.html?channel=example-channel" target="_blank" rel="noopener">Kick WebSocket source page</a>.</li>
+                    <li>Replace <code>example-channel</code> with the channel's exact URL slug.</li>
+                    <li>Select <strong>Connect channel</strong> if the page has not connected automatically.</li>
+                    <li>Select <strong>Sign in with Kick</strong> to enable official event subscriptions and account controls.</li>
+                    <li>Keep the page open while streaming.</li>
+                </ol>
+                <pre><code>https://socialstream.ninja/sources/websocket/kick.html?channel=CHANNEL_SLUG</code></pre>
+                <p>For Standard capture, open <code>https://kick.com/CHANNEL_SLUG</code> or its popout chat and leave chat visible.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>What The Current Kick Login Requests</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Permission Group</th><th>Used For</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Permission Group">User and channel read</td><td data-label="Used For">Resolve the signed-in user, channel, category, and current channel information.</td></tr>
+                        <tr><td data-label="Permission Group">Channel write</td><td data-label="Used For">Update stream title/category from Advanced Controls.</td></tr>
+                        <tr><td data-label="Permission Group">Rewards</td><td data-label="Used For">Read channel reward information and normalize reward redemptions.</td></tr>
+                        <tr><td data-label="Permission Group">Chat write</td><td data-label="Used For">Send broadcaster or bot chat from the source.</td></tr>
+                        <tr><td data-label="Permission Group">Event subscriptions</td><td data-label="Used For">Subscribe to official real-time Kick events.</td></tr>
+                        <tr><td data-label="Permission Group">Moderation</td><td data-label="Used For">Ban/unban users and manage chat messages when the account has permission.</td></tr>
+                        <tr><td data-label="Permission Group">KICKs</td><td data-label="Used For">Read KICKs-related support information.</td></tr>
+                    </tbody>
+                </table>
+                <p>Kick's current OAuth flow uses authorization-code login with PKCE. Do not paste an access token, refresh token, client secret, or browser cookie into a guide, chat, or support ticket.</p>
+                <p>Official references: <a href="https://github.com/KickEngineering/KickDevDocs/blob/main/getting-started/generating-tokens-oauth2-flow.md" target="_blank" rel="noopener">OAuth 2.1</a>, <a href="https://github.com/KickEngineering/KickDevDocs/blob/main/scopes/scopes.md" target="_blank" rel="noopener">scopes</a>, and the <a href="https://api.kick.com/swagger/index.html" target="_blank" rel="noopener">Kick API reference</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Official Events The Current Source Subscribes To</h2>
+                <ul class="guide-list">
+                    <li><strong>Chat:</strong> <code>chat.message.sent</code>.</li>
+                    <li><strong>Follows:</strong> <code>channel.followed</code> → Social Stream <code>new_follower</code>.</li>
+                    <li><strong>Subscriptions:</strong> new, renewal, and gifts → <code>new_subscriber</code>, <code>resub</code>, and <code>subscription_gift</code>.</li>
+                    <li><strong>Rewards:</strong> <code>channel.reward.redemption.updated</code> → <code>reward</code>.</li>
+                    <li><strong>KICKs gifts:</strong> <code>kicks.gifted</code> → <code>donation</code> with the KICKs amount.</li>
+                    <li><strong>Moderation:</strong> <code>moderation.banned</code>.</li>
+                    <li><strong>Stream status:</strong> <code>livestream.status.updated</code> → <code>stream_online</code> or <code>stream_offline</code>.</li>
+                </ul>
+                <div class="guide-note">
+                    <p><strong>Raid/host note:</strong> Kick's current official webhook list does not publish a raid/host event. Social Stream has compatibility handling if Kick exposes one through a connected feed, but a Kick raid alert should not be treated as guaranteed.</p>
+                </div>
+                <p>See Kick's current official <a href="https://github.com/KickEngineering/KickDevDocs/blob/main/events/event-types.md" target="_blank" rel="noopener">webhook event list</a> and Social Stream's <a href="events-alerts-compatibility.html">Events and Alerts Compatibility guide</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Fix A Kick Source That Will Not Connect</h2>
+                <ol class="guide-steps">
+                    <li>Copy the exact channel slug from the Kick URL.</li>
+                    <li>Check that <strong>Channel</strong> shows the intended slug and <strong>Chat socket</strong> changes from disconnected.</li>
+                    <li>If chat works but official alerts do not, sign in again and wait for <strong>Bridge</strong> and <strong>Subscriptions</strong> to connect.</li>
+                    <li>If embedded login or CAPTCHA fails, use <strong>External browser</strong> in the desktop app.</li>
+                    <li>Confirm the signed-in account owns or may moderate the channel before testing send/moderation controls.</li>
+                    <li>Check the Social Stream dock before debugging OBS. If the dock receives Kick data, the remaining problem is the overlay or OBS URL.</li>
+                </ol>
+            </div>
+
+            <template data-copy-markdown-extra>
+## Verified maintainer context
+
+Current `sources/websocket/kick.js` OAuth scopes:
+
+`user:read`, `channel:read`, `channel:write`, `channel:rewards:read`, `chat:write`, `events:subscribe`, `moderation:ban`, `moderation:chat_message:manage`, `kicks:read`.
+
+Current default official subscriptions:
+
+`chat.message.sent`, `channel.followed`, `channel.subscription.new`, `channel.subscription.renewal`, `channel.subscription.gifts`, `channel.reward.redemption.updated`, `kicks.gifted`, `moderation.banned`, `livestream.status.updated`.
+
+The source can add custom and newly advertised donation/support event names when Kick returns them from its event-type endpoint. Do not document those dynamic names as guaranteed. The current official Kick event list has no raid/host webhook.
+
+Standard browser capture is implemented by the current manifest-injected `sources/kick.js`. The structured source is `sources/websocket/kick.html` plus `sources/websocket/kick.js`; the stale `sources/kick_new.js` file is not the manifest source of truth.
+            </template>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+    <script src="js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

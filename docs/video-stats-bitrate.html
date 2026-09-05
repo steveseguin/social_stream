@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Stats and Bitrate Guide - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Configure video server polling and show live bitrate metadata in the Social Stream Ninja Dock.">
+    <style>
+        .quick-note { background: rgba(26,115,232,.08); border-left: 4px solid #1a73e8; padding: 1.2rem 1.4rem; margin: 1.5rem 0; }
+        .warning-note { background: rgba(251,188,5,.14); border-left-color: #f9ab00; }
+        .dark-mode .quick-note { background: rgba(26,115,232,.18); }
+        .field-table { width: 100%; border-collapse: collapse; }
+        .field-table th, .field-table td { border: 1px solid var(--border-color); padding: .65rem; text-align: left; vertical-align: top; }
+        pre { overflow-x: auto; }
+
+        @media (max-width: 700px) {
+            .field-table, .steps-table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands & API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <div class="mobile-nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="page-hero"><div class="container"><h1>Video Stats and Bitrate</h1><p>Show the incoming stream bitrate in the top-right of the Social Stream Ninja Dock.</p></div></section>
+        <section class="guide-content"><div class="container">
+            <div class="quick-note"><strong>Important:</strong> SSN does not read bitrate from OBS or a streaming platform automatically. It polls the stats API of the video server receiving your stream.</div>
+
+            <div class="guide-card"><h2>What it is for</h2>
+                <p>This gives a host or producer a small, live bitrate readout in the Dock. It is useful when OBS, a mobile encoder, or another sender publishes to your own relay or ingest server.</p>
+                <p>SSN also normalizes available latency, buffer, packet-loss, uptime, codec, and viewer data into a <code>video_stats</code> metadata event. The standard Dock readout shows only bitrate.</p>
+            </div>
+
+            <div class="guide-card"><h2>Compatibility</h2><ul class="guide-list">
+                <li><strong>SRT Live Server / SLS:</strong> JSON <code>/stats</code> endpoint containing a <code>publishers</code> object.</li>
+                <li><strong>Belabox Cloud:</strong> its SRT-style JSON receiver/relay stats response.</li>
+                <li><strong>NGINX RTMP:</strong> XML from the NGINX RTMP status module.</li>
+                <li><strong>Node Media Server:</strong> its JSON stream API, with optional HTTP Basic authentication.</li>
+            </ul><div class="quick-note warning-note"><strong>OBS is not a stats source:</strong> OBS can send video to a compatible server, but OBS WebSocket and SSN browser sources do not provide this data.</div></div>
+
+            <div class="guide-card"><h2>How to use it</h2><ol class="guide-steps">
+                <li>Enable the compatible server's HTTP stats endpoint and confirm the computer running SSN can open its URL.</li>
+                <li>In SSN <strong>Global settings</strong>, enable <strong>Video stats polling</strong>.</li>
+                <li>Select the source type and enter the stats URL.</li>
+                <li>For SRT or Belabox, enter the exact publisher ID, such as <code>publish/live/feed1</code>. SSN automatically uses it when the response contains only one publisher.</li>
+                <li>For NGINX RTMP or Node Media Server, enter the application and stream key/name, such as <code>live</code> and <code>feed1</code>.</li>
+                <li>Add authorization if required. The SRT API key field is sent as the complete <code>Authorization</code> header. Node Media Server uses the username/password as HTTP Basic authentication.</li>
+                <li>Choose a polling interval from 1 to 60 seconds; the default is five seconds.</li>
+                <li>In Dock options, enable <strong>Show bitrate metadata if available; top-right</strong>, then open or refresh the Dock link.</li>
+                <li>Start publishing video. The bitrate appears after a valid online response.</li>
+            </ol></div>
+
+            <div class="guide-card"><h2>If nothing appears</h2><ul class="guide-list">
+                <li>Confirm both video stats options are enabled in SSN.</li>
+                <li>Confirm the endpoint responds within five seconds and the source type and stream identifiers match.</li>
+                <li><code>127.0.0.1</code> means the computer running SSN. Use the server's LAN address when it is another device.</li>
+                <li>The readout disappears when the stream is offline, bitrate is missing or zero, or no fresh stats arrive for about 130 seconds.</li>
+            </ul></div>
+
+            <div class="guide-card"><h2>Advanced: protocol, formats, and units</h2>
+                <p>SSN performs an HTTP or HTTPS <code>GET</code> at the configured interval with caching disabled and a five-second timeout.</p>
+                <h3>SRT Live Server / SLS and Belabox Cloud</h3>
+                <pre><code>{
+  "publishers": {
+    "publish/live/feed1": {
+      "bitrate": 4500, "rtt": 32.5, "msRcvBuf": 120,
+      "mbpsRecvRate": 4.5, "mbpsBandwidth": 12.8,
+      "pktRcvDrop": 2, "pktRcvLoss": 1,
+      "bytesRcvDrop": 2632, "bytesRcvLoss": 1316, "uptime": 3600
+    }
+  }
+}</code></pre>
+                <p><code>bitrate</code> is Kbps; RTT and receive buffer are milliseconds; receive rate and bandwidth are Mbps; uptime is seconds; loss/drop values are packet counts or bytes.</p>
+                <h3>NGINX RTMP</h3>
+                <p>The URL must return NGINX RTMP status XML. SSN matches the configured application and stream. It reads <code>bw_video</code> as bytes per second and divides by 1024 for <code>bitrateKbps</code>. It also reads stream time and optional video/audio codec metadata.</p>
+                <h3>Node Media Server</h3>
+                <p>SSN requests <code>STATS_URL/APPLICATION/STREAM_NAME</code>. Fields may be top-level or inside <code>data</code>.</p>
+                <pre><code>{ "data": { "isLive": true, "bitrate": 4500, "viewers": 3, "duration": 3600 } }</code></pre>
+                <p>Bitrate is Kbps, viewers is a count, and duration is seconds.</p>
+                <h3>Normalized SSN event</h3>
+                <pre><code>{
+  "type": "generic",
+  "event": "video_stats",
+  "meta": {
+    "provider": "srt-live-server", "source": "srt-live-server",
+    "label": "SRT", "online": true,
+    "updatedAt": "2026-07-13T14:45:00.000Z",
+    "bitrateKbps": 4500, "rttMs": 32.5, "bufferMs": 120,
+    "summary": "4500 Kbps, 33 ms, 120 ms"
+  }
+}</code></pre>
+                <table class="field-table"><thead><tr><th>Field</th><th>Unit/type</th></tr></thead><tbody>
+                    <tr><td><code>bitrateKbps</code></td><td>Kbps, whole number</td></tr>
+                    <tr><td><code>rttMs</code> / <code>bufferMs</code></td><td>Milliseconds</td></tr>
+                    <tr><td><code>recvRateMbps</code> / <code>bandwidthMbps</code></td><td>Mbps</td></tr>
+                    <tr><td>Loss/drop fields</td><td>Packet counts or bytes</td></tr>
+                    <tr><td><code>uptimeSeconds</code> / <code>durationSeconds</code></td><td>Seconds</td></tr>
+                    <tr><td><code>online</code></td><td>Boolean; <code>false</code> hides the Dock value</td></tr>
+                </tbody></table>
+                <p>The Dock accepts <code>meta.bitrateKbps</code>, with <code>meta.bitrate</code> and <code>meta.kbps</code> as fallbacks. Values below 1000 display as rounded Kbps; larger values display as Mbps rounded to one decimal. The stats URL, stream key, and credentials are never sent to overlays.</p>
+            </div>
+        </div></section>
+    </main>
+    <footer><div class="container"><div class="footer-content"><div class="footer-logo"><img src="../media/logo.png" alt="Social Stream Ninja logo"><span>Social Stream Ninja</span></div><div class="footer-links"><div class="footer-section"><h4>Resources</h4><ul><li><a href="guides.html">Guides</a></li><li><a href="event-reference.html">Event Reference</a></li><li><a href="support.html">Support</a></li></ul></div></div></div><div class="footer-bottom"><p>&copy; 2026 Social Stream Ninja. All rights reserved.</p></div></div></footer>
+    <script src="js/main.js"></script>
+</body>
+</html>
