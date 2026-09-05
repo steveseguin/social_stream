@@ -604,6 +604,16 @@ This example shows an overlay that only displays new follower and subscriber eve
 </html>
 ```
 
+### Scoreboard wording
+
+In the popup, open **Scoreboard → options → Custom scoreboard wording / translations** to customize ranked viewers, streak, points, waiting text, and the empty scoreboard message. Blank fields keep the defaults. The ranked viewers template supports `{count}`; for example, `{count} spectateurs`.
+
+Enable **Hide update reason** to remove the trailing `message`, `live`, or other update reason and its separator. Alternatively, set replacement text for all update reasons.
+
+These options travel with the generated scoreboard URL: `rankedtext`, `streaktext`, `pointstext`, `waitingtext`, `emptytext`, `reasontext`, and the flag `hidereason`. URL-encode custom text when editing links manually. An explicitly empty text parameter (such as `&pointstext=`) hides that text; omitting it uses the default.
+
+Example: `scoreboard.html?session=YOUR_SESSION_ID&maxusers=3&rankedtext=%7Bcount%7D%20spectateurs&streaktext=s%C3%A9rie&hidereason`.
+
 ## 10\. Best Practices
 
   - **Unique Labels:** If using multiple custom overlays, ensure each has a unique `&label=` in its VDO.Ninja iframe URL. This allows for targeted messaging if needed.
