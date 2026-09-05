@@ -3860,6 +3860,10 @@ async function resetSettings(item = false) {
 
 async function exportSettings() {
 	chrome.storage.local.get(properties, async function (item) {
+		try {
+		if (chrome.runtime.lastError) {
+			throw new Error(chrome.runtime.lastError.message);
+		}
 		item.settings = settings;
 		const opts = {
 			types: [
@@ -3876,6 +3880,9 @@ async function exportSettings() {
 
 		try {
 			fileExportHandler = await window.showSaveFilePicker(opts);
+		} catch (error) {
+			if (error && error.name === "AbortError") return;
+			throw error;
 		} finally {
 			await restorePreviousTabAfterPicker(restoreTarget);
 		}
@@ -3886,6 +3893,10 @@ async function exportSettings() {
 			const writableStream = await fileExportHandler.createWritable();
 			await writableStream.write(JSON.stringify(item));
 			await writableStream.close();
+		}
+		} catch (error) {
+			console.error("[Settings] Export failed:", error);
+			messagePopup({ alert: "Failed to export settings: " + (error.message || String(error)) });
 		}
 	});
 }
@@ -3903,6 +3914,9 @@ async function importSettings(item = false) {
 
 	try {
 		importFile = await window.showOpenFilePicker();
+	} catch (error) {
+		if (error && error.name === "AbortError") return;
+		throw error;
 	} finally {
 		await restorePreviousTabAfterPicker(restoreTarget);
 	}
@@ -3926,11 +3940,16 @@ async function importSettings(item = false) {
 	}
 
 	try {
-		loadSettings(JSON.parse(importFile), true);
+		const imported = JSON.parse(importFile);
+		if (!imported || typeof imported !== "object" || Array.isArray(imported) ||
+			!imported.settings || typeof imported.settings !== "object" || Array.isArray(imported.settings)) {
+			throw new Error("Missing or invalid settings object");
+		}
+		loadSettings(imported, true);
 		messagePopup({ settingsImported: true });
 	} catch (e) {
-		console.error("[Settings] Invalid JSON in import file:", e.message);
-		messagePopup({ alert: "File does not contain a valid JSON structure" });
+		console.error("[Settings] Invalid settings import:", e.message);
+		messagePopup({ alert: "File does not contain a valid Social Stream settings backup" });
 	}
 }
 
@@ -8250,17 +8269,17 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
 						if (sessionId && replaySessions[sessionId]) {
 							if (!replaySessions[sessionId].isPaused) {
 								sendDataP2P(message);
-								replaySessions[sessionId].currentIndex = index + 1;
+								replaySessions[sessionId].currentIndex = messageIndex + 1;
 
 								// Send progress update
-								const progress = ((index + 1) / messages.length) * 100;
+								const progress = ((messageIndex + 1) / messages.length) * 100;
 								// Send to all extension pages
 								chrome.runtime
 									.sendMessage({
 										action: "replayProgress",
 										sessionId: sessionId,
 										progress: progress,
-										currentMessage: index + 1,
+										currentMessage: messageIndex + 1,
 										totalMessages: messages.length,
 										currentTimestamp: message.timestamp,
 										messageDetails: {
@@ -8273,7 +8292,7 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
 									});
 
 								// Clean up if this was the last message
-								if (index === messages.length - 1) {
+								if (messageIndex === messages.length - 1) {
 									delete replaySessions[sessionId];
 								}
 							}
@@ -8859,10 +8878,7 @@ function sendToS10(data, fakechat = false, relayed = false) {
 			}
 
 			let cleaned = data.chatmessage;
-			if (data.textonly) {
-				cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, ""); // keep a cleaned copy
-				cleaned = cleaned.replace(/\s\s+/g, " ");
-			} else {
+			if (!data.textonly) {
 				cleaned = decodeAndCleanHtml(cleaned);
 			}
 			if (!cleaned) {
@@ -8995,10 +9011,7 @@ function sendToSSC(data, fakechat = false, relayed = false) {
 			}
 
 			let cleaned = data.chatmessage;
-			if (data.textonly) {
-				cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, "");
-				cleaned = cleaned.replace(/\s\s+/g, " ");
-			} else {
+			if (!data.textonly) {
 				cleaned = decodeAndCleanHtml(cleaned);
 			}
 			if (!cleaned) {
@@ -9666,12 +9679,9 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
 			return null;
 		}
 
-		// Clean the message
+		// Plain-text messages may contain literal angle brackets and significant whitespace.
 		let cleaned = data.chatmessage;
-		if (data.textonly) {
-			cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, "");
-			cleaned = cleaned.replace(/\s\s+/g, " ");
-		} else if (typeof cleaned === "string") {
+		if (!data.textonly && typeof cleaned === "string") {
 			cleaned = decodeAndCleanHtml(cleaned); // Assuming decodeAndCleanHtml is defined elsewhere
 		}
 

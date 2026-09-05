@@ -327,13 +327,16 @@ class PointsSystem {
     async getLeaderboard(limit = 10, type = null) {
         const db = await this.ensureDB();
         
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const tx = db.transaction(this.storeName, 'readonly');
             const store = tx.objectStore(this.storeName);
             const index = store.index('points');
             const users = [];
             
-            index.openCursor(null, 'prev').onsuccess = event => {
+            const request = index.openCursor(null, 'prev');
+            request.onerror = () => reject(request.error);
+            tx.onabort = () => reject(tx.error || new Error('Points leaderboard read aborted'));
+            request.onsuccess = event => {
                 const cursor = event.target.result;
                 if (cursor && users.length < limit) {
                     const userData = cursor.value;
@@ -484,14 +487,17 @@ class PointsSystem {
     async getUsersWithSameName(username) {
         const db = await this.ensureDB();
         
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const tx = db.transaction(this.storeName, 'readonly');
             const store = tx.objectStore(this.storeName);
             const index = store.index('username');
             const range = IDBKeyRange.only(username);
             const results = [];
             
-            index.openCursor(range).onsuccess = event => {
+            const request = index.openCursor(range);
+            request.onerror = () => reject(request.error);
+            tx.onabort = () => reject(tx.error || new Error('Points user lookup aborted'));
+            request.onsuccess = event => {
                 const cursor = event.target.result;
                 if (cursor) {
                     results.push(cursor.value);
