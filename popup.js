@@ -7505,7 +7505,9 @@ function handleNumberSetting(ele, sync) {
             checkbox = document.querySelector(`input[${relatedAttr}*='${settingValue}']`);
         }
 
-        if (checkbox && checkbox.checked) {
+        // The scoreboard user limit is always active and has no enable checkbox.
+        const isScoreboardUserLimit = targetId === 'scoreboard' && settingValue === 'maxusers';
+        if (isScoreboardUserLimit || (checkbox && checkbox.checked)) {
             const targetElement = document.getElementById(targetId);
             const effectiveKey = normalizeParamKey(settingValue);
             targetElement.raw = removeQueryParamWithValue(targetElement.raw, effectiveKey);
