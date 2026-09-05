@@ -5,6 +5,7 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |
 | 1.3.1 / MCP 1.2.2 | 0.4.32 | Adds platforms.whatnot with live show URL/videoId input and default WebSocket public-chat capture; requires updated Whatnot page sources and settings; existing source commands and schemas unchanged |
+| 1.3.1 / MCP 1.2.2 | 0.4.25 | Fixes screenshots of never-shown source windows; shares capture-surface preparation with app-window screenshots, restores hidden state and opacity, and serializes screenshots of the same window; schemas unchanged |
 | 1.3.1 / MCP 1.2.2 | 0.4.24 | Bounds semantic page inspection so unresponsive subframes cannot consume the command timeout; main-page failures return SOURCE_PAGE_UNAVAILABLE; tool schemas unchanged |
 | 1.3.1 / MCP 1.2.2 | 0.4.23 | Returns SSAPP_UNREACHABLE for interrupted HTTP response bodies and drains queued stdout before exiting after client stdin closes; tool schemas and commands are unchanged |
 | 1.3.1 / MCP 1.2.1 | 0.4.22 | Removes the inactive global YouTube sync settings from capabilities and getSettings; updateSettings rejects youtubeAutoAdd, youtubeAutoCleanup, and youtubeCheckInterval. Group Auto-activate remains the supported discovery path. |
@@ -108,6 +109,11 @@ Windows x64 voice commands in this unreleased preview use a pinned local whisper
   running app; platform discovery remains authoritative. Auctions and sign-in are deferred.
 
 ### 2026-09-05
+
+- Fixed hidden-source screenshots (minimum SSApp 0.4.25), including shared source/app-window
+  capture serialization and restoration. Screenshot failures on earlier releases do not
+  imply failed chat capture. Also corrected clean SIGTERM exit status in the source
+  headless launcher; actual app/display failures remain nonzero.
 
 - Documented bounded frame inspection and main-page retry behavior (minimum SSApp 0.4.24), plus platform-dependent diagnostic memory availability.
 

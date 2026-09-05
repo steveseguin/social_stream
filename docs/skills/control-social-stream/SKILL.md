@@ -45,6 +45,11 @@ Headless mode is separate. To hide windows and also allow a local agent, pass bo
 `--ssapp-headless-control` and `--ssapp-control-api`. Headless mode alone does not open the
 API. Environment variables are also supported.
 
+SSApp 0.4.25 fixes screenshots of sources created hidden by briefly preparing a
+non-focused capture surface and restoring the hidden window afterward. Source and
+app-window screenshot requests for the same window are serialized. Older versions can
+return `SCREENSHOT_FAILED` even when chat capture and semantic inspection are working.
+
 Do not use this localhost API as a cloud remote-control interface. Remote users and Stream
 Deck use Social Stream's existing WebRTC or WebSocket transport instead.
 

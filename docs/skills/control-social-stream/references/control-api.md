@@ -110,6 +110,11 @@ removed; local file paths are hidden. Virtual WebSocket sources return counters 
 but no page or screenshot.
 
 `captureSourceScreenshot` returns bounded PNG or JPEG data for a real source window.
+From SSApp 0.4.25, a source created hidden can be captured even when Chromium has not
+created its display surface yet. The app briefly prepares that surface without focusing
+the window, then restores its hidden state and opacity. Source and app-window screenshots
+of the same window are serialized to avoid overlapping restoration. API and MCP schemas
+are unchanged; earlier releases may return `SCREENSHOT_FAILED` for these hidden sources.
 `inspectSourcePage` returns visible text and no more than 200 semantic elements with
 short-lived opaque references. From SSApp 0.4.24, inspection allows two seconds per frame and ten seconds overall; unresponsive subframes are omitted. If the main page cannot be inspected, it returns `SOURCE_PAGE_UNAVAILABLE`; wait for loading to finish and retry. It never accepts or returns JavaScript, HTML, selectors,
 link destinations, request headers, cookies, browser storage, or current input values.
