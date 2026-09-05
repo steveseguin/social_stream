@@ -4485,7 +4485,7 @@ input:checked + .slider:before {
                                     <span data-translate="make-emojis-larger">😊 Make emojis larger </span>
                                 </div>
                                 <div>
-                                    <label class="switch" title="larger twitch post images, instagram images, giphy images (not emojis)">
+                                    <label class="switch" title="Show content images and videos up to 240px, including Twitch GIFs and stickers (does not resize regular emotes)">
                                         <input type="checkbox" data-param1="largecontent" />
                                         <span class="slider round"></span>
                                     </label>
@@ -5107,7 +5107,7 @@ input:checked + .slider:before {
                     <span class="title-group"><span class="emoji" aria-hidden="true">🎨</span><span data-translate="pre-styled-chat-overlays">Pre-styled chat overlays</span> </span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
                 </h2>
-				<small class="beginner-section-note" data-translate="pre-styled-chat-beginner-note">Ready-made chat looks for OBS. These are quick presets; switch to full mode for deeper styling controls.</small>
+				<small class="beginner-section-note" data-translate="pre-styled-chat-beginner-note">Ready-made chat looks for OBS. Auto-hide timing follows the Main chat overlay settings. Switch to full mode for deeper styling controls.</small>
                 <div id="chatoverlaytemplate" data-raw="" class="streaming_chat"></div>
 				<div class="template-selector overlay-selector">
 					<label for="overlay-preset-select" style="display: inline-block; margin-right: 10px;">
@@ -5117,6 +5117,14 @@ input:checked + .slider:before {
 						<option value="sampleoverlay.html">📄 Sample Overlay - Basic chat overlay</option>
 						<option value="themes/compact-classic.html">💬 Compact Classic - Dense Twitch/IRC-style chat</option>
 						<option value="themes/compact-classic.html?ultra">⚡ Compact Ultra - Super dense minimum-height chat</option>
+						                        <option value="themes/compact-clean.html?style=cute">Pastel Pop - Blush pink with candy dots</option>
+                        <option value="themes/compact-clean.html?style=cozy">Cozy Cafe - Warm cream and coffee</option>
+                        <option value="themes/compact-clean.html?style=cats">Cat Cafe - Peach cards with a tiny cat</option>
+                        <option value="themes/compact-clean.html?style=music">Studio Sessions - Dark studio with an equalizer</option>
+                        <option value="themes/compact-clean.html?style=arcade">Pocket Arcade - Pixel borders and violet accents</option>
+                        <option value="themes/compact-clean.html?style=slate">Compact Slate - Quiet dark rows</option>
+                        <option value="themes/compact-clean.html?style=paper">Compact Paper - Crisp light cards</option>
+                        <option value="themes/compact-clean.html?style=micro">Micro Line - Minimal slim dark strips</option>
 						<option value="themes/compact-clean.html">🧼 Compact Clean - Tidy compact cards</option>
 						<option value="themes/compact-glass.html">🪟 Compact Glass - Frosted compact rows</option>
 						<option value="themes/overlay-comic-pop.html">💥 Comic Pop Dock - Stackable pop art chat</option>
@@ -5146,7 +5154,7 @@ input:checked + .slider:before {
 
 			<div class="chat-overlay-design-note beginner-basic">
 				Want to design your own? Check out our <a class="lightblue"  href="https://github.com/steveseguin/social_stream/tree/main/themes#custom-themes" target="_blank">AI-friendly starter templates</a>.
-				Have a StreamElements or Streamlabs chat widget? <a class="lightblue" href="./streamelements-importer.html" target="_blank">Import and export it as a standalone SSN overlay</a>.
+				Have a StreamElements or Streamlabs chat widget? <a class="lightblue" id="streamelements_importer_link" href="./streamelements-importer.html" target="_blank">Convert it for OBS with the guided importer</a>. It works with both the SSN desktop app and Chrome extension.
 			</div>
             <div class="link beginner-basic" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
                 <h2 class="featured_chat_title">
@@ -5173,6 +5181,14 @@ input:checked + .slider:before {
                     </label>
                     <select id="featured-preset-select" data-optionsetting="featuredOverlayStyle" style="padding: 5px 10px; border-radius: 4px; background: var(--color-accent-subtle); color: var(--default-text-color); border: 1px solid var(--collapsible-border-color);">
                         <option value="">Classic (Full Customization)</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=cute">Pastel Pop</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=cozy">Cozy Cafe</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=cats">Cat Cafe</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=music">Studio Sessions</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=arcade">Pocket Arcade</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=slate">Compact Slate</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=paper">Compact Paper</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=micro">Micro Line</option>
                         <option value="themes/featured-styles/featured-modern.html?style=glass">Modern Glass</option>
                         <option value="themes/featured-styles/featured-modern.html?style=neon">Neon Glow</option>
                         <option value="themes/featured-styles/featured-modern.html?style=minimal">Minimal Clean</option>
@@ -6510,7 +6526,15 @@ input:checked + .slider:before {
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
 										<option value="solid">Solid / Flat</option>
-									</select>
+									<option value="cute">Pastel Pop</option>
+<option value="cozy">Cozy Cafe</option>
+<option value="cats">Cat Cafe</option>
+<option value="music">Studio Sessions</option>
+<option value="arcade">Pocket Arcade</option>
+<option value="slate">Compact Slate</option>
+<option value="paper">Compact Paper</option>
+<option value="micro">Micro Line</option>
+</select>
 								</div>
 								<div>
 									<label>Subscription preset</label>
@@ -6519,7 +6543,15 @@ input:checked + .slider:before {
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
 										<option value="solid">Solid / Flat</option>
-									</select>
+									<option value="cute">Pastel Pop</option>
+<option value="cozy">Cozy Cafe</option>
+<option value="cats">Cat Cafe</option>
+<option value="music">Studio Sessions</option>
+<option value="arcade">Pocket Arcade</option>
+<option value="slate">Compact Slate</option>
+<option value="paper">Compact Paper</option>
+<option value="micro">Micro Line</option>
+</select>
 								</div>
 								<div>
 									<label>Donation preset</label>
@@ -6528,7 +6560,15 @@ input:checked + .slider:before {
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
 										<option value="solid">Solid / Flat</option>
-									</select>
+									<option value="cute">Pastel Pop</option>
+<option value="cozy">Cozy Cafe</option>
+<option value="cats">Cat Cafe</option>
+<option value="music">Studio Sessions</option>
+<option value="arcade">Pocket Arcade</option>
+<option value="slate">Compact Slate</option>
+<option value="paper">Compact Paper</option>
+<option value="micro">Micro Line</option>
+</select>
 								</div>
 								<div>
 									<label>Bits/Cheer preset</label>
@@ -6537,7 +6577,15 @@ input:checked + .slider:before {
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
 										<option value="solid">Solid / Flat</option>
-									</select>
+									<option value="cute">Pastel Pop</option>
+<option value="cozy">Cozy Cafe</option>
+<option value="cats">Cat Cafe</option>
+<option value="music">Studio Sessions</option>
+<option value="arcade">Pocket Arcade</option>
+<option value="slate">Compact Slate</option>
+<option value="paper">Compact Paper</option>
+<option value="micro">Micro Line</option>
+</select>
 								</div>
 								<div>
 									<label>Raid preset</label>
@@ -6546,7 +6594,15 @@ input:checked + .slider:before {
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
 										<option value="solid">Solid / Flat</option>
-									</select>
+									<option value="cute">Pastel Pop</option>
+<option value="cozy">Cozy Cafe</option>
+<option value="cats">Cat Cafe</option>
+<option value="music">Studio Sessions</option>
+<option value="arcade">Pocket Arcade</option>
+<option value="slate">Compact Slate</option>
+<option value="paper">Compact Paper</option>
+<option value="micro">Micro Line</option>
+</select>
 								</div>
 								<div>
 									<label>Auction win preset</label>
@@ -6555,7 +6611,15 @@ input:checked + .slider:before {
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
 										<option value="solid">Solid / Flat</option>
-									</select>
+									<option value="cute">Pastel Pop</option>
+<option value="cozy">Cozy Cafe</option>
+<option value="cats">Cat Cafe</option>
+<option value="music">Studio Sessions</option>
+<option value="arcade">Pocket Arcade</option>
+<option value="slate">Compact Slate</option>
+<option value="paper">Compact Paper</option>
+<option value="micro">Micro Line</option>
+</select>
 								</div>
 								<div>
 									<label>Hype train preset</label>
@@ -6564,7 +6628,15 @@ input:checked + .slider:before {
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
 										<option value="solid">Solid / Flat</option>
-									</select>
+									<option value="cute">Pastel Pop</option>
+<option value="cozy">Cozy Cafe</option>
+<option value="cats">Cat Cafe</option>
+<option value="music">Studio Sessions</option>
+<option value="arcade">Pocket Arcade</option>
+<option value="slate">Compact Slate</option>
+<option value="paper">Compact Paper</option>
+<option value="micro">Micro Line</option>
+</select>
 								</div>
 								<div>
 									<label>Entrance animation</label>
@@ -6594,7 +6666,14 @@ input:checked + .slider:before {
 										<span class="range-value" id="multi-alert-radius-display">7px</span>
 									</span>
 								</div>
-								<div class="textInputContainer" style="width: 95%;" title="Overrides the accent color for every alert type. Per-type URL params also exist: followaccent, subaccent, donoaccent, bitsaccent, raidaccent, auctionaccent, hypeaccent.">
+								<div title="Opt in to use the source platform color for every alert instead of a different color for each alert type.">
+									<label class="switch">
+										<input type="checkbox" data-param25="platformcolors" />
+										<span class="slider round"></span>
+									</label>
+									<span>Color alerts by platform instead of alert type</span>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Overrides the accent color for every alert type when platform colors are disabled. Per-type URL params also exist: followaccent, subaccent, donoaccent, bitsaccent, raidaccent, auctionaccent, hypeaccent.">
 									<input type="text" id="multialertaccent" class="textInput instant" autocomplete="off" placeholder="#ff2d5e" data-textparam25="accent" />
 									<label for="multialertaccent"><span>&gt; Accent color (all alert types)</span></label>
 								</div>
@@ -6606,7 +6685,7 @@ input:checked + .slider:before {
 									<input type="text" id="multialerttextcolor" class="textInput instant" autocomplete="off" placeholder="#f8fafc" data-textparam25="textcolor" />
 									<label for="multialerttextcolor"><span>&gt; Text color</span></label>
 								</div>
-								<small style="opacity: 0.8;">Each category maps all supported platforms into one shared alert style, while still keeping the source badge and event wording platform-aware. The animation, flat, radius, and color options apply on top of every preset; leave them untouched to keep the stock look.</small>
+								<small style="opacity: 0.8;">By default, each alert type keeps its own color. Enable platform colors to use each source platform's standard color across every alert from that platform. The remaining options apply on top of every preset.</small>
 							</div>
 						</div>
 					</div>
@@ -7468,6 +7547,13 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="add-ffz-to-chat"> 🌭 Add FFZ emotes (global+) </span>
                                 </div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="pluralmind" />
+										<span class="slider round"></span>
+									</label>
+									<span> Identify PluralMind members in Twitch chat (looks up Twitch user ID/username; message matching stays local) <a class="options-link rounded_area" href="https://pluralmind.chat/" target="_blank">via third-party</a> </span>
+								</div>
 								<div title="Enable Pronoun support - https://pr.alejo.io/">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="pronouns" />
@@ -7534,10 +7620,22 @@ input:checked + .slider:before {
 								<div>
 									<h3>Printer Control</h3>
 									<div class="textInputContainer" style="display: inline-block; width: 250px;">
-										<input type="text" id="printerName" class="textInput" autocomplete="off" data-textsetting="printerName" placeholder="Enter printer name (e.g., 'POS-58')" />
-
+										<input type="text" id="printerName" class="textInput" autocomplete="off" data-textsetting="printerName" list="thermalPrinterNames" placeholder="Enter printer name (e.g., 'POS-58')" />
+										<datalist id="thermalPrinterNames"></datalist>
 									</div>
-									<p>You make need to add <i>--kiosk --kiosk-printing</i> to your browser's command line to disable the system print pop-up window</p>
+									<button type="button" id="refreshThermalPrinters">Find printers</button>
+									<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:end;">
+										<label>Paper width (mm)<br><input type="number" min="20" max="120" step="0.1" value="58" class="textInput" style="width:90px" data-numbersetting="printerPaperWidth"></label>
+										<label>Fixed label length<br><input type="number" min="0" max="4000" step="0.1" value="0" class="textInput" style="width:90px" data-numbersetting="printerLabelHeight"></label>
+										<label>Left safe margin<br><input type="number" min="0" max="25" step="0.1" value="2" class="textInput" style="width:90px" data-numbersetting="printerMarginLeft"></label>
+										<label>Right safe margin<br><input type="number" min="0" max="25" step="0.1" value="2" class="textInput" style="width:90px" data-numbersetting="printerMarginRight"></label>
+										<label>Top safe margin<br><input type="number" min="0" max="25" step="0.1" value="0" class="textInput" style="width:90px" data-numbersetting="printerMarginTop"></label>
+										<label>Bottom safe margin<br><input type="number" min="0" max="25" step="0.1" value="0" class="textInput" style="width:90px" data-numbersetting="printerMarginBottom"></label>
+										<label>Extra feed (mm)<br><input type="number" min="0" max="25" step="0.1" value="1" class="textInput" style="width:90px" data-numbersetting="printerFeed"></label>
+										<label>Driver margins<br><select class="textInput" data-optionsetting="printerMarginMode"><option value="printableArea" selected>Use printable area</option><option value="none">Use full paper</option></select></label>
+									</div>
+									<div style="margin-top:10px;"><button type="button" id="testThermalPrinter">Print alignment test</button> <span id="thermalPrinterStatus" role="status"></span></div>
+									<p>SSApp uses the printer driver's printable area, then applies these safe margins. Fixed label length is in millimetres; leave it at 0 for content-sized receipt paper. If either edge of the alignment box is missing, increase that side's margin. <a href="./docs/thermal-printer-guide.html" target="_blank">Open the thermal printer guide</a>.</p>
 								</div>
                                 <div title="Some sites may wish to access your stream ID for custom third party integrations">
                                     <label class="switch">
@@ -7770,6 +7868,13 @@ input:checked + .slider:before {
                                         <label for="postallserverdiscord"><span data-translate="send-all-messages-to-post-server-discord">&gt; Publish all messages to Discord</span></label>
                                     </div>
                                 </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="postallserverdiscordsimple" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Use simple Discord webhook formatting</span>
+								</div>
 								<div>
                                     <label class="switch">
                                         <input type="checkbox" data-setting="postdiscord" />
@@ -8076,7 +8181,7 @@ input:checked + .slider:before {
 									<button id="uploadCustomJsButton" class="glowingButton" style="width: 160px; margin-left: 0px;" title="Upload custom JavaScript file"><span>⬆️ Upload Script</span></button>
 									<button id="deleteCustomJsButton" class="glowingButton" style="width: 160px; margin-left: 0px;" title="Delete uploaded JavaScript file"><span>⛔ Delete</span></button>
 								</div>
-                                <h3><span data-translate="giphy-support">Giphy/Tenor support</span></h3>
+                                <h3><span>GIFs and stickers ? Powered By GIPHY</span></h3>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" id="giphy" data-setting="giphy" />
@@ -8089,21 +8194,21 @@ input:checked + .slider:before {
                                         <input type="checkbox" id="tenor" data-setting="tenor" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="include-a-gif-when"> Include a GIF when </span><b><span data-translate="tenor">!tenor</span></b><span data-translate="is-used"> is used </span>
+                                    <span data-translate="include-a-gif-when"> Include a GIF when </span><b><span>!tenor</span></b> is used (legacy alias, powered by GIPHY)
                                 </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" id="giphy2" data-setting="giphy2" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="include-a-gif-when"> Include a GIF when </span><b><span data-translate="somekeyword">#{somekeyword}</span></b><span data-translate="is-used"> is used </span>
+                                    <span data-translate="include-a-gif-when"> Include a GIF when </span><b><span>#keyword (GIF) or ##keyword (sticker)</span></b><span data-translate="is-used"> is used </span>
                                 </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-setting="hidegiphytrigger" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="hide-giphy-trigger"> Hide the Giphy/Tenor trigger word or sentence</span>
+                                    <span>Hide the GIF trigger word or sentence</span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -8119,13 +8224,7 @@ input:checked + .slider:before {
                                     </div>
                                 </div>
                                 <a href="https://support.giphy.com/hc/en-us/articles/360020283431-Request-A-GIPHY-API-Key" target="_blank">Get a Giphy API key here</a>
-                                <div>
-                                    <div class="textInputContainer" style="width: 95%;">
-                                        <input type="password" id="tenorKey" class="textInput" autocomplete="off" placeholder="Tenor API Key" data-textsetting="tenorKey" />
-                                        <label for="tenorKey"><span data-translate="tenor-api-key-here-if-wanting-tenor-support">&gt; Tenor API key here if wanting Tenor support</span></label>
-                                    </div>
-                                </div>
-                                <a href="https://developers.google.com/tenor/guides/quickstart#curl" target="_blank">Get a Tenor API key here</a>
+                                <p><small>Tenor API search has retired. Enter a GIPHY API key above; old Tenor keys cannot be used. Existing !tenor commands use GIPHY when their toggle is enabled.</small></p>
 
                                 <br />
                                 <h3><span data-translate="trigger-webhook-url-by-a-command">Trigger webhook URL by a !command</span></h3>
@@ -8552,7 +8651,7 @@ input:checked + .slider:before {
 									</div>
 								</div>
 								<h3>User display names</h3>
-								<p>Show a preferred name while keeping the original username for user actions.</p>
+								<p>Show a preferred name in docks and overlays without changing the original message identity.</p>
 								<div class="isolate">
 									<div id="userDisplayAliasesList" class="username-list-container"></div>
 									<div id="addUserDisplayAliasContainer" class="add-username-container">
@@ -11547,6 +11646,7 @@ input:checked + .slider:before {
 					<p>Normal mode counts donations and paid messages. Enable Hype Cup scoring to also count memberships and subscriptions.</p>
 					<ul>
 						<li>Running total of all donations</li>
+						<li>Optional count goals for Super Chats and Super Stickers</li>
 						<li>Optional membership and subscription scoring</li>
 						<li>Visual progress bar display</li>
 						<li>Supports multiple donation platforms</li>
@@ -11643,6 +11743,37 @@ input:checked + .slider:before {
                                     <input type="number" data-optionparam12="donationpoints" class="textInput" placeholder="1" min="0" step="0.1" />
                                 </div>
                                 <div>
+                                    <strong>Exclude from Hype scoring:</strong>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="notips" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Donations and paid messages</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="nosubs" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>New memberships and subscriptions</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="noresubs" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Renewals and resubscriptions</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="nogifts" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Gifted memberships and subscriptions</span>
+                                </div>
+                                <div>
                                     <label>Point unit label:</label>
                                     <input type="text" data-optionparam12="unit" class="textInput" placeholder="pts" />
                                 </div>
@@ -11717,7 +11848,28 @@ input:checked + .slider:before {
 
                                 <h3>🎯 <span data-translate="goal-settings">Goal Settings</span></h3>
                                 <div>
-                                    <label><span data-translate="goal-amount">Goal Amount ($):</span></label>
+                                    <label>Goal measures:</label>
+                                    <select data-optionparam12="goalmetric" class="textInput">
+                                        <option value="" selected>Total donation value (default)</option>
+                                        <option value="count">Number of qualifying donations</option>
+                                    </select>
+                                    <small style="display: block; opacity: 0.8;">Count goals take priority over Hype scoring.</small>
+                                </div>
+                                <div>
+                                    <label>Paid event filter:</label>
+                                    <select data-optionparam12="tipjarevent" class="textInput">
+                                        <option value="" selected>All donation events</option>
+                                        <option value="superchat">Super Chats only</option>
+                                        <option value="supersticker">Super Stickers only</option>
+                                        <option value="superchat,supersticker">Super Chats + Super Stickers</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Count unit label:</label>
+                                    <input type="text" data-optionparam12="countlabel" class="textInput" placeholder="Auto (for example, Super Chats)" />
+                                </div>
+                                <div>
+                                    <label><span data-translate="goal-amount">Goal target:</span></label>
                                     <input type="number" data-optionparam12="goal" class="textInput" placeholder="250" value="250" min="1" step="1" />
                                 </div>
                                 <div>
@@ -13799,6 +13951,39 @@ input:checked + .slider:before {
 								</div>
 								<br>
 
+								<details>
+									<summary>Custom scoreboard wording / translations</summary>
+									<p>Leave fields blank to use the default wording. Use {count} for the number of ranked viewers.</p>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="scoreboardRankedText" class="textInput instant" autocomplete="off" placeholder="{count} ranked viewers" data-textparam21="rankedtext" />
+										<label for="scoreboardRankedText">&gt; Ranked viewers text ({count})</label>
+									</div>
+									<div>
+										<label class="switch"><input type="checkbox" data-param21="hidereason" /><span class="slider round"></span></label>
+										<span>Hide update reason (message, live, etc.)</span>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="scoreboardReasonText" class="textInput instant" autocomplete="off" placeholder="e.g. Activity" data-textparam21="reasontext" />
+										<label for="scoreboardReasonText">&gt; Replacement text for all update reasons</label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="scoreboardStreakText" class="textInput instant" autocomplete="off" placeholder="streak" data-textparam21="streaktext" />
+										<label for="scoreboardStreakText">&gt; Streak label</label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="scoreboardPointsText" class="textInput instant" autocomplete="off" placeholder="points" data-textparam21="pointstext" />
+										<label for="scoreboardPointsText">&gt; Points label</label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="scoreboardWaitingText" class="textInput instant" autocomplete="off" placeholder="Waiting for points" data-textparam21="waitingtext" />
+										<label for="scoreboardWaitingText">&gt; Waiting subtitle</label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="scoreboardEmptyText" class="textInput instant" autocomplete="off" placeholder="Enable Points System, then wait for chat activity or manage points from the popup." data-textparam21="emptytext" />
+										<label for="scoreboardEmptyText">&gt; Empty scoreboard message</label>
+									</div>
+								</details>
+								<br>
 								<div class="textInputContainer" style="width: 95%;" title="Minimum points required to appear on scoreboard">
                                     <input type="text" id="minpoints20" class="textInput instant" autocomplete="off" placeholder="eg: 10" value="0" data-textparam21="minpoints" />
 									<label for="minpoints20"><span data-translate="minimum-points">&gt; Minimum points threshold</span></label>

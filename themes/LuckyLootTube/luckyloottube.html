@@ -977,7 +977,7 @@ function processData(data) {
 if (!data) return;
 if (data.content) data = data.content;
 if (hideBots && data.bot) return;
-if (data.chatmessage) addMessage(data);
+if (data.chatmessage || data.contentimg || data.hasDonation) addMessage(data);
 }
 
 const session = urlParams.get('session');

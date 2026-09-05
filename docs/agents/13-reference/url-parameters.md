@@ -200,7 +200,7 @@ Do not put provider keys in shared screenshots.
 | `trivialevents` | Allow minor event shading. |
 | `dissolve` | Fade event cards quickly. |
 
-For tip goal display, use `tipjar.html` parameters such as `goal`, `style`, `tipjartype`, `tipjarsource`, `persistent`, `controls`, `sound`, `hype`, `levelsize`, and color/fill options. For page behavior, commands, persistence, and first checks, use `07-overlays-and-pages/tipjar-credits.md`.
+For tip goal display, use `tipjar.html` parameters such as `goal`, `style`, `goalmetric`, `tipjarevent`, `tipjartype`, `tipjarsource`, `persistent`, `controls`, `sound`, `hype`, `levelsize`, and color/fill options. For page behavior, commands, persistence, and first checks, use `07-overlays-and-pages/tipjar-credits.md`.
 
 ## Automation And External Integration Parameters
 

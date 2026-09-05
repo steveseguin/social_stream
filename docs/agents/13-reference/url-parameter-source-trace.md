@@ -178,7 +178,8 @@ Support caveat: `actions.html` is an action output page for Event Flow style beh
 Source-checked URL initialization includes:
 
 - display mode: `style`, `theme`, `hype`, `mode=hype`, `celebration`, `title`, `controls`, `jarimage`, `alignright`
-- goal and units: `goal`, `unit`, `subpoints`, `giftpoints`, `donationpoints`, `tipjartype`, `tipjarunit`, `donationtype`, `tipjarsource`, `donationsource`, `tipjarunitlabel`
+- goal and units: `goal`, `unit`, `subpoints`, `giftpoints`, `donationpoints`, `goalmetric`, `countdonations`, `countlabel`, `countsingular`, `tipjartype`, `tipjarunit`, `donationtype`, `tipjarsource`, `donationsource`, `tipjarevent`, `tipjarevents`, `tipjarunitlabel`
+- contribution exclusions: `notips`, `nosubs`, `noresubs`, `nogifts`, `countgiftredemptions`, `excludegiftpurchase`
 - counting behavior: `notips`, `nosubs`, `nogifts`, `noresubs`, `countgiftredemptions`
 - completion behavior: `persistent`, `resetoncomplete`, `noresetoncomplete`, `carryover`, `hidecompletions`, `completiondelay`, `dedupewindow`
 - bar styling: `fillstart`, `fillend`, `barcolorstart`, `barcolorend`, `fillmode`, `noliquid`, `barheight`, `barradius`, `baronly`, `levelsize`, `increment`, `startamount`, `initialamount`, `currentamount`, `trackcolor`, `bartrackcolor`, `barbackground`

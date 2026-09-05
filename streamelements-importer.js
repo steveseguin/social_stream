@@ -14,7 +14,9 @@
 				detected: null,
 				warnings: [],
 				manualParts: {},
-				lastExportFileName: ""
+				lastExportFileName: "",
+				messageSettingKeys: {},
+				previewMode: ""
 			};
 
 			var zipInput = document.getElementById("zipInput");
@@ -37,12 +39,8 @@
 			var copyPromptBtn = document.getElementById("copyPromptBtn");
 			var promptCopyStatus = document.getElementById("promptCopyStatus");
 			var exportModal = document.getElementById("exportModal");
-			var exportSessionHint = document.getElementById("exportSessionHint");
-			var exportObsUrlHint = document.getElementById("exportObsUrlHint");
 			var exportSessionMessage = document.getElementById("exportSessionMessage");
 			var exportSummary = document.getElementById("exportSummary");
-			var copySessionHintBtn = document.getElementById("copySessionHintBtn");
-			var copyObsUrlBtn = document.getElementById("copyObsUrlBtn");
 			var downloadReadmeBtn = document.getElementById("downloadReadmeBtn");
 			var closeExportModalBtn = document.getElementById("closeExportModalBtn");
 			var htmlPartSelect = document.getElementById("htmlPartSelect");
@@ -51,6 +49,12 @@
 			var fieldsPartSelect = document.getElementById("fieldsPartSelect");
 			var dataPartSelect = document.getElementById("dataPartSelect");
 			var applyFileSelectionBtn = document.getElementById("applyFileSelectionBtn");
+			var messageSettings = document.getElementById("messageSettings");
+			var messageDurationRow = document.getElementById("messageDurationRow");
+			var keepMessagesVisible = document.getElementById("keepMessagesVisible");
+			var messageDuration = document.getElementById("messageDuration");
+			var maxMessagesRow = document.getElementById("maxMessagesRow");
+			var maxMessages = document.getElementById("maxMessages");
 
 			loadSavedSession();
 			updateSessionWarning();
@@ -112,14 +116,6 @@
 				copyPromptBtn.addEventListener("click", copyFallbackPrompt);
 			}
 
-			if (copySessionHintBtn) {
-				copySessionHintBtn.addEventListener("click", copySessionHint);
-			}
-
-			if (copyObsUrlBtn) {
-				copyObsUrlBtn.addEventListener("click", copyObsUrl);
-			}
-
 			if (downloadReadmeBtn) {
 				downloadReadmeBtn.addEventListener("click", downloadReadme);
 			}
@@ -144,6 +140,9 @@
 				refreshButtons();
 			});
 			passwordInput.addEventListener("input", refreshButtons);
+			if (keepMessagesVisible) keepMessagesVisible.addEventListener("change", updateMessageDurationSetting);
+			if (messageDuration) messageDuration.addEventListener("change", updateMessageDurationSetting);
+			if (maxMessages) maxMessages.addEventListener("change", updateMaxMessagesSetting);
 
 			function resetState() {
 				state = {
@@ -161,12 +160,15 @@
 					detected: null,
 					warnings: [],
 					manualParts: {},
-					lastExportFileName: ""
+					lastExportFileName: "",
+					messageSettingKeys: {},
+					previewMode: ""
 				};
 				previewFrame.removeAttribute("srcdoc");
 				emptyPreview.style.display = "";
 				statusBox.textContent = "Waiting for overlay files.";
 				fileList.innerHTML = "";
+				if (messageSettings) messageSettings.hidden = true;
 				populateFileSelectors(null);
 				refreshButtons();
 			}
@@ -181,7 +183,7 @@
 				var hasBuild = !!(state.html || state.css || state.js);
 				previewBtn.disabled = !hasBuild || state.processing;
 				if (livePreviewBtn) livePreviewBtn.disabled = !hasBuild || state.processing || !(sessionInput.value || "").trim();
-				exportBtn.disabled = !hasBuild || state.processing;
+				exportBtn.disabled = !hasBuild || state.processing || !(sessionInput.value || "").trim();
 			}
 
 			function getPageParam(names) {
@@ -288,20 +290,10 @@
 			}
 
 			function showExportModal(fileName) {
-				if (!exportModal || !exportSessionHint || !exportSessionMessage) return;
+				if (!exportModal || !exportSessionMessage) return;
 				var session = (sessionInput.value || "").trim();
-				var password = (passwordInput.value || "").trim();
-				var suffix = session ? "?session=" + encodeURIComponent(session) : "?session=YOUR_SESSION_ID";
-				if (password) suffix += "&password=" + encodeURIComponent(password);
-				var exampleUrl = fileName + suffix;
 				state.lastExportFileName = fileName;
-				exportSessionHint.textContent = suffix;
-				if (exportObsUrlHint) exportObsUrlHint.textContent = exampleUrl;
-				if (session) {
-					exportSessionMessage.textContent = "Your session ID was saved inside " + fileName + ". In OBS, you can use the downloaded HTML file directly. The URL ending below is only a backup or override.";
-				} else {
-					exportSessionMessage.textContent = "No session ID was saved in this file. Easiest fix: close this, paste your SSN session ID, and export again. Or append the URL ending below.";
-				}
+				exportSessionMessage.textContent = "Select " + fileName + " as the Local file in OBS and keep the SSN app or extension running.";
 				if (exportSummary) exportSummary.textContent = buildExportSummary(fileName);
 				exportModal.classList.add("open");
 				if (closeExportModalBtn) closeExportModalBtn.focus();
@@ -309,32 +301,6 @@
 
 			function hideExportModal() {
 				if (exportModal) exportModal.classList.remove("open");
-			}
-
-			function copySessionHint() {
-				if (!exportSessionHint) return;
-				copyText(exportSessionHint.textContent || "?session=YOUR_SESSION_ID", function () {
-					if (copySessionHintBtn) {
-						var oldText = copySessionHintBtn.textContent;
-						copySessionHintBtn.textContent = "Copied";
-						setTimeout(function () {
-							copySessionHintBtn.textContent = oldText;
-						}, 1600);
-					}
-				});
-			}
-
-			function copyObsUrl() {
-				if (!exportObsUrlHint) return;
-				copyText(exportObsUrlHint.textContent || "", function () {
-					if (copyObsUrlBtn) {
-						var oldText = copyObsUrlBtn.textContent;
-						copyObsUrlBtn.textContent = "Copied";
-						setTimeout(function () {
-							copyObsUrlBtn.textContent = oldText;
-						}, 1600);
-					}
-				});
 			}
 
 			function downloadReadme() {
@@ -379,27 +345,21 @@
 			}
 
 			function buildReadmeText(fileName) {
-				var suffix = exportSessionHint ? exportSessionHint.textContent : "?session=YOUR_SESSION_ID";
-				var hasSession = suffix.indexOf("YOUR_SESSION_ID") === -1;
 				var lines = [
 					"Social Stream Ninja Imported Overlay",
 					"",
-					"You do not add the original zip or code to Social Stream Ninja.",
-					"Use the exported HTML file as an OBS Browser Source.",
+					"Works with the Social Stream Ninja Windows desktop app and Chrome extension.",
+					"Keep your chosen SSN version running while streaming.",
+					"Use the exported HTML file as an OBS Browser Source; do not use the original zip or importer page.",
 					"",
 					"HTML file:",
 					fileName,
 					"",
 					"OBS setup:",
-					"1. Add a Browser Source.",
-					"2. Choose or paste the exported HTML file.",
-					hasSession
-						? "3. Your SSN session ID is already saved inside the file."
-						: "3. Add your SSN session to the end of the file URL:",
-					hasSession ? "" : suffix,
-					"",
-					hasSession ? "Backup URL override:" : "Example URL:",
-					fileName + suffix,
+					"1. Confirm a real chat message appears in the SSN dock.",
+					"2. Add a Browser Source in OBS.",
+					"3. Enable Local file and browse to the exported HTML file.",
+					"4. Your SSN session ID is already saved inside the file; do not add it in OBS.",
 					"",
 					"Optional URL overrides:",
 					"- Add &limit=30 to cap chat rows.",
@@ -508,6 +468,7 @@
 				var fields = parseJSONSafe(detected.fieldsText || "{}");
 				var data = parseJSONSafe(detected.dataText || "{}");
 				state.fieldData = mergeFieldDefaults(fields, data);
+				setupMessageSettings(fields);
 				state.html = normalizeProtocolRelative(replaceAssets(resolveTemplate(detected.htmlText || '<div class="main-container"></div>', state.fieldData)));
 				state.css = normalizeProtocolRelative(replaceAssets(resolveTemplate(detected.cssText || "", state.fieldData)));
 				state.js = normalizeProtocolRelative(replaceScriptAssets(resolveTemplate(detected.jsText || "", state.fieldData)));
@@ -523,13 +484,18 @@
 					state.remoteAssetsEmbedded = stats.embedded;
 					state.remoteAssetsFailed = stats.failed;
 					state.processing = false;
-					updateFileList(detected);
+					updateFileList(detected, [(sessionInput.value || "").trim()
+						? "Ready. Demo Preview is loaded. Click Live Preview to test real SSN chat, then download the OBS HTML."
+						: "Ready. Demo Preview is loaded. Paste your SSN session ID next so Live Preview and the downloaded file can receive chat."]);
 					refreshButtons();
 					renderPreview();
 				}).catch(function (error) {
 					state.remoteAssetsFailed += 1;
 					state.processing = false;
-					updateFileList(detected, ["Remote asset check failed: " + String(error && error.message || error)]);
+					updateFileList(detected, [
+						"Ready with a remote asset warning. The demo may still work, but verify fonts and artwork.",
+						"Remote asset check failed: " + String(error && error.message || error)
+					]);
 					refreshButtons();
 					renderPreview();
 				});
@@ -760,6 +726,11 @@
 
 			function updateFileList(detected, extraLines) {
 				var lines = [];
+				if (extraLines && extraLines.length) {
+					extraLines.forEach(function (line) {
+						lines.push(line);
+					});
+				}
 				lines.push("Detected HTML: " + (detected.htmlFiles.join(", ") || "generated fallback"));
 				lines.push("Detected CSS: " + (detected.cssFiles.join(", ") || "none"));
 				lines.push("Detected JS: " + (detected.jsFiles.join(", ") || "none"));
@@ -771,10 +742,10 @@
 				if (state.remoteAssetsFailed) lines.push("Remote assets left as URLs: " + state.remoteAssetsFailed);
 				if (detected.ignoredFiles && detected.ignoredFiles.length) lines.push("Ignored generated/export files: " + detected.ignoredFiles.length);
 				if (detected.unusedPartFiles && detected.unusedPartFiles.length) lines.push("Other source-like files not used: " + detected.unusedPartFiles.length);
-				if (state.warnings && state.warnings.length) lines.push("Possible manual fixes: " + state.warnings.length);
-				if (extraLines && extraLines.length) {
-					extraLines.forEach(function (line) {
-						lines.push(line);
+				if (state.warnings && state.warnings.length) {
+					lines.push("Possible manual fixes: " + state.warnings.length);
+					state.warnings.forEach(function (warning) {
+						lines.push("- " + warning);
 					});
 				}
 				setStatus(lines);
@@ -803,6 +774,84 @@
 					});
 				}
 				return output;
+			}
+
+			function setupMessageSettings(fields) {
+				var durationKey = findFieldKey(["autoRemoveAfterSeconds", "hideAfter", "messageDurationSeconds", "messageDuration"]);
+				var maxKey = findFieldKey(["maxMessages", "messagesLimit", "eventsLimit"]);
+				state.messageSettingKeys = { duration: durationKey, max: maxKey };
+				if (!messageSettings) return;
+				messageSettings.hidden = !durationKey && !maxKey;
+
+				if (messageDurationRow) messageDurationRow.hidden = !durationKey;
+				if (durationKey && messageDuration && keepMessagesVisible) {
+					var durationValue = parseFloat(state.fieldData[durationKey]);
+					if (!isFinite(durationValue)) durationValue = 0;
+					var durationDisabled = durationValue <= 0 || (durationKey.toLowerCase() === "hideafter" && durationValue === 999);
+					keepMessagesVisible.checked = durationDisabled;
+					messageDuration.value = durationDisabled ? 10 : durationValue;
+					messageDuration.disabled = keepMessagesVisible.checked;
+					applyNumberBounds(messageDuration, fields && fields[durationKey], 1);
+				}
+
+				if (maxMessagesRow) maxMessagesRow.hidden = !maxKey;
+				if (maxKey && maxMessages) {
+					var maxValue = parseInt(state.fieldData[maxKey], 10);
+					if (!maxValue || maxValue < 1) maxValue = 20;
+					maxMessages.value = maxValue;
+					applyNumberBounds(maxMessages, fields && fields[maxKey], 1);
+				}
+			}
+
+			function findFieldKey(candidates) {
+				var keys = Object.keys(state.fieldData || {});
+				for (var i = 0; i < candidates.length; i += 1) {
+					for (var j = 0; j < keys.length; j += 1) {
+						if (keys[j].toLowerCase() === candidates[i].toLowerCase()) return keys[j];
+					}
+				}
+				return "";
+			}
+
+			function applyNumberBounds(input, definition, fallbackMin) {
+				var min = definition && definition.min;
+				var max = definition && definition.max;
+				input.min = isFinite(parseFloat(min)) ? min : fallbackMin;
+				if (isFinite(parseFloat(max))) input.max = max;
+				else input.removeAttribute("max");
+			}
+
+			function updateMessageDurationSetting() {
+				var key = state.messageSettingKeys && state.messageSettingKeys.duration;
+				if (!key || !messageDuration || !keepMessagesVisible) return;
+				messageDuration.disabled = keepMessagesVisible.checked;
+				var value = parseFloat(messageDuration.value);
+				if (!isFinite(value) || value < 1) value = 1;
+				if (keepMessagesVisible.checked) value = getDisabledDurationValue(key);
+				state.fieldData[key] = value;
+				refreshPreviewForSettings();
+			}
+
+			function getDisabledDurationValue(key) {
+				return String(key || "").toLowerCase() === "hideafter" ? 999 : 0;
+			}
+
+			function updateMaxMessagesSetting() {
+				var key = state.messageSettingKeys && state.messageSettingKeys.max;
+				if (!key || !maxMessages) return;
+				var value = parseInt(maxMessages.value, 10);
+				var min = parseInt(maxMessages.min || "1", 10);
+				var max = parseInt(maxMessages.max || "", 10);
+				if (!value || value < min) value = min;
+				if (max && value > max) value = max;
+				maxMessages.value = value;
+				state.fieldData[key] = value;
+				refreshPreviewForSettings();
+			}
+
+			function refreshPreviewForSettings() {
+				if (state.previewMode === "live") renderLivePreview();
+				else if (state.html || state.css || state.js) renderPreview();
 			}
 
 			function resolveTemplate(text, fieldData) {
@@ -1033,6 +1082,7 @@
 
 			function renderPreview() {
 				if (!(state.html || state.css || state.js)) return;
+				state.previewMode = "demo";
 				previewFrame.srcdoc = buildExportHTML({ preview: true });
 				emptyPreview.style.display = "none";
 			}
@@ -1044,12 +1094,18 @@
 					sessionInput.focus();
 					return;
 				}
+				state.previewMode = "live";
 				previewFrame.srcdoc = buildExportHTML({ preview: false });
 				emptyPreview.style.display = "none";
 				updateFileList(state.detected, ["Live preview is listening for SSN session: " + (sessionInput.value || "").trim()]);
 			}
 
 			function exportOverlay() {
+				if (!(sessionInput.value || "").trim()) {
+					updateSessionWarning();
+					sessionInput.focus();
+					return;
+				}
 				var html = buildExportHTML({ preview: false });
 				var fileName = (outputName.value || "ssn-imported-overlay.html").trim();
 				if (!/\.html?$/i.test(fileName)) {
@@ -1119,7 +1175,7 @@
 				return [
 					"<!--",
 					"Social Stream Ninja imported overlay",
-					"Live use: add this file as an OBS Browser Source and append " + suffix + " to the file URL if a session was not embedded.",
+					"Live use: add this file as an OBS Browser Source with Local file enabled. The session is embedded; no URL editing is needed.",
 					"Optional overrides: &limit=30, &direction=top, &direction=bottom, &hideAfter=20.",
 					"Demo use: open this file with ?demo to show sample messages without SSN traffic.",
 					"Generated by streamelements-importer.html",
@@ -1392,12 +1448,64 @@
 								return;
 							}
 							var eventData = mapSSNToSEMessage(payload);
+							var existingRows = snapshotLikelyMessageRows();
 							window.dispatchEvent(new CustomEvent("onEventReceived", {
 								detail: {
 									listener: "message",
 									event: eventData
 								}
 							}));
+							tagNewMessageRows(existingRows, eventData, payload);
+						}
+
+						var renderedRowsByMessageId = {};
+						function getLikelyMessageContainers() {
+							var selectors = [".main-container", "#main-container", "#log", ".chat-container", "#chat-container"];
+							var containers = [];
+							selectors.forEach(function (selector) {
+								Array.prototype.slice.call(document.querySelectorAll(selector)).forEach(function (container) {
+									if (containers.indexOf(container) === -1) containers.push(container);
+								});
+							});
+							return containers;
+						}
+
+						function snapshotLikelyMessageRows() {
+							var rows = [];
+							getLikelyMessageContainers().forEach(function (container) {
+								Array.prototype.slice.call(container.children || []).forEach(function (child) {
+									if (rows.indexOf(child) === -1) rows.push(child);
+								});
+							});
+							return rows;
+						}
+
+						function tagNewMessageRows(existingRows, eventData, payload) {
+							var msgId = String(eventData && eventData.data && eventData.data.msgId || "");
+							if (!msgId) return;
+							pruneTrackedMessageRows();
+							var displayName = String(payload.chatname || payload.name || "Viewer");
+							var sourceType = String(payload.type || payload.platform || "ssn");
+							var tagged = [];
+							snapshotLikelyMessageRows().forEach(function (row) {
+								if (existingRows.indexOf(row) !== -1) return;
+								if (/^(SCRIPT|STYLE|LINK|IFRAME)$/i.test(row.tagName || "")) return;
+								if (!row.hasAttribute("data-mid")) row.setAttribute("data-mid", msgId);
+								if (!row.hasAttribute("data-chatname")) row.setAttribute("data-chatname", displayName);
+								if (!row.hasAttribute("data-source-type")) row.setAttribute("data-source-type", sourceType);
+								tagged.push(row);
+							});
+							if (tagged.length) renderedRowsByMessageId[msgId] = tagged;
+						}
+
+						function pruneTrackedMessageRows() {
+							Object.keys(renderedRowsByMessageId).forEach(function (msgId) {
+								var connectedRows = renderedRowsByMessageId[msgId].filter(function (row) {
+									return row && document.documentElement.contains(row);
+								});
+								if (connectedRows.length) renderedRowsByMessageId[msgId] = connectedRows;
+								else delete renderedRowsByMessageId[msgId];
+							});
 						}
 
 						function handleControlPayload(payload) {
@@ -1525,6 +1633,11 @@
 						function removeByMessageId(id) {
 							id = String(id || "");
 							if (!id) return;
+							var trackedRows = renderedRowsByMessageId[id] || [];
+							trackedRows.forEach(function (row) {
+								if (row && row.parentNode) row.parentNode.removeChild(row);
+							});
+							delete renderedRowsByMessageId[id];
 							removeMatching('[data-mid="' + cssEscape(id) + '"], [data-id="' + cssEscape(id) + '"], [data-msgid="' + cssEscape(id) + '"]');
 						}
 
@@ -1557,13 +1670,15 @@
 									while (element.firstChild) element.removeChild(element.firstChild);
 								});
 							});
+							renderedRowsByMessageId = {};
 						}
 
 						function mapSSNToSEMessage(payload) {
 							var displayName = String(payload.chatname || payload.name || "Viewer");
 							var msgId = String(payload.mid || payload.id || payload.messageId || payload.message_id || (payload.meta && (payload.meta.messageId || payload.meta.message_id)) || ("ssn-" + Date.now() + "-" + Math.floor(Math.random() * 100000)));
 							var textHTML = String(payload.chatmessage || payload.message || "");
-							var plainText = stripHTML(textHTML);
+							var messageParts = extractMessageParts(textHTML);
+							var plainText = messageParts.text;
 							var role = getRole(payload);
 							var badges = mapBadges(payload.chatbadges, role);
 							var userId = userIdForName(displayName);
@@ -1587,13 +1702,37 @@
 									channel: roomID || "ssn",
 									text: eventText,
 									isAction: !!payload.event,
-									emotes: [],
+									emotes: messageParts.emotes,
 									msgId: msgId,
 									attachment: attachment,
 									amount: payload.hasDonation || payload.donation || "",
 									role: role,
 									rawSSN: payload
 								}
+							};
+						}
+
+						function extractMessageParts(html) {
+							var container = document.createElement("div");
+							container.innerHTML = String(html || "");
+							var emotes = [];
+							Array.prototype.slice.call(container.querySelectorAll("img")).forEach(function (image, index) {
+								var name = String(image.getAttribute("alt") || image.getAttribute("title") || "").trim();
+								var url = String(image.getAttribute("src") || "").trim();
+								if (!name) name = "emote-" + (index + 1);
+								if (url) {
+									emotes.push({
+										type: "ssn",
+										name: name,
+										url: url,
+										urls: { "1": url, "2": url, "4": url }
+									});
+								}
+								image.parentNode.replaceChild(document.createTextNode(name), image);
+							});
+							return {
+								text: (container.textContent || container.innerText || "").trim(),
+								emotes: emotes
 							};
 						}
 

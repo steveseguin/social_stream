@@ -230,6 +230,7 @@ export function createTwitchChatClient(options = {}) {
     lastError: null,
     manualDisconnect: false,
     destroyed: false,
+    connectionGeneration: 0,
     boundHandlers: [],
     clientFactory: typeof opts.clientFactory === 'function' ? opts.clientFactory : null
   };
@@ -736,6 +737,8 @@ export function createTwitchChatClient(options = {}) {
       return state.client;
     }
     clearReconnectTimer();
+    const generation = ++state.connectionGeneration;
+    const isCurrent = () => generation === state.connectionGeneration && !state.destroyed;
     state.manualDisconnect = Boolean(connectOptions.manual === true);
     state.joined = false;
     updateStatus(STATUS.CONNECTING);
@@ -751,6 +754,7 @@ export function createTwitchChatClient(options = {}) {
 
     try {
       const { token, identity } = await resolveAuth(connectOptions);
+      if (!isCurrent()) return;
       state.token = token || null;
       state.identity = identity || null;
 
@@ -784,6 +788,11 @@ export function createTwitchChatClient(options = {}) {
         options: connectOptions
       });
 
+      if (!isCurrent()) {
+        disconnectStaleClient(client);
+        return;
+      }
+
       if (!client || typeof client.connect !== 'function') {
         const error = new Error('clientFactory must return a tmi.js client with connect().');
         error.code = 'INVALID_CLIENT';
@@ -794,12 +803,17 @@ export function createTwitchChatClient(options = {}) {
       state.boundHandlers = [];
       attachClientEventHandlers(channel);
       const result = await client.connect();
+      if (!isCurrent()) {
+        disconnectStaleClient(client);
+        return;
+      }
 
       state.reconnectAttempts = 0;
       state.manualDisconnect = false;
       updateStatus(STATUS.CONNECTED, { channel, identity: state.identity, joined: state.joined });
       return result;
     } catch (err) {
+      if (!isCurrent()) return;
       state.lastError = err;
       updateStatus(STATUS.ERROR, { error: err, force: true });
       emitter.emit(EVENTS.ERROR, err);
@@ -810,12 +824,24 @@ export function createTwitchChatClient(options = {}) {
   }
 
   function disconnect(options = {}) {
+    state.connectionGeneration++;
     state.manualDisconnect = true;
     clearReconnectTimer();
     teardownClient();
     updateStatus(options.error ? STATUS.ERROR : STATUS.DISCONNECTED, {
       error: options.error || null
     });
+  }
+
+  function disconnectStaleClient(client) {
+    if (!client || client === state.client || typeof client.disconnect !== 'function') return;
+    try {
+      Promise.resolve(client.disconnect()).catch(err => {
+        logDebug('Cancelled client disconnect failed', { error: err?.message || err });
+      });
+    } catch (err) {
+      logDebug('Cancelled client disconnect failed', { error: err?.message || err });
+    }
   }
 
   function destroy() {

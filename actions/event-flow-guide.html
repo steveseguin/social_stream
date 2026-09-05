@@ -335,7 +335,7 @@
                 </div>
                 <p>Once loaded, that overlay can:</p>
                 <ul>
-                    <li>Show Tenor/GIPHY media, text, and confetti triggered by your flows.</li>
+                    <li>Show GIPHY or direct media URLs, text, and confetti triggered by your flows.</li>
                     <li>Play sounds (TTS, audio clips) locally so viewers hear them.</li>
                     <li>Talk to OBS via the WebSocket settings that live under the Flow Actions section in the popup (scene switching, source toggles, GDI+/FreeType text updates, replay buffer, etc.).</li>
                 </ul>
@@ -531,7 +531,7 @@ Trigger ──────────────────▲
 
             <section id="template-variables">
                 <h2>6. Template Variables Reference</h2>
-                <p>Several action nodes (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook) support <strong>template variables</strong> that get replaced with event data at runtime. Wrap variable names in curly braces like <code>{username}</code>.</p>
+                <p>Several action nodes (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label) support <strong>template variables</strong> that get replaced with event data at runtime. Wrap variable names in curly braces like <code>{username}</code>.</p>
 
                 <h3>Core Variables (backward compatible)</h3>
                 <table class="var-table">
@@ -586,6 +586,7 @@ Trigger ──────────────────▲
                     <li><strong>Relay Chat:</strong> <code>[{source}] {username}: {message}</code></li>
                     <li><strong>TTS:</strong> <code>{username} says {message}</code></li>
                     <li><strong>Donation Alert:</strong> <code>{username} donated {donation} - {subtitle}</code></li>
+					<li><strong>Thermal Label:</strong> <code>{username}</code>, a new line, then <code>{donation}</code>. See the <a href="../docs/thermal-printer-guide.html">Thermal Printer Guide</a> for printer setup, fixed-size labels, and a complete flow.</li>
                     <li><strong>Discord Call Webhook:</strong> <code>{&quot;content&quot;:&quot;{message}&quot;,&quot;username&quot;:&quot;{username}&quot;,&quot;avatar_url&quot;:&quot;{chatimg}&quot;}</code></li>
                 </ul>
 
@@ -687,8 +688,12 @@ Trigger ──────────────────▲
 
                 <div class="panel">
                     <strong>Signature:</strong> your code runs as <code>function(message, result) { ... }</code><br>
-                    <strong>Should return:</strong> an object merged into <code>result</code> — see <a href="#custom-js-result-api">result API</a>.<br>
-                    <strong>Available:</strong> <code>message</code> (the event payload), <code>result</code> (current flow result state), plus <code>convertCurrency(value, targetCurrency, source)</code> and <code>convertToUSD(value, source)</code>.
+                    <strong>Should return:</strong> an object or Promise merged into <code>result</code> — see <a href="#custom-js-result-api">result API</a>.<br>
+                    <strong>Available:</strong> <code>message</code> (the event payload), <code>result</code> (current flow result state), <code>printThermal(html, options)</code>, plus <code>convertCurrency(value, targetCurrency, source)</code> and <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <div class="panel">
+                    <strong>Thermal printing in SSApp:</strong> choose the printer and calibrate its paper width and safe margins under <em>Printer Control</em>, then return <code>printThermal('&lt;strong&gt;' + message.chatname + '&lt;/strong&gt;')</code>. SSApp queues the job silently through the native Windows printer API and uses those saved settings. A flow can override them with options such as <code>{ width: '58mm', marginLeft: '3mm', marginRight: '3mm', marginTop: '2mm', marginBottom: '2mm', feed: '3mm', marginType: 'printableArea' }</code>. Returning the Promise lets Event Flow wait for submission and report errors.
                 </div>
 
                 <!-- ─── Both nodes on canvas ─── -->

@@ -14,11 +14,12 @@ function readText(relativePath) {
   const payloadCorpus = JSON.parse(readText("tests/fixtures/xss-payload-corpus.json"));
   const xssSource = readText("thirdparty/xss.min.js");
   const objectsSource = readText("libs/objects.js");
+  const bundledSource = objectsSource.split("// BEGIN BUNDLED thirdparty/xss.min.js")[1].split("// END BUNDLED thirdparty/xss.min.js")[0].trim();
+  assert.strictEqual(bundledSource, xssSource.trim(), "Bundled sanitizer must match the vendored library");
 
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   await page.setContent("<!doctype html><html><body><div id=\"sink\"></div></body></html>");
-  await page.addScriptTag({ content: xssSource });
   await page.addScriptTag({ content: objectsSource });
 
   const results = await page.evaluate(async (items) => {
@@ -83,6 +84,10 @@ function readText(relativePath) {
       if (window.__xssHit) {
         failures.push({ name: item.name, reason: "payload executed", output });
         continue;
+      }
+
+      if (item.expectedText !== undefined && sink.textContent !== item.expectedText) {
+        failures.push({ name: item.name, reason: "rendered text changed", output });
       }
 
       if (item.mustContain) {

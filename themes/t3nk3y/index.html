@@ -162,6 +162,18 @@ body.reverse .message-container {
 /* Enhanced gaming mode: punchier saturation + RGB glow on messages */
 body.gaming { filter: saturate(1.35) contrast(1.08); }
 body.gaming .message-container { text-shadow: 0 0 6px rgba(0,200,255,0.55), 0 0 10px rgba(255,0,180,0.35); }
+
+/* Keep content attachments separate from the smaller inline emotes. */
+img.ssn-content-image {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-top: 6px;
+}
 </style>
 <script src="./chroma.min.cjs"></script>
 </head>
@@ -311,6 +323,17 @@ body.gaming .message-container { text-shadow: 0 0 6px rgba(0,200,255,0.55), 0 0 
         recentTransportDeliveries.set(key, now);
         return false;
     }
+    // Content images are separate from chat text (including GIF-only messages).
+    function appendContentImage(container, data) {
+        if (typeof data.contentimg !== 'string' || !data.contentimg.trim()) return;
+        const img = document.createElement('img');
+        img.className = 'ssn-content-image';
+        img.alt = (data.meta && data.meta.gifLabel) || 'Content image';
+        img.onerror = function () { this.style.display = 'none'; };
+        img.src = data.contentimg;
+        container.appendChild(img);
+    }
+
     function addMessageToOverlay(data, source) {
         if (isDuplicateTransportDelivery(data, source)) {
             return;
@@ -341,7 +364,7 @@ body.gaming .message-container { text-shadow: 0 0 6px rgba(0,200,255,0.55), 0 0 
             });
         }
 		
-		let valid = data.chatname || data.chatmessage || data.donation || data.hasDonation || '';
+		let valid = data.chatname || data.chatmessage || data.donation || data.hasDonation || data.contentimg || '';
 		if (!valid){return;}
 
         // Construct the HTML for each message
@@ -356,6 +379,7 @@ body.gaming .message-container { text-shadow: 0 0 6px rgba(0,200,255,0.55), 0 0 
 			</div>
         `;
 
+        appendContentImage(messageDiv.querySelector('.message'), data);
         messageContainer.appendChild(messageDiv);
         chatContainer.prepend(messageContainer);
         

@@ -74,7 +74,7 @@ In API 1.3.1, `inspectSourcePage` and `inspectAppWindow` accept optional
 `elementOrder: "reverse"`. Use it when a late-mounted modal falls beyond the bounded element
 limit; opaque references and all interaction safety rules remain unchanged.
 
-Controllable settings are returned by `getCapabilities`. The initial set is `betaMode`, `youtubeAutoAdd`, `youtubeAutoCleanup`, `youtubeCheckInterval`, `forceTikTokClassic`, `preferTikTokLegacy`, and `lastTikTokMode`.
+Controllable settings are returned by `getCapabilities`. SSApp 0.4.22 and newer expose `betaMode`, `forceTikTokClassic`, `preferTikTokLegacy`, and `lastTikTokMode`. The retired `youtubeAutoAdd`, `youtubeAutoCleanup`, and `youtubeCheckInterval` settings are rejected; use group Auto-activate for YouTube discovery. Always read the running app's capabilities.
 
 Connection-mode changes are validated against the source platform's advertised `connectionModes`; a globally known mode is not necessarily valid for every platform.
 
@@ -158,7 +158,7 @@ Reload all active sources:
 Change a setting:
 
 ```json
-{"action":"updateSettings","value":{"settings":{"youtubeAutoCleanup":true}}}
+{"action":"updateSettings","value":{"settings":{"preferTikTokLegacy":true}}}
 ```
 
 Gracefully stop a headless app:

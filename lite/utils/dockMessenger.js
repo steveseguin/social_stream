@@ -146,7 +146,7 @@ export class DockMessenger {
       return;
     }
 
-    if (!this.ready || !this.frame.contentWindow) {
+    if (!this.ready || !this.frame.contentWindow || this.flushTimer) {
       this.pending.push(entry);
       this.debugLog('Queued dock payload until iframe is ready', {
         pending: this.pending.length,
@@ -198,7 +198,7 @@ export class DockMessenger {
         this.pending.unshift(entry);
         this.debugLog('Re-queued message after post failure', { attempts: nextAttempts });
         this.scheduleFlush(Math.min(1200, 400 * nextAttempts));
-        return;
+        return false;
       }
       this.retryCounts.delete(entry);
       if (this.onDebug) {
@@ -225,7 +225,11 @@ export class DockMessenger {
     }
     while (this.pending.length) {
       const entry = this.pending.shift();
-      this.post(entry);
+      // A failed send requeues the entry and schedules a delayed retry.
+      // Stop here so this loop cannot consume those retries immediately.
+      if (this.post(entry) === false) {
+        break;
+      }
       if (!this.ready) {
         break;
       }

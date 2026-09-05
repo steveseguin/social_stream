@@ -156,6 +156,15 @@
 			requires: ["defaultDock"],
 			callback: "guaranteed"
 		},
+		clearHistory: {
+			owner: "background",
+			phase: 1,
+			category: "history",
+			label: "Clear saved history",
+			risk: "destructive",
+			confirmation: true,
+			callback: "guaranteed"
+		},
 		sendChat: {
 			owner: "background",
 			phase: 1,
@@ -202,6 +211,14 @@
 			phase: 1,
 			category: "timer",
 			label: "Get timer state",
+			risk: "read-only",
+			callback: "guaranteed"
+		},
+		getpollpresets: {
+			owner: "background",
+			phase: 1,
+			category: "poll",
+			label: "Get poll presets",
 			risk: "read-only",
 			callback: "guaranteed"
 		},

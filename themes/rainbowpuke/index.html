@@ -255,6 +255,7 @@ body {
 <script>
 
 	var urlParams = new URLSearchParams(window.location.search);
+    var showtime = Math.max(0, parseInt(urlParams.get("showtime"), 10) || 0);
 	var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
 	// Transport migration guard: only pages with full server parity may skip the legacy bridge.
 	var TRANSPORT_CAPABILITIES = {
@@ -375,7 +376,7 @@ body {
 		}
 		
 		if (hideBots && data.bot) { return; }
-		if (!(data.chatmessage || data.donation || data.hasDonation) && !data.chatname){
+		if (!(data.chatmessage || data.donation || data.hasDonation || data.contentimg) && !data.chatname){
 			return;
 		}
 
@@ -416,6 +417,11 @@ body {
 		});
 		
 		chatContainer.prepend(messageDiv);
+        if (showtime > 0) {
+            setTimeout(function () {
+                if (messageDiv.parentNode) { messageDiv.parentNode.removeChild(messageDiv); }
+            }, showtime);
+        }
 		
 		// Auto-scroll to the latest message
         chatContainer.scrollTop = chatContainer.scrollHeight;

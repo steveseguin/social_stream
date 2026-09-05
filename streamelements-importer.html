@@ -4,7 +4,7 @@
   <script type="text/javascript" src="./js/local-server-url.js"></script>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>SE Widget Importer - Social Stream Ninja</title>
+	<title>StreamElements Widget Importer - Social Stream Ninja</title>
 	<link rel="icon" href="./icons/favicon.ico">
 	<style>
 		:root {
@@ -103,7 +103,7 @@
 
 		.app {
 			display: grid;
-			grid-template-columns: 340px minmax(0, 1fr);
+			grid-template-columns: 390px minmax(0, 1fr);
 			height: 100vh;
 		}
 
@@ -136,6 +136,20 @@
 			color: var(--muted);
 			font-size: 13px;
 			line-height: 1.45;
+		}
+
+		.compat-banner {
+			border: 1px solid #296749;
+			background: #10251c;
+			border-radius: 8px;
+			padding: 10px 12px;
+			color: #c9f6e2;
+			font-size: 13px;
+			line-height: 1.45;
+		}
+
+		.guide-link {
+			color: #8fc5ff;
 		}
 
 		.drop-zone {
@@ -263,6 +277,36 @@
 
 		.info-panel a {
 			color: var(--accent-2);
+		}
+
+		.widget-settings {
+			border: 1px solid rgba(90, 164, 255, 0.45);
+			background: rgba(90, 164, 255, 0.08);
+			border-radius: 8px;
+			padding: 10px;
+		}
+
+		.widget-settings[hidden],
+		.setting-row[hidden] {
+			display: none;
+		}
+
+		.widget-settings-title {
+			font-weight: 700;
+			font-size: 13px;
+			margin-bottom: 4px;
+		}
+
+		.check-row {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			color: var(--text);
+		}
+
+		.check-row input {
+			width: auto;
+			margin: 0;
 		}
 
 		.info-panel select {
@@ -492,42 +536,64 @@
 <body>
 	<div class="app">
 		<aside class="sidebar">
-			<div class="brand"><span class="dot"></span><span>SE Widget Importer</span></div>
-			<div class="hint">Turn a StreamElements or Streamlabs chat overlay zip into one HTML file for OBS. No code copy/paste is needed.</div>
+			<div class="brand"><span class="dot"></span><span>StreamElements Widget Importer</span></div>
+			<div class="hint">Choose the widget, confirm your SSN session, then download one ready-to-use HTML file for OBS. No coding or URL editing is needed.</div>
+			<div class="compat-banner"><strong>Works with both SSN versions:</strong> use either the Windows desktop app or the Chrome extension to capture chat. The downloaded HTML file displays that chat in OBS.</div>
 
 			<details class="info-panel simple-steps" open>
-				<summary>Simple Setup</summary>
+				<summary>Start-to-finish setup</summary>
 				<ol>
-					<li>Choose the overlay <strong>zip</strong> or folder here.</li>
-					<li>Paste your <strong>SSN Session ID / Stream ID</strong> below.</li>
-					<li>Click <strong>Preview</strong>, then <strong>Download OBS HTML</strong>.</li>
-					<li>Add the downloaded HTML file to OBS as a <strong>Browser Source</strong>.</li>
+					<li>Open SSN and confirm a real chat message appears in its dock.</li>
+					<li>Choose the widget <strong>zip</strong>, folder, or files below.</li>
+					<li>Check the <strong>SSN Session ID / Stream ID</strong> below. It is filled automatically when you open this importer from SSN and saved inside the downloaded file.</li>
+					<li>Use <strong>Demo Preview</strong> to check the design, then <strong>Live Preview</strong> to check real chat.</li>
+					<li>Click <strong>Download OBS HTML</strong>.</li>
+					<li>In OBS, add a <strong>Browser Source</strong>, enable <strong>Local file</strong>, and select the downloaded HTML file. <strong>Do not add the session ID in OBS.</strong></li>
 				</ol>
-				<div style="margin-top: 8px;">Do not add the zip or code to Social Stream Ninja. This page makes the OBS overlay file for you.</div>
+				<div style="margin-top: 8px;">Keep the SSN app or extension running while streaming. You may close this importer and StreamElements after downloading.</div>
+				<div style="margin-top: 8px;"><a class="guide-link" href="./docs/templates.html#streamelements-importer-guide" target="_blank" rel="noopener">Open the full illustrated checklist</a></div>
 			</details>
 
 			<div class="drop-zone" id="dropZone">
-				<div class="hint">Start here: choose the overlay zip from the designer, or choose the folder/files if you do not have a zip.</div>
+				<div class="hint">Choose the original export from the widget designer. It should contain HTML, CSS, JavaScript, fields/data, or assets. A screenshot or StreamElements overlay URL alone is not enough.</div>
 				<div class="button-row" style="margin-top: 10px;">
-					<label class="file-button" for="zipInput">Zip</label>
-					<label class="file-button" for="fileInput">Files</label>
-					<label class="file-button" for="folderInput">Folder</label>
+					<label class="file-button" for="zipInput">Choose ZIP</label>
+					<label class="file-button" for="fileInput">Choose Files</label>
+					<label class="file-button" for="folderInput">Choose Folder</label>
 				</div>
 				<input class="hidden-input" id="zipInput" type="file" accept=".zip">
 				<input class="hidden-input" id="fileInput" type="file" multiple>
 				<input class="hidden-input" id="folderInput" type="file" multiple webkitdirectory>
 			</div>
 
+			<div class="widget-settings" id="messageSettings" hidden>
+				<div class="widget-settings-title">Message history</div>
+				<div class="hint">These are the widget's own StreamElements settings. Changes apply to previews and the downloaded OBS file.</div>
+				<div class="setting-row" id="messageDurationRow" hidden>
+					<label class="check-row" for="keepMessagesVisible">
+						<input id="keepMessagesVisible" type="checkbox">
+						<span>Keep messages visible (turn off auto-hide)</span>
+					</label>
+					<label for="messageDuration">Or remove each message after this many seconds</label>
+					<input id="messageDuration" type="number" min="1" step="1">
+				</div>
+				<div class="setting-row" id="maxMessagesRow" hidden>
+					<label for="maxMessages">Maximum messages kept on screen</label>
+					<input id="maxMessages" type="number" min="1" step="1">
+				</div>
+			</div>
+
 			<label for="sessionInput">Your SSN Session ID / Stream ID</label>
 			<input id="sessionInput" placeholder="Example: DMFJUmUXEv">
-			<div class="session-warning" id="sessionWarning">Recommended: paste your session ID before exporting. Then the downloaded HTML file can receive live messages without editing the URL.</div>
+			<div class="hint"><strong>Enter it once here.</strong> It is saved inside the downloaded file, so there is nothing to paste into OBS.</div>
+			<div class="session-warning" id="sessionWarning">No session ID detected. Open this importer from the SSN popup to fill it automatically, or paste the ID from Session Options.</div>
 			<details class="session-help">
 				<summary>Where do I find this?</summary>
 				<ol>
-					<li>Open the Social Stream Ninja extension popup.</li>
+					<li>Open the Social Stream Ninja Windows app or Chrome extension popup.</li>
 					<li>Open <strong>Session Options</strong>.</li>
 					<li>Copy the value under <strong>Your unique session ID is below</strong>.</li>
-					<li>Paste it here. It is the same value used in overlay URLs after <code>?session=</code>.</li>
+					<li>If it was not filled automatically, paste it here. It is the same value used in overlay URLs after <code>?session=</code>.</li>
 				</ol>
 				<div style="margin-top: 8px;">This is not your Twitch, YouTube, or Kick username.</div>
 			</details>
@@ -539,13 +605,24 @@
 			<input id="outputName" value="ssn-imported-overlay.html">
 
 			<div class="button-row">
-				<button id="previewBtn" type="button" disabled>Preview</button>
+				<button id="previewBtn" type="button" disabled>Demo Preview</button>
 				<button id="livePreviewBtn" type="button" disabled>Live Preview</button>
 				<button class="primary" id="exportBtn" type="button" disabled>Download OBS HTML</button>
 			</div>
+			<div class="hint">Demo Preview uses sample messages. Live Preview listens to your real SSN session and requires the session ID above.</div>
 
 			<div class="status" id="statusBox">Waiting for overlay files.</div>
 			<div class="file-list" id="fileList"></div>
+
+			<details class="info-panel">
+				<summary>If something is blank</summary>
+				<ul>
+					<li><strong>Demo Preview is blank:</strong> check the detected files below or use Advanced file selection.</li>
+					<li><strong>Demo works but Live Preview is blank:</strong> confirm chat reaches the SSN dock and the session ID/password exactly match.</li>
+					<li><strong>Live Preview works but OBS is blank:</strong> select the downloaded HTML—not this importer or the original zip—and refresh the OBS Browser Source.</li>
+					<li><strong>Fonts or artwork are missing:</strong> check the export summary for remote assets; some widgets still require internet access.</li>
+				</ul>
+			</details>
 
 			<details class="info-panel">
 				<summary>Advanced file selection</summary>
@@ -620,8 +697,8 @@ Test viewer, VIP/mod/subscriber, donation, badge, media, delete, clear, empty-me
 		<main class="main">
 			<div class="toolbar">
 				<div>
-					<div class="toolbar-title">Preview</div>
-					<div class="hint">Demo messages are used here. The exported file uses live SSN traffic.</div>
+					<div class="toolbar-title">Widget preview</div>
+					<div class="hint">Demo Preview shows sample messages. Live Preview listens to the SSN app or extension.</div>
 				</div>
 				<button id="clearBtn" type="button">Clear</button>
 			</div>
@@ -635,23 +712,17 @@ Test viewer, VIP/mod/subscriber, donation, badge, media, delete, clear, empty-me
 	<div class="modal-backdrop" id="exportModal" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
 		<div class="export-modal">
 			<h2 id="exportModalTitle">Exported HTML is ready</h2>
-			<p class="plain-note">Use the downloaded HTML file in OBS. Do not upload the original zip to SSN, and do not paste any code.</p>
+			<p class="plain-note"><strong>Your SSN session is already saved inside the downloaded file.</strong> You do not need to paste a session ID or edit a URL in OBS.</p>
 			<ol>
-				<li>Open OBS.</li>
-				<li>Add a new <strong>Browser Source</strong>.</li>
-				<li>Choose or paste the downloaded HTML file.</li>
-				<li>Keep the source background transparent.</li>
+				<li>Keep Social Stream Ninja running and confirm chat appears in its dock.</li>
+				<li>In OBS, add a new <strong>Browser Source</strong>.</li>
+				<li>Enable <strong>Local file</strong> and browse to the downloaded HTML file.</li>
+				<li>Set the source size for your layout, then click OK.</li>
 			</ol>
 			<p id="exportSessionMessage"></p>
-			<p>If live chat does not appear, add this to the end of the file URL:</p>
-			<div class="url-box" id="exportSessionHint">?session=YOUR_SESSION_ID</div>
-			<p>Example URL:</p>
-			<div class="url-box" id="exportObsUrlHint">ssn-imported-overlay.html?session=YOUR_SESSION_ID</div>
 			<p>For a quick visual test without live chat, open the file with <code>?demo</code>.</p>
 			<div class="export-summary" id="exportSummary"></div>
 			<div class="modal-actions">
-				<button id="copySessionHintBtn" type="button">Copy URL Ending</button>
-				<button id="copyObsUrlBtn" type="button">Copy Example URL</button>
 				<button id="downloadReadmeBtn" type="button">Download README</button>
 				<button id="closeExportModalBtn" type="button">Close</button>
 			</div>

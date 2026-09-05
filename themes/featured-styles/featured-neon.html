@@ -750,7 +750,7 @@
                 if (data.value) {
                     try {
                         const parsed = JSON.parse(data.value);
-                        if (parsed && "chatmessage" in parsed) {
+                        if (parsed && ("chatmessage" in parsed || "contentimg" in parsed)) {
                             showMessage(parsed);
                         }
                     } catch (e) {
@@ -761,14 +761,14 @@
                 }
             }
             // Direct message format
-            else if (data && "chatmessage" in data) {
+            else if (data && ("chatmessage" in data || "contentimg" in data)) {
                 showMessage(data);
             }
         }
 
         // Display message
         function showMessage(content) {
-            if (!content.chatmessage && !content.chatname) return;
+            if (!content.chatmessage && !content.chatname && !content.contentimg) return;
 
             hideMessage(() => {
                 const wrapper = document.createElement('div');

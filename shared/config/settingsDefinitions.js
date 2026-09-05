@@ -41,7 +41,7 @@ const SETTINGS_CATEGORIES = Object.freeze({
   'commands': { label: "Commands", order: 127 },
   'management': { label: "Management", order: 128 },
   'custom_javascript': { label: "Custom JavaScript", order: 129 },
-  'giphy_tenor_support': { label: "Giphy/Tenor support", order: 130 },
+  'giphy_tenor_support': { label: "GIPHY GIFs and stickers", order: 130 },
   'trigger_webhook_url_by_a_command': { label: "Trigger webhook URL by a !command", order: 131 },
   'send_fixed_messages_at_intervals': { label: "Send fixed messages at intervals", order: 132 },
   'auto_responder': { label: "Auto-responder", order: 133 },
@@ -782,7 +782,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "giphy2": {
     type: "boolean",
     category: "giphy_tenor_support",
-    description: "When enabled, include a GIF when #{somekeyword} is used."
+    description: "When enabled, search GIPHY for #keyword GIFs and ##keyword stickers."
   },
   "giphyKey": {
     type: "text",
@@ -857,7 +857,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "hidegiphytrigger": {
     type: "boolean",
     category: "giphy_tenor_support",
-    description: "Hide the Giphy/Tenor trigger word or sentence."
+    description: "Hide the GIF trigger word or sentence."
   },
   "hidehostsext": {
     type: "boolean",
@@ -1299,6 +1299,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "printer_control",
     description: "Discord webhook URL that receives every captured message."
   },
+  "postallserverdiscordsimple": {
+    type: "boolean",
+    category: "printer_control",
+    description: "Post all-message Discord webhooks without embeds, timestamps, or platform thumbnails."
+  },
   "postdiscord": {
     type: "boolean",
     category: "printer_control",
@@ -1318,6 +1323,51 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     type: "text",
     category: "printer_control",
     description: "Local printer name to use when printing chat from the dock."
+  },
+  "printerPaperWidth": {
+    type: "number",
+    category: "printer_control",
+    description: "Thermal printer paper width in millimetres."
+  },
+  "printerLabelHeight": {
+    type: "number",
+    category: "printer_control",
+    description: "Fixed thermal label length in millimetres; zero uses content-sized receipt paper."
+  },
+  "printerMarginLeft": {
+    type: "number",
+    category: "printer_control",
+    description: "Extra left safe margin for thermal printing in millimetres."
+  },
+  "printerMarginRight": {
+    type: "number",
+    category: "printer_control",
+    description: "Extra right safe margin for thermal printing in millimetres."
+  },
+  "printerMarginTop": {
+    type: "number",
+    category: "printer_control",
+    description: "Extra top safe margin for thermal printing in millimetres."
+  },
+  "printerMarginBottom": {
+    type: "number",
+    category: "printer_control",
+    description: "Extra bottom safe margin for thermal printing in millimetres."
+  },
+  "printerFeed": {
+    type: "number",
+    category: "printer_control",
+    description: "Extra paper feed after each thermal print in millimetres."
+  },
+  "printerMarginMode": {
+    type: "select",
+    category: "printer_control",
+    description: "Use the printer driver's printable area or the full configured paper width."
+  },
+  "pluralmind": {
+    type: "boolean",
+    category: "custom_injection",
+    description: "Identify PluralMind members in Twitch chat. Looks up Twitch user IDs or usernames via pluralmind.chat; message matching stays local."
   },
   "pronouns": {
     type: "boolean",
@@ -1572,12 +1622,12 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "tenor": {
     type: "boolean",
     category: "giphy_tenor_support",
-    description: "When enabled, include a GIF when !tenor is used."
+    description: "Enable the legacy !tenor command alias using the GIPHY API key."
   },
   "tenorKey": {
     type: "text",
     category: "giphy_tenor_support",
-    description: "Tenor API key used to enable GIF search support."
+    description: "Deprecated Tenor API key; retained for saved-settings compatibility. Set giphyKey instead."
   },
   "textonlymode": {
     type: "boolean",

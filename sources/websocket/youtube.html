@@ -2618,7 +2618,7 @@ function enableBackgroundKeepAlive() {
 		try {
 			const parsed = JSON.parse(localStorage.getItem(YT_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
 			return {
-				syncDeleteMessages: !!parsed.syncDeleteMessages,
+				syncDeleteMessages: parsed.syncDeleteMessages !== false,
 				syncBlockUsers: !!parsed.syncBlockUsers,
 				hideMetrics: !!parsed.hideMetrics,
 				subscriberAlertMessages: !!parsed.subscriberAlertMessages,
@@ -2626,7 +2626,7 @@ function enableBackgroundKeepAlive() {
 			};
 		} catch (_) {
 			return {
-				syncDeleteMessages: false,
+				syncDeleteMessages: true,
 				syncBlockUsers: false,
 				hideMetrics: false,
 				subscriberAlertMessages: false,
@@ -4268,6 +4268,7 @@ function enableBackgroundKeepAlive() {
 					const isGiftEvent = item.snippet.type === 'giftEvent' || !!giftMetadata;
 					const isUserBannedEvent = item.snippet.type === 'userBannedEvent' || hasUserBannedDetails;
 					const isSpecialEvent = isGiftEvent ||
+										  !!item.snippet.superChatDetails ||
 										  isUserBannedEvent ||
 										  item.snippet.type === 'giftMembershipReceivedEvent' ||
 										  item.snippet.type === 'newSponsorEvent' ||

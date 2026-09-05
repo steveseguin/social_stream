@@ -250,6 +250,19 @@ body, html {
 
 .badge.svg { overflow: hidden; }
 .badge.svg svg { display: block; width: auto !important; height: 100% !important; max-width: 100px !important; max-height: 100% !important; }
+
+/* Keep content attachments separate from the smaller inline emotes. */
+img.ssn-content-image {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-top: 6px;
+}
+img.ssn-content-image { display: inline-block; width: 64px; height: 28px; margin: 0 6px; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -436,6 +449,17 @@ body, html {
         recentTransportDeliveries.set(key, now);
         return false;
     }
+    // Content images are separate from chat text (including GIF-only messages).
+    function appendContentImage(container, data) {
+        if (typeof data.contentimg !== 'string' || !data.contentimg.trim()) return;
+        const img = document.createElement('img');
+        img.className = 'ssn-content-image';
+        img.alt = (data.meta && data.meta.gifLabel) || 'Content image';
+        img.onerror = function () { this.style.display = 'none'; };
+        img.src = data.contentimg;
+        container.appendChild(img);
+    }
+
     function addMessageToOverlay(data, source) {
         if (isDuplicateTransportDelivery(data, source)) {
             return;
@@ -515,6 +539,7 @@ body, html {
             </div>
         `;
 
+        appendContentImage(messageDiv.querySelector('.message-text-meta > div:last-child'), data);
         messageListWrapper.appendChild(messageDiv);
         void messageDiv.offsetWidth; 
         messageDiv.classList.add('visible');

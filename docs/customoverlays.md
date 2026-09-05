@@ -20,6 +20,12 @@ Before diving into custom page creation, let's revisit some core SSN concepts fr
   - **`password` (Optional):** If your SSN session is password-protected, you'll need this.
   - **Message Structure:** Incoming data will be JSON objects. Refer to the "Message Structure" section in the AI integration document for a detailed list of common fields (e.g., `id`, `type`, `chatname`, `chatmessage`, `hasDonation`, `event`).
 
+### Image-only chat and Twitch GIFs
+
+Render `data.contentimg` independently of `data.chatmessage`. Twitch GIF messages can have an empty `chatmessage` and put their descriptive label in `data.meta.gifLabel`. Do not discard a chat message just because it has `meta`; skip metadata-only updates only when they have no displayable content. `textonly` controls chat text rendering, not attachments.
+
+Use an `<img>` for image/GIF URLs, assign its `src` as a DOM property, and size it separately from inline emotes. Preserve the image aspect ratio; compact tickers should reserve a fixed image slot so loading an image does not change message spacing mid-animation.
+
 ## 4\. Connection Methods for Custom Overlays
 
 Custom overlay pages primarily connect to the Social Stream Ninja backend to receive messages. There are two main ways:
@@ -482,7 +488,7 @@ Remember that SSN overlays are highly customizable via URL parameters. Your cust
   - `&scale=FLOAT`: Scale the entire overlay.
   - `&limit=NUMBER`: Limit the number of messages displayed.
   - `&hidesource=1`: To hide the source platform icon/name.
-  - `&showtime=MILLISECONDS`: How long to display a message before auto-hiding (if implemented).
+  - `&showtime=MILLISECONDS`: How long to display a message before auto-hiding; `0` disables timed hiding. Pre-styled chat overlay links inherit this value from the Main chat overlay settings. Moving overlays can still leave the screen naturally before this timeout.
   - `&fadeout=1`: To enable fade-out animations.
   - `&showviewercount`: Show per-source viewer totals in the dock's top-right bar. An open dock requests viewer-count collection for 70 minutes and renews that request hourly, so a direct dock URL can enable collection without permanently changing the global setting.
   - `&reserveviewercountspace`: Reserve space above the chat for that viewer count bar; off by default.
@@ -597,6 +603,16 @@ This example shows an overlay that only displays new follower and subscriber eve
 </body>
 </html>
 ```
+
+### Scoreboard wording
+
+In the popup, open **Scoreboard → options → Custom scoreboard wording / translations** to customize ranked viewers, streak, points, waiting text, and the empty scoreboard message. Blank fields keep the defaults. The ranked viewers template supports `{count}`; for example, `{count} spectateurs`.
+
+Enable **Hide update reason** to remove the trailing `message`, `live`, or other update reason and its separator. Alternatively, set replacement text for all update reasons.
+
+These options travel with the generated scoreboard URL: `rankedtext`, `streaktext`, `pointstext`, `waitingtext`, `emptytext`, `reasontext`, and the flag `hidereason`. URL-encode custom text when editing links manually. An explicitly empty text parameter (such as `&pointstext=`) hides that text; omitting it uses the default.
+
+Example: `scoreboard.html?session=YOUR_SESSION_ID&maxusers=3&rankedtext=%7Bcount%7D%20spectateurs&streaktext=s%C3%A9rie&hidereason`.
 
 ## 10\. Best Practices
 

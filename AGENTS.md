@@ -156,6 +156,7 @@ Sample payloads based on the fake test data in [background.js](./background.js):
 ## Git Safety
 
 - VERY IMPORTANT: Never use `git restore`, `git revert`, or any revert/restore operation unless Steve explicitly asks for that exact action.
+- VERY IMPORTANT: Always work from and target the `beta` branch in this repository. Never work from, commit to, push to, or target `main`.
 
 ## Git Push Contract
 

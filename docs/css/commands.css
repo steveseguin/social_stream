@@ -202,7 +202,7 @@ body.sticky-nav-active {
 
 .overlay-options {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 3rem;
     margin: 3rem 0;
 }
@@ -699,3 +699,9 @@ img {
     padding: 1.5rem;
     margin-top: 1.5rem;
 }
+@media (max-width: 768px) {
+    .overlay-options { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Some API tables use a wrapper instead of the table class itself. */
+div.command-table { max-width: 100%; overflow-x: auto; }

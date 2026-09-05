@@ -36,6 +36,11 @@ instead of desktop control or operating-system screen capture.
 MCP 1.2.1 with API 1.3.1 adds `elementOrder: "reverse"` to source-page and app-window
 inspection. Use it when a late-mounted modal falls beyond the bounded semantic element limit.
 
+MCP 1.2.2 in SSApp 0.4.23 fixes interrupted HTTP responses and draining large replies when
+client input closes. An interrupted app response returns `SSAPP_UNREACHABLE`; read the app's
+state before deciding whether to retry a mutation. Clients that send EOF must keep reading
+stdout through its end to receive the complete screenshot or other reply.
+
 Headless mode is separate. To hide windows and also allow a local agent, pass both
 `--ssapp-headless-control` and `--ssapp-control-api`. Headless mode alone does not open the
 API. Environment variables are also supported.

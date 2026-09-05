@@ -1,6 +1,6 @@
 # ISSUE-016: YouTube provider retry loop reuses dead token after 401
 
-- **Status**: open
+- **Status**: fixed (2026-09-05, local)
 - **Severity**: medium
 - **Area**: social_stream `providers/youtube/liveChat.js` (Lite surface)
 - **Found**: 2026-07-22, during YouTube source documentation pass
@@ -20,5 +20,7 @@ After `TOKEN_EXPIRED`, retry obtains a fresh token via `tokenProvider` (or stops
 - `providers/youtube/liveChat.js:250-255` — ensureToken preferring stale token
 
 ## Notes
+
+`TOKEN_EXPIRED` now stops automatic retries, clears the cached token, and surfaces the existing reconnect error. An explicit start with replacement credentials still works. Verified by `tests/review-critical-regressions.test.cjs`; transient network failures retain automatic retry behavior.
 
 Affects Lite (`lite/plugins/youtubeStreamingPlugin.js`) only; the extension/Electron websocket page implements streaming inline in `sources/websocket/youtube.html` and handles 401 by refreshing then `scheduleAuthRetry` (`youtube.html:3776-3779`).
