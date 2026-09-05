@@ -119,7 +119,7 @@ export class KickPlugin extends BasePlugin {
       ...options,
       id: 'kick',
       name: 'Kick',
-      description: 'Enter a Kick channel in Options, then connect. If channel lookup fails, Options also includes manual chatroom settings.'
+      description: 'Choose a Kick channel in Options, then connect.'
     });
 
     this.channelInput = null;
@@ -706,6 +706,7 @@ export class KickPlugin extends BasePlugin {
   }
 
   async enable() {
+    const attempt = this.connectionAttempt = (this.connectionAttempt || 0) + 1;
     const sessionId = this.messenger.getSessionId();
     if (!sessionId) {
       this.reportError(new Error('Start a session before connecting Kick.'));
@@ -782,6 +783,7 @@ export class KickPlugin extends BasePlugin {
           metadata = await this.fetchChannelMetadataAligned(channel);
           metadataSource = 'api';
         } catch (fetchErr) {
+          if (attempt !== this.connectionAttempt) return;
           const fallback = this.getCachedMetadataForChannel(channel, { includeLegacy: !channelChanged });
           if (fallback?.chatroomId) {
             metadata = {
@@ -797,6 +799,7 @@ export class KickPlugin extends BasePlugin {
         }
       }
 
+      if (attempt !== this.connectionAttempt) return;
       if (!metadata || !metadata.chatroomId) {
         throw new Error('Unable to determine Kick chatroom ID. Provide it via advanced options if Kick blocks API access.');
       }
@@ -811,6 +814,7 @@ export class KickPlugin extends BasePlugin {
       this.refreshStatus();
 
       await this.prepareEmotesForChannel(channel);
+      if (attempt !== this.connectionAttempt) return;
       this.setState('connecting');
       this.refreshStatus();
       this.connectWebsocket({
@@ -820,6 +824,7 @@ export class KickPlugin extends BasePlugin {
       });
       this.log(`Connecting to Kick channel ${channel} via direct WebSocket.`);
     } catch (err) {
+      if (attempt !== this.connectionAttempt) return;
       this.resetConnectionState();
       const error = err instanceof Error ? err : new Error(err?.message || String(err));
       this.reportError(error);
@@ -1894,6 +1899,7 @@ export class KickPlugin extends BasePlugin {
   }
 
   disable() {
+    this.connectionAttempt = (this.connectionAttempt || 0) + 1;
     this.resetConnectionState();
     this.setState('idle');
     this.clearProfileCache();

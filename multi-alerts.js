@@ -2159,6 +2159,9 @@ function renderAlert(model) {
   const accentRgb = toAccentRgbTriplet(model.accent);
   const eventClass = normalizeCssToken(model.eventKey);
   article.className = `alert-card theme-${styleKey} category-${model.category} event-${eventClass}`;
+  if (['cute', 'cozy', 'cats', 'music', 'arcade', 'slate', 'paper', 'micro'].indexOf(styleKey) !== -1) {
+    article.classList.add('collection');
+  }
   article.dataset.eventKey = model.eventKey || '';
   article.dataset.alertCategory = model.category || '';
   article.style.setProperty('--alert-accent', model.accent);

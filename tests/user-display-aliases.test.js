@@ -58,6 +58,7 @@ ${extractFunction(backgroundSource, "findUserDisplayAlias")}
 ${extractFunction(backgroundSource, "applyUserDisplayAlias")}
 ${extractFunction(backgroundSource, "getOverlayDisplayMessage")}
 ${extractFunction(backgroundSource, "getOverlayDisplayPayload")}
+${extractFunction(backgroundSource, "sendDataToStreamDeckPeersP2P")}
 ${extractFunction(backgroundSource, "sendDataP2P")}
 async ${extractFunction(backgroundSource, "trySendTargetP2P")}
 async ${extractFunction(backgroundSource, "sendTargetP2P")}

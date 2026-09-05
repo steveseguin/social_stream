@@ -47,7 +47,7 @@ export class TwitchPlugin extends BasePlugin {
       ...options,
       id: 'twitch',
       name: 'Twitch',
-      description: 'Sign in to read Twitch chat. Your own channel is selected by default; choose another channel in Options.'
+      description: 'Sign in for your channel, or choose another in Options.'
     });
 
     this.clientIdInput = null;
@@ -60,6 +60,7 @@ export class TwitchPlugin extends BasePlugin {
     this.token = storage.get(TOKEN_KEY, null);
     this.identity = null;
     this.client = null;
+    this.connectionAttempt = 0;
     this.channelUserId = null;
     this.chatClient = null;
     this.chatClientOffHandlers = [];
@@ -184,6 +185,7 @@ export class TwitchPlugin extends BasePlugin {
   }
 
   disable() {
+    this.connectionAttempt = (this.connectionAttempt || 0) + 1;
     if (this.chatClientOffHandlers?.length) {
       this.chatClientOffHandlers.forEach((off) => {
         try {
@@ -268,14 +270,12 @@ export class TwitchPlugin extends BasePlugin {
   }
 
   signOut() {
+    this.disable();
     storage.remove(TOKEN_KEY);
     this.token = null;
     this.identity = null;
     this.refreshStatus();
-    if (this.state === 'connected') {
-      this.disable();
-      this.setState('idle');
-    }
+    this.setState('idle');
   }
 
   shouldAutoConnect() {
@@ -286,18 +286,25 @@ export class TwitchPlugin extends BasePlugin {
     if (!this.messenger.getSessionId()) {
       throw new Error('Start a session before connecting Twitch.');
     }
+    const attempt = this.connectionAttempt = (this.connectionAttempt || 0) + 1;
     try {
       this.debugLog('Validating Twitch token before chat connect');
-      await this.validateToken();
+      await this.validateToken(attempt);
+      if (attempt !== this.connectionAttempt) return;
       const channelName = this.resolveChannel();
       storage.set(CHANNEL_KEY, channelName);
 
+      if (this.channelName !== channelName) {
+        this.channelUserId = null;
+      }
       this.channelName = channelName;
 
-      await this.resolveChannelUserId(channelName);
+      await this.resolveChannelUserId(channelName, attempt);
+      if (attempt !== this.connectionAttempt) return;
       if (this.emotes) {
         const context = this.buildEmoteContext(channelName);
         await this.emotes.prepareChannel(context).catch(() => {});
+        if (attempt !== this.connectionAttempt) return;
       }
 
       const chatClient = this.ensureChatClient();
@@ -319,8 +326,10 @@ export class TwitchPlugin extends BasePlugin {
         clientFactory
       });
 
+      if (attempt !== this.connectionAttempt) return;
       this.client = chatClient.getClient();
     } catch (err) {
+      if (attempt !== this.connectionAttempt) return;
       this.debugLog('Twitch connectToChat failed', { error: err?.message || err });
       this.reportError(err);
     }
@@ -372,19 +381,22 @@ export class TwitchPlugin extends BasePlugin {
     return this.chatClient;
   }
 
-  async validateToken() {
+  async validateToken(attempt = this.connectionAttempt) {
     const res = await fetch('https://id.twitch.tv/oauth2/validate', {
       headers: {
         Authorization: `OAuth ${this.token.accessToken}`
       }
     });
 
+    if (attempt !== this.connectionAttempt) return;
     if (!res.ok) {
       this.signOut();
-      throw new Error('Twitch token invalid or expired. Please reconnect.');
+      this.reportError(new Error('Twitch token invalid or expired. Please reconnect.'));
+      return;
     }
 
     const data = await res.json();
+    if (attempt !== this.connectionAttempt) return;
     this.identity = {
       login: data.login,
       userId: data.user_id,
@@ -662,7 +674,7 @@ export class TwitchPlugin extends BasePlugin {
     return context;
   }
 
-  async resolveChannelUserId(channelName) {
+  async resolveChannelUserId(channelName, attempt = this.connectionAttempt) {
     const normalized = sanitizeChannel(channelName || '');
     if (!normalized) {
       return null;
@@ -676,6 +688,7 @@ export class TwitchPlugin extends BasePlugin {
     }
     try {
       const fetched = await this.fetchTwitchUserId(normalized);
+      if (attempt !== this.connectionAttempt) return null;
       if (fetched) {
         this.channelUserId = String(fetched);
         return this.channelUserId;

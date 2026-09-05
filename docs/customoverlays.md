@@ -488,7 +488,7 @@ Remember that SSN overlays are highly customizable via URL parameters. Your cust
   - `&scale=FLOAT`: Scale the entire overlay.
   - `&limit=NUMBER`: Limit the number of messages displayed.
   - `&hidesource=1`: To hide the source platform icon/name.
-  - `&showtime=MILLISECONDS`: How long to display a message before auto-hiding (if implemented).
+  - `&showtime=MILLISECONDS`: How long to display a message before auto-hiding; `0` disables timed hiding. Pre-styled chat overlay links inherit this value from the Main chat overlay settings. Moving overlays can still leave the screen naturally before this timeout.
   - `&fadeout=1`: To enable fade-out animations.
   - `&showviewercount`: Show per-source viewer totals in the dock's top-right bar. An open dock requests viewer-count collection for 70 minutes and renews that request hourly, so a direct dock URL can enable collection without permanently changing the global setting.
   - `&reserveviewercountspace`: Reserve space above the chat for that viewer count bar; off by default.

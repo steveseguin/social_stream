@@ -358,6 +358,7 @@ export class TikTokPlugin extends BasePlugin {
   }
 
   async enable() {
+    const attempt = this.connectionAttempt = (this.connectionAttempt || 0) + 1;
     const sessionId = this.messenger.getSessionId();
     if (!sessionId) {
       this.reportError(new Error('Start a session before connecting TikTok.'));
@@ -444,6 +445,7 @@ export class TikTokPlugin extends BasePlugin {
 
     try {
       await this.ensureConnectorLoaded(customSources);
+      if (attempt !== this.connectionAttempt) return;
 
       this.cleanupConnector();
 
@@ -454,8 +456,10 @@ export class TikTokPlugin extends BasePlugin {
       if (result && typeof result.then === 'function') {
         await result;
       }
+      if (attempt !== this.connectionAttempt) return;
       this.log(`Connecting to TikTok @${uniqueId}`);
     } catch (err) {
+      if (attempt !== this.connectionAttempt) return;
       this.cleanupConnector();
       const error = err instanceof Error ? err : new Error(err?.message || String(err));
       this.reportError(error);
@@ -627,6 +631,7 @@ export class TikTokPlugin extends BasePlugin {
   }
 
   disable() {
+    this.connectionAttempt = (this.connectionAttempt || 0) + 1;
     this.cleanupConnector();
     this.setState('idle');
   }

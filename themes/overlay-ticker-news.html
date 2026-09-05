@@ -146,6 +146,7 @@ img.ssn-content-image { display: inline-block; width: 3em; height: 1.3em; margin
 </div>
 <script>
     var urlParams = new URLSearchParams(window.location.search);
+    var showtime = Math.max(0, parseInt(urlParams.get("showtime"), 10) || 0);
     var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
     // Transport migration guard: only pages with full server parity may skip the legacy bridge.
     var TRANSPORT_CAPABILITIES = {
@@ -380,7 +381,7 @@ img.ssn-content-image { display: inline-block; width: 3em; height: 1.3em; margin
         function frame(ts) {
             if (startTime === null) { startTime = ts; }
             var x = startX - SPEED * ((ts - startTime) / 1000);
-            if (x + w < 0) {
+            if (x + w < 0 || (showtime > 0 && ts - startTime >= showtime)) {
                 if (item.parentNode) { item.parentNode.removeChild(item); }
                 return;
             }

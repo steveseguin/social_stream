@@ -1,5 +1,7 @@
 # Featured Message Overlay Styles
 
+See the [matching overlay collections](../collections.md) for eight coordinated chat, featured and multi-alert styles.
+
 These are modern, stylized overlays for displaying featured messages from Social Stream Ninja. They use an iframe connection to VDO.Ninja to receive messages, just like the main featured.html overlay.
 
 ## Available Overlays

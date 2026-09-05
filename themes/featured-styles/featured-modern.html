@@ -460,6 +460,7 @@
             }
         }
     </style>
+<link rel="stylesheet" href="../collections.css">
 </head>
 <body>
     <div id="container">
@@ -478,6 +479,9 @@
         
         // Apply selected style
         document.body.className = `style-${style}`;
+        if (['cute', 'cozy', 'cats', 'music', 'arcade', 'slate', 'paper', 'micro'].indexOf(style) !== -1) {
+            document.body.classList.add('collection', 'collection-featured');
+        }
 
         // State
         let messageTimeout = null;
@@ -712,9 +716,11 @@
 
                 // Auto-hide after showtime
                 if (messageTimeout) clearTimeout(messageTimeout);
-                messageTimeout = setTimeout(() => {
-                    hideMessage();
-                }, showtime);
+                if (showtime > 0) {
+                    messageTimeout = setTimeout(() => {
+                        hideMessage();
+                    }, showtime);
+                }
             });
         }
 

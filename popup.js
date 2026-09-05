@@ -3774,6 +3774,17 @@ function applyChatOverlayTemplatePreset(presetValue, options) {
   const dockElement = document.getElementById("dock");
   let params = options.preferDockParams ? getGeneratedLinkParams(dockElement, templateElement) : getGeneratedLinkParams(templateElement, dockElement);
   params = mergeSupportedServerParamsIntoQuery(params, "chatoverlaytemplate", dockElement, templatePath);
+  // Auto-hide is managed with the main chat settings, including disabling it.
+  const templateParams = new URLSearchParams(params);
+  // The selected collection owns its style; do not carry the previous preset forward.
+  if (templatePath.split("?")[0] === "themes/compact-clean.html") {
+    templateParams.delete("style");
+    const selectedStyle = new URL(templatePath, baseURL).searchParams.get("style");
+    if (selectedStyle) templateParams.set("style", selectedStyle);
+  }
+  const dockParams = new URLSearchParams(getGeneratedLinkParams(dockElement));
+  templateParams.set("showtime", dockParams.get("showtime") || "0");
+  params = templateParams.toString();
   const templateUrl = buildGeneratedUrl(templatePath || DEFAULT_CHAT_OVERLAY_TEMPLATE, params);
 
   setGeneratedLink(templateElement, templateUrl);
@@ -7505,9 +7516,10 @@ function handleNumberSetting(ele, sync) {
             checkbox = document.querySelector(`input[${relatedAttr}*='${settingValue}']`);
         }
 
-        // The scoreboard user limit is always active and has no enable checkbox.
-        const isScoreboardUserLimit = targetId === 'scoreboard' && settingValue === 'maxusers';
-        if (isScoreboardUserLimit || (checkbox && checkbox.checked)) {
+        // These standalone controls have no enable checkbox.
+        const isStandaloneNumber = (targetId === 'scoreboard' && settingValue === 'maxusers') ||
+            (targetId === 'leaderboard' && (settingValue === 'updateinterval' || settingValue === 'rotateinterval'));
+        if (isStandaloneNumber || (checkbox && checkbox.checked)) {
             const targetElement = document.getElementById(targetId);
             const effectiveKey = normalizeParamKey(settingValue);
             targetElement.raw = removeQueryParamWithValue(targetElement.raw, effectiveKey);

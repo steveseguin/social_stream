@@ -81,7 +81,7 @@ export class YoutubePlugin extends BasePlugin {
       ...options,
       id: 'youtube',
       name: 'YouTube',
-      description: 'Sign in to find your live broadcast. To choose a specific broadcast, enter its Video ID or Live Chat ID in Options. Polling is the default; streaming is optional.'
+      description: 'Sign in to find your live broadcast, or choose one in Options.'
     });
 
     this.clientIdInput = null;

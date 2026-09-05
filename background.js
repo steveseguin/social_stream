@@ -1717,9 +1717,8 @@ function loadSettings(item, resave = false) {
 
 	if (incomingStreamId) {
 		if (streamID != incomingStreamId) {
-			streamID = incomingStreamId;
-			streamID = validateRoomId(streamID);
-			if (!streamID) {
+			const validatedStreamId = validateRoomId(incomingStreamId);
+			if (!validatedStreamId) {
 				try {
 					chrome.notifications.create({
 						type: "basic",
@@ -1733,6 +1732,7 @@ function loadSettings(item, resave = false) {
 					throw new Error("Invalid session ID");
 				}
 			}
+			streamID = validatedStreamId;
 			reloadNeeded = true;
 			persistSession({ streamId: streamID });
 		}
@@ -9211,6 +9211,13 @@ class StreamerbotWebsocketClient {
 	}
 
 	_connect() {
+		if (!this.enabled || (this.socket && (this.socket.readyState === WebSocket.CONNECTING || this.socket.readyState === WebSocket.OPEN))) {
+			return;
+		}
+		if (this.reconnectTimeout) {
+			clearTimeout(this.reconnectTimeout);
+			this.reconnectTimeout = null;
+		}
 		try {
 			this.log(`Connecting to ${this.url}...`);
 			this.socket = new WebSocket(this.url);
@@ -9348,7 +9355,7 @@ class StreamerbotWebsocketClient {
 	}
 
 	_scheduleReconnect() {
-		if (!this.enabled || !this.autoReconnect) return;
+		if (!this.enabled || !this.autoReconnect || this.reconnectTimeout) return;
 
 		this.reconnectAttempts++;
 
@@ -9371,7 +9378,7 @@ class StreamerbotWebsocketClient {
 		if (!this.isAuthenticated || this.messageQueue.length === 0) return;
 
 		this.log(`Processing queued messages (${this.messageQueue.length})`);
-		while (this.messageQueue.length > 0) {
+		while (this.messageQueue.length > 0 && this.isAuthenticated && this.socket && this.socket.readyState === WebSocket.OPEN) {
 			const message = this.messageQueue.shift();
 			this._sendMessage(message);
 		}
@@ -18675,256 +18682,7 @@ async function applyBotActions(data, tab = false) {
 			//}
 		}
 
-		if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy && data.chatmessage && data.chatmessage.indexOf("!giphy") != -1 && !data.contentimg) {
-			let giphySearchTerm = data.chatmessage;
-			giphySearchTerm = giphySearchTerm.replaceAll("!giphy", "").trim();
-			if (giphySearchTerm) {
-				let giphyOrder = 0;
-				if (settings.randomgif) {
-					giphyOrder = parseInt(Math.random() * 15);
-				}
-				const giphyUrl = await fetch("https://api.giphy.com/v1/gifs/search?q=" + encodeURIComponent(giphySearchTerm) + "&api_key=" + settings.giphyKey.textsetting + "&limit=1&offset=" + giphyOrder)
-					.then(response => response.json())
-					.then(response => {
-						try {
-							return response.data[0].images.downsized_large.url;
-						} catch (e) {
-							console.error(e);
-							return false;
-						}
-					});
-				if (giphyUrl) {
-					data.contentimg = giphyUrl;
-					if (settings.hidegiphytrigger) {
-						data.chatmessage = "";
-					}
-				} else if (!data.hasDonation && !data.contentimg) {
-					return false;
-				}
-			}
-		} else if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy2 && data.chatmessage && data.chatmessage.indexOf("#") != -1 && !data.contentimg) {
-			const messageText = data.textContent || data.chatmessage;
-			const xx = messageText.split(" ");
-			for (let tagIndex = 0; tagIndex < xx.length; tagIndex++) {
-				let word = xx[tagIndex];
-				if (!word.startsWith("#")) {
-					continue;
-				}
-				word = word.replaceAll("#", " ").trim();
-				if (word) {
-					let order = 0;
-					if (tagIndex + 1 < xx.length) {
-						order = parseInt(xx[tagIndex + 1]) || 0;
-					}
-
-					if (settings.hidegiphytrigger) {
-						if (messageText.includes("#" + word + " " + order)) {
-							data.chatmessage = data.chatmessage.replace("#" + word + " " + order, "");
-						} else if (messageText.includes("#" + word + " ")) {
-							data.chatmessage = data.chatmessage.replace("#" + word + " ", "");
-						} else {
-							data.chatmessage = data.chatmessage.replace("#" + word, "");
-						}
-						data.chatmessage = data.chatmessage.trim();
-					}
-
-					if (settings.randomgif) {
-						order = parseInt(Math.random() * 15);
-					}
-					const gurl = await fetch("https://api.giphy.com/v1/gifs/search?q=" + encodeURIComponent(word) + "&api_key=" + settings.giphyKey.textsetting + "&limit=1&offset=" + order)
-						.then(response => response.json())
-						.then(response => {
-							try {
-								return response.data[0].images.downsized_large.url;
-							} catch (e) {
-								return false;
-							}
-						});
-
-					if (gurl) {
-						data.contentimg = gurl;
-						break;
-					}
-
-					if (!data.contentimg && !data.chatmessage && !data.hasDonation) {
-						return false;
-					}
-				}
-			}
-			// curl "https://tenor.googleapis.com/v2/search?q=excited&key=&client_key=my_test_app&limit=8"
-		} else if (settings.tenorKey && settings.tenorKey.textsetting && settings.tenor && data.chatmessage && data.chatmessage.indexOf("!tenor") != -1 && !data.contentimg) {
-			let searchGif = data.chatmessage;
-			searchGif = searchGif.replaceAll("!tenor", "").trim();
-			if (searchGif) {
-				let order = 1;
-				if (settings.randomgif) {
-					order = parseInt(Math.random() * 15) + 1;
-				}
-				const gurl = await fetch("https://tenor.googleapis.com/v2/search?contentfilter=high&media_filter=tinygif,tinywebp_transparent&q=" + encodeURIComponent(searchGif) + "&key=" + settings.tenorKey.textsetting + "&limit=" + order)
-					.then(response => response.json())
-					.then(response => {
-						try {
-							if (response.results.length < order - 1) {
-								order = response.results.length;
-							}
-							if (response.results[order - 1].media_formats.tinywebp_transparent) {
-								return response.results[order - 1].media_formats.tinywebp_transparent.url;
-							} else if (response.results[order - 1].media_formats.tinygif) {
-								return response.results[order - 1].media_formats.tinygif.url;
-							} else {
-								return false;
-							}
-						} catch (e) {
-							console.error(e);
-							return false;
-						}
-					});
-				if (gurl) {
-					data.contentimg = gurl;
-					if (settings.hidegiphytrigger) {
-						data.chatmessage = "";
-					}
-				} else if (!data.hasDonation && !data.contentimg) {
-					return false;
-				}
-			}
-		} else if (settings.tenorKey && settings.tenorKey.textsetting && settings.giphy2 && data.chatmessage && data.chatmessage.indexOf("##") != -1 && !data.contentimg) {
-			const xx = data.chatmessage.split(" ");
-			for (let tagIndex = 0; tagIndex < xx.length; tagIndex++) {
-				let word = xx[tagIndex];
-				if (!word.startsWith("##")) {
-					continue;
-				}
-				word = word.trim();
-				search_word = word.replace(/[-_]/g, " ");
-				search_word = search_word.replace(/[^\w\s]/g, "");
-
-				if (word) {
-					let order = 1; // Start from 1
-					if (tagIndex + 1 < xx.length) {
-						order = parseInt(xx[tagIndex + 1]) || 1;
-					}
-
-					if (settings.hidegiphytrigger) {
-						let re = new RegExp(word + " " + order, "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						re = new RegExp(word + " ", "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						re = new RegExp(word, "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						data.chatmessage = data.chatmessage.trim();
-					}
-					let skip = false;
-					if (tagIndex + 1 < xx.length) {
-						if (xx[tagIndex + 1] == order) {
-							skip = true;
-						}
-					}
-					if (!skip && settings.randomgif) {
-						order = parseInt(Math.random() * 8) + 1; // Adjust for 1-based indexing and 8 stickers randomization, because less actual amount
-					}
-					if (order > 40) {
-						order = 40;
-					}
-					const gurl = await fetch("https://tenor.googleapis.com/v2/search?contentfilter=high&searchfilter=sticker&media_filter=tinygif,tinywebp_transparent&q=" + encodeURIComponent(search_word) + "&key=" + settings.tenorKey.textsetting + "&limit=" + order)
-						.then(response => response.json())
-						.then(response => {
-							try {
-								if (response.results.length < order - 1) {
-									order = response.results.length;
-								}
-								if (response.results[order - 1].media_formats.tinywebp_transparent) {
-									return response.results[order - 1].media_formats.tinywebp_transparent.url;
-								} else if (response.results[order - 1].media_formats.tinygif) {
-									return response.results[order - 1].media_formats.tinygif.url;
-								} else {
-									return false;
-								}
-							} catch (e) {
-								console.error(e);
-								return false;
-							}
-						});
-
-					if (gurl) {
-						data.contentimg = gurl;
-						break;
-					}
-
-					if (!data.contentimg && !data.chatmessage && !data.hasDonation) {
-						return false;
-					}
-				}
-			}
-		} else if (settings.tenorKey && settings.tenorKey.textsetting && settings.giphy2 && data.chatmessage && data.chatmessage.indexOf("#") != -1 && !data.contentimg) {
-			const xx = data.chatmessage.split(" ");
-			for (let tagIndex = 0; tagIndex < xx.length; tagIndex++) {
-				let word = xx[tagIndex];
-				if (!word.startsWith("#")) {
-					continue;
-				}
-				word = word.trim();
-				search_word = word.replace(/[-_]/g, " ");
-				search_word = search_word.replace(/[^\w\s]/g, "");
-
-				if (word) {
-					let order = 1; // Start from 1
-					if (tagIndex + 1 < xx.length) {
-						order = parseInt(xx[tagIndex + 1]) || 1;
-					}
-
-					if (settings.hidegiphytrigger) {
-						let re = new RegExp(word + " " + order, "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						re = new RegExp(word + " ", "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						re = new RegExp(word, "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						data.chatmessage = data.chatmessage.trim();
-					}
-					let skip = false;
-					if (tagIndex + 1 < xx.length) {
-						if (xx[tagIndex + 1] == order) {
-							skip = true;
-						}
-					}
-					if (!skip && settings.randomgif) {
-						order = parseInt(Math.random() * 15) + 1; // Adjust for 1-based indexing
-					}
-					if (order > 40) {
-						order = 40;
-					}
-					const gurl = await fetch("https://tenor.googleapis.com/v2/search?contentfilter=high&media_filter=tinygif,tinywebp_transparent&q=" + encodeURIComponent(search_word) + "&key=" + settings.tenorKey.textsetting + "&limit=" + order)
-						.then(response => response.json())
-						.then(response => {
-							try {
-								if (response.results.length < order - 1) {
-									order = response.results.length;
-								}
-								if (response.results[order - 1].media_formats.tinywebp_transparent) {
-									return response.results[order - 1].media_formats.tinywebp_transparent.url;
-								} else if (response.results[order - 1].media_formats.tinygif) {
-									return response.results[order - 1].media_formats.tinygif.url;
-								} else {
-									return false;
-								}
-							} catch (e) {
-								console.error(e);
-								return false;
-							}
-						});
-
-					if (gurl) {
-						data.contentimg = gurl;
-						break;
-					}
-
-					if (!data.contentimg && !data.chatmessage && !data.hasDonation) {
-						return false;
-					}
-				}
-			}
-		}
+		await applyGiphyToMessage(data, settings);
 	} catch (e) {
 		console.error(e);
 	}
@@ -20395,3 +20153,44 @@ window.addEventListener("beforeunload", async function () {
 window.addEventListener("unload", async function () {
 	document.title = "Close me - Social Stream Ninja";
 });
+
+// Tenor search was retired June 2026. Saved !tenor toggles remain GIPHY aliases;
+// API keys are provider-specific and must never be reused across providers.
+async function applyGiphyToMessage(data, gifSettings) {
+    const key = gifSettings.giphyKey && gifSettings.giphyKey.textsetting;
+    if (!key || !data.chatmessage || data.contentimg) return;
+    const message = data.textContent || data.chatmessage;
+    let query = "", endpoint = "gifs", trigger = "", offset = 0, command = false;
+    const commandMatch = message.match(/(?:^|\s)(!(giphy|tenor))\s+(.+)/i);
+    if (commandMatch && ((commandMatch[2].toLowerCase() === "giphy" && gifSettings.giphy) ||
+        (commandMatch[2].toLowerCase() === "tenor" && gifSettings.tenor))) {
+        query = commandMatch[3].trim();
+        command = true;
+    } else if (gifSettings.giphy2) {
+        const tag = message.match(/(?:^|\s)(#{1,2}[^\s#]+)(?:\s+(\d+)(?=\s|$))?/);
+        if (tag) {
+            endpoint = tag[1].indexOf("##") === 0 ? "stickers" : "gifs";
+            query = tag[1].replace(/^#+/, "").replace(/[-_]/g, " ").trim();
+            trigger = tag[1] + (tag[2] !== undefined ? " " + tag[2] : "");
+            offset = Math.min(4999, parseInt(tag[2], 10) || 0);
+        }
+    }
+    if (!query) return;
+    if (gifSettings.randomgif) offset = Math.floor(Math.random() * 10);
+    try {
+        const response = await fetch("https://api.giphy.com/v1/" + endpoint + "/search?q=" +
+            encodeURIComponent(query) + "&api_key=" + encodeURIComponent(key) + "&limit=1&rating=g&offset=" + offset);
+        if (!response.ok) return;
+        const result = await response.json();
+        const item = result && result.data && result.data[0];
+        const images = item && item.images;
+        const image = images && (images.downsized_large || images.fixed_height || images.original);
+        if (!image || !/^https:\/\//i.test(image.url || "")) return;
+        data.contentimg = image.url;
+        if (gifSettings.hidegiphytrigger) {
+            data.chatmessage = command ? "" : data.chatmessage.replace(trigger, "").trim();
+        }
+    } catch (e) {
+        // Network failures and rate limits must not discard the original chat message.
+    }
+}

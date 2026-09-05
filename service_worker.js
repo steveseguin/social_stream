@@ -379,6 +379,7 @@ async function ensureBackgroundPageIsOpen(load = true, force = false) {
   const isOpen = await checkBackgroundPageIsOpen();
   if (isOpen) {
     log("Background page is already open");
+    await processMessageQueue();
     return;
   }
 
