@@ -3758,8 +3758,13 @@
 					};
 					  
 					document.addEventListener('DOMContentLoaded', () => {
-						let ninjafy = window.ninjafy || window.electronApi;
-						ninjafy.onCloseFileStream(writerCloseHandler);
+						let fileStreamBridge = window.ninjafy;
+						if (!fileStreamBridge || typeof fileStreamBridge.onCloseFileStream !== 'function') {
+							fileStreamBridge = window.electronApi;
+						}
+						if (fileStreamBridge && typeof fileStreamBridge.onCloseFileStream === 'function') {
+							fileStreamBridge.onCloseFileStream(writerCloseHandler);
+						}
 					});
 				}
 			} catch (e) {

@@ -43,6 +43,7 @@
 			config[mode].position = by(mode + '-position').value;
 		});
 		config.wishlist.url = by('wishlist-url').value;
+		config.ninja.reliable = by('ninja-delivery').value === 'reliable';
 		config.ninja.username = by('ninja-username').value;
 		config.throne.username = by('throne-username').value;
 		config.ebay.display = by('ebay-display').value;
@@ -117,6 +118,10 @@
 		});
 		by('wishlist-url').value = reply.config.wishlist.url;
 		by('ninja-username').value = reply.config.ninja.username;
+		by('ninja-delivery').value = reply.config.ninja.reliable ? 'reliable' : 'live';
+		showNinjaDelivery();
+		by('ninja-webhook').value = reply.ninjaReceiver && reply.ninjaReceiver.webhook || '';
+		by('ninja-secret').placeholder = by('ninja-webhook').value ? 'Saved securely on the SSN API' : 'Generate in the NinjaBacker dashboard';
 		by('throne-username').value = reply.config.throne.username;
 		by('ebay-display').value = reply.config.ebay.display;
 		by('ebay-seconds').value = reply.config.ebay.seconds;
@@ -177,8 +182,9 @@
 		}
 	}
 	async function save() {
-		var response = await request('save', { config: values(), token: by('ninja-token').value.trim(), clearToken: by('ninja-clear-token').checked });
+		var response = await request('save', { config: values(), token: by('ninja-token').value.trim(), clearToken: by('ninja-clear-token').checked, ninjaSecret: by('ninja-secret').value.trim() });
 		by('ninja-token').value = '';
+		by('ninja-secret').value = '';
 		by('ninja-clear-token').checked = false;
 		return response;
 	}
@@ -268,6 +274,9 @@
 		});
 	};
 	by('mode').addEventListener('change', showMode);
+	function showNinjaDelivery() { var reliable = by('ninja-delivery').value === 'reliable'; by('ninja-reliable-panel').hidden = !reliable; by('ninja-live-help').hidden = reliable; }
+	by('ninja-delivery').addEventListener('change', showNinjaDelivery);
+	by('ninja-webhook').addEventListener('click', function () { this.select(); });
 	by('ninja-username').addEventListener('input', links);
 	by('copy').onclick = function () {
 		var url = by('overlay').href;

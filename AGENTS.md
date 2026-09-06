@@ -165,3 +165,8 @@ Sample payloads based on the fake test data in [background.js](./background.js):
 - VERY IMPORTANT: Do it serially in this exact order only: `git add -A`, `git commit` (use `--allow-empty` if needed), `git pull --rebase origin beta`, `git push origin beta`.
 - VERY IMPORTANT: Do not parallelize any git commands in that flow.
 - VERY IMPORTANT: Do not add extra git inspection commands unless Steve explicitly asks for them.
+
+## Menu Regression Checks
+
+- Before starting the Git Push Contract, run `node tests/popup-search.test.js` and `node tests/popup-search-electron.test.cjs`. Do not proceed with a push if either fails.
+- The Electron suite requires the sibling `ssapp` checkout and local Playwright; set `SSAPP_REPO` if the app checkout is elsewhere. It uses an isolated profile and local relay, never live source channels.
