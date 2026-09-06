@@ -1,27 +1,27 @@
 #!/usr/bin/env node
 
-'use strict';
+"use strict";
 
-const assert = require('assert');
-const fs = require('fs');
-const http = require('http');
-const net = require('net');
-const os = require('os');
-const path = require('path');
-const { spawn } = require('child_process');
+const assert = require("assert");
+const fs = require("fs");
+const http = require("http");
+const net = require("net");
+const os = require("os");
+const path = require("path");
+const { _electron } = require("playwright");
 
 // Run against the actual sibling SSApp checkout, with a fresh isolated profile.
-const repoRoot = process.env.SSAPP_REPO || path.resolve(__dirname, '..', '..', 'ssapp');
-const electronPath = require(path.join(repoRoot, 'node_modules', 'electron'));
-const socialStreamRoot = path.resolve(__dirname, '..');
-const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ssapp-popup-search-filter-'));
+const repoRoot = process.env.SSAPP_REPO || path.resolve(__dirname, "..", "..", "ssapp");
+const electronPath = require(path.join(repoRoot, "node_modules", "electron"));
+const socialStreamRoot = path.resolve(__dirname, "..");
+const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), "ssapp-popup-search-filter-"));
 const token = `popup-search-filter-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 function getFreePort() {
 	return new Promise((resolve, reject) => {
 		const server = net.createServer();
-		server.once('error', reject);
-		server.listen(0, '127.0.0.1', () => {
+		server.once("error", reject);
+		server.listen(0, "127.0.0.1", () => {
 			const port = server.address().port;
 			server.close(() => resolve(port));
 		});
@@ -31,28 +31,39 @@ function getFreePort() {
 function requestJson(port, pathname, body) {
 	return new Promise((resolve, reject) => {
 		const payload = body === undefined ? null : JSON.stringify(body);
-		const request = http.request({
-			host: '127.0.0.1',
-			port,
-			path: `${pathname}${pathname.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}`,
-			method: payload === null ? 'GET' : 'POST',
-			headers: payload === null ? {} : {
-				'Content-Type': 'application/json',
-				'Content-Length': Buffer.byteLength(payload),
+		const request = http.request(
+			{
+				host: "127.0.0.1",
+				port,
+				path: `${pathname}${pathname.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}`,
+				method: payload === null ? "GET" : "POST",
+				headers:
+					payload === null
+						? {}
+						: {
+								"Content-Type": "application/json",
+								"Content-Length": Buffer.byteLength(payload)
+							}
 			},
-		}, response => {
-			let text = '';
-			response.setEncoding('utf8');
-			response.on('data', chunk => { text += chunk; });
-			response.on('end', () => {
-				try {
-					const parsed = text ? JSON.parse(text) : {};
-					if (response.statusCode >= 200 && response.statusCode < 300) resolve(parsed);
-					else reject(new Error(`HTTP ${response.statusCode}: ${text}`));
-				} catch (error) { reject(error); }
-			});
-		});
-		request.on('error', reject);
+			response => {
+				let text = "";
+				response.setEncoding("utf8");
+				response.on("data", chunk => {
+					text += chunk;
+				});
+				response.on("end", () => {
+					try {
+						const parsed = text ? JSON.parse(text) : {};
+						if (response.statusCode >= 200 && response.statusCode < 300) resolve(parsed);
+						else reject(new Error(`HTTP ${response.statusCode}: ${text}`));
+					} catch (error) {
+						reject(error);
+					}
+				});
+			}
+		);
+		request.on("error", reject);
+		request.setTimeout(90000, () => request.destroy(new Error("SSApp control request timed out")));
 		if (payload !== null) request.write(payload);
 		request.end();
 	});
@@ -63,39 +74,50 @@ async function waitForControl(port, child, timeoutMs = 60000) {
 	while (Date.now() - started < timeoutMs) {
 		if (child.exitCode !== null) throw new Error(`SSApp exited early with code ${child.exitCode}.`);
 		try {
-			const ping = await requestJson(port, '/ping');
+			const ping = await requestJson(port, "/ping");
 			if (ping && ping.ok) return;
-		} catch (_) { }
+		} catch (_) {}
 		await new Promise(resolve => setTimeout(resolve, 250));
 	}
-	throw new Error('Timed out waiting for SSApp remote control.');
+	throw new Error("Timed out waiting for SSApp remote control.");
 }
 
 async function stopApp(child) {
 	if (!child || child.exitCode !== null) return;
 	child.kill();
-	await Promise.race([
-		new Promise(resolve => child.once('exit', resolve)),
-		new Promise(resolve => setTimeout(resolve, 5000)),
-	]);
+	await Promise.race([new Promise(resolve => child.once("exit", resolve)), new Promise(resolve => setTimeout(resolve, 5000))]);
 }
 
-
 async function run() {
- const port=await getFreePort();
- const child=spawn(electronPath,['.','--multiinstance','--preferlocalassets',`--filesource=${socialStreamRoot}`,'--remote-control'],{cwd:repoRoot,env:{...process.env,SSAPP_USER_DATA_DIR:profileDir,SSAPP_REMOTE_CONTROL:'1',SSAPP_REMOTE_CONTROL_PORT:String(port),SSAPP_REMOTE_CONTROL_TOKEN:token,SSAPP_DIAGNOSTICS_SAFE_GPU:'1',SSAPP_DEBUG_LOGS:'0'},stdio:['ignore','ignore','ignore'],windowsHide:true});
- try {
- await waitForControl(port,child);
- let mainWindow;
- for(let i=0;i<100;i++){mainWindow=((await requestJson(port,'/windows')).windows||[]).find(w=>String(w.url).includes('index.html'));if(mainWindow)break;await new Promise(r=>setTimeout(r,200));}
- const result=await requestJson(port,'/exec',{windowId:mainWindow.id,code:`(async()=>{
- await ensurePopupPanelLoaded(true);
+	const port = await getFreePort();
+	let electronApp;
+	const pageErrors = [];
+	const localPort = await getFreePort();
+	const launch = async () => {
+		electronApp = await _electron.launch({ executablePath: electronPath, args: [".", "--multiinstance", "--preferlocalassets", `--filesource=${socialStreamRoot}`, "--remote-control", `--ssapp-local-server-port=${localPort}`], cwd: repoRoot, env: { ...process.env, SSAPP_USER_DATA_DIR: profileDir, SSAPP_REMOTE_CONTROL: "1", SSAPP_REMOTE_CONTROL_PORT: String(port), SSAPP_REMOTE_CONTROL_TOKEN: token, SSAPP_DIAGNOSTICS_SAFE_GPU: "1", SSAPP_DEBUG_LOGS: "0" }, timeout: 60000 });
+		for (const page of electronApp.windows()) {
+			page.on("pageerror", error => pageErrors.push(error.message));
+		}
+		return electronApp.process();
+	};
+	let child = await launch();
+	try {
+		await waitForControl(port, child);
+		let mainWindow;
+		for (let i = 0; i < 100; i++) {
+			mainWindow = ((await requestJson(port, "/windows")).windows || []).find(w => String(w.url).includes("index.html"));
+			if (mainWindow) break;
+			await new Promise(r => setTimeout(r, 200));
+		}
+		const result = await requestJson(port, "/exec", {
+			windowId: mainWindow.id,
+			code: `(async()=>{
+ await ensurePopupPanelLoaded();
  const frame=document.getElementById('frame1');
  for(let i=0;i<100;i++){if(frame.contentDocument?.getElementById('searchInput') && frame.contentDocument?.getElementById('docklink')?.href)break;await new Promise(r=>setTimeout(r,200));}
  await new Promise(r=>setTimeout(r,1200));
  const d=frame.contentDocument,w=frame.contentWindow;
- const input=d.getElementById('searchInput'),toolbar=d.getElementById('popupSearchToolbar');
- const rect=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom};};
+ const input=d.getElementById('searchInput');
 
  const checks=[];
  function check(value,message){if(!value)throw new Error(message);checks.push(message);}
@@ -109,6 +131,7 @@ async function run() {
  const filter=()=>d.getElementById('activeIcon').click();
  const escape=()=>input.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
  async function search(q){input.value=q;input.dispatchEvent(new w.Event('input',{bubbles:true}));await new Promise(r=>setTimeout(r,350));return [...d.querySelectorAll('.popup-search-result')];}
+ check(sourcemode.startsWith('file://'),'Local source path normalized to a file URL');
  check(!bttv.checked,'Fresh profile starts with BTTV disabled');
  check(visible(input),'Search visible initially');
  for(let cycle=0;cycle<3;cycle++){
@@ -153,12 +176,169 @@ async function run() {
  check(values()===originalValues,'Settings unchanged after repeated search and filter interactions');
  check(inlineDisplays.every(([e,display])=>e.style.display===display),'Original inline visibility survives filter cycles');
  check(!d.querySelector('.popup-enabled-filter-hidden'),'No filter hiding remains after disabling filter');
- const output={passed:checks.length,checks};
+
+ function change(selector,value) {
+  const e=d.querySelector(selector);check(!!e,'Control exists: '+selector);
+  if(e.type==='checkbox'){if(e.checked!==value)e.click();}
+  else {e.value=value;e.dispatchEvent(new w.Event('change',{bubbles:true}));}
+ }
+ change('[data-setting="excludeAlertsDock"]',true);
+ change('[data-param1="transparent"]',true);
+ change('[data-textparam1="viewerbarbg"]','#123456');
+ await new Promise(r=>setTimeout(r,2500));
+ const dock=new URL(d.getElementById('docklink').href),featured=new URL(d.getElementById('overlaylink').href);
+ check(dock.pathname.endsWith('/dock.html') && featured.pathname.endsWith('/featured.html'),'Generated links target correct overlay pages');
+ check(dock.searchParams.get('session') && dock.searchParams.get('session')===featured.searchParams.get('session'),'Generated links share a nonempty session');
+ check(dock.searchParams.has('transparent'),'Checkbox updates generated dock URL');
+ check(dock.searchParams.get('viewerbarbg')==='#123456','Text option is encoded correctly in dock URL');
+ check(!featured.searchParams.has('viewerbarbg') && !featured.searchParams.has('transparent'),'Dock options do not leak into featured URL');
+ const output={passed:checks.length,checks,links:{dock:dock.href,featured:featured.href}};
+
 
  return output;
- })()`});
- assert.ok(result.ok && result.result && result.result.passed >= 47, 'Electron menu checks did not complete');
- console.log(JSON.stringify(result.result,null,2));
- }finally{await stopApp(child);}
+ })()`
+		});
+		assert.ok(result.ok && result.result && result.result.passed >= 47, "Electron menu checks did not complete");
+
+		console.log("Initial menu checks passed: " + result.result.passed);
+
+		await electronApp.close();
+		child = await launch();
+		await waitForControl(port, child);
+		mainWindow = null;
+		for (let i = 0; i < 100; i++) {
+			mainWindow = ((await requestJson(port, "/windows")).windows || []).find(w => String(w.url).includes("index.html"));
+			if (mainWindow) break;
+			await new Promise(r => setTimeout(r, 200));
+		}
+		const restarted = await requestJson(port, "/exec", {
+			windowId: mainWindow.id,
+			code: `(async()=>{
+ await ensurePopupPanelLoaded();
+ const frame=document.getElementById('frame1');
+ for(let i=0;i<100;i++){if(frame.contentDocument?.getElementById('docklink')?.href)break;await new Promise(r=>setTimeout(r,200));}
+ await new Promise(r=>setTimeout(r,2000));
+ const d=frame.contentDocument;
+ return {global:d.querySelector('[data-setting="excludeAlertsDock"]').checked,transparent:d.querySelector('[data-param1="transparent"]').checked,text:d.querySelector('[data-textparam1="viewerbarbg"]').value,dock:d.getElementById('docklink').href,featured:d.getElementById('overlaylink').href};
+ })()`
+		});
+		assert.strictEqual(restarted.result.global, true, "Global setting survives restart");
+		assert.strictEqual(restarted.result.transparent, true, "Overlay checkbox survives restart");
+		assert.strictEqual(restarted.result.text, "#123456", "Text option survives restart");
+		assert.strictEqual(restarted.result.dock, result.result.links.dock, "Dock session and parameters survive restart");
+		assert.strictEqual(restarted.result.featured, result.result.links.featured, "Featured session and parameters survive restart");
+		console.log("Restart persistence checks passed: 5");
+
+		const execMenu = async code => {
+			const response = await requestJson(port, "/exec", { windowId: mainWindow.id, code });
+			assert.ok(response.ok);
+			return response.result;
+		};
+		for (const theme of ["light", "dark"]) {
+			await electronApp
+				.windows()
+				.find(page => page.url().includes("index.html"))
+				.emulateMedia({ colorScheme: theme });
+			for (const width of [520, 1280]) {
+				await electronApp.evaluate(({ BrowserWindow }, width) => {
+					const win = BrowserWindow.getAllWindows().find(w => w.webContents.getURL().includes("index.html"));
+					win.setSize(width, 850);
+				}, width);
+				const layout = await execMenu(`(async()=>{
+    await new Promise(r=>setTimeout(r,350));
+    const f=document.getElementById('frame1'),d=f.contentDocument,w=f.contentWindow;
+    const input=d.getElementById('searchInput');input.scrollIntoView();
+    const scroll=d.scrollingElement;scroll.scrollTop=scroll.scrollHeight;
+    await new Promise(r=>setTimeout(r,350));
+    const r=input.getBoundingClientRect();
+    return {visible:r.width>100 && r.top>=0 && r.bottom<=w.innerHeight && r.right<=w.innerWidth,dark:w.matchMedia('(prefers-color-scheme: dark)').matches};
+   })()`);
+				assert.ok(layout.visible, "Search stays on screen after scrolling at " + width + "px in " + theme);
+				assert.strictEqual(layout.dark, theme === "dark", "Electron theme reaches menu");
+			}
+		}
+		console.log("Theme/size/scroll checks passed: 8");
+		const modes = await execMenu(`(async()=>{
+  const f=document.getElementById('frame1'),d=f.contentDocument,w=f.contentWindow,input=d.getElementById('searchInput');
+  const escape=()=>input.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+  async function search(){input.value='Better Twitch TV';input.dispatchEvent(new w.Event('input',{bubbles:true}));await new Promise(r=>setTimeout(r,350));return [...d.querySelectorAll('.popup-search-result')];}
+  for(const beginner of [true,false,true,false]){
+   escape();w.applyPopupBeginnerMode(beginner);
+   d.getElementById('activeIcon').click();
+   const rows=await search();
+   if(rows.length!==1)throw new Error('Common emote setting missing in mode '+beginner);
+   rows[0].click();
+   const row=d.querySelector('[data-setting="bttv"]').closest('.options_group > div');
+   if(!row.getBoundingClientRect().height)throw new Error('Mode/filter result stays hidden');
+   if(d.body.classList.contains('beginner-mode')!==beginner)throw new Error('Mode changed during search');
+  }
+  return true;
+ })()`);
+		assert.strictEqual(modes, true);
+		console.log("Beginner/full rendering with search/filter checks passed: 4 cycles");
+		// Start transport testing without the preceding CDP media emulation.
+		await electronApp.close();
+		child = await launch();
+		await waitForControl(port, child);
+		mainWindow = null;
+		for (let i = 0; i < 100; i++) {
+			mainWindow = ((await requestJson(port, "/windows")).windows || []).find(w => String(w.url).includes("index.html"));
+			if (mainWindow) break;
+			await new Promise(r => setTimeout(r, 200));
+		}
+
+		await electronApp.evaluate(async ({ Menu }) => {
+			function find(menu) {
+				for (const item of menu.items) {
+					if (item.label.startsWith("Enable Local Server")) return item;
+					if (item.submenu) {
+						const found = find(item.submenu);
+						if (found) return found;
+					}
+				}
+			}
+			const item = find(Menu.getApplicationMenu());
+			if (!item) throw new Error("Local server menu item missing");
+			await item.click();
+		});
+		const delivery = await execMenu(`(async()=>{
+  await new Promise(r=>setTimeout(r,2000));
+  await ensurePopupPanelLoaded();
+  const menu=document.getElementById('frame1');
+  for(let i=0;i<100;i++){if(menu.contentDocument?.getElementById('docklink')?.href)break;await new Promise(r=>setTimeout(r,200));}
+  const d=menu.contentDocument,w=menu.contentWindow;
+  if(!d?.getElementById('docklink')){
+   const reply=await new Promise(resolve=>{w.chrome?.runtime?.sendMessage({cmd:'getSettings'},r=>resolve(r));setTimeout(()=>resolve(null),4000);});
+   throw new Error('Reloaded menu not ready: '+JSON.stringify({ready:d?.readyState,hydrated:w.popupStartupSettingsHydrated,hasSession:!!w.lastResponse?.streamID,replySession:!!reply?.streamID,replySettings:!!reply?.settings,updateType:typeof w.update,body:!!d?.body}));
+  }
+  for(let i=0;i<100;i++){if(typeof d.getElementById('server2')?.onchange==='function' && !d.getElementById('disableButtonText').textContent.includes('Loading'))break;await new Promise(r=>setTimeout(r,200));}
+  if(typeof d.getElementById('server2')?.onchange!=='function' || d.getElementById('disableButtonText').textContent.includes('Loading'))throw new Error('Menu settings handlers did not finish loading');
+  const state=d.getElementById('extensionState');if(state && !state.checked)state.click();
+  await new Promise(r=>setTimeout(r,1500));
+  const server=d.getElementById('server2');if(!server)throw new Error('Server fallback control missing');if(!server.checked)server.click();
+  await new Promise(r=>setTimeout(r,1000));
+  if(!server.checked)throw new Error('Server fallback did not remain enabled; detached='+!server.isConnected+' handler='+typeof server.onchange+' status='+d.getElementById('disableButtonText').textContent);
+  const dock=new URL(d.getElementById('docklink').href);
+  dock.searchParams.set('server2','');dock.searchParams.set('localserver','');dock.searchParams.set('localserverport',${localPort});
+  const local=new URL('dock.html',menu.src);local.search=dock.search;
+  const frame=document.createElement('iframe');frame.id='regressionDock';frame.style.cssText='position:fixed;left:0;top:0;width:400px;height:500px;z-index:9999';frame.src=local.href;document.body.appendChild(frame);
+  await new Promise((resolve,reject)=>{frame.onload=resolve;setTimeout(()=>reject(new Error('Dock load timed out')),15000);});
+  for(let i=0;i<3;i++){d.querySelector('[data-action="fakemsg"]').click();await new Promise(r=>setTimeout(r,700));}
+  for(let i=0;i<50;i++){if(frame.contentDocument.querySelector('[data-mid]'))break;await new Promise(r=>setTimeout(r,200));}
+  const count=frame.contentDocument.querySelectorAll('[data-mid]').length;
+  if(!count)throw new Error('Fake test messages did not render in local dock');
+  await new Promise(r=>setTimeout(r,2500));
+  if(menu.contentDocument!==d || !d.getElementById('docklink'))throw new Error('Menu reloaded unexpectedly during message delivery');
+  frame.remove();return {count};
+ })()`);
+		assert.ok(delivery.count > 0);
+		console.log("Real test-message button -> local relay -> dock rendering passed");
+		assert.deepStrictEqual(pageErrors, [], "No uncaught JavaScript errors across the app workflows");
+	} finally {
+		await electronApp.close().catch(() => stopApp(child));
+	}
 }
-run().catch(e=>{console.error(e);process.exitCode=1;});
+run().catch(e => {
+	console.error(e);
+	process.exitCode = 1;
+});

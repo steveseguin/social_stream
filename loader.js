@@ -36,6 +36,7 @@ async function loadScriptsInOrder() {
         './shared/stickers/background.js',
         './shared/monetization/core.js',
         './shared/monetization/ebay-service.js',
+        './shared/monetization/ninja-service.js',
         './shared/monetization/background.js'
 
     ];

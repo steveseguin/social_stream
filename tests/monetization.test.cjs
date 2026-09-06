@@ -60,6 +60,7 @@ function service() {
 	c.window = c;
 	vm.createContext(c);
 	vm.runInContext(fs.readFileSync(path.join(root, 'shared/monetization/ebay-service.js'), 'utf8'), c);
+	vm.runInContext(fs.readFileSync(path.join(root, 'shared/monetization/ninja-service.js'), 'utf8'), c);
 	vm.runInContext(fs.readFileSync(path.join(root, 'shared/monetization/background.js'), 'utf8'), c);
 	return {
 		c,

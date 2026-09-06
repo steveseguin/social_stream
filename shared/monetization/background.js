@@ -39,6 +39,12 @@
 			if (isExtensionOn) sendMessageToTabs({ response: text, outgoingOrigin: 'chatbot' }, false, null, false, true, false);
 		}
 	});
+	var ninjaReceiver = SSNNinjaReceiver({ privateState: privateState, store: store, config: cfg, isOn: function () { return ready && isExtensionOn; }, deliver: async function (data) {
+		if (data.isTest === true) { sendDataP2P({ event: 'monetization_test', type: 'socialstream', platform: 'socialstream', meta: { ninjabackerTest: { id: data.id, at: Date.now() } } }); return; }
+		var tip = M.tip(data);
+		if (!tip) throw new Error('Invalid receiver tip.');
+		await processIncomingMessage(tip);
+	} });
 	function store() {
 		return new Promise(function (resolve, reject) {
 			chrome.storage.local.set({ monetizationPrivate: privateState, settings: settings }, function () {
@@ -104,7 +110,7 @@
 	}
 	function connect() {
 		var c = cfg(),
-			key = isExtensionOn && c.ninja.enabled && c.ninja.username && privateState.token ? c.ninja.username + '|' + privateState.token : '';
+			key = isExtensionOn && c.ninja.enabled && !c.ninja.reliable && c.ninja.username && privateState.token ? c.ninja.username + '|' + privateState.token : '';
 		if (key === sourceKey) {
 			if (!key) status = idleStatus(c);
 			return;
@@ -308,6 +314,7 @@
 			if (updated.ninja.enabled && updated.ninja.username && token && (!c.ninja.enabled || token !== privateState.token || updated.ninja.username !== c.ninja.username)) await verifyNinja(updated.ninja.username, token);
 			if (updated.ebay.enabled && !c.ebay.enabled && !(await ebay.verify())) throw new Error('Finish connecting eBay before enabling the showcase.');
 			await prepareThrone(updated.throne, c.throne);
+			await ninjaReceiver.prepare(updated.ninja, c.ninja, token, request.ninjaSecret);
 			privateState.token = token;
 			settings.monetization = { json: JSON.stringify(updated) };
 			await store();
@@ -381,7 +388,7 @@
 		return snapshot();
 	}
 	function snapshot() {
-		return { ebay: ebay.snapshot(), throne: { status: throneStatus, gifts: thronePrivate().gifts, webhook: thronePrivate().hook ? 'https://api.socialstream.ninja/v1/throne/webhook/' + thronePrivate().hook : '' }, config: cfg(), list: list(), tokenSaved: !!privateState.token, status: status, canUndo: !!lastPurchase };
+		return { ninjaReceiver: ninjaReceiver.snapshot(), ebay: ebay.snapshot(), throne: { status: throneStatus, gifts: thronePrivate().gifts, webhook: thronePrivate().hook ? 'https://api.socialstream.ninja/v1/throne/webhook/' + thronePrivate().hook : '' }, config: cfg(), list: list(), tokenSaved: !!privateState.token, status: cfg().ninja.reliable ? ninjaReceiver.snapshot().status : status, canUndo: !!lastPurchase };
 	}
 	window.handleMonetizationRequest = function (request, sender) {
 		if (sender && sender.tab && sender.tab.id !== null && sender.tab.id !== undefined) return Promise.resolve({ error: 'Use the SSN popup to configure monetization.' });
@@ -411,6 +418,7 @@
 								.slice(-1000)
 						: []
 				};
+			if (p.receiver && /^[a-f0-9]{64}$/.test(p.receiver.key || '')) privateState.receiver = { key: p.receiver.key, webhook: /^https:\/\/api\.socialstream\.ninja\/v1\/ninjabacker\/webhook\/[a-f0-9]{64}$/.test(p.receiver.webhook || '') ? p.receiver.webhook : '', username: String(p.receiver.username || ''), seen: Array.isArray(p.receiver.seen) ? p.receiver.seen.filter(function (id) { return typeof id === 'string'; }).slice(-2000) : [] };
 			privateState.token = typeof p.token === 'string' ? p.token : '';
 			privateState.list = p.list && typeof p.list === 'object' ? p.list : { url: '', items: [] };
 			privateState.seen = Array.isArray(p.seen)
@@ -426,6 +434,7 @@
 	setInterval(function () {
 		if (!ready || !loadedFirst) return;
 		ebay.poll();
+		ninjaReceiver.poll();
 		connect();
 		connectThrone();
 		var c = cfg(),

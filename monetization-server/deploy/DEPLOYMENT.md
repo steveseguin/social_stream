@@ -28,3 +28,10 @@ Throne's public status endpoint, SSE connection and unsigned-webhook rejection w
 - Existing public edge filtering rejected Python's default user agent with error 1010; browser-agent HTTPS requests and SSE passed. No edge configuration was changed. Verify that actual provider webhook requests pass before calling the integration live-validated.
 - This was a targeted review of the API paths and server configuration, not a complete audit of every legacy application in the webroot.
 - Server deployment does not publish the local SSN client changes; those still require the normal beta release flow.
+
+
+## NinjaBacker receiver deployment (September 6 follow-up)
+
+The optional receiver is enabled on `/v1/ninjabacker/*`. The service unit enables it; existing PHP/Throne/eBay paths were checked after deployment. Seven server tests passed on the VPS. Actual SSApp tests covered both modes, signed delivery, private setup, offline/server-restart recovery, test-tip isolation, deduplication and acknowledgments. Popup/mobile screenshots were reviewed. Public HTTPS tests with an isolated synthetic receiver passed; its test rows were removed. The actual NinjaBacker sender transport also reached the receiver without any NinjaBacker changes.
+
+Database/key state was backed up locally outside Git after deployment and checksums matched. Future backups must retain the encryption key together with SQLite state; the original full-server backup predates this receiver. Frontend changes require the normal beta publication flow. No real-money payment test was performed.
