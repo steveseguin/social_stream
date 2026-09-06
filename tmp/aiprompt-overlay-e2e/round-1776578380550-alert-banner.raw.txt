@@ -1,0 +1,278 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Alert Banner</title>
+<style>
+  :root {
+    --font-stack: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --anim-duration: 0.6s;
+    --alert-height: 80px;
+    --gap: 10px;
+    --bg-gradient: linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(20,20,20,0.9) 100%);
+    --border-color: rgba(255,255,255,0.2);
+    --text-color: #ffffff;
+    --accent-follow: #00ff88;
+    --accent-sub: #9146ff;
+    --accent-gift: #ff00ff;
+    --accent-donate: #ffcc00;
+    --accent-raid: #ff4444;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: transparent; /* OBS Overlay Standard */
+    overflow: hidden;
+    font-family: var(--font-stack);
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Align to bottom */
+    align-items: center;
+    pointer-events: none; /* Let clicks pass through to OBS/Scene */
+  }
+
+  #alert-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 40px;
+    gap: var(--gap);
+    z-index: 10;
+  }
+
+  .alert-card {
+    width: 80%;
+    max-width: 800px;
+    height: var(--alert-height);
+    background: var(--bg-gradient);
+    border-left: 6px solid var(--border-color);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    color: var(--text-color);
+    position: relative;
+    overflow: hidden;
+    /* Animation Setup */
+    opacity: 0;
+    transform: translateX(-100%);
+    animation: slideIn var(--anim-duration) cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  /* Progress bar for auto-dismiss */
+  .alert-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: rgba(255,255,255,0.3);
+    width: 100%;
+    transform-origin: left;
+    animation: progress 4s linear forwards;
+  }
+
+  .alert-card.removing {
+    animation: slideOut 0.4s ease-in forwards;
+  }
+  .alert-card.removing::after {
+    animation: none;
+    opacity: 0;
+  }
+
+  .alert-icon {
+    font-size: 2rem;
+    margin-right: 15px;
+    width: 40px;
+    text-align: center;
+  }
+
+  .alert-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .alert-header {
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 1.2;
+  }
+
+  .alert-sub {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-top: 2px;
+  }
+
+  /* Specific Accent Colors */
+  .type-follow { border-left-color: var(--accent-follow); }
+  .type-sub { border-left-color: var(--accent-sub); }
+  .type-gift { border-left-color: var(--accent-gift); }
+  .type-donate { border-left-color: var(--accent-donate); }
+  .type-raid { border-left-color: var(--accent-raid); }
+
+  /* Animations */
+  @keyframes slideIn {
+    0% { opacity: 0; transform: translateX(-100%); }
+    100% { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes slideOut {
+    0% { opacity: 1; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(-100%); }
+  }
+
+  @keyframes progress {
+    0% { transform: scaleX(1); }
+    100% { transform: scaleX(0); }
+  }
+
+  /* Hide bridge */
+  #ssn_bridge { display: none; }
+</style>
+</head>
+<body>
+
+<div id="alert-container"></div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  // --- VDO.Ninja Bridge Setup ---
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_alerts_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  // --- State & Config ---
+  var container = document.getElementById("alert-container");
+  var DISMISS_DELAY = 4000; // 4 seconds
+
+  // --- Helpers ---
+  function escapeHtml(text) {
+    if (!text) return "";
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+  }
+
+  function createAlertCard(type, name, message, subtext, icon) {
+    var card = document.createElement("div");
+    card.className = "alert-card type-" + type;
+    
+    var iconDiv = document.createElement("div");
+    iconDiv.className = "alert-icon";
+    iconDiv.textContent = icon;
+    
+    var contentDiv = document.createElement("div");
+    contentDiv.className = "alert-content";
+    
+    var header = document.createElement("div");
+    header.className = "alert-header";
+    header.textContent = name; // Always show name prominently
+    
+    var sub = document.createElement("div");
+    sub.className = "alert-sub";
+    sub.textContent = message + (subtext ? " — " + subtext : "");
+
+    contentDiv.appendChild(header);
+    contentDiv.appendChild(sub);
+    card.appendChild(iconDiv);
+    card.appendChild(contentDiv);
+
+    // Append to DOM
+    container.appendChild(card);
+
+    // Auto-dismiss logic
+    setTimeout(function() {
+      if (card.parentNode) {
+        card.classList.add("removing");
+        // Wait for slideOut animation to finish before removing from DOM
+        setTimeout(function() {
+          if (card.parentNode) {
+            card.parentNode.removeChild(card);
+          }
+        }, 400); // Matches CSS animation duration
+      }
+    }, DISMISS_DELAY);
+  }
+
+  // --- Payload Router ---
+  function handlePayload(data) {
+    if (!data) return;
+
+    // 1. New Follower
+    if (data.event === "new_follower") {
+      createAlertCard("follow", data.chatname || "Unknown", "is a new follower!", "", "👤");
+      return;
+    }
+
+    // 2. Subscriber (Resub or new sub)
+    // Logic: event is 'subscriber' OR 'resub', OR membership exists without a conflicting event
+    if (data.event === "subscriber" || data.event === "resub" || data.membership) {
+      var subDetail = data.membership || "";
+      if (data.subtitle) subDetail += " (" + data.subtitle + ")";
+      createAlertCard("sub", data.chatname || "Unknown", "subscribed!", subDetail, "⭐");
+      return;
+    }
+
+    // 3. Gifted Sub
+    if (data.event === "subscription_gift" || data.event === "gifted") {
+      var giftCount = data.subtitle || "";
+      if (data.meta && data.meta.gift_count) giftCount = data.meta.gift_count + " gifts";
+      createAlertCard("gift", data.chatname || "Unknown", "gifted " + giftCount, "", "🎁");
+      return;
+    }
+
+    // 4. Donation
+    if (data.hasDonation) {
+      var amount = data.hasDonation;
+      var msg = data.chatmessage || "";
+      createAlertCard("donate", data.chatname || "Unknown", "donated " + amount, msg, "💰");
+      return;
+    }
+
+    // 5. Raid
+    if (data.event === "raid") {
+      var viewers = data.subtitle || "";
+      if (data.meta && data.meta.viewers) viewers = data.meta.viewers + " viewers";
+      createAlertCard("raid", data.chatname || "Unknown", "is raiding with", viewers, "🚀");
+      return;
+    }
+  }
+
+  // --- Event Listeners ---
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") handlePayload(payload);
+  });
+
+  // Expose for testing
+  window.handleOverlayPayload = handlePayload;
+})();
+</script>
+</body>
+</html>
+```

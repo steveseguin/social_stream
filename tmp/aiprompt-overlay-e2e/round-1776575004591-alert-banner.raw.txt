@@ -1,0 +1,299 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Alert Banner</title>
+<style>
+  :root {
+    --bg-gradient-start: rgba(20, 20, 30, 0.95);
+    --bg-gradient-end: rgba(40, 40, 60, 0.95);
+    --accent-color: #00e5ff;
+    --text-color: #ffffff;
+    --sub-text-color: #b0b0c0;
+    --border-radius: 12px;
+    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--font-family);
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; /* Align to bottom */
+    padding-bottom: 40px;
+    box-sizing: border-box;
+  }
+
+  #alert-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none; /* Let clicks pass through to OBS */
+  }
+
+  .alert-card {
+    background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+    border-left: 6px solid var(--accent-color);
+    padding: 15px 25px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-width: 300px;
+    max-width: 600px;
+    color: var(--text-color);
+    transform: translateY(100px);
+    opacity: 0;
+    animation: slideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Icon styling */
+  .alert-icon {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .alert-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .alert-title {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent-color);
+    margin-bottom: 2px;
+    font-weight: bold;
+  }
+
+  .alert-message {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .alert-subtext {
+    font-size: 14px;
+    color: var(--sub-text-color);
+    margin-top: 2px;
+  }
+
+  /* Animations */
+  @keyframes slideIn {
+    0% { transform: translateY(100px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes fadeOut {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-20px); opacity: 0; }
+  }
+
+  .fade-out {
+    animation: fadeOut 0.5s ease-in forwards;
+  }
+</style>
+</head>
+<body>
+
+<div id="alert-container"></div>
+
+<script>
+(function () {
+  // --- Bridge Setup ---
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "alert_banner_" + Date.now();
+  
+  var bridge = document.createElement("iframe");
+  bridge.id = "ssn_bridge";
+  bridge.style.display = "none";
+  document.body.appendChild(bridge);
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  // --- State & Config ---
+  var container = document.getElementById("alert-container");
+  var DISMISS_DELAY = 4000; // 4 seconds
+
+  // --- Helper: Escape HTML ---
+  function escapeHtml(text) {
+    if (!text) return "";
+    var div = document.createElement("div");
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+  }
+
+  // --- Helper: Create Alert DOM ---
+  function createAlertCard(type, title, name, message, subtext, icon) {
+    var card = document.createElement("div");
+    card.className = "alert-card";
+    
+    // Set border color based on type
+    var colors = {
+      "new_follower": "#9146FF", // Twitch Purple
+      "subscriber": "#00e5ff",   // Cyan
+      "subscription_gift": "#ff0055", // Pink/Red
+      "raid": "#ff9900",         // Orange
+      "default": "#00e5ff"
+    };
+    card.style.borderLeftColor = colors[type] || colors["default"];
+
+    var iconDiv = document.createElement("div");
+    iconDiv.className = "alert-icon";
+    iconDiv.textContent = icon;
+
+    var contentDiv = document.createElement("div");
+    contentDiv.className = "alert-content";
+
+    var titleDiv = document.createElement("div");
+    titleDiv.className = "alert-title";
+    titleDiv.textContent = title;
+
+    var msgDiv = document.createElement("div");
+    msgDiv.className = "alert-message";
+    msgDiv.textContent = name; // Name is prominent
+
+    contentDiv.appendChild(titleDiv);
+    contentDiv.appendChild(msgDiv);
+
+    if (subtext) {
+      var subDiv = document.createElement("div");
+      subDiv.className = "alert-subtext";
+      subDiv.textContent = subtext;
+      contentDiv.appendChild(subDiv);
+    }
+
+    if (message) {
+      var msgTextDiv = document.createElement("div");
+      msgTextDiv.className = "alert-message";
+      msgTextDiv.style.fontSize = "16px";
+      msgTextDiv.textContent = message;
+      contentDiv.appendChild(msgTextDiv);
+    }
+
+    card.appendChild(iconDiv);
+    card.appendChild(contentDiv);
+
+    return card;
+  }
+
+  // --- Main Handler ---
+  function handlePayload(data) {
+    if (!data) return;
+
+    var type = data.type || "";
+    var event = data.event || "";
+    var name = data.chatname || "Anonymous";
+    var message = data.chatmessage || "";
+    var subtext = "";
+    var icon = "★";
+    var title = "EVENT";
+
+    // 1. New Follower
+    if (event === "new_follower") {
+      title = "NEW FOLLOWER";
+      icon = "★";
+      subtext = "Thanks for following!";
+    }
+    // 2. Subscriber (Resub or New Sub)
+    else if (event === "subscriber" || event === "resub" || (data.membership && event !== "subscription_gift")) {
+      title = "SUBSCRIBER";
+      icon = "♥";
+      subtext = data.membership || "";
+    }
+    // 3. Gifted Sub
+    else if (event === "subscription_gift" || event === "gifted") {
+      title = "GIFTED SUBS";
+      icon = "🎁";
+      // Try to get count from subtitle or meta
+      if (data.subtitle) {
+        subtext = data.subtitle;
+      } else if (data.meta && data.meta.gift_count) {
+        subtext = "Gifted " + data.meta.gift_count + " subs";
+      }
+    }
+    // 4. Donation
+    else if (data.hasDonation) {
+      title = "DONATION";
+      icon = "💰";
+      subtext = "Amount: " + data.hasDonation;
+      // If message is empty, maybe use the donation amount as the main text?
+      // But request says "include user's name".
+    }
+    // 5. Raid
+    else if (event === "raid") {
+      title = "RAID";
+      icon = "🚀";
+      var viewers = "";
+      if (data.subtitle) viewers = data.subtitle;
+      else if (data.meta && data.meta.viewers) viewers = data.meta.viewers + " viewers";
+      else if (data.meta && typeof data.meta === 'object' && data.meta.viewer_count) viewers = data.meta.viewer_count;
+      
+      if (viewers) {
+        subtext = "Joining with " + viewers;
+      } else {
+        subtext = "Thanks for raiding!";
+      }
+    }
+    // Ignore other events
+    else {
+      return;
+    }
+
+    // Create and append card
+    var card = createAlertCard(event || "default", title, name, message, subtext, icon);
+    container.appendChild(card);
+
+    // Auto-dismiss
+    setTimeout(function () {
+      card.classList.add("fade-out");
+      card.addEventListener("animationend", function () {
+        if (card.parentNode) {
+          card.parentNode.removeChild(card);
+        }
+      });
+    }, DISMISS_DELAY);
+  }
+
+  // --- Event Listeners ---
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handlePayload(payload);
+    }
+  });
+
+  // Expose for testing
+  window.handleOverlayPayload = handlePayload;
+})();
+</script>
+</body>
+</html>
+```

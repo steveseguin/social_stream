@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Starting Soon</title>
+<style>
+  :root {
+    --bg-color: #000000;
+    --text-color: #ffffff;
+    --accent-color: #3b82f6;
+    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-family);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  #overlay-container {
+    text-align: center;
+    opacity: 0;
+    animation: fadeIn 1s ease-in forwards;
+  }
+
+  h1 {
+    font-size: 4rem;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-weight: 700;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  }
+
+  .timer {
+    font-size: 6rem;
+    font-weight: 300;
+    margin-top: 1rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent-color);
+    text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div id="overlay-container">
+  <h1>Starting Soon</h1>
+  <div class="timer" id="countdown">05:00</div>
+</div>
+
+<script>
+(function () {
+  // Configuration
+  var startSeconds = 5 * 60; // 5 minutes
+  var remainingSeconds = startSeconds;
+  var timerElement = document.getElementById('countdown');
+  var intervalId = null;
+
+  // Helper to format time MM:SS
+  function formatTime(totalSeconds) {
+    var m = Math.floor(totalSeconds / 60);
+    var s = totalSeconds % 60;
+    return (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+  }
+
+  // Update the display
+  function updateDisplay() {
+    timerElement.textContent = formatTime(remainingSeconds);
+  }
+
+  // Start the countdown
+  function startCountdown() {
+    updateDisplay();
+    intervalId = setInterval(function () {
+      remainingSeconds--;
+      if (remainingSeconds < 0) {
+        clearInterval(intervalId);
+        timerElement.textContent = "LIVE";
+        timerElement.style.color = "#22c55e"; // Green for live
+        document.querySelector('h1').textContent = "We Are Live!";
+      } else {
+        updateDisplay();
+      }
+    }, 1000);
+  }
+
+  // Initialize
+  startCountdown();
+
+  // VDO.Ninja Bridge Setup (Standard SSN Pattern)
+  // This ensures the overlay is ready to receive data if a session is connected,
+  // though this specific "Starting Soon" page is mostly autonomous.
+  (function () {
+    var params = new URLSearchParams(location.search);
+    var roomID = params.get("session") || "";
+    var password = params.get("password") || "false";
+    var label = params.get("label") || "starting_soon_overlay_" + Date.now();
+    var bridge = document.createElement("iframe");
+    bridge.id = "ssn_bridge";
+    bridge.style.display = "none";
+    document.body.appendChild(bridge);
+
+    if (roomID) {
+      bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+        encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+        "&label=" + encodeURIComponent(label) +
+        "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+    }
+
+    window.addEventListener("message", function (event) {
+      var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+      if (typeof payload !== "undefined") {
+        // If a specific event (like "start_now") is received, we could stop the timer here.
+        // For now, we just acknowledge it.
+        console.log("SSN Data Received:", payload);
+      }
+    });
+  })();
+})();
+</script>
+</body>
+</html>

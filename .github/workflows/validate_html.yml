@@ -1,0 +1,36 @@
+name: Validate HTML and CSS
+
+on:
+  push:
+    branches: [main, beta]
+  pull_request:
+    branches: [main, beta]
+
+jobs:
+  validate:
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[skip pages]') && !contains(github.event.head_commit.message, '[auto-enhanced]') && github.actor != 'github-pages[bot]'"
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm install htmlhint stylelint stylelint-config-standard
+
+    - name: Validate HTML files
+      run: npx htmlhint "**/*.html" --config .htmlhintrc
+
+    - name: Validate Python scripts
+      run: python3 -m compileall -q scripts docs/skills/control-social-stream/scripts
+
+    - name: Validate documentation links
+      run: python3 scripts/validate-doc-links.py
+
+    - name: Validate documentation search index
+      run: python3 scripts/build-docs-search-index.py --docs-root docs --output /tmp/social-stream-docs-search-index.json

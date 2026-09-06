@@ -1,0 +1,280 @@
+Here is the polished chat overlay. It features a clean, modern design with a dark semi-transparent background, rounded avatars, distinct typography for usernames and messages, and a smooth slide-in animation.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSN Chat Overlay</title>
+<style>
+  :root {
+    --bg-color: rgba(0, 0, 0, 0.75);
+    --text-color: #ffffff;
+    --username-color: #ffffff;
+    --message-color: #e0e0e0;
+    --accent-color: #3b82f6;
+    --avatar-size: 40px;
+    --max-width: 600px;
+    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  body {
+    background: transparent;
+    margin: 0;
+    padding: 20px;
+    font-family: var(--font-family);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+  }
+
+  #feed {
+    width: var(--max-width);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 20px;
+  }
+
+  .chat-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 12px;
+    background: var(--bg-color);
+    border-radius: 8px;
+    border-left: 4px solid var(--accent-color);
+    animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    opacity: 0;
+    transform: translateX(-20px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+
+  .chat-item.has-donation {
+    border-left-color: #fbbf24; /* Gold for donations */
+    background: rgba(30, 30, 30, 0.85);
+  }
+
+  .avatar {
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #444;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.1);
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 2px;
+  }
+
+  .username {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--username-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .badges {
+    display: flex;
+    gap: 4px;
+  }
+
+  .badge {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.2);
+  }
+
+  .message {
+    font-size: 14px;
+    color: var(--message-color);
+    line-height: 1.4;
+    word-wrap: break-word;
+  }
+
+  .donation-tag {
+    font-size: 11px;
+    background: #fbbf24;
+    color: #000;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-weight: bold;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  @keyframes slideIn {
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes fadeOut {
+    to {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+</style>
+</head>
+<body>
+
+<div id="feed"></div>
+
+<script>
+(function() {
+  // --- Configuration ---
+  const MAX_ITEMS = 15; // Max messages to keep in DOM
+  const FAKE_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23555'/%3E%3Ctext x='50' y='50' dy='.35em' fill='white' text-anchor='middle' font-size='40'%3E?%3C/text%3E%3C/svg%3E";
+
+  // --- Bridge Setup ---
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "chat_overlay_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+  
+  // Create bridge if not exists
+  if (!bridge) {
+    bridge = document.createElement("iframe");
+    bridge.id = "ssn_bridge";
+    bridge.style.display = "none";
+    document.body.appendChild(bridge);
+  }
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  // --- Core Logic ---
+  window.handleOverlayPayload = function(data) {
+    if (!data || !data.chatname) return;
+
+    // Filter: Only show chat messages (ignore system events unless they have chat content)
+    // We allow events if they have a chatname and message
+    if (!data.chatmessage && !data.event) return;
+
+    // Filter: Hide bots if requested via URL
+    if (params.get("hidetype") === "bots" && data.bot) return;
+
+    // Filter: Only donations if requested
+    if (params.get("donationsonly") && !data.hasDonation) return;
+
+    renderChat(data);
+  };
+
+  function renderChat(data) {
+    const feed = document.getElementById("feed");
+    
+    // Create Element
+    const item = document.createElement("div");
+    item.className = "chat-item";
+    if (data.hasDonation) item.classList.add("has-donation");
+
+    // Avatar
+    const img = document.createElement("img");
+    img.className = "avatar";
+    img.src = data.chatimg || FAKE_AVATAR;
+    img.onerror = function() { this.src = FAKE_AVATAR; };
+    item.appendChild(img);
+
+    // Content Wrapper
+    const content = document.createElement("div");
+    content.className = "content";
+
+    // Header (Name + Badges)
+    const header = document.createElement("div");
+    header.className = "header";
+
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "username";
+    nameSpan.textContent = data.chatname;
+    if (data.nameColor) nameSpan.style.color = data.nameColor;
+    header.appendChild(nameSpan);
+
+    // Badges (Simple representation)
+    if (data.chatbadges && Array.isArray(data.chatbadges)) {
+      const badgeContainer = document.createElement("span");
+      badgeContainer.className = "badges";
+      data.chatbadges.forEach(url => {
+        if (url) {
+          const b = document.createElement("img");
+          b.src = url;
+          b.className = "badge";
+          b.title = "Badge";
+          badgeContainer.appendChild(b);
+        }
+      });
+      header.appendChild(badgeContainer);
+    }
+
+    content.appendChild(header);
+
+    // Message Body
+    const msgDiv = document.createElement("div");
+    msgDiv.className = "message";
+    
+    // Handle Donation Tag
+    if (data.hasDonation) {
+      const tag = document.createElement("span");
+      tag.className = "donation-tag";
+      tag.textContent = data.hasDonation;
+      msgDiv.appendChild(tag);
+    }
+
+    // Handle Message Text
+    const textNode = document.createTextNode(data.chatmessage);
+    msgDiv.appendChild(textNode);
+    
+    content.appendChild(msgDiv);
+    item.appendChild(content);
+
+    // Prepend to feed (newest top)
+    feed.insertBefore(item, feed.firstChild);
+
+    // Cleanup old items
+    while (feed.children.length > MAX_ITEMS) {
+      const last = feed.lastChild;
+      // Animate out last item before removing
+      last.style.animation = "fadeOut 0.5s forwards";
+      setTimeout(() => { if(last.parentNode) last.parentNode.removeChild(last); }, 500);
+    }
+  }
+
+  // --- Event Listener ---
+  window.addEventListener("message", function(event) {
+    // Handle data from VDO.Ninja bridge
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handleOverlayPayload(payload);
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
+```

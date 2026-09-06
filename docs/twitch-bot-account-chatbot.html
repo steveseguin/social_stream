@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Accounts for Automatic Replies - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Use a Twitch WebSocket bot account or a separate reply-only source to send Social Stream Ninja automatic replies from another account.">
+    <style>
+        .bot-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin: 22px 0;
+        }
+        .bot-guide-card {
+            background: var(--card-bg, #fff);
+            border: 1px solid rgba(127, 127, 127, 0.22);
+            border-radius: 8px;
+            padding: 18px;
+        }
+        .bot-guide-card h3 {
+            margin-top: 0;
+        }
+        .bot-guide-shot {
+            display: block;
+            width: auto;
+            max-width: 100%;
+            border: 1px solid rgba(127, 127, 127, 0.28);
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            margin: 16px auto 8px;
+        }
+        .bot-guide-caption {
+            color: var(--text-secondary);
+            font-size: 1.4rem;
+            margin-bottom: 22px;
+        }
+        .dark-mode .bot-guide-card {
+            background: #161b22;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands & API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <div class="mobile-nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Bot Accounts for Automatic Replies</h1>
+            <p>Choose the simple Twitch WebSocket option or the existing separate reply-only source method.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Which Method Should I Use?</h2>
+                <p>Both methods make automatic replies appear under a bot account instead of your main account. They do it in different ways.</p>
+                <div class="guide-note">
+                    <p><strong>The new attached-account method is only for Twitch WebSocket sources in the SSApp desktop app.</strong> It is not available for Twitch Standard mode, other platforms, or the browser extension.</p>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Best for</th>
+                            <th>Extra source?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Method"><strong>Twitch WebSocket bot account</strong></td>
+                            <td data-label="Best for">The easiest Twitch-only setup</td>
+                            <td data-label="Extra source?">No</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Method"><strong>Separate reply-only bot source</strong></td>
+                            <td data-label="Best for">Twitch Standard mode or another platform that can send replies</td>
+                            <td data-label="Extra source?">Yes</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Method 1: Twitch WebSocket Bot Account</h2>
+                <p>This attaches a second Twitch login to your existing WebSocket source. It does <strong>not</strong> create another source or permanent browser session.</p>
+                <p><small>Tip: Click or tap any screenshot to open it at full size.</small></p>
+                <ol class="guide-steps">
+                    <li>In SSApp, find your Twitch source and make sure <strong>WebSocket</strong> is selected.</li>
+                    <li>Click the source's <strong>gear button</strong>.</li>
+                    <li>Under <strong>Twitch WebSocket sending</strong>, click <strong>Automatic reply account: Main account</strong>.</li>
+                </ol>
+                <a href="images/twitch-bot-account-chatbot/ssapp-twitch-websocket-bot-menu.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="images/twitch-bot-account-chatbot/ssapp-twitch-websocket-bot-menu.png" alt="SSApp Twitch WebSocket source with its gear menu open and Automatic reply account set to Main account">
+                </a>
+                <p class="bot-guide-caption">This section appears only when that Twitch source is using WebSocket mode.</p>
+
+                <ol class="guide-steps" start="4">
+                    <li>Review the explanation, then click <strong>Connect bot account</strong>.</li>
+                    <li>SSApp opens a separate Twitch sign-in window. Sign in with the account that should send bot replies.</li>
+                    <li>When the sign-in finishes, the source menu changes to <strong>Automatic reply account: @BotName</strong>.</li>
+                </ol>
+                <a href="images/twitch-bot-account-chatbot/ssapp-twitch-bot-account-dialog.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="images/twitch-bot-account-chatbot/ssapp-twitch-bot-account-dialog.png" alt="SSApp Automatic reply account dialog with the Connect bot account button">
+                </a>
+                <p class="bot-guide-caption">The separate sign-in window prevents your normal browser's Twitch login from silently choosing the wrong account.</p>
+
+                <div class="bot-guide-grid">
+                    <div class="bot-guide-card">
+                        <h3>Pros</h3>
+                        <ul class="guide-list">
+                            <li>No second source to create or keep running.</li>
+                            <li>Very little setup after the WebSocket source is connected.</li>
+                            <li>Chatbot and scheduled automatic replies use the bot account.</li>
+                            <li>In Twitch Shared Chat, bot replies stay in this source's channel.</li>
+                        </ul>
+                    </div>
+                    <div class="bot-guide-card">
+                        <h3>Cons</h3>
+                        <ul class="guide-list">
+                            <li>Twitch only.</li>
+                            <li>WebSocket mode only.</li>
+                            <li>Manual sends still use the main Twitch account.</li>
+                            <li>The bot must be a moderator, or the channel owner may need to reconnect once to approve Twitch bot access.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Method 2: Separate Reply-Only Bot Source</h2>
+                <p>This is the original SSApp method and it is still supported. It creates a second source, gives that source its own browser session, and routes automatic replies through sources with the <code>bot</code> role.</p>
+                <p>The screenshots below use Twitch, but this method is not Twitch-only. It can also be used with other SSApp sources that support signing in and sending replies.</p>
+                <ol class="guide-steps">
+                    <li>Add your normal source for capturing chat.</li>
+                    <li>Add the same channel or source again. If SSApp asks whether to make it a reply-only bot source, choose <strong>Yes</strong>.</li>
+                    <li>On the second source, open <strong>Browser Session Settings</strong> and use a separate session such as <code>bot-account</code>.</li>
+                    <li>Click <strong>Sign in</strong> on that second source and sign in with the bot account.</li>
+                    <li>Open its gear menu. Enable <strong>Bot reply-only (no capture)</strong> and cycle <strong>Account role</strong> until it says <strong>Bot</strong>.</li>
+                </ol>
+                <a href="images/twitch-bot-account-chatbot/ssapp-separate-reply-only-bot-source.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="images/twitch-bot-account-chatbot/ssapp-separate-reply-only-bot-source.png" alt="A separate SSApp Twitch source configured as Reply only with Role Bot and a bot-account browser session">
+                </a>
+                <p class="bot-guide-caption">The finished second source shows <strong>Reply only</strong>, <strong>Role: Bot</strong>, and its separate session at the top.</p>
+
+                <ol class="guide-steps" start="6">
+                    <li>In the settings panel on the right, switch to full mode and search for <strong>bot replies</strong>.</li>
+                    <li>Set <strong>Send bot replies through these SSApp account roles</strong> to <code>bot</code>.</li>
+                    <li>Activate the bot source and leave it running whenever it needs to send replies.</li>
+                </ol>
+                <a href="images/twitch-bot-account-chatbot/ssn-bot-reply-role-routing.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="images/twitch-bot-account-chatbot/ssn-bot-reply-role-routing.png" alt="SSN setting Send bot replies through these SSApp account roles filled with bot">
+                </a>
+                <p class="bot-guide-caption">Enter <code>bot</code> in this field. The two relay-role fields above it are separate settings and can stay blank.</p>
+
+                <div class="bot-guide-grid">
+                    <div class="bot-guide-card">
+                        <h3>Pros</h3>
+                        <ul class="guide-list">
+                            <li>Works with Twitch Standard mode.</li>
+                            <li>Can work with other platforms that support outgoing replies.</li>
+                            <li>The bot source has its own browser session and source controls.</li>
+                            <li>Account roles can support more advanced routing setups.</li>
+                        </ul>
+                    </div>
+                    <div class="bot-guide-card">
+                        <h3>Cons</h3>
+                        <ul class="guide-list">
+                            <li>Requires a second source and a separate session.</li>
+                            <li>The bot source must be active to send.</li>
+                            <li>More settings must be kept in sync.</li>
+                            <li>If reply-only is disabled, the second source can capture duplicate messages.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>If Both Methods Are Configured</h2>
+                <p>Use one method for a given reply path. If <strong>Send bot replies through these SSApp account roles</strong> is set to <code>bot</code>, the separate bot source takes priority. SSN will not also send the same reply through the attached Twitch WebSocket bot account.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Troubleshooting</h2>
+                <ul class="guide-list">
+                    <li><strong>The new option is missing:</strong> confirm this is the SSApp desktop app and the Twitch source is set to WebSocket mode.</li>
+                    <li><strong>The attached Twitch bot cannot send:</strong> make the bot a moderator. If it is not a moderator, reconnect the main Twitch account once using the channel owner and approve the requested permission.</li>
+                    <li><strong>The wrong Twitch account was selected:</strong> choose the account again and sign into the separate SSApp Twitch window with the bot account.</li>
+                    <li><strong>The separate source sends nothing:</strong> activate it, confirm it is signed in as the bot, and verify the routing field contains exactly <code>bot</code>.</li>
+                    <li><strong>The separate source captures duplicate chat:</strong> enable <strong>Bot reply-only (no capture)</strong>.</li>
+                    <li><strong>Replies still use the main account:</strong> verify the attached account is shown by username, or verify the separate source says <strong>Role: Bot</strong>.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

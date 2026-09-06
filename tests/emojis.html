@@ -1,0 +1,214 @@
+<html lang="en">
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+	<meta content="utf-8" http-equiv="encoding" />
+	<title>Social Stream - Dashboard</title>
+	<meta name="title" content="Social Stream - Test" />
+	<link rel="icon" href="./favicon.ico" />
+	<link href="../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
+	<meta name="robots" content="noindex">
+	<style>
+		@font-face {
+			font-family: NotoColorEmojiLimited;
+			unicode-range: U+1F1E6-1F1FF;
+			src: url(./thirdparty/NotoColorEmoji.ttf);
+			font-display: swap;
+		}
+		 .test-container { font-family: Arial, sans-serif; margin: 20px; }
+		.test-case { margin-bottom: 20px; border: 1px solid #eee; padding: 15px; border-radius: 5px; }
+		.test-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+		.test-result { font-weight: bold; }
+		.passed { color: green; }
+		.failed { color: red; }
+		.emoji { display: inline-block; font-size: 1.5em; }
+		.test-row { margin: 5px 0; }
+		.raw, .wrapped { padding: 10px; background: #f9f9f9; border-radius: 4px; margin-top: 5px; }
+	</style>
+</head>
+<body>
+<script>
+function wrapEmojis(text) {
+    let flagCounter = 0;
+    let flags = [];
+    
+    // First handle flag emoji sequences
+    text = text.replace(/(\uD83C[\uDDE6-\uDDFF]){2}/g, (match) => {
+        flags.push(match);
+        return `###FLAG${flagCounter++}###`;
+    });
+    
+    // Regex for detecting emoji sequences
+    // This pattern includes emoji with variation selectors (FE0F) and keycap sequences
+    const emojiPattern = new RegExp(
+        // Keycap sequences (digit/symbol + FE0F + 20E3)
+        '(?:[0-9#*]\\uFE0F?\\u20E3)|' +
+        
+        // Basic emoji
+        '(?:[\\u2011-\\u26FF]|[\\u2700-\\u27BF]|[\\uE000-\\uF8FF]|\\uD83C[\\uDC00-\\uDFFF]|\\uD83D[\\uDC00-\\uDFFF]|\\uD83E[\\uDD10-\\uDDFF])' +
+        // Optional variation selector
+        '(?:\\uFE0F)?' +
+        // Optional skin tone modifier
+        '(?:\\uD83C[\\uDFFB-\\uDFFF])?' +
+        // Optional zero width joiner sequences (for compound emoji)
+        '(?:\\u200D(?:[\\u2011-\\u26FF]|[\\u2700-\\u27BF]|[\\uE000-\\uF8FF]|\\uD83C[\\uDC00-\\uDFFF]|\\uD83D[\\uDC00-\\uDFFF]|\\uD83E[\\uDD10-\\uDDFF])' +
+        '(?:\\uFE0F)?' +
+        '(?:\\uD83C[\\uDFFB-\\uDFFF])?)*',
+        'g'
+    );
+    
+    // Replace all emoji with spans
+    text = text.replace(emojiPattern, "<span class='emoji'>$&</span>");
+    
+    // Replace flag placeholders
+    flags.forEach((flag, index) => {
+        text = text.replace(
+            `###FLAG${index}###`,
+            `<span class='emoji'>${flag}</span>`
+        );
+    });
+    
+    return text;
+}
+
+// Unit test function
+function testEmojiWrapping() {
+  const testCases = [
+    // Basic emoji
+    { input: "Hello 😀 World", expected: "Hello <span class='emoji'>😀</span> World" },
+    
+    // Flag emoji
+    { input: "Countries: 🇺🇸 🇯🇵 🇪🇸", expected: "Countries: <span class='emoji'>🇺🇸</span> <span class='emoji'>🇯🇵</span> <span class='emoji'>🇪🇸</span>" },
+    
+    // Skin tone modifiers
+    { input: "Hands: 👍 👍🏻 👍🏼 👍🏽 👍🏾 👍🏿", expected: "Hands: <span class='emoji'>👍</span> <span class='emoji'>👍🏻</span> <span class='emoji'>👍🏼</span> <span class='emoji'>👍🏽</span> <span class='emoji'>👍🏾</span> <span class='emoji'>👍🏿</span>" },
+    
+    // ZWJ sequences (family)
+    { input: "Family: 👨‍👩‍👧‍👦", expected: "Family: <span class='emoji'>👨‍👩‍👧‍👦</span>" },
+    
+    // ZWJ sequences (professions)
+    { input: "Jobs: 👨‍💻 👩‍🔬 👨‍🚒", expected: "Jobs: <span class='emoji'>👨‍💻</span> <span class='emoji'>👩‍🔬</span> <span class='emoji'>👨‍🚒</span>" },
+    
+    // ZWJ with skin tones
+    { input: "Diverse: 👨🏽‍💻 👩🏿‍🔬", expected: "Diverse: <span class='emoji'>👨🏽‍💻</span> <span class='emoji'>👩🏿‍🔬</span>" },
+    
+    // Variation selectors
+    { input: "Compare: ☠️ vs ☠", expected: "Compare: <span class='emoji'>☠️</span> vs <span class='emoji'>☠</span>" },
+    
+    // Mixed text and emoji
+    { input: "Text 🎉 with 🌍 multiple 🚀 emoji!", expected: "Text <span class='emoji'>🎉</span> with <span class='emoji'>🌍</span> multiple <span class='emoji'>🚀</span> emoji!" },
+    
+    // Complex mixed case
+    { input: "Summary: I visited 🇫🇷 and met a 👨🏻‍🦰 who works as a 👨🏻‍🍳!", 
+      expected: "Summary: I visited <span class='emoji'>🇫🇷</span> and met a <span class='emoji'>👨🏻‍🦰</span> who works as a <span class='emoji'>👨🏻‍🍳</span>!" },
+	
+	// Multiple variation selectors
+	{ input: "Hearts: ❤️ 💙️ 💚️", expected: "Hearts: <span class='emoji'>❤️</span> <span class='emoji'>💙️</span> <span class='emoji'>💚️</span>" },
+    
+    // Emoji with numbers
+    { input: "Numbers: 1️⃣ 2️⃣ 3️⃣", expected: "Numbers: <span class='emoji'>1️⃣</span> <span class='emoji'>2️⃣</span> <span class='emoji'>3️⃣</span>" },
+    
+    // Flag edge cases
+    { input: "Special flags: 🏳️‍🌈 🏳️‍⚧️", expected: "Special flags: <span class='emoji'>🏳️‍🌈</span> <span class='emoji'>🏳️‍⚧️</span>" },
+    
+    // Emoji with multiple ZWJ sequences
+    { input: "Complex: 👨‍👩‍👧‍👧 👩‍👩‍👦‍👦", expected: "Complex: <span class='emoji'>👨‍👩‍👧‍👧</span> <span class='emoji'>👩‍👩‍👦‍👦</span>" },
+    
+    // Emoji at beginning and end of text
+    { input: "🎯 Target at ends 🎯", expected: "<span class='emoji'>🎯</span> Target at ends <span class='emoji'>🎯</span>" },
+    
+    // Adjacent emoji without spaces
+    { input: "Adjacent😎😍🤩emoji", expected: "Adjacent<span class='emoji'>😎</span><span class='emoji'>😍</span><span class='emoji'>🤩</span>emoji" },
+    
+    // Regional indicators that aren't flags
+    { input: "Not flags: 🇦 🇧 🇨", expected: "Not flags: <span class='emoji'>🇦</span> <span class='emoji'>🇧</span> <span class='emoji'>🇨</span>" },
+    
+    // Less common emoji
+    { input: "Uncommon: 🫠 🫥 🫰", expected: "Uncommon: <span class='emoji'>🫠</span> <span class='emoji'>🫥</span> <span class='emoji'>🫰</span>" },
+    
+    // Keycap sequences
+    { input: "Keycaps: 1️⃣ #️⃣ *️⃣", expected: "Keycaps: <span class='emoji'>1️⃣</span> <span class='emoji'>#️⃣</span> <span class='emoji'>*️⃣</span>" },
+    
+    // Text presentation vs emoji presentation
+    { input: "Text vs Emoji: ▶ vs ▶️", expected: "Text vs Emoji: <span class='emoji'>▶</span> vs <span class='emoji'>▶️</span>" },
+    
+    // Multiple consecutive variation selectors (edge case)
+    { input: "Multiple VS: ❤️️", expected: "Multiple VS: <span class='emoji'>❤️️</span>" },
+    
+    // Skin tone with variation selector
+    { input: "Skin+VS: 👍🏿️", expected: "Skin+VS: <span class='emoji'>👍🏿️</span>" }
+  ];
+  
+  // Run tests and display results
+  const results = testCases.map((testCase, index) => {
+    const result = wrapEmojis(testCase.input);
+    const passed = result === testCase.expected;
+    
+    return {
+      test: index + 1,
+      input: testCase.input,
+      output: result,
+      expected: testCase.expected,
+      passed: passed
+    };
+  });
+  
+  // Display results in console
+  console.log("=== EMOJI WRAPPING TEST RESULTS ===");
+  results.forEach(r => {
+    console.log(`\nTest #${r.test}: ${r.passed ? 'PASSED ✅' : 'FAILED ❌'}`);
+    console.log(`Input: ${r.input}`);
+    console.log(`Output: ${r.output}`);
+    if (!r.passed) {
+      console.log(`Expected: ${r.expected}`);
+    }
+  });
+  
+  // Visual test helper - append to document body for visual inspection
+  const displayResults = () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div class="test-container">
+        <h2>Emoji Wrapping Visual Test Results</h2>
+        ${results.map(r => `
+          <div class="test-case">
+            <div class="test-header">
+              <div>Test Case #${r.test}</div>
+              <div class="test-result ${r.passed ? 'passed' : 'failed'}">${r.passed ? 'PASSED' : 'FAILED'}</div>
+            </div>
+            <div class="test-row">
+              <div><strong>Raw Input:</strong></div>
+              <div class="raw">${r.input}</div>
+            </div>
+            <div class="test-row">
+              <div><strong>Wrapped Output:</strong></div>
+              <div class="wrapped">${r.output}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    document.body.appendChild(container);
+  };
+  
+  // If running in a browser, display visual results
+  if (typeof document !== 'undefined') {
+    displayResults();
+  }
+  
+  // Summary
+  const passCount = results.filter(r => r.passed).length;
+  console.log(`\n=== SUMMARY ===`);
+  console.log(`${passCount} of ${results.length} tests passed`);
+  
+  return {
+    results,
+    allPassed: passCount === results.length
+  };
+}
+
+// Run the test
+const testResults = testEmojiWrapping();
+</script>
+</body>
+</html>

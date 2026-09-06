@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Browser Legitimacy Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .test-name {
+            font-weight: bold;
+            flex: 1;
+        }
+        .test-value {
+            flex: 2;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .test-status {
+            width: 100px;
+            text-align: center;
+            padding: 5px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status-pass {
+            background: #4CAF50;
+            color: white;
+        }
+        .status-fail {
+            background: #f44336;
+            color: white;
+        }
+        .status-warning {
+            background: #ff9800;
+            color: white;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        #overall-score {
+            font-size: 48px;
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .score-good { color: #4CAF50; }
+        .score-medium { color: #ff9800; }
+        .score-bad { color: #f44336; }
+    </style>
+</head>
+<body>
+    <h1>Browser Legitimacy Test</h1>
+    <div id="overall-score"></div>
+    
+    <div id="test-results"></div>
+
+    <script>
+    const tests = [];
+    let totalScore = 0;
+    let maxScore = 0;
+
+    function addTest(category, name, value, status, score = 1) {
+        tests.push({ category, name, value, status, score });
+        maxScore += score;
+        if (status === 'pass') totalScore += score;
+        else if (status === 'warning') totalScore += score * 0.5;
+    }
+
+    async function runTests() {
+        // 1. Navigator Properties Tests
+        addTest('Navigator', 'webdriver property', 
+            navigator.webdriver === undefined ? 'undefined (good)' : navigator.webdriver,
+            navigator.webdriver === undefined ? 'pass' : 'fail', 2);
+
+        addTest('Navigator', 'plugins.length', 
+            navigator.plugins.length,
+            navigator.plugins.length > 0 ? 'pass' : 'fail');
+
+        addTest('Navigator', 'languages', 
+            JSON.stringify(navigator.languages),
+            navigator.languages.length > 0 ? 'pass' : 'warning');
+
+        addTest('Navigator', 'platform', 
+            navigator.platform,
+            navigator.platform ? 'pass' : 'fail');
+
+        addTest('Navigator', 'vendor', 
+            navigator.vendor,
+            navigator.vendor === 'Google Inc.' ? 'pass' : 'warning');
+
+        addTest('Navigator', 'hardwareConcurrency', 
+            navigator.hardwareConcurrency,
+            navigator.hardwareConcurrency > 0 && navigator.hardwareConcurrency <= 32 ? 'pass' : 'warning');
+
+        addTest('Navigator', 'deviceMemory', 
+            navigator.deviceMemory || 'undefined',
+            navigator.deviceMemory >= 2 && navigator.deviceMemory <= 64 ? 'pass' : 'warning');
+
+        // 2. User Agent Tests
+        const ua = navigator.userAgent.toLowerCase();
+        addTest('User Agent', 'Contains Electron', 
+            ua.includes('electron'),
+            !ua.includes('electron') ? 'pass' : 'fail', 2);
+
+        addTest('User Agent', 'Contains HeadlessChrome', 
+            ua.includes('headlesschrome'),
+            !ua.includes('headlesschrome') ? 'pass' : 'fail', 2);
+
+        addTest('User Agent', 'Valid Chrome Version', 
+            ua.match(/chrome\/(\d+)/)?.[1] || 'not found',
+            ua.match(/chrome\/(\d+)/) ? 'pass' : 'warning');
+
+        // 3. Window Properties Tests
+        addTest('Window', 'window.chrome exists', 
+            !!window.chrome,
+            !!window.chrome ? 'pass' : 'warning');
+
+        addTest('Window', 'Electron specific properties', 
+            typeof window.process !== 'undefined' || typeof window.require !== 'undefined',
+            typeof window.process === 'undefined' && typeof window.require === 'undefined' ? 'pass' : 'fail', 2);
+
+        // 4. Canvas Fingerprinting Test
+        try {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#f60';
+            ctx.fillRect(125, 1, 62, 20);
+            ctx.fillStyle = '#069';
+            ctx.fillText('BrowserTest', 2, 15);
+            const canvasData = canvas.toDataURL();
+            addTest('Canvas', 'Canvas fingerprint available', 
+                canvasData.length > 100 ? 'Yes' : 'No',
+                canvasData.length > 100 ? 'pass' : 'warning');
+        } catch (e) {
+            addTest('Canvas', 'Canvas fingerprint', 'Error: ' + e.message, 'fail');
+        }
+
+        // 5. WebGL Tests
+        try {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (gl) {
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                if (debugInfo) {
+                    const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+                    const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                    addTest('WebGL', 'Vendor', vendor, vendor ? 'pass' : 'warning');
+                    addTest('WebGL', 'Renderer', renderer, renderer ? 'pass' : 'warning');
+                } else {
+                    addTest('WebGL', 'Debug info', 'Not available', 'warning');
+                }
+            } else {
+                addTest('WebGL', 'WebGL support', 'Not available', 'warning');
+            }
+        } catch (e) {
+            addTest('WebGL', 'WebGL test', 'Error: ' + e.message, 'fail');
+        }
+
+        // 6. Screen Tests
+        addTest('Screen', 'Resolution', 
+            `${screen.width}x${screen.height}`,
+            screen.width > 0 && screen.height > 0 ? 'pass' : 'fail');
+
+        addTest('Screen', 'Color depth', 
+            screen.colorDepth,
+            screen.colorDepth >= 24 ? 'pass' : 'warning');
+
+        addTest('Screen', 'Available screen', 
+            `${screen.availWidth}x${screen.availHeight}`,
+            screen.availWidth > 0 && screen.availHeight > 0 ? 'pass' : 'fail');
+
+        // 7. Permissions API Test
+        if (navigator.permissions) {
+            try {
+                const result = await navigator.permissions.query({ name: 'notifications' });
+                addTest('Permissions', 'Notifications permission', 
+                    result.state,
+                    result.state === 'prompt' || result.state === 'granted' ? 'pass' : 'warning');
+            } catch (e) {
+                addTest('Permissions', 'Permissions API', 'Error: ' + e.message, 'warning');
+            }
+        } else {
+            addTest('Permissions', 'Permissions API', 'Not available', 'warning');
+        }
+
+        // 8. Client Hints Tests
+        if (navigator.userAgentData) {
+            addTest('Client Hints', 'userAgentData.brands', 
+                JSON.stringify(navigator.userAgentData.brands),
+                navigator.userAgentData.brands.length > 0 ? 'pass' : 'warning');
+
+            addTest('Client Hints', 'userAgentData.mobile', 
+                navigator.userAgentData.mobile,
+                'pass');
+
+            addTest('Client Hints', 'userAgentData.platform', 
+                navigator.userAgentData.platform,
+                navigator.userAgentData.platform ? 'pass' : 'warning');
+        } else {
+            addTest('Client Hints', 'userAgentData', 'Not available', 'warning');
+        }
+
+        // 9. Connection API Test
+        if (navigator.connection) {
+            addTest('Connection', 'effectiveType', 
+                navigator.connection.effectiveType,
+                navigator.connection.effectiveType ? 'pass' : 'warning');
+        } else {
+            addTest('Connection', 'Connection API', 'Not available', 'pass');
+        }
+
+        // 10. Battery API Test (often blocked in automation)
+        if (navigator.getBattery) {
+            try {
+                const battery = await navigator.getBattery();
+                addTest('Battery', 'Battery level', 
+                    battery.level,
+                    battery.level >= 0 && battery.level <= 1 ? 'pass' : 'warning');
+            } catch (e) {
+                addTest('Battery', 'Battery API', 'Error: ' + e.message, 'pass');
+            }
+        } else {
+            addTest('Battery', 'Battery API', 'Not available', 'pass');
+        }
+
+        // 11. AudioContext Test
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            const context = new AudioContext();
+            const oscillator = context.createOscillator();
+            const analyser = context.createAnalyser();
+            oscillator.connect(analyser);
+            analyser.connect(context.destination);
+            const data = new Float32Array(analyser.frequencyBinCount);
+            analyser.getFloatFrequencyData(data);
+            addTest('Audio', 'AudioContext fingerprint', 
+                'Available',
+                'pass');
+            context.close();
+        } catch (e) {
+            addTest('Audio', 'AudioContext', 'Error: ' + e.message, 'warning');
+        }
+
+        // 12. Font Detection
+        const testFonts = ['Arial', 'Helvetica', 'Times New Roman', 'Comic Sans MS'];
+        const fontDetected = testFonts.filter(font => {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            context.font = `72px ${font}`;
+            const width1 = context.measureText('mmmmmmmmmmlli').width;
+            context.font = '72px monospace';
+            const width2 = context.measureText('mmmmmmmmmmlli').width;
+            return width1 !== width2;
+        });
+        addTest('Fonts', 'Common fonts detected', 
+            fontDetected.length + '/' + testFonts.length,
+            fontDetected.length >= 2 ? 'pass' : 'warning');
+
+        // 13. Notification Permission
+        addTest('Notifications', 'Permission', 
+            Notification.permission,
+            Notification.permission === 'default' || Notification.permission === 'granted' ? 'pass' : 'warning');
+
+        // 14. Document State
+        addTest('Document', 'hidden', 
+            document.hidden,
+            !document.hidden ? 'pass' : 'warning');
+
+        addTest('Document', 'visibilityState', 
+            document.visibilityState,
+            document.visibilityState === 'visible' ? 'pass' : 'warning');
+
+        // 15. Console Detection
+        let consoleRef = console.log;
+        let consoleOverridden = false;
+        try {
+            console.log = function() {};
+            consoleOverridden = console.log !== consoleRef;
+            console.log = consoleRef;
+        } catch (e) {}
+        addTest('Console', 'Console.log overridden', 
+            consoleOverridden,
+            !consoleOverridden ? 'pass' : 'warning');
+
+        // Display results
+        displayResults();
+    }
+
+    function displayResults() {
+        const resultsDiv = document.getElementById('test-results');
+        const categories = {};
+
+        // Group tests by category
+        tests.forEach(test => {
+            if (!categories[test.category]) {
+                categories[test.category] = [];
+            }
+            categories[test.category].push(test);
+        });
+
+        // Display by category
+        Object.entries(categories).forEach(([category, categoryTests]) => {
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            
+            const header = document.createElement('h2');
+            header.textContent = category;
+            section.appendChild(header);
+
+            categoryTests.forEach(test => {
+                const item = document.createElement('div');
+                item.className = 'test-item';
+                
+                const name = document.createElement('div');
+                name.className = 'test-name';
+                name.textContent = test.name;
+                
+                const value = document.createElement('div');
+                value.className = 'test-value';
+                value.textContent = test.value;
+                
+                const status = document.createElement('div');
+                status.className = `test-status status-${test.status}`;
+                status.textContent = test.status.toUpperCase();
+                
+                item.appendChild(name);
+                item.appendChild(value);
+                item.appendChild(status);
+                section.appendChild(item);
+            });
+            
+            resultsDiv.appendChild(section);
+        });
+
+        // Display overall score
+        const scorePercent = Math.round((totalScore / maxScore) * 100);
+        const scoreDiv = document.getElementById('overall-score');
+        scoreDiv.textContent = `Overall Score: ${scorePercent}%`;
+        
+        if (scorePercent >= 80) {
+            scoreDiv.className = 'score-good';
+            scoreDiv.textContent += ' - Likely a legitimate browser';
+        } else if (scorePercent >= 60) {
+            scoreDiv.className = 'score-medium';
+            scoreDiv.textContent += ' - Some suspicious characteristics';
+        } else {
+            scoreDiv.className = 'score-bad';
+            scoreDiv.textContent += ' - Likely automated/bot';
+        }
+    }
+
+    // Run tests when page loads
+    window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>

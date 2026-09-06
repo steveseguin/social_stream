@@ -1,0 +1,34 @@
+
+=========================================================
+Round: round-1776574869688
+Endpoint: http://10.0.0.214:8000/v1/chat/completions   model: qwen3.6-35b-a3b-fp8
+=========================================================
+
+--- chat-overlay ---
+  generated 4792 chars in 5193ms
+  [✓] three chat messages appear in DOM
+  [✓] bot messages are filtered out
+  [✓] system events are filtered out of chat
+  [✓] message content is rendered
+
+--- alert-banner ---
+  generated 8928 chars in 9874ms
+  [✓] follower alert appears with the name
+  [✗] subscriber alert appears with the name — subscriber alert missing in DOM
+  [✗] gifted-sub alert appears with the name — gifted-sub alert missing in DOM
+  [✗] donation alert appears with name and amount — donation alert missing name
+  [✗] raid alert appears with the raider name — raid alert missing in DOM
+
+--- viewer-ticker ---
+  generated 7712 chars in 7915ms
+  [✗] renders platform counts from viewer_updates — missing count 815 in DOM
+  [✗] shows a combined total — combined total 150 not rendered
+  [✗] updates when a new viewer_updates arrives — updated count 9999 missing
+  [!] page/console errors:
+      pageerror: Cannot set properties of null (setting 'src')
+
+--- round summary ---
+  chat-overlay: 4/4
+  alert-banner: 1/5
+  viewer-ticker: 0/3
+  TOTAL: 5/12

@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem("darkMode");
+				var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+				if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+					document.documentElement.classList.add("dark-mode");
+				}
+			})();
+		</script>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Export Settings for Support - Social Stream Ninja</title>
+		<link rel="stylesheet" href="css/styles.css" />
+		<link rel="stylesheet" href="css/guides.css" />
+		<link rel="icon" href="../icons/favicon.ico" type="image/x-icon" />
+		<meta name="description" content="Export Social Stream Ninja settings and the OBS scene collection or profile needed for troubleshooting." />
+	</head>
+	<body>
+		<header>
+			<div class="container">
+				<div class="logo">
+					<a href="../index.html">
+						<img src="../icons/logo.svg" alt="Social Stream Ninja Logo" />
+						<span>Social Stream Ninja</span>
+					</a>
+				</div>
+				<nav>
+					<ul>
+						<li><a href="../index.html">Home</a></li>
+						<li><a href="../docs/features.html">Features</a></li>
+						<li><a href="../docs/download.html">Download</a></li>
+						<li><a href="../docs/guides.html" class="active">Guides</a></li>
+						<li><a href="../docs/commands.html">Commands &amp; API</a></li>
+						<li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+						<li><a href="../docs/templates.html">Templates</a></li>
+						<li><a href="../docs/services.html">Hire</a></li>
+						<li><a href="../docs/support.html">Support</a></li>
+					</ul>
+				</nav>
+				<div class="header-controls">
+					<button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+						<svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+						<svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+							<circle cx="12" cy="12" r="5"></circle>
+							<line x1="12" y1="1" x2="12" y2="3"></line>
+							<line x1="12" y1="21" x2="12" y2="23"></line>
+							<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+							<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+							<line x1="1" y1="12" x2="3" y2="12"></line>
+							<line x1="21" y1="12" x2="23" y2="12"></line>
+							<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+							<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+						</svg>
+					</button>
+					<div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+				</div>
+			</div>
+		</header>
+
+		<section class="page-hero">
+			<div class="container">
+				<h1>Export Settings for Support</h1>
+				<p>Send the files that show where an unexpected sound or other OBS problem is coming from.</p>
+			</div>
+		</section>
+
+		<main class="guide-section">
+			<div class="container">
+				<div class="guide-card">
+					<h2>What To Export</h2>
+					<p>For an unexpected donation beep, start with these two files:</p>
+					<ul class="guide-list">
+						<li><strong>Social Stream Ninja settings:</strong> shows the enabled options and generated links.</li>
+						<li><strong>OBS Scene Collection:</strong> shows scenes, browser sources, media sources, source URLs, and global audio sources.</li>
+					</ul>
+					<p>An OBS Profile is normally not needed for a browser-source beep. Export it only if support asks for output, video, or account-related settings.</p>
+					<div class="warning-note"><strong>Keep exports private.</strong> They can contain session passwords, webhook URLs, source URLs, connected-account details, or a stream key. Send them only to the person reviewing the problem, never in a public chat or forum.</div>
+				</div>
+
+				<div class="guide-card">
+					<h2>1. Export Social Stream Ninja Settings</h2>
+					<ol class="guide-steps">
+						<li>Open the Social Stream Ninja control panel.</li>
+						<li>Scroll to <strong>Global settings and tools</strong>.</li>
+						<li>If you are already near the bottom of the page, select the <strong>JUMP</strong> link beside “Looking for the Global settings?” to move there.</li>
+						<li>Under Global settings, find and select <strong>Export / import</strong>.</li>
+					</ol>
+					<figure class="guide-figure">
+						<img src="images/guides/ssn-global-settings-export-menu.png" alt="Social Stream Ninja Global settings showing the Export and import menu" class="guide-image guide-image-medium" />
+						<figcaption>In Global settings, select Export / import to open its options.</figcaption>
+					</figure>
+					<ol class="guide-steps" start="5">
+						<li>Scroll inside the expanded section until you see <strong>Export/import settings</strong>.</li>
+						<li>Select <strong>Export to disk</strong>.</li>
+						<li>Choose where to save the file and enter any filename you like. Keep the <strong>.data</strong> extension.</li>
+						<li>Select <strong>Save</strong>, then send that settings file privately to support without editing it.</li>
+					</ol>
+					<figure class="guide-figure">
+						<img src="images/guides/ssn-export-import-settings.png" alt="Expanded Social Stream Ninja Export import settings with Export to disk highlighted" class="guide-image guide-image-medium" />
+						<figcaption>Scroll to Export/import settings, then select Export to disk. The saved file can have any filename.</figcaption>
+					</figure>
+				</div>
+
+				<div class="guide-card">
+					<h2>2. Export The OBS Scene Collection</h2>
+					<ol class="guide-steps">
+						<li>In OBS, switch to the Scene Collection used when the problem happens.</li>
+						<li>Select <strong>Scene Collection</strong> in the top menu.</li>
+						<li>Select <strong>Export...</strong>, choose a folder, and save the JSON file.</li>
+						<li>If the problem happens in more than one collection, export each affected collection.</li>
+					</ol>
+					<figure class="guide-figure">
+						<img src="images/guides/obs-export-scene-collection-menu.png" alt="OBS Scene Collection menu with Export selected as the next step" class="guide-image guide-image-narrow" />
+						<figcaption>Scene Collection &gt; Export saves the scenes and sources a reviewer needs to inspect unexpected browser-source audio.</figcaption>
+					</figure>
+				</div>
+
+				<div class="guide-card">
+					<h2>3. Export The OBS Profile Only If Asked</h2>
+					<ol class="guide-steps">
+						<li>Switch to the affected OBS Profile.</li>
+						<li>Select <strong>Profile</strong> in the top menu.</li>
+						<li>Select <strong>Export...</strong>, choose a folder, and save the JSON file.</li>
+					</ol>
+					<figure class="guide-figure">
+						<img src="images/guides/obs-export-profile-menu.png" alt="OBS Profile menu showing the Export option" class="guide-image guide-image-narrow" />
+						<figcaption>A Profile contains output, video, stream, and connected-account settings; it does not contain scenes.</figcaption>
+					</figure>
+					<div class="warning-note">A Profile can include connected-account or stream-key information. Share it privately and only when it is required.</div>
+				</div>
+
+				<div class="guide-card">
+					<h2>Send The Support Package</h2>
+					<p>Attach the Social Stream Ninja settings file (<strong>.data</strong>) and OBS Scene Collection JSON. Also include the name of the donation platform and the approximate time the sound happened.</p>
+					<p>If the problem is hard to reproduce, a short clip with one donation is useful. Include the OBS Profile JSON only when support specifically asks for it.</p>
+				</div>
+			</div>
+		</main>
+
+		<footer>
+			<div class="container">
+				<div class="footer-bottom">
+					<p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p>
+				</div>
+			</div>
+		</footer>
+		<script src="js/main.js"></script>
+		<script>
+			document.getElementById("current-year").textContent = new Date().getFullYear();
+		</script>
+	</body>
+</html>

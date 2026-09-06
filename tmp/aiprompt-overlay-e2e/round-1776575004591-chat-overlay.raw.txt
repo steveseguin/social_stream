@@ -1,0 +1,199 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Chat Overlay</title>
+<style>
+  :root {
+    --bg-color: rgba(0, 0, 0, 0.6);
+    --text-color: #ffffff;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --max-width: 600px;
+    --row-height: 40px;
+    --avatar-size: 32px;
+    --border-radius: 4px;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--font-family);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #chat-container {
+    width: var(--max-width);
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: 20px;
+    pointer-events: none; /* Let clicks pass through to OBS scene */
+  }
+
+  .chat-row {
+    display: flex;
+    align-items: center;
+    background: var(--bg-color);
+    padding: 6px 10px;
+    margin-top: 4px;
+    border-radius: var(--border-radius);
+    animation: fadeIn 0.3s ease-out;
+    box-sizing: border-box;
+    opacity: 0;
+    animation-fill-mode: forwards;
+  }
+
+  .avatar {
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    border-radius: 50%;
+    margin-right: 10px;
+    background-color: #333;
+    flex-shrink: 0;
+    object-fit: cover;
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .username {
+    font-weight: bold;
+    font-size: 0.9em;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .message {
+    font-size: 0.95em;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div id="chat-container"></div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  // 1. Parse URL Params
+  var params = new URLSearchParams(location.search);
+  var limit = parseInt(params.get("limit"), 10) || 10;
+  var container = document.getElementById("chat-container");
+  var bridge = document.getElementById("ssn_bridge");
+
+  // 2. Setup Bridge
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "chat_overlay_" + Date.now();
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  // 3. Helper: Escape HTML to prevent XSS
+  function escapeHtml(text) {
+    if (!text) return "";
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+  }
+
+  // 4. Render Logic
+  function addChatRow(data) {
+    // Filter: Must have chatname and chatmessage
+    if (!data.chatname || !data.chatmessage) return;
+    
+    // Filter: No bots
+    if (data.bot === true) return;
+
+    // Filter: No events (system messages)
+    if (data.event) return;
+
+    // Create Row
+    var row = document.createElement("div");
+    row.className = "chat-row";
+
+    // Avatar
+    var img = document.createElement("img");
+    img.className = "avatar";
+    img.src = data.chatimg || "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"; // 1x1 transparent gif fallback
+    img.onerror = function() { this.style.display = 'none'; };
+    row.appendChild(img);
+
+    // Content Wrapper
+    var contentDiv = document.createElement("div");
+    contentDiv.className = "content";
+
+    // Username
+    var nameSpan = document.createElement("span");
+    nameSpan.className = "username";
+    nameSpan.textContent = data.chatname;
+    if (data.nameColor) nameSpan.style.color = data.nameColor;
+    contentDiv.appendChild(nameSpan);
+
+    // Message
+    var msgSpan = document.createElement("span");
+    msgSpan.className = "message";
+    msgSpan.textContent = data.chatmessage;
+    contentDiv.appendChild(msgSpan);
+
+    row.appendChild(contentDiv);
+
+    // Add to DOM
+    container.appendChild(row);
+
+    // Enforce Limit
+    while (container.children.length > limit) {
+      container.removeChild(container.firstChild);
+    }
+  }
+
+  // 5. Message Handler
+  function handlePayload(data) {
+    if (!data) return;
+    addChatRow(data);
+  }
+
+  // Listen for Bridge Messages
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handlePayload(payload);
+    }
+  });
+
+  // Expose for testing
+  window.handleOverlayPayload = handlePayload;
+})();
+</script>
+</body>
+</html>
+```

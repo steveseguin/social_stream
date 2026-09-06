@@ -1,0 +1,274 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    --alert-bg: rgba(20, 20, 30, 0.9);
+    --alert-border: #00d2ff;
+    --alert-text: #ffffff;
+    --alert-accent: #ff0055;
+    --alert-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --alert-width: 400px;
+    --alert-height: 100px;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--alert-font);
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none; /* Let clicks pass through to OBS */
+  }
+
+  #alert-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9999;
+  }
+
+  .alert-card {
+    width: var(--alert-width);
+    height: var(--alert-height);
+    background: var(--alert-bg);
+    border-left: 6px solid var(--alert-border);
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    animation: slideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    position: relative;
+    overflow: hidden;
+    pointer-events: auto;
+  }
+
+  /* Specific styles for different alert types */
+  .alert-card[data-type="donation"] {
+    border-left-color: #ffd700;
+    background: linear-gradient(135deg, rgba(40,40,10,0.95), rgba(20,20,30,0.95));
+  }
+  
+  .alert-card[data-type="raid"] {
+    border-left-color: #ff0055;
+    background: linear-gradient(135deg, rgba(40,10,10,0.95), rgba(20,20,30,0.95));
+  }
+
+  .alert-card[data-type="gifted"] {
+    border-left-color: #00ff88;
+  }
+
+  .alert-icon {
+    font-size: 32px;
+    width: 40px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .alert-content {
+    flex-grow: 1;
+    color: var(--alert-text);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .alert-title {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.8;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+
+  .alert-message {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .alert-subtext {
+    font-size: 12px;
+    opacity: 0.7;
+    margin-top: 2px;
+  }
+
+  .alert-timer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: var(--alert-border);
+    width: 100%;
+    transform-origin: left;
+  }
+  
+  .alert-card[data-type="donation"] .alert-timer { background: #ffd700; }
+  .alert-card[data-type="raid"] .alert-timer { background: #ff0055; }
+
+  @keyframes slideIn {
+    0% { transform: translateX(120%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+  }
+
+  @keyframes fadeOut {
+    0% { transform: translateX(0); opacity: 1; }
+    100% { transform: translateX(120%); opacity: 0; }
+  }
+
+  .removing {
+    animation: fadeOut 0.5s ease-in forwards;
+  }
+</style>
+</head>
+<body>
+
+<div id="alert-container"></div>
+
+<script>
+(function() {
+  // VDO.Ninja Bridge Setup
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "alert_overlay_" + Date.now();
+  var bridge = document.createElement("iframe");
+  bridge.id = "ssn_bridge";
+  bridge.style.display = "none";
+  document.body.appendChild(bridge);
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") handlePayload(payload);
+  });
+
+  // Helper to escape HTML
+  function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function handlePayload(data) {
+    if (!data) return;
+
+    // Determine alert type
+    var type = null;
+    var icon = '';
+    var title = '';
+    var message = '';
+    var subtext = '';
+
+    // 1. New Follower
+    if (data.event === "new_follower") {
+      type = "follow";
+      icon = '👤';
+      title = 'New Follower';
+      message = escapeHtml(data.chatname) + ' just followed!';
+    }
+    // 2. Subscriber (Membership set or event)
+    else if (data.event === "subscriber" || data.membership) {
+      type = "sub";
+      icon = '⭐';
+      title = 'New Subscriber';
+      message = escapeHtml(data.chatname) + ' subscribed';
+      if (data.membership) {
+        subtext = escapeHtml(data.membership);
+      }
+    }
+    // 3. Gifted Sub
+    else if (data.event === "subscription_gift" || data.event === "gifted") {
+      type = "gifted";
+      icon = '🎁';
+      title = 'Gifted Sub';
+      message = escapeHtml(data.chatname) + ' gifted subs';
+      if (data.subtitle) {
+        subtext = escapeHtml(data.subtitle);
+      }
+    }
+    // 4. Donation
+    else if (data.hasDonation) {
+      type = "donation";
+      icon = '💰';
+      title = 'Donation';
+      message = escapeHtml(data.hasDonation);
+      if (data.chatmessage) {
+        subtext = '"' + escapeHtml(data.chatmessage) + '"';
+      }
+    }
+    // 5. Raid
+    else if (data.event === "raid") {
+      type = "raid";
+      icon = '🚀';
+      title = 'Incoming Raid!';
+      message = escapeHtml(data.chatname) + ' is raiding with ' + (data.meta || 'viewers');
+    }
+
+    if (type) {
+      showAlert(type, icon, title, message, subtext);
+    }
+  }
+
+  function showAlert(type, icon, title, message, subtext) {
+    var container = document.getElementById('alert-container');
+    var card = document.createElement('div');
+    card.className = 'alert-card';
+    card.setAttribute('data-type', type);
+
+    card.innerHTML = `
+      <div class="alert-icon">${icon}</div>
+      <div class="alert-content">
+        <div class="alert-title">${title}</div>
+        <div class="alert-message">${message}</div>
+        ${subtext ? '<div class="alert-subtext">' + subtext + '</div>' : ''}
+      </div>
+      <div class="alert-timer"></div>
+    `;
+
+    container.appendChild(card);
+
+    // Animate timer
+    var timer = card.querySelector('.alert-timer');
+    timer.style.transition = 'transform 4s linear';
+    // Force reflow
+    void timer.offsetWidth; 
+    timer.style.transform = 'scaleX(0)';
+
+    // Auto remove after 4 seconds
+    setTimeout(function() {
+      card.classList.add('removing');
+      setTimeout(function() {
+        if (card.parentNode) {
+          card.parentNode.removeChild(card);
+        }
+      }, 500); // Wait for fade out animation
+    }, 4000);
+  }
+
+  // Expose for testing
+  window.handleOverlayPayload = handlePayload;
+})();
+</script>
+</body>
+</html>
+```

@@ -1,0 +1,302 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>SSN Bottom Bar — Viewer Counts</title>
+<style>
+  :root {
+    --bar-bg: rgba(0, 0, 0, 0.65);
+    --bar-radius: 8px;
+    --bar-padding: 8px 16px;
+    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-size: 14px;
+    --font-weight: 600;
+    --text-color: #ffffff;
+    --text-muted: #aaaaaa;
+    --divider-color: rgba(255, 255, 255, 0.15);
+    --platform-youtube: #ff0000;
+    --platform-twitch: #9146ff;
+    --platform-kick: #53fc18;
+    --platform-tiktok: #ff0050;
+    --platform-facebook: #1877f2;
+    --platform-rumble: #8bc34a;
+    --platform-discord: #5865f2;
+    --platform-default: #888888;
+    --total-color: #ffd700;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: transparent;
+    font-family: var(--font-family);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  #bar-container {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bar-bg);
+    border-radius: var(--bar-radius);
+    padding: var(--bar-padding);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+
+  #bar-container.visible {
+    opacity: 1;
+  }
+
+  .platform-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .platform-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .platform-name {
+    color: var(--text-muted);
+    font-size: var(--font-size);
+    font-weight: var(--font-weight);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .platform-count {
+    color: var(--text-color);
+    font-size: var(--font-size);
+    font-weight: var(--font-weight);
+    min-width: 2ch;
+    text-align: right;
+  }
+
+  .divider {
+    width: 1px;
+    height: 20px;
+    background: var(--divider-color);
+    flex-shrink: 0;
+  }
+
+  .total-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .total-label {
+    color: var(--total-color);
+    font-size: var(--font-size);
+    font-weight: var(--font-weight);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .total-count {
+    color: var(--total-color);
+    font-size: var(--font-size);
+    font-weight: 700;
+    min-width: 2ch;
+    text-align: right;
+  }
+
+  /* Platform color classes */
+  .dot-youtube { background: var(--platform-youtube); }
+  .dot-twitch { background: var(--platform-twitch); }
+  .dot-kick { background: var(--platform-kick); }
+  .dot-tiktok { background: var(--platform-tiktok); }
+  .dot-facebook { background: var(--platform-facebook); }
+  .dot-rumble { background: var(--platform-rumble); }
+  .dot-discord { background: var(--platform-discord); }
+  .dot-default { background: var(--platform-default); }
+</style>
+</head>
+<body>
+
+<div id="bar-container">
+  <div id="platform-stats"></div>
+  <div class="divider"></div>
+  <div class="total-stat">
+    <span class="total-label">Total</span>
+    <span class="total-count" id="total-count">0</span>
+  </div>
+</div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+<script>
+(function () {
+  /* ---------- DOM refs ---------- */
+  var container = document.getElementById("bar-container");
+  var platformStats = document.getElementById("platform-stats");
+  var totalCountEl = document.getElementById("total-count");
+
+  /* ---------- State ---------- */
+  var currentMeta = {};
+  var platformOrder = ["youtube", "twitch", "kick", "tiktok", "facebook", "rumble", "discord"];
+
+  /* ---------- Helpers ---------- */
+  function escapeText(str) {
+    var div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function getPlatformColorClass(platform) {
+    var cls = "dot-" + platform.toLowerCase();
+    var validPlatforms = ["youtube", "twitch", "kick", "tiktok", "facebook", "rumble", "discord"];
+    if (validPlatforms.indexOf(platform.toLowerCase()) === -1) {
+      cls = "dot-default";
+    }
+    return cls;
+  }
+
+  function formatNumber(n) {
+    if (typeof n !== "number" || isNaN(n)) return "0";
+    return n.toLocaleString("en-US");
+  }
+
+  /* ---------- Render ---------- */
+  function render() {
+    platformStats.innerHTML = "";
+    var total = 0;
+    var hasData = false;
+
+    // Render known platforms first
+    for (var i = 0; i < platformOrder.length; i++) {
+      var key = platformOrder[i];
+      if (currentMeta.hasOwnProperty(key)) {
+        var val = currentMeta[key];
+        if (typeof val === "number" && val > 0) {
+          hasData = true;
+          total += val;
+
+          var stat = document.createElement("div");
+          stat.className = "platform-stat";
+
+          var dot = document.createElement("span");
+          dot.className = "platform-dot " + getPlatformColorClass(key);
+          stat.appendChild(dot);
+
+          var name = document.createElement("span");
+          name.className = "platform-name";
+          name.textContent = key;
+          stat.appendChild(name);
+
+          var count = document.createElement("span");
+          count.className = "platform-count";
+          count.textContent = formatNumber(val);
+          stat.appendChild(count);
+
+          platformStats.appendChild(stat);
+        }
+      }
+    }
+
+    // Render any unknown platforms
+    var knownKeys = {};
+    for (var j = 0; j < platformOrder.length; j++) {
+      knownKeys[platformOrder[j]] = true;
+    }
+    for (var key in currentMeta) {
+      if (currentMeta.hasOwnProperty(key) && !knownKeys[key]) {
+        var val = currentMeta[key];
+        if (typeof val === "number" && val > 0) {
+          hasData = true;
+          total += val;
+
+          var stat = document.createElement("div");
+          stat.className = "platform-stat";
+
+          var dot = document.createElement("span");
+          dot.className = "platform-dot dot-default";
+          stat.appendChild(dot);
+
+          var name = document.createElement("span");
+          name.className = "platform-name";
+          name.textContent = key;
+          stat.appendChild(name);
+
+          var count = document.createElement("span");
+          count.className = "platform-count";
+          count.textContent = formatNumber(val);
+          stat.appendChild(count);
+
+          platformStats.appendChild(stat);
+        }
+      }
+    }
+
+    totalCountEl.textContent = formatNumber(total);
+
+    if (hasData) {
+      container.classList.add("visible");
+    } else {
+      container.classList.remove("visible");
+    }
+  }
+
+  /* ---------- VDO.Ninja Bridge ---------- */
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_viewerbar_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handlePayload(payload);
+    }
+  });
+
+  function handlePayload(data) {
+    if (!data) return;
+
+    // Only process viewer_updates snapshots
+    if (data.event === "viewer_updates" && data.meta) {
+      var meta = data.meta;
+      if (typeof meta === "object" && !Array.isArray(meta)) {
+        currentMeta = {};
+        for (var key in meta) {
+          if (meta.hasOwnProperty(key)) {
+            var val = parseInt(meta[key], 10);
+            if (!isNaN(val)) {
+              currentMeta[key] = val;
+            }
+          }
+        }
+        render();
+      }
+    }
+  }
+
+  window.handleOverlayPayload = handlePayload;
+
+  // Initial render (hidden until data arrives)
+  render();
+})();
+</script>
+</body>
+</html>
+```

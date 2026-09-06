@@ -1,0 +1,331 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SSN Viewer Counter Bar</title>
+<style>
+  :root {
+    --bar-bg: rgba(0, 0, 0, 0.75);
+    --bar-text: #ffffff;
+    --bar-text-dim: #aaaaaa;
+    --bar-font: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --bar-radius: 6px;
+    --bar-padding: 6px 14px;
+    --bar-gap: 10px;
+    --bar-font-size: 14px;
+    --bar-font-size-total: 16px;
+    --bar-font-weight: 600;
+    --bar-font-weight-total: 700;
+    --bar-platform-colors: #ff4444, #9146ff, #53fc18, #fe2c55, #01aef0, #f24c5e, #7c3aed;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: transparent;
+    font-family: var(--bar-font);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #viewer-bar {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: var(--bar-gap);
+    background: var(--bar-bg);
+    border-radius: var(--bar-radius);
+    padding: var(--bar-padding);
+    white-space: nowrap;
+    z-index: 9999;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+  }
+
+  #viewer-bar.visible {
+    opacity: 1;
+  }
+
+  .viewer-segment {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+  }
+
+  .viewer-platform {
+    font-size: var(--bar-font-size);
+    font-weight: var(--bar-font-weight);
+    color: var(--bar-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .viewer-count {
+    font-size: var(--bar-font-size);
+    font-weight: var(--bar-font-weight);
+    color: var(--bar-text);
+  }
+
+  .viewer-divider {
+    width: 1px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+  }
+
+  .viewer-total {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+  }
+
+  .viewer-total-label {
+    font-size: var(--bar-font-size);
+    font-weight: var(--bar-font-weight);
+    color: var(--bar-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .viewer-total-count {
+    font-size: var(--bar-font-size-total);
+    font-weight: var(--bar-font-weight-total);
+    color: #ffffff;
+  }
+
+  /* Platform accent colors via CSS variables */
+  .platform-youtube { color: #ff4444 !important; }
+  .platform-twitch { color: #9146ff !important; }
+  .platform-kick { color: #53fc18 !important; }
+  .platform-tiktok { color: #fe2c55 !important; }
+  .platform-facebook { color: #01aef0 !important; }
+  .platform-rumble { color: #f24c5e !important; }
+  .platform-discord { color: #7c3aed !important; }
+  .platform-whatnot { color: #ff6b35 !important; }
+  .platform-x { color: #1da1f2 !important; }
+  .platform-bluesky { color: #0085ff !important; }
+  .platform-mastodon { color: #6364ff !important; }
+  .platform-peertube { color: #d64040 !important; }
+  .platform-others { color: #888888 !important; }
+
+  .platform-youtube .viewer-platform { color: #ff4444 !important; }
+  .platform-twitch .viewer-platform { color: #9146ff !important; }
+  .platform-kick .viewer-platform { color: #53fc18 !important; }
+  .platform-tiktok .viewer-platform { color: #fe2c55 !important; }
+  .platform-facebook .viewer-platform { color: #01aef0 !important; }
+  .platform-rumble .viewer-platform { color: #f24c5e !important; }
+  .platform-discord .viewer-platform { color: #7c3aed !important; }
+  .platform-whatnot .viewer-platform { color: #ff6b35 !important; }
+  .platform-x .viewer-platform { color: #1da1f2 !important; }
+  .platform-bluesky .viewer-platform { color: #0085ff !important; }
+  .platform-mastodon .viewer-platform { color: #6364ff !important; }
+  .platform-peertube .viewer-platform { color: #d64040 !important; }
+  .platform-others .viewer-platform { color: #888888 !important; }
+
+  .viewer-count.pulse {
+    animation: countPulse 0.35s ease-out;
+  }
+
+  @keyframes countPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+</style>
+</head>
+<body>
+
+<div id="viewer-bar">
+  <div id="viewer-segments"></div>
+  <div class="viewer-divider"></div>
+  <div class="viewer-total">
+    <span class="viewer-total-label">Total</span>
+    <span class="viewer-total-count" id="viewer-total-count">0</span>
+  </div>
+</div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---- Config from URL params ---- */
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "viewer_bar_" + Date.now();
+  var hidetype = params.get("hidetype") || "";
+  var onlytype = params.get("onlytype") || "";
+
+  var hiddenTypes = hidetype.split(",").map(function (t) { return t.trim().toLowerCase(); });
+  var allowedTypes = onlytype.split(",").map(function (t) { return t.trim().toLowerCase(); });
+
+  /* ---- State ---- */
+  var viewerState = {};
+  var prevCounts = {};
+
+  /* ---- DOM refs ---- */
+  var bar = document.getElementById("viewer-bar");
+  var segmentsEl = document.getElementById("viewer-segments");
+  var totalCountEl = document.getElementById("viewer-total-count");
+
+  /* ---- Helpers ---- */
+  function escapeText(str) {
+    var div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function formatNumber(n) {
+    return Number(n || 0).toLocaleString("en-US");
+  }
+
+  function isHidden(type) {
+    if (!type) return false;
+    var t = type.toLowerCase();
+    for (var i = 0; i < hiddenTypes.length; i++) {
+      if (t === hiddenTypes[i]) return true;
+    }
+    return false;
+  }
+
+  function isAllowed(type) {
+    if (!onlytype) return true;
+    if (!type) return false;
+    var t = type.toLowerCase();
+    for (var i = 0; i < allowedTypes.length; i++) {
+      if (t === allowedTypes[i]) return true;
+    }
+    return false;
+  }
+
+  function getPlatformClass(type) {
+    if (!type) return "platform-others";
+    var t = type.toLowerCase();
+    return "platform-" + t;
+  }
+
+  /* ---- Render ---- */
+  function render() {
+    var keys = Object.keys(viewerState);
+    var total = 0;
+
+    segmentsEl.innerHTML = "";
+
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      var count = viewerState[key];
+      var type = key;
+
+      if (isHidden(type) || !isAllowed(type)) continue;
+      if (count <= 0) continue;
+
+      total += count;
+
+      var seg = document.createElement("div");
+      seg.className = "viewer-segment " + getPlatformClass(type);
+
+      var platformSpan = document.createElement("span");
+      platformSpan.className = "viewer-platform";
+      platformSpan.textContent = escapeText(type);
+
+      var countSpan = document.createElement("span");
+      countSpan.className = "viewer-count";
+      countSpan.textContent = formatNumber(count);
+
+      seg.appendChild(platformSpan);
+      seg.appendChild(countSpan);
+      segmentsEl.appendChild(seg);
+    }
+
+    /* Animate total change */
+    var newTotalStr = formatNumber(total);
+    if (totalCountEl.textContent !== newTotalStr) {
+      totalCountEl.textContent = newTotalStr;
+      totalCountEl.classList.remove("pulse");
+      void totalCountEl.offsetWidth;
+      totalCountEl.classList.add("pulse");
+    }
+
+    /* Show/hide bar */
+    if (total > 0) {
+      bar.classList.add("visible");
+    } else {
+      bar.classList.remove("visible");
+    }
+  }
+
+  /* ---- Payload handler ---- */
+  function handlePayload(data) {
+    if (!data) return;
+
+    /* Handle viewer_updates snapshot */
+    if (data.event === "viewer_updates" && data.meta && typeof data.meta === "object") {
+      var newMeta = data.meta;
+      var changed = false;
+
+      /* Replace entire state (snapshot semantics) */
+      viewerState = {};
+      for (var key in newMeta) {
+        if (Object.prototype.hasOwnProperty.call(newMeta, key)) {
+          var val = newMeta[key];
+          var num = parseInt(val, 10);
+          if (!isNaN(num) && num > 0) {
+            viewerState[key] = num;
+          }
+        }
+      }
+
+      render();
+      return;
+    }
+
+    /* Handle individual viewer_update events */
+    if (data.event === "viewer_update" && data.meta) {
+      var type = data.type || "unknown";
+      var delta = parseInt(data.meta, 10);
+      if (isNaN(delta)) return;
+
+      if (!viewerState[type]) viewerState[type] = 0;
+      viewerState[type] += delta;
+      if (viewerState[type] < 0) viewerState[type] = 0;
+
+      render();
+      return;
+    }
+  }
+
+  /* ---- Bridge setup ---- */
+  var bridge = document.getElementById("ssn_bridge");
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handlePayload(payload);
+    }
+  });
+
+  /* Allow manual test payloads */
+  window.handleOverlayPayload = handlePayload;
+  window.handlePayload = handlePayload;
+
+  /* Initial render */
+  render();
+
+})();
+</script>
+</body>
+</html>
+```

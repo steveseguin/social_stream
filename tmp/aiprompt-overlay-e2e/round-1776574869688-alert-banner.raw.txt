@@ -1,0 +1,321 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSN Alert Banner Overlay</title>
+<style>
+  :root {
+    --bg-gradient-start: rgba(0, 0, 0, 0.85);
+    --bg-gradient-end: rgba(20, 20, 20, 0.95);
+    --text-color: #ffffff;
+    --accent-color: #00ffcc;
+    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --border-radius: 12px;
+    --padding: 16px 24px;
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: transparent; /* OBS Overlay Requirement */
+    font-family: var(--font-family);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    pointer-events: none; /* Let clicks pass through to OBS/Scene */
+  }
+
+  #alert-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding-top: 40px;
+    gap: 10px;
+    z-index: 10;
+  }
+
+  .alert-card {
+    background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+    color: var(--text-color);
+    padding: var(--padding);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border-left: 6px solid var(--accent-color);
+    min-width: 300px;
+    max-width: 600px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+    animation: slideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    pointer-events: auto;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Distinct Border Colors per Type */
+  .alert-card[data-type="new_follower"] { border-left-color: #9b59b6; }
+  .alert-card[data-type="subscriber"] { border-left-color: #3498db; }
+  .alert-card[data-type="subscription_gift"] { border-left-color: #e74c3c; }
+  .alert-card[data-type="raid"] { border-left-color: #f1c40f; }
+  .alert-card[data-type="donation"] { border-left-color: #2ecc71; }
+
+  .alert-icon {
+    font-size: 2rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .alert-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+  }
+
+  .alert-header {
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .alert-user {
+    color: var(--accent-color);
+  }
+
+  .alert-detail {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    font-weight: 400;
+  }
+
+  .alert-donation-amount {
+    color: #2ecc71;
+    font-weight: bold;
+  }
+
+  /* Animations */
+  @keyframes slideIn {
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes fadeOut {
+    to {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.95);
+    }
+  }
+
+  .alert-card.removing {
+    animation: fadeOut 0.4s ease-in forwards;
+  }
+
+  /* Progress bar for auto-dismiss */
+  .alert-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: var(--accent-color);
+    width: 100%;
+    transform-origin: left;
+    animation: progress 4s linear forwards;
+  }
+  
+  .alert-card[data-type="new_follower"] .alert-progress { background: #9b59b6; }
+  .alert-card[data-type="subscriber"] .alert-progress { background: #3498db; }
+  .alert-card[data-type="subscription_gift"] .alert-progress { background: #e74c3c; }
+  .alert-card[data-type="raid"] .alert-progress { background: #f1c40f; }
+  .alert-card[data-type="donation"] .alert-progress { background: #2ecc71; }
+
+  @keyframes progress {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+  }
+
+  /* Hidden Bridge */
+  #ssn_bridge { display: none; }
+</style>
+</head>
+<body>
+
+<div id="alert-container"></div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  // --- Configuration ---
+  const AUTO_DISMISS_TIME = 4000; // 4 seconds
+  
+  // --- State ---
+  const container = document.getElementById('alert-container');
+  let isProcessing = false; // Queue management
+  const alertQueue = [];
+
+  // --- VDO.Ninja Bridge Setup ---
+  (function initBridge() {
+    var params = new URLSearchParams(location.search);
+    var roomID = params.get("session") || "";
+    var password = params.get("password") || "false";
+    var label = params.get("label") || "custom_overlay_alert_" + Date.now();
+    var bridge = document.getElementById("ssn_bridge");
+    
+    if (roomID) {
+      bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+        encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+        "&label=" + encodeURIComponent(label) +
+        "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+    }
+
+    window.addEventListener("message", function (event) {
+      var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+      if (typeof payload !== "undefined") {
+        handlePayload(payload);
+      }
+    });
+
+    window.handleOverlayPayload = handlePayload;
+  })();
+
+  // --- Core Logic ---
+
+  function handlePayload(data) {
+    if (!data) return;
+
+    // 1. Filter: Only process specific alert types
+    const isFollower = data.event === "new_follower";
+    const isSubscriber = data.event === "subscriber" || (data.membership && data.event !== "subscription_gift");
+    const isGifted = data.event === "subscription_gift" || data.event === "gifted";
+    const isDonation = !!data.hasDonation;
+    const isRaid = data.event === "raid";
+
+    if (!isFollower && !isSubscriber && !isGifted && !isDonation && !isRaid) {
+      return; // Not an alert we care about
+    }
+
+    // 2. Determine Type & Content
+    let type = "";
+    let icon = "";
+    let title = "";
+    let detail = "";
+    let user = data.chatname || "Anonymous";
+
+    if (isFollower) {
+      type = "new_follower";
+      icon = "👤";
+      title = "New Follower";
+      detail = user + " just followed!";
+    } else if (isSubscriber) {
+      type = "subscriber";
+      icon = "⭐";
+      title = "New Subscriber";
+      detail = user + " subscribed";
+      if (data.membership) detail += " (" + data.membership + ")";
+    } else if (isGifted) {
+      type = "subscription_gift";
+      icon = "🎁";
+      title = "Gifted Subs";
+      let count = data.subtitle || data.meta && data.meta.gift_count || "a sub";
+      detail = user + " gifted " + count;
+    } else if (isDonation) {
+      type = "donation";
+      icon = "💰";
+      title = "Donation";
+      detail = user + " donated " + data.hasDonation;
+      if (data.chatmessage) detail += ": " + data.chatmessage;
+    } else if (isRaid) {
+      type = "raid";
+      icon = "🚀";
+      title = "Raid Incoming!";
+      let viewers = data.subtitle || data.meta && data.meta.viewers || "viewers";
+      detail = user + " is raiding with " + viewers;
+    }
+
+    // 3. Add to Queue
+    alertQueue.push({ type, icon, title, detail, user });
+    processQueue();
+  }
+
+  function processQueue() {
+    if (isProcessing || alertQueue.length === 0) return;
+    isProcessing = true;
+
+    const alertData = alertQueue.shift();
+    createAlertElement(alertData);
+  }
+
+  function createAlertElement(data) {
+    const el = document.createElement('div');
+    el.className = 'alert-card';
+    el.setAttribute('data-type', data.type);
+    
+    // HTML Content
+    el.innerHTML = `
+      <div class="alert-icon">${data.icon}</div>
+      <div class="alert-content">
+        <div class="alert-header">
+          <span>${data.title}</span>
+          <span class="alert-user">${escapeHtml(data.user)}</span>
+        </div>
+        <div class="alert-detail">${escapeHtml(data.detail)}</div>
+      </div>
+      <div class="alert-progress"></div>
+    `;
+
+    container.appendChild(el);
+
+    // Auto-dismiss logic
+    setTimeout(function() {
+      el.classList.add('removing');
+      el.addEventListener('animationend', function() {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+        isProcessing = false;
+        processQueue(); // Trigger next in queue
+      });
+    }, AUTO_DISMISS_TIME);
+  }
+
+  // --- Utilities ---
+  function escapeHtml(text) {
+    if (!text) return "";
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+  }
+
+  // --- Test Mode Helper ---
+  // If no session ID is provided, you can manually trigger alerts via console:
+  // window.testAlert('new_follower', 'TestUser')
+  // window.testAlert('donation', 'RichUser', '$50.00')
+  window.testAlert = function(type, user, extra) {
+    let data = { chatname: user, event: type };
+    if (type === 'donation') data.hasDonation = extra || "$10.00";
+    if (type === 'subscriber') data.membership = "Tier 1";
+    if (type === 'subscription_gift') data.subtitle = "3";
+    handlePayload(data);
+  };
+
+})();
+</script>
+</body>
+</html>
+```

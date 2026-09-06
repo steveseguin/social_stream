@@ -1,0 +1,306 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>SSN Viewer Count Bar</title>
+<style>
+  :root {
+    --bar-bg: rgba(0, 0, 0, 0.75);
+    --bar-height: 36px;
+    --bar-radius: 6px;
+    --bar-padding: 0 12px;
+    --font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-size: 14px;
+    --font-weight: 600;
+    --text-color: #ffffff;
+    --divider-color: rgba(255, 255, 255, 0.25);
+    --total-color: #ffd700;
+    --platform-colors: #ff4444, #9146ff, #53fc18, #fe2c55, #0077ed, #00c74c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--font-family);
+    font-size: var(--font-size);
+    font-weight: var(--font-weight);
+    color: var(--text-color);
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #viewer-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--bar-bg);
+    border-radius: var(--bar-radius);
+    padding: var(--bar-padding);
+    white-space: nowrap;
+    user-select: none;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+    transition: opacity 0.3s ease;
+    opacity: 0;
+  }
+
+  #viewer-bar.visible {
+    opacity: 1;
+  }
+
+  .platform-count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    border-right: 1px solid var(--divider-color);
+    line-height: 1;
+  }
+
+  .platform-count:last-of-type {
+    border-right: none;
+  }
+
+  .platform-count .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .platform-count .label {
+    text-transform: capitalize;
+    opacity: 0.85;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+  }
+
+  .platform-count .count {
+    font-size: 15px;
+    font-weight: 700;
+    min-width: 2ch;
+    text-align: right;
+  }
+
+  .total-sep {
+    width: 1px;
+    height: 20px;
+    background: var(--divider-color);
+    margin: 0 6px;
+  }
+
+  .total-count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    color: var(--total-color);
+  }
+
+  .total-count .label {
+    font-size: 12px;
+    opacity: 0.85;
+    letter-spacing: 0.3px;
+  }
+
+  .total-count .count {
+    font-size: 15px;
+    font-weight: 700;
+    min-width: 2ch;
+    text-align: right;
+  }
+
+  .platform-count .count,
+  .total-count .count {
+    transition: transform 0.15s ease;
+  }
+
+  .platform-count .count.bump,
+  .total-count .count.bump {
+    transform: scale(1.25);
+  }
+</style>
+</head>
+<body>
+
+<div id="viewer-bar">
+  <div id="platforms-container"></div>
+  <div class="total-sep"></div>
+  <div class="total-count">
+    <span class="label">TOTAL</span>
+    <span class="count" id="total-count">0</span>
+  </div>
+</div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---- state ---- */
+  var viewerState = {};
+  var platformOrder = [];
+  var lastTotal = 0;
+
+  /* ---- DOM refs ---- */
+  var barEl = document.getElementById("viewer-bar");
+  var platformsContainer = document.getElementById("platforms-container");
+  var totalCountEl = document.getElementById("total-count");
+
+  /* ---- platform color palette ---- */
+  var platformColors = [
+    "#ff4444", "#9146ff", "#53fc18", "#fe2c55",
+    "#0077ed", "#00c74c", "#ffaa00", "#00bfff",
+    "#ff69b4", "#a855f7", "#22c55e", "#f97316",
+    "#eab308", "#14b8a6", "#ec4899", "#6366f1"
+  ];
+
+  function getPlatformColor(name) {
+    var idx = 0;
+    var seen = {};
+    for (var i = 0; i < platformOrder.length; i++) {
+      seen[platformOrder[i]] = true;
+    }
+    var colorIdx = 0;
+    for (var k = 0; k < platformOrder.length; k++) {
+      if (platformOrder[k] === name) {
+        return platformColors[colorIdx % platformColors.length];
+      }
+      colorIdx++;
+    }
+    return platformColors[platformColors.length - 1];
+  }
+
+  /* ---- build / rebuild platform chips ---- */
+  function renderPlatforms() {
+    platformsContainer.innerHTML = "";
+
+    for (var i = 0; i < platformOrder.length; i++) {
+      var plat = platformOrder[i];
+      var count = viewerState[plat] || 0;
+      if (count === 0) continue;
+
+      var chip = document.createElement("div");
+      chip.className = "platform-count";
+
+      var dot = document.createElement("span");
+      dot.className = "dot";
+      dot.style.backgroundColor = getPlatformColor(plat);
+
+      var label = document.createElement("span");
+      label.className = "label";
+      label.textContent = plat;
+
+      var countSpan = document.createElement("span");
+      countSpan.className = "count";
+      countSpan.id = "count-" + plat;
+      countSpan.textContent = count.toLocaleString();
+
+      chip.appendChild(dot);
+      chip.appendChild(label);
+      chip.appendChild(countSpan);
+      platformsContainer.appendChild(chip);
+    }
+  }
+
+  /* ---- bump animation ---- */
+  function bumpCount(el) {
+    if (!el) return;
+    el.classList.add("bump");
+    setTimeout(function () {
+      el.classList.remove("bump");
+    }, 160);
+  }
+
+  /* ---- update total ---- */
+  function updateTotal() {
+    var total = 0;
+    for (var k in viewerState) {
+      if (viewerState.hasOwnProperty(k)) {
+        total += viewerState[k] || 0;
+      }
+    }
+
+    totalCountEl.textContent = total.toLocaleString();
+
+    if (total !== lastTotal) {
+      bumpCount(totalCountEl);
+      lastTotal = total;
+    }
+
+    if (total > 0) {
+      barEl.classList.add("visible");
+    } else {
+      barEl.classList.remove("visible");
+    }
+  }
+
+  /* ---- handle incoming payload ---- */
+  function handlePayload(data) {
+    if (!data || typeof data !== "object") return;
+
+    if (data.event === "viewer_updates" && data.meta && typeof data.meta === "object") {
+      /*
+        meta is a FULL SNAPSHOT — replace state entirely.
+        Do NOT merge with old data.
+      */
+      var newOrder = [];
+      var newState = {};
+
+      for (var key in data.meta) {
+        if (data.meta.hasOwnProperty(key)) {
+          var val = parseInt(data.meta[key], 10);
+          if (!isNaN(val) && val > 0) {
+            newState[key] = val;
+            newOrder.push(key);
+          }
+        }
+      }
+
+      viewerState = newState;
+      platformOrder = newOrder;
+
+      renderPlatforms();
+      updateTotal();
+    }
+  }
+
+  /* ---- VDO.Ninja bridge ---- */
+  (function initBridge() {
+    var params = new URLSearchParams(location.search);
+    var roomID = params.get("session") || "";
+    var password = params.get("password") || "false";
+    var label = params.get("label") || "custom_overlay_viewerbar_" + Date.now();
+    var bridge = document.getElementById("ssn_bridge");
+
+    if (roomID) {
+      bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+        encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+        "&label=" + encodeURIComponent(label) +
+        "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+    }
+
+    window.addEventListener("message", function (event) {
+      var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+      if (typeof payload !== "undefined") {
+        handlePayload(payload);
+      }
+    });
+
+    window.handleOverlayPayload = handlePayload;
+  })();
+
+})();
+</script>
+</body>
+</html>
+```

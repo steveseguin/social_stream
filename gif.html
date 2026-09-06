@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Overlay - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background-color: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        #mediaContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        #mediaContent {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+		#mediaContainer img,
+		#mediaContainer svg,
+		#mediaContainer video,
+		#mediaContainer iframe{
+			max-height:100vh;
+			max-width:100vw;
+		}
+		body.stretch #mediaContainer #mediaContent,
+		body.stretch #mediaContainer img,
+		body.stretch #mediaContainer svg,
+		body.stretch #mediaContainer video,
+		body.stretch #mediaContainer iframe {
+			width: 100vw !important;
+			height: 100vh !important;
+			max-width: none !important;
+			max-height: none !important;
+			object-fit: fill;
+		}
+    </style>
+</head>
+<body>
+    <div id="mediaContainer">
+        <img id="mediaContent" src="" alt="Media Content">
+    </div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const mediaContainer = document.getElementById('mediaContainer');
+        const mediaContent = document.getElementById('mediaContent');
+        const bridgeSession = (urlParams.get('session') || '').split(',')[0].trim();
+        const customGifFilterId = (urlParams.get('gifid') || '').trim();
+        const customGifFilterCommand = (urlParams.get('gifcommand') || '').trim().toLowerCase();
+        const customGifFilterCommands = customGifFilterCommand.split(',').map(function(command) {
+            return command.trim();
+        }).filter(Boolean);
+        if (urlParams.has('stretch')) document.body.classList.add('stretch');
+        let mediaQueue = [];
+        let isPlaying = false;
+        
+		var audioContext = null;
+		function ensureAudioContext() {
+			if (!audioContext && (window.AudioContext || window.webkitAudioContext)) {
+				var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+				audioContext = new AudioContextCtor();
+			}
+			return audioContext;
+		}
+		async function resumeAudioContext() {
+			var ctx = ensureAudioContext();
+			if (!ctx) {
+				return null;
+			}
+			if (ctx.state === 'suspended') {
+				await ctx.resume();
+			}
+			return ctx;
+		}
+		function attachAudioUnlockListeners() {
+			var handler = function() {
+				resumeAudioContext().catch(function(e) {
+					console.warn('Audio context resume failed after user interaction', e);
+				});
+			};
+			['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'].forEach(function(eventName) {
+				document.addEventListener(eventName, handler, { once: true });
+			});
+		}
+
+		const fadeoutTime = 300;
+		const parsedShowtime = parseInt(urlParams.get('showtime'), 10);
+		const minDisplayTime = urlParams.has('showtime') && !Number.isNaN(parsedShowtime) ? parsedShowtime : 3000;
+		const embeddedDisplayTime = urlParams.has('showtime') ? minDisplayTime : Math.max(minDisplayTime, 5000);
+		const mediaProbeTimeout = 4000;
+
+        function shouldShowCustomGifData(data) {
+            if (!customGifFilterId && !customGifFilterCommands.length) return true;
+
+            const meta = data && data.meta ? data.meta : {};
+            if (customGifFilterId && String(meta.customGifCommandId || '') === customGifFilterId) {
+                return true;
+            }
+
+            if (customGifFilterCommands.length) {
+                const command = String(meta.customGifCommand || '').toLowerCase();
+                if (customGifFilterCommands.indexOf(command) !== -1) return true;
+
+                const commands = Array.isArray(meta.customGifCommands) ? meta.customGifCommands : [];
+                for (let i = 0; i < commands.length; i++) {
+                    if (customGifFilterCommands.indexOf(String(commands[i] || '').toLowerCase()) !== -1) {
+                        return true;
+                    }
+                }
+
+                const chatMessage = String(data && data.chatmessage ? data.chatmessage : '').trim().toLowerCase();
+                const firstWord = chatMessage.split(/\s+/)[0] || '';
+                if (customGifFilterCommands.indexOf(firstWord) !== -1 || customGifFilterCommands.indexOf(chatMessage) !== -1) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function processData(data) {
+           //console.log(data);
+
+            if (data.content) {
+                data = data.content;
+            }
+
+            if (!shouldShowCustomGifData(data)) {
+                return;
+            }
+
+			// the URL should be a direct image/video/audio/svg, but it might also be a link to tenor/giphy.
+			
+			// Here, we want to show contentimg as an near full window or full window
+			// we want to make sure its preloaded before display it, to ensure a smooth fade in and out, and that it is valid
+			// we want to mute it, and play it, if the audio context is suspended and can't be resumed/enabled due to lack of user gesture input.
+			// if we're using window.obsstudio, then gestures aren't needed to play audio, but we need to make sure thats the casse.
+			// if a user has urlParams.has('muted') enabled, then we should mute any video by default
+			// we can look at the file type to tell if its a webm, gif, jpeg, svg, webp, audio, or mp4; and treat it accordingly; video/img/svg tag, audio-muted, etc.
+			// if it can't play, lets put an error in the console log saying say; CORS issue?
+			
+			// additional data that will be available, that we dont need to use now, but is available, is:
+			// data.chatimg - avatar of user
+			// data.chatname - name of user
+			// data.chatmessage - a text message from user 
+			// data.type - what site, like twitch or facebook, that the message came from
+			// data.hasDonation - an possible donation value if there was a donation attached.
+			// data.contentimg = "https://picsum.photos/1280/720?random=" + Math.random();
+            if (data.contentimg) {
+                mediaQueue.push(data.contentimg);
+                if (!isPlaying) {
+                    playNextMedia();
+                }
+            }
+        }
+
+        function getMediaTypeFromExtension(source) {
+			const cleanSource = (source || '').toLowerCase().split('#')[0].split('?')[0].split('&')[0];
+			const fileExtension = cleanSource.split('.').pop();
+			if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) return 'image';
+			if (['mp4', 'webm', 'ogg'].includes(fileExtension)) return 'video';
+			if (['mp3', 'wav'].includes(fileExtension)) return 'audio';
+			if (fileExtension === 'svg') return 'svg';
+			if (fileExtension === 'html') return 'embed';
+			return '';
+        }
+
+		function getMediaTypeFromMimeType(contentType) {
+			switch ((contentType || '').split(';')[0].trim().toLowerCase()) {
+				case 'image/gif':
+				case 'image/webp':
+				case 'image/jpeg':
+				case 'image/png':
+				case 'image/svg+xml':
+					return contentType.includes('svg') ? 'svg' : 'image';
+				case 'video/mp4':
+				case 'video/webm':
+				case 'video/ogg':
+					return 'video';
+				case 'audio/mpeg':
+				case 'audio/wav':
+				case 'audio/ogg':
+					return 'audio';
+				case 'text/html':
+					return 'embed';
+				default:
+					return '';
+			}
+		}
+
+		function renderDetectedMedia(url, mediaType) {
+			if (mediaType === 'image') {
+				displayImage(url);
+			} else if (mediaType === 'video') {
+				displayVideo(url);
+			} else if (mediaType === 'audio') {
+				playAudio(url);
+			} else if (mediaType === 'svg') {
+				displaySVG(url);
+			} else {
+				displayEmbeddedContent(url);
+			}
+		}
+
+		function probeSingleMediaType(url, mediaType) {
+			return new Promise((resolve) => {
+				let settled = false;
+				let timeoutId = null;
+				let element = null;
+
+				const cleanup = () => {
+					if (timeoutId) {
+						clearTimeout(timeoutId);
+					}
+					if (!element) return;
+					element.onerror = null;
+					if ('onload' in element) {
+						element.onload = null;
+					}
+					if ('onloadedmetadata' in element) {
+						element.onloadedmetadata = null;
+					}
+					if ('oncanplay' in element) {
+						element.oncanplay = null;
+					}
+					element.removeAttribute('src');
+					if (typeof element.load === 'function') {
+						try {
+							element.load();
+						} catch (e) {}
+					}
+				};
+
+				const finish = (result) => {
+					if (settled) return;
+					settled = true;
+					cleanup();
+					resolve(result);
+				};
+
+				timeoutId = setTimeout(() => finish(''), mediaProbeTimeout);
+
+				if (mediaType === 'image') {
+					element = new Image();
+					element.onload = () => finish('image');
+					element.onerror = () => finish('');
+					element.src = url;
+					return;
+				}
+
+				if (mediaType === 'video') {
+					element = document.createElement('video');
+					element.muted = true;
+					element.preload = 'metadata';
+					element.playsInline = true;
+					element.onloadedmetadata = () => finish('video');
+					element.oncanplay = () => finish('video');
+					element.onerror = () => finish('');
+					element.src = url;
+					element.load();
+					return;
+				}
+
+				if (mediaType === 'audio') {
+					element = new Audio();
+					element.preload = 'metadata';
+					element.onloadedmetadata = () => finish('audio');
+					element.oncanplay = () => finish('audio');
+					element.onerror = () => finish('');
+					element.src = url;
+					element.load();
+					return;
+				}
+
+				finish('');
+			});
+		}
+
+		async function probeMediaElement(url, preferredType) {
+			const probeOrder = [];
+			if (preferredType && !['embed', 'svg'].includes(preferredType)) {
+				probeOrder.push(preferredType);
+			}
+			['video', 'image', 'audio'].forEach((type) => {
+				if (!probeOrder.includes(type)) {
+					probeOrder.push(type);
+				}
+			});
+
+			for (const mediaType of probeOrder) {
+				const result = await probeSingleMediaType(url, mediaType);
+				if (result) {
+					return result;
+				}
+			}
+
+			return '';
+		}
+
+        async function detectMediaType(url) {
+			const extensionType = getMediaTypeFromExtension(url);
+			if (extensionType && extensionType !== 'embed') {
+				renderDetectedMedia(url, extensionType);
+				return;
+			}
+
+			let headerType = '';
+			let controller = null;
+			let timeoutId = null;
+			try {
+				if (typeof AbortController !== 'undefined') {
+					controller = new AbortController();
+					timeoutId = setTimeout(() => controller.abort(), mediaProbeTimeout);
+				}
+				const response = await fetch(url, { method: 'HEAD', signal: controller ? controller.signal : undefined });
+				headerType = getMediaTypeFromMimeType(response.headers.get('Content-Type') || '');
+				if (!headerType) {
+					headerType = getMediaTypeFromExtension(response.url || '');
+				}
+			} catch (e) {
+			} finally {
+				if (timeoutId) {
+					clearTimeout(timeoutId);
+				}
+			}
+
+			if (headerType && headerType !== 'embed') {
+				renderDetectedMedia(url, headerType);
+				return;
+			}
+
+			const probedType = await probeMediaElement(url, headerType || extensionType);
+			if (probedType) {
+				renderDetectedMedia(url, probedType);
+				return;
+			}
+
+			renderDetectedMedia(url, headerType || 'embed');
+        }
+
+        function playNextMedia() {
+			if (mediaQueue.length === 0) {
+				isPlaying = false;
+				return;
+			}
+
+			isPlaying = true;
+			let mediaUrl = mediaQueue.shift();
+			
+			
+			const youtubeVideoId = getYouTubeVideoId(mediaUrl);
+			if (youtubeVideoId) {
+				mediaUrl = createYouTubeEmbed(youtubeVideoId);
+			}
+
+			if (isEmbeddedContent(mediaUrl)) {
+				displayEmbeddedContent(mediaUrl);
+			} else {
+				const urlPath = mediaUrl.split('?')[0].split('&')[0];
+				const fileExtension = urlPath.split('.').pop().toLowerCase();
+
+				if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
+					displayImage(mediaUrl);
+				} else if (['mp4', 'webm'].includes(fileExtension)) {
+					displayVideo(mediaUrl);
+				} else if (['mp3', 'wav', 'ogg'].includes(fileExtension)) {
+					playAudio(mediaUrl);
+				} else if (fileExtension === 'svg') {
+					displaySVG(mediaUrl);
+				} else if (fileExtension === 'html') {
+					displayEmbeddedContent(mediaUrl);
+				} else {
+					detectMediaType(mediaUrl);
+				}
+			}
+		}
+
+		function isEmbeddedContent(content) {
+			return content.includes('<iframe') || content.includes('<embed');
+		}
+		
+		function getYouTubeVideoId(url) {
+			const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+			const match = url.match(regExp);
+			return (match && match[2].length === 11) ? match[2] : null;
+		}
+
+		function createYouTubeEmbed(videoId) {
+			return `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+		}
+
+		function displayEmbeddedContent(content) {
+			let embedElement;
+			if (content.startsWith('http') || content.endsWith('.html')) {
+				embedElement = document.createElement('iframe');
+				embedElement.src = content;
+			} else {
+				const tempDiv = document.createElement('div');
+				tempDiv.innerHTML = content;
+				embedElement = tempDiv.querySelector('iframe, embed');
+				if (!embedElement) {
+					console.error('Invalid embedded content');
+					playNextMedia();
+					return;
+				}
+			}
+
+			let src = embedElement.src;
+			for (let i = embedElement.attributes.length - 1; i >= 0; i--) {
+				embedElement.removeAttribute(embedElement.attributes[i].name);
+			}
+			
+			if (src.includes('youtube.com') || src.includes('youtu.be')) {
+				const urlObj = new URL(src);
+				urlObj.searchParams.set('autoplay', '1');
+				src = urlObj.toString();
+			}
+			
+			embedElement.src = src;
+
+			embedElement.style.width = '100%';
+			embedElement.style.height = '100%';
+			embedElement.style.border = 'none';
+			embedElement.setAttribute("allow","autoplay");
+
+			embedElement.replaceWith(embedElement.cloneNode(true));
+
+			mediaContainer.innerHTML = '';
+			mediaContainer.appendChild(embedElement);
+			fadeIn();
+
+			setTimeout(() => {
+				fadeOut(() => {
+					mediaContainer.innerHTML = '';
+					mediaContainer.appendChild(mediaContent);
+					playNextMedia();
+				});
+			}, embeddedDisplayTime);
+		}
+
+        function displayVideo(url) {
+            const video = document.createElement('video');
+            video.src = url;
+            video.muted = urlParams.has('muted');
+            video.oncanplay = async () => {
+                mediaContent.replaceWith(video);
+				fadeIn();
+				try {
+					if (!video.muted) {
+						await resumeAudioContext();
+					}
+					await video.play();
+				} catch(e) {
+					console.warn('Video playback blocked:', e);
+					playNextMedia();
+					return;
+				}
+                
+                const videoDuration = video.duration * 1000; 
+                const displayTime = Math.max(videoDuration, minDisplayTime);
+                setTimeout(() => {
+                    if (videoDuration < minDisplayTime) {
+                        video.loop = true;
+                        setTimeout(() => {
+                            video.loop = false;
+                            video.onended = () => {
+                                fadeOut(() => {
+                                    video.replaceWith(mediaContent);
+                                    playNextMedia();
+                                });
+                            };
+                        }, minDisplayTime - videoDuration);
+                    } else {
+                        video.onended = () => {
+                            fadeOut(() => {
+                                video.replaceWith(mediaContent);
+                                playNextMedia();
+                            });
+                        };
+                    }
+                }, 0);
+            };
+            video.onerror = () => {
+                console.error('Failed to load video:', url);
+                playNextMedia();
+            };
+        }
+
+        function playAudio(url) {
+            const audio = new Audio(url);
+            audio.muted = urlParams.has('muted');
+            audio.oncanplay = async () => {
+                fadeIn();
+				try {
+					await resumeAudioContext();
+					await audio.play();
+				} catch(e) {
+					console.warn('Audio playback blocked:', e);
+					playNextMedia();
+				}
+            };
+            audio.onended = () => {
+                fadeOut(() => playNextMedia());
+            };
+            audio.onerror = () => {
+                console.error('Failed to load audio:', url);
+                playNextMedia();
+            };
+        }
+
+        function displaySVG(url) {
+            const img = document.createElement('img');
+            img.src = url;
+            img.onload = () => {
+                mediaContainer.innerHTML = '';
+                mediaContainer.appendChild(img);
+                fadeIn();
+                setTimeout(() => {
+                    fadeOut(() => {
+                        mediaContainer.innerHTML = '';
+                        mediaContainer.appendChild(mediaContent);
+                        playNextMedia();
+                    });
+                }, 5000);
+            };
+            img.onerror = () => {
+                console.error('Failed to load SVG:', url);
+                playNextMedia();
+            };
+        }
+
+        function fadeIn() {
+            mediaContainer.style.opacity = '1';
+        }
+
+        function fadeOut(callback) {
+            mediaContainer.style.opacity = '0';
+            setTimeout(callback, fadeoutTime); // 200
+        }
+
+        const iframe = document.createElement("iframe");
+        const filename = new URL(window.location.href).pathname.split('/').pop().split('.')[0] || "dock";
+        const bridgeLabel = ((customGifFilterId || customGifFilterCommand) ? filename : (urlParams.get('label') || filename)).trim() || filename;
+        const password = urlParams.get('password') || 'false';
+        const lanonly = urlParams.has('lanonly') ? '&lanonly' : '';
+        if (bridgeSession) {
+            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" + encodeURIComponent(password) + lanonly + "&solo&view=" + encodeURIComponent(bridgeSession) + "&novideo&noaudio&label=" + encodeURIComponent(bridgeLabel) + "&cleanoutput&room=" + encodeURIComponent(bridgeSession);
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
+            const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+            const eventer = window[eventMethod];
+            const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+            eventer(messageEvent, function (e) {
+                if (e.source != iframe.contentWindow) return;
+                if (e.data && e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
+            });
+        }
+
+        // Handle audio context for browsers that require user interaction
+        attachAudioUnlockListeners();
+		
+		function getUint24(view, pos) {
+            return (view.getUint8(pos) | (view.getUint8(pos + 1) << 8) | (view.getUint8(pos + 2) << 16));
+        }
+
+        function getWebPDuration(arr) {
+            const view = new DataView(arr.buffer);
+            let pos = 12; // Skip RIFF header
+            let duration = 0;
+            let frames = 0;
+            let loopCount = 0;
+
+            while (pos < arr.length) {
+                const chunkId = String.fromCharCode(arr[pos], arr[pos+1], arr[pos+2], arr[pos+3]);
+                const chunkSize = view.getUint32(pos + 4, true);
+
+                if (chunkId === 'VP8X') {
+                    const flags = view.getUint32(pos + 8, true);
+                    if (!(flags & 2)) {
+                        console.warn('Not an animated WebP');
+                        return minDisplayTime;
+                    }
+                } else if (chunkId === 'ANIM') {
+                    loopCount = view.getUint16(pos + 12, true);
+                    // console.log('Loop count:', loopCount === 0 ? 'infinite' : loopCount);
+                } else if (chunkId === 'ANMF') {
+                    frames++;
+                    const frameDuration = getUint24(view, pos + 20);
+                    duration += frameDuration;
+                    // console.log(`Frame ${frames}: duration: ${frameDuration}ms`);
+                }
+
+                pos += 8 + chunkSize;
+                if (chunkSize % 2 !== 0) pos++; // Padding byte
+            }
+            if (duration) {
+                duration = Math.max(fadeoutTime,Math.max(Math.ceil(minDisplayTime/duration)*duration)-fadeoutTime/1.5);
+				duration = Math.min((minDisplayTime+fadeoutTime)*5,duration); // won't be 5x longer then the min time; 10s?
+            } else {
+                duration = minDisplayTime;
+            }
+			
+            return duration;
+        }
+		
+		function getGifDuration(arr) {
+            if (arr[0] !== 0x47 || arr[1] !== 0x49 || arr[2] !== 0x46) return 0;
+            const lsdFlags = arr[10];
+            const gctSize = (lsdFlags & 0x80) ? 3 * (1 << ((lsdFlags & 0x07) + 1)) : 0;
+            let i = 13 + gctSize;
+            let duration = 0;
+            while (i < arr.length - 1) {
+                if (arr[i] === 0x3B) break;
+                if (arr[i] === 0x21) {
+                    if (arr[i + 1] === 0xF9) {
+                        const delayCs = arr[i + 4] | (arr[i + 5] << 8);
+                        duration += (delayCs > 0 ? delayCs : 10) * 10;
+                        i += 8;
+                    } else {
+                        i += 2;
+                        while (i < arr.length && arr[i] !== 0) i += arr[i] + 1;
+                        i++;
+                    }
+                } else if (arr[i] === 0x2C) {
+                    i += 10;
+                    const lctFlags = arr[i - 1];
+                    if (lctFlags & 0x80) i += 3 * (1 << ((lctFlags & 0x07) + 1));
+                    i++;
+                    while (i < arr.length && arr[i] !== 0) i += arr[i] + 1;
+                    i++;
+                } else {
+                    i++;
+                }
+            }
+            return duration;
+        }
+
+		function analyzeAnimatedImage(blob, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const arr = new Uint8Array(e.target.result);
+                if (blob.type === 'image/webp') {
+					try{
+						const duration = getWebPDuration(arr);
+						callback(duration);
+					} catch(e){
+						callback(minDisplayTime);
+					}
+                } else {
+                    console.warn('Unsupported animated image format');
+                    callback(minDisplayTime);
+                }
+            };
+            reader.readAsArrayBuffer(blob);
+        }
+
+        function displayImage(url) {
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const objectURL = URL.createObjectURL(blob);
+                    const cleanUrl = url.toLowerCase().split('?')[0];
+                    const isGif = blob.type === 'image/gif' || cleanUrl.endsWith('.gif');
+                    const isWebp = blob.type === 'image/webp' || cleanUrl.endsWith('.webp');
+                    mediaContent.onload = () => {
+                        fadeIn();
+                        if (isGif) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                const arr = new Uint8Array(e.target.result);
+                                const gifDuration = getGifDuration(arr);
+                                const displayTime = Math.max(gifDuration || minDisplayTime, minDisplayTime);
+                                setTimeout(() => {
+                                    fadeOut(() => {
+                                        URL.revokeObjectURL(objectURL);
+                                        playNextMedia();
+                                    });
+                                }, displayTime);
+                            };
+                            reader.onerror = () => {
+                                setTimeout(() => {
+                                    fadeOut(() => {
+                                        URL.revokeObjectURL(objectURL);
+                                        playNextMedia();
+                                    });
+                                }, minDisplayTime);
+                            };
+                            reader.readAsArrayBuffer(blob);
+                        } else if (isWebp) {
+                            analyzeAnimatedImage(blob, (duration) => {
+                                const displayTime = Math.max(duration, minDisplayTime);
+                                setTimeout(() => {
+                                    fadeOut(() => {
+                                        URL.revokeObjectURL(objectURL);
+                                        playNextMedia();
+                                    });
+                                }, displayTime);
+                            });
+                        } else {
+                            setTimeout(() => {
+                                fadeOut(() => {
+                                    URL.revokeObjectURL(objectURL);
+                                    playNextMedia();
+                                });
+                            }, minDisplayTime);
+                        }
+                    };
+                    mediaContent.onerror = () => {
+                        console.error('Failed to display image:', url);
+                        URL.revokeObjectURL(objectURL);
+                        playNextMedia();
+                    };
+                    mediaContent.src = objectURL;
+                })
+                .catch(error => {
+                    console.error('Failed to load image:', url, error);
+                    playNextMedia();
+                });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,292 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Alert Banner</title>
+<style>
+  :root {
+    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --anim-duration: 0.5s;
+    --banner-height: 120px;
+    --banner-width: 100%;
+    --max-banners: 5;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--font-family);
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #alert-container {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none; /* Let clicks pass through to OBS/Scene */
+    z-index: 9999;
+  }
+
+  .alert-card {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    border-left: 6px solid #fff;
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    animation: slideIn var(--anim-duration) cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .alert-card.removing {
+    animation: slideOut 0.4s ease-in forwards;
+  }
+
+  /* Type-specific colors */
+  .alert-card[data-type="new_follower"] { border-left-color: #9b59b6; }
+  .alert-card[data-type="subscriber"] { border-left-color: #3498db; }
+  .alert-card[data-type="subscription_gift"] { border-left-color: #2ecc71; }
+  .alert-card[data-type="gifted"] { border-left-color: #2ecc71; }
+  .alert-card[data-type="donation"] { border-left-color: #f1c40f; }
+  .alert-card[data-type="raid"] { border-left-color: #e74c3c; }
+
+  .alert-icon {
+    font-size: 24px;
+    margin-right: 15px;
+    width: 30px;
+    text-align: center;
+  }
+
+  .alert-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .alert-header {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 2px;
+  }
+
+  .alert-detail {
+    font-size: 14px;
+    opacity: 0.9;
+    font-weight: 400;
+  }
+
+  .alert-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-left: 15px;
+    background: #333;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.2);
+  }
+
+  /* Progress bar for auto-dismiss */
+  .alert-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: rgba(255,255,255,0.3);
+    width: 100%;
+    transform-origin: left;
+    animation: shrink 4s linear forwards;
+  }
+
+  @keyframes slideIn {
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes slideOut {
+    to { opacity: 0; transform: translateY(-20px) scale(0.95); }
+  }
+
+  @keyframes shrink {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+  }
+</style>
+</head>
+<body>
+
+<div id="alert-container"></div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  // --- Bridge Setup ---
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "alert_overlay_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") handlePayload(payload);
+  });
+
+  // --- Alert Logic ---
+  var container = document.getElementById("alert-container");
+  var MAX_ALERTS = 5;
+
+  function handlePayload(data) {
+    if (!data) return;
+
+    var type = data.type;
+    var event = data.event;
+    var name = data.chatname || "Anonymous";
+    var msg = data.chatmessage || "";
+    var donation = data.hasDonation || "";
+    var membership = data.membership || "";
+    var subtitle = data.subtitle || "";
+    var img = data.chatimg || "";
+    var color = data.nameColor || "#ffffff";
+
+    // Determine if this is an alert we should show
+    var alertType = null;
+    var title = "";
+    var detail = "";
+    var icon = "";
+
+    if (event === "new_follower") {
+      alertType = "new_follower";
+      title = name + " followed!";
+      detail = "Welcome to the stream!";
+      icon = "★";
+    } 
+    else if (event === "subscriber" || (data.membership && event !== "subscription_gift" && event !== "gifted")) {
+      alertType = "subscriber";
+      title = name + " subscribed!";
+      detail = membership || "Thank you for the support!";
+      icon = "♥";
+    }
+    else if (event === "subscription_gift" || event === "gifted") {
+      alertType = "subscription_gift";
+      // Try to get count from subtitle or meta
+      var count = subtitle;
+      if (!count && data.meta && data.meta.gift_count) count = data.meta.gift_count;
+      title = name + " gifted " + (count || "subs");
+      detail = "Thank you for the generosity!";
+      icon = "🎁";
+    }
+    else if (data.hasDonation) {
+      alertType = "donation";
+      title = name + " donated " + donation;
+      detail = msg || "Thank you!";
+      icon = "💰";
+    }
+    else if (event === "raid") {
+      alertType = "raid";
+      var viewers = subtitle;
+      if (!viewers && data.meta && data.meta.viewers) viewers = data.meta.viewers;
+      title = name + " is raiding!";
+      detail = viewers + " viewers joining us!";
+      icon = "🚀";
+    }
+
+    if (!alertType) return;
+
+    showAlert(alertType, title, detail, icon, img, color);
+  }
+
+  function showAlert(type, title, detail, icon, img, nameColor) {
+    // Create card
+    var card = document.createElement("div");
+    card.className = "alert-card";
+    card.setAttribute("data-type", type);
+
+    // Avatar
+    var avatar = document.createElement("img");
+    avatar.className = "alert-avatar";
+    avatar.src = img;
+    avatar.onerror = function() { this.style.display = 'none'; };
+    
+    // Content
+    var content = document.createElement("div");
+    content.className = "alert-content";
+
+    var header = document.createElement("div");
+    header.className = "alert-header";
+    header.textContent = title;
+    header.style.color = nameColor;
+
+    var detailDiv = document.createElement("div");
+    detailDiv.className = "alert-detail";
+    detailDiv.textContent = detail;
+
+    content.appendChild(header);
+    content.appendChild(detailDiv);
+
+    // Icon
+    var iconDiv = document.createElement("div");
+    iconDiv.className = "alert-icon";
+    iconDiv.textContent = icon;
+
+    // Progress bar
+    var progress = document.createElement("div");
+    progress.className = "alert-progress";
+
+    // Assemble
+    card.appendChild(iconDiv);
+    card.appendChild(content);
+    if (img) card.appendChild(avatar);
+    card.appendChild(progress);
+
+    // Add to container
+    container.appendChild(card);
+
+    // Limit visible alerts
+    while (container.children.length > MAX_ALERTS) {
+      var old = container.firstChild;
+      old.classList.add("removing");
+      setTimeout(function() {
+        if (old.parentNode) old.parentNode.removeChild(old);
+      }, 400);
+    }
+
+    // Auto dismiss
+    setTimeout(function() {
+      card.classList.add("removing");
+      setTimeout(function() {
+        if (card.parentNode) card.parentNode.removeChild(card);
+      }, 400);
+    }, 4000);
+  }
+
+  // Expose for testing
+  window.handleOverlayPayload = handlePayload;
+})();
+</script>
+</body>
+</html>
+```

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    --bg-color: rgba(0, 0, 0, 0.6);
+    --text-color: #ffffff;
+    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-size: 16px;
+    --avatar-size: 32px;
+    --max-width: 600px;
+    --padding: 10px;
+    --border-radius: 4px;
+    --gap: 8px;
+  }
+
+  body {
+    margin: 0;
+    padding: 20px;
+    background: transparent;
+    font-family: var(--font-family);
+    color: var(--text-color);
+    overflow: hidden;
+    height: 100vh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  #chat-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+    width: 100%;
+    max-width: var(--max-width);
+    margin: 0 auto;
+  }
+
+  .chat-row {
+    display: flex;
+    align-items: flex-start;
+    background: var(--bg-color);
+    padding: var(--padding);
+    border-radius: var(--border-radius);
+    animation: fadeIn 0.3s ease-out;
+    word-wrap: break-word;
+    line-height: 1.4;
+  }
+
+  .avatar {
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    border-radius: 50%;
+    margin-right: 10px;
+    flex-shrink: 0;
+    background-color: #333;
+    object-fit: cover;
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .username {
+    font-weight: bold;
+    margin-bottom: 2px;
+    color: #4fc3f7; /* Default username color */
+  }
+
+  .message {
+    color: var(--text-color);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div id="chat-container"></div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  // Configuration
+  var MAX_ROWS = 10;
+  var container = document.getElementById("chat-container");
+  var rows = []; // Keep track of DOM elements
+
+  // Parse URL params
+  var params = new URLSearchParams(location.search);
+  if (params.has("limit")) {
+    MAX_ROWS = parseInt(params.get("limit"), 10) || 10;
+  }
+
+  // Bridge Setup
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_chat_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  // Core Handler
+  function handlePayload(data) {
+    if (!data) return;
+
+    // 1. Filter: Must be chat, not event, not bot
+    if (data.event) return; // Skip system events
+    if (data.bot === true) return; // Skip bots
+
+    // 2. Extract fields
+    var name = data.chatname || "Anonymous";
+    var msg = data.chatmessage || "";
+    var img = data.chatimg || "";
+    var color = data.nameColor || "#4fc3f7";
+
+    // 3. Create DOM
+    var row = document.createElement("div");
+    row.className = "chat-row";
+
+    // Avatar
+    var imgEl = document.createElement("img");
+    imgEl.className = "avatar";
+    imgEl.src = img;
+    imgEl.onerror = function() { this.style.display = 'none'; };
+    if (!img) imgEl.style.display = 'none';
+
+    // Content Wrapper
+    var contentDiv = document.createElement("div");
+    contentDiv.className = "content";
+
+    // Username
+    var nameSpan = document.createElement("span");
+    nameSpan.className = "username";
+    nameSpan.textContent = name;
+    nameSpan.style.color = color;
+
+    // Message
+    var msgSpan = document.createElement("span");
+    msgSpan.className = "message";
+    msgSpan.textContent = msg;
+
+    // Assemble
+    contentDiv.appendChild(nameSpan);
+    contentDiv.appendChild(msgSpan);
+    row.appendChild(imgEl);
+    row.appendChild(contentDiv);
+
+    // 4. Add to DOM
+    container.appendChild(row);
+    rows.push(row);
+
+    // 5. Enforce Limit
+    while (rows.length > MAX_ROWS) {
+      var oldRow = rows.shift();
+      if (oldRow && oldRow.parentNode) {
+        oldRow.parentNode.removeChild(oldRow);
+      }
+    }
+  }
+
+  // Listen for messages
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") handlePayload(payload);
+  });
+
+  // Expose for testing
+  window.handleOverlayPayload = handlePayload;
+})();
+</script>
+</body>
+</html>

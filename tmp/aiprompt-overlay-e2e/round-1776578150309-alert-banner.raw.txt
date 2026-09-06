@@ -1,0 +1,318 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Alert Banner</title>
+<style>
+  :root {
+    --alert-bg: rgba(0, 0, 0, 0.85);
+    --alert-border: #00d2ff;
+    --alert-text: #ffffff;
+    --alert-name-color: #ffcc00;
+    --alert-donation-color: #00ff88;
+    --alert-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --alert-duration: 4s;
+    --alert-width: 400px;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--alert-font);
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 50px;
+  }
+
+  #alert-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: var(--alert-width);
+    pointer-events: none;
+  }
+
+  .alert-card {
+    background: var(--alert-bg);
+    border-left: 5px solid var(--alert-border);
+    border-radius: 8px;
+    padding: 15px 20px;
+    color: var(--alert-text);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    animation: slideIn 0.5s ease-out forwards, fadeOut 0.5s ease-in 3.5s forwards;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    opacity: 0;
+    transform: translateY(-20px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .alert-card.is-donation {
+    border-left-color: var(--alert-donation-color);
+  }
+
+  .alert-card.is-donation .alert-amount {
+    color: var(--alert-donation-color);
+    font-weight: bold;
+  }
+
+  .alert-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--alert-border);
+    flex-shrink: 0;
+    background: #333;
+  }
+
+  .alert-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .alert-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .alert-name {
+    font-weight: bold;
+    font-size: 1.2em;
+    color: var(--alert-name-color);
+  }
+
+  .alert-type {
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.8;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .alert-message {
+    font-size: 1em;
+    opacity: 0.9;
+  }
+
+  .alert-amount {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: var(--alert-donation-color);
+    margin-left: 5px;
+  }
+
+  .alert-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--alert-border);
+    width: 100%;
+    transform-origin: left;
+    animation: progress 4s linear forwards;
+  }
+
+  .alert-card.is-donation .alert-progress {
+    background: var(--alert-donation-color);
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+  }
+
+  @keyframes progress {
+    from {
+      transform: scaleX(1);
+    }
+    to {
+      transform: scaleX(0);
+    }
+  }
+</style>
+</head>
+<body>
+
+<div id="alert-container"></div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "alert_banner_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+  
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") handlePayload(payload);
+  });
+
+  function handlePayload(data) {
+    if (!data || !data.chatname) return;
+
+    var alertType = null;
+    var isDonation = false;
+    var donationAmount = "";
+    var message = "";
+    var detail = "";
+
+    // Determine alert type
+    if (data.event === "new_follower") {
+      alertType = "follower";
+      detail = "followed";
+    } else if (data.event === "subscriber" || (data.membership && data.event !== "subscription_gift" && data.event !== "gifted")) {
+      alertType = "subscriber";
+      detail = "subscribed";
+      if (data.membership) {
+        detail += " (" + data.membership + ")";
+      }
+    } else if (data.event === "subscription_gift" || data.event === "gifted") {
+      alertType = "gifted_sub";
+      detail = "gifted a sub";
+      if (data.subtitle) {
+        detail += " - " + data.subtitle;
+      }
+    } else if (data.hasDonation) {
+      alertType = "donation";
+      isDonation = true;
+      donationAmount = data.hasDonation;
+      message = data.chatmessage || "";
+      detail = "donated";
+    } else if (data.event === "raid") {
+      alertType = "raid";
+      detail = "is raiding with";
+      if (data.subtitle) {
+        detail += " " + data.subtitle + " viewers";
+      }
+    }
+
+    if (!alertType) return;
+
+    showAlert(data, alertType, isDonation, donationAmount, message, detail);
+  }
+
+  function showAlert(data, alertType, isDonation, donationAmount, message, detail) {
+    var container = document.getElementById("alert-container");
+    var card = document.createElement("div");
+    card.className = "alert-card" + (isDonation ? " is-donation" : "");
+
+    // Avatar
+    var avatar = document.createElement("img");
+    avatar.className = "alert-avatar";
+    avatar.src = data.chatimg || "";
+    avatar.onerror = function() {
+      this.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23333'/%3E%3Ctext x='50' y='55' font-family='Arial' font-size='40' fill='%23fff' text-anchor='middle'%3E%3F%3C/text%3E%3C/svg%3E";
+    };
+    card.appendChild(avatar);
+
+    // Content
+    var content = document.createElement("div");
+    content.className = "alert-content";
+
+    // Header with name and type
+    var header = document.createElement("div");
+    header.className = "alert-header";
+
+    var nameSpan = document.createElement("span");
+    nameSpan.className = "alert-name";
+    nameSpan.textContent = data.chatname;
+
+    var typeSpan = document.createElement("span");
+    typeSpan.className = "alert-type";
+    typeSpan.textContent = alertType.replace("_", " ");
+
+    header.appendChild(nameSpan);
+    header.appendChild(typeSpan);
+    content.appendChild(header);
+
+    // Message/Detail
+    var msgDiv = document.createElement("div");
+    msgDiv.className = "alert-message";
+
+    if (isDonation && donationAmount) {
+      var amountSpan = document.createElement("span");
+      amountSpan.className = "alert-amount";
+      amountSpan.textContent = donationAmount;
+      msgDiv.appendChild(amountSpan);
+    }
+
+    var detailSpan = document.createElement("span");
+    detailSpan.textContent = " " + detail;
+    msgDiv.appendChild(detailSpan);
+
+    if (message) {
+      var msgBreak = document.createElement("br");
+      msgDiv.appendChild(msgBreak);
+      var msgText = document.createElement("span");
+      msgText.textContent = message;
+      msgDiv.appendChild(msgText);
+    }
+
+    content.appendChild(msgDiv);
+    card.appendChild(content);
+
+    // Progress bar
+    var progress = document.createElement("div");
+    progress.className = "alert-progress";
+    card.appendChild(progress);
+
+    container.appendChild(card);
+
+    // Auto-remove after animation
+    setTimeout(function() {
+      if (card.parentNode) {
+        card.parentNode.removeChild(card);
+      }
+    }, 4000);
+  }
+
+  // Expose for testing
+  window.handleOverlayPayload = handlePayload;
+})();
+</script>
+
+</body>
+</html>
+```

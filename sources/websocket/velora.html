@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Social Stream - Velora</title>
+    <link rel="icon" href="https://velora.tv/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="velora.css">
+    <link rel="stylesheet" href="websocket-responsive.css">
+</head>
+<body>
+    <div class="container">
+        <header class="channel-header">
+            <div class="header-main-row">
+                <div class="header-copy">
+                    <h1>Velora for Social Stream</h1>
+                    <p class="subtitle">Connect your Velora chat and alerts to Social Stream.</p>
+                </div>
+                <div class="identity-row" aria-label="Velora source details">
+                    <div id="channel-label" class="identity-item">
+                        <span class="identity-label">Source channel</span>
+                        <strong>@<span>-</span></strong>
+                    </div>
+                    <div class="identity-item">
+                        <span class="identity-label">Signed-in account</span>
+                        <strong id="signed-in-account">Not signed in</strong>
+                    </div>
+                    <span id="viewer-count" class="status-chip neutral">Checking viewers…</span>
+                </div>
+            </div>
+
+            <div id="socket-state" class="connection-state disconnected" role="status" aria-live="polite">
+                Sign in to connect
+            </div>
+
+            <section id="setup-notice" class="setup-card">
+                <div>
+                    <h2 id="setup-heading">Sign in to Velora</h2>
+                    <p id="setup-copy">Sign in with the same Velora account as this source channel.</p>
+                </div>
+                <button id="start-auth" type="button">Sign in with Velora</button>
+                <span id="auth-state" class="sr-only" aria-live="polite">Not signed in</span>
+            </section>
+
+            <section id="mismatch-notice" class="notice-box danger-notice" role="alert" hidden>
+                <div>
+                    <strong>Velora accounts don’t match</strong>
+                    <p id="mismatch-copy"></p>
+                </div>
+                <button id="switch-account" type="button">Sign out of this Velora account</button>
+            </section>
+
+            <section id="profile-error-notice" class="notice-box danger-notice" role="alert" hidden>
+                <div>
+                    <strong>Velora needs attention</strong>
+                    <p id="profile-error-copy">Check your connection, then try again.</p>
+                </div>
+                <button id="retry-connection" type="button">Try again</button>
+            </section>
+
+            <div id="connected-actions" class="auth-row" hidden>
+                <button id="sign-out" type="button" class="button-secondary">Sign out</button>
+                <span id="bridge-state" hidden></span>
+            </div>
+        </header>
+
+        <div id="dashboard" class="layout" hidden>
+            <main class="main-content">
+                <details class="panel chat-panel collapsible-panel" open>
+                    <summary class="panel-summary">
+                        <h2>Live Chat</h2>
+                        <span class="panel-summary-icon" aria-hidden="true"></span>
+                    </summary>
+                    <div class="panel-body">
+                        <p class="hint">Incoming Velora chat messages appear here as they arrive.</p>
+                        <div id="chat-feed" class="chat-feed">
+                            <div id="chat-feed-empty" class="chat-feed-empty">No chat messages yet.</div>
+                        </div>
+                        <div class="chat-input-footer">
+                            <label id="chat-message-label" for="chat-message">Send a message</label>
+                            <textarea id="chat-message" placeholder="Say something in chat&hellip;"></textarea>
+                            <div class="button-row">
+                                <button id="send-chat" type="button">Send</button>
+                                <span id="chat-status" class="hint"></span>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="panel collapsible-panel connection-details">
+                    <summary class="panel-summary">
+                        <h2>Connection details <span class="advanced-label">Advanced</span></h2>
+                        <span class="panel-summary-icon" aria-hidden="true"></span>
+                    </summary>
+                    <div class="panel-body">
+                        <p class="hint">Technical connection activity and events received from Velora.</p>
+                        <p class="hint">Redirect URI: <code id="redirect-uri-hint"></code></p>
+                        <div id="event-log" class="log"></div>
+                    </div>
+                </details>
+            </main>
+
+            <aside class="sidebar">
+                <section class="panel">
+                    <h2>Display</h2>
+                    <label class="setting-toggle">
+                        <input type="checkbox" id="hide-metrics">
+                        <span>Hide dashboard metrics</span>
+                    </label>
+                </section>
+                <section class="panel">
+                    <h2>Alerts</h2>
+                    <p class="hint">Follows, subscriptions, gifts, Volts, and raids appear here.</p>
+                    <div id="alerts-feed" class="alerts-feed">
+                        <div id="alerts-feed-empty" class="alerts-feed-empty">No alerts yet.</div>
+                    </div>
+                </section>
+            </aside>
+        </div>
+    </div>
+    <script src="../../shared/vendor/socket.io.min.js"></script>
+    <script src="velora.js"></script>
+</body>
+</html>

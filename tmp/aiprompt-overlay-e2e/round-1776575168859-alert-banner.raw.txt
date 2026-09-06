@@ -1,0 +1,308 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Alert Banner</title>
+<style>
+  :root {
+    --bg-color: rgba(0, 0, 0, 0.85);
+    --text-color: #ffffff;
+    --accent-color: #00ffcc;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-size: 24px;
+    --padding: 15px 25px;
+    --border-radius: 8px;
+    --transition-speed: 0.5s;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: transparent; /* OBS Overlay Requirement */
+    overflow: hidden;
+    font-family: var(--font-family);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #alert-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none; /* Let clicks pass through to OBS */
+    z-index: 100;
+  }
+
+  .alert-card {
+    background: var(--bg-color);
+    color: var(--text-color);
+    padding: var(--padding);
+    border-radius: var(--border-radius);
+    border-left: 6px solid var(--accent-color);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    font-size: var(--font-size);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+    animation: slideIn var(--transition-speed) forwards ease-out;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-width: 300px;
+    max-width: 600px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .alert-card.fade-out {
+    animation: fadeOut var(--transition-speed) forwards ease-in;
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #333;
+    object-fit: cover;
+    border: 2px solid var(--accent-color);
+    flex-shrink: 0;
+  }
+
+  .alert-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.2;
+  }
+
+  .alert-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .user-name {
+    color: var(--accent-color);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  }
+
+  .alert-action {
+    font-size: 0.8em;
+    color: #ddd;
+    font-weight: normal;
+    text-transform: none;
+  }
+
+  .alert-sub {
+    font-size: 0.7em;
+    color: #aaa;
+    margin-top: 2px;
+  }
+
+  /* Animations */
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(-20px) scale(0.95); }
+  }
+
+  /* Specific Event Styles */
+  .type-new_follower { border-left-color: #9146FF; } /* Twitch Purple */
+  .type-subscriber { border-left-color: #FF4500; } /* Red */
+  .type-subscription_gift { border-left-color: #00FF7F; } /* Green */
+  .type-raid { border-left-color: #00BFFF; } /* Blue */
+  .type-donation { border-left-color: #FFD700; } /* Gold */
+  
+  /* Hide bridge iframe */
+  #ssn_bridge { display: none; }
+</style>
+</head>
+<body>
+
+<div id="alert-container"></div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  // --- Bridge Setup ---
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "alert_overlay_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  // --- State & Config ---
+  var container = document.getElementById("alert-container");
+  var MAX_ALERTS = 3; // Keep stack small
+  var DISMISS_TIME = 4000; // 4 seconds
+
+  // --- Helpers ---
+  function escapeHtml(text) {
+    if (!text) return "";
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+  }
+
+  function getAvatarUrl(data) {
+    return data.chatimg || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3Ctext x='50' y='50' font-size='40' text-anchor='middle' dy='.3em' fill='white'%3E%3F%3C/text%3E%3C/svg%3E";
+  }
+
+  // --- Alert Logic ---
+  function handlePayload(data) {
+    if (!data) return;
+
+    var type = data.type || "";
+    var eventName = data.event || "";
+    var hasDonation = data.hasDonation;
+    var membership = data.membership;
+    var name = data.chatname || "Anonymous";
+    var message = data.chatmessage || "";
+    var subtitle = data.subtitle || "";
+    var img = getAvatarUrl(data);
+
+    // Determine if this is an alertable event
+    var isAlert = false;
+    var alertClass = "";
+    var actionText = "";
+    var subText = "";
+
+    // 1. New Follower
+    if (eventName === "new_follower") {
+      isAlert = true;
+      alertClass = "type-new_follower";
+      actionText = "followed";
+    }
+    // 2. Subscriber (Resub or New Sub)
+    else if (eventName === "subscriber" || (eventName === "resub" && !eventName === "subscription_gift")) {
+      isAlert = true;
+      alertClass = "type-subscriber";
+      actionText = "subscribed";
+      if (membership) subText = membership;
+    }
+    // 3. Gifted Sub
+    else if (eventName === "subscription_gift" || eventName === "gifted") {
+      isAlert = true;
+      alertClass = "type-subscription_gift";
+      actionText = "gifted a sub";
+      if (subtitle) subText = subtitle; // e.g., "5 subs"
+    }
+    // 4. Donation
+    else if (hasDonation) {
+      isAlert = true;
+      alertClass = "type-donation";
+      actionText = "donated " + escapeHtml(hasDonation);
+      if (message) subText = '"' + escapeHtml(message) + '"';
+    }
+    // 5. Raid
+    else if (eventName === "raid") {
+      isAlert = true;
+      alertClass = "type-raid";
+      actionText = "is raiding with";
+      // Raid viewer count often in subtitle or meta
+      var viewers = subtitle || (data.meta && data.meta.viewers) || "";
+      subText = viewers + " viewers";
+    }
+
+    if (isAlert) {
+      createAlertCard(name, actionText, subText, img, alertClass);
+    }
+  }
+
+  function createAlertCard(name, action, sub, img, cssClass) {
+    // Remove oldest if at max
+    if (container.children.length >= MAX_ALERTS) {
+      var oldest = container.children[0];
+      oldest.classList.add("fade-out");
+      setTimeout(function() {
+        if (oldest.parentNode) oldest.parentNode.removeChild(oldest);
+      }, 500); // Match CSS animation duration
+    }
+
+    var card = document.createElement("div");
+    card.className = "alert-card " + cssClass;
+
+    // Avatar
+    var avatar = document.createElement("img");
+    avatar.className = "user-avatar";
+    avatar.src = img;
+    // Fallback if image fails
+    avatar.onerror = function() { this.src = img; }; // Reset to default or keep broken
+
+    // Content
+    var content = document.createElement("div");
+    content.className = "alert-content";
+
+    // Header: Name + Action
+    var header = document.createElement("div");
+    header.className = "alert-header";
+    
+    var nameSpan = document.createElement("span");
+    nameSpan.className = "user-name";
+    nameSpan.textContent = name;
+
+    var actionSpan = document.createElement("span");
+    actionSpan.className = "alert-action";
+    actionSpan.textContent = " " + action;
+
+    header.appendChild(nameSpan);
+    header.appendChild(actionSpan);
+
+    // Subtext
+    if (sub) {
+      var subSpan = document.createElement("div");
+      subSpan.className = "alert-sub";
+      subSpan.textContent = sub;
+      content.appendChild(header);
+      content.appendChild(subSpan);
+    } else {
+      content.appendChild(header);
+    }
+
+    card.appendChild(avatar);
+    card.appendChild(content);
+    container.appendChild(card);
+
+    // Auto dismiss
+    setTimeout(function() {
+      card.classList.add("fade-out");
+      setTimeout(function() {
+        if (card.parentNode) card.parentNode.removeChild(card);
+      }, 500);
+    }, DISMISS_TIME);
+  }
+
+  // --- Event Listeners ---
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") handlePayload(payload);
+  });
+
+  // Expose for testing
+  window.handleOverlayPayload = handlePayload;
+})();
+</script>
+</body>
+</html>
+```

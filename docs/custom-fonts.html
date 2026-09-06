@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Self-Hosted Fonts & Styling - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Learn how to self-host fonts and customize Social Stream Ninja overlays like dock.html and featured.html with custom CSS.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands & API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <div class="mobile-nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Self-Hosted Fonts & Overlay Styling</h1>
+            <p>Use your own fonts with dock.html and featured.html, whether you load them in OBS Browser Source, the Chrome extension, or the desktop app.</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>What this guide covers</h3>
+                <ul class="guide-list">
+                    <li>How to host .ttf, .otf, or .woff2 files yourself (no Google or system font required).</li>
+                    <li>How to load those fonts in <code>dock.html</code> or <code>featured.html</code> using URL parameters or OBS custom CSS.</li>
+                    <li>Which CSS variables adjust text sizing and layout on both pages.</li>
+                    <li>Quick fallbacks if you want to keep using Google Fonts or installed system fonts.</li>
+                </ul>
+                <figure class="guide-figure">
+                    <img src="images/guides/custom-font-featured-demo.png" alt="featured.html overlay message rendered in the Pacifico font with an avatar and name tag" class="guide-image">
+                    <figcaption>The same <code>featured.html</code> overlay with <code>&amp;googlefont=Pacifico</code> applied — self-hosted fonts work the same way via <code>@font-face</code>.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>1) Host your font files</h3>
+                <p>You need a direct HTTPS link to the font file. Pick a host that allows hotlinking/CORS so the browser inside OBS or the app can fetch it.</p>
+                <ul class="guide-list">
+                    <li><strong>Quick options:</strong> catbox.moe, 0x0.st, file.io (short-lived).</li>
+                    <li><strong>Durable options:</strong> GitHub Pages, Cloudflare Pages, Netlify, your own web server.</li>
+                    <li>Only host fonts you are licensed to redistribute. WOFF2 files are smaller and load faster than TTF/OTF when available.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h3>2) Build the CSS</h3>
+                <p>Define the font with <code>@font-face</code> and point it at your hosted file, then set the overlay to use it via <code>--font-family</code>.</p>
+                <div class="code-block">
+<pre>@font-face {
+  font-family: 'MyDockFont';
+  src: url('https://your-site.example/fonts/MyDockFont.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* Optional second weight */
+@font-face {
+  font-family: 'MyDockFont';
+  src: url('https://your-site.example/fonts/MyDockFont-Bold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+}
+
+:root {
+  --font-family: 'MyDockFont', 'Segoe UI', 'Arial Unicode MS', sans-serif;
+  --comment-font-size: 28px;
+  --author-font-size: 24px;
+  --message-line-height: 32px;
+}</pre>
+                </div>
+                <div class="guide-note">
+                    <p>Need multiple fonts (for Armenian + Russian + Latin)? Declare each font-face and list them in <code>--font-family</code> like <code>'FontA', 'FontB', 'FontC', sans-serif</code>. The browser will fall back automatically if a glyph is missing.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h3>3) Apply it to dock.html or featured.html</h3>
+                <ul class="guide-list">
+                    <li><strong>OBS Browser Source:</strong> Open your dock/featured URL in OBS &gt; Browser Source &gt; Custom CSS and paste the CSS block above.</li>
+                    <li><strong>URL parameter (hosted CSS):</strong> Upload the CSS to the same host as your fonts, then append <code>&css=https://your-site.example/my-font.css</code> to the page URL:
+                        <div class="code-block"><pre>https://socialstream.ninja/dock.html?session=YOURSESSION&css=https://your-site.example/my-font.css
+https://socialstream.ninja/featured.html?session=YOURSESSION&css=https://your-site.example/my-font.css</pre></div>
+                    </li>
+                    <li><strong>Inline URL param:</strong> For quick tests you can pass CSS directly with <code>&css=</code> or base64 encode it with <code>&b64css=</code> (both pages support these).</li>
+                    <li><strong>Quick font switches:</strong> <code>&font=YourInstalledFont</code> uses a system font name, while <code>&googlefont=Noto+Sans+Armenian,Noto+Sans</code> loads Google Fonts if you prefer not to self-host.</li>
+                </ul>
+                <div class="guide-note">
+                    <p>These options work the same in the Chrome extension, Electron app, and the hosted site because they all load the same <code>dock.html</code>/<code>featured.html</code> files.</p>
+                </div>
+			</div>
+
+			<div class="guide-card">
+				<h3>4) Tune the overlay text</h3>
+				<p>Core typography variables used by both pages:</p>
+				<div class="code-block">
+<pre>:root {
+  --font-family: 'MyDockFont', 'FontB', sans-serif;
+  --comment-font-size: 28px;  /* message text size */
+  --author-font-size: 24px;   /* name text size */
+  --comment-font-weight: 600; /* featured.html */
+  --author-font-weight: 700;  /* featured.html */
+  --message-font-weight: 500; /* dock.html */
+  --name-font-weight: 700;    /* dock.html */
+  --comment-color: #ffffff;
+  --author-color: #ffe08a;
+  --comment-bg-color: #161616;
+  --author-bg-color: #202020;
+}</pre>
+				</div>
+				<p><strong>Dock-only extras:</strong> <code>--stylized-emoji</code>, <code>--stylized-img</code>, <code>--text-stroke-width</code>, <code>--text-shadow</code>, and row colors (<code>--highlight-base</code>, <code>--highlight-base2</code>, plus the <code>compact</code> variants).</p>
+				<p><strong>Featured layout tweaks:</strong> adjust <code>--comment-width</code>, <code>--comment-padding</code>, <code>--comment-area-bottom</code>, and <code>--comment-area-height</code> to reposition the lower-third block without editing the HTML.</p>
+				<p>Pair CSS changes with existing URL options like <code>&scale</code>, <code>&compact</code>, or <code>&hidesource</code> when you need layout adjustments in the dock.</p>
+			</div>
+
+            <div class="guide-card">
+                <h3>5) Troubleshooting</h3>
+                <ul class="guide-list">
+                    <li>If the font does not appear, open the font URL directly in a browser to confirm it downloads and is served with HTTPS.</li>
+                    <li>Some hosts block hotlinking; switch to a host that allows direct file access or set the proper CORS headers.</li>
+                    <li>Reload the OBS Browser Source or refresh the dock/featured tab after changing CSS so cached fonts are re-requested.</li>
+                    <li>Use <code>https://socialstream.ninja/fonts.html</code> to confirm a system font is visible when testing <code>&font=</code>.</li>
+                    <li>Keep font-family names consistent between the <code>@font-face</code> blocks and <code>--font-family</code>; mismatches are the most common issue.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>About</h3>
+                    <p>Social Stream Ninja lets you capture, mix, and display chat from over 100 platforms in real time. Built by Steve Seguin.</p>
+                    <div class="social-links">
+                        <a href="https://discord.socialstream.ninja" target="_blank" aria-label="Discord">
+                            <img src="../icons/discord.svg" alt="Discord">
+                        </a>
+                        <a href="https://x.com/ninjafytools" target="_blank" aria-label="X">
+                            <img src="../icons/x.svg" alt="X">
+                        </a>
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank" aria-label="GitHub">
+                            <img src="../icons/github.svg" alt="GitHub">
+                        </a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Product</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../docs/features.html">Features</a></li>
+                        <li><a href="../docs/download.html">Download</a></li>
+                        <li><a href="../docs/guides.html">Guides</a></li>
+                        <li><a href="../docs/commands.html">Commands & API</a></li>
+                        <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                        <li><a href="../docs/templates.html">Templates</a></li>
+                        <li><a href="../docs/support.html">Support</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="../docs/guides.html#extension-customization">Customization Guide</a></li>
+                        <li><a href="../docs/customoverlays.md">Custom Overlays</a></li>
+                        <li><a href="../api.md">API Reference</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Report an Issue</a></li>
+                        <li><a href="../privacy.html">Privacy Policy</a></li>
+                        <li><a href="../TOS.html">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Community</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Join our Discord</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub Repository</a></li>
+                        <li><a href="../docs/support.html#contribute">Contribute</a></li>
+                        <li><a href="https://github.com/sponsors/steveseguin" target="_blank">Donate</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License. Created by <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> with contributions from the community.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        // Set current year in footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
