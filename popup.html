@@ -2519,6 +2519,7 @@ input:checked + .slider:before {
 				<small class="beginner-section-note" data-translate="main-chat-beginner-note">Use this as your main chat view, OBS overlay, or dock for controlling featured messages and TTS.</small>
                 <div id="dock" data-raw="" class="streaming_chat"></div>
 				<div id="dock-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
+                <p class="beginner-section-note"><a id="games_gallery_url" href="docs/games-gallery.html" target="_blank" rel="noopener noreferrer">Browse game gallery</a> &middot; Screenshots and quick previews</p>
 				<input type="checkbox" id="help-dock" class="link-help-toggle">
 				<div class="link-help-content">
 					<strong>Your all-in-one chat control center.</strong>
@@ -3021,6 +3022,10 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="auto-queue-questions">❓⛓️ Auto-queue messages identified as questions </span>
+                                </div>
+                                <div title="Track messages containing ? and identified questions. Keeps the latest 100 in the standard dock; resets on reload." data-keywords="unanswered questions Q&A tracking">
+                                    <label class="switch"><input type="checkbox" data-param1="trackquestions" /><span class="slider round"></span></label>
+                                    <span>Track unanswered questions in the dock</span>
                                 </div>
 								<div title="Automatically pins messages that are identified as donations" data-keywords="donations pin sticky">
                                     <label class="switch">
@@ -14446,8 +14451,19 @@ input:checked + .slider:before {
 					</label>
 					<select id="games-preset-select" style="padding: 5px 10px; border-radius: 4px; background: var(--color-accent-subtle); color: var(--default-text-color); border: 1px solid var(--collapsible-border-color);">
 						<option value="">Choose a game...</option>
-						<option value="games/signallock.html">Signal Lock - Cooperative code puzzle</option>
-<option value="games/crowdquest.html">Crowd Quest - Chat chooses the adventure</option>
+						<option value="games/signallock.html">🔐 Signal Lock - Cooperative code puzzle</option>
+<option value="games/crowdquest.html">🚀 Crowd Quest - Chat chooses the adventure</option>
+<option value="games/minorityclub.html">🌙 Minority Club</option>
+<option value="games/tugofwar.html">🪢 Tug of War - Two teams, one rope</option>
+<option value="games/crewkitchen.html">🍳 Crew Kitchen</option>
+<option value="games/beaconrelay.html">🔦 Beacon Relay</option>
+<option value="games/meteorshield.html">🛡️ Meteor Shield</option>
+<option value="games/memoryparade.html">🧠 Memory Parade</option>
+<option value="games/oddoneout.html">🔎 Odd One Out</option>
+<option value="games/sumsquad.html">➕ Sum Squad</option>
+<option value="games/rockpapershowdown.html">✊ Rock Paper Showdown</option>
+<option value="games/wordshuffle.html">🔀 Word Shuffle</option>
+<option value="games/numberhunt.html">🔢 Number Hunt</option>
 <option value="games.html">⚡ Spam Power - Chat activity powered</option>
 						<option value="battle.html">⚔️ Battlefield Mayhem - Automated chat combat</option>
 						<option value="games/emojirain.html">🌧️ Emoji Rain - Emoji falling effects</option>
@@ -14460,7 +14476,8 @@ input:checked + .slider:before {
 						<option value="games/memorylane.html">📷 Memory Lane - Nostalgic photo stories</option>
 						<option value="games/rhythmpulse.html">🎵 Rhythm Pulse - Musical beat creation</option>
 						<option value="games/petrace.html">🏁 Pet Race - Racing game</option>
-						<option value="games/wordchain.html">🔤 Word Chain - Word puzzle</option>
+						<option value="games/phraseguess.html">💬 Phrase Guessing - Host-created word puzzles</option>
+<option value="games/wordchain.html">🔤 Word Chain - Word puzzle</option>
 						<option value="games/emojitower.html">🏗️ Emoji Tower - Stacking game</option>
 						<option value="games/colorwars.html">🎨 Color Wars - Territory painting</option>
 						<option value="games/treasurehunt.html">🏴‍☠️ Treasure Hunt - Grid exploration</option>
@@ -14468,7 +14485,7 @@ input:checked + .slider:before {
 						<option value="games/chickenroyale.html">🍗 Chicken Royale - 3D battle royale, last chicken standing</option>
 					</select>
 					<span style="margin-left: 10px; font-size: 12px; opacity: 0.7;display: block;">
-						<i data-translate="games-note">Note: Each game has unique commands and mechanics</i> <a href="docs/chat-games.html" target="_blank" rel="noopener">Game guide &amp; previews</a>
+						<i data-translate="games-note">Note: Each game has unique commands and mechanics</i> <a id="games_gallery_menu_url" href="docs/games-gallery.html" target="_blank" rel="noopener noreferrer">Browse screenshots &amp; games</a> &middot; <a href="docs/chat-games.html" target="_blank" rel="noopener">Game guide</a>
 					</span>
 				</div>
 			</div>

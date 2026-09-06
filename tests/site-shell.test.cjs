@@ -1,10 +1,8 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
-const {execFileSync}=require('node:child_process');
 const root=path.join(__dirname,'..');
-test('All static site headers stay in sync and their local navigation links resolve',()=>{
-    execFileSync(process.execPath,['scripts/build-site-shell.cjs','--check'],{cwd:root});
+test('Updated header is limited to inspiration and its local links resolve',()=>{
     const pages=['index.html',...fs.readdirSync(path.join(root,'docs')).filter(f=>f.endsWith('.html')).map(f=>'docs/'+f)];
     let count=0;
     for(const file of pages){
@@ -13,7 +11,8 @@ test('All static site headers stay in sync and their local navigation links reso
         const shell=source.match(/<!-- SSN shared header -->[\s\S]*?<!-- \/SSN shared header -->/)[0];
         for(const match of shell.matchAll(/(?:href|src)="([^"]+)"/g))assert.ok(fs.existsSync(path.resolve(path.dirname(path.join(root,file)),match[1])),file+': '+match[1]);
     }
-    assert.ok(count>=64);
+    assert.equal(count,1);
+    assert.ok(!fs.existsSync(path.join(root,'scripts/build-site-shell.cjs')));
     require('acorn').parse(fs.readFileSync(path.join(root,'docs/js/site-shell.js'),'utf8'),{ecmaVersion:2020});
 });
 test('Shared menus, persistent themes, gallery previews and documentation controls work together',async()=>{
@@ -29,7 +28,7 @@ test('Shared menus, persistent themes, gallery previews and documentation contro
     try{
         const page=await browser.newPage({colorScheme:'dark'}),errors=[];
         page.on('pageerror',e=>errors.push(e.message));await page.route('https://**',r=>r.abort());
-        for(const file of ['index.html','docs/inspiration.html','docs/guides.html','docs/overlay-gallery.html','docs/sticker-gallery.html','docs/index.html','docs/chat-games.html']){
+        for(const file of ['docs/inspiration.html']){
             await page.setViewportSize({width:1440,height:900});await page.goto(origin+'/'+file);
             assert.equal(await page.locator('.site-header').evaluate(e=>e.getBoundingClientRect().height),76);
             await page.locator('.site-theme').click();
@@ -47,8 +46,25 @@ test('Shared menus, persistent themes, gallery previews and documentation contro
         await page.locator('[data-preview]').first().click();assert.equal(await page.locator('#sticker-preview').isVisible(),true);await page.keyboard.press('Escape');
         await page.goto(origin+'/docs/overlay-gallery.html');await page.locator('#gallery-search').fill('cozy');assert.ok(await page.locator('.gallery-card:visible').count()>0);
         await page.locator('[data-screenshot]').filter({visible:true}).first().click();assert.equal(await page.locator('#gallery-lightbox').isVisible(),true);await page.keyboard.press('Escape');
-        await page.goto(origin+'/docs/index.html');await page.locator('.site-theme').click();
-        assert.equal(await page.locator('#themeToggle').getAttribute('aria-pressed'),await page.evaluate(()=>String(document.documentElement.classList.contains('dark-mode'))));
+        for(const file of ['index.html','docs/features.html']) {
+            await page.goto(origin+'/'+file);assert.equal(await page.locator('.site-header').count(),0);
+            assert.equal(await page.locator('#theme-toggle svg').count(),2);
+            const before=await page.evaluate(()=>document.documentElement.classList.contains('dark-mode'));
+            await page.locator('#theme-toggle').click();
+            assert.notEqual(await page.evaluate(()=>document.documentElement.classList.contains('dark-mode')),before);
+            assert.equal(await page.locator('.product-scene,.site-product-shot,.site-download').count(),0);
+            for(const width of [1440,390]) {
+                await page.setViewportSize({width,height:900});
+                await page.screenshot({path:path.join(require('os').tmpdir(),'ssn-design-correction-'+file.replace(/[/.]/g,'-')+'-'+width+'.png'),fullPage:false});
+            }
+        }
+        await page.goto(origin+'/docs/inspiration.html');
+        for(const width of [1440,390]) {
+            await page.setViewportSize({width,height:900});
+            await page.screenshot({path:path.join(require('os').tmpdir(),'ssn-design-correction-inspiration-'+width+'.png'),fullPage:false});
+        }
+        assert.equal(await page.locator('.site-download').count(),0);
+        assert.equal(await page.locator('.site-theme svg').count(),1);
         assert.deepEqual(errors,[]);
     }finally{await browser.close();await new Promise(r=>server.close(r));}
 });

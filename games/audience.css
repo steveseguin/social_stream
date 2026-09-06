@@ -1,4 +1,16 @@
 :root { color-scheme: dark; --ink:#eff4ee; --muted:#9cacae; --accent:#cdfb84; --panel:#152326; }
+body[data-game="number"] { --accent:#9be1fa; --panel:#152c42; background:#0b1828; }
+body[data-game="shuffle"] { --accent:#f7d896; --panel:#342b29; background:#1d1918; }
+body[data-game="showdown"] { --accent:#fca9b6; --panel:#342337; background:#1b1324; }
+body[data-game="minority"] { --accent:#c6b5ff; --panel:#282744; background:#13142b; }
+.party-art { padding:32px 12px; border:1px solid #ffffff25; border-radius:24px; text-align:center; font-size:clamp(28px,4.5vw,60px); font-weight:750; letter-spacing:.04em; color:var(--accent); overflow-wrap:anywhere; background:linear-gradient(135deg,#ffffff12,transparent); box-shadow:0 18px 60px #0002; }
+.guess code { overflow-wrap:anywhere; }
+.guess small { overflow-wrap:anywhere; }
+@media (max-width:600px) {
+    body[data-game="showdown"] .guess, body[data-game="minority"] .guess { flex-direction:column; align-items:flex-start; gap:6px; }
+    body[data-game="showdown"] .guess code, body[data-game="minority"] .guess code { font-size:18px; letter-spacing:.02em; }
+    body[data-game="showdown"] .guess b, body[data-game="minority"] .guess b { color:var(--muted); font-size:12px; }
+}
 * { box-sizing:border-box; }
 [hidden] { display:none!important; }
 .choice + .choice { margin-top:12px; }

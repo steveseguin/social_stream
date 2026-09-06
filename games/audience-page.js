@@ -12,7 +12,10 @@
         var remaining = game.phase === 'active' ? Math.max(0, Math.ceil((game.deadline - (paused ? pausedAt : Date.now())) / 1000)) : game.seconds;
         document.getElementById('clock-value').textContent = paused ? 'Paused' : game.phase === 'result' ? 'Complete' : remaining + 's';
         document.getElementById('clock-label').textContent = game.phase === 'waiting' ? 'Starts with chat' : game.phase === 'result' ? 'Next round shortly' : 'Remaining';
-        var key = JSON.stringify([game.phase, game.round, game.history, Array.from(game.votes), game.supplies, game.discoveries]);
+        if (game.tug) { SSNTugView.clock(game, paused ? pausedAt : Date.now()); if (game.phase === 'waiting') document.getElementById('clock-label').textContent = 'Join both teams to start'; }
+        if (game.teamplay) SSNTeamplayView.clock(game, paused ? pausedAt : Date.now());
+        if (window.SSNGameView) SSNGameView.clock(game, paused ? pausedAt : Date.now());
+        var key = JSON.stringify([game.phase, game.round, game.history, Array.from(game.votes), game.supplies, game.discoveries, game.scrambled, game.revision]);
         if (key === lastRender) return;
         lastRender = key;
         var result = document.getElementById('result'); result.hidden = game.phase !== 'result'; result.textContent = game.result;
@@ -20,7 +23,30 @@
         document.getElementById('participants').textContent = game.users.size;
         if (game.phase === 'result' && !nextAt) nextAt = Date.now() + 10000;
         history.textContent = '';
-        if (mode === 'signal') {
+        if (window.SSNGameView) {
+            SSNGameView.render(game, el, history);
+        } else if (game.teamplay) {
+            SSNTeamplayView.render(game, el, history);
+        } else if (game.tug) {
+            SSNTugView.render(game, el, history);
+        } else if (game.card) {
+            document.getElementById('round').textContent = 'Round ' + String(game.round).padStart(2, '0');
+            var art = document.getElementById('party-art');
+            art.textContent = mode === 'number' ? game.low + '\u2013' + game.high : mode === 'shuffle' ? game.scrambled.toUpperCase() : game.phase === 'result' && mode === 'showdown' ? game.card.labels[game.secret].toUpperCase() : mode === 'showdown' ? '\u270a \u270b \u270c' : '\u2600 \u263e \u2606';
+            if (game.card.labels.length) {
+                var totals = [0, 0, 0]; game.votes.forEach(function (v) { totals[v]++; });
+                game.card.labels.forEach(function (label, index) {
+                    var row = el('div', null, 'guess'); row.appendChild(el('code', (mode === 'showdown' ? '!throw ' : '!pick ') + label));
+                    row.appendChild(el('b', game.phase === 'result' ? totals[index] + ' picked' : 'Hidden until reveal')); history.appendChild(row);
+                });
+            } else {
+                if (!game.history.length) history.appendChild(el('p', 'The first guess starts the clock. Your whole chat can join in.', 'empty'));
+                game.history.forEach(function (item) {
+                    var row = el('div', null, 'guess'), left = el('div'); left.appendChild(el('code', item.code)); left.appendChild(el('small', item.name));
+                    row.appendChild(left); row.appendChild(el('b', item.feedback)); history.appendChild(row);
+                });
+            }
+        } else if (mode === 'signal') {
             document.getElementById('round').textContent = 'Transmission ' + String(game.round).padStart(2, '0');
             document.querySelectorAll('.digit').forEach(function (digit, index) { digit.textContent = game.phase === 'result' ? game.secret[index] : '?'; });
             if (!game.history.length) history.appendChild(el('p', 'The first guess starts the clock. Every clue helps the whole chat.', 'empty'));
@@ -67,11 +93,12 @@
     document.getElementById('pause').onclick = function () {
         paused = !paused;
         if (paused) pausedAt = Date.now();
-        else { var elapsed = Date.now() - pausedAt; if (game.deadline) game.deadline += elapsed; if (nextAt) nextAt += elapsed; }
+        else { var elapsed = Date.now() - pausedAt; if (game.deadline) game.deadline += elapsed; if (nextAt) nextAt += elapsed; if (game.shiftTime) game.shiftTime(elapsed); }
+        document.body.classList.toggle('game-paused', paused);
         this.textContent = paused ? 'Resume' : 'Pause'; render();
     };
     document.getElementById('next').onclick = function () { if (!paused) { game.next(); nextAt = 0; render(); } };
-    document.getElementById('restart').onclick = function () { game.reset(); nextAt = 0; render(); };
+    document.getElementById('restart').onclick = function () { game.reset(); nextAt = 0; lastRender = ''; render(); };
     render();
     setInterval(function () {
         if (paused) return;
@@ -83,7 +110,7 @@
         setInterval(function () {
             counter++;
             receive({ type: 'demo', chatname: ['Juniper', 'CosmicCat', 'River', 'Milo', 'Nova'][counter % 5], textonly: true, id: counter,
-                chatmessage: mode === 'signal' ? '!code ' + (counter % 7 === 0 ? game.secret : Array.from({ length: 4 }, function () { return 1 + Math.floor(Math.random() * 6); }).join('')) : '!vote ' + (1 + counter % 3) });
+                chatmessage: typeof game.previewCommand === 'function' ? game.previewCommand(counter) : mode === 'signal' ? '!code ' + (counter % 7 === 0 ? game.secret : Array.from({ length: 4 }, function () { return 1 + Math.floor(Math.random() * 6); }).join('')) : '!vote ' + (1 + counter % 3) });
         }, 2000);
         return; // Demo never opens a session or sends messages.
     }

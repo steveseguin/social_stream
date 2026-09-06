@@ -3913,6 +3913,11 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     sampleOverlay.href = buildGeneratedUrl("sampleoverlay.html", `session=${encodeURIComponent(streamID)}${password}${customParams}${versionParam}`, baseURL);
   }
   
+  ['games_gallery_url', 'games_gallery_menu_url'].forEach(function(id) {
+    const link = document.getElementById(id);
+    if (link) link.href = buildGeneratedUrl("docs/games-gallery.html", `session=${encodeURIComponent(streamID)}${password}`, baseURL);
+  });
+
   const remoteControlUrl = document.getElementById("remote_control_url");
   if (remoteControlUrl) {
     remoteControlUrl.href = buildGeneratedUrl("sampleapi.html", `session=${encodeURIComponent(streamID)}${password}${customParams}${versionParam}`, baseURL);
@@ -7194,7 +7199,7 @@ function refreshGeneratedConnectionLinks(paramName, value) {
         setGeneratedLink(element, replaceGeneratedConnectionParam(element.raw, paramName, value));
     });
 
-    ['sampleoverlay', 'remote_control_url', 'obs_control_dock_url'].forEach(function(elementId) {
+    ['sampleoverlay', 'remote_control_url', 'obs_control_dock_url', 'games_gallery_url', 'games_gallery_menu_url'].forEach(function(elementId) {
         const link = document.getElementById(elementId);
         if (!link || !link.href) return;
         link.href = replaceGeneratedConnectionParam(link.href, paramName, value);

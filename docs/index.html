@@ -739,13 +739,8 @@
       }
     }
   </style>
-<link rel="stylesheet" href="css/site-shell.css">
-<script src="js/site-shell.js"></script>
 </head>
-<body class="site-page site-reader">
-<!-- SSN shared header -->
-<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="features.html">Features</a><a href="inspiration.html">Inspiration</a><a href="overlay-gallery.html">Gallery</a><a href="guides.html" aria-current="page">Guides</a><a href="commands.html">API</a><a href="supported-sites.html">Supported sites</a><a href="support.html">Support</a><a href="download.html">Download</a></nav><div class="site-actions"><a class="site-download" href="download.html">Get SSN</a><button class="site-theme" type="button" aria-label="Switch theme">Theme</button><button class="site-menu" type="button" aria-expanded="false" aria-controls="ssn-site-nav">Menu</button></div></div></header>
-<!-- /SSN shared header -->
+<body>
   <div class="app">
     <aside class="sidebar" id="sidebar">
       <div class="brand">
@@ -826,7 +821,6 @@
 
     function toggleTheme() {
       const useDark = !isDarkTheme();
-      if (window.SSNSiteTheme) { window.SSNSiteTheme.apply(useDark, true); updateThemeButton(); return; }
       document.documentElement.classList.toggle("dark-mode", useDark);
       document.documentElement.classList.toggle("light-mode", !useDark);
       localStorage.setItem("darkMode", useDark ? "true" : "false");

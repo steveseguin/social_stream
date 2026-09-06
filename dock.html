@@ -2744,7 +2744,8 @@
 		}
 
 		</style>
-	</head>
+	<link rel="stylesheet" href="dock-questions.css">
+</head>
 	<body id="main" class="vanilla notcompactmode">
 		<div id="topbar"></div>
 		<div id="topbarSpacer" aria-hidden="true"></div>
@@ -6410,6 +6411,7 @@
 				var visibleNodes = [];
 				var hiddenNodes = [];
 				Array.prototype.forEach.call(nodes, function(node) {
+                    if (node.classList.contains("ssn-question-pending")) return;
 					if (isDockMessageVisible(node)) {
 						visibleNodes.push(node);
 					} else {
@@ -12744,6 +12746,7 @@
 
 					if (!suppressLiveSideEffects) {
 						applyBotActions(data); // Official actions
+                        if (window.SSNQuestionTracker) window.SSNQuestionTracker.add(node, data);
 
 						if (data.queueme) {
 							selectedQueue.push(node);
@@ -14093,5 +14096,6 @@
 			initHotkeys();
 
 		</script>
-	</body>
+	<script src="dock-questions.js"></script>
+</body>
 </html>

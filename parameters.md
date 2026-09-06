@@ -201,6 +201,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `autopinquestions` or `autopinquestion` | boolean | Auto-pins cards marked as questions |
 | `autoqueuedonations` or `autoqueuedonation` | boolean | Auto-queues donation cards |
 | `autoqueuequestions` or `autoqueuequestion` | boolean | Auto-queues question cards |
+| `trackquestions` | boolean | Adds a pending-question filter and Answered/Dismiss controls to the host dock. Tracks visible question marks and identified questions. Keeps the latest 100 during normal vertical chat pruning; local to this dock and resets on reload. |
 | `skipdonations` | boolean | Prevents donation cards from being auto-featured |
 | `selfqueue` | comma-separated strings | Viewer commands that add themselves to the queue (e.g., `!queue`) |
 | `deleteonlylast` | boolean | Only removes the most recent card when clearing messages |

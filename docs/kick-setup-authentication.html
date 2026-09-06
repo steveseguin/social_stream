@@ -17,13 +17,33 @@
     <link rel="stylesheet" href="css/guides.css">
     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
     <meta name="description" content="Connect Kick chat and alerts to Social Stream Ninja, choose Standard or WebSocket mode, sign in safely, and fix channel slug or OAuth problems.">
-<link rel="stylesheet" href="css/site-shell.css">
-<script src="js/site-shell.js"></script>
 </head>
-<body class="site-page">
-    <!-- SSN shared header -->
-<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="features.html">Features</a><a href="inspiration.html">Inspiration</a><a href="overlay-gallery.html">Gallery</a><a href="guides.html" aria-current="page">Guides</a><a href="commands.html">API</a><a href="supported-sites.html">Supported sites</a><a href="support.html">Support</a><a href="download.html">Download</a></nav><div class="site-actions"><a class="site-download" href="download.html">Get SSN</a><button class="site-theme" type="button" aria-label="Switch theme">Theme</button><button class="site-menu" type="button" aria-expanded="false" aria-controls="ssn-site-nav">Menu</button></div></div></header>
-<!-- /SSN shared header -->
+<body>
+    <header>
+        <div class="container">
+            <div class="logo"><a href="../index.html"><img src="../icons/logo.svg" alt="Social Stream Ninja Logo"><span>Social Stream Ninja</span></a></div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands &amp; API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
+                </button>
+                <div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+    </header>
 
     <section class="page-hero">
         <div class="container">
@@ -160,9 +180,7 @@ Standard browser capture is implemented by the current manifest-injected `source
         </div>
     </main>
 
-    <!-- SSN shared footer -->
-<footer class="site-footer"><div class="site-footer-top"><div><strong>Social Stream Ninja</strong><p>Bring your chats together. Make the stream your own. Free and open source.</p></div><div class="site-footer-links"><a href="features.html">Features</a><a href="inspiration.html">Inspiration</a><a href="overlay-gallery.html">Gallery</a><a href="guides.html">Guides</a><a href="commands.html">API</a><a href="supported-sites.html">Supported sites</a><a href="support.html">Support</a><a href="download.html">Download</a><a href="sticker-gallery.html">Sticker packs</a><a href="chat-games.html">Games</a><a href="services.html">Hire</a><a href="https://github.com/steveseguin/social_stream">GitHub</a><a href="https://discord.socialstream.ninja">Discord</a><a href="https://github.com/sponsors/steveseguin">Donate</a></div></div><div class="site-legal"><span>© <span id="current-year">2026</span> Social Stream Ninja · GPLv3</span><a href="../privacy.html">Privacy</a><a href="../TOS.html">Terms</a><a href="https://github.com/steveseguin">Created by Steve Seguin &amp; the community</a></div></footer>
-<!-- /SSN shared footer -->
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
     <script src="js/main.js"></script>
     <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
 </body>
