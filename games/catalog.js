@@ -1,5 +1,38 @@
 window.SSNGamesCatalog = [
   {
+    "id": "mazeraid",
+    "title": "Maze Raid",
+    "category": "Party",
+    "description": "Chat becomes avatar enemies in an auto-roaming retro maze with transparent space around it.",
+    "command": "Say anything in chat",
+    "path": "games/mazeraid.html",
+    "image": "images/games/mazeraid.jpg",
+    "demo": true,
+    "audience": "Solo-friendly"
+  },
+  {
+    "id": "fireflycatch",
+    "title": "Firefly Catch",
+    "category": "Puzzle",
+    "description": "Time your catches as glowing fireflies cross a transparent OBS overlay.",
+    "command": "!catch",
+    "path": "games/fireflycatch.html",
+    "image": "images/games/fireflycatch.jpg",
+    "demo": true,
+    "audience": "Solo-friendly"
+  },
+  {
+    "id": "cometrally",
+    "title": "Comet Rally",
+    "category": "Teams",
+    "description": "Boost your team comet along a transparent race track at the bottom of your stream.",
+    "command": "!boost",
+    "path": "games/cometrally.html",
+    "image": "images/games/cometrally.jpg",
+    "demo": true,
+    "audience": "2+ chatters"
+  },
+  {
     "id": "signallock",
     "title": "Signal Lock",
     "category": "Puzzle",

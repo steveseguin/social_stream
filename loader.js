@@ -33,7 +33,10 @@ async function loadScriptsInOrder() {
         './pointsactions.js?v=1',
         './shared/stickers/catalog.js',
         './shared/stickers/rewards.js',
-        './shared/stickers/background.js'
+        './shared/stickers/background.js',
+        './shared/monetization/core.js',
+        './shared/monetization/ebay-service.js',
+        './shared/monetization/background.js'
 
     ];
 
