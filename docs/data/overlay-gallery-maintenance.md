@@ -11,3 +11,5 @@ When adding an overlay or style:
 5. Run `node tests/overlay-gallery.test.cjs` and run `scripts/electron-overlay-gallery-e2e.cjs` with Electron. The former checks assets, paths, menu coverage and discovery links; the latter checks desktop/mobile rendering, combined filters, image enlargement, keyboard focus and correctly encoded session links.
 
 No platform channels, user sessions or external services are contacted during capture. The gallery itself opens an overlay connection only when a visitor enters their session and follows an overlay link. Session/password fields are never persisted by the gallery.
+
+Matching artwork sets use the same `collection` key on exactly three catalogue entries: chat, featured, and alerts. The builder adds **Use matching set** to those cards; the panel reuses their paths and previews. Keep all alert-category style parameters in the alerts entry. The gallery checks cover complete sets, encoded credentials, shared character motion, copying and narrow layouts.

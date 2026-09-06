@@ -178,6 +178,7 @@ const SOURCE_ALIASES = Object.freeze({
 });
 
 const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.has('staticart')) document.body.classList.add('static-art');
 const SERVER_EXCLUSIVE_TRANSPORT_VERSION = '3.52.0';
 // Transport migration guard: only pages with full server parity may skip the legacy bridge.
 var TRANSPORT_CAPABILITIES = {
@@ -2166,6 +2167,12 @@ function renderAlert(model) {
     article.classList.add('collection');
     if (settings.accent || settings.categoryAccents[model.category] || settings.colorByPlatform) {
       article.classList.add('custom-accent');
+      article.style.setProperty('--collection-accent', model.accent);
+    }
+  }
+  if (['art-cat', 'art-dog', 'art-halloween', 'art-christmas', 'art-music', 'art-forest', 'art-space', 'art-dragon'].indexOf(styleKey) !== -1) {
+    article.classList.add('collection', 'art-alert', 'style-' + styleKey);
+    if (settings.accent || settings.categoryAccents[model.category] || settings.colorByPlatform) {
       article.style.setProperty('--collection-accent', model.accent);
     }
   }

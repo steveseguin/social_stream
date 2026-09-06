@@ -12,6 +12,101 @@
   var lastFocus = null;
   var category = 'all';
   var theme = document.getElementById('gallery-theme');
+  var matching = document.getElementById('gallery-matching');
+  var matchingTitle = document.getElementById('gallery-matching-title');
+  var motion = document.getElementById('gallery-set-motion');
+  var setLinks = document.getElementById('gallery-set-links');
+  var setStatus = document.getElementById('gallery-set-status');
+  var collections = Object.create(null);
+  var selectedSet = null;
+  cards.forEach(function (card) {
+    if (!card.dataset.collection) return;
+    var key = card.dataset.collection;
+    if (!collections[key]) collections[key] = Object.create(null);
+    collections[key][card.dataset.kind] = card;
+  });
+  function overlayURL(card, still) {
+    var url = new URL('../' + card.dataset.path, window.location.href);
+    url.searchParams.set('session', session.value.trim());
+    if (password.value) url.searchParams.set('password', password.value);
+    if (still) url.searchParams.set('staticart', '');
+    else url.searchParams.delete('staticart');
+    return url.href;
+  }
+  function updateSetLinks() {
+    if (!selectedSet) return;
+    var ready = Boolean(session.value.trim());
+    Array.prototype.forEach.call(setLinks.children, function (row) {
+      var url = ready ? overlayURL(selectedSet[row.dataset.kind], !motion.checked) : '';
+      row.querySelector('input').value = url;
+      row.querySelector('button').disabled = !ready;
+      var link = row.querySelector('a');
+      if (ready) link.href = url;
+      else link.removeAttribute('href');
+      link.setAttribute('aria-disabled', String(!ready));
+    });
+    setStatus.textContent = ready ? 'Ready to copy into OBS.' : 'Enter your session ID above to create the three links.';
+  }
+  function copySetLink(input) {
+    var value = input.value;
+    function fallback() {
+      input.focus();
+      input.select();
+      var copied = false;
+      try { copied = document.execCommand('copy'); } catch (error) {}
+      setStatus.textContent = copied ? 'Link copied.' : 'Link selected. Press Ctrl+C (Command+C on Mac) to copy.';
+    }
+    if (!value) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(value).then(function () { setStatus.textContent = 'Link copied.'; }, fallback);
+    } else fallback();
+  }
+  cards.forEach(function (card) {
+    var button = card.querySelector('.gallery-use-set');
+    var group = collections[card.dataset.collection];
+    if (!button || !group || !group.chat || !group.featured || !group.alerts) return;
+    button.hidden = false;
+    button.addEventListener('click', function () {
+      selectedSet = group;
+      matchingTitle.textContent = group.featured.querySelector('h2').textContent;
+      setLinks.textContent = '';
+      ['chat', 'featured', 'alerts'].forEach(function (kind) {
+        var label = {chat: 'Chat', featured: 'Featured message', alerts: 'Alerts'}[kind];
+        var row = document.createElement('div');
+        row.className = 'gallery-set-row';
+        row.dataset.kind = kind;
+        var image = document.createElement('img');
+        image.src = group[kind].querySelector('.gallery-preview img').src;
+        image.alt = label + ' preview';
+        var field = document.createElement('label');
+        field.textContent = label;
+        var input = document.createElement('input');
+        input.type = 'text'; input.readOnly = true;
+        input.spellcheck = false;
+        input.placeholder = 'Enter your session ID above';
+        field.appendChild(input);
+        var actions = document.createElement('div');
+        actions.className = 'gallery-set-actions';
+        var copy = document.createElement('button');
+        copy.type = 'button'; copy.textContent = 'Copy link';
+        copy.setAttribute('aria-label', 'Copy ' + label.toLowerCase() + ' link');
+        copy.addEventListener('click', function () { copySetLink(input); });
+        var open = document.createElement('a');
+        open.textContent = 'Open'; open.target = '_blank'; open.rel = 'noopener';
+        open.setAttribute('aria-label', 'Open ' + label.toLowerCase() + ' overlay');
+        actions.appendChild(copy); actions.appendChild(open);
+        row.appendChild(image); row.appendChild(field); row.appendChild(actions);
+        setLinks.appendChild(row);
+      });
+      matching.hidden = false;
+      setup.open = true;
+      updateSetLinks();
+      if (session.value.trim()) matchingTitle.focus();
+      else session.focus();
+      (session.value.trim() ? matching : setup).scrollIntoView({block: 'start'});
+    });
+  });
+  motion.addEventListener('change', updateSetLinks);
   try {
     var saved = localStorage.getItem('darkMode');
     document.documentElement.classList.toggle('dark-mode', saved === 'true' || (saved === null && window.matchMedia('(prefers-color-scheme: dark)').matches));
@@ -46,6 +141,7 @@
       if (password.value) url.searchParams.set('password', password.value);
       link.href = url.href;
     });
+    updateSetLinks();
   }
   session.addEventListener('input', updateLinks);
   password.addEventListener('input', updateLinks);
