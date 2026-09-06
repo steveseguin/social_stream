@@ -118,23 +118,48 @@ function replaceEmotesWithImages(message, emoteMap) {
   if (!emoteMap || typeof message !== 'string') {
     return message;
   }
-  return message.replace(TOKEN_REGEX, (match, token) => {
-    const entry = emoteMap[token];
-    if (!entry) {
-      return match;
+  // Callers pass rendered chat HTML, including native emotes and reply markup.
+  // Work on text nodes so replacements cannot corrupt tags or attributes.
+  const template = document.createElement('template');
+  template.innerHTML = message;
+  const walker = document.createTreeWalker(template.content, 4); // SHOW_TEXT
+  const nodes = [];
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    if (!node.parentElement || !node.parentElement.closest('script, style, textarea')) {
+      nodes.push(node);
     }
-    const alt = escapeAttribute(match);
-    if (typeof entry === 'string') {
-      return `<img src="${entry}" alt="${alt}" class="third-party-emote zero-width-friendly" loading="lazy" decoding="async">`;
-    }
-    if (entry && entry.url) {
-      if (entry.zw) {
-        return `<span class="zero-width-span"><img src="${entry.url}" alt="${alt}" class="zero-width-emote" loading="lazy" decoding="async"></span>`;
+  }
+  let changed = false;
+  nodes.forEach((node) => {
+    let replaced = false;
+    const rendered = node.textContent.replace(TOKEN_REGEX, (match, token) => {
+      const entry = emoteMap[token];
+      if (!entry) {
+        return escapeAttribute(match);
       }
-      return `<img src="${entry.url}" alt="${alt}" class="third-party-emote zero-width-friendly" loading="lazy" decoding="async">`;
+      const alt = escapeAttribute(match);
+      if (typeof entry === 'string') {
+        replaced = true;
+        return `<img src="${escapeAttribute(entry)}" alt="${alt}" class="third-party-emote zero-width-friendly" loading="lazy" decoding="async">`;
+      }
+      if (entry && entry.url) {
+        replaced = true;
+        if (entry.zw) {
+          return `<span class="zero-width-span"><img src="${escapeAttribute(entry.url)}" alt="${alt}" class="zero-width-emote" loading="lazy" decoding="async"></span>`;
+        }
+        return `<img src="${escapeAttribute(entry.url)}" alt="${alt}" class="third-party-emote zero-width-friendly" loading="lazy" decoding="async">`;
+      }
+      return escapeAttribute(match);
+    });
+    if (replaced) {
+      const replacement = document.createElement('template');
+      replacement.innerHTML = rendered;
+      node.parentNode.replaceChild(replacement.content, node);
+      changed = true;
     }
-    return match;
   });
+  return changed ? template.innerHTML : message;
 }
 
 async function fetchJson(url) {

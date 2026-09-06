@@ -268,7 +268,7 @@ class MessageStoreDB {
             
             const request = store.add(messageData);
             
-            request.onsuccess = () => {
+            tx.oncomplete = () => {
                 // Get the auto-generated ID from the request
                 messageData.id = request.result;
                 message.idx = request.result;
@@ -287,6 +287,8 @@ class MessageStoreDB {
             };
             
             request.onerror = () => reject(request.error);
+            tx.onerror = () => reject(tx.error || new Error('Failed to save chat message'));
+            tx.onabort = () => reject(tx.error || new Error('Chat message save was aborted'));
         });
     }
 
@@ -300,30 +302,34 @@ class MessageStoreDB {
 			const tx = db.transaction(this.storeName, 'readwrite');
 			const store = tx.objectStore(this.storeName);
 			const getRequest = store.get(idx);
+			let merged = null;
 
 			getRequest.onsuccess = () => {
 				const existing = getRequest.result;
 				if (!existing) {
-					resolve(null);
 					return;
 				}
 
 				const timestamp = Number(existing.timestamp);
 				const expiration = getStoredMessageExpiration(existing, this.daysToKeep);
-				const merged = {...existing, ...updatedResponse, id: idx};
+				merged = {...existing, ...updatedResponse, id: idx};
 				if (Number.isFinite(timestamp)) merged.timestamp = timestamp;
 				if (expiration !== null) merged.expiresAt = expiration;
 
 				const putRequest = store.put(merged);
-				putRequest.onsuccess = () => {
-					this.clearCache();
-					this.clearExistenceCache();
-					resolve(merged);
-				};
 				putRequest.onerror = () => reject(putRequest.error);
 			};
 
 			getRequest.onerror = () => reject(getRequest.error);
+			tx.oncomplete = () => {
+				if (merged) {
+					this.clearCache();
+					this.clearExistenceCache();
+				}
+				resolve(merged);
+			};
+			tx.onerror = () => reject(tx.error || new Error('Failed to update chat message'));
+			tx.onabort = () => reject(tx.error || new Error('Chat message update was aborted'));
 		});
 	}
     updateCache(message) {

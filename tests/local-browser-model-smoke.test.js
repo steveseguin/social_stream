@@ -100,7 +100,7 @@ async function run() {
 
         await page.waitForFunction(() => {
             return window.__SSN_LOCAL_BROWSER_MODEL_SMOKE__ && window.__SSN_LOCAL_BROWSER_MODEL_SMOKE__.done;
-        }, { timeout: 900000 });
+        }, null, { timeout: 900000 });
 
         const result = await page.evaluate(() => window.__SSN_LOCAL_BROWSER_MODEL_SMOKE__);
         console.log(JSON.stringify({

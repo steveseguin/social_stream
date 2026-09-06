@@ -202,6 +202,8 @@ First failure checks:
 
 Primary use: convert a StreamElements or Streamlabs chat widget package into a standalone OBS HTML file that reads SSN payloads.
 
+The importer and exported overlay work with chat supplied by either the SSN Windows desktop app or Chrome extension. The capture surface must remain running, but the importer page and StreamElements may be closed after export.
+
 What it accepts:
 
 - `.zip` file via JSZip.
@@ -236,9 +238,11 @@ SSN to StreamElements-style mapping:
 
 - `chatname` maps to display name/nick.
 - `chatmessage` maps to text/rendered text.
+- Inline message images with names map to StreamElements-style emote tokens and emote URL metadata while plain `data.text` remains plain text.
 - `chatbadges` maps to badge data when URLs or labels exist.
 - `type` maps to service/source.
 - `mid`, `id`, `messageId`, `message_id`, or `meta.messageId` map to message IDs.
+- Newly rendered widget rows are tagged with message ID, chat name, and source type where the widget does not add those attributes itself, allowing SSN delete/timeout/block controls to remove them.
 - `membership`, `subtitle`, badges, and role hints map to subscriber/mod/VIP/broadcaster flags when detectable.
 - `hasDonation`, `donation`, and `contentimg` map to amount/support text or attachment data where possible.
 

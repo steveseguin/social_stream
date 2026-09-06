@@ -7,6 +7,7 @@ const SocialStreamLocalServer = require("../js/local-server-url.js");
 const popupSource = fs.readFileSync(path.resolve(__dirname, "..", "popup.js"), "utf8");
 const popupHtml = fs.readFileSync(path.resolve(__dirname, "..", "popup.html"), "utf8");
 const dockHtml = fs.readFileSync(path.resolve(__dirname, "..", "dock.html"), "utf8");
+const windowsOverlayHtml = fs.readFileSync(path.resolve(__dirname, "..", "themes", "Windows3.1", "index.html"), "utf8");
 const backgroundSource = fs.readFileSync(path.resolve(__dirname, "..", "background.js"), "utf8");
 const parametersSource = fs.readFileSync(path.resolve(__dirname, "..", "parameters.md"), "utf8");
 const urlParameterConfig = fs.readFileSync(path.resolve(__dirname, "..", "shared", "config", "urlParameters.js"), "utf8");
@@ -68,6 +69,34 @@ assert.ok(dockHtml.includes('--viewer-count-reserved-space: 0px;'), "reserved sp
 assert.ok(dockHtml.includes('new MutationObserver(scheduleViewerBarSpaceUpdate)'), "viewer bar height tracking is missing");
 assert.ok(parametersSource.includes('| `reserveviewercountspace` | boolean |'), "parameter documentation is missing");
 assert.ok(urlParameterConfig.includes('"key": "reserveviewercountspace"'), "generated parameter metadata is missing");
+
+assert.ok(!popupHtml.includes('data-param30="showtime"'), "Auto-hide uses the main chat control, without duplicate theme controls");
+
+// Exercise actual preset link generation as the dock timing changes.
+{
+  const dock = { raw: "https://socialstream.ninja/dock.html?session=test&showtime=12000" };
+  const template = { raw: "https://socialstream.ninja/themes/compact-classic.html?session=test&ultra&font=18&showtime=999" };
+  const apply = Function("document", "getGeneratedLinkParams", "mergeSupportedServerParamsIntoQuery", "buildGeneratedUrl", "setGeneratedLink", "syncChatOverlayTemplateConfig", "refreshLinks", "DEFAULT_CHAT_OVERLAY_TEMPLATE", "baseURL",
+    extractFunction("applyChatOverlayTemplatePreset") + "; return applyChatOverlayTemplatePreset;")(
+      { getElementById: id => id === "dock" ? dock : id === "chatoverlaytemplate" ? template : null },
+      element => element.raw.split("?")[1], params => params,
+      Function("baseURL", extractFunction("buildGeneratedUrl") + "; return buildGeneratedUrl;")("https://socialstream.ninja/"),
+      (element, url) => { element.raw = url; }, () => {}, () => {}, "sampleoverlay.html", "https://socialstream.ninja/"
+    );
+  for (const timing of ["12000", "5000", "0", null]) {
+    dock.raw = "https://socialstream.ninja/dock.html?session=test" + (timing === null ? "" : "&showtime=" + timing);
+    for (const preset of ["themes/compact-classic.html", "themes/compact-clean.html?style=cute", "themes/compact-clean.html?style=cozy", "themes/compact-clean.html", "sampleoverlay.html"]) {
+      apply(preset);
+      const params = new URL(template.raw).searchParams;
+      assert.strictEqual(params.get("showtime"), timing || "0");
+      if (preset.includes("compact-clean")) assert.strictEqual(params.get("style"), new URL(preset, "https://socialstream.ninja/").searchParams.get("style"));
+      assert.strictEqual(params.get("font"), "18");
+      assert.ok(params.has("ultra"));
+      assert.strictEqual(params.get("session"), "test");
+    }
+  }
+}
+assert.ok(windowsOverlayHtml.includes('urlParams.has("showtime")'), "Windows 3.1 overlay must consume showtime");
 
 const viewerCountOptionIndex = popupHtml.indexOf('data-param1="showviewercount"');
 const likeCountOptionIndex = popupHtml.indexOf('data-param1="showlikecount"');

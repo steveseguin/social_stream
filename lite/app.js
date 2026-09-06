@@ -15,16 +15,33 @@ const overlayToggleDefs = [
   { key: 'reverse', id: 'session-opt-reverse', params: ['reverse'] }
 ];
 
-const isObsDockView = typeof window !== 'undefined' && Boolean(window.obsstudio);
-
 const url = new URL(window.location.href);
+// OAuth callbacks use the registered base URL. Restore this window's OBS view.
+try {
+  const callback = (url.searchParams.has('code') && url.searchParams.has('state')) ||
+    (new URLSearchParams(url.hash.slice(1)).has('access_token') && new URLSearchParams(url.hash.slice(1)).has('state'));
+  const savedView = sessionStorage.getItem('ssn-lite-obs-return-view');
+  if (callback && !url.searchParams.has('view') && ['dock', 'overlay'].includes(savedView)) {
+    url.searchParams.set('view', savedView);
+    history.replaceState(null, '', url.toString());
+  }
+  if (['dock', 'overlay'].includes(url.searchParams.get('view'))) {
+    sessionStorage.setItem('ssn-lite-obs-return-view', url.searchParams.get('view'));
+  } else {
+    sessionStorage.removeItem('ssn-lite-obs-return-view');
+  }
+} catch (_) {}
 const focusParam = (url.searchParams.get('focus') || '').trim().toLowerCase();
 const liteViewParam = (url.searchParams.get('view') || url.searchParams.get('liteView') || '').trim().toLowerCase();
+const isStandaloneOverlay = liteViewParam === 'overlay';
+const isObsDockView = !isStandaloneOverlay && (liteViewParam === 'dock' || Boolean(window.obsstudio));
 const hasOpener = typeof window !== 'undefined' && Boolean(window.opener);
 const isActivityPopoutView = liteViewParam === 'activity' || (!liteViewParam && focusParam === 'activity' && hasOpener);
 
 const elements = {
   sessionInput: document.getElementById('session-id'),
+  sessionUrl: document.getElementById('session-url'),
+  quickStart: document.getElementById('quick-start'),
   sessionApply: document.getElementById('session-apply'),
   sessionCopy: document.getElementById('session-copy'),
   sessionTest: document.getElementById('session-test'),
@@ -132,7 +149,23 @@ window.SocialStreamLiteDebug = Object.freeze({
   }
 });
 
-const messenger = new DockMessenger(elements.dockFrame, {
+const messenger = isStandaloneOverlay ? {
+  ready: true,
+  sessionId: null,
+  getSessionId() { return this.sessionId; },
+  setSessionId(value) { this.sessionId = value; },
+  send(message) { handleRelayMessage(message); },
+  sendDelete(message) {
+    for (let i = activityEntries.length - 1; i >= 0; i--) {
+      const entry = activityEntries[i];
+      if (entry.payload?.type === message.type && String(entry.payload.id) === String(message.id)) {
+        activityEntries.splice(i, 1);
+        activityById.delete(entry.id);
+      }
+    }
+    renderActivity();
+  }
+} : new DockMessenger(elements.dockFrame, {
   debug: debugEnabled,
   onDebug: debugEnabled ? addActivity : null,
   onMessage: ({ message }) => handleRelayMessage(message)
@@ -377,8 +410,8 @@ const activityState = {
 };
 
 const speechSupported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
-const donationsFilterKey = 'activity.filter.donationsOnly';
-const ttsEnabledKey = 'activity.tts.enabled';
+const donationsFilterKey = isStandaloneOverlay ? 'obs.overlay.donationsOnly' : 'activity.filter.donationsOnly';
+const ttsEnabledKey = isStandaloneOverlay ? 'obs.overlay.tts' : 'activity.tts.enabled';
 
 const ALLOWED_ACTIVITY_TAGS = new Set(['a', 'b', 'strong', 'i', 'em', 'u', 's', 'br', 'span', 'small', 'code', 'img']);
 const ALLOWED_ACTIVITY_ATTRS = {
@@ -605,8 +638,16 @@ function updateSessionLink(sessionId) {
     return;
   }
   const dockLink = sessionUrl(effectiveSession);
+  if (elements.sessionUrl) elements.sessionUrl.value = dockLink;
   elements.sessionOpen.href = dockLink;
   elements.sessionOpen.dataset.sessionId = effectiveSession;
+  ['dock', 'overlay'].forEach(view => {
+    const field = document.getElementById(`obs-${view}-url`);
+    if (!field) return;
+    const link = new URL('./index.html', window.location.href);
+    link.searchParams.set('view', view);
+    field.value = link.toString();
+  });
 }
 
 function handleOverlayToggleChange(key, checked) {
@@ -632,6 +673,7 @@ function setSessionIndicator(state, label) {
   const indicator = elements.sessionIndicator;
   if (!indicator) return;
   indicator.dataset.state = state || 'idle';
+  indicator.title = label || `Session ${state || 'idle'}`;
   const sr = indicator.querySelector('.sr-only');
   if (sr) {
     sr.textContent = label || `Session ${state || 'idle'}`;
@@ -651,6 +693,7 @@ function startSession(sessionId) {
 
   storage.set(sessionKey, value);
   messenger.setSessionId(value);
+  elements.sessionInput.value = value;
 
   if (elements.sessionTest) {
     elements.sessionTest.disabled = !value;
@@ -659,7 +702,7 @@ function startSession(sessionId) {
   updateSessionLink(value);
 
   setSessionIndicator('ready', 'Overlay link ready');
-  updateSessionStatus('');
+  updateSessionStatus(previous && previous !== value ? 'Session changed. Copy the updated overlay URL into your browser source.' : 'Overlay link ready. Connect a source below, or send a test message.');
 
   const sessionChanged = !previous || previous !== value;
 
@@ -694,6 +737,8 @@ function handleCopyLink() {
         );
       })
       .catch(() => {
+        elements.sessionUrl?.focus();
+        elements.sessionUrl?.select();
         updateSessionStatus(
           `Clipboard copy failed. Use this link instead: <a href="${safeLink}" target="_blank" rel="noopener">${safeLink}</a>`,
           'warn',
@@ -701,6 +746,8 @@ function handleCopyLink() {
         );
       });
   } else {
+    elements.sessionUrl?.focus();
+    elements.sessionUrl?.select();
     updateSessionStatus(
       `Copy this link manually: <a href="${safeLink}" target="_blank" rel="noopener">${safeLink}</a>`,
       'info',
@@ -849,6 +896,7 @@ function shouldDisplayEntry(entry) {
     }
     return true;
   }
+  if (isStandaloneOverlay && !document.body.classList.contains('overlay-setup')) return false;
   if (entry.kind === 'error') {
     return true;
   }
@@ -864,7 +912,11 @@ function renderActivity() {
   if (!visibleEntries.length) {
     const empty = document.createElement('p');
     empty.className = 'activity-empty';
-    empty.textContent = 'No activity yet.';
+    empty.textContent = activityState.filters.donationsOnly
+      ? 'No donations to show. Turn off Donations only to see all messages.'
+      : isActivityPopoutView
+        ? 'Waiting for messages. Keep the main Lite page open and a source connected.'
+        : 'No messages yet. Connect a source or send a test message above.';
     elements.activityLog.appendChild(empty);
     return;
   }
@@ -1534,13 +1586,7 @@ function applyObsDockLayout() {
     });
   });
 
-  if (elements.sessionToggle) {
-    elements.sessionToggle.hidden = true;
-    elements.sessionToggle.setAttribute('aria-hidden', 'true');
-  }
-  if (elements.sessionAdvanced) {
-    elements.sessionAdvanced.hidden = true;
-  }
+  // A custom dock is also a configuration surface; keep session options usable.
 
   const sourcesFootnote = document.querySelector('.sources__footnote');
   if (sourcesFootnote) {
@@ -1792,7 +1838,9 @@ function handleSendTestMessage() {
     timestamp: Date.now()
   });
 
-  updateSessionStatus('Test message sent to dock overlay.', 'success');
+  updateSessionStatus(messenger.ready
+    ? 'Test message sent. Check the open overlay to confirm delivery.'
+    : 'Test message queued while the relay loads. Keep this page open and check the overlay.', 'info');
 }
 
 function notifyPluginsOfSession(sessionId) {
@@ -1825,7 +1873,7 @@ function createYoutubePluginInstance(useStreaming) {
     onActivity: addActivity,
     onStatus: ({ kind = 'debug', plugin, state }) => addActivity({ kind, plugin, message: `Status changed: ${state}`, timestamp: Date.now() }),
     autoConnect: true,
-    controls: { connect: false, disconnect: true },
+    controls: { connect: true, disconnect: true },
     useStreaming,
     onStreamingPreferenceChange: handleYoutubeStreamingPreferenceChange
   });
@@ -1846,6 +1894,17 @@ function mountAllPlugins() {
   elements.sourceList.innerHTML = '';
   plugins.forEach((plugin) => {
     plugin.mount(elements.sourceList);
+    if (plugin.id === 'kick' && !plugin.settingsNode.querySelector('[data-obs-kick-auto]')) {
+      const label = document.createElement('label');
+      label.className = 'checkbox';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.dataset.obsKickAuto = '';
+      input.checked = storage.get('obs.kickAutoConnect', false) === true;
+      input.addEventListener('change', () => storage.set('obs.kickAutoConnect', input.checked));
+      label.append(input, document.createTextNode('Reconnect this Kick channel automatically in OBS modes'));
+      plugin.settingsNode.appendChild(label);
+    }
   });
 }
 
@@ -1987,15 +2046,39 @@ async function processOAuthCallback(pluginMap) {
   history.replaceState(null, '', window.location.pathname + window.location.search);
 }
 
+function setOverlaySetup(open) {
+  document.body.classList.toggle('overlay-setup', open);
+  document.getElementById('overlay-setup-bar').hidden = !open;
+  if (!open) {
+    storage.set('obs.overlayConfigured', true);
+  }
+  renderActivity();
+}
+
 function init() {
+  if (isStandaloneOverlay) {
+    document.body.classList.add('standalone-overlay');
+    const configured = storage.get('obs.overlayConfigured', false) === true;
+    setOverlaySetup(!configured);
+    document.getElementById('overlay-show').addEventListener('click', () => setOverlaySetup(false));
+    document.getElementById('overlay-test').addEventListener('click', handleSendTestMessage);
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !event.repeat) {
+        event.preventDefault();
+        setOverlaySetup(!document.body.classList.contains('overlay-setup'));
+      }
+    });
+  }
+  ['obs-dock-url', 'obs-overlay-url'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', event => event.target.select());
+  });
   setSessionIndicator('idle', 'Session idle');
   initOverlayToggleControls();
   document.addEventListener('fullscreenchange', handleFullscreenChange);
   elements.dockFrame.addEventListener('load', () => {
     if (messenger.getSessionId()) {
       const sessionId = messenger.getSessionId();
-      setSessionIndicator('connected', 'Relay active');
-      updateSessionStatus('');
+      setSessionIndicator('ready', 'Relay page loaded; check your overlay to confirm delivery');
       updateSessionLink(sessionId);
     }
   });
@@ -2007,7 +2090,11 @@ function init() {
     }
   });
 
-  elements.sessionInput.addEventListener('change', () => startSession());
+  if (elements.quickStart) {
+    elements.quickStart.open = storage.get('guide.quickStartOpen', true) !== false;
+    elements.quickStart.addEventListener('toggle', () => storage.set('guide.quickStartOpen', elements.quickStart.open));
+  }
+  elements.sessionUrl?.addEventListener('click', () => elements.sessionUrl.select());
   elements.sessionApply.addEventListener('click', () => startSession());
   elements.sessionCopy.addEventListener('click', () => handleCopyLink());
   elements.sessionTest?.addEventListener('click', () => handleSendTestMessage());
@@ -2072,13 +2159,14 @@ function init() {
         onActivity: addActivity,
         onStatus: ({ kind = 'debug', plugin, state }) => addActivity({ kind, plugin, message: `Status changed: ${state}`, timestamp: Date.now() }),
         autoConnect: true,
-        controls: { connect: false, disconnect: true }
+        controls: { connect: true, disconnect: true }
       }),
       new KickPlugin({
         messenger,
         emotes,
         icon: '../sources/images/kick.png',
         debug: debugEnabled,
+        autoConnect: (isStandaloneOverlay || isObsDockView) && storage.get('obs.kickAutoConnect', false) === true && Boolean(storage.get('kick.channel', '')),
         onActivity: addActivity,
         onStatus: ({ plugin, state }) => addActivity({ kind: 'debug', plugin, message: `Status changed: ${state}`, timestamp: Date.now() })
       }),

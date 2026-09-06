@@ -26,19 +26,26 @@ electron_app_reference/
 tests/
 !tests/
 tests/*
+!tests/review-critical-regressions.test.cjs
+!tests/pr898-regressions.test.cjs
 !tests/mobile-remote-control-contract.test.js
 !tests/vdo-password-test-vectors.test.js
 !tests/blaze-source.test.js
 !tests/castyr-source.test.js
+!tests/discord-streamkit-source.test.js
+!tests/discord-webhook-format.test.js
 !tests/kick-websocket-assets.test.js
 !tests/joystick-source.test.js
 !tests/vkvideo-source.test.js
+!tests/worldswave-source.test.js
 !tests/background-overlay-compat-matrix.test.cjs
 !tests/leaderboard-supporters.test.cjs
 !tests/credits-background-mode.test.cjs
+!tests/tipjar-count-goals.test.cjs
 !tests/obs-control-dock.test.cjs
 !tests/configured-user-matching.test.js
 !tests/user-display-aliases.test.js
+!tests/reflection-message-normalization.test.js
 !tests/signin-compat-config.test.js
 !tests/french-translation.test.js
 !tests/tikfinity-gift-streak.test.js
@@ -49,10 +56,12 @@ tests/*
 !tests/twitch-gif-message.test.js
 !tests/twitch-watch-streak.test.js
 !tests/twitch-watch-streak-dom.test.js
+!tests/pluralmind-integration.test.js
 !tests/channel-source-options.test.js
 !tests/dock-inline-messages.test.js
 !tests/tts-elevenlabs-queue-race.test.js
 !tests/openai-source.test.js
+!tests/streamelements-importer-shim.test.js
 !tests/ai-docs-links.test.js
 !tests/cohost-openai-realtime.test.js
 !tests/cohost-gemini-live.test.js
@@ -68,6 +77,9 @@ tests/*
 !tests/all-translations.test.js
 scripts/*
 !scripts/playwright-obs-event-flow-e2e.cjs
+!scripts/lite-emote-rendering-regressions.cjs
+!scripts/lite-ui-regressions.cjs
+!scripts/lite-obs-modes-regressions.cjs
 scripts/test-*.cjs
 issue/
 
@@ -102,3 +114,10 @@ Qwen3-TTS/
 
 # Generated Firefox extension build output
 firefox-build/
+
+# Accidental Windows system cache artifacts
+/%SystemDrive%/ProgramData/Microsoft/Windows/Caches/
+
+!scripts/electron-overlay-contentimg-e2e.cjs
+!tests/sticker-rewards.test.cjs
+!tests/thermal-label-formatting.test.cjs

@@ -192,7 +192,8 @@ function debounceFilters() {
 
 function parseDateInput(value, endOfDay = false) {
     if (!value) return null;
-    const parsed = new Date(value);
+    // Date inputs represent a local calendar day, not UTC midnight.
+    const parsed = new Date(`${value}T00:00:00`);
     if (Number.isNaN(parsed.getTime())) {
         return null;
     }
@@ -247,7 +248,7 @@ function buildCursorConfig(direction) {
         }
         return {
             cursorDirection: 'prev',
-            range: createRange(dateLower, upper, { excludeUpper: true })
+            range: createRange(dateLower, upper)
         };
     }
 
@@ -265,7 +266,7 @@ function buildCursorConfig(direction) {
         }
         return {
             cursorDirection: 'next',
-            range: createRange(lower, dateUpper, { excludeLower: true })
+            range: createRange(lower, dateUpper)
         };
     }
 
@@ -351,27 +352,27 @@ function messageMatchesFilters(message, activeFilters = filters) {
 
     if (activeFilters.search) {
         const term = activeFilters.search;
-        const matchesGlobal = (message.chatname || '').toLowerCase().includes(term) ||
-            (message.userid || '').toLowerCase().includes(term) ||
-            (message.type || '').toLowerCase().includes(term) ||
-            (message.chatmessage || '').toLowerCase().includes(term);
+        const matchesGlobal = String(message.chatname == null ? '' : message.chatname).toLowerCase().includes(term) ||
+            String(message.userid == null ? '' : message.userid).toLowerCase().includes(term) ||
+            String(message.type == null ? '' : message.type).toLowerCase().includes(term) ||
+            String(message.chatmessage == null ? '' : message.chatmessage).toLowerCase().includes(term);
         if (!matchesGlobal) return false;
     }
 
     if (activeFilters.username) {
-        if (!(message.chatname || '').toLowerCase().includes(activeFilters.username)) {
+        if (!String(message.chatname == null ? '' : message.chatname).toLowerCase().includes(activeFilters.username)) {
             return false;
         }
     }
 
     if (activeFilters.keyword) {
-        if (!(message.chatmessage || '').toLowerCase().includes(activeFilters.keyword)) {
+        if (!String(message.chatmessage == null ? '' : message.chatmessage).toLowerCase().includes(activeFilters.keyword)) {
             return false;
         }
     }
 
     if (activeFilters.type) {
-        if ((message.type || '').toLowerCase() !== activeFilters.type) {
+        if (String(message.type == null ? '' : message.type).toLowerCase() !== activeFilters.type) {
             return false;
         }
     }
@@ -413,21 +414,25 @@ function findSnapshotMessageIndex(matching, anchor) {
 }
 
 function fetchSnapshotMessages(direction = 'initial') {
-    const matching = (snapshotMessages || []).filter(message => messageMatchesFilters(message));
-    if (direction === 'initial' || !messages.length) {
-        return matching.slice(0, PAGE_SIZE);
+    const snapshot = snapshotMessages || [];
+    const initial = direction === 'initial' || !messages.length;
+    const step = !initial && direction === 'up' ? -1 : 1;
+    let index = 0;
+    if (!initial) {
+        if (direction !== 'up' && direction !== 'down') return [];
+        const anchor = step === -1 ? messages[0] : messages[messages.length - 1];
+        index = findSnapshotMessageIndex(snapshot, anchor);
+        if (index === -1) return [];
+        index += step;
     }
-    if (direction === 'down') {
-        const anchorIndex = findSnapshotMessageIndex(matching, messages[messages.length - 1]);
-        if (anchorIndex === -1) return [];
-        return matching.slice(anchorIndex + 1, anchorIndex + 1 + PAGE_SIZE);
+
+    // The snapshot is already sorted. Scan only as far as this page needs,
+    // instead of filtering and allocating a copy of the entire archive.
+    const results = [];
+    for (; index >= 0 && index < snapshot.length && results.length < PAGE_SIZE; index += step) {
+        if (messageMatchesFilters(snapshot[index])) results.push(snapshot[index]);
     }
-    if (direction === 'up') {
-        const anchorIndex = findSnapshotMessageIndex(matching, messages[0]);
-        if (anchorIndex <= 0) return [];
-        return matching.slice(Math.max(0, anchorIndex - PAGE_SIZE), anchorIndex);
-    }
-    return [];
+    return step === -1 ? results.reverse() : results;
 }
 
 function fetchMessages(direction = 'initial') {
@@ -443,22 +448,27 @@ function fetchMessages(direction = 'initial') {
             return;
         }
 
+        // Timestamp indexes are not unique; keep the boundary timestamp and skip
+        // only rows on the already displayed side of the (timestamp, id) pair.
+        const anchor = direction === 'down' ? messages[messages.length - 1] : direction === 'up' ? messages[0] : null;
         const results = [];
         const request = index.openCursor(range, cursorDirection);
         request.onsuccess = event => {
             const cursor = event.target.result;
             if (!cursor) {
-                resolve(results.sort((a, b) => b.timestamp - a.timestamp));
+                resolve(results.sort(compareMessagesNewestFirst));
                 return;
             }
 
             const value = cursor.value;
-            if (messageMatchesFilters(value)) {
+            const comparison = anchor ? compareMessagesNewestFirst(value, anchor) : 0;
+            const pastAnchor = !anchor || (direction === 'down' ? comparison > 0 : comparison < 0);
+            if (pastAnchor && messageMatchesFilters(value)) {
                 results.push(value);
             }
 
             if (results.length >= PAGE_SIZE) {
-                resolve(results.sort((a, b) => b.timestamp - a.timestamp));
+                resolve(results.sort(compareMessagesNewestFirst));
                 return;
             }
 
@@ -473,7 +483,7 @@ function updateTypeOptions(newMessages) {
     let optionsAdded = false;
 
     newMessages.forEach(message => {
-        const type = (message.type || '').toLowerCase();
+        const type = String(message.type == null ? '' : message.type).toLowerCase();
         if (!type) return;
         if (knownTypes.has(type)) return;
         knownTypes.add(type);
@@ -612,8 +622,12 @@ async function loadMoreMessages(direction) {
     if (direction === 'up' && reachedNewest) return;
 
     isLoading = true;
-    const previousScrollHeight = messagesContainer.scrollHeight;
-    const previousScrollTop = messagesContainer.scrollTop;
+    // Preserve the visible row even when the 500-row limit removes rows
+    // from the opposite end. Total scroll height alone cannot track that.
+    const containerTop = messagesContainer.getBoundingClientRect().top;
+    const scrollAnchor = Array.from(messagesContainer.querySelectorAll('.message-wrapper'))
+        .find(row => row.getBoundingClientRect().bottom > containerTop);
+    const anchorTop = scrollAnchor ? scrollAnchor.getBoundingClientRect().top : 0;
 
     try {
         const newMessages = await fetchMessages(direction);
@@ -629,9 +643,11 @@ async function loadMoreMessages(direction) {
         mergeMessages(newMessages, direction);
         renderMessages();
 
-        if (direction === 'up') {
-            const newScrollHeight = messagesContainer.scrollHeight;
-            messagesContainer.scrollTop = newScrollHeight - (previousScrollHeight - previousScrollTop);
+        if (scrollAnchor) {
+            const currentAnchor = document.getElementById(scrollAnchor.id);
+            if (currentAnchor) {
+                messagesContainer.scrollTop += currentAnchor.getBoundingClientRect().top - anchorTop;
+            }
         }
 
         if (direction === 'down') {
@@ -647,7 +663,7 @@ async function loadMoreMessages(direction) {
 function handleImageError(event) {
     const img = event.target;
     img.style.display = 'none';
-    if (img.classList.contains('avatar')) {
+    if (img.classList.contains('avatar') && img.src !== 'https://socialstream.ninja/sources/images/unknown.png') {
         img.src = 'https://socialstream.ninja/sources/images/unknown.png';
         img.style.display = 'block';
     }
@@ -682,8 +698,7 @@ function getDateRangeFromTimeframe(timeframe) {
 
     switch (timeframe) {
         case 'day':
-            startDate.setDate(now.getDate() - 1);
-            break;
+            return { startTimestamp: now.getTime() - 24 * 60 * 60 * 1000, endTimestamp: now.getTime() };
         case 'week':
             startDate.setDate(now.getDate() - 7);
             break;
@@ -820,8 +835,10 @@ function setDefaultExportDates() {
     const lastMonth = new Date(today);
     lastMonth.setMonth(today.getMonth() - 1);
 
-    dateFilterFrom.valueAsDate = lastMonth;
-    dateFilterTo.valueAsDate = today;
+    // valueAsDate uses UTC and can select tomorrow late in the local evening.
+    const localDateValue = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    dateFilterFrom.value = localDateValue(lastMonth);
+    dateFilterTo.value = localDateValue(today);
 }
 
 function clearFilters() {

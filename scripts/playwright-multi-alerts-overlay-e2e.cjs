@@ -290,6 +290,7 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
       mediaScale: rootStyles.getPropertyValue('--media-scale').trim(),
       headlineScale: rootStyles.getPropertyValue('--headline-scale').trim(),
       detailScale: rootStyles.getPropertyValue('--detail-scale').trim(),
+      accent: article ? article.style.getPropertyValue('--alert-accent').trim() : '',
       audioEvents: window.__audioEvents.slice(),
       state: window.__multiAlertsOverlay.getState()
     };
@@ -364,6 +365,7 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     await setControlValue(popupPage, "[data-optionparam25='donostyle']", 'twitch', ['change']);
     await setControlValue(popupPage, "[data-optionparam25='bitsstyle']", 'classic', ['change']);
     await setControlValue(popupPage, "[data-optionparam25='raidstyle']", 'minimal', ['change']);
+    await setCheckboxValue(popupPage, "[data-param25='platformcolors']", true);
     await setControlValue(popupPage, '#multialertsources', 'twitch,youtube', ['input', 'change']);
     await setControlValue(popupPage, '#multialerthidesources', 'kick', ['input', 'change']);
     await setControlValue(popupPage, '#multialertmindonation', '5', ['input', 'change']);
@@ -428,6 +430,7 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     assert(popupUrl.searchParams.get('donostyle') === 'twitch', 'Popup did not add donostyle=twitch.');
     assert(popupUrl.searchParams.get('bitsstyle') === 'classic', 'Popup did not add bitsstyle=classic.');
     assert(popupUrl.searchParams.get('raidstyle') === 'minimal', 'Popup did not add raidstyle=minimal.');
+    assert(popupUrl.searchParams.has('platformcolors'), 'Popup did not add platformcolors.');
     assert(popupUrl.searchParams.get('sources') === 'twitch,youtube', 'Popup did not add sources filter.');
     assert(popupUrl.searchParams.get('hidesources') === 'kick', 'Popup did not add hidesources filter.');
     assert(popupUrl.searchParams.get('mindonation') === '5', 'Popup did not add mindonation=5.');
@@ -474,6 +477,7 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     assert(previewUrl.searchParams.get('align') === 'center', 'Preview iframe URL lost align=center.');
     assert(previewUrl.searchParams.get('pagebg') === '#112233', 'Preview iframe URL lost pagebg=#112233.');
     assert(previewUrl.searchParams.get('followstyle') === 'classic', 'Preview iframe URL lost followstyle=classic.');
+    assert(previewUrl.searchParams.has('platformcolors'), 'Preview iframe URL lost platformcolors.');
     assert(previewUrl.searchParams.get('sources') === 'twitch,youtube', 'Preview iframe URL lost the sources filter.');
     assert(previewUrl.searchParams.get('mindonation') === '5', 'Preview iframe URL lost mindonation=5.');
 
@@ -549,6 +553,7 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     assert(baseSettings.beep === true, 'Multi-alert overlay did not parse beep.');
     assert(baseSettings.beepVolume === 0.8, 'Multi-alert overlay did not parse beepvolume=80%.');
     assert(baseSettings.customBeep === `http://${HOST}:${PORT}/audio/custom.wav`, 'Multi-alert overlay did not parse custombeep.');
+    assert(baseSettings.colorByPlatform === true, 'Multi-alert overlay did not enable platform colors.');
     assert(baseSettings.styles.follow === 'classic', 'Follow style preset did not parse.');
     assert(baseSettings.styles.subscription === 'minimal', 'Sub style preset did not parse.');
     assert(baseSettings.styles.donation === 'twitch', 'Donation style preset did not parse.');
@@ -581,6 +586,7 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     assert(followSnapshot.mediaScale === '1.3', 'Media scale CSS variable did not apply.');
     assert(followSnapshot.headlineScale === '1.4', 'Headline scale CSS variable did not apply.');
     assert(followSnapshot.detailScale === '1.2', 'Detail scale CSS variable did not apply.');
+    assert(followSnapshot.accent === '#9147FF', 'Twitch follow did not use the standard Twitch platform color.');
     assert(followSnapshot.audioEvents.length === 1, 'Follow preview did not trigger audio.');
     assert(followSnapshot.audioEvents[0].src === `http://${HOST}:${PORT}/audio/follow.wav`, 'Follow preview did not use the follow sound override.');
     assert(Math.abs(followSnapshot.audioEvents[0].volume - 0.8) < 0.0001, 'Follow preview did not apply the audio volume.');
@@ -593,6 +599,7 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
       }
     });
     assert(subSnapshot.articleClass.includes('theme-minimal'), 'Subscription preset is not applying the minimal theme.');
+    assert(subSnapshot.accent === '#FF0000', 'YouTube subscription did not use the standard YouTube platform color.');
     assert(subSnapshot.audioEvents[0].src === `http://${HOST}:${PORT}/audio/sub.wav`, 'Subscription preview did not use the subscription sound override.');
 
     const donationSnapshot = await getOverlaySnapshot(overlayPage, {
@@ -603,6 +610,7 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
       }
     });
     assert(donationSnapshot.articleClass.includes('theme-twitch'), 'Donation preset is not applying the twitch theme.');
+    assert(donationSnapshot.accent === '#9147FF', 'Twitch donation did not keep the Twitch platform color across alert types.');
     assert(donationSnapshot.audioEvents[0].src === `http://${HOST}:${PORT}/audio/dono.wav`, 'Donation preview did not use the donation sound override.');
 
     const bitsSnapshot = await getOverlaySnapshot(overlayPage, {

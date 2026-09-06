@@ -43,6 +43,9 @@ export function mapBadges(badges) {
       if (typeof badge === 'string') {
         return badge;
       }
+      if (badge.selected === false) {
+        return null;
+      }
       const image = badge.image || badge.icon || badge.source;
       if (image && typeof image === 'object') {
         const src = image.url || image.light || image.dark;
@@ -58,6 +61,14 @@ export function mapBadges(badges) {
       }
       if (badge.svg) {
         return { type: 'svg', html: badge.svg };
+      }
+      // Profile collection already converts SVG badges to this shape.
+      // Display formatting normalizes that collection again.
+      if (badge.type === 'svg' && badge.html) {
+        return { type: 'svg', html: badge.html };
+      }
+      if (badge.text) {
+        return { type: 'text', text: badge.text };
       }
       if (badge.label || badge.name) {
         return badge.label || badge.name;

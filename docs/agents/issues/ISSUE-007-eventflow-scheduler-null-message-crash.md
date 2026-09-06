@@ -1,6 +1,6 @@
 # ISSUE-007: Event Flow scheduler crashes flows mixing time triggers with message triggers
 
-- **Status**: open
+- **Status**: fixed (2026-09-05, local)
 - **Severity**: high
 - **Area**: social_stream `actions/EventFlowSystem.js`
 - **Found**: 2026-07-22, during Event Flow editor documentation pass
@@ -20,5 +20,7 @@ Time triggers fire on schedule regardless of what other triggers exist in the fl
 - `actions/EventFlowSystem.js:210-212` — swallowed error
 
 ## Notes
+
+Null-message evaluations now skip message-dependent triggers before accessing the payload or changing message counters. Time triggers, custom scripts, and random triggers explicitly configured with `requireMessage: false` remain supported. Regression tests exercise the actual scheduler with mixed triggers and check that real follower events still match.
 
 Guard message-dependent evaluators with `if (!message) return false;` or try/catch Pass 1 per trigger.

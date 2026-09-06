@@ -642,12 +642,12 @@ try{
 		try {
 			const parsed = JSON.parse(localStorage.getItem(TWITCH_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
 			return {
-				syncDeleteMessages: !!parsed.syncDeleteMessages,
+				syncDeleteMessages: parsed.syncDeleteMessages !== false,
 				syncBlockUsers: !!parsed.syncBlockUsers
 			};
 		} catch (_) {
 			return {
-				syncDeleteMessages: false,
+				syncDeleteMessages: true,
 				syncBlockUsers: false
 			};
 		}
@@ -1922,12 +1922,15 @@ function ensureClientFactory() {
 			const messageId = pickSourceControlMessageId(tags && tags['target-msg-id']);
 			if (messageId) {
 				deletePayload.id = messageId;
+			} else if (settings.pluralmind && username) {
+				deletePayload.username = username;
+				deletePayload.meta = { pluralmind: true };
 			}
 			const chatname = getRememberedTwitchDisplayName(username);
 			if (chatname) {
 				deletePayload.chatname = chatname;
 			}
-			if (!deletePayload.id && !deletePayload.chatname) {
+			if (!deletePayload.id && !deletePayload.username && !deletePayload.chatname) {
 				return;
 			}
 			if (!deletePayload.id) {
@@ -1938,15 +1941,25 @@ function ensureClientFactory() {
 
 		client.on('ban', function(chan, username) {
 			const chatname = getRememberedTwitchDisplayName(username);
-			if (chatname) {
-				pushDeleteMessage({ type: 'twitch', chatname: chatname });
+			if (chatname || (settings.pluralmind && username)) {
+				const deletePayload = { type: 'twitch', chatname: chatname };
+				if (settings.pluralmind && username) {
+					deletePayload.username = username;
+					deletePayload.meta = { pluralmind: true };
+				}
+				pushDeleteMessage(deletePayload);
 			}
 		});
 
 		client.on('timeout', function(chan, username) {
 			const chatname = getRememberedTwitchDisplayName(username);
-			if (chatname) {
-				pushDeleteMessage({ type: 'twitch', chatname: chatname });
+			if (chatname || (settings.pluralmind && username)) {
+				const deletePayload = { type: 'twitch', chatname: chatname };
+				if (settings.pluralmind && username) {
+					deletePayload.username = username;
+					deletePayload.meta = { pluralmind: true };
+				}
+				pushDeleteMessage(deletePayload);
 			}
 		});
 	}
@@ -2432,8 +2445,13 @@ async function ensureChatClientInstance() {
 		console.log('Twitch chat cleared', payload);
 		if (payload.user) {
 			const chatname = getRememberedTwitchDisplayName(payload.user);
-			if (chatname) {
-				pushDeleteMessage({ type: 'twitch', chatname: chatname });
+			if (chatname || settings.pluralmind) {
+				const deletePayload = { type: 'twitch', chatname: chatname };
+				if (settings.pluralmind) {
+					deletePayload.username = payload.user;
+					deletePayload.meta = { pluralmind: true };
+				}
+				pushDeleteMessage(deletePayload);
 			}
 			if (!activeSubscriptions.has('channel.ban')) {
 				pushTwitchBanMetaEvent({
@@ -3554,7 +3572,7 @@ async function ensureChatClientInstance() {
 		const normalizedEventTypeLower =
 			typeof normalizedEventType === 'string' ? normalizedEventType.toLowerCase() : '';
 		const user = parsedMessage.prefix.split('!')[0];
-		const message = normalizedPayload?.rawMessage ?? parsedMessage.trailing;
+		let message = normalizedPayload?.rawMessage ?? parsedMessage.trailing;
 		// Clean channel name from params (remove # prefix)
 		if (parsedMessage.params[0]) {
 			channel = parsedMessage.params[0].replace(/^#/, '');
@@ -3647,6 +3665,24 @@ async function ensureChatClientInstance() {
 			}
 		}
 		
+		const sourceDisplayName = normalizedPayload?.chatname || (userInfo ? userInfo.display_name : user);
+		let resolvedDisplayName = sourceDisplayName;
+		let pluralmindResult = null;
+		const pluralmindEligibleEvent = !normalizedEventTypeLower || ['message', 'chat', 'action', 'bits'].includes(normalizedEventTypeLower);
+		if (settings.pluralmind && pluralmindEligibleEvent && message && !normalizedPayload?.contentimg && globalThis.SSNPluralmindIntegration) {
+			// Render native emotes against the original offsets before stripping proxy text.
+			pluralmindResult = await globalThis.SSNPluralmindIntegration.resolveRenderedMessage({
+				userId: normalizedPayload?.userId || parsedMessage.tags?.['user-id'],
+				username: user,
+				message: replaceEmotesWithImages(message, parsedMessage.tags?.emotes, !!parsedMessage.tags?.bits),
+				textOnly: !!settings.textonlymode
+			});
+			if (pluralmindResult) {
+				resolvedDisplayName = pluralmindResult.name;
+				message = pluralmindResult.body;
+			}
+		}
+
 		// Parse reply if enabled
 		let replyMessage = "";
 		let originalMessage = "";
@@ -3667,8 +3703,7 @@ async function ensureChatClientInstance() {
 			displayMessage = `<i><small>${escapeHtml(replyMessage)}:</small></i> ${displayMessage}`;
 		}
 		
-		const resolvedDisplayName = normalizedPayload?.chatname || (userInfo ? userInfo.display_name : user);
-		rememberTwitchDisplayName(user, resolvedDisplayName);
+		rememberTwitchDisplayName(user, sourceDisplayName);
 		span.innerHTML = `${badgeHtml}${escapeHtml(resolvedDisplayName)}: ${displayMessage}`;
 		document.querySelector("#textarea").appendChild(span);
 		if (document.querySelector("#textarea").childNodes.length > 10) {
@@ -3693,10 +3728,16 @@ async function ensureChatClientInstance() {
 		
 		// Convert badge URLs to badge objects
 		data.chatbadges = badgeList.map(url => ({ type: "img", src: url }));
+		if (pluralmindResult) {
+			const pluralmindPronounBadge = globalThis.SSNPluralmindIntegration.createPronounBadge(pluralmindResult.pronouns);
+			if (pluralmindPronounBadge) {
+				data.chatbadges.push(pluralmindPronounBadge);
+			}
+		}
 		
 		data.backgroundColor = "";
 		data.textColor = parsedMessage.tags?.color || "";
-		data.nameColor = parsedMessage.tags?.color || "";
+		data.nameColor = pluralmindResult?.color || parsedMessage.tags?.color || "";
 		
 		// Parse Twitch emotes from tags
 		const twitchEmotes =
@@ -3706,6 +3747,7 @@ async function ensureChatClientInstance() {
 		
 		// Check if this is a bit message
 		const isBitMessage = !!(parsedMessage.tags && parsedMessage.tags.bits);
+		const renderedMessage = pluralmindResult ? pluralmindResult.cleanedMessage : replaceEmotesWithImages(message, twitchEmotes, isBitMessage);
 		
 		// Debug logging for bit messages
 		if (isBitMessage) {
@@ -3720,12 +3762,12 @@ async function ensureChatClientInstance() {
 			data.initial = replyMessage;
 			data.reply = originalMessage;
 			if (settings.textonlymode) {
-				data.chatmessage = replyMessage + ": " + replaceEmotesWithImages(message, twitchEmotes, isBitMessage);
+				data.chatmessage = replyMessage + ": " + renderedMessage;
 			} else {
-				data.chatmessage = "<i><small>" + escapeHtml(replyMessage) + ":&nbsp;</small></i> " + replaceEmotesWithImages(message, twitchEmotes, isBitMessage);
+				data.chatmessage = "<i><small>" + escapeHtml(replyMessage) + ":&nbsp;</small></i> " + renderedMessage;
 			}
 		} else {
-			data.chatmessage = replaceEmotesWithImages(message, twitchEmotes, isBitMessage);
+			data.chatmessage = renderedMessage;
 		}
 		if (data.contentimg) {
 			data.chatmessage = "";
@@ -5000,7 +5042,13 @@ async function cleanupCurrentConnection() {
 				break;
 
 			case 'channel.ban':
-				pushDeleteMessage({ type: 'twitch', chatname: event.user_name || event.user_login });
+				const deletePayload = { type: 'twitch', chatname: event.user_name || event.user_login };
+				if (settings.pluralmind) {
+					deletePayload.userid = event.user_id;
+					deletePayload.username = event.user_login;
+					deletePayload.meta = { pluralmind: true };
+				}
+				pushDeleteMessage(deletePayload);
 				pushTwitchBanMetaEvent({
 					username: event.user_login,
 					displayName: event.user_name,

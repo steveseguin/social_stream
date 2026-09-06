@@ -16,7 +16,7 @@ const chromeCandidates = [
 const TEST_CASES = [
     {
         id: 'same-user-fuck',
-        expectedFinal: false,
+        expectedAllPassed: false,
         sequence: [
             { user: 'Lucy', text: 'F' },
             { user: 'Lucy', text: 'U' },
@@ -26,7 +26,7 @@ const TEST_CASES = [
     },
     {
         id: 'cross-user-fuck',
-        expectedFinal: false,
+        expectedAllPassed: false,
         sequence: [
             { user: 'A', text: 'F' },
             { user: 'B', text: 'U' },
@@ -36,7 +36,7 @@ const TEST_CASES = [
     },
     {
         id: 'same-user-threat',
-        expectedFinal: false,
+        expectedAllPassed: false,
         sequence: [
             { user: 'Max', text: 'go' },
             { user: 'Max', text: 'kill' },
@@ -45,7 +45,7 @@ const TEST_CASES = [
     },
     {
         id: 'same-user-insult',
-        expectedFinal: false,
+        expectedAllPassed: false,
         sequence: [
             { user: 'Ben', text: 'you' },
             { user: 'Ben', text: 'are' },
@@ -55,7 +55,7 @@ const TEST_CASES = [
     },
     {
         id: 'same-user-nice',
-        expectedFinal: true,
+        expectedAllPassed: true,
         sequence: [
             { user: 'Lucy', text: 'N' },
             { user: 'Lucy', text: 'I' },
@@ -65,7 +65,7 @@ const TEST_CASES = [
     },
     {
         id: 'mixed-room-harmless',
-        expectedFinal: true,
+        expectedAllPassed: true,
         sequence: [
             { user: 'A', text: 'hi' },
             { user: 'B', text: 'gg' },
@@ -193,7 +193,9 @@ async function run() {
                 outputs.push({
                     id: testCase.id,
                     steps,
-                    finalPassed: steps[steps.length - 1].passed
+                    // Blocking an earlier fragment already prevents the full
+                    // sequence from appearing; blocked text leaves the context.
+                    allPassed: steps.every((step) => step.passed)
                 });
             }
 
@@ -210,9 +212,9 @@ async function run() {
             const matching = result.find((entry) => entry.id === testCase.id);
             assert(matching, `Missing result for ${testCase.id}`);
             assert.strictEqual(
-                matching.finalPassed,
-                testCase.expectedFinal,
-                `${testCase.id} final moderation mismatch: ${JSON.stringify(matching)}`
+                matching.allPassed,
+                testCase.expectedAllPassed,
+                `${testCase.id} sequence moderation mismatch: ${JSON.stringify(matching)}`
             );
         }
 

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+		})();
+	</script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Thermal Printers And Stream Labels - Social Stream Ninja</title>
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/guides.css">
+	<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Set up a USB thermal receipt or label printer in Social Stream Ninja and print names, donations, purchases, tickets, and fixed-size labels from Event Flow.">
+	<style>
+		.printer-gallery { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; margin:24px 0; align-items:start; }
+		.paper-example { display:flex; flex-direction:column; align-items:center; gap:10px; }
+		.paper { position:relative; width:min(100%,220px); min-height:260px; padding:25px 19px; color:#151515; background:#fffdf7; border:1px solid #d9d3c5; box-shadow:0 14px 26px rgba(28,25,18,.15); font-family:"Roboto Mono",monospace; text-align:center; }
+		.paper.receipt::after { content:""; position:absolute; inset:auto 0 -7px; height:13px; background:linear-gradient(135deg,transparent 7px,#fffdf7 0) 0 0/14px 14px repeat-x; }
+		.paper.label { min-height:170px; border-radius:6px; outline:8px solid #e9e5dc; }
+		.paper .eyebrow { font-size:11px; letter-spacing:.13em; text-transform:uppercase; }
+		.paper .big { margin:15px 0 6px; font-size:27px; font-weight:800; overflow-wrap:anywhere; }
+		.paper .amount { margin-top:9px; font-size:22px; font-weight:800; }
+		.paper .rule { border-top:2px dashed #777; margin:17px 0; }
+		.paper-caption { max-width:250px; color:var(--text-secondary); text-align:center; font-size:.9rem; }
+		.flow-demo { display:grid; grid-template-columns:minmax(180px,1fr) auto minmax(180px,1fr); gap:16px; align-items:center; margin:22px 0; }
+		.flow-node { padding:18px; border:2px solid var(--border-strong); border-radius:12px; background:var(--card-background); box-shadow:var(--shadow-sm); }
+		.flow-node.trigger { border-color:#d89614; }
+		.flow-node.action { border-color:#2a9d8f; }
+		.flow-node strong { display:block; margin-bottom:7px; }
+		.flow-arrow { color:var(--primary-color); font-size:28px; font-weight:700; }
+		.printer-types { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:20px 0; }
+		.printer-type { padding:18px; border:1px solid var(--border-color); border-radius:12px; background:var(--background-card); }
+		.printer-type h3 { margin-top:0; }
+		.callout-strong { padding:16px 18px; border-left:5px solid var(--primary-color); border-radius:8px; background:var(--accent-soft); }
+		@media (max-width:800px) {
+			.printer-gallery, .printer-types { grid-template-columns:1fr; }
+			.flow-demo { grid-template-columns:1fr; }
+			.flow-arrow { transform:rotate(90deg); text-align:center; }
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<div class="container">
+			<div class="logo"><a href="../index.html"><img src="../icons/logo.svg" alt="Social Stream Ninja Logo"><span>Social Stream Ninja</span></a></div>
+			<nav><ul><li><a href="../index.html">Home</a></li><li><a href="features.html">Features</a></li><li><a href="download.html">Download</a></li><li><a href="guides.html" class="active">Guides</a></li><li><a href="commands.html">Commands &amp; API</a></li><li><a href="supported-sites.html">Supported Sites</a></li><li><a href="templates.html">Templates</a></li><li><a href="services.html">Hire</a></li><li><a href="support.html">Support</a></li></ul></nav>
+			<div class="header-controls">
+				<button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"><svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
+				<div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+			</div>
+		</div>
+	</header>
+
+	<section class="page-hero"><div class="container"><h1>Thermal Printers And Stream Labels</h1><p>Turn purchases, donations, and chat events into physical receipts, stickers, tickets, or pickup tags.</p></div></section>
+
+	<main class="guide-section">
+		<div class="container">
+			<div class="guide-card">
+				<h2>What Can It Print?</h2>
+				<p>The Windows standalone app can send silent jobs to a printer installed in Windows. A flow can combine any available values, such as a viewer name, donation, product, message, or counter value, and control the text size and alignment.</p>
+				<div class="printer-gallery" aria-label="Examples of thermal receipt and label output">
+					<figure class="paper-example"><div class="paper receipt"><div class="eyebrow">Purchase tag</div><div class="big">BUYER #12</div><div class="rule"></div><strong>Inky</strong><br>Blue Ninja Mug</div><figcaption class="paper-caption">Continuous 58 mm receipt paper: the length grows with the content.</figcaption></figure>
+					<figure class="paper-example"><div class="paper label"><div class="eyebrow">Thank you</div><div class="big">INKY</div><div class="amount">$25.00 CAD</div></div><figcaption class="paper-caption">A fixed die-cut label: name plus donation, sized to the physical stock.</figcaption></figure>
+					<figure class="paper-example"><div class="paper label"><div class="eyebrow">Pickup</div><div class="big">A-037</div><div class="rule"></div><strong>Ninja Hoodie</strong><br>Size L</div><figcaption class="paper-caption">A merch, drink, or fulfillment label made from event fields and a counter.</figcaption></figure>
+				</div>
+				<p class="callout-strong"><strong>Compatibility rule:</strong> the printer must appear as a working Windows printer queue. Social Stream prints through the installed Windows driver; it does not send raw ESC/POS, ZPL, or manufacturer SDK commands.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Quick Setup</h2>
+				<ol class="guide-steps">
+					<li>Connect the printer by USB, turn it on, and install its Windows driver. Print a Windows test page first.</li>
+					<li>In Social Stream, open <strong>Global settings and tools</strong> &rarr; <strong>Printer Control</strong>.</li>
+					<li>Select <strong>Find printers</strong> and choose the exact queue name shown by Windows.</li>
+					<li>Enter the physical paper width, commonly <code>58</code>, <code>80</code>, or <code>62</code> mm depending on the device and stock.</li>
+					<li>Leave <strong>Fixed label length</strong> at <code>0</code> for a content-sized receipt. For die-cut stock, enter the label's feed-direction length in millimetres.</li>
+					<li>Select <strong>Print alignment test</strong>. If an edge is missing, increase that side's safe margin and test again.</li>
+				</ol>
+				<div class="guide-note"><p>The default 2 mm left and right safe margins suit many inexpensive 58 mm receipt printers, but the driver decides the true printable area. Keep <strong>Use printable area</strong> selected unless you have tested a different setting.</p></div>
+			</div>
+
+			<div class="guide-card">
+				<h2>Receipt Roll, Continuous Sticker, Or Die-Cut Label?</h2>
+				<div class="printer-types">
+					<div class="printer-type"><h3>Receipt roll</h3><p>Best for variable-length purchase slips, queue tickets, and supporter receipts. Leave fixed label length at 0 and let the content decide the paper length.</p></div>
+					<div class="printer-type"><h3>Continuous sticker roll</h3><p>Good for adhesive name strips with different amounts of text. It behaves like receipt paper, but the printer or driver must handle cutting.</p></div>
+					<div class="printer-type"><h3>Die-cut labels</h3><p>Best for consistent badges and product labels. Set the exact fixed length and configure the same stock in Windows Printing Preferences.</p></div>
+				</div>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Printer example</th><th>Useful for</th><th>Connection and media notes</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Printer example">Generic “POS-58”</td><td data-label="Useful for">Low-cost 58 mm continuous receipts</td><td data-label="Notes">Usually USB and direct thermal. Model names and drivers vary by seller. A basic POS-58 queue was used for Social Stream's physical development test.</td></tr>
+						<tr><td data-label="Printer example"><a href="https://files.support.epson.com/pdf/pos/bulk/tm-t20iii_trg_en_reva.pdf" target="_blank" rel="noopener">Epson TM-T20III</a></td><td data-label="Useful for">A more established receipt-printer option</td><td data-label="Notes">USB model; supports 80 mm paper and 58 mm paper with the supplied width adapter.</td></tr>
+						<tr><td data-label="Printer example"><a href="https://www.brother-usa.com/products/ql800" target="_blank" rel="noopener">Brother QL-800</a></td><td data-label="Useful for">USB stickers and address/name labels</td><td data-label="Notes">Direct thermal, up to 62 mm media, die-cut or continuous rolls, with an automatic cutter.</td></tr>
+						<tr><td data-label="Printer example"><a href="https://www.brother-usa.com/products/ql820nwb" target="_blank" rel="noopener">Brother QL-820NWB</a></td><td data-label="Useful for">A shared or networked label station</td><td data-label="Notes">Supports USB, Ethernet, Wi-Fi, and Bluetooth with Brother's die-cut and continuous label range.</td></tr>
+						<tr><td data-label="Printer example"><a href="https://www.zebra.com/gb/en/products/spec-sheets/printers/desktop/zd220.html" target="_blank" rel="noopener">Zebra ZD220</a></td><td data-label="Useful for">Wider product, shipping, wristband, or durable labels</td><td data-label="Notes">USB desktop label printer for roughly 25–112 mm media; available in direct-thermal and thermal-transfer configurations.</td></tr>
+					</tbody>
+				</table>
+				<p>These are examples, not a guaranteed compatibility list. Before buying, confirm that the exact model has a current Windows driver, supports your label dimensions, and appears as a normal Windows printer.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Print A Donation Label With Event Flow</h2>
+				<div class="flow-demo" aria-label="Donation trigger connected to a thermal print action"><div class="flow-node trigger"><strong>💰 Donation / Tip</strong>Minimum Amount: <code>10</code></div><div class="flow-arrow" aria-hidden="true">→</div><div class="flow-node action"><strong>🖨️ Print Thermal Label</strong><code>{username}<br>{donation}</code><br>24 pt · bold · centred</div></div>
+				<ol class="guide-steps">
+					<li>Open the <a href="../actions/">Event Flow Editor</a> and create a flow.</li>
+					<li>Add the <strong>Donation / Tip</strong> trigger. Set <strong>Minimum Amount</strong> if only larger donations should print.</li>
+					<li>Add <strong>Print Thermal Label</strong> from Integrations and connect the trigger to it.</li>
+					<li>Set the label text to <code>{username}</code>, add a new line, then <code>{donation}</code>. Choose the font size, weight, alignment, and copies.</li>
+					<li>Normally leave the action's printer and fixed-length overrides blank or 0 so the global Printer Control settings apply.</li>
+					<li>Open <strong>Test Flow</strong>, enter a name, enable <strong>Has Donation</strong>, enter an amount, and run the test. This sends a real print job in the standalone app.</li>
+				</ol>
+				<p>Other useful placeholders include <code>{message}</code>, <code>{source}</code>, <code>{donationAmount}</code>, and <code>{counterValue}</code>. Values created by earlier nodes can also be used in the print template.</p>
+				<h3>Bold the buyer, keep the item normal</h3>
+				<p>Choose <strong>Weight → Selected text (**bold**)</strong>, then enter:</p>
+				<pre><code>**{username}**
+{itemName}</code></pre>
+				<p>Use single braces. If your earlier node creates <code>buyer</code>, use <code>**{buyer}**</code> instead. The purchase source or an earlier node must supply <code>itemName</code>. Only text wrapped in <code>**</code> becomes bold; no custom JavaScript or HTML is needed. Existing All bold and Normal labels keep their formatting.</p>
+				<div class="guide-note"><p>For purchase events, use the matching event trigger and print the fields supplied by that integration. Add a Counter before the print action when you want one running order number for the stream.</p></div>
+				<p>A Counter numbers purchases, not unique buyers. Reusing one ID for every purchase by the same buyer needs a separate buyer-to-ID mapping and an explicit reset at the start of each stream. User Memory's reason field is descriptive text, not a dedicated buyer-ID counter.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Fixed-Length Labels Without Surprises</h2>
+				<p><strong>3 × 1-inch labels (including a Munbyn BT320 setup):</strong> use 76.2 mm width and 25.4 mm fixed length when the 1-inch side is the feed direction. Match that stock and orientation in Windows Printing Preferences. Start with 12–14 pt text and test a long buyer and item name.</p>
+				<p>The alignment test's side borders mark the safe width after the selected printable-area setting and safe margins. The box height follows the test text; it does not outline the full label or touch the physical paper edges.</p>
+				<ul class="guide-list">
+					<li><strong>Measure in the feed direction.</strong> A 62 × 29 mm label normally uses a 62 mm paper width and 29 mm fixed label length.</li>
+					<li><strong>Match Windows too.</strong> Select the exact label stock, orientation, gap/mark sensing, and cutter behavior in the printer driver's Printing Preferences.</li>
+					<li><strong>Fixed means fixed.</strong> Social Stream does not add receipt feed space to a fixed-length job. Content that is too tall can clip or spill depending on the driver.</li>
+					<li><strong>Test the longest realistic data.</strong> Long viewer names, product variants, currency labels, and multiple lines need more room or a smaller font.</li>
+					<li><strong>Driver limits still apply.</strong> Windows or the printer driver may clamp very short custom pages; Social Stream requests a minimum of 20 mm.</li>
+				</ul>
+			</div>
+
+			<div class="guide-card">
+				<h2>Stream Ideas</h2>
+				<ul class="guide-list">
+					<li>Print supporter-name stickers for a wall, prop, map, or physical progress board.</li>
+					<li>Create merch-order, commission, drink, or pickup tags as purchases arrive.</li>
+					<li>Print raffle tickets or giveaway entry stubs, with rate limits and eligibility checks before the print action.</li>
+					<li>Make VIP badges, team assignments, challenge tokens, or donation milestone labels.</li>
+					<li>Print a short moderation or fulfillment queue for a producer working beside the streamer.</li>
+				</ul>
+				<div class="warning-note"><strong>Think before printing personal data.</strong> Avoid addresses, emails, payment details, or private messages. Thermal paper also fades with heat, light, and time, so it is not archival.</div>
+			</div>
+
+			<div class="guide-card">
+				<h2>Common Fixes</h2>
+				<ul class="guide-list">
+					<li><strong>No printer appears:</strong> confirm Windows can print a test page, then restart Social Stream and select Find printers again.</li>
+					<li><strong>The job reports success but nothing prints:</strong> open the Windows queue for that printer and check for paused, offline, paper, driver, or port errors.</li>
+					<li><strong>An edge is cut off:</strong> keep Use printable area enabled and increase the safe margin on that side.</li>
+					<li><strong>There is too much blank paper:</strong> use fixed length 0 for receipts, reduce bottom margin and feed, or set the exact length for label stock.</li>
+					<li><strong>One label becomes two:</strong> the content is taller than the fixed label, or Windows is using the wrong stock size. Reduce text, font size, line spacing, and margins.</li>
+					<li><strong>The wrong printer is used in Test Flow:</strong> choose a printer override on the Print Thermal Label node. A blank override uses the Windows default while testing directly in the editor.</li>
+				</ul>
+			</div>
+		</div>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+	<script src="js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -763,13 +763,21 @@
         }
         const style = urlParams.get('style') || 'jar'; // jar, meter, minimal
         const theme = urlParams.get('theme') || 'default'; // default, neon, gold
-        const hypeMode = urlParams.has('hype') || urlParams.get('mode') === 'hype';
-        const goal = readNumberParam('goal', hypeMode ? 100 : 250, 0.01);
+        const requestedHypeMode = urlParams.has('hype') || urlParams.get('mode') === 'hype';
+        const goalMetric = normalizeGoalMetric(urlParams.get('goalmetric') || (urlParams.has('countdonations') ? 'count' : 'value'));
+        const countMode = goalMetric === 'count';
+        const hypeMode = requestedHypeMode && !countMode;
+        const eventTypeFilter = normalizeEventFilterList(urlParams.get('tipjarevent') || urlParams.get('tipjarevents') || '');
+        const excludeYoutubeGiftMemberships = urlParams.has('excludegiftpurchase');
+        const countLabel = String(urlParams.get('countlabel') || getDefaultCountLabel(eventTypeFilter)).trim() || 'donations';
+        const countSingularLabel = String(urlParams.get('countsingular') || getDefaultCountSingularLabel(eventTypeFilter, countLabel)).trim() || 'donation';
+        const parsedGoal = readNumberParam('goal', hypeMode ? 100 : 250, countMode ? 1 : 0.01);
+        const goal = countMode ? Math.max(1, Math.round(parsedGoal)) : parsedGoal;
         const celebration = urlParams.get('celebration') || 'hearts'; // hearts, confetti, fireworks, none
         const persistent = urlParams.has('persistent'); // Keep amount between sessions
         const sound = urlParams.has('sound'); // Play sound on donation
         const hasCustomTitle = urlParams.has('title');
-        const customTitle = urlParams.get('title') || (hypeMode ? 'Hype Goal' : 'Stream Goal');
+        const customTitle = urlParams.get('title') || (hypeMode ? 'Hype Goal' : (countMode ? getDefaultCountTitle(eventTypeFilter) : 'Stream Goal'));
         const showControls = urlParams.has('controls'); // Show control panel
         const customJarUrl = urlParams.get('jarimage'); // Custom jar image URL
         const alignRight = urlParams.has('alignright');
@@ -789,7 +797,8 @@
         const dedupeWindowMs = readNumberParam('dedupewindow', 8, 0) * 1000;
         const donationTypeFilter = normalizeDonationTypeFilter(urlParams.get('tipjartype') || urlParams.get('tipjarunit') || urlParams.get('donationtype') || '');
         const sourceTypeFilter = normalizeFilterList(urlParams.get('tipjarsource') || urlParams.get('donationsource') || '');
-        const nativeUnitMode = !!donationTypeFilter && donationTypeFilter !== 'usd';
+        const donationUsesNativeUnits = !!donationTypeFilter && donationTypeFilter !== 'usd';
+        const nativeUnitMode = donationUsesNativeUnits && !countMode;
         const nativeUnitLabel = urlParams.get('tipjarunitlabel') || getDonationTypeLabel(donationTypeFilter);
 
         // Fluid goal bar styling + recurring goal levels
@@ -802,10 +811,13 @@
         const barTextSize = readNumberParam('bartextsize', readNumberParam('barfontsize', 0, 1), 1);
         const barRadius = urlParams.get('barradius'); // "0" for square edges, "12" for rounded, etc.
         const barOnly = urlParams.has('baronly');
-        const levelSize = readNumberParam('levelsize', readNumberParam('increment', 0, 0.0001), 0.0001);
+        const parsedLevelSize = readNumberParam('levelsize', readNumberParam('increment', 0, 0.0001), 0.0001);
+        const levelSize = countMode && parsedLevelSize > 0 ? Math.max(1, Math.round(parsedLevelSize)) : parsedLevelSize;
         const rollingGoal = urlParams.has('rollinggoal') || urlParams.has('cumulativegoal') || urlParams.has('goalladder');
-        const rollingGoalSize = readOptionalNumberParam(['rollinggoal', 'cumulativegoal', 'goalladder', 'goalstep', 'goalincrement'], 0.01) || goal;
-        const startAmount = readOptionalNumberParam(['startamount', 'initialamount', 'currentamount'], 0);
+        const parsedRollingGoalSize = readOptionalNumberParam(['rollinggoal', 'cumulativegoal', 'goalladder', 'goalstep', 'goalincrement'], 0.01) || goal;
+        const rollingGoalSize = countMode ? Math.max(1, Math.round(parsedRollingGoalSize)) : parsedRollingGoalSize;
+        const parsedStartAmount = readOptionalNumberParam(['startamount', 'initialamount', 'currentamount'], 0);
+        const startAmount = countMode && parsedStartAmount !== null ? Math.max(0, Math.round(parsedStartAmount)) : parsedStartAmount;
         const barTrackColor = urlParams.get('trackcolor') || urlParams.get('bartrackcolor') || urlParams.get('barbackground') || '';
         const fillStartRgb = parseColorToRgb(fillStartColor, [33, 150, 243]);
         const fillEndRgb = parseColorToRgb(fillEndColor, [244, 67, 54]);
@@ -1070,7 +1082,7 @@
             renderAmount();
             clearJarContents();
             if (showNotice) {
-                showNotification(hypeMode ? 'Hype goal reset.' : 'Tip jar amount reset.');
+                showNotification(hypeMode ? 'Hype goal reset.' : (countMode ? 'Donation count reset.' : 'Tip jar amount reset.'));
             }
         }
 
@@ -1107,6 +1119,19 @@
         }
 
         function commandMatchesTipJarFilters(data) {
+            const commandMetric = normalizeGoalMetric(data.goalmetric || (data.countdonations ? 'count' : ''));
+            if (data.goalmetric || data.countdonations) {
+                if ((commandMetric === 'count') !== countMode) return false;
+            }
+
+            const commandEvents = normalizeEventFilterList(data.tipjarevent || data.tipjarevents || '');
+            if (commandEvents.length) {
+                if (!eventTypeFilter.length) return false;
+                for (let i = 0; i < commandEvents.length; i++) {
+                    if (eventTypeFilter.indexOf(commandEvents[i]) === -1) return false;
+                }
+            }
+
             const commandType = normalizeDonationTypeFilter(data.tipjartype || data.tipjarunit || data.donationtype || '');
             if (commandType) {
                 if (!donationTypeFilter || commandType !== donationTypeFilter) return false;
@@ -1131,7 +1156,7 @@
             }
             const previousAmount = currentAmount;
             clearLevelCompletionState();
-            currentAmount = Math.max(0, amount);
+            currentAmount = countMode ? Math.max(0, Math.round(amount)) : Math.max(0, amount);
             if (currentAmount < previousAmount) {
                 clearJarContents();
             }
@@ -1404,6 +1429,70 @@
             return filter === 'cash' ? 'usd' : filter;
         }
 
+        function normalizeGoalMetric(value) {
+            const metric = normalizeFilterValue(value);
+            return metric === 'count' || metric === 'events' || metric === 'donations' ? 'count' : 'value';
+        }
+
+        function normalizeTipJarEventValue(value) {
+            const eventName = normalizeFilterValue(value).replace(/[\s_-]+/g, '');
+            const aliases = {
+                superchat: 'superchat',
+                supersticker: 'supersticker',
+                giftpurchase: 'giftpurchase',
+                giftredemption: 'giftredemption',
+                giftsubscription: 'gift_subscription',
+                subscriptiongift: 'subscription_gift',
+                jeweldonation: 'jeweldonation'
+            };
+            return aliases[eventName] || normalizeFilterValue(value);
+        }
+
+        function normalizeEventFilterList(value) {
+            return String(value || '').split(',').map(function(item) {
+                return normalizeTipJarEventValue(item);
+            }).filter(function(item) {
+                return item && item !== 'all' && item !== 'any';
+            });
+        }
+
+        function hasExactEventFilters(filters, expected) {
+            if (filters.length !== expected.length) return false;
+            for (let i = 0; i < expected.length; i++) {
+                if (filters.indexOf(expected[i]) === -1) return false;
+            }
+            return true;
+        }
+
+        function getDefaultCountLabel(filters) {
+            if (hasExactEventFilters(filters, ['superchat'])) return 'Super Chats';
+            if (hasExactEventFilters(filters, ['supersticker'])) return 'Super Stickers';
+            if (hasExactEventFilters(filters, ['superchat', 'supersticker'])) return 'paid messages';
+            return filters.length ? 'events' : 'donations';
+        }
+
+        function getDefaultCountSingularLabel(filters, pluralLabel) {
+            const label = String(pluralLabel || '').trim();
+            if (label && label !== getDefaultCountLabel(filters)) {
+                if (/ies$/i.test(label)) return label.slice(0, -3) + 'y';
+                if (/s$/i.test(label) && !/ss$/i.test(label)) return label.slice(0, -1);
+                return label;
+            }
+            if (hasExactEventFilters(filters, ['superchat'])) return 'Super Chat';
+            if (hasExactEventFilters(filters, ['supersticker'])) return 'Super Sticker';
+            if (hasExactEventFilters(filters, ['superchat', 'supersticker'])) return 'paid message';
+            if (/ies$/i.test(label)) return label.slice(0, -3) + 'y';
+            if (/s$/i.test(label) && !/ss$/i.test(label)) return label.slice(0, -1);
+            return label || 'donation';
+        }
+
+        function getDefaultCountTitle(filters) {
+            if (hasExactEventFilters(filters, ['superchat'])) return 'Super Chat Goal';
+            if (hasExactEventFilters(filters, ['supersticker'])) return 'Super Sticker Goal';
+            if (hasExactEventFilters(filters, ['superchat', 'supersticker'])) return 'YouTube Paid Message Goal';
+            return 'Donation Count Goal';
+        }
+
         function normalizeTipJarSourceValue(value) {
             const source = normalizeFilterValue(value).replace(/[\s_-]+/g, '');
             if (source === 'youtubeshort' || source === 'youtubeshorts') {
@@ -1422,11 +1511,20 @@
 
         function buildTipJarStorageSuffix() {
             const parts = [];
+            if (countMode) {
+                parts.push('metric_count');
+            }
+            if (eventTypeFilter.length) {
+                parts.push('events_' + eventTypeFilter.join('_').replace(/[^a-z0-9_-]/g, ''));
+            }
             if (donationTypeFilter) {
                 parts.push('type_' + donationTypeFilter.replace(/[^a-z0-9_-]/g, ''));
             }
             if (sourceTypeFilter.length) {
                 parts.push('source_' + sourceTypeFilter.join('_').replace(/[^a-z0-9_-]/g, ''));
+            }
+            if (excludeYoutubeGiftMemberships) {
+                parts.push('exclude_youtube_gifts');
             }
             return parts.length ? '_' + parts.join('_') : '';
         }
@@ -1542,6 +1640,33 @@
             return sourceTypeFilter.indexOf(source) !== -1;
         }
 
+        function passesTipJarEventFilter(data) {
+            if (!eventTypeFilter.length) return true;
+            const meta = getMeta(data);
+            const source = normalizeTipJarSourceValue(data.type || data.platform || meta.source || '');
+            let eventName = normalizeTipJarEventValue(getEventName(data));
+
+            // Older YouTube WebSocket payloads used "donation" for Super Chats.
+            if (source === 'youtube' && eventName === 'donation' && eventTypeFilter.indexOf('superchat') !== -1) {
+                eventName = 'superchat';
+            }
+            return eventTypeFilter.indexOf(eventName) !== -1;
+        }
+
+        function shouldExcludeYoutubeGiftMembership(data) {
+            if (!excludeYoutubeGiftMemberships) return false;
+            const meta = getMeta(data);
+            const source = normalizeTipJarSourceValue(data.type || data.platform || meta.source || '');
+            if (source !== 'youtube') return false;
+
+            const eventName = normalizeTipJarEventValue(getEventName(data));
+            const membership = normalizeFilterValue(data.membership);
+            return eventName === 'giftpurchase' ||
+                eventName === 'gift_subscription' ||
+                eventName === 'subscription_gift' ||
+                membership === 'gift_giver';
+        }
+
         function readNumberParam(name, fallback, minValue) {
             const raw = urlParams.get(name);
             if (raw === null || raw === '') return fallback;
@@ -1568,7 +1693,16 @@
             return num % 1 === 0 ? num.toFixed(0) : num.toFixed(2);
         }
 
+        function formatCountGoalValue(value) {
+            const num = Math.max(0, Math.ceil(Number(value) || 0));
+            const label = num === 1 ? countSingularLabel : countLabel;
+            return `${formatNumber(num)} ${label}`;
+        }
+
         function formatGoalValue(value, forceCents) {
+            if (countMode) {
+                return formatCountGoalValue(value);
+            }
             if (hypeMode) {
                 return `${formatNumber(value)} ${unitLabel}`;
             }
@@ -1631,13 +1765,16 @@
         }
 
         function formatProgressPair(state) {
+            if (countMode) {
+                return `${formatNumber(state.current)} / ${formatNumber(state.goal)} ${countLabel}`;
+            }
             return `${formatGoalValue(state.current, true)} / ${formatGoalValue(state.goal)}`;
         }
 
         function formatProgressText() {
             const state = getProgressState();
             const progress = formatProgressPair(state);
-            if (style === 'jar' && (hypeMode || hasCustomTitle || state.isLevel)) {
+            if (style === 'jar' && (hypeMode || countMode || hasCustomTitle || state.isLevel)) {
                 const titleText = state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle;
                 return `${titleText}: ${progress}`;
             }
@@ -2076,18 +2213,21 @@
                 return;
             }
 
-            const tipValue = nativeUnitMode && unitInfo ? unitInfo.amount : convertToUSD(rawDonation, source);
+            const tipValue = donationUsesNativeUnits && unitInfo ? unitInfo.amount : convertToUSD(rawDonation, source);
 
-            if (isNaN(tipValue) || tipValue <= 0) {
+            if (!countMode && (isNaN(tipValue) || tipValue <= 0)) {
                 console.warn('Ignoring invalid donation value:', rawDonation);
                 return;
             }
 
             const parsedDonation = parseDonationString(rawDonation);
-            const storedAmount = parsedDonation.amount !== null ? parsedDonation.amount : tipValue;
-            const storedCurrency = nativeUnitMode ? (unitInfo && unitInfo.label ? unitInfo.label : nativeUnitLabel) : (parsedDonation.currency || 'USD');
-            const displayLabel = nativeUnitMode ? `${formatNumber(tipValue)} ${storedCurrency}` : (parsedDonation.display || `$${tipValue.toFixed(2)}`);
-            const goalValue = hypeMode ? tipValue * donationPointRate : tipValue;
+            const hasValidTipValue = !isNaN(tipValue) && tipValue > 0;
+            const storedAmount = parsedDonation.amount !== null ? parsedDonation.amount : (hasValidTipValue ? tipValue : '');
+            const storedCurrency = donationUsesNativeUnits ? (unitInfo && unitInfo.label ? unitInfo.label : nativeUnitLabel) : (parsedDonation.currency || 'USD');
+            const displayLabel = donationUsesNativeUnits && hasValidTipValue
+                ? `${formatNumber(tipValue)} ${storedCurrency}`
+                : (parsedDonation.display || (hasValidTipValue ? `$${tipValue.toFixed(2)}` : String(rawDonation)));
+            const goalValue = countMode ? 1 : (hypeMode ? tipValue * donationPointRate : tipValue);
 
             const donation = {
                 timestamp: new Date().toISOString(),
@@ -2099,8 +2239,9 @@
                 count: 1,
                 amount: storedAmount,
                 currency: storedCurrency,
-                usdValue: nativeUnitMode ? undefined : tipValue,
-                unitValue: nativeUnitMode ? tipValue : undefined,
+                usdValue: donationUsesNativeUnits || !hasValidTipValue ? undefined : tipValue,
+                unitValue: donationUsesNativeUnits && hasValidTipValue ? tipValue : undefined,
+                countValue: countMode ? 1 : undefined,
                 points: hypeMode ? goalValue : undefined,
                 raw: parsedDonation.display || ''
             };
@@ -2108,7 +2249,10 @@
             saveHistory();
 
             updateAmount(goalValue);
-            addRecentTip(donator, hypeMode ? `+${formatGoalValue(goalValue)} (${displayLabel})` : displayLabel);
+            const recentLabel = countMode
+                ? `+1 ${countSingularLabel} (${displayLabel})`
+                : (hypeMode ? `+${formatGoalValue(goalValue)} (${displayLabel})` : displayLabel);
+            addRecentTip(donator, recentLabel);
             playDonationSound();
 
             if (celebration === 'hearts' && style === 'jar') {
@@ -2124,7 +2268,9 @@
                 triggerFireworks();
             }
 
-            showNotification(hypeMode ? `${donator} added ${formatGoalValue(goalValue)}!` : `${donator} tipped ${displayLabel}!`);
+            showNotification(countMode
+                ? `${donator} added ${formatCountGoalValue(1)}!`
+                : (hypeMode ? `${donator} added ${formatGoalValue(goalValue)}!` : `${donator} tipped ${displayLabel}!`));
         }
 
         function processData(data) {
@@ -2151,6 +2297,10 @@
             }
 
             if (!passesTipJarSourceFilter(data)) {
+                return;
+            }
+
+            if (shouldExcludeYoutubeGiftMembership(data) || !passesTipJarEventFilter(data)) {
                 return;
             }
 
@@ -2245,7 +2395,10 @@
         });
         
         document.getElementById('reset-amount').addEventListener('click', () => {
-            if (confirm(hypeMode ? 'Are you sure you want to reset the hype goal to 0?' : 'Are you sure you want to reset the tip jar amount to $0?')) {
+            const resetPrompt = hypeMode
+                ? 'Are you sure you want to reset the hype goal to 0?'
+                : (countMode ? 'Are you sure you want to reset the donation count to 0?' : 'Are you sure you want to reset the tip jar amount to $0?');
+            if (confirm(resetPrompt)) {
                 resetTipJarAmount(false);
             }
         });
@@ -2308,13 +2461,15 @@
 
         function exportToCSV() {
             if (donationHistory.length === 0) {
-                alert(hypeMode ? 'No hype contributions to export' : 'No donations to export');
+                alert(hypeMode ? 'No hype contributions to export' : (countMode ? 'No counted donations to export' : 'No donations to export'));
                 return;
             }
 
             let csv = hypeMode
                 ? 'Timestamp,Type,Name,Recipient,Count,Points,Amount,Currency,USD Value,Source,Event,Raw\n'
-                : 'Timestamp,Donator,Amount,Currency,USD Value,Unit Value,Source,Raw\n';
+                : (countMode
+                    ? 'Timestamp,Donator,Count,Amount,Currency,USD Value,Unit Value,Source,Event,Raw\n'
+                    : 'Timestamp,Donator,Amount,Currency,USD Value,Unit Value,Source,Event,Raw\n');
             donationHistory.forEach(donation => {
                 const date = new Date(donation.timestamp).toLocaleString();
                 if (hypeMode) {
@@ -2332,10 +2487,14 @@
                         csvCell(donation.event || ''),
                         csvCell(donation.raw || '')
                     ].join(',') + '\n';
+                } else if (countMode) {
+                    const usdValue = donation.usdValue !== undefined ? Number(donation.usdValue).toFixed(2) : '';
+                    const unitValue = donation.unitValue !== undefined ? formatNumber(donation.unitValue) : '';
+                    csv += `${csvCell(date)},${csvCell(donation.donator)},${donation.countValue || 1},${donation.amount},${csvCell(donation.currency)},${usdValue},${unitValue},${csvCell(donation.source || '')},${csvCell(donation.event || '')},${csvCell(donation.raw || '')}\n`;
                 } else {
                     const usdValue = donation.usdValue !== undefined ? Number(donation.usdValue).toFixed(2) : '';
                     const unitValue = donation.unitValue !== undefined ? formatNumber(donation.unitValue) : '';
-                    csv += `${csvCell(date)},${csvCell(donation.donator)},${donation.amount},${csvCell(donation.currency)},${usdValue},${unitValue},${csvCell(donation.source || '')},${csvCell(donation.raw || '')}\n`;
+                    csv += `${csvCell(date)},${csvCell(donation.donator)},${donation.amount},${csvCell(donation.currency)},${usdValue},${unitValue},${csvCell(donation.source || '')},${csvCell(donation.event || '')},${csvCell(donation.raw || '')}\n`;
                 }
             });
             
@@ -2344,7 +2503,7 @@
             const a = document.createElement('a');
             a.setAttribute('hidden', '');
             a.setAttribute('href', url);
-            a.setAttribute('download', `${hypeMode ? 'hype_contributions' : 'donations'}_${new Date().toISOString().split('T')[0]}.csv`);
+            a.setAttribute('download', `${hypeMode ? 'hype_contributions' : (countMode ? 'donation_counts' : 'donations')}_${new Date().toISOString().split('T')[0]}.csv`);
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -2355,7 +2514,7 @@
             historyList.innerHTML = '';
             
             if (donationHistory.length === 0) {
-                historyList.innerHTML = hypeMode ? '<p>No hype contributions yet</p>' : '<p>No donations yet</p>';
+                historyList.innerHTML = hypeMode ? '<p>No hype contributions yet</p>' : (countMode ? '<p>No counted donations yet</p>' : '<p>No donations yet</p>');
             } else {
                 const sortedHistory = [...donationHistory].reverse();
                 sortedHistory.forEach(donation => {
@@ -2364,9 +2523,11 @@
                     const kind = donation.kind || 'donation';
                     const detail = hypeMode
                         ? `${formatGoalValue(donation.points || 0)} - ${kind}${donation.count ? ` x${donation.count}` : ''}${donation.recipient ? ` - recipient: ${donation.recipient}` : ''}`
-                        : (donation.usdValue !== undefined
+                        : (countMode
+                            ? `${formatCountGoalValue(donation.countValue || 1)}${donation.raw ? ` - ${donation.raw}` : ''}${donation.event ? ` (${donation.event})` : ''}`
+                            : (donation.usdValue !== undefined
                             ? `${donation.amount} ${donation.currency} ($${Number(donation.usdValue).toFixed(2)} USD)`
-                            : `${formatNumber(donation.unitValue || donation.amount || 0)} ${donation.currency}`);
+                            : `${formatNumber(donation.unitValue || donation.amount || 0)} ${donation.currency}`));
                     item.style.cssText = 'margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;';
                     item.innerHTML = `
                         <div><strong>${donation.donator}</strong></div>
@@ -2377,10 +2538,12 @@
                 });
 
                 // Add total at the bottom
-                const total = donationHistory.reduce((sum, d) => sum + (hypeMode ? (d.points || 0) : (d.unitValue !== undefined ? d.unitValue : d.usdValue || 0)), 0);
+                const total = donationHistory.reduce((sum, d) => sum + (hypeMode
+                    ? (d.points || 0)
+                    : (countMode ? (d.countValue || 1) : (d.unitValue !== undefined ? d.unitValue : d.usdValue || 0))), 0);
                 const totalDiv = document.createElement('div');
                 totalDiv.style.cssText = 'margin-top: 20px; padding-top: 20px; border-top: 1px solid #666; font-size: 18px; font-weight: bold;';
-                totalDiv.innerHTML = hypeMode || nativeUnitMode ? `Total: ${formatGoalValue(total)}` : `Total: $${total.toFixed(2)} USD`;
+                totalDiv.innerHTML = hypeMode || nativeUnitMode || countMode ? `Total: ${formatGoalValue(total)}` : `Total: $${total.toFixed(2)} USD`;
                 historyList.appendChild(totalDiv);
             }
             
@@ -2411,7 +2574,7 @@
             leaderboardList.innerHTML = '';
             
             if (donationHistory.length === 0) {
-                leaderboardList.innerHTML = hypeMode ? '<p style="text-align: center;">No hype contributions yet</p>' : '<p style="text-align: center;">No donations yet</p>';
+                leaderboardList.innerHTML = hypeMode ? '<p style="text-align: center;">No hype contributions yet</p>' : (countMode ? '<p style="text-align: center;">No counted donations yet</p>' : '<p style="text-align: center;">No donations yet</p>');
             } else {
                 // Aggregate contributions by donator
                 const donatorTotals = {};
@@ -2447,7 +2610,9 @@
 
                 // Sort by points in hype mode, otherwise by total USD.
                 const sortedDonators = Object.entries(donatorTotals)
-                    .sort((a, b) => hypeMode ? b[1].totalPoints - a[1].totalPoints : (nativeUnitMode ? b[1].totalUnits - a[1].totalUnits : b[1].totalUSD - a[1].totalUSD))
+                    .sort((a, b) => hypeMode
+                        ? b[1].totalPoints - a[1].totalPoints
+                        : (countMode ? b[1].count - a[1].count : (nativeUnitMode ? b[1].totalUnits - a[1].totalUnits : b[1].totalUSD - a[1].totalUSD)))
                     .slice(0, 10); // Top 10
 
                 sortedDonators.forEach(([donator, data], index) => {
@@ -2460,7 +2625,9 @@
                     const currencyBreakdown = Object.entries(data.currencies)
                         .map(([currency, amount]) => `${amount.toFixed(2)} ${currency}`)
                         .join(' + ');
-                    const scoreLabel = hypeMode ? formatGoalValue(data.totalPoints) : (nativeUnitMode ? formatGoalValue(data.totalUnits) : `$${data.totalUSD.toFixed(2)}`);
+                    const scoreLabel = hypeMode
+                        ? formatGoalValue(data.totalPoints)
+                        : (countMode ? formatCountGoalValue(data.count) : (nativeUnitMode ? formatGoalValue(data.totalUnits) : `$${data.totalUSD.toFixed(2)}`));
                     const subLine = hypeMode
                         ? `${data.count} contribution${data.count > 1 ? 's' : ''}${data.subs ? ` - ${data.subs} sub/member` : ''}${data.gifts ? ` - ${data.gifts} gifted` : ''}`
                         : `${data.count} donation${data.count > 1 ? 's' : ''}`;

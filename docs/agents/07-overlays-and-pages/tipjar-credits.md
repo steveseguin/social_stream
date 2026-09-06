@@ -79,6 +79,9 @@ Counting and filters:
 | `tipjartype` / `tipjarunit` / `donationtype` | Counts only a unit type such as `usd`, `stars`, `bits`, `coins`, `diamonds`, `kicks`, `jewels`, `tokens`, `hearts`, or `gold`. |
 | `tipjarunitlabel` | Display label for a filtered/native unit bar. |
 | `tipjarsource` / `donationsource` | Comma-separated source filter. |
+| `goalmetric=count` / `countdonations` | Counts each qualifying donation event as one instead of adding its value. Count mode takes priority if Hype is also present. |
+| `tipjarevent` / `tipjarevents` | Comma-separated paid-event filter, such as `superchat`, `supersticker`, or both. |
+| `countlabel` / `countsingular` | Override the plural and singular labels used by count goals. |
 | `persistent` | Saves amount/history in localStorage. |
 | `sound` | Plays donation sound when accepted. |
 | `controls` | Shows reset/history/export/leaderboard/custom image controls. |
@@ -95,6 +98,7 @@ Hype mode:
 | `giftpoints` | Points per gift; defaults to `subpoints`. |
 | `donationpoints` | Multiplier for donation value in hype mode; default `1`. |
 | `notips`, `nosubs`, `nogifts`, `noresubs` | Exclude specific contribution classes. |
+| `excludegiftpurchase` | Excludes YouTube gifted-membership purchase events before Tip Jar/Hype processing. |
 | `countgiftredemptions` | Count gift-recipient events where available. |
 | `resetoncomplete`, `noresetoncomplete`, `carryover` | Goal completion reset/carryover behavior. |
 | `hidecompletions` | Hides completion count in hype mode. |
@@ -138,6 +142,8 @@ Support rule: an API command can reach the server but still do nothing if the `t
 Normal mode:
 
 - Counts payloads with `donation` or `hasDonation`.
+- With `goalmetric=count`, adds one per accepted donation regardless of its monetary value.
+- `tipjarevent` can isolate specific paid events. For example, `tipjarsource=youtube&tipjarevent=superchat` excludes Super Stickers, memberships, and gifts from a Super Chat count goal.
 - Reads donor name from `chatname`, falling back to `Anonymous`.
 - Reads source from `type`.
 - Uses `currency.js` conversion helpers for cash-style values.
@@ -172,6 +178,7 @@ Saved localStorage keys:
 | `tipjar_custom_image` | Custom jar image when controls/persistent custom image is used. |
 
 Filtered pages append a suffix based on donation type and source filters. This lets a Stars-only bar and a USD bar keep separate saved totals.
+Count metrics, event filters, and YouTube gift-purchase exclusion also receive distinct storage suffixes, preventing saved monetary totals from appearing in a count goal.
 
 Controls mode:
 

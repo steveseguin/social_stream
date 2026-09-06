@@ -337,12 +337,12 @@
 						<tr>
 							<td><code>data.chatname</code></td>
 							<td>string</td>
-							<td>Display name shown by docks, overlays, TTS, relays, and Event Flow. A configured user display-name alias may replace the source-provided value.</td>
+							<td>Source-provided display name used by message processing and non-overlay outputs. A configured user display-name alias may replace this value only in copied dock and overlay transport payloads.</td>
 						</tr>
 						<tr>
 							<td><code>data.username</code></td>
 							<td>string</td>
-							<td>Source username when available. If a display-name alias is applied and neither <code>userid</code> nor <code>username</code> exists, this preserves the original <code>chatname</code> for user actions.</td>
+							<td>Source username when available. An aliased dock or overlay payload may add this field to preserve the original <code>chatname</code> for user actions; the canonical message remains unchanged.</td>
 						</tr>
 						<tr>
 							<td><code>data.userid</code></td>
@@ -413,6 +413,9 @@
                     <li>SSApp source identity metadata may add <code>meta.ssnAccountRole</code>, <code>meta.ssnSourceId</code>, and <code>meta.ssnSession</code> when a source is assigned a non-normal account role.</li>
                     <li>Event Flow can request a highlight by setting <code>meta.featured = true</code> on the chat payload, which auto-features the message in dock/featured overlays.</li>
                     <li>Event Flow can request dock pinning by setting <code>meta.pinned = true</code>; optional <code>meta.pinnedTarget</code> limits that pin to a dock with the matching <code>label</code>.</li>
+                    <li>Event Flow thermal printing records its result under <code>meta.thermalPrintResult</code> (<code>success</code> and optional <code>code</code>/<code>error</code>), preserving the chat event and other metadata. For events with numeric or other non-object metadata, the diagnostic stays in the action result and the event remains unchanged.</li>
+                    <li><strong>Opt-in SSN sticker rewards:</strong> <code>event: "sticker"</code> is sent only to the <code>stickers</code> overlay label after a loyalty-point debit. It preserves the originating <code>platform</code>, <code>type</code>, and <code>chatname</code>, with empty <code>chatmessage</code>, <code>textonly: true</code>, and <code>contentimg</code> containing a packaged relative image path or a host-approved HTTPS media URL. <code>meta.sticker</code> contains <code>id</code>, <code>pack</code>, <code>name</code>, <code>cost</code>, <code>duration</code> (seconds), <code>motion</code>, <code>redemptionId</code>, and <code>expiresAt</code> (Unix milliseconds). This is an SSN reward, not a platform donation or native channel-points event. See the <a href="sticker-gallery.html">gallery and setup guide</a>.</li>
+                    <li>The sticker player returns a control packet <code>{action: "stickerReceipt", meta: {sticker: {redemptionId, success}}}</code> to its sender when the image loads or fails. Only receipts from a connected <code>stickers</code> peer resolve a pending redemption. Failed or unconfirmed delivery triggers a refund; this control packet is not a chat event. One active sticker display per session is recommended.</li>
                     <li>AI stage overlay commands use <code>{ action: "aiOverlay", target, meta }</code> or dock-controlled co-host playout uses <code>{ action: "cohostOverlay", target, meta }</code>; keep all command details such as <code>command</code>, <code>text</code>, <code>emotion</code>, <code>avatar</code>, and <code>tts</code> inside <code>meta</code>.</li>
                     <li>If a platform exposes multiple counters together, prefer a structured object with explicit keys (<code>meta.viewer_count</code>, <code>meta.follower_count</code>) instead of overloading strings.</li>
                     <li>Commerce overlays should use snapshot objects under <code>meta</code> (for example <code>auction_update</code> and <code>commerce_update</code>) and avoid ad-hoc top-level fields.</li>
@@ -648,6 +651,7 @@
                         <li>Viewer count requests hit <code>https://api.socialstream.ninja/twitch/viewers</code> every 30 seconds.</li>
                         <li><strong>For follower alerts, raids, and full event support</strong>, enable WebSocket mode in extension settings.</li>
 						<li>Viewer-shared Watch Streak notices are disabled by default and require the <strong>Show Twitch Watch Streaks</strong> setting.</li>
+						<li>The opt-in <strong>PluralMind</strong> setting may replace <code>chatname</code>, <code>nameColor</code>, and the proxy-wrapped portion of <code>chatmessage</code>, and may add a pronoun text badge. <code>username</code> remains the Twitch login; related deletes carry <code>delete.meta.pluralmind</code> so the dock uses that stable login.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -712,6 +716,7 @@
                         <li><strong>WebSocket mode provides real-time</strong> follower alerts, subscription events, raids, cheers, Power-ups, channel point redemptions, and hype train metadata.</li>
                         <li>Shared Chat rows use Twitch IRC <code>source-room-id</code> to populate <code>sourceName</code>/<code>sourceImg</code> with the originating channel when it differs from the connected channel.</li>
 						<li>Viewer-shared Watch Streak notices are disabled by default and require the <strong>Show Twitch Watch Streaks</strong> setting.</li>
+						<li>The opt-in <strong>PluralMind</strong> setting may replace <code>chatname</code>, <code>nameColor</code>, and the proxy-wrapped portion of <code>chatmessage</code>, and may add a pronoun text badge. <code>username</code> and <code>userid</code> retain the Twitch identity; related deletes carry <code>delete.meta.pluralmind</code> so the dock uses those stable fields.</li>
                     </ul>
                     <table class="event-table">
                         <thead>

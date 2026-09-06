@@ -168,11 +168,6 @@ function matchesConfiguredUser(entry, data, sourceType) {
 	return !!chatName && configuredIdentifier === chatName;
 }
 
-function getMessageUserIdentity(data) {
-	if (!data) return "";
-	return data.userid || data.username || data.chatname || "";
-}
-
 function getUserDisplayAliasEntries() {
 	const configured = settings.userdisplayaliases;
 	if (!configured) return [];
@@ -197,6 +192,31 @@ function applyUserDisplayAlias(data) {
 		? filterXSS(alias.displayName.slice(0, 80))
 		: alias.displayName.slice(0, 80);
 	return true;
+}
+
+function getOverlayDisplayMessage(data) {
+	if (!data || typeof data !== "object") return data;
+	const displayMessage = Object.assign({}, data);
+	return applyUserDisplayAlias(displayMessage) ? displayMessage : data;
+}
+
+function getOverlayDisplayPayload(data) {
+	if (!data || typeof data !== "object") return data;
+	if (!getUserDisplayAliasEntries().length) return data;
+	let displayPayload = getOverlayDisplayMessage(data);
+	["userHistory", "recentHistory", "historyBefore"].forEach(key => {
+		if (!Array.isArray(data[key])) return;
+		if (displayPayload === data) displayPayload = Object.assign({}, data);
+		displayPayload[key] = data[key].map(getOverlayDisplayMessage);
+	});
+	if (data.delete && typeof data.delete === "object") {
+		const displayDelete = getOverlayDisplayMessage(data.delete);
+		if (displayDelete !== data.delete) {
+			if (displayPayload === data) displayPayload = Object.assign({}, data);
+			displayPayload.delete = displayDelete;
+		}
+	}
+	return displayPayload;
 }
 
 function getCommandAliases(commandString) {
@@ -1365,107 +1385,106 @@ function resetCustomJs() {
 	console.log("Custom JavaScript function reset to default");
 }
 //////////////
-function printThermal(htmlContent, options = {}) {
-	// --kiosk --kiosk-printing
-	// Default options
+async function printThermal(htmlContent, options = {}) {
+	const getNumberSetting = function (key, fallback, minimum, maximum) {
+		const value = Number(settings[key]?.numbersetting);
+		if (!Number.isFinite(value)) return fallback;
+		return Math.max(minimum, Math.min(maximum, value));
+	};
 	const defaultOptions = {
-		width: "58mm",
-		margin: "0mm",
+		width: `${getNumberSetting("printerPaperWidth", 58, 20, 120)}mm`,
+		marginTop: `${getNumberSetting("printerMarginTop", 0, 0, 25)}mm`,
+		marginRight: `${getNumberSetting("printerMarginRight", 2, 0, 25)}mm`,
+		marginBottom: `${getNumberSetting("printerMarginBottom", 0, 0, 25)}mm`,
+		marginLeft: `${getNumberSetting("printerMarginLeft", 2, 0, 25)}mm`,
+		feed: `${getNumberSetting("printerFeed", 1, 0, 25)}mm`,
+		marginType: settings.printerMarginMode?.optionsetting === "none" ? "none" : "printableArea",
 		fontSize: "10pt",
 		fontFamily: "monospace",
 		lineHeight: "1.2",
 		printerName: settings.printerName?.textsetting || null
 	};
+	const configuredLabelHeight = getNumberSetting("printerLabelHeight", 0, 0, 4000);
+	if (configuredLabelHeight > 0) defaultOptions.height = `${configuredLabelHeight}mm`;
 
-	// Merge provided options with defaults
 	const printOptions = { ...defaultOptions, ...options };
+	if (Object.prototype.hasOwnProperty.call(options, "margin")) {
+		["marginTop", "marginRight", "marginBottom", "marginLeft"].forEach(function (side) {
+			if (!Object.prototype.hasOwnProperty.call(options, side)) printOptions[side] = options.margin;
+		});
+	}
 
-	// Create an iframe to handle the print job
-	const printFrame = document.createElement("iframe");
-
-	// Make iframe invisible
-	printFrame.style.position = "fixed";
-	printFrame.style.width = "0";
-	printFrame.style.height = "0";
-	printFrame.style.border = "0";
-	printFrame.style.opacity = "0";
-
-	document.body.appendChild(printFrame);
-
-	// Get iframe's document object
-	const frameDoc = printFrame.contentWindow.document;
-
-	// Open document and write HTML
-	frameDoc.open();
-
-	// Create style for printing
-	const printStyles = `
-    @page {
-      size: ${printOptions.width} auto;
-      margin: ${printOptions.margin};
-    }
-    body {
-      width: ${printOptions.width};
-      font-family: ${printOptions.fontFamily};
-      font-size: ${printOptions.fontSize};
-      line-height: ${printOptions.lineHeight};
-      margin: 0;
-      padding: 0;
-    }
-    * {
-      box-sizing: border-box;
-    }
-  `;
-
-	// Write HTML to iframe with styles
-	frameDoc.write(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Print</title>
-        <style>${printStyles}</style>
-      </head>
-      <body>
-        ${htmlContent}
-      </body>
-    </html>
-  `);
-
-	frameDoc.close();
-
-	// Wait for content to load before printing
-	printFrame.onload = function () {
-		const printWindow = printFrame.contentWindow;
-
-		// If a specific printer name is provided, attempt to use it
-		if (printOptions.printerName) {
-			// Use the print API with specific printer
-			const printOpts = {
-				printer: printOptions.printerName,
-				silent: true
+	// SSApp can submit a silent job to the selected native printer. Browser
+	// window.print() cannot select a device by name, even when options are passed.
+	if (window.ninjafy && typeof window.ninjafy.printThermal === "function") {
+		try {
+			return await window.ninjafy.printThermal(htmlContent, printOptions);
+		} catch (error) {
+			console.error("[ThermalPrint] Native print failed:", error?.message || error);
+			return {
+				success: false,
+				error: error?.message || String(error),
+				code: error?.code || "SSAPP_PRINT_FAILED"
 			};
-
-			// Print with specified options
-			if (printWindow.navigator && printWindow.navigator.serviceWorker) {
-				printWindow.print(printOpts).catch(error => {
-					console.warn("Failed to select printer:", error);
-					// Fallback to default print
-					printWindow.print();
-				});
-			} else {
-				// Fallback to default print
-				printWindow.print();
-			}
-		} else {
-			// Use default print dialog
-			printWindow.print();
 		}
+	}
 
-		// Remove iframe after printing is complete
-		setTimeout(() => {
-			document.body.removeChild(printFrame);
-		}, 1000);
-	};
+	return await new Promise(resolve => {
+		// Create an iframe to handle the browser print dialog fallback.
+		const printFrame = document.createElement("iframe");
+		printFrame.style.position = "fixed";
+		printFrame.style.width = "0";
+		printFrame.style.height = "0";
+		printFrame.style.border = "0";
+		printFrame.style.opacity = "0";
+		document.body.appendChild(printFrame);
+
+		const frameDoc = printFrame.contentWindow.document;
+		printFrame.onload = function () {
+			const printWindow = printFrame.contentWindow;
+			if (printOptions.printerName) {
+				console.warn("[ThermalPrint] Browser printing cannot select a printer by name; opening the print dialog instead.");
+			}
+			printWindow.print();
+
+			setTimeout(() => {
+				printFrame.remove();
+				resolve({ success: true, native: false });
+			}, 1000);
+		};
+
+		frameDoc.open();
+		const printStyles = `
+			@page {
+				size: ${printOptions.width} ${printOptions.height || 'auto'};
+				margin: 0;
+			}
+			body {
+				width: ${printOptions.width};
+				font-family: ${printOptions.fontFamily};
+				font-size: ${printOptions.fontSize};
+				line-height: ${printOptions.lineHeight};
+				margin: 0;
+				padding: ${printOptions.marginTop} ${printOptions.marginRight} ${printOptions.marginBottom} ${printOptions.marginLeft};
+			}
+			* {
+				box-sizing: border-box;
+			}
+		`;
+
+		frameDoc.write(`
+			<!DOCTYPE html>
+			<html>
+				<head>
+					<title>Print</title>
+					<style>${printStyles}</style>
+				</head>
+				<body>${htmlContent}</body>
+			</html>
+		`);
+
+		frameDoc.close();
+	});
 }
 ////////
 
@@ -1698,9 +1717,8 @@ function loadSettings(item, resave = false) {
 
 	if (incomingStreamId) {
 		if (streamID != incomingStreamId) {
-			streamID = incomingStreamId;
-			streamID = validateRoomId(streamID);
-			if (!streamID) {
+			const validatedStreamId = validateRoomId(incomingStreamId);
+			if (!validatedStreamId) {
 				try {
 					chrome.notifications.create({
 						type: "basic",
@@ -1714,6 +1732,7 @@ function loadSettings(item, resave = false) {
 					throw new Error("Invalid session ID");
 				}
 			}
+			streamID = validatedStreamId;
 			reloadNeeded = true;
 			persistSession({ streamId: streamID });
 		}
@@ -3841,6 +3860,10 @@ async function resetSettings(item = false) {
 
 async function exportSettings() {
 	chrome.storage.local.get(properties, async function (item) {
+		try {
+		if (chrome.runtime.lastError) {
+			throw new Error(chrome.runtime.lastError.message);
+		}
 		item.settings = settings;
 		const opts = {
 			types: [
@@ -3857,6 +3880,9 @@ async function exportSettings() {
 
 		try {
 			fileExportHandler = await window.showSaveFilePicker(opts);
+		} catch (error) {
+			if (error && error.name === "AbortError") return;
+			throw error;
 		} finally {
 			await restorePreviousTabAfterPicker(restoreTarget);
 		}
@@ -3867,6 +3893,10 @@ async function exportSettings() {
 			const writableStream = await fileExportHandler.createWritable();
 			await writableStream.write(JSON.stringify(item));
 			await writableStream.close();
+		}
+		} catch (error) {
+			console.error("[Settings] Export failed:", error);
+			messagePopup({ alert: "Failed to export settings: " + (error.message || String(error)) });
 		}
 	});
 }
@@ -3884,6 +3914,9 @@ async function importSettings(item = false) {
 
 	try {
 		importFile = await window.showOpenFilePicker();
+	} catch (error) {
+		if (error && error.name === "AbortError") return;
+		throw error;
 	} finally {
 		await restorePreviousTabAfterPicker(restoreTarget);
 	}
@@ -3907,11 +3940,16 @@ async function importSettings(item = false) {
 	}
 
 	try {
-		loadSettings(JSON.parse(importFile), true);
+		const imported = JSON.parse(importFile);
+		if (!imported || typeof imported !== "object" || Array.isArray(imported) ||
+			!imported.settings || typeof imported.settings !== "object" || Array.isArray(imported.settings)) {
+			throw new Error("Missing or invalid settings object");
+		}
+		loadSettings(imported, true);
 		messagePopup({ settingsImported: true });
 	} catch (e) {
-		console.error("[Settings] Invalid JSON in import file:", e.message);
-		messagePopup({ alert: "File does not contain a valid JSON structure" });
+		console.error("[Settings] Invalid settings import:", e.message);
+		messagePopup({ alert: "File does not contain a valid Social Stream settings backup" });
 	}
 }
 
@@ -6150,6 +6188,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (request.setting == "delaytwitch") {
 				pushSettingChange();
 			}
+			if (request.setting == "pluralmind") {
+				pushSettingChange();
+			}
 			if (request.setting == "customtwitchaccount") {
 				pushSettingChange();
 			}
@@ -6335,9 +6376,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if ("delete" in request) {
 			sendResponse({ state: isExtensionOn });
 			if (isExtensionOn && (request.delete.type || request.delete.chatname || request.delete.id)) {
-				const deletePayload = Object.assign({}, request.delete);
-				applyUserDisplayAlias(deletePayload);
-				sendToDestinations({ delete: deletePayload });
+				sendToDestinations({ delete: request.delete });
 			}
 		} else if ("liveStats" in request) {
 			sendResponse({ state: isExtensionOn });
@@ -7181,7 +7220,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 					cmd: "settipjaramount",
 					value: request.value,
 					tipjarsource: request.tipjarsource || "",
-					tipjartype: request.tipjartype || ""
+					tipjartype: request.tipjartype || "",
+					goalmetric: request.goalmetric || "",
+					tipjarevent: request.tipjarevent || ""
 				},
 				"tipjar"
 			);
@@ -7925,22 +7966,27 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 			//}
 		}
 
-		if (settings.pronouns && message.type == "twitch" && (message.username || message.chatname)) {
-			let pronoun = await getPronounsNames(message.username || message.chatname);
-			if (!Pronouns && pronoun) {
-				await getPronouns();
-			}
-			if (Pronouns && pronoun && pronoun.pronoun_id) {
-				if (pronoun.pronoun_id in Pronouns) {
-					if (!message.chatbadges) {
-						message.chatbadges = [];
+		if (settings.pronouns && message.type == "twitch" && message.chatname) {
+			var hasPluralmindPronouns = settings.pluralmind && Array.isArray(message.chatbadges) && message.chatbadges.some(function (badge) {
+				return badge && typeof badge === "object" && badge.source === "pluralmind";
+			});
+			if (!hasPluralmindPronouns) {
+				let pronoun = await getPronounsNames(message.username || message.chatname);
+				if (!Pronouns && pronoun) {
+					await getPronouns();
+				}
+				if (Pronouns && pronoun && pronoun.pronoun_id) {
+					if (pronoun.pronoun_id in Pronouns) {
+						if (!message.chatbadges) {
+							message.chatbadges = [];
+						}
+						var bage = {};
+						bage.text = Pronouns[pronoun.pronoun_id];
+						bage.type = "text";
+						bage.bgcolor = "#000";
+						bage.color = "#FFF";
+						message.chatbadges.push(bage);
 					}
-					var bage = {};
-					bage.text = Pronouns[pronoun.pronoun_id];
-					bage.type = "text";
-					bage.bgcolor = "#000";
-					bage.color = "#FFF";
-					message.chatbadges.push(bage);
 				}
 			}
 		}
@@ -7950,9 +7996,9 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 		}
 
 		if (settings.randomcolor && message && !message.nameColor && message.chatname) {
-			message.nameColor = getColorFromName(getMessageUserIdentity(message), settings);
+			message.nameColor = getColorFromName(message.chatname, settings);
 		} else if (settings.randomcolorall && message && message.chatname) {
-			message.nameColor = getColorFromName(getMessageUserIdentity(message), settings);
+			message.nameColor = getColorFromName(message.chatname, settings);
 		} else if (settings.colorofsource && message && message.chatname) {
 			message.nameColor = getColorFromType(message.type);
 		}
@@ -8136,6 +8182,10 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 	if (message.chatmessage || message.hasDonation || message.chatname) {
 		message.idx = await addMessageDB(message);
 	}
+	if (window.processStickerReward && /^!stickers?(?:\s|$)/i.test(message.chatmessage || '')) {
+		// Opt-in reward failures must never interrupt normal chat delivery.
+		window.processStickerReward(message).catch(function (error) { console.warn('Sticker reward failed:', error); });
+	}
 	return true;
 }
 
@@ -8223,17 +8273,17 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
 						if (sessionId && replaySessions[sessionId]) {
 							if (!replaySessions[sessionId].isPaused) {
 								sendDataP2P(message);
-								replaySessions[sessionId].currentIndex = index + 1;
+								replaySessions[sessionId].currentIndex = messageIndex + 1;
 
 								// Send progress update
-								const progress = ((index + 1) / messages.length) * 100;
+								const progress = ((messageIndex + 1) / messages.length) * 100;
 								// Send to all extension pages
 								chrome.runtime
 									.sendMessage({
 										action: "replayProgress",
 										sessionId: sessionId,
 										progress: progress,
-										currentMessage: index + 1,
+										currentMessage: messageIndex + 1,
 										totalMessages: messages.length,
 										currentTimestamp: message.timestamp,
 										messageDetails: {
@@ -8246,7 +8296,7 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
 									});
 
 								// Clean up if this was the last message
-								if (index === messages.length - 1) {
+								if (messageIndex === messages.length - 1) {
 									delete replaySessions[sessionId];
 								}
 							}
@@ -8380,7 +8430,7 @@ function sendToH2R(data) {
 			}
 			msg.authorDetails = {};
 			msg.authorDetails.displayName = data.chatname || "";
-			if (data.type && data.type == "twitch" && !data.chatimg && (data.username || data.chatname)) {
+			if (data.type && data.type == "twitch" && !data.chatimg && data.chatname) {
 				msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.username || data.chatname); // 150x150
 			} else if (data.type && (data.type == "youtube" || data.type == "youtubeshorts") && data.chatimg) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
@@ -8653,24 +8703,38 @@ function isEmoji(char) {
 	return emojiRegex.test(trimmed);
 }
 
-// Helper to preserve emoji from img alt attributes before stripping HTML
-// Used by reflection filter to properly compare messages with emoji
-function preserveEmojiFromImgAlt(html) {
-	if (!html || typeof html !== "string") return html;
-	try {
-		const tempDiv = document.createElement("div");
-		tempDiv.innerHTML = html;
-		const imgElements = tempDiv.querySelectorAll("img");
-		imgElements.forEach(img => {
-			const altText = img.getAttribute("alt");
-			if (altText && isEmoji(altText)) {
-				img.outerHTML = altText;
-			}
-		});
-		return tempDiv.innerHTML;
-	} catch (e) {
-		return html;
+// Build the same reflection key for plain text and platform-rendered rich text.
+// Private-use markers let us remove whitespace inserted between an emote image
+// and adjacent punctuation without changing intentional spacing in plain text.
+function normalizeMessageForTracking(msg, textonly = false) {
+	if (msg === undefined || msg === null) return "";
+
+	let normalized = String(msg);
+	const imageStartMarker = "\uE000";
+	const imageEndMarker = "\uE001";
+	const unknownImageMarker = "\uE002";
+
+	if (!textonly) {
+		try {
+			const doc = new DOMParser().parseFromString(normalized, "text/html");
+			doc.querySelectorAll("img").forEach(img => {
+				const replacement = (img.getAttribute("alt") || img.getAttribute("title") || unknownImageMarker).trim();
+				img.parentNode.replaceChild(doc.createTextNode(imageStartMarker + replacement + imageEndMarker), img);
+			});
+			normalized = doc.body.textContent || "";
+		} catch (e) {}
 	}
+
+	try {
+		normalized = normalized.normalize("NFC");
+	} catch (e) {}
+
+	return normalized
+		.replace(/[\uFE0E\uFE0F]/g, "")
+		.replace(/\uE001\s+([.,!?])/g, "\uE001$1")
+		.replace(/[\uE000\uE001]/g, "")
+		.replace(/\s+/g, " ")
+		.trim();
 }
 
 const messageStore = {};
@@ -8685,17 +8749,7 @@ function checkExactDuplicateAlreadyRelayed(msg, sanitized = true, tabid = false,
 		}
 	}
 
-	// Preserve emoji from img alt attributes before processing (fixes reflection filter for emoji)
-	msg = preserveEmojiFromImgAlt(msg);
-
-	if (!sanitized) {
-		var textArea = document.createElement("textarea");
-		textArea.innerHTML = msg;
-		msg = textArea.value.replace(/\s\s+/g, " ").trim();
-	} else {
-		msg = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
-		msg = msg.replace(/\s\s+/g, " ").trim();
-	}
+	msg = normalizeMessageForTracking(msg, sanitized);
 
 	if (save) {
 		return msg;
@@ -8732,17 +8786,7 @@ function checkExactDuplicateAlreadyReceived(msg, sanitized = true, tabid = false
 		return false;
 	}
 
-	// Preserve emoji from img alt attributes before processing (fixes reflection filter for emoji)
-	msg = preserveEmojiFromImgAlt(msg);
-
-	if (!sanitized) {
-		var textArea = document.createElement("textarea");
-		textArea.innerHTML = msg;
-		msg = textArea.value.replace(/\s\s+/g, " ").trim();
-	} else {
-		msg = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
-		msg = msg.replace(/\s\s+/g, " ").trim();
-	}
+	msg = normalizeMessageForTracking(msg, sanitized);
 
 	if (!msg || !tabid) {
 		return false;
@@ -8826,10 +8870,7 @@ function sendToS10(data, fakechat = false, relayed = false) {
 			}
 
 			let cleaned = data.chatmessage;
-			if (data.textonly) {
-				cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, ""); // keep a cleaned copy
-				cleaned = cleaned.replace(/\s\s+/g, " ");
-			} else {
+			if (!data.textonly) {
 				cleaned = decodeAndCleanHtml(cleaned);
 			}
 			if (!cleaned) {
@@ -8962,10 +9003,7 @@ function sendToSSC(data, fakechat = false, relayed = false) {
 			}
 
 			let cleaned = data.chatmessage;
-			if (data.textonly) {
-				cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, "");
-				cleaned = cleaned.replace(/\s\s+/g, " ");
-			} else {
+			if (!data.textonly) {
 				cleaned = decodeAndCleanHtml(cleaned);
 			}
 			if (!cleaned) {
@@ -9178,6 +9216,13 @@ class StreamerbotWebsocketClient {
 	}
 
 	_connect() {
+		if (!this.enabled || (this.socket && (this.socket.readyState === WebSocket.CONNECTING || this.socket.readyState === WebSocket.OPEN))) {
+			return;
+		}
+		if (this.reconnectTimeout) {
+			clearTimeout(this.reconnectTimeout);
+			this.reconnectTimeout = null;
+		}
 		try {
 			this.log(`Connecting to ${this.url}...`);
 			this.socket = new WebSocket(this.url);
@@ -9315,7 +9360,7 @@ class StreamerbotWebsocketClient {
 	}
 
 	_scheduleReconnect() {
-		if (!this.enabled || !this.autoReconnect) return;
+		if (!this.enabled || !this.autoReconnect || this.reconnectTimeout) return;
 
 		this.reconnectAttempts++;
 
@@ -9338,7 +9383,7 @@ class StreamerbotWebsocketClient {
 		if (!this.isAuthenticated || this.messageQueue.length === 0) return;
 
 		this.log(`Processing queued messages (${this.messageQueue.length})`);
-		while (this.messageQueue.length > 0) {
+		while (this.messageQueue.length > 0 && this.isAuthenticated && this.socket && this.socket.readyState === WebSocket.OPEN) {
 			const message = this.messageQueue.shift();
 			this._sendMessage(message);
 		}
@@ -9626,12 +9671,9 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
 			return null;
 		}
 
-		// Clean the message
+		// Plain-text messages may contain literal angle brackets and significant whitespace.
 		let cleaned = data.chatmessage;
-		if (data.textonly) {
-			cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, "");
-			cleaned = cleaned.replace(/\s\s+/g, " ");
-		} else if (typeof cleaned === "string") {
+		if (!data.textonly && typeof cleaned === "string") {
 			cleaned = decodeAndCleanHtml(cleaned); // Assuming decodeAndCleanHtml is defined elsewhere
 		}
 
@@ -9813,6 +9855,36 @@ function handleStreamerBotSettingsChange() {
 	}
 }
 
+function buildAllMessagesDiscordPayload(data, simpleFormat = false) {
+	const avatarUrl = validateImageUrl(data.chatimg);
+	const username = (data.chatname || "Unknown") + " @ " + capitalizeFirstLetter(data.type);
+	const description = decodeAndCleanHtml(data.chatmessage || "");
+
+	if (simpleFormat) {
+		return {
+			content: description.slice(0, 2000),
+			username: username,
+			avatar_url: avatarUrl || "https://socialstream.ninja/sources/images/unknown.png"
+		};
+	}
+
+	return {
+		username: username,
+		avatar_url: avatarUrl || "https://socialstream.ninja/sources/images/unknown.png",
+		embeds: [
+			{
+				description: description,
+				color: 0xffffff,
+				timestamp: new Date().toISOString(),
+				thumbnail: {
+					url: data.type ? `https://socialstream.ninja/sources/images/${data.type}.png` : null
+				},
+				fields: []
+			}
+		]
+	};
+}
+
 function sendAllToDiscord(data) {
 	if (!settings.postalldiscord || !settings.postallserverdiscord) {
 		return;
@@ -9823,24 +9895,7 @@ function sendAllToDiscord(data) {
 
 	try {
 		let postServerDiscord = normalizeWebhookUrl(settings.postallserverdiscord.textsetting);
-
-		const avatarUrl = validateImageUrl(data.chatimg);
-
-		const payload = {
-			username: (data.chatname || "Unknown") + " @ " + capitalizeFirstLetter(data.type), // Custom webhook name
-			avatar_url: avatarUrl || "https://socialstream.ninja/sources/images/unknown.png",
-			embeds: [
-				{
-					description: decodeAndCleanHtml(data.chatmessage || ""),
-					color: 0xffffff, // Green color for donations
-					timestamp: new Date().toISOString(),
-					thumbnail: {
-						url: data.type ? `https://socialstream.ninja/sources/images/${data.type}.png` : null
-					},
-					fields: []
-				}
-			]
-		};
+		const payload = buildAllMessagesDiscordPayload(data, getSettingFlag("postallserverdiscordsimple"));
 		fetch(postServerDiscord, {
 			method: "POST",
 			headers: {
@@ -10024,7 +10079,7 @@ function sendToPost(data) {
 				postServer = "https://" + settings.postserver.textsetting; // Just going to assume they meant https
 			}
 
-			if (data.type && !data.chatimg && data.type == "twitch" && (data.username || data.chatname)) {
+			if (data.type && !data.chatimg && data.type == "twitch" && data.chatname) {
 				data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.username || data.chatname); // 150x150
 			} else if (data.type && (data.type == "youtube" || data.type == "youtubeshorts") && data.chatimg) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
@@ -10924,6 +10979,27 @@ async function handleStreamDeckBackgroundRequest(request) {
 			"accepted"
 		);
 	}
+	if (action === "clearHistory") {
+		const clearHistoryResult = await clearSavedMessageHistory(request.value);
+		if (!clearHistoryResult.ok) {
+			const errorCode = isClearHistoryConfirmed(request.value) ? "TARGET_UNAVAILABLE" : "CONFIRMATION_REQUIRED";
+			return router.makeError(request, errorCode, clearHistoryResult.error || "Failed to clear saved message history.");
+		}
+		const historyClearedPayload = {
+			action: "historyCleared",
+			ok: true,
+			deleted: clearHistoryResult.deleted || 0
+		};
+		if (request.target) {
+			historyClearedPayload.target = request.target;
+		}
+		sendDataP2P(historyClearedPayload);
+		return router.makeResponse(request, clearHistoryResult);
+	}
+	if (action === "getpollpresets") {
+		const presets = await new Promise(resolve => getPollPresets(resolve));
+		return router.makeResponse(request, presets);
+	}
 
 	if (isStreamDeckTimerAction(action)) {
 		if (action === "resettimer" && !isStreamDeckResetConfirmed(request.value)) {
@@ -11249,7 +11325,9 @@ function setupSocket() {
 						cmd: "settipjaramount",
 						value: data.value,
 						tipjarsource: data.tipjarsource || "",
-						tipjartype: data.tipjartype || ""
+						tipjartype: data.tipjartype || "",
+						goalmetric: data.goalmetric || "",
+						tipjarevent: data.tipjarevent || ""
 					},
 					"tipjar"
 				);
@@ -12756,8 +12834,57 @@ async function openchat(target = null, force = false) {
 	}
 }
 
+function sendDataToStreamDeckPeersP2P(data) {
+	var sent = false;
+	if (ninjaBridge && ninjaBridge.isReady()) {
+		try {
+			var peers = typeof ninjaBridge.getPeers === "function" ? ninjaBridge.getPeers() : {};
+			for (var peerId in peers) {
+				if (peers[peerId] === "streamdeck") {
+					sent = true;
+					break;
+				}
+			}
+			if (sent) {
+				var result = ninjaBridge.sendToLabel(data, "streamdeck");
+				if (result && typeof result.catch === "function") {
+					result.catch(function () {
+						markP2PFailure("streamDeckFeedSend");
+					});
+				} else if (result === false) {
+					markP2PFailure("streamDeckFeedSend");
+				}
+				return true;
+			}
+		} catch (e) {
+			markP2PFailure("streamDeckFeedSend");
+		}
+	}
+
+	if (iframe && connectedPeers) {
+		var keys = Object.keys(connectedPeers);
+		for (var i = 0; i < keys.length; i++) {
+			var UUID = keys[i];
+			if (connectedPeers[UUID] !== "streamdeck") {
+				continue;
+			}
+			try {
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+				sent = true;
+			} catch (e) {
+				console.error(e);
+			}
+		}
+	}
+	return sent;
+}
+
 function sendDataP2P(data, UUID = false) {
 	// function to send data to the DOCk via the VDO.Ninja API
+	data = getOverlayDisplayPayload(data);
+	// Stream Deck can explicitly remain on P2P while a Dock uses the hosted
+	// WebSocket relay. Deliver its feed before the server2 early return below.
+	var streamDeckPeerSent = !UUID && sendDataToStreamDeckPeersP2P(data);
 
 	// TODO after 2026-09-01: make the server2 dock send additive by default.
 	// Overlay links generated from 3.52.0+ are prepared to use socket-only
@@ -12822,8 +12949,15 @@ function sendDataP2P(data, UUID = false) {
 				trackSdkSendResult(ninjaBridge.sendToLabel(data, "aioverlay"));
 				trackSdkSendResult(ninjaBridge.sendToLabel(data, "cohost"));
 				trackSdkSendResult(ninjaBridge.sendToLabel(data, "tipjar"));
-			} else {
+			} else if (!streamDeckPeerSent) {
 				trackSdkSendResult(ninjaBridge.send(data)); // broadcast
+			} else {
+				// Stream Deck already received its copy; preserve the fallback feed for other peers.
+				for (var peerId in peers) {
+					if (peers[peerId] !== "streamdeck") {
+						trackSdkSendResult(ninjaBridge.send(data, peerId));
+					}
+				}
 			}
 			return;
 		} catch (e) {
@@ -12883,13 +13017,13 @@ function processHype(data) {
 
 	// If it's not a viewer_update, proceed to process as a chatter
 	const sourceType = data.type;
+	const userKey = data.userid || data.username || data.chatname;
 
 	let newSource = false;
 
-	const userIdentity = getMessageUserIdentity(data);
-	if (users[sourceType] && userIdentity) {
+	if (users[sourceType] && data.chatname) {
 		// Site exists
-		if (!users[sourceType][userIdentity]) {
+		if (!users[sourceType][userKey]) {
 			// New user for this site
 			if (hype[sourceType]) {
 				hype[sourceType] += 1;
@@ -12898,11 +13032,11 @@ function processHype(data) {
 				newSource = true;
 			}
 		}
-		users[sourceType][userIdentity] = Date.now() + 60000 * 5;
-	} else if (userIdentity) {
+		users[sourceType][userKey] = Date.now() + 60000 * 5;
+	} else if (data.chatname) {
 		// New site
 		var site = {};
-		site[userIdentity] = Date.now() + 60000 * 5;
+		site[userKey] = Date.now() + 60000 * 5;
 		users[sourceType] = site;
 		hype[sourceType] = 1;
 		newSource = true;
@@ -13206,6 +13340,7 @@ async function trySendTargetP2P(data, target) {
 }
 
 async function sendTargetP2P(data, target, options) {
+	data = getOverlayDisplayPayload(data);
 	options = options || {};
 	var retry = typeof options.retry === "boolean" ? options.retry : target === "actions";
 	var timeoutMs = Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : 10000;
@@ -13921,11 +14056,10 @@ function processWaitlistControlCommand(data) {
 
 function forgetWaitlistUser(entry) {
 	try {
-		const userIdentity = getMessageUserIdentity(entry);
-		if (!entry || !entry.type || !userIdentity || !waitListUsers[entry.type]) {
+		if (!entry || !entry.type || !entry.chatname || !waitListUsers[entry.type]) {
 			return;
 		}
-		delete waitListUsers[entry.type][userIdentity];
+		delete waitListUsers[entry.type][entry.userid || entry.username || entry.chatname];
 		if (!Object.keys(waitListUsers[entry.type]).length) {
 			delete waitListUsers[entry.type];
 		}
@@ -13951,17 +14085,17 @@ function processWaitlist(data) {
 		data.waitlistTrigger = trigger;
 		data.waitlistJoinMessage = extractWaitlistMessage(data.chatmessage, trigger);
 
-		const userIdentity = getMessageUserIdentity(data);
+		var userKey = data.userid || data.username || data.chatname;
 		var update = false;
 		if (waitListUsers[data.type]) {
-			if (!waitListUsers[data.type][userIdentity]) {
+			if (!waitListUsers[data.type][userKey]) {
 				update = true;
-				waitListUsers[data.type][userIdentity] = Date.now();
+				waitListUsers[data.type][userKey] = Date.now();
 				waitlist.push(data);
 			}
 		} else {
 			var site = {};
-			site[userIdentity] = Date.now();
+			site[userKey] = Date.now();
 			waitListUsers[data.type] = site;
 			waitlist.push(data);
 			update = true;
@@ -14434,7 +14568,7 @@ function sendToDisk(data) {
 					data.chatimg = data.chatimg.replace("=s64-", "=s512-");
 				}
 
-				if (data.type && data.type == "twitch" && !data.chatimg && (data.username || data.chatname)) {
+				if (data.type && data.type == "twitch" && !data.chatimg && data.chatname) {
 					data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.username || data.chatname); // 150x150
 				}
 
@@ -14452,7 +14586,7 @@ function sendToDisk(data) {
 					data.chatimg = data.chatimg.replace("=s64-", "=s256-");
 				}
 
-				if (data.type && data.type == "twitch" && !data.chatimg && (data.username || data.chatname)) {
+				if (data.type && data.type == "twitch" && !data.chatimg && data.chatname) {
 					data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.username || data.chatname); // 150x150
 				}
 				overwriteFileExcel(data);
@@ -14627,7 +14761,7 @@ async function initTransport(roomStreamID, pass = false) {
 						if (!data) return;
 						if (typeof data !== "object") return;
 						let payload = data.overlayNinja || null;
-						if (!payload && (data.action || "response" in data)) {
+						if (!payload && (data.action || data.callback || "response" in data || data.type === "ssnPeerHello")) {
 							payload = data;
 						}
 						if (payload) {
@@ -14706,6 +14840,16 @@ async function ensureNinjaSDKLoaded() {
 			await window.loadScript("./thirdparty/vdoninja-sdk.js");
 		} else {
 			await dynamicLoadScript("./thirdparty/vdoninja-sdk.js");
+		}
+		// Electron exposes CommonJS globals in this renderer. The browser SDK then
+		// publishes itself through module.exports instead of creating its normal
+		// window globals, so adopt that export before loading NinjaBridge.
+		if (typeof window.VDONinjaSDK === "undefined" && typeof module !== "undefined" && module.exports) {
+			var exportedSDK = module.exports.default || module.exports.VDONinjaSDK || module.exports.VDONinja || module.exports;
+			if (typeof exportedSDK === "function") {
+				window.VDONinjaSDK = exportedSDK;
+				window.VDONinja = exportedSDK;
+			}
 		}
 	}
 	if (typeof window.NinjaBridge === "undefined") {
@@ -14969,6 +15113,21 @@ async function processEventFlowBridgeEvent(value) {
 
 async function processIncomingRequest(request, UUID = false) {
 	// from the dock or chat bot, etc.
+	if (request && request.action === "stickerReceipt") {
+		if (window.receiveStickerReceipt) window.receiveStickerReceipt(request, UUID);
+		return;
+	}
+	if (request && request.type === "ssnPeerHello" && request.label && UUID) {
+		var announcedLabel = String(request.label).trim().slice(0, 100);
+		if (announcedLabel) {
+			if (ninjaBridge && typeof ninjaBridge.identifyPeer === "function") {
+				ninjaBridge.identifyPeer(String(UUID), announcedLabel);
+			} else {
+				markP2PPeerConnected(String(UUID), announcedLabel);
+			}
+		}
+		return true;
+	}
 	if (handleStreamDeckDockCallback(request)) {
 		return true;
 	}
@@ -16535,7 +16694,7 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 		return;
 	}
 
-	if (isWebsocketSourceTabUrl(url)) {
+	if (isWebsocketSourceTabUrl(url) || (isSSAPP && tab.virtualSourceTarget === "discord")) {
 		if (relayMessageToWebsocketSourceTab(tab.id, data.response, messageOrigin)) {
 			relayTabContext.storeMessage(data.response);
 			lastSentMessage = sanitizeMessageForTracking(data.response, false);
@@ -16787,22 +16946,7 @@ function handleMessageStore(tabId, msg2Save, now, relayMode, origin = "relay") {
 }
 function sanitizeMessageForTracking(msg, sanitized = true) {
 	try {
-		if (!msg) {
-			return "";
-		}
-
-		// Preserve emoji from img alt attributes before processing (fixes reflection filter for emoji)
-		msg = preserveEmojiFromImgAlt(msg);
-
-		let normalized;
-		if (!sanitized) {
-			const textArea = document.createElement("textarea");
-			textArea.innerHTML = msg;
-			normalized = textArea.value;
-		} else {
-			normalized = msg.replace(/<\/?[^>]+(>|$)/g, "");
-		}
-		return normalized.replace(/\s\s+/g, " ").trim();
+		return normalizeMessageForTracking(msg, sanitized);
 	} catch (e) {
 		errorlog(e);
 		return "";
@@ -18093,7 +18237,6 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		prependFirstTimerBadge(data);
-		applyUserDisplayAlias(data);
 
 		const returningBeepEnabled = !!(settings.beepreturning?.setting ?? settings.beepreturning);
 		const hasChatFields = typeof data.chatname === "string" && data.chatname.trim() !== "" && typeof data.chatmessage === "string" && data.chatmessage.trim() !== "";
@@ -18554,256 +18697,7 @@ async function applyBotActions(data, tab = false) {
 			//}
 		}
 
-		if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy && data.chatmessage && data.chatmessage.indexOf("!giphy") != -1 && !data.contentimg) {
-			let giphySearchTerm = data.chatmessage;
-			giphySearchTerm = giphySearchTerm.replaceAll("!giphy", "").trim();
-			if (giphySearchTerm) {
-				let giphyOrder = 0;
-				if (settings.randomgif) {
-					giphyOrder = parseInt(Math.random() * 15);
-				}
-				const giphyUrl = await fetch("https://api.giphy.com/v1/gifs/search?q=" + encodeURIComponent(giphySearchTerm) + "&api_key=" + settings.giphyKey.textsetting + "&limit=1&offset=" + giphyOrder)
-					.then(response => response.json())
-					.then(response => {
-						try {
-							return response.data[0].images.downsized_large.url;
-						} catch (e) {
-							console.error(e);
-							return false;
-						}
-					});
-				if (giphyUrl) {
-					data.contentimg = giphyUrl;
-					if (settings.hidegiphytrigger) {
-						data.chatmessage = "";
-					}
-				} else if (!data.hasDonation && !data.contentimg) {
-					return false;
-				}
-			}
-		} else if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy2 && data.chatmessage && data.chatmessage.indexOf("#") != -1 && !data.contentimg) {
-			const messageText = data.textContent || data.chatmessage;
-			const xx = messageText.split(" ");
-			for (let tagIndex = 0; tagIndex < xx.length; tagIndex++) {
-				let word = xx[tagIndex];
-				if (!word.startsWith("#")) {
-					continue;
-				}
-				word = word.replaceAll("#", " ").trim();
-				if (word) {
-					let order = 0;
-					if (tagIndex + 1 < xx.length) {
-						order = parseInt(xx[tagIndex + 1]) || 0;
-					}
-
-					if (settings.hidegiphytrigger) {
-						if (messageText.includes("#" + word + " " + order)) {
-							data.chatmessage = data.chatmessage.replace("#" + word + " " + order, "");
-						} else if (messageText.includes("#" + word + " ")) {
-							data.chatmessage = data.chatmessage.replace("#" + word + " ", "");
-						} else {
-							data.chatmessage = data.chatmessage.replace("#" + word, "");
-						}
-						data.chatmessage = data.chatmessage.trim();
-					}
-
-					if (settings.randomgif) {
-						order = parseInt(Math.random() * 15);
-					}
-					const gurl = await fetch("https://api.giphy.com/v1/gifs/search?q=" + encodeURIComponent(word) + "&api_key=" + settings.giphyKey.textsetting + "&limit=1&offset=" + order)
-						.then(response => response.json())
-						.then(response => {
-							try {
-								return response.data[0].images.downsized_large.url;
-							} catch (e) {
-								return false;
-							}
-						});
-
-					if (gurl) {
-						data.contentimg = gurl;
-						break;
-					}
-
-					if (!data.contentimg && !data.chatmessage && !data.hasDonation) {
-						return false;
-					}
-				}
-			}
-			// curl "https://tenor.googleapis.com/v2/search?q=excited&key=&client_key=my_test_app&limit=8"
-		} else if (settings.tenorKey && settings.tenorKey.textsetting && settings.tenor && data.chatmessage && data.chatmessage.indexOf("!tenor") != -1 && !data.contentimg) {
-			let searchGif = data.chatmessage;
-			searchGif = searchGif.replaceAll("!tenor", "").trim();
-			if (searchGif) {
-				let order = 1;
-				if (settings.randomgif) {
-					order = parseInt(Math.random() * 15) + 1;
-				}
-				const gurl = await fetch("https://tenor.googleapis.com/v2/search?contentfilter=high&media_filter=tinygif,tinywebp_transparent&q=" + encodeURIComponent(searchGif) + "&key=" + settings.tenorKey.textsetting + "&limit=" + order)
-					.then(response => response.json())
-					.then(response => {
-						try {
-							if (response.results.length < order - 1) {
-								order = response.results.length;
-							}
-							if (response.results[order - 1].media_formats.tinywebp_transparent) {
-								return response.results[order - 1].media_formats.tinywebp_transparent.url;
-							} else if (response.results[order - 1].media_formats.tinygif) {
-								return response.results[order - 1].media_formats.tinygif.url;
-							} else {
-								return false;
-							}
-						} catch (e) {
-							console.error(e);
-							return false;
-						}
-					});
-				if (gurl) {
-					data.contentimg = gurl;
-					if (settings.hidegiphytrigger) {
-						data.chatmessage = "";
-					}
-				} else if (!data.hasDonation && !data.contentimg) {
-					return false;
-				}
-			}
-		} else if (settings.tenorKey && settings.tenorKey.textsetting && settings.giphy2 && data.chatmessage && data.chatmessage.indexOf("##") != -1 && !data.contentimg) {
-			const xx = data.chatmessage.split(" ");
-			for (let tagIndex = 0; tagIndex < xx.length; tagIndex++) {
-				let word = xx[tagIndex];
-				if (!word.startsWith("##")) {
-					continue;
-				}
-				word = word.trim();
-				search_word = word.replace(/[-_]/g, " ");
-				search_word = search_word.replace(/[^\w\s]/g, "");
-
-				if (word) {
-					let order = 1; // Start from 1
-					if (tagIndex + 1 < xx.length) {
-						order = parseInt(xx[tagIndex + 1]) || 1;
-					}
-
-					if (settings.hidegiphytrigger) {
-						let re = new RegExp(word + " " + order, "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						re = new RegExp(word + " ", "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						re = new RegExp(word, "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						data.chatmessage = data.chatmessage.trim();
-					}
-					let skip = false;
-					if (tagIndex + 1 < xx.length) {
-						if (xx[tagIndex + 1] == order) {
-							skip = true;
-						}
-					}
-					if (!skip && settings.randomgif) {
-						order = parseInt(Math.random() * 8) + 1; // Adjust for 1-based indexing and 8 stickers randomization, because less actual amount
-					}
-					if (order > 40) {
-						order = 40;
-					}
-					const gurl = await fetch("https://tenor.googleapis.com/v2/search?contentfilter=high&searchfilter=sticker&media_filter=tinygif,tinywebp_transparent&q=" + encodeURIComponent(search_word) + "&key=" + settings.tenorKey.textsetting + "&limit=" + order)
-						.then(response => response.json())
-						.then(response => {
-							try {
-								if (response.results.length < order - 1) {
-									order = response.results.length;
-								}
-								if (response.results[order - 1].media_formats.tinywebp_transparent) {
-									return response.results[order - 1].media_formats.tinywebp_transparent.url;
-								} else if (response.results[order - 1].media_formats.tinygif) {
-									return response.results[order - 1].media_formats.tinygif.url;
-								} else {
-									return false;
-								}
-							} catch (e) {
-								console.error(e);
-								return false;
-							}
-						});
-
-					if (gurl) {
-						data.contentimg = gurl;
-						break;
-					}
-
-					if (!data.contentimg && !data.chatmessage && !data.hasDonation) {
-						return false;
-					}
-				}
-			}
-		} else if (settings.tenorKey && settings.tenorKey.textsetting && settings.giphy2 && data.chatmessage && data.chatmessage.indexOf("#") != -1 && !data.contentimg) {
-			const xx = data.chatmessage.split(" ");
-			for (let tagIndex = 0; tagIndex < xx.length; tagIndex++) {
-				let word = xx[tagIndex];
-				if (!word.startsWith("#")) {
-					continue;
-				}
-				word = word.trim();
-				search_word = word.replace(/[-_]/g, " ");
-				search_word = search_word.replace(/[^\w\s]/g, "");
-
-				if (word) {
-					let order = 1; // Start from 1
-					if (tagIndex + 1 < xx.length) {
-						order = parseInt(xx[tagIndex + 1]) || 1;
-					}
-
-					if (settings.hidegiphytrigger) {
-						let re = new RegExp(word + " " + order, "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						re = new RegExp(word + " ", "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						re = new RegExp(word, "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						data.chatmessage = data.chatmessage.trim();
-					}
-					let skip = false;
-					if (tagIndex + 1 < xx.length) {
-						if (xx[tagIndex + 1] == order) {
-							skip = true;
-						}
-					}
-					if (!skip && settings.randomgif) {
-						order = parseInt(Math.random() * 15) + 1; // Adjust for 1-based indexing
-					}
-					if (order > 40) {
-						order = 40;
-					}
-					const gurl = await fetch("https://tenor.googleapis.com/v2/search?contentfilter=high&media_filter=tinygif,tinywebp_transparent&q=" + encodeURIComponent(search_word) + "&key=" + settings.tenorKey.textsetting + "&limit=" + order)
-						.then(response => response.json())
-						.then(response => {
-							try {
-								if (response.results.length < order - 1) {
-									order = response.results.length;
-								}
-								if (response.results[order - 1].media_formats.tinywebp_transparent) {
-									return response.results[order - 1].media_formats.tinywebp_transparent.url;
-								} else if (response.results[order - 1].media_formats.tinygif) {
-									return response.results[order - 1].media_formats.tinygif.url;
-								} else {
-									return false;
-								}
-							} catch (e) {
-								console.error(e);
-								return false;
-							}
-						});
-
-					if (gurl) {
-						data.contentimg = gurl;
-						break;
-					}
-
-					if (!data.contentimg && !data.chatmessage && !data.hasDonation) {
-						return false;
-					}
-				}
-			}
-		}
+		await applyGiphyToMessage(data, settings);
 	} catch (e) {
 		console.error(e);
 	}
@@ -20238,6 +20132,7 @@ let tmp = new EventFlowSystem({
 	messageStore: messageStore || {}, // Share the message store for duplicate detection
 	handleMessageStore: handleMessageStore || null, // Share the message store handler
 	sendTargetP2P: window.sendTargetP2P || null, // Add sendTargetP2P for OBS and other actions
+	printThermal: printThermal,
 	// Handle Spotify actions locally since we're already in background.js
 	sendMessageToBackground: async msg => {
 		if (!msg || typeof msg !== "object") return;
@@ -20273,3 +20168,44 @@ window.addEventListener("beforeunload", async function () {
 window.addEventListener("unload", async function () {
 	document.title = "Close me - Social Stream Ninja";
 });
+
+// Tenor search was retired June 2026. Saved !tenor toggles remain GIPHY aliases;
+// API keys are provider-specific and must never be reused across providers.
+async function applyGiphyToMessage(data, gifSettings) {
+    const key = gifSettings.giphyKey && gifSettings.giphyKey.textsetting;
+    if (!key || !data.chatmessage || data.contentimg) return;
+    const message = data.textContent || data.chatmessage;
+    let query = "", endpoint = "gifs", trigger = "", offset = 0, command = false;
+    const commandMatch = message.match(/(?:^|\s)(!(giphy|tenor))\s+(.+)/i);
+    if (commandMatch && ((commandMatch[2].toLowerCase() === "giphy" && gifSettings.giphy) ||
+        (commandMatch[2].toLowerCase() === "tenor" && gifSettings.tenor))) {
+        query = commandMatch[3].trim();
+        command = true;
+    } else if (gifSettings.giphy2) {
+        const tag = message.match(/(?:^|\s)(#{1,2}[^\s#]+)(?:\s+(\d+)(?=\s|$))?/);
+        if (tag) {
+            endpoint = tag[1].indexOf("##") === 0 ? "stickers" : "gifs";
+            query = tag[1].replace(/^#+/, "").replace(/[-_]/g, " ").trim();
+            trigger = tag[1] + (tag[2] !== undefined ? " " + tag[2] : "");
+            offset = Math.min(4999, parseInt(tag[2], 10) || 0);
+        }
+    }
+    if (!query) return;
+    if (gifSettings.randomgif) offset = Math.floor(Math.random() * 10);
+    try {
+        const response = await fetch("https://api.giphy.com/v1/" + endpoint + "/search?q=" +
+            encodeURIComponent(query) + "&api_key=" + encodeURIComponent(key) + "&limit=1&rating=g&offset=" + offset);
+        if (!response.ok) return;
+        const result = await response.json();
+        const item = result && result.data && result.data[0];
+        const images = item && item.images;
+        const image = images && (images.downsized_large || images.fixed_height || images.original);
+        if (!image || !/^https:\/\//i.test(image.url || "")) return;
+        data.contentimg = image.url;
+        if (gifSettings.hidegiphytrigger) {
+            data.chatmessage = command ? "" : data.chatmessage.replace(trigger, "").trim();
+        }
+    } catch (e) {
+        // Network failures and rate limits must not discard the original chat message.
+    }
+}

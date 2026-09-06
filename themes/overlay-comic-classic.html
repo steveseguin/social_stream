@@ -528,7 +528,7 @@ body, html {
 		}
 
 		// Skip meta-only messages (follower/viewer data without actual content)
-		if (!data.chatname && data.meta) {
+		if (!data.chatname && data.meta && !data.chatmessage && !data.contentimg && !data.hasDonation && !data.donation) {
 			return;
 		}
 		

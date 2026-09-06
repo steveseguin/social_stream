@@ -7,12 +7,26 @@ const source = fs.readFileSync(
 	path.resolve(__dirname, "..", "sources", "websocket", "kick.js"),
 	"utf8"
 );
+const coreSource = fs.readFileSync(
+	path.resolve(__dirname, "..", "providers", "kick", "core.js"),
+	"utf8"
+);
 
 function findImage(result, className) {
 	return result.images.find((image) => image.classes.includes(className));
 }
 
 (async () => {
+	const kickCore = await import(`data:text/javascript;base64,${Buffer.from(coreSource).toString("base64")}`);
+	assert.deepStrictEqual(kickCore.mapBadges([
+		{ type: "moderator", text: "Moderator" },
+		{ name: "level", image_url: "https://ext.cdn.kick.com/chat/badges/16.png", selected: true },
+		{ name: "level", image_url: "https://ext.cdn.kick.com/chat/badges/22.png", selected: false }
+	]), [
+		{ type: "text", text: "Moderator" },
+		"https://ext.cdn.kick.com/chat/badges/16.png"
+	]);
+
 	const browser = await chromium.launch({ headless: true });
 	try {
 		const page = await browser.newPage();
@@ -88,6 +102,9 @@ function findImage(result, className) {
 							pushMessage = originalPushMessage;
 						}
 						return messages;
+					},
+					collectBadges: function (source) {
+						return collectBadgesFromSources(source);
 					}
 				};
 			`
@@ -222,6 +239,28 @@ function findImage(result, className) {
 			"channel.15462911",
 			"channel_15462911",
 		]);
+
+		const badgePayload = {
+			identity: {
+				badges: [
+					{ type: "moderator", text: "Moderator" },
+					{ type: "subscriber", text: "Subscriber", count: 3 }
+				],
+				badges_v2: [
+					{ name: "level", image_url: "https://ext.cdn.kick.com/chat/badges/16.png", selected: true },
+					{ name: "level", image_url: "https://ext.cdn.kick.com/chat/badges/22.png", selected: false }
+				]
+			}
+		};
+		const collectedBadges = await page.evaluate(
+			(payload) => window.__kickAssetTest.collectBadges(payload),
+			badgePayload
+		);
+		assert.deepStrictEqual(collectedBadges, [
+			{ type: "text", text: "Moderator" },
+			{ type: "text", text: "Subscriber" },
+			"https://ext.cdn.kick.com/chat/badges/16.png"
+		], "legacy badges and the selected v2 badge must be merged");
 
 		const kicksGift = {
 			// Captured basic KICK Gift shape; these can omit gift_transaction_id.

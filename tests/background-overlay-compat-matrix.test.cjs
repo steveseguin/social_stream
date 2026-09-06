@@ -127,6 +127,7 @@ function simulateBackgroundDelivery(build, payload, options) {
 		getSettingFlag(setting) {
 			return setting === "server2additivedelivery" && !!options.additive;
 		},
+		getOverlayDisplayPayload(data) { return data; },
 		markP2PFailure() {},
 		console: {
 			error() {},
@@ -135,8 +136,13 @@ function simulateBackgroundDelivery(build, payload, options) {
 		}
 	};
 	vm.createContext(sandbox);
+	// Newer builds route Stream Deck peers separately; load the real helper
+	// while keeping older historical fixtures unchanged.
+	const streamDeckHelper = build.source.includes("function sendDataToStreamDeckPeersP2P(")
+		? extractFunction(build.source, "sendDataToStreamDeckPeersP2P")
+		: "";
 	vm.runInContext(
-		`${build.sendDataP2PSource}\nthis.__sendDataP2P = sendDataP2P;`,
+		`${streamDeckHelper}\n${build.sendDataP2PSource}\nthis.__sendDataP2P = sendDataP2P;`,
 		sandbox,
 		{ filename: `background-${build.label}-sendDataP2P.js` }
 	);

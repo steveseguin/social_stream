@@ -1,7 +1,6 @@
 (function () {
 	const HOST = "https://vpzone.tv";
 	const SOURCE_NAME = "VPZone";
-	const SOURCE_IMG = "./sources/images/vpzone.png";
 	const CONFIG_KEY = "vpzoneWsConfig";
 	const TOKEN_KEY = "vpzoneWsTokens";
 	const OAUTH_KEY = "vpzoneOAuthState";
@@ -58,7 +57,12 @@
 		seenOrder: [],
 		avatarCache: new Map(),
 		avatarPending: new Map(),
-		avatarNegativeUntil: new Map()
+		avatarNegativeUntil: new Map(),
+		sourceName: SOURCE_NAME,
+		sourceImg: "",
+		sourceBrandChannel: "",
+		sourceBrandLoaded: false,
+		sourceBrandPromise: null
 	};
 	const wsProxy = {
 		readyState: READY_STATE.CLOSED,
@@ -1128,13 +1132,35 @@
 		return true;
 	}
 
-	function renderMessage(text) {
+	function safeEmoteUrl(value) {
+		if (typeof value !== "string" || !value.trim()) return "";
+		try {
+			var url = new URL(value, HOST);
+			return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
+		} catch (e) {
+			return "";
+		}
+	}
+
+	function eventEmoteMap(ev) {
+		var meta = ev && ev.metadata && typeof ev.metadata === "object" ? ev.metadata : {};
+		return (ev && (ev.emoteMap || ev.emote_map)) || meta.emoteMap || meta.emote_map || {};
+	}
+
+	function renderMessage(text, emoteMap) {
 		text = String(text == null ? "" : text);
-		return state.settings && state.settings.textonlymode ? text : esc(text).replace(/\n/g, "<br>");
+		if (state.settings && state.settings.textonlymode) return text;
+		if (!emoteMap || typeof emoteMap !== "object") return esc(text).replace(/\n/g, "<br>");
+		return text.split(/(\s+)/).map(function (token) {
+			var emoteUrl = safeEmoteUrl(emoteMap[token]);
+			if (!emoteUrl) return esc(token);
+			var label = token.replace(/^:|:$/g, "");
+			return '<img src="' + esc(emoteUrl) + '" alt="' + esc(label) + '" title="' + esc(label) + '" class="regular-emote vpzone-emote"/>';
+		}).join("").replace(/\n/g, "<br>");
 	}
 
 	function basePayload() {
-		return { chatbadges: [], backgroundColor: "", textColor: "", chatimg: "", hasDonation: "", membership: "", contentimg: "", textonly: !!(state.settings && state.settings.textonlymode), type: "vpzone", sourceName: SOURCE_NAME, sourceImg: SOURCE_IMG };
+		return { chatbadges: [], backgroundColor: "", textColor: "", chatimg: "", hasDonation: "", membership: "", contentimg: "", textonly: !!(state.settings && state.settings.textonlymode), type: "vpzone", sourceName: state.sourceName, sourceImg: state.sourceImg };
 	}
 
 	// VPZONE chat frames don't carry an avatar URL — fetch from the public
@@ -1168,6 +1194,45 @@
 			});
 		state.avatarPending.set(key, promise);
 		return promise;
+	}
+
+	function refreshSourceBranding(channel) {
+		channel = normalizeChannel(channel || state.currentChannel || state.cfg.channel);
+		if (!channel) {
+			state.sourceName = SOURCE_NAME;
+			state.sourceImg = "";
+			state.sourceBrandChannel = "";
+			state.sourceBrandLoaded = true;
+			state.sourceBrandPromise = null;
+			return Promise.resolve({ sourceName: state.sourceName, sourceImg: state.sourceImg });
+		}
+		if (state.sourceBrandChannel === channel && state.sourceBrandPromise) return state.sourceBrandPromise;
+		if (state.sourceBrandChannel === channel && state.sourceBrandLoaded) {
+			return Promise.resolve({ sourceName: state.sourceName, sourceImg: state.sourceImg });
+		}
+
+		state.sourceBrandChannel = channel;
+		state.sourceBrandLoaded = false;
+		state.sourceName = channel;
+		state.sourceImg = "";
+		state.sourceBrandPromise = fetchJson(HOST + "/api/chat/profile-card/" + encodeURIComponent(channel))
+			.then(function (profile) {
+				if (state.sourceBrandChannel !== channel) return { sourceName: state.sourceName, sourceImg: state.sourceImg };
+				state.sourceName = profile && profile.display_name ? String(profile.display_name) : channel;
+				state.sourceImg = profile && profile.avatar_url ? absUrl(String(profile.avatar_url)) : "";
+				return { sourceName: state.sourceName, sourceImg: state.sourceImg };
+			})
+			.catch(function () {
+				return { sourceName: state.sourceName, sourceImg: state.sourceImg };
+			})
+			.then(function (branding) {
+				if (state.sourceBrandChannel === channel) {
+					state.sourceBrandLoaded = true;
+					state.sourceBrandPromise = null;
+				}
+				return branding;
+			});
+		return state.sourceBrandPromise;
 	}
 
 	function eventTime(ev) {
@@ -1266,7 +1331,7 @@
 		if (messageId) data.id = messageId;
 		data.chatname = esc(rawName);
 		data.username = ev.actorUsername || ev.username || "";
-		data.chatmessage = renderMessage(ev.message || ev.text || ev.body || ev.content || "");
+		data.chatmessage = renderMessage(ev.message || ev.text || ev.body || ev.content || "", eventEmoteMap(ev));
 		data.chatimg = absUrl(ev.actorAvatarUrl || ev.avatarUrl || ev.actorAvatar || ev.avatar_url || ev.profileImage || "");
 		data.contentimg = absUrl(ev.contentimg || ev.contentImage || ev.imageUrl || "");
 		data.chatbadges = buildBadges(ev);
@@ -1317,7 +1382,7 @@
 		data.event = mapped;
 		data.chatname = esc(rawName);
 		data.username = ev.actorUsername || ev.username || "";
-		data.chatmessage = renderMessage(ev.body || ev.message || ev.text || mapped);
+		data.chatmessage = renderMessage(ev.body || ev.message || ev.text || mapped, eventEmoteMap(ev));
 		data.chatimg = absUrl(ev.actorAvatarUrl || ev.avatarUrl || ev.actorAvatar || ev.avatar_url || ev.profileImage || "");
 		data.chatbadges = buildBadges(ev);
 		data.membership = ev.metadata && ev.metadata.actorRank ? nice(ev.metadata.actorRank) : (isSubscriber ? "Subscriber" : "");
@@ -1344,7 +1409,7 @@
 		if (mapped === "shoutout") {
 			var target = ev.metadata && ev.metadata.target_user ? String(ev.metadata.target_user) : "";
 			if (target) {
-				data.chatmessage = renderMessage("gave a shoutout to @" + target);
+				data.chatmessage = renderMessage("gave a shoutout to @" + target, eventEmoteMap(ev));
 				data.meta.targetUser = target;
 			}
 		}
@@ -1385,7 +1450,11 @@
 		chip(els.lastEventChip, "Last event: Presence", count > 0 ? "good" : "");
 		if (state.lastViewerCount === count) return;
 		state.lastViewerCount = count;
-		if (state.settings.showviewercount || state.settings.hypemode) pushMessage({ type: "vpzone", event: "viewer_update", meta: count, sourceName: SOURCE_NAME, sourceImg: SOURCE_IMG });
+		if (state.settings.showviewercount || state.settings.hypemode) {
+			refreshSourceBranding().then(function () {
+				pushMessage({ type: "vpzone", event: "viewer_update", meta: count, sourceName: state.sourceName, sourceImg: state.sourceImg });
+			});
+		}
 	}
 
 	// System frames whose body is just an announcement (e.g. join messages from
@@ -1482,7 +1551,8 @@
 		var actor = ev.actorUsername || ev.username || "";
 		var hasCarriedAvatar = !!(ev.actorAvatarUrl || ev.avatarUrl || ev.actorAvatar || ev.avatar_url || ev.profileImage);
 		var enrich = hasCarriedAvatar ? Promise.resolve("") : fetchAvatar(actor);
-		enrich.then(function (avatarUrl) {
+		Promise.all([enrich, refreshSourceBranding()]).then(function (results) {
+			var avatarUrl = results[0];
 			if (avatarUrl && !hasCarriedAvatar) ev.avatarUrl = avatarUrl;
 			var data;
 			if (mapped === "pixels_cheer") data = buildPixelsCheer(ev);
@@ -1653,6 +1723,7 @@
 		state.active = true;
 		state.manualDisconnect = false;
 		state.currentChannel = state.cfg.channel;
+		refreshSourceBranding(state.currentChannel);
 		state.lastViewerCount = null;
 		state.seenIds.clear();
 		state.seenOrder = [];

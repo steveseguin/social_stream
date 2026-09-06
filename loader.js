@@ -22,8 +22,7 @@ async function loadScriptsInOrder() {
         './actions/EventFlowEditor.js?v=1',
 		'./actions/interface.js',
 		'./dashboard.js',
-		'./thirdparty/xss.min.js?v=1',
-        './libs/objects.js?v=1',
+        './libs/objects.js?v=2',
         './libs/colours.js?v=1',
         './spotify.js?v=1',
         './js/streamdeck-remote-control.js?v=3',
@@ -31,7 +30,10 @@ async function loadScriptsInOrder() {
         './db.js?v=2',
         './ai.js?v=2',
         './points.js?v=1',
-        './pointsactions.js?v=1'
+        './pointsactions.js?v=1',
+        './shared/stickers/catalog.js',
+        './shared/stickers/rewards.js',
+        './shared/stickers/background.js'
 
     ];
 

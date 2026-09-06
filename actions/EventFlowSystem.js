@@ -13,6 +13,7 @@ class EventFlowSystem {
         this.sanitizeRelay = options.sanitizeRelay || window.sanitizeRelay || null;
 		this.checkExactDuplicateAlreadyRelayed = options.checkExactDuplicateAlreadyRelayed || window.checkExactDuplicateAlreadyRelayed || null;
 		this.sendTargetP2P = options.sendTargetP2P || window.sendTargetP2P || null;
+		this.printThermal = options.printThermal || window.printThermal || null;
 		// For sending messages to background.js (e.g., Spotify actions)
 		this.sendMessageToBackground = options.sendMessageToBackground || ((msg) => {
 			if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
@@ -408,7 +409,7 @@ class EventFlowSystem {
                 if (!hasActiveInput) return false;
 
                 // Get probability from config (0-100), default to 50%
-                const probability = (nodeConfig && nodeConfig.probability) || 50;
+                const probability = (nodeConfig && nodeConfig.probability) ?? 50;
                 const roll = Math.random() * 100;
 
                 // Pass the input through if roll succeeds, otherwise block it
@@ -967,7 +968,9 @@ class EventFlowSystem {
         }
         
         // Initialize state if it doesn't exist
-        if (!this.nodeStates.has(nodeId)) {
+        const stateStore = stateType === 'SEMAPHORE' ? this.semaphoreStates
+            : stateType === 'THROTTLE' ? this.throttleStates : this.nodeStates;
+        if (!stateStore.has(nodeId)) {
             this.initializeStateNode(nodeId, stateType, config);
         }
 
@@ -991,7 +994,7 @@ class EventFlowSystem {
                 break;
                 
             case 'QUEUE':
-                result = this.evaluateQueueNode(nodeId, config, message, inputActive);
+                result = this.evaluateQueueNode(nodeId, config, message, inputActive, flow);
                 break;
                 
             case 'SEMAPHORE':
@@ -1023,6 +1026,7 @@ class EventFlowSystem {
     
     // Initialize state for a state node
     initializeStateNode(nodeId, stateType, config) {
+        this.clearStateNode(nodeId);
         switch (stateType) {
             case 'GATE':
                 this.nodeStates.set(nodeId, { 
@@ -1108,7 +1112,7 @@ class EventFlowSystem {
     }
     
     // Queue node: FIFO message queue with overflow strategies
-    evaluateQueueNode(nodeId, config, message, inputActive) {
+    evaluateQueueNode(nodeId, config, message, inputActive, flow = null) {
         if (!inputActive) return { active: false, passMessage: false };
         
         const queue = this.messageQueues.get(nodeId) || [];
@@ -1124,94 +1128,110 @@ class EventFlowSystem {
                         queue.shift(); // Remove oldest
                         break;
                     case 'DROP_NEWEST':
-                        return false; // Don't add new message
+                        return { active: false, passMessage: false };
                     case 'DROP_RANDOM':
                         const randomIndex = Math.floor(Math.random() * queue.length);
                         queue.splice(randomIndex, 1);
                         break;
                     default:
-                        return false; // Block by default
+                        return { active: false, passMessage: false };
                 }
             }
             
             // Add message with timestamp
             queue.push({
-                message: message,
+                message: { ...message },
                 timestamp: Date.now()
             });
             this.messageQueues.set(nodeId, queue);
         }
         
-        // Check if we should dequeue
-        if (config.autoDequeue && !state.processing) {
-            const now = Date.now();
-            const timeSinceLastProcess = now - state.lastProcessTime;
-            
-            if (timeSinceLastProcess >= config.processingDelayMs && queue.length > 0) {
-                // Check TTL and remove expired messages
-                const filteredQueue = queue.filter(item => {
-                    return (now - item.timestamp) < config.ttlMs;
-                });
-                this.messageQueues.set(nodeId, filteredQueue);
-                
-                if (filteredQueue.length > 0) {
-                    // Dequeue next message
-                    const item = filteredQueue.shift();
-                    state.processing = true;
-                    state.lastProcessTime = now;
-                    
-                    // Reset processing flag after delay
-                    setTimeout(() => {
-                        state.processing = false;
-                    }, config.processingDelayMs);
-                    
-                    // Return the dequeued message (async - doesn't return original)
-                    return { active: true, passMessage: false, modifiedMessage: item.message };
+        if (config.autoDequeue && !state.processing && !this.stateTimers.has(nodeId)
+            && Date.now() - state.lastProcessTime >= (Number(config.processingDelayMs) || 0)) {
+            const item = this.takeQueueMessage(nodeId, config);
+            if (item) {
+                state.lastProcessTime = Date.now();
+                this.scheduleQueueDrain(nodeId, config, flow, state);
+                return { active: true, passMessage: true, modifiedMessage: item.message };
+            }
+        }
+        this.scheduleQueueDrain(nodeId, config, flow, state);
+        return { active: false, passMessage: false };
+    }
+
+    takeQueueMessage(nodeId, config) {
+        const queue = this.messageQueues.get(nodeId) || [];
+        const ttl = Number(config.ttlMs);
+        while (queue.length) {
+            const item = queue.shift();
+            if (!(ttl > 0) || Date.now() - item.timestamp < ttl) return item;
+        }
+        return null;
+    }
+
+    // Resume only this queue's downstream branch; never replay the original triggers.
+    scheduleQueueDrain(nodeId, config, flow, state) {
+        if (!flow || !config.autoDequeue || state.processing || this.stateTimers.has(nodeId)
+            || !this.messageQueues.get(nodeId)?.length) return;
+        const delay = Math.max(0, (Number(config.processingDelayMs) || 0) - (Date.now() - state.lastProcessTime));
+        const timer = setTimeout(async () => {
+            this.stateTimers.delete(nodeId);
+            if (this.nodeStates.get(nodeId) !== state) return;
+            const currentFlow = this.flows.find(candidate => candidate.id === flow.id) || flow;
+            const node = currentFlow.nodes?.find(candidate => candidate.id === nodeId && candidate.stateType === 'QUEUE');
+            if (currentFlow.active === false || !node || !node.config?.autoDequeue) {
+                this.clearStateNode(nodeId);
+                return;
+            }
+            const item = this.takeQueueMessage(nodeId, node.config);
+            if (!item) return;
+            state.processing = true;
+            state.lastProcessTime = Date.now();
+            try {
+                await this.evaluateFlow(currentFlow, item.message, nodeId);
+            } catch (error) {
+                console.warn('[EventFlow] Queued message failed:', error);
+            } finally {
+                state.processing = false;
+                if (this.nodeStates.get(nodeId) === state) this.scheduleQueueDrain(nodeId, node.config, currentFlow, state);
+            }
+        }, delay);
+        this.stateTimers.set(nodeId, timer);
+    }
+
+    clearStateNode(nodeId) {
+        clearTimeout(this.stateTimers.get(nodeId));
+        this.stateTimers.delete(nodeId);
+        for (const timer of this.semaphoreStates.get(nodeId)?.activeOperations || []) clearTimeout(timer);
+        this.nodeStates.delete(nodeId);
+        this.messageQueues.delete(nodeId);
+        this.semaphoreStates.delete(nodeId);
+        this.throttleStates.delete(nodeId);
+    }
+
+    reconcileFlowState(nextFlows) {
+        for (const flow of this.flows) {
+            const next = nextFlows.find(candidate => candidate.id === flow.id);
+            if (!next) {
+                this.cleanupStateNodes(flow.id);
+                continue;
+            }
+            if (next.active === false) this.cancelFlowExecutions(flow.id);
+            for (const node of flow.nodes || []) {
+                const replacement = next.nodes?.find(candidate => candidate.id === node.id);
+                if (!replacement || replacement.stateType !== node.stateType
+                    || (node.stateType === 'QUEUE' && (next.active === false || !replacement.config?.autoDequeue))) {
+                    this.clearStateNode(node.id);
                 }
             }
         }
-        
-        // Message queued but not released yet
-        return { active: false, passMessage: false };
     }
-    
-    // Cleanup state nodes when flow is deactivated
+
+    // Clean up using the flow's actual node IDs, which need not contain the flow ID.
     cleanupStateNodes(flowId) {
-        // Clear all timers for this flow's nodes
-        this.stateTimers.forEach((timer, nodeId) => {
-            if (nodeId.startsWith(flowId)) {
-                clearTimeout(timer);
-                this.stateTimers.delete(nodeId);
-            }
-        });
-        
-        // Clear state storage
-        this.nodeStates.forEach((state, nodeId) => {
-            if (nodeId.startsWith(flowId)) {
-                this.nodeStates.delete(nodeId);
-            }
-        });
-        
-        // Clear message queues
-        this.messageQueues.forEach((queue, nodeId) => {
-            if (nodeId.startsWith(flowId)) {
-                this.messageQueues.delete(nodeId);
-            }
-        });
-        
-        // Clear semaphore states
-        this.semaphoreStates.forEach((state, nodeId) => {
-            if (nodeId.startsWith(flowId)) {
-                this.semaphoreStates.delete(nodeId);
-            }
-        });
-        
-        // Clear throttle states
-        this.throttleStates.forEach((state, nodeId) => {
-            if (nodeId.startsWith(flowId)) {
-                this.throttleStates.delete(nodeId);
-            }
-        });
+        this.cancelFlowExecutions(flowId);
+        const flow = this.flows.find(candidate => candidate.id === flowId);
+        for (const node of flow?.nodes || []) this.clearStateNode(node.id);
 
         const memoryPrefix = `${flowId || 'draft'}::`;
         this.userMemoryStates.forEach((state, stateId) => {
@@ -1242,11 +1262,13 @@ class EventFlowSystem {
             
             // Auto-release after timeout
             if (config.timeoutMs > 0) {
-                setTimeout(() => {
+                const timer = setTimeout(() => {
+                    state.activeOperations = state.activeOperations.filter(active => active !== timer);
                     if (state.currentCount > 0) {
                         state.currentCount--;
                     }
                 }, config.timeoutMs);
+                state.activeOperations.push(timer);
             }
             
             // Allow message through
@@ -1266,9 +1288,11 @@ class EventFlowSystem {
             
             // Auto-reset after timeout
             if (config.autoResetMs > 0) {
-                setTimeout(() => {
+                const timer = setTimeout(() => {
+                    this.stateTimers.delete(nodeId);
                     state.triggered = false;
                 }, config.autoResetMs);
+                this.stateTimers.set(nodeId, timer);
             }
             
             // First trigger - pass message through
@@ -1285,9 +1309,11 @@ class EventFlowSystem {
         const state = this.throttleStates.get(nodeId);
         const now = Date.now();
         
-        // Remove timestamps older than 1 second
+        // Fractional rates need a longer window (0.1/sec = one every 10 seconds).
+        const windowMs = config.messagesPerSecond > 0 && config.messagesPerSecond < 1
+            ? 1000 / config.messagesPerSecond : 1000;
         state.messageTimestamps = state.messageTimestamps.filter(
-            timestamp => now - timestamp < 1000
+            timestamp => now - timestamp < windowMs
         );
         
         if (state.messageTimestamps.length < config.messagesPerSecond) {
@@ -1390,10 +1416,7 @@ class EventFlowSystem {
         });
     }
     
-    async duplicateFlow(flowId) {
-        const flow = await this.getFlowById(flowId);
-        if (!flow) return null;
-
+    cloneFlowWithFreshNodeIds(flow) {
         const newFlow = JSON.parse(JSON.stringify(flow));
         const idMap = new Map();
         const usedNodeIds = new Set();
@@ -1431,6 +1454,14 @@ class EventFlowSystem {
         });
 
         newFlow.id = null;
+        return newFlow;
+    }
+
+    async duplicateFlow(flowId) {
+        const flow = await this.getFlowById(flowId);
+        if (!flow) return null;
+
+        const newFlow = this.cloneFlowWithFreshNodeIds(flow);
         newFlow.name = `${flow.name} (Copy)`;
         
         return this.saveFlow(newFlow);
@@ -1445,8 +1476,9 @@ class EventFlowSystem {
     
     async importFlow(flowData) {
         try {
-            const flow = typeof flowData === 'string' ? JSON.parse(flowData) : flowData;
-            flow.id = null; // Force new ID on import
+            const flow = this.cloneFlowWithFreshNodeIds(
+                typeof flowData === 'string' ? JSON.parse(flowData) : flowData
+            );
             
             return this.saveFlow(flow);
         } catch (e) {
@@ -1516,6 +1548,7 @@ class EventFlowSystem {
 						}
 					});
 					
+					this.reconcileFlowState(flowsFromDB);
 					this.flows = flowsFromDB;
 					
 					// Check if MIDI is required and set up listeners
@@ -1536,7 +1569,8 @@ class EventFlowSystem {
 		const db = await this.ensureDB();
 		
 		if (!flowData.id) {
-			flowData.id = Date.now().toString(); // Generate ID if not present
+			// Imports can save multiple flows in the same millisecond.
+			flowData.id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 		}
 
 		const existingFlowIndex = this.flows.findIndex(f => f.id === flowData.id);
@@ -1564,6 +1598,8 @@ class EventFlowSystem {
 			const request = store.put(flowData); // flowData now includes 'order'
 			
 			request.onsuccess = async () => {
+				this.reconcileFlowState(existingFlowIndex === -1 ? [...this.flows, flowData]
+					: this.flows.map(flow => flow.id === flowData.id ? flowData : flow));
 				if (existingFlowIndex !== -1) {
 					this.flows[existingFlowIndex] = flowData;
 				} else {
@@ -1639,8 +1675,8 @@ class EventFlowSystem {
             const request = store.delete(flowId);
             
             request.onsuccess = () => {
-                this.flows = this.flows.filter(flow => flow.id !== flowId);
                 this.cleanupStateNodes(flowId);
+                this.flows = this.flows.filter(flow => flow.id !== flowId);
                 this.deletePersistentUserMemoriesForFlow(flowId);
                 // Re-order remaining flows
                 this.flows.sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -1793,19 +1829,65 @@ class EventFlowSystem {
         return blocked ? null : processed;
     }
     
-    async evaluateFlow(flow, message) {
+    cancelFlowExecutions(flowId) {
+        const execution = this.flowExecutions && this.flowExecutions.get(flowId);
+        if (!execution) return;
+        execution.cancelled = true;
+        for (const finish of execution.delays) finish();
+        this.flowExecutions.delete(flowId);
+    }
+
+    waitForFlowDelay(delayMs, execution) {
+        if (!execution) return new Promise(resolve => setTimeout(resolve, delayMs));
+        if (execution.cancelled) return Promise.resolve();
+        return new Promise(resolve => {
+            const finish = () => {
+                clearTimeout(timer);
+                execution.delays.delete(finish);
+                resolve();
+            };
+            const timer = setTimeout(finish, delayMs);
+            execution.delays.add(finish);
+        });
+    }
+
+    async evaluateFlow(flow, message, resumeNodeId = null) {
       //console.log(`[EvaluateFlow "${flow.name}"] Starting evaluation with message:`, JSON.stringify(message));
         if (!flow.nodes || !flow.connections) {
           //console.log(`[EvaluateFlow "${flow.name}"] Flow has no nodes or connections.`);
             return { modified: false, message, blocked: false };
         }
 
+        if (!this.flowExecutions) this.flowExecutions = new Map();
+        if (!this.flowExecutions.has(flow.id)) {
+            this.flowExecutions.set(flow.id, { cancelled: false, delays: new Set() });
+        }
+        const execution = this.flowExecutions.get(flow.id);
+        const canContinue = () => !execution.cancelled
+            && (this.flows.find(candidate => candidate.id === flow.id) || flow).active !== false;
         const nodeActivationStates = {}; 
+        if (resumeNodeId) {
+            const downstream = new Set([resumeNodeId]);
+            const pending = [resumeNodeId];
+            while (pending.length) {
+                const id = pending.shift();
+                for (const connection of flow.connections) {
+                    if (connection.from === id && !downstream.has(connection.to)) {
+                        downstream.add(connection.to);
+                        pending.push(connection.to);
+                    }
+                }
+            }
+            for (const node of flow.nodes) {
+                if (!downstream.has(node.id) || node.type === 'trigger') nodeActivationStates[node.id] = false;
+            }
+            nodeActivationStates[resumeNodeId] = true;
+        }
 
         // --- Pass 1: Evaluate all base triggers ---
       //console.log(`[EvaluateFlow "${flow.name}"] Pass 1: Evaluating Triggers`);
         for (const node of flow.nodes) {
-            if (node.type === 'trigger') {
+            if (node.type === 'trigger' && !resumeNodeId) {
               //console.log(`[EvaluateFlow "${flow.name}"] Evaluating Trigger Node ID: ${node.id}, Type: ${node.triggerType}`);
                 nodeActivationStates[node.id] = await this.evaluateTrigger(node, message, flow);
               //console.log(`[EvaluateFlow "${flow.name}"] Trigger Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
@@ -1879,6 +1961,7 @@ class EventFlowSystem {
 
         // Process actions in topological order (following connections)
         const executeActionChain = async (actionId) => {
+            if (!canContinue()) return;
             if (executedActions.has(actionId)) {
                 return; // Already executed this action
             }
@@ -1895,7 +1978,8 @@ class EventFlowSystem {
             
             // Execute this action
             executedActions.add(actionId);
-            const actionResult = await this.executeAction(node, overallResult.message, flow);
+            const actionResult = await this.executeAction(node, overallResult.message, flow, execution);
+            if (!canContinue()) return;
             
             if (actionResult) {
                 // Handle returnNow - mark message for immediate return
@@ -1929,6 +2013,7 @@ class EventFlowSystem {
                             let asyncBlocked = false;
 
                             const executeAsyncChain = async (asyncActionId) => {
+                                if (!canContinue()) return;
                                 if (asyncExecutedActions.has(asyncActionId)) return;
                                 if (asyncBlocked) return; // Stop if blocked
 
@@ -1936,7 +2021,8 @@ class EventFlowSystem {
                                 if (!asyncNode || asyncNode.type !== 'action') return;
 
                                 asyncExecutedActions.add(asyncActionId);
-                                const asyncResult = await this.executeAction(asyncNode, asyncMessage, flow);
+                                const asyncResult = await this.executeAction(asyncNode, asyncMessage, flow, execution);
+                                if (!canContinue()) return;
 
                                 // Handle action results - mirror synchronous behavior
                                 if (asyncResult) {
@@ -2058,7 +2144,7 @@ class EventFlowSystem {
     }
 
     normalizeEventType(eventType) {
-        const normalized = (eventType || '').toLowerCase().trim();
+        const normalized = typeof eventType === 'string' ? eventType.toLowerCase().trim() : '';
         // Backward compatibility alias: legacy Twitch ad event spelling.
         if (normalized === 'adbreak') {
             return 'ad_break';
@@ -2116,6 +2202,15 @@ class EventFlowSystem {
     
     async evaluateTrigger(triggerNode, message, flow = null) {
         const { triggerType, config } = triggerNode;
+        // Boolean activity markers are valid payloads, but are not named events.
+        const messageEvent = message && typeof message.event === 'string' ? message.event.toLowerCase() : '';
+        // Scheduler ticks have no chat payload. Do not match message filters or
+        // advance message counters; preserve explicitly message-free triggers.
+        if (message == null && triggerType !== 'timeInterval' && triggerType !== 'timeOfDay'
+            && triggerType !== 'customJs'
+            && !(triggerType === 'randomChance' && config && config.requireMessage === false)) {
+            return false;
+        }
         // console.log(`[EvaluateTrigger] Node: ${triggerNode.id}, Type: ${triggerType}, Config: ${JSON.stringify(config)}, Message: ${message.chatmessage}`);
         let match = false;
 		
@@ -2282,34 +2377,34 @@ class EventFlowSystem {
 
             // === NEW DEDICATED EVENT TRIGGERS ===
             case 'eventNewFollower': {
-                const eventMatch = (message.event || '').toLowerCase() === 'new_follower';
+                const eventMatch = messageEvent === 'new_follower';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
                 return eventMatch && sourceMatch;
             }
 
             case 'eventNewSubscriber': {
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 const eventMatch = event === 'new_subscriber' || event === 'sponsorship';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
                 return eventMatch && sourceMatch;
             }
 
             case 'eventResub': {
-                const eventMatch = (message.event || '').toLowerCase() === 'resub';
+                const eventMatch = messageEvent === 'resub';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
                 return eventMatch && sourceMatch;
             }
 
             case 'eventGiftSub': {
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 const eventMatch = event === 'subscription_gift' || event === 'giftpurchase';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
                 return eventMatch && sourceMatch;
             }
 
             case 'eventDonation': {
-                const event = (message.event || '').toLowerCase();
-                const eventMatch = event === 'superchat' || event === 'donation' || event === 'cheer' || event === 'supersticker' || event === 'jeweldonation';
+                const event = messageEvent;
+				const eventMatch = !!message.hasDonation || event === 'superchat' || event === 'donation' || event === 'cheer' || event === 'supersticker' || event === 'jeweldonation';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
 
                 // Check minimum amount if specified
@@ -2323,26 +2418,28 @@ class EventFlowSystem {
             }
 
             case 'eventRaid': {
-                const eventMatch = (message.event || '').toLowerCase() === 'raid';
+                const eventMatch = messageEvent === 'raid';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
 
                 // Check minimum viewers if specified
                 let viewerMatch = true;
-                if (config.minViewers > 0 && message.meta?.viewers) {
-                    viewerMatch = message.meta.viewers >= config.minViewers;
+                if (config.minViewers > 0) {
+                    const viewers = Number(message.meta?.viewers ?? message.viewers);
+                    viewerMatch = Number.isFinite(viewers) && viewers >= config.minViewers;
                 }
 
                 return eventMatch && sourceMatch && viewerMatch;
             }
 
             case 'eventCheer': {
-                const eventMatch = (message.event || '').toLowerCase() === 'cheer';
+                const eventMatch = messageEvent === 'cheer';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
 
                 // Check minimum bits if specified
                 let bitsMatch = true;
-                if (config.minBits > 0 && message.bits) {
-                    bitsMatch = message.bits >= config.minBits;
+                if (config.minBits > 0) {
+                    const bits = Number(message.meta?.bits ?? message.bits);
+                    bitsMatch = Number.isFinite(bits) && bits >= config.minBits;
                 }
 
                 return eventMatch && sourceMatch && bitsMatch;
@@ -2377,37 +2474,37 @@ class EventFlowSystem {
 
             case 'obsStreamStarted': {
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 return event === 'stream_started';
             }
 
             case 'obsStreamStopped': {
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 return event === 'stream_stopped';
             }
 
             case 'obsRecordingStarted': {
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 return event === 'recording_started' || event === 'obs_recording_started';
             }
 
             case 'obsRecordingStopped': {
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 return event === 'recording_stopped' || event === 'obs_recording_stopped';
             }
 
             case 'obsSceneChanged': {
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 return event === 'scene_changed' || event === 'obs_scene_changed';
             }
 
             case 'obsMediaEnded': {
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 if (event !== 'media_ended' && event !== 'obs_media_ended') return false;
                 const configuredSource = String(config.sourceName || '').trim().toLowerCase();
                 if (!configuredSource) return true;
@@ -2418,7 +2515,7 @@ class EventFlowSystem {
             case 'obsReplaybufferSaved': {
                 // Matches OBS obs-browser's official replay-buffer event casing.
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 return event === 'replay_buffer_saved' || event === 'obs_replay_buffer_saved';
             }
 
@@ -2505,7 +2602,9 @@ class EventFlowSystem {
                 
             case 'timeOfDay':
                 // Trigger at specific times of day
-                if (!config.times || !Array.isArray(config.times)) return false;
+                // Older editor versions saved this comma-separated field as a string.
+                const configuredTimes = Array.isArray(config.times) ? config.times
+                    : typeof config.times === 'string' ? config.times.split(',') : [];
                 
                 const currentTime = new Date();
                 const currentHour = currentTime.getHours();
@@ -2513,20 +2612,21 @@ class EventFlowSystem {
                 const currentTimeString = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
                 
                 // Check if current time matches any configured time
-                match = config.times.some(time => {
+                match = configuredTimes.some(time => {
                     if (typeof time === 'string' && time.includes(':')) {
-                        return time === currentTimeString;
+                        return time.trim() === currentTimeString;
                     }
                     return false;
                 });
                 
                 // Prevent triggering multiple times in the same minute
                 const todNodeState = `timeOfDay_${triggerNode.id}_lastTriggered`;
+                const currentMinuteId = Math.floor(currentTime.getTime() / 60000);
                 if (match) {
-                    if (this[todNodeState] === currentTimeString) {
+                    if (this[todNodeState] === currentMinuteId) {
                         return false; // Already triggered this minute
                     }
-                    this[todNodeState] = currentTimeString;
+                    this[todNodeState] = currentMinuteId;
                 }
                 return match;
                 
@@ -2617,14 +2717,14 @@ class EventFlowSystem {
             
             case 'userPool': {
                 const poolConfig = {
-                    poolName: trigger.config.poolName || 'default',
-                    maxUsers: trigger.config.maxUsers || 10,
-                    requireEntry: trigger.config.requireEntry !== false, // Default true
-                    entryKeyword: trigger.config.entryKeyword || '!enter',
-                    resetOnFull: trigger.config.resetOnFull || false,
-                    resetAfterMs: trigger.config.resetAfterMs || 0,
-                    allowReentry: trigger.config.allowReentry || false,
-                    scope: trigger.config.scope || 'global' // global, perSource
+                    poolName: config.poolName || 'default',
+                    maxUsers: config.maxUsers || 10,
+                    requireEntry: config.requireEntry !== false, // Default true
+                    entryKeyword: config.entryKeyword || '!enter',
+                    resetOnFull: config.resetOnFull || false,
+                    resetAfterMs: config.resetAfterMs || 0,
+                    allowReentry: config.allowReentry || false,
+                    scope: config.scope || 'global' // global, perSource
                 };
                 
                 // Initialize pool storage if needed
@@ -2713,14 +2813,14 @@ class EventFlowSystem {
             
             case 'accumulator': {
                 const accConfig = {
-                    accumulatorName: trigger.config.accumulatorName || 'default',
-                    threshold: trigger.config.threshold || 100,
-                    propertyName: trigger.config.propertyName || 'amount',
-                    operation: trigger.config.operation || 'sum', // sum, avg, max, min
-                    triggerMode: trigger.config.triggerMode || 'gte', // gte, exact, lte
-                    autoReset: trigger.config.autoReset || false,
-                    scope: trigger.config.scope || 'global', // global, perUser, perSource
-                    resetAfterMs: trigger.config.resetAfterMs || 0
+                    accumulatorName: config.accumulatorName || 'default',
+                    threshold: config.threshold || 100,
+                    propertyName: config.propertyName || 'amount',
+                    operation: config.operation || 'sum', // sum, avg, max, min
+                    triggerMode: config.triggerMode || 'gte', // gte, exact, lte
+                    autoReset: config.autoReset || false,
+                    scope: config.scope || 'global', // global, perUser, perSource
+                    resetAfterMs: config.resetAfterMs || 0
                 };
                 
                 // Initialize accumulator storage if needed
@@ -3103,6 +3203,40 @@ class EventFlowSystem {
 		});
 	}
 
+	escapeThermalPrintText(value) {
+		return String(value ?? '')
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#39;');
+	}
+
+	renderThermalPrintText(template, message, weight) {
+		const render = text => this.escapeThermalPrintText(this.replaceTemplateVars(text, message));
+		if (weight !== 'selected') return render(template);
+		// Parse only the host's template. Buyer/item text cannot introduce formatting or HTML.
+		return template.split(/(\*\*[\s\S]+?\*\*)/g).map(part => {
+			if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+				return `<strong>${render(part.slice(2, -2))}</strong>`;
+			}
+			return render(part);
+		}).join('');
+	}
+
+	resolveThermalPrinter() {
+		if (typeof this.printThermal === 'function') return this.printThermal;
+		try {
+			if (typeof window.printThermal === 'function') return window.printThermal;
+		} catch (e) {}
+		try {
+			if (window.ninjafy && typeof window.ninjafy.printThermal === 'function') {
+				return window.ninjafy.printThermal.bind(window.ninjafy);
+			}
+		} catch (e) {}
+		return null;
+	}
+
 	/**
 	 * Render Event Flow variables inside JSON string values for a webhook body.
 	 * Bodies without template variables are returned unchanged.
@@ -3211,7 +3345,7 @@ class EventFlowSystem {
 		return text.trim();
 	}
     
-    async executeAction(actionNode, message, flow = null) {
+    async executeAction(actionNode, message, flow = null, execution = null) {
         const { actionType, config } = actionNode;
         //console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);
         let result = { modified: false, message, blocked: false };
@@ -3563,7 +3697,7 @@ class EventFlowSystem {
                     //console.log('[SEND MESSAGE - Action] Mode: Send to platform:', config.destination);
                 }
                 
-                const timeout = config.timeout || 1000;
+                const timeout = config.timeout ?? 1000;
                 
                 //console.log('[SEND MESSAGE - Action] Calling sendMessageToTabs with:');
                 //console.log('  - message:', sendMsg);
@@ -3641,7 +3775,7 @@ class EventFlowSystem {
                 
                 //console.log('[RELAY DEBUG - Action] Relay message prepared:', relayMessage);
                 
-                const timeout = config.timeout || 1000;
+                const timeout = config.timeout ?? 1000;
                 
                 //console.log('[RELAY DEBUG - Action] Calling sendMessageToTabs with:');
                 //console.log('  - message:', relayMessage);
@@ -3806,7 +3940,7 @@ class EventFlowSystem {
                 }
                 try {
                     const evalFunction = new Function('message', 'result', config.code);
-                    const customResult = evalFunction(message, { ...result });
+                    const customResult = await Promise.resolve(evalFunction(message, { ...result }));
                     
                     if (customResult && typeof customResult === 'object') {
                         result = {
@@ -3818,6 +3952,51 @@ class EventFlowSystem {
                     console.error('Error in custom JS action:', e);
                 }
                 break;
+
+			case 'printThermal': {
+				const printer = this.resolveThermalPrinter();
+				let printResult;
+				if (!printer) {
+					printResult = {
+						success: false,
+						code: 'SSAPP_PRINT_UNAVAILABLE',
+						error: 'Thermal printing requires the Social Stream standalone app.'
+					};
+				} else {
+					const renderedText = this.renderThermalPrintText(config.text || '{username}', message || {}, config.fontWeight);
+					const fontSize = Math.max(6, Math.min(96, Number(config.fontSize) || 18));
+					const lineHeight = Math.max(0.8, Math.min(3, Number(config.lineHeight) || 1.15));
+					const fontWeight = ['normal', 'selected'].includes(config.fontWeight) ? 'normal' : 'bold';
+					const textAlign = ['left', 'center', 'right'].includes(config.textAlign) ? config.textAlign : 'center';
+					const fontFamily = String(config.fontFamily || 'monospace').replace(/[^\w\s,'"-]/g, '') || 'monospace';
+					const html = `<div style="white-space:pre-wrap;font-family:${fontFamily};font-size:${fontSize}pt;font-weight:${fontWeight};line-height:${lineHeight};text-align:${textAlign}">${renderedText}</div>`;
+					const printOptions = {
+						copies: Math.max(1, Math.min(99, Math.floor(Number(config.copies) || 1)))
+					};
+					if (String(config.printerName || '').trim()) printOptions.printerName = String(config.printerName).trim();
+					if (Number(config.labelHeight) > 0) printOptions.height = `${Math.max(20, Math.min(4000, Number(config.labelHeight)))}mm`;
+					try {
+						printResult = await printer(html, printOptions);
+					} catch (error) {
+						printResult = {
+							success: false,
+							code: error?.code || 'SSAPP_PRINT_FAILED',
+							error: error?.message || String(error)
+						};
+					}
+				}
+				if (message?.meta != null && (typeof message.meta !== 'object' || Array.isArray(message.meta))) {
+					// Counter events use numeric meta; printing must not reshape those events.
+					result.thermalPrintResult = printResult;
+				} else {
+					result.message = {
+						...(message || {}),
+						meta: { ...(message?.meta || {}), thermalPrintResult: printResult }
+					};
+					result.modified = true;
+				}
+				break;
+			}
 				
 			case 'playTenorGiphy':
 				if (config.mediaUrl || (config.sourceType === 'local' && config.localAssetId)) {
@@ -3981,7 +4160,7 @@ class EventFlowSystem {
             case 'delay':
                 // Delay the message by specified milliseconds
                 if (config.delayMs && typeof config.delayMs === 'number') {
-                    await new Promise(resolve => setTimeout(resolve, config.delayMs));
+                    await this.waitForFlowDelay(config.delayMs, execution);
                 }
                 break;
             
@@ -4355,13 +4534,14 @@ class EventFlowSystem {
                 
                 const noteOutput = this.getMIDIOutputDevice(config.deviceId);
                 if (noteOutput) {
-                    const velocity = config.velocity || 127;
+                    const velocity = config.velocity ?? 127;
                     const duration = config.duration || 100;
                     const channel = config.channel || 1;
                     
                     try {
-                        noteOutput.playNote(config.note, channel, {
-                            velocity: velocity / 127,
+                        noteOutput.playNote(config.note, {
+                            channels: channel,
+                            attack: velocity / 127,
                             duration: duration
                         });
                         console.log(`[MIDI] Sent note ${config.note} to device ${config.deviceId}`);

@@ -2,7 +2,7 @@
 	"name": "Social Stream Ninja",
 	"description": "Capture live chat from 100+ supported sites and consolidate it into a single dashboard for live production workflows",
 	"manifest_version": 3,
-	"version": "3.50.8",
+	"version": "3.50.9",
 	"homepage_url": "http://socialstream.ninja/",
 	"browser_specific_settings": {
 		"gecko": {
@@ -22,7 +22,7 @@
 	"permissions": ["webNavigation", "notifications", "storage", "debugger", "tabs", "scripting", "activeTab", "tabCapture", "identity"],
 	"web_accessible_resources": [
 		{
-			"resources": ["providers/kick/core.js", "providers/twitch/chatClient.js", "providers/youtube/liveChat.js", "providers/youtube/contextResolver.js", "shared/utils/scriptLoader.js", "shared/utils/html.js", "shared/utils/twitchEmotes.js", "shared/aiPrompt/overlayStore.js", "shared/vendor/socket.io.min.js", "shared/vendor/tmi.js", "shared/vendor/tmi.module.js", "shared/ai/browserModelCatalog.js", "shared/ai/localBrowserLLM.js", "local-browser-model-worker.js", "cohost-local-qwen-worker.js"],
+			"resources": ["providers/kick/core.js", "providers/twitch/chatClient.js", "providers/youtube/liveChat.js", "providers/youtube/contextResolver.js", "shared/utils/scriptLoader.js", "shared/stickers/*", "media/stickers/*", "shared/utils/html.js", "shared/utils/twitchEmotes.js", "shared/aiPrompt/overlayStore.js", "shared/vendor/socket.io.min.js", "shared/vendor/tmi.js", "shared/vendor/tmi.module.js", "shared/ai/browserModelCatalog.js", "shared/ai/localBrowserLLM.js", "local-browser-model-worker.js", "cohost-local-qwen-worker.js"],
 			"matches": ["<all_urls>"]
 		},
 		{
@@ -495,7 +495,7 @@
 			"matches": ["https://*.roll20.net/*", "https://roll20.net/*"]
 		},
 		{
-			"js": ["./sources/websocket/twitch.js"],
+			"js": ["./shared/vendor/pluralmind.iife.js", "./shared/integrations/pluralmind.js", "./sources/websocket/twitch.js"],
 			"matches": ["https://socialstream.ninja/sources/websocket/twitch*", "https://beta.socialstream.ninja/sources/websocket/twitch*", "https://socialstream.ninja/beta/sources/websocket/twitch*", "file:///C:/Users/steve/Code/social_stream/sources/websocket/twitch.html*", "http://localhost:8080/*/twitch.html*", "http://localhost:8181/*/twitch.html*"]
 		},
 		{
@@ -569,7 +569,7 @@
 			"matches": ["https://web.whatsapp.com/"]
 		},
 		{
-			"js": ["./sources/twitch.js"],
+			"js": ["./shared/vendor/pluralmind.iife.js", "./shared/integrations/pluralmind.js", "./sources/twitch.js"],
 			"matches": ["https://*.twitch.tv/popout/*"],
 			"run_at": "document_start"
 		},
@@ -602,6 +602,10 @@
 		{
 			"js": ["./sources/discord.js"],
 			"matches": ["https://discord.com/*", "https://discord.gg/*"]
+		},
+		{
+			"js": ["./sources/discordstreamkit.js"],
+			"matches": ["https://streamkit.discord.com/overlay/chat/*"]
 		},
 		{
 			"js": ["./thirdparty/vdoninja-sdk.js", "./sources/capturevideo.js"],

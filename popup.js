@@ -3320,7 +3320,7 @@ function updateAiOverlayGeneratedLinks(hideLinks, baseURL, streamID, password, v
     cohostElement.raw = cleanURL(cohostUrl);
     if (cohostLink) {
       cohostLink.href = cohostElement.raw;
-      cohostLink.innerText = hideLinks ? "Click to open link" : cohostElement.raw;
+      cohostLink.innerText = hideLinks ? "Click to open link" : getGeneratedLinkDisplayUrl(cohostElement, cohostElement.raw);
     }
   }
 }
@@ -3660,6 +3660,15 @@ function getGeneratedLinkParams(primaryElement, fallbackElement) {
   return "";
 }
 
+function getGeneratedLinkDisplayUrl(element, url) {
+  const value = typeof url === "string" ? url : "";
+  const elementId = element && element.id ? element.id : "";
+  if (elementId === "cohost" || elementId === "cohostlink") {
+    return value.replace(/#cohostauth=[^&\s]*/i, "#private-cohost-access");
+  }
+  return value;
+}
+
 function setGeneratedLink(element, url) {
   if (!element) return;
   element.raw = cleanURL(url);
@@ -3670,12 +3679,12 @@ function setGeneratedLink(element, url) {
     link = element.querySelector("a");
   }
   if (!link) {
-    element.innerHTML = `<a target='_blank' id='${linkId}' href='${element.raw}'>${document.body.classList.contains("hidelinks") ? "Click to open link" : element.raw}</a>`;
+    element.innerHTML = `<a target='_blank' id='${linkId}' href='${element.raw}'>${document.body.classList.contains("hidelinks") ? "Click to open link" : getGeneratedLinkDisplayUrl(element, element.raw)}</a>`;
     return;
   }
 
   link.href = element.raw;
-  link.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : element.raw;
+  link.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : getGeneratedLinkDisplayUrl(element, element.raw);
 }
 
 function moveChatOverlayThemeOptions() {
@@ -3765,6 +3774,17 @@ function applyChatOverlayTemplatePreset(presetValue, options) {
   const dockElement = document.getElementById("dock");
   let params = options.preferDockParams ? getGeneratedLinkParams(dockElement, templateElement) : getGeneratedLinkParams(templateElement, dockElement);
   params = mergeSupportedServerParamsIntoQuery(params, "chatoverlaytemplate", dockElement, templatePath);
+  // Auto-hide is managed with the main chat settings, including disabling it.
+  const templateParams = new URLSearchParams(params);
+  // The selected collection owns its style; do not carry the previous preset forward.
+  if (templatePath.split("?")[0] === "themes/compact-clean.html") {
+    templateParams.delete("style");
+    const selectedStyle = new URL(templatePath, baseURL).searchParams.get("style");
+    if (selectedStyle) templateParams.set("style", selectedStyle);
+  }
+  const dockParams = new URLSearchParams(getGeneratedLinkParams(dockElement));
+  templateParams.set("showtime", dockParams.get("showtime") || "0");
+  params = templateParams.toString();
   const templateUrl = buildGeneratedUrl(templatePath || DEFAULT_CHAT_OVERLAY_TEMPLATE, params);
 
   setGeneratedLink(templateElement, templateUrl);
@@ -3821,6 +3841,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "chatoverlaytemplate", path: getSelectedChatOverlayTemplatePath() },
     { id: "overlay", path: "featured.html" },
     { id: "multialerts", path: "multi-alerts.html" },
+    { id: "stickeroverlay", path: "stickers.html" },
     { id: "emoteswall", path: "emotes.html" },
     { id: "hypemeter", path: "hype.html" },
     { id: "hypetrain", path: "meta.html", defaultParams: "&hype" },
@@ -3901,6 +3922,11 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   if (obsControlDockUrl) {
     obsControlDockUrl.href = buildGeneratedUrl("obs-control-dock.html", `session=${encodeURIComponent(streamID)}`, baseURL);
   }
+
+	const streamElementsImporterUrl = document.getElementById("streamelements_importer_link");
+	if (streamElementsImporterUrl) {
+		streamElementsImporterUrl.href = buildGeneratedUrl("streamelements-importer.html", `session=${encodeURIComponent(streamID)}${password}`, baseURL);
+	}
 
   syncAllOverlayPreviews();
 }
@@ -4550,6 +4576,7 @@ function update(response, sync = true) {
 
         if (response.streamID) {
             lastResponse = response;
+            if (window.updateStickerRewardSettings) window.updateStickerRewardSettings(response.settings);
             streamID = true;
 
             var password = "";
@@ -4617,7 +4644,7 @@ function update(response, sync = true) {
                         const cleanedUrl = removeTTSProviderParams(originalHref);
                         linkElement.href = cleanedUrl;
                         if (linkElement.innerText !== "Click to open link" || !currentHideLinks) { // Avoid overwriting "Click to open" if links are hidden
-                           linkElement.innerText = currentHideLinks ? "Click to open link" : cleanedUrl;
+                           linkElement.innerText = currentHideLinks ? "Click to open link" : getGeneratedLinkDisplayUrl(linkElement, cleanedUrl);
                         }
                         // If your old `sourceElement.raw` was important, you might need to update a similar attribute
                         // if (linkElement.raw) linkElement.raw = cleanedUrl;
@@ -5165,6 +5192,14 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-setting="addkarma"]',
 		'[data-setting="pumpTheNumbers"]',
 		'[data-textsetting="printerName"]',
+		'[data-numbersetting="printerPaperWidth"]',
+		'[data-numbersetting="printerLabelHeight"]',
+		'[data-numbersetting="printerMarginLeft"]',
+		'[data-numbersetting="printerMarginRight"]',
+		'[data-numbersetting="printerMarginTop"]',
+		'[data-numbersetting="printerMarginBottom"]',
+		'[data-numbersetting="printerFeed"]',
+		'[data-optionsetting="printerMarginMode"]',
 		'[data-setting="sharestreamid"]',
 		'[data-setting="disableRelayThrottle"]',
 		'[data-setting="disablehost"]',
@@ -5193,6 +5228,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-textsetting="postserver"]',
 		'[data-setting="postalldiscord"]',
 		'[data-textsetting="postallserverdiscord"]',
+		'[data-setting="postallserverdiscordsimple"]',
 		'[data-setting="postdiscord"]',
 		'[data-textsetting="postserverdiscord"]',
 		'[data-setting="webhookrelay"]',
@@ -5253,6 +5289,14 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 	],
 	"wrapper-global-connections-integrations-options": [
 		'[data-textsetting="printerName"]',
+		'[data-numbersetting="printerPaperWidth"]',
+		'[data-numbersetting="printerLabelHeight"]',
+		'[data-numbersetting="printerMarginLeft"]',
+		'[data-numbersetting="printerMarginRight"]',
+		'[data-numbersetting="printerMarginTop"]',
+		'[data-numbersetting="printerMarginBottom"]',
+		'[data-numbersetting="printerFeed"]',
+		'[data-optionsetting="printerMarginMode"]',
 		'[data-setting="sharestreamid"]',
 		'[data-setting="disableRelayThrottle"]',
 		'[data-setting="disablehost"]',
@@ -5281,6 +5325,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-textsetting="postserver"]',
 		'[data-setting="postalldiscord"]',
 		'[data-textsetting="postallserverdiscord"]',
+		'[data-setting="postallserverdiscordsimple"]',
 		'[data-setting="postdiscord"]',
 		'[data-textsetting="postserverdiscord"]',
 		'[data-setting="webhookrelay"]'
@@ -7473,7 +7518,10 @@ function handleNumberSetting(ele, sync) {
             checkbox = document.querySelector(`input[${relatedAttr}*='${settingValue}']`);
         }
 
-        if (checkbox && checkbox.checked) {
+        // These standalone controls have no enable checkbox.
+        const isStandaloneNumber = (targetId === 'scoreboard' && settingValue === 'maxusers') ||
+            (targetId === 'leaderboard' && (settingValue === 'updateinterval' || settingValue === 'rotateinterval'));
+        if (isStandaloneNumber || (checkbox && checkbox.checked)) {
             const targetElement = document.getElementById(targetId);
             const effectiveKey = normalizeParamKey(settingValue);
             targetElement.raw = removeQueryParamWithValue(targetElement.raw, effectiveKey);
@@ -8412,7 +8460,7 @@ function buildTipJarTestDonationPayload(kind) {
         'youtube-superchat': {
             type: 'youtube',
             platform: 'youtube',
-            event: 'donation',
+            event: 'superchat',
             chatname: 'SuperChat Fan',
             chatmessage: 'Testing a Super Chat donation',
             hasDonation: '$10.00',
@@ -8626,7 +8674,7 @@ function refreshLinks(){
         linkElement.href = cleanedUrl; // Update the link's href
 
         // Update link's text based on hideLinks status
-        linkElement.innerText = currentHideLinks ? "Click to open link" : cleanedUrl;
+        linkElement.innerText = currentHideLinks ? "Click to open link" : getGeneratedLinkDisplayUrl(divElement, cleanedUrl);
       }
     });
 
@@ -9815,6 +9863,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         }
 
         try {
+            if (settings.volume <= 0) {
+                throw new Error("TTS volume is set to 0. Increase it under More TTS options before testing.");
+            }
             // Check for required API keys if using premium services
             if (provider === 'google' && !settings.google.key) {
                 throw new Error('Google Cloud API key is required');
@@ -9879,7 +9930,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                     await this.kittenTTS(text, settings, section);
                 }
             } else if (!settings.service || (settings.service == "system")) {
-                this.systemTTS(text, settings);
+                this.systemTTS(text, settings, section);
             } else if (allow) {
                 this.showFeedback(`${this.getServiceName(section)} is not configured for testing`, 'error', section);
                 this.finishedAudio();
@@ -9891,7 +9942,52 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         }
     },
     
-    systemTTS(text, settings) {
+    async systemTTS(text, settings, section = this.currentTtsSection || "") {
+        let desktopBridge = window.ninjafy || window.electronApi;
+        try {
+            desktopBridge = desktopBridge || window.parent?.ninjafy || window.parent?.electronApi;
+        } catch (_) {}
+
+        if (ssapp && desktopBridge && typeof desktopBridge.systemTts === "function") {
+            try {
+                this.premiumQueueActive = true;
+                this.setTestRunning(section, true, "Generating...");
+                const response = await desktopBridge.systemTts(text, {
+                    voice: settings.system.voice,
+                    lang: settings.system.lang,
+                    rate: settings.system.rate,
+                    pitch: settings.system.pitch
+                });
+                this.lastDesktopSystemTts = {
+                    voice: response?.voice || "",
+                    lang: response?.lang || ""
+                };
+                if (this.cancelRequested) return;
+
+                const wavBuffer = response?.wavBuffer || response;
+                const audioBlob = new Blob([wavBuffer], { type: "audio/wav" });
+                const audioElement = document.createElement("audio");
+                this.activeAudioElement = audioElement;
+                this.activeAudioUrl = URL.createObjectURL(audioBlob);
+                audioElement.src = this.activeAudioUrl;
+                audioElement.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
+                audioElement.onended = () => {
+                    this.showFeedback("System TTS test completed successfully", "success", section);
+                    this.finishedAudio(section);
+                };
+                audioElement.onerror = () => {
+                    this.showFeedback("System TTS audio could not be played", "error", section);
+                    this.finishedAudio(section);
+                };
+                this.setTestRunning(section, true, "Playing...");
+                await audioElement.play();
+                return;
+            } catch (error) {
+                console.warn("Desktop System TTS failed; falling back to Web Speech:", error);
+                this.finishedAudio(section);
+            }
+        }
+
         if (!window.speechSynthesis) return;
         
         const utterance = new SpeechSynthesisUtterance(text);
@@ -9940,9 +10036,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                         this.finishedAudio(section);
                     };
 					
-					// Set volume if needed
-					//const settings = { volume: 0.8 }; // Replace with your actual settings
-					//if (settings.volume) audioElement.volume = settings.volume;
+					audioElement.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
 					
 					await audioElement.play();
 					return;
@@ -10829,10 +10923,90 @@ function reorderGlobalSettingsSections() {
     }
 }
 
+function getThermalPrinterOptionsFromPopup() {
+	const getNumber = function (setting, fallback) {
+		const value = Number(document.querySelector(`[data-numbersetting="${setting}"]`)?.value);
+		return Number.isFinite(value) ? value : fallback;
+	};
+	const labelHeight = getNumber('printerLabelHeight', 0);
+	const options = {
+		printerName: document.getElementById('printerName')?.value?.trim() || '',
+		width: `${getNumber('printerPaperWidth', 58)}mm`,
+		marginLeft: `${getNumber('printerMarginLeft', 2)}mm`,
+		marginRight: `${getNumber('printerMarginRight', 2)}mm`,
+		marginTop: `${getNumber('printerMarginTop', 0)}mm`,
+		marginBottom: `${getNumber('printerMarginBottom', 0)}mm`,
+		feed: `${getNumber('printerFeed', 1)}mm`,
+		marginType: document.querySelector('[data-optionsetting="printerMarginMode"]')?.value || 'printableArea'
+	};
+	if (labelHeight > 0) options.height = `${labelHeight}mm`;
+	return options;
+}
+
+function setThermalPrinterStatus(message, isError) {
+	const status = document.getElementById('thermalPrinterStatus');
+	if (!status) return;
+	status.textContent = message;
+	status.style.color = isError ? '#c62828' : '';
+}
+
+async function refreshThermalPrinterList() {
+	if (!window.ninjafy || typeof window.ninjafy.listThermalPrinters !== 'function') {
+		setThermalPrinterStatus('Printer discovery is available in SSApp.', true);
+		return [];
+	}
+	setThermalPrinterStatus('Finding printers...', false);
+	try {
+		const response = await window.ninjafy.listThermalPrinters();
+		const printers = Array.isArray(response) ? response : [];
+		const datalist = document.getElementById('thermalPrinterNames');
+		if (datalist) {
+			datalist.replaceChildren(...printers.map(function (printer) {
+				const option = document.createElement('option');
+				option.value = printer.name;
+				option.label = `${printer.displayName || printer.name}${printer.isDefault ? ' (default)' : ''}`;
+				return option;
+			}));
+		}
+		setThermalPrinterStatus(printers.length ? `${printers.length} printer${printers.length === 1 ? '' : 's'} found.` : 'No printers found.', !printers.length);
+		return printers;
+	} catch (error) {
+		setThermalPrinterStatus(error?.message || 'Could not list printers.', true);
+		return [];
+	}
+}
+
+async function testThermalPrinterAlignment() {
+	if (!window.ninjafy || typeof window.ninjafy.printThermal !== 'function') {
+		setThermalPrinterStatus('Silent test printing is available in SSApp.', true);
+		return;
+	}
+	const button = document.getElementById('testThermalPrinter');
+	if (button) button.disabled = true;
+	setThermalPrinterStatus('Sending alignment test...', false);
+	try {
+		const html = '<div style="border:1px solid #000;padding:1mm;font-size:8pt;line-height:1.2">' +
+			'<div style="display:flex;justify-content:space-between;font-size:8pt"><b>| LEFT</b><b>RIGHT |</b></div>' +
+			'<div style="font-size:10pt;font-weight:bold;text-align:center;margin:1mm 0">SAFE WIDTH TEST</div>' +
+			'<div style="text-align:center">Both side borders should be visible.</div></div>';
+		const result = await window.ninjafy.printThermal(html, getThermalPrinterOptionsFromPopup());
+		setThermalPrinterStatus(result?.success ? 'Alignment test sent.' : (result?.error || 'Print failed.'), !result?.success);
+	} catch (error) {
+		setThermalPrinterStatus(error?.message || 'Print failed.', true);
+	} finally {
+		if (button) button.disabled = false;
+	}
+}
+
 document.addEventListener("DOMContentLoaded", async function(event) {
     reorderGlobalSettingsSections();
     loadSourcesListFromRuntimeManifest();
-    setupDynamicCustomUrlControls();
+	setupDynamicCustomUrlControls();
+	document.getElementById('refreshThermalPrinters')?.addEventListener('click', refreshThermalPrinterList);
+	document.getElementById('testThermalPrinter')?.addEventListener('click', testThermalPrinterAlignment);
+	if (window.ninjafy && typeof window.ninjafy.listThermalPrinters === 'function') {
+		refreshThermalPrinterList();
+	}
 
     // Initialize hotkey system
     initHotkeys();
@@ -13462,7 +13636,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					});
 				}
 			} else if (msg.cmd == "resettipjar"){
-				var confirmResetTipJar = confirm("Reset the connected Tip Jar/Goal amount to $0?");
+				var confirmResetTipJar = confirm("Reset the connected Tip Jar/Goal to 0?");
 				if (confirmResetTipJar){
 					chrome.runtime.sendMessage(msg, function (response) {
 						log("ignore callback for this action");
@@ -13476,11 +13650,19 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				}
 				var tipjarSourceSelect = document.querySelector('[data-optionparam12="tipjarsource"]');
 				var tipjarTypeSelect = document.querySelector('[data-optionparam12="tipjartype"]');
+				var tipjarMetricSelect = document.querySelector('[data-optionparam12="goalmetric"]');
+				var tipjarEventSelect = document.querySelector('[data-optionparam12="tipjarevent"]');
 				if (tipjarSourceSelect && tipjarSourceSelect.value) {
 					msg.tipjarsource = tipjarSourceSelect.value;
 				}
 				if (tipjarTypeSelect && tipjarTypeSelect.value) {
 					msg.tipjartype = tipjarTypeSelect.value;
+				}
+				if (tipjarMetricSelect && tipjarMetricSelect.value) {
+					msg.goalmetric = tipjarMetricSelect.value;
+				}
+				if (tipjarEventSelect && tipjarEventSelect.value) {
+					msg.tipjarevent = tipjarEventSelect.value;
 				}
 				chrome.runtime.sendMessage(msg, function (response) {
 					log("ignore callback for this action");

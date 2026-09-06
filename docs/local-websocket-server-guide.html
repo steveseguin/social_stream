@@ -12,8 +12,8 @@
 	</script>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Use Enable Local Server - Social Stream Ninja</title>
-	<meta name="description" content="Set up the Social Stream Ninja desktop app's local WebSocket relay for supported docks, overlays, chat routing, commands, and trusted-LAN clients.">
+	<title>Hosted WebSocket and Local Server Modes - Social Stream Ninja</title>
+	<meta name="description" content="Enable Social Stream Ninja's hosted WebSocket routes for chat, overlays, replies, and commands, or use the advanced local relay when the public server is unavailable.">
 	<link rel="stylesheet" href="css/styles.css">
 	<link rel="stylesheet" href="css/guides.css">
 	<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
@@ -47,56 +47,86 @@
 
 	<section class="page-hero">
 		<div class="container">
-			<h1>Use Enable Local Server</h1>
-			<p>Run Social Stream's WebSocket relay inside the desktop app for supported local docks, overlays, chat routes, and commands.</p>
+			<h1>Hosted WebSocket and Local Server Modes</h1>
+			<p>Use Social Stream's hosted WebSocket routes for normal Chrome extension and desktop app setups. Run a local relay only when you specifically need one.</p>
 		</div>
 	</section>
 
 	<main class="guide-section">
 		<div class="container">
 			<div class="guide-card">
-				<h2>What It Is</h2>
-				<p><strong>File &gt; Enable Local Server</strong> starts a WebSocket relay inside the Social Stream Ninja desktop app. Pages join the same session room and use matching channels to exchange messages. New installations use <code>127.0.0.1:3003</code>; an upgraded installation that already used port <code>3000</code> may keep it.</p>
+				<h2>Which Mode Should I Use?</h2>
+				<div class="guide-note">
+					<p><strong>Most users should not enable Local Server.</strong> The Chrome extension and normal SSApp setups can use Social Stream's hosted WebSocket service by enabling the routing switches shown below. Local Server is an advanced replacement for the hosted relay.</p>
+				</div>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Mode</th><th>When To Use It</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Mode"><span>Normal WebRTC</span></td><td data-label="When To Use It"><span>Keep the defaults when your Dock and overlays already connect reliably. No server flags are needed.</span></td></tr>
+						<tr><td data-label="Mode"><span>Hosted WebSocket</span></td><td data-label="When To Use It"><span>The normal server fallback for the Chrome extension or SSApp. It uses Social Stream's public hosted relay and does not require <strong>File &gt; Enable Local Server</strong>.</span></td></tr>
+						<tr><td data-label="Mode"><span>Local Server</span></td><td data-label="When To Use It"><span>Advanced use only: self-host the relay on the SSApp computer, or use it when a regional, corporate, or restricted network cannot reach the public hosted WebSocket service.</span></td></tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="guide-card">
+				<h2>Enable Hosted WebSocket Mode</h2>
+				<ol class="guide-steps">
+					<li>Open the Social Stream Ninja extension popup or the settings panel in SSApp.</li>
+					<li>Open <strong>Global settings and tools &gt; Mechanics - Connections &amp; Integrations</strong>.</li>
+					<li>Enable <strong>Enable Dock to use and publish via API server</strong>. This adds <code>server</code> to supported generated links.</li>
+					<li>Enable <strong>Send messages to Dock from Extension via server</strong>. This adds <code>server2</code> and carries captured chat to the Dock.</li>
+					<li>If you want replies or moderation and source commands that travel from the Dock back to the extension, enable <strong>Dock sends its commands to Extension via server</strong>. This adds <code>server3</code>.</li>
+					<li>Leave <strong>Experimental/temporary: also send API-routed chat to normal dock/overlay connections</strong> off unless you are specifically testing additive delivery.</li>
+					<li>Leave <strong>Peer-to-peer connections via local network only</strong> off for the normal hosted setup.</li>
+					<li>Copy fresh Dock and overlay links, replace old saved URLs in OBS, and reopen any pages that were already running.</li>
+				</ol>
+				<figure class="guide-figure">
+					<img src="images/guides/guide-hosted-websocket-popup-toggles.png" alt="Social Stream Ninja Mechanics - Connections and Integrations popup with the server, server2, and server3 switches enabled" class="guide-image-narrow">
+					<figcaption>For a complete two-way setup, enable the three blue switches shown here. View-only setups generally need <code>server</code> and <code>server2</code>; add <code>server3</code> for replies and commands.</figcaption>
+				</figure>
+				<p>If the Dock offers <strong>Enable Server Fallback</strong>, that shortcut enables the chat and command fallback routes together. Open this settings section and confirm the first <strong>Enable Dock to use and publish via API server</strong> switch is also on for the complete three-route setup.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>What The Three Server Flags Do</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Flag</th><th>Direction</th><th>Use</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Flag"><span><code>server</code></span></td><td data-label="Direction"><span>Dock/API route</span></td><td data-label="Use"><span>Lets supported Dock and API pages use and publish through the hosted server route.</span></td></tr>
+						<tr><td data-label="Flag"><span><code>server2</code></span></td><td data-label="Direction"><span>Extension to Dock</span></td><td data-label="Use"><span>Sends captured chat messages to the Dock through the hosted server.</span></td></tr>
+						<tr><td data-label="Flag"><span><code>server3</code></span></td><td data-label="Direction"><span>Dock to extension</span></td><td data-label="Use"><span>Returns supported replies and commands to the extension. It is optional for a view-only Dock.</span></td></tr>
+					</tbody>
+				</table>
+				<p>A generated two-way Dock link may contain:</p>
+				<pre><code>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;server&amp;server2&amp;server3</code></pre>
+				<p>Copy generated links instead of adding flags to every page by hand. Routing support differs between the Dock, overlays, alerts, games, and utility pages.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Advanced: Use SSApp's Local Server</h2>
+				<p>Local Server replaces the public hosted WebSocket endpoint with a relay running inside the Social Stream Ninja desktop app. Use it when you intentionally want to self-host the relay or the public server cannot be reached from your network or region.</p>
 				<div class="guide-note">
 					<p><strong>This is a relay, not a website host.</strong> It does not serve the SSN interface, capture platform chat by itself, or expose the Local Control API.</p>
 				</div>
-			</div>
-
-			<div class="guide-card">
-				<h2>What It Can Do</h2>
-				<ul class="guide-list">
-					<li>Relay supported Social Stream chat traffic between pages using the same session.</li>
-					<li>Carry supported Dock or remote commands when the matching command route is enabled.</li>
-					<li>Replace the hosted WebSocket endpoint for pages that support <code>localserver</code>.</li>
-					<li>Keep selected relay traffic on the SSApp computer.</li>
-					<li>Accept direct clients from a trusted LAN after LAN access is explicitly enabled.</li>
-				</ul>
-				<p>Support is page-specific. Some pages use <code>localserver</code> directly; others also need the matching <code>server</code>, <code>server2</code>, or <code>server3</code> route.</p>
-			</div>
-
-			<div class="guide-card">
-				<h2>Typical Dock Read-and-Reply Setup</h2>
 				<ol class="guide-steps">
-					<li>Open the Social Stream Ninja desktop app.</li>
-					<li>Choose <strong>File &gt; Enable Local Server</strong>. The menu shows the active port.</li>
-					<li>In <strong>Global settings and tools &gt; Mechanics - Connections &amp; Integrations</strong>, enable <strong>Send chat messages to API server (for external listeners)</strong>.</li>
-					<li>Enable <strong>Dock sends its commands to Extension via server</strong> if replies or Dock commands must return through the relay.</li>
-					<li>Copy fresh Dock and overlay links from SSApp. The app adds <code>localserver</code> and the active <code>localserverport</code> where needed.</li>
-					<li>Replace old saved URLs in OBS and reopen any browser pages that were already running.</li>
-					<li>Send one fake test message and confirm it reaches the Dock before testing replies or overlays.</li>
+					<li>Complete the hosted-route switch setup above. The same <code>server</code>, <code>server2</code>, and optional <code>server3</code> directions still apply.</li>
+					<li>In SSApp, choose <strong>File &gt; Enable Local Server</strong>. The menu shows the selected port.</li>
+					<li>Copy fresh Dock and overlay links. SSApp adds <code>localserver</code> and the active <code>localserverport</code> where supported.</li>
+					<li>Replace old saved URLs in OBS and reopen active pages.</li>
+					<li>Send a fake test message, then test a reply or Dock command if <code>server3</code> is enabled.</li>
 				</ol>
-				<p>If the Dock offers <strong>Enable Server Fallback</strong>, that shortcut enables the normal read and reply routes together. The local-server flag changes those supported routes to use SSApp's relay.</p>
+				<figure class="guide-figure">
+					<img src="images/guides/guide-local-server-file-menu.png" alt="Social Stream Ninja desktop app File menu showing the Enable Local Server command" class="guide-image-narrow">
+					<figcaption>The Local Server command is in SSApp's File menu. Do not turn it on for the normal hosted WebSocket setup.</figcaption>
+				</figure>
+				<p>New installations normally use <code>127.0.0.1:3003</code>. An upgraded installation that already used port <code>3000</code> may keep it. A generated local two-way Dock link may contain:</p>
+				<pre><code>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;server&amp;server2&amp;server3&amp;localserver&amp;localserverport=3003</code></pre>
 			</div>
 
 			<div class="guide-card">
-				<h2>Generated Link Example</h2>
-				<p>A new-install link using the relay may contain:</p>
-				<pre><code>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;server2&amp;server3&amp;localserver&amp;localserverport=3003</code></pre>
-				<p>Do not add these flags to every page by hand. The exact server flags and channel routing differ between the Dock, overlays, alerts, games, and utility pages. Copy the generated URL for the exact page.</p>
-			</div>
-
-			<div class="guide-card">
-				<h2>Using Another Port</h2>
+				<h2>Advanced Local Options</h2>
+				<h3>Using Another Port</h3>
 				<ol class="guide-steps">
 					<li>Choose <strong>File &gt; Set Local Server Port</strong>.</li>
 					<li>Select an unused port from <code>1024</code> through <code>65535</code>.</li>
@@ -104,11 +134,8 @@
 					<li>Replace saved OBS URLs and reopen active pages.</li>
 				</ol>
 				<p>Changing this port does not change the Local Control API on <code>17777</code> or the local media server on <code>3001</code>.</p>
-			</div>
-
-			<div class="guide-card">
-				<h2>Optional Trusted-LAN Access</h2>
-				<p><strong>File &gt; Allow Local Server Connections from the LAN</strong> changes the relay from loopback-only to listening on the computer's network interfaces. A client on another device must connect to the SSApp computer's LAN address, not <code>127.0.0.1</code>. The exact custom WebSocket URL and routing flag remain page-specific.</p>
+				<h3>Optional Trusted-LAN Access</h3>
+				<p><strong>File &gt; Allow Local Server Connections from the LAN</strong> changes the relay from loopback-only to listening on the computer's network interfaces. A client on another device must connect to the SSApp computer's LAN address, not <code>127.0.0.1</code>.</p>
 				<div class="warning-note">
 					<p><strong>LAN mode has no authentication or encryption.</strong> Use it only on a trusted private network. Do not port-forward it or expose it to the internet. For normal cross-machine internet control, use Social Stream's existing WebRTC or hosted WebSocket transport.</p>
 				</div>
@@ -119,10 +146,11 @@
 				<table class="guide-table guide-table-stack">
 					<thead><tr><th>Problem</th><th>What To Check</th></tr></thead>
 					<tbody>
-						<tr><td data-label="Problem"><span>Dock or overlay stays blank</span></td><td data-label="What To Check"><span>Confirm the source and page use the same session and password, then copy a fresh generated URL with the current routing flags.</span></td></tr>
+						<tr><td data-label="Problem"><span>Dock or overlay stays blank</span></td><td data-label="What To Check"><span>Confirm the source and page use the same session and password. For hosted mode, confirm <code>server</code> and <code>server2</code> are in a freshly copied Dock link.</span></td></tr>
+						<tr><td data-label="Problem"><span>Chat arrives but replies fail</span></td><td data-label="What To Check"><span>The incoming and command routes are separate. Enable <strong>Dock sends its commands to Extension via server</strong> so the link includes <code>server3</code>.</span></td></tr>
+						<tr><td data-label="Problem"><span>Hosted WebSocket will not connect</span></td><td data-label="What To Check"><span>A regional, corporate, school, or filtered network may block the public relay. Try another network first; advanced SSApp users can use Local Server instead.</span></td></tr>
 						<tr><td data-label="Problem"><span>The link uses port 3000 but SSApp shows 3003</span></td><td data-label="What To Check"><span>Replace the old link. New installs add <code>localserverport=3003</code>; older installs may intentionally remain on <code>3000</code>.</span></td></tr>
-						<tr><td data-label="Problem"><span>Server will not start</span></td><td data-label="What To Check"><span>Another program may own the port. Choose another unused port, restart the relay, and recopy links.</span></td></tr>
-						<tr><td data-label="Problem"><span>Chat arrives but replies fail</span></td><td data-label="What To Check"><span>The incoming and command routes are separate. Confirm <strong>Dock sends its commands to Extension via server</strong> is also enabled.</span></td></tr>
+						<tr><td data-label="Problem"><span>Local Server will not start</span></td><td data-label="What To Check"><span>Another program may own the port. Choose another unused port, restart the relay, and recopy links.</span></td></tr>
 						<tr><td data-label="Problem"><span>LAN device cannot connect</span></td><td data-label="What To Check"><span>Confirm LAN access is enabled, the client uses the SSApp computer's LAN IP, and the firewall permits the selected port.</span></td></tr>
 					</tbody>
 				</table>

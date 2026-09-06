@@ -1,5 +1,16 @@
 [
   {
+    "name": "emote and apostrophe without separate sanitizer script",
+    "input": "it&#039;s 👑 <img src=\"https://cdn.betterttv.net/emote/64040c27ccf0dd06e1af2c67/2x\" alt=\"sadNik\" class=\"regular-emote\"/>",
+    "mustContain": ["<img", "regular-emote", "sadNik"],
+    "expectedText": "it's 👑 "
+  },
+  {
+    "name": "literal escaped markup remains text",
+    "input": "&lt;img src=x onerror=alert(1)&gt; &amp; &#039;",
+    "expectedText": "<img src=x onerror=alert(1)> & '"
+  },
+  {
     "name": "reported img onerror",
     "input": "<img src=\"qsdf\" onerror=\"alert('hi')\">"
   },

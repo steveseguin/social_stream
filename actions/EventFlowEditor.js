@@ -249,7 +249,7 @@ class EventFlowEditor {
                     { id: 'eventNewSubscriber', name: '⭐ New Subscriber' },
                     { id: 'eventResub', name: '🔄 Resub/Renewal' },
                     { id: 'eventGiftSub', name: '🎁 Gift Sub' },
-                    { id: 'eventDonation', name: '💰 Specific Donation Event' },
+                    { id: 'eventDonation', name: '💰 Donation / Tip' },
                     { id: 'eventRaid', name: '🚀 Raid' },
                     { id: 'eventCheer', name: '💎 Cheer/Bits' },
                     { id: 'eventOther', name: '📋 Other Event...' },
@@ -374,6 +374,7 @@ class EventFlowEditor {
                 expanded: true,
                 actions: [
                     { id: 'customJs', name: 'Execute Custom Code' },
+					{ id: 'printThermal', name: '🖨️ Print Thermal Label' },
                     { id: 'webhook', name: '🌐 Call Webhook' },
                     { id: 'addPoints', name: '⬆️ Add Points' },
                     { id: 'spendPoints', name: '⬇️ Spend Points' }
@@ -1763,7 +1764,7 @@ class EventFlowEditor {
             }
 
             // Import the flow
-            const savedFlow = await this.eventFlowSystem.saveFlow(cleanFlow);
+            const savedFlow = await this.eventFlowSystem.importFlow(cleanFlow);
 
             // Return the saved flow if requested, otherwise return success boolean
             if (returnFlow) {
@@ -2110,7 +2111,7 @@ class EventFlowEditor {
                     return `${prop} ${opSymbols[op] || op} ${val}`;
                 }
                 case 'randomChance': {
-                    const prob = Math.round((node.config.probability || 0.1) * 100);
+                    const prob = Math.round((node.config.probability ?? 0.1) * 100);
                     const cooldown = node.config.cooldownMs ? ` (${node.config.cooldownMs/1000}s cooldown)` : '';
                     const rateLimit = node.config.maxPerMinute ? ` max ${node.config.maxPerMinute}/min` : '';
                     return `${prob}% chance${cooldown}${rateLimit}`;
@@ -2216,6 +2217,10 @@ class EventFlowEditor {
                 }
                 case 'sendMessage': return `Send to: ${node.config.destination || 'All'}`;
                 case 'relay': return `Relay to: ${node.config.destination || 'All'}`;
+				case 'printThermal': {
+					const text = node.config.text || '{username}';
+					return `Print ${node.config.fontSize || 18}pt: "${text.substring(0, 18)}${text.length > 18 ? '...' : ''}"`;
+				}
                 case 'reflectionFilter': {
                     const policyMap = { 'block-all': 'Block All', 'allow-first': 'Allow First', 'allow-all': 'Allow All' };
                     const srcMode = node.config.sourceMode || 'none';
@@ -2341,7 +2346,7 @@ class EventFlowEditor {
                 case 'AND': return 'All inputs must be true.';
                 case 'OR': return 'Any input can be true.';
                 case 'NOT': return 'Inverts the input signal.';
-                case 'RANDOM': return `${node.config?.probability || 50}% chance`;
+                case 'RANDOM': return `${node.config?.probability ?? 50}% chance`;
                 case 'CHECK_BAD_WORDS': return 'Bad words? → TRUE/FALSE';
                 default: return 'Logic Gate';
             }
@@ -3194,6 +3199,8 @@ class EventFlowEditor {
 					node.config = { destination: '', template: '[{source}] {username}: {message}', timeout: 0 }; break;
                 case 'webhook':
 					node.config = { url: 'https://example.com/hook', method: 'POST', body: '{}', includeMessage: true, syncMode: false, blockOnFailure: false }; break;
+				case 'printThermal':
+					node.config = { text: '{username}\n{donation}', fontSize: 18, fontFamily: 'monospace', fontWeight: 'bold', textAlign: 'center', lineHeight: 1.15, copies: 1, printerName: '', labelHeight: 0 }; break;
                 case 'addPoints':
 					node.config = { amount: 100 }; break;
                 case 'spendPoints':
@@ -3699,7 +3706,7 @@ class EventFlowEditor {
 			case 'timeOfDay':
 				html += `<div class="property-group">
 					<label class="property-label">Times (HH:MM format, comma separated)</label>
-					<input type="text" class="property-input" id="prop-times" value="${(node.config.times || ['12:00']).join(', ')}" placeholder="09:00, 12:00, 18:00">
+					<input type="text" class="property-input" id="prop-times" value="${this.escapeHtml(Array.isArray(node.config.times) ? node.config.times.join(', ') : (node.config.times ?? '12:00'))}" placeholder="09:00, 12:00, 18:00">
 				</div>
 				<p class="property-help">Triggers at specific times of day.</p>`;
 				break;
@@ -3936,9 +3943,8 @@ class EventFlowEditor {
 						<div class="property-help">Set to 0 to trigger on any matched event amount</div>
 					</div>
 					<div class="property-group" style="background: #fff8e1; color: #333; padding: 10px; border-radius: 4px;">
-						<strong>💰 Specific Donation Event</strong><br>
-						Matches specific event names: <code>superchat</code>, legacy <code>donation</code>, <code>cheer</code>, <code>supersticker</code>, and <code>jeweldonation</code>.<br>
-						For normal value-only tips or donations with no event name, use <strong>Has Donation</strong> instead.<br><br>
+						<strong>💰 Donation / Tip</strong><br>
+						Matches any row with <code>hasDonation</code>, plus named <code>superchat</code>, legacy <code>donation</code>, <code>cheer</code>, <code>supersticker</code>, and <code>jeweldonation</code> events.<br><br>
 						<strong>⚡ Supported platforms:</strong><br>
 						• <strong>YouTube:</strong> Super Chat, Super Stickers, Jewels/Gifts<br>
 						• <strong>Twitch:</strong> Cheers/Bits (WebSocket mode)<br>
@@ -4175,7 +4181,7 @@ class EventFlowEditor {
 					</div>`;
 				break;
 			case 'randomChance': // Random trigger
-				const probability = (node.config.probability || 0.1) * 100; // Convert to percentage for display
+				const probability = (node.config.probability ?? 0.1) * 100; // Convert to percentage for display
 				html += `
 					<div class="property-group">
 						<label class="property-label">Trigger Probability</label>
@@ -4205,7 +4211,7 @@ class EventFlowEditor {
 					
 					<div class="property-group">
 						<label class="property-label">
-							<input type="checkbox" id="prop-requireMessage" 
+							<input type="checkbox" class="property-input" id="prop-requireMessage"
 								${node.config.requireMessage !== false ? 'checked' : ''}>
 							Require Chat Message
 						</label>
@@ -4486,7 +4492,7 @@ class EventFlowEditor {
 					
 					<div class="property-group">
 						<label class="property-label">
-							<input type="checkbox" id="prop-resetOnFull" 
+							<input type="checkbox" class="property-input" id="prop-resetOnFull"
 								${node.config.resetOnFull ? 'checked' : ''}>
 							Auto-reset when full
 						</label>
@@ -4575,7 +4581,7 @@ class EventFlowEditor {
 					
 					<div class="property-group">
 						<label class="property-label">
-							<input type="checkbox" id="prop-autoReset" 
+							<input type="checkbox" class="property-input" id="prop-autoReset"
 								${node.config.autoReset ? 'checked' : ''}>
 							Auto-reset after trigger
 						</label>
@@ -4987,6 +4993,38 @@ class EventFlowEditor {
                         </div>`;
                 }
                 break;
+			case 'printThermal':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Label text</label>
+						<textarea class="property-input" id="prop-text" rows="4" placeholder="{username}\n{donation}">${this.escapeHtml(node.config.text ?? '{username}\n{donation}')}</textarea>
+						<div class="property-help">Use single braces: {username}, {message}, or fields from earlier nodes. New lines print on new lines.</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Text appearance</label>
+						<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+							<label>Size (pt)<input type="number" class="property-input" id="prop-fontSize" value="${node.config.fontSize ?? 18}" min="6" max="96" step="1"></label>
+							<label>Line spacing<input type="number" class="property-input" id="prop-lineHeight" value="${node.config.lineHeight ?? 1.15}" min="0.8" max="3" step="0.05"></label>
+							<label>Font<input type="text" class="property-input" id="prop-fontFamily" value="${this.escapeHtml(node.config.fontFamily || 'monospace')}"></label>
+							<label>Weight<select class="property-input" id="prop-fontWeight"><option value="bold" ${!['normal', 'selected'].includes(node.config.fontWeight) ? 'selected' : ''}>All bold</option><option value="normal" ${node.config.fontWeight === 'normal' ? 'selected' : ''}>Normal</option><option value="selected" ${node.config.fontWeight === 'selected' ? 'selected' : ''}>Selected text</option></select></label>
+							<label>Alignment<select class="property-input" id="prop-textAlign"><option value="left" ${node.config.textAlign === 'left' ? 'selected' : ''}>Left</option><option value="center" ${node.config.textAlign !== 'left' && node.config.textAlign !== 'right' ? 'selected' : ''}>Center</option><option value="right" ${node.config.textAlign === 'right' ? 'selected' : ''}>Right</option></select></label>
+							<label>Copies<input type="number" class="property-input" id="prop-copies" value="${node.config.copies ?? 1}" min="1" max="99" step="1"></label>
+						</div>
+						<div class="property-help">To bold just the buyer, choose Selected text and enter <code>**{username}**</code> above <code>{itemName}</code>. Item fields must come from your event or an earlier node.</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Printer override (optional)</label>
+						<input type="text" class="property-input" id="prop-printerName" list="eventflow-thermal-printers" value="${this.escapeHtml(node.config.printerName || '')}" placeholder="Use Printer Control setting">
+						<datalist id="eventflow-thermal-printers"></datalist>
+						<div class="property-help">Leave blank to use Printer Control during live flows, or the Windows default while testing directly in the editor.</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Fixed label length override (mm)</label>
+						<input type="number" class="property-input" id="prop-labelHeight" value="${node.config.labelHeight ?? 0}" min="0" max="4000" step="0.1">
+						<div class="property-help">0 uses the global setting or content-sized receipt paper. For die-cut labels, enter their exact feed-direction length; fixed labels do not add extra feed.</div>
+					</div>
+					<div class="property-help">Connect a <strong>Donation / Tip</strong> trigger to print only donations. Its Minimum Amount field can restrict printing to donations at or above a chosen value. Use the editor's Test Flow panel to send a physical test label.</div>`;
+				break;
 			case 'webhook':
 				html += `<div class="property-group"><label class="property-label">URL</label><input type="url" class="property-input" id="prop-url" value="${node.config.url || ''}"></div>
 						 <div class="property-group"><label class="property-label">Method</label><select class="property-input" id="prop-method">${['POST', 'GET', 'PUT', 'DELETE', 'PATCH'].map(m => `<option value="${m}" ${node.config.method === m ? 'selected' : ''}>${m}</option>`).join('')}</select></div>
@@ -5017,7 +5055,7 @@ class EventFlowEditor {
 			case 'RANDOM':
 				html += `<div class="property-group">
 					<label class="property-label">Probability (%)</label>
-					<input type="number" class="property-input" id="prop-probability" value="${node.config?.probability || 50}" min="0" max="100">
+					<input type="number" class="property-input" id="prop-probability" value="${node.config?.probability ?? 50}" min="0" max="100">
 				</div>
 				<p class="property-help">This gate randomly passes or blocks the input signal based on the probability. For example, 25% means the signal will pass through roughly 1 in 4 times.</p>`;
 				break;
@@ -6087,7 +6125,7 @@ class EventFlowEditor {
 				</div>
 				<div class="property-group">
 					<label class="property-label">Velocity (0-127)</label>
-					<input type="number" class="property-input" id="prop-velocity" value="${node.config.velocity || 127}" min="0" max="127">
+					<input type="number" class="property-input" id="prop-velocity" value="${node.config.velocity ?? 127}" min="0" max="127">
 				</div>
 				<div class="property-group">
 					<label class="property-label">Duration (ms)</label>
@@ -6281,6 +6319,18 @@ class EventFlowEditor {
 		}
 
 		propertiesContent.innerHTML = html;
+		if (node.type === 'action' && node.actionType === 'printThermal' && window.ninjafy?.listThermalPrinters) {
+			window.ninjafy.listThermalPrinters().then(printers => {
+				const datalist = document.getElementById('eventflow-thermal-printers');
+				if (!datalist || !Array.isArray(printers)) return;
+				datalist.replaceChildren(...printers.map(printer => {
+					const option = document.createElement('option');
+					option.value = printer.name;
+					option.label = `${printer.displayName || printer.name}${printer.isDefault ? ' (default)' : ''}`;
+					return option;
+				}));
+			}).catch(error => console.warn('[EventFlowEditor] Printer discovery failed:', error?.message || error));
+		}
 		if (this.isCustomCodeNode(node)) {
 			const codeInput = document.getElementById('prop-code');
 			if (codeInput) codeInput.value = this.getCustomCode(node);
@@ -6344,6 +6394,8 @@ class EventFlowEditor {
                     }
                 } else if (e.target.type === 'number') {
                     nodeData.config[propId] = parseFloat(e.target.value) || 0;
+                } else if (nodeData.triggerType === 'timeOfDay' && propId === 'times') {
+                    nodeData.config.times = e.target.value.split(',').map(time => time.trim()).filter(Boolean);
                 } else {
                     nodeData.config[propId] = e.target.value;
                 }
@@ -6412,12 +6464,6 @@ class EventFlowEditor {
                 }
                 this.markUnsavedChanges(true);
                 this.renderNodeOnCanvas(nodeData.id);
-                if (propId === 'targetNodeId') {
-                    this.renderStateReferences();
-                    this.highlightStateReferenceGroup(nodeData.id);
-                } else if (nodeData.type === 'state' && nodeData.stateType === 'USER_MEMORY' && propId === 'name') {
-                    this.renderFlow();
-                }
             });
         }
 
@@ -6431,14 +6477,10 @@ class EventFlowEditor {
                 }
                 if (nodeData && nodeData.config) {
                     nodeData.config.sanitizeMode = e.target.value;
-                    }
-                    this.markUnsavedChanges(true);
-                    this.renderNodeOnCanvas(nodeData.id);
-                    if (propId === 'targetNodeId') {
-                        this.renderStateReferences();
-                        this.highlightStateReferenceGroup(nodeData.id);
-                    }
-                });
+                }
+                this.markUnsavedChanges(true);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
         }
 
         // Special handling for compareProperty - show/hide custom property input

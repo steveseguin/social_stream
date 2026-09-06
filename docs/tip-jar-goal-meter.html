@@ -94,6 +94,7 @@
                         <thead><tr><th>Mode</th><th>What it counts</th><th>Best for</th></tr></thead>
                         <tbody>
                             <tr><td data-label="Mode">Normal Tip Jar</td><td data-label="What it counts">Super Chats, Cheers/Bits, tips, and other payloads with a donation amount</td><td data-label="Best for">Money or native-unit goals</td></tr>
+                            <tr><td data-label="Mode">Donation count</td><td data-label="What it counts">Each qualifying paid event as one, regardless of its value</td><td data-label="Best for">Goals such as 7 / 20 Super Chats</td></tr>
                             <tr><td data-label="Mode">Hype Cup Scoring</td><td data-label="What it counts">Donations, memberships/subscriptions, renewals, and gifted memberships/subscriptions</td><td data-label="Best for">One combined supporter-points goal</td></tr>
                         </tbody>
                     </table>
@@ -114,10 +115,24 @@
                         <li>Activate the YouTube, Twitch, or other source in Social Stream Ninja.</li>
                         <li>Open <strong>Tip Jar and Goal Meter</strong>, then open its options.</li>
                         <li>Leave Hype Cup Scoring off for a donation-only goal. Enable it for a mixed supporter goal.</li>
-                        <li>Choose the display style, goal, title, filters, and persistence behavior.</li>
+                        <li>Choose whether the goal measures donation value or the number of qualifying donations.</li>
+                        <li>Choose the display style, goal, title, source/event filters, and persistence behavior.</li>
                         <li>Copy the updated Tip Jar link and add it to OBS as a Browser Source.</li>
                     </ol>
                     <div class="quick-note warning-note"><strong>Session check:</strong> The source and copied overlay URL must use the same session ID. Keep session and password values private.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Count YouTube Super Chats instead of money</h3>
+                    <ol class="guide-steps">
+                        <li>Leave <strong>Hype Cup Scoring</strong> off.</li>
+                        <li>Set <strong>Goal measures</strong> to <strong>Number of qualifying donations</strong>.</li>
+                        <li>Set <strong>Source filter</strong> to <strong>YouTube</strong>.</li>
+                        <li>Set <strong>Paid event filter</strong> to <strong>Super Chats only</strong>.</li>
+                        <li>Set the goal target, such as <code>20</code>. The overlay displays progress such as <code>7 / 20 Super Chats</code>.</li>
+                    </ol>
+                    <p>Super Chat value does not affect a count goal: a $1 Super Chat and a $100 Super Chat each add one. Memberships, gifted memberships, Super Stickers, and YouTube Gifts do not move a Super Chat-only goal.</p>
+                    <div class="quick-note"><strong>Other count goals:</strong> The paid event filter can count only Super Stickers or combine Super Chats and Super Stickers. Use <strong>Count unit label</strong> to override the automatic label.</div>
                 </div>
 
                 <div class="guide-card">
@@ -170,6 +185,8 @@
                             <tr><td data-label="Symptom">Total drops after reaching the goal</td><td data-label="What to check">Hype resets by default; use a rolling goal for a cumulative total.</td></tr>
                             <tr><td data-label="Symptom">An old amount returns</td><td data-label="What to check">Persistence is enabled in the same browser or OBS profile.</td></tr>
                             <tr><td data-label="Symptom">Gift memberships appear twice</td><td data-label="What to check">Disable individual gift-recipient counting.</td></tr>
+                            <tr><td data-label="Symptom">Super Chat count includes Super Stickers</td><td data-label="What to check">Set Paid event filter to Super Chats only.</td></tr>
+                            <tr><td data-label="Symptom">Gifted memberships move a Hype goal</td><td data-label="What to check">Enable Exclude YouTube gifted memberships, or exclude all gifts from Hype scoring.</td></tr>
                         </tbody>
                     </table>
                     <p>The popup's test buttons currently test donation rows. For membership or gift issues, use the Dock or Events Dashboard with the same session to confirm the event arrives before troubleshooting the goal.</p>

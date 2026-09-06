@@ -73,16 +73,16 @@
     <section class="page-hero">
         <div class="container">
             <h1>Templates Gallery</h1>
-            <p>Browse, download, and customize chat overlays for your streams</p>
+            <p>Browse the <a href="overlay-gallery.html">complete visual overlay gallery</a>, or explore custom templates and imports below.</p>
         </div>
     </section>
 
     <section class="template-banner">
         <div class="container">
-            <h2>Enhance Your Streams with Custom Templates</h2>
-            <p>Choose from our collection of professionally designed templates or create your own to match your brand aesthetic. All templates are fully customizable and work with OBS, Streamlabs, and other streaming software.</p>
+            <h2>Choose a look for your stream</h2>
+            <p>Preview chat, featured-message, and alert overlays, then add your favorite to OBS or Streamlabs.</p>
             <div class="hero-buttons">
-                <a href="#themed-packages" class="btn btn-primary">Browse Templates</a>
+                <a href="overlay-gallery.html" class="btn btn-primary">Browse Overlay Gallery</a>
                 <a href="#how-to-use" class="btn btn-secondary">How to Use</a>
                 <a href="../streamelements-importer.html" class="btn btn-secondary">Import StreamElements Widget</a>
             </div>
@@ -92,7 +92,7 @@
     <section class="template-details">
         <div class="container">
             <h2>Why Use Custom Templates?</h2>
-            <p class="section-subtitle">Stand out from the crowd with professional overlays</p>
+            <p class="section-subtitle">Ready to use, with room to customize</p>
             
             <div class="template-features">
                 <div class="template-feature">
@@ -362,6 +362,87 @@
         </div>
     </section>
 
+    <section id="streamelements-importer-guide" class="how-to-use">
+        <div class="container">
+            <h2>Use a StreamElements Chat Widget with Social Stream Ninja</h2>
+            <p class="section-subtitle">This works with both the SSN Windows desktop app and Chrome extension—no code editing is required.</p>
+
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Confirm SSN Is Receiving Chat</h4>
+                        <p>Open your platform sources in the SSN app or extension, then send a test message. Continue only after it appears in the SSN dock.</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Get the Original Widget Export</h4>
+                        <p>Use the ZIP, folder, or files supplied by the widget designer. A useful export normally contains HTML, CSS, JavaScript, fields/data, and assets. A screenshot or StreamElements overlay URL is not enough.</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Open the Importer</h4>
+                        <p>Open the importer and choose the ZIP, folder, or files. It detects the widget parts and immediately shows a demo preview.</p>
+                        <a href="../streamelements-importer.html" class="btn btn-primary">Open Widget Importer</a>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Add Your SSN Session ID</h4>
+						<p>Opening the importer from the SSN popup fills the session ID and password automatically. If you opened it directly, copy them from <strong>Session Options</strong> in the app or extension. You enter the session ID once in the importer; it is saved inside the downloaded file.</p>
+                    </div>
+                </div>
+
+				<div class="step-card">
+					<div class="step-number"></div>
+					<div class="step-content">
+						<h4>Choose Message History</h4>
+						<p>If the imported widget provides compatible settings, use <strong>Message history</strong> to turn off timed removal or change how many messages stay on screen. This changes widget settings, not its code.</p>
+					</div>
+				</div>
+
+				<div class="step-card">
+					<div class="step-number"></div>
+					<div class="step-content">
+						<h4>Test Before Downloading</h4>
+                        <p><strong>Demo Preview</strong> checks the design with sample messages. <strong>Live Preview</strong> checks the session using real chat from the running SSN app or extension.</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Download and Add It to OBS</h4>
+						<p>Click <strong>Download OBS HTML</strong>. In OBS, add a Browser Source, enable <strong>Local file</strong>, and select the downloaded HTML file. <strong>Do not add the session ID or edit the URL in OBS.</strong> Keep SSN running while streaming; the importer and StreamElements may be closed.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="template-features" style="margin-top: 2rem;">
+                <div class="template-feature">
+                    <h4>Demo is blank</h4>
+                    <p>Review the detected files in the importer and use Advanced file selection if it chose the wrong HTML, CSS, or JavaScript.</p>
+                </div>
+                <div class="template-feature">
+                    <h4>Live Preview is blank</h4>
+                    <p>Confirm chat reaches the SSN dock and that the session ID and optional password match exactly.</p>
+                </div>
+                <div class="template-feature">
+                    <h4>OBS is blank</h4>
+                    <p>Use the downloaded HTML file—not the importer page, original ZIP, or StreamElements URL—then refresh the OBS Browser Source.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section id="how-to-use" class="how-to-use">
         <div class="container">
             <h2>How to Use Templates</h2>
@@ -592,9 +673,10 @@
         
        document.addEventListener('DOMContentLoaded', () => {
             // Number the steps
-            const stepNumbers = document.querySelectorAll('.step-number');
-            stepNumbers.forEach((el, index) => {
-                el.textContent = (index + 1).toString();
+			document.querySelectorAll('.steps-container').forEach(container => {
+				container.querySelectorAll('.step-number').forEach((el, index) => {
+					el.textContent = (index + 1).toString();
+				});
             });
             
             // Auto-scroll to sections when clicking nav links

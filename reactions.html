@@ -280,7 +280,7 @@ body {
 		return [
 			normalizeEventName(payload && payload.event),
 			payload && payload.type ? payload.type : "",
-			payload && payload.chatname ? payload.chatname : "",
+			(payload && (payload.userid || payload.username || payload.chatname)) || "",
 			payload && payload.chatmessage ? payload.chatmessage : "",
 			payload && payload.id ? payload.id : ""
 		].join("|");

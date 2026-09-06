@@ -138,28 +138,28 @@
 </head>
 <body>
     <div id="search-container">
-        <input type="text" id="search-input" placeholder="Search by name, id, message, or type...">
+        <input type="text" id="search-input" aria-label="Search messages" placeholder="Search by name, id, message, or type...">
         <div id="filter-options">
             <div class="filter-group">
-                <span class="filter-label">Source:</span>
+                <label class="filter-label" for="type-filter">Source:</label>
                 <select id="type-filter">
                     <option value="">All Sources</option>
                 </select>
             </div>
             <div class="filter-group">
-                <span class="filter-label">Username:</span>
+                <label class="filter-label" for="username-filter">Username:</label>
                 <input type="text" id="username-filter" placeholder="eg: streamer123">
             </div>
             <div class="filter-group">
-                <span class="filter-label">Keyword:</span>
+                <label class="filter-label" for="keyword-filter">Keyword:</label>
                 <input type="text" id="keyword-filter" placeholder="Search message text">
             </div>
             <div class="filter-group">
                 <span class="filter-label">Date Range:</span>
                 <div>
-                    <input type="date" id="message-date-from">
+                    <input type="date" id="message-date-from" aria-label="Messages from date">
                     <span>to</span>
-                    <input type="date" id="message-date-to">
+                    <input type="date" id="message-date-to" aria-label="Messages through date">
                 </div>
             </div>
             <div class="filter-group">
@@ -174,14 +174,14 @@
                 <button id="clear-filters" type="button">Reset Filters</button>
             </div>
             <div class="export-container">
-                <span class="filter-label">Format:</span>
+                <label class="filter-label" for="export-format">Format:</label>
                 <select id="export-format">
                     <option value="json">JSON</option>
                     <option value="tsv">TSV</option>
                     <option value="html">HTML</option>
                 </select>
                 
-                <span class="filter-label">Time Range:</span>
+                <label class="filter-label" for="export-timeframe">Time Range:</label>
                 <select id="export-timeframe">
                     <option value="all">All Time</option>
                     <option value="day">Last 24 Hours</option>
@@ -191,9 +191,9 @@
                 </select>
                 
                 <div id="date-filter-container">
-                    <span class="filter-label">From:</span>
+                    <label class="filter-label" for="date-filter-from">From:</label>
                     <input type="date" id="date-filter-from">
-                    <span class="filter-label">To:</span>
+                    <label class="filter-label" for="date-filter-to">To:</label>
                     <input type="date" id="date-filter-to">
                 </div>
 
@@ -202,7 +202,7 @@
             </div>
         </div>
     </div>
-    <div id="messages-container"></div>
+    <div id="messages-container" role="region" aria-label="Saved messages" tabindex="0"></div>
     <script type="text/javascript" src="./chathistory.js?v=2"></script>
 </body>
 </html>

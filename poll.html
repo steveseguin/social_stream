@@ -702,7 +702,7 @@ function buildVoterKey(name, source, userId) {
 
 function extractVoterId(payload) {
     if (!payload) return null;
-    return payload.userid || payload.userId || payload.user_id || payload.uid || null;
+    return payload.userid || payload.userId || payload.user_id || payload.uid || payload.username || null;
 }
 
 function recordVote(option, voterKey, context = {}, voteWeight = 1, donationAmount = 0) {

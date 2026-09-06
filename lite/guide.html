@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lite setup guide · Social Stream Ninja</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="layout guide-page">
+    <article class="card">
+      <a href="./index.html">← Open Lite</a>
+      <h1>Get chat into your overlay</h1>
+      <p>Lite connects supported chat sources from your browser or OBS. With the regular overlay link, keep Lite running in a tab or OBS dock. The experimental standalone OBS mode captures and displays chat in one Browser Source.</p>
+      <nav aria-label="Guide sections"><a href="#setup">Setup</a> · <a href="#obs">OBS-only setups</a> · <a href="#sources">Sources</a> · <a href="#existing">Existing setups</a> · <a href="#troubleshooting">Troubleshooting</a></nav>
+      <h2 id="setup">1. Set up your overlay</h2>
+      <ol>
+        <li>Open Lite. A session ID and overlay URL are generated automatically and remembered in this browser.</li>
+        <li>Connect one of the sources below. Use its <strong>Options</strong> button for channel settings.</li>
+        <li>Choose <strong>Copy link</strong>. In OBS, add a <strong>Browser</strong> source and paste the link into its URL field. You can also use <strong>Open dock overlay</strong> to check it in a browser.</li>
+        <li>Choose <strong>Send test message</strong> in Lite. Confirm it appears in the open overlay. A message in Lite's Activity feed alone does not confirm that the overlay received it.</li>
+      </ol>
+      <p>For a transparent overlay or different message order, open the options beside <strong>Chat Overlay Link</strong>. After changing these options, copy the updated URL into OBS.</p>
+      <h2 id="sources">2. Choose your sources</h2>
+      <p>For an OBS-only setup, choose one of the two workflows below. You do not need a separate desktop browser tab if capture runs in OBS.</p>
+      <table>
+        <thead><tr><th scope="col">Source</th><th scope="col">What to do</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">YouTube</th><td>Sign in with YouTube. Lite looks for your live broadcast. In Options, you can supply a Video ID or Live Chat ID for a specific broadcast. Polling is the default; the optional streaming API is marked beta. The broadcast must have an available live chat.</td></tr>
+          <tr><th scope="row">Twitch</th><td>Sign in with Twitch. Lite uses your own channel by default; set a different channel in Options. If your authorization expires, sign in again.</td></tr>
+          <tr><th scope="row">Kick</th><td>Enter the channel name in Options and connect. If automatic lookup fails, check the channel spelling, then use the manual chatroom settings if needed.</td></tr>
+          <tr><th scope="row">TikTok</th><td>The integration is currently hidden in the standard Lite panel. It requires a compatible TikTok Chat Reader proxy; a prefilled address does not guarantee service availability. Use the full app for the available TikTok capture options.</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Disconnect</strong> stops that source. For YouTube and Twitch, it keeps your sign-in so you can use <strong>Connect</strong> again. <strong>Sign out</strong> removes the saved authorization in this browser.</p>
+      <h2 id="existing">3. Use your existing Social Stream setup</h2>
+      <p>To feed an existing dock or overlay, open the session options in Lite and enter its session ID. Choose <strong>Save session ID</strong> or press Enter. Changing the ID switches where Lite sends messages; update any browser-source URLs that should follow it.</p>
+      <p>Use only one capture method per channel in the same session. Running Lite alongside extension or desktop capture of the same chat can produce duplicates. You can use Lite for one channel and the full app for other sources.</p>
+      <p>Lite's generated link uses the default session password. Password-protected or custom-server setups may need the full app's connection controls. Lite does not replace the full app's capture, automation, moderation, or overlay customization controls.</p>
+      <p>Activity's <strong>Donations only</strong> and <strong>Text-to-speech</strong> controls apply to the Lite activity view. Keep the main Lite page open when using its activity popout. Treat your overlay URL as private if you do not want others joining that session.</p>
+      <h2 id="obs">Run entirely inside OBS</h2>
+      <h3>Option A: Lite dock + regular overlay</h3>
+      <ol>
+        <li>Open <strong>Run entirely inside OBS</strong> in Lite and copy the <strong>OBS custom dock URL</strong> (<code>lite/index.html?view=dock</code>).</li>
+        <li>Add it under OBS's <strong>Custom Browser Docks</strong>. Sign in and configure sources in that dock. Source Options and session settings remain accessible there.</li>
+        <li>Copy the dock's regular overlay URL into an OBS Browser Source. Keep the Lite dock loaded while capturing. The source only displays messages, so it does not need its own provider sign-in.</li>
+      </ol>
+      <p>This is the simplest OBS-only workflow: capture lives in the dock and display lives in the Browser Source. Closing the dock stops its capture. A desktop browser is not required once setup is complete.</p>
+      <h3>Option B: One capture-and-overlay Browser Source (experimental)</h3>
+      <ol>
+        <li>Add the <strong>Standalone capture + overlay URL</strong> (<code>lite/index.html?view=overlay</code>) as an OBS Browser Source.</li>
+        <li>Open <strong>Interact</strong> to configure sources. If already configured, press <strong>Escape</strong> in Interact to reopen setup. Sign-in pages and setup controls are visible in this source, so configure it off-air.</li>
+        <li>Choose <strong>Show overlay</strong>. The page now displays its own incoming chat on a transparent background. It does not need another Lite tab, dock, or relay connection, and does not feed other session overlays.</li>
+        <li>Leave <strong>Shutdown source when not visible</strong> and <strong>Refresh browser source when scene becomes active</strong> off to avoid interrupting capture when changing scenes. See <a href="https://obsproject.com/kb/browser-source" target="_blank" rel="noopener">OBS Browser Source properties</a>.</li>
+      </ol>
+      <p>Saved valid YouTube/Twitch credentials reconnect on startup. For Kick, opt into <strong>Reconnect this Kick channel automatically in OBS modes</strong> in its Options. Configure the channel first. TikTok remains hidden. Layout starts with all messages visible and speech off, independently of the normal activity view's saved preferences.</p>
+      <p>OBS docks, OBS Browser Sources, and desktop browsers may use different cookie/storage profiles. Do not assume that configuring a dock signs in an independent Browser Source. If sign-in cannot complete inside your OBS Browser Source, use Option A. Native OBS provider authentication still needs live validation; this mode is experimental.</p>
+      <p>Use one capture location per channel. Do not keep a dock capturing the same channel as a standalone capture-and-overlay source. Use OBS's existing-source option when reusing the same capture source across scenes.</p>
+      <h2 id="troubleshooting">Troubleshooting</h2>
+      <dl>
+        <dt><strong>My overlay is blank</strong></dt><dd>Check that Lite is still open and the overlay uses the same session ID. Send a test message. If a test arrives but live chat does not, check the source's status and channel. If neither arrives, check the overlay URL and whether your network blocks the relay connection.</dd>
+        <dt><strong>Copy link is blocked</strong></dt><dd>Click the visible overlay URL, then copy the selected text with your keyboard or device's copy menu.</dd>
+        <dt><strong>A source is idle or shows an error</strong></dt><dd>Check its Options and error text. Reconnect after fixing the settings. YouTube and Twitch may require another sign-in if authorization has expired.</dd>
+        <dt><strong>I see duplicate messages</strong></dt><dd>Check for a second Lite tab, extension capture, or desktop capture of the same channel and session. Keep only the intended capture running.</dd>
+        <dt><strong>Settings disappeared</strong></dt><dd>Settings are stored in this browser's local storage. A different browser, private window, or cleared site data uses a different set of settings.</dd>
+      </dl>
+      <p><a href="./index.html">Return to Lite</a> · <a href="../docs/customoverlays.md">Custom overlay reference</a> · <a href="../">Social Stream Ninja</a></p>
+    </article>
+  </main>
+</body>
+</html>

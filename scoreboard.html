@@ -554,11 +554,17 @@
 		function updateSubtitle(reason) {
 			var subtitle = getById("scoreboardSubtitle");
 			if (!entries.length) {
-				subtitle.textContent = "Waiting for points";
+				subtitle.textContent = getScoreboardText("waitingtext", "Waiting for points");
 				return;
 			}
-			var label = reason ? reason.replace(/_/g, " ") : "live";
-			subtitle.textContent = entries.length + " ranked viewer" + (entries.length === 1 ? "" : "s") + " - " + label;
+			var ranked = getScoreboardText("rankedtext", "{count} ranked viewer" + (entries.length === 1 ? "" : "s"));
+			ranked = ranked.replace(/\{count\}/g, function () { return String(entries.length); });
+			var label = urlParams.has("hidereason") ? "" : getScoreboardText("reasontext", reason ? reason.replace(/_/g, " ") : "live");
+			subtitle.textContent = ranked + (label ? " - " + label : "");
+		}
+
+		function getScoreboardText(param, fallback) {
+			return urlParams.has(param) ? urlParams.get(param) : fallback;
 		}
 
 		function createAvatar(entry) {
@@ -599,7 +605,7 @@
 			if (!entries.length) {
 				var empty = document.createElement("div");
 				empty.className = "empty-state";
-				empty.textContent = "Enable Points System, then wait for chat activity or manage points from the popup.";
+				empty.textContent = getScoreboardText("emptytext", "Enable Points System, then wait for chat activity or manage points from the popup.");
 				list.appendChild(empty);
 				document.title = "Scoreboard";
 				return;
@@ -627,7 +633,8 @@
 				meta.className = "meta";
 				meta.appendChild(createPlatformIcon(entry));
 				var metaText = document.createElement("span");
-				metaText.textContent = entry.currentStreak ? entry.type + " streak " + entry.currentStreak : entry.type;
+				var streakLabel = getScoreboardText("streaktext", "streak");
+				metaText.textContent = entry.currentStreak ? entry.type + " " + (streakLabel ? streakLabel + " " : "") + entry.currentStreak : entry.type;
 				meta.appendChild(metaText);
 				identity.appendChild(name);
 				identity.appendChild(meta);
@@ -637,7 +644,7 @@
 				points.textContent = Math.round(entry.points).toLocaleString();
 				var label = document.createElement("span");
 				label.className = "points-label";
-				label.textContent = "points";
+				label.textContent = getScoreboardText("pointstext", "points");
 				points.appendChild(label);
 
 				row.appendChild(rank);

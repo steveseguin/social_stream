@@ -8,6 +8,9 @@
 	var lastViewerCount = null;
 	var sourceImg = "";
 	var sourceName = "VPZone";
+	var sourceBrandChannel = "";
+	var sourceBrandLoaded = false;
+	var sourceBrandPending = null;
 	var seenWsMessageIds = new Map();
 	var captureStartedAt = Date.now();
 	var staleHistoryWindowMs = 30000;
@@ -73,6 +76,52 @@
 		}
 	}
 
+	function refreshSourceBranding() {
+		var channel = String(currentChannelSlug || getChannelSlugFromUrl() || "").trim().toLowerCase();
+		if (!channel) {
+			sourceBrandChannel = "";
+			sourceBrandLoaded = true;
+			sourceBrandPending = null;
+			sourceName = "VPZone";
+			sourceImg = "";
+			return Promise.resolve({ sourceName: sourceName, sourceImg: sourceImg });
+		}
+		if (channel === sourceBrandChannel && sourceBrandPending) {
+			return sourceBrandPending;
+		}
+		if (channel === sourceBrandChannel && sourceBrandLoaded) {
+			return Promise.resolve({ sourceName: sourceName, sourceImg: sourceImg });
+		}
+
+		sourceBrandChannel = channel;
+		sourceBrandLoaded = false;
+		sourceName = channel;
+		sourceImg = "";
+		sourceBrandPending = fetch("/api/chat/profile-card/" + encodeURIComponent(channel), {
+			credentials: "omit",
+			cache: "force-cache",
+			headers: { Accept: "application/json" }
+		})
+			.then(function (response) { return response.ok ? response.json() : {}; })
+			.then(function (profile) {
+				if (sourceBrandChannel !== channel) return { sourceName: sourceName, sourceImg: sourceImg };
+				sourceName = profile && profile.display_name ? String(profile.display_name) : channel;
+				sourceImg = profile && profile.avatar_url ? toAbsoluteUrl(String(profile.avatar_url)) : "";
+				return { sourceName: sourceName, sourceImg: sourceImg };
+			})
+			.catch(function () {
+				return { sourceName: sourceName, sourceImg: sourceImg };
+			})
+			.then(function (branding) {
+				if (sourceBrandChannel === channel) {
+					sourceBrandLoaded = true;
+					sourceBrandPending = null;
+				}
+				return branding;
+			});
+		return sourceBrandPending;
+	}
+
 	function pruneSeenWs(now) {
 		if (!seenWsMessageIds.size) return;
 		seenWsMessageIds.forEach(function (ts, id) {
@@ -102,6 +151,30 @@
 
 	function escapeHtmlMaybe(text) {
 		return escapeHtml((text == null ? "" : String(text)));
+	}
+
+	function safeEmoteUrl(value) {
+		if (typeof value !== "string" || !value.trim()) return "";
+		try {
+			var url = new URL(value, window.location.href);
+			return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
+		} catch (e) {
+			return "";
+		}
+	}
+
+	function renderWsMessage(text, emoteMap) {
+		text = String(text == null ? "" : text);
+		if (settings.textonlymode) return text;
+		if (!emoteMap || typeof emoteMap !== "object") {
+			return escapeHtmlMaybe(text).replace(/\n/g, "<br>");
+		}
+		return text.split(/(\s+)/).map(function (token) {
+			var emoteUrl = safeEmoteUrl(emoteMap[token]);
+			if (!emoteUrl) return escapeHtmlMaybe(token);
+			var label = token.replace(/^:|:$/g, "");
+			return '<img src="' + escapeHtmlMaybe(emoteUrl) + '" alt="' + escapeHtmlMaybe(label) + '" title="' + escapeHtmlMaybe(label) + '" class="regular-emote vpzone-emote"/>';
+		}).join("").replace(/\n/g, "<br>");
 	}
 
 	function tierBadge(tier, subMonths) {
@@ -303,7 +376,7 @@
 			fetchAvatar(name);
 		}
 
-		var rendered = escapeHtmlMaybe(body);
+		var rendered = renderWsMessage(body, msg.emoteMap || msg.emote_map || (msg.metadata && (msg.metadata.emoteMap || msg.metadata.emote_map)));
 		var wsPayload = {
 			chatname: escapeHtmlMaybe(name),
 			chatmessage: rendered,
@@ -353,9 +426,18 @@
 		if (!isExtensionOn) {
 			return;
 		}
-		try {
-			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function () {});
-		} catch (e) {}
+		function send() {
+			if (!isExtensionOn) return;
+			if (data && data.type === "vpzone") {
+				data.sourceName = sourceName;
+				data.sourceImg = sourceImg;
+			}
+			try {
+				chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function () {});
+			} catch (e) {}
+		}
+		refreshSourceBranding();
+		send();
 	}
 
 	function escapeHtml(unsafe) {
@@ -727,7 +809,7 @@
 	}
 
 	function parseRow(row) {
-		if (!row || row.nodeType !== 1 || !row.isConnected || row.parentElement !== observedList) {
+		if (!row || row.nodeType !== 1 || !row.isConnected || !observedList || !observedList.contains(row)) {
 			return null;
 		}
 		if (row.matches && row.matches('[data-chat-message="true"]')) {
@@ -805,7 +887,7 @@
 	}
 
 	function queueRow(row) {
-		if (!row || row.nodeType !== 1 || row.parentElement !== observedList) {
+		if (!row || row.nodeType !== 1 || !observedList || !observedList.contains(row)) {
 			return;
 		}
 		if (row.dataset.ssnVpzoneSeen === "true" || row.dataset.ssnVpzoneQueued === "true") {
@@ -827,6 +909,15 @@
 
 	function findRowFromNode(node) {
 		var current = node && node.nodeType === 1 ? node : node ? node.parentElement : null;
+		if (!current || !observedList || !observedList.contains(current)) {
+			return null;
+		}
+		if (current.closest) {
+			var attributedRow = current.closest('[data-chat-message="true"]');
+			if (attributedRow && observedList.contains(attributedRow)) {
+				return attributedRow;
+			}
+		}
 		while (current && current !== observedList && current.parentElement !== observedList) {
 			current = current.parentElement;
 		}
@@ -842,6 +933,26 @@
 				row.dataset.ssnVpzoneSeen = "true";
 			}
 		});
+		Array.from(target && target.querySelectorAll ? target.querySelectorAll('[data-chat-message="true"]') : []).forEach(function (row) {
+			row.dataset.ssnVpzoneSeen = "true";
+		});
+	}
+
+	function queueRowsFromNode(node) {
+		var element = node && node.nodeType === 1 ? node : null;
+		var attributedRows = [];
+		if (element && element.matches && element.matches('[data-chat-message="true"]')) {
+			attributedRows.push(element);
+		}
+		if (element && element.querySelectorAll) {
+			attributedRows = attributedRows.concat(Array.from(element.querySelectorAll('[data-chat-message="true"]')));
+		}
+		if (attributedRows.length) {
+			attributedRows.forEach(queueRow);
+			return;
+		}
+		var row = findRowFromNode(node);
+		if (row) queueRow(row);
 	}
 
 	function disconnectObserver() {
@@ -997,10 +1108,7 @@
 		observer = new MutationObserver(function (mutations) {
 			mutations.forEach(function (mutation) {
 				Array.from(mutation.addedNodes || []).forEach(function (node) {
-					var row = findRowFromNode(node);
-					if (row) {
-						queueRow(row);
-					}
+					queueRowsFromNode(node);
 				});
 			});
 		});
@@ -1052,15 +1160,10 @@
 		sendResponse(false);
 	});
 
-	try {
-		sourceImg = new URL("/favicon.ico", window.location.origin).href;
-	} catch (e) {
-		sourceImg = "";
-	}
-
 	console.log("Social Stream injected: VPZone");
 
 	currentChannelSlug = getChannelSlugFromUrl();
+	refreshSourceBranding();
 	window.addEventListener("message", handleWindowMessage);
 
 	setInterval(function () {
@@ -1074,6 +1177,7 @@
 			captureStartedAt = Date.now();
 			wsCaptureActive = false;
 			currentChannelSlug = getChannelSlugFromUrl();
+			refreshSourceBranding();
 		}
 		attachObserver();
 	}, 1000);

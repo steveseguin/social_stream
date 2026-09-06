@@ -474,6 +474,14 @@
 		return "";
 	}
 
+	function getDeleteUsername(ele) {
+		const usernameEle = ele?.querySelector?.(".chat-author__intl-login");
+		if (!usernameEle?.innerText) {
+			return "";
+		}
+		return usernameEle.innerText.replace(/^\s*\(@?/, "").replace(/\)\s*$/, "").trim();
+	}
+
 	function isDeletedMessageNode(node) {
 		if (!node || node.nodeType !== 1) {
 			return false;
@@ -1327,6 +1335,26 @@
 		} else if (!chatmessage && !hasDonation && !username && !contentimg) {
 			return;
 		}
+
+		if (settings.pluralmind && !event && chatmessage && !contentimg && !isWatchStreakNotice(ele, chatmessage) && globalThis.SSNPluralmindIntegration) {
+			var pluralmindResult = await globalThis.SSNPluralmindIntegration.resolveRenderedMessage({
+				username: username,
+				message: chatmessage,
+				textOnly: settings.textonlymode || false,
+				documentRef: document
+			});
+			if (pluralmindResult) {
+				displayName = escapeHtml(pluralmindResult.name);
+				chatmessage = pluralmindResult.cleanedMessage;
+				if (pluralmindResult.color) {
+					nameColor = pluralmindResult.color;
+				}
+				var pluralmindPronounBadge = globalThis.SSNPluralmindIntegration.createPronounBadge(pluralmindResult.pronouns);
+				if (pluralmindPronounBadge) {
+					chatbadges.push(pluralmindPronounBadge);
+				}
+			}
+		}
 		
 		var originalMessage = "";
 	    var ReplyMessage = "";
@@ -1787,8 +1815,15 @@
 			if (chatname) {
 				data.chatname = chatname;
 			}
+			if (settings.pluralmind) {
+				const username = getDeleteUsername(messageEle) || getDeleteUsername(ele);
+				if (username) {
+					data.username = username;
+					data.meta = { pluralmind: true };
+				}
+			}
 
-			if (!data.id && !data.chatname) {
+			if (!data.id && !data.username && !data.chatname) {
 				return;
 			}
 			if (!data.id) {

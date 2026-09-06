@@ -43,7 +43,7 @@ Keep this file Chrome-80 friendly: no <script type="module">, no top-level impor
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Compact Clean Chat Overlay</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-<script src="https://socialstream.ninja/libs/colours.js" type="text/javascript"></script>
+<script src="../libs/colours.js" type="text/javascript"></script>
 <link rel="canonical" href="https://socialstream.ninja/">
 <meta name="generator" content="Social Stream Ninja - https://github.com/steveseguin/social_stream">
 <style>
@@ -261,6 +261,7 @@ body.ultra .content-img {
 }
 #spacer { width: 100%; padding: 0; margin: 0; border: none; background: transparent; }
 </style>
+<link rel="stylesheet" href="./collections.css">
 </head>
 <body>
 <div id="chat-container">
@@ -270,6 +271,10 @@ body.ultra .content-img {
 </div>
 <script>
     var urlParams = new URLSearchParams(window.location.search);
+    var collectionStyle = urlParams.get('style');
+    if (['cute', 'cozy', 'cats', 'music', 'arcade', 'slate', 'paper', 'micro'].indexOf(collectionStyle) !== -1) {
+        document.body.classList.add('collection', 'collection-chat', 'style-' + collectionStyle);
+    }
     var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
     // Transport migration guard: only pages with full server parity may skip the legacy bridge.
     var TRANSPORT_CAPABILITIES = {
@@ -585,6 +590,10 @@ body.ultra .content-img {
             const ts = messageTimestamps.get(message.id);
             if (ts && (now - ts) > showtime && !message.classList.contains('fading')) {
                 message.classList.add('fading');
+                setTimeout(function () {
+                    removeOverlayMessage(message);
+                    adjustMessageWrapperScroll();
+                }, 1200);
             }
         });
     }, 1000);
@@ -652,7 +661,7 @@ body.ultra .content-img {
         if (!data || typeof data !== "object") { return; }
         if (isMessageBlocked(data)) { return; }
         if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg) { return; }
-        if (!data.chatname && data.meta) { return; }
+        if (!data.chatname && data.meta && !data.chatmessage && !data.contentimg && !data.hasDonation && !data.donation) { return; }
 
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message');

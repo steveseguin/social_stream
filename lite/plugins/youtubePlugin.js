@@ -81,7 +81,7 @@ export class YoutubePlugin extends BasePlugin {
       ...options,
       id: 'youtube',
       name: 'YouTube',
-      description: 'Connect directly to YouTube live chat using OAuth and forward messages to overlays.'
+      description: 'Sign in to find your live broadcast, or choose one in Options.'
     });
 
     this.clientIdInput = null;
@@ -95,6 +95,7 @@ export class YoutubePlugin extends BasePlugin {
     this.token = storage.get(TOKEN_KEY, null);
     this.channelInfo = storage.get(CHANNEL_KEY, null);
     this.pollTimer = null;
+    this.pollGeneration = 0;
     this.nextPageToken = null;
     this.pollInterval = 5000;
 
@@ -184,7 +185,7 @@ export class YoutubePlugin extends BasePlugin {
   }
 
   renderSettings(container) {
-    const chatRow = document.createElement('div');
+    const chatRow = document.createElement('label');
     chatRow.className = 'field';
 
     const chatLabel = document.createElement('span');
@@ -312,6 +313,9 @@ export class YoutubePlugin extends BasePlugin {
       const needsAuth = !this.isTokenValid();
       this.authButton.hidden = !needsAuth;
       this.authButton.disabled = this.state === 'connecting';
+    }
+    if (this.connectBtn) {
+      this.connectBtn.hidden = !this.isTokenValid() || this.state === 'connected';
     }
   }
 
@@ -937,10 +941,12 @@ export class YoutubePlugin extends BasePlugin {
   }
 
   startListening() {
+    this.stopListening();
     this.pollChat();
   }
 
   stopListening() {
+    this.pollGeneration++;
     if (this.pollTimer) {
       window.clearTimeout(this.pollTimer);
       this.pollTimer = null;
@@ -948,6 +954,7 @@ export class YoutubePlugin extends BasePlugin {
   }
 
   async pollChat() {
+    const generation = this.pollGeneration;
     if (this.state !== 'connected') {
       return;
     }
@@ -989,7 +996,7 @@ export class YoutubePlugin extends BasePlugin {
       }
 
       const data = await res.json();
-      if (this.state !== 'connected') {
+      if (generation !== this.pollGeneration || this.state !== 'connected') {
         return;
       }
       this.nextPageToken = data.nextPageToken || null;
@@ -1009,6 +1016,9 @@ export class YoutubePlugin extends BasePlugin {
         );
       }
     } catch (err) {
+      if (generation !== this.pollGeneration) {
+        return;
+      }
       if (this.isLiveChatInactiveError(err) && this.beginLiveChatRecovery({ reason: err })) {
         return;
       }
@@ -1016,7 +1026,7 @@ export class YoutubePlugin extends BasePlugin {
       return;
     }
 
-    if (this.state !== 'connected') {
+    if (generation !== this.pollGeneration || this.state !== 'connected') {
       return;
     }
     this.pollTimer = window.setTimeout(() => this.pollChat(), this.pollInterval);

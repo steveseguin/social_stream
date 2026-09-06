@@ -485,10 +485,17 @@
 			}
 			
 
+			.largeContent .hl-imgContent {
+				max-width: 100%;
+				min-width: 0;
+			}
 			.largeContent .hl-imgContent img, .largeContent .hl-imgContent video {
-				max-width: 160px !important;
+				width: 240px;
+				max-width: calc(100% - 4px) !important;
 				margin: 0 2px;
-				max-height: 80px !important;
+				height: auto !important;
+				max-height: 240px !important;
+				object-fit: contain;
 			}
 			.largeContent .hl-content {
 				margin: 4px 1px;
@@ -2509,7 +2516,21 @@
 			.horizontal .hl-message {
 				min-height: 24px;
 			}
-			
+
+			body:not(.twoLines) .horizontal .highlight-chat,
+			body:not(.twoLines) .horizontal .hl-message,
+			body:not(.twoLines) .horizontal .hl-imgContent {
+				display: inline-flex;
+				align-items: center;
+				flex-wrap: nowrap;
+			}
+
+			body:not(.twoLines) .horizontal:not(.largeContent) .hl-imgContent img,
+			body:not(.twoLines) .horizontal:not(.largeContent) .hl-imgContent video {
+				height: 24px !important;
+				max-height: 24px !important;
+			}
+
 			.alignright .horizontal .hl-donation {
 				padding-right: 11px;
 			}
@@ -7012,6 +7033,10 @@
 				let selector = "";
 				if (data.delete.id) {
 					selector = dataAttributeSelector("data-mid", data.delete.id);
+				} else if (data.delete.type === "twitch" && data.delete.meta && data.delete.meta.pluralmind && data.delete.userid) {
+					selector = dataAttributeSelector("data-userid", data.delete.userid) + dataAttributeSelector("data-source-type", data.delete.type);
+				} else if (data.delete.type === "twitch" && data.delete.meta && data.delete.meta.pluralmind && data.delete.username) {
+					selector = dataAttributeSelector("data-username", data.delete.username) + dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.chatname && data.delete.type) {
 					selector = dataAttributeSelector("data-chatname", data.delete.chatname) + dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.type) {
@@ -7036,10 +7061,11 @@
 			function getUserHistory(element) {
 				var chatName = element.dataset.chatname;
 				var userId = element.dataset.userid || "";
+				var username = element.dataset.username || "";
 				var type = element.dataset.sourceType;
 
 				if (chatName && type) {
-					send2Extension({ action: "getUserHistory", value: { chatname: chatName, userid: userId, type: type } });
+					send2Extension({ action: "getUserHistory", value: { chatname: chatName, userid: userId, username: username, type: type } });
 				}
 			}
 			

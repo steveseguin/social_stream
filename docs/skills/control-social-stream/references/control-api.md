@@ -74,7 +74,7 @@ In API 1.3.1, `inspectSourcePage` and `inspectAppWindow` accept optional
 `elementOrder: "reverse"`. Use it when a late-mounted modal falls beyond the bounded element
 limit; opaque references and all interaction safety rules remain unchanged.
 
-Controllable settings are returned by `getCapabilities`. The initial set is `betaMode`, `youtubeAutoAdd`, `youtubeAutoCleanup`, `youtubeCheckInterval`, `forceTikTokClassic`, `preferTikTokLegacy`, and `lastTikTokMode`.
+Controllable settings are returned by `getCapabilities`. SSApp 0.4.22 and newer expose `betaMode`, `forceTikTokClassic`, `preferTikTokLegacy`, and `lastTikTokMode`. The retired `youtubeAutoAdd`, `youtubeAutoCleanup`, and `youtubeCheckInterval` settings are rejected; use group Auto-activate for YouTube discovery. Always read the running app's capabilities.
 
 Connection-mode changes are validated against the source platform's advertised `connectionModes`; a globally known mode is not necessarily valid for every platform.
 
@@ -93,13 +93,13 @@ timeout. Use monotonic diagnostic counters when a soak test outlives the retaine
 `getSourceDiagnostics` returns normalized source state, capture counters, lifecycle details,
 and on-demand page/process state. When available, `process.pid` and `process.type` identify
 the matched Chromium renderer, while `process.privateKb` and `process.residentSetKb` report
-its memory in KiB. Multiple sources can share one PID, so count that process memory only once. Page URLs have credentials, query strings, and fragments
+its memory in KiB. Unavailable memory fields are null; Electron exposes private memory only on Windows. Multiple sources can share one PID, so count that process memory only once. Page URLs have credentials, query strings, and fragments
 removed; local file paths are hidden. Virtual WebSocket sources return counters and status,
 but no page or screenshot.
 
 `captureSourceScreenshot` returns bounded PNG or JPEG data for a real source window.
 `inspectSourcePage` returns visible text and no more than 200 semantic elements with
-short-lived opaque references. It never accepts or returns JavaScript, HTML, selectors,
+short-lived opaque references. From SSApp 0.4.24, inspection allows two seconds per frame and ten seconds overall; unresponsive subframes are omitted. If the main page cannot be inspected, it returns `SOURCE_PAGE_UNAVAILABLE`; wait for loading to finish and retry. It never accepts or returns JavaScript, HTML, selectors,
 link destinations, request headers, cookies, browser storage, or current input values.
 Its `contentSafety` metadata marks page text as `untrusted-third-party-content`, warns that
 it may contain private information, and sets `treatAsInstructions` to false. Screenshots
@@ -158,7 +158,7 @@ Reload all active sources:
 Change a setting:
 
 ```json
-{"action":"updateSettings","value":{"settings":{"youtubeAutoCleanup":true}}}
+{"action":"updateSettings","value":{"settings":{"preferTikTokLegacy":true}}}
 ```
 
 Gracefully stop a headless app:

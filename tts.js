@@ -163,6 +163,14 @@ TTS.getVoiceOverride = function(options) {
     return TTS.normalizeSpeakOptions(options).voice || "";
 };
 
+TTS.getDesktopSystemTtsBridge = function() {
+    var bridge = window.ninjafy || window.electronApi;
+    try {
+        bridge = bridge || window.parent?.ninjafy || window.parent?.electronApi;
+    } catch (e) {}
+    return bridge && typeof bridge.systemTts === "function" ? bridge : null;
+};
+
 TTS.normalizeSystemVoiceIdentifier = function(value) {
     return String(value || "")
         .trim()
@@ -1462,6 +1470,16 @@ TTS.speak = function(text, allow = false, options = {}) {
 	TTS.initAudioContext();
 	options = TTS.normalizeSpeakOptions(options);
 
+	const desktopSystemTts = TTS.getDesktopSystemTtsBridge();
+	if ((!TTS.TTSProvider || TTS.TTSProvider === "system") && desktopSystemTts) {
+		if (!TTS.premiumQueueActive) {
+			TTS.desktopSystemTTS(text, options);
+		} else {
+			TTS.queuePremiumTTS(text, allow, options);
+		}
+		return;
+	}
+
     // Use the selected provider
 	switch (TTS.TTSProvider) {
 		case "piper":
@@ -1545,7 +1563,18 @@ TTS.speak = function(text, allow = false, options = {}) {
 			return;
 	}
 
+    TTS.webSystemTTS(text, options);
+};
+
+TTS.webSystemTTS = function(text, options, finishPremiumQueue = false) {
+    let premiumFinished = false;
+    const finishPremium = function() {
+        if (!finishPremiumQueue || premiumFinished) return;
+        premiumFinished = true;
+        TTS.finishedAudio();
+    };
     if (!TTS.voices && TTS.voices === null) {
+        finishPremium();
         return;
     }
     // system tts instead
@@ -1567,6 +1596,7 @@ TTS.speak = function(text, allow = false, options = {}) {
     const speechVoice = (voiceOverride && TTS.findSystemVoice(voiceOverride, TTS.speechLang)) || TTS.voice;
     
     if (!window.SpeechSynthesisUtterance) {
+        finishPremium();
         return;
     }
 
@@ -1588,6 +1618,7 @@ TTS.speak = function(text, allow = false, options = {}) {
 
     try {
         speechInput.addEventListener("end", function (e) {
+            finishPremium();
             if (window.speechSynthesis.pending || window.speechSynthesis.speaking) {
                 TTS.updateButtonState('speaking');
             } else if (!TTS.speech) {
@@ -1596,6 +1627,11 @@ TTS.speak = function(text, allow = false, options = {}) {
                 TTS.updateButtonState('on');
             }
         });
+        if (finishPremiumQueue) {
+            speechInput.addEventListener("error", function () {
+                finishPremium();
+            }, { once: true });
+        }
     } catch (e) {
         console.error(e);
     }
@@ -2106,6 +2142,44 @@ TTS.ElevenLabsTTS = async function(tts, options) {
         if (premiumSerial === TTS.premiumSerial) {
             TTS.finishedAudio();
         }
+    }
+};
+
+TTS.desktopSystemTTS = async function(text, options) {
+    TTS.premiumQueueActive = true;
+    const premiumSerial = ++TTS.premiumSerial;
+    try {
+        const bridge = TTS.getDesktopSystemTtsBridge();
+        if (!bridge) throw new Error("Desktop System TTS bridge is unavailable");
+        const voiceOverride = TTS.getVoiceOverride(options);
+        const response = await bridge.systemTts(text, {
+            voice: voiceOverride || TTS.voiceName || (TTS.voice && TTS.voice.name) || "",
+            lang: TTS.speechLang,
+            rate: TTS.rate,
+            pitch: TTS.pitch
+        });
+        TTS.lastDesktopSystemTts = {
+            voice: response?.voice || "",
+            lang: response?.lang || ""
+        };
+        if (premiumSerial !== TTS.premiumSerial) return;
+        const wavBuffer = response?.wavBuffer || response;
+        if (TTS.neuroSyncEnabled) {
+            try {
+                await TTS.sendToNeuroSync(new Blob([wavBuffer], { type: "audio/wav" }));
+            } catch (error) {
+                console.error("NeuroSync error:", error);
+            } finally {
+                if (premiumSerial === TTS.premiumSerial) TTS.finishedAudio();
+            }
+            return;
+        }
+        await TTS.playAudioBlob(new Blob([wavBuffer], { type: "audio/wav" }));
+        TTS.updateButtonState("speaking");
+    } catch (error) {
+        if (premiumSerial !== TTS.premiumSerial) return;
+        console.error("Desktop System TTS failed; falling back to Web Speech:", error);
+        TTS.webSystemTTS(text, options, true);
     }
 };
 

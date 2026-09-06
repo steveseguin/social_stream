@@ -412,6 +412,11 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `style` | `jar`, `meter`, `bar`, `compact`, `vertical`, `minimal`, `text` | Selects the tip jar display style. `bar` is the fluid goal bar; `compact`/`vertical` are simple square-edged bars for corners; `text` is a one-line readout |
 | `goal` | number | Sets the target amount for the bar or jar |
 | `title` | string | Sets the visible goal title (e.g. `Star Goal`, `SuperChat Goal`) |
+| `goalmetric` | `value`, `count` | Uses donation value by default. `count` adds one per qualifying donation event regardless of its monetary value and takes priority over Hype scoring |
+| `countdonations` | boolean | Alias for `goalmetric=count` |
+| `tipjarevent` or `tipjarevents` | comma-separated event names | Counts only matching paid event types, such as `superchat`, `supersticker`, or `superchat,supersticker` |
+| `countlabel` | string | Overrides the plural unit label used by count goals, such as `Super Chats` |
+| `countsingular` | string | Optional singular label used for one counted event, such as `Super Chat` |
 | `tipjartype` | `usd`, `stars`, `bits`, `coins`, `diamonds`, `kicks`, `jewels`, `tokens`, `hearts`, `gold` | Counts only that donation unit/type. When set, the jar uses the raw unit count instead of converting to USD |
 | `tipjarunit` or `donationtype` | same as `tipjartype` | Alias for `tipjartype` |
 | `tipjarunitlabel` | string | Overrides the displayed unit label for a filtered unit bar |
@@ -421,6 +426,8 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `controls` | boolean | Shows reset/history/export controls |
 | `sound` | boolean | Plays a sound on accepted donations |
 | `hype` | boolean | Enables hype cup scoring mode |
+| `notips`, `nosubs`, `noresubs`, `nogifts` | boolean | Excludes that contribution class from Hype scoring |
+| `excludegiftpurchase` | boolean | Excludes YouTube gifted-membership purchase events from the Tip Jar, including Hype scoring |
 | `levelsize` or `increment` | number | Turns the goal into repeating bands/levels of this size (e.g. `1000` stars or `50` dollars). The bar fills, celebrates, and rolls into the next level instead of stopping |
 | `rollinggoal` or `cumulativegoal` | boolean or number | Keeps the displayed amount cumulative and advances the target to the next goal step after each completion. Example: `goal=50&rollinggoal` displays `$60 / $100` after a $60 total |
 | `goalstep` or `goalincrement` | number | Optional step size for `rollinggoal`; defaults to `goal` |

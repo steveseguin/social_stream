@@ -1,6 +1,6 @@
 # ISSUE-010: Event Flow `userPool`/`accumulator` triggers throw ReferenceError
 
-- **Status**: open
+- **Status**: fixed (2026-09-05, local)
 - **Severity**: low
 - **Area**: social_stream `actions/EventFlowSystem.js`
 - **Found**: 2026-07-22, during Event Flow editor documentation pass
@@ -20,5 +20,7 @@ Evaluators use the correct variable, and/or Pass 1 isolates per-trigger errors.
 - `actions/EventFlowSystem.js:1756-1762` — unprotected Pass 1
 
 ## Notes
+
+Both evaluators now read the existing `config` variable. Regression tests import and execute complete flows, checking distinct pool entrants, unrelated actions, accumulator thresholds, and per-user totals. The triggers remain absent from the editor palette; this fixes execution of existing/imported configurations.
 
 Related to ISSUE-007 (same missing error isolation in Pass 1).

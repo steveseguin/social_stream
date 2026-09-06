@@ -208,6 +208,7 @@ body, html {
 </div>
 <script>
     var urlParams = new URLSearchParams(window.location.search);
+    var showtime = Math.max(0, parseInt(urlParams.get("showtime"), 10) || 0);
     var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
     // Transport migration guard: only pages with full server parity may skip the legacy bridge.
     var TRANSPORT_CAPABILITIES = {
@@ -366,7 +367,8 @@ body, html {
 
         // Retire messages that have fully rolled past the top edge
         var first = messages[0];
-        while (first && (first.offsetTop + first.offsetHeight) < scrollOffset) {
+        while (first && ((first.offsetTop + first.offsetHeight) < scrollOffset ||
+            (showtime > 0 && Date.now() - messageTimestamps.get(first.id) >= showtime))) {
             removeFirstMessageCompensated();
             messages = getOverlayMessages();
             first = messages.length ? messages[0] : null;

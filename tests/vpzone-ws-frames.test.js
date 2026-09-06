@@ -18,6 +18,18 @@ const CHROME_MOCK = `
 					return;
 				}
 				if (payload && payload.type === "toBackground") {
+					var request = payload.data || {};
+					if (String(request.url || "").indexOf("/api/chat/profile-card/testchan") !== -1) {
+						if (cb) cb({
+							ok: true,
+							status: 200,
+							data: {
+								avatar_url: "https://cdn.example.test/testchan-avatar.webp",
+								display_name: "Test Channel"
+							}
+						});
+						return;
+					}
 					if (cb) cb({ ok: false, status: 0, error: "network disabled in test" });
 					return;
 				}
@@ -103,7 +115,19 @@ async function testContentScript(browser) {
 	assert.ok(reply.chatmessage.indexOf("<i><small>") === 0, "reply rows quote the target message");
 	assert.strictEqual(reply.meta.reply.messageId, "m-1");
 
-	// 4. Pixels cheer becomes a donation-bearing chat row with the native id.
+	// 4. Native VPZONE emotes render as images instead of raw shortcode text.
+	await send({
+		id: "m-emote", type: "msg", username: "emoter", body: "hello :wave:", ts: now(),
+		emoteMap: { ":wave:": "https://cdn.example.test/wave.webp" }
+	});
+	await waitForRelayed(page, "p && p.message && p.message.id === 'm-emote'", 1);
+	messages = await relayedMessages(page);
+	const emote = messages.find((m) => m.id === "m-emote");
+	assert.ok(emote.chatmessage.includes('class="regular-emote vpzone-emote"'));
+	assert.ok(emote.chatmessage.includes('src="https://cdn.example.test/wave.webp"'));
+	assert.ok(!emote.chatmessage.includes(":wave:"), "native emote shortcode must be replaced by its image");
+
+	// 5. Pixels cheer becomes a donation-bearing chat row with the native id.
 	await send({
 		id: "m-3", type: "system", username: "system", ts: now(),
 		metadata: { kind: "pixels_cheer", amount: 250, username: "carol", message: "great stream" }
@@ -116,11 +140,11 @@ async function testContentScript(browser) {
 	assert.strictEqual(cheer.id, "m-3");
 	assert.ok(!cheer.event, "pixels cheers keep event blank (Kick tip pattern)");
 
-	// 5. delete_message with camelCase metadata id.
+	// 6. delete_message with camelCase metadata id.
 	await send({ type: "delete_message", metadata: { messageId: "m-1" } });
-	// 6. delete_message with snake_case metadata id (server emits snake_case elsewhere).
+	// 7. delete_message with snake_case metadata id (server emits snake_case elsewhere).
 	await send({ type: "delete_message", metadata: { message_id: "m-2" } });
-	// 7. clear_chat wipes by type.
+	// 8. clear_chat wipes by type.
 	await send({ type: "clear_chat" });
 	await waitForRelayed(page, "p && p.delete", 3);
 	const deletes = await relayedDeletes(page);
@@ -128,14 +152,14 @@ async function testContentScript(browser) {
 	assert.deepStrictEqual(deletes[1], { type: "vpzone", id: "m-2" });
 	assert.deepStrictEqual(deletes[2], { type: "vpzone" });
 
-	// 8. Outgoing raid frames are skipped; incoming shoutout/lifecycle/reward map to standard names.
+	// 9. Outgoing raid frames are skipped; incoming shoutout/lifecycle/reward map to standard names.
 	await send({ id: "m-5", type: "raid", username: "someone", body: "raiding out", ts: now(), metadata: { kind: "outgoing" } });
 	await send({ id: "m-6", type: "system", username: "system", ts: now(), metadata: { kind: "stream_started", channel_slug: "testchan" } });
 	await send({ id: "m-7", type: "system", username: "system", body: "redeemed Hydrate", ts: now(), metadata: { kind: "channel_points_redeem", username: "dave" } });
 	await send({ id: "m-8", type: "shoutout", username: "modguy", ts: now(), metadata: { target_user: "friend" } });
-	await waitForRelayed(page, "p && p.message", 6);
+	await waitForRelayed(page, "p && p.message", 7);
 	messages = await relayedMessages(page);
-	assert.strictEqual(messages.length, 6, "outgoing raid must not emit a row");
+	assert.strictEqual(messages.length, 7, "outgoing raid must not emit a row");
 	const online = messages.find((m) => m.event === "stream_online");
 	assert.strictEqual(online.chatname, "testchan");
 	const reward = messages.find((m) => m.event === "reward");
@@ -146,6 +170,61 @@ async function testContentScript(browser) {
 
 	await page.close();
 	console.log("content script frame handling: ok");
+}
+
+async function testNestedDomCaptureAndBranding(browser) {
+	const page = await browser.newPage();
+	await page.route("https://vpzone.tv/**", async (route) => {
+		const url = new URL(route.request().url());
+		if (url.pathname === "/api/chat/profile-card/testchan") {
+			await route.fulfill({
+				status: 200,
+				contentType: "application/json",
+				body: JSON.stringify({
+					avatar_url: "https://cdn.example.test/testchan-avatar.webp",
+					display_name: "Test Channel"
+				})
+			});
+			return;
+		}
+		await route.fulfill({
+			status: 200,
+			contentType: "text/html",
+			body: '<div data-chat-container="true"><div class="space-y-2"><div id="nested-rows"></div></div></div>'
+		});
+	});
+	await page.goto("https://vpzone.tv/watch/testchan");
+	await page.addScriptTag({ content: CHROME_MOCK });
+	await page.addScriptTag({ content: contentSource });
+
+	await page.evaluate(() => {
+		function makeRow(username, message, id) {
+			const row = document.createElement("div");
+			row.setAttribute("data-chat-message", "true");
+			row.setAttribute("data-username", username);
+			row.setAttribute("data-msg-id", id);
+			row.setAttribute("data-timestamp", new Date().toISOString());
+			row.innerHTML = '<span data-chat-username="true"></span><p data-chat-body="true"></p><span data-chat-timestamp="true"></span>';
+			row.querySelector('[data-chat-username="true"]').textContent = username;
+			row.querySelector('[data-chat-body="true"]').textContent = message;
+			row.querySelector('[data-chat-timestamp="true"]').textContent = new Date().toLocaleTimeString();
+			return row;
+		}
+		document.querySelector("#nested-rows").appendChild(makeRow("nested-user", "Nested VPZONE message", "nested-1"));
+		document.querySelector('[data-chat-container="true"]').appendChild(makeRow("direct-user", "Direct VPZONE control message", "direct-1"));
+	});
+
+	await waitForRelayed(page, "p && p.message && p.message.chatname", 2);
+	const messages = await relayedMessages(page);
+	assert.strictEqual(messages.filter((m) => m.chatname === "nested-user").length, 1, "nested VPZONE rows must be captured exactly once");
+	assert.strictEqual(messages.filter((m) => m.chatname === "direct-user").length, 1, "direct VPZONE rows remain supported");
+	messages.forEach((message) => {
+		assert.strictEqual(message.sourceName, "Test Channel");
+		assert.strictEqual(message.sourceImg, "https://cdn.example.test/testchan-avatar.webp");
+	});
+
+	await page.close();
+	console.log("nested DOM capture and channel branding: ok");
 }
 
 async function testWebsocketPage(browser) {
@@ -182,10 +261,26 @@ async function testWebsocketPage(browser) {
 	let messages = await relayedMessages(page);
 	assert.strictEqual(messages[0].chatname, "alice");
 	assert.strictEqual(messages[0].id, "w-1");
+	assert.strictEqual(messages[0].chatmessage, "hello", "plain text must not be turned into bogus emote images");
 	const reply = messages[1];
 	assert.strictEqual(reply.initial, "alice: hello");
 	assert.ok(reply.chatmessage.indexOf("<i><small>") === 0);
 	assert.strictEqual(reply.meta.reply.messageId, "w-1");
+
+	// Native VPZONE emotes and channel branding are preserved by the direct source.
+	await send({
+		type: "msg", id: "w-emote", username: "emoter", message: "hello :wave:", created_at: now(),
+		emoteMap: { ":wave:": "https://cdn.example.test/wave.webp" }
+	});
+	await waitForRelayed(page, "p && p.message && p.message.id === 'w-emote'", 1);
+	messages = await relayedMessages(page);
+	const emote = messages.find((m) => m.id === "w-emote");
+	assert.ok(emote.chatmessage.includes('class="regular-emote vpzone-emote"'));
+	assert.ok(emote.chatmessage.includes('src="https://cdn.example.test/wave.webp"'));
+	assert.ok(!emote.chatmessage.includes(":wave:"), "native emote shortcode must be replaced by its image");
+	assert.strictEqual(emote.sourceName, "Test Channel");
+	assert.strictEqual(emote.sourceImg, "https://cdn.example.test/testchan-avatar.webp");
+	assert.ok(!emote.sourceImg.includes("sources/images/vpzone.png"), "sourceImg must be the channel avatar, not a second VPZONE logo");
 
 	// Pixels cheer via system frame; actor sits in metadata.username and the
 	// server composes a body ("X sent N Pixels!") that the builder discards.
@@ -205,7 +300,7 @@ async function testWebsocketPage(browser) {
 	await send({ type: "system", id: "w-7", username: "system", body: "Stream started", created_at: now(), metadata: { kind: "stream_started" } });
 	await send({ type: "system", id: "w-8", username: "system", body: "redeemed Hydrate", created_at: now(), metadata: { kind: "channel_points_redeem", username: "dave" } });
 	await send({ type: "mod_message", id: "w-9", username: "modann", message: "announcement", created_at: now() });
-	await waitForRelayed(page, "p && p.message", 8);
+	await waitForRelayed(page, "p && p.message", 9);
 	messages = await relayedMessages(page);
 	assert.strictEqual(messages.filter((m) => m.chatname === "outraider").length, 0, "outgoing raids must be skipped");
 	const gift = messages.find((m) => m.event === "subscription_gift");
@@ -241,6 +336,7 @@ async function testWebsocketPage(browser) {
 (async () => {
 	const browser = await chromium.launch({ headless: true });
 	try {
+		await testNestedDomCaptureAndBranding(browser);
 		await testContentScript(browser);
 		await testWebsocketPage(browser);
 		console.log("vpzone-ws-frames: all assertions passed");

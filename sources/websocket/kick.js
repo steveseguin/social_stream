@@ -46,7 +46,25 @@ function applyKickCoreFallbacks() {
         });
     }
     if (typeof mapBadges !== 'function') {
-        mapBadges = (badges) => Array.isArray(badges) ? badges : [];
+        mapBadges = (badges) => {
+            if (!Array.isArray(badges) || !badges.length) return [];
+            return badges.map((badge) => {
+                if (!badge) return null;
+                if (typeof badge === 'string') return badge;
+                if (badge.selected === false) return null;
+                const image = badge.image || badge.icon || badge.source;
+                if (image && typeof image === 'object') {
+                    const src = image.url || image.light || image.dark;
+                    if (src) return normalizeImage(src);
+                }
+                if (badge.image_url) return normalizeImage(badge.image_url);
+                if (badge.asset) return normalizeImage(badge.asset);
+                if (badge.svg) return { type: 'svg', html: badge.svg };
+                if (badge.text) return { type: 'text', text: badge.text };
+                if (badge.label || badge.name) return badge.label || badge.name;
+                return null;
+            }).filter(Boolean);
+        };
     }
     if (typeof eventNameForType !== 'function') {
         eventNameForType = (type) => {
@@ -1359,12 +1377,17 @@ function extractProfileFromSource(source) {
 
     const badgeCollections = [
         source.identity?.badges,
+        source.identity?.badges_v2,
         source.badges,
+        source.badges_v2,
         source.badge_collection,
         source.badgeCollection,
         source.profile?.badges,
+        source.profile?.badges_v2,
         source.membership?.badges,
-        source.subscription?.badges
+        source.membership?.badges_v2,
+        source.subscription?.badges,
+        source.subscription?.badges_v2
     ];
     for (const collection of badgeCollections) {
         const normalized = mapBadges(collection);
@@ -1448,12 +1471,17 @@ function collectBadgesFromSources(...sources) {
         }
         const collections = [
             source.identity?.badges,
+            source.identity?.badges_v2,
             source.badges,
+            source.badges_v2,
             source.badge_collection,
             source.badgeCollection,
             source.profile?.badges,
+            source.profile?.badges_v2,
             source.membership?.badges,
-            source.subscription?.badges
+            source.membership?.badges_v2,
+            source.subscription?.badges,
+            source.subscription?.badges_v2
         ];
         for (const collection of collections) {
             const normalized = mapBadges(collection);

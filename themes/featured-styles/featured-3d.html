@@ -576,6 +576,16 @@
                 animation: none !important;
             }
         }
+        .content-image {
+            display: block;
+            max-width: 100%;
+            max-height: 200px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            margin-top: 12px;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -643,7 +653,7 @@
                 if (data.value) {
                     try {
                         const parsed = JSON.parse(data.value);
-                        if (parsed && "chatmessage" in parsed) {
+                        if (parsed && ("chatmessage" in parsed || "contentimg" in parsed)) {
                             showMessage(parsed);
                         }
                     } catch (e) {
@@ -654,14 +664,14 @@
                 }
             }
             // Direct message format
-            else if (data && "chatmessage" in data) {
+            else if (data && ("chatmessage" in data || "contentimg" in data)) {
                 showMessage(data);
             }
         }
 
         function showMessage(content) {
             console.log('showMessage called with:', content);
-            if (!content.chatmessage && !content.chatname) return;
+            if (!content.chatmessage && !content.chatname && !content.contentimg) return;
 
             hideMessage(() => {
                 const wrapper = document.createElement('div');
@@ -789,6 +799,15 @@
                 if (content.textonly === true) text.textContent = content.chatmessage;
                 else text.innerHTML = content.chatmessage;
                 div.appendChild(text);
+            }
+
+            if (content.contentimg) {
+                const img = document.createElement('img');
+                img.className = 'content-image';
+                img.src = content.contentimg;
+                img.alt = (content.meta && content.meta.gifLabel) || 'Content image';
+                img.onerror = function () { this.style.display = 'none'; };
+                div.appendChild(img);
             }
 
             message.appendChild(div);

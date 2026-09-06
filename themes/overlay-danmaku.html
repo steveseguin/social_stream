@@ -97,12 +97,26 @@ html, body {
     background: linear-gradient(90deg, rgba(110,231,135,0.25), rgba(110,231,135,0));
     border-radius: 6px;
 }
+
+/* Keep content attachments separate from the smaller inline emotes. */
+img.ssn-content-image {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-top: 6px;
+}
+img.ssn-content-image { display: inline-block; width: 3em; height: 1.3em; margin: 0 0.25em; vertical-align: middle; }
 </style>
 </head>
 <body>
 <div id="stage"></div>
 <script>
     var urlParams = new URLSearchParams(window.location.search);
+    var showtime = Math.max(0, parseInt(urlParams.get("showtime"), 10) || 0);
     var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
     // Transport migration guard: only pages with full server parity may skip the legacy bridge.
     var TRANSPORT_CAPABILITIES = {
@@ -285,6 +299,17 @@ html, body {
         recentTransportDeliveries.set(key, now);
         return false;
     }
+    // Content images are separate from chat text (including GIF-only messages).
+    function appendContentImage(container, data) {
+        if (typeof data.contentimg !== 'string' || !data.contentimg.trim()) return;
+        const img = document.createElement('img');
+        img.className = 'ssn-content-image';
+        img.alt = (data.meta && data.meta.gifLabel) || 'Content image';
+        img.onerror = function () { this.style.display = 'none'; };
+        img.src = data.contentimg;
+        container.appendChild(img);
+    }
+
     function addMessageToOverlay(data, source) {
         if (isDuplicateTransportDelivery(data, source)) {
             return;
@@ -292,8 +317,8 @@ html, body {
         if (handleControlPayload(data)) { return; }
         if (!data || typeof data !== "object") { return; }
         if (hideBots && data.bot) { return; }
-        if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation) { return; }
-        if (!data.chatname && data.meta) { return; }
+        if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg) { return; }
+        if (!data.chatname && data.meta && !data.chatmessage && !data.contentimg && !data.hasDonation && !data.donation && !data.contentimg) { return; }
 
         var nameColor = data.nameColor;
         if (!nameColor && typeof getColorFromType === "function" && data.type) {
@@ -321,6 +346,7 @@ html, body {
         var donationHtml = donation ? "<span class='donation'>" + escapeHtml(donation) + "</span>" : "";
 
         bullet.innerHTML = avatarHtml + iconHtml + badgesHtml + membershipHtml + nameHtml + colonHtml + textHtml + donationHtml;
+        appendContentImage(bullet, data);
         stage.appendChild(bullet);
 
         var b = laneBounds();
@@ -343,7 +369,8 @@ html, body {
         function frame(ts) {
             if (startTime === null) { startTime = ts; }
             var t = (ts - startTime) / (CROSS_SECONDS * 1000);
-            if (t >= 1) {
+            if (t >= 1 || (showtime > 0 && ts - startTime >= showtime)) {
+                laneEndsAt[lane] = 0;
                 if (bullet.parentNode) { bullet.parentNode.removeChild(bullet); }
                 return;
             }

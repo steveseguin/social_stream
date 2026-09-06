@@ -2375,7 +2375,7 @@
         }
 
         function handleChatMessage(data) {
-            const voterKey = buildVoterKey(data.chatname, data.type, data.userid || data.userId || data.uid);
+            const voterKey = buildVoterKey(data.chatname, data.type, data.userid || data.userId || data.uid || data.username);
             const country = resolveCountry(data.chatmessage);
             if (!country) {
                 debugLog('no country match', { chatmessage: data.chatmessage, chatname: data.chatname });

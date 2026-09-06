@@ -158,7 +158,7 @@ class PointsSystem {
 
         const db = await this.ensureDB();
         
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const tx = db.transaction(this.storeName, 'readonly');
             const store = tx.objectStore(this.storeName);
             const request = store.get(userKey);
@@ -169,11 +169,9 @@ class PointsSystem {
                 resolve(userData);
             };
             
-            request.onerror = () => {
-                const userData = this.createDefaultUserData(username, type);
-                this.cache.set(userKey, userData);
-                resolve(userData);
-            };
+            // A failed read is not a missing user; never replace their balance with zero.
+            request.onerror = () => reject(request.error);
+            tx.onabort = () => reject(tx.error || new Error('Points read aborted'));
         });
     }
 
@@ -193,17 +191,27 @@ class PointsSystem {
     }
 
     async saveUserPoints(userData) {
-        const db = await this.ensureDB();
         const userKey = userData.userKey || this.getUserKey(userData.username, userData.type);
-        this.cache.set(userKey, userData);
+        // Callers may have changed the cached object. Keep it out of the cache until committed.
+        this.cache.delete(userKey);
+        const db = await this.ensureDB();
         
         return new Promise((resolve, reject) => {
             const tx = db.transaction(this.storeName, 'readwrite');
             const store = tx.objectStore(this.storeName);
             const request = store.put(userData);
             
-            request.onsuccess = () => resolve(userData);
-            request.onerror = () => reject(request.error);
+            tx.oncomplete = () => {
+                this.cache.set(userKey, userData);
+                resolve(userData);
+            };
+            const fail = () => {
+                this.cache.delete(userKey);
+                reject(tx.error || request.error || new Error('Points write failed'));
+            };
+            request.onerror = fail;
+            tx.onerror = fail;
+            tx.onabort = fail;
         });
     }
 
@@ -249,9 +257,10 @@ class PointsSystem {
                 if (userData.engagementHistory.length > 100) {
                     userData.engagementHistory = userData.engagementHistory.slice(-100);
                 }
+                // Only credited engagements start a new award window.
+                userData.lastEngagement = now;
             }
 
-            userData.lastEngagement = now;
             userData.lastActive = now;
 
             await this.saveUserPoints(userData);
@@ -260,7 +269,7 @@ class PointsSystem {
     }
 
     async addPoints(username, type = 'default', amount) {
-        if (amount <= 0) return { success: false, message: "Amount must be positive" };
+        if (!Number.isFinite(amount) || amount <= 0) return { success: false, message: "Amount must be a positive number" };
 
         const userKey = this.getUserKey(username, type);
 
@@ -283,7 +292,7 @@ class PointsSystem {
     }
     
     async spendPoints(username, type = 'default', amount) {
-        if (amount <= 0) return { success: false, message: "Amount must be positive" };
+        if (!Number.isFinite(amount) || amount <= 0) return { success: false, message: "Amount must be a positive number" };
 
         const userKey = this.getUserKey(username, type);
 
@@ -315,16 +324,29 @@ class PointsSystem {
         });
     }
 
+    async refundPoints(username, type = 'default', amount) {
+        if (!Number.isFinite(amount) || amount <= 0) throw new Error('Invalid refund amount');
+        return this.withUserLock(this.getUserKey(username, type), async () => {
+            const userData = Object.assign({}, await this.getUserPoints(username, type));
+            userData.pointsSpent = Math.max(0, userData.pointsSpent - amount);
+            await this.saveUserPoints(userData);
+            return { success: true, remaining: userData.points - userData.pointsSpent };
+        });
+    }
+
     async getLeaderboard(limit = 10, type = null) {
         const db = await this.ensureDB();
         
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const tx = db.transaction(this.storeName, 'readonly');
             const store = tx.objectStore(this.storeName);
             const index = store.index('points');
             const users = [];
             
-            index.openCursor(null, 'prev').onsuccess = event => {
+            const request = index.openCursor(null, 'prev');
+            request.onerror = () => reject(request.error);
+            tx.onabort = () => reject(tx.error || new Error('Points leaderboard read aborted'));
+            request.onsuccess = event => {
                 const cursor = event.target.result;
                 if (cursor && users.length < limit) {
                     const userData = cursor.value;
@@ -359,12 +381,14 @@ class PointsSystem {
             const store = tx.objectStore(this.storeName);
             const request = store.clear();
 
-            request.onsuccess = () => {
+            tx.oncomplete = () => {
                 this.cache.clear();
                 resolve(true);
             };
 
             request.onerror = () => reject(request.error);
+            tx.onerror = () => reject(tx.error || new Error('Points reset failed'));
+            tx.onabort = () => reject(tx.error || new Error('Points reset aborted'));
         });
     }
 
@@ -402,7 +426,7 @@ class PointsSystem {
             return { success: false, message: 'Invalid JSON format', error: e.message };
         }
 
-        if (!data.users || !Array.isArray(data.users)) {
+        if (!data || !Array.isArray(data.users)) {
             return { success: false, message: 'Invalid backup format: missing users array' };
         }
 
@@ -411,10 +435,21 @@ class PointsSystem {
         let skipped = 0;
         let errors = 0;
 
-        for (const user of data.users) {
+        for (let user of data.users) {
             try {
-                // Validate required fields
-                if (!user.username || !user.userKey) {
+                if (!user || typeof user.username !== 'string' || !user.username.trim() ||
+                    (user.type !== undefined && typeof user.type !== 'string') ||
+                    user.userKey !== this.getUserKey(user.username, user.type) || !Number.isFinite(user.points)) {
+                    skipped++;
+                    continue;
+                }
+
+                // Older backups may omit activity fields, but malformed values must not reach live scoring.
+                user = Object.assign(this.createDefaultUserData(user.username, user.type || 'default'), user);
+                const invalidActivity = ['pointsSpent', 'lastEngagement', 'currentStreak', 'lastActive'].some(key =>
+                    !Number.isFinite(user[key]) || user[key] < 0);
+                if (invalidActivity || !Array.isArray(user.engagementHistory) ||
+                    user.engagementHistory.some(value => !Number.isFinite(value) || value < 0)) {
                     skipped++;
                     continue;
                 }
@@ -440,7 +475,7 @@ class PointsSystem {
                     }
                 }
             } catch (e) {
-                console.error(`Error importing user ${user.username}:`, e);
+                console.error('Error importing points user:', user && user.username, e);
                 errors++;
             }
         }
@@ -462,14 +497,17 @@ class PointsSystem {
     async getUsersWithSameName(username) {
         const db = await this.ensureDB();
         
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const tx = db.transaction(this.storeName, 'readonly');
             const store = tx.objectStore(this.storeName);
             const index = store.index('username');
             const range = IDBKeyRange.only(username);
             const results = [];
             
-            index.openCursor(range).onsuccess = event => {
+            const request = index.openCursor(range);
+            request.onerror = () => reject(request.error);
+            tx.onabort = () => reject(tx.error || new Error('Points user lookup aborted'));
+            request.onsuccess = event => {
                 const cursor = event.target.result;
                 if (cursor) {
                     results.push(cursor.value);
@@ -786,9 +824,14 @@ function ensurePointsSystemInitialized() {
                 messageStoreDB.addMessage = async function(message) {
                     const result = await originalAddMessage.call(this, message);
                     if (isPointsSystemEnabled()) {
-                        syncPointsSystemConfigFromSettings();
-                        await pointsSystem.processNewMessage(message);
-                        schedulePointsLeaderboardBroadcast('message');
+                        try {
+                            syncPointsSystemConfigFromSettings();
+                            await pointsSystem.processNewMessage(message);
+                            schedulePointsLeaderboardBroadcast('message');
+                        } catch (error) {
+                            // Points are optional; the chat message was already saved successfully.
+                            console.error('Failed to update points for saved chat message:', error);
+                        }
                     }
                     return result;
                 };

@@ -178,6 +178,18 @@
 			}
 			.badge.svg { overflow: hidden; }
 			.badge.svg svg { display: block; width: auto !important; height: 100% !important; max-width: 100px !important; max-height: 100% !important; }
+
+/* Keep content attachments separate from the smaller inline emotes. */
+img.ssn-content-image {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-top: 6px;
+}
 </style>
 	</head>
 
@@ -337,17 +349,28 @@
 				recentTransportDeliveries.set(key, now);
 				return false;
 			}
+			// Content images are separate from chat text (including GIF-only messages).
+			function appendContentImage(container, data) {
+				if (typeof data.contentimg !== 'string' || !data.contentimg.trim()) return;
+				const img = document.createElement('img');
+				img.className = 'ssn-content-image';
+				img.alt = (data.meta && data.meta.gifLabel) || 'Content image';
+				img.onerror = function () { this.style.display = 'none'; };
+				img.src = data.contentimg;
+				container.appendChild(img);
+			}
+
 			function addMessageToOverlay(data) {
 				if (isDuplicateTransportDelivery(data)) {
 					return;
 				}
-				if (!data || !data.chatname) {
+				if (!data || (!data.chatname && !data.chatmessage && !data.contentimg && !data.hasDonation)) {
 					console.error("Invalid message data", data);
 					return;
 				}
 
 				if (["follow", "subscription", "donation"].includes(data.type) || data.event === "membership" || data.hasDonation) {
-					if (!data.chatmessage) {
+					if (!data.chatmessage && !data.contentimg) {
 						addEventToOverlay(data);
 						return;
 					}
@@ -403,7 +426,7 @@
 
 				messageContainer.appendChild(usernameBox);
 
-				if (data.chatmessage) {
+				if (data.chatmessage || data.contentimg) {
 					const messageDiv = document.createElement("div");
 					messageDiv.classList.add("message");
 
@@ -416,12 +439,13 @@
 						textStyle = `style="color:${data.textColor}"`;
 					}
 
-					const renderedChatMessage = data.textonly ? escapeHtml(data.chatmessage) : data.chatmessage;
+					const renderedChatMessage = data.textonly ? escapeHtml(data.chatmessage || '') : (data.chatmessage || '');
 					messageDiv.innerHTML = `
 				<div class="text" ${textStyle}>${renderedChatMessage}</div>
 				${data.donation || data.hasDonation ? `<div class="donation">${escapeHtml(data.donation || data.hasDonation)}</div>` : ""}
 			`;
 
+					appendContentImage(messageDiv, data);
 					messageContainer.appendChild(messageDiv);
 				}
 

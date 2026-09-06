@@ -885,7 +885,7 @@ pre code {
 
 @media (max-width: 992px) {
     html {
-        font-size: 55%;
+        font-size: 58%;
     }
 
     .hero .container {
@@ -907,7 +907,7 @@ pre code {
 
 @media (max-width: 768px) {
     html {
-        font-size: 52%;
+        font-size: 58%;
     }
 
     h1 {
@@ -1447,4 +1447,18 @@ header .container {
 
 .dark-mode ::-webkit-scrollbar-track {
     background-color: transparent;
+}
+
+/* Keep mobile header controls usable instead of squeezing the menu icon. */
+@media (max-width: 768px) {
+    header .header-controls { flex-shrink: 0; gap: .8rem; }
+    header .theme-toggle { margin-left: 0; flex-shrink: 0; }
+    header .github-link { margin-right: 0; }
+    .mobile-nav-toggle { flex-shrink: 0; }
+    header nav { height: calc(100vh - 8rem); overflow-y: auto; visibility: hidden; }
+    header nav.active { visibility: visible; }
+}
+@media (max-width: 480px) {
+    header .logo a { font-size: 1.7rem; }
+    header .logo img { height: 3rem; width: 3rem; margin-right: .7rem; }
 }
