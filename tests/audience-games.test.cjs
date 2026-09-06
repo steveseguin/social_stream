@@ -7,6 +7,31 @@ const {Game, clue} = require('../games/audience-engine.js');
 const root = path.join(__dirname, '..');
 const msg = (text, name = 'Viewer', extra = {}) => Object.assign({chatname:name, type:'youtube', chatmessage:text, textonly:true}, extra);
 function fixture(mode) { let time = 10000; return {game:new Game(mode, {now:()=>time, random:()=>0}), advance(n) {time += n;}}; }
+
+test('Memory Parade accepts short and legacy commands without bypassing round rules', () => {
+    const MemoryGame = require('../games/puzzle-party-engine.js').Game;
+    let time = 10000;
+    const game = new MemoryGame('memory', {now:()=>time, random:()=>0});
+    assert.equal(game.input(msg('!mem 111')),false);
+    assert.equal(game.input(msg('!ready','Starter')),true);
+    assert.equal(game.input(msg('!mem 111','Early')),false);
+    time += 5000; game.tick();
+    assert.equal(game.previewCommand(),'!mem 111');
+    for(const text of ['111','!mem 11','!mem 1111','!memory 111','!mem 115','!mem 111 extra']) {
+        assert.equal(game.input(msg(text,'Invalid')),false,text);
+    }
+    assert.equal(game.input(msg('!mem 111','Short')),true);
+    assert.equal(game.input(msg('!remember 111','Legacy')),true);
+    assert.equal(game.input(msg('!MEM 111','Uppercase')),true);
+    time += 1100;
+    assert.equal(game.input(msg('!remember 111','Short')),false,'Cannot answer twice using another alias');
+    time = 25000; game.tick();
+    assert.equal(game.users.get('youtube:Short').score,1);
+    assert.equal(game.users.get('youtube:Legacy').score,1);
+    assert.equal(game.users.get('youtube:Uppercase').score,1);
+    assert.equal(game.sequence.length,4);
+    for(const mode of ['odd','sum'])assert.equal(new MemoryGame(mode).input(msg('!mem 111')),false);
+});
 test('Code clues account for repeated digits without double counting', () => {
     assert.deepEqual(clue('1123','1211'),{exact:1,misplaced:2});
     assert.deepEqual(clue('1234','4321'),{exact:0,misplaced:4});

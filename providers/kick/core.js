@@ -1,3 +1,5 @@
+import { getKickRoleBadge } from '../../shared/kickBadges.js';
+
 const KICK_DOMAIN = 'https://kick.com';
 
 export const PROFILE_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
@@ -37,13 +39,13 @@ export function mapBadges(badges) {
   if (!Array.isArray(badges) || !badges.length) {
     return [];
   }
-  return badges
+  return [...badges].sort((a, b) => (a?.sort_order ?? Infinity) - (b?.sort_order ?? Infinity))
     .map((badge) => {
       if (!badge) return null;
       if (typeof badge === 'string') {
-        return badge;
+        return getKickRoleBadge(badge) || badge;
       }
-      if (badge.selected === false) {
+      if (badge.selected === false || badge.active === false) {
         return null;
       }
       // Accept both Kick assets and our already-normalized chatbadges shape.
@@ -67,6 +69,8 @@ export function mapBadges(badges) {
       if (badge.type === 'svg' && badge.html) {
         return { type: 'svg', html: badge.html };
       }
+      const roleBadge = getKickRoleBadge(badge);
+      if (roleBadge) return roleBadge;
       if (badge.text) {
         return { type: 'text', text: badge.text };
       }

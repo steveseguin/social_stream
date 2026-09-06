@@ -12,7 +12,7 @@
                 if(g.phase==='waiting'){command.appendChild(el('span','Type '));command.appendChild(el('code','!ready'));command.appendChild(el('span',' in chat'));}
                 else if(g.phase==='result')command.textContent='A fresh match starts shortly.';
                 else if(!g.revealed)command.textContent='Memorize now. Answer when the numbers disappear.';
-                else{command.appendChild(el('span','Type '));command.appendChild(el('code','!remember '+ '123412'.slice(0,g.sequence.length)));command.appendChild(el('span',' with the numbers you saw.'));}
+                else{command.appendChild(el('span','Type '));command.appendChild(el('code','!mem '+ '123412'.slice(0,g.sequence.length)));command.appendChild(el('span',' with the numbers you saw.'));}
                 document.getElementById('puzzle-title').textContent=g.phase==='waiting'?'Ready for a little brain stretch?':g.revealed?'What was the sequence?':'Watch the parade.';
                 document.getElementById('puzzle-score').textContent='Sequence '+Math.min(4,g.stage+1)+' / 4';
                 (g.revealed||g.phase==='waiting'||g.phase==='result'?'?'.repeat(g.sequence.length):g.sequence).split('').forEach(function(n){board.appendChild(el('span',n,'memory-tile tile-'+n));});
