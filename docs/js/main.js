@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const targetElement = document.querySelector(targetId);
 
             if (targetElement) {
-                const headerHeight = header.offsetHeight;
+                const headerHeight = header ? header.offsetHeight : 0;
                 const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - headerHeight;
 
                 window.scrollTo({
@@ -161,8 +161,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
 
                 // Close mobile nav if open
-                nav.classList.remove('active');
-                mobileNavToggle.classList.remove('active');
+                if (nav) nav.classList.remove('active');
+                if (mobileNavToggle) mobileNavToggle.classList.remove('active');
             }
         });
     });
@@ -184,6 +184,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+    // The shared site shell owns theme preference and controls on migrated pages.
+    if (window.SSNSiteTheme) return;
 	    // Dark Mode Toggle Logic - Fixed Version
     const themeToggle = document.getElementById('theme-toggle');
 

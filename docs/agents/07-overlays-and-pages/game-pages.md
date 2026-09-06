@@ -31,6 +31,17 @@ These pages are output/control surfaces. They do not capture platform chat by th
 
 ## Shared Runtime Pattern
 
+### Cooperative games (September 2026)
+
+`games/signallock.html` and `games/crowdquest.html` share the classic scripts `games/audience-engine.js` and `games/audience-page.js`, with `games/audience.css`. The public setup guide is `docs/chat-games.html`; both are in the existing popup game selector.
+
+- Signal Lock: `!code 1234`, four digits from 1 through 6 including repeats, exact/misplaced feedback, 90 seconds from the first valid guess. Five-second per-viewer cooldown, duplicate guesses ignored.
+- Crowd Quest: `!vote 1`, `!vote 2`, or `!vote 3`; five chapters, 30 seconds per chapter starting with the first valid vote. One changeable vote per platform account; outcomes shown in advance. Insufficient-supply routes are unavailable. Ties choose randomly.
+- Both advance after a ten-second result screen. Host buttons pause or restart locally; chat cannot invoke them. State resets on reload, with no loyalty spending or source-chat replies. At most 1,000 players per round; identity combines platform with user ID, username, or display name in that order.
+- Parameters: `session` (aliases `room`, `s`, `id`), `password`, `server`, `demo`, `clean` (hide host controls), `transparent`, `chroma`. `demo` never connects, even if a session is supplied. A missing session never joins a shared fallback room.
+- Use either the normal dock-label iframe bridge or `server` WebSocket (out 2/in 1), never both. Array payloads and `content` envelopes are accepted. Bots, private/reflected traffic, and events are excluded. Only the created bridge may deliver window messages.
+- Word Chain now uses `games/wordchain.css` and a chronological trail of eight words. Scoring, letter matching, themes, and timers remain unchanged.
+
 | Area | Source-Backed Behavior |
 | --- | --- |
 | URL shape | Usually `https://socialstream.ninja/games/FILE.html?session=SESSION_ID`. Root Spam Power uses `https://socialstream.ninja/games.html?session=SESSION_ID`. |
