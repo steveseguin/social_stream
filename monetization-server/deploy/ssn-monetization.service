@@ -1,0 +1,26 @@
+[Unit]
+Description=Social Stream Ninja monetization API
+After=network.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+WorkingDirectory=/opt/ssn-monetization
+ExecStart=/usr/bin/node /opt/ssn-monetization/server.js
+Environment=NODE_ENV=production
+Environment=SSN_MONETIZATION_DB=/var/lib/ssn-monetization/monetization.db
+EnvironmentFile=-/etc/ssn-monetization.env
+StateDirectory=ssn-monetization
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+MemoryMax=256M
+TasksMax=64
+TimeoutStopSec=20
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

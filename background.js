@@ -5773,7 +5773,10 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		const senderTabId = hasSenderTabId ? senderTab.id : null;
 		const senderTabUrl = senderTab && typeof senderTab.url === "string" ? senderTab.url : "";
 
-		if (request.action === "clearHistory") {
+		if (request.cmd === "monetization") {
+            sendResponse(window.handleMonetizationRequest ? await window.handleMonetizationRequest(request, sender) : {error:"Monetization is loading."});
+            return response;
+        } else if (request.action === "clearHistory") {
 			const clearHistoryResult = await clearSavedMessageHistory(request.value);
 			if (clearHistoryResult.ok) {
 				sendDataP2P({

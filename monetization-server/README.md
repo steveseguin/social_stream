@@ -1,0 +1,15 @@
+# SSN monetization API
+
+Server endpoints for Social Stream Ninja's Monetization section. These belong on `api.socialstream.ninja`, separately from NinjaBacker. NinjaBacker donations continue to use NinjaBacker's existing API without server changes.
+
+Run `npm ci` and `npm start`. The standalone service listens on loopback port 3079 (override with `PORT`). Route `/v1/throne/*`, `/v1/ebay/*`, and `/v1/monetization/health` from the SSN API reverse proxy to it. Preserve existing API routes. Deployment wiring must be checked against the VPS configuration before installation. Nothing in this directory deploys automatically.
+
+Throne works without application credentials. Its receiver verifies the published Ed25519 signature, timestamp and creator, removes private fields, and forwards verified gifts to SSN. One process handles webhook and SSE traffic. Disable proxy buffering for SSE, allow long response timeouts, and omit query strings from access logs: SSE reader keys and OAuth callback codes are private. Reader keys are distinct from public webhook identifiers. SSN supplies the webhook URL in its Monetization section.
+
+To enable eBay, set `EBAY_SHOWCASE_ENABLED=1`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`, and `EBAY_RUNAME` (the registered redirect name, not a URL). Configure the eBay application callback as `https://api.socialstream.ninja/v1/ebay/callback`. Production Browse access and `sell.fulfillment.readonly` access are required. Meet eBay's application requirements and review request quotas before rollout. The default database is `monetization.db`; set `SSN_MONETIZATION_DB` to a persistent writable path. Back up the database and keep secrets out of source control.
+
+Only eBay connection tokens are stored, encrypted using a reader secret retained on the SSN device. The database stores its hash, not the secret. No raw orders, addresses or buyer identities are stored or broadcast. OAuth state expires in ten minutes and is single-use. Disconnect deletes the encrypted connection. eBay orders use overlapping date cursors, pagination and stable order-line deduplication; stock changes and auction endings never count as paid purchases.
+
+Use HTTPS on the public API. The loopback service has body limits, rate limits and bounded SSE clients. Do not expose its internal port directly. This service does not edit listings, fulfill orders or collect payments.
+
+Tests: `npm test`. From the SSN repository, `node tests/monetization-ssapp.e2e.cjs` and `node tests/ebay-ssapp.e2e.cjs` run the actual desktop app against local fixtures. A real eBay seller OAuth/order test and a real signed Throne gift remain required before claiming live integration validation.

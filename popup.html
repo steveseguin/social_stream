@@ -2437,7 +2437,8 @@ input:checked + .slider:before {
 	}
 }
         </style>
-    </head>
+    <link rel="stylesheet" href="shared/monetization/popup.css">
+</head>
 
     <body>
         <button class="showalways" id="disableButton">
@@ -14417,6 +14418,44 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
+<div class="link" title="Monetization"><h2><span>💝 Monetization</span></h2>
+<details id="monetization-settings"><summary>Wishlist rank-ups, gifts &amp; tips</summary>
+<label>Support option <select id="money-mode"><option value="wishlist">Amazon Wishlist Rank-Up</option><option value="ninja">NinjaBacker donations</option><option value="throne">Throne gifts</option><option value="ebay">eBay product showcase</option></select></label>
+<div id="money-wishlist-panel"><label><input id="money-wishlist-enabled" type="checkbox"> Enable Wishlist Rank-Up</label><label>Public wishlist URL<input id="money-wishlist-url" type="url" placeholder="https://www.amazon.com/hz/wishlist/ls/..."></label><button id="money-load" type="button">Load wishlist</button>
+<p>Cheapest first. Confirm purchases here to unlock the next item. Amazon does not provide a reliable public purchase feed or buyer identity.</p><p id="money-current"></p><div id="money-items"></div><label>Buyer name, if known<input id="money-buyer" type="text" maxlength="60" placeholder="Optional"></label><div class="money-actions"><button id="money-complete" type="button" disabled>Confirm current item bought</button><button id="money-undo" type="button" disabled>Undo last confirmation</button></div>
+<details><summary>Add an item manually</summary><label>Item name<input id="money-item-name" type="text" maxlength="180"></label><label>Price <input id="money-item-price" type="number" min="0.01" step="0.01"> <select id="money-item-currency" aria-label="Currency"><option>USD</option><option>CAD</option><option>GBP</option><option>EUR</option><option>AUD</option><option>JPY</option><option>INR</option></select></label><label>Wishlist item link (optional)<input id="money-item-url" type="url"></label><label>Image URL (optional)<input id="money-item-image" type="url"></label><button id="money-add" type="button">Add item</button></details>
+<label><input type="checkbox" id="money-wishlist-qr" checked> Show QR code</label><label>Overlay corner <select id="money-wishlist-position"><option value="br">Bottom right</option><option value="tl">Top left</option></select></label><label><input type="checkbox" id="money-wishlist-announce"> Announce purchases and the next item in chat</label><label><input type="checkbox" id="money-wishlist-interval"> Repeat the link every <input id="money-wishlist-minutes" type="number" min="5" max="120" value="15" aria-label="Announcement interval in minutes"> minutes</label></div>
+<div id="money-ninja-panel" hidden><label><input id="money-ninja-enabled" type="checkbox"> Enable NinjaBacker donation source</label><p>0% NinjaBacker platform commission; payment processing fees still apply.</p><label>NinjaBacker username<input id="money-ninja-username" type="text" maxlength="50" placeholder="Your username"></label><label>Private Tip ID, for alerts<input id="money-ninja-token" type="password" autocomplete="off" maxlength="128" placeholder="From your NinjaBacker dashboard"></label><label><input id="money-ninja-clear-token" type="checkbox"> Clear saved Tip ID</label><p>The Tip ID stays on this device and is never included in your overlay link. Use the ID from the same account as the username.</p><p><a href="https://ninjabacker.com/dashboard" target="_blank" rel="noopener noreferrer">Open NinjaBacker dashboard</a></p><label>Public tip link for your stream description<input id="money-ninja-link" type="text" readonly></label><p id="money-ninja-status" role="status"></p><label><input type="checkbox" id="money-ninja-qr"> Show QR code</label><label>Overlay corner <select id="money-ninja-position"><option value="br">Bottom right</option><option value="tl">Top left</option></select></label><label><input type="checkbox" id="money-ninja-announce"> Announce the tip link when enabled</label><label><input type="checkbox" id="money-ninja-interval"> Repeat the link every <input id="money-ninja-minutes" type="number" min="5" max="120" value="15" aria-label="Announcement interval in minutes"> minutes</label></div>
+<div id="money-ebay-panel" hidden>
+<p>Show your own listings. Paid purchases anywhere on this list trigger an alert.</p>
+<div class="money-actions"><button id="money-ebay-connect" type="button">Connect eBay</button><button id="money-ebay-disconnect" type="button">Disconnect</button><a id="money-ebay-auth" target="_blank" rel="noopener noreferrer" hidden>Continue to eBay</a></div>
+<p id="money-ebay-status" role="status">Connect your seller account</p>
+<label><input id="money-ebay-enabled" type="checkbox"> Enable product showcase and sale alerts</label>
+<label>Your eBay item URL<input id="money-ebay-url" type="url" placeholder="https://www.ebay.com/itm/..."></label><button id="money-ebay-add" type="button">Add product</button>
+<div id="money-ebay-items"></div>
+<label>Show <select id="money-ebay-display"><option value="cycle">Cycle remaining products</option><option value="cheapest">Cheapest remaining product</option><option value="first">First remaining product in list</option></select></label>
+<label id="money-ebay-cycle">Change product every <input id="money-ebay-seconds" type="number" min="10" max="300" value="20"> seconds</label>
+<p>One purchase completes a list entry. Auctions show the current bid and time left; prices refresh about once a minute.</p>
+<label><input id="money-ebay-qr" type="checkbox" checked> Show product QR code</label>
+<label>Overlay corner <select id="money-ebay-position"><option value="br">Bottom right</option><option value="tl">Top left</option></select></label>
+<label><input id="money-ebay-announce" type="checkbox"> Announce purchases in chat</label>
+<label><input id="money-ebay-interval" type="checkbox"> Post the featured product link every <input id="money-ebay-minutes" type="number" min="5" max="120" value="15" aria-label="eBay announcement interval in minutes"> minutes</label>
+</div>
+<div id="money-throne-panel" hidden>
+<label><input id="money-throne-enabled" type="checkbox"> Enable automatic Throne gift alerts</label>
+<label>Throne username<input id="money-throne-username" type="text" maxlength="50" placeholder="Your Throne username"></label>
+<p>Completed gifts raise your rank. Contributions show an alert without counting as a completed gift.</p>
+<label>Webhook URL for Throne<input id="money-throne-webhook" type="text" readonly placeholder="Enable and save to create your connection"></label><button id="money-throne-copy" type="button">Copy webhook URL</button>
+<p>Save setup, then paste this URL into <a href="https://help.throne.com/en/articles/15935990-how-do-i-set-up-webhook-integration" target="_blank" rel="noopener noreferrer">Throne's Webhook integration</a>. Keep SSN on to receive gifts.</p>
+<p id="money-throne-status" role="status"></p>
+<div class="money-actions"><span id="money-throne-rank">Rank 1</span><button id="money-throne-reset" type="button">Reset rank</button></div>
+<label><input id="money-throne-qr" type="checkbox" checked> Show wishlist QR code between gifts</label>
+<label>Overlay corner <select id="money-throne-position"><option value="br">Bottom right</option><option value="tl">Top left</option></select></label>
+<label><input id="money-throne-announce" type="checkbox"> Announce gifts and rank-ups in chat</label>
+<label><input id="money-throne-interval" type="checkbox"> Repeat the wishlist link every <input id="money-throne-minutes" type="number" min="5" max="120" value="15" aria-label="Throne announcement interval in minutes"> minutes</label>
+<p>Shows your gift rank, without guessing which wishlist item unlocks next. Throne checkout fees apply.</p>
+</div>
+<div class="money-actions"><button id="money-save" type="button">Save setup</button><a id="money-overlay" target="_blank" rel="noopener noreferrer">Open overlay</a><button id="money-copy" type="button">Copy OBS link</button><a id="money-preview" href="monetization.html?demo" target="_blank" rel="noopener noreferrer">Preview</a></div><p id="money-status" role="status"></p><p><a href="docs/monetization.html" target="_blank" rel="noopener">Setup guide</a></p></details></div>
 			<!-- GAMES SECTION -->
 			<div class="link" title="Interactive Games">
 				<h2 class="games_mode_title">
@@ -14451,6 +14490,9 @@ input:checked + .slider:before {
 					</label>
 					<select id="games-preset-select" style="padding: 5px 10px; border-radius: 4px; background: var(--color-accent-subtle); color: var(--default-text-color); border: 1px solid var(--collapsible-border-color);">
 						<option value="">Choose a game...</option>
+						<option value="games/mazeraid.html">🧱 Maze Raid - Chat invades a retro maze</option>
+						<option value="games/fireflycatch.html">🐛 Firefly Catch - Transparent timing game</option>
+						<option value="games/cometrally.html">☄️ Comet Rally - Transparent team race</option>
 						<option value="games/signallock.html">🔐 Signal Lock - Cooperative code puzzle</option>
 <option value="games/crowdquest.html">🚀 Crowd Quest - Chat chooses the adventure</option>
 <option value="games/minorityclub.html">🌙 Minority Club</option>
@@ -15726,6 +15768,8 @@ input:checked + .slider:before {
         <script type="text/javascript" src="popup.js?v=3"></script>
         <script src="shared/stickers/catalog.js"></script>
         <script src="shared/stickers/popup.js"></script>
+<script src="shared/monetization/core.js"></script>
+<script src="shared/monetization/popup.js"></script>
         <script type="text/javascript" src="spotify-auth-helper.js"></script>
     </body>
 </html>

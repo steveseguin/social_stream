@@ -3905,6 +3905,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   });
 
   syncChatOverlayTemplateLinkFromDock();
+  if (window.updateMonetizationLinks) window.updateMonetizationLinks();
   updateAiOverlayGeneratedLinks(hideLinks, baseURL, streamID, password, versionParam);
   
   // Update sample overlay and remote control URLs too
@@ -7206,6 +7207,7 @@ function refreshGeneratedConnectionLinks(paramName, value) {
     });
 
     refreshLinks();
+    if (window.updateMonetizationLinks) window.updateMonetizationLinks();
 }
 
 function handleSpecialSettings(ele, sync) {
