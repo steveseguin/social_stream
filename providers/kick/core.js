@@ -46,18 +46,18 @@ export function mapBadges(badges) {
       if (badge.selected === false) {
         return null;
       }
-      const image = badge.image || badge.icon || badge.source;
-      if (image && typeof image === 'object') {
-        const src = image.url || image.light || image.dark;
-        if (src) {
-          return normalizeImage(src);
+      // Accept both Kick assets and our already-normalized chatbadges shape.
+      // Do not let an empty/malformed candidate hide another usable image URL.
+      const images = [badge.src, badge.image_url, badge.image, badge.icon, badge.source, badge.url, badge.asset];
+      for (const image of images) {
+        const candidates = image && typeof image === 'object'
+          ? [image.url, image.src, image.light, image.dark]
+          : [image];
+        for (const src of candidates) {
+          if (typeof src === 'string' && src.trim()) {
+            return normalizeImage(src.trim());
+          }
         }
-      }
-      if (badge.image_url) {
-        return normalizeImage(badge.image_url);
-      }
-      if (badge.asset) {
-        return normalizeImage(badge.asset);
       }
       if (badge.svg) {
         return { type: 'svg', html: badge.svg };
@@ -146,7 +146,7 @@ export function formatBadgesForDisplay(badges) {
         if (isAsset) {
           return { src: normalizeImage(trimmed), type: 'img' };
         }
-        return { text: trimmed, type: 'badge' };
+        return { text: trimmed, type: 'text' };
       }
       if (badge.type === 'svg' && badge.html) {
         return { type: 'svg', html: badge.html };

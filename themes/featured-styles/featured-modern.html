@@ -461,6 +461,7 @@
         }
     </style>
 <link rel="stylesheet" href="../collections.css">
+<link rel="stylesheet" href="artwork.css">
 </head>
 <body>
     <div id="container">
@@ -482,6 +483,12 @@
         if (['cute', 'cozy', 'cats', 'music', 'arcade', 'slate', 'paper', 'micro'].indexOf(style) !== -1) {
             document.body.classList.add('collection', 'collection-featured');
         }
+
+        if (['art-cat', 'art-dog', 'art-halloween', 'art-christmas', 'art-music', 'art-forest', 'art-space', 'art-dragon'].indexOf(style) !== -1) {
+            document.body.classList.add('art-featured');
+        }
+
+        if (urlParams.has('staticart')) document.body.classList.add('static-art');
 
         // State
         let messageTimeout = null;

@@ -21,10 +21,24 @@ function applyKickCoreFallbacks() {
         };
     }
     if (typeof normalizeImage !== 'function') {
-        normalizeImage = (value) => (value ? String(value) : '');
+        normalizeImage = (value) => {
+            if (!value) return '';
+            const url = String(value);
+            if (/^https?:\/\//i.test(url)) return url;
+            if (url.startsWith('//')) return `https:${url}`;
+            return `https://kick.com${url.startsWith('/') ? '' : '/'}${url}`;
+        };
     }
     if (typeof formatBadgesForDisplay !== 'function') {
-        formatBadgesForDisplay = (badges) => Array.isArray(badges) ? badges : [];
+        formatBadgesForDisplay = (badges) => mapBadges(badges).map((badge) => {
+            if (typeof badge !== 'string') return badge;
+            const value = badge.trim();
+            if (!value) return null;
+            if (/^https?:\/\//i.test(value) || value.startsWith('/')) {
+                return { type: 'img', src: normalizeImage(value) };
+            }
+            return { type: 'text', text: value };
+        }).filter(Boolean);
     }
     if (typeof getProfileCacheEntry !== 'function') {
         getProfileCacheEntry = () => null;
@@ -52,14 +66,21 @@ function applyKickCoreFallbacks() {
                 if (!badge) return null;
                 if (typeof badge === 'string') return badge;
                 if (badge.selected === false) return null;
-                const image = badge.image || badge.icon || badge.source;
-                if (image && typeof image === 'object') {
-                    const src = image.url || image.light || image.dark;
-                    if (src) return normalizeImage(src);
+                // Accept both Kick assets and our already-normalized chatbadges shape.
+                // Do not let an empty/malformed candidate hide another usable image URL.
+                const images = [badge.src, badge.image_url, badge.image, badge.icon, badge.source, badge.url, badge.asset];
+                for (const image of images) {
+                    const candidates = image && typeof image === 'object'
+                        ? [image.url, image.src, image.light, image.dark]
+                        : [image];
+                    for (const src of candidates) {
+                        if (typeof src === 'string' && src.trim()) {
+                            return normalizeImage(src.trim());
+                        }
+                    }
                 }
-                if (badge.image_url) return normalizeImage(badge.image_url);
-                if (badge.asset) return normalizeImage(badge.asset);
                 if (badge.svg) return { type: 'svg', html: badge.svg };
+                if (badge.type === 'svg' && badge.html) return { type: 'svg', html: badge.html };
                 if (badge.text) return { type: 'text', text: badge.text };
                 if (badge.label || badge.name) return badge.label || badge.name;
                 return null;

@@ -27,6 +27,26 @@ function findImage(result, className) {
 		"https://ext.cdn.kick.com/chat/badges/16.png"
 	]);
 
+	const badgeSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 0h16v16H0z"/></svg>';
+	const badgeUrl = 'https://ext.cdn.kick.com/chat/badges/16.png';
+	const badgeCases = [
+		...['src', 'image_url', 'image', 'icon', 'source', 'url', 'asset'].map(key => ({
+			input: { [key]: badgeUrl, svg: badgeSvg, text: 'Subscriber' },
+			expected: [{ type: 'img', src: badgeUrl }]
+		})),
+		{ input: { image: {}, icon: { url: 42, light: badgeUrl }, text: 'VIP' }, expected: [{ type: 'img', src: badgeUrl }] },
+		{ input: { type: 'img', src: badgeUrl }, expected: [{ type: 'img', src: badgeUrl }] },
+		{ input: { image: {}, svg: badgeSvg, text: 'VIP' }, expected: [{ type: 'svg', html: badgeSvg }] },
+		{ input: { type: 'svg', html: badgeSvg, text: 'VIP' }, expected: [{ type: 'svg', html: badgeSvg }] },
+		{ input: { text: 'Subscriber' }, expected: [{ type: 'text', text: 'Subscriber' }] },
+		{ input: { name: 'VIP' }, expected: [{ type: 'text', text: 'VIP' }] },
+		{ input: { image_url: badgeUrl, selected: false, text: 'VIP' }, expected: [] }
+	];
+	for (const { input, expected } of badgeCases) {
+		assert.deepStrictEqual(kickCore.formatBadgesForDisplay([input]), expected);
+		assert.deepStrictEqual(kickCore.formatBadgesForDisplay(kickCore.mapBadges([input])), expected);
+	}
+
 	const browser = await chromium.launch({ headless: true });
 	try {
 		const page = await browser.newPage();
@@ -109,6 +129,11 @@ function findImage(result, className) {
 				};
 			`
 		});
+
+		for (const { input, expected } of badgeCases) {
+			const actual = await page.evaluate(badge => formatBadgesForDisplay(mapBadges([badge])), input);
+			assert.deepStrictEqual(actual, expected, 'fallback must preserve image/SVG/text priority');
+		}
 
 		const inspect = (message, fallback, payload) => page.evaluate(
 			({ messageValue, fallbackValue, payloadValue }) => {

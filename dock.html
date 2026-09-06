@@ -1740,7 +1740,17 @@
 				opacity: 1; /* Firefox */
 			}
 
-			.hl-badge.textbadge {
+			.hl-badge.textbadge,
+			.hl-firstline .hl-name .hl-badge.textbadge {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				vertical-align: middle;
+				line-height: 1;
+				white-space: nowrap;
+				overflow-wrap: normal;
+				max-width: none;
+				flex-shrink: 0;
 				border-radius: 6px;
 				padding: 0 5px;
 				font-size: 50%;
@@ -12118,7 +12128,7 @@
 										}
 									} else if (badge.type && badge.type == "svg" && badge.html) {
 										chatbadges += "<span class='hl-badge svg'>" + badge.html + "</span>";
-									} else if (badge.type && badge.type == "text" && badge.text) {
+									} else if ((badge.type == "text" || badge.type == "badge") && badge.text) {
 										chatbadges += "<span class='hl-badge textbadge'>" + badge.text + "</span>";
 									}
 								} else {
