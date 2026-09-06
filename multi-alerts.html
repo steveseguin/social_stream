@@ -353,6 +353,17 @@
       font-size: calc(14px * var(--detail-scale));
     }
 
+    .alert-headline,
+    .alert-message,
+    .alert-subtitle,
+    .alert-pill,
+    .alert-title,
+    .source-badge {
+      overflow-wrap: anywhere;
+      min-width: 0;
+      max-width: 100%;
+    }
+
     .alert-meta {
       display: flex;
       flex-wrap: wrap;
@@ -771,6 +782,18 @@
       to {
         transform: scale(0.85);
         opacity: 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body .alert-card,
+      body .alert-card.is-hiding,
+      body .alert-progress::after {
+        animation: none !important;
+        transition: none !important;
+      }
+      body .alert-card.is-hiding {
+        visibility: hidden;
       }
     }
 

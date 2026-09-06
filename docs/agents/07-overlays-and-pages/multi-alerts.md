@@ -154,7 +154,7 @@ Category styles:
 - `auctionstyle`
 - `hypestyle`
 
-Default style is `twitch`. HTML/CSS defines `twitch`, `classic`, `minimal`, and `solid` themes. `solid` is a flat preset: opaque card, no blur/glow/accent stripe, 7px default corner radius.
+Default style is `twitch`. HTML/CSS defines `twitch`, `classic`, `minimal`, `solid`, `cute`, `cozy`, `cats`, `music`, `arcade`, `slate`, `paper`, and `micro` themes. `solid` is a flat preset: opaque card, no blur/glow/accent stripe, 7px default corner radius.
 
 Category accent colors (optional overrides; hex like `ff2d5e` or any CSS color):
 
@@ -196,6 +196,9 @@ Layout/display:
 - `hidesource`
 - `hideamount`
 - `hidesubtitle`
+- `hidetitle`: hide the category title badge
+- `hidemessage`: hide message body text
+- `hideprogress`: hide the countdown bar
 - `align=center`
 - `alignright`
 - `scale`
@@ -272,3 +275,9 @@ Repeated alerts:
 - Investigate why the Playwright multi-alerts E2E script times out while waiting for the preview iframe overlay API, then rerun it before promoting any runtime claim.
 - Trace popup-generated multi-alert URLs and settings labels outside the failed runtime attempt if a source-level update is needed.
 - Map each platform's current event names into the category classifier.
+
+## Style controls
+
+All 12 presets support `hidetitle` (category title badge), `hidemessage` (message body), and `hideprogress` (countdown bar). These switches are also available in the popup. They preserve the alert headline and display timing.
+
+Presets: twitch, classic, minimal, solid, cute, cozy, cats, music, arcade, slate, paper, micro. Flat mode preserves collection background colors; explicit accent/category/platform colors override collection name and border colors. All presets respect reduced-motion preferences.

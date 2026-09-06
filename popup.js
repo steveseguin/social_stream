@@ -3803,6 +3803,8 @@ function syncChatOverlayTemplateLinkFromDock() {
 }
 
 function setupPageLinks(hideLinks, baseURL, streamID, password) {
+  const tipjarPreview = document.getElementById('tipjar-style-preview');
+  if (tipjarPreview) tipjarPreview.href = new URL('tipjar-preview.html', baseURL).href;
   // Get any custom parameters from the current URL
   let customParams = getSelectedTranslationLinkParam();
   try {
@@ -11654,6 +11656,24 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		if (/\bcolor\b|\bcolour\b|\bhue\b|\bbackground\b|\bpagebg\b|\bchroma\b|\btextcolor\b|\bnamecolor\b|\bstroke\b|\bglow\b/.test(text)) {
 			synonyms.push('color colour hue background foreground fill text page chroma stroke glow');
 		}
+        // Expand specific concepts only, so generic searches do not match every row.
+        var aliases = [
+            [/\btts\b|\btext to speech\b/, 'tts text to speech read aloud read chat speech synthesis'],
+            [/\bfont\b/, 'font typeface typography lettering'],
+            [/\bfont size\b|\bfontsize\b/, 'text size lettering size bigger text smaller text'],
+            [/\bopacity\b|\btransparent\b|\btransparency\b/, 'opacity transparency transparent see through'],
+            [/\bprofanity\b|\bswear\b|\bbad words\b/, 'profanity swear swearing bad words cursing language filter'],
+            [/\bblacklist\b|\bblocklist\b/, 'blacklist blocklist blocked denylist'],
+            [/\bwhitelist\b|\ballowlist\b/, 'whitelist allowlist allowed'],
+            [/\bavatar\b|\bprofile picture\b|\bprofile image\b/, 'avatar profile picture profile image user picture'],
+            [/\btimestamp\b|\btime stamp\b/, 'timestamp time stamp message time'],
+            [/\bemotes?\b|\bemoticons?\b/, 'emote emotes emoticon emoticons']
+        ];
+        aliases.forEach(function(alias) {
+            if (alias[0].test(text)) {
+                synonyms.push(alias[1]);
+            }
+        });
 		if (synonyms.length) {
 			parts.push(synonyms.join(' '));
 		}
@@ -11845,6 +11865,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		var target = record && record.element;
 		var wrapper = record && record.wrapper;
 		closePopupSearch();
+		// Search covers all settings; leave the enabled-only view before revealing one.
+		setPopupEnabledFilter(false);
 		if (wrapper) {
 			openPopupSearchSection(wrapper);
 		}
@@ -11861,6 +11883,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	function renderPopupSearchResults(records, totalMatches) {
 		clearPopupSearchResults();
+        var toolbar = document.getElementById('popupSearchToolbar');
+        if (toolbar && popupSearchResults) {
+            popupSearchResults.style.top = Math.ceil(toolbar.getBoundingClientRect().bottom + 4) + 'px';
+        }
+
 		if (!popupSearchResults) {
 			return;
 		}
@@ -11902,7 +11929,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			return false;
 		}
 		return element.id === 'searchInput' ||
-			element.id === 'searchIcon' ||
+			element.id === 'popupSearchToolbar' ||
 			element.id === 'popupSearchNoResults' ||
 			element.id === 'popupSearchResults' ||
 			element.id === 'activeIcon' ||
@@ -12286,8 +12313,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		if (popupSearchInput) {
 			popupSearchInput.value = '';
-			popupSearchInput.style.display = 'none';
-			popupSearchInput.style.width = '0';
 		}
 		clearPopupSearchHidden();
 		clearPopupSearchMatches();
@@ -12327,14 +12352,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		if (!searchInput) {
 			return;
 		}
-		if (searchInput.style.display === 'none' || searchInput.style.display === '') {
-			searchInput.style.display = 'block';
-			searchInput.style.width = 'calc(100% - 35px)'; // Match this with your CSS width
-			searchInput.focus(); // Optional: Focus on the input field when it's shown
-		} else {
-			searchInput.focus();
-			searchInput.select();
-		}
+		searchInput.focus();
+		searchInput.select();
 	}
 
 	document.addEventListener('keydown', function(e) {
@@ -12343,27 +12362,22 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			openPopupSearch();
 		} else if (e.key === 'Escape') {
 			var searchInput = popupSearchInput || document.getElementById('searchInput');
-			if (searchInput && window.getComputedStyle(searchInput).display !== 'none') {
+			if (searchInput && (document.activeElement === searchInput || document.body.classList.contains('popup-searching'))) {
 				e.preventDefault();
 				closePopupSearch();
 			}
 		}
 	});
 
-	document.getElementById('searchIcon').addEventListener('click', function() {
-		var searchInput = popupSearchInput || document.getElementById('searchInput');
-		if (searchInput.style.display === 'none' || searchInput.style.display === '') {
-			openPopupSearch();
-		} else {
-			closePopupSearch();
-		}
-	});
-	
+
 	var activeToggle = false;
 	var activeToggleOpenState = null;
 	var activeToggleScrollY = null;
-	document.getElementById('activeIcon').addEventListener('click', function() {
-		activeToggle = !activeToggle;
+	function setPopupEnabledFilter(enabled) {
+		if (activeToggle === enabled) {
+			return;
+		}
+		activeToggle = enabled;
 		if (activeToggle) {
 			// Remember open sections and scroll position so toggling off restores them
 			activeToggleOpenState = [];
@@ -12379,8 +12393,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				ele.checked = true;
 			});
 			
-			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
-				item.style.display = 'none';
+			document.querySelectorAll('button:not(.showalways):not(.popup-search-result)').forEach(function(item) {
+				item.classList.add('popup-enabled-filter-hidden');
 			});
 
 			document.querySelectorAll('.wrapper').forEach(w => {
@@ -12405,22 +12419,22 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 					if (isActive) {
 						matches += 1;
-						item.style.display = '';
+						item.classList.remove('popup-enabled-filter-hidden');
 					} else {
-						item.style.display = 'none';
+						item.classList.add('popup-enabled-filter-hidden');
 					}
 				});
 				
 				if (!matches) {
-					w.style.display = "none";
+					w.classList.add('popup-enabled-filter-hidden');
 				} else {
-					w.style.display = "";
+					w.classList.remove('popup-enabled-filter-hidden');
 				}
 			});
 		} else {
 			
-			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
-				item.style.display = '';
+			document.querySelectorAll('button:not(.showalways):not(.popup-search-result)').forEach(function(item) {
+				item.classList.remove('popup-enabled-filter-hidden');
 			});
 			// Reset to original state
 			if (activeToggleOpenState) {
@@ -12436,16 +12450,20 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				});
 			}
 			document.querySelectorAll('.wrapper').forEach(ele => {
-				ele.style.display = "";
+				ele.classList.remove('popup-enabled-filter-hidden');
 			});
 			document.querySelectorAll('.options_group > div').forEach(ele => {
-				ele.style.display = "";
+				ele.classList.remove('popup-enabled-filter-hidden');
 			});
 			if (typeof activeToggleScrollY === 'number') {
 				restorePopupScrollTop(activeToggleScrollY);
 				activeToggleScrollY = null;
 			}
 		}
+	}
+
+	document.getElementById('activeIcon').addEventListener('click', function() {
+		setPopupEnabledFilter(!activeToggle);
 	});
 	
 	const uploadBadwordsButton = document.getElementById('uploadBadwordsButton');

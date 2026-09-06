@@ -343,6 +343,13 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
       return !!(link && link.href && link.href.indexOf('multi-alerts.html?session=testsession') !== -1);
     });
 
+    for (const param of ['hidetitle', 'hidemessage', 'hideprogress']) {
+      await setCheckboxValue(popupPage, `[data-param25='${param}']`, true);
+      assert(new URL(await popupPage.getAttribute('#multialertslink', 'href')).searchParams.has(param), `Popup did not add ${param}.`);
+      await setCheckboxValue(popupPage, `[data-param25='${param}']`, false);
+      assert(!new URL(await popupPage.getAttribute('#multialertslink', 'href')).searchParams.has(param), `Popup did not remove ${param}.`);
+    }
+
     await setCheckboxValue(popupPage, "[data-param25='disablefollows']", true);
     await setCheckboxValue(popupPage, "[data-param25='disablesubs']", true);
     await setCheckboxValue(popupPage, "[data-param25='disabledonos']", true);

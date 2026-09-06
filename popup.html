@@ -390,39 +390,40 @@ input[type="range"] {
 }
 
 
+#popupSearchToolbar {
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 67px;
+    z-index: 100;
+    padding: 6px 8px;
+    background: var(--body-background-color);
+}
+
 #searchInput {
     appearance: none;
-    position: fixed;
-    top: 65px;
-    right: 26px;
-    border: 1px solid var(--collapsible-border-color);
-    background-color: var(--color-accent-subtle);
+    display: block;
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--color-accent);
+    border-radius: 4px;
+    background-color: var(--options-group-background-color);
     color: var(--default-text-color);
-    display: none;
-    width: 0;
-    padding: 1px 4px;
-    font-weight: bold;
+    padding: 6px 8px;
+    font: inherit;
     cursor: text;
-    z-index: 100;
-    transition: width 0.5s ease;
-	border-radius: 4px;
 }
 
 #searchInput:focus {
-    outline: none;
-    border-color: var(--color-accent);
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
 }
 
-@keyframes shake {
-  0%, 50%, 100% { transform: rotate(0deg); }
-  70% { transform: rotate(-20deg); }
-  90% { transform: rotate(20deg); }
-}
-
-
-#searchInput.show {
-    display: block;
-    width: calc(100% - 35px); /* Adjust width as needed */
+#searchInput::placeholder {
+    color: var(--placeholder-color);
+    opacity: 1;
 }
 
 #searchInput::-webkit-search-cancel-button {
@@ -430,32 +431,12 @@ input[type="range"] {
     cursor: pointer;
 }
 
-#searchIcon {
-    position: fixed;
-    top: 60px;
-    right: 0px;
-    z-index: 100;
-    cursor: pointer;
-	font-size: 150%;
-	animation: shake 2s ease-in-out;
-}
-#activeIcon {
-	position: absolute;
-    top: 60px;
-    right: 25px;
-    cursor: pointer;
-    display: block;
-    height: 0;
-	font-size: 150%;
-}
+#activeIcon,
 #languageIcon {
-	position: absolute;
-    top: 60px;
-    right: 50px;
+    flex: none;
+    margin-left: 8px;
     cursor: pointer;
-    display: block;
-    height: 0;
-	font-size: 150%;
+    font-size: 150%;
 }
 .tts-test-button {
 	display: inline-block;
@@ -653,6 +634,7 @@ body {
     opacity: 0;
 }
 
+.popup-enabled-filter-hidden,
 .popup-search-hidden {
     display: none !important;
 }
@@ -666,7 +648,7 @@ body {
 #popupSearchResults {
     display: none;
     position: fixed;
-    top: 92px;
+    top: 112px;
     right: 8px;
     bottom: 8px;
     left: 8px;
@@ -1258,7 +1240,6 @@ h2 {
 		border-top-color: #3d444d;
 		border-bottom-color: #3d444d;
 	}
-	#searchIcon,
 	#activeIcon,
 	#languageIcon {
 		filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
@@ -2463,6 +2444,11 @@ input:checked + .slider:before {
                 <span data-translate="clear-all-messages">Clear All</span>
             </button>
         </div>
+        <div id="popupSearchToolbar">
+            <input type="search" id="searchInput" placeholder="Search settings..." aria-label="Search all settings" />
+            <div id="activeIcon" title="Show only enabled options">🔰</div>
+            <div id="languageIcon" title="Select language">🌐</div>
+        </div>
         <div id="serverFallbackTestNotice">
             <div data-role="message"></div>
             <div class="server-fallback-actions">
@@ -2473,12 +2459,8 @@ input:checked + .slider:before {
         </div>
         <div id="newVersion"></div>
         <div id="importantChanges"></div>
-        <input type="search" id="searchInput" placeholder="Search all options by keyword..." data-translate="placeholder-search-options" />
-        <div id="searchIcon" title="Search all options by keyword">🔍</div>
         <div id="popupSearchNoResults" data-translate="search-no-results">No matching options found</div>
-		<div id="popupSearchResults" role="list" aria-label="Search results"></div>
-		<div id="activeIcon" title="Show only enabled options">🔰</div>
-        <div id="languageIcon" title="Select language">🌐</div>
+        <div id="popupSearchResults" role="list" aria-label="Search results"></div>
         <!-- Language Selector (hidden by default) -->
         <div id="language-selector-container" style="display: none; position: absolute; right: 10px; top: 100px; background: var(--options-group-background-color); color: var(--options-group-text-color); padding: 10px; border-radius: 4px; border: 1px solid var(--collapsible-border-color); box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000;">
             <span data-translate="select-a-different-translation" style="display: block; margin-bottom: 5px; color: var(--options-group-text-color);">
@@ -6823,6 +6805,27 @@ input:checked + .slider:before {
 								</div>
 								<div>
 									<label class="switch">
+										<input type="checkbox" data-param25="hidetitle" />
+										<span class="slider round"></span>
+									</label>
+									<span>Hide alert title</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="hidemessage" />
+										<span class="slider round"></span>
+									</label>
+									<span>Hide message text</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="hideprogress" />
+										<span class="slider round"></span>
+									</label>
+									<span>Hide progress bar</span>
+								</div>
+								<div>
+									<label class="switch">
 										<input type="checkbox" data-param25="hidesubtitle" />
 										<span class="slider round"></span>
 									</label>
@@ -7532,21 +7535,21 @@ input:checked + .slider:before {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
-                                <div title="Enable BTTV emotes - YT/TW channels + globals">
+                                <div title="Enable BTTV emotes - YT/TW channels + globals" data-keywords="BetterTTV Better Twitch TV third-party emotes custom emotes animated emotes">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="bttv" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="add-bttv-to-chat"> 🥵 Add BTTV emotes (global+) </span>
                                 </div>
-                                <div title="Enable 7TV emotes - YT/TW channels + globals">
+                                <div title="Enable 7TV emotes - YT/TW channels + globals" data-keywords="SevenTV Seven TV 7 TV third-party emotes custom emotes animated emotes">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="seventv" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="add-7tv-to-chat"> 😱 Add 7TV emotes (global+) </span>
                                 </div>
-								<div title="Enable FFZ emotes - YT/TW channels + globals">
+								<div title="Enable FFZ emotes - YT/TW channels + globals" data-keywords="FrankerFaceZ Franker Face Z third-party emotes custom emotes">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="ffz" />
                                         <span class="slider round"></span>
@@ -11863,8 +11866,27 @@ input:checked + .slider:before {
                                         <option value="vertical"><span data-translate="vertical-style">Vertical Bar</span></option>
                                         <option value="minimal"><span data-translate="minimal-style">Minimal</span></option>
                                         <option value="text"><span data-translate="text-style">Text Only</span></option>
+                                        <option value="card">Goal Card</option>
+                                        <option value="ring">Progress Ring</option>
+                                        <option value="lowerthird">Lower Third</option>
+                                        <option value="segmented">Segmented Bar</option>
                                     </select>
                                 </div>
+                                <div>
+                                    <a id="tipjar-style-preview" href="https://socialstream.ninja/tipjar-preview.html" target="_blank" rel="noopener">Preview all styles safely</a>
+                                    <small style="display:block;opacity:0.8">Uses sample totals without sending donations to your overlays.</small>
+                                </div>
+                                <div>
+                                    <label class="switch"><input type="checkbox" data-param12="refresh" /><span class="slider round"></span></label>
+                                    <span>Refreshed appearance for existing styles (optional)</span>
+                                    <small style="display:block;opacity:0.8">Leave off to keep the original sizing, colors, and animation.</small>
+                                </div>
+                                <h3>New panel styles only</h3>
+                                <small>These controls apply to Goal Card, Progress Ring, Lower Third, and Segmented Bar.</small>
+                                <div><label>Panel opacity (0–1):</label><input type="number" data-optionparam12="panelopacity" class="textInput" min="0" max="1" step="0.05" placeholder="Default" /></div>
+                                <div><label>Accent color:</label><input type="text" data-optionparam12="accent" class="textInput" placeholder="#66d9b2" /><small style="display:block;opacity:0.8">Use a six-digit hex color. Explicit fill start/end colors still control the progress fill.</small></div>
+                                <div><label>Total text size (12–96 px):</label><input type="number" data-optionparam12="amountsize" class="textInput" min="12" max="96" placeholder="Default" /></div>
+                                <div><label class="switch"><input type="checkbox" data-param12="hidepercent" /><span class="slider round"></span></label><span>Hide percentage on new panel styles</span></div>
                                 <div>
                                     <label><span data-translate="theme">Theme:</span></label>
                                     <select data-optionparam12="theme" class="textInput">
@@ -11989,7 +12011,7 @@ input:checked + .slider:before {
                                     <input type="number" data-optionparam12="levelsize" class="textInput" placeholder="0 = single goal (e.g. 1000 stars, 50 $)" min="0" step="1" />
                                 </div>
                                 <div>
-                                    <label>Bar text size (px):</label>
+                                    <label>Fluid Goal Bar text size (px):</label>
                                     <input type="number" data-optionparam12="bartextsize" class="textInput" placeholder="26" min="1" step="1" />
                                 </div>
                                 <div>
@@ -11997,7 +12019,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param12="baronly" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span>Only show the bar, with text inside</span>
+                                    <span>Fluid Goal Bar: only show the bar, with text inside</span>
                                 </div>
                                 <div class="textInputContainer textInputWithUpload" style="width: 95%;">
                                     <label><span data-translate="custom-jar-image">Custom Jar Image URL:</span></label>
