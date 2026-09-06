@@ -22,7 +22,7 @@ Throne's public status endpoint, SSE connection and unsigned-webhook rejection w
 
 ## Remaining work / limits
 
-- A reboot is still needed: the running kernel is `5.10.0-28-cloud-amd64`; newer kernels are installed. No reboot was performed during this change.
+- Authorized reboot completed on September 6 after the full local backup was verified. The running kernel is now `5.10.0-46-cloud-amd64`. SSH, Apache, memcached and the SSN service started successfully; no failed systemd units were reported. Origin and public YouTube/Twitch/monetization checks passed, including public SSE. eBay still returns its expected setup-pending 503.
 - Debian 11 reached end of support on August 31, 2026. Available package updates do not make it a supported OS. Plan and test an OS/PHP migration separately against the active PHP integrations: https://www.debian.org/News/2026/20260831
 - A real signed Throne delivery and a real eBay seller OAuth/paid-order flow remain untested. eBay application credentials and permissions are required before enabling it.
 - Existing public edge filtering rejected Python's default user agent with error 1010; browser-agent HTTPS requests and SSE passed. No edge configuration was changed. Verify that actual provider webhook requests pass before calling the integration live-validated.

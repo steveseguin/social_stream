@@ -172,6 +172,59 @@ async function testGiftPurchaseExclusion(baseUrl, browser) {
 	}
 }
 
+async function testGoalLayouts(baseUrl, browser) {
+	const context = await makeContext(browser);
+	try {
+		for (const style of ['card', 'ring', 'lowerthird', 'segmented']) {
+			const { page, errors } = await openTipJar(context, baseUrl + '/tipjar.html?session=layout-test&style=' + style + '&goal=100&startamount=25&celebration=none');
+			assert.strictEqual(await page.locator('.style-container.active').count(), 1);
+			assert.strictEqual(await page.textContent('#summary-amount'), '$25.00');
+			assert.strictEqual(await page.textContent('#summary-percent'), '25%');
+			await page.evaluate(() => processData({ type: 'youtube', event: 'superchat', chatname: 'Layout Test', hasDonation: '$25', donoValue: 25 }));
+			assert.strictEqual(await page.textContent('#summary-percent'), '50%');
+			assert.strictEqual(await page.getAttribute('#summary-progress', 'aria-valuenow'), '50');
+			assert.strictEqual(await page.locator('#summary-ring-fill').evaluate(el => el.style.strokeDashoffset), '50');
+			await page.setViewportSize({ width: 320, height: 500 });
+			await page.evaluate(() => { document.getElementById('summary-title').textContent = 'A long community fundraiser title that needs to wrap'; });
+			assert(await page.locator('.summary-panel').evaluate(el => el.scrollWidth <= el.clientWidth), style + ' overflows at 320px');
+			for (const params of ['&goalmetric=count&countlabel=donations', '&hype&noresetoncomplete', '&levelsize=100', '&rollinggoal=100']) {
+				await page.goto(baseUrl + '/tipjar.html?session=layout-test&style=' + style + '&goal=100&startamount=150&celebration=none' + params);
+				await page.waitForFunction(() => typeof window.processData === 'function');
+				const expected = params.includes('levelsize') ? '50%' : (params.includes('rollinggoal') ? '75%' : '100%');
+				assert.strictEqual(await page.textContent('#summary-percent'), expected, style + params);
+				if (params.includes('countlabel')) assert((await page.textContent('#summary-goal')).includes('donations'));
+				if (params.includes('hype')) assert((await page.textContent('#summary-amount')).includes('pts'));
+				if (params.includes('levelsize')) assert((await page.textContent('#summary-title')).includes('Lvl 2'));
+			}
+			assert.deepStrictEqual(errors, [], style + ' browser errors');
+			await page.close();
+		}
+		if (process.env.TIPJAR_SCREENSHOTS) {
+			fs.mkdirSync(process.env.TIPJAR_SCREENSHOTS, { recursive: true });
+			const gallery = await context.newPage();
+			await gallery.setViewportSize({ width: 1440, height: 1320 });
+			await gallery.goto(baseUrl + '/tipjar.html?session=layout-gallery&style=text');
+			await gallery.evaluate(base => {
+				document.body.innerHTML = '';
+				document.body.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);align-items:start;background:#343e50;overflow:auto;padding:16px;gap:12px;height:auto';
+				for (const style of ['card', 'ring', 'segmented', 'lowerthird', 'meter', 'compact', 'bar', 'minimal', 'vertical']) {
+					const tile = document.createElement('div');
+					tile.innerHTML = '<div style="color:white;font:16px Arial;padding:8px">' + style + '</div>';
+					const frame = document.createElement('iframe');
+					frame.src = base + '/tipjar.html?session=layout-gallery&style=' + style + '&goal=1000&startamount=635&title=Community%20studio%20fund&theme=' + (style === 'ring' ? 'gold' : style === 'segmented' ? 'neon' : 'default');
+					frame.style.cssText = 'width:100%;height:380px;border:0';
+					tile.appendChild(frame);
+					document.body.appendChild(tile);
+				}
+			}, baseUrl);
+			await gallery.waitForTimeout(1600);
+			await gallery.screenshot({ path: path.join(process.env.TIPJAR_SCREENSHOTS, 'tipjar-styles.png'), fullPage: true });
+		}
+	} finally {
+		await context.close();
+	}
+}
+
 function testPopupContract() {
 	const popupHtml = fs.readFileSync(path.join(repoRoot, "popup.html"), "utf8");
 	const popupSource = fs.readFileSync(path.join(repoRoot, "popup.js"), "utf8");
@@ -199,13 +252,18 @@ async function main() {
 		console.log("PASS Tip Jar can count combined Super Chat and Super Sticker goals");
 		await testGiftPurchaseExclusion(baseUrl, browser);
 		console.log("PASS Tip Jar gifted-membership exclusion works in Hype mode");
+		await testGoalLayouts(baseUrl, browser);
+		console.log("PASS Goal layouts render donations, count/Hype/recurring goals, and narrow widths");
 	} finally {
 		await browser.close();
 		await new Promise(resolve => server.close(resolve));
 	}
 }
 
-main().catch(error => {
-	console.error(error.stack || error);
-	process.exit(1);
-});
+module.exports = { startServer, makeContext, openTipJar };
+if (require.main === module) {
+	main().catch(error => {
+		console.error(error.stack || error);
+		process.exit(1);
+	});
+}

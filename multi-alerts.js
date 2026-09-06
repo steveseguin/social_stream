@@ -1715,6 +1715,9 @@ function readSettings() {
     hideSource: urlParams.has('hidesource'),
     hideAmount: urlParams.has('hideamount'),
     hideSubtitle: urlParams.has('hidesubtitle'),
+    hideTitle: urlParams.has('hidetitle'),
+    hideMessage: urlParams.has('hidemessage'),
+    hideProgress: urlParams.has('hideprogress'),
     includeSources: parseSourceListParam('sources'),
     excludeSources: parseSourceListParam('hidesources'),
     includeSourceMatches: parseSourceMatchListParam('sourceids', ['channels']),
@@ -2161,6 +2164,10 @@ function renderAlert(model) {
   article.className = `alert-card theme-${styleKey} category-${model.category} event-${eventClass}`;
   if (['cute', 'cozy', 'cats', 'music', 'arcade', 'slate', 'paper', 'micro'].indexOf(styleKey) !== -1) {
     article.classList.add('collection');
+    if (settings.accent || settings.categoryAccents[model.category] || settings.colorByPlatform) {
+      article.classList.add('custom-accent');
+      article.style.setProperty('--collection-accent', model.accent);
+    }
   }
   article.dataset.eventKey = model.eventKey || '';
   article.dataset.alertCategory = model.category || '';
@@ -2178,7 +2185,9 @@ function renderAlert(model) {
   const titleBadge = document.createElement('div');
   titleBadge.className = 'alert-title';
   titleBadge.textContent = model.title.toUpperCase();
-  header.appendChild(titleBadge);
+  if (!settings.hideTitle) {
+    header.appendChild(titleBadge);
+  }
 
   if (!settings.hideSource) {
     const spacer = document.createElement('div');
@@ -2235,7 +2244,7 @@ function renderAlert(model) {
     copy.appendChild(subtitle);
   }
 
-  if (shouldRenderBodyText(model)) {
+  if (!settings.hideMessage && shouldRenderBodyText(model)) {
     const message = document.createElement('div');
     message.className = 'alert-message';
     message.innerHTML = model.bodyText;
@@ -2273,12 +2282,16 @@ function renderAlert(model) {
     }
   }
 
-  article.appendChild(header);
+  if (header.querySelector('.alert-title, .source-badge')) {
+    article.appendChild(header);
+  }
   article.appendChild(shell);
 
   const progress = document.createElement('div');
   progress.className = 'alert-progress';
-  article.appendChild(progress);
+  if (!settings.hideProgress) {
+    article.appendChild(progress);
+  }
 
   return article;
 }
@@ -2644,6 +2657,9 @@ window.__multiAlertsOverlay = {
       hideSource: settings.hideSource,
       hideAmount: settings.hideAmount,
       hideSubtitle: settings.hideSubtitle,
+      hideTitle: settings.hideTitle,
+      hideMessage: settings.hideMessage,
+      hideProgress: settings.hideProgress,
       includeSources: Array.from(settings.includeSources),
       excludeSources: Array.from(settings.excludeSources),
       includeSourceMatches: Array.from(settings.includeSourceMatches),
