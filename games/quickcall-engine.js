@@ -1,0 +1,18 @@
+(function(root){
+'use strict';
+function Game(options){options=options||{};this.now=options.now||Date.now;this.random=options.random||Math.random;this.reset();}
+Game.prototype.reset=function(){this.users=new Map();this.queue=[];this.calls=[];this.phase='waiting';this.deadline=0;this.round=0;this.revision=0;this.seen=new Set();this.codes=new Set();};
+Game.prototype.code=function(){var alphabet='ABCDEFGHJKMNPQRSTUVWXYZ23456789',base=alphabet.length,n=Math.floor(this.random()*Math.pow(base,4)),s;do{var value=n++;s='';for(var i=0;i<4;i++){s+=alphabet[value%base];value=Math.floor(value/base);}}while(this.codes.has(s));this.codes.add(s);if(this.codes.size>5000)this.codes.delete(this.codes.values().next().value);return s;};
+Game.prototype.start=function(){this.calls=[];while(this.queue.length&&this.calls.length<3){var p=this.users.get(this.queue.shift());if(p&&p.queued){p.queued=false;this.calls.push({key:p.key,name:p.name,code:this.code(),time:null,attempt:-Infinity});}}if(!this.calls.length){this.phase='waiting';this.deadline=0;this.revision++;return;}this.round++;this.phase='active';this.started=this.now();this.deadline=this.started+30000;this.revision++;};
+Game.prototype.finish=function(){var self=this;this.calls.forEach(function(c){var p=self.users.get(c.key);if(c.time!==null&&p){p.queued=true;self.queue.push(c.key);}});this.phase='result';this.deadline=this.now()+6000;this.revision++;};
+Game.prototype.tick=function(){if(!this.deadline||this.now()<this.deadline)return;if(this.phase==='active')this.finish();else this.start();};
+Game.prototype.shiftTime=function(ms){if(this.deadline)this.deadline+=ms;if(this.phase==='active')this.started+=ms;this.calls.forEach(function(c){if(c.attempt)c.attempt+=ms;});};
+Game.prototype.input=function(m){this.tick();if(!m||m.bot||m.private||m.reflection||m.event||typeof m.type!=='string'||typeof m.chatname!=='string'||typeof m.chatmessage!=='string'||m.chatmessage.length>100)return false;
+var key=m.type+':'+String(m.userid||m.username||m.chatname),text=m.chatmessage.trim().toUpperCase(),p=this.users.get(key),id=m.id==null?m.meta&&m.meta.messageId:m.id,dup=id==null?null:m.type+':'+String(m.tid||'')+':'+String(id);
+if(dup&&this.seen.has(dup))return false;
+function remember(self){if(dup){self.seen.add(dup);if(self.seen.size>5000)self.seen.delete(self.seen.values().next().value);}}
+if(text==='!QUICK'){if(p&&(p.queued||this.phase==='active'&&this.calls.some(function(c){return c.key===key;})))return false;if(!p){if(this.users.size>=1000)return false;p={key:key,name:m.chatname.slice(0,60),best:null,wins:0,queued:false};this.users.set(key,p);}p.queued=true;this.queue.push(key);remember(this);if(this.phase==='waiting'){this.phase='joining';this.deadline=this.now()+5000;}this.revision++;return true;}
+if(this.phase!=='active'||!p)return false;var c=this.calls.find(function(c){return c.key===key;});if(!c||c.time!==null||! /^[A-Z2-9]{4}$/.test(text)||this.now()-c.attempt<500)return false;c.attempt=this.now();remember(this);if(text!==c.code)return false;c.time=Math.max(0,this.now()-this.started);p.best=p.best===null?c.time:Math.min(p.best,c.time);p.wins++;this.revision++;if(this.calls.every(function(c){return c.time!==null;}))this.finish();return true;};
+Game.prototype.leaders=function(){return Array.from(this.users.values()).filter(function(p){return p.best!==null;}).sort(function(a,b){return a.best-b.best||b.wins-a.wins||a.name.localeCompare(b.name);}).slice(0,5);};
+if(typeof module==='object'&&module.exports)module.exports=Game;else root.SSNQuickCall=Game;
+})(typeof window==='undefined'?globalThis:window);

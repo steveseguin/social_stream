@@ -2,6 +2,13 @@
 const msg=(chatmessage,name='River',extra={})=>Object.assign({chatmessage,chatname:name,type:'youtube',textonly:true},extra);
 const advance=(g,seconds)=>{for(let i=0;i<Math.ceil(seconds*10);i++)g.tick(.1);};
 function random(seed){return ()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);}
+test('Maze raiders spawn nearby along corridors rather than across distant walls',()=>{
+ for(let seed=1;seed<=100;seed++){
+  const g=new Game('maze',{random:random(seed)});g.input(msg('hello'));g.pathMap();
+  const enemy=g.enemies[0],distance=g.distances[Math.floor(enemy.y)][Math.floor(enemy.x)];
+  assert(distance>=3&&distance<=8,'Spawn must be 3–8 walkable corridor steps away');
+ }
+});
 test('Maze exploration and pursuit stay inside corridors, credit a winner, and reset',()=>{
  for(let seed=1;seed<=5;seed++){
   const g=new Game('maze',{random:random(seed)});g.input(msg('Hello maze'));const firstMap=g.map;

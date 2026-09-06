@@ -1,9 +1,10 @@
 window.SSNGamesCatalog = [
+  {"id":"quickcall","title":"Quick Call","category":"Party","description":"Wait for your name, type your random code, and race for the fastest reply.","command":"!quick","path":"games/quickcall.html","image":"images/games/quickcall.jpg","demo":true,"audience":"Solo-friendly"},
   {
     "id": "mazeraid",
     "title": "Maze Raid",
     "category": "Party",
-    "description": "Chat becomes avatar enemies in an auto-roaming retro maze with transparent space around it.",
+    "description": "Chat becomes avatar raiders in a full-window, auto-roaming retro maze.",
     "command": "Say anything in chat",
     "path": "games/mazeraid.html",
     "image": "images/games/mazeraid.jpg",
