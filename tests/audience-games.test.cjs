@@ -158,3 +158,5 @@ test('Word Chain retains its word validation, combo scoring, timer bonus and rea
         for(const width of [390,1280]) {await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
     } finally {await browser.close();}
 });
+
+test('Tug of War balances teams, limits each prompt and finishes at the winning line',()=>{const {Game}=require('../games/tug-engine.js');let now=1000;const g=new Game('tug',{now:()=>now,random:()=>0});for(let i=0;i<40;i++)assert(g.input(msg('!join','P'+i)));assert.deepEqual(g.teams,[20,20]);assert.equal(g.input(msg(g.answer,'Stranger')),false);assert.equal(g.input(msg('wrong','P0')),false);const answer=g.answer;assert(g.input(msg(answer,'P0')));assert.equal(g.input(msg('!answer '+answer,'P0')),false);for(let i=2;i<40;i+=2)assert(g.input(msg(answer,'P'+i)));assert.equal(g.position,-20);assert.equal(g.phase,'result');assert.match(g.result,/Team Coral wins/);assert.equal(g.input(msg(answer,'P1')),false);g.next();assert.equal(g.users.size,0);assert.equal(g.phase,'waiting');});

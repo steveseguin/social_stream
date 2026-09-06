@@ -31,6 +31,7 @@
             SSNTugView.render(game, el, history);
         } else if (game.card) {
             document.getElementById('round').textContent = 'Round ' + String(game.round).padStart(2, '0');
+            if (mode === 'number') document.querySelector('.command code').textContent = '!guess ' + Math.floor((game.low + game.high) / 2);
             var art = document.getElementById('party-art');
             art.textContent = mode === 'number' ? game.low + '\u2013' + game.high : mode === 'shuffle' ? game.scrambled.toUpperCase() : game.phase === 'result' && mode === 'showdown' ? game.card.labels[game.secret].toUpperCase() : mode === 'showdown' ? '\u270a \u270b \u270c' : '\u2600 \u263e \u2606';
             if (game.card.labels.length) {

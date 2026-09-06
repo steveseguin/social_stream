@@ -2,7 +2,7 @@
 'use strict';
 var params=new URLSearchParams(location.search),mode=document.body.dataset.game,game=new SSNOverlayGame.Game(mode),demo=params.has('demo'),paused=false;
 var canvas=document.getElementById('playfield'),ctx=canvas.getContext('2d'),connection=document.getElementById('connection'),result=document.getElementById('result'),images=new Map(),last=performance.now(),lastDraw=0;
-function resize(){if(mode!=='maze')canvas.width=Math.min(1600,window.innerWidth);}
+function resize(){if(mode!=='maze'){canvas.width=Math.min(1600,window.innerWidth);return;}var scale=Math.min(1,640/window.innerWidth,480/window.innerHeight);canvas.width=Math.max(1,Math.round(window.innerWidth*scale));canvas.height=Math.max(1,Math.round(window.innerHeight*scale));}
 window.addEventListener('resize',resize);resize();
 if(demo)document.body.classList.add('demo');if(params.has('clean')){document.getElementById('controls').hidden=true;connection.hidden=true;}if(params.has('fullscreen'))document.body.classList.add('fullscreen');
 if(params.has('chroma'))document.body.classList.add('chroma');
@@ -17,10 +17,10 @@ function drawAmbient(){var w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h)
   ctx.strokeStyle=ready?'#ceffa8':'#cce2db';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(w/2,100,Math.max(30,width/8),42,0,0,Math.PI*2);ctx.stroke();
   var glow=ctx.createRadialGradient(x,y,0,x,y,35);glow.addColorStop(0,'#f3ffd6cc');glow.addColorStop(1,'#d5ff8c00');ctx.fillStyle=glow;ctx.fillRect(x-35,y-35,70,70);star(x,y,12,'#edffc7');
   text(game.phase==='waiting'?'Type !catch to wake the fireflies':ready?'CATCH NOW!':'Wait for the ring...',w/2,174,w<600?13:18,ready?'#dcffb2':'#eef8f3','center');
-  game.effects.forEach(function(e,i){var age=game.time-e.at;text(e.name.slice(0,14)+(e.score?' +'+e.score:' · too early / late'),left+(i%4)*width/4,135-age*20,12,e.score?'#e2ffc1':'#c2c8cf');});
+  game.effects.forEach(function(e,i){var age=game.time-e.at;text(e.name.slice(0,14)+(e.score?' +'+e.score:' - too early / late'),left+(i%4)*width/4,135-age*20,12,e.score?'#e2ffc1':'#c2c8cf');});
  }else{
   ['#ffa3a3','#9deedc'].forEach(function(color,team){var y=65+team*70,progress=game.points[team]/20,x=left+width*progress;ctx.fillStyle='#18263899';roundRect(left,y-5,width,10,5);ctx.fill();var glow=ctx.createLinearGradient(Math.max(left,x-100),0,x+1,0);glow.addColorStop(0,color+'00');glow.addColorStop(1,color);ctx.fillStyle=glow;ctx.fillRect(Math.max(left,x-100),y-4,Math.min(100,x-left),8);star(x,y,18,color);text(team?'MINT':'CORAL',left,y-24,12,color);text(game.points[team]+' / 20',right,y-24,12,color,'right');});
-  ctx.strokeStyle='#e8f1ff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(right+18,36);ctx.lineTo(right+18,155);ctx.stroke();text('Type !boost · Your first boost assigns your team',w/2,188,w<600?10:16,'#f4f7ff','center');
+  ctx.strokeStyle='#e8f1ff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(right+18,36);ctx.lineTo(right+18,155);ctx.stroke();text('Type !boost - Your first boost assigns your team',w/2,188,w<600?10:16,'#f4f7ff','center');
   game.effects.forEach(function(e,i){text(e.name.slice(0,14)+' +1',left+(i%5)*width/5,65+e.team*70-(game.time-e.at)*15,12,e.team?'#9deedc':'#ffa3a3');});
  }
 }
@@ -45,8 +45,18 @@ function makeMazeTextures(){
  }
  return textures;
 }
+function makeRaiderSprite(enemy,record){
+ var sprite=document.createElement('canvas');sprite.width=64;sprite.height=80;var t=sprite.getContext('2d');t.imageSmoothingEnabled=false;
+ var armor=enemy.color?'#74aa94':'#ad7957';
+ t.fillStyle='#172130';t.fillRect(8,68,18,12);t.fillRect(38,68,18,12);t.fillRect(3,40,58,24);
+ t.fillStyle=armor;t.fillRect(9,39,46,30);t.fillRect(0,44,10,17);t.fillRect(54,44,10,17);
+ t.fillStyle='#ced5c4';t.fillRect(12,0,40,43);t.fillStyle='#162537';t.fillRect(15,4,34,34);
+ if(record.ready)t.drawImage(record.img,15,4,34,34);else{t.fillStyle='#d6f2c2';t.font='bold 18px monospace';t.textAlign='center';t.fillText(enemy.name.slice(0,2).toUpperCase(),32,28);}
+ t.fillStyle='#273747';t.fillRect(21,46,22,13);t.fillStyle='#f5cf68';t.fillRect(25,49,4,4);t.fillRect(35,49,4,4);
+ return sprite;
+}
 function drawMaze(){
- var w=canvas.width,h=canvas.height,p=game.explorer,map=game.map,fov=Math.PI/3,rays=320,strip=w/rays,z=[];
+ var w=canvas.width,h=canvas.height,p=game.explorer,map=game.map,fov=2*Math.atan(w/(h*1.6)),rays=320,strip=w/rays,z=[];
  ctx.imageSmoothingEnabled=false;
  ctx.fillStyle='#252338';ctx.fillRect(0,0,w,h/2);ctx.fillStyle='#454343';ctx.fillRect(0,h/2,w,h/2);
  var plane=Math.tan(fov/2),fx=Math.cos(p.angle),fy=Math.sin(p.angle);
@@ -63,36 +73,44 @@ function drawMaze(){
   var raw=side?ty-ddy:tx-ddx,dist=Math.max(0.05,raw*Math.cos(angle-p.angle)),wall=h*0.8/dist,top=(h-wall)/2,hit=side?p.x+raw*dx:p.y+raw*dy,u=hit-Math.floor(hit),light=Math.max(0.16,1/(1+dist*0.17))*(side?0.74:1),panel=(mx+my)%4===0;
   z[i]=dist;
   var texture=mazeTextures[Math.abs(mx*3+my*7)%mazeTextures.length],column=Math.min(63,Math.floor(u*64));
+  if((!side&&dx<0)||(side&&dy>0))column=63-column;
   ctx.drawImage(texture,column,0,1,64,i*strip,top,strip+1,wall);
   ctx.fillStyle='rgba(0,0,0,'+(1-light)+')';ctx.fillRect(i*strip,top,strip+1,wall);
 
  }
  // Paint far enemies first, and clip every sprite strip against the wall depth.
  var sprites=game.enemies.map(function(e){var dx=e.x-p.x,dy=e.y-p.y;return {e:e,forward:dx*Math.cos(p.angle)+dy*Math.sin(p.angle),across:-dx*Math.sin(p.angle)+dy*Math.cos(p.angle)};}).filter(function(s){return s.forward>0.1;}).sort(function(a,b){return b.forward-a.forward;});
- sprites.forEach(function(s){var e=s.e,projection=w/(2*Math.tan(fov/2)),size=Math.min(h*2,h*0.48/s.forward),x=w/2+s.across/s.forward*projection-size/2,y=h/2-size*0.24,record=images.get(e.key);
-  if(!record){record={img:null,ready:false};images.set(e.key,record);if(e.avatar){var img=new Image();img.referrerPolicy='no-referrer';img.onload=function(){record.ready=img.naturalWidth>0;};img.onerror=function(){record.ready=false;};img.src=e.avatar;record.img=img;}}
+ var labels=[];
+ sprites.forEach(function(s){var e=s.e,projection=w/(2*Math.tan(fov/2)),size=Math.min(h*0.48,h*0.48/s.forward),x=w/2+s.across/s.forward*projection-size/2,y=h/2+Math.min(h*.43,h*.4/s.forward)-size*1.25,record=images.get(e.key);
+  if(!record){record={img:null,ready:false};record.sprite=makeRaiderSprite(e,record);images.set(e.key,record);if(e.avatar){var img=new Image();img.referrerPolicy='no-referrer';img.onload=function(){record.ready=img.naturalWidth>0;record.sprite=makeRaiderSprite(e,record);};img.onerror=function(){record.ready=false;};img.src=e.avatar;record.img=img;}}
   if(x>w||x+size<0)return;var visible=false;
   for(var col=Math.max(0,Math.floor(x/strip));col<Math.min(rays,Math.ceil((x+size)/strip));col++){if(s.forward>=z[col])continue;visible=true;ctx.save();ctx.beginPath();ctx.rect(col*strip,0,strip+0.5,h);ctx.clip();
-   ctx.fillStyle=e.color?'#82e3ca':'#f1a1b0';roundRect(x,y,size,size*1.15,size*0.12);ctx.fill();ctx.fillStyle='#152033';roundRect(x+size*0.08,y+size*0.08,size*0.84,size*0.84,size*0.08);ctx.fill();
-   if(record.ready)ctx.drawImage(record.img,x+size*0.1,y+size*0.1,size*0.8,size*0.8);else text(e.name.slice(0,2).toUpperCase(),x+size/2,y+size*0.66,size*0.4,'#e2f0f5','center');
+   ctx.drawImage(record.sprite,x,y,size,size*1.25);
    ctx.restore();}
-  if(visible&&s.forward<7){text(e.name,x+size/2,Math.max(15,y-9),Math.max(10,Math.min(18,size*0.16)),'#fff','center');}
+  if(visible&&s.forward<7)labels.push({name:e.name,x:x+size/2,y:Math.max(42,y-9),size:Math.max(10,Math.min(18,size*.16))});
+ });
+ // Nearest names take priority; overlapping raiders must not stack unreadable labels.
+ var occupied=[];labels.reverse().forEach(function(label){
+  ctx.font='600 '+label.size+'px monospace';var width=ctx.measureText(label.name).width;
+  var box={left:label.x-width/2,right:label.x+width/2,top:label.y-label.size,bottom:label.y+3};
+  if(occupied.some(function(b){return box.left<b.right&&box.right>b.left&&box.top<b.bottom&&box.bottom>b.top;}))return;
+  occupied.push(box);text(label.name,label.x,label.y,label.size,'#fff','center');
  });
  var shade=ctx.createRadialGradient(w/2,h/2,h*0.2,w/2,h/2,w*0.65);shade.addColorStop(0,'#0000');shade.addColorStop(1,'#03081744');ctx.fillStyle=shade;ctx.fillRect(0,0,w,h);
  if(game.hitFlash){ctx.fillStyle='rgba(244,83,104,'+(game.hitFlash*1.1)+')';ctx.fillRect(0,0,w,h);}
  // Original retro explorer visor, with a quiet compass and floor-level movement cue.
  ctx.strokeStyle='#b7e2d766';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(w/2-6,h/2);ctx.lineTo(w/2+6,h/2);ctx.moveTo(w/2,h/2-6);ctx.lineTo(w/2,h/2+6);ctx.stroke();
- var heading=((p.angle*180/Math.PI)%360+360)%360;text(['E','S','W','N'][Math.round(heading/90)%4]+' / '+Math.round(heading)+'\u00b0',w/2,24,12,'#c0d8d6','center');
+ var heading=((p.angle*180/Math.PI)%360+360)%360;text(['E','S','W','N'][Math.round(heading/90)%4]+' / '+Math.round(heading)+'\u00b0',w/2,(window.innerWidth<600?56:24),12,'#c0d8d6','center');
 }
 function render(){document.body.dataset.phase=game.phase;document.getElementById('round').textContent='Round '+game.round;document.getElementById('players').textContent=game.users.size+(mode==='maze'?' raiders':' players');
  document.getElementById('meter').textContent=paused?'Paused':mode==='maze'?game.hp+' HP':game.phase==='waiting'?'Starts with chat':mode==='catch'?'Flight '+Math.min(6,game.flight+1)+' / 6':Math.max(0,Math.ceil(60-game.time))+'s';
- result.hidden=game.phase!=='result';result.textContent=game.result+(game.phase==='result'?' · Next round in '+Math.max(0,Math.ceil(game.endAt-game.time))+'s':'');
+ result.hidden=game.phase!=='result';result.textContent=game.result+(game.phase==='result'?' - Next round in '+Math.max(0,Math.ceil(game.endAt-game.time))+'s':'');
  if(mode==='maze'){document.getElementById('health').style.width=game.hp+'%';drawMaze();}else drawAmbient();
  if(images.size&&!game.enemies.length)images.clear();
 }
 document.getElementById('pause').onclick=function(){paused=!paused;this.textContent=paused?'Resume':'Pause';render();};document.getElementById('restart').onclick=function(){game.begin();images.clear();render();};
 function frame(now){var dt=(now-last)/1000;last=now;if(!paused)game.tick(dt);if(now-lastDraw>=33){render();lastDraw=now;}requestAnimationFrame(frame);}requestAnimationFrame(frame);render();
-if(demo){connection.textContent='Preview · simulated chat';var n=0;setInterval(function(){n++;receive({id:'demo-'+n,type:'demo',chatname:['Nova','Milo','Juniper','River','Ava','CosmicCat'][n%6],chatmessage:mode==='maze'?'Hello maze!':mode==='catch'?'!catch':'!boost',textonly:true});},mode==='catch'?650:1500);return;}
+if(demo){connection.textContent='Preview - simulated chat';var n=0;setInterval(function(){n++;receive({id:'demo-'+n,type:'demo',chatname:['Nova','Milo','Juniper','River','Ava','CosmicCat'][n%6],chatmessage:mode==='maze'?'Hello maze!':mode==='catch'?'!catch':'!boost',textonly:true});},mode==='catch'?650:1500);return;}
 var session=params.get('session')||params.get('room')||params.get('s')||params.get('id');if(!session){connection.textContent='Add your SSN session to connect';return;}
 if(params.has('server')){var endpoint=params.get('server')||'wss://io.socialstream.ninja',socket,retry,closed=false;try{var parsed=new URL(endpoint);if(parsed.protocol!=='ws:'&&parsed.protocol!=='wss:')throw new Error();}catch(_){connection.textContent='Invalid relay address';return;}
  function connect(){if(closed)return;connection.textContent='Connecting to chat';try{socket=new WebSocket(endpoint);}catch(_){connection.textContent='Could not connect';return;}socket.onopen=function(){socket.send(JSON.stringify({join:session.split(',')[0],out:2,in:1}));connection.textContent='Relay connected - waiting for chat';};socket.onmessage=function(event){if(typeof event.data!=='string'||event.data.length>256000)return;try{receive(JSON.parse(event.data));}catch(_){}};socket.onerror=function(){socket.close();};socket.onclose=function(){if(!closed){connection.textContent='Reconnecting';retry=setTimeout(connect,5000);}};}
