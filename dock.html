@@ -1218,6 +1218,18 @@
 				width: auto;
 				vertical-align: middle;
 			}
+			/* Kick supplies both image and inline-SVG versions of the same badges. */
+			.highlight-chat[data-source-type="kick"] .hl-badge:not(.textbadge) {
+				height: 20px;
+				max-height: 20px;
+				vertical-align: middle;
+			}
+			.highlight-chat[data-source-type="kick"] .hl-badge.svg > svg {
+				height: 100%;
+				max-height: 100%;
+				width: auto;
+				vertical-align: top;
+			}
 			.highlight-chat.compactmode.larger-emojis .hl-message > .hl-badges > .hl-badge.svg {
 				vertical-align: middle;
 			}

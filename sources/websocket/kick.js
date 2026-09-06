@@ -9,6 +9,7 @@ let storeProfileCacheEntry;
 let mergeBadges;
 let mergeProfileDetails;
 let mapBadges;
+let getKickRoleBadge = () => null;
 let eventNameForType;
 
 // Fallback implementations when providers/kick/core.js fails to load.
@@ -62,10 +63,10 @@ function applyKickCoreFallbacks() {
     if (typeof mapBadges !== 'function') {
         mapBadges = (badges) => {
             if (!Array.isArray(badges) || !badges.length) return [];
-            return badges.map((badge) => {
+            return [...badges].sort((a, b) => (a?.sort_order ?? Infinity) - (b?.sort_order ?? Infinity)).map((badge) => {
                 if (!badge) return null;
-                if (typeof badge === 'string') return badge;
-                if (badge.selected === false) return null;
+                if (typeof badge === 'string') return getKickRoleBadge(badge) || badge;
+                if (badge.selected === false || badge.active === false) return null;
                 // Accept both Kick assets and our already-normalized chatbadges shape.
                 // Do not let an empty/malformed candidate hide another usable image URL.
                 const images = [badge.src, badge.image_url, badge.image, badge.icon, badge.source, badge.url, badge.asset];
@@ -81,6 +82,8 @@ function applyKickCoreFallbacks() {
                 }
                 if (badge.svg) return { type: 'svg', html: badge.svg };
                 if (badge.type === 'svg' && badge.html) return { type: 'svg', html: badge.html };
+                const roleBadge = getKickRoleBadge(badge);
+                if (roleBadge) return roleBadge;
                 if (badge.text) return { type: 'text', text: badge.text };
                 if (badge.label || badge.name) return badge.label || badge.name;
                 return null;
@@ -131,6 +134,12 @@ async function importWithFallback(extensionPath, relativePath) {
 }
 
 const kickCoreReady = (async () => {
+    // Load role artwork independently so the standalone core fallback also has icons.
+    try {
+        ({ getKickRoleBadge } = await importWithFallback('shared/kickBadges.js', '../../shared/kickBadges.js'));
+    } catch (error) {
+        console.warn('Kick role artwork unavailable; using supplied assets or text.', error);
+    }
     const kickModule = await importWithFallback(KICK_CORE_EXTENSION_PATH, KICK_CORE_RELATIVE_PATH);
     ({
         normalizeChannel,
@@ -395,8 +404,7 @@ const KICK_VIEWER_DISCONNECT_EMIT_DEBOUNCE_MS = 1500;
 const KICK_CHAT_ECHO_TIMEOUT_MS = 10000;
 const KICK_CHAT_ECHO_STALE_MS = 60000;
 let extensionInitialized = false;
-let lastBridgeNotifyStatus = null;
-let lastAuthNotifyStatus = null;
+let lastCaptureNotifyKey = null;
 let lastSocketNotifyStatus = null;
 let socketBridgeInitialized = false;
 let kickBackgroundKeepAliveInitialized = false;
@@ -1410,12 +1418,11 @@ function extractProfileFromSource(source) {
         source.subscription?.badges,
         source.subscription?.badges_v2
     ];
-    for (const collection of badgeCollections) {
-        const normalized = mapBadges(collection);
-        if (normalized.length) {
-            profile.badges = mergeBadges(profile.badges, normalized);
-            touched = true;
-        }
+    // Combine legacy and v2 badges before normalization discards sort_order.
+    const normalizedBadges = mapBadges(badgeCollections.flatMap(collection => Array.isArray(collection) ? collection : []));
+    if (normalizedBadges.length) {
+        profile.badges = mergeBadges(profile.badges, normalizedBadges);
+        touched = true;
     }
 
     const badgeInfo = source.identity?.badge_info || source.identity?.badgeInfo || {};
@@ -1504,11 +1511,9 @@ function collectBadgesFromSources(...sources) {
             source.subscription?.badges,
             source.subscription?.badges_v2
         ];
-        for (const collection of collections) {
-            const normalized = mapBadges(collection);
-            if (normalized.length) {
-                badges = mergeBadges(badges, normalized);
-            }
+        const normalized = mapBadges(collections.flatMap(collection => Array.isArray(collection) ? collection : []));
+        if (normalized.length) {
+            badges = mergeBadges(badges, normalized);
         }
     }
     return badges;
@@ -2968,6 +2973,33 @@ function resolveAuthIdentity() {
     return null;
 }
 
+// Account authorization and chat transport are independent. A later OAuth or
+// bridge update must not overwrite a working public Pusher chat connection.
+function notifyKickCaptureStatus(payload = {}) {
+    const socketStatus = state.socket?.status || 'disconnected';
+    const bridgeStatus = state.bridge?.status || 'disconnected';
+    const pusherUp = state.socket?.pusherStatus === 'connected';
+    let status;
+    let message;
+    if (pusherUp || socketStatus === 'connected' || bridgeStatus === 'connected') {
+        status = 'connected';
+        message = pusherUp ? 'Kick chat connected via Pusher' : socketStatus === 'connected' ? 'Kick chat connected' : 'Connected to Kick bridge';
+    } else if (socketStatus === 'connecting' || bridgeStatus === 'connecting') {
+        status = 'connecting';
+        message = 'Connecting to Kick chat';
+    } else if (socketStatus === 'error') {
+        status = 'error';
+        message = payload.error || state.socket?.lastError || 'Kick chat connection failed';
+    } else {
+        status = 'disconnected';
+        message = state.channelSlug ? 'Kick chat disconnected' : 'Choose a Kick channel to start chat';
+    }
+    const key = `${status}:${message}`;
+    if (key === lastCaptureNotifyKey) return;
+    lastCaptureNotifyKey = key;
+    notifyApp({ wssStatus: { platform: WSS_PLATFORM, status, message } });
+}
+
 function updateAuthStatus() {
     if (!els.authState) return;
     const authed = state.tokens?.access_token && !isTokenExpired();
@@ -2991,7 +3023,7 @@ function updateAuthStatus() {
             els.authState.innerHTML = `Signed in as <span class="status-emphasis">${safeDisplay}</span>${safeUsername ? ` <span class="status-subtle">(@${safeUsername})</span>` : ''}`;
         }
     } else {
-        els.authState.textContent = authed ? 'Signed in' : (waitingForRefresh ? 'Refreshing sign-in...' : 'Not signed in');
+        els.authState.textContent = authed ? 'Signed in' : (waitingForRefresh ? 'Refreshing sign-in...' : 'OAuth not connected (optional for chat)');
     }
     els.authState.className = authed ? 'status-chip' : 'status-chip warning';
     // Hide auth-dependent status chips when not signed in
@@ -3013,17 +3045,7 @@ function updateAuthStatus() {
         const showSelector = !authed && isElectronEnvironment();
         authMethodSelector.classList.toggle('hidden', !showSelector);
     }
-    const status = authed ? 'authorized' : (waitingForRefresh ? 'auth_refreshing' : 'signin_required');
-    if (status !== 'auth_refreshing' && status !== lastAuthNotifyStatus) {
-        lastAuthNotifyStatus = status;
-        notifyApp({
-            wssStatus: {
-                platform: WSS_PLATFORM,
-                status,
-                message: authed ? 'Kick account linked' : 'Sign in with Kick to continue'
-            }
-        });
-    }
+    notifyKickCaptureStatus();
     updateKickAdminControlHint();
     notifyLiteStatus('auth');
 }
@@ -3582,6 +3604,7 @@ function resetKickViewerHeartbeatState() {
 }
 
 function updateSocketState(payload = {}) {
+    notifyKickCaptureStatus(payload);
     syncKickViewerHeartbeat(true);
     if (!els.socketState) return;
     els.socketState.style.display = '';
@@ -6486,25 +6509,7 @@ function updateBridgeState() {
         els.bridgeState.textContent = 'Bridge disconnected';
         els.bridgeState.className = 'status-chip danger';
     }
-    const status = state.bridge.status || 'disconnected';
-    if (status !== lastBridgeNotifyStatus) {
-        lastBridgeNotifyStatus = status;
-        let message;
-        if (status === 'connected') {
-            message = 'Connected to Kick bridge';
-        } else if (status === 'connecting') {
-            message = 'Connecting to Kick bridge';
-        } else {
-            message = 'Disconnected from Kick bridge';
-        }
-        notifyApp({
-            wssStatus: {
-                platform: WSS_PLATFORM,
-                status,
-                message
-            }
-        });
-    }
+    notifyKickCaptureStatus();
     notifyLiteStatus('bridge');
 }
 
@@ -6660,7 +6665,10 @@ async function forwardChatMessage(evt, bridgeMeta) {
             ]);
         const content = extractMessageContent(message) || extractMessageContent(payload) || '';
         const badgeCandidates = collectBadgesFromSources(...profileSources);
-        const rawBadges = (actorProfile.badges && actorProfile.badges.length) ? actorProfile.badges : badgeCandidates;
+        // Fresh identity selection/order takes precedence over cached profile badges.
+        const hasFreshBadges = profileSources.some(source => source && [source.identity, source, source.profile, source.membership, source.subscription]
+            .some(value => value && [value.badges, value.badges_v2, value.badge_collection, value.badgeCollection].some(Array.isArray)));
+        const rawBadges = hasFreshBadges ? badgeCandidates : actorProfile.badges || [];
         const badges = formatBadgesForDisplay(rawBadges);
         let chatimg =
             actorProfile.avatar ||

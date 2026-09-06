@@ -15,14 +15,14 @@ Game.prototype.walk=function(dt){
  var p=this.explorer,self=this;
  if(!p.target){var x=Math.floor(p.x),y=Math.floor(p.y),choices=this.neighbors(x,y);choices.sort(function(a,b){return (self.visits[a.join(',')]||0)-(self.visits[b.join(',')]||0);});var n=choices[0];p.target={x:n[0]+0.5,y:n[1]+0.5};this.visits[n.join(',')]=(this.visits[n.join(',')]||0)+1;}
  var looking=p.lookAt&&this.time<p.lookAt.until,look=looking?p.lookAt:p.target;
- var angle=Math.atan2(look.y-p.y,look.x-p.x),delta=Math.atan2(Math.sin(angle-p.angle),Math.cos(angle-p.angle));p.angle+=Math.max(-dt*(looking?5:2),Math.min(dt*(looking?5:2),delta));
- if(!looking&&Math.abs(delta)<0.3&&move(p,p.target,0.72,dt))p.target=null;
+ var angle=Math.atan2(look.y-p.y,look.x-p.x),delta=Math.atan2(Math.sin(angle-p.angle),Math.cos(angle-p.angle));p.angle+=Math.max(-dt*(looking?7:5),Math.min(dt*(looking?7:5),delta));
+ if(!looking&&Math.abs(delta)<0.3&&move(p,p.target,1.45,dt))p.target=null;
  if(this.time-this.pathAt>0.4){this.pathMap();this.pathAt=this.time;}
  this.enemies.forEach(function(e){
   var distance=Math.hypot(e.x-p.x,e.y-p.y);
-  if(distance<0.85&&Math.abs(Math.floor(e.x)-Math.floor(p.x))+Math.abs(Math.floor(e.y)-Math.floor(p.y))<=1){if(self.time-e.attackAt>=2.5&&self.time-self.lastHit>=0.35&&self.phase==='active'){e.attackAt=self.time;self.lastHit=self.time;self.hitFlash=0.25;p.lookAt={x:e.x,y:e.y,until:self.time+1.2};self.hp=Math.max(0,self.hp-5);if(!self.hp)self.finish(e.name+' conquered the maze!',e);}return;}
+  if(distance<0.85&&Math.abs(Math.floor(e.x)-Math.floor(p.x))+Math.abs(Math.floor(e.y)-Math.floor(p.y))<=1){if(self.time-e.attackAt>=2.5&&self.time-self.lastHit>=0.35&&self.phase==='active'){e.attackAt=self.time;self.lastHit=self.time;self.hitFlash=0.25;p.lookAt={x:e.x,y:e.y,until:self.time+0.35};self.hp=Math.max(0,self.hp-5);if(!self.hp)self.finish(e.name+' conquered the maze!',e);}return;}
   if(!e.target){var ns=self.neighbors(Math.floor(e.x),Math.floor(e.y));ns.sort(function(a,b){return self.distances[a[1]][a[0]]-self.distances[b[1]][b[0]];});if(ns.length)e.target={x:ns[0][0]+0.5,y:ns[0][1]+0.5};}
-  if(e.target&&move(e,e.target,1.12,dt))e.target=null;
+  if(e.target&&move(e,e.target,1.85,dt))e.target=null;
  });
 };
 Game.prototype.finish=function(text,winner){if(this.phase==='result')return;this.phase='result';this.result=text;this.winner=winner?{name:winner.name,key:winner.key}:null;this.endAt=this.time+8;};
@@ -40,7 +40,7 @@ Game.prototype.input=function(m){
  user.last=this.time;
  if(this.mode==='maze'){
   var existing=this.enemies.find(function(e){return e.key===key;});if(existing)return true;
-  var p=this.explorer,choices=this.cells.filter(function(c){var d=Math.hypot(c.x-p.x,c.y-p.y);return d>=3&&d<=7;}),cell=choices[Math.floor(this.random()*choices.length)]||this.cells[this.cells.length-1];
+  this.pathMap();var distances=this.distances,choices=this.cells.filter(function(c){var d=distances[Math.floor(c.y)][Math.floor(c.x)];return d>=3&&d<=8;}),cell=choices[Math.floor(this.random()*choices.length)]||this.cells[this.cells.length-1];
   var avatar=typeof m.chatimg==='string'&&/^https?:\/\//i.test(m.chatimg)&&m.chatimg.length<2048?m.chatimg:'';
   this.enemies.push({key:key,name:user.name,x:cell.x,y:cell.y,target:null,attackAt:-10,avatar:avatar,color:user.team});
  }else if(this.mode==='rally'){

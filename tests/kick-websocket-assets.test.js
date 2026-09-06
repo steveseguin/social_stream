@@ -7,7 +7,7 @@ const source = fs.readFileSync(
 	path.resolve(__dirname, "..", "sources", "websocket", "kick.js"),
 	"utf8"
 );
-const coreSource = fs.readFileSync(
+let coreSource = fs.readFileSync(
 	path.resolve(__dirname, "..", "providers", "kick", "core.js"),
 	"utf8"
 );
@@ -17,13 +17,17 @@ function findImage(result, className) {
 }
 
 (async () => {
+	const roleSource = fs.readFileSync(path.resolve(__dirname, '../shared/kickBadges.js'), 'utf8');
+	const roleUrl = `data:text/javascript;base64,${Buffer.from(roleSource).toString('base64')}`;
+	const { getKickRoleBadge } = await import(roleUrl);
+	coreSource = coreSource.replace('../../shared/kickBadges.js', roleUrl);
 	const kickCore = await import(`data:text/javascript;base64,${Buffer.from(coreSource).toString("base64")}`);
 	assert.deepStrictEqual(kickCore.mapBadges([
 		{ type: "moderator", text: "Moderator" },
 		{ name: "level", image_url: "https://ext.cdn.kick.com/chat/badges/16.png", selected: true },
 		{ name: "level", image_url: "https://ext.cdn.kick.com/chat/badges/22.png", selected: false }
 	]), [
-		{ type: "text", text: "Moderator" },
+		getKickRoleBadge("Moderator"),
 		"https://ext.cdn.kick.com/chat/badges/16.png"
 	]);
 
@@ -38,14 +42,24 @@ function findImage(result, className) {
 		{ input: { type: 'img', src: badgeUrl }, expected: [{ type: 'img', src: badgeUrl }] },
 		{ input: { image: {}, svg: badgeSvg, text: 'VIP' }, expected: [{ type: 'svg', html: badgeSvg }] },
 		{ input: { type: 'svg', html: badgeSvg, text: 'VIP' }, expected: [{ type: 'svg', html: badgeSvg }] },
-		{ input: { text: 'Subscriber' }, expected: [{ type: 'text', text: 'Subscriber' }] },
-		{ input: { name: 'VIP' }, expected: [{ type: 'text', text: 'VIP' }] },
+		{ input: { text: 'Subscriber' }, expected: [getKickRoleBadge('Subscriber')] },
+		{ input: { name: 'VIP' }, expected: [getKickRoleBadge('VIP')] },
+		{ input: { type: 'subscriber', active: false }, expected: [] },
+		{ input: { text: 'Unknown badge' }, expected: [{ type: 'text', text: 'Unknown badge' }] },
+		...['VIP', 'Founder', 'Verified channel', 'Moderator'].map(text => ({ input: { text }, expected: [getKickRoleBadge(text)] })),
 		{ input: { image_url: badgeUrl, selected: false, text: 'VIP' }, expected: [] }
 	];
 	for (const { input, expected } of badgeCases) {
 		assert.deepStrictEqual(kickCore.formatBadgesForDisplay([input]), expected);
 		assert.deepStrictEqual(kickCore.formatBadgesForDisplay(kickCore.mapBadges([input])), expected);
 	}
+
+	for (const [count, tier] of [[1, 1], [4, 1], [5, 5], [9, 5], [10, 10], [4999, 4000], [5000, 5000], [6000, 5000]]) {
+		assert.ok(kickCore.formatBadgesForDisplay([{ type: 'sub_gifter', count }])[0].html.includes(`data-ds-icon="Gift${tier}"`));
+	}
+	const orderedInput = [{ type: 'subscriber', sort_order: 2 }, { name: 'level', image_url: badgeUrl, sort_order: 1 }];
+	assert.strictEqual(kickCore.formatBadgesForDisplay(orderedInput)[0].src, badgeUrl);
+	assert.strictEqual(orderedInput[0].type, 'subscriber', 'normalization must not mutate the input order');
 
 	const browser = await chromium.launch({ headless: true });
 	try {
@@ -55,6 +69,7 @@ function findImage(result, className) {
 			window.__kickWsBootstrapped = true;
 		});
 		await page.addScriptTag({ content: source });
+		await page.evaluate(async url => { getKickRoleBadge = (await import(url)).getKickRoleBadge; }, roleUrl);
 		await page.addScriptTag({
 			content: `
 				applyKickCoreFallbacks();
@@ -282,8 +297,8 @@ function findImage(result, className) {
 			badgePayload
 		);
 		assert.deepStrictEqual(collectedBadges, [
-			{ type: "text", text: "Moderator" },
-			{ type: "text", text: "Subscriber" },
+			getKickRoleBadge("Moderator"),
+			getKickRoleBadge("Subscriber"),
 			"https://ext.cdn.kick.com/chat/badges/16.png"
 		], "legacy badges and the selected v2 badge must be merged");
 

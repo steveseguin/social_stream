@@ -263,7 +263,13 @@ async function run() {
   const escape=()=>input.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
   async function search(){input.value='Better Twitch TV';input.dispatchEvent(new w.Event('input',{bubbles:true}));await new Promise(r=>setTimeout(r,350));return [...d.querySelectorAll('.popup-search-result')];}
   for(const beginner of [true,false,true,false]){
-   escape();w.applyPopupBeginnerMode(beginner);
+   escape();
+   // Persist the mode through the real settings path. Changing only the body
+   // class is undone by the settings refresh caused by the filter controls.
+   await new Promise(resolve=>w.chrome.runtime.sendMessage({cmd:'saveSetting',type:'setting',setting:'beginnerMode',value:beginner},resolve));
+   const saved=await new Promise(resolve=>w.chrome.runtime.sendMessage({cmd:'getSettings'},resolve));
+   if(saved.beginnerMode!==beginner)throw new Error('Beginner mode was not saved');
+   w.update(saved,false);
    d.getElementById('activeIcon').click();
    const rows=await search();
    if(rows.length!==1)throw new Error('Common emote setting missing in mode '+beginner);
