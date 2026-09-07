@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url';
 import throneRelay from './throne-relay.js';
 import ebayShowcase from './ebay-showcase.js';
 import ninjaRelay from './ninjabacker-relay.js';
+import shopifyRelay from './shopify-relay.js';
 import fs from 'node:fs';
 
 export async function createServer(options = {}) {
@@ -31,6 +32,24 @@ export async function createServer(options = {}) {
 	} else {
 		app.route({ method: ['GET', 'POST', 'DELETE'], url: '/v1/ninjabacker/*', handler: async (_request, reply) => reply.code(503).send({ error: 'Reliable delivery is not configured on the SSN API.' }) });
 	}
+
+    if (options.shopify || process.env.SHOPIFY_RELAY_ENABLED === '1') {
+        let shopifyOptions = options.shopify;
+        if (!shopifyOptions) {
+            const databasePath = process.env.SSN_MONETIZATION_DB || 'monetization.db';
+            const keyPath = process.env.SSN_MONETIZATION_KEY || databasePath + '.key';
+            if (!fs.existsSync(keyPath)) fs.writeFileSync(keyPath, (await import('node:crypto')).randomBytes(32), { mode: 0o600, flag: 'wx' });
+            const masterKey = fs.readFileSync(keyPath);
+            if (masterKey.length !== 32) throw new Error('Invalid receiver encryption key');
+            const db = new Database(databasePath);
+            db.pragma('journal_mode = WAL'); db.pragma('synchronous = FULL');
+            app.addHook('onClose', async () => db.close());
+            shopifyOptions = { db, masterKey };
+        }
+        await app.register(shopifyRelay, shopifyOptions);
+    } else {
+        app.route({ method: ['GET', 'POST', 'DELETE'], url: '/v1/shopify/*', handler: async (_request, reply) => reply.code(503).send({ error: 'Shopify receiver is not configured on the SSN API.' }) });
+    }
 
 	if (options.ebay || process.env.EBAY_SHOWCASE_ENABLED === '1') {
 		const db = options.ebay?.db || new Database(process.env.SSN_MONETIZATION_DB || 'monetization.db');
