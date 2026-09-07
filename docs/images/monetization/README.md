@@ -8,3 +8,6 @@ Reviewed provider-setup.png, fourthwall-import.png and product-showcase.png for 
 
 
 Shopify screenshots were captured with `SSN_GUIDE_SCREENSHOTS=1 node tests/shopify-ssapp.e2e.cjs`, through a local signed Shopify receiver and actual SSApp with fixture storefront data. Reviewed shopify-setup.png, shopify-setup-dark.png, shopify-import.png and shopify-purchase.png for complete crops, light/dark input contrast, readable labels and absence of signing secrets. The visible receiver belongs only to the isolated local fixture; its reader key is not shown. The guide was rendered at 1200px and 390px without overflow or missing images.
+
+
+Live product controls and public viewer pages: regenerate with `SSN_GUIDE_SCREENSHOTS=1 node tests/product-controls-ssapp.e2e.cjs`. This uses the actual SSApp, an isolated profile, local SQLite API and public metadata fixtures; no live store, merchant account or payment. Reviewed product-controls.png, product-controls-dark.png, public-shop-setup.png and viewer-shop.png for complete crops, readable controls, light/dark input contrast and absence of publishing/session keys. Viewer screenshot is cropped at native capture to the mobile content. The product-controls guide was rendered and reviewed at 1200px and 390px; it has one page heading, no horizontal overflow and no broken images.

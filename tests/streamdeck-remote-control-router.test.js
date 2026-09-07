@@ -173,3 +173,15 @@ assert.deepEqual(normalizedLegacy, {
 });
 
 console.log("streamdeck remote-control router tests passed");
+
+for (const action of ['commerceShow','commerceNext','commerceHide','commerceResume','commerceControl']) {
+ assert.equal(unavailable.ssn.actions[action],true);
+ assert.equal(router.getActionOwner(action),'background');
+ assert.equal(unavailable.ssn.actionDescriptors[action].callback,'guaranteed');
+}
+assert.deepEqual(router.commerceRequest({action:'commerceShow',value:'https://example.com/product'}),{ok:true,command:'show',url:'https://example.com/product',seconds:0});
+assert.equal(router.commerceRequest({action:'commerceHide',value:'30'}).seconds,30);
+assert.equal(router.commerceRequest({action:'commerceResume'}).command,'resume');
+assert.equal(router.commerceRequest({action:'commerceControl',command:'next',seconds:15}).seconds,15);
+for(const value of [-1,3601,true,[],{seconds:false}]) assert.equal(router.commerceRequest({action:'commerceNext',value}).ok,false);
+assert.equal(router.commerceRequest({action:'commerceShow',value:'javascript:alert(1)'}).ok,false);

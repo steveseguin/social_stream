@@ -2418,48 +2418,6 @@ input:checked + .slider:before {
 	}
 }
 
-/* Recent settings share the popup palette, switch pattern, and focus treatment. */
-:root { --settings-control-border:#718096; }
-@media (prefers-color-scheme: dark) { :root { --settings-control-border:#71869e; } }
-.popup-settings-panel input:not([type="checkbox"]):not([type="range"]),
-.popup-settings-panel select, .popup-settings-panel textarea, .popup-reviewed-control {
-    box-sizing:border-box; max-width:100%; padding:6px 8px; font:inherit;
-    color:var(--default-text-color); background:var(--color-accent-subtle);
-    border:1px solid var(--settings-control-border); border-radius:4px;
-}
-.popup-settings-panel input::placeholder, .popup-settings-panel textarea::placeholder { color:var(--placeholder-color); opacity:1; }
-.popup-settings-panel button:not(.tts-test-button):not(.textInputUploadButton), .overlayButton, .popup-icon-button {
-    font:inherit; padding:5px 9px; min-height:30px; border:1px solid var(--settings-control-border);
-    border-radius:4px; background:var(--button-background); color:var(--text-button-text); cursor:pointer;
-}
-.popup-settings-panel button:disabled { opacity:.65; cursor:default; }
-.popup-icon-button { background:transparent; }
-.popup-settings-panel summary { cursor:pointer; padding:6px 0; }
-.popup-settings-panel .popup-subsection, .popup-subsection { border-top:1px solid var(--collapsible-border-color); margin-top:12px; padding-top:8px; }
-#sticker-rewards-settings, #captureSiteReminder { padding:12px; margin:10px 0; border:1px solid var(--collapsible-border-color); border-radius:4px; background:var(--options-group-background-color); color:var(--default-text-color); }
-.popup-settings-panel .popup-toggle-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
-.popup-toggle-row label.switch { flex:0 0 30px; }
-.popup-toggle-row > label:not(.switch) { flex:1; min-width:100px; cursor:pointer; }
-.popup-guide-link { display:block; margin:8px 0; font-size:.9em; color:var(--text-secondary); }
-.popup-settings-panel a { color:var(--color-accent); }
-.popup-reviewed-control:focus, .popup-settings-panel input:focus, .popup-settings-panel select:focus, .popup-settings-panel button:focus,
-.popup-settings-panel summary:focus, .popup-settings-panel a:focus, .overlayButton:focus, .popup-icon-button:focus {
-    outline:2px solid var(--color-accent); outline-offset:2px;
-}
-.popup-settings-panel .slider { box-shadow:inset 0 0 0 1px var(--settings-control-border); }
-.popup-settings-panel .popup-toggle-row .switch { margin-right:4px; }
-.switch input:focus + .slider { outline:2px solid var(--color-accent); outline-offset:3px; }
-/* Preserve native keyboard toggling for the popup's existing accordion pattern. */
-.collapsible-input { display:block; position:absolute; width:1px; height:1px; opacity:0; }
-.collapsible-input:focus + .collapsible-label { outline:2px solid var(--color-accent); outline-offset:-3px; }
-body .popup-settings-panel .textInputContainer { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:5px 0; margin:6px 0; }
-body .popup-settings-panel .textInputContainer .textInput { grid-area:2 / 1 / 3 / 3; height:auto; min-height:32px; }
-body .popup-settings-panel .textInputContainer .textInput + label { position:static; grid-area:1 / 1 / 2 / 3; font-size:1em; padding:0; max-width:100%; color:var(--default-text-color); }
-body .popup-settings-panel .textInputContainer .textInput + label::before { display:none; }
-body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-area:2 / 2; position:static; }
-#monetization-settings > summary { font-size:1.17em; font-weight:600; color:var(--h3-color); background:var(--collapsible-label-color); padding:4px 8px; border-radius:4px; }
-#sticker-custom-form input[type="text"], #sticker-custom-form input[type="url"] { display:block; width:100%; }
-@media (prefers-reduced-motion: reduce) { html, html.extension-popup-surface body { scroll-behavior:auto; } .slider, .slider:before { transition:none; } }
         </style>
     <link rel="stylesheet" href="shared/monetization/popup.css">
 </head>
@@ -3007,7 +2965,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                     <span data-translate="skip-donation-data-from-messages">🏷️🦘 Skip messages containing donations </span>
                                 </div>
 								<div data-keywords="custom donation thank you fallback superchat tip message text">
-									<div class="textInputContainer donation-thank-you-input" style="display: inline-block; margin-top: 6px;">
+									<div class="textInputContainer donation-thank-you-input" style="display: inline-grid; margin-top: 6px;">
 										<input type="text" id="customDonationThankYou" class="textInput" autocomplete="off" placeholder="Thank you for your donation!" data-textsetting="customDonationThankYou" />
 										<label for="customDonationThankYou"><span>&gt; Custom donation thank-you text</span></label>
 									</div>
@@ -4154,7 +4112,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                     </label>
                                     <span>🚨 Hide alert events (follows, subs, donations, bits, raids)</span>
                                 </div>
-                                <div class="textInputContainer" style="display: inline-block; width: 400px;" title="Provide comma separated values. Matches exact event names or text inside event messages. eg: subscription_gift,new_follower,gifted">
+                                <div class="textInputContainer" style="display: inline-grid; width: 400px;" title="Provide comma separated values. Matches exact event names or text inside event messages. eg: subscription_gift,new_follower,gifted">
                                     <input type="text" id="dockfilterevents" class="textInput" autocomplete="off" placeholder="Event name or text..." data-textparam1="filterevents" data-tag-presets="events" />
                                     <label for="dockfilterevents" style="display: inline-block; margin: 0 0 6px 0;"><span data-translate="hide-specific-events">&gt; Hide specific events</span></label>
                                     <div style="display: inline-block; margin: 0 0 6px 6px; font-size: 0.9em;"><a href="https://socialstream.ninja/docs/event-reference.html" class="lightblue" target="_blank" rel="noopener">See the full list of event names</a></div>
@@ -6234,13 +6192,13 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                     <span data-translate="shorten-links-in-messages">🤏🔗 Shorten long links ... </span>
                                 </div>
 
-                                <div class="textInputContainer" style="display: inline-block; width: 400px;" title="Provide comma separated values. Matches exact event names or text inside event messages. eg: subscription_gift,new_follower,gifted">
+                                <div class="textInputContainer" style="display: inline-grid; width: 400px;" title="Provide comma separated values. Matches exact event names or text inside event messages. eg: subscription_gift,new_follower,gifted">
                                     <input type="text" id="featuredfilterevents" class="textInput" autocomplete="off" placeholder="Event name or text..." data-textparam2="filterevents" data-tag-presets="events" />
                                     <label for="featuredfilterevents" style="display: inline-block; margin: 0 0 6px 0;"><span data-translate="hide-specific-events">&gt; Hide specific events</span></label>
                                     <div style="display: inline-block; margin: 0 0 6px 6px; font-size: 0.9em;"><a href="https://socialstream.ninja/docs/event-reference.html" class="lightblue" target="_blank" rel="noopener">See the full list of event names</a></div>
                                 </div>
 
-                                <div class="textInputContainer" style="display: inline-block; width: 400px;" title="This only filters which users may appear. It does not automatically feature their messages.">
+                                <div class="textInputContainer" style="display: inline-grid; width: 400px;" title="This only filters which users may appear. It does not automatically feature their messages.">
                                     <input type="text" id="filterfeaturedusers" class="textInput" autocomplete="off" placeholder="eg: name,name2:source,bob:twitch,Name3:*" data-textparam2="filterfeaturedusers" data-user-source-select="true" />
                                     <label for="filterfeaturedusers"><span data-translate="filter-featured-users">&gt; Allowed featured users (filter only; does not auto-feature)</span></label>
                                 </div>
@@ -7043,7 +7001,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Donation sound URL (.ogg, .mp3, .wav)" data-textparam25="donosound" id="multi-alert-donosound" />
 											<label><span>&gt; 💚 Donation sound</span></label>
-											<button type="button" id="uploadDonoSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #14f195; --upload-button-color: #111;">Upload</button>
+											<button type="button" id="uploadDonoSoundBtn" class="textInputUploadButton">Upload</button>
 										</div>
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Bits sound URL (.ogg, .mp3, .wav)" data-textparam25="bitssound" id="multi-alert-bitssound" />
@@ -7053,12 +7011,12 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Raid sound URL (.ogg, .mp3, .wav)" data-textparam25="raidsound" id="multi-alert-raidsound" />
 											<label><span>&gt; 🧡 Raid sound</span></label>
-											<button type="button" id="uploadRaidSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #f59e0b; --upload-button-color: #111;">Upload</button>
+											<button type="button" id="uploadRaidSoundBtn" class="textInputUploadButton">Upload</button>
 										</div>
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Auction win sound URL (.ogg, .mp3, .wav)" data-textparam25="auctionsound" id="multi-alert-auctionsound" />
 											<label><span>&gt; 💛 Auction win sound</span></label>
-											<button type="button" id="uploadAuctionSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #fbbf24; --upload-button-color: #111;">Upload</button>
+											<button type="button" id="uploadAuctionSoundBtn" class="textInputUploadButton">Upload</button>
 										</div>
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Hype train sound URL (.ogg, .mp3, .wav)" data-textparam25="hypesound" id="multi-alert-hypesound" />
@@ -7114,7 +7072,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                     <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px 0;">
                                         <div><label class="switch"><input type="checkbox" id="multi-alert-effect1-enabled" checked aria-label="Enable alert 1" /><span class="slider round"></span></label><label for="multi-alert-effect1-enabled">Enable alert</label></div>
                                         <select id="multi-alert-effect1-state" data-optionparam25="effect1enabled" hidden aria-hidden="true"><option value="">Enabled</option><option value="false">Disabled</option></select>
-                                        <div><button type="button" id="multi-alert-effect1-preset" class="tts-test-button" style="margin: 2px 1px;">💵 $100 donation preset</button></div>
+                                        <div><button type="button" id="multi-alert-effect1-preset" class="popup-secondary-button" style="margin: 2px 1px;">💵 $100 donation preset</button></div>
                                         <label for="multi-alert-effect1-type">🎯 Event</label>
                                         <select id="multi-alert-effect1-type" class="textInput" data-optionparam25="effect1type">
                                             <option value="donation">Donation / paid gift</option>
@@ -7147,7 +7105,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         </div>
 
                                         </details>
-                                        <button type="button" id="multi-alert-effect1-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;">▶ Test alert</button><div class="ssn-effect-management"><button type="button" id="multi-alert-effect1-clear-sound" class="tts-test-button">🔇 Clear sound</button><button type="button" id="multi-alert-effect1-reset" class="tts-test-button">↺ Reset alert</button></div><span id="multi-alert-effect1-status" role="status" aria-live="polite"></span>
+                                        <button type="button" id="multi-alert-effect1-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;">▶ Test alert</button><div class="ssn-effect-management"><button type="button" id="multi-alert-effect1-clear-sound" class="popup-secondary-button">🔇 Clear sound</button><button type="button" id="multi-alert-effect1-reset" class="popup-secondary-button">↺ Reset alert</button></div><span id="multi-alert-effect1-status" role="status" aria-live="polite"></span>
                                     </div>
                                 </details>
                                 <details style="width: 95%; margin-top: 6px;">
@@ -7155,7 +7113,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                     <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px 0;">
                                         <div><label class="switch"><input type="checkbox" id="multi-alert-effect2-enabled" checked aria-label="Enable alert 2" /><span class="slider round"></span></label><label for="multi-alert-effect2-enabled">Enable alert</label></div>
                                         <select id="multi-alert-effect2-state" data-optionparam25="effect2enabled" hidden aria-hidden="true"><option value="">Enabled</option><option value="false">Disabled</option></select>
-                                        <div><button type="button" id="multi-alert-effect2-preset" class="tts-test-button" style="margin: 2px 1px;">💵 $100 donation preset</button></div>
+                                        <div><button type="button" id="multi-alert-effect2-preset" class="popup-secondary-button" style="margin: 2px 1px;">💵 $100 donation preset</button></div>
                                         <label for="multi-alert-effect2-type">🎯 Event</label>
                                         <select id="multi-alert-effect2-type" class="textInput" data-optionparam25="effect2type">
                                             <option value="donation">Donation / paid gift</option>
@@ -7188,7 +7146,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         </div>
 
                                         </details>
-                                        <button type="button" id="multi-alert-effect2-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;">▶ Test alert</button><div class="ssn-effect-management"><button type="button" id="multi-alert-effect2-clear-sound" class="tts-test-button">🔇 Clear sound</button><button type="button" id="multi-alert-effect2-reset" class="tts-test-button">↺ Reset alert</button></div><span id="multi-alert-effect2-status" role="status" aria-live="polite"></span>
+                                        <button type="button" id="multi-alert-effect2-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;">▶ Test alert</button><div class="ssn-effect-management"><button type="button" id="multi-alert-effect2-clear-sound" class="popup-secondary-button">🔇 Clear sound</button><button type="button" id="multi-alert-effect2-reset" class="popup-secondary-button">↺ Reset alert</button></div><span id="multi-alert-effect2-status" role="status" aria-live="polite"></span>
                                     </div>
                                 </details>
                                 <details style="width: 95%; margin-top: 6px;">
@@ -7196,7 +7154,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                     <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px 0;">
                                         <div><label class="switch"><input type="checkbox" id="multi-alert-effect3-enabled" checked aria-label="Enable alert 3" /><span class="slider round"></span></label><label for="multi-alert-effect3-enabled">Enable alert</label></div>
                                         <select id="multi-alert-effect3-state" data-optionparam25="effect3enabled" hidden aria-hidden="true"><option value="">Enabled</option><option value="false">Disabled</option></select>
-                                        <div><button type="button" id="multi-alert-effect3-preset" class="tts-test-button" style="margin: 2px 1px;">💵 $100 donation preset</button></div>
+                                        <div><button type="button" id="multi-alert-effect3-preset" class="popup-secondary-button" style="margin: 2px 1px;">💵 $100 donation preset</button></div>
                                         <label for="multi-alert-effect3-type">🎯 Event</label>
                                         <select id="multi-alert-effect3-type" class="textInput" data-optionparam25="effect3type">
                                             <option value="donation">Donation / paid gift</option>
@@ -7229,7 +7187,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         </div>
 
                                         </details>
-                                        <button type="button" id="multi-alert-effect3-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;">▶ Test alert</button><div class="ssn-effect-management"><button type="button" id="multi-alert-effect3-clear-sound" class="tts-test-button">🔇 Clear sound</button><button type="button" id="multi-alert-effect3-reset" class="tts-test-button">↺ Reset alert</button></div><span id="multi-alert-effect3-status" role="status" aria-live="polite"></span>
+                                        <button type="button" id="multi-alert-effect3-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;">▶ Test alert</button><div class="ssn-effect-management"><button type="button" id="multi-alert-effect3-clear-sound" class="popup-secondary-button">🔇 Clear sound</button><button type="button" id="multi-alert-effect3-reset" class="popup-secondary-button">↺ Reset alert</button></div><span id="multi-alert-effect3-status" role="status" aria-live="polite"></span>
                                     </div>
                                 </details>
                             <p class="popup-guide-link"><a href="./docs/alert-effects.html" target="_blank" rel="noopener">?✨ Alert setup guide</a></p>
@@ -7434,7 +7392,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
 									</div>
 								</span>
                                 <div>
-                                    <div class="textInputContainer" style="display: inline-block; width: 275px;">
+                                    <div class="textInputContainer" style="display: inline-grid; width: 275px;">
                                         <input type="text" id="customdiscord" class="textInput" autocomplete="off" placeholder="Provide channel name to allow" data-textsetting="customdiscordchannel" />
                                         <label for="customdiscord"><span data-translate="discord-channel-name-to-allow">&gt; Discord channels to allow (all default)</span></label>
                                     </div>
@@ -7448,7 +7406,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <span class="slider round"></span>
                                     </label>
                                     <img class="icon" src="./sources/images/twitch.png" style="display: inline-block;" />
-                                    <div class="textInputContainer" style="display: inline-block; width: 215px;">
+                                    <div class="textInputContainer" style="display: inline-grid; width: 215px;">
                                         <input type="text" id="customtwitch" class="textInput" autocomplete="off" placeholder="Provide channel name to allow" data-textsetting="customtwitchaccount" />
                                         <label for="customtwitch"><span data-translate="twitch-channel-name-to-allow">&gt; Twitch channel name to allow</span></label>
                                     </div>
@@ -7459,7 +7417,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <span class="slider round"></span>
                                     </label>
                                     <img class="icon" src="./sources/images/tiktok.png" style="display: inline-block;" />
-                                    <div class="textInputContainer" style="display: inline-block; width: 215px;">
+                                    <div class="textInputContainer" style="display: inline-grid; width: 215px;">
                                         <input type="text" id="customtiktok" class="textInput" autocomplete="off" placeholder="Provide channel name to allow" data-textsetting="customtiktokaccount" />
                                         <label for="customtiktok"><span data-translate="tiktok-channel-name-to-allow">&gt; Tiktok channel name to allow</span></label>
                                     </div>
@@ -7470,7 +7428,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <span class="slider round"></span>
                                     </label>
                                     <img class="icon" src="./sources/images/youtube.png" /><span data-translate="disable-youtube-chat"> Disable YouTube chat </span>
-                                    <div class="textInputContainer hidden" style="display: inline-block; width: 250px;">
+                                    <div class="textInputContainer hidden" style="display: inline-grid; width: 250px;">
                                         <input type="text" id="customyoutube" class="textInput" autocomplete="off" placeholder="Provide channel name to allow" data-textsetting="customyoutubeaccount" />
                                         <label for="customyoutube"><span data-translate="youtube-channel-name-to-allow">&gt; YouTube channel name to allow</span></label>
                                     </div>
@@ -7481,7 +7439,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <span class="slider round"></span>
                                     </label>
                                     <img class="icon" src="./sources/images/kick.png" /><span data-translate="disable-kick-chat"> Disable Kick chat </span>
-                                    <div class="textInputContainer hidden" style="display: inline-block; width: 250px;">
+                                    <div class="textInputContainer hidden" style="display: inline-grid; width: 250px;">
                                         <input type="text" id="customkick" class="textInput" autocomplete="off" placeholder="Provide channel name to allow" data-textsetting="customkickaccount" />
                                         <label for="customkick"><span data-translate="kick-channel-name-to-allow">&gt; Kick channel name to allow</span></label>
                                     </div>
@@ -7492,7 +7450,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <span class="slider round"></span>
                                     </label>
                                     <img class="icon" src="./sources/images/riverside.png" /><span data-translate="disable-riverside-chat"> Disable Riverside </span>
-                                    <div class="textInputContainer hidden" style="display: inline-block; width: 250px;">
+                                    <div class="textInputContainer hidden" style="display: inline-grid; width: 250px;">
                                         <input type="text" id="customriverside" class="textInput" autocomplete="off" placeholder="Provide channel name to allow" data-textsetting="customriversideaccount" />
                                         <label for="customriverside"><span data-translate="riverside-channel-name-to-allow">&gt; Riverside channel name to allow</span></label>
                                     </div>
@@ -7701,7 +7659,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <input type="checkbox" data-setting="filtereventstoggle" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 400px;" title="Provide comma separated values. Matches exact event names or text inside event messages. eg: subscription_gift,new_follower,gifted">
+                                    <div class="textInputContainer" style="display: inline-grid; width: 400px;" title="Provide comma separated values. Matches exact event names or text inside event messages. eg: subscription_gift,new_follower,gifted">
                                         <input type="text" id="filterevents" class="textInput" autocomplete="off" placeholder="Event name or text..." data-textsetting="filterevents" data-tag-presets="events" />
                                         <label for="filterevents" style="display: inline-block; margin: 0 0 6px 0;"><span data-translate="hide-specific-events">&gt; Hide specific events</span></label>
                                         <div style="display: inline-block; margin: 0 0 6px 6px; font-size: 0.9em;"><a href="https://socialstream.ninja/docs/event-reference.html" class="lightblue" target="_blank" rel="noopener">See the full list of event names</a></div>
@@ -7893,7 +7851,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
 							<div class="options_group">
 								<div>
 									<h3>Printer Control</h3>
-									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+									<div class="textInputContainer" style="display: inline-grid; width: 250px;">
 										<input type="text" id="printerName" class="textInput" autocomplete="off" data-textsetting="printerName" list="thermalPrinterNames" placeholder="Enter printer name (e.g., 'POS-58')" />
 										<datalist id="thermalPrinterNames"></datalist>
 									</div>
@@ -7996,7 +7954,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
 								  <img class="icon" src="./sources/images/socialstream.png" style="display: inline-block;" />📨 <span>Send messages to <a href="https://ninjachatter.com/" target="_blank" class="lightblue" style="font-size: 13px;" title="Free public-facing embeddable chat">Ninja Chatter</a></span>
 								</div>
 								<div>
-								  <div class="textInputContainer" style="display: inline-block; width: 300px; ">
+								  <div class="textInputContainer" style="display: inline-grid; width: 300px; ">
 									  <input type="text" id="sscapikey" class="textInput" autocomplete="off" placeholder="API Key (from Bot & Webhook section)" data-textsetting="sscapikey" />
 									  <label for="sscapikey"><span>&gt; Ingress API Key</span></label>
 								  </div>
@@ -8012,7 +7970,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
 									📡 Enable video stats polling
 								</div>
 								<div>
-									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+									<div class="textInputContainer" style="display: inline-grid; width: 250px;">
 										<select id="videostatssource" class="textInput" autocomplete="off" data-optionsetting="videostatssource">
 											<option value="srt-live-server">SRT Live Server / SLS</option>
 											<option value="belabox-cloud">Belabox Cloud</option>
@@ -8023,49 +7981,49 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
 									</div>
 								</div>
 								<div>
-									<div class="textInputContainer" style="display: inline-block; width: 360px;">
+									<div class="textInputContainer" style="display: inline-grid; width: 360px;">
 										<input type="text" id="videostatsurl" class="textInput" autocomplete="off" value="http://127.0.0.1:8181/stats" placeholder="http://192.168.0.50:8181/stats" data-textsetting="videostatsurl" />
 										<label for="videostatsurl">&gt; Stats URL</label>
 									</div>
 								</div>
 								<div class="video-stats-publisher-field">
-									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+									<div class="textInputContainer" style="display: inline-grid; width: 250px;">
 										<input type="text" id="videostatspublisher" class="textInput" autocomplete="off" value="publish/live/feed1" placeholder="publish/live/feed1" data-textsetting="videostatspublisher" />
 										<label for="videostatspublisher">&gt; Publisher / stream id</label>
 									</div>
 								</div>
 								<div class="video-stats-app-field hidden">
-									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+									<div class="textInputContainer" style="display: inline-grid; width: 250px;">
 										<input type="text" id="videostatsapplication" class="textInput" autocomplete="off" value="live" placeholder="live" data-textsetting="videostatsapplication" />
 										<label for="videostatsapplication">&gt; Application</label>
 									</div>
-									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+									<div class="textInputContainer" style="display: inline-grid; width: 250px;">
 										<input type="text" id="videostatskey" class="textInput" autocomplete="off" value="feed1" placeholder="feed1" data-textsetting="videostatskey" />
 										<label for="videostatskey">&gt; Stream key/name</label>
 									</div>
 								</div>
 								<div class="video-stats-api-key-field">
-									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+									<div class="textInputContainer" style="display: inline-grid; width: 250px;">
 										<input type="password" id="videostatsapikey" class="textInput" autocomplete="off" placeholder="Optional API key" data-textsetting="videostatsapikey" />
 										<label for="videostatsapikey">&gt; API key / Authorization header</label>
 									</div>
 								</div>
 								<div class="video-stats-basic-auth-field hidden">
-									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+									<div class="textInputContainer" style="display: inline-grid; width: 250px;">
 										<input type="text" id="videostatsusername" class="textInput" autocomplete="off" placeholder="Optional username" data-textsetting="videostatsusername" />
 										<label for="videostatsusername">&gt; Username</label>
 									</div>
-									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+									<div class="textInputContainer" style="display: inline-grid; width: 250px;">
 										<input type="password" id="videostatspassword" class="textInput" autocomplete="off" placeholder="Optional password" data-textsetting="videostatspassword" />
 										<label for="videostatspassword">&gt; Password</label>
 									</div>
 								</div>
 								<div>
-									<div class="textInputContainer" style="display: inline-block; width: 160px;">
+									<div class="textInputContainer" style="display: inline-grid; width: 160px;">
 										<input type="number" id="videostatsinterval" class="textInput" min="1" max="60" value="5" autocomplete="off" data-numbersetting="videostatsinterval" />
 										<label for="videostatsinterval">&gt; Poll interval (sec)</label>
 									</div>
-									<div class="textInputContainer" style="display: inline-block; width: 160px;">
+									<div class="textInputContainer" style="display: inline-grid; width: 160px;">
 										<input type="text" id="videostatslabel" class="textInput" autocomplete="off" value="SRT" placeholder="SRT" data-textsetting="videostatslabel" />
 										<label for="videostatslabel">&gt; Meta label</label>
 									</div>
@@ -8087,19 +8045,19 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
 									Enable Streamer.bot websocket support
 								</div>
 								<div>
-									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+									<div class="textInputContainer" style="display: inline-grid; width: 250px;">
 										<input type="text" id="streamerbotendpoint" class="textInput" autocomplete="off" placeholder="ws://127.0.0.1:8080" data-textsetting="streamerbotendpoint" />
 										<label for="streamerbotendpoint"><span data-translate="send-all-to-streamerbot-server">&gt; Streamer.bot Websocket endpoint</span></label>
 									</div>
 								</div>
 								<div>
-									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+									<div class="textInputContainer" style="display: inline-grid; width: 250px;">
 										<input type="text" id="streamerbotpassword" class="textInput" autocomplete="off" placeholder="Enter Streamer.bot Websocket Password" data-textsetting="streamerbotpassword" />
 										<label for="streamerbotpassword"><span data-translate="streamerbotpassword">&gt; Streamer.bot password</span></label>
 									</div>
 								</div>
 								<div>
-									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+									<div class="textInputContainer" style="display: inline-grid; width: 250px;">
 										<input type="text" id="streamerbotactionid" class="textInput" autocomplete="off" placeholder="Enter Streamer.bot Action ID" data-textsetting="streamerbotactionid" />
 										<label for="streamerbotactionid"><span data-translate="streamerbot-action-id">&gt; Streamer.bot Action ID</span></label>
 									</div>
@@ -8116,7 +8074,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <input type="checkbox" data-setting="h2r" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;">
+                                    <div class="textInputContainer" style="display: inline-grid; width: 250px;">
                                         <input type="text" id="h2rserver" class="textInput" autocomplete="off" placeholder="Provide ID or full URL" data-textsetting="h2rserver" />
                                         <label for="h2rserver"><span data-translate="send-all-to-h2r-server">&gt; Send all to H2R server</span></label>
                                     </div>
@@ -8127,7 +8085,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <input type="checkbox" data-setting="post" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;">
+                                    <div class="textInputContainer" style="display: inline-grid; width: 250px;">
                                         <input type="text" id="postserver" class="textInput" autocomplete="off" placeholder="Provide ID or full URL" data-textsetting="postserver" />
                                         <label for="postserver"><span data-translate="send-all-to-post-server">&gt; Send all to POST server</span></label>
                                     </div>
@@ -8137,7 +8095,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <input type="checkbox" data-setting="postalldiscord" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;">
+                                    <div class="textInputContainer" style="display: inline-grid; width: 250px;">
                                         <input type="text" id="postallserverdiscord" class="textInput" autocomplete="off" placeholder="Provide Discord Webhook URL" data-textsetting="postallserverdiscord" />
                                         <label for="postallserverdiscord"><span data-translate="send-all-messages-to-post-server-discord">&gt; Publish all messages to Discord</span></label>
                                     </div>
@@ -8154,7 +8112,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <input type="checkbox" data-setting="postdiscord" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;">
+                                    <div class="textInputContainer" style="display: inline-grid; width: 250px;">
                                         <input type="text" id="postserverdiscord" class="textInput" autocomplete="off" placeholder="Provide Discord Webhook URL" data-textsetting="postserverdiscord" />
                                         <label for="postserverdiscord"><span data-translate="send-donations-to-post-server-discord">&gt; Donations published to Discord</span></label>
                                     </div>
@@ -8468,7 +8426,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <input type="checkbox" data-setting="questionKeywords" />
                                         <span class="slider round"></span>
                                     </label>
-									<div class="textInputContainer" style="display: inline-block; width: 200px;">
+									<div class="textInputContainer" style="display: inline-grid; width: 200px;">
 										<input type="text" id="questionKeywords" class="textInput" autocomplete="off" placeholder="?,how,what,when,why" data-textsetting="questionKeywords" />
 										<label for="questionKeywords"><span data-translate="question-keywords">&gt; Custom question keywords</span></label>
 									</div>
@@ -8756,7 +8714,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <input type="checkbox" data-setting="filtercommandscustomtoggle" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values; messages that start with the word will be blocked. eg: playlist,hello,subscribe">
+                                    <div class="textInputContainer" style="display: inline-grid; width: 250px;" title="Provide comma separated values; messages that start with the word will be blocked. eg: playlist,hello,subscribe">
                                         <input type="text" id="filtercommandscustomwords" class="textInput" autocomplete="off" placeholder="Comma separated list of words" data-textsetting="filtercommandscustomwords" />
                                         <label for="filtercommandscustomwords"><span data-translate="custom-filter-list-start-words">&gt; Custom filter out list of start words</span></label>
                                     </div>
@@ -8895,7 +8853,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <input type="checkbox" data-setting="whitelistuserstoggle" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 100%;" title="Provide comma separated values; only values that match a username will be allowed.">
+                                    <div class="textInputContainer" style="display: inline-grid; width: 100%;" title="Provide comma separated values; only values that match a username will be allowed.">
                                         <input type="text" id="whitelistusers" class="textInput" autocomplete="off" placeholder="Provide usernames, comma, separated" data-textsetting="whitelistusers" />
 										🤍 <span data-translate="only-allow-specified-users">Show only the specified users (approved list)</span>
                                     </div>
@@ -8907,7 +8865,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <input type="checkbox" data-setting="blacklistuserstoggle" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 100%;" title="Provide comma-separated usernames. Remove a username from this list to unblock that user.">
+                                    <div class="textInputContainer" style="display: inline-grid; width: 100%;" title="Provide comma-separated usernames. Remove a username from this list to unblock that user.">
                                         <input type="text" id="blacklistusers" class="textInput" autocomplete="off" placeholder="Blocked usernames, comma-separated" data-textsetting="blacklistusers" />
 										🔮 <span data-translate="blocked-users">Blocked users</span> — <span data-translate="unblock-user-help">remove a username to unblock that user</span>
                                     </div>
@@ -9835,7 +9793,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
 										<span>Enable AI auto translate</span>
 									</div>
 								</div>
-								<div class="textInputContainer" style="display: inline-block; width: 260px; margin-left: 50px; margin-top: 8px;" title="Target language for translated incoming chat messages.">
+								<div class="textInputContainer" style="display: inline-grid; width: 260px; margin-left: 50px; margin-top: 8px;" title="Target language for translated incoming chat messages.">
 									<input type="text" id="aiAutoTranslateTargetLanguage" class="textInput" autocomplete="off" placeholder="en-US" data-textsetting="aiAutoTranslateTargetLanguage" />
 									<label for="aiAutoTranslateTargetLanguage"><span>&gt; Target language (default: en-US)</span></label>
 								</div>
@@ -9848,7 +9806,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
 										<span>Translate outgoing messages before sending</span>
 									</div>
 								</div>
-								<div class="textInputContainer" style="display: inline-block; width: 260px; margin-left: 50px; margin-top: 8px;" title="Target language for translated outgoing host messages. Leave blank to use the target language above.">
+								<div class="textInputContainer" style="display: inline-grid; width: 260px; margin-left: 50px; margin-top: 8px;" title="Target language for translated outgoing host messages. Leave blank to use the target language above.">
 									<input type="text" id="aiAutoTranslateOutgoingTargetLanguage" class="textInput" autocomplete="off" placeholder="blank = target above" data-textsetting="aiAutoTranslateOutgoingTargetLanguage" />
 									<label for="aiAutoTranslateOutgoingTargetLanguage"><span>&gt; Outgoing target language</span></label>
 								</div>
@@ -10168,7 +10126,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <input type="checkbox" data-param10="postserver" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;">
+                                    <div class="textInputContainer" style="display: inline-grid; width: 250px;">
                                         <input type="text" id="postserver10" class="textInput" autocomplete="off" placeholder="http://127.0.0.1:8000" data-textparam10="postserver" />
                                         <label for="postserver10"><span data-translate="send-bot-to-post-server">&gt; Send bot replies to a POST server</span></label>
                                     </div>
@@ -10178,7 +10136,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <input type="checkbox" data-param10="putserver" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;">
+                                    <div class="textInputContainer" style="display: inline-grid; width: 250px;">
                                         <input type="text" id="putserver10" class="textInput" autocomplete="off" placeholder="http://127.0.0.1:3000" data-textparam10="putserver" />
                                         <label for="putserver10"><span data-translate="send-bot-to-put-server">&gt; Send bot replies to a PUT server</span></label>
                                     </div>
@@ -11380,7 +11338,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <input type="checkbox" data-param3="bademotes" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;">
+                                    <div class="textInputContainer" style="display: inline-grid; width: 250px;">
                                         <input type="text" id="bademotes" class="textInput" autocomplete="off" placeholder="Provide emotes to filter out." data-textparam3="bademotes" />
                                         <label for="bademotes"><span data-translate="bademotes-list">&gt; Emotes to filter out. eg: 🍆💩</span></label>
                                     </div>
@@ -12387,7 +12345,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <span class="slider round"></span>
                                     </label>
                                     🚦
-                                    <div class="textInputContainer" style="display: inline-block; width: 215px;">
+                                    <div class="textInputContainer" style="display: inline-grid; width: 215px;">
                                         <input type="text" id="customwaitlistcommand" class="textInput" autocomplete="off" placeholder="Set a different !trigger command here" data-textsetting="customwaitlistcommand" />
                                         <label for="customwaitlistcommand"><span data-translate="enables-the-wait-list-feature">&gt; Enables this page</span></label>
                                     </div>
@@ -12411,23 +12369,23 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                     </label>
                                     <span>Enable waitlist control commands</span>
                                 </div>
-                                <div class="textInputContainer" style="display: inline-block; width: 215px;">
+                                <div class="textInputContainer" style="display: inline-grid; width: 215px;">
                                     <input type="text" id="waitlistcommandstop" class="textInput" autocomplete="off" value="!wlstop" placeholder="!wlstop" data-textsetting="waitlistcommandstop" />
                                     <label for="waitlistcommandstop">&gt; Stop entries command</label>
                                 </div>
-                                <div class="textInputContainer" style="display: inline-block; width: 215px;">
+                                <div class="textInputContainer" style="display: inline-grid; width: 215px;">
                                     <input type="text" id="waitlistcommandremove" class="textInput" autocomplete="off" value="!wlremove" placeholder="!wlremove" data-textsetting="waitlistcommandremove" />
                                     <label for="waitlistcommandremove">&gt; Remove top entry command</label>
                                 </div>
-                                <div class="textInputContainer" style="display: inline-block; width: 215px;">
+                                <div class="textInputContainer" style="display: inline-grid; width: 215px;">
                                     <input type="text" id="waitlistcommandreset" class="textInput" autocomplete="off" value="!wlreset" placeholder="!wlreset" data-textsetting="waitlistcommandreset" />
                                     <label for="waitlistcommandreset">&gt; Reset command</label>
                                 </div>
-                                <div class="textInputContainer" style="display: inline-block; width: 215px;">
+                                <div class="textInputContainer" style="display: inline-grid; width: 215px;">
                                     <input type="text" id="waitlistcommandselect" class="textInput" autocomplete="off" value="!wlpick" placeholder="!wlpick" data-textsetting="waitlistcommandselect" />
                                     <label for="waitlistcommandselect">&gt; Select name command</label>
                                 </div>
-                                <div class="textInputContainer" style="display: inline-block; width: 215px;">
+                                <div class="textInputContainer" style="display: inline-grid; width: 215px;">
                                     <input type="text" id="waitlistcommandhighlight" class="textInput" autocomplete="off" value="!wlhighlight" placeholder="!wlhighlight" data-textsetting="waitlistcommandhighlight" />
                                     <label for="waitlistcommandhighlight">&gt; Highlight top entry command</label>
                                 </div>
@@ -12575,7 +12533,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                     <span class="slider round"></span>
                                 </label>
 
-                                <div class="textInputContainer" style="display: inline-block; width: 215px;">
+                                <div class="textInputContainer" style="display: inline-grid; width: 215px;">
 									🪧
                                     <input type="text" id="customwaitlistmessage" class="textInput" autocomplete="off" placeholder="Enter {trigger} to enter!" data-textsetting="customwaitlistmessage" />
                                     <label for="customwaitlistmessage"><span data-translate="use-a-custom-message--title">&gt; Use a custom message / title</span></label>
@@ -12668,7 +12626,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
                                         <input type="checkbox" data-param18="css" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <div class="textInputContainer" style="width: 80%; display: inline-block; vertical-align: middle;">
+                                    <div class="textInputContainer" style="width: 80%; display: inline-grid; vertical-align: middle;">
                                         <input type="text" id="flowactionsCssUrl" class="textInput instant" autocomplete="off" placeholder="https://example.com/style.css" data-textparam18="css" />
                                         <label for="flowactionsCssUrl">🎨 Custom CSS URL</label>
                                     </div>
@@ -16128,6 +16086,7 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
 		<!-- Kitten TTS will be loaded dynamically as ES module when needed -->
         <link rel="stylesheet" href="shared/alerts/sound-library.css">
         <script src="shared/alerts/sound-library.js"></script>
+        <link rel="stylesheet" href="popup-ui.css">
         <script type="text/javascript" src="popup.js?v=3"></script>
         <script src="js/popup-capture-reminder.js"></script>
         <script src="shared/stickers/catalog.js"></script>

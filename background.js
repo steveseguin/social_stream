@@ -10946,6 +10946,19 @@ async function handleStreamDeckBackgroundRequest(request) {
 	}
 
 	const action = router.normalizeAction(request.action);
+    if (action === "getCommerceState") {
+        if (!window.handleMonetizationRequest) return router.makeError(request, "TARGET_UNAVAILABLE", "Product controls are still loading.");
+        const result = await window.handleMonetizationRequest({ action: "getCommerceState" });
+        return router.makeResponse(request, result);
+    }
+    if (router.isCommerceAction(action)) {
+        const control = router.commerceRequest(request);
+        if (!control.ok) return router.makeError(request, "INVALID_VALUE", control.message);
+        if (!window.handleMonetizationRequest) return router.makeError(request, "TARGET_UNAVAILABLE", "Product controls are still loading.");
+        const result = await window.handleMonetizationRequest({ action: "commerceControl", command: control.command, url: control.url, seconds: control.seconds });
+        if (result.error) return router.makeError(request, "TARGET_UNAVAILABLE", result.error);
+        return router.makeResponse(request, { action: action, command: control.command, live: result.commerceLive || null, commerce: result.commerceState });
+    }
 	if (action === "creditsStart" || action === "creditsPreview" || action === "creditsTest" || action === "creditsReset") {
 		const result = await runCreditsCommand(action);
 		if (!result.success) {
@@ -11056,7 +11069,7 @@ async function routeStreamDeckRemoteRequest(request, context) {
 			result: await handleStreamDeckSsappRequest(request)
 		};
 	}
-	if ((router.isVersionedRequest(request) || isCreditsRemoteAction(request.action)) && router.isRemoteSsnRequest(request, "background")) {
+	if ((router.isVersionedRequest(request) || isCreditsRemoteAction(request.action) || router.isCommerceAction(request.action) || request.action === "getCommerceState") && router.isRemoteSsnRequest(request, "background")) {
 		return {
 			kind: "command",
 			result: await handleStreamDeckBackgroundRequest(request)

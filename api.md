@@ -1344,3 +1344,23 @@ Advantages of using Companion:
 - Can be used alongside StreamDeck for more complex setups
 
 This makes Companion a simpler alternative to the StreamDeck HTTP method described above, especially for basic Social Stream Ninja control.
+
+
+### Product showcase controls (Stream Deck / remote API)
+
+Use the existing P2P or WebSocket API. These commands are advertised in the version 2 capabilities and return correlated success/error responses. SSN and host controls must be enabled. Configure and save Products & support links first.
+
+| Action | Value | Effect |
+| --- | --- | --- |
+| `commerceShow` | Saved public product URL, or omit | Pin that product (or current/first product). |
+| `commerceNext` | Seconds, optional; default 0 | Pin the next product. |
+| `commerceHide` | Seconds, optional; default 0 | Hide promotions; activity alerts continue. |
+| `commerceResume` | Omit | Resume the saved schedule. |
+
+0 seconds means until changed; 1-3600 restores the schedule after that duration. Overrides reset when SSN restarts. `commerceShow` also accepts an object `{ "url": "https://example.com/product", "seconds": 30 }` for a timed product.
+
+```json
+{"protocol":2,"action":"commerceShow","value":"https://example.com/product","get":"product-key-1"}
+```
+
+The existing `commerceControl` action accepts `{ "command": "show", "url": "https://example.com/product", "seconds": 30 }` inside `value`, or the original top-level `command`, `url`, and `seconds` fields. All paths call the same monetization controller. Replies contain only the action, command and live display override; no publishing credentials. Commands do not publish pages, post chat, or create payment events. See [product controls](docs/product-controls.html).
