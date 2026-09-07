@@ -1,6 +1,6 @@
 # eBay sandbox setup
 
-See the [seller/streamer implementation plan](EBAY-SELLER-PLAN.md) for the next milestones and comprehensive feature scope. Steve completed developer verification and eBay created the sandbox RuName on September 7, 2026. It is now stored in the private environment file. The separate sandbox callback route and service still need deployment.
+See the [seller/streamer implementation plan](EBAY-SELLER-PLAN.md) for the next milestones and comprehensive feature scope. Steve completed developer verification and eBay created the sandbox RuName on September 7, 2026. It is now stored in the private environment file. The separate sandbox service and callback route were deployed and verified over public HTTPS on September 7, 2026.
 
 The sandbox keyset authenticated successfully on September 7, 2026. It is stored outside Git at `%USERPROFILE%\.ssn-secrets\ebay-sandbox.env`, with file access restricted to Steve's Windows account. Never copy its contents into the client, repository, screenshots or logs. The Dev ID is retained there but REST OAuth uses only the Client ID and Client Secret.
 
@@ -63,6 +63,14 @@ ProxyPass /v1/ebay-sandbox/ http://127.0.0.1:3080/v1/ebay-sandbox/
 ProxyPassReverse /v1/ebay-sandbox/ http://127.0.0.1:3080/v1/ebay-sandbox/
 ```
 
-Confirm port 3080 is free, validate Apache configuration, and verify the callback before enabling the service publicly. The API host/SSH connection still needs to be identified. No deployment or Cloudflare changes have been performed.
+Confirm port 3080 is free, validate Apache configuration, and verify the callback before enabling the service publicly. The existing API host was confirmed on September 7. Its connection details are stored privately in `%USERPROFILE%\.ssn-secrets\ssn-api-server.json`. No deployment or Cloudflare changes have been performed.
 
 Local validation after the selector/route changes: monetization unit tests 16/16, server tests 9/9, popup search checks, Electron popup checks, and the actual SSApp eBay fixture flow all passed. The SSApp screenshot was inspected. These fixture checks verify automatic advancement and alerts, but do not replace the still-blocked paid sandbox checkout test.
+
+## Deployment completed September 7
+
+The confirmed existing API VPS now runs the sandbox code independently at `/opt/ssn-ebay-sandbox`, under `ssn-ebay-sandbox.service`, listening only on 127.0.0.1:3080. Its credentials are root-owned mode 600 in `/etc/ssn-ebay-sandbox.env`, and its database is under its separate systemd state directory. Temporary credential-transfer copies were removed.
+
+All nine server tests passed on the VPS. Apache configuration validation passed before reload. Public HTTPS `/v1/ebay-sandbox/status` returns environment=sandbox and connected=false for a fresh reader; `/v1/ebay-sandbox/callback` returns the expected 400 for missing OAuth state. Existing monetization health remains OK, and both services are active. No Cloudflare changes were made. The local frontend changes are not pushed; seller OAuth must next be completed through the running SSN client before the full end-to-end test.
+
+The connection address, username and private-key file reference are saved outside Git in `%USERPROFILE%\.ssn-secrets\ssn-api-server.json` with restricted Windows permissions.

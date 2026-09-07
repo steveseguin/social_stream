@@ -201,6 +201,18 @@ async function run() {
 		assert.ok(result.ok && result.result && result.result.passed >= 47, "Electron menu checks did not complete");
 
 		console.log("Initial menu checks passed: " + result.result.passed);
+		await requestJson(port, '/exec', { windowId: mainWindow.id, code: `(() => {
+ const d=document.getElementById('frame1').contentDocument;
+ const get=key=>d.getElementById('multi-alert-effect3-'+key);
+ get('preset').click();
+ if(!get('summary').textContent.includes('exactly $100 USD') || !get('summary').textContent.includes('Thank you!')) throw Error('Alert summary missing preset details');
+ get('clear-sound').click();
+ if(get('sound').value || get('min').value!=='100') throw Error('Clear sound changed other settings');
+ get('reset').click();
+ if(get('summary').textContent!=='Not configured' || get('min').value) throw Error('Reset left stale alert settings');
+ return true;
+})()` });
+		console.log('Electron alert summaries, clear sound, and reset passed');
 		const soundIntegration = await requestJson(port, '/exec', {windowId: mainWindow.id, code: `(async()=>{
             for(let attempt=0;attempt<100;attempt++){
                 const frame=document.getElementById('frame2'), background=frame && frame.contentWindow;

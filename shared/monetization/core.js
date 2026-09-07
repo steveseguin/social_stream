@@ -19,6 +19,75 @@
 			return '';
 		}
 	}
+	function commerce(raw) {
+		raw = raw || {};
+		return { enabled: raw.enabled === true, qr: raw.qr !== false, position: raw.position === 'tl' ? 'tl' : 'br', display: raw.display === 'first' ? 'first' : 'cycle', seconds: Math.max(15, Math.min(300, Number(raw.seconds) || 30)), items: (Array.isArray(raw.items) ? raw.items : []).slice(0, 20).map(function (item) {
+			var name = str(item && item.name, 180), url = imageURL(item && item.url);
+			if (!name || !url) return null;
+			var amount = item.amount === '' || item.amount == null ? null : Number(item.amount);
+			return { name: name, url: url, image: imageURL(item.image), amount: Number.isFinite(amount) && amount >= 0 && amount < 10000000 ? amount : null, currency: /^[A-Z]{3}$/.test(item.currency) ? item.currency : 'USD', purpose: ['shop', 'gift', 'support', 'membership'].indexOf(item.purpose) !== -1 ? item.purpose : 'shop' };
+		}).filter(Boolean) };
+	}
+	function commerceCurrent(c, now) {
+		var items = c && c.items || [];
+		return items.length ? items[c.display === 'first' ? 0 : Math.floor(now / (c.seconds * 1000)) % items.length] : null;
+	}
+	// Public display data only. Receiver authentication remains in the existing relay.
+	function providerEvent(provider, payload, deliveryId) {
+		if (!payload || payload.testMode === true || payload.live_mode === false || payload.isTest === true) return null;
+		var d = provider === 'kofi' ? payload : payload.data;
+		if (!d || typeof d !== 'object') return null;
+		var row = { platform: provider, type: provider, id: provider + ':' + String(deliveryId || d.id || Date.now()), chatname: 'Anonymous', chatmessage: '', textonly: true, chatimg: '', subtitle: '', meta: {} };
+		var amount, currency, paid = false, kind = '', items = [];
+		if (provider === 'kofi') {
+			if (d.is_public !== true || ['Donation', 'Subscription', 'Shop Order', 'Commission'].indexOf(d.type) === -1) return null;
+			row.chatname = str(d.from_name, 60) || 'Anonymous'; row.chatmessage = str(d.message, 500);
+			amount = d.amount; currency = d.currency;
+			kind = d.type === 'Shop Order' || d.type === 'Commission' ? 'purchase' : d.type === 'Subscription' || d.is_subscription_payment === true ? (d.is_first_subscription_payment ? 'new_subscriber' : 'resub') : '';
+			paid = kind !== 'purchase';
+			row.subtitle = str(d.tier_name, 180);
+			if (kind === 'new_subscriber' || kind === 'resub') row.membership = row.subtitle || 'Membership';
+			items = Array.isArray(d.shop_items) ? d.shop_items.map(function (x) { return str(x.item_name, 180); }) : [];
+		} else if (provider === 'bmac') {
+			var types = { 'donation.created': '', 'extra_purchase.created': 'purchase', 'commission_order.created': 'purchase', 'wishlist_payment.created': 'giftcontribution', 'membership.started': 'new_subscriber' };
+			if (!Object.prototype.hasOwnProperty.call(types, payload.type) || d.refunded === true || d.refunded === 'true' || (d.status && ['succeeded', 'active'].indexOf(d.status) === -1)) return null;
+			kind = types[payload.type]; row.chatname = d.supporter_name_type === 'anonymous' ? 'Anonymous' : str(d.supporter_name, 60) || 'Anonymous';
+			row.chatmessage = d.note_hidden === true || d.note_hidden === 'true' ? '' : str(d.support_note, 500);
+			amount = d.amount; currency = d.currency; paid = kind !== 'purchase' && kind !== 'new_subscriber';
+			if (kind === 'new_subscriber') { row.membership = str(d.membership_level_name, 180) || 'Membership'; row.subtitle = row.membership; }
+			if (d.wishlist) { row.subtitle = str(d.wishlist.title, 180); row.meta.commerce = { recipient: 'creator', completed: d.wishlist.completed === true }; }
+			if (d.commission) row.subtitle = str(d.commission.name, 180);
+			items = Array.isArray(d.extras) ? d.extras.map(function (x) { return str(x.title, 180); }) : [];
+		} else if (provider === 'fourthwall') {
+			var kinds = { ORDER_PLACED: 'purchase', GIFT_PURCHASE: 'gift', DONATION: '', SUBSCRIPTION_PURCHASED: 'new_subscriber' };
+			if (!Object.prototype.hasOwnProperty.call(kinds, payload.type)) return null;
+			kind = kinds[payload.type]; row.chatname = str(d.username || d.nickname, 60) || 'Anonymous'; row.chatmessage = str(d.message, 500);
+			var price = d.amounts && d.amounts.total || d.subscription && d.subscription.variant && d.subscription.variant.amount || {};
+			amount = price.value; currency = price.currency;
+			// Preserve existing Fourthwall order-value donation triggers during migration.
+			paid = true;
+			if (kind === 'purchase') {
+                paid = !(Array.isArray(d.amounts && d.amounts.giftCards) && d.amounts.giftCards.length);
+                row.meta.commerce = paid ? { legacyDonationValue: true } : {};
+            }
+			if (kind === 'gift') { row.subtitle = str(d.offer && d.offer.name, 180); row.meta.commerce = { recipient: 'other' }; }
+			if (kind === 'new_subscriber') row.membership = 'Membership';
+			items = Array.isArray(d.offers) ? d.offers.map(function (x) { return str(x.name, 180); }) : [];
+		} else return null;
+		if (items.length) row.subtitle = items.filter(Boolean).join(', ').slice(0, 180);
+		if (kind) row.event = kind;
+		var value = typeof amount === 'number' || (typeof amount === 'string' && /^\d+(?:\.\d+)?$/.test(amount.trim())) ? Number(amount) : NaN, code = typeof currency === 'string' && /^[A-Za-z]{3}$/.test(currency) ? currency.toUpperCase() : '';
+		if (amount != null && amount !== '' && Number.isFinite(value) && value > 0 && value < 10000000 && /^[A-Z]{3}$/.test(code)) {
+			row.meta.commerce = row.meta.commerce || {}; row.meta.commerce.currency = code;
+			if (paid) { row.hasDonation = money(value, code); row.donoValue = value; }
+		} else if (paid) return null;
+		if (!row.chatmessage && !row.hasDonation) row.chatmessage = row.subtitle || (kind === 'purchase' ? 'Product purchased' : 'Membership started');
+		return row;
+	}
+	function presentation(raw) {
+		raw = raw || {};
+		return { view: ['both', 'showcase', 'card', 'alerts'].indexOf(raw.view) !== -1 ? raw.view : 'both', style: raw.style === 'compact' ? 'compact' : 'default', scale: Math.max(0.5, Math.min(2, Number(raw.scale) || 1)), cardevery: Math.max(0, Math.min(3600, Number(raw.cardevery) || 0)), cardfor: Math.max(15, Math.min(300, Number(raw.cardfor) || 30)), onlytype: str(raw.onlytype, 200).toLowerCase().split(',').map(function (part) { return part.trim(); }).filter(function (part) { return /^[a-z0-9_-]+$/.test(part); }).join(',') };
+	}
 	function config(raw) {
 		if (raw && raw.json)
 			try {
@@ -31,7 +100,7 @@
 		var w = raw.wishlist || {},
 			n = raw.ninja || {},
 			t = raw.throne || {};
-		return { ebay: { enabled: e.enabled === true, qr: e.qr !== false, announce: e.announce === true, interval: e.interval === true, minutes: Math.max(5, Math.min(120, Number(e.minutes) || 15)), position: e.position === 'tl' ? 'tl' : 'br', display: ['cycle', 'cheapest', 'first'].indexOf(e.display) !== -1 ? e.display : 'cycle', seconds: Math.max(10, Math.min(300, Number(e.seconds) || 20)) }, throne: { enabled: t.enabled === true, username: /^[a-z0-9_.-]{1,50}$/i.test(str(t.username, 50)) ? str(t.username, 50).toLowerCase() : '', qr: t.qr !== false, announce: t.announce === true, interval: t.interval === true, minutes: Math.max(5, Math.min(120, Number(t.minutes) || 15)), position: t.position === 'tl' ? 'tl' : 'br' }, wishlist: { enabled: w.enabled === true, url: amazonURL(w.url, true), qr: w.qr !== false, announce: w.announce === true, interval: w.interval === true, minutes: Math.max(5, Math.min(120, Number(w.minutes) || 15)), position: w.position === 'tl' ? 'tl' : 'br' }, ninja: { enabled: n.enabled === true, reliable: n.reliable === true, username: /^[a-z0-9_-]{1,50}$/i.test(str(n.username, 50)) ? str(n.username, 50).toLowerCase() : '', qr: n.qr === true, announce: n.announce === true, interval: n.interval === true, minutes: Math.max(5, Math.min(120, Number(n.minutes) || 15)), position: n.position === 'tl' ? 'tl' : 'br' } };
+		return { presentation: presentation(raw.presentation), commerce: commerce(raw.commerce), ebay: { enabled: e.enabled === true, qr: e.qr !== false, announce: e.announce === true, interval: e.interval === true, minutes: Math.max(5, Math.min(120, Number(e.minutes) || 15)), position: e.position === 'tl' ? 'tl' : 'br', display: ['cycle', 'cheapest', 'first'].indexOf(e.display) !== -1 ? e.display : 'cycle', seconds: Math.max(10, Math.min(300, Number(e.seconds) || 20)) }, throne: { enabled: t.enabled === true, username: /^[a-z0-9_.-]{1,50}$/i.test(str(t.username, 50)) ? str(t.username, 50).toLowerCase() : '', qr: t.qr !== false, announce: t.announce === true, interval: t.interval === true, minutes: Math.max(5, Math.min(120, Number(t.minutes) || 15)), position: t.position === 'tl' ? 'tl' : 'br' }, wishlist: { enabled: w.enabled === true, url: amazonURL(w.url, true), qr: w.qr !== false, announce: w.announce === true, interval: w.interval === true, minutes: Math.max(5, Math.min(120, Number(w.minutes) || 15)), position: w.position === 'tl' ? 'tl' : 'br' }, ninja: { enabled: n.enabled === true, reliable: n.reliable === true, username: /^[a-z0-9_-]{1,50}$/i.test(str(n.username, 50)) ? str(n.username, 50).toLowerCase() : '', qr: n.qr === true, announce: n.announce === true, interval: n.interval === true, minutes: Math.max(5, Math.min(120, Number(n.minutes) || 15)), position: n.position === 'tl' ? 'tl' : 'br' } };
 	}
 	function price(text, currency) {
 		var s = str(text, 100).replace(/[^\d.,]/g, '');
@@ -138,7 +207,7 @@
 	}
 	function throne(event) {
 		if (!event || event.contract_version !== '1' || !/^[\w-]{1,128}$/.test(event.event_id || '')) return null;
-		var kind = { gift_purchased: 'giftpurchase', contribution_purchased: 'giftcontribution', gift_crowdfunded: 'giftfunded' }[event.event_type],
+		var kind = { gift_purchased: 'gift', contribution_purchased: 'giftcontribution', gift_crowdfunded: 'giftfunded' }[event.event_type],
 			d = event.data;
 		if (!kind || !d || !str(d.item_name, 180) || !/^[A-Z]{3}$/.test(d.currency || '')) return null;
 		var minor = kind === 'giftcontribution' ? d.amount : d.price;
@@ -152,7 +221,8 @@
 		var amount = minor / Math.pow(10, digits),
 			itemName = str(d.item_name, 180),
 			name = kind === 'giftfunded' ? 'Community' : str(d.gifter_username, 60) || 'Anonymous';
-		var row = { platform: 'throne', type: 'throne', event: kind, id: 'throne:' + event.event_id, chatname: name, chatmessage: str(d.message, 500), textonly: true, chatimg: '', contentimg: imageURL(d.item_thumbnail_url), subtitle: itemName, meta: { throne: { itemName: itemName, creator: str(d.creator_username, 50).toLowerCase(), completed: kind !== 'giftcontribution', currency: d.currency, amount: amount } } };
+		var row = { platform: 'throne', type: 'throne', event: kind, id: 'throne:' + event.event_id, chatname: name, chatmessage: str(d.message, 500), textonly: true, chatimg: '', contentimg: imageURL(d.item_thumbnail_url), subtitle: itemName, meta: { commerce: { recipient: 'creator', currency: d.currency }, throne: { itemName: itemName, creator: str(d.creator_username, 50).toLowerCase(), completed: kind !== 'giftcontribution', currency: d.currency, amount: amount } } };
+		if (kind === 'giftfunded') row.meta.commerce.goalAmount = amount;
 		// Contributions have already entered the donation flow when a crowdfund completes.
 		if (kind !== 'giftfunded') {
 			row.hasDonation = money(amount, d.currency);
@@ -182,7 +252,22 @@
 			});
 		return remaining[options.display === 'cycle' ? Math.floor(now / (options.seconds * 1000)) % remaining.length : 0];
 	}
-	var api = { ebayId: ebayId, ebayCurrent: ebayCurrent, throne: throne, config: config, amazonURL: amazonURL, imageURL: imageURL, price: price, item: item, ladder: ladder, purchaseURL: purchaseURL, parseList: parseList, money: money, tip: tip };
+
+    function fourthwallProduct(data, link) {
+        var url;
+        try { url = new URL(link); } catch (_) { return null; }
+        var match = url.pathname.match(/^\/products\/([a-zA-Z0-9_-]+)\/?$/);
+        if (url.protocol !== 'https:' || url.username || url.password || url.port || !match || !data || data.slug !== match[1] || !data.state || data.state.type !== 'AVAILABLE' || !data.access || data.access.type !== 'PUBLIC') return null;
+        var variants = Array.isArray(data.variants) ? data.variants : [];
+        // Leave variable and bundle prices blank instead of implying a fixed checkout price.
+        var prices = variants.map(function (variant) { return variant.unitPrice; });
+        var price = prices.length && prices[0];
+        if (!price || !prices.every(function (p) { return p && p.value === price.value && p.currency === price.currency; }) || data.type === 'BUNDLE') price = null;
+        var image = Array.isArray(data.images) && data.images.length ? data.images[0].url : '';
+        url.search = ''; url.hash = '';
+        return commerce({ items: [{ name: data.name, url: url.href, image: image, amount: price && typeof price.value === 'number' && /^[A-Z]{3}$/.test(price.currency) ? price.value : null, currency: price ? price.currency : 'USD', purpose: 'shop' }] }).items[0] || null;
+    }
+	var api = { fourthwallProduct: fourthwallProduct, commerce: commerce, commerceCurrent: commerceCurrent, providerEvent: providerEvent, ebayId: ebayId, ebayCurrent: ebayCurrent, throne: throne, config: config, amazonURL: amazonURL, imageURL: imageURL, price: price, item: item, ladder: ladder, purchaseURL: purchaseURL, parseList: parseList, money: money, tip: tip };
 	root.SSNMonetization = api;
 	if (typeof module === 'object' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : this);

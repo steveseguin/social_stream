@@ -2,6 +2,7 @@ const ALERT_CATEGORIES = Object.freeze({
   FOLLOW: 'follow',
   SUBSCRIPTION: 'subscription',
   DONATION: 'donation',
+  PURCHASE: 'purchase',
   BITS: 'bits',
   RAID: 'raid',
   AUCTION: 'auction',
@@ -16,6 +17,7 @@ const CATEGORY_LABELS = Object.freeze({
   [ALERT_CATEGORIES.FOLLOW]: 'New Follower',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'New Subscriber',
   [ALERT_CATEGORIES.DONATION]: 'New Donation',
+  [ALERT_CATEGORIES.PURCHASE]: 'New Purchase',
   [ALERT_CATEGORIES.BITS]: 'New Cheer',
   [ALERT_CATEGORIES.RAID]: 'Incoming Raid',
   [ALERT_CATEGORIES.AUCTION]: 'Auction Won',
@@ -26,6 +28,7 @@ const CATEGORY_LABEL_KEYS = Object.freeze({
   [ALERT_CATEGORIES.FOLLOW]: 'alert-title-new-follower',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'alert-title-new-subscriber',
   [ALERT_CATEGORIES.DONATION]: 'alert-title-new-donation',
+  [ALERT_CATEGORIES.PURCHASE]: 'alert-title-new-purchase',
   [ALERT_CATEGORIES.BITS]: 'alert-title-new-cheer',
   [ALERT_CATEGORIES.RAID]: 'alert-title-incoming-raid',
   [ALERT_CATEGORIES.AUCTION]: 'alert-title-auction-won',
@@ -36,6 +39,7 @@ const CATEGORY_ACCENTS = Object.freeze({
   [ALERT_CATEGORIES.FOLLOW]: '#ff68b3',
   [ALERT_CATEGORIES.SUBSCRIPTION]: '#8b5cf6',
   [ALERT_CATEGORIES.DONATION]: '#14f195',
+  [ALERT_CATEGORIES.PURCHASE]: '#14b8a6',
   [ALERT_CATEGORIES.BITS]: '#38bdf8',
   [ALERT_CATEGORIES.RAID]: '#f59e0b',
   [ALERT_CATEGORIES.AUCTION]: '#fbbf24',
@@ -83,6 +87,8 @@ const DONATION_EVENTS = new Set([
   'donation',
   'gift',              // TikTok gifts, Kick DOM gifts
   'gift_sent',
+  'giftcontribution',
+  'giftfunded',
   'gift_message',
   'live_gift',
   'tiktok_gift',
@@ -223,6 +229,7 @@ const CATEGORY_STYLE_PARAMS = {
   [ALERT_CATEGORIES.FOLLOW]: 'followstyle',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'substyle',
   [ALERT_CATEGORIES.DONATION]: 'donostyle',
+  [ALERT_CATEGORIES.PURCHASE]: 'purchasestyle',
   [ALERT_CATEGORIES.BITS]: 'bitsstyle',
   [ALERT_CATEGORIES.RAID]: 'raidstyle',
   [ALERT_CATEGORIES.AUCTION]: 'auctionstyle',
@@ -233,6 +240,7 @@ const CATEGORY_DISABLE_PARAMS = {
   [ALERT_CATEGORIES.FOLLOW]: 'disablefollows',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'disablesubs',
   [ALERT_CATEGORIES.DONATION]: 'disabledonos',
+  [ALERT_CATEGORIES.PURCHASE]: 'disablepurchases',
   [ALERT_CATEGORIES.BITS]: 'disablebits',
   [ALERT_CATEGORIES.RAID]: 'disableraids'
 };
@@ -247,6 +255,7 @@ const CATEGORY_SOUND_PARAMS = {
   [ALERT_CATEGORIES.FOLLOW]: 'followsound',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'subsound',
   [ALERT_CATEGORIES.DONATION]: 'donosound',
+  [ALERT_CATEGORIES.PURCHASE]: 'purchasesound',
   [ALERT_CATEGORIES.BITS]: 'bitssound',
   [ALERT_CATEGORIES.RAID]: 'raidsound',
   [ALERT_CATEGORIES.AUCTION]: 'auctionsound',
@@ -257,6 +266,7 @@ const CATEGORY_ACCENT_PARAMS = {
   [ALERT_CATEGORIES.FOLLOW]: 'followaccent',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'subaccent',
   [ALERT_CATEGORIES.DONATION]: 'donoaccent',
+  [ALERT_CATEGORIES.PURCHASE]: 'purchaseaccent',
   [ALERT_CATEGORIES.BITS]: 'bitsaccent',
   [ALERT_CATEGORIES.RAID]: 'raidaccent',
   [ALERT_CATEGORIES.AUCTION]: 'auctionaccent',
@@ -1193,6 +1203,8 @@ function inferCategory(payload = {}) {
     return null;
   }
 
+  if (eventKey === 'purchase') return ALERT_CATEGORIES.PURCHASE;
+
   if (AUCTION_EVENTS.has(eventKey)) {
     return isAuctionWinPayload(payload) ? ALERT_CATEGORIES.AUCTION : null;
   }
@@ -1239,6 +1251,9 @@ function inferCategory(payload = {}) {
 }
 
 function buildHeadline(category, eventKey, actor, amount, viewerCount, payload = {}) {
+  if (eventKey === 'giftcontribution') return { lead: actor, tail: amount ? 'contributed ' + amount + ' toward a gift' : 'contributed toward a gift' };
+  if (eventKey === 'giftfunded') return { lead: actor, tail: 'fully funded a gift' };
+  if (eventKey === 'purchase') return { lead: actor, tail: 'purchased ' + (pickSubtitle(payload) || 'an item') };
   switch (category) {
     case ALERT_CATEGORIES.AUCTION:
       return {
@@ -1312,6 +1327,8 @@ function buildHeadline(category, eventKey, actor, amount, viewerCount, payload =
 }
 
 function buildTitle(category, eventKey) {
+  if (eventKey === 'giftcontribution') return 'Gift Contribution';
+  if (eventKey === 'giftfunded') return 'Gift Fully Funded';
   if (category === ALERT_CATEGORIES.DONATION && isGiftEventKey(eventKey)) {
     return getTranslation('alert-title-new-gift', 'New Gift');
   }
@@ -1325,6 +1342,7 @@ function buildBodyText(category, payload, viewerCount) {
   const eventKey = pickEventKey(payload);
   const rawMessage = normalizeText(payload.chatmessage);
   const subtitle = pickSubtitle(payload);
+  if (eventKey === 'giftfunded' || eventKey === 'giftcontribution' || eventKey === 'purchase') return rawMessage || subtitle;
 
   if (category === ALERT_CATEGORIES.AUCTION) {
     const itemTitle = normalizeText(payload.meta?.title);

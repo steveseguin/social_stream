@@ -156,6 +156,7 @@ Sample payloads based on the fake test data in [background.js](./background.js):
 ## Accessibility, UI, UX, and Integrations
 
 - Prioritize accessibility and a clear, consistent user experience when designing or changing features.
+- Popup menus must reuse the existing theme colors, styled buttons, switches, section hierarchy, and meaningful icons/emotes with text labels. Put basic setup first and advanced controls in subsections. Verify input contrast in light and dark modes. Keep menus terse; put longer instructions in `docs/` and link to them from the menu.
 - Keep the default experience simple for new users, with plain labels, sensible defaults, and easy previews. Make advanced options and effects available through clearly labelled optional controls.
 - Provide keyboard access, visible focus, accessible control names, and understandable feedback. Do not rely only on color or sound to communicate state.
 - Inspect existing app integrations, especially the Event Flow editor, before adding new configuration or automation. Reuse existing patterns and capabilities where practical, and avoid disconnected or competing ways to configure the same behavior.

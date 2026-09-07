@@ -62,8 +62,9 @@ const ssapp = process.env.SSN_TEST_SSAPP_ROOT || path.resolve(root, '../ssapp'),
 		});
 		await popup.waitForFunction(() => document.getElementById('money-current').textContent.includes('Load your wishlist'));
 		await popup.locator('#money-mode').selectOption('throne');
+		await popup.locator('#money-throne-panel > summary').click();
 		await popup.locator('#money-throne-username').fill('creator');
-		await popup.locator('#money-throne-enabled').check();
+		await popup.locator('label.switch:has(#money-throne-enabled)').click();
 		await popup.locator('#money-save').click();
 		await popup.waitForFunction(() => document.getElementById('money-status').textContent === 'Saved.');
 		let setup = await call('get');
@@ -124,6 +125,7 @@ const ssapp = process.env.SSN_TEST_SSAPP_ROOT || path.resolve(root, '../ssapp'),
 			main.url()
 		);
 		fs.writeFileSync(path.join(os.tmpdir(), 'ssn-throne-popup.png'), Buffer.from(png, 'base64'));
+		await popup.locator('#money-throne-panel .popup-subsection > summary').click();
 		await popup.locator('#money-throne-position').selectOption('tl');
 		await popup.locator('#money-save').click();
 		await overlay.waitForFunction(() => document.body.classList.contains('tl'));
@@ -133,7 +135,7 @@ const ssapp = process.env.SSN_TEST_SSAPP_ROOT || path.resolve(root, '../ssapp'),
 		await popup.locator('#money-throne-reset').click();
 		await popup.waitForFunction(() => document.getElementById('money-throne-rank').textContent.includes('Rank 1'));
 		assert.equal((await call('get')).throne.gifts, 0);
-		await popup.locator('#money-throne-enabled').uncheck();
+		await popup.locator('label.switch:has(#money-throne-enabled)').click();
 		await popup.locator('#money-save').click();
 		await overlay.locator('#support-card').waitFor({ state: 'hidden' });
 		console.log('PASS: actual SSApp UI, signed webhook to SSE to SSN to overlay, invalid signature rejection, duplicate suppression, gift/contribution ranks, no double-counted income, QR targets, corner, reset, disable, no default chat sends.');

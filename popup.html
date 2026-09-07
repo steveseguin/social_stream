@@ -2417,6 +2417,49 @@ input:checked + .slider:before {
 		color: #04121f;
 	}
 }
+
+/* Recent settings share the popup palette, switch pattern, and focus treatment. */
+:root { --settings-control-border:#718096; }
+@media (prefers-color-scheme: dark) { :root { --settings-control-border:#71869e; } }
+.popup-settings-panel input:not([type="checkbox"]):not([type="range"]),
+.popup-settings-panel select, .popup-settings-panel textarea, .popup-reviewed-control {
+    box-sizing:border-box; max-width:100%; padding:6px 8px; font:inherit;
+    color:var(--default-text-color); background:var(--color-accent-subtle);
+    border:1px solid var(--settings-control-border); border-radius:4px;
+}
+.popup-settings-panel input::placeholder, .popup-settings-panel textarea::placeholder { color:var(--placeholder-color); opacity:1; }
+.popup-settings-panel button:not(.tts-test-button):not(.textInputUploadButton), .overlayButton, .popup-icon-button {
+    font:inherit; padding:5px 9px; min-height:30px; border:1px solid var(--settings-control-border);
+    border-radius:4px; background:var(--button-background); color:var(--text-button-text); cursor:pointer;
+}
+.popup-settings-panel button:disabled { opacity:.65; cursor:default; }
+.popup-icon-button { background:transparent; }
+.popup-settings-panel summary { cursor:pointer; padding:6px 0; }
+.popup-settings-panel .popup-subsection, .popup-subsection { border-top:1px solid var(--collapsible-border-color); margin-top:12px; padding-top:8px; }
+#sticker-rewards-settings, #captureSiteReminder { padding:12px; margin:10px 0; border:1px solid var(--collapsible-border-color); border-radius:4px; background:var(--options-group-background-color); color:var(--default-text-color); }
+.popup-settings-panel .popup-toggle-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.popup-toggle-row label.switch { flex:0 0 30px; }
+.popup-toggle-row > label:not(.switch) { flex:1; min-width:100px; cursor:pointer; }
+.popup-guide-link { display:block; margin:8px 0; font-size:.9em; color:var(--text-secondary); }
+.popup-settings-panel a { color:var(--color-accent); }
+.popup-reviewed-control:focus, .popup-settings-panel input:focus, .popup-settings-panel select:focus, .popup-settings-panel button:focus,
+.popup-settings-panel summary:focus, .popup-settings-panel a:focus, .overlayButton:focus, .popup-icon-button:focus {
+    outline:2px solid var(--color-accent); outline-offset:2px;
+}
+.popup-settings-panel .slider { box-shadow:inset 0 0 0 1px var(--settings-control-border); }
+.popup-settings-panel .popup-toggle-row .switch { margin-right:4px; }
+.switch input:focus + .slider { outline:2px solid var(--color-accent); outline-offset:3px; }
+/* Preserve native keyboard toggling for the popup's existing accordion pattern. */
+.collapsible-input { display:block; position:absolute; width:1px; height:1px; opacity:0; }
+.collapsible-input:focus + .collapsible-label { outline:2px solid var(--color-accent); outline-offset:-3px; }
+body .popup-settings-panel .textInputContainer { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:5px 0; margin:6px 0; }
+body .popup-settings-panel .textInputContainer .textInput { grid-area:2 / 1 / 3 / 3; height:auto; min-height:32px; }
+body .popup-settings-panel .textInputContainer .textInput + label { position:static; grid-area:1 / 1 / 2 / 3; font-size:1em; padding:0; max-width:100%; color:var(--default-text-color); }
+body .popup-settings-panel .textInputContainer .textInput + label::before { display:none; }
+body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-area:2 / 2; position:static; }
+#monetization-settings > summary { font-size:1.17em; font-weight:600; color:var(--h3-color); background:var(--collapsible-label-color); padding:4px 8px; border-radius:4px; }
+#sticker-custom-form input[type="text"], #sticker-custom-form input[type="url"] { display:block; width:100%; }
+@media (prefers-reduced-motion: reduce) { html, html.extension-popup-surface body { scroll-behavior:auto; } .slider, .slider:before { transition:none; } }
         </style>
     <link rel="stylesheet" href="shared/monetization/popup.css">
 </head>
@@ -2446,9 +2489,14 @@ input:checked + .slider:before {
         </div>
         <div id="popupSearchToolbar">
             <input type="search" id="searchInput" placeholder="Search settings..." aria-label="Search all settings" />
-            <div id="activeIcon" title="Show only enabled options">🔰</div>
-            <div id="languageIcon" title="Select language">🌐</div>
+            <button type="button" id="activeIcon" class="popup-icon-button showalways" aria-pressed="false" title="Show only enabled options" aria-label="Show only enabled options">🔰</button>
+            <button type="button" id="languageIcon" class="popup-icon-button showalways" title="Select language" aria-label="Select language">🌐</button>
         </div>
+        <section id="captureSiteReminder" class="popup-settings-panel popup-subsection" hidden aria-label="Optional site capture">
+            <p data-capture-message style="margin: 0 0 8px;" role="status"></p>
+            <button type="button" data-capture-enable class="showalways">▶ Enable capture</button>
+            <button type="button" data-capture-dismiss class="showalways">✕ Dismiss reminder</button>
+        </section>
         <div id="serverFallbackTestNotice">
             <div data-role="message"></div>
             <div class="server-fallback-actions">
@@ -3007,8 +3055,8 @@ input:checked + .slider:before {
                                     <span data-translate="auto-queue-questions">❓⛓️ Auto-queue messages identified as questions </span>
                                 </div>
                                 <div title="Track messages containing ? and identified questions. Keeps the latest 100 in the standard dock; resets on reload." data-keywords="unanswered questions Q&A tracking">
-                                    <label class="switch"><input type="checkbox" data-param1="trackquestions" /><span class="slider round"></span></label>
-                                    <span>Track unanswered questions in the dock</span>
+                                    <label class="switch"><input type="checkbox" data-param1="trackquestions" aria-label="Track unanswered questions" /><span class="slider round"></span></label>
+                                    <span>❓ Track unanswered questions</span>
                                 </div>
 								<div title="Automatically pins messages that are identified as donations" data-keywords="donations pin sticky">
                                     <label class="switch">
@@ -3377,7 +3425,7 @@ input:checked + .slider:before {
 							<br /><br />
 							<div>
 								🎭 Voice to use:
-								<select id="kokoroVoiceSelect" data-optionparam1="voicekokoro" title="Select the Kokoro TTS Voice">
+								<select id="kokoroVoiceSelect" data-optionparam1="voicekokoro" title="Select the Kokoro TTS Voice" class="textInput popup-reviewed-control" aria-label="Kokoro voice">
 									<option value="af_heart">Heart (American Female)</option><option value="af_alloy">Alloy (American Female)</option><option selected value="af_aoede">Aoede (American Female)</option><option value="af_bella">Bella (American Female)</option><option value="af_jessica">Jessica (American Female)</option><option value="af_kore">Kore (American Female)</option><option value="af_nicole">Nicole (American Female)</option><option value="af_nova">Nova (American Female)</option><option value="af_river">River (American Female)</option><option value="af_sarah">Sarah (American Female)</option><option value="af_sky">Sky (American Female)</option><option value="am_adam">Adam (American Male)</option><option value="am_echo">Echo (American Male)</option><option value="am_eric">Eric (American Male)</option><option value="am_fenrir">Fenrir (American Male)</option><option value="am_liam">Liam (American Male)</option><option value="am_michael">Michael (American Male)</option><option value="am_onyx">Onyx (American Male)</option><option value="am_puck">Puck (American Male)</option><option value="am_santa">Santa (American Male)</option><option value="bf_emma">Emma (British Female)</option><option value="bf_isabella">Isabella (British Female)</option><option value="bm_george">George (British Male)</option><option value="bm_lewis">Lewis (British Male)</option><option value="bf_alice">Alice (British Female)</option><option value="bf_lily">Lily (British Female)</option><option value="bm_daniel">Daniel (British Male)</option><option value="bm_fable">Fable (British Male)</option>
 
 <optgroup label="Spanish"><option value="ef_dora">Dora (Spanish)</option><option value="em_alex">Alex (Spanish)</option><option value="em_santa">Santa (Spanish)</option></optgroup>
@@ -5108,22 +5156,22 @@ input:checked + .slider:before {
 						<option value="sampleoverlay.html">📄 Sample Overlay - Basic chat overlay</option>
 						<option value="themes/compact-classic.html">💬 Compact Classic - Dense Twitch/IRC-style chat</option>
 						<option value="themes/compact-classic.html?ultra">⚡ Compact Ultra - Super dense minimum-height chat</option>
-						                        <option value="themes/compact-clean.html?style=art-cat">Strawberry Cat - Illustrated</option>
-                        <option value="themes/compact-clean.html?style=art-dog">Good Company - Illustrated</option>
-                        <option value="themes/compact-clean.html?style=art-halloween">Pumpkin Haunt - Illustrated</option>
-                        <option value="themes/compact-clean.html?style=art-christmas">Merry Little Reindeer - Illustrated</option>
-                        <option value="themes/compact-clean.html?style=art-music">Midnight Mixtape - Illustrated</option>
-                        <option value="themes/compact-clean.html?style=art-forest">Moss & Mushrooms - Illustrated</option>
-                        <option value="themes/compact-clean.html?style=art-space">Moon Bunny - Illustrated</option>
-                        <option value="themes/compact-clean.html?style=art-dragon">Crystal Guardian - Illustrated</option>
-                        <option value="themes/compact-clean.html?style=cute">Pastel Pop - Blush pink with candy dots</option>
-                        <option value="themes/compact-clean.html?style=cozy">Cozy Cafe - Warm cream and coffee</option>
-                        <option value="themes/compact-clean.html?style=cats">Cat Cafe - Peach cards with a tiny cat</option>
-                        <option value="themes/compact-clean.html?style=music">Studio Sessions - Dark studio with an equalizer</option>
-                        <option value="themes/compact-clean.html?style=arcade">Pocket Arcade - Pixel borders and violet accents</option>
-                        <option value="themes/compact-clean.html?style=slate">Compact Slate - Quiet dark rows</option>
-                        <option value="themes/compact-clean.html?style=paper">Compact Paper - Crisp light cards</option>
-                        <option value="themes/compact-clean.html?style=micro">Micro Line - Minimal slim dark strips</option>
+						                        <option value="themes/compact-clean.html?style=art-cat">🐱 Strawberry Cat — Illustrated</option>
+                        <option value="themes/compact-clean.html?style=art-dog">🐶 Good Company — Illustrated</option>
+                        <option value="themes/compact-clean.html?style=art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
+                        <option value="themes/compact-clean.html?style=art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
+                        <option value="themes/compact-clean.html?style=art-music">🎵 Midnight Mixtape — Illustrated</option>
+                        <option value="themes/compact-clean.html?style=art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
+                        <option value="themes/compact-clean.html?style=art-space">🌙 Moon Bunny — Illustrated</option>
+                        <option value="themes/compact-clean.html?style=art-dragon">🐉 Crystal Guardian — Illustrated</option>
+                        <option value="themes/compact-clean.html?style=cute">🍬 Pastel Pop</option>
+                        <option value="themes/compact-clean.html?style=cozy">☕ Cozy Cafe</option>
+                        <option value="themes/compact-clean.html?style=cats">🐱 Cat Cafe</option>
+                        <option value="themes/compact-clean.html?style=music">🎵 Studio Sessions</option>
+                        <option value="themes/compact-clean.html?style=arcade">🕹️ Pocket Arcade</option>
+                        <option value="themes/compact-clean.html?style=slate">🌑 Compact Slate</option>
+                        <option value="themes/compact-clean.html?style=paper">📄 Compact Paper</option>
+                        <option value="themes/compact-clean.html?style=micro">➖ Micro Line</option>
 						<option value="themes/compact-clean.html">🧼 Compact Clean - Tidy compact cards</option>
 						<option value="themes/compact-glass.html">🪟 Compact Glass - Frosted compact rows</option>
 						<option value="themes/overlay-comic-pop.html">💥 Comic Pop Dock - Stackable pop art chat</option>
@@ -5180,22 +5228,22 @@ input:checked + .slider:before {
                     </label>
                     <select id="featured-preset-select" data-optionsetting="featuredOverlayStyle" style="padding: 5px 10px; border-radius: 4px; background: var(--color-accent-subtle); color: var(--default-text-color); border: 1px solid var(--collapsible-border-color);">
                         <option value="">Classic (Full Customization)</option>
-                        <option value="themes/featured-styles/featured-modern.html?style=art-cat">Crystal Guardian - Illustrated</option>
-                        <option value="themes/featured-styles/featured-modern.html?style=art-dog">Crystal Guardian - Illustrated</option>
-                        <option value="themes/featured-styles/featured-modern.html?style=art-halloween">Crystal Guardian - Illustrated</option>
-                        <option value="themes/featured-styles/featured-modern.html?style=art-christmas">Crystal Guardian - Illustrated</option>
-                        <option value="themes/featured-styles/featured-modern.html?style=art-music">Crystal Guardian - Illustrated</option>
-                        <option value="themes/featured-styles/featured-modern.html?style=art-forest">Crystal Guardian - Illustrated</option>
-                        <option value="themes/featured-styles/featured-modern.html?style=art-space">Crystal Guardian - Illustrated</option>
-                        <option value="themes/featured-styles/featured-modern.html?style=art-dragon">Crystal Guardian - Illustrated</option>
-                        <option value="themes/featured-styles/featured-modern.html?style=cute">Pastel Pop</option>
-                        <option value="themes/featured-styles/featured-modern.html?style=cozy">Cozy Cafe</option>
-                        <option value="themes/featured-styles/featured-modern.html?style=cats">Cat Cafe</option>
-                        <option value="themes/featured-styles/featured-modern.html?style=music">Studio Sessions</option>
-                        <option value="themes/featured-styles/featured-modern.html?style=arcade">Pocket Arcade</option>
-                        <option value="themes/featured-styles/featured-modern.html?style=slate">Compact Slate</option>
-                        <option value="themes/featured-styles/featured-modern.html?style=paper">Compact Paper</option>
-                        <option value="themes/featured-styles/featured-modern.html?style=micro">Micro Line</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=art-cat">🐱 Strawberry Cat — Illustrated</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=art-dog">🐶 Good Company — Illustrated</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=art-music">🎵 Midnight Mixtape — Illustrated</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=art-space">🌙 Moon Bunny — Illustrated</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=art-dragon">🐉 Crystal Guardian — Illustrated</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=cute">🍬 Pastel Pop</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=cozy">☕ Cozy Cafe</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=cats">🐱 Cat Cafe</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=music">🎵 Studio Sessions</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=arcade">🕹️ Pocket Arcade</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=slate">🌑 Compact Slate</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=paper">📄 Compact Paper</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=micro">➖ Micro Line</option>
                         <option value="themes/featured-styles/featured-modern.html?style=glass">Modern Glass</option>
                         <option value="themes/featured-styles/featured-modern.html?style=neon">Neon Glow</option>
                         <option value="themes/featured-styles/featured-modern.html?style=minimal">Minimal Clean</option>
@@ -5560,7 +5608,7 @@ input:checked + .slider:before {
                             <br /><br />
                             <div>
                                 🎭 Voice to use:
-                                <select id="kokoroVoiceSelect2" data-optionparam2="voicekokoro" title="Select the Kokoro TTS Voice">
+                                <select id="kokoroVoiceSelect2" data-optionparam2="voicekokoro" title="Select the Kokoro TTS Voice" class="textInput popup-reviewed-control" aria-label="Kokoro voice">
                                     <option value="af_bella">af_bella</option>
                                     <option value="af_nicole">af_nicole</option>
                                     <option value="af_sarah">af_sarah</option>
@@ -6337,7 +6385,7 @@ input:checked + .slider:before {
 							<div class="options">
 								<div class="options_group">
 									<h3>Style Options</h3>
-									<div title="Illustrated themes only; other animations keep their existing settings."><label class="switch"><input type="checkbox" data-param2="staticart" /><span class="slider round"></span></label><span>Keep illustrated characters still</span></div>
+									<div title="Illustrated themes only; other animations keep their existing settings."><label class="switch"><input type="checkbox" data-param2="staticart" aria-label="Keep illustrated characters still" /><span class="slider round"></span></label><span>⏸️ Keep illustrated characters still</span></div>
 									<div>
 										<label class="switch">
 											<input type="checkbox" data-param2="showtime" />
@@ -6529,180 +6577,180 @@ input:checked + .slider:before {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
-								<div title="Illustrated themes only; other animations keep their existing settings."><label class="switch"><input type="checkbox" data-param25="staticart" /><span class="slider round"></span></label><span>Keep illustrated characters still</span></div>
+								<div title="Illustrated themes only; other animations keep their existing settings."><label class="switch"><input type="checkbox" data-param25="staticart" aria-label="Keep illustrated characters still" /><span class="slider round"></span></label><span>⏸️ Keep illustrated characters still</span></div>
 <div>
-									<label>Follow preset</label>
-									<select data-optionparam25="followstyle" class="textInput">
+									<label for="multi-alert-followstyle">💚 Follow preset</label>
+									<select id="multi-alert-followstyle" data-optionparam25="followstyle" class="textInput popup-reviewed-control">
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
 										<option value="solid">Solid / Flat</option>
-									<option value="cute">Pastel Pop</option>
-<option value="cozy">Cozy Cafe</option>
-<option value="art-cat">Strawberry Cat - Illustrated</option>
-<option value="art-dog">Good Company - Illustrated</option>
-<option value="art-halloween">Pumpkin Haunt - Illustrated</option>
-<option value="art-christmas">Merry Little Reindeer - Illustrated</option>
-<option value="art-music">Midnight Mixtape - Illustrated</option>
-<option value="art-forest">Moss & Mushrooms - Illustrated</option>
-<option value="art-space">Moon Bunny - Illustrated</option>
-<option value="art-dragon">Crystal Guardian - Illustrated</option>
-<option value="cats">Cat Cafe</option>
-<option value="music">Studio Sessions</option>
-<option value="arcade">Pocket Arcade</option>
-<option value="slate">Compact Slate</option>
-<option value="paper">Compact Paper</option>
-<option value="micro">Micro Line</option>
+									<option value="cute">🍬 Pastel Pop</option>
+<option value="cozy">☕ Cozy Cafe</option>
+<option value="art-cat">🐱 Strawberry Cat — Illustrated</option>
+<option value="art-dog">🐶 Good Company — Illustrated</option>
+<option value="art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
+<option value="art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
+<option value="art-music">🎵 Midnight Mixtape — Illustrated</option>
+<option value="art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
+<option value="art-space">🌙 Moon Bunny — Illustrated</option>
+<option value="art-dragon">🐉 Crystal Guardian — Illustrated</option>
+<option value="cats">🐱 Cat Cafe</option>
+<option value="music">🎵 Studio Sessions</option>
+<option value="arcade">🕹️ Pocket Arcade</option>
+<option value="slate">🌑 Compact Slate</option>
+<option value="paper">📄 Compact Paper</option>
+<option value="micro">➖ Micro Line</option>
 </select>
 								</div>
 								<div>
-									<label>Subscription preset</label>
-									<select data-optionparam25="substyle" class="textInput">
+									<label for="multi-alert-substyle">💜 Subscription preset</label>
+									<select id="multi-alert-substyle" data-optionparam25="substyle" class="textInput popup-reviewed-control">
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
 										<option value="solid">Solid / Flat</option>
-									<option value="cute">Pastel Pop</option>
-<option value="cozy">Cozy Cafe</option>
-<option value="art-cat">Strawberry Cat - Illustrated</option>
-<option value="art-dog">Good Company - Illustrated</option>
-<option value="art-halloween">Pumpkin Haunt - Illustrated</option>
-<option value="art-christmas">Merry Little Reindeer - Illustrated</option>
-<option value="art-music">Midnight Mixtape - Illustrated</option>
-<option value="art-forest">Moss & Mushrooms - Illustrated</option>
-<option value="art-space">Moon Bunny - Illustrated</option>
-<option value="art-dragon">Crystal Guardian - Illustrated</option>
-<option value="cats">Cat Cafe</option>
-<option value="music">Studio Sessions</option>
-<option value="arcade">Pocket Arcade</option>
-<option value="slate">Compact Slate</option>
-<option value="paper">Compact Paper</option>
-<option value="micro">Micro Line</option>
+									<option value="cute">🍬 Pastel Pop</option>
+<option value="cozy">☕ Cozy Cafe</option>
+<option value="art-cat">🐱 Strawberry Cat — Illustrated</option>
+<option value="art-dog">🐶 Good Company — Illustrated</option>
+<option value="art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
+<option value="art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
+<option value="art-music">🎵 Midnight Mixtape — Illustrated</option>
+<option value="art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
+<option value="art-space">🌙 Moon Bunny — Illustrated</option>
+<option value="art-dragon">🐉 Crystal Guardian — Illustrated</option>
+<option value="cats">🐱 Cat Cafe</option>
+<option value="music">🎵 Studio Sessions</option>
+<option value="arcade">🕹️ Pocket Arcade</option>
+<option value="slate">🌑 Compact Slate</option>
+<option value="paper">📄 Compact Paper</option>
+<option value="micro">➖ Micro Line</option>
 </select>
 								</div>
 								<div>
-									<label>Donation preset</label>
-									<select data-optionparam25="donostyle" class="textInput">
+									<label for="multi-alert-donostyle">💛 Donation preset</label>
+									<select id="multi-alert-donostyle" data-optionparam25="donostyle" class="textInput popup-reviewed-control">
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
 										<option value="solid">Solid / Flat</option>
-									<option value="cute">Pastel Pop</option>
-<option value="cozy">Cozy Cafe</option>
-<option value="art-cat">Strawberry Cat - Illustrated</option>
-<option value="art-dog">Good Company - Illustrated</option>
-<option value="art-halloween">Pumpkin Haunt - Illustrated</option>
-<option value="art-christmas">Merry Little Reindeer - Illustrated</option>
-<option value="art-music">Midnight Mixtape - Illustrated</option>
-<option value="art-forest">Moss & Mushrooms - Illustrated</option>
-<option value="art-space">Moon Bunny - Illustrated</option>
-<option value="art-dragon">Crystal Guardian - Illustrated</option>
-<option value="cats">Cat Cafe</option>
-<option value="music">Studio Sessions</option>
-<option value="arcade">Pocket Arcade</option>
-<option value="slate">Compact Slate</option>
-<option value="paper">Compact Paper</option>
-<option value="micro">Micro Line</option>
+									<option value="cute">🍬 Pastel Pop</option>
+<option value="cozy">☕ Cozy Cafe</option>
+<option value="art-cat">🐱 Strawberry Cat — Illustrated</option>
+<option value="art-dog">🐶 Good Company — Illustrated</option>
+<option value="art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
+<option value="art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
+<option value="art-music">🎵 Midnight Mixtape — Illustrated</option>
+<option value="art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
+<option value="art-space">🌙 Moon Bunny — Illustrated</option>
+<option value="art-dragon">🐉 Crystal Guardian — Illustrated</option>
+<option value="cats">🐱 Cat Cafe</option>
+<option value="music">🎵 Studio Sessions</option>
+<option value="arcade">🕹️ Pocket Arcade</option>
+<option value="slate">🌑 Compact Slate</option>
+<option value="paper">📄 Compact Paper</option>
+<option value="micro">➖ Micro Line</option>
 </select>
 								</div>
 								<div>
-									<label>Bits/Cheer preset</label>
-									<select data-optionparam25="bitsstyle" class="textInput">
+									<label for="multi-alert-bitsstyle">💙 Bits/Cheer preset</label>
+									<select id="multi-alert-bitsstyle" data-optionparam25="bitsstyle" class="textInput popup-reviewed-control">
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
 										<option value="solid">Solid / Flat</option>
-									<option value="cute">Pastel Pop</option>
-<option value="cozy">Cozy Cafe</option>
-<option value="art-cat">Strawberry Cat - Illustrated</option>
-<option value="art-dog">Good Company - Illustrated</option>
-<option value="art-halloween">Pumpkin Haunt - Illustrated</option>
-<option value="art-christmas">Merry Little Reindeer - Illustrated</option>
-<option value="art-music">Midnight Mixtape - Illustrated</option>
-<option value="art-forest">Moss & Mushrooms - Illustrated</option>
-<option value="art-space">Moon Bunny - Illustrated</option>
-<option value="art-dragon">Crystal Guardian - Illustrated</option>
-<option value="cats">Cat Cafe</option>
-<option value="music">Studio Sessions</option>
-<option value="arcade">Pocket Arcade</option>
-<option value="slate">Compact Slate</option>
-<option value="paper">Compact Paper</option>
-<option value="micro">Micro Line</option>
+									<option value="cute">🍬 Pastel Pop</option>
+<option value="cozy">☕ Cozy Cafe</option>
+<option value="art-cat">🐱 Strawberry Cat — Illustrated</option>
+<option value="art-dog">🐶 Good Company — Illustrated</option>
+<option value="art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
+<option value="art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
+<option value="art-music">🎵 Midnight Mixtape — Illustrated</option>
+<option value="art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
+<option value="art-space">🌙 Moon Bunny — Illustrated</option>
+<option value="art-dragon">🐉 Crystal Guardian — Illustrated</option>
+<option value="cats">🐱 Cat Cafe</option>
+<option value="music">🎵 Studio Sessions</option>
+<option value="arcade">🕹️ Pocket Arcade</option>
+<option value="slate">🌑 Compact Slate</option>
+<option value="paper">📄 Compact Paper</option>
+<option value="micro">➖ Micro Line</option>
 </select>
 								</div>
 								<div>
-									<label>Raid preset</label>
-									<select data-optionparam25="raidstyle" class="textInput">
+									<label for="multi-alert-raidstyle">🧡 Raid preset</label>
+									<select id="multi-alert-raidstyle" data-optionparam25="raidstyle" class="textInput popup-reviewed-control">
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
 										<option value="solid">Solid / Flat</option>
-									<option value="cute">Pastel Pop</option>
-<option value="cozy">Cozy Cafe</option>
-<option value="art-cat">Strawberry Cat - Illustrated</option>
-<option value="art-dog">Good Company - Illustrated</option>
-<option value="art-halloween">Pumpkin Haunt - Illustrated</option>
-<option value="art-christmas">Merry Little Reindeer - Illustrated</option>
-<option value="art-music">Midnight Mixtape - Illustrated</option>
-<option value="art-forest">Moss & Mushrooms - Illustrated</option>
-<option value="art-space">Moon Bunny - Illustrated</option>
-<option value="art-dragon">Crystal Guardian - Illustrated</option>
-<option value="cats">Cat Cafe</option>
-<option value="music">Studio Sessions</option>
-<option value="arcade">Pocket Arcade</option>
-<option value="slate">Compact Slate</option>
-<option value="paper">Compact Paper</option>
-<option value="micro">Micro Line</option>
+									<option value="cute">🍬 Pastel Pop</option>
+<option value="cozy">☕ Cozy Cafe</option>
+<option value="art-cat">🐱 Strawberry Cat — Illustrated</option>
+<option value="art-dog">🐶 Good Company — Illustrated</option>
+<option value="art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
+<option value="art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
+<option value="art-music">🎵 Midnight Mixtape — Illustrated</option>
+<option value="art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
+<option value="art-space">🌙 Moon Bunny — Illustrated</option>
+<option value="art-dragon">🐉 Crystal Guardian — Illustrated</option>
+<option value="cats">🐱 Cat Cafe</option>
+<option value="music">🎵 Studio Sessions</option>
+<option value="arcade">🕹️ Pocket Arcade</option>
+<option value="slate">🌑 Compact Slate</option>
+<option value="paper">📄 Compact Paper</option>
+<option value="micro">➖ Micro Line</option>
 </select>
 								</div>
 								<div>
-									<label>Auction win preset</label>
-									<select data-optionparam25="auctionstyle" class="textInput">
+									<label for="multi-alert-auctionstyle">🏆 Auction win preset</label>
+									<select id="multi-alert-auctionstyle" data-optionparam25="auctionstyle" class="textInput popup-reviewed-control">
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
 										<option value="solid">Solid / Flat</option>
-									<option value="cute">Pastel Pop</option>
-<option value="cozy">Cozy Cafe</option>
-<option value="art-cat">Strawberry Cat - Illustrated</option>
-<option value="art-dog">Good Company - Illustrated</option>
-<option value="art-halloween">Pumpkin Haunt - Illustrated</option>
-<option value="art-christmas">Merry Little Reindeer - Illustrated</option>
-<option value="art-music">Midnight Mixtape - Illustrated</option>
-<option value="art-forest">Moss & Mushrooms - Illustrated</option>
-<option value="art-space">Moon Bunny - Illustrated</option>
-<option value="art-dragon">Crystal Guardian - Illustrated</option>
-<option value="cats">Cat Cafe</option>
-<option value="music">Studio Sessions</option>
-<option value="arcade">Pocket Arcade</option>
-<option value="slate">Compact Slate</option>
-<option value="paper">Compact Paper</option>
-<option value="micro">Micro Line</option>
+									<option value="cute">🍬 Pastel Pop</option>
+<option value="cozy">☕ Cozy Cafe</option>
+<option value="art-cat">🐱 Strawberry Cat — Illustrated</option>
+<option value="art-dog">🐶 Good Company — Illustrated</option>
+<option value="art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
+<option value="art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
+<option value="art-music">🎵 Midnight Mixtape — Illustrated</option>
+<option value="art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
+<option value="art-space">🌙 Moon Bunny — Illustrated</option>
+<option value="art-dragon">🐉 Crystal Guardian — Illustrated</option>
+<option value="cats">🐱 Cat Cafe</option>
+<option value="music">🎵 Studio Sessions</option>
+<option value="arcade">🕹️ Pocket Arcade</option>
+<option value="slate">🌑 Compact Slate</option>
+<option value="paper">📄 Compact Paper</option>
+<option value="micro">➖ Micro Line</option>
 </select>
 								</div>
 								<div>
-									<label>Hype train preset</label>
-									<select data-optionparam25="hypestyle" class="textInput">
+									<label for="multi-alert-hypestyle">🚂 Hype train preset</label>
+									<select id="multi-alert-hypestyle" data-optionparam25="hypestyle" class="textInput popup-reviewed-control">
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
 										<option value="solid">Solid / Flat</option>
-									<option value="cute">Pastel Pop</option>
-<option value="cozy">Cozy Cafe</option>
-<option value="art-cat">Strawberry Cat - Illustrated</option>
-<option value="art-dog">Good Company - Illustrated</option>
-<option value="art-halloween">Pumpkin Haunt - Illustrated</option>
-<option value="art-christmas">Merry Little Reindeer - Illustrated</option>
-<option value="art-music">Midnight Mixtape - Illustrated</option>
-<option value="art-forest">Moss & Mushrooms - Illustrated</option>
-<option value="art-space">Moon Bunny - Illustrated</option>
-<option value="art-dragon">Crystal Guardian - Illustrated</option>
-<option value="cats">Cat Cafe</option>
-<option value="music">Studio Sessions</option>
-<option value="arcade">Pocket Arcade</option>
-<option value="slate">Compact Slate</option>
-<option value="paper">Compact Paper</option>
-<option value="micro">Micro Line</option>
+									<option value="cute">🍬 Pastel Pop</option>
+<option value="cozy">☕ Cozy Cafe</option>
+<option value="art-cat">🐱 Strawberry Cat — Illustrated</option>
+<option value="art-dog">🐶 Good Company — Illustrated</option>
+<option value="art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
+<option value="art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
+<option value="art-music">🎵 Midnight Mixtape — Illustrated</option>
+<option value="art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
+<option value="art-space">🌙 Moon Bunny — Illustrated</option>
+<option value="art-dragon">🐉 Crystal Guardian — Illustrated</option>
+<option value="cats">🐱 Cat Cafe</option>
+<option value="music">🎵 Studio Sessions</option>
+<option value="arcade">🕹️ Pocket Arcade</option>
+<option value="slate">🌑 Compact Slate</option>
+<option value="paper">📄 Compact Paper</option>
+<option value="micro">➖ Micro Line</option>
 </select>
 								</div>
 								<div>
@@ -6884,21 +6932,21 @@ input:checked + .slider:before {
 								</div>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param25="hidetitle" />
+										<input type="checkbox" data-param25="hidetitle" aria-label="Hide alert title" />
 										<span class="slider round"></span>
 									</label>
 									<span>Hide alert title</span>
 								</div>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param25="hidemessage" />
+										<input type="checkbox" data-param25="hidemessage" aria-label="Hide message text" />
 										<span class="slider round"></span>
 									</label>
 									<span>Hide message text</span>
 								</div>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param25="hideprogress" />
+										<input type="checkbox" data-param25="hideprogress" aria-label="Hide progress bar" />
 										<span class="slider round"></span>
 									</label>
 									<span>Hide progress bar</span>
@@ -7058,16 +7106,16 @@ input:checked + .slider:before {
                     <input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-effect-options" />
                     <label class="collapsible-label" for="wrapper-multi-alert-effect-options"><span>✨ Event animations &amp; sound effects</span></label>
                     <div class="collapsible-text">
-                        <div class="options ssn-alert-setup"><div class="options_group">
-                            <p class="ssn-alert-intro">Pair an event with media and sound in your Multi-Alerts overlay.</p>
+                        <div class="options ssn-alert-setup popup-settings-panel"><div class="options_group">
+
 
                             <details open style="width: 95%; margin-top: 6px;">
-                                    <summary>Set up an alert</summary>
+                                    <summary>✨ Alert 1<small id="multi-alert-effect1-summary" class="ssn-effect-summary">Not configured</small></summary>
                                     <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px 0;">
                                         <div><label class="switch"><input type="checkbox" id="multi-alert-effect1-enabled" checked aria-label="Enable alert 1" /><span class="slider round"></span></label><label for="multi-alert-effect1-enabled">Enable alert</label></div>
                                         <select id="multi-alert-effect1-state" data-optionparam25="effect1enabled" hidden aria-hidden="true"><option value="">Enabled</option><option value="false">Disabled</option></select>
-                                        <div><button type="button" id="multi-alert-effect1-preset" class="tts-test-button" style="margin: 2px 1px;">Use $100 donation preset</button></div>
-                                        <label for="multi-alert-effect1-type">Event</label>
+                                        <div><button type="button" id="multi-alert-effect1-preset" class="tts-test-button" style="margin: 2px 1px;">💵 $100 donation preset</button></div>
+                                        <label for="multi-alert-effect1-type">🎯 Event</label>
                                         <select id="multi-alert-effect1-type" class="textInput" data-optionparam25="effect1type">
                                             <option value="donation">Donation / paid gift</option>
                                             <option value="follow">Follow</option>
@@ -7079,7 +7127,7 @@ input:checked + .slider:before {
                                         </select>
                                         <div class="textInputContainer textInputWithUpload" style="width: 100%;">
                                             <input type="text" id="multi-alert-effect1-media" class="textInput instant" data-textparam25="effect1media" placeholder="Direct GIF/image/video URL (not a Giphy page link)" autocomplete="off" />
-                                            <label for="multi-alert-effect1-media">GIF, image or video (optional)</label>
+                                            <label for="multi-alert-effect1-media">🖼️ Media (optional)</label>
                                             <button type="button" id="uploadMultiEffect1MediaBtn" class="textInputUploadButton">Upload</button>
                                         </div>
                                         <div class="textInputContainer textInputWithUpload" style="width: 100%;">
@@ -7087,8 +7135,8 @@ input:checked + .slider:before {
                                             <label for="multi-alert-effect1-sound">Sound URL</label>
                                             <button type="button" id="uploadMultiEffect1SoundBtn" class="textInputUploadButton">Upload</button>
                                         </div>
-                                        <details class="ssn-effect-advanced"><summary>Amount limits (USD)</summary>
-                                            <p>Donations and bits use estimated USD. For exactly $100, set both limits to 100. Blank limits allow any amount.</p>
+                                        <details class="ssn-effect-advanced"><summary>💵 Amount limits (USD)</summary>
+
                                         <div class="textInputContainer" style="width: 100%;">
                                             <input type="text" inputmode="decimal" id="multi-alert-effect1-min" class="textInput instant" data-textparam25="effect1min" placeholder="Any amount" autocomplete="off" />
                                             <label for="multi-alert-effect1-min">Minimum USD</label>
@@ -7099,16 +7147,16 @@ input:checked + .slider:before {
                                         </div>
 
                                         </details>
-                                        <button type="button" id="multi-alert-effect1-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;">Test alert</button><span id="multi-alert-effect1-status" role="status" aria-live="polite"></span>
+                                        <button type="button" id="multi-alert-effect1-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;">▶ Test alert</button><div class="ssn-effect-management"><button type="button" id="multi-alert-effect1-clear-sound" class="tts-test-button">🔇 Clear sound</button><button type="button" id="multi-alert-effect1-reset" class="tts-test-button">↺ Reset alert</button></div><span id="multi-alert-effect1-status" role="status" aria-live="polite"></span>
                                     </div>
                                 </details>
                                 <details style="width: 95%; margin-top: 6px;">
-                                    <summary>Additional alert 2</summary>
+                                    <summary>✨ Alert 2<small id="multi-alert-effect2-summary" class="ssn-effect-summary">Not configured</small></summary>
                                     <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px 0;">
                                         <div><label class="switch"><input type="checkbox" id="multi-alert-effect2-enabled" checked aria-label="Enable alert 2" /><span class="slider round"></span></label><label for="multi-alert-effect2-enabled">Enable alert</label></div>
                                         <select id="multi-alert-effect2-state" data-optionparam25="effect2enabled" hidden aria-hidden="true"><option value="">Enabled</option><option value="false">Disabled</option></select>
-                                        <div><button type="button" id="multi-alert-effect2-preset" class="tts-test-button" style="margin: 2px 1px;">Use $100 donation preset</button></div>
-                                        <label for="multi-alert-effect2-type">Event</label>
+                                        <div><button type="button" id="multi-alert-effect2-preset" class="tts-test-button" style="margin: 2px 1px;">💵 $100 donation preset</button></div>
+                                        <label for="multi-alert-effect2-type">🎯 Event</label>
                                         <select id="multi-alert-effect2-type" class="textInput" data-optionparam25="effect2type">
                                             <option value="donation">Donation / paid gift</option>
                                             <option value="follow">Follow</option>
@@ -7120,7 +7168,7 @@ input:checked + .slider:before {
                                         </select>
                                         <div class="textInputContainer textInputWithUpload" style="width: 100%;">
                                             <input type="text" id="multi-alert-effect2-media" class="textInput instant" data-textparam25="effect2media" placeholder="Direct GIF/image/video URL (not a Giphy page link)" autocomplete="off" />
-                                            <label for="multi-alert-effect2-media">GIF, image or video (optional)</label>
+                                            <label for="multi-alert-effect2-media">🖼️ Media (optional)</label>
                                             <button type="button" id="uploadMultiEffect2MediaBtn" class="textInputUploadButton">Upload</button>
                                         </div>
                                         <div class="textInputContainer textInputWithUpload" style="width: 100%;">
@@ -7128,8 +7176,8 @@ input:checked + .slider:before {
                                             <label for="multi-alert-effect2-sound">Sound URL</label>
                                             <button type="button" id="uploadMultiEffect2SoundBtn" class="textInputUploadButton">Upload</button>
                                         </div>
-                                        <details class="ssn-effect-advanced"><summary>Amount limits (USD)</summary>
-                                            <p>Donations and bits use estimated USD. For exactly $100, set both limits to 100. Blank limits allow any amount.</p>
+                                        <details class="ssn-effect-advanced"><summary>💵 Amount limits (USD)</summary>
+
                                         <div class="textInputContainer" style="width: 100%;">
                                             <input type="text" inputmode="decimal" id="multi-alert-effect2-min" class="textInput instant" data-textparam25="effect2min" placeholder="Any amount" autocomplete="off" />
                                             <label for="multi-alert-effect2-min">Minimum USD</label>
@@ -7140,16 +7188,16 @@ input:checked + .slider:before {
                                         </div>
 
                                         </details>
-                                        <button type="button" id="multi-alert-effect2-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;">Test alert</button><span id="multi-alert-effect2-status" role="status" aria-live="polite"></span>
+                                        <button type="button" id="multi-alert-effect2-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;">▶ Test alert</button><div class="ssn-effect-management"><button type="button" id="multi-alert-effect2-clear-sound" class="tts-test-button">🔇 Clear sound</button><button type="button" id="multi-alert-effect2-reset" class="tts-test-button">↺ Reset alert</button></div><span id="multi-alert-effect2-status" role="status" aria-live="polite"></span>
                                     </div>
                                 </details>
                                 <details style="width: 95%; margin-top: 6px;">
-                                    <summary>Additional alert 3</summary>
+                                    <summary>✨ Alert 3<small id="multi-alert-effect3-summary" class="ssn-effect-summary">Not configured</small></summary>
                                     <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px 0;">
                                         <div><label class="switch"><input type="checkbox" id="multi-alert-effect3-enabled" checked aria-label="Enable alert 3" /><span class="slider round"></span></label><label for="multi-alert-effect3-enabled">Enable alert</label></div>
                                         <select id="multi-alert-effect3-state" data-optionparam25="effect3enabled" hidden aria-hidden="true"><option value="">Enabled</option><option value="false">Disabled</option></select>
-                                        <div><button type="button" id="multi-alert-effect3-preset" class="tts-test-button" style="margin: 2px 1px;">Use $100 donation preset</button></div>
-                                        <label for="multi-alert-effect3-type">Event</label>
+                                        <div><button type="button" id="multi-alert-effect3-preset" class="tts-test-button" style="margin: 2px 1px;">💵 $100 donation preset</button></div>
+                                        <label for="multi-alert-effect3-type">🎯 Event</label>
                                         <select id="multi-alert-effect3-type" class="textInput" data-optionparam25="effect3type">
                                             <option value="donation">Donation / paid gift</option>
                                             <option value="follow">Follow</option>
@@ -7161,7 +7209,7 @@ input:checked + .slider:before {
                                         </select>
                                         <div class="textInputContainer textInputWithUpload" style="width: 100%;">
                                             <input type="text" id="multi-alert-effect3-media" class="textInput instant" data-textparam25="effect3media" placeholder="Direct GIF/image/video URL (not a Giphy page link)" autocomplete="off" />
-                                            <label for="multi-alert-effect3-media">GIF, image or video (optional)</label>
+                                            <label for="multi-alert-effect3-media">🖼️ Media (optional)</label>
                                             <button type="button" id="uploadMultiEffect3MediaBtn" class="textInputUploadButton">Upload</button>
                                         </div>
                                         <div class="textInputContainer textInputWithUpload" style="width: 100%;">
@@ -7169,8 +7217,8 @@ input:checked + .slider:before {
                                             <label for="multi-alert-effect3-sound">Sound URL</label>
                                             <button type="button" id="uploadMultiEffect3SoundBtn" class="textInputUploadButton">Upload</button>
                                         </div>
-                                        <details class="ssn-effect-advanced"><summary>Amount limits (USD)</summary>
-                                            <p>Donations and bits use estimated USD. For exactly $100, set both limits to 100. Blank limits allow any amount.</p>
+                                        <details class="ssn-effect-advanced"><summary>💵 Amount limits (USD)</summary>
+
                                         <div class="textInputContainer" style="width: 100%;">
                                             <input type="text" inputmode="decimal" id="multi-alert-effect3-min" class="textInput instant" data-textparam25="effect3min" placeholder="Any amount" autocomplete="off" />
                                             <label for="multi-alert-effect3-min">Minimum USD</label>
@@ -7181,14 +7229,10 @@ input:checked + .slider:before {
                                         </div>
 
                                         </details>
-                                        <button type="button" id="multi-alert-effect3-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;">Test alert</button><span id="multi-alert-effect3-status" role="status" aria-live="polite"></span>
+                                        <button type="button" id="multi-alert-effect3-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;">▶ Test alert</button><div class="ssn-effect-management"><button type="button" id="multi-alert-effect3-clear-sound" class="tts-test-button">🔇 Clear sound</button><button type="button" id="multi-alert-effect3-reset" class="tts-test-button">↺ Reset alert</button></div><span id="multi-alert-effect3-status" role="status" aria-live="polite"></span>
                                     </div>
                                 </details>
-                            <details class="ssn-alert-help"><summary>How alerts work</summary>
-                                <p>The first matching alert is used. Platform and category filters still apply. Turn off Enable alert to pause it without losing your settings.</p>
-                                <p>Test alert previews locally. Set volume under Sound &amp; Timing.</p>
-                                <p>For sequences and OBS effects, use Event Flow templates with the Flow Actions overlay. Use one overlay for each event's sound to avoid playing it twice.</p>
-                            </details>
+                            <p class="popup-guide-link"><a href="./docs/alert-effects.html" target="_blank" rel="noopener">?✨ Alert setup guide</a></p>
                         </div></div>
                     </div>
                 </div>
@@ -7211,20 +7255,20 @@ input:checked + .slider:before {
 									</select>
 								</div>
 								<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
-									<button type="button" id="multi-alert-preview-follow" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Follow</button>
-									<button type="button" id="multi-alert-preview-sub" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Sub</button>
-									<button type="button" id="multi-alert-preview-dono" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Donation</button>
-									<button type="button" id="multi-alert-preview-bits" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Bits</button>
-									<button type="button" id="multi-alert-preview-raid" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Raid</button>
-									<button type="button" id="multi-alert-preview-auction" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Auction</button>
-									<button type="button" id="multi-alert-preview-hype" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Hype</button>
-									<button type="button" id="multi-alert-preview-clear" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Clear</button>
+									<button type="button" id="multi-alert-preview-follow" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;">Follow</button>
+									<button type="button" id="multi-alert-preview-sub" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;">Sub</button>
+									<button type="button" id="multi-alert-preview-dono" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;">Donation</button>
+									<button type="button" id="multi-alert-preview-bits" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;">Bits</button>
+									<button type="button" id="multi-alert-preview-raid" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;">Raid</button>
+									<button type="button" id="multi-alert-preview-auction" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;">Auction</button>
+									<button type="button" id="multi-alert-preview-hype" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;">Hype</button>
+									<button type="button" id="multi-alert-preview-clear" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;">Clear</button>
 									<button type="button" id="multi-alert-preview-mute" class="overlayButton" style="flex: 0 0 auto; min-width: 0; white-space: nowrap; opacity: 0.6;" title="Mute preview sound">🔊</button>
 								</div>
 								<div style="width: 100%; height: 280px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: linear-gradient(135deg, rgba(10,12,18,0.94), rgba(19,24,35,0.92));">
 									<iframe id="multi-alerts-preview-frame" title="Multi alert preview" style="width: 100%; height: 100%; border: 0; background: transparent;" loading="lazy" allow="autoplay"></iframe>
 								</div>
-								<small style="display: block; margin-top: 10px; opacity: 0.8;">Use the buttons above to send test alerts into the preview. This uses the real multi-alert overlay renderer in a local iframe, so theme, visibility, disabled categories, media, and timing changes match the live browser source.</small>
+								<small class="popup-guide-link">Local preview ? <a href="./docs/alert-effects.html#testing" target="_blank" rel="noopener">📖 Preview help</a></small>
 							</div>
 						</div>
 					</div>
@@ -7864,8 +7908,8 @@ input:checked + .slider:before {
 										<label>Extra feed (mm)<br><input type="number" min="0" max="25" step="0.1" value="1" class="textInput" style="width:90px" data-numbersetting="printerFeed"></label>
 										<label>Driver margins<br><select class="textInput" data-optionsetting="printerMarginMode"><option value="printableArea" selected>Use printable area</option><option value="none">Use full paper</option></select></label>
 									</div>
-									<div style="margin-top:10px;"><button type="button" id="testThermalPrinter">Print alignment test</button> <span id="thermalPrinterStatus" role="status"></span></div>
-									<p>The test's side borders mark the safe width, not the paper edges; its height follows the test text. If a side is missing, increase that margin. For 3 × 1-inch stock: 76.2 mm width, 25.4 mm fixed length when the 1-inch side feeds through. Match Windows too. <a href="./docs/thermal-printer-guide.html" target="_blank">Printer setup guide</a>.</p>
+									<div style="margin-top:10px;"><button type="button" id="testThermalPrinter" class="tts-test-button">🖨️ Print test</button> <span id="thermalPrinterStatus" role="status"></span></div>
+									<p class="popup-guide-link"><a href="./docs/thermal-printer-guide.html" target="_blank" rel="noopener">📖 Printer setup guide</a></p>
 								</div>
                                 <div title="Some sites may wish to access your stream ID for custom third party integrations">
                                     <label class="switch">
@@ -8194,35 +8238,34 @@ input:checked + .slider:before {
                                     <button id="viewPointsLeaderboard" class="button" data-translate="view-points-leaderboard">View Leaderboard</button>
                                 </div>
 
-                                <details id="sticker-rewards-settings" style="margin-top:15px;border:1px solid var(--color-border);border-radius:8px;padding:12px;">
-                                    <summary style="cursor:pointer;font-weight:bold;">Sticker rewards · let viewers spend points</summary>
-                                    <p>Turn loyalty points into on-screen stickers. Off until you enable it and choose a pack. Viewers use <code>!stickers</code> and <code>!sticker launch</code>.</p>
-                                    <label><input type="checkbox" name="sticker-enabled"> Enable sticker rewards</label>
+                                <details id="sticker-rewards-settings" class="popup-settings-panel popup-subsection">
+                                    <summary style="cursor:pointer;font-weight:bold;">🎟️ Sticker rewards</summary>
+                                    <p class="popup-guide-link"><a href="./docs/sticker-gallery.html" target="_blank" rel="noopener">🖼️ Packs &amp; setup guide</a></p>
+                                    <div class="popup-toggle-row"><label class="switch"><input type="checkbox" name="sticker-enabled" id="sticker-enabled"><span class="slider round"></span></label><label for="sticker-enabled">Enable sticker rewards</label></div>
                                     <div id="sticker-pack-options"></div>
-                                    <p><a href="./docs/sticker-gallery.html" target="_blank" rel="noopener">Browse packs &amp; previews</a> · <a href="./docs/inspiration.html" target="_blank" rel="noopener">Get stream ideas</a></p>
-                                    <p>Add this link as an OBS Browser Source (keep it active):</p>
+                                    <p>🔗 OBS browser source</p>
                                     <div id="stickeroverlay"></div>
-                                    <p>Or add <code>&amp;stickers</code> to your Multi-Alerts or Event Stream link. Use one of these display options to avoid showing the same sticker twice.</p>
+                                    <details class="popup-subsection"><summary>⚙️ Timing &amp; chat replies</summary>
                                     <div style="display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin:12px 0;">
                                         <label>Show for (seconds) <input type="number" name="sticker-duration" min="2" max="15" value="6" style="width:65px"></label>
                                         <label>Per-viewer cooldown (seconds) <input type="number" name="sticker-userCooldown" min="5" max="3600" value="60" style="width:65px"></label>
                                         <label>Per-sticker cooldown (seconds) <input type="number" name="sticker-stickerCooldown" min="5" max="3600" value="20" style="width:65px"></label>
                                         <label>Quiet gap (seconds) <input type="number" name="sticker-gap" min="1" max="60" value="3" style="width:65px"></label>
                                     </div>
-                                    <label><input type="checkbox" name="sticker-replies" checked> Reply to sticker commands in the originating chat, when that source supports replies</label>
+                                    <div class="popup-toggle-row"><label class="switch"><input type="checkbox" name="sticker-replies" id="sticker-replies" checked><span class="slider round"></span></label><label for="sticker-replies">Reply to sticker commands</label></div></details>
                                     <details id="sticker-custom-form" style="margin-top:12px;">
-                                        <summary>My images &amp; GIPHY GIFs</summary>
-                                        <p>Add media you have permission to use. For GIPHY, paste a direct media link ending in .gif or .webp, not the GIPHY page. Only your approved URLs are available to viewers.</p>
+                                        <summary>🖼️ Custom images &amp; GIFs</summary>
+                                        <small>Use a direct HTTPS image or GIF link.</small>
                                         <div style="display:grid;gap:8px;">
                                             <label>Name <input type="text" id="sticker-custom-name" maxlength="60"></label>
                                             <label>Short chat code <input type="text" id="sticker-custom-code" maxlength="32" pattern="[a-z0-9-]+"></label>
                                             <label>Direct HTTPS image / GIF URL <input type="url" id="sticker-custom-url" maxlength="2048" style="width:95%"></label>
                                             <label>Points <input type="number" id="sticker-custom-cost" min="1" max="1000000" value="100"></label>
-                                            <button type="button" id="sticker-custom-add" class="button">Add custom sticker</button>
+                                            <button type="button" id="sticker-custom-add" class="button">＋ Add sticker</button>
                                         </div>
                                         <div id="sticker-custom-list"></div>
                                     </details>
-                                    <p id="sticker-settings-status" role="status">Requires loyalty points and a connected sticker overlay. One sticker at a time; no backlog.</p>
+                                    <p id="sticker-settings-status" role="status">Requires loyalty points and an open sticker overlay.</p>
                                 </details>
 
                                 <h4 style="margin-top: 15px;">Backup & Restore</h4>
@@ -10545,7 +10588,7 @@ input:checked + .slider:before {
 							<br /><br />
 							<div>
 								🎭 Voice to use:
-								<select id="kokoroVoiceSelect10" data-optionparam10="voicekokoro" title="Select the Kokoro TTS Voice">
+								<select id="kokoroVoiceSelect10" data-optionparam10="voicekokoro" title="Select the Kokoro TTS Voice" class="textInput popup-reviewed-control" aria-label="Kokoro voice">
 									<option value="af_heart">Heart (American Female)</option><option value="af_alloy">Alloy (American Female)</option><option selected value="af_aoede">Aoede (American Female)</option><option value="af_bella">Bella (American Female)</option><option value="af_jessica">Jessica (American Female)</option><option value="af_kore">Kore (American Female)</option><option value="af_nicole">Nicole (American Female)</option><option value="af_nova">Nova (American Female)</option><option value="af_river">River (American Female)</option><option value="af_sarah">Sarah (American Female)</option><option value="af_sky">Sky (American Female)</option><option value="am_adam">Adam (American Male)</option><option value="am_echo">Echo (American Male)</option><option value="am_eric">Eric (American Male)</option><option value="am_fenrir">Fenrir (American Male)</option><option value="am_liam">Liam (American Male)</option><option value="am_michael">Michael (American Male)</option><option value="am_onyx">Onyx (American Male)</option><option value="am_puck">Puck (American Male)</option><option value="am_santa">Santa (American Male)</option><option value="bf_emma">Emma (British Female)</option><option value="bf_isabella">Isabella (British Female)</option><option value="bm_george">George (British Male)</option><option value="bm_lewis">Lewis (British Male)</option><option value="bf_alice">Alice (British Female)</option><option value="bf_lily">Lily (British Female)</option><option value="bm_daniel">Daniel (British Male)</option><option value="bm_fable">Fable (British Male)</option>
 
 <optgroup label="Spanish"><option value="ef_dora">Dora (Spanish)</option><option value="em_alex">Alex (Spanish)</option><option value="em_santa">Santa (Spanish)</option></optgroup>
@@ -11499,7 +11542,7 @@ input:checked + .slider:before {
                                 </div>
                                 <div>
                                     <label class="switch">
-                                        <input type="checkbox" data-param4="hidetitle" />
+                                        <input type="checkbox" data-param4="hidetitle" aria-label="Hide alert title" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="do-not-show-the-sub-title">🧹 Do not show the title "current viewer count"</span>
@@ -11797,7 +11840,7 @@ input:checked + .slider:before {
 								</div>
 									<div>
 										<label class="switch">
-											<input type="checkbox" data-param24="hidetitle" />
+											<input type="checkbox" data-param24="hidetitle" aria-label="Hide alert title" />
 											<span class="slider round"></span>
 										</label>
 										<span>🧹 Hide header title</span>
@@ -12097,20 +12140,20 @@ input:checked + .slider:before {
                                     </select>
                                 </div>
                                 <div>
-                                    <a id="tipjar-style-preview" href="https://socialstream.ninja/tipjar-preview.html" target="_blank" rel="noopener">Preview all styles safely</a>
+                                    <a id="tipjar-style-preview" href="https://socialstream.ninja/tipjar-preview.html" target="_blank" rel="noopener">🖼️ Preview styles</a>
                                     <small style="display:block;opacity:0.8">Uses sample totals without sending donations to your overlays.</small>
                                 </div>
                                 <div>
-                                    <label class="switch"><input type="checkbox" data-param12="refresh" /><span class="slider round"></span></label>
-                                    <span>Refreshed appearance for existing styles (optional)</span>
+                                    <label class="switch"><input type="checkbox" data-param12="refresh" aria-label="Refresh classic styles" /><span class="slider round"></span></label>
+                                    <span>✨ Refresh classic styles</span>
                                     <small style="display:block;opacity:0.8">Leave off to keep the original sizing, colors, and animation.</small>
                                 </div>
-                                <h3>New panel styles only</h3>
+                                <details class="popup-settings-panel popup-subsection"><summary>🎨 Panel styling</summary>
                                 <small>These controls apply to Goal Card, Progress Ring, Lower Third, and Segmented Bar.</small>
-                                <div><label>Panel opacity (0–1):</label><input type="number" data-optionparam12="panelopacity" class="textInput" min="0" max="1" step="0.05" placeholder="Default" /></div>
-                                <div><label>Accent color:</label><input type="text" data-optionparam12="accent" class="textInput" placeholder="#66d9b2" /><small style="display:block;opacity:0.8">Use a six-digit hex color. Explicit fill start/end colors still control the progress fill.</small></div>
-                                <div><label>Total text size (12–96 px):</label><input type="number" data-optionparam12="amountsize" class="textInput" min="12" max="96" placeholder="Default" /></div>
-                                <div><label class="switch"><input type="checkbox" data-param12="hidepercent" /><span class="slider round"></span></label><span>Hide percentage on new panel styles</span></div>
+                                <div><label for="tipjar-panelopacity">Panel opacity (0–1)</label><input id="tipjar-panelopacity" type="number" data-optionparam12="panelopacity" class="textInput" min="0" max="1" step="0.05" placeholder="Default" /></div>
+                                <div><label for="tipjar-accent">Accent color</label><input id="tipjar-accent" type="text" data-optionparam12="accent" class="textInput" placeholder="#66d9b2" /><small style="display:block;opacity:0.8">Use a six-digit hex color. Explicit fill start/end colors still control the progress fill.</small></div>
+                                <div><label for="tipjar-amountsize">Total text size (12–96 px)</label><input id="tipjar-amountsize" type="number" data-optionparam12="amountsize" class="textInput" min="12" max="96" placeholder="Default" /></div>
+                                <div><label class="switch"><input type="checkbox" data-param12="hidepercent" aria-label="Hide percentage" /><span class="slider round"></span></label><span>Hide percentage on new panel styles</span></div></details>
                                 <div>
                                     <label><span data-translate="theme">Theme:</span></label>
                                     <select data-optionparam12="theme" class="textInput">
@@ -12487,7 +12530,7 @@ input:checked + .slider:before {
                                 </div>
                                 <div>
                                     <label class="switch">
-                                        <input type="checkbox" data-param5="hidetitle" />
+                                        <input type="checkbox" data-param5="hidetitle" aria-label="Hide alert title" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="do-not-show-the-queue-instructions">🧹 Do not show the !queue instructions </span>
@@ -12737,7 +12780,7 @@ input:checked + .slider:before {
                             <br /><br />
                             <div>
                                 🎭 Voice to use:
-                                <select id="kokoroVoiceSelect18" data-optionparam18="voicekokoro" title="Select the Kokoro TTS Voice">
+                                <select id="kokoroVoiceSelect18" data-optionparam18="voicekokoro" title="Select the Kokoro TTS Voice" class="textInput popup-reviewed-control" aria-label="Kokoro voice">
                                     <option value="af_heart">Heart (American Female)</option><option value="af_alloy">Alloy (American Female)</option><option selected value="af_aoede">Aoede (American Female)</option><option value="af_bella">Bella (American Female)</option><option value="af_jessica">Jessica (American Female)</option><option value="af_kore">Kore (American Female)</option><option value="af_nicole">Nicole (American Female)</option><option value="af_nova">Nova (American Female)</option><option value="af_river">River (American Female)</option><option value="af_sarah">Sarah (American Female)</option><option value="af_sky">Sky (American Female)</option><option value="am_adam">Adam (American Male)</option><option value="am_echo">Echo (American Male)</option><option value="am_eric">Eric (American Male)</option><option value="am_fenrir">Fenrir (American Male)</option><option value="am_liam">Liam (American Male)</option><option value="am_michael">Michael (American Male)</option><option value="am_onyx">Onyx (American Male)</option><option value="am_puck">Puck (American Male)</option><option value="am_santa">Santa (American Male)</option><option value="bf_emma">Emma (British Female)</option><option value="bf_isabella">Isabella (British Female)</option><option value="bm_george">George (British Male)</option><option value="bm_lewis">Lewis (British Male)</option><option value="bf_alice">Alice (British Female)</option><option value="bf_lily">Lily (British Female)</option><option value="bm_daniel">Daniel (British Male)</option><option value="bm_fable">Fable (British Male)</option>
 
 <optgroup label="Spanish"><option value="ef_dora">Dora (Spanish)</option><option value="em_alex">Alex (Spanish)</option><option value="em_santa">Santa (Spanish)</option></optgroup>
@@ -14237,15 +14280,14 @@ input:checked + .slider:before {
 								</div>
 								<br>
 
-								<details>
-									<summary>Custom scoreboard wording / translations</summary>
+								<details class="popup-settings-panel"><summary>✏️ Scoreboard wording</summary>
 									<p>Leave fields blank to use the default wording. Use {count} for the number of ranked viewers.</p>
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" id="scoreboardRankedText" class="textInput instant" autocomplete="off" placeholder="{count} ranked viewers" data-textparam21="rankedtext" />
 										<label for="scoreboardRankedText">&gt; Ranked viewers text ({count})</label>
 									</div>
 									<div>
-										<label class="switch"><input type="checkbox" data-param21="hidereason" /><span class="slider round"></span></label>
+										<label class="switch"><input type="checkbox" data-param21="hidereason" aria-label="Hide update reason" /><span class="slider round"></span></label>
 										<span>Hide update reason (message, live, etc.)</span>
 									</div>
 									<div class="textInputContainer" style="width: 95%;">
@@ -14289,7 +14331,7 @@ input:checked + .slider:before {
 						<div class="options">
 							<!-- Common Overlay Options (shared by most fixed themes) -->
 							<div class="overlay-config-section" id="common-overlay-config" style="display: none;">
-<div title="Illustrated themes only; other animations keep their existing settings."><label class="switch"><input type="checkbox" data-param30="staticart" /><span class="slider round"></span></label><span>Keep illustrated characters still</span></div>
+<div title="Illustrated themes only; other animations keep their existing settings."><label class="switch"><input type="checkbox" data-param30="staticart" aria-label="Keep illustrated characters still" /><span class="slider round"></span></label><span>⏸️ Keep illustrated characters still</span></div>
 								<h3>🎛️ <span data-translate="common-overlay-options">Common Options</span></h3>
 								<div title="Hides messages flagged as bots from this overlay only. Your dock keeps showing them.">
 									<label class="switch">
@@ -14668,45 +14710,86 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-<div class="link" title="Monetization"><h2><span>💝 Monetization</span></h2>
-<details id="monetization-settings"><summary>Wishlist rank-ups, gifts &amp; tips</summary>
-<label>Support option <select id="money-mode"><option value="wishlist">Amazon Wishlist Rank-Up</option><option value="ninja">NinjaBacker donations</option><option value="throne">Throne gifts</option><option value="ebay">eBay product showcase (setup required)</option></select></label>
-<div id="money-wishlist-panel"><label><input id="money-wishlist-enabled" type="checkbox"> Enable Wishlist Rank-Up</label><label>Public wishlist URL<input id="money-wishlist-url" type="url" placeholder="https://www.amazon.com/hz/wishlist/ls/..."></label><button id="money-load" type="button">Load wishlist</button>
-<p>Cheapest first. Confirm purchases here to unlock the next item. Amazon does not provide a reliable public purchase feed or buyer identity.</p><p id="money-current"></p><div id="money-items"></div><label>Buyer name, if known<input id="money-buyer" type="text" maxlength="60" placeholder="Optional"></label><div class="money-actions"><button id="money-complete" type="button" disabled>Confirm current item bought</button><button id="money-undo" type="button" disabled>Undo last confirmation</button></div>
-<details><summary>Add an item manually</summary><label>Item name<input id="money-item-name" type="text" maxlength="180"></label><label>Price <input id="money-item-price" type="number" min="0.01" step="0.01"> <select id="money-item-currency" aria-label="Currency"><option>USD</option><option>CAD</option><option>GBP</option><option>EUR</option><option>AUD</option><option>JPY</option><option>INR</option></select></label><label>Wishlist item link (optional)<input id="money-item-url" type="url"></label><label>Image URL (optional)<input id="money-item-image" type="url"></label><button id="money-add" type="button">Add item</button></details>
-<label><input type="checkbox" id="money-wishlist-qr" checked> Show QR code</label><label>Overlay corner <select id="money-wishlist-position"><option value="br">Bottom right</option><option value="tl">Top left</option></select></label><label><input type="checkbox" id="money-wishlist-announce"> Announce purchases and the next item in chat</label><label><input type="checkbox" id="money-wishlist-interval"> Repeat the link every <input id="money-wishlist-minutes" type="number" min="5" max="120" value="15" aria-label="Announcement interval in minutes"> minutes</label></div>
-<div id="money-ninja-panel" hidden><label><input id="money-ninja-enabled" type="checkbox"> Enable NinjaBacker donation source</label><p>0% NinjaBacker platform commission; payment processing fees still apply.</p><label>NinjaBacker username<input id="money-ninja-username" type="text" maxlength="50" placeholder="Your username"></label><label>Private Tip ID, for alerts<input id="money-ninja-token" type="password" autocomplete="off" maxlength="128" placeholder="From your NinjaBacker dashboard"></label><label><input id="money-ninja-clear-token" type="checkbox"> Clear saved Tip ID</label><p>The Tip ID stays on this device and is never included in your overlay link. Use the ID from the same account as the username.</p><label>Delivery <select id="money-ninja-delivery"><option value="live">Live feed (simple)</option><option value="reliable">Reliable webhook</option></select></label><p id="money-ninja-live-help">Live alerts only: tips received while disconnected are not replayed.</p><div id="money-ninja-reliable-panel" hidden><label>NinjaBacker signing secret<input id="money-ninja-secret" type="password" autocomplete="off" maxlength="256" placeholder="Generate in the NinjaBacker dashboard"></label><p>Save setup, then paste this receiver URL into NinjaBacker's Webhook setting and send a dashboard test tip.</p><label>Receiver URL<input id="money-ninja-webhook" type="text" readonly placeholder="Save setup to generate"></label><p>Tips can queue for 7 days while SSN is off. Pausing keeps the queue; switching back to Live feed deletes it. Remove the old Webhook URL in NinjaBacker when switching back.</p></div><p><a href="https://ninjabacker.com/dashboard" target="_blank" rel="noopener noreferrer">Open NinjaBacker dashboard</a></p><label>Public tip link for your stream description<input id="money-ninja-link" type="text" readonly></label><p id="money-ninja-status" role="status"></p><label><input type="checkbox" id="money-ninja-qr"> Show QR code</label><label>Overlay corner <select id="money-ninja-position"><option value="br">Bottom right</option><option value="tl">Top left</option></select></label><label><input type="checkbox" id="money-ninja-announce"> Announce the tip link when enabled</label><label><input type="checkbox" id="money-ninja-interval"> Repeat the link every <input id="money-ninja-minutes" type="number" min="5" max="120" value="15" aria-label="Announcement interval in minutes"> minutes</label></div>
-<div id="money-ebay-panel" hidden>
-<p>Show your own listings. Paid purchases anywhere on this list trigger an alert.</p>
+<div class="link" title="Monetization"><h2 class="monetization-title"><span>💵 Monetization</span></h2>
+<details id="monetization-settings" class="popup-settings-panel"><summary>🛍️ Platforms, products &amp; tips</summary>
+<div class="money-actions"><button id="money-save" type="button">💾 Save setup</button><a href="docs/monetization.html" target="_blank" rel="noopener">📖 Setup guide</a></div>
+<section class="money-platform" id="money-provider-section">
+<details id="money-provider-panel"><summary data-translate="commerce-connections">Fourthwall, Ko-fi &amp; Buy Me a Coffee alerts</summary>
+<label><span data-translate="commerce-provider">Provider</span><select id="money-provider"><option value="fourthwall">Fourthwall</option><option value="kofi">Ko-fi</option><option value="bmac">Buy Me a Coffee</option></select></label>
+<label><span data-translate="commerce-receiver-url">Private webhook URL</span><input id="money-provider-url" type="password" readonly autocomplete="off"></label>
+<div class="money-actions"><button id="money-provider-copy" type="button" data-translate="commerce-copy-webhook">Copy webhook URL</button><button id="money-provider-setting" type="button" data-translate="commerce-receiver-setting">Receiver setting</button><a id="money-provider-guide" href="docs/creator-store-setup.html#fourthwall" target="_blank" rel="noopener" data-translate="commerce-setup-guide">Setup guide</a><a id="money-provider-preview" href="monetization.html?demo&amp;mode=commerce&amp;view=alerts" target="_blank" rel="noopener" data-translate="commerce-safe-preview">Preview sample alert</a></div>
+<p id="money-provider-status" role="status"></p><p id="money-provider-seen" role="status"></p>
+</details></section>
+<section class="money-platform">
+<div class="money-platform-heading"><label class="switch"><input id="money-commerce-enabled" type="checkbox" aria-labelledby="money-commerce-title"><span class="slider round"></span></label><label id="money-commerce-title" for="money-commerce-enabled" data-translate="commerce-title">Products &amp; support links</label></div>
+<details id="money-commerce-panel"><summary data-translate="commerce-setup">Set up products and links</summary>
+<p data-translate="commerce-help">Promote a public product or support page. Connect alerts separately.</p>
+<details class="popup-subsection" id="money-fourthwall-import-panel"><summary data-translate="commerce-import-fourthwall">Import a Fourthwall product</summary>
+<label><span data-translate="commerce-product-link">Fourthwall product URL</span><input id="money-fourthwall-url" type="url" placeholder="https://your-shop.com/products/product-name"></label>
+<label><span data-translate="commerce-storefront-token">Storefront token</span><input id="money-fourthwall-token" type="password" autocomplete="off" maxlength="512"></label>
+<div class="money-actions"><button id="money-fourthwall-import" type="button" data-translate="commerce-load-product">Load product details</button><a href="docs/creator-store-setup.html#import" target="_blank" rel="noopener" data-translate="commerce-setup-guide">Setup guide</a></div><p id="money-fourthwall-status" role="status"></p>
+</details>
+<div id="money-commerce-items"></div>
+<label><span data-translate="commerce-name">Product or page name</span><input id="money-commerce-name" type="text" maxlength="180"></label>
+<label><span data-translate="commerce-url">Public HTTPS link</span><input id="money-commerce-url" type="url" placeholder="https://"></label>
+<label><span data-translate="commerce-image">Image URL (optional)</span><input id="money-commerce-image" type="url" placeholder="https://"></label>
+<label><span data-translate="commerce-price">Price (optional)</span><input id="money-commerce-price" type="number" min="0" step="any"></label>
+<label><span data-translate="commerce-currency">Currency</span><select id="money-commerce-currency"><option>USD</option><option>EUR</option><option>GBP</option><option>CAD</option><option>AUD</option><option>JPY</option></select></label>
+<label><span data-translate="commerce-purpose">Link purpose</span><select id="money-commerce-purpose"><option value="shop" data-translate="commerce-shop">Shop</option><option value="gift" data-translate="commerce-gift">Gift</option><option value="support" data-translate="commerce-support">Support</option><option value="membership" data-translate="commerce-join">Join</option></select></label>
+<button type="button" id="money-commerce-add" data-translate="commerce-add">Add product or link</button><button type="button" id="money-commerce-cancel" data-translate="commerce-cancel" hidden>Cancel edit</button>
+<p data-translate="commerce-save-help">Save setup applies your changes. Prices and availability do not refresh automatically.</p>
+<details class="popup-subsection"><summary data-translate="commerce-display">Display options</summary>
+<label><span data-translate="commerce-selection">Product selection</span><select id="money-commerce-display"><option value="cycle" data-translate="commerce-cycle">Rotate products</option><option value="first" data-translate="commerce-first">Pin the first product</option></select></label>
+<label><span data-translate="commerce-seconds">Seconds per product</span><input id="money-commerce-seconds" type="number" min="15" max="300" value="30"></label>
+<div class="money-toggle"><label class="switch"><input type="checkbox" id="money-commerce-qr" checked aria-labelledby="money-commerce-qr-label"><span class="slider round"></span></label><span id="money-commerce-qr-label" data-translate="commerce-qr">Show QR code</span></div>
+<label><span data-translate="commerce-corner">Overlay corner</span><select id="money-commerce-position"><option value="br" data-translate="commerce-br">Bottom right</option><option value="tl" data-translate="commerce-tl">Top left</option></select></label>
+</details></details></section>
+<section class="money-platform"><div class="money-platform-heading"><label class="switch"><input id="money-wishlist-enabled" type="checkbox" aria-labelledby="money-wishlist-title"><span class="slider round"></span></label><label id="money-wishlist-title" for="money-wishlist-enabled">🎁 Amazon Wishlist Rank-Up</label></div><details id="money-wishlist-panel"><summary>⚙️ Setup</summary><label>Public wishlist URL<input id="money-wishlist-url" type="url" placeholder="https://www.amazon.com/hz/wishlist/ls/..."></label><button id="money-load" type="button">Load wishlist</button>
+<p id="money-current"></p><div id="money-items"></div><label>Buyer name, if known<input id="money-buyer" type="text" maxlength="60" placeholder="Optional"></label><div class="money-actions"><button id="money-complete" type="button" disabled>Confirm current item bought</button><button id="money-undo" type="button" disabled>Undo last confirmation</button></div>
+<details><summary>＋ Add an item manually</summary><label>Item name<input id="money-item-name" type="text" maxlength="180"></label><label>Price <input id="money-item-price" type="number" min="0.01" step="0.01"> <select id="money-item-currency" aria-label="Currency"><option>USD</option><option>CAD</option><option>GBP</option><option>EUR</option><option>AUD</option><option>JPY</option><option>INR</option></select></label><label>Wishlist item link (optional)<input id="money-item-url" type="url"></label><label>Image URL (optional)<input id="money-item-image" type="url"></label><button id="money-add" type="button">Add item</button></details>
+<details class="popup-subsection"><summary>🎨 Overlay &amp; announcements</summary><div class="money-toggle"><label class="switch"><input type="checkbox" id="money-wishlist-qr" checked aria-labelledby="money-wishlist-qr-label"><span class="slider round"></span></label><span id="money-wishlist-qr-label">Show QR code</span></div><label>Overlay corner <select id="money-wishlist-position"><option value="br">Bottom right</option><option value="tl">Top left</option></select></label><div class="money-toggle"><label class="switch"><input type="checkbox" id="money-wishlist-announce" aria-labelledby="money-wishlist-announce-label"><span class="slider round"></span></label><span id="money-wishlist-announce-label">Announce purchases and the next item in chat</span></div><div class="money-toggle"><label class="switch"><input type="checkbox" id="money-wishlist-interval" aria-labelledby="money-wishlist-interval-label"><span class="slider round"></span></label><span id="money-wishlist-interval-label">Repeat the link every <input id="money-wishlist-minutes" type="number" min="5" max="120" value="15" aria-label="Announcement interval in minutes"> minutes</span></div></details></details></section>
+<section class="money-platform"><div class="money-platform-heading"><label class="switch"><input id="money-ninja-enabled" type="checkbox" aria-labelledby="money-ninja-title"><span class="slider round"></span></label><label id="money-ninja-title" for="money-ninja-enabled">🥷 NinjaBacker donations</label></div><details id="money-ninja-panel"><summary>⚙️ Setup</summary><p>Free tipping from the creators of Social Stream Ninja and VDO.Ninja. NinjaBacker takes 0% platform commission; Stripe processing fees apply. Connect your own Stripe account to receive tips directly.</p><label>NinjaBacker username<input id="money-ninja-username" type="text" maxlength="50" placeholder="Your username"></label><label>Private Tip ID, for alerts<input id="money-ninja-token" type="password" autocomplete="off" maxlength="128" placeholder="From your NinjaBacker dashboard"></label><div class="money-toggle"><label class="switch"><input id="money-ninja-clear-token" type="checkbox" aria-labelledby="money-ninja-clear-token-label"><span class="slider round"></span></label><span id="money-ninja-clear-token-label">Clear saved Tip ID</span></div><label>Delivery <select id="money-ninja-delivery"><option value="live">Live feed (simple)</option><option value="reliable">Reliable webhook</option></select></label><p id="money-ninja-live-help">Live alerts only: tips received while disconnected are not replayed.</p><div id="money-ninja-reliable-panel" hidden><label>NinjaBacker signing secret<input id="money-ninja-secret" type="password" autocomplete="off" maxlength="256" placeholder="Generate in the NinjaBacker dashboard"></label><p>Save setup, then paste this receiver URL into NinjaBacker's Webhook setting and send a dashboard test tip.</p><label>Receiver URL<input id="money-ninja-webhook" type="text" readonly placeholder="Save setup to generate"></label><small>Switching to Live feed deletes queued tips. Remove the old webhook too.</small></div><p><a href="https://ninjabacker.com/dashboard" target="_blank" rel="noopener noreferrer">Open NinjaBacker dashboard</a></p><label>🔗 Public tip link<input id="money-ninja-link" type="text" readonly></label><p id="money-ninja-status" role="status"></p><details class="popup-subsection"><summary>🎨 Overlay &amp; announcements</summary><div class="money-toggle"><label class="switch"><input type="checkbox" id="money-ninja-qr" aria-labelledby="money-ninja-qr-label"><span class="slider round"></span></label><span id="money-ninja-qr-label">Show QR code</span></div><label>Overlay corner <select id="money-ninja-position"><option value="br">Bottom right</option><option value="tl">Top left</option></select></label><div class="money-toggle"><label class="switch"><input type="checkbox" id="money-ninja-announce" aria-labelledby="money-ninja-announce-label"><span class="slider round"></span></label><span id="money-ninja-announce-label">Announce the tip link when enabled</span></div><div class="money-toggle"><label class="switch"><input type="checkbox" id="money-ninja-interval" aria-labelledby="money-ninja-interval-label"><span class="slider round"></span></label><span id="money-ninja-interval-label">Repeat the link every <input id="money-ninja-minutes" type="number" min="5" max="120" value="15" aria-label="Announcement interval in minutes"> minutes</span></div></details></details></section>
+<section class="money-platform"><div class="money-platform-heading"><label class="switch"><input id="money-ebay-enabled" type="checkbox" aria-labelledby="money-ebay-title"><span class="slider round"></span></label><label id="money-ebay-title" for="money-ebay-enabled">🛍️ eBay products &amp; sale alerts</label></div><details id="money-ebay-panel"><summary>⚙️ Setup</summary>
+
 <label for="money-ebay-environment">eBay environment</label><select id="money-ebay-environment"><option value="production">Production (real purchases)</option><option value="sandbox">Sandbox (test purchases)</option></select>
 <div class="money-actions"><button id="money-ebay-connect" type="button">Connect eBay</button><button id="money-ebay-disconnect" type="button">Disconnect</button><a id="money-ebay-auth" target="_blank" rel="noopener noreferrer" hidden>Continue to eBay</a></div>
 <p id="money-ebay-status" role="status">Connect your seller account</p>
-<label><input id="money-ebay-enabled" type="checkbox"> Enable product showcase and sale alerts</label>
+
 <label>Your eBay item URL<input id="money-ebay-url" type="url" placeholder="https://www.ebay.com/itm/..."></label><button id="money-ebay-add" type="button">Add product</button>
 <div id="money-ebay-items"></div>
 <label>Show <select id="money-ebay-display"><option value="cycle">Cycle remaining products</option><option value="cheapest">Cheapest remaining product</option><option value="first">First remaining product in list</option></select></label>
 <label id="money-ebay-cycle">Change product every <input id="money-ebay-seconds" type="number" min="10" max="300" value="20"> seconds</label>
-<p>One purchase completes a list entry. Auctions show the current bid and time left; prices refresh about once a minute.</p>
-<label><input id="money-ebay-qr" type="checkbox" checked> Show product QR code</label>
+
+<details class="popup-subsection"><summary>🎨 Overlay &amp; announcements</summary><div class="money-toggle"><label class="switch"><input id="money-ebay-qr" type="checkbox" checked aria-labelledby="money-ebay-qr-label"><span class="slider round"></span></label><span id="money-ebay-qr-label">Show product QR code</span></div>
 <label>Overlay corner <select id="money-ebay-position"><option value="br">Bottom right</option><option value="tl">Top left</option></select></label>
-<label><input id="money-ebay-announce" type="checkbox"> Announce purchases in chat</label>
-<label><input id="money-ebay-interval" type="checkbox"> Post the featured product link every <input id="money-ebay-minutes" type="number" min="5" max="120" value="15" aria-label="eBay announcement interval in minutes"> minutes</label>
-</div>
-<div id="money-throne-panel" hidden>
-<label><input id="money-throne-enabled" type="checkbox"> Enable automatic Throne gift alerts</label>
+<div class="money-toggle"><label class="switch"><input id="money-ebay-announce" type="checkbox" aria-labelledby="money-ebay-announce-label"><span class="slider round"></span></label><span id="money-ebay-announce-label">Announce purchases in chat</span></div>
+<div class="money-toggle"><label class="switch"><input id="money-ebay-interval" type="checkbox" aria-labelledby="money-ebay-interval-label"><span class="slider round"></span></label><span id="money-ebay-interval-label">Post the featured product link every <input id="money-ebay-minutes" type="number" min="5" max="120" value="15" aria-label="eBay announcement interval in minutes"> minutes</span></div>
+</details></details></section>
+<section class="money-platform"><div class="money-platform-heading"><label class="switch"><input id="money-throne-enabled" type="checkbox" aria-labelledby="money-throne-title"><span class="slider round"></span></label><label id="money-throne-title" for="money-throne-enabled">👑 Throne gifts</label></div><details id="money-throne-panel"><summary>⚙️ Setup</summary>
+
 <label>Throne username<input id="money-throne-username" type="text" maxlength="50" placeholder="Your Throne username"></label>
-<p>Completed gifts raise your rank. Contributions show an alert without counting as a completed gift.</p>
+
 <label>Webhook URL for Throne<input id="money-throne-webhook" type="text" readonly placeholder="Enable and save to create your connection"></label><button id="money-throne-copy" type="button">Copy webhook URL</button>
-<p>Save setup, then paste this URL into <a href="https://help.throne.com/en/articles/15935990-how-do-i-set-up-webhook-integration" target="_blank" rel="noopener noreferrer">Throne's Webhook integration</a>. Keep SSN on to receive gifts.</p>
+<p>Save, then paste this URL into <a href="https://help.throne.com/en/articles/15935990-how-do-i-set-up-webhook-integration" target="_blank" rel="noopener noreferrer">Throne's Webhook integration</a>.</p>
 <p id="money-throne-status" role="status"></p>
 <div class="money-actions"><span id="money-throne-rank">Rank 1</span><button id="money-throne-reset" type="button">Reset rank</button></div>
-<label><input id="money-throne-qr" type="checkbox" checked> Show wishlist QR code between gifts</label>
+<details class="popup-subsection"><summary>🎨 Overlay &amp; announcements</summary><div class="money-toggle"><label class="switch"><input id="money-throne-qr" type="checkbox" checked aria-labelledby="money-throne-qr-label"><span class="slider round"></span></label><span id="money-throne-qr-label">Show wishlist QR code between gifts</span></div>
 <label>Overlay corner <select id="money-throne-position"><option value="br">Bottom right</option><option value="tl">Top left</option></select></label>
-<label><input id="money-throne-announce" type="checkbox"> Announce gifts and rank-ups in chat</label>
-<label><input id="money-throne-interval" type="checkbox"> Repeat the wishlist link every <input id="money-throne-minutes" type="number" min="5" max="120" value="15" aria-label="Throne announcement interval in minutes"> minutes</label>
-<p>Shows your gift rank, without guessing which wishlist item unlocks next. Throne checkout fees apply.</p>
-</div>
-<div class="money-actions"><button id="money-save" type="button">Save setup</button><a id="money-overlay" target="_blank" rel="noopener noreferrer">Open overlay</a><button id="money-copy" type="button">Copy OBS link</button><a id="money-preview" href="monetization.html?demo" target="_blank" rel="noopener noreferrer">Preview</a></div><p id="money-status" role="status"></p><p><a href="docs/monetization.html" target="_blank" rel="noopener">Setup guide</a></p></details></div>
+<div class="money-toggle"><label class="switch"><input id="money-throne-announce" type="checkbox" aria-labelledby="money-throne-announce-label"><span class="slider round"></span></label><span id="money-throne-announce-label">Announce gifts and rank-ups in chat</span></div>
+<div class="money-toggle"><label class="switch"><input id="money-throne-interval" type="checkbox" aria-labelledby="money-throne-interval-label"><span class="slider round"></span></label><span id="money-throne-interval-label">Repeat the wishlist link every <input id="money-throne-minutes" type="number" min="5" max="120" value="15" aria-label="Throne announcement interval in minutes"> minutes</span></div>
+
+</details></details></section>
+<label>🔗 OBS overlay for <select id="money-mode"><option value="commerce" data-translate="commerce-title">Products &amp; support links</option><option value="wishlist">Amazon Wishlist Rank-Up</option><option value="ninja">NinjaBacker donations</option><option value="throne">Throne gifts</option><option value="ebay">eBay product showcase</option></select></label>
+<details class="popup-subsection"><summary data-translate="commerce-link-options">Overlay link options</summary>
+<label><span data-translate="commerce-view">Overlay view</span><select id="money-view"><option value="both" data-translate="commerce-both">Showcase and alerts</option><option value="showcase" data-translate="commerce-showcase">Product showcase only</option><option value="card" data-translate="commerce-card">Support card only</option><option value="alerts" data-translate="commerce-alerts">Activity alerts only</option></select></label>
+<label><span data-translate="commerce-style">Style</span><select id="money-style"><option value="default" data-translate="commerce-default">Default</option><option value="compact" data-translate="commerce-compact">Compact</option></select></label>
+<label><span data-translate="commerce-scale">Scale</span><input id="money-scale" type="number" min="0.5" max="2" step="0.1" value="1"></label>
+<label><span data-translate="commerce-schedule">Show card every (seconds; 0 means always)</span><input id="money-cardevery" type="number" min="0" max="3600" value="0"></label>
+<label><span data-translate="commerce-duration">Card visible for (seconds)</span><input id="money-cardfor" type="number" min="15" max="300" value="30"></label>
+<label><span data-translate="commerce-source-filter">Alert source filter (optional, comma-separated)</span><input id="money-onlytype" type="text" placeholder="fourthwall,kofi,bmac"></label>
+<p data-translate="commerce-link-help">These options apply to the copied overlay link. Add separate OBS browser sources for independent showcase and alert views. QR codes help viewers on another device; copy the public link into chat or your stream description for phone viewers.</p>
+</details>
+<div class="money-actions"><a id="money-overlay" target="_blank" rel="noopener noreferrer">↗ Open overlay</a><button id="money-copy" type="button">📋 Copy OBS link</button><a id="money-preview" href="monetization.html?demo" target="_blank" rel="noopener noreferrer">👁️ Preview</a></div><p id="money-status" role="status"></p><p><a href="docs/monetization.html" target="_blank" rel="noopener">Setup guide</a></p></details></div>
 			<!-- GAMES SECTION -->
 			<div class="link" title="Interactive Games">
 				<h2 class="games_mode_title">
@@ -15740,7 +15823,7 @@ input:checked + .slider:before {
 								</div>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param22="hideprogress" />
+										<input type="checkbox" data-param22="hideprogress" aria-label="Hide progress bar" />
 										<span class="slider round"></span>
 									</label>
 									<span>Hide progress bar + timestamps</span>
@@ -16020,6 +16103,7 @@ input:checked + .slider:before {
         <link rel="stylesheet" href="shared/alerts/sound-library.css">
         <script src="shared/alerts/sound-library.js"></script>
         <script type="text/javascript" src="popup.js?v=3"></script>
+        <script src="js/popup-capture-reminder.js"></script>
         <script src="shared/stickers/catalog.js"></script>
         <script src="shared/stickers/popup.js"></script>
 <script src="shared/monetization/core.js"></script>

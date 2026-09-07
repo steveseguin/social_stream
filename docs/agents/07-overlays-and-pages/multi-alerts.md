@@ -199,6 +199,7 @@ Beginner setup uses **When this happens → Show this → Play this sound → Te
 Event animation/sound rules:
 
 - Configure up to three effects in the popup's **Event animations & sound effects** section.
+- `effect1enabled=false`: pauses this rule while preserving its other settings. Missing means enabled for compatibility with existing links.
 - `effect1type`: category (`donation` by default), or `follow`, `subscription`, `bits`, `raid`, `auction`, `hype`.
 - `effect1media`: direct GIF/image/video asset URL. Giphy page links are not asset URLs. GIFs have no audio; video playback remains muted.
 - `effect1sound`: sound asset URL, using the normal `beep` switch and `beepvolume` control.

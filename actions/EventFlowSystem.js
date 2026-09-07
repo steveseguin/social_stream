@@ -2158,6 +2158,18 @@ class EventFlowSystem {
         return text.replace(/\s\s+/g, ' ').trim();
     }
 
+    // Read only own JSON fields; never traverse prototypes through user-entered paths.
+    getMessageProperty(message, path) {
+        const parts = String(path || '').split('.');
+        let value = message;
+        for (const part of parts) {
+            if (!part || ['__proto__', 'prototype', 'constructor'].includes(part) ||
+                !value || typeof value !== 'object' || !Object.prototype.hasOwnProperty.call(value, part)) return undefined;
+            value = value[part];
+        }
+        return value;
+    }
+
     normalizeEventType(eventType) {
         const normalized = typeof eventType === 'string' ? eventType.toLowerCase().trim() : '';
         // Backward compatibility alias: legacy Twitch ad event spelling.
@@ -2543,7 +2555,7 @@ class EventFlowSystem {
                 const rawCompareValue = config.value;
 
                 // Get the property value from the message
-                let msgValue = message[prop];
+                let msgValue = this.getMessageProperty(message, prop);
 
                 // Handle special cases for message length and word count
                 if (prop === 'donationAmount' || prop === 'donoValue' ||
@@ -3207,8 +3219,8 @@ class EventFlowSystem {
 			}
 		}
 
-		return text.replace(/\{(\w+)\}/gi, (match, key) => {
-			const val = messageData[key.toLowerCase()];
+		return text.replace(/\{(\w+(?:\.\w+)*)\}/gi, (match, key) => {
+			const val = key.indexOf('.') !== -1 ? this.getMessageProperty(message, key) : messageData[key.toLowerCase()];
 			if (val === undefined || val === null) return '';
 			if (typeof val === 'object') {
 				try {

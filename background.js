@@ -5724,68 +5724,6 @@ async function processIncomingMessage(message, sender = null) {
 	return message;
 }
 
-const TEAMS_CAPTURE_REMINDER_ID = "ssn-teams-capture-disabled";
-let teamsCaptureReminderPending = false;
-let teamsCaptureReminderShown = false;
-
-function maybeShowTeamsCaptureReminder(sender) {
-	if (isSSAPP || !isExtensionOn || settings.teams || teamsCaptureReminderPending || teamsCaptureReminderShown) {
-		return;
-	}
-	if (!chrome.notifications || !chrome.notifications.create || !sender || !sender.tab) {
-		return;
-	}
-	try {
-		const url = new URL(sender.url || sender.tab.url);
-		if (url.protocol !== "https:" || !["teams.live.com", "teams.microsoft.com", "teams.cloud.microsoft"].includes(url.hostname)) {
-			return;
-		}
-	} catch (e) {
-		return;
-	}
-	teamsCaptureReminderPending = true;
-	chrome.storage.local.get("teamsCaptureReminderShown", function (stored) {
-		if (chrome.runtime.lastError || (stored && stored.teamsCaptureReminderShown) || !isExtensionOn || settings.teams) {
-			teamsCaptureReminderPending = false;
-			return;
-		}
-		chrome.notifications.create(TEAMS_CAPTURE_REMINDER_ID, {
-			type: "basic",
-			iconUrl: "icons/icon-128.png",
-			title: "Social Stream Ninja: Teams capture is off",
-			message: "Enable capture to send Teams chat to your dock and overlays.",
-			buttons: [{ title: "Enable capture" }, { title: "Don't show again" }],
-			requireInteraction: true
-		}, function () {
-			const failed = chrome.runtime.lastError;
-			teamsCaptureReminderPending = false;
-			if (!failed) {
-				teamsCaptureReminderShown = true;
-				chrome.storage.local.set({ teamsCaptureReminderShown: true });
-			}
-		});
-	});
-}
-
-if (chrome.notifications && chrome.notifications.onButtonClicked) {
-	chrome.notifications.onButtonClicked.addListener(function (notificationId, buttonIndex) {
-		if (isSSAPP || notificationId !== TEAMS_CAPTURE_REMINDER_ID) {
-			return;
-		}
-		if (buttonIndex === 0) {
-			handleRuntimeMessage({ cmd: "saveSetting", type: "setting", setting: "teams", value: true }, {}, function (response) {
-				if (response && response.saved) {
-					pushSettingChange();
-					chrome.notifications.clear(TEAMS_CAPTURE_REMINDER_ID);
-				}
-			});
-		} else if (buttonIndex === 1) {
-			chrome.storage.local.set({ teamsCaptureReminderShown: true });
-			chrome.notifications.clear(TEAMS_CAPTURE_REMINDER_ID);
-		}
-	});
-}
-
 async function handleRuntimeMessage(request, sender, sendResponseReal) {
 	var response = {};
 	var alreadySet = false;
@@ -6123,6 +6061,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 						socketserverDock.close();
 					}
 				}
+			}
+			if (["teams", "discord", "slack", "openai", "chime", "meet", "telegram", "whatsapp", "instagram", "xcapture"].includes(request.setting)) {
+				pushSettingChange();
 			}
 			if (request.setting == "textonlymode") {
 				pushSettingChange();
@@ -7054,7 +6995,6 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			}
 			return true;
 		} else if ("getSettings" in request) {
-			maybeShowTeamsCaptureReminder(sender);
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: getEffectiveSettingsForSources() }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
 			if (hasSenderTabId) {
@@ -11742,7 +11682,9 @@ function setupSocket() {
 					}
 
 					try {
-						var kofi = JSON.parse(decodeURIComponent(data.kofi.data).replace(/\+/g, " "));
+						var kofi;
+                        try { kofi = JSON.parse(data.kofi.data); }
+                        catch (_) { kofi = JSON.parse(decodeURIComponent(String(data.kofi.data).replace(/\+/g, " "))); }
 					} catch (e) {
 						console.error(e);
 						return;
@@ -11752,43 +11694,13 @@ function setupSocket() {
 					if (isDuplicateInboundWebhook("kofi", kofiWebhookId)) {
 						return false;
 					}
-					relayIncomingWebhook("kofi", data.kofi);
 
-					if (kofi.type !== "Donation") {
-						return false;
-					} else if (!kofi.is_public) {
-						return false;
-					}
 
-					const kofiMessage = {};
-					kofiMessage.chatname = decodeURIComponent(kofi.from_name) || "Anonymous";
-					kofiMessage.chatmessage = decodeURIComponent(kofi.message);
-
-					let kofiCurrency = "";
-
-					try {
-						kofiCurrency = kofi.currency.toLowerCase() || "";
-					} catch (e) {}
-
-					let kofiSymbol = {};
-					if (kofiCurrency && kofiCurrency in Currencies) {
-						kofiSymbol = Currencies[kofiCurrency];
-					}
-
-					if (kofi.amount) {
-						kofiMessage.hasDonation = (kofiSymbol.s || "") + (kofi.amount || "") + " " + (kofi.currency.toUpperCase() || "");
-						kofiMessage.hasDonation = kofiMessage.hasDonation.trim();
-					}
-					kofiMessage.id = parseInt(Math.random() * 100000 + 1000000);
-					kofiMessage.chatbadges = "";
-					kofiMessage.backgroundColor = "";
-					kofiMessage.textColor = "";
-					kofiMessage.nameColor = "";
-					kofiMessage.chatimg = "";
-					kofiMessage.membership = "";
-					kofiMessage.contentimg = "";
-					kofiMessage.type = "kofi";
-					setInboundWebhookMeta(kofiMessage, kofiWebhookId);
+                    const kofiMessage = SSNMonetization.providerEvent("kofi", kofi, kofiWebhookId);
+                    if (typeof noteMonetizationProvider === "function") noteMonetizationProvider("kofi", !!kofiMessage);
+                    if (!kofiMessage) return false;
+                    relayIncomingWebhook("kofi", data.kofi);
+                    setInboundWebhookMeta(kofiMessage, kofiWebhookId);
 
 					data = kofiMessage; // replace inbound stripe message with new message
 
@@ -11826,46 +11738,12 @@ function setupSocket() {
 						if (isDuplicateInboundWebhook("bmac", bmacWebhookId)) {
 							return false;
 						}
-						relayIncomingWebhook("bmac", data.bmac);
-						const bmacMessage = {};
-						if (bmac.type === "membership.started") {
-							bmacMessage.chatname = bmac.data.supporter_name || "Anonymous";
-							bmacMessage.chatmessage = (bmac.data.support_note || "").trim();
-							//We use the donation badge from Kofi to feature the membership level name
-							bmacMessage.hasDonation = bmac.data.membership_level_name || "";
-						}
-						if (bmac.type === "donation.created") {
-							bmacMessage.chatname = bmac.data.supporter_name || "Anonymous";
-							let bmacCurrency = "";
-							try {
-								bmacCurrency = bmac.data.currency.toLowerCase() || "";
-							} catch (e) {}
 
-							let bmacSymbol = {};
-							if (bmacCurrency && bmacCurrency in Currencies) {
-								bmacSymbol = Currencies[bmacCurrency];
-							}
-							var msgParts = [];
-							if (bmac.data.message) {
-								msgParts.push(bmac.data.message);
-							}
-							if (bmac.data.support_note) {
-								msgParts.push("<em>" + bmac.data.support_note + "</em>");
-							}
-							bmacMessage.chatmessage = msgParts.join(" - ").trim();
-							bmacMessage.hasDonation = (bmacSymbol.s || "") + (bmac.data.amount || "") + " " + (bmac.data.currency.toUpperCase() || "");
-							bmacMessage.hasDonation = bmacMessage.hasDonation.trim();
-						}
-						bmacMessage.contentimg = "";
-						bmacMessage.id = parseInt(Math.random() * 100000 + 1000000);
-						bmacMessage.chatbadges = "";
-						bmacMessage.backgroundColor = "";
-						bmacMessage.textColor = "";
-						bmacMessage.nameColor = "";
-						bmacMessage.chatimg = "";
-						bmacMessage.membership = "";
-						bmacMessage.type = "bmac";
-						setInboundWebhookMeta(bmacMessage, bmacWebhookId);
+                        const bmacMessage = SSNMonetization.providerEvent("bmac", bmac, bmacWebhookId);
+                        if (typeof noteMonetizationProvider === "function") noteMonetizationProvider("bmac", !!bmacMessage);
+                    if (!bmacMessage) return false;
+                    relayIncomingWebhook("bmac", data.bmac);
+                        setInboundWebhookMeta(bmacMessage, bmacWebhookId);
 						data = bmacMessage; // replace inbound stripe message with new message
 
 						try {
@@ -11894,7 +11772,7 @@ function setupSocket() {
 				ackInboundWebhookDelivery(socketserver, data);
 				// Dorthwall
 				try {
-					if (!data.fourthwall.data || data.fourthwall.type !== "ORDER_PLACED") {
+					if (!data.fourthwall.data) {
 						return false;
 					}
 
@@ -11902,55 +11780,13 @@ function setupSocket() {
 					if (isDuplicateInboundWebhook("fourthwall", fourthwallWebhookId)) {
 						return false;
 					}
-					relayIncomingWebhook("fourthwall", data.fourthwall);
 
-					const fourthwallData = data.fourthwall.data;
 
-					const fourthwallMessage = {};
-					fourthwallMessage.chatname = fourthwallData.username || fourthwallData.billing?.address?.name || "Anonymous";
-					fourthwallMessage.chatmessage = fourthwallData.message || "";
-
-					let fourthwallCurrency = "";
-					try {
-						fourthwallCurrency = fourthwallData.amounts.total.currency.toLowerCase() || "";
-					} catch (e) {
-						console.error(e);
-					}
-
-					let fourthwallSymbol = {};
-					if (fourthwallCurrency && fourthwallCurrency in Currencies) {
-						fourthwallSymbol = Currencies[fourthwallCurrency];
-					}
-
-					if (fourthwallData.amounts && fourthwallData.amounts.total) {
-						fourthwallMessage.hasDonation = (fourthwallSymbol.s || "") + (fourthwallData.amounts.total.value || "") + " " + (fourthwallData.amounts.total.currency || "");
-						fourthwallMessage.hasDonation = fourthwallMessage.hasDonation.trim();
-					}
-
-					// Add product info to the subtitle
-					if (fourthwallData.offers && fourthwallData.offers.length) {
-						let productInfo = [];
-						fourthwallData.offers.forEach(offer => {
-							if (offer.name && offer.variant && offer.variant.quantity) {
-								productInfo.push(`${offer.variant.quantity}× ${offer.name}`);
-							}
-						});
-
-						if (productInfo.length) {
-							fourthwallMessage.subtitle = productInfo.join(", ");
-						}
-					}
-
-					fourthwallMessage.id = parseInt(Math.random() * 100000 + 1000000);
-					fourthwallMessage.chatbadges = "";
-					fourthwallMessage.backgroundColor = "";
-					fourthwallMessage.textColor = "";
-					fourthwallMessage.nameColor = "";
-					fourthwallMessage.chatimg = "";
-					fourthwallMessage.membership = "";
-					fourthwallMessage.contentimg = "";
-					fourthwallMessage.type = "fourthwall";
-					setInboundWebhookMeta(fourthwallMessage, fourthwallWebhookId);
+                    const fourthwallMessage = SSNMonetization.providerEvent("fourthwall", data.fourthwall, fourthwallWebhookId);
+                    if (typeof noteMonetizationProvider === "function") noteMonetizationProvider("fourthwall", !!fourthwallMessage);
+                    if (!fourthwallMessage) return false;
+                    relayIncomingWebhook("fourthwall", data.fourthwall);
+                    setInboundWebhookMeta(fourthwallMessage, fourthwallWebhookId);
 
 					data = fourthwallMessage; // replace inbound fourthwall message with new message
 
@@ -19217,8 +19053,15 @@ async function fetchData(url, useLocalFs = false) {
 	}
 }
 
-// Example usage in window.onload:
-window.onload = async function () {
+let backgroundInitializationStarted = false;
+async function initializeBackgroundSettings() {
+	if (backgroundInitializationStarted) return;
+	// SSApp's verified downloads can finish after the browser load event.
+	// The loader calls this explicitly once the full script sequence is ready.
+	if (window.ssappBackgroundLoadState?.status === 'loading'
+		&& window.ssappFallback && typeof window.ssappFallback.fetchBackgroundScript === 'function'
+		&& location.protocol === 'https:') return;
+	backgroundInitializationStarted = true;
 	// Pass true as second parameter to force local file system in Electron
 	let programmedSettings = await fetchData("settings.json", true);
 	if (programmedSettings && typeof programmedSettings === "object") {
@@ -19288,7 +19131,8 @@ window.onload = async function () {
 			});
 		});
 	}
-};
+}
+window.onload = initializeBackgroundSettings;
 
 let fileHandleTicker;
 let fileContentTicker = "";
