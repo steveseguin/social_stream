@@ -45,6 +45,7 @@
 		if (!tip) throw new Error('Invalid receiver tip.');
 		await processIncomingMessage(tip);
 	} });
+    var shopifyReceiver = SSNShopifyReceiver({ privateState: privateState, store: store, config: cfg, isOn: function () { return ready && isExtensionOn; }, deliver: function (data) { return processIncomingMessage(data); } });
 	function store() {
 		return new Promise(function (resolve, reject) {
 			chrome.storage.local.set({ monetizationPrivate: privateState, settings: settings }, function () {
@@ -298,6 +299,25 @@
         if (['fourthwall', 'kofi', 'bmac'].indexOf(provider) === -1) return;
         providerActivity[provider] = { at: Date.now(), accepted: !!accepted };
     };
+    async function importShopify(request) {
+        var shop = M.shopifyDomain(request.shop), token = typeof request.token === 'string' ? request.token.trim() : '', url;
+        try { url = new URL(request.url); } catch (_) { throw new Error('Enter a public Shopify product URL.'); }
+        var match = url.pathname.match(/\/products\/([a-zA-Z0-9_-]+)\/?$/);
+        if (!shop || token.length > 512 || /\s/.test(token) || !match || !M.imageURL(url.href)) throw new Error('Enter your myshopify.com domain and public product URL.');
+        var controller = new AbortController(), timer = setTimeout(function () { controller.abort(); }, 12000);
+        try {
+            var response = await fetch('https://' + shop + '/api/2026-07/graphql.json', { method: 'POST', credentials: 'omit', redirect: 'error', signal: controller.signal, headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { 'X-Shopify-Storefront-Access-Token': token } : {}), body: JSON.stringify({ query: 'query Product($handle: String!) { product(handle: $handle) { title availableForSale onlineStoreUrl featuredImage { url } priceRange { minVariantPrice { amount currencyCode } maxVariantPrice { amount currencyCode } } } }', variables: { handle: match[1] } }) });
+            if (!response.ok) throw new Error('Could not load the Shopify product. Check the store and public Storefront token.');
+            var body = await response.text();
+            if (body.length > 1000000) throw new Error('Product response is too large. Add it manually.');
+            var data = JSON.parse(body), item = !data.errors && data.data && M.shopifyProduct(data.data.product);
+            if (!item) throw new Error('No available product published to this Storefront token and Online Store.');
+            return { item: item };
+        } catch (e) {
+            if (e.name === 'SyntaxError' || e.name === 'AbortError' || e instanceof TypeError) throw new Error('Could not read Shopify product data. Retry or add it manually.');
+            throw e;
+        } finally { clearTimeout(timer); }
+    }
     async function importFourthwall(request) {
         var url;
         try { url = new URL(request.url); } catch (_) { throw new Error('Enter a public Fourthwall product URL.'); }
@@ -322,6 +342,11 @@
 	async function action(request) {
 		if (!ready) throw new Error('Settings are still loading.');
 		var c = cfg();
+        if (request.action === 'shopifyImport') return importShopify(request);
+        if (request.action === 'shopifyDisconnect') {
+            await shopifyReceiver.disconnect(); c.shopify = { enabled: false, shop: '' };
+            settings.monetization = { json: JSON.stringify(c) }; await store(); return snapshot();
+        }
         if (request.action === 'fourthwallImport') return importFourthwall(request);
 		if (request.action.indexOf('ebay') === 0) {
 			var result = await ebay.action(request);
@@ -349,6 +374,8 @@
 			if (updated.ebay.enabled && !c.ebay.enabled && !(await ebay.verify())) throw new Error('Finish connecting eBay before enabling the showcase.');
 			await prepareThrone(updated.throne, c.throne);
 			await ninjaReceiver.prepare(updated.ninja, c.ninja, token, request.ninjaSecret);
+            if (request.config && request.config.shopify && request.config.shopify.shop && !updated.shopify.shop) throw new Error('Enter your store.myshopify.com domain.');
+            await shopifyReceiver.prepare(updated.shopify, request.shopifySecret);
 			privateState.token = token;
 			settings.monetization = { json: JSON.stringify(updated) };
 			await store();
@@ -422,7 +449,7 @@
 		return snapshot();
 	}
 	function snapshot() {
-		return { receiver: { enabled: !!settings.socketserver, on: !!isExtensionOn, connected: !!(typeof socketserver !== 'undefined' && socketserver && socketserver.readyState === 1), providers: providerActivity }, ninjaReceiver: ninjaReceiver.snapshot(), ebay: ebay.snapshot(), throne: { status: throneStatus, gifts: thronePrivate().gifts, webhook: thronePrivate().hook ? 'https://api.socialstream.ninja/v1/throne/webhook/' + thronePrivate().hook : '' }, config: cfg(), list: list(), tokenSaved: !!privateState.token, status: cfg().ninja.reliable ? ninjaReceiver.snapshot().status : status, canUndo: !!lastPurchase };
+		return { shopify: shopifyReceiver.snapshot(), receiver: { enabled: !!settings.socketserver, on: !!isExtensionOn, connected: !!(typeof socketserver !== 'undefined' && socketserver && socketserver.readyState === 1), providers: providerActivity }, ninjaReceiver: ninjaReceiver.snapshot(), ebay: ebay.snapshot(), throne: { status: throneStatus, gifts: thronePrivate().gifts, webhook: thronePrivate().hook ? 'https://api.socialstream.ninja/v1/throne/webhook/' + thronePrivate().hook : '' }, config: cfg(), list: list(), tokenSaved: !!privateState.token, status: cfg().ninja.reliable ? ninjaReceiver.snapshot().status : status, canUndo: !!lastPurchase };
 	}
 	window.handleMonetizationRequest = function (request, sender) {
 		if (sender && sender.tab && sender.tab.id !== null && sender.tab.id !== undefined) return Promise.resolve({ error: 'Use the SSN popup to configure monetization.' });
@@ -463,6 +490,7 @@
 						: []
 				};
 			if (p.receiver && /^[a-f0-9]{64}$/.test(p.receiver.key || '')) privateState.receiver = { key: p.receiver.key, webhook: /^https:\/\/api\.socialstream\.ninja\/v1\/ninjabacker\/webhook\/[a-f0-9]{64}$/.test(p.receiver.webhook || '') ? p.receiver.webhook : '', username: String(p.receiver.username || ''), seen: Array.isArray(p.receiver.seen) ? p.receiver.seen.filter(function (id) { return typeof id === 'string'; }).slice(-2000) : [] };
+            if (p.shopifyReceiver && /^[a-f0-9]{64}$/.test(p.shopifyReceiver.key || '')) privateState.shopifyReceiver = { key: p.shopifyReceiver.key, webhook: /^https:\/\/api\.socialstream\.ninja\/v1\/shopify\/webhook\/[a-f0-9]{64}$/.test(p.shopifyReceiver.webhook || '') ? p.shopifyReceiver.webhook : '', shop: M.shopifyDomain(p.shopifyReceiver.shop), seen: Array.isArray(p.shopifyReceiver.seen) ? p.shopifyReceiver.seen.filter(function (id) { return /^[a-f0-9]{64}$/.test(id); }).slice(-2000) : [] };
 			privateState.token = typeof p.token === 'string' ? p.token : '';
 			privateState.list = p.list && typeof p.list === 'object' ? p.list : { url: '', items: [] };
 			privateState.seen = Array.isArray(p.seen)
@@ -479,6 +507,7 @@
 		if (!ready || !loadedFirst) return;
 		ebay.poll();
 		ninjaReceiver.poll();
+        shopifyReceiver.poll();
 		connect();
 		connectThrone();
 		var c = cfg(),

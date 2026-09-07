@@ -18,9 +18,9 @@ export function paidOrder(data, shop, now = Date.now()) {
  const amount = money?.amount ?? data.total_price, currency = money?.currency_code ?? data.currency;
  if (!order || typeof amount !== 'string' || !/^\d+(?:\.\d+)?$/.test(amount) || !/^[A-Z]{3}$/.test(currency || '') || Number(amount) <= 0 || Number(amount) >= 10000000) return null;
  const lines = Array.isArray(data.line_items) ? data.line_items.slice(0, 250) : [];
- const quantity = lines.reduce((sum, line) => sum + (Number.isSafeInteger(line.quantity) && line.quantity > 0 && line.quantity < 100000 ? line.quantity : 0), 0);
- const titles = lines.filter(line => line.product_id && typeof line.title === 'string').map(line => line.title.trim().slice(0, 100)).filter(Boolean).slice(0, 3);
- return { id: hash(shop + ':' + order), event: 'purchase', platform: 'shopify', type: 'shopify', chatname: 'Anonymous', chatmessage: 'A store purchase was paid.', textonly: true, chatimg: '', subtitle: titles.join(', ').slice(0, 180), meta: { commerce: { recipient: 'buyer', quantity, currency, orderTotal: Number(amount) } } };
+ const quantity = data.line_items?.length <= 250 && lines.every(line => line && Number.isSafeInteger(line.quantity) && line.quantity > 0 && line.quantity < 100000) ? lines.reduce((sum, line) => sum + line.quantity, 0) : 0;
+ const titles = lines.filter(line => line && line.product_id && typeof line.title === 'string').map(line => line.title.trim().slice(0, 100)).filter(Boolean).slice(0, 3);
+ return { id: hash(shop + ':' + order), event: 'purchase', platform: 'shopify', type: 'shopify', chatname: 'Anonymous', chatmessage: 'A store purchase was paid.', textonly: true, chatimg: '', subtitle: titles.join(', ').slice(0, 180), meta: { commerce: { ...(quantity ? { quantity } : {}), currency, orderTotal: Number(amount) } } };
 }
 
 export default async function shopifyRelay(app, { db, masterKey, now = Date.now } = {}) {
@@ -61,14 +61,14 @@ export default async function shopifyRelay(app, { db, masterKey, now = Date.now 
   if (existing && existing.shop !== value.shop) throw fail('Disconnect before changing stores.');
   if (!existing && db.prepare('SELECT count(*) AS n FROM shopify_receivers').get().n >= 1000) throw fail('Receiver capacity reached. Try again later.', 503);
   db.prepare('INSERT INTO shopify_receivers(id,shop,secret) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET secret=excluded.secret').run(id, value.shop, value.secret ? seal(value.secret) : existing.secret);
-  return { webhook: 'https://api.socialstream.shopify/v1/shopify/webhook/' + id };
+  return { webhook: 'https://api.socialstream.ninja/v1/shopify/webhook/' + id };
  });
  app.delete('/v1/shopify/connection', async request => {
   const id = credentials(request);
   db.transaction(() => { db.prepare('DELETE FROM shopify_deliveries WHERE channel=?').run(id); db.prepare('DELETE FROM shopify_receivers WHERE id=?').run(id); })();
   return { disconnected: true };
  });
- app.post('/v1/shopify/webhook/:channel', { config: { rateLimit: { max: 300, timeWindow: '1 minute' } } }, async (request, reply) => {
+ app.post('/v1/shopify/webhook/:channel', { bodyLimit: 1048576, config: { rateLimit: { max: 300, timeWindow: '1 minute' } } }, async (request, reply) => {
   const id = request.params.channel;
   if (!/^[a-f0-9]{64}$/.test(id)) throw fail('Invalid receiver.');
   const row = db.prepare('SELECT secret,shop FROM shopify_receivers WHERE id=?').get(id);

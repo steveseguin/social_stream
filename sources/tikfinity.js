@@ -145,9 +145,10 @@
 		].join("|");
 	}
 
-	function shouldEmitMessage(data, meta) {
+	function shouldEmitMessage(data, meta, messageId) {
 		var now = Date.now();
-		var key = buildRecentMessageKey(data, meta);
+		// Separate TikTok messages can have identical text, especially during live games.
+		var key = messageId ? (data.event || "chat") + "-id:" + String(messageId) : buildRecentMessageKey(data, meta);
 		cleanupRecentMessages(now);
 		if (!key) {
 			return true;
@@ -469,14 +470,14 @@
 		};
 	}
 
-	function finalizeAndPush(data, meta) {
+	function finalizeAndPush(data, meta, messageId) {
 		if (!data.chatname && !data.chatmessage && !data.hasDonation) {
 			return;
 		}
 		if (meta && Object.keys(meta).length) {
 			data.meta = meta;
 		}
-		if (!shouldEmitMessage(data, meta)) {
+		if (!shouldEmitMessage(data, meta, messageId)) {
 			return;
 		}
 		pushMessage(data);
@@ -571,7 +572,8 @@
 			return;
 		}
 
-		finalizeAndPush(data, meta);
+		// Gift updates can reuse an ID while their repeat count changes.
+		finalizeAndPush(data, meta, rawType !== "gift" ? payload.msgId : null);
 	}
 
 	function handleWindowMessage(event) {

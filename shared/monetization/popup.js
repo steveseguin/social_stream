@@ -66,6 +66,27 @@
         }
         select.value = value;
     }
+    function shopifyStatus(reply) {
+        var s = reply.shopify || {};
+        by('shopify-webhook').value = s.webhook || '';
+        by('shopify-status').textContent = tr('shopify-status-' + (s.status || '').toLowerCase().replace(/[^a-z]+/g, '-'), s.status || 'Set up Shopify on this device');
+        by('shopify-secret').placeholder = s.webhook ? tr('shopify-secret-saved', 'Saved on the SSN API') : tr('shopify-secret-placeholder', 'From Shopify Notifications > Webhooks');
+        by('shopify-copy').disabled = !s.webhook;
+        by('shopify-disconnect').disabled = !s.webhook;
+    }
+    by('shopify-copy').onclick = function () { navigator.clipboard.writeText(by('shopify-webhook').value).then(function () { status(tr('shopify-copied', 'Shopify receiver URL copied.')); }).catch(function () { by('shopify-webhook').focus(); by('shopify-webhook').select(); }); };
+    by('shopify-disconnect').onclick = function () { run(function () { return request('shopifyDisconnect'); }); };
+    by('shopify-import').onclick = function () {
+        var button = this; button.disabled = true;
+        by('shopify-import-status').textContent = tr('commerce-import-loading', 'Loading product...');
+        request('shopifyImport', { shop: by('shopify-shop').value, url: by('shopify-product').value, token: by('shopify-token').value }).then(function (reply) {
+            var item = reply.item; resetProductForm();
+            ['name', 'url', 'image', 'purpose'].forEach(function (key) { by('commerce-' + key).value = item[key]; });
+            setProductCurrency(item.currency); by('commerce-price').value = item.amount == null ? '' : item.amount;
+            by('shopify-import-status').textContent = tr('commerce-import-review', 'Details loaded. Review below, add the product, then save setup.');
+            by('commerce-panel').open = true; by('commerce-name').focus();
+        }).catch(function (error) { by('shopify-import-status').textContent = error.message; }).then(function () { button.disabled = false; by('shopify-token').value = ''; });
+    };
     var providerSnapshot = {};
     function providerLinks() {
         var provider = by('provider').value;
@@ -123,7 +144,7 @@
 		links();
 	}
 	function values() {
-		var config = { wishlist: {}, ninja: {}, throne: {}, ebay: {}, commerce: { enabled: by("commerce-enabled").checked, qr: by("commerce-qr").checked, position: by("commerce-position").value, display: by("commerce-display").value, seconds: Number(by("commerce-seconds").value), items: products } };
+		var config = { shopify: { enabled: by("shopify-enabled").checked, shop: by("shopify-shop").value }, wishlist: {}, ninja: {}, throne: {}, ebay: {}, commerce: { enabled: by("commerce-enabled").checked, qr: by("commerce-qr").checked, position: by("commerce-position").value, display: by("commerce-display").value, seconds: Number(by("commerce-seconds").value), items: products } };
 		['wishlist', 'ninja', 'throne', 'ebay'].forEach(function (mode) {
 			['enabled', 'qr', 'announce', 'interval'].forEach(function (key) {
 				config[mode][key] = by(mode + '-' + key).checked;
@@ -208,6 +229,7 @@
 		if (!reply.config) return;
 		reply.config = SSNMonetization.config(reply.config);
 		current = reply;
+        by('shopify-enabled').checked = reply.config.shopify.enabled; by('shopify-shop').value = reply.config.shopify.shop; shopifyStatus(reply);
         providerStatus(reply);
         ['view', 'style', 'scale', 'cardevery', 'cardfor', 'onlytype'].forEach(function (key) { by(key).value = reply.config.presentation[key]; });
         products = reply.config.commerce.items.slice(); editingProduct = -1; renderProducts();
@@ -287,8 +309,9 @@
 		}
 	}
 	async function save() {
-		var response = await request('save', { config: values(), token: by('ninja-token').value.trim(), clearToken: by('ninja-clear-token').checked, ninjaSecret: by('ninja-secret').value.trim() });
+		var response = await request('save', { config: values(), token: by('ninja-token').value.trim(), clearToken: by('ninja-clear-token').checked, ninjaSecret: by('ninja-secret').value.trim(), shopifySecret: by('shopify-secret').value.trim() });
 		by('ninja-token').value = '';
+        by('shopify-secret').value = '';
 		by('ninja-secret').value = '';
 		by('ninja-clear-token').checked = false;
 		return response;
@@ -416,7 +439,7 @@
 		if (ready && panel.open)
 			request('get').then(
 				function (reply) {
-					providerStatus(reply);
+					providerStatus(reply); shopifyStatus(reply);
                     by('ninja-status').textContent = reply.status;
 					showThroneStatus(reply);
 					showEbayStatus(reply);

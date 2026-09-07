@@ -14713,6 +14713,21 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
 <div class="link" title="Monetization"><h2 class="monetization-title"><span>💵 Monetization</span></h2>
 <details id="monetization-settings" class="popup-settings-panel"><summary>🛍️ Platforms, products &amp; tips</summary>
 <div class="money-actions"><button id="money-save" type="button">💾 Save setup</button><a href="docs/monetization.html" target="_blank" rel="noopener">📖 Setup guide</a></div>
+<section class="money-platform" id="money-shopify-section">
+<div class="money-platform-heading"><label class="switch"><input id="money-shopify-enabled" type="checkbox" aria-labelledby="money-shopify-title"><span class="slider round"></span></label><label id="money-shopify-title" for="money-shopify-enabled" data-translate="shopify-title">🛍️ Shopify purchases</label></div>
+<details id="money-shopify-panel"><summary data-translate="shopify-setup">⚙️ Setup</summary>
+<label><span data-translate="shopify-shop">Shopify store domain</span><input id="money-shopify-shop" type="text" maxlength="100" placeholder="your-store.myshopify.com"></label>
+<label><span data-translate="shopify-secret">Webhook signing secret</span><input id="money-shopify-secret" type="password" autocomplete="off" maxlength="256"></label>
+<label><span data-translate="shopify-webhook">Receiver URL</span><input id="money-shopify-webhook" type="text" readonly placeholder="Save setup to generate"></label>
+<div class="money-actions"><button id="money-shopify-copy" type="button" data-translate="shopify-copy">📋 Copy receiver URL</button><a href="docs/shopify-setup.html" target="_blank" rel="noopener" data-translate="shopify-guide">📖 Setup guide</a><a href="monetization.html?demo&amp;mode=commerce&amp;view=alerts&amp;provider=shopify" target="_blank" rel="noopener" data-translate="shopify-preview">👁️ Preview sample</a></div>
+<p id="money-shopify-status" role="status"></p>
+<details class="popup-subsection" id="money-shopify-import-panel"><summary data-translate="shopify-import">📦 Import a product</summary>
+<label><span data-translate="shopify-product">Public product URL</span><input id="money-shopify-product" type="url" placeholder="https://your-shop.com/products/product-name"></label>
+<label><span data-translate="shopify-token">Public Storefront token (optional)</span><input id="money-shopify-token" type="password" autocomplete="off" maxlength="512"></label>
+<button id="money-shopify-import" type="button" data-translate="shopify-load">📥 Load product details</button><p id="money-shopify-import-status" role="status"></p>
+</details>
+<details class="popup-subsection"><summary data-translate="shopify-connection-options">🔧 Connection options</summary><button id="money-shopify-disconnect" type="button" data-translate="shopify-disconnect">Disconnect Shopify</button></details>
+</details></section>
 <section class="money-platform" id="money-provider-section">
 <details id="money-provider-panel"><summary data-translate="commerce-connections">Fourthwall, Ko-fi &amp; Buy Me a Coffee alerts</summary>
 <label><span data-translate="commerce-provider">Provider</span><select id="money-provider"><option value="fourthwall">Fourthwall</option><option value="kofi">Ko-fi</option><option value="bmac">Buy Me a Coffee</option></select></label>

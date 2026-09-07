@@ -54,3 +54,10 @@ The existing Monetization menu now offers a manual public product/link catalog, 
 The Monetization panel now links to the illustrated `creator-store-setup.html` guide. Provider selection generates the existing private session URL, reports the shared receiver connection and last normalized event in this app session, and opens a sample-only preview with no session connection. No new receiver deployment or signing-secret claims are introduced.
 
 Fourthwall import uses its public Storefront API to load one product into the existing editor for review. Tokens are transient; imported fields remain the existing manual catalog shape. Hidden/unavailable products are rejected, variant and bundle prices are left blank when ambiguous, and no purchase event is inferred. This is an on-demand snapshot, not ongoing inventory synchronization. Shopify, Tiltify and Patreon payment connections remain the next integration phase.
+
+
+## Shopify implementation follow-up
+
+Shopify now has a dedicated optional signed `orders/paid` receiver in the existing monetization service, a persisted local reader, purchase alerts through SSN's normal processing and Event Flow, and optional Storefront API product import into the common editor. Purchases omit donation fields; order totals are available as documented commerce metadata. Buyer data is stripped at the receiver, tests do not enqueue purchases, and repeated delivery/order IDs are deduplicated. Generic duplicate filtering uses the stable Shopify order identity rather than the shared Anonymous display text.
+
+The Shopify guide includes cropped, reviewed screenshots from actual SSApp, including light/dark setup and imported product fields. Local server tests and actual SSApp tests cover signed delivery, privacy, offline/server restart recovery, idempotency, product import, persistence and disconnect. This is implemented code, not a claim of deployment or live merchant validation. Enable/deploy the receiver and complete a Shopify development-store test before live rollout. Tiltify and Patreon payment integrations remain future work.

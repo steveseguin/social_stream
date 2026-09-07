@@ -138,6 +138,27 @@ async function run() {
 				})`), dockId));
 			throw error;
 		});
+		const repeatedSender = 'Repeated text diagnostic';
+		for (const msgId of ['7682859422984751888', '7682859424214502160', '7682859424214502160']) {
+			await frame.evaluate(payload => window.postMessage({ type: 'chat', payload }, '*'), {
+				nickname: repeatedSender, uniqueId: 'repeated_text_diagnostic', userBadges: [],
+				comment: '6222969812', msgId, createTime: String(Date.now()),
+			});
+		}
+		await waitFor(() => received.filter(message => message.chatname === repeatedSender).length >= 2,
+			'distinct message IDs with identical text');
+		await new Promise(resolve => setTimeout(resolve, 750));
+		assert.strictEqual(received.filter(message => message.chatname === repeatedSender).length, 2,
+			'Keep separate messages and suppress retransmission of the same message ID');
+		for (const msgId of ['share-1', 'share-2', 'share-2']) {
+			await frame.evaluate(payload => window.postMessage({ type: 'share', payload }, '*'), {
+				nickname: 'Repeated share diagnostic', uniqueId: 'repeated_share_diagnostic', msgId,
+			});
+		}
+		await waitFor(() => received.filter(message => message.chatname === 'Repeated share diagnostic').length >= 2,
+			'distinct share IDs');
+		await new Promise(resolve => setTimeout(resolve, 750));
+		assert.strictEqual(received.filter(message => message.chatname === 'Repeated share diagnostic').length, 2);
 		const popup = main.frames().find(item => item.url().includes('popup.html'));
 		async function textOnly(value) {
 			await popup.locator('#textonlymode').evaluate((input, value) => {
@@ -165,7 +186,8 @@ async function run() {
 		assert.strictEqual((reloaded.chatmessage.match(/<img /g) || []).length, 4);
 		console.log(JSON.stringify({ passed: true, ssappVersion: capability.ssappVersion,
 			builtInEmoji: names.length, decodedDockImages: decoded.length,
-			textOnly: true, mixedEmotes: true, unknownCodesAndEscaping: true, reload: true }));
+			textOnly: true, mixedEmotes: true, unknownCodesAndEscaping: true,
+			messageIdDeduplication: true, reload: true }));
 	} finally {
 		if (socket) socket.close();
 		await app.close();

@@ -100,7 +100,7 @@
 		var w = raw.wishlist || {},
 			n = raw.ninja || {},
 			t = raw.throne || {};
-		return { presentation: presentation(raw.presentation), commerce: commerce(raw.commerce), ebay: { enabled: e.enabled === true, qr: e.qr !== false, announce: e.announce === true, interval: e.interval === true, minutes: Math.max(5, Math.min(120, Number(e.minutes) || 15)), position: e.position === 'tl' ? 'tl' : 'br', display: ['cycle', 'cheapest', 'first'].indexOf(e.display) !== -1 ? e.display : 'cycle', seconds: Math.max(10, Math.min(300, Number(e.seconds) || 20)) }, throne: { enabled: t.enabled === true, username: /^[a-z0-9_.-]{1,50}$/i.test(str(t.username, 50)) ? str(t.username, 50).toLowerCase() : '', qr: t.qr !== false, announce: t.announce === true, interval: t.interval === true, minutes: Math.max(5, Math.min(120, Number(t.minutes) || 15)), position: t.position === 'tl' ? 'tl' : 'br' }, wishlist: { enabled: w.enabled === true, url: amazonURL(w.url, true), qr: w.qr !== false, announce: w.announce === true, interval: w.interval === true, minutes: Math.max(5, Math.min(120, Number(w.minutes) || 15)), position: w.position === 'tl' ? 'tl' : 'br' }, ninja: { enabled: n.enabled === true, reliable: n.reliable === true, username: /^[a-z0-9_-]{1,50}$/i.test(str(n.username, 50)) ? str(n.username, 50).toLowerCase() : '', qr: n.qr === true, announce: n.announce === true, interval: n.interval === true, minutes: Math.max(5, Math.min(120, Number(n.minutes) || 15)), position: n.position === 'tl' ? 'tl' : 'br' } };
+		return { shopify: { enabled: !!(raw.shopify && raw.shopify.enabled === true), shop: shopifyDomain(raw.shopify && raw.shopify.shop) }, presentation: presentation(raw.presentation), commerce: commerce(raw.commerce), ebay: { enabled: e.enabled === true, qr: e.qr !== false, announce: e.announce === true, interval: e.interval === true, minutes: Math.max(5, Math.min(120, Number(e.minutes) || 15)), position: e.position === 'tl' ? 'tl' : 'br', display: ['cycle', 'cheapest', 'first'].indexOf(e.display) !== -1 ? e.display : 'cycle', seconds: Math.max(10, Math.min(300, Number(e.seconds) || 20)) }, throne: { enabled: t.enabled === true, username: /^[a-z0-9_.-]{1,50}$/i.test(str(t.username, 50)) ? str(t.username, 50).toLowerCase() : '', qr: t.qr !== false, announce: t.announce === true, interval: t.interval === true, minutes: Math.max(5, Math.min(120, Number(t.minutes) || 15)), position: t.position === 'tl' ? 'tl' : 'br' }, wishlist: { enabled: w.enabled === true, url: amazonURL(w.url, true), qr: w.qr !== false, announce: w.announce === true, interval: w.interval === true, minutes: Math.max(5, Math.min(120, Number(w.minutes) || 15)), position: w.position === 'tl' ? 'tl' : 'br' }, ninja: { enabled: n.enabled === true, reliable: n.reliable === true, username: /^[a-z0-9_-]{1,50}$/i.test(str(n.username, 50)) ? str(n.username, 50).toLowerCase() : '', qr: n.qr === true, announce: n.announce === true, interval: n.interval === true, minutes: Math.max(5, Math.min(120, Number(n.minutes) || 15)), position: n.position === 'tl' ? 'tl' : 'br' } };
 	}
 	function price(text, currency) {
 		var s = str(text, 100).replace(/[^\d.,]/g, '');
@@ -267,7 +267,17 @@
         url.search = ''; url.hash = '';
         return commerce({ items: [{ name: data.name, url: url.href, image: image, amount: price && typeof price.value === 'number' && /^[A-Z]{3}$/.test(price.currency) ? price.value : null, currency: price ? price.currency : 'USD', purpose: 'shop' }] }).items[0] || null;
     }
-	var api = { fourthwallProduct: fourthwallProduct, commerce: commerce, commerceCurrent: commerceCurrent, providerEvent: providerEvent, ebayId: ebayId, ebayCurrent: ebayCurrent, throne: throne, config: config, amazonURL: amazonURL, imageURL: imageURL, price: price, item: item, ladder: ladder, purchaseURL: purchaseURL, parseList: parseList, money: money, tip: tip };
+    function shopifyDomain(value) {
+        value = str(value, 100).toLowerCase();
+        return /^[a-z0-9][a-z0-9-]{0,62}\.myshopify\.com$/.test(value) ? value : '';
+    }
+    function shopifyProduct(data) {
+        if (!data || data.availableForSale !== true || !data.onlineStoreUrl || !data.priceRange) return null;
+        var min = data.priceRange.minVariantPrice, max = data.priceRange.maxVariantPrice;
+        var price = min && max && min.amount === max.amount && min.currencyCode === max.currencyCode && /^[A-Z]{3}$/.test(min.currencyCode) && /^\d+(?:\.\d+)?$/.test(min.amount) ? Number(min.amount) : null;
+        return commerce({ items: [{ name: data.title, url: data.onlineStoreUrl, image: data.featuredImage && data.featuredImage.url, amount: price, currency: min && min.currencyCode, purpose: 'shop' }] }).items[0] || null;
+    }
+	var api = { shopifyDomain: shopifyDomain, shopifyProduct: shopifyProduct, fourthwallProduct: fourthwallProduct, commerce: commerce, commerceCurrent: commerceCurrent, providerEvent: providerEvent, ebayId: ebayId, ebayCurrent: ebayCurrent, throne: throne, config: config, amazonURL: amazonURL, imageURL: imageURL, price: price, item: item, ladder: ladder, purchaseURL: purchaseURL, parseList: parseList, money: money, tip: tip };
 	root.SSNMonetization = api;
 	if (typeof module === 'object' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : this);

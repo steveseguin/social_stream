@@ -180,7 +180,7 @@
         if (mode === 'commerce' && view !== 'card' && view !== 'showcase') setTimeout(function () {
             var provider = params.get('provider') || 'fourthwall';
             var donation = provider === 'kofi', gift = provider === 'bmac';
-            enqueue('demo-commerce', tr(donation ? 'commerce-alert-support' : gift ? 'commerce-alert-giftcontribution' : 'commerce-alert-purchase', donation ? 'Support' : gift ? 'Gift contribution' : 'Purchase') + ': Juniper', donation ? 'Ko-fi - $5.00 - Thank you for the stream!' : gift ? 'Buy Me a Coffee - Studio light - $10.00' : 'Fourthwall - Creator T-shirt');
+            enqueue('demo-commerce', tr(donation ? 'commerce-alert-support' : gift ? 'commerce-alert-giftcontribution' : 'commerce-alert-purchase', donation ? 'Support' : gift ? 'Gift contribution' : 'Purchase') + ': Juniper', donation ? 'Ko-fi - $5.00 - Thank you for the stream!' : gift ? 'Buy Me a Coffee - Studio light - $10.00' : provider === 'shopify' ? 'Shopify - Creator T-shirt' : 'Fourthwall - Creator T-shirt');
         }, 600);
 		if (mode === 'throne')
 			setTimeout(function () {
