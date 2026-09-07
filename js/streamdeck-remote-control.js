@@ -71,6 +71,12 @@
 	};
 
 	const SSN_ACTIONS = {
+        getCommerceState: true,
+		commerceShow: true,
+		commerceNext: true,
+		commerceHide: true,
+		commerceResume: true,
+		commerceControl: true,
 		nextInQueue: true,
 		clearOverlay: true,
 		clearDock: true,
@@ -120,6 +126,12 @@
 	};
 
 	const REMOTE_SSN_ACTION_DESCRIPTORS = {
+        getCommerceState: { owner: "background", phase: 2, category: "commerce", label: "Get product display state", risk: "read-only", callback: "guaranteed" },
+		commerceShow: { owner: "background", phase: 2, category: "commerce", label: "Show product", risk: "mutating", callback: "guaranteed" },
+		commerceNext: { owner: "background", phase: 2, category: "commerce", label: "Next product", risk: "mutating", callback: "guaranteed" },
+		commerceHide: { owner: "background", phase: 2, category: "commerce", label: "Hide products", risk: "mutating", callback: "guaranteed" },
+		commerceResume: { owner: "background", phase: 2, category: "commerce", label: "Resume products", risk: "mutating", callback: "guaranteed" },
+		commerceControl: { owner: "background", phase: 2, category: "commerce", label: "Control product display", risk: "mutating", callback: "guaranteed" },
 		nextInQueue: {
 			owner: "dock",
 			phase: 1,
@@ -602,6 +614,29 @@
 		return { ok: true };
 	}
 
+    function isCommerceAction(action) {
+        return ["commerceControl", "commerceShow", "commerceNext", "commerceHide", "commerceResume"].indexOf(normalizeAction(action)) !== -1;
+    }
+    function commerceRequest(request) {
+        const action = normalizeAction(request.action);
+        let value = request.value;
+        if (action === "commerceControl" && typeof value === "string") {
+            try { value = JSON.parse(value); } catch (_) { return { ok: false, message: "Use a product control object." }; }
+        }
+        if (Array.isArray(value) || (value !== undefined && value !== null && typeof value === "boolean")) return { ok: false, message: "Invalid product control value." };
+        const options = value && typeof value === "object" ? value : {};
+        const command = { commerceShow: "show", commerceNext: "next", commerceHide: "hide", commerceResume: "resume" }[action] || options.command || request.command;
+        const url = options.url !== undefined ? options.url : action === "commerceShow" && typeof value === "string" ? value : request.url || "";
+        const duration = options.seconds !== undefined ? options.seconds : (action === "commerceNext" || action === "commerceHide") && value != null && typeof value !== "object" ? value : request.seconds === undefined ? 0 : request.seconds;
+        const seconds = Number(duration);
+        if (["show", "next", "hide", "resume"].indexOf(command) === -1 || ["number", "string"].indexOf(typeof duration) === -1 || !Number.isFinite(seconds) || seconds < 0 || seconds > 3600) return { ok: false, message: "Choose Show, Next, Hide or Resume and 0 to 3600 seconds." };
+        if (typeof url !== "string" || url.length > 2048) return { ok: false, message: "Use an exact saved product URL." };
+        if (url) {
+            try { const parsed = new URL(url); if (parsed.protocol !== "https:" || parsed.username || parsed.password) throw new Error(); }
+            catch (_) { return { ok: false, message: "Use a public HTTPS product URL." }; }
+        }
+        return { ok: true, command: command, url: url, seconds: seconds };
+    }
 	function getActionOwner(action) {
 		const normalized = normalizeAction(action);
 		if (SSAPP_ACTIONS[normalized]) {
@@ -706,6 +741,8 @@
 		buildSsappCapabilities,
 		buildSsnAvailability,
 		normalizeAction,
+        isCommerceAction,
+        commerceRequest,
 		isCapabilityRequest,
 		isVersionedRequest,
 		validateVersionedRequest,

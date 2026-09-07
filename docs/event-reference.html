@@ -1557,7 +1557,10 @@
                     <h3>Facebook Live</h3>
                     <p class="source-note">Implementation: <code>sources/facebook.js</code> (DOM scraping) and optional Graph API bridge at <code>sources/websocket/facebook.html</code></p>
                     <ul class="requirements">
-                        <li>Relies on DOM scraping; viewer counts only refresh when <strong>Show viewer count</strong> or hype mode is enabled.</li>
+                        <li>DOM capture reads rendered Facebook comments; the managed-Page Graph API bridge reads video comments. Both use <code>type: "facebook"</code>, the standard chat fields, and no <code>event</code> for ordinary comments. The API bridge also includes the optional <code>platform: "facebook"</code>.</li>
+                        <li>The API bridge uses <code>userid</code> for the author ID when available, <code>timestamp</code> for a valid creation time in Unix milliseconds, and <code>contentimg</code> for an HTTP(S) attachment image supplied by the API. Image-only comments may have an empty <code>chatmessage</code>. <code>textonly</code> applies only to the message body: raw text when true, escaped HTML when false.</li>
+                        <li>API comment context uses <code>meta.messageId</code> (native comment ID), <code>meta.permalink</code>, <code>meta.videoId</code>, and <code>meta.pageId</code>. Earlier API builds used <code>meta.commentId</code>, duplicated author/time fields under <code>meta</code>, and passed raw attachments there. New builds use the standard author/time/media fields instead; this does not add delete-sync support.</li>
+                        <li>Viewer counts refresh only when enabled. The API bridge reads concurrent <code>live_views</code>; it does not substitute cumulative video views or invent a zero for an unavailable count. API capture does not infer Stars, memberships, highlights, or replies from ordinary comment text.</li>
                         <li>Stars are captured from the rendered Live Chat DOM when Facebook shows the visible <code>N sent</code> marker; they populate <code>hasDonation</code> and <code>donoValue</code> at 100 Stars = $1 USD without setting <code>data.event</code>.</li>
                         <li>For testing, add <code>ssnreplay=1</code> to the Facebook Live URL to process chat rows already visible after refresh.</li>
                     </ul>
@@ -1572,8 +1575,8 @@
                         <tbody>
                             <tr>
                                 <td class="status-event"><code>viewer_update</code></td>
-                                <td>Polls the live viewer badge (every ~8s when enabled).</td>
-                                <td><code>meta</code> integer viewer count; sends 0 when parsing fails to clear stale entries.</td>
+                                <td>DOM polls the live viewer badge; the API bridge polls concurrent live views when enabled.</td>
+                                <td><code>meta</code> integer viewer count, matching other sources. Missing or unparseable counts are skipped; an actual zero is valid.</td>
                             </tr>
                             <tr>
                                 <td class="donation-event"><code>hasDonation</code></td>

@@ -339,7 +339,7 @@
             throw e;
         } finally { clearTimeout(timer); }
     }
-    var liveCommerce = null, shopStatus = '', lastShopPayload = '', nextShopSync = 0;
+    var liveCommerce = null, shopStatus = '', lastShopPayload = '', nextShopSync = 0, shopQueue = Promise.resolve(), shopPending = false;
     function shopState() {
         var p = privateState.publicShop || {};
         return { url: p.published && /^[a-f0-9]{64}$/.test(p.id || '') ? 'https://socialstream.ninja/shop.html?id=' + p.id : '', published: !!p.published, status: shopStatus };
@@ -350,6 +350,32 @@
         c.viewerURL = shopState().url;
         return c;
     }
+    function controlState() {
+        var c = commerceState(), now = Date.now(), live = liveCommerce && (!liveCommerce.until || liveCommerce.until > now) ? liveCommerce : null;
+        var selected = M.commerceCurrent(c, now);
+        return { enabled: c.enabled, hostOn: !!isExtensionOn, mode: !isExtensionOn ? 'offline' : !c.enabled ? 'disabled' : live ? live.mode === 'hide' ? 'hidden' : 'pinned' : 'scheduled', selected: selected ? { name: selected.name, url: selected.url } : null, expiresAt: live && live.until || 0, remainingSeconds: live && live.until ? Math.max(0, Math.ceil((live.until - now) / 1000)) : null, items: c.items.map(function (item) { return { name: item.name, url: item.url }; }), publicPage: { published: shopState().published, syncing: shopPending, status: shopStatus } };
+    }
+    function enqueueShop(remove) {
+        var job = shopQueue.then(function () { return syncShop(remove); });
+        shopQueue = job.catch(function () {});
+        return job;
+    }
+    function scheduleShop() {
+        if (shopPending || !privateState.publicShop || !privateState.publicShop.published) return;
+        shopPending = true; nextShopSync = Date.now() + 60000;
+        var job = shopQueue.then(async function () {
+            if (!privateState.publicShop.published) return false;
+            try { await syncShop(!!privateState.publicShop.removePending); return true; } catch (_) { return false; }
+        });
+        shopQueue = job.catch(function () {});
+        job.then(function (success) {
+            shopPending = false;
+            if (success) {
+                broadcast();
+                if (privateState.publicShop.published && JSON.stringify(commerceState()) !== lastShopPayload) scheduleShop();
+            }
+        });
+    }
     async function syncShop(remove) {
         var p = privateState.publicShop;
         if (!p) {
@@ -357,8 +383,8 @@
             p = privateState.publicShop = { key: Array.prototype.map.call(bytes, function (n) { return n.toString(16).padStart(2, '0'); }).join(''), published: false };
             await store(); // Save the write capability before the first request.
         }
-        var controller = new AbortController(), timer = setTimeout(function () { controller.abort(); }, 12000);
         p.removePending = !!remove; await store();
+        var controller = new AbortController(), timer = setTimeout(function () { controller.abort(); }, 12000);
         try {
             var payload = JSON.stringify(commerceState());
             var headers = { Authorization: 'Bearer ' + p.key };
@@ -368,14 +394,9 @@
             if (!response.ok) throw new Error(result.error || 'Could not update the public page.');
             if (!remove && !/^[a-f0-9]{64}$/.test(result.id || '')) throw new Error('Invalid public page response.');
             p.published = !remove; p.removePending = false; if (!remove) p.id = result.id;
-            await store(); lastShopPayload = remove ? '' : JSON.stringify(commerceState()); shopStatus = remove ? 'Public page removed.' : 'Public page updated.';
+            await store(); lastShopPayload = remove ? '' : payload; shopStatus = remove ? 'Public page removed.' : 'Public page updated.';
         } catch (error) { shopStatus = 'Public page update failed. The last published version may still be visible.'; throw error; }
         finally { clearTimeout(timer); }
-    }
-    async function refreshShop() {
-        if (privateState.publicShop && privateState.publicShop.published) {
-            try { await syncShop(!!privateState.publicShop.removePending); } catch (_) {} // Local controls still work during an API outage.
-        }
     }
     async function importPublicProduct(request) {
         var url; try { url = new URL(request.url); } catch (_) { throw new Error('Enter a public product URL.'); }
@@ -411,7 +432,7 @@
 		var c = cfg();
         if (request.action === 'productImport') return importPublicProduct(request);
         if (request.action === 'publishShop' || request.action === 'unpublishShop') {
-            await syncShop(request.action === 'unpublishShop'); broadcast(); return snapshot();
+            await enqueueShop(request.action === 'unpublishShop'); broadcast(); return snapshot();
         }
         if (request.action === 'commerceControl') {
             var command = request.command, items = c.commerce.items;
@@ -429,7 +450,7 @@
                 if (!product) throw new Error('Save this product before showing it.');
                 liveCommerce = { mode: 'show', url: product.url, until: duration ? Date.now() + duration * 1000 : 0 };
             }
-            broadcast(); await refreshShop(); return snapshot();
+            broadcast(); scheduleShop(); return snapshot();
         }
         if (request.action === 'shopifyImport') return importShopify(request);
         if (request.action === 'shopifyDisconnect') {
@@ -470,7 +491,7 @@
 			await store();
 			connect();
             if (liveCommerce && liveCommerce.mode === 'show' && !updated.commerce.items.some(function (item) { return item.url === liveCommerce.url; })) liveCommerce = null;
-            await refreshShop();
+            scheduleShop();
 			connectThrone();
 			broadcast();
 			if (updated.wishlist.enabled && updated.wishlist.announce && !c.wishlist.enabled) announce('wishlist');
@@ -540,10 +561,13 @@
 		return snapshot();
 	}
 	function snapshot() {
-		return { publicShop: shopState(), commerceLive: liveCommerce, shopify: shopifyReceiver.snapshot(), receiver: { enabled: !!settings.socketserver, on: !!isExtensionOn, connected: !!(typeof socketserver !== 'undefined' && socketserver && socketserver.readyState === 1), providers: providerActivity }, ninjaReceiver: ninjaReceiver.snapshot(), ebay: ebay.snapshot(), throne: { status: throneStatus, gifts: thronePrivate().gifts, webhook: thronePrivate().hook ? 'https://api.socialstream.ninja/v1/throne/webhook/' + thronePrivate().hook : '' }, config: cfg(), list: list(), tokenSaved: !!privateState.token, status: cfg().ninja.reliable ? ninjaReceiver.snapshot().status : status, canUndo: !!lastPurchase };
+		return { commerceState: controlState(), publicShop: shopState(), commerceLive: liveCommerce, shopify: shopifyReceiver.snapshot(), receiver: { enabled: !!settings.socketserver, on: !!isExtensionOn, connected: !!(typeof socketserver !== 'undefined' && socketserver && socketserver.readyState === 1), providers: providerActivity }, ninjaReceiver: ninjaReceiver.snapshot(), ebay: ebay.snapshot(), throne: { status: throneStatus, gifts: thronePrivate().gifts, webhook: thronePrivate().hook ? 'https://api.socialstream.ninja/v1/throne/webhook/' + thronePrivate().hook : '' }, config: cfg(), list: list(), tokenSaved: !!privateState.token, status: cfg().ninja.reliable ? ninjaReceiver.snapshot().status : status, canUndo: !!lastPurchase };
 	}
 	window.handleMonetizationRequest = function (request, sender) {
 		if (sender && sender.tab && sender.tab.id !== null && sender.tab.id !== undefined) return Promise.resolve({ error: 'Use the SSN popup to configure monetization.' });
+        if (request.action === 'getCommerceState') return Promise.resolve({ commerce: controlState() });
+        if (request.action === 'get') return Promise.resolve(snapshot());
+        if (request.action === 'commerceControl') return action(request).catch(function (e) { return { error: e.message }; });
 		var job = queue.then(function () {
 			return request.action === 'get' ? snapshot() : action(request);
 		});
@@ -602,7 +626,7 @@
         shopifyReceiver.poll();
         if (privateState.publicShop && privateState.publicShop.published && Date.now() >= nextShopSync && (privateState.publicShop.removePending || JSON.stringify(commerceState()) !== lastShopPayload)) {
             nextShopSync = Date.now() + 60000;
-            queue = queue.then(refreshShop).catch(function () {});
+            scheduleShop();
         }
 		connect();
 		connectThrone();

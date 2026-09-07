@@ -92,6 +92,10 @@ fs.writeFileSync(path.join(profile, 'savedSync.json'), JSON.stringify({ streamID
   send({type:'fourthwall',platform:'fourthwall',event:'purchase',id:'fixture-purchase',chatname:'Jess',subtitle:'Studio print'});
   await overlay.waitForFunction(()=>document.getElementById('title').textContent.includes('Purchase: Jess'));
   assert(await overlay.locator('#qr').isHidden());
+  const keyReply = await bg.evaluate(()=>routeStreamDeckRemoteRequest({protocol:2,action:'commerceShow',value:'https://creator.gumroad.com/l/print',get:'commerce-key-1'},{transport:'websocket'}));
+  assert.equal(keyReply.result.ok,true); assert.equal(keyReply.result.payload.command,'show');
+  const invalidReply = await bg.evaluate(()=>routeStreamDeckRemoteRequest({protocol:2,action:'commerceNext',value:-1,get:'commerce-key-invalid'},{transport:'websocket'}));
+  assert.equal(invalidReply.result.ok,false);
   await bg.waitForFunction(()=>!!window.eventFlowSystem);
   await bg.evaluate(()=>eventFlowSystem.executeAction({actionType:'commerceControl',config:{command:'show',url:'https://creator.gumroad.com/l/print',seconds:1}},{}));
   config=await request({cmd:'monetization',action:'get'}); assert(config.commerceLive.until>Date.now()-1500);

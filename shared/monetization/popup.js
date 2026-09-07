@@ -16,12 +16,14 @@
 		var rows = by('commerce-items'); rows.textContent = '';
 		products.forEach(function (item, index) {
 			var row = document.createElement('div'), label = document.createElement('span'); row.className = 'money-item';
-			label.textContent = item.name + (item.amount != null ? ' - ' + SSNMonetization.money(item.amount, item.currency) : ''); row.appendChild(label);
+			var saved = current && current.config.commerce.items.some(function (entry) { return JSON.stringify(entry) === JSON.stringify(item); });
+            label.textContent = item.name + (saved ? '' : ' (' + tr('commerce-draft', 'Unsaved') + ')') + (item.amount != null ? ' - ' + SSNMonetization.money(item.amount, item.currency) : ''); row.appendChild(label);
 			['show', 'edit', 'up', 'remove', 'copy'].forEach(function (action) {
 				var button = document.createElement('button'); button.type = 'button';
 				button.textContent = tr('commerce-' + action, { show: 'Show now', edit: 'Edit', up: 'Move up', remove: 'Remove', copy: 'Copy public link' }[action]);
 				button.setAttribute('aria-label', button.textContent + ': ' + item.name);
-				button.disabled = action === 'up' && index === 0;
+				button.disabled = (action === 'up' && index === 0) || (action === 'show' && (!saved || !current.config.commerce.enabled));
+                if (action === 'show' && !saved) button.title = tr('commerce-save-first', 'Save setup before showing this product.');
 				button.onclick = function () {
 					if (action === 'show') { control('show', item.url); return; }
                     if (action === 'copy') { navigator.clipboard.writeText(item.url).then(function () { status(tr('commerce-copied', 'Public link copied.')); }).catch(function () { status(item.url); }); return; }
@@ -39,11 +41,15 @@
 		});
 	}
     function liveStatus(reply) {
-        var live = reply.commerceLive, active = live && (!live.until || live.until > Date.now());
-        by('commerce-live-status').textContent = active ? live.mode === 'hide' ? tr('commerce-hidden', 'Products hidden; activity alerts remain enabled.') : tr('commerce-showing', 'Product pinned on air.') : tr('commerce-scheduled', 'Using saved product schedule.');
+        var state = reply.commerceState || {}, name = state.selected && state.selected.name;
+        var labels = { offline: tr('commerce-offline-state', 'SSN is off'), disabled: tr('commerce-disabled-state', 'Products disabled'), hidden: tr('commerce-hidden-state', 'Products hidden; activity alerts continue'), pinned: tr('commerce-selected-state', 'Selected product'), scheduled: tr('commerce-scheduled-state', 'Using saved schedule') };
+        var text = labels[state.mode] || labels.scheduled;
+        if (name && state.mode !== 'hidden') text += ': ' + name;
+        if (state.remainingSeconds != null && state.remainingSeconds > 0) text += ' (' + state.remainingSeconds + 's)';
+        by('commerce-live-status').textContent = text;
         var shop = reply.publicShop || {};
         by('shop-url').value = shop.url || ''; by('shop-copy').disabled = !shop.url; by('shop-remove').disabled = !shop.published;
-        by('shop-status').textContent = shop.status || (shop.published ? tr('commerce-published', 'Saved links are public. Changes update the same viewer link.') : tr('commerce-unpublished', 'Publish your saved links to get a stable viewer URL.'));
+        by('shop-status').textContent = state.publicPage && state.publicPage.syncing ? tr('commerce-syncing-state', 'Updating public page; local controls are ready.') : shop.status || (shop.published ? tr('commerce-published', 'Saved links are public. Changes update the same viewer link.') : tr('commerce-unpublished', 'Publish your saved links to get a stable viewer URL.'));
     }
     function control(command, url) {
         request('commerceControl', { command: command, url: url, seconds: Number(by('commerce-duration').value) }).then(function (reply) { liveStatus(reply); }).catch(function (error) { status(error.message); });
