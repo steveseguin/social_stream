@@ -3375,6 +3375,16 @@ class EventFlowSystem {
 		return text.trim();
 	}
     
+    async executeCommunityCheer() {
+        if (typeof this.sendTargetP2P !== 'function') return false;
+        // Reuse the established show-text overlay vocabulary, with a fixed bounded preset.
+        const payload = { actionType: 'show_text', text: 'Cheer!', textProcessed: true,
+            x: 50, y: 40, width: 60, fontSize: 48, fontFamily: 'Arial', color: '#ffffff',
+            backgroundColor: 'rgba(0,0,0,0.8)', duration: 3000, animation: 'none', clearFirst: false };
+        const sent = await this.sendTargetP2P({ overlayNinja: payload }, 'actions', { retry: false });
+        return sent === true; // Transport acceptance, never proof that OBS displayed it.
+    }
+
     async executeAction(actionNode, message, flow = null, execution = null) {
         const { actionType, config } = actionNode;
         //console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);

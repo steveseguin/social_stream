@@ -5575,6 +5575,7 @@ function routeIndividualLikeEvent(message, alreadyRouted) {
 }
 
 async function processIncomingMessage(message, sender = null) {
+ if (message && message.type === "socialstreamchat" && window.ncAudience && window.ncAudience.ownsRoom(message.meta && message.meta.ninjachatter && message.meta.ninjachatter.room)) return; // Paired connector owns audience return.
 	var individualLikeRouting = { routed: false, stop: false };
 	try {
 		if (sender?.tab && (message.tid === undefined || message.tid === null)) {
@@ -5726,6 +5727,14 @@ async function processIncomingMessage(message, sender = null) {
 }
 
 async function handleRuntimeMessage(request, sender, sendResponseReal) {
+ if (request && request.ncAudience) {
+  // Only the packaged popup may operate the private connector; sources cannot obtain it.
+  const popupOrigin = chrome.runtime.getURL('popup.html');
+  if (!sender || !sender.url || sender.url.split('?')[0] !== popupOrigin) { sendResponseReal({error:'Not authorized'}); return; }
+  try { sendResponseReal(await window.ncAudience.handle(request.ncAudience)); } catch (_) { sendResponseReal({error:'Audience connection unavailable'}); }
+  return;
+ }
+
 	var response = {};
 	var alreadySet = false;
 
@@ -7921,6 +7930,7 @@ function hasTargetedMetaPayload(message) {
 }
 
 async function sendToDestinations(message, individualLikeAlreadyRouted) {
+
 	if (typeof message == "object") {
 		captureLiveStatsFromMessage(message);
 
@@ -8084,6 +8094,8 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 	if (message && typeof message === "object" && typeof sanitizeRelayPayloadFields === "function") {
 		message = sanitizeRelayPayloadFields(message) || message;
 	}
+
+ if (window.ncAudience && window.ncAudience.paired()) window.ncAudience.publish(message);
 
 	try {
 		captureBackgroundCreditsMessage(message);
@@ -8993,6 +9005,8 @@ function sendToS10(data, fakechat = false, relayed = false) {
 
 // Social Stream Chat integration - send messages to chat.socialstream.ninja
 function sendToSSC(data, fakechat = false, relayed = false) {
+ if (window.ncAudience && window.ncAudience.paired()) return; // Explicit paired path owns publication, including while offline.
+
 	if (settings.ssc && settings.sscapikey && settings.sscapikey.textsetting) {
 		if (settings.blockChannelPointRelays && data && (data.event === "channel_points" || data.event === "reward" || (data.reward && (data.reward.redemptionId || data.reward.cost || data.reward.title)) || (data.hasDonation && typeof data.hasDonation === "string" && data.hasDonation.includes("points")))) {
 			return null;

@@ -7950,6 +7950,23 @@ input:checked + .slider:before {
                                 </div>
 								<hr>
 
+<details id="nc-audience-room" class="options_group">
+ <summary data-translate="nc-audience-title">Audience Room · NinjaChatter</summary>
+ <p data-translate="nc-audience-intro">Give viewers a public room for chat and Cheer. Your private SSN links stay private.</p>
+ <p data-nc-status role="status">Not connected</p>
+ <div class="textInputContainer"><label for="nc-pair-code" data-translate="nc-audience-pair-code">Pairing code</label><input id="nc-pair-code" class="textInput" data-nc-code readonly autocomplete="off"></div>
+ <button type="button" data-nc-op="pair" data-translate="nc-audience-connect">Connect a room</button>
+ <a href="https://ninjachatter.com/dashboard.html" target="_blank" rel="noopener noreferrer" data-translate="nc-audience-settings">Open room settings</a>
+ <a data-nc-link href="#" hidden target="_blank" rel="noopener noreferrer" data-translate="nc-audience-public">Open public audience room</a>
+ <div class="textInputContainer"><label for="nc-publish-sources" data-translate="nc-audience-sources">Publish these sources (comma separated)</label><input id="nc-publish-sources" class="textInput" data-nc-sources placeholder="youtube, twitch" autocomplete="off"></div>
+ <p data-translate="nc-audience-sources-note">Only selected ordinary chat is published. Audience replies return for display without triggering bots or commands.</p>
+ <div><label class="switch"><input id="nc-cheer-enabled" type="checkbox" data-nc-cheer><span class="slider round"></span></label><label for="nc-cheer-enabled" data-translate="nc-audience-cheer">Allow Cheer overlay effect</label></div>
+ <p data-translate="nc-audience-preset">Uses the fixed Event Flow Cheer preset. Open your SSN Actions overlay to see it.</p>
+ <button type="button" data-nc-op="save" data-translate="nc-audience-save">Save connection options</button>
+ <button type="button" data-nc-op="pause" data-translate="nc-audience-pause">Pause</button>
+ <button type="button" data-nc-op="resume" data-translate="nc-audience-resume">Resume</button>
+ <button type="button" data-nc-op="disconnect" data-translate="nc-audience-disconnect">Disconnect</button>
+ <details><summary data-translate="nc-audience-legacy">Existing chat relay</summary>
 								<!-- Social Stream Chat Integration -->
 								<div title="Relay all messages to Ninja Chatter">
 								  <label class="switch">
@@ -7966,6 +7983,7 @@ input:checked + .slider:before {
 								</div>
 								<hr>
 
+</details></details>
 								<!-- Video Stats Polling -->
 								<div title="Poll a video server stats endpoint and send bitrate/health data as meta events.">
 									<label class="switch">
@@ -16098,6 +16116,7 @@ input:checked + .slider:before {
         <script src="shared/stickers/popup.js"></script>
 <script src="shared/monetization/core.js"></script>
 <script src="shared/monetization/popup.js"></script>
+<script src="shared/audience-room/popup.js"></script>
         <script type="text/javascript" src="spotify-auth-helper.js"></script>
     </body>
 </html>
