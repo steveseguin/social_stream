@@ -297,7 +297,7 @@
 		var c = cfg();
 		if (request.action.indexOf('ebay') === 0) {
 			var result = await ebay.action(request);
-			if (request.action === 'ebayDisconnect') {
+			if (request.action === 'ebayDisconnect' || request.action === 'ebayEnvironment') {
 				c.ebay.enabled = false;
 				settings.monetization = { json: JSON.stringify(c) };
 				await store();
@@ -403,7 +403,17 @@
 	chrome.storage.local.get(['monetizationPrivate'], function (saved) {
 		var p = saved.monetizationPrivate;
 		if (p && typeof p === 'object') {
-			if (p.ebay && (p.ebay.key === '' || /^[a-f0-9]{64}$/.test(p.ebay.key || '')) && Array.isArray(p.ebay.items) && Array.isArray(p.ebay.seen)) privateState.ebay = { key: p.ebay.key, items: p.ebay.items.slice(0, 20), seen: p.ebay.seen.slice(-10000), cursor: Number(p.ebay.cursor) || 0 };
+			function ebayProfile(value) {
+				if (!value || !(value.key === '' || /^[a-f0-9]{64}$/.test(value.key || '')) || !Array.isArray(value.items) || !Array.isArray(value.seen)) return null;
+				return { key: value.key, environment: value.environment === 'sandbox' ? 'sandbox' : 'production', items: value.items.slice(0, 20), seen: value.seen.slice(-10000), cursor: Number(value.cursor) || 0 };
+			}
+			var savedEbay = ebayProfile(p.ebay);
+			if (savedEbay) privateState.ebay = savedEbay;
+			privateState.ebayProfiles = {};
+			['production', 'sandbox'].forEach(function (environment) {
+				var profile = ebayProfile(p.ebayProfiles && p.ebayProfiles[environment]);
+				if (profile && profile.environment === environment) privateState.ebayProfiles[environment] = profile;
+			});
 			if (p.throne && /^[a-f0-9]{64}$/.test(p.throne.key || '') && /^[a-f0-9]{64}$/.test(p.throne.hook || ''))
 				privateState.throne = {
 					key: p.throne.key,

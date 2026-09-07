@@ -10,6 +10,8 @@ To enable eBay, set `EBAY_SHOWCASE_ENABLED=1`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SE
 
 Only eBay connection tokens are stored, encrypted using a reader secret retained on the SSN device. The database stores its hash, not the secret. No raw orders, addresses or buyer identities are stored or broadcast. OAuth state expires in ten minutes and is single-use. Disconnect deletes the encrypted connection. eBay orders use overlapping date cursors, pagination and stable order-line deduplication; stock changes and auction endings never count as paid purchases.
 
+For sandbox development, set `EBAY_ENVIRONMENT=sandbox` and use sandbox credentials, a sandbox RuName, and a separate database/service. Production remains the default; recognizable sandbox keys are rejected in production mode. See [sandbox setup and expansion notes](EBAY-SANDBOX.md). Application-key authentication alone does not complete seller OAuth or establish production API access.
+
 Use HTTPS on the public API. The loopback service has body limits, rate limits and bounded SSE clients. Do not expose its internal port directly. This service does not edit listings, fulfill orders or collect payments.
 
 Tests: `npm test`. From the SSN repository, `node tests/monetization-ssapp.e2e.cjs` and `node tests/ebay-ssapp.e2e.cjs` run the actual desktop app against local fixtures. A real eBay seller OAuth/order test and a real signed Throne gift remain required before claiming live integration validation.

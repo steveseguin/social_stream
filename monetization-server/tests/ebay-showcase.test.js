@@ -5,6 +5,41 @@ import Database from "better-sqlite3";
 import plugin, { paidSales, publicItem } from "../ebay-showcase.js";
 import { fixture, order } from "./ebay-fixture.js";
 
+test("Sandbox isolates OAuth, item links and seller tokens from production", async () => {
+	const db = new Database(":memory:"), sandbox = Fastify(), production = Fastify(), remote = fixture();
+	const headers = { authorization: "Bearer " + "d".repeat(64) };
+	const options = { db, clientId: "fixture-id", clientSecret: "fixture-secret", ruName: "fixture-redirect", fetch: remote.fetch };
+	await sandbox.register(plugin, { ...options, environment: "sandbox" });
+	await production.register(plugin, { ...options, environment: "production" });
+	try {
+		const auth = new URL((await sandbox.inject({ method: "POST", url: "/v1/ebay-sandbox/connect", headers })).json().url);
+		assert.equal(auth.origin, "https://auth.sandbox.ebay.com");
+		assert.equal((await sandbox.inject("/v1/ebay-sandbox/callback?state=" + auth.searchParams.get("state") + "&code=fixture")).statusCode, 200);
+		assert.equal((await sandbox.inject({ url: "/v1/ebay-sandbox/status", headers })).json().environment, "sandbox");
+		assert.equal((await production.inject({ url: "/v1/ebay/status", headers })).json().connected, false);
+		assert.equal((await sandbox.inject({ url: "/v1/ebay-sandbox/item/123456789012", headers })).json().url, "https://www.sandbox.ebay.com/itm/123456789012");
+		remote.orders = [order()];
+		assert.equal((await sandbox.inject({ url: "/v1/ebay-sandbox/sales?since=" + (Date.now() - 60000), headers })).json().sales.length, 1);
+		assert(remote.calls.every(c => c.url.origin === "https://api.sandbox.ebay.com"));
+	} finally {
+		await sandbox.close();
+		await production.close();
+		db.close();
+	}
+});
+
+test("Invalid environment and sandbox credentials in production fail before network access", async () => {
+	for (const extra of [{ environment: "sandbbox" }, { environment: "production", clientId: "fixture-SBX-id" }, { environment: "production", clientSecret: "SBX-fixture" }]) {
+		const app = Fastify(), db = new Database(":memory:");
+		try {
+			await assert.rejects(async () => { await app.register(plugin, { db, clientId: "fixture-id", clientSecret: "fixture-secret", ruName: "fixture", ...extra }); }, /EBAY_ENVIRONMENT/);
+		} finally {
+			await app.close();
+			db.close();
+		}
+	}
+});
+
 test("Paid sales exclude pending/cancelled orders and all buyer/payment private fields", () => {
 	const a = order(),
 		pending = { ...order("pending"), orderPaymentStatus: "PENDING" },

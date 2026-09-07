@@ -5724,6 +5724,68 @@ async function processIncomingMessage(message, sender = null) {
 	return message;
 }
 
+const TEAMS_CAPTURE_REMINDER_ID = "ssn-teams-capture-disabled";
+let teamsCaptureReminderPending = false;
+let teamsCaptureReminderShown = false;
+
+function maybeShowTeamsCaptureReminder(sender) {
+	if (isSSAPP || !isExtensionOn || settings.teams || teamsCaptureReminderPending || teamsCaptureReminderShown) {
+		return;
+	}
+	if (!chrome.notifications || !chrome.notifications.create || !sender || !sender.tab) {
+		return;
+	}
+	try {
+		const url = new URL(sender.url || sender.tab.url);
+		if (url.protocol !== "https:" || !["teams.live.com", "teams.microsoft.com", "teams.cloud.microsoft"].includes(url.hostname)) {
+			return;
+		}
+	} catch (e) {
+		return;
+	}
+	teamsCaptureReminderPending = true;
+	chrome.storage.local.get("teamsCaptureReminderShown", function (stored) {
+		if (chrome.runtime.lastError || (stored && stored.teamsCaptureReminderShown) || !isExtensionOn || settings.teams) {
+			teamsCaptureReminderPending = false;
+			return;
+		}
+		chrome.notifications.create(TEAMS_CAPTURE_REMINDER_ID, {
+			type: "basic",
+			iconUrl: "icons/icon-128.png",
+			title: "Social Stream Ninja: Teams capture is off",
+			message: "Enable capture to send Teams chat to your dock and overlays.",
+			buttons: [{ title: "Enable capture" }, { title: "Don't show again" }],
+			requireInteraction: true
+		}, function () {
+			const failed = chrome.runtime.lastError;
+			teamsCaptureReminderPending = false;
+			if (!failed) {
+				teamsCaptureReminderShown = true;
+				chrome.storage.local.set({ teamsCaptureReminderShown: true });
+			}
+		});
+	});
+}
+
+if (chrome.notifications && chrome.notifications.onButtonClicked) {
+	chrome.notifications.onButtonClicked.addListener(function (notificationId, buttonIndex) {
+		if (isSSAPP || notificationId !== TEAMS_CAPTURE_REMINDER_ID) {
+			return;
+		}
+		if (buttonIndex === 0) {
+			handleRuntimeMessage({ cmd: "saveSetting", type: "setting", setting: "teams", value: true }, {}, function (response) {
+				if (response && response.saved) {
+					pushSettingChange();
+					chrome.notifications.clear(TEAMS_CAPTURE_REMINDER_ID);
+				}
+			});
+		} else if (buttonIndex === 1) {
+			chrome.storage.local.set({ teamsCaptureReminderShown: true });
+			chrome.notifications.clear(TEAMS_CAPTURE_REMINDER_ID);
+		}
+	});
+}
+
 async function handleRuntimeMessage(request, sender, sendResponseReal) {
 	var response = {};
 	var alreadySet = false;
@@ -6992,6 +7054,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			}
 			return true;
 		} else if ("getSettings" in request) {
+			maybeShowTeamsCaptureReminder(sender);
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: getEffectiveSettingsForSources() }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
 			if (hasSenderTabId) {

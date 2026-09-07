@@ -38,6 +38,7 @@ export async function createServer(options = {}) {
 		await app.register(ebayShowcase, { ...options.ebay, db });
 	} else {
 		app.route({ method: ['GET', 'POST', 'DELETE'], url: '/v1/ebay/*', handler: async (_request, reply) => reply.code(503).send({ code: 'EBAY_NOT_CONFIGURED' }) });
+		app.route({ method: ['GET', 'POST', 'DELETE'], url: '/v1/ebay-sandbox/*', handler: async (_request, reply) => reply.code(503).send({ code: 'EBAY_NOT_CONFIGURED' }) });
 	}
 	app.get('/v1/monetization/health', async () => ({ service: 'ssn-monetization', ok: true }));
 	return app;

@@ -1,0 +1,29 @@
+[Unit]
+Description=Social Stream Ninja eBay sandbox API
+After=network.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+WorkingDirectory=/opt/ssn-monetization
+ExecStart=/usr/bin/node /opt/ssn-monetization/server.js
+Environment=NODE_ENV=production
+Environment=EBAY_SHOWCASE_ENABLED=1
+Environment=EBAY_ENVIRONMENT=sandbox
+Environment=PORT=3080
+Environment=SSN_MONETIZATION_DB=/var/lib/ssn-ebay-sandbox/monetization.db
+EnvironmentFile=/etc/ssn-ebay-sandbox.env
+StateDirectory=ssn-ebay-sandbox
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+MemoryMax=256M
+TasksMax=64
+TimeoutStopSec=20
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
