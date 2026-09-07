@@ -26,7 +26,8 @@
 					controller.abort();
 				}, 15000);
 			try {
-				var response = await fetch('https://api.socialstream.ninja/v1/ebay/' + path, { method: method || 'GET', headers: { Authorization: 'Bearer ' + p.key }, credentials: 'omit', redirect: 'error', signal: controller.signal });
+				var route = p.environment === 'sandbox' ? 'ebay-sandbox' : 'ebay';
+				var response = await fetch('https://api.socialstream.ninja/v1/' + route + '/' + path, { method: method || 'GET', headers: { Authorization: 'Bearer ' + p.key }, credentials: 'omit', redirect: 'error', signal: controller.signal });
 				if (response.status === 503) {
 					var problem = await response.json().catch(function () { return {}; });
 					if (problem.code === 'EBAY_NOT_CONFIGURED') throw new Error('eBay needs application credentials configured on the SSN API.');
@@ -39,23 +40,58 @@
 		}
 		function publicState() {
 			return Object.assign({}, hooks.config(), {
+				environment: state().environment || 'production',
 				items: state().items.map(function (i) {
 					return { id: i.id, name: i.name, amount: i.amount, currency: i.currency, image: i.image, url: i.url, auction: i.auction, startingBid: i.startingBid, endsAt: i.endsAt, available: i.available, bought: i.bought, updatedAt: i.updatedAt };
 				})
 			});
 		}
+		function useEnvironment(value) {
+			var environment = value || 'production', p = state();
+			if (environment !== 'sandbox' && environment !== 'production') throw new Error('Invalid eBay environment.');
+			if ((p.environment || 'production') !== environment) {
+				throw new Error('The eBay service does not match the selected environment.');
+			}
+			p.environment = environment;
+		}
 		async function verify() {
 			var reply = await api('status');
+			connected = false;
+			useEnvironment(reply.environment);
+			await hooks.store();
 			connected = reply.protocol === 'ssn-ebay-1' && reply.connected === true;
-			status = connected ? 'Connected to eBay' : 'Finish connecting your seller account';
+			status = connected ? (state().environment === 'sandbox' ? 'Connected to eBay Sandbox (test purchases only)' : 'Connected to eBay') : 'Finish connecting your seller account';
 			return connected;
 		}
 		async function action(request) {
 			var p = state();
+			if (request.action === 'ebayEnvironment') {
+				if (!['sandbox', 'production'].includes(request.environment)) throw new Error('Invalid eBay environment.');
+				if (busy) throw new Error('Wait for the current eBay update before switching environments.');
+				if ((p.environment || 'production') === request.environment) return {};
+				var privateData = hooks.privateState();
+				var before = JSON.stringify(privateData);
+				if (!privateData.ebayProfiles) privateData.ebayProfiles = {};
+				privateData.ebayProfiles[p.environment || 'production'] = p;
+				privateData.ebay = privateData.ebayProfiles[request.environment] || { key: '', items: [], seen: [], cursor: 0, environment: request.environment };
+				try { await hooks.store(); } catch (e) {
+					var previous = JSON.parse(before);
+					privateData.ebay = previous.ebay;
+					privateData.ebayProfiles = previous.ebayProfiles;
+					throw e;
+				}
+				connected = false;
+				nextPoll = 0;
+				status = 'Environment changed. Connect or check your seller account before enabling the showcase.';
+				return {};
+			}
 			if (request.action === 'ebayConnect') {
 				var reply = await api('connect', 'POST'),
 					url = new URL(reply.url);
-				if (url.origin !== 'https://auth.ebay.com' || url.pathname !== '/oauth2/authorize') throw new Error('Invalid eBay connection link.');
+				var environment = reply.environment || 'production';
+				if (url.origin !== (environment === 'sandbox' ? 'https://auth.sandbox.ebay.com' : 'https://auth.ebay.com') || url.pathname !== '/oauth2/authorize' || url.username || url.password) throw new Error('Invalid eBay connection link.');
+				useEnvironment(environment);
+				await hooks.store();
 				return { url: url.href };
 			}
 			if (request.action === 'ebayStatus') {
@@ -70,6 +106,9 @@
 			} else if (request.action === 'ebayAdd') {
 				var id = SSNMonetization.ebayId(request.url);
 				if (!id) throw new Error('Paste a full eBay item URL.');
+				await verify();
+				var sandboxURL = /^(?:www\.)?sandbox\.ebay\.com$/.test(new URL(request.url).hostname);
+				if (sandboxURL !== (p.environment === 'sandbox')) throw new Error('Use an eBay listing URL matching the connected sandbox or production environment.');
 				if (p.items.length >= 20) throw new Error('The showcase supports up to 20 products.');
 				if (
 					p.items.some(function (i) {
@@ -104,6 +143,8 @@
 			nextPoll = Date.now() + 60000;
 			try {
 				await hooks.serialize(async function () {
+					await verify();
+					if (!connected) throw new Error('Connect your eBay seller account first.');
 					var p = state(),
 						since = Math.max(p.cursor - 120000, Date.now() - 29 * 86400000),
 						result = await api('sales?since=' + Math.floor(since));
@@ -118,7 +159,7 @@
 						if (!item || !/^[a-f0-9]{64}$/.test(sale.id) || p.seen.indexOf(sale.id) !== -1 || (sale.paidAt || sale.createdAt) < item.addedAt) return;
 						p.seen.push(sale.id);
 						item.bought = true;
-						alerts.push({ platform: 'ebay', type: 'ebay', event: 'purchase', id: 'ebay-' + sale.id, chatname: 'eBay buyer', chatmessage: 'Purchased ' + item.name, textonly: true, subtitle: item.name, contentimg: SSNMonetization.imageURL(item.image), meta: { ebayPurchase: { itemId: item.id, itemName: item.name, quantity: Math.max(1, Math.min(100000, Number(sale.quantity) || 1)), url: item.url } } });
+						alerts.push({ platform: 'ebay', type: 'ebay', event: 'purchase', id: 'ebay-' + sale.id, chatname: p.environment === 'sandbox' ? 'eBay Sandbox buyer' : 'eBay buyer', chatmessage: (p.environment === 'sandbox' ? 'Sandbox test purchase: ' : 'Purchased ') + item.name, textonly: true, subtitle: item.name, contentimg: SSNMonetization.imageURL(item.image), meta: { ebayPurchase: { itemId: item.id, itemName: item.name, quantity: Math.max(1, Math.min(100000, Number(sale.quantity) || 1)), url: item.url } } });
 					});
 					p.cursor = result.through;
 					p.seen = p.seen.slice(-10000);
@@ -150,7 +191,7 @@
 					await hooks.store();
 					hooks.broadcast();
 					connected = true;
-					status = stale ? 'Sales checked; some listing prices could not refresh' : 'Connected; checks about once a minute';
+					status = (p.environment === 'sandbox' ? 'Sandbox test mode. ' : '') + (stale ? 'Sales checked; some listing prices could not refresh' : 'Connected; checks about once a minute');
 				});
 			} catch (e) {
 				status = e.message;
@@ -164,7 +205,7 @@
 			poll: poll,
 			publicState: publicState,
 			snapshot: function () {
-				return { status: status, connected: connected, items: publicState().items };
+				return { status: status, connected: connected, environment: state().environment || 'production', items: publicState().items };
 			}
 		};
 	};

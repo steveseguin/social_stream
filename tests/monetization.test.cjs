@@ -7,7 +7,7 @@ const { test } = require('node:test'),
 const M = require('../shared/monetization/core.js'),
 	root = path.join(__dirname, '..'),
 	url = 'https://www.amazon.com/hz/wishlist/ls/ABC123456';
-function service() {
+function service(initialDisk = {}) {
 	let now = 1000000;
 	const sent = [],
 		chat = [],
@@ -48,7 +48,7 @@ function service() {
 			runtime: {},
 			storage: {
 				local: {
-					get: (keys, cb) => cb({}),
+					get: (keys, cb) => cb(JSON.parse(JSON.stringify(initialDisk))),
 					set: (data, cb) => {
 						Object.assign(disk, JSON.parse(JSON.stringify(data)));
 						if (cb) cb();
@@ -283,6 +283,10 @@ test('eBay selects remaining products, validates item links and never calls an e
 	assert.equal(M.ebayCurrent(items, { display: 'cycle', seconds: 20 }, 40000).id, 'a');
 	assert.equal(items[3].bought, undefined);
 	assert.equal(M.ebayId('https://www.ebay.ca/itm/A-title/123456789012?foo=1'), '123456789012');
+	assert.equal(M.ebayId('https://www.sandbox.ebay.com/itm/123456789012'), '123456789012');
+	assert.equal(M.ebayId('https://sandbox.ebay.com.evil.test/itm/123456789012'), '');
+	items[1].bought = true;
+	assert.equal(M.ebayCurrent(items, { display: 'cheapest', seconds: 20 }, 1000).id, 'a');
 	for (const url of ['https://ebay.com.evil.test/itm/123456789012', 'http://ebay.com/itm/123456789012', 'https://u:p@ebay.com/itm/123456789012', 'javascript:alert(1)']) assert.equal(M.ebayId(url), '');
 });
 test('eBay watches off-screen items, ignores history, persists deduplication and respects disable/chat opt-in', async () => {
@@ -340,6 +344,62 @@ test('eBay watches off-screen items, ignores history, persists deduplication and
 	s.advance(61000);
 	await s.request('get');
 	assert.equal(requests, before);
+});
+
+test('Sandbox accepts only matching auth/listing links and cannot mix a production queue', async () => {
+	const s = service();
+	assert(!(await s.request('ebayEnvironment', { environment: 'sandbox' })).error);
+	let environment = 'sandbox', authOrigin = 'https://auth.sandbox.ebay.com';
+	s.c.fetch = async endpoint => ({ ok: true, json: async () => {
+		if (endpoint.endsWith('/connect')) return { environment, url: authOrigin + '/oauth2/authorize?state=fixture' };
+		if (endpoint.endsWith('/status')) return { protocol: 'ssn-ebay-1', environment, connected: true };
+		if (endpoint.includes('/item/')) return { id: '123456789012', name: 'Test product', amount: 10, currency: 'USD', url: 'https://www.sandbox.ebay.com/itm/123456789012' };
+		throw Error('Unexpected endpoint');
+	} });
+	assert(!(await s.request('ebayConnect')).error);
+	assert.match((await s.request('ebayAdd', { url: 'https://www.ebay.com/itm/123456789012' })).error, /matching/);
+	assert(!(await s.request('ebayAdd', { url: 'https://www.sandbox.ebay.com/itm/123456789012' })).error);
+	authOrigin = 'https://auth.sandbox.ebay.com.evil.test';
+	assert.match((await s.request('ebayConnect')).error, /Invalid/);
+	environment = 'production';
+	assert.match((await s.request('ebayStatus')).error, /selected environment/);
+	assert.equal(s.disk.monetizationPrivate.ebay.items.length, 1);
+});
+
+test('Switching eBay environments preserves separate products and credentials and disables the showcase', async () => {
+	const s = service(), routes = [];
+	s.c.fetch = async endpoint => {
+		routes.push(endpoint);
+		const environment = endpoint.includes('/ebay-sandbox/') ? 'sandbox' : 'production';
+		return { ok: true, json: async () => endpoint.endsWith('/status')
+			? { protocol: 'ssn-ebay-1', environment, connected: true }
+			: { id: '123456789012', name: environment, amount: 5, currency: 'USD', url: 'https://www.' + (environment === 'sandbox' ? 'sandbox.' : '') + 'ebay.com/itm/123456789012' } };
+	};
+	assert(!(await s.request('ebayAdd', { url: 'https://www.ebay.com/itm/123456789012' })).error);
+	const productionKey = s.disk.monetizationPrivate.ebay.key;
+	await s.request('save', { config: { ebay: { enabled: true } } });
+	let reply = await s.request('ebayEnvironment', { environment: 'sandbox' });
+	assert.equal(reply.config.ebay.enabled, false);
+	assert.equal(reply.ebay.items.length, 0);
+	assert(!(await s.request('ebayAdd', { url: 'https://www.sandbox.ebay.com/itm/123456789012' })).error);
+	const sandboxKey = s.disk.monetizationPrivate.ebay.key;
+	assert.notEqual(sandboxKey, productionKey);
+	await s.request('ebayEnvironment', { environment: 'production' });
+	assert.equal(s.disk.monetizationPrivate.ebay.key, productionKey);
+	assert.equal((await s.request('get')).ebay.items[0].name, 'production');
+	await s.request('ebayEnvironment', { environment: 'sandbox' });
+	assert.equal(s.disk.monetizationPrivate.ebay.key, sandboxKey);
+	assert.equal((await s.request('get')).ebay.items[0].name, 'sandbox');
+	const restarted = service(s.disk);
+	assert.equal((await restarted.request('get')).ebay.environment, 'sandbox');
+	assert.equal((await restarted.request('get')).ebay.items[0].name, 'sandbox');
+	await restarted.request('ebayEnvironment', { environment: 'production' });
+	assert.equal(restarted.disk.monetizationPrivate.ebay.key, productionKey);
+	assert.equal((await restarted.request('get')).ebay.items[0].name, 'production');
+	assert(routes.some(url => url.includes('/ebay-sandbox/')));
+	assert(!JSON.stringify(s.sent).includes(productionKey));
+	assert(!JSON.stringify(s.sent).includes(sandboxKey));
+	assert.match((await s.request('ebayEnvironment', { environment: 'invalid' })).error, /Invalid/);
 });
 
 test('An unavailable eBay service cannot enable the source or overwrite other support settings', async () => {

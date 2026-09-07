@@ -290,6 +290,7 @@ const state = {
   currentAlert: null,
   currentAlertNode: null,
   alertSequence: 0,
+  soundSequence: 0,
   showTimer: null,
   cleanupTimer: null,
   watchdogTimer: null,
@@ -1408,7 +1409,7 @@ function buildAlertViewModel(payload = {}) {
   }
   const subtitle = buildAlertSubtitle(category, payload, eventKey, actor);
   const viewerCount = pickViewerCount(payload);
-  const mediaUrl = pickMediaUrl(payload);
+  let mediaUrl = pickMediaUrl(payload);
   const cashValue = pickCashValue(payload, amount, sourceKey);
   if (isValueAlertCategory(category) && settings.minDonationValue > 0 && cashValue < settings.minDonationValue) {
     log('value alert skipped below minimum', { amount, cashValue, minimum: settings.minDonationValue, payload });
@@ -1416,6 +1417,8 @@ function buildAlertViewModel(payload = {}) {
   }
   const headline = buildHeadline(category, eventKey, actor, amount, viewerCount, payload);
   const bodyText = buildBodyText(category, payload, viewerCount);
+  const effect = matchAlertEffect(category, payload, amount, sourceKey);
+  if (effect && effect.media) mediaUrl = effect.media;
 
   return {
     category,
@@ -1427,6 +1430,7 @@ function buildAlertViewModel(payload = {}) {
     actor,
     amount,
     cashValue,
+    effectSound: effect ? effect.sound : '',
     subtitle,
     bodyText,
     headlineLead: headline.lead,
@@ -1629,6 +1633,49 @@ function isValueAlertCategory(category) {
   return category === ALERT_CATEGORIES.DONATION || category === ALERT_CATEGORIES.BITS;
 }
 
+// These are overlay settings, never fields added to the incoming event payload.
+function readAlertEffects() {
+  const effects = [];
+  for (let index = 1; index <= 3; index++) {
+    const prefix = 'effect' + index;
+    if (urlParams.get(prefix + 'enabled') === 'false') continue;
+    const media = normalizeText(urlParams.get(prefix + 'media'));
+    const sound = normalizeText(urlParams.get(prefix + 'sound'));
+    if (!media && !sound) continue;
+    const category = normalizeText(urlParams.get(prefix + 'type')) || 'donation';
+    if (!Object.values(ALERT_CATEGORIES).includes(category)) continue;
+    const minText = normalizeText(urlParams.get(prefix + 'min'));
+    const maxText = normalizeText(urlParams.get(prefix + 'max'));
+    const min = minText ? Number(minText) : null;
+    const max = maxText ? Number(maxText) : null;
+    if ((min !== null && (!Number.isFinite(min) || min < 0)) ||
+        (max !== null && (!Number.isFinite(max) || max < 0)) ||
+        (min !== null && max !== null && min > max)) continue;
+    // Bounds only make sense on donation and cheer categories.
+    if ((min !== null || max !== null) && !isValueAlertCategory(category)) continue;
+    effects.push({ category, min, max, media, sound });
+  }
+  return effects;
+}
+
+function matchAlertEffect(category, payload, amount, sourceKey) {
+  // Prefer a labelled amount: bare donoValue units differ across providers.
+  const labelledAmount = normalizeText(amount);
+  let value = labelledAmount && !/^[\d\s.,+-]+$/.test(labelledAmount) ? parseCashValue(labelledAmount, sourceKey) : 0;
+  const meta = payload.meta || {};
+  if (meta.currency && Number(meta.amount) > 0 && Number.isFinite(Number(meta.amount))) {
+    value = parseCashValue(String(meta.amount) + ' ' + meta.currency, sourceKey);
+  }
+  const cents = Math.round(value * 100);
+  return settings.alertEffects.find(effect => {
+    if (effect.category !== category) return false;
+    if (effect.min === null && effect.max === null) return true;
+    if (!(value > 0)) return false;
+    return (effect.min === null || cents >= Math.round(effect.min * 100)) &&
+      (effect.max === null || cents <= Math.round(effect.max * 100));
+  }) || null;
+}
+
 function normalizeColor(value) {
   const trimmed = normalizeText(value).replace(/^#/, '');
   if (!trimmed) return '';
@@ -1707,6 +1754,7 @@ function readSettings() {
     beep: urlParams.has('beep'),
     beepVolume: Math.max(0, Math.min(1, parseNumberParam('beepvolume', 35) / 100)),
     customBeep: normalizeText(urlParams.get('custombeep')),
+    alertEffects: readAlertEffects(),
     categorySounds: Object.fromEntries(
       Object.entries(CATEGORY_SOUND_PARAMS).map(([cat, param]) => [cat, normalizeText(urlParams.get(param))])
     ),
@@ -2425,6 +2473,7 @@ function clearActiveGeneratedSound(oscillator = null, gain = null) {
 }
 
 function stopActiveAlertSound() {
+  state.soundSequence += 1;
   if (elements.audio) {
     try {
       elements.audio.pause();
@@ -2567,7 +2616,8 @@ async function playAlertSound(model) {
   stopActiveAlertSound();
 
   const categorySound = model.category && settings.categorySounds[model.category];
-  const customSrc = categorySound || settings.customBeep;
+  const soundToken = state.soundSequence;
+  const customSrc = model.effectSound || categorySound || settings.customBeep;
 
   if (customSrc && elements.audio) {
     try {
@@ -2587,11 +2637,14 @@ async function playAlertSound(model) {
         elements.audio.addEventListener('error', fail, { once: true });
         elements.audio.load();
       });
+      if (state.soundSequence !== soundToken) return;
       await primeAudioPipeline();
+      if (state.soundSequence !== soundToken) return;
       await elements.audio.play();
       state.lastAudioTime = Date.now();
       return;
     } catch (error) {
+      if (state.soundSequence !== soundToken) return;
       noteBlockedAudio(error);
       log('custom beep failed', error);
     }
@@ -2599,11 +2652,14 @@ async function playAlertSound(model) {
 
   try {
     var ctx = await resumeAudioContext();
+    if (state.soundSequence !== soundToken) return;
     if (!ctx || ctx.state !== 'running') {
       updateStatus('Audio blocked - click the overlay once to enable sound', 5000);
       return;
     }
     await primeAudioPipeline();
+
+    if (state.soundSequence !== soundToken) return;
 
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -2658,6 +2714,7 @@ window.__multiAlertsOverlay = {
       beepVolume: settings.beepVolume,
       customBeep: settings.customBeep,
       categorySounds: Object.assign({}, settings.categorySounds),
+      alertEffects: settings.alertEffects.map(effect => Object.assign({}, effect)),
       compact: settings.compact,
       hideAvatar: settings.hideAvatar,
       hideMedia: settings.hideMedia,

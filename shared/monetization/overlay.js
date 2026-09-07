@@ -46,7 +46,7 @@
 		var url = mode === 'ebay' ? ebayItem && ebayItem.url : mode === 'wishlist' ? (c.item && c.item.url) || c.url : c.url,
 			image = '';
 		if (active) {
-			by('badge').textContent = mode === 'ebay' ? 'Purchased on eBay' : mode === 'wishlist' ? 'Rank unlocked' : mode === 'throne' ? 'Gift rank ' + (c.rank || 1) : 'Thank you for the support';
+			by('badge').textContent = mode === 'ebay' ? (c.environment === 'sandbox' ? 'eBay Sandbox test purchase' : 'Purchased on eBay') : mode === 'wishlist' ? 'Rank unlocked' : mode === 'throne' ? 'Gift rank ' + (c.rank || 1) : 'Thank you for the support';
 			by('title').textContent = active.title;
 			by('detail').textContent = active.detail;
 			image = active.image || '';
@@ -59,7 +59,7 @@
 			by('footer').textContent = c.item ? 'Buy through the wishlist. Host-confirmed gifts unlock the next rank.' : 'Thanks for helping the stream grow.';
 			image = c.item && safeURL(c.item.image);
 		} else if (mode === 'ebay') {
-			by('badge').textContent = 'eBay ' + (ebayItem && ebayItem.auction ? '\u00b7 Auction' : '\u00b7 Product showcase');
+			by('badge').textContent = (c.environment === 'sandbox' ? 'eBay Sandbox (test) ' : 'eBay ') + (ebayItem && ebayItem.auction ? '\u00b7 Auction' : '\u00b7 Product showcase');
 			by('title').textContent = ebayItem ? ebayItem.name : 'No remaining products';
 			by('detail').textContent = ebayItem ? (ebayItem.auction ? (ebayItem.startingBid ? 'Starting bid ' : 'Current bid ') : '') + SSNMonetization.money(ebayItem.amount, ebayItem.currency) : 'Thanks for supporting the stream.';
 			var seconds = ebayItem ? Math.max(0, Math.ceil((ebayItem.endsAt - Date.now()) / 1000)) : 0;

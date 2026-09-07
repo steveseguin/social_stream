@@ -201,6 +201,17 @@ async function run() {
 		assert.ok(result.ok && result.result && result.result.passed >= 47, "Electron menu checks did not complete");
 
 		console.log("Initial menu checks passed: " + result.result.passed);
+		const soundIntegration = await requestJson(port, '/exec', {windowId: mainWindow.id, code: `(async()=>{
+            for(let attempt=0;attempt<100;attempt++){
+                const frame=document.getElementById('frame2'), background=frame && frame.contentWindow;
+                if(background && background.SSNSoundLibrary && background.flowEditor) return {sounds:background.SSNSoundLibrary.sounds.length,styles:!!frame.contentDocument.querySelector('link[href="./shared/alerts/sound-library.css"]')};
+                await new Promise(resolve=>setTimeout(resolve,200));
+            }
+            throw new Error('Integrated background Event Flow sound picker did not load');
+        })()`});
+		assert.strictEqual(soundIntegration.result.sounds, 17);
+		assert.ok(soundIntegration.result.styles);
+		console.log('Integrated Electron Event Flow sound library passed');
 
 		await electronApp.close();
 		child = await launch();

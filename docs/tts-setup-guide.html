@@ -129,8 +129,16 @@
 <div class="tts-preview"><h3>Kitten</h3><p>Voice 4, female. Bundled nano v0.1 model.<br><code>expr-voice-4-f</code></p><audio controls preload="none" aria-label="Kitten voice sample"><source src="audio/tts/kitten-4f.mp3" type="audio/mpeg"><a href="audio/tts/kitten-4f.mp3">Download Kitten sample</a></audio><p><a href="#settings-kitten">View settings and voices</a></p></div>
 <div class="tts-preview"><h3>eSpeak</h3><p>English. A synthetic voice with a small footprint.<br><code>en</code></p><audio controls preload="none" aria-label="eSpeak voice sample"><source src="audio/tts/espeak-en.mp3" type="audio/mpeg"><a href="audio/tts/espeak-en.mp3">Download eSpeak sample</a></audio><p><a href="#settings-espeak">View settings and voices</a></p></div>
 </div>
+                <details class="tts-settings"><summary>Spanish and Portuguese samples</summary>
+                <p>Choose a language above the voice list in SSN settings, then use <strong>Test</strong>. Piper offers Spain, Mexico, Brazil and Portugal; Kokoro adds three Spanish and three Brazilian Portuguese voices.</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper - Spanish (Spain)</h3><p>DaveFX</p><audio controls preload="none" aria-label="Piper - Spanish (Spain) sample"><source src="audio/tts/piper-spanish.mp3" type="audio/mpeg"><a href="audio/tts/piper-spanish.mp3">Download sample</a></audio></div>
+<div class="tts-preview"><h3>Kokoro - Spanish</h3><p>Dora</p><audio controls preload="none" aria-label="Kokoro - Spanish sample"><source src="audio/tts/kokoro-spanish.mp3" type="audio/mpeg"><a href="audio/tts/kokoro-spanish.mp3">Download sample</a></audio></div>
+<div class="tts-preview"><h3>Piper - Portuguese (Brazil)</h3><p>Faber</p><audio controls preload="none" aria-label="Piper - Portuguese (Brazil) sample"><source src="audio/tts/piper-portuguese.mp3" type="audio/mpeg"><a href="audio/tts/piper-portuguese.mp3">Download sample</a></audio></div>
+<div class="tts-preview"><h3>Kokoro - Portuguese (Brazil)</h3><p>Dora</p><audio controls preload="none" aria-label="Kokoro - Portuguese (Brazil) sample"><source src="audio/tts/kokoro-portuguese.mp3" type="audio/mpeg"><a href="audio/tts/kokoro-portuguese.mp3">Download sample</a></audio></div>
+                </div><p>Free local synthesis, with an initial download. Samples omit loading time. Piper is the lighter starting point; Kokoro can be slow on CPU. Use Piper if speech falls behind the chat.</p></details>
                 <details class="tts-settings"><summary>Sample words and test details</summary>
-                <p>Each voice reads: <em>Welcome to the stream! Thanks for joining us. Which game should we play next?</em> Name reading is disabled.</p>
+                <p>The four English samples read: <em>Welcome to the stream! Thanks for joining us. Which game should we play next?</em> Name reading is disabled.</p>
                 <p>Checked September 7, 2026 in OBS 32.2.2 on Windows 11: a chat message reached the real dock, generated speech, moved the Browser Source meter and appeared in a recording. Kokoro took noticeably longer to start speaking in this CPU test. These clips preview the voice, not the waiting time.</p>
                 <p>System TTS exposed five voices on this machine but produced no audio in the Browser Source recording. That result is specific to this setup; always test your final URL and recording. Cloud voices are not included because no paid credentials were used.</p>
             </details>
@@ -150,7 +158,7 @@
                 <p><strong>Start with Piper for a free local voice, or compare Kokoro if you prefer its sound.</strong> Try eSpeak when responsiveness matters more than realism. Kitten is another compact English option. Listen before deciding.</p>
                 <table class="guide-table guide-table-stack">
                     <thead><tr><th>Provider</th><th>Good for</th><th>Trade-off</th><th>Requirements / cost</th></tr></thead><tbody>
-<tr><td data-label="Provider">Kokoro</td><td data-label="Good for">Natural English voices; US/UK choices.</td><td data-label="Trade-off">More CPU work; first speech can be slow.</td><td data-label="Requirements / cost">Free, no key. Downloads model/voice assets; CPU or supported WebGPU.</td></tr>
+<tr><td data-label="Provider">Kokoro</td><td data-label="Good for">English, Spanish and Brazilian Portuguese voices.</td><td data-label="Trade-off">More CPU work; first speech can be slow.</td><td data-label="Requirements / cost">Free, no key. Downloads model/voice assets; CPU or supported WebGPU.</td></tr>
 <tr><td data-label="Provider">Piper</td><td data-label="Good for">Local neural voices; English, Spanish and Portuguese options.</td><td data-label="Trade-off">Quality and pronunciation vary by voice.</td><td data-label="Requirements / cost">Free, no key. Downloads the selected model (HFC medium: about 63 MB), plus engine files.</td></tr>
 <tr><td data-label="Provider">Kitten</td><td data-label="Good for">Compact English model, eight voice choices.</td><td data-label="Trade-off">Fewer languages and voice styles.</td><td data-label="Requirements / cost">Free, no key. Current bundled model: about 24 MB, plus engine/voice files; CPU.</td></tr>
 <tr><td data-label="Provider">eSpeak</td><td data-label="Good for">Lightweight, many languages, quick to start.</td><td data-label="Trade-off">Deliberately synthetic/robotic sound.</td><td data-label="Requirements / cost">Free, no key. Loads packaged engine/language files; no neural model or GPU needed.</td></tr>
@@ -172,7 +180,7 @@
                 <p>Actual desktop-app settings, captured with a fresh profile. Open the provider you want; the API-key fields are intentionally empty. These controls configure the selected SSN dock or overlay. Select a screenshot to see it at full size.</p>
 <details class="tts-settings" id="settings-system"><summary>System TTS</summary><p>The language list is empty in this fresh profile. Available voices depend on the browser/app and installed voices; there is no universal SSN voice list.</p><figure class="guide-figure"><a href="images/guides/tts-settings-system.png"><img src="images/guides/tts-settings-system.png" alt="Actual SSN System TTS provider settings" class="guide-image" loading="lazy"></a></figure>
 </details>
-<details class="tts-settings" id="settings-kokoro"><summary>Kokoro</summary><p>Choose a voice in SSN; the model loads on the page that speaks. The built-in selection is English US/UK.</p><figure class="guide-figure"><a href="images/guides/tts-settings-kokoro.png"><img src="images/guides/tts-settings-kokoro.png" alt="Actual SSN Kokoro provider settings" class="guide-image" loading="lazy"></a></figure>
+<details class="tts-settings" id="settings-kokoro"><summary>Kokoro</summary><p>Choose a voice in SSN; the model loads on the page that speaks. The selection includes English US/UK, Spanish and Brazilian Portuguese. Use the language filter to find voices; Test plays a short phrase in the selected language. For lower CPU use, try Piper.</p><figure class="guide-figure"><a href="images/guides/tts-settings-kokoro.png"><img src="images/guides/tts-settings-kokoro.png" alt="Actual SSN Kokoro provider settings" class="guide-image" loading="lazy"></a></figure>
 <details><summary>Voice names and URL values</summary><ul class="guide-list">
 <li>Heart (American Female) — <code>af_heart</code></li>
 <li>Alloy (American Female) — <code>af_alloy</code></li>
@@ -202,6 +210,12 @@
 <li>Lily (British Female) — <code>bf_lily</code></li>
 <li>Daniel (British Male) — <code>bm_daniel</code></li>
 <li>Fable (British Male) — <code>bm_fable</code></li>
+<li>Dora (Spanish) - <code>ef_dora</code></li>
+<li>Alex (Spanish) - <code>em_alex</code></li>
+<li>Santa (Spanish) - <code>em_santa</code></li>
+<li>Dora (Brazilian Portuguese) - <code>pf_dora</code></li>
+<li>Alex (Brazilian Portuguese) - <code>pm_alex</code></li>
+<li>Santa (Brazilian Portuguese) - <code>pm_santa</code></li>
 </ul></details>
 </details>
 <details class="tts-settings" id="settings-kitten"><summary>Kitten</summary><p>Eight English voices: male and female variants numbered 2, 3, 4 and 5. The sample uses Voice 4 (Female).</p><figure class="guide-figure"><a href="images/guides/tts-settings-kitten.png"><img src="images/guides/tts-settings-kitten.png" alt="Actual SSN Kitten provider settings" class="guide-image" loading="lazy"></a></figure>

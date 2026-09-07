@@ -46,6 +46,13 @@ jobs:
                   shutil.make_archive(str(skills / 'control-social-stream'), 'zip', skills, 'control-social-stream')
           PY
           for checkout in main-content beta-content; do
+            # Alert sounds and their shared picker must ship together on the site.
+            if [ -f "$checkout/shared/alerts/sound-library.js" ]; then
+              test -f "$checkout/shared/alerts/sound-library.css"
+              test -f "$checkout/audio/alerts/voice-thank-you.wav"
+              test -f "$checkout/audio/alerts/applause.wav"
+              test -f "$checkout/media/alerts/celebration.svg"
+            fi
             generator="$checkout/scripts/build-docs-search-index.py"
             if [ -f "$generator" ]; then
               python3 "$generator" --docs-root "$checkout/docs" --output "$checkout/docs/search-index.json"

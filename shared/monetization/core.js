@@ -164,7 +164,7 @@
 	function ebayId(value) {
 		try {
 			var u = new URL(str(value, 2048));
-			if (u.protocol !== 'https:' || u.username || u.password || u.port || !/^(?:www\.)?ebay\.(?:com|ca|co\.uk|com\.au|de|fr|it|es|ie|at|ch|be|nl|pl)$/.test(u.hostname)) return '';
+			if (u.protocol !== 'https:' || u.username || u.password || u.port || !/^(?:(?:www\.)?ebay\.(?:com|ca|co\.uk|com\.au|de|fr|it|es|ie|at|ch|be|nl|pl)|(?:www\.)?sandbox\.ebay\.com)$/.test(u.hostname)) return '';
 			var match = u.pathname.match(/^\/itm\/(?:[^/]+\/)?(\d{9,15})(?:\/|$)/);
 			return match ? match[1] : '';
 		} catch (_) {

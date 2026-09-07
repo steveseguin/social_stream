@@ -7943,6 +7943,50 @@ function validateRoomId(roomId) {
 
 let overlayPreviewSequence = 0;
 
+function attachMultiAlertSoundLibrary(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input || !window.SSNSoundLibrary || document.getElementById(inputId + '-library')) return;
+    const container = document.createElement('div');
+    container.style.width = input.closest('.ssn-alert-setup') ? '100%' : '95%';
+    const custom = document.createElement('details');
+    custom.className = 'ssn-sound-custom';
+    const summary = document.createElement('summary');
+    summary.textContent = 'Custom sound URL / upload';
+    custom.appendChild(summary);
+    const inputRow = input.parentElement;
+    inputRow.insertAdjacentElement('beforebegin', container);
+    inputRow.insertAdjacentElement('beforebegin', custom);
+    custom.appendChild(inputRow);
+    window.SSNSoundLibrary.attach({
+        container, input, id: inputId, label: ({
+            'multi-alert-custombeep': 'Default alert sound',
+            'multi-alert-followsound': 'Follow sound',
+            'multi-alert-subsound': 'Subscription sound',
+            'multi-alert-donosound': 'Donation sound',
+            'multi-alert-bitssound': 'Bits / cheer sound',
+            'multi-alert-raidsound': 'Raid sound',
+            'multi-alert-auctionsound': 'Auction win sound',
+            'multi-alert-hypesound': 'Hype train sound'
+        })[inputId] || 'Sound (optional)',
+        getValue: () => input.value,
+        setValue: value => {
+            input.value = value;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            const enabled = document.querySelector('[data-param25="beep"]');
+            if (enabled && !enabled.checked) {
+                enabled.checked = true;
+                enabled.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        },
+        getVolume: () => {
+            const enabled = document.querySelector('[data-param25="beepvolume"]');
+            const volume = document.querySelector('[data-numbersetting25="beepvolume"]');
+            return enabled && enabled.checked && volume ? Number(volume.value) / 100 : 0.35;
+        }
+    });
+}
+
 const overlayPreviewConfigs = Object.freeze({
     multialerts: {
         frameId: 'multi-alerts-preview-frame',
@@ -8126,6 +8170,12 @@ function buildOverlayPreviewUrl(previewKey) {
 }
 
 function syncOverlayPreview(previewKey) {
+    for (let index = 1; index <= 3; index++) {
+        const toggle = document.getElementById('multi-alert-effect' + index + '-enabled');
+        const saved = document.getElementById('multi-alert-effect' + index + '-state');
+        if (toggle && saved) toggle.checked = saved.value !== 'false';
+    }
+    if (window.SSNSoundLibrary) window.SSNSoundLibrary.syncAll();
     const config = overlayPreviewConfigs[previewKey];
     if (!config) {
         return;
@@ -9715,6 +9765,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 rate: getParam('kokorospeed') ? getNumber('kokorospeed', 1.0) : 1.0,
             },
             
+            piper: {
+                speed: getParam('piperspeed') ? getNumber('piperspeed', 1.0) : 1.0
+            },
+
             // Kitten TTS settings
             kitten: {
                 voice: getId('kittenVoiceSelect')?.selectedOptions[0]?.value || "expr-voice-4-f",
@@ -9830,7 +9884,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     },
     
     testTTS(section = "") {
-        const testPhrase = "The quick brown fox jumps over the lazy dog";
+        const testPhrase = getLocalTtsSample(this.getProviderSelect(section)?.value,
+            document.getElementById('kokoroVoiceSelect' + section)?.value,
+            document.getElementById('piperVoiceSelect' + section)?.value);
         const provider = this.getProviderSelect(section)?.value || "system";
         if (provider === "system") {
             populateSystemVoiceDropdowns();
@@ -9842,7 +9898,11 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             this.showFeedback("A TTS test is already running. Cancel it before starting another test.", 'warning', section, 0);
             return;
         }
-        if (provider === 'piper' || provider === 'espeak') {
+        if (provider === 'piper' && this.piperPreviewBusy) {
+            this.showFeedback("Piper is finishing the previous test. Try again in a moment.", 'info', section);
+            return;
+        }
+        if (provider === 'espeak') {
             let warningMsg = getTranslation("tts-test-not-available", "Testing is not available for {provider}. This TTS provider works during streaming only.");
             warningMsg = warningMsg.replace('{provider}', serviceName);
             this.showFeedback(warningMsg, 'error', section);
@@ -9934,6 +9994,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 if (!this.premiumQueueActive) {
                     await this.kokoroTTS(text, settings, section);
                 }
+            } else if (settings.service == "piper") {
+                await this.piperTTS(text, settings, section);
             } else if (settings.service == "kitten") {
                 if (!this.premiumQueueActive) {
                     await this.kittenTTS(text, settings, section);
@@ -10042,7 +10104,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             this.premiumQueueActive = true;
             this.cancelRequested = false;
             this.setTestRunning(section, true, "Loading...");
-			if (ssapp){
+			if (ssapp && !/^(ef_dora|em_alex|em_santa|pf_dora|pm_alex|pm_santa)$/.test(settings.kokoro.voice)){
 				try {
                     this.setTestRunning(section, true, "Generating...");
                     this.showFeedback("Generating Kokoro test audio in the desktop app...", 'info', section, 0);
@@ -10078,11 +10140,12 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 			
 			if (!kokoroTtsInstance) {
                 this.showFeedback("Loading Kokoro TTS. First use may download a large model and can take a while.", 'warning', section, 0);
-				const initialized = await initKokoro();
+				const initialized = await initKokoro(true);
                 if (this.cancelRequested) {
                     return;
                 }
 				if (!initialized) {
+                    this.showFeedback("Kokoro could not load. Retry, or choose Piper for a lighter voice.", "error", section, 0);
 					this.finishedAudio(section);
 					return;
 				}
@@ -10143,6 +10206,71 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 		}
 	},
     
+    async piperTTS(text, settings, section = "") {
+        const token = {};
+        this.localPiperTest = token;
+        this.piperPreviewBusy = true;
+        this.premiumQueueActive = true;
+        this.setTestRunning(section, true, "Loading...");
+        this.showFeedback("Loading Piper. First use downloads the selected voice.", 'info', section, 0);
+        try {
+            if (!window.ProperPiperTTS) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = './thirdparty/piper/piper-tts-proper.js';
+                    script.onload = resolve;
+                    script.onerror = () => { script.remove(); reject(new Error('Could not load Piper')); };
+                    document.head.appendChild(script);
+                });
+            }
+            if (!window.ort) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = './thirdparty/ort.min.js';
+                    script.onload = resolve;
+                    script.onerror = () => { script.remove(); reject(new Error('Could not load the speech runtime')); };
+                    document.head.appendChild(script);
+                });
+            }
+            const voice = document.getElementById('piperVoiceSelect' + section)?.value || 'en_US-hfc_female-medium';
+            if (!this.piperPreview || this.piperPreview.voiceId !== voice) {
+                if (this.piperPreview?.session?.release) await this.piperPreview.session.release();
+                this.piperPreview = new window.ProperPiperTTS(voice);
+            }
+            const instance = this.piperPreview;
+            await instance.init();
+            if (this.localPiperTest !== token) return;
+            this.setTestRunning(section, true, "Generating...");
+            this.showFeedback('Generating Piper preview...', 'info', section, 0);
+            const blob = await instance.synthesize(text, settings.piper?.speed || 1.0);
+            if (this.localPiperTest !== token) return;
+            const audio = document.createElement('audio');
+            this.activeAudioElement = audio;
+            this.activeAudioUrl = URL.createObjectURL(blob);
+            audio.src = this.activeAudioUrl;
+            audio.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
+            audio.onended = () => {
+                if (this.localPiperTest !== token) return;
+                this.showFeedback("Audio played here. Check OBS playback separately.", 'success', section);
+                this.finishedAudio(section);
+            };
+            audio.onerror = () => {
+                if (this.localPiperTest !== token) return;
+                this.showFeedback("Piper audio could not be played", 'error', section);
+                this.finishedAudio(section);
+            };
+            this.setTestRunning(section, true, "Playing...");
+            this.showFeedback('Playing Piper preview...', 'info', section, 0);
+            await audio.play();
+        } catch (error) {
+            if (this.localPiperTest !== token) return;
+            this.showFeedback("Piper: " + error.message, 'error', section, 0);
+            this.finishedAudio(section);
+        } finally {
+            this.piperPreviewBusy = false;
+        }
+    },
+
     async kittenTTS(text, settings) {
         try {
             const baseUrl = chrome.runtime.getURL('');
@@ -10602,6 +10730,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     },
 
     finishTtsTest(section = this.currentTtsSection || "", keepCancelFlag = false) {
+        this.localPiperTest = null;
         if (this.activeSystemUtterance) {
             this.activeSystemUtterance.onstart = null;
             this.activeSystemUtterance.onend = null;
@@ -10693,11 +10822,11 @@ async function initKokoroWithFallback(preferredDevice) {
 	throw lastError || new Error("Unable to initialize Kokoro TTS");
 }
 
-async function initKokoro() {
-	if (ssapp) return false;
+async function initKokoro(browserOnly = false) {
+	if (ssapp && !browserOnly) return false;
 	if (kokoroDownloadInProgress) return false;
 	
-	if (!KokoroTTS) {
+	if (!KokoroTTS || !kokoroTtsInstance) {
 		try {
 			const kokoroAssets = getKokoroAssets();
 			kokoroDownloadInProgress = true;
@@ -11369,6 +11498,56 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	]);
 	attachTipJarTestDonationButtons();
 	attachReactionTestButton();
+	for (let index = 1; index <= 3; index++) {
+		const prefix = 'multi-alert-effect' + index;
+		const enabled = document.getElementById(prefix + '-enabled');
+		const savedState = document.getElementById(prefix + '-state');
+		const status = document.getElementById(prefix + '-status');
+		enabled.addEventListener('change', function() {
+			savedState.value = enabled.checked ? '' : 'false';
+			savedState.dispatchEvent(new Event('change', { bubbles: true }));
+			status.textContent = enabled.checked ? 'Alert enabled.' : 'Alert paused. Settings kept.';
+		});
+		document.getElementById(prefix + '-preset').addEventListener('click', function() {
+			const values = { type: 'donation', min: '100', max: '100', state: '' };
+			if (!document.getElementById(prefix + '-sound').value.trim()) values.sound = './audio/alerts/voice-thank-you.wav';
+			Object.keys(values).forEach(function(key) {
+				const input = document.getElementById(prefix + '-' + key);
+				input.value = values[key];
+				input.dispatchEvent(new Event('change', { bubbles: true }));
+			});
+			const audio = document.querySelector('[data-param25="beep"]');
+			if (!audio.checked) { audio.checked = true; audio.dispatchEvent(new Event('change', { bubbles: true })); }
+			document.getElementById(prefix + '-min').closest('details').open = true;
+			status.textContent = 'Exactly $100 USD. Sound ready; add media if you like.';
+		});
+		document.getElementById(prefix + '-test').addEventListener('click', function() {
+			if (!enabled.checked) { status.textContent = 'Enable this alert before testing.'; enabled.focus(); return; }
+			const category = document.getElementById(prefix + '-type').value || 'donation';
+			const minText = document.getElementById(prefix + '-min').value.trim();
+			const maxText = document.getElementById(prefix + '-max').value.trim();
+			const min = minText ? Number(minText) : null;
+			const max = maxText ? Number(maxText) : null;
+			if ((min !== null && (!Number.isFinite(min) || min < 0)) ||
+				(max !== null && (!Number.isFinite(max) || max < 0)) ||
+				(min !== null && max !== null && min > max) ||
+				((min !== null || max !== null) && category !== 'donation' && category !== 'bits')) {
+				alert('Use a valid amount range for donations/bits, or leave both amount fields blank for other events.');
+				return;
+			}
+			const descriptor = buildMultiAlertPreviewDescriptor(category);
+			if (category === 'donation' || category === 'bits') {
+				const amount = min !== null ? min : (max !== null ? max : 100);
+				descriptor.overrides.hasDonation = category === 'bits' ? String(amount * 100) + ' bits' : '$' + amount + ' USD';
+				descriptor.overrides.donoValue = amount;
+			}
+			document.getElementById('wrapper-multi-alert-preview-options').checked = true;
+			const preview = document.getElementById('multi-alerts-preview-frame');
+			preview.scrollIntoView({ block: 'center' });
+			preview.focus({ preventScroll: true });
+			sendOverlayPreview('multialerts', descriptor);
+		});
+	}
 
 	var previewPlatformSelect = document.getElementById('multi-alert-preview-platform');
 	if (previewPlatformSelect) {
@@ -13837,6 +14016,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		{ btnId: 'uploadHypeSoundBtn', inputId: 'multi-alert-hypesound' }
 	];
 	alertSoundUploads.forEach(({ btnId, inputId }) => {
+		attachMultiAlertSoundLibrary(inputId);
 		const btn = document.getElementById(btnId);
 		if (btn) {
 			btn.onclick = function() {
@@ -13844,6 +14024,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			};
 		}
 	});
+	for (let index = 1; index <= 3; index++) {
+		['Media', 'Sound'].forEach(function(kind) {
+			if (kind === 'Sound') attachMultiAlertSoundLibrary('multi-alert-effect' + index + '-sound');
+			const btnId = 'uploadMultiEffect' + index + kind + 'Btn';
+			document.getElementById(btnId).onclick = function() {
+				openHostedMediaUploadForInput(document.getElementById('multi-alert-effect' + index + '-' + kind.toLowerCase()), btnId);
+			};
+		});
+	}
 
 	const hostedMediaUploads = [
 		{ btnId: 'uploadDefaultAvatarBtn', inputId: 'default_avatar' },
@@ -13880,3 +14069,37 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		};
 	}
 });
+
+function getLocalTtsSample(provider, kokoroVoice, piperVoice) {
+    const voice = provider === 'kokoro' ? kokoroVoice : provider === 'piper' ? piperVoice : '';
+    if (/^(e[fm]_|es_)/.test(voice || '')) return 'Hola, gracias por participar. ¿Qué jugamos hoy?';
+    if (/^(p[fm]_|pt_BR)/.test(voice || '')) return 'Olá, obrigado por participar. O que vamos jogar hoje?';
+    if (/^pt_PT/.test(voice || '')) return 'Olá, obrigado por participares. O que vamos jogar hoje?';
+    return 'The quick brown fox jumps over the lazy dog';
+}
+function setupLocalTtsLanguageFilters() {
+    document.querySelectorAll('select[id^="kokoroVoiceSelect"], select[id^="piperVoiceSelect"]').forEach(function(voices) {
+        if (document.getElementById(voices.id + 'Language')) return;
+        const filter = document.createElement('select');
+        filter.id = voices.id + 'Language';
+        filter.setAttribute('aria-label', 'Filter voices by language');
+        filter.style.cssText = 'display:block;max-width:100%;margin:6px 0';
+        const choices = [['', 'All languages'], ['en', 'English'], ['es', 'Spanish'], ['pt', 'Portuguese']];
+        choices.forEach(function(choice) { filter.add(new Option(choice[1], choice[0])); });
+        voices.parentNode.insertBefore(filter, voices);
+        voices.addEventListener('change', function() { filter.dispatchEvent(new Event('change')); });
+        filter.addEventListener('change', function() {
+            Array.prototype.forEach.call(voices.options, function(option) {
+                const id = option.value;
+                const language = /^(a[fm]_|b[fm]_|en_)/.test(id) ? 'en' : /^(e[fm]_|es_)/.test(id) ? 'es' : /^(p[fm]_|pt_)/.test(id) ? 'pt' : '';
+                // Preserve the saved voice even if it is outside the current filter.
+                option.hidden = !!filter.value && language !== filter.value && !option.selected;
+            });
+            voices.querySelectorAll('optgroup').forEach(function(group) {
+                group.hidden = Array.prototype.every.call(group.children, function(option) { return option.hidden; });
+            });
+        });
+    });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupLocalTtsLanguageFilters);
+else setupLocalTtsLanguageFilters();

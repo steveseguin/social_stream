@@ -6,6 +6,8 @@ const fs = require('fs'),
 	path = require('path'),
 	assert = require('assert'),
 	crypto = require('crypto');
+const environment = process.env.SSN_TEST_EBAY_ENVIRONMENT || 'sandbox';
+const itemOrigin = environment === 'sandbox' ? 'https://www.sandbox.ebay.com' : 'https://www.ebay.com';
 const root = path.resolve(__dirname, '..').replace(/\\/g, '/'),
 	room = 'ebayqa' + Date.now(),
 	profile = fs.mkdtempSync(path.join(os.tmpdir(), 'ssn-ebay-e2e-'));
@@ -22,7 +24,7 @@ const ssapp = process.env.SSN_TEST_SSAPP_ROOT || path.resolve(root, '../ssapp'),
 		remote = fixture(),
 		server = Fastify();
 	await server.register(require(path.join(tipServer, 'node_modules/@fastify/cors')), { origin: '*' });
-	await server.register(relay, { db, fetch: remote.fetch, clientId: 'fixture-id', clientSecret: 'fixture-secret', ruName: 'fixture-redirect' });
+	await server.register(relay, { db, environment, fetch: remote.fetch, clientId: 'fixture-id', clientSecret: 'fixture-secret', ruName: 'fixture-redirect' });
 	await server.listen({ host: '127.0.0.1', port: 0 });
 	const port = server.server.address().port;
 	const wrapper = path.join(profile, 'ssn-e2e-bootstrap.cjs');
@@ -44,10 +46,10 @@ const ssapp = process.env.SSN_TEST_SSAPP_ROOT || path.resolve(root, '../ssapp'),
 				return 'http://127.0.0.1:' + port + u.pathname + u.search;
 			}
 			window.fetch = function (url, options) {
-				return originalFetch(String(url).startsWith('https://api.socialstream.ninja/v1/ebay/') ? local(url) : url, options);
+				return originalFetch(String(url).match(/^https:\/\/api\.socialstream\.ninja\/v1\/ebay(?:-sandbox)?\//) ? local(url) : url, options);
 			};
 			window.EventSource = function (url) {
-				return new OriginalEventSource(String(url).startsWith('https://api.socialstream.ninja/v1/ebay/') ? local(url) : url);
+				return new OriginalEventSource(String(url).match(/^https:\/\/api\.socialstream\.ninja\/v1\/ebay(?:-sandbox)?\//) ? local(url) : url);
 			};
 			window.capturedGifts = [];
 			const originalProcess = processIncomingMessage;
@@ -72,43 +74,54 @@ const ssapp = process.env.SSN_TEST_SSAPP_ROOT || path.resolve(root, '../ssapp'),
 				window.ebayAuthURL = options.url;
 			};
 		});
+		await popup.locator('#money-ebay-environment').selectOption(environment);
+		await popup.waitForFunction(() => !document.getElementById('monetization-settings').hasAttribute('aria-busy'));
 		await popup.locator('#money-ebay-connect').click();
 		await popup.waitForFunction(() => window.ebayAuthURL);
 		const auth = new URL(await popup.evaluate(() => window.ebayAuthURL));
-		assert.equal(auth.origin, 'https://auth.ebay.com');
-		assert.equal((await server.inject('/v1/ebay/callback?state=' + auth.searchParams.get('state') + '&code=fixture')).statusCode, 200);
+		assert.equal(auth.origin, environment === 'sandbox' ? 'https://auth.sandbox.ebay.com' : 'https://auth.ebay.com');
+		assert.equal((await server.inject((environment === 'sandbox' ? '/v1/ebay-sandbox' : '/v1/ebay') + '/callback?state=' + auth.searchParams.get('state') + '&code=fixture')).statusCode, 200);
 		for (const id of ['123456789012', '234567890123']) {
-			await popup.locator('#money-ebay-url').fill('https://www.ebay.com/itm/' + id);
+			await popup.locator('#money-ebay-url').fill(itemOrigin + '/itm/' + id);
 			await popup.locator('#money-ebay-add').click();
 			await popup.waitForFunction(() => document.getElementById('money-ebay-url').value === '' && !document.getElementById('monetization-settings').hasAttribute('aria-busy'));
 		}
 		await popup.locator('#money-ebay-enabled').check();
 		await popup.locator('#money-ebay-display').selectOption('first');
 		await popup.locator('#money-save').click();
+		await popup.waitForFunction(() => !document.getElementById('monetization-settings').hasAttribute('aria-busy'));
 		await popup.waitForFunction(() => document.getElementById('money-status').textContent === 'Saved.' && !document.getElementById('monetization-settings').hasAttribute('aria-busy'));
 		assert((await call('get')).config.ebay.enabled);
 		const windowPromise = app.waitForEvent('window');
 		await app.evaluate(({ BrowserWindow }, url) => new BrowserWindow({ show: false, width: 800, height: 600, webPreferences: { offscreen: true, backgroundThrottling: false } }).loadURL(url), 'file:///' + root + '/monetization.html?session=' + room + '&mode=ebay');
 		const overlay = await windowPromise;
 		await overlay.waitForFunction(() => document.getElementById('title').textContent === 'Retro handheld game console');
-		assert.equal(await overlay.locator('#qr').getAttribute('title'), 'https://www.ebay.com/itm/123456789012');
+		assert.equal(await overlay.locator('#qr').getAttribute('title'), itemOrigin + '/itm/123456789012');
 		assert((await overlay.locator('#detail').textContent()).includes('32.50'));
+		if (environment === 'sandbox') assert((await overlay.locator('#badge').textContent()).includes('Sandbox'));
 		const timer = await overlay.locator('#footer').textContent();
 		await overlay.waitForTimeout(1200);
 		assert.notEqual(await overlay.locator('#footer').textContent(), timer);
 		await overlay.screenshot({ path: path.join(os.tmpdir(), 'ssn-ebay-auction.png'), omitBackground: true });
 		await popup.locator('#money-ebay-display').selectOption('cheapest');
 		await popup.locator('#money-save').click();
+		await popup.waitForFunction(() => !document.getElementById('monetization-settings').hasAttribute('aria-busy'));
 		await overlay.waitForFunction(() => document.getElementById('title').textContent === 'Cozy studio light');
 		await popup.locator('#money-ebay-display').selectOption('cycle');
 		await popup.locator('#money-ebay-seconds').fill('10');
 		await popup.locator('#money-save').click();
+		await popup.waitForFunction(() => !document.getElementById('monetization-settings').hasAttribute('aria-busy'));
 		await overlay.waitForTimeout(500);
 		const cycled = await overlay.locator('#title').textContent();
 		await overlay.waitForFunction(title => document.getElementById('title').textContent !== title, cycled, { timeout: 15000 });
 		await popup.locator('#money-ebay-display').selectOption('first');
 		await popup.locator('#money-save').click();
+		await popup.waitForFunction(() => !document.getElementById('monetization-settings').hasAttribute('aria-busy'));
 		await overlay.waitForFunction(() => document.getElementById('title').textContent === 'Retro handheld game console');
+		await popup.locator('#money-ebay-display').selectOption('cheapest');
+		await popup.locator('#money-save').click();
+		await popup.waitForFunction(() => !document.getElementById('monetization-settings').hasAttribute('aria-busy'));
+		await overlay.waitForFunction(() => document.getElementById('title').textContent === 'Cozy studio light');
 		remote.orders = [order()];
 		remote.bid = 40;
 		console.log('Waiting for the normal 60-second sales poll...');
@@ -131,10 +144,12 @@ const ssapp = process.env.SSN_TEST_SSAPP_ROOT || path.resolve(root, '../ssapp'),
 		await popup.locator('#money-ebay-position').selectOption('tl');
 		await popup.locator('#money-ebay-qr').uncheck();
 		await popup.locator('#money-save').click();
+		await popup.waitForFunction(() => !document.getElementById('monetization-settings').hasAttribute('aria-busy'));
 		await overlay.waitForFunction(() => document.body.classList.contains('tl') && document.getElementById('qr').hidden);
 		assert(await overlay.locator('#support-card').isVisible());
 		await popup.locator('#money-ebay-qr').check();
 		await popup.locator('#money-save').click();
+		await popup.waitForFunction(() => !document.getElementById('monetization-settings').hasAttribute('aria-busy'));
 		await overlay.waitForFunction(() => !document.getElementById('qr').hidden);
 		await overlay.setViewportSize({ width: 390, height: 600 });
 		assert(await overlay.evaluate(() => document.documentElement.scrollWidth <= innerWidth));

@@ -19,6 +19,7 @@ async function loadScriptsInOrder() {
 		'./shared/ai/browserModelCatalog.js?v=1',
 		'./shared/ai/localBrowserLLM.js?v=1',
 		'./actions/EventFlowSystem.js?v=1',
+        './shared/alerts/sound-library.js',
         './actions/EventFlowEditor.js?v=1',
 		'./actions/interface.js',
 		'./dashboard.js',

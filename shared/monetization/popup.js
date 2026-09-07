@@ -70,6 +70,7 @@
 	}
 	function showEbayStatus(reply) {
 		var e = reply.ebay || {};
+		by('ebay-environment').value = e.environment || 'production';
 		by('ebay-status').textContent = e.status || 'Connect your seller account';
 		by('ebay-connect').textContent = e.connected ? 'Reconnect eBay' : 'Connect eBay';
 		if (e.connected) by('ebay-auth').hidden = true;
@@ -235,6 +236,15 @@
 			return reply;
 		});
 	};
+	by('ebay-environment').addEventListener('change', function () {
+		var environment = by('ebay-environment').value;
+		run(async function () {
+			var reply = await request('ebayEnvironment', { environment: environment });
+			by('ebay-auth').hidden = true;
+			reply.message = 'Environment changed. Each environment keeps its own connection and products. Enable the showcase when ready.';
+			return reply;
+		});
+	});
 	by('ebay-disconnect').onclick = function () {
 		run(function () {
 			return request('ebayDisconnect');

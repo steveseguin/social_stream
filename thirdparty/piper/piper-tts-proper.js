@@ -134,31 +134,9 @@
     }
 
     async loadPhonemizer() {
-      // Load piper-o91UDS6e.js as text and convert to function
-      const response = await fetch(this.baseUrl + '/thirdparty/piper/piper-o91UDS6e.js');
-      const moduleText = await response.text();
-      
-      // Extract the createPiperPhonemize function
-      // Remove the ES6 export and make it available
-      const modifiedText = moduleText.replace(
-        /export\s*{\s*createPiperPhonemize\s*};?/,
-        'window.__createPiperPhonemize = createPiperPhonemize;'
-      );
-      
-      // Execute the module code
-      const script = document.createElement('script');
-      script.textContent = modifiedText;
-      document.head.appendChild(script);
-      
-      // Wait for it to be available
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      if (!window.__createPiperPhonemize) {
-        throw new Error('Failed to load createPiperPhonemize');
-      }
-      
-      this.createPiperPhonemize = window.__createPiperPhonemize;
-      delete window.__createPiperPhonemize;
+      // Import the packaged module directly; inline execution is blocked by extension CSP.
+      const module = await import(this.baseUrl + '/thirdparty/piper/piper-o91UDS6e.js');
+      this.createPiperPhonemize = module.createPiperPhonemize;
       console.log('Phonemizer module loaded');
     }
 
@@ -198,7 +176,7 @@
       console.log('Phonemizer module initialized');
     }
 
-    async phonemize(text) {
+    async phonemize(text, returnPhonemes = false) {
       if (!this.createPiperPhonemize) {
         throw new Error('Phonemizer not loaded');
       }
@@ -218,7 +196,7 @@
       try {
         const input = JSON.stringify([{ text: text.trim() }]);
         
-        return new Promise((resolve, reject) => {
+        return await new Promise((resolve, reject) => {
           let resolved = false;
           
           // Set up callbacks
@@ -227,8 +205,9 @@
               try {
                 const result = JSON.parse(data);
                 if (result.phoneme_ids) {
+                  const value = returnPhonemes ? result.phonemes.join('') : this.encodePhonemes(result);
                   resolved = true;
-                  resolve(result.phoneme_ids);
+                  resolve(value);
                 }
               } catch (e) {
                 console.error('Failed to parse phonemizer output:', e);
@@ -264,6 +243,25 @@
         this.phonemizerCallback = null;
         this.phonemizerErrorCallback = null;
       }
+    }
+
+    // Older/low-quality models can use different IDs from the phonemizer default.
+    encodePhonemes(result) {
+      const map = this.voiceConfig && this.voiceConfig.phoneme_id_map;
+      if (!map || !Array.isArray(result.phonemes)) return result.phoneme_ids;
+      const ids = [];
+      const append = symbol => {
+        if (Object.prototype.hasOwnProperty.call(map, symbol)) ids.push(...map[symbol]);
+      };
+      append('^');
+      append('_');
+      for (const phoneme of result.phonemes) {
+        if (!Object.prototype.hasOwnProperty.call(map, phoneme)) continue;
+        append(phoneme);
+        append('_');
+      }
+      append('$');
+      return ids;
     }
 
     async synthesize(text, speed = 1.0) {

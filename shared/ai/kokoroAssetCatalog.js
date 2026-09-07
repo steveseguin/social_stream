@@ -52,7 +52,8 @@
 		"bf_alice",
 		"bf_lily",
 		"bm_daniel",
-		"bm_fable"
+		"bm_fable",
+		"ef_dora", "em_alex", "em_santa", "pf_dora", "pm_alex", "pm_santa"
 	];
 
 	function normalizeBase(value) {
@@ -78,6 +79,10 @@
 	}
 
 	function getVoiceUrl(voice, value) {
+		// New voices use upstream data; existing English URLs and caches stay unchanged.
+		if (/^(ef_dora|em_alex|em_santa|pf_dora|pm_alex|pm_santa)$/.test(voice)) {
+			return "https://huggingface.co/" + MODEL_ID + "/resolve/1939ad2a8e416c0acfeecc08a694d14ef25f2231/voices/" + voice + ".bin";
+		}
 		return getResolveBase(value) + "voices/" + voice + ".bin";
 	}
 

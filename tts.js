@@ -2039,9 +2039,13 @@ TTS.speechMeta = function(data, allow = false) {
  * Initialize the Kokoro TTS system
  * @returns {Promise<boolean>} - Whether initialization was successful
  */
-TTS.initKokoro = async function() {
-    if ((window.ninjafy || window.electronApi)) {
-        return true; // Electron already handles this
+TTS.isNewKokoroVoice = function(voice) {
+    return /^(ef_dora|em_alex|em_santa|pf_dora|pm_alex|pm_santa)$/.test(voice || "");
+};
+
+TTS.initKokoro = async function(voice) {
+    if ((window.ninjafy || window.electronApi) && !TTS.isNewKokoroVoice(voice || TTS.kokoroSettings.voiceName)) {
+        return true; // Electron already handles existing voices
     }
     if (TTS.kokoroDownloadInProgress) return TTS.kokoroDownloadInProgress;
     if (TTS.kokoroTtsInstance) return true;
@@ -2532,7 +2536,7 @@ TTS.kokoroTTS = async function(text, options) {
   const premiumSerial = ++TTS.premiumSerial;
   const voiceOverride = TTS.getVoiceOverride(options);
   try {
-    if ((window.ninjafy || window.electronApi)) {
+    if ((window.ninjafy || window.electronApi) && !TTS.isNewKokoroVoice(voiceOverride || TTS.kokoroSettings.voiceName)) {
       try {
         // Electron implementation remains the same
         let ninjafy = window.ninjafy || window.electronApi;
@@ -2585,7 +2589,7 @@ TTS.kokoroTTS = async function(text, options) {
 
     // Web implementation with fixes aligned to working version
     if (!TTS.kokoroTtsInstance) {
-      const initialized = await TTS.initKokoro();
+      const initialized = await TTS.initKokoro(voiceOverride);
       if (!initialized || !TTS.kokoroTtsInstance) {
         console.error("Failed to initialize Kokoro TTS");
         if (premiumSerial === TTS.premiumSerial) {
@@ -2828,12 +2832,11 @@ TTS.initPiper = async function(voiceName) {
         //console.log("Loading Piper TTS module...");
         
         // Load dependencies in order
-        if (!window.ProperPiperTTS) {
-            const scripts = [
-                './thirdparty/ort.min.js',
-                './thirdparty/piper/piper-tts-proper.js'
-            ];
-            
+        if (!window.ProperPiperTTS || !window.ort) {
+            const scripts = [];
+            if (!window.ort) scripts.push('./thirdparty/ort.min.js');
+            if (!window.ProperPiperTTS) scripts.push('./thirdparty/piper/piper-tts-proper.js');
+
             for (const src of scripts) {
                 await new Promise((resolve, reject) => {
                     const script = document.createElement('script');
