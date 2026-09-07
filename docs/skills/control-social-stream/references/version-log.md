@@ -20,6 +20,16 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.1.0 | 0.4.2 | Versioned responses, request and operation IDs, SSE status events, token-file and stored credentials, visible-app controls, expanded source/settings discovery, and version-aware MCP tools |
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
+## Unreleased voice preview
+
+Minimum supported build: an unreleased SSApp build after 0.4.25 containing `ninjafy.voiceControl`; no released minimum version is assigned yet. Feature-detect the bridge rather than assuming support from the version number of a development checkout.
+
+Adds a separate Voice Control page and optional paired OBS dock. This is not a new `/api/v1` or MCP command and does not change the intentionally tokenless Local AI control API. The dock uses its own random loopback port and private revocable token. Do not expose the link in chat, logs, or shared overlays. Event Flow registers exact phrases through a restricted native bridge; ordinary chat cannot invoke host voice triggers.
+
+The unreleased voice preview also cancels queued Start/Arm operations after Stop and ignores overlong speech until a pause. No Local AI API or MCP command changed.
+
+Windows x64 voice commands in this unreleased preview use a pinned local whisper.cpp runtime downloaded on first Start. Stop also cancels runtime preparation/inference. Cohost and the Local AI API remain unchanged; feature-detect ninjafy.voiceControl as above.
+
 ## Skill revisions
 
 ### 2026-09-05

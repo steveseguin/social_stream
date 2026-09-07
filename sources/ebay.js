@@ -102,8 +102,11 @@
 		}
 		
 		var name="";
+		// The chat-only page exposes stable attributes instead of the stream's
+		// class names. Threaded rows contain a quoted parent before the new reply.
+		var messageRoot = ele.querySelector('[data-chat-element="thread-reply"]') || ele;
 		try {
-			name = escapeHtml(ele.querySelector(".user-name, [class*='_username_'], [class*='chatAuthor-']").textContent);
+			name = escapeHtml(messageRoot.querySelector("[data-chat-element='author-name'], .user-name, [class*='_username_'], [class*='chatAuthor-']").textContent);
 		} catch(e){
 		}
 		
@@ -119,7 +122,9 @@
 
 		var msg="";
 		try {
-			if (ele.querySelector(".message-content")){
+			if (messageRoot.querySelector("[data-chat-element='message-content']")){
+				msg = getAllContentNodes(messageRoot.querySelector("[data-chat-element='message-content']")).trim();
+			} else if (ele.querySelector(".message-content")){
 				msg = getAllContentNodes(ele.querySelector(".message-content")).trim();
 			} else if (ele.querySelector("[class*='chatText-']")){
 				msg = getAllContentNodes(ele.querySelector("[class*='chatText-']")).trim();
@@ -196,6 +201,250 @@
 	var sellerStatsInFlight = false;
 	var EBAY_SELLER_STATS_ENDPOINT = "https://vps-1122d8c8.vps.ovh.us:1443/seller?seller=";
 	var EBAY_SELLER_STATS_INTERVAL_MS = 60 * 1000;
+
+	// Both /chat and /stream subscribe to /liveevents/<id>. GraphQL supplies
+	// listing details; the fanout feed supplies the current auction and inventory.
+	var ebayEventMatch = location.pathname.match(/^\/ebaylive\/events\/([a-zA-Z0-9]+)\/(?:chat|stream)\/?$/);
+	var ebayEventId = ebayEventMatch ? ebayEventMatch[1] : "";
+	var networkListings = Object.create(null);
+	var graphqlListings = Object.create(null);
+	var listingUpdates = Object.create(null);
+	var networkListingIds = [];
+	var networkReady = false;
+	var networkViewerCount = null;
+	var networkRevision = 0;
+	var networkSeen = new Set();
+	var networkSeenOrder = [];
+	var networkTimer = null;
+	var graphqlPending = false;
+	var graphqlLastAttempt = 0;
+	var graphqlRefreshNeeded = true;
+	var networkClockOffset = 0;
+
+	// Read-only fields used by eBay's HostLiveEventListings query. No account,
+	// bidding or checkout mutations, and no personalized watch/payment fields.
+	var ebayListingsQuery = `query SSNLiveEventListings($input: LiveEventListingsInput!) {
+		liveEventListings(liveEventListingsInput: $input) {
+			eventId
+			liveEventListings {
+				eventId listingId pin hostConsolePurchasable visibility { isVisible }
+				listing {
+					id title status saleType bidCount endDate
+					currentPrice { original { amount currency } converted { amount currency } }
+					image { id url width height }
+					minimalShippingCostToBuyer { shippingType isFree }
+				}
+				caseBreakSpot { id name break { id name type images { url } } }
+				listingV2 { listingId listing {
+					listingId listingLifecycle { endDate }
+					category { primaryCategory { categoryId name ancestorIds } }
+					... on SingleSkuListing { totalQuantity items { quantityAvailable quantitySold } }
+					... on VariationListing { totalQuantity items { quantityAvailable quantitySold } }
+				} }
+				auction { winner { id userAccountName } }
+				liveAuctionState {
+					status recommendedPrices endingAt price { amount currency }
+					leader { id userAccountName } winner { id userAccountName }
+				}
+			}
+		}
+	}`;
+
+	function refreshEbayListings() {
+		if (!ebayEventId || !isExtensionOn || !graphqlRefreshNeeded || graphqlPending || Date.now() - graphqlLastAttempt < 30000) return;
+		graphqlPending = true;
+		graphqlLastAttempt = Date.now();
+		graphqlRefreshNeeded = false;
+		var revision = networkRevision;
+		var controller = new AbortController();
+		var timeout = setTimeout(function () { controller.abort(); }, 15000);
+		fetch("/ebaylive/graphql", {
+			method: "POST", credentials: "same-origin", signal: controller.signal,
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ operationName: "SSNLiveEventListings", query: ebayListingsQuery,
+				variables: { input: { eventId: ebayEventId, pagination: { maxPageSize: 1000 } } } })
+		}).then(function (response) {
+			if (!response.ok) throw new Error("eBay listings HTTP " + response.status);
+			return response.json();
+		}).then(function (response) {
+			var result = response.data && response.data.liveEventListings;
+			if (!result || result.eventId !== ebayEventId || !Array.isArray(result.liveEventListings)) throw new Error("eBay listing data unavailable");
+			var next = Object.create(null);
+			result.liveEventListings.forEach(function (item) { if (item.listingId) next[item.listingId] = item; });
+			graphqlListings = next;
+			// A response that crossed a socket update may enrich titles/images but
+			// must never replace the newer live auction state or selected cards.
+			if (!networkReady && revision === networkRevision) {
+				networkListingIds = result.liveEventListings.filter(function (item) { return item.pin; }).map(function (item) { return item.listingId; });
+			}
+			queueNetworkSnapshots();
+		}).catch(function () {
+			graphqlRefreshNeeded = true; // Bounded retry; DOM and socket capture continue.
+		}).finally(function () {
+			clearTimeout(timeout);
+			graphqlPending = false;
+		});
+	}
+
+	function ebayPrice(value) {
+		if (!value) return null;
+		var price = value.original || value;
+		var amount = Number(price.amount);
+		return price.amount != null && Number.isFinite(amount) ? { amount: amount, currency: price.currencyCode || price.currency || "" } : null;
+	}
+
+	function ebayPriceText(price) {
+		if (!price) return "";
+		try { return new Intl.NumberFormat(document.documentElement.lang || "en-US", { style: "currency", currency: price.currency }).format(price.amount); }
+		catch (e) { return String(price.amount) + (price.currency ? " " + price.currency : ""); }
+	}
+
+	function networkAuctionSnapshot(id) {
+		var item = networkListings[id] || {};
+		var graph = graphqlListings[id] || {};
+		var listing = graph.listing || {};
+		var details = item.saleInfo && item.saleInfo.details;
+		var auction = graph.liveAuctionState || {};
+		var result = details && details.result;
+		var hasSocketAuction = !!details;
+		var state = hasSocketAuction ? details.typename : auction.status;
+		var status = /Ended|ENDED/.test(state) ? "ended" : /Closed/.test(state) ? "closing" : /Running|Started|ACTIVE|RUNNING/.test(state) ? "active" : "ready";
+		var winner = hasSocketAuction ? (result && result.winner) : (auction.winner || (graph.auction && graph.auction.winner));
+		var leader = hasSocketAuction ? details.bidder : auction.leader;
+		var price = ebayPrice(hasSocketAuction ? ((result && result.winningBid) || details.winningBid || details.startingPrice || item.originalPrice) : (auction.price || listing.currentPrice));
+		var nextBid = ebayPrice(details && details.recommendedBid);
+		var endingAt = hasSocketAuction ? details.endingAt : auction.endingAt;
+		var remaining = endingAt && status === "active" ? Math.max(0, Math.ceil((Date.parse(endingAt) - Date.now() - networkClockOffset) / 1000)) : null;
+		var bidder = leader && (leader.userName || leader.userAccountName) || "";
+		var winnerName = winner && (winner.userName || winner.userAccountName) || "";
+		var bids = hasSocketAuction ? (details.bidRound == null ? null : details.bidRound) : listing.bidCount;
+		return {
+			title: item.title || listing.title || "", status: winnerName ? "sold" : status,
+			statusText: winnerName ? winnerName + " won" : bidder && status === "active" ? bidder + " is winning" : status,
+			bidder: bidder, winnerName: winnerName, currentPrice: price ? price.amount : null,
+			currentPriceText: ebayPriceText(price), price: price ? price.amount : null, priceText: ebayPriceText(price),
+			nextBid: nextBid ? nextBid.amount : null, nextBidText: ebayPriceText(nextBid),
+			bids: bids == null ? null : bids, bidsText: bids == null ? "" : bids + " Bids",
+			timer: remaining !== null && Number.isFinite(remaining) ? String(Math.floor(remaining / 60)).padStart(2, "0") + ":" + String(remaining % 60).padStart(2, "0") : "",
+			endingAt: endingAt || null, sourceMode: "network", cardCount: networkListingIds.length,
+			ebay: { eventId: ebayEventId, listingId: id, listing: graph, eventListing: item, update: listingUpdates[id] || null }
+		};
+	}
+
+	function networkCommerceSnapshot() {
+		if (!networkReady && !networkListingIds.length) return null;
+		return { sourceMode: "network", eventId: ebayEventId,
+			playerCards: networkListingIds.map(networkAuctionSnapshot),
+			navigation: { viewerCount: networkViewerCount } };
+	}
+
+	function currentNetworkAuction() {
+		var pinned = networkListingIds.filter(function (id) { return networkListings[id] ? networkListings[id].isPinnedInEvent : graphqlListings[id] && graphqlListings[id].pin; });
+		var id = pinned[0] || networkListingIds[networkListingIds.length - 1];
+		return id ? networkAuctionSnapshot(id) : null;
+	}
+
+	function queueNetworkSnapshots() {
+		if (networkTimer) return;
+		networkTimer = setTimeout(function () {
+			networkTimer = null;
+			checkAuctionUpdates();
+			checkCommerceUpdates();
+		}, 50);
+	}
+
+	function handleEbayPayload(payload, replay) {
+		if (!payload || !ebayEventId) return;
+		var kind = payload.typename;
+		if (kind === "ServerTimeBeacon") {
+			var time = Date.parse(payload.timestamp);
+			if (Number.isFinite(time)) networkClockOffset = time - Date.now();
+			return;
+		}
+		if (kind === "LiveEventViewerStatsUpdatedV2") {
+			if (Number.isFinite(payload.concurrentViewers)) networkViewerCount = payload.concurrentViewers;
+			return;
+		}
+		if (kind === "GetMessagesFromKeystoneEventResponse" || kind === "ReplayEventMessagesResponse") {
+			if (payload.eventId !== "/liveevents/" + ebayEventId || !Array.isArray(payload.messages)) return;
+			payload.messages.forEach(function (message) { handleEbayPayload(message, true); });
+			if (payload.hasMore || payload.isStale) graphqlRefreshNeeded = true;
+			queueNetworkSnapshots();
+			return;
+		}
+		if (payload.eventId !== ebayEventId || !/^(EventListingsUpdated(?:Patch)?|Auction\w+|BidTimeExtended|FlashDeal\w+)$/.test(kind)) return;
+		var key = JSON.stringify(payload);
+		if (networkSeen.has(key)) return;
+		networkSeen.add(key);
+		networkSeenOrder.push(key);
+		if (networkSeenOrder.length > 1000) networkSeen.delete(networkSeenOrder.shift());
+		networkRevision++;
+		if (kind === "EventListingsUpdated" || kind === "EventListingsUpdatedPatch") {
+			if (!Array.isArray(payload.eventListings)) return;
+			if (kind === "EventListingsUpdated") {
+				networkListingIds = payload.eventListings.filter(function (item) { return item.isVisibleInEvent !== false; }).map(function (item) { return item.listingId; });
+				var previous = networkListings;
+				networkListings = Object.create(null);
+				networkListingIds.forEach(function (id) { if (previous[id]) networkListings[id] = previous[id]; });
+				networkReady = true;
+			}
+			payload.eventListings.forEach(function (item) {
+				if (!item.listingId) return;
+				if (kind === "EventListingsUpdated") networkListings[item.listingId] = item;
+				else networkListings[item.listingId] = Object.assign({}, networkListings[item.listingId] || {}, item);
+				if (!graphqlListings[item.listingId]) graphqlRefreshNeeded = true;
+				if (item.isVisibleInEvent === false) networkListingIds = networkListingIds.filter(function (id) { return id !== item.listingId; });
+				else if (item.isVisibleInEvent === true && networkListingIds.indexOf(item.listingId) === -1) networkListingIds.push(item.listingId);
+			});
+		} else if (payload.listingId) {
+			var id = payload.listingId;
+			var previousUpdate = listingUpdates[id];
+			if (previousUpdate && previousUpdate.serverCreatedAt > payload.serverCreatedAt) return;
+			listingUpdates[id] = payload;
+			var item = networkListings[id];
+			if (!item) { graphqlRefreshNeeded = true; return; }
+			var details = Object.assign({}, item.saleInfo && item.saleInfo.details);
+			if (kind === "AuctionStarted") details = Object.assign({}, payload, { typename: "RunningAuctionDetails", bidRound: 0 });
+			else if (kind === "AuctionReset" || kind === "AuctionWillStart") details = Object.assign({}, payload, { typename: "ReadyAuctionDetails", bidRound: 0 });
+			else if (kind === "AuctionEnded") details = Object.assign({}, details, payload, { typename: "EndedAuctionDetails", endingAt: null });
+			else if (kind === "AuctionBiddingClosed") details.typename = "ClosedAuctionDetails";
+			else if (kind === "AuctionNewBidLeader") Object.assign(details, { winningBid: payload.winningBid, bidder: payload.bidder, bidRound: payload.bidRound, recommendedBid: payload.recommendedBid });
+			else if (kind === "BidTimeExtended") details.endingAt = payload.endingAt;
+			else graphqlRefreshNeeded = true;
+			item.saleInfo = Object.assign({}, item.saleInfo, { details: details });
+		}
+		if (!replay) queueNetworkSnapshots();
+	}
+
+	function handleEbaySocketFrame(data) {
+		if (typeof data !== "string" || !ebayEventId) return;
+		// eBay uses STOMP with LF or CRLF headers and NUL-delimited frames.
+		data.split("\x00").forEach(function (frame) {
+			var separator = frame.match(/\r?\n\r?\n/);
+			if (!separator || !/^\s*MESSAGE\r?\n/.test(frame)) return;
+			var headers = frame.slice(0, separator.index);
+			var destination = headers.match(/(?:^|\n)(?:subscription|for-destination):([^\r\n]+)/);
+			if (destination && destination[1].indexOf("/liveevents/") === 0 && destination[1] !== "/liveevents/" + ebayEventId) return;
+			try { handleEbayPayload(JSON.parse(frame.slice(separator.index + separator[0].length)).payload, false); } catch (e) {}
+		});
+	}
+
+	if (ebayEventId) {
+		if (window.ninjafy && window.ninjafy.onWebSocketMessage) {
+			window.ninjafy.onWebSocketMessage(function (event) {
+				try { if (new URL(event.url).hostname !== "fanout.ebay.com") return; } catch (e) { return; }
+				if (event.type === "message") handleEbaySocketFrame(event.data);
+				if (event.type === "open") graphqlRefreshNeeded = true;
+			});
+		} else {
+			window.addEventListener("message", function (event) {
+				if (event.source !== window || event.origin !== location.origin || !event.data) return;
+				if (event.data.source === "ebay-ws-observer") handleEbaySocketFrame(event.data.data);
+				if (event.data.source === "ebay-ws-available") window.postMessage({ source: "ebay-ws-ready" }, location.origin);
+			});
+			window.postMessage({ source: "ebay-ws-ready" }, location.origin);
+		}
+	}
 
 	function normalizeText(value) {
 		if (value === null || typeof value === "undefined") {
@@ -1155,7 +1404,7 @@
 		if (!isExtensionOn) {
 			return;
 		}
-		var snapshot = createAuctionSnapshot();
+		var snapshot = currentNetworkAuction() || (networkReady ? null : createAuctionSnapshot());
 		if (!snapshot) {
 			return;
 		}
@@ -1171,7 +1420,7 @@
 		if (!isExtensionOn) {
 			return;
 		}
-		var snapshot = createCommerceSnapshot();
+		var snapshot = networkCommerceSnapshot() || createCommerceSnapshot();
 		if (!snapshot) {
 			return;
 		}
@@ -1186,7 +1435,7 @@
 	function checkViewers(){
 		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
 			try {
-				var views = getViewerCountFromDom();
+				var views = networkViewerCount !== null ? networkViewerCount : getViewerCountFromDom();
 				if (views === null || views === lastViewerCount) {
 					return;
 				}
@@ -1322,6 +1571,7 @@
 		
 		checking = setInterval(function(){
 			try {
+				refreshEbayListings();
 				var container = document.querySelector("#chatting-container, [data-testid='chat-messages-container'], [data-testid='message-list-container']");
 				if (container){
 					var observeTarget = container.querySelector("ul[class*='chatFeed-'], ul[aria-live='polite']") || container;
