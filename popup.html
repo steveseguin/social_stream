@@ -14744,9 +14744,15 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
 <label><span data-translate="commerce-storefront-token">Storefront token</span><input id="money-fourthwall-token" type="password" autocomplete="off" maxlength="512"></label>
 <div class="money-actions"><button id="money-fourthwall-import" type="button" data-translate="commerce-load-product">Load product details</button><a href="docs/creator-store-setup.html#import" target="_blank" rel="noopener" data-translate="commerce-setup-guide">Setup guide</a></div><p id="money-fourthwall-status" role="status"></p>
 </details>
-<div id="money-commerce-items"></div>
+<div id="money-commerce-controls"><details id="money-commerce-live" class="popup-subsection"><summary data-translate="commerce-live">&#127916; Live product controls</summary>
+<div class="money-actions"><button type="button" id="money-commerce-next" data-translate="commerce-next">Next product</button><button type="button" id="money-commerce-hide" data-translate="commerce-hide">Hide products</button><button type="button" id="money-commerce-resume" data-translate="commerce-resume">Resume schedule</button></div>
+<label><span data-translate="commerce-live-duration">Show/hide seconds (0 = until changed)</span><input id="money-commerce-duration" type="number" min="0" max="3600" value="0"></label>
+<p id="money-commerce-live-status" role="status"></p>
+</details>
+<div id="money-commerce-items"></div></div>
 <label><span data-translate="commerce-name">Product or page name</span><input id="money-commerce-name" type="text" maxlength="180"></label>
 <label><span data-translate="commerce-url">Public HTTPS link</span><input id="money-commerce-url" type="url" placeholder="https://"></label>
+<button type="button" id="money-product-import" data-translate="commerce-quick-import">Load details from link</button>
 <label><span data-translate="commerce-image">Image URL (optional)</span><input id="money-commerce-image" type="url" placeholder="https://"></label>
 <label><span data-translate="commerce-price">Price (optional)</span><input id="money-commerce-price" type="number" min="0" step="any"></label>
 <label><span data-translate="commerce-currency">Currency</span><select id="money-commerce-currency"><option>USD</option><option>EUR</option><option>GBP</option><option>CAD</option><option>AUD</option><option>JPY</option></select></label>
@@ -14754,6 +14760,11 @@ body .popup-settings-panel .textInputContainer .textInputUploadButton { grid-are
 <button type="button" id="money-commerce-add" data-translate="commerce-add">Add product or link</button><button type="button" id="money-commerce-cancel" data-translate="commerce-cancel" hidden>Cancel edit</button>
 <p data-translate="commerce-save-help">Save setup applies your changes. Prices and availability do not refresh automatically.</p>
 <details class="popup-subsection"><summary data-translate="commerce-display">Display options</summary>
+<details id="money-public-shop" class="popup-subsection"><summary data-translate="commerce-viewer-page">&#128279; Public viewer page</summary>
+<div class="money-actions"><button type="button" id="money-shop-publish" data-translate="commerce-publish">Publish saved links</button><button type="button" id="money-shop-remove" data-translate="commerce-unpublish">Unpublish</button></div>
+<label><span data-translate="commerce-viewer-link">Viewer link (also used by the product QR)</span><input id="money-shop-url" type="url" readonly></label>
+<div class="money-actions"><button type="button" id="money-shop-copy" data-translate="commerce-copy-page">Copy viewer link</button><a href="docs/product-controls.html" target="_blank" rel="noopener" data-translate="commerce-controls-guide">Product controls guide</a></div><p id="money-shop-status" role="status"></p>
+</details>
 <label><span data-translate="commerce-selection">Product selection</span><select id="money-commerce-display"><option value="cycle" data-translate="commerce-cycle">Rotate products</option><option value="first" data-translate="commerce-first">Pin the first product</option></select></label>
 <label><span data-translate="commerce-seconds">Seconds per product</span><input id="money-commerce-seconds" type="number" min="15" max="300" value="30"></label>
 <div class="money-toggle"><label class="switch"><input type="checkbox" id="money-commerce-qr" checked aria-labelledby="money-commerce-qr-label"><span class="slider round"></span></label><span id="money-commerce-qr-label" data-translate="commerce-qr">Show QR code</span></div>

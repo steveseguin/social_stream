@@ -17,13 +17,14 @@
 		products.forEach(function (item, index) {
 			var row = document.createElement('div'), label = document.createElement('span'); row.className = 'money-item';
 			label.textContent = item.name + (item.amount != null ? ' - ' + SSNMonetization.money(item.amount, item.currency) : ''); row.appendChild(label);
-			['edit', 'up', 'remove', 'copy'].forEach(function (action) {
+			['show', 'edit', 'up', 'remove', 'copy'].forEach(function (action) {
 				var button = document.createElement('button'); button.type = 'button';
-				button.textContent = tr('commerce-' + action, { edit: 'Edit', up: 'Move up', remove: 'Remove', copy: 'Copy public link' }[action]);
+				button.textContent = tr('commerce-' + action, { show: 'Show now', edit: 'Edit', up: 'Move up', remove: 'Remove', copy: 'Copy public link' }[action]);
 				button.setAttribute('aria-label', button.textContent + ': ' + item.name);
 				button.disabled = action === 'up' && index === 0;
 				button.onclick = function () {
-					if (action === 'copy') { navigator.clipboard.writeText(item.url).then(function () { status(tr('commerce-copied', 'Public link copied.')); }).catch(function () { status(item.url); }); return; }
+					if (action === 'show') { control('show', item.url); return; }
+                    if (action === 'copy') { navigator.clipboard.writeText(item.url).then(function () { status(tr('commerce-copied', 'Public link copied.')); }).catch(function () { status(item.url); }); return; }
 					if (action === 'edit') {
 						editingProduct = index; by('commerce-cancel').hidden = false;
 						['name', 'url', 'image', 'currency', 'purpose'].forEach(function (key) { by('commerce-' + key).value = item[key]; });
@@ -37,6 +38,32 @@
 			}); rows.appendChild(row);
 		});
 	}
+    function liveStatus(reply) {
+        var live = reply.commerceLive, active = live && (!live.until || live.until > Date.now());
+        by('commerce-live-status').textContent = active ? live.mode === 'hide' ? tr('commerce-hidden', 'Products hidden; activity alerts remain enabled.') : tr('commerce-showing', 'Product pinned on air.') : tr('commerce-scheduled', 'Using saved product schedule.');
+        var shop = reply.publicShop || {};
+        by('shop-url').value = shop.url || ''; by('shop-copy').disabled = !shop.url; by('shop-remove').disabled = !shop.published;
+        by('shop-status').textContent = shop.status || (shop.published ? tr('commerce-published', 'Saved links are public. Changes update the same viewer link.') : tr('commerce-unpublished', 'Publish your saved links to get a stable viewer URL.'));
+    }
+    function control(command, url) {
+        request('commerceControl', { command: command, url: url, seconds: Number(by('commerce-duration').value) }).then(function (reply) { liveStatus(reply); }).catch(function (error) { status(error.message); });
+    }
+    ['next', 'hide', 'resume'].forEach(function (command) { by('commerce-' + command).onclick = function () { control(command); }; });
+    ['publish', 'remove'].forEach(function (command) {
+        by('shop-' + command).onclick = function () {
+            var button = this; button.disabled = true;
+            request(command === 'publish' ? 'publishShop' : 'unpublishShop').then(liveStatus).catch(function (error) { by('shop-status').textContent = error.message; }).then(function () { button.disabled = false; });
+        };
+    });
+    by('shop-copy').onclick = function () { navigator.clipboard.writeText(by('shop-url').value).then(function () { status(tr('commerce-copied', 'Public link copied.')); }).catch(function () { by('shop-url').focus(); by('shop-url').select(); }); };
+    by('product-import').onclick = function () {
+        var button = this; button.disabled = true;
+        request('productImport', { url: by('commerce-url').value }).then(function (reply) {
+            by('commerce-name').value = reply.item.name; by('commerce-image').value = reply.item.image;
+            by('commerce-price').value = '';
+            status(tr('commerce-import-price', 'Details loaded. Check the price and purpose, add the product, then save setup.'));
+        }).catch(function (error) { status(error.message); }).then(function () { button.disabled = false; });
+    };
 	function by(id) {
 		return document.getElementById('money-' + id);
 	}
@@ -229,8 +256,9 @@
 		if (!reply.config) return;
 		reply.config = SSNMonetization.config(reply.config);
 		current = reply;
+        liveStatus(reply);
         by('shopify-enabled').checked = reply.config.shopify.enabled; by('shopify-shop').value = reply.config.shopify.shop; shopifyStatus(reply);
-        providerStatus(reply);
+        providerStatus(reply); liveStatus(reply);
         ['view', 'style', 'scale', 'cardevery', 'cardfor', 'onlytype'].forEach(function (key) { by(key).value = reply.config.presentation[key]; });
         products = reply.config.commerce.items.slice(); editingProduct = -1; renderProducts();
         ['enabled', 'qr'].forEach(function (key) { by('commerce-' + key).checked = reply.config.commerce[key]; });
@@ -439,7 +467,7 @@
 		if (ready && panel.open)
 			request('get').then(
 				function (reply) {
-					providerStatus(reply); shopifyStatus(reply);
+					providerStatus(reply); liveStatus(reply); shopifyStatus(reply);
                     by('ninja-status').textContent = reply.status;
 					showThroneStatus(reply);
 					showEbayStatus(reply);

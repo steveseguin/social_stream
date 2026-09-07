@@ -46,7 +46,7 @@
 			return;
 		}
 		document.body.classList.toggle('tl', c.position === 'tl');
-		if (!active && (view === 'alerts' || (!demo && cardEvery > 0 && (Date.now() / 1000) % Math.max(cardEvery, cardFor) >= cardFor))) { card.hidden = true; return; }
+		if (!active && (view === 'alerts' || (!demo && !(mode === 'commerce' && c.live && c.live.mode === 'show' && (!c.live.until || c.live.until > Date.now())) && cardEvery > 0 && (Date.now() / 1000) % Math.max(cardEvery, cardFor) >= cardFor))) { card.hidden = true; return; }
 		if (mode !== 'commerce' && mode !== 'wishlist' && mode !== 'ebay' && view !== 'card' && !c.qr && !active) {
 			card.hidden = true;
 			return;
@@ -54,7 +54,7 @@
 		card.hidden = false;
 		var product = mode === 'commerce' ? SSNMonetization.commerceCurrent(c, Date.now()) : null;
 		var ebayItem = mode === 'ebay' ? SSNMonetization.ebayCurrent(c.items, c, Date.now()) : null;
-		var url = mode === 'commerce' ? product && product.url : mode === 'ebay' ? ebayItem && ebayItem.url : mode === 'wishlist' ? (c.item && c.item.url) || c.url : c.url,
+		var url = mode === 'commerce' ? c.viewerURL || product && product.url : mode === 'ebay' ? ebayItem && ebayItem.url : mode === 'wishlist' ? (c.item && c.item.url) || c.url : c.url,
 			image = '';
 		if (active) {
 			by('badge').textContent = mode === 'commerce' ? tr('commerce-activity', 'Recent activity') : mode === 'ebay' ? (c.environment === 'sandbox' ? 'eBay Sandbox test purchase' : 'Purchased on eBay') : mode === 'wishlist' ? 'Rank unlocked' : mode === 'throne' ? 'Gift rank ' + (c.rank || 1) : 'Thank you for the support';

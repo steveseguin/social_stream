@@ -440,3 +440,24 @@ test('Shopify import confines tokens to the named store and preserves receiver c
  result = await s.request('save', { config: { shopify: { enabled: true, shop: 'fixture.myshopify.com' } }, shopifySecret: 'fixture-webhook-secret' }); assert(!result.error, result.error); assert.equal(result.shopify.webhook, hook); assert(!JSON.stringify(s.disk).includes('fixture-webhook-secret'));
  const reload = service(s.disk); const restored = await reload.request('get'); assert.equal(restored.shopify.webhook, hook); assert.equal(s.tips.length, 0);
 });
+
+
+test('Live product controls use saved URLs, expire, survive reordering and never emit payment or chat', async () => {
+    const s = service();
+    const a = { name: 'A', url: 'https://example.com/a' }, b = { name: 'B', url: 'https://example.com/b' };
+    await s.request('save', { config: { commerce: { enabled: true, display: 'first', items: [a, b] } } });
+    let reply = await s.request('commerceControl', { command: 'show', url: b.url, seconds: 30 });
+    assert.equal(reply.commerceLive.url, b.url);
+    const current = () => M.commerceCurrent(s.sent.at(-1).meta.monetization.commerce, s.c.Date.now());
+    assert.equal(current().name, 'B');
+    await s.request('save', { config: { commerce: { enabled: true, display: 'first', items: [b, a] } } });
+    assert.equal(current().name, 'B');
+    await s.request('commerceControl', { command: 'next', seconds: 1 }); assert.equal(current().name, 'A');
+    s.advance(1100); assert.equal(current().name, 'B');
+    await s.request('commerceControl', { command: 'hide' }); assert.equal(current(), null);
+    await s.request('commerceControl', { command: 'resume' }); assert.equal(current().name, 'B');
+    assert((await s.request('commerceControl', { command: 'show', url: 'https://unknown.test/' })).error);
+    assert((await s.request('commerceControl', { command: 'hide', seconds: -1 })).error);
+    assert.equal(s.chat.length, 0); assert.equal(s.tips.length, 0);
+    assert(s.sent.every(event => event.event === 'monetization_update'));
+});
