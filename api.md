@@ -1365,3 +1365,10 @@ Use the existing P2P or WebSocket API. These commands are advertised in the vers
 ```
 
 The existing `commerceControl` action accepts `{ "command": "show", "url": "https://example.com/product", "seconds": 30 }` inside `value`, or the original top-level `command`, `url`, and `seconds` fields. All paths call the same monetization controller. Replies contain only the action, command and live display override; no publishing credentials. Commands do not publish pages, post chat, or create payment events. See [product controls](docs/product-controls.html).
+
+
+### Read product display state
+
+`{"protocol":2,"action":"getCommerceState","get":"product-state-1"}` returns `payload.commerce`: `enabled`, `hostOn`, `mode` (`offline`, `disabled`, `hidden`, `pinned`, `scheduled`), `selected` (name/URL or null), `expiresAt` (epoch milliseconds or 0), `remainingSeconds` (or null), saved `items` (name/URL only), and `publicPage` publishing/synchronization status. The existing host-control/session permissions apply. It returns no publishing key, session key or buyer data.
+
+Commerce control replies also include this state. Local display commands acknowledge immediately after applying the selection; public-page synchronization runs separately, coalesces newer selections, and retries failures. A successful response confirms SSN state only, not OBS recording/streaming, scene visibility, or public-page synchronization. The same read/write contract supports operator controls in Stream Deck, Event Flow, the SSN popup, or a future OBS browser dock; audience overlays need no controls.

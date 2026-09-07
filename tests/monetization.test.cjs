@@ -474,9 +474,33 @@ test('Public page key persists privately and failed removal retries DELETE after
  const restarted = service(s.disk);
  restarted.c.fetch = async (url, options) => { calls.push(options); return {ok:true,json:async()=>({removed:true})}; };
  restarted.advance(1000);
+ await new Promise(resolve => setImmediate(resolve));
  await restarted.request('get');
  const state = await restarted.request('get');
  assert.equal(state.publicShop.published,false); assert.equal(state.publicShop.url,'');
  assert.equal(calls.at(-1).method,'DELETE');
  assert(!JSON.stringify(state).includes(key));
+});
+
+
+test('Product controls and state remain responsive while public sync stalls; latest selection wins', async () => {
+ const s = service({monetizationPrivate:{publicShop:{key:'a'.repeat(64),id:'b'.repeat(64),published:true}}});
+ let release, first = true; const writes=[];
+ s.c.fetch = async (url,options) => {
+  writes.push(JSON.parse(options.body));
+  if (first) { first=false; await new Promise(resolve=>{release=resolve;}); }
+  return {ok:true,json:async()=>({id:'b'.repeat(64)})};
+ };
+ const a={name:'A',url:'https://example.com/a'}, b={name:'B',url:'https://example.com/b'};
+ await s.request('save',{config:{commerce:{enabled:true,display:'first',items:[a,b]}}});
+ await new Promise(resolve=>setImmediate(resolve)); assert(release);
+ const quick = job => Promise.race([job,new Promise((_,reject)=>{const timer=setTimeout(()=>reject(Error('Local control waited for network')),300);timer.unref();})]);
+ await quick(s.request('commerceControl',{command:'show',url:a.url}));
+ await quick(s.request('commerceControl',{command:'next'}));
+ const state = await quick(s.request('getCommerceState'));
+ assert.equal(state.commerce.selected.name,'B'); assert.equal(state.commerce.mode,'pinned');
+ assert(!JSON.stringify(state).includes('a'.repeat(64)));
+ release(); await new Promise(resolve=>setImmediate(resolve)); await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(writes.at(-1).live.url,b.url);
+ assert.equal(s.chat.length,0);assert.equal(s.tips.length,0);
 });
