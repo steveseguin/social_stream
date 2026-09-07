@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" class="extension-popup-surface">
     <head>
+  <script src="./js/popup-bootstrap.js"></script>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
         <title>Menu</title>
         <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
@@ -588,6 +589,10 @@ html {
 }
 
 /* Keep overflow inside the extension popup to avoid Chromium's popup autosize loop. */
+html.popup-initializing body {
+    display: none;
+}
+
 html.extension-popup-surface {
     overflow: hidden;
 }

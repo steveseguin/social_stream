@@ -4651,7 +4651,7 @@ function update(response, sync = true) {
                         const originalHref = linkElement.href; // Or from a 'data-raw-url' attribute if refreshLinks sets one
                         const cleanedUrl = removeTTSProviderParams(originalHref);
                         linkElement.href = cleanedUrl;
-                        if (linkElement.innerText !== "Click to open link" || !currentHideLinks) { // Avoid overwriting "Click to open" if links are hidden
+                        if (!currentHideLinks || linkElement.textContent !== "Click to open link") { // Read text without forcing layout between link updates.
                            linkElement.innerText = currentHideLinks ? "Click to open link" : getGeneratedLinkDisplayUrl(linkElement, cleanedUrl);
                         }
                         // If your old `sourceElement.raw` was important, you might need to update a similar attribute
@@ -8197,7 +8197,7 @@ function syncAlertEffectSummaries() {
     }
 }
 
-function syncOverlayPreview(previewKey) {
+function syncOverlayPreview(previewKey, force = false) {
     syncAlertEffectSummaries();
     for (let index = 1; index <= 3; index++) {
         const toggle = document.getElementById('multi-alert-effect' + index + '-enabled');
@@ -8214,6 +8214,12 @@ function syncOverlayPreview(previewKey) {
     if (!frame) {
         return;
     }
+
+    // The closed preview should not parse an overlay or create an AudioContext
+    // on every menu opening. Once loaded, keep it in sync even when collapsed.
+    const section = frame.closest('.collapsible');
+    const toggle = section && section.querySelector('input.collapsible-input');
+    if (!force && !frame.dataset.currentPreviewUrl && toggle && !toggle.checked) return;
 
     const nextUrl = buildOverlayPreviewUrl(previewKey);
     if (frame.dataset.currentPreviewUrl === nextUrl) {
@@ -8284,6 +8290,7 @@ function sendOverlayPreview(previewKey, descriptor) {
         return;
     }
 
+    syncOverlayPreview(previewKey, true);
     replayOverlayPreview(previewKey, { silent: false });
 }
 
@@ -8641,6 +8648,11 @@ function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
 
     const frame = document.getElementById(config.frameId);
     if (frame) {
+        const section = frame.closest('.collapsible');
+        const toggle = section && section.querySelector('input.collapsible-input');
+        if (toggle) toggle.addEventListener('change', () => {
+            if (toggle.checked) syncOverlayPreview(previewKey);
+        });
         frame.addEventListener('load', () => {
             replayOverlayPreview(previewKey, { silent: true });
         });
