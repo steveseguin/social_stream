@@ -1,4 +1,6 @@
 (function () {
+	if (window.__ssnEbayCaptureActive) return;
+	window.__ssnEbayCaptureActive = true;
 	 
 	 
 	var checking = false;
@@ -211,6 +213,7 @@
 	var listingUpdates = Object.create(null);
 	var networkListingIds = [];
 	var networkReady = false;
+	var graphqlReady = false;
 	var networkViewerCount = null;
 	var networkRevision = 0;
 	var networkSeen = new Set();
@@ -223,32 +226,7 @@
 
 	// Read-only fields used by eBay's HostLiveEventListings query. No account,
 	// bidding or checkout mutations, and no personalized watch/payment fields.
-	var ebayListingsQuery = `query SSNLiveEventListings($input: LiveEventListingsInput!) {
-		liveEventListings(liveEventListingsInput: $input) {
-			eventId
-			liveEventListings {
-				eventId listingId pin hostConsolePurchasable visibility { isVisible }
-				listing {
-					id title status saleType bidCount endDate
-					currentPrice { original { amount currency } converted { amount currency } }
-					image { id url width height }
-					minimalShippingCostToBuyer { shippingType isFree }
-				}
-				caseBreakSpot { id name break { id name type images { url } } }
-				listingV2 { listingId listing {
-					listingId listingLifecycle { endDate }
-					category { primaryCategory { categoryId name ancestorIds } }
-					... on SingleSkuListing { totalQuantity items { quantityAvailable quantitySold } }
-					... on VariationListing { totalQuantity items { quantityAvailable quantitySold } }
-				} }
-				auction { winner { id userAccountName } }
-				liveAuctionState {
-					status recommendedPrices endingAt price { amount currency }
-					leader { id userAccountName } winner { id userAccountName }
-				}
-			}
-		}
-	}`;
+	var ebayListingsQuery = "query HostLiveEventListings($liveEventListingsInput: LiveEventListingsInput!, $isAuthenticated: Boolean!, $enableSellerDiscountsQuery: Boolean = false, $includeLiveCommerceSignals: Boolean = true, $enableWinnerForLiveAuctionState: Boolean = true, $includePagination: Boolean = false, $skipAuctionStatus: Boolean = false, $enableBreakSpotsGroupings: Boolean = false, $enableCBTData: Boolean = false, $includeVehicleDetails: Boolean = false) {\n  liveEventListings(liveEventListingsInput: $liveEventListingsInput) {\n    eventId\n    pagination @include(if: $includePagination) {\n      nextCursor\n      __typename\n    }\n    liveEventListings {\n      eventId\n      listingId\n      listing {\n        ...EventListing\n        isWatched @include(if: $isAuthenticated)\n        __typename\n      }\n      caseBreakSpot @include(if: $enableBreakSpotsGroupings) {\n        id\n        name\n        break {\n          id\n          name\n          images {\n            url\n            __typename\n          }\n          type\n          __typename\n        }\n        __typename\n      }\n      listingV2 {\n        listingId\n        listing {\n          listingId\n          listingLifecycle {\n            endDate\n            __typename\n          }\n          sellerProduct @include(if: $includeVehicleDetails) {\n            motorVehicleIdentifier {\n              vin\n              __typename\n            }\n            __typename\n          }\n          category {\n            primaryCategory {\n              categoryId\n              name\n              ancestorIds\n              __typename\n            }\n            __typename\n          }\n          listingTerms @include(if: $includeVehicleDetails) {\n            itemLocation {\n              location\n              __typename\n            }\n            listingFulfillmentTerms {\n              inStorePickupSupported\n              __typename\n            }\n            listingPaymentTerms {\n              motorVehicleDeposit {\n                depositRequired\n                depositAmount {\n                  original {\n                    value\n                    currency\n                    __typename\n                  }\n                  __typename\n                }\n                __typename\n              }\n              __typename\n            }\n            __typename\n          }\n          ... on SingleSkuListing {\n            __typename\n            ...ListingV2Quantity\n            ...ListingV2Discount @include(if: $enableSellerDiscountsQuery)\n            items {\n              priceRollups @include(if: $enableCBTData) {\n                feeComputationReferenceData\n                __typename\n              }\n              __typename\n            }\n          }\n          ... on VariationListing {\n            __typename\n            ...ListingV2Quantity\n            ...ListingV2Discount @include(if: $enableSellerDiscountsQuery)\n            items {\n              priceRollups @include(if: $enableCBTData) {\n                feeComputationReferenceData\n                __typename\n              }\n              __typename\n            }\n          }\n          __typename\n        }\n        __typename\n      }\n      auction @skip(if: $skipAuctionStatus) {\n        winner {\n          id\n          userAccountName\n          __typename\n        }\n        __typename\n      }\n      liveAuctionState @skip(if: $skipAuctionStatus) {\n        status\n        recommendedPrices\n        endingAt\n        price {\n          amount\n          currency\n          __typename\n        }\n        leader {\n          id\n          userAccountName\n          __typename\n        }\n        winner @include(if: $enableWinnerForLiveAuctionState) {\n          id\n          userAccountName\n          __typename\n        }\n        __typename\n      }\n      visibility {\n        isVisible\n        __typename\n      }\n      pin\n      hostConsolePurchasable\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment Price on Price {\n  amount\n  currency\n  __typename\n}\n\nfragment Image on Image {\n  id\n  url\n  width\n  height\n  __typename\n}\n\nfragment EventListing on Listing {\n  id\n  title\n  status\n  currentPrice {\n    converted {\n      ...Price\n      __typename\n    }\n    original {\n      ...Price\n      __typename\n    }\n    __typename\n  }\n  image {\n    ...Image\n    __typename\n  }\n  minimalShippingCostToBuyer {\n    shippingType\n    isFree\n    __typename\n  }\n  bidCount\n  saleType\n  liveCommerceSignals @include(if: $includeLiveCommerceSignals) {\n    isExclusive\n    purchasable\n    __typename\n  }\n  endDate\n  __typename\n}\n\nfragment ListingV2Quantity on ListingV2 {\n  totalQuantity\n  items {\n    quantityAvailable\n    quantitySold\n    __typename\n  }\n  __typename\n}\n\nfragment ListingV2Discount on ListingV2 {\n  isItemOnSale\n  sellerDiscounts {\n    bestDiscounts {\n      id\n      startDate\n      endDate\n      offerCheckSumId\n      discountType {\n        id\n        __typename\n      }\n      ... on CodedCouponDiscount {\n        couponCode\n        discountSubType {\n          id\n          __typename\n        }\n        usageLimit {\n          maximumSavings {\n            amount\n            currency\n            __typename\n          }\n          maximumRedemptionsPerBuyer\n          __typename\n        }\n        name\n        rule {\n          discountOffered {\n            ... on SellerDiscountOfferedPercentage {\n              discountPercentage\n              discountApplyLevel\n              __typename\n            }\n            ... on SellerDiscountOfferedAmount {\n              discountAmountOff {\n                amount\n                currency\n                __typename\n              }\n              discountApplyLevel\n              __typename\n            }\n            __typename\n          }\n          __typename\n        }\n        __typename\n      }\n      ... on MarkdownSellerPromotion {\n        offerCheckSumId\n        endDate\n        __typename\n      }\n      ... on OrderDiscount {\n        offerCheckSumId\n        endDate\n        __typename\n      }\n      ... on ShippingDiscount {\n        offerCheckSumId\n        endDate\n        __typename\n      }\n      ... on VolumeDiscount {\n        offerCheckSumId\n        endDate\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  __typename\n}";
 
 	function refreshEbayListings() {
 		if (!ebayEventId || !isExtensionOn || !graphqlRefreshNeeded || graphqlPending || Date.now() - graphqlLastAttempt < 30000) return;
@@ -261,8 +239,11 @@
 		fetch("/ebaylive/graphql", {
 			method: "POST", credentials: "same-origin", signal: controller.signal,
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ operationName: "SSNLiveEventListings", query: ebayListingsQuery,
-				variables: { input: { eventId: ebayEventId, pagination: { maxPageSize: 1000 } } } })
+			body: JSON.stringify({ operationName: "HostLiveEventListings", query: ebayListingsQuery,
+				variables: { isAuthenticated: false, enableSellerDiscountsQuery: false, includeLiveCommerceSignals: false,
+					enableWinnerForLiveAuctionState: true, includePagination: false, skipAuctionStatus: false,
+					enableBreakSpotsGroupings: true, enableCBTData: false, includeVehicleDetails: false,
+					liveEventListingsInput: { eventId: ebayEventId, pagination: { maxPageSize: 1000 } } } })
 		}).then(function (response) {
 			if (!response.ok) throw new Error("eBay listings HTTP " + response.status);
 			return response.json();
@@ -272,6 +253,8 @@
 			var next = Object.create(null);
 			result.liveEventListings.forEach(function (item) { if (item.listingId) next[item.listingId] = item; });
 			graphqlListings = next;
+			graphqlReady = true;
+			window.__ssnEbayNetworkReady = true;
 			// A response that crossed a socket update may enrich titles/images but
 			// must never replace the newer live auction state or selected cards.
 			if (!networkReady && revision === networkRevision) {
@@ -332,7 +315,7 @@
 	}
 
 	function networkCommerceSnapshot() {
-		if (!networkReady && !networkListingIds.length) return null;
+		if (!networkReady && !graphqlReady) return null;
 		return { sourceMode: "network", eventId: ebayEventId,
 			playerCards: networkListingIds.map(networkAuctionSnapshot),
 			navigation: { viewerCount: networkViewerCount } };
@@ -387,6 +370,7 @@
 				networkListings = Object.create(null);
 				networkListingIds.forEach(function (id) { if (previous[id]) networkListings[id] = previous[id]; });
 				networkReady = true;
+				window.__ssnEbayNetworkReady = true;
 			}
 			payload.eventListings.forEach(function (item) {
 				if (!item.listingId) return;
@@ -402,7 +386,14 @@
 			if (previousUpdate && previousUpdate.serverCreatedAt > payload.serverCreatedAt) return;
 			listingUpdates[id] = payload;
 			var item = networkListings[id];
-			if (!item) { graphqlRefreshNeeded = true; return; }
+			if (!item) {
+				var graph = graphqlListings[id] || {};
+				var listing = graph.listing || {};
+				item = networkListings[id] = { listingId: id, title: listing.title || "", originalPrice: listing.currentPrice,
+					isPinnedInEvent: !!graph.pin, imageUrl: listing.image && listing.image.url };
+				if (networkListingIds.indexOf(id) === -1) networkListingIds.push(id);
+				graphqlRefreshNeeded = true;
+			}
 			var details = Object.assign({}, item.saleInfo && item.saleInfo.details);
 			if (kind === "AuctionStarted") details = Object.assign({}, payload, { typename: "RunningAuctionDetails", bidRound: 0 });
 			else if (kind === "AuctionReset" || kind === "AuctionWillStart") details = Object.assign({}, payload, { typename: "ReadyAuctionDetails", bidRound: 0 });
@@ -1404,7 +1395,8 @@
 		if (!isExtensionOn) {
 			return;
 		}
-		var snapshot = currentNetworkAuction() || (networkReady ? null : createAuctionSnapshot());
+		try { if (window !== window.top && window.top.__ssnEbayNetworkReady) return; } catch (e) {}
+		var snapshot = currentNetworkAuction() || (networkReady || graphqlReady ? null : createAuctionSnapshot());
 		if (!snapshot) {
 			return;
 		}
@@ -1420,6 +1412,7 @@
 		if (!isExtensionOn) {
 			return;
 		}
+		try { if (window !== window.top && window.top.__ssnEbayNetworkReady) return; } catch (e) {}
 		var snapshot = networkCommerceSnapshot() || createCommerceSnapshot();
 		if (!snapshot) {
 			return;
