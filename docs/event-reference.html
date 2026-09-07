@@ -2438,5 +2438,6 @@
     <script>
         document.getElementById('current-year').textContent = new Date().getFullYear();
     </script>
+<section id="ninjachatter-audience-pilot"><h2>NinjaChatter audience pilot</h2><p>The experimental paired extension connector sends display-only rows with <code>type: socialstreamchat</code>, <code>platform: ninjachatter</code>, and <code>textonly: true</code>. <code>meta.ninjachatter</code> carries <code>origin: audience</code>, the descriptive <code>provider</code>, and public <code>room</code> ID. These rows bypass platform replies, bots, Event Flow triggers and points. A displayed provider is not authorization. Legacy NinjaChatter source captures include <code>meta.ninjachatter.room</code> for room-specific duplicate suppression.</p><p>Cheer uses a separate authenticated claim and result path, never a special chat command. The fixed preset emits the existing Actions overlay <code>show_text</code> message for three seconds. Its receipt means transport acceptance, not verified OBS display. No audience payload can select arbitrary actions. The pilot is disabled by default on NinjaChatter; Electron retains its existing relay until the new private pairing boundary is qualified.</p></section>
 </body>
 </html>

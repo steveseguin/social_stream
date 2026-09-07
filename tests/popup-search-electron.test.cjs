@@ -192,6 +192,11 @@ async function run() {
  check(dock.searchParams.has('transparent'),'Checkbox updates generated dock URL');
  check(dock.searchParams.get('viewerbarbg')==='#123456','Text option is encoded correctly in dock URL');
  check(!featured.searchParams.has('viewerbarbg') && !featured.searchParams.has('transparent'),'Dock options do not leak into featured URL');
+ const audience=d.getElementById('nc-audience-room');
+ check(!!audience,'Audience section is registered in the menu');
+ check(audience.querySelector('[data-nc-status]').textContent.includes('Chrome extension'),'Electron explains the audience pilot limitation');
+ check([...audience.querySelectorAll('[data-nc-op]')].every(button=>button.disabled),'Unqualified pairing controls stay disabled');
+ check(!!audience.querySelector('[data-setting="ssc"]'),'Existing desktop relay remains available');
  const output={passed:checks.length,checks,links:{dock:dock.href,featured:featured.href}};
 
 
