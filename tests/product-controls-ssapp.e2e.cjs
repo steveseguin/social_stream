@@ -117,7 +117,8 @@ fs.writeFileSync(path.join(profile, 'savedSync.json'), JSON.stringify({ streamID
   if(process.env.SSN_GUIDE_SCREENSHOTS) {
    await app.evaluate(({BrowserWindow},url)=>{const w=BrowserWindow.getAllWindows().find(w=>w.webContents.getURL()===url);w.showInactive();},viewer.url());
    await viewer.waitForTimeout(500);
-   const png=await app.evaluate(async({BrowserWindow},url)=>(await BrowserWindow.getAllWindows().find(w=>w.webContents.getURL()===url).webContents.capturePage()).toPNG().toString('base64'),viewer.url());
+   const crop=await viewer.locator('.viewer-shop').boundingBox();
+   const png=await app.evaluate(async({BrowserWindow},o)=>(await BrowserWindow.getAllWindows().find(w=>w.webContents.getURL()===o.url).webContents.capturePage({x:0,y:0,width:390,height:Math.min(844,Math.ceil(o.crop.y+o.crop.height+16))})).toPNG().toString('base64'),{url:viewer.url(),crop});
    fs.writeFileSync(path.join(root,'docs/images/monetization/viewer-shop.png'),Buffer.from(png,'base64'));
   }
   const promo=await page('file:///'+root+'/monetization.html?session=productqa&mode=commerce&view=showcase&server=ws://127.0.0.1:'+relay.address().port);
