@@ -461,3 +461,22 @@ test('Live product controls use saved URLs, expire, survive reordering and never
     assert.equal(s.chat.length, 0); assert.equal(s.tips.length, 0);
     assert(s.sent.every(event => event.event === 'monetization_update'));
 });
+
+
+test('Public page key persists privately and failed removal retries DELETE after reload', async () => {
+ const key = 'a'.repeat(64), id = 'b'.repeat(64);
+ const s = service({ monetizationPrivate: { publicShop: { key, id, published: true } } });
+ const calls = [];
+ s.c.fetch = async (url, options) => { calls.push(options); return { ok: false, json: async () => ({error:'offline'}) }; };
+ const result = await s.request('unpublishShop'); assert.equal(result.error,'offline');
+ assert.equal(s.disk.monetizationPrivate.publicShop.removePending,true);
+ assert.equal(calls[0].method,'DELETE'); assert.equal(calls[0].headers['Content-Type'],undefined);
+ const restarted = service(s.disk);
+ restarted.c.fetch = async (url, options) => { calls.push(options); return {ok:true,json:async()=>({removed:true})}; };
+ restarted.advance(1000);
+ await restarted.request('get');
+ const state = await restarted.request('get');
+ assert.equal(state.publicShop.published,false); assert.equal(state.publicShop.url,'');
+ assert.equal(calls.at(-1).method,'DELETE');
+ assert(!JSON.stringify(state).includes(key));
+});

@@ -358,6 +358,7 @@
             await store(); // Save the write capability before the first request.
         }
         var controller = new AbortController(), timer = setTimeout(function () { controller.abort(); }, 12000);
+        p.removePending = !!remove; await store();
         try {
             var payload = JSON.stringify(commerceState());
             var headers = { Authorization: 'Bearer ' + p.key };
@@ -366,14 +367,14 @@
             var result; try { result = await response.json(); } catch (_) { throw new Error('Public pages are unavailable. Try again later.'); }
             if (!response.ok) throw new Error(result.error || 'Could not update the public page.');
             if (!remove && !/^[a-f0-9]{64}$/.test(result.id || '')) throw new Error('Invalid public page response.');
-            p.published = !remove; if (!remove) p.id = result.id;
+            p.published = !remove; p.removePending = false; if (!remove) p.id = result.id;
             await store(); lastShopPayload = remove ? '' : JSON.stringify(commerceState()); shopStatus = remove ? 'Public page removed.' : 'Public page updated.';
         } catch (error) { shopStatus = 'Public page update failed. The last published version may still be visible.'; throw error; }
         finally { clearTimeout(timer); }
     }
     async function refreshShop() {
         if (privateState.publicShop && privateState.publicShop.published) {
-            try { await syncShop(false); } catch (_) {} // Local controls still work during an API outage.
+            try { await syncShop(!!privateState.publicShop.removePending); } catch (_) {} // Local controls still work during an API outage.
         }
     }
     async function importPublicProduct(request) {
@@ -554,7 +555,7 @@
 	chrome.storage.local.get(['monetizationPrivate'], function (saved) {
 		var p = saved.monetizationPrivate;
 		if (p && typeof p === 'object') {
-            if (p.publicShop && /^[a-f0-9]{64}$/.test(p.publicShop.key || '')) privateState.publicShop = { key: p.publicShop.key, id: /^[a-f0-9]{64}$/.test(p.publicShop.id || '') ? p.publicShop.id : '', published: p.publicShop.published === true };
+            if (p.publicShop && /^[a-f0-9]{64}$/.test(p.publicShop.key || '')) privateState.publicShop = { key: p.publicShop.key, id: /^[a-f0-9]{64}$/.test(p.publicShop.id || '') ? p.publicShop.id : '', published: p.publicShop.published === true, removePending: p.publicShop.removePending === true };
 			function ebayProfile(value) {
 				if (!value || !(value.key === '' || /^[a-f0-9]{64}$/.test(value.key || '')) || !Array.isArray(value.items) || !Array.isArray(value.seen)) return null;
 				return { key: value.key, environment: value.environment === 'sandbox' ? 'sandbox' : 'production', items: value.items.slice(0, 20), seen: value.seen.slice(-10000), cursor: Number(value.cursor) || 0 };
@@ -599,7 +600,7 @@
 		ebay.poll();
 		ninjaReceiver.poll();
         shopifyReceiver.poll();
-        if (privateState.publicShop && privateState.publicShop.published && Date.now() >= nextShopSync && JSON.stringify(commerceState()) !== lastShopPayload) {
+        if (privateState.publicShop && privateState.publicShop.published && Date.now() >= nextShopSync && (privateState.publicShop.removePending || JSON.stringify(commerceState()) !== lastShopPayload)) {
             nextShopSync = Date.now() + 60000;
             queue = queue.then(refreshShop).catch(function () {});
         }
