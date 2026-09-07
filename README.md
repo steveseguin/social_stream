@@ -1,3 +1,26 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [🥷 Social Stream Ninja](#-social-stream-ninja)
+  - [👀 What is Social Stream Ninja?](#-what-is-social-stream-ninja)
+  - [✨ What you can do](#-what-you-can-do)
+  - [🌐 Supported platforms](#-supported-platforms)
+  - [🚀 Download and get started](#-download-and-get-started)
+    - [Your first chat overlay](#your-first-chat-overlay)
+    - [Updating](#updating)
+  - [🎨 Overlays, templates, and sound](#-overlays-templates-and-sound)
+  - [🔊 Text-to-speech and automation](#-text-to-speech-and-automation)
+  - [🧰 Troubleshooting](#-troubleshooting)
+  - [🛠️ Source code and development](#-source-code-and-development)
+  - [💬 Support and contributions](#-support-and-contributions)
+  - [📜 License and privacy](#-license-and-privacy)
+  - [💙 Donations](#-donations)
+  - [Icons and Media](#icons-and-media)
+  - [Credit and contributors](#credit-and-contributors)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 <div align="center">
   <h1>🥷 Social Stream Ninja</h1>
   <p><strong>Free, open-source multistream chat, livestream overlays, and audience interaction tools.</strong></p>
