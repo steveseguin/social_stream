@@ -62,7 +62,7 @@
 	function publicState() {
 		var c = cfg(),
 			l = list();
-		return { ebay: ebay.publicState(), throne: { enabled: c.throne.enabled, username: c.throne.username, qr: c.throne.qr, position: c.throne.position, url: c.throne.username ? 'https://throne.com/' + encodeURIComponent(c.throne.username) : '', rank: thronePrivate().gifts + 1, gifts: thronePrivate().gifts }, wishlist: { enabled: c.wishlist.enabled, qr: c.wishlist.qr, position: c.wishlist.position, rank: l.rank, total: l.total, item: l.current ? { name: l.current.name, amount: l.current.amount, currency: l.current.currency, image: l.current.image, url: M.purchaseURL(l.current, l.url) } : null, url: l.url }, ninja: { enabled: c.ninja.enabled, qr: c.ninja.qr, position: c.ninja.position, username: c.ninja.username, url: c.ninja.username ? 'https://ninjabacker.com/' + encodeURIComponent(c.ninja.username) : '' } };
+		return { commerce: c.commerce, ebay: ebay.publicState(), throne: { enabled: c.throne.enabled, username: c.throne.username, qr: c.throne.qr, position: c.throne.position, url: c.throne.username ? 'https://throne.com/' + encodeURIComponent(c.throne.username) : '', rank: thronePrivate().gifts + 1, gifts: thronePrivate().gifts }, wishlist: { enabled: c.wishlist.enabled, qr: c.wishlist.qr, position: c.wishlist.position, rank: l.rank, total: l.total, item: l.current ? { name: l.current.name, amount: l.current.amount, currency: l.current.currency, image: l.current.image, url: M.purchaseURL(l.current, l.url) } : null, url: l.url }, ninja: { enabled: c.ninja.enabled, qr: c.ninja.qr, position: c.ninja.position, username: c.ninja.username, url: c.ninja.username ? 'https://ninjabacker.com/' + encodeURIComponent(c.ninja.username) : '' } };
 	}
 	function broadcast(purchase) {
 		if (!ready || !isExtensionOn) return;
@@ -292,9 +292,37 @@
 			queue = job.catch(function () {});
 		};
 	}
+
+    var providerActivity = {};
+    window.noteMonetizationProvider = function (provider, accepted) {
+        if (['fourthwall', 'kofi', 'bmac'].indexOf(provider) === -1) return;
+        providerActivity[provider] = { at: Date.now(), accepted: !!accepted };
+    };
+    async function importFourthwall(request) {
+        var url;
+        try { url = new URL(request.url); } catch (_) { throw new Error('Enter a public Fourthwall product URL.'); }
+        var match = url.pathname.match(/^\/products\/([a-zA-Z0-9_-]+)\/?$/);
+        var token = typeof request.token === 'string' ? request.token.trim() : '';
+        if (url.protocol !== 'https:' || url.username || url.password || url.port || !match || !token || token.length > 512) throw new Error('Enter a product URL and Storefront token from Fourthwall.');
+        var controller = new AbortController(), timer = setTimeout(function () { controller.abort(); }, 12000);
+        try {
+            var response = await fetch('https://storefront-api.fourthwall.com/v1/products/' + encodeURIComponent(match[1]) + '?storefront_token=' + encodeURIComponent(token), { credentials: 'omit', redirect: 'error', signal: controller.signal });
+            if (!response.ok) throw new Error('Could not load the product. Check the link and Storefront token.');
+            var body = await response.text();
+            if (body.length > 1000000) throw new Error('Product response is too large. Add it manually.');
+            var item = M.fourthwallProduct(JSON.parse(body), url.href);
+            if (!item) throw new Error('No available public product found. Check the link and shop token.');
+            return { item: item };
+        } catch (e) {
+            if (e.name === 'SyntaxError') throw new Error('Fourthwall returned an invalid product response. Retry or add it manually.');
+            if (e.name === 'AbortError' || e instanceof TypeError) throw new Error('Could not reach Fourthwall. Retry or add the product manually.');
+            throw e;
+        } finally { clearTimeout(timer); }
+    }
 	async function action(request) {
 		if (!ready) throw new Error('Settings are still loading.');
 		var c = cfg();
+        if (request.action === 'fourthwallImport') return importFourthwall(request);
 		if (request.action.indexOf('ebay') === 0) {
 			var result = await ebay.action(request);
 			if (request.action === 'ebayDisconnect' || request.action === 'ebayEnvironment') {
@@ -307,6 +335,12 @@
 		}
 		if (request.action === 'save') {
 			var updated = M.config(request.config);
+            if (request.config && request.config.commerce) {
+                var rawItems = request.config.commerce.items || [];
+                if (!Array.isArray(rawItems) || rawItems.length > 20 || updated.commerce.items.length !== rawItems.length) throw new Error('Each product needs a name and public HTTPS link (up to 20 products).');
+                if (rawItems.some(function (item) { return item.amount !== '' && item.amount != null && (!Number.isFinite(Number(item.amount)) || Number(item.amount) < 0 || Number(item.amount) >= 10000000); })) throw new Error('Enter a valid price or leave it blank.');
+            }
+
 			if (request.config && request.config.wishlist && request.config.wishlist.url && !updated.wishlist.url) throw new Error('Use the full public Amazon wishlist URL.');
 			if (request.config && request.config.ninja && request.config.ninja.username && !updated.ninja.username) throw new Error('Use your NinjaBacker username, without a URL.');
 			var token = request.clearToken ? '' : request.token || privateState.token;
@@ -388,7 +422,7 @@
 		return snapshot();
 	}
 	function snapshot() {
-		return { ninjaReceiver: ninjaReceiver.snapshot(), ebay: ebay.snapshot(), throne: { status: throneStatus, gifts: thronePrivate().gifts, webhook: thronePrivate().hook ? 'https://api.socialstream.ninja/v1/throne/webhook/' + thronePrivate().hook : '' }, config: cfg(), list: list(), tokenSaved: !!privateState.token, status: cfg().ninja.reliable ? ninjaReceiver.snapshot().status : status, canUndo: !!lastPurchase };
+		return { receiver: { enabled: !!settings.socketserver, on: !!isExtensionOn, connected: !!(typeof socketserver !== 'undefined' && socketserver && socketserver.readyState === 1), providers: providerActivity }, ninjaReceiver: ninjaReceiver.snapshot(), ebay: ebay.snapshot(), throne: { status: throneStatus, gifts: thronePrivate().gifts, webhook: thronePrivate().hook ? 'https://api.socialstream.ninja/v1/throne/webhook/' + thronePrivate().hook : '' }, config: cfg(), list: list(), tokenSaved: !!privateState.token, status: cfg().ninja.reliable ? ninjaReceiver.snapshot().status : status, canUndo: !!lastPurchase };
 	}
 	window.handleMonetizationRequest = function (request, sender) {
 		if (sender && sender.tab && sender.tab.id !== null && sender.tab.id !== undefined) return Promise.resolve({ error: 'Use the SSN popup to configure monetization.' });
@@ -469,7 +503,7 @@
 			next.throne = now + c.throne.minutes * 60000;
 			next.ebay = now + c.ebay.minutes * 60000;
 		}
-		if ((c.wishlist.enabled || c.ninja.enabled || c.throne.enabled || c.ebay.enabled) && now - lastBroadcast > 10000) broadcast();
+		if ((c.commerce.enabled || c.wishlist.enabled || c.ninja.enabled || c.throne.enabled || c.ebay.enabled) && now - lastBroadcast > 10000) broadcast();
 		['wishlist', 'ninja', 'throne', 'ebay'].forEach(function (mode) {
 			if (c[mode].enabled && c[mode].interval && now >= next[mode]) {
 				next[mode] = now + c[mode].minutes * 60000;

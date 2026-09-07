@@ -546,9 +546,9 @@ With this route, each donation is normalized once in the extension and then deli
 | Platform | Webhook URL | Event Type |
 |----------|-------------|------------|
 | **Stripe** | `https://io.socialstream.ninja/{sessionID}/stripe` | `checkout.session.completed` |
-| **Ko-Fi** | `https://io.socialstream.ninja/{sessionID}/kofi` | Donations (public only) |
-| **Buy Me A Coffee** | `https://io.socialstream.ninja/{sessionID}/bmac` | `donation.created`, `membership.started` |
-| **Fourthwall** | `https://io.socialstream.ninja/{sessionID}/fourthwall` | `ORDER_PLACED` |
+| **Ko-Fi** | `https://io.socialstream.ninja/{sessionID}/kofi` | Public tips, memberships, shop orders and commissions |
+| **Buy Me A Coffee** | `https://io.socialstream.ninja/{sessionID}/bmac` | `donation.created`, `membership.started`, shop, commission and wishlist payments |
+| **Fourthwall** | `https://io.socialstream.ninja/{sessionID}/fourthwall` | Orders, gifts, donations and new subscriptions |
 
 ### Stripe Setup
 
@@ -563,25 +563,9 @@ With this route, each donation is normalized once in the extension and then deli
 
 **Testing**: Use Stripe's Test Mode with card number `4242 4242 4242 4242`, any future expiry date, and any CVC.
 
-### Ko-Fi Setup
+### Creator store setup
 
-1. Sign in to [Ko-Fi Webhook Settings](https://ko-fi.com/manage/webhooks)
-2. Paste `https://io.socialstream.ninja/YOUR_SESSION_ID/kofi` into **Webhook URL**, then click **Update**
-3. Enable **remote API control of extension** as shown above
-4. Reload an already-open dock, then click **Send single tip test** in Ko-Fi
-5. Confirm exactly one alert appears; only public donations are supported
-
-### Buy Me A Coffee Setup
-
-1. Sign in to Buy Me A Coffee and navigate to Settings → Webhooks
-2. Add webhook URL: `https://io.socialstream.ninja/YOUR_SESSION_ID/bmac`
-3. Both one-time donations (`donation.created`) and new memberships (`membership.started`) are supported
-
-### Fourthwall Setup
-
-1. Go to your Fourthwall admin: Settings → For Developers → Webhooks
-2. Create a webhook with URL: `https://io.socialstream.ninja/YOUR_SESSION_ID/fourthwall`
-3. Subscribe to `ORDER_PLACED` events
+See the [illustrated creator store guide](docs/creator-store-setup.html) for Fourthwall, Ko-fi and Buy Me a Coffee. It covers event selection, receiver status, isolated previews, product import and OBS links. Use SSN's sample preview to check appearance without triggering payments or Event Flow.
 
 ### Security Note
 

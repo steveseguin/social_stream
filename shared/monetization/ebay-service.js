@@ -159,7 +159,7 @@
 						if (!item || !/^[a-f0-9]{64}$/.test(sale.id) || p.seen.indexOf(sale.id) !== -1 || (sale.paidAt || sale.createdAt) < item.addedAt) return;
 						p.seen.push(sale.id);
 						item.bought = true;
-						alerts.push({ platform: 'ebay', type: 'ebay', event: 'purchase', id: 'ebay-' + sale.id, chatname: p.environment === 'sandbox' ? 'eBay Sandbox buyer' : 'eBay buyer', chatmessage: (p.environment === 'sandbox' ? 'Sandbox test purchase: ' : 'Purchased ') + item.name, textonly: true, subtitle: item.name, contentimg: SSNMonetization.imageURL(item.image), meta: { ebayPurchase: { itemId: item.id, itemName: item.name, quantity: Math.max(1, Math.min(100000, Number(sale.quantity) || 1)), url: item.url } } });
+						alerts.push({ platform: 'ebay', type: 'ebay', event: 'purchase', id: 'ebay-' + sale.id, chatname: p.environment === 'sandbox' ? 'eBay Sandbox buyer' : 'eBay buyer', chatmessage: (p.environment === 'sandbox' ? 'Sandbox test purchase: ' : 'Purchased ') + item.name, textonly: true, subtitle: item.name, contentimg: SSNMonetization.imageURL(item.image), meta: { commerce: { quantity: Math.max(1, Math.min(100000, Number(sale.quantity) || 1)) }, ebayPurchase: { itemId: item.id, itemName: item.name, quantity: Math.max(1, Math.min(100000, Number(sale.quantity) || 1)), url: item.url } } });
 					});
 					p.cursor = result.through;
 					p.seen = p.seen.slice(-10000);

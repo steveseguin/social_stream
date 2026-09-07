@@ -192,9 +192,10 @@ test('Popup retries incomplete startup replies and keeps its mode switch after g
 	try {
 		const page = await browser.newPage();
 		const html = fs.readFileSync(path.join(root, 'popup.html'), 'utf8');
-		const start = html.indexOf('<details id="monetization-settings">'),
+		const start = html.indexOf('<details id="monetization-settings"'),
 			end = html.indexOf('</details></div>', html.indexOf('id="money-status"', start)) + 10;
-		await page.setContent(html.slice(start, end));
+		await page.route('https://ssn.test/popup.html', route => route.fulfill({ contentType: 'text/html', body: html.slice(start, end) }));
+        await page.goto('https://ssn.test/popup.html');
 		await page.evaluate(() => {
 			window.calls = 0;
 			window.chrome = {
@@ -318,6 +319,8 @@ test('eBay watches off-screen items, ignores history, persists deduplication and
 	assert.equal(s.tips.length, 1);
 	assert.equal(s.tips[0].subtitle, 'Off-screen product');
 	assert.equal(s.tips[0].event, 'purchase');
+	assert.equal(s.tips[0].meta.commerce.quantity, s.tips[0].meta.ebayPurchase.quantity);
+	assert.equal(s.tips[0].meta.commerce.recipient, undefined);
 	assert.equal(s.tips[0].hasDonation, undefined);
 	assert.equal(s.chat.length, 0);
 	const setup = await s.request('get');
@@ -413,3 +416,16 @@ test('An unavailable eBay service cannot enable the source or overwrite other su
 	assert.equal(saved.config.wishlist.enabled, true);
 	assert.equal(saved.config.wishlist.url, url);
 });
+
+ test('Fourthwall import only fetches public API data and never stores its token or broadcasts activity', async () => {
+  const s = service(); const requests = [];
+  const product = { name: 'Studio print', slug: 'print', type: 'PRODUCT', state: { type: 'AVAILABLE' }, access: { type: 'PUBLIC' }, images: [], variants: [{ unitPrice: { value: 20, currency: 'USD' } }] };
+  s.c.fetch = async (url, options) => { requests.push({ url, options }); return { ok: true, text: async () => JSON.stringify(product) }; };
+  const result = await s.request('fourthwallImport', { url: 'https://store.example/products/print?private=discard', token: 'test-storefront-token' });
+  assert.equal(result.item.name, 'Studio print'); assert.equal(result.item.url, 'https://store.example/products/print');
+  assert.equal(new URL(requests[0].url).origin, 'https://storefront-api.fourthwall.com');
+  assert.equal(requests[0].options.redirect, 'error'); assert.equal(requests[0].options.credentials, 'omit');
+  assert(!JSON.stringify(s.disk).includes('test-storefront-token')); assert.equal(s.tips.length, 0); assert.equal(s.sent.length, 0);
+  const bad = await s.request('fourthwallImport', { url: 'http://localhost/private', token: 'x' }); assert(bad.error); assert.equal(requests.length, 1);
+  s.c.noteMonetizationProvider('kofi', false); const state = await s.request('get'); assert.equal(state.receiver.providers.kofi.accepted, false); assert.equal(state.receiver.connected, false);
+ });

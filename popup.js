@@ -7951,7 +7951,7 @@ function attachMultiAlertSoundLibrary(inputId) {
     const custom = document.createElement('details');
     custom.className = 'ssn-sound-custom';
     const summary = document.createElement('summary');
-    summary.textContent = 'Custom sound URL / upload';
+    summary.textContent = '📎 Custom sound URL / upload';
     custom.appendChild(summary);
     const inputRow = input.parentElement;
     inputRow.insertAdjacentElement('beforebegin', container);
@@ -7967,7 +7967,7 @@ function attachMultiAlertSoundLibrary(inputId) {
             'multi-alert-raidsound': 'Raid sound',
             'multi-alert-auctionsound': 'Auction win sound',
             'multi-alert-hypesound': 'Hype train sound'
-        })[inputId] || 'Sound (optional)',
+        })[inputId] || '🔊 Sound (optional)',
         getValue: () => input.value,
         setValue: value => {
             input.value = value;
@@ -8169,7 +8169,36 @@ function buildOverlayPreviewUrl(previewKey) {
     return previewUrl.toString();
 }
 
+function syncAlertEffectSummaries() {
+    for (let index = 1; index <= 3; index++) {
+        const prefix = 'multi-alert-effect' + index;
+        const summary = document.getElementById(prefix + '-summary');
+        if (!summary) continue;
+        const value = key => document.getElementById(prefix + '-' + key).value.trim();
+        const media = value('media'), sound = value('sound');
+        const parts = [];
+        if (value('state') === 'false') parts.push('Paused');
+        if (!media && !sound) parts.push('Not configured');
+        else {
+            const type = document.getElementById(prefix + '-type');
+            parts.push(type.options[type.selectedIndex].textContent);
+            const min = value('min'), max = value('max');
+            if (min || max) {
+                if (!['donation', 'bits'].includes(type.value) || (min && (!Number.isFinite(Number(min)) || Number(min) < 0)) || (max && (!Number.isFinite(Number(max)) || Number(max) < 0)) || (min && max && Number(min) > Number(max))) parts.push('Check amount limits');
+                else parts.push(min && max && Number(min) === Number(max) ? 'exactly $' + Number(min) + ' USD' : (min && max ? '$' + Number(min) + '–$' + Number(max) + ' USD' : min ? '$' + Number(min) + '+ USD' : 'up to $' + Number(max) + ' USD'));
+            }
+            if (media) parts.push('Media');
+            if (sound) {
+                const entry = window.SSNSoundLibrary && window.SSNSoundLibrary.sounds.find(item => item.url === sound);
+                parts.push(entry ? entry.name : 'Custom sound');
+            } else parts.push('Default sound');
+        }
+        summary.textContent = parts.join(' · ');
+    }
+}
+
 function syncOverlayPreview(previewKey) {
+    syncAlertEffectSummaries();
     for (let index = 1; index <= 3; index++) {
         const toggle = document.getElementById('multi-alert-effect' + index + '-enabled');
         const saved = document.getElementById('multi-alert-effect' + index + '-state');
@@ -11503,6 +11532,26 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		const enabled = document.getElementById(prefix + '-enabled');
 		const savedState = document.getElementById(prefix + '-state');
 		const status = document.getElementById(prefix + '-status');
+		const setField = function(key, value) {
+			const input = document.getElementById(prefix + '-' + key);
+			input.value = value;
+			input.dispatchEvent(new Event('change', { bubbles: true }));
+		};
+		document.getElementById(prefix + '-clear-sound').addEventListener('click', function() {
+			if (window.SSNSoundLibrary) window.SSNSoundLibrary.stop();
+			setField('sound', '');
+			status.textContent = 'Sound cleared. Default alert audio still applies.';
+		});
+		document.getElementById(prefix + '-reset').addEventListener('click', function() {
+			if (window.SSNSoundLibrary) window.SSNSoundLibrary.stop();
+			['media', 'sound', 'min', 'max', 'state'].forEach(key => setField(key, ''));
+			setField('type', 'donation');
+			status.textContent = 'Alert reset. Other alerts are unchanged.';
+		});
+		['type', 'media', 'sound', 'min', 'max', 'state'].forEach(function(key) {
+			document.getElementById(prefix + '-' + key).addEventListener('input', syncAlertEffectSummaries);
+			document.getElementById(prefix + '-' + key).addEventListener('change', syncAlertEffectSummaries);
+		});
 		enabled.addEventListener('change', function() {
 			savedState.value = enabled.checked ? '' : 'false';
 			savedState.dispatchEvent(new Event('change', { bubbles: true }));
@@ -12591,6 +12640,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			return;
 		}
 		activeToggle = enabled;
+		document.getElementById('activeIcon').setAttribute('aria-pressed', String(enabled));
 		if (activeToggle) {
 			// Remember open sections and scroll position so toggling off restores them
 			activeToggleOpenState = [];

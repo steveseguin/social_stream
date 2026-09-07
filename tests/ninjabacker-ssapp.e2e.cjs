@@ -68,10 +68,14 @@ fs.writeFileSync(path.join(profile, 'savedSync.json'), JSON.stringify({ streamID
   await popup.evaluate(() => { document.getElementById('monetization-settings').open = true; applyPopupBeginnerMode(false); });
   await popup.waitForFunction(() => document.getElementById('money-current').textContent.includes('Load your wishlist'));
   await popup.locator('#money-mode').selectOption('ninja');
+  await popup.locator('#money-ninja-panel > summary').click();
+  await popup.locator('#money-ninja-panel .popup-subsection > summary').click();
   await popup.locator('#money-ninja-username').fill('creator');
   await popup.locator('#money-ninja-token').fill(token);
-  await popup.locator('#money-ninja-enabled').check();
-  await popup.locator('#money-ninja-qr').check();
+  await popup.locator('label[for=money-ninja-enabled]').click();
+  assert(await popup.locator('#money-ninja-enabled').isChecked());
+  await popup.locator('#money-ninja-qr + .slider').click();
+  assert(await popup.locator('#money-ninja-qr').isChecked());
   await popup.locator('#money-save').click();
   await popup.waitForFunction(() => document.getElementById('money-status').textContent === 'Saved.');
   await bg.waitForFunction(async () => (await handleMonetizationRequest({ action: 'get' })).status === 'Listening for tips');
@@ -151,7 +155,8 @@ fs.writeFileSync(path.join(profile, 'savedSync.json'), JSON.stringify({ streamID
   await popup.locator('#money-save').click();
   await popup.waitForFunction(() => !document.getElementById('money-ninja-webhook').value);
   assert.equal(receiverDb.prepare('SELECT count(*) AS n FROM ninja_receivers').get().n, 0);
-  await popup.locator('#money-ninja-enabled').uncheck();
+  await popup.locator('label[for=money-ninja-enabled]').click();
+  assert(!(await popup.locator('#money-ninja-enabled').isChecked()));
   await popup.locator('#money-save').click();
   await overlay.locator('#support-card').waitFor({ state: 'hidden' });
   console.log('PASS: actual NinjaBacker source -> SSE -> SSApp -> overlay; private Tip ID setup, safe test preview, JPY units, anonymous/plain text, delayed signed payment retry, deduplication, QR/mobile, disable, reliable signed delivery, offline/server-restart recovery, test isolation, acknowledgments, switch back to live and no chat sends.');

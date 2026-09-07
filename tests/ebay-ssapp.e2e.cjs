@@ -69,6 +69,7 @@ const ssapp = process.env.SSN_TEST_SSAPP_ROOT || path.resolve(root, '../ssapp'),
 		});
 		await popup.waitForFunction(() => document.getElementById('money-current').textContent.includes('Load your wishlist'));
 		await popup.locator('#money-mode').selectOption('ebay');
+		await popup.locator('#money-ebay-panel > summary').click();
 		await popup.evaluate(() => {
 			chrome.tabs.create = options => {
 				window.ebayAuthURL = options.url;
@@ -86,12 +87,20 @@ const ssapp = process.env.SSN_TEST_SSAPP_ROOT || path.resolve(root, '../ssapp'),
 			await popup.locator('#money-ebay-add').click();
 			await popup.waitForFunction(() => document.getElementById('money-ebay-url').value === '' && !document.getElementById('monetization-settings').hasAttribute('aria-busy'));
 		}
-		await popup.locator('#money-ebay-enabled').check();
+		await popup.locator('label.switch:has(#money-ebay-enabled)').click();
 		await popup.locator('#money-ebay-display').selectOption('first');
 		await popup.locator('#money-save').click();
 		await popup.waitForFunction(() => !document.getElementById('monetization-settings').hasAttribute('aria-busy'));
 		await popup.waitForFunction(() => document.getElementById('money-status').textContent === 'Saved.' && !document.getElementById('monetization-settings').hasAttribute('aria-busy'));
 		assert((await call('get')).config.ebay.enabled);
+		await popup.locator('label.switch:has(#money-wishlist-enabled)').click();
+		await popup.locator('#money-save').click();
+		await popup.waitForFunction(() => !document.getElementById('monetization-settings').hasAttribute('aria-busy'));
+		const combined = (await call('get')).config;
+		assert(combined.wishlist.enabled && combined.ebay.enabled, 'Platforms can run together');
+		await popup.locator('#money-mode').selectOption('throne');
+		assert(await popup.locator('#money-ebay-url').isVisible(), 'Overlay selection does not hide platform settings');
+		await popup.locator('#money-mode').selectOption('ebay');
 		const windowPromise = app.waitForEvent('window');
 		await app.evaluate(({ BrowserWindow }, url) => new BrowserWindow({ show: false, width: 800, height: 600, webPreferences: { offscreen: true, backgroundThrottling: false } }).loadURL(url), 'file:///' + root + '/monetization.html?session=' + room + '&mode=ebay');
 		const overlay = await windowPromise;
@@ -142,12 +151,12 @@ const ssapp = process.env.SSN_TEST_SSAPP_ROOT || path.resolve(root, '../ssapp'),
 		await call('get');
 		assert.equal(await bg.evaluate(() => capturedGifts.length), 1);
 		await popup.locator('#money-ebay-position').selectOption('tl');
-		await popup.locator('#money-ebay-qr').uncheck();
+		await popup.locator('label.switch:has(#money-ebay-qr)').click();
 		await popup.locator('#money-save').click();
 		await popup.waitForFunction(() => !document.getElementById('monetization-settings').hasAttribute('aria-busy'));
 		await overlay.waitForFunction(() => document.body.classList.contains('tl') && document.getElementById('qr').hidden);
 		assert(await overlay.locator('#support-card').isVisible());
-		await popup.locator('#money-ebay-qr').check();
+		await popup.locator('label.switch:has(#money-ebay-qr)').click();
 		await popup.locator('#money-save').click();
 		await popup.waitForFunction(() => !document.getElementById('monetization-settings').hasAttribute('aria-busy'));
 		await overlay.waitForFunction(() => !document.getElementById('qr').hidden);

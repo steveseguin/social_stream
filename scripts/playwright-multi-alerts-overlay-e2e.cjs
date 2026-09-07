@@ -937,6 +937,18 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     await setCheckboxValue(popupPage, '#multi-alert-effect1-enabled', false);
     assert((await popupPage.getAttribute('#multialertslink', 'href')).includes('effect1enabled=false'), 'Paused alert state must be saved in the overlay URL.');
     await setCheckboxValue(popupPage, '#multi-alert-effect1-enabled', true);
+    await clickElement(popupPage, '#multi-alert-effect2-preset');
+    assert(await popupPage.inputValue('#multi-alert-effect2-min') === '100' && await popupPage.inputValue('#multi-alert-effect2-max') === '100', 'Preset must set exact USD limits.');
+    assert(await popupPage.inputValue('#multi-alert-effect2-sound') === './audio/alerts/voice-thank-you.wav', 'Preset should supply a starter sound.');
+    await setCheckboxValue(popupPage, '#multi-alert-effect2-enabled', false);
+    assert((await popupPage.textContent('#multi-alert-effect2-summary')).includes('Paused'), 'Collapsed summary should show paused state.');
+    await clickElement(popupPage, '#multi-alert-effect2-clear-sound');
+    assert(await popupPage.inputValue('#multi-alert-effect2-sound') === '', 'Clear sound did not clear the saved URL.');
+    assert(await popupPage.inputValue('#multi-alert-effect2-min') === '100', 'Clear sound changed the amount limit.');
+    await clickElement(popupPage, '#multi-alert-effect2-reset');
+    assert(await popupPage.inputValue('#multi-alert-effect2-min') === '' && await popupPage.inputValue('#multi-alert-effect2-state') === '', 'Reset did not restore defaults.');
+    assert(await popupPage.textContent('#multi-alert-effect2-summary') === 'Not configured', 'Reset summary is stale.');
+    assert(await popupPage.inputValue('#multi-alert-effect1-sound') === effectSound, 'Reset changed another alert.');
 
     const effectUrl = new URL(popupUrl.toString());
     effectUrl.searchParams.delete('hidemedia');

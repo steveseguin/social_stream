@@ -1,7 +1,7 @@
 (function () {
 	'use strict';
 	var params = new URLSearchParams(location.search),
-		mode = params.get('mode') === 'ebay' ? 'ebay' : params.get('mode') === 'ninja' ? 'ninja' : params.get('mode') === 'throne' ? 'throne' : 'wishlist',
+		mode = params.get('mode') === 'commerce' ? 'commerce' : params.get('mode') === 'ebay' ? 'ebay' : params.get('mode') === 'ninja' ? 'ninja' : params.get('mode') === 'throne' ? 'throne' : 'wishlist',
 		demo = params.has('demo'),
 		card = document.getElementById('support-card'),
 		status = document.getElementById('overlay-status'),
@@ -17,6 +17,15 @@
 		state = {};
 		state[mode] = { enabled: true, qr: false, position: 'br', username: '', url: '', rank: 1, gifts: 0 };
 	}
+	var view = ['both', 'showcase', 'card', 'alerts'].indexOf(params.get('view')) !== -1 ? params.get('view') : 'both';
+	var cardEvery = Math.max(0, Math.min(3600, Number(params.get('cardevery')) || 0));
+	var cardFor = Math.max(15, Math.min(300, Number(params.get('cardfor')) || 30));
+	var sources = (params.get('onlytype') || '').toLowerCase().split(',').map(function (part) { return part.trim(); }).filter(Boolean);
+	document.body.classList.toggle('compact', params.get('style') === 'compact');
+	document.body.classList.toggle('card-view', view === 'card');
+	card.style.setProperty('--monetization-scale', Math.max(0.5, Math.min(2, Number(params.get('scale')) || 1)));
+	function tr(key, fallback, values) { return window.SSNPageI18n ? SSNPageI18n.t(key, fallback, values) : fallback; }
+	window.addEventListener('ssn-page-language-changed', function () { display(); });
 	function by(id) {
 		return document.getElementById(id);
 	}
@@ -37,22 +46,31 @@
 			return;
 		}
 		document.body.classList.toggle('tl', c.position === 'tl');
-		if (mode !== 'wishlist' && mode !== 'ebay' && !c.qr && !active) {
+		if (!active && (view === 'alerts' || (!demo && cardEvery > 0 && (Date.now() / 1000) % Math.max(cardEvery, cardFor) >= cardFor))) { card.hidden = true; return; }
+		if (mode !== 'commerce' && mode !== 'wishlist' && mode !== 'ebay' && view !== 'card' && !c.qr && !active) {
 			card.hidden = true;
 			return;
 		}
 		card.hidden = false;
+		var product = mode === 'commerce' ? SSNMonetization.commerceCurrent(c, Date.now()) : null;
 		var ebayItem = mode === 'ebay' ? SSNMonetization.ebayCurrent(c.items, c, Date.now()) : null;
-		var url = mode === 'ebay' ? ebayItem && ebayItem.url : mode === 'wishlist' ? (c.item && c.item.url) || c.url : c.url,
+		var url = mode === 'commerce' ? product && product.url : mode === 'ebay' ? ebayItem && ebayItem.url : mode === 'wishlist' ? (c.item && c.item.url) || c.url : c.url,
 			image = '';
 		if (active) {
-			by('badge').textContent = mode === 'ebay' ? (c.environment === 'sandbox' ? 'eBay Sandbox test purchase' : 'Purchased on eBay') : mode === 'wishlist' ? 'Rank unlocked' : mode === 'throne' ? 'Gift rank ' + (c.rank || 1) : 'Thank you for the support';
+			by('badge').textContent = mode === 'commerce' ? tr('commerce-activity', 'Recent activity') : mode === 'ebay' ? (c.environment === 'sandbox' ? 'eBay Sandbox test purchase' : 'Purchased on eBay') : mode === 'wishlist' ? 'Rank unlocked' : mode === 'throne' ? 'Gift rank ' + (c.rank || 1) : 'Thank you for the support';
 			by('title').textContent = active.title;
 			by('detail').textContent = active.detail;
 			image = active.image || '';
-			if (mode === 'ebay') url = '';
-			by('footer').textContent = mode === 'ebay' ? 'Thanks for supporting the stream.' : mode === 'wishlist' ? 'The next wishlist item unlocks shortly.' : 'Your support makes the next stream possible.';
-		} else if (mode === 'wishlist') {
+			if (mode === 'ebay' || mode === 'commerce') url = ''; // Never attach an unrelated rotating product to a sale alert.
+			by('footer').textContent = mode === 'commerce' ? tr('commerce-thanks', 'Thanks for being part of the stream.') : mode === 'ebay' ? 'Thanks for supporting the stream.' : mode === 'wishlist' ? 'The next wishlist item unlocks shortly.' : 'Your support makes the next stream possible.';
+		} else if (mode === 'commerce') {
+            if (!product) { card.hidden = true; return; }
+            by('badge').textContent = tr('commerce-' + product.purpose, { shop: 'Shop', gift: 'Gift', support: 'Support', membership: 'Join' }[product.purpose]);
+            by('title').textContent = product.name;
+            by('detail').textContent = product.amount == null || view === 'card' ? '' : SSNMonetization.money(product.amount, product.currency);
+            by('footer').textContent = tr('commerce-scan', 'Scan the QR code or use the public link in chat.');
+            image = view === 'card' ? '' : product.image;
+        } else if (mode === 'wishlist') {
 			by('badge').textContent = 'Wishlist · Rank ' + c.rank;
 			by('title').textContent = c.item ? c.item.name : c.total ? 'Wishlist complete!' : 'Your next rank awaits';
 			by('detail').textContent = c.item ? SSNMonetization.money(c.item.amount, c.item.currency) : c.total + ' items unlocked';
@@ -102,6 +120,7 @@
 		}
 	}
 	function enqueue(id, title, detail, image) {
+		if (view === 'showcase' || view === 'card') return;
 		if (seen.has(id)) return;
 		seen.add(id);
 		if (seen.size > 200) seen.delete(seen.values().next().value);
@@ -111,6 +130,13 @@
 		(Array.isArray(payload) ? payload.slice(0, 100) : [payload]).forEach(function (data) {
 			if (data && data.content) data = data.content;
 			if (!data || typeof data !== 'object') return;
+            if (mode === 'commerce' && data.event !== 'monetization_update' && state && state.commerce && state.commerce.enabled && (!sources.length || sources.indexOf(data.type) !== -1)) {
+                var kind = data.event || '';
+                if (data.id && (data.hasDonation || ['purchase', 'gift', 'giftcontribution', 'giftfunded', 'new_subscriber', 'resub', 'subscription_gift', 'giftpurchase'].indexOf(kind) !== -1)) {
+                    var action = { purchase: 'Purchase', gift: 'Gift', giftcontribution: 'Gift contribution', giftfunded: 'Gift fully funded', new_subscriber: 'New member', resub: 'Renewed membership', subscription_gift: 'Gifted membership', giftpurchase: 'Gifted membership' }[kind] || 'Support received';
+                    enqueue(String(data.type) + ':' + String(data.id), tr('commerce-alert-' + (kind || 'support'), action) + ': ' + String(data.chatname || 'Anonymous').slice(0, 60), [data.subtitle, data.hasDonation, data.chatmessage].filter(Boolean).join(' - ').slice(0, 500), data.contentimg);
+                }
+            }
 			if (data.event === 'monetization_update' && data.meta && data.meta.monetization) {
 				state = data.meta.monetization;
 				lastStateAt = Date.now();
@@ -120,7 +146,7 @@
 				display();
 			}
 			if (mode === 'ebay' && data.type === 'ebay' && data.event === 'purchase' && data.meta && data.meta.ebayPurchase && state && state.ebay && state.ebay.enabled) enqueue(String(data.id), 'Purchased: ' + String(data.meta.ebayPurchase.itemName || '').slice(0, 180), String(data.meta.ebayPurchase.quantity || 1) + ' purchased. Thank you!', data.contentimg);
-			if (mode === 'throne' && data.type === 'throne' && ['giftpurchase', 'giftcontribution', 'giftfunded'].indexOf(data.event) !== -1 && state && state.throne && state.throne.enabled) {
+			if (mode === 'throne' && data.type === 'throne' && ['gift', 'giftpurchase', 'giftcontribution', 'giftfunded'].indexOf(data.event) !== -1 && state && state.throne && state.throne.enabled) {
 				var action = data.event === 'giftfunded' ? 'Community funded a gift' : String(data.chatname || 'Anonymous').slice(0, 60) + (data.event === 'giftcontribution' ? ' chipped in' : ' sent a gift');
 				enqueue(String(data.id), action, String(data.subtitle || 'A wishlist gift').slice(0, 180) + (data.hasDonation ? ' \u00b7 ' + String(data.hasDonation).slice(0, 40) : ''), data.contentimg);
 			}
@@ -130,7 +156,7 @@
 	}
 	setInterval(function () {
 		var now = Date.now();
-		if (mode === 'ebay' && (!lastStateAt || now - lastStateAt <= 35000 || demo)) display();
+		if ((!lastStateAt || now - lastStateAt <= 35000 || demo)) display();
 		if (active && now >= until) {
 			active = null;
 			display();
@@ -149,8 +175,13 @@
 	if (demo) {
 		document.body.classList.add('demo');
 		status.textContent = 'Preview · sample items and tips';
-		state = { ebay: { enabled: true, qr: true, position: params.get('position') || 'br', display: 'cycle', seconds: 20, items: [{ id: '123456789012', name: 'Retro handheld game console', amount: 32.5, currency: 'USD', url: 'https://www.ebay.com/itm/123456789012', auction: true, endsAt: Date.now() + 3723000, updatedAt: Date.now() }] }, throne: { enabled: true, qr: true, position: params.get('position') || 'br', username: 'the stream', url: 'https://throne.com', rank: 4, gifts: 3 }, wishlist: { enabled: true, qr: true, position: params.get('position') || 'br', rank: 3, total: 6, url: 'https://www.amazon.com/hz/wishlist/intro', item: { name: 'A little light for the next big idea', amount: 24.99, currency: 'USD', url: 'https://www.amazon.com/hz/wishlist/intro' } }, ninja: { enabled: true, qr: true, position: params.get('position') || 'br', username: 'the stream', url: 'https://ninjabacker.com' } };
+		state = { commerce: { enabled: true, qr: true, position: params.get('position') || 'br', display: 'cycle', seconds: 30, items: [{ name: 'Creator merchandise', url: 'https://socialstream.ninja', image: '', amount: 25, currency: 'USD', purpose: 'shop' }] }, ebay: { enabled: true, qr: true, position: params.get('position') || 'br', display: 'cycle', seconds: 20, items: [{ id: '123456789012', name: 'Retro handheld game console', amount: 32.5, currency: 'USD', url: 'https://www.ebay.com/itm/123456789012', auction: true, endsAt: Date.now() + 3723000, updatedAt: Date.now() }] }, throne: { enabled: true, qr: true, position: params.get('position') || 'br', username: 'the stream', url: 'https://throne.com', rank: 4, gifts: 3 }, wishlist: { enabled: true, qr: true, position: params.get('position') || 'br', rank: 3, total: 6, url: 'https://www.amazon.com/hz/wishlist/intro', item: { name: 'A little light for the next big idea', amount: 24.99, currency: 'USD', url: 'https://www.amazon.com/hz/wishlist/intro' } }, ninja: { enabled: true, qr: true, position: params.get('position') || 'br', username: 'the stream', url: 'https://ninjabacker.com' } };
 		display();
+        if (mode === 'commerce' && view !== 'card' && view !== 'showcase') setTimeout(function () {
+            var provider = params.get('provider') || 'fourthwall';
+            var donation = provider === 'kofi', gift = provider === 'bmac';
+            enqueue('demo-commerce', tr(donation ? 'commerce-alert-support' : gift ? 'commerce-alert-giftcontribution' : 'commerce-alert-purchase', donation ? 'Support' : gift ? 'Gift contribution' : 'Purchase') + ': Juniper', donation ? 'Ko-fi - $5.00 - Thank you for the stream!' : gift ? 'Buy Me a Coffee - Studio light - $10.00' : 'Fourthwall - Creator T-shirt');
+        }, 600);
 		if (mode === 'throne')
 			setTimeout(function () {
 				enqueue('demo-gift', 'Juniper sent a gift', 'A studio light for the next big idea');

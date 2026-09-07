@@ -3897,6 +3897,10 @@ class EventFlowEditor {
 					{ value: 'reward', label: 'Channel Point Redemption' },
 					{ value: 'newmember', label: 'New Member/Subscriber' },
 					{ value: 'giftpurchase', label: 'Gift Sub Purchase' },
+					{ value: 'gift', label: 'Gift' },
+					{ value: 'giftcontribution', label: 'Gift Contribution' },
+					{ value: 'giftfunded', label: 'Gift Fully Funded' },
+					{ value: 'purchase', label: 'Product Purchase' },
 					{ value: 'raid', label: 'Raid' },
 					{ value: 'follow', label: 'Follow' },
 					{ value: 'host', label: 'Host' },
@@ -4122,6 +4126,10 @@ class EventFlowEditor {
 			case 'eventOther':
 				const otherEventTypes = [
 					{ value: '', label: '-- Select Event --' },
+					{ value: 'gift', label: 'Gift' },
+					{ value: 'giftcontribution', label: 'Gift Contribution' },
+					{ value: 'giftfunded', label: 'Gift Fully Funded' },
+					{ value: 'purchase', label: 'Product Purchase' },
 					{ value: 'channel_points', label: 'Channel Points (Twitch)' },
 					{ value: 'membermilestone', label: 'Member Milestone (YouTube)' },
 					{ value: 'giftredemption', label: 'Gift Received (YouTube)' },
@@ -4217,7 +4225,7 @@ class EventFlowEditor {
 					<div class="property-group" id="custom-property-group" style="${isCustomProp ? '' : 'display: none;'}">
 						<label class="property-label">Custom Property Name</label>
 						<input type="text" class="property-input" id="prop-property" value="${isCustomProp ? (node.config.property || '') : ''}" placeholder="e.g., customField">
-						<div class="property-help">Enter the exact property name from the message object</div>
+						<div class="property-help">Enter a field or nested path, such as meta.commerce.recipient or meta.commerce.quantity</div>
 					</div>
 					<div class="property-group">
 						<label class="property-label">Operator</label>

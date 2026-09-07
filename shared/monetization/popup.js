@@ -4,6 +4,39 @@
 	if (!panel) return;
 	var ready = false,
 		current = null;
+	var products = [], editingProduct = -1;
+	function tr(key, fallback) { return typeof getTranslation === 'function' ? getTranslation(key, fallback) : fallback; }
+	function resetProductForm() {
+        editingProduct = -1;
+        ['name', 'url', 'image', 'price'].forEach(function (key) { by('commerce-' + key).value = ''; });
+        by('commerce-add').textContent = tr('commerce-add', 'Add product or link');
+        by('commerce-cancel').hidden = true;
+    }
+	function renderProducts() {
+		var rows = by('commerce-items'); rows.textContent = '';
+		products.forEach(function (item, index) {
+			var row = document.createElement('div'), label = document.createElement('span'); row.className = 'money-item';
+			label.textContent = item.name + (item.amount != null ? ' - ' + SSNMonetization.money(item.amount, item.currency) : ''); row.appendChild(label);
+			['edit', 'up', 'remove', 'copy'].forEach(function (action) {
+				var button = document.createElement('button'); button.type = 'button';
+				button.textContent = tr('commerce-' + action, { edit: 'Edit', up: 'Move up', remove: 'Remove', copy: 'Copy public link' }[action]);
+				button.setAttribute('aria-label', button.textContent + ': ' + item.name);
+				button.disabled = action === 'up' && index === 0;
+				button.onclick = function () {
+					if (action === 'copy') { navigator.clipboard.writeText(item.url).then(function () { status(tr('commerce-copied', 'Public link copied.')); }).catch(function () { status(item.url); }); return; }
+					if (action === 'edit') {
+						editingProduct = index; by('commerce-cancel').hidden = false;
+						['name', 'url', 'image', 'currency', 'purpose'].forEach(function (key) { by('commerce-' + key).value = item[key]; });
+						setProductCurrency(item.currency); by('commerce-price').value = item.amount == null ? '' : item.amount;
+						by('commerce-add').textContent = tr('commerce-update', 'Update product or link'); by('commerce-name').focus(); return;
+					}
+					if (action === 'remove') products.splice(index, 1);
+					else { var previous = products[index - 1]; products[index - 1] = item; products[index] = previous; }
+					resetProductForm(); renderProducts();
+				}; row.appendChild(button);
+			}); rows.appendChild(row);
+		});
+	}
 	function by(id) {
 		return document.getElementById('money-' + id);
 	}
@@ -25,16 +58,72 @@
 			});
 		});
 	}
+
+    function setProductCurrency(value) {
+        var select = by('commerce-currency');
+        if (!Array.prototype.some.call(select.options, function (option) { return option.value === value; })) {
+            var option = document.createElement('option'); option.value = value; option.textContent = value; select.appendChild(option);
+        }
+        select.value = value;
+    }
+    var providerSnapshot = {};
+    function providerLinks() {
+        var provider = by('provider').value;
+        by('provider-url').value = typeof lastResponse !== 'undefined' && lastResponse && lastResponse.streamID ? 'https://io.socialstream.ninja/' + encodeURIComponent(lastResponse.streamID) + '/' + provider : '';
+        by('provider-guide').href = 'docs/creator-store-setup.html#' + provider;
+        var preview = new URL('monetization.html', location.href);
+        preview.search = '?demo&mode=commerce&view=alerts&provider=' + provider;
+        if (typeof getSelectedTranslationLinkParam === 'function') preview.search += getSelectedTranslationLinkParam();
+        by('provider-preview').href = preview.href;
+        var s = providerSnapshot;
+        by('provider-status').textContent = !s.enabled ? tr('commerce-receiver-off', 'Receiver off. Open Receiver setting to enable it.') : !s.on ? tr('commerce-ssn-off', 'Turn SSN on to receive alerts.') : s.connected ? tr('commerce-receiver-ready', 'Receiver connected. Provider delivery is confirmed only when an event arrives.') : tr('commerce-receiver-wait', 'Receiver disconnected. Check your connection.');
+        var seen = s.providers && s.providers[provider];
+        by('provider-seen').textContent = seen ? tr('commerce-last-event', 'Last event received:') + ' ' + new Date(seen.at).toLocaleTimeString() + ' (' + tr(seen.accepted ? 'commerce-event-accepted' : 'commerce-event-skipped', seen.accepted ? 'accepted' : 'test, private or unsupported event skipped') + ')' : tr('commerce-no-event', 'No event received in this app session.');
+    }
+    function providerStatus(reply) { providerSnapshot = reply.receiver || {}; providerLinks(); }
+    by('provider').addEventListener('change', providerLinks);
+    by('provider-copy').onclick = function () {
+        if (!by('provider-url').value) return;
+        navigator.clipboard.writeText(by('provider-url').value).then(function () { status(tr('commerce-webhook-copied', 'Private webhook URL copied.')); }).catch(function () { by('provider-url').type = 'text'; by('provider-url').focus(); by('provider-url').select(); });
+    };
+    by('provider-url').onblur = function () { this.type = 'password'; };
+    by('provider-setting').onclick = function () {
+        var input = document.querySelector('input[data-setting="socketserver"]');
+        if (!input) return;
+        var filter = document.getElementById('activeIcon'); if (filter && filter.getAttribute('aria-pressed') === 'true') filter.click();
+        for (var parent = input.parentElement; parent; parent = parent.parentElement) if (parent.tagName === 'DETAILS') parent.open = true;
+        if (typeof scrollToSetting === 'function') scrollToSetting('wrapper-global-connections-integrations-options', 'socketserver');
+        else input.closest('div').scrollIntoView({ block: 'center' });
+        var label = input.closest('label'); label.tabIndex = -1; label.focus();
+    };
+    by('fourthwall-import').onclick = function () {
+        var button = this; button.disabled = true;
+        by('fourthwall-status').textContent = tr('commerce-import-loading', 'Loading product...');
+        request('fourthwallImport', { url: by('fourthwall-url').value, token: by('fourthwall-token').value }).then(function (reply) {
+            var item = reply.item; resetProductForm();
+            ['name', 'url', 'image', 'purpose'].forEach(function (key) { by('commerce-' + key).value = item[key]; });
+            setProductCurrency(item.currency); by('commerce-price').value = item.amount == null ? '' : item.amount;
+            by('fourthwall-status').textContent = tr('commerce-import-review', 'Details loaded. Review below, add the product, then save setup.');
+            by('commerce-name').focus();
+        }).catch(function (error) { by('fourthwall-status').textContent = error.message; }).then(function () { button.disabled = false; by('fourthwall-token').value = ''; });
+    };
+	by('commerce-cancel').onclick = resetProductForm;
+	by('commerce-add').onclick = function () {
+		var raw = { name: by('commerce-name').value, url: by('commerce-url').value, image: by('commerce-image').value, amount: by('commerce-price').value, currency: by('commerce-currency').value, purpose: by('commerce-purpose').value };
+		var item = SSNMonetization.commerce({ items: [raw] }).items[0];
+		if (!item || (raw.image && !item.image) || (raw.amount !== '' && item.amount == null)) { status(tr('commerce-invalid', 'Enter a name, public HTTPS links, and a valid price or leave the price blank.')); return; }
+		if (editingProduct >= 0) products[editingProduct] = item;
+		else if (products.length < 20) products.push(item);
+		else { status(tr('commerce-limit', 'You can add up to 20 products or links.')); return; }
+		resetProductForm();
+		by('commerce-add').textContent = tr('commerce-add', 'Add product or link'); renderProducts(); status(tr('commerce-unsaved', 'List updated. Click Save setup to apply.'));
+	};
+	['view', 'style', 'scale', 'cardevery', 'cardfor', 'onlytype'].forEach(function (key) { by(key).addEventListener('input', links); });
 	function showMode() {
-		var mode = by('mode').value;
-		by('wishlist-panel').hidden = mode !== 'wishlist';
-		by('ninja-panel').hidden = mode !== 'ninja';
-		by('throne-panel').hidden = mode !== 'throne';
-		by('ebay-panel').hidden = mode !== 'ebay';
 		links();
 	}
 	function values() {
-		var config = { wishlist: {}, ninja: {}, throne: {}, ebay: {} };
+		var config = { wishlist: {}, ninja: {}, throne: {}, ebay: {}, commerce: { enabled: by("commerce-enabled").checked, qr: by("commerce-qr").checked, position: by("commerce-position").value, display: by("commerce-display").value, seconds: Number(by("commerce-seconds").value), items: products } };
 		['wishlist', 'ninja', 'throne', 'ebay'].forEach(function (mode) {
 			['enabled', 'qr', 'announce', 'interval'].forEach(function (key) {
 				config[mode][key] = by(mode + '-' + key).checked;
@@ -42,6 +131,8 @@
 			config[mode].minutes = Number(by(mode + '-minutes').value);
 			config[mode].position = by(mode + '-position').value;
 		});
+		config.presentation = {};
+		['view', 'style', 'scale', 'cardevery', 'cardfor', 'onlytype'].forEach(function (key) { config.presentation[key] = by(key).value; });
 		config.wishlist.url = by('wishlist-url').value;
 		config.ninja.reliable = by('ninja-delivery').value === 'reliable';
 		config.ninja.username = by('ninja-username').value;
@@ -51,22 +142,30 @@
 		return config;
 	}
 	function links() {
+        providerLinks();
 		if (typeof lastResponse === 'undefined' || !lastResponse || !lastResponse.streamID) return;
 		var base = document.getElementById('dock') && document.getElementById('dock').raw;
 		var u;
 		try {
 			u = new URL(base || document.getElementById('docklink').href);
 			u.pathname = u.pathname.replace(/[^/]*$/, 'monetization.html');
+			var keepServer = u.searchParams.has('server'), serverValue = u.searchParams.get('server');
 			u.search = '';
+			if (keepServer) u.searchParams.set('server', serverValue || '');
 			u.searchParams.set('session', lastResponse.streamID);
 			if (lastResponse.password) u.searchParams.set('password', lastResponse.password);
 			u.searchParams.set('mode', by('mode').value);
+            ['view', 'style', 'scale', 'cardevery', 'cardfor', 'onlytype'].forEach(function (key) { if (by(key).value) u.searchParams.set(key, by(key).value); });
+            if (typeof getSelectedTranslationLinkParam === 'function') { var language = new URLSearchParams(getSelectedTranslationLinkParam().replace(/^&/, '')).get('ln'); if (language) u.searchParams.set('ln', language); }
 			by('overlay').href = u.href;
-			by('overlay').textContent = 'Open ' + (by('mode').value === 'ebay' ? 'eBay Showcase' : by('mode').value === 'wishlist' ? 'Wishlist Rank-Up' : by('mode').value === 'throne' ? 'Throne Gifts' : 'NinjaBacker') + ' overlay';
+			by('overlay').textContent = 'Open ' + (by('mode').value === 'commerce' ? tr('commerce-title', 'Products & support links') : by('mode').value === 'ebay' ? 'eBay Showcase' : by('mode').value === 'wishlist' ? 'Wishlist Rank-Up' : by('mode').value === 'throne' ? 'Throne Gifts' : 'NinjaBacker') + ' overlay';
 		} catch (_) {}
 		var name = by('ninja-username').value.trim();
 		by('ninja-link').value = /^[a-z0-9_-]{1,50}$/i.test(name) ? 'https://ninjabacker.com/' + name.toLowerCase() : '';
-		by('preview').href = 'monetization.html?demo&mode=' + by('mode').value;
+		var preview = new URL('monetization.html', location.href); preview.searchParams.set('demo', ''); preview.searchParams.set('mode', by('mode').value);
+        ['view', 'style', 'scale', 'cardevery', 'cardfor', 'onlytype'].forEach(function (key) { if (by(key).value) preview.searchParams.set(key, by(key).value); });
+        if (typeof language !== 'undefined' && language) preview.searchParams.set('ln', language);
+        by('preview').href = preview.href;
 	}
 	function showEbayStatus(reply) {
 		var e = reply.ebay || {};
@@ -109,6 +208,11 @@
 		if (!reply.config) return;
 		reply.config = SSNMonetization.config(reply.config);
 		current = reply;
+        providerStatus(reply);
+        ['view', 'style', 'scale', 'cardevery', 'cardfor', 'onlytype'].forEach(function (key) { by(key).value = reply.config.presentation[key]; });
+        products = reply.config.commerce.items.slice(); editingProduct = -1; renderProducts();
+        ['enabled', 'qr'].forEach(function (key) { by('commerce-' + key).checked = reply.config.commerce[key]; });
+        ['position', 'display', 'seconds'].forEach(function (key) { by('commerce-' + key).value = reply.config.commerce[key]; });
 		['wishlist', 'ninja', 'throne', 'ebay'].forEach(function (mode) {
 			var cfg = reply.config[mode];
 			['enabled', 'qr', 'announce', 'interval'].forEach(function (key) {
@@ -309,10 +413,11 @@
 	};
 	window.updateMonetizationLinks = links;
 	setInterval(function () {
-		if (ready && panel.open && (by('mode').value === 'ninja' || by('mode').value === 'throne' || by('mode').value === 'ebay'))
+		if (ready && panel.open)
 			request('get').then(
 				function (reply) {
-					by('ninja-status').textContent = reply.status;
+					providerStatus(reply);
+                    by('ninja-status').textContent = reply.status;
 					showThroneStatus(reply);
 					showEbayStatus(reply);
 				},
