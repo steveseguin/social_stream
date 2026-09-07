@@ -7998,7 +7998,7 @@ const overlayPreviewConfigs = Object.freeze({
 });
 
 const overlayPreviewState = {
-    multialerts: { pending: null, timer: null, muted: false }
+    multialerts: { pending: null, timer: null, muted: false, loading: false, playOnLoad: false }
 };
 
 function getLocalOverlayUrl(path) {
@@ -8228,6 +8228,7 @@ function syncOverlayPreview(previewKey, force = false) {
     }
 
     frame.dataset.currentPreviewUrl = nextUrl;
+    overlayPreviewState[previewKey].loading = true;
     frame.src = nextUrl;
 }
 
@@ -8280,6 +8281,7 @@ function sendOverlayPreview(previewKey, descriptor) {
 
     state.pending = descriptor;
     if (descriptor === false) {
+        state.playOnLoad = false;
         if (state.timer) {
             clearTimeout(state.timer);
             state.timer = null;
@@ -8291,6 +8293,12 @@ function sendOverlayPreview(previewKey, descriptor) {
     }
 
     syncOverlayPreview(previewKey, true);
+    if (state.loading) {
+        // Keep an explicit first test (including its sound) until the lazy frame
+        // is ready. Ordinary settings refreshes still replay silently.
+        state.playOnLoad = true;
+        return;
+    }
     replayOverlayPreview(previewKey, { silent: false });
 }
 
@@ -8654,7 +8662,11 @@ function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
             if (toggle.checked) syncOverlayPreview(previewKey);
         });
         frame.addEventListener('load', () => {
-            replayOverlayPreview(previewKey, { silent: true });
+            const state = overlayPreviewState[previewKey];
+            state.loading = false;
+            const silent = !state.playOnLoad;
+            state.playOnLoad = false;
+            replayOverlayPreview(previewKey, { silent });
         });
     }
 

@@ -17,6 +17,7 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 (async () => {
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'ssapp-api-bot-'));
   const requests = [], packets = [];
+  let failNextRequest = false;
   let relay, app;
   const server = http.createServer((req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -30,6 +31,11 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     req.on('data', data => { body += data; });
     req.on('end', () => {
       requests.push({ url: req.url, body: JSON.parse(body || '{}') });
+      if (failNextRequest) {
+        failNextRequest = false;
+        res.statusCode = 500;
+        return res.end(JSON.stringify({ error: 'Deliberate provider failure' }));
+      }
       res.setHeader('Content-Type', 'application/x-ndjson');
       // Delay allows the concurrent-request limiter to be exercised.
       setTimeout(() => res.end(JSON.stringify({ response: 'Fixture reply number ' + requests.length, done: true }) + '\n'), 150);
@@ -140,6 +146,51 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     assert.equal(await bg.evaluate(() => activeBotResponseCount), 0, 'Response slots released');
     await bot.screenshot({ path: path.join(profile, 'bot-overlay.png') });
     console.log('PASS existing target and rate-limit behavior, repeated API replies, concurrency limit, no reply loop');
+    let before = requests.length;
+    await bg.evaluate(() => { settings.aiChatbotEnabled = false; });
+    await send('The disabled bot must stay quiet');
+    assert.equal(requests.length, before);
+    await bg.evaluate(() => { settings.aiChatbotEnabled = true; });
+    await send('');
+    await send('   ');
+    assert.equal(requests.length, before, 'Empty API messages do not consume AI requests');
+    failNextRequest = true;
+    await send('Exercise a failed provider call');
+    assert.equal(await bg.evaluate(() => activeBotResponseCount), 0);
+    const afterFailure = requests.length;
+    await send('Recover with a fresh successful request');
+    assert.equal(requests.length, afterFailure + 1);
+    await bot.waitForFunction(text => document.body.innerText.includes(text), 'Fixture reply number ' + requests.length);
+    await bg.evaluate(() => {
+      settings.aiOverlayFromChatBot = true;
+      settings.aiOverlayTts = true;
+      settings.ollamatts = false;
+      window.__aiOverlayCommands = [];
+      const original = sendAiOverlayCommand;
+      sendAiOverlayCommand = function (...args) { const result = original(...args); window.__aiOverlayCommands.push(result); return result; };
+    });
+    await send('Try the optional cohost overlay output');
+    const aiOutput = await bg.evaluate(() => window.__aiOverlayCommands);
+    assert.equal(aiOutput.length, 1);
+    assert.equal(aiOutput[0].target, 'cohost-overlay');
+    assert.equal(aiOutput[0].meta.tts, true);
+    assert.equal(packets[packets.length - 1].tts, false, 'Regular bot TTS can be disabled independently');
+    assert.equal(await bg.evaluate(() => window.__platformCalls.length), 1);
+    // The flattened API intentionally has no retry deduplication. Record that cost/volume risk.
+    before = requests.length;
+    await send('Duplicate API input from a retry');
+    await send('Duplicate API input from a retry');
+    assert.equal(requests.length, before + 2, 'Sequential duplicate API calls can each generate a reply');
+    console.log('PASS disabled bot, empty input, provider failure recovery, optional AI overlay routing and independent TTS flags');
+    console.log('CONFIRMED risk: sequential API retries can generate duplicate AI replies in overlay-only mode');
+    await bg.evaluate(() => new Promise(resolve => {
+      settings.socketserver = false;
+      chrome.storage.local.set({ settings }, resolve);
+    }));
+    await bg.goto(bg.url());
+    await bg.waitForFunction(() => typeof processMessageWithOllama === 'function' && settings.ollamaoverlayonly === true, null, { timeout: 30000 });
+    assert.equal(await bg.evaluate(() => settings.aiChatbotEnabled), true);
+    console.log('PASS overlay-only and AI enable settings survive background reload');
     console.log('Artifacts: ' + profile);
   } finally {
     if (app) await app.close();
