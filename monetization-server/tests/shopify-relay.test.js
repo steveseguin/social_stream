@@ -50,3 +50,59 @@ test('Shopify verifies store/topic, persists and deduplicates orders across rest
 test('Shopify fails closed when the receiver is not enabled', async () => {
  const app = await createServer(); try { assert.equal((await app.inject('/v1/shopify/status')).statusCode, 503); } finally { await app.close(); }
 });
+
+test('Real HTTP delivery preserves signed UTF-8 bytes and isolates test, duplicate and oversized orders', async () => {
+ const db = new Database(':memory:');
+ const app = await createServer({ shopify: { db, masterKey: crypto.randomBytes(32) } });
+ const key = crypto.randomBytes(32).toString('hex'), channel = shopifyChannel(key);
+ await app.listen({ host: '127.0.0.1', port: 0 });
+ const base = 'http://127.0.0.1:' + app.server.address().port;
+ const reader = { authorization: 'Bearer ' + key, 'content-type': 'application/json' };
+ async function send(value, changes = {}) {
+  const body = JSON.stringify(value);
+  return fetch(base + '/v1/shopify/webhook/' + channel, { method: 'POST', headers: {
+   'content-type': 'application/json; charset=utf-8', 'x-shopify-shop-domain': shop,
+   'x-shopify-topic': 'orders/paid', 'x-shopify-api-version': '2026-07',
+   'x-shopify-triggered-at': new Date().toISOString(), 'x-shopify-webhook-id': crypto.randomUUID(),
+   'x-shopify-hmac-sha256': crypto.createHmac('sha256', secret).update(Buffer.from(body, 'utf8')).digest('base64'), ...changes
+  }, body });
+ }
+ try {
+  assert.equal((await fetch(base + '/v1/shopify/connection', { method: 'POST', headers: reader, body: JSON.stringify({ shop, secret }) })).status, 200);
+  const paid = { ...order(), id: '9007199254740993', total_price: '18.25', currency: 'EUR',
+   total_price_set: { shop_money: { amount: '25.125', currency_code: 'BHD' }, presentment_money: { amount: '18.25', currency_code: 'EUR' } },
+   line_items: [{ product_id: 123, title: 'Café — 限定版 🎨', quantity: 1, properties: [{ name: 'email', value: 'private@example.invalid' }] }]
+  };
+  assert.equal((await send({ ...paid, test: true })).status, 200);
+  assert.equal(db.prepare('SELECT count(*) n FROM shopify_deliveries').get().n, 0);
+  assert.equal((await send(paid, { 'x-shopify-hmac-sha256': 'A'.repeat(43) + '=' })).status, 401);
+  assert.equal((await send(paid)).status, 200);
+  assert.equal((await send(paid)).status, 200);
+  const received = await (await fetch(base + '/v1/shopify/events', { headers: reader })).json();
+  assert.equal(received.events.length, 1);
+  const event = received.events[0].data;
+  assert.equal(event.subtitle, 'Café — 限定版 🎨');
+  assert.equal(event.meta.commerce.currency, 'BHD');
+  assert.equal(event.meta.commerce.orderTotal, 25.125);
+  assert.equal(event.hasDonation, undefined);
+  assert(!JSON.stringify(event).includes('private@example.invalid'));
+  assert(!JSON.stringify(event).includes(paid.id));
+  assert.equal((await send({ ...paid, id: '23456', note: 'x'.repeat(1048576) })).status, 413);
+  await fetch(base + '/v1/shopify/connection', { method: 'DELETE', headers: reader });
+  assert.equal((await send(paid)).status, 410);
+ } finally { await app.close(); db.close(); }
+});
+
+test('Paid-order boundaries do not infer quantities, payments or customer identity', () => {
+ const now = Date.now();
+ for (const financial_status of ['authorized', 'partially_paid', 'partially_refunded', 'refunded', 'voided']) {
+  assert.equal(paidOrder({ ...order(), financial_status }, shop, now), null);
+ }
+ assert.equal(paidOrder({ ...order(), updated_at: new Date(now + 301000).toISOString() }, shop, now), null);
+ const oversized = paidOrder({ ...order(), line_items: Array.from({ length: 251 }, () => ({ product_id: 1, title: 'Print', quantity: 1 })) }, shop, now);
+ assert.equal(oversized.meta.commerce.quantity, undefined);
+ const custom = paidOrder({ ...order(), line_items: [{ title: 'Custom order for Private Person', quantity: 1 }] }, shop, now);
+ assert.equal(custom.subtitle, '');
+ const malformed = paidOrder({ ...order(), line_items: [{ product_id: 1, title: 'Print', quantity: -1 }] }, shop, now);
+ assert.equal(malformed.meta.commerce.quantity, undefined);
+});
