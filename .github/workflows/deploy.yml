@@ -84,6 +84,9 @@ jobs:
             --exclude='/tests/' \
             --exclude='/tmp/' \
             beta-content/ gh-pages-content/beta/
+          # Public viewer URLs are stable even while creator controls ship on beta.
+          # Keep the viewer's versioned dependencies separate from stable app assets.
+          python3 beta-content/scripts/build-public-shop.py --source beta-content --output gh-pages-content
           seo_script="${GITHUB_REF_NAME}-content/scripts/prepare-pages-seo.py"
           python3 "$seo_script" --root gh-pages-content
           touch gh-pages-content/.nojekyll

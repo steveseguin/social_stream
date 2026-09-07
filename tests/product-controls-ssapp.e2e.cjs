@@ -15,6 +15,7 @@ fs.writeFileSync(path.join(profile, 'savedSync.json'), JSON.stringify({ streamID
  async function start() { db = new Database(dbFile); receiver = await createServer({ publicShop: { db } }); await receiver.listen({ host: '127.0.0.1', port }); port = receiver.server.address().port; }
  await start();
  const relay = new WebSocketServer({ host: '127.0.0.1', port: 0 }); await new Promise(r => relay.once('listening', r));
+ relay.on('connection', client => client.on('message', raw => { let data; try { data=JSON.parse(String(raw)); } catch (_) { return; } if(data.join && data.out===1 && data.in===2) client.isControlDock=true; if(data.action || data.callback) relay.clients.forEach(other => { if(other!==client && other.readyState===1) other.send(String(raw)); }); }));
  const send = data => relay.clients.forEach(c => c.send(JSON.stringify(data)));
  const wrapper = path.join(profile, 'bootstrap.cjs');
  fs.writeFileSync(wrapper, `const {app}=require('electron');app.setAppPath(${JSON.stringify(ssapp)});app.on('session-created',s=>s.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*','ws://*/*','wss://*/*']},(d,cb)=>cb({cancel:!['localhost','127.0.0.1'].includes(new URL(d.url).hostname)})));require(${JSON.stringify(path.join(ssapp,'bootstrap.js'))});`);
@@ -106,6 +107,38 @@ fs.writeFileSync(path.join(profile, 'savedSync.json'), JSON.stringify({ streamID
   config=await request({cmd:'monetization',action:'get'}); assert(config.commerceLive.until>Date.now()-1500);
   await bg.evaluate(port=>{settings.socketserver=true;serverURL='ws://127.0.0.1:'+port;setupSocket();},relay.address().port);
   await bg.waitForFunction(()=>socketserver && socketserver.readyState===1);
+  const controlDock=await page('file:///'+root+'/obs-control-dock.html?session=shopifyqa&commerce&server=ws://127.0.0.1:'+relay.address().port,390,850);
+  await controlDock.waitForFunction(()=>document.querySelectorAll('#commerce-product option').length===2);
+  assert.equal(await controlDock.locator('body > details:not([hidden])').count(),1);
+  await controlDock.locator('#commerce-product').selectOption('https://ninjabacker.com/example');
+  await controlDock.locator('[data-commerce=show]').click();
+  await controlDock.waitForFunction(()=>document.getElementById('commerce-state').textContent.includes('Selected product: Support the show'));
+  await controlDock.locator('[data-commerce=next]').click();
+  await controlDock.waitForFunction(()=>document.getElementById('commerce-state').textContent.includes('Selected product: Studio & art print'));
+  await controlDock.locator('[data-commerce=hide]').click();
+  await controlDock.waitForFunction(()=>document.getElementById('commerce-state').textContent==='Products hidden');
+  await controlDock.locator('[data-commerce=resume]').click();
+  await controlDock.waitForFunction(()=>document.getElementById('commerce-state').textContent.includes('Scheduled product'));
+  await controlDock.locator('#commerce-product').selectOption('https://creator.gumroad.com/l/print');
+  await controlDock.locator('[data-commerce=show]').click();
+  await controlDock.waitForFunction(()=>document.getElementById('commerce-state').textContent.includes('Selected product: Studio & art print'));
+  assert(await controlDock.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  if(process.env.SSN_GUIDE_SCREENSHOTS) {
+   await app.evaluate(({BrowserWindow},url)=>BrowserWindow.getAllWindows().find(w=>w.webContents.getURL()===url).showInactive(),controlDock.url());
+   await controlDock.waitForTimeout(350);
+   const box=await controlDock.locator('#commerce-controls').boundingBox();
+   const png=await app.evaluate(async({BrowserWindow},o)=>{const w=BrowserWindow.getAllWindows().find(w=>w.webContents.getURL()===o.url);return(await w.webContents.capturePage({x:Math.floor(o.box.x),y:Math.floor(o.box.y),width:Math.ceil(o.box.width),height:Math.ceil(o.box.height)})).toPNG().toString('base64');},{url:controlDock.url(),box});
+   fs.writeFileSync(path.join(root,'docs/images/monetization/obs-product-controls.png'),Buffer.from(png,'base64'));
+  }
+  await controlDock.locator('#commerce-duration').fill('1');
+  await controlDock.locator('[data-commerce=hide]').click();
+  await controlDock.waitForFunction(()=>document.getElementById('commerce-state').textContent.includes('remaining'));
+  await controlDock.waitForFunction(()=>document.getElementById('commerce-state').textContent.includes('Scheduled product'));
+  relay.clients.forEach(client=>{if(client.isControlDock)client.terminate();});
+  await controlDock.waitForFunction(()=>document.getElementById('commerce-state').textContent.includes('Disconnected'));
+  assert(await controlDock.locator('[data-commerce=show]').isDisabled());
+  await controlDock.waitForFunction(()=>!document.querySelector('[data-commerce=show]').disabled);
+  await controlDock.close();
   send({action:'commerceControl',command:'hide'});
   await bg.waitForFunction(async()=>(await handleMonetizationRequest({action:'get'})).commerceLive.mode==='hide');
   send({action:'commerceControl',command:'show',url:'https://creator.gumroad.com/l/print'});
