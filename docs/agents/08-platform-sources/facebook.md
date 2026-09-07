@@ -50,6 +50,8 @@ The page is meant for Pages the user manages. The setup notes in the page say:
 
 The bridge polls live video comments and optionally viewer count. Keep the page open while it should relay Facebook Live comments into SSN.
 
+On each connection, the first successful comment snapshot is displayed locally and seeded into dedupe without being relayed. Later polls relay only previously unseen comments with a valid creation timestamp newer than the connection start. Older or undated comments remain local. Disconnect invalidates pending comment requests so an old response cannot publish after a reconnect. The `autoconnect=0` URL parameter explicitly disables startup capture; use `autoconnect=1` to override saved settings and connect automatically.
+
 ## API Bridge Setup
 
 Normal setup:

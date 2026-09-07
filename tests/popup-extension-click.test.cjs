@@ -20,6 +20,17 @@ const path = require('path');
         const page = await context.newPage();
         await page.goto('chrome-extension://' + new URL(worker.url()).host + '/popup.html');
         await page.waitForFunction(() => document.getElementById('multialertslink')?.href);
+        await page.evaluate(() => {
+            const translated = Array.from(document.querySelectorAll('[data-translate]')).find(element =>
+                element.parentElement.querySelector(':scope > .popup-control-icon'));
+            if (!translated) throw new Error('No translated icon label found');
+            const parent = translated.parentElement;
+            const icon = parent.querySelector('.popup-control-icon');
+            const text = translated.innerHTML;
+            miniTranslate(parent, translated.dataset.translate, 'Translation preview');
+            if (!icon.isConnected || icon.getAttribute('aria-hidden') !== 'true') throw new Error('Translation removed the decorative icon');
+            translated.innerHTML = text;
+        });
         for (const theme of ['light', 'dark']) {
             await page.emulateMedia({ colorScheme: theme });
             for (const width of [400, 600]) {

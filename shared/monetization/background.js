@@ -566,7 +566,6 @@
 	window.handleMonetizationRequest = function (request, sender) {
 		if (sender && sender.tab && sender.tab.id !== null && sender.tab.id !== undefined) return Promise.resolve({ error: 'Use the SSN popup to configure monetization.' });
         if (request.action === 'getCommerceState') return Promise.resolve({ commerce: controlState() });
-        if (request.action === 'get') return Promise.resolve(snapshot());
         if (request.action === 'commerceControl') return action(request).catch(function (e) { return { error: e.message }; });
 		var job = queue.then(function () {
 			return request.action === 'get' ? snapshot() : action(request);

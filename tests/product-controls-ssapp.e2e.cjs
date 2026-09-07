@@ -62,6 +62,8 @@ fs.writeFileSync(path.join(profile, 'savedSync.json'), JSON.stringify({ streamID
   await popup.locator('#money-commerce-url').fill('https://ninjabacker.com/example');
   await popup.locator('#money-commerce-purpose').selectOption('support');
   await popup.locator('#money-commerce-add').click();
+  assert(await popup.locator('#money-commerce-items button').filter({hasText:'Show now'}).first().isDisabled());
+  assert((await popup.locator('#money-commerce-items').textContent()).includes('Unsaved'));
   await popup.locator('label[for=money-commerce-enabled]').click();
   await request({cmd:'setOnOffState',data:{value:true}});
   await popup.locator('#money-save').click();
@@ -69,7 +71,7 @@ fs.writeFileSync(path.join(profile, 'savedSync.json'), JSON.stringify({ streamID
   await popup.locator('#money-commerce-live > summary').click();
   const show = popup.locator('#money-commerce-items button').filter({hasText:'Show now'});
   await show.first().click();
-  await popup.waitForFunction(() => document.getElementById('money-commerce-live-status').textContent.includes('pinned'));
+  await popup.waitForFunction(() => document.getElementById('money-commerce-live-status').textContent.includes('Selected product'));
   let config = await request({cmd:'monetization',action:'get'}); assert.equal(config.commerceLive.url, 'https://creator.gumroad.com/l/print');
   await capture('#money-commerce-controls', 'product-controls.png');
   await capture('#money-commerce-controls', 'product-controls-dark.png','dark');
@@ -93,6 +95,9 @@ fs.writeFileSync(path.join(profile, 'savedSync.json'), JSON.stringify({ streamID
   await overlay.waitForFunction(()=>document.getElementById('title').textContent.includes('Purchase: Jess'));
   assert(await overlay.locator('#qr').isHidden());
   const keyReply = await bg.evaluate(()=>routeStreamDeckRemoteRequest({protocol:2,action:'commerceShow',value:'https://creator.gumroad.com/l/print',get:'commerce-key-1'},{transport:'websocket'}));
+  const readState = await bg.evaluate(()=>routeStreamDeckRemoteRequest({protocol:2,action:'getCommerceState',get:'state-key'},{transport:'websocket'}));
+  assert.equal(readState.result.payload.commerce.selected.name,'Studio & art print');
+  assert.equal(readState.result.payload.commerce.items.length,2);
   assert.equal(keyReply.result.ok,true); assert.equal(keyReply.result.payload.command,'show');
   const invalidReply = await bg.evaluate(()=>routeStreamDeckRemoteRequest({protocol:2,action:'commerceNext',value:-1,get:'commerce-key-invalid'},{transport:'websocket'}));
   assert.equal(invalidReply.result.ok,false);

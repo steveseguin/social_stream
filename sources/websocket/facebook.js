@@ -107,6 +107,9 @@ const state = {
   lastPollAt: null,
   lastViewerAt: 0,
   lastTimestamp: null,
+  captureStartedAt: 0,
+  historyLoaded: false,
+  captureGeneration: 0,
   failureCount: 0,
   messageCount: 0,
   errorCount: 0,
@@ -1153,8 +1156,9 @@ function buildCommentsParams() {
   } else {
     params.order = 'chronological';
   }
-  if (state.lastTimestamp) {
-    params.since = Math.max(Math.floor(state.lastTimestamp / 1000) - 1, 0);
+  if (state.historyLoaded) {
+    const since = Math.max(state.lastTimestamp || 0, state.captureStartedAt);
+    params.since = Math.max(Math.floor(since / 1000) - 1, 0);
   }
   return params;
 }
@@ -1254,7 +1258,9 @@ function trackSeenId(id) {
 }
 
 function handleComments(entries) {
-  if (!Array.isArray(entries) || !entries.length) return;
+  if (!Array.isArray(entries)) return;
+  const seedHistory = !state.historyLoaded;
+  state.historyLoaded = true;
   const outgoing = [];
   entries.forEach((entry) => {
     if (!entry || !entry.id) return;
@@ -1262,30 +1268,38 @@ function handleComments(entries) {
     updateLastTimestamp(entry);
     const payload = createMessagePayload(entry);
     if (!payload.chatmessage && !payload.contentimg) return;
-    outgoing.push(payload);
     renderMessage(payload);
+    state.messageCount += 1;
+    // Seed the initial snapshot locally, including comments without timestamps.
+    // The cutoff also rejects older comments returned later by overlapping polls.
+    if (!seedHistory && Number.isFinite(payload.timestamp) && payload.timestamp > state.captureStartedAt) {
+      outgoing.push(payload);
+    }
   });
 
-  if (!outgoing.length) return;
-  state.messageCount += outgoing.length;
   updateStats();
+  if (!outgoing.length) return;
   const relay = outgoing.length === 1 ? { message: outgoing[0] } : { messages: outgoing };
   relayPayload(relay);
 }
 
 async function pollOnce() {
   if (!state.connected || state.polling) return;
+  const generation = state.captureGeneration;
   state.polling = true;
   try {
     const data = await graphRequest(`${encodeURIComponent(state.videoId)}/comments`, buildCommentsParams());
+    if (!state.connected || generation !== state.captureGeneration) return;
     handleComments(data && data.data ? data.data : []);
     await pollViewerCount();
+    if (!state.connected || generation !== state.captureGeneration) return;
     state.failureCount = 0;
     state.lastPollAt = Date.now();
     updateStats();
     setStatus('connected', 'Connected to Facebook Live comments.');
     schedulePoll();
   } catch (err) {
+    if (!state.connected || generation !== state.captureGeneration) return;
     state.failureCount += 1;
     state.errorCount += 1;
     state.lastPollAt = Date.now();
@@ -1313,7 +1327,7 @@ async function pollOnce() {
     const backoff = Math.min(state.pollInterval * Math.pow(2, Math.min(state.failureCount, 4)), 60000);
     schedulePoll(backoff);
   } finally {
-    state.polling = false;
+    if (generation === state.captureGeneration) state.polling = false;
   }
 }
 
@@ -1338,6 +1352,11 @@ function connect() {
     return;
   }
   state.connected = true;
+  state.captureGeneration += 1;
+  state.captureStartedAt = Date.now();
+  state.historyLoaded = false;
+  state.lastTimestamp = null;
+  pendingPageRelays.length = 0;
   state.failureCount = 0;
   state.polling = false;
   setStatus('connecting', 'Connecting to Facebook Page live chat...');
@@ -1346,6 +1365,8 @@ function connect() {
 }
 
 function disconnect() {
+  state.captureGeneration += 1;
+  pendingPageRelays.length = 0;
   state.connected = false;
   state.polling = false;
   state.viewerValue = null;
@@ -1388,6 +1409,9 @@ function bindEvents() {
       saveConfig();
       if (state.connected && checkbox === els.viewerCount) {
         state.lastViewerAt = 0;
+      }
+      if (checkbox === els.autoConnect && state.autoConnect && !state.connected) {
+        autoConnectIfReady();
       }
     });
   });
