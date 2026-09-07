@@ -464,6 +464,7 @@
 
         <!-- OVERVIEW -->
         <h2 id="overview">Overview</h2>
+        <div class="info"><strong>Works with captured chat text, regardless of platform.</strong> The voice provider belongs to SSN’s player, not YouTube, Twitch, TikTok, or another chat site. These local AI providers differ from <em>System TTS</em>: they generate page audio rather than depending on OBS exposing operating-system voices. See the <a href="tts-setup-guide.html#obs-voices">short OBS setup guide</a> for voice availability versus audio capture. <a href="tts-setup-guide.html#voice-chooser">Compare providers, hear samples and see the settings.</a></div>
         <div class="card">
             <p>Social Stream Ninja can read chat messages out loud using local AI text-to-speech. "Local" can mean two things: the voice runs inside the browser, or you run a small TTS server on your own computer.</p>
 
@@ -657,7 +658,7 @@
             <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=kokoro</div>
 
             <h3>Kokoro TTS Options</h3>
-            <p>Kokoro has 26 built-in voices. Specify one with <code>&amp;voicekokoro=</code>:</p>
+            <p>SSN currently lists 28 English Kokoro voices. Specify one with <code>&amp;voicekokoro=</code>:</p>
             <div class="code">English female: af_bella, af_sarah, af_nicole, af_sky
 English male:   am_adam, am_michael
 British female: bf_emma, bf_isabella
@@ -685,7 +686,7 @@ British male:   bm_george, bm_lewis</div>
             <div class="url-example">dock.html?session=YOUR_SESSION&speech=es-ES&ttsprovider=espeak&espeakvoice=es&espeakspeed=145</div>
 
             <div class="warning">
-                <strong>First-time load:</strong> Kokoro and Piper need to download their model files on first use (~50–200 MB). This happens automatically in the background. Subsequent loads are instant (cached in browser).
+                <strong>First-time load:</strong> Kokoro and Piper need to download their model files on first use (~50–200 MB). This happens automatically in the background. Later loads can reuse cached models, but initialization still takes time. OBS has a separate cache from Chrome/Edge.
             </div>
 
             <div class="info">
@@ -1391,7 +1392,7 @@ npm run local-tts-bridge -- --mode f5</div>
             <div class="step"><span class="step-number">3</span><div class="step-content">Route the virtual output into OBS as an Audio Input Capture source.</div></div>
 
             <div class="warning">
-                <strong>System TTS (<code>?speech=en-US</code> without a provider) uses OS speech synthesis</strong>, which cannot be captured by OBS browser source. Use one of the providers above (<code>kokoro</code>, <code>piper</code>, etc.) instead.
+                <strong>System TTS (<code>?speech=en-US</code> without a provider) depends on voices exposed by the browser.</strong> OBS may expose no voices, or may list voices without producing capturable audio. Test speech and the OBS recording separately. Use one of the providers above (<code>kokoro</code>, <code>piper</code>, etc.) instead.
             </div>
         </div>
 
