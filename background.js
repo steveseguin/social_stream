@@ -20153,6 +20153,19 @@ let tmp = new EventFlowSystem({
 tmp.initPromise
 	.then(() => {
 		window.eventFlowSystem = tmp;
+        // Native-only channel, separate from untrusted chat and overlay messages.
+        if (window.ninjafy && typeof window.ninjafy.syncVoiceCommands === 'function') {
+            const syncVoiceCommands = () => {
+                const commands = [];
+                tmp.flows.filter(f => f.active).forEach(f => f.nodes.forEach(n => {
+                    if (n.type === 'trigger' && n.triggerType === 'voicePhrase') commands.push({flowId:f.id,nodeId:n.id,phrase:n.config.phrase || '',cooldown:n.config.cooldown || 5});
+                }));
+                window.ninjafy.syncVoiceCommands(commands).catch(() => {});
+            };
+            window.ninjafy.onVoiceCommand(payload => tmp.processVoiceCommand(payload).catch(() => {}));
+            syncVoiceCommands();setInterval(syncVoiceCommands, 1500);
+        }
+
 		// Start periodic scheduler so time-based triggers (timeInterval/timeOfDay) work without incoming messages
 		try {
 			tmp.startScheduler && tmp.startScheduler();

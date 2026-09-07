@@ -1772,6 +1772,21 @@ class EventFlowSystem {
 		});
 	}
     
+    // Only the native background bridge calls this path. Ordinary chat cannot mark
+    // itself trusted, even if it copies all fields of a host voice payload.
+    async processVoiceCommand(payload) {
+        if (!payload || typeof payload.text !== 'string' || !Number.isFinite(payload.expiresAt) || Date.now() > payload.expiresAt) return;
+        const flow = this.flows.find(f => f.active && f.id === payload.flowId);
+        if (!flow) return;
+        const trigger = flow.nodes.find(n => n.id === payload.nodeId && n.type === 'trigger' && n.triggerType === 'voicePhrase');
+        const normalizeVoice = value => String(value || '').normalize('NFKC').toLocaleLowerCase().replace(/[.,!?;:]/g, '').replace(/\s+/g, ' ').trim();
+        if (!trigger || normalizeVoice(trigger.config.phrase) !== normalizeVoice(payload.text)) return;
+        const message = {chatname:'Host', chatmessage:payload.text, type:'hostvoice', textonly:true};
+        if (!this.voiceMessages) this.voiceMessages = new WeakMap();
+        this.voiceMessages.set(message, payload);
+        try { await this.evaluateFlow(flow, message); } finally { this.voiceMessages.delete(message); }
+    }
+
     async processMessage(message) {
         
         if (!message) {
@@ -2202,6 +2217,9 @@ class EventFlowSystem {
     
     async evaluateTrigger(triggerNode, message, flow = null) {
         const { triggerType, config } = triggerNode;
+        const voice = message && this.voiceMessages && this.voiceMessages.get(message);
+        if (voice) return triggerType === 'voicePhrase' && triggerNode.id === voice.nodeId && Date.now() <= voice.expiresAt;
+        if (triggerType === 'voicePhrase') return false;
         // Boolean activity markers are valid payloads, but are not named events.
         const messageEvent = message && typeof message.event === 'string' ? message.event.toLowerCase() : '';
         // Scheduler ticks have no chat payload. Do not match message filters or

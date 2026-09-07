@@ -318,6 +318,7 @@ class EventFlowEditor {
                 triggers: [
                     { id: 'randomChance', name: '🎲 Random Chance' },
                     { id: 'timeInterval', name: '⏰ Time Interval' },
+                    { id: 'voicePhrase', name: '\uD83C\uDFA4 When I say...' },
                     { id: 'timeOfDay', name: '🕐 Time of Day' }
                 ]
             },
@@ -3160,6 +3161,7 @@ class EventFlowEditor {
                 case 'obsReplaybufferSaved': node.config = {}; break;
                 case 'compareProperty': node.config = { property: 'donoValue', operator: 'gt', value: 0 }; break;
                 case 'randomChance': node.config = { probability: 0.1, cooldownMs: 0, maxPerMinute: 0, requireMessage: true }; break;
+                case 'voicePhrase': node.config = { phrase: 'ninja celebration', cooldown: 5 }; break;
                 case 'timeInterval': node.config = { interval: 60 }; break;
                 case 'timeOfDay': node.config = { times: ['12:00'] }; break;
                 case 'midiNoteOn': node.config = { deviceId: '', note: '', channel: 1 }; break;
@@ -3696,6 +3698,9 @@ class EventFlowEditor {
 			case 'anyMessage':
 				html += `<p class="property-help">Triggers on any message regardless of content.</p>`;
 				break;
+            case 'voicePhrase':
+                html += `<div class="property-group"><label class="property-label">Exact spoken phrase</label><input class="property-input" id="prop-phrase" maxlength="160" value="${this.escapeHtml(node.config.phrase || '')}" placeholder="ninja celebration"></div><div class="property-group"><label class="property-label">Cooldown (seconds)</label><input type="number" class="property-input" id="prop-cooldown" min="1" max="300" value="${Math.max(1, Number(node.config.cooldown) || 5)}"></div><p class="property-help">Requires SSApp local voice control. Test your phrase before arming. No actions run while in Test mode.</p><a href="voice-control.html" target="_blank" rel="noopener">Open Voice Control</a>`;
+                break;
 			case 'timeInterval':
 				html += `<div class="property-group">
 					<label class="property-label">Interval (seconds)</label>

@@ -3248,3 +3248,15 @@ TTS.openAITTS = function(text, options) {
         console.error("OpenAI TTS error:", e);
     }
 };
+
+// A short renewable lease suppresses host voice commands during managed playback.
+// It expires if this renderer closes; external/OBS playback requires separate integration.
+(function(){
+    if (!window.ninjafy || typeof window.ninjafy.voicePlayback !== 'function') return;
+    var previous = false;
+    setInterval(function(){
+        var active = !!TTS.premiumQueueActive || !!(window.speechSynthesis && window.speechSynthesis.speaking);
+        if (active || previous) window.ninjafy.voicePlayback(active).catch(function(){});
+        previous = active;
+    }, 400);
+})();
