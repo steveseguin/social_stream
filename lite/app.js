@@ -8,6 +8,8 @@ import { YoutubeStreamingPlugin } from './plugins/youtubeStreamingPlugin.js';
 import { TwitchPlugin } from './plugins/twitchPlugin.js';
 import { TikTokPlugin } from './plugins/tiktokPlugin.js';
 import { KickPlugin } from './plugins/kickPlugin.js';
+import { FacebookPlugin } from './plugins/facebookPlugin.js';
+import { FACEBOOK_ENABLED } from './features.js';
 
 const overlayToggleDefs = [
   { key: 'transparent', id: 'session-opt-transparent', params: ['transparent'] },
@@ -2178,6 +2180,16 @@ function init() {
         onStatus: ({ plugin, state }) => addActivity({ kind: 'debug', plugin, message: `Status changed: ${state}`, timestamp: Date.now() })
       })
     ];
+    if (FACEBOOK_ENABLED) {
+      plugins.push(new FacebookPlugin({
+        messenger,
+        icon: '../sources/images/facebook.png',
+        debug: debugEnabled,
+        autoConnect: true,
+        onActivity: addActivity,
+        onStatus: ({ plugin, state }) => addActivity({ kind: 'debug', plugin, message: `Status changed: ${state}`, timestamp: Date.now() })
+      }));
+    }
     mountAllPlugins();
   } else {
     plugins = [];

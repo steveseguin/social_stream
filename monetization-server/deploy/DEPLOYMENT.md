@@ -1,6 +1,6 @@
 # VPS deployment — 2026-09-06
 
-The SSN monetization service is deployed on the existing SSN API VPS, separately from NinjaBacker. Its files live in `/opt/ssn-monetization`; systemd runs it as a restricted dynamic user on `127.0.0.1:3079`. Apache proxies only the three `/v1/` prefixes defined in `ssn-api.conf`. Existing PHP routes remain under `/var/www/html`.
+The SSN monetization service is deployed on the existing SSN API VPS, separately from NinjaBacker. Its files live in `/opt/ssn-monetization`; systemd runs it as a restricted dynamic user on `127.0.0.1:3079`. Apache proxies the `/v1/` route families defined in `ssn-api.conf`. Existing PHP routes remain under `/var/www/html`.
 
 Throne's public status endpoint, SSE connection and unsigned-webhook rejection were checked over HTTPS. eBay deliberately returns `503 EBAY_NOT_CONFIGURED` until application credentials and access are configured. Put these in root-owned `/etc/ssn-monetization.env` with mode 600, then restart the service. Do not put credentials in this repository.
 
@@ -37,12 +37,16 @@ The optional receiver is enabled on `/v1/ninjabacker/*`. The service unit enable
 Database/key state was backed up locally outside Git after deployment and checksums matched. Future backups must retain the encryption key together with SQLite state; the original full-server backup predates this receiver. Frontend changes require the normal beta publication flow. No real-money payment test was performed.
 
 
-## Public shop release preparation (September 7)
+## Public shop deployment (September 7)
 
-The local service template now enables `PUBLIC_SHOP_ENABLED=1`; Apache has an exact `/v1/shop` path-family proxy, leaving `/v1/shopify` unchanged. These VPS configuration changes have not been applied. SSH connection details are still required; the saved GCP address timed out.
+The public-shop API is enabled on the existing monetization service. Apache proxies exactly `/v1/shop` and its child paths; the eBay sandbox, Throne, NinjaBacker and existing PHP configuration were preserved. The repository's Apache template now reflects the active sandbox route too.
 
-Before applying: inspect the active VPS files, back up the service/configuration and SQLite database together with its encryption key, stage the current server sources plus the shared core at the documented relative path, and run the server tests there. Preserve the current environment file and other API routes. Validate Apache before reload, restart the monetization service, and check existing Throne/NinjaBacker/eBay paths as well as health.
+The service's package and lockfile matched the staged release, so dependencies were retained. Deployed the new server entry point, public-shop module, optional Shopify module (still disabled), and shared monetization core. The deployed eBay provider was intentionally retained. All 12 tests for this staged combination passed on the VPS.
 
-Then use a newly generated isolated publisher key to POST one example.com product, GET its public ID, update its selected/hidden state, and DELETE it; verify the final GET returns the handler's JSON 404. Check the same page and QR destination over public HTTPS. Never use a creator's publishing key or real catalog for this check.
+Before installation, code and configuration were backed up under `/root/ssn-backups/ssn-public-shop-12a8bd542bb9`. The SQLite online backup passed `integrity_check`; its matching encryption key and path metadata are included in that root-only directory. The existing environment file and live database/key were preserved. Apache configuration validation passed, and Apache and the service are active.
 
-The beta Pages workflow now publishes the standalone root viewer with content-versioned assets. Carry this deployment step forward when releasing the stable branch too, so a later stable-only deployment retains the public viewer.
+Public HTTPS verification passed using a newly generated temporary publisher: POST/read, stable viewer product links, automatic selected/hidden updates, DELETE, JSON 404 afterward, and clearing an already-open viewer page. The temporary catalog was removed. No real merchant account, creator catalog, payment, or chat message was involved. Health, Throne and NinjaBacker return 200; unconfigured production eBay returns 503 and the configured sandbox requires authentication (401), as expected.
+
+The beta Pages workflow publishes the standalone viewer at `/shop.html` with content-versioned dependencies. The public page and all bundled assets return 200. Carry this deployment step forward when releasing the stable branch too, so a later stable-only deployment retains the public viewer.
+
+Local connection notes are indexed in the operator's SSH README; use the SSN API entry, not the separate Chunkcast GCP server.
