@@ -223,10 +223,295 @@
 	var graphqlLastAttempt = 0;
 	var graphqlRefreshNeeded = true;
 	var networkClockOffset = 0;
+	var listingTimes = Object.create(null);
+	var listingsSnapshotTime = 0;
 
 	// Read-only fields used by eBay's HostLiveEventListings query. No account,
 	// bidding or checkout mutations, and no personalized watch/payment fields.
-	var ebayListingsQuery = "query HostLiveEventListings($liveEventListingsInput: LiveEventListingsInput!, $isAuthenticated: Boolean!, $enableSellerDiscountsQuery: Boolean = false, $includeLiveCommerceSignals: Boolean = true, $enableWinnerForLiveAuctionState: Boolean = true, $includePagination: Boolean = false, $skipAuctionStatus: Boolean = false, $enableBreakSpotsGroupings: Boolean = false, $enableCBTData: Boolean = false, $includeVehicleDetails: Boolean = false) {\n  liveEventListings(liveEventListingsInput: $liveEventListingsInput) {\n    eventId\n    pagination @include(if: $includePagination) {\n      nextCursor\n      __typename\n    }\n    liveEventListings {\n      eventId\n      listingId\n      listing {\n        ...EventListing\n        isWatched @include(if: $isAuthenticated)\n        __typename\n      }\n      caseBreakSpot @include(if: $enableBreakSpotsGroupings) {\n        id\n        name\n        break {\n          id\n          name\n          images {\n            url\n            __typename\n          }\n          type\n          __typename\n        }\n        __typename\n      }\n      listingV2 {\n        listingId\n        listing {\n          listingId\n          listingLifecycle {\n            endDate\n            __typename\n          }\n          sellerProduct @include(if: $includeVehicleDetails) {\n            motorVehicleIdentifier {\n              vin\n              __typename\n            }\n            __typename\n          }\n          category {\n            primaryCategory {\n              categoryId\n              name\n              ancestorIds\n              __typename\n            }\n            __typename\n          }\n          listingTerms @include(if: $includeVehicleDetails) {\n            itemLocation {\n              location\n              __typename\n            }\n            listingFulfillmentTerms {\n              inStorePickupSupported\n              __typename\n            }\n            listingPaymentTerms {\n              motorVehicleDeposit {\n                depositRequired\n                depositAmount {\n                  original {\n                    value\n                    currency\n                    __typename\n                  }\n                  __typename\n                }\n                __typename\n              }\n              __typename\n            }\n            __typename\n          }\n          ... on SingleSkuListing {\n            __typename\n            ...ListingV2Quantity\n            ...ListingV2Discount @include(if: $enableSellerDiscountsQuery)\n            items {\n              priceRollups @include(if: $enableCBTData) {\n                feeComputationReferenceData\n                __typename\n              }\n              __typename\n            }\n          }\n          ... on VariationListing {\n            __typename\n            ...ListingV2Quantity\n            ...ListingV2Discount @include(if: $enableSellerDiscountsQuery)\n            items {\n              priceRollups @include(if: $enableCBTData) {\n                feeComputationReferenceData\n                __typename\n              }\n              __typename\n            }\n          }\n          __typename\n        }\n        __typename\n      }\n      auction @skip(if: $skipAuctionStatus) {\n        winner {\n          id\n          userAccountName\n          __typename\n        }\n        __typename\n      }\n      liveAuctionState @skip(if: $skipAuctionStatus) {\n        status\n        recommendedPrices\n        endingAt\n        price {\n          amount\n          currency\n          __typename\n        }\n        leader {\n          id\n          userAccountName\n          __typename\n        }\n        winner @include(if: $enableWinnerForLiveAuctionState) {\n          id\n          userAccountName\n          __typename\n        }\n        __typename\n      }\n      visibility {\n        isVisible\n        __typename\n      }\n      pin\n      hostConsolePurchasable\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment Price on Price {\n  amount\n  currency\n  __typename\n}\n\nfragment Image on Image {\n  id\n  url\n  width\n  height\n  __typename\n}\n\nfragment EventListing on Listing {\n  id\n  title\n  status\n  currentPrice {\n    converted {\n      ...Price\n      __typename\n    }\n    original {\n      ...Price\n      __typename\n    }\n    __typename\n  }\n  image {\n    ...Image\n    __typename\n  }\n  minimalShippingCostToBuyer {\n    shippingType\n    isFree\n    __typename\n  }\n  bidCount\n  saleType\n  liveCommerceSignals @include(if: $includeLiveCommerceSignals) {\n    isExclusive\n    purchasable\n    __typename\n  }\n  endDate\n  __typename\n}\n\nfragment ListingV2Quantity on ListingV2 {\n  totalQuantity\n  items {\n    quantityAvailable\n    quantitySold\n    __typename\n  }\n  __typename\n}\n\nfragment ListingV2Discount on ListingV2 {\n  isItemOnSale\n  sellerDiscounts {\n    bestDiscounts {\n      id\n      startDate\n      endDate\n      offerCheckSumId\n      discountType {\n        id\n        __typename\n      }\n      ... on CodedCouponDiscount {\n        couponCode\n        discountSubType {\n          id\n          __typename\n        }\n        usageLimit {\n          maximumSavings {\n            amount\n            currency\n            __typename\n          }\n          maximumRedemptionsPerBuyer\n          __typename\n        }\n        name\n        rule {\n          discountOffered {\n            ... on SellerDiscountOfferedPercentage {\n              discountPercentage\n              discountApplyLevel\n              __typename\n            }\n            ... on SellerDiscountOfferedAmount {\n              discountAmountOff {\n                amount\n                currency\n                __typename\n              }\n              discountApplyLevel\n              __typename\n            }\n            __typename\n          }\n          __typename\n        }\n        __typename\n      }\n      ... on MarkdownSellerPromotion {\n        offerCheckSumId\n        endDate\n        __typename\n      }\n      ... on OrderDiscount {\n        offerCheckSumId\n        endDate\n        __typename\n      }\n      ... on ShippingDiscount {\n        offerCheckSumId\n        endDate\n        __typename\n      }\n      ... on VolumeDiscount {\n        offerCheckSumId\n        endDate\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  __typename\n}";
+	var ebayListingsQuery = `query HostLiveEventListings($liveEventListingsInput: LiveEventListingsInput!, $isAuthenticated: Boolean!, $enableSellerDiscountsQuery: Boolean = false, $includeLiveCommerceSignals: Boolean = true, $enableWinnerForLiveAuctionState: Boolean = true, $includePagination: Boolean = false, $skipAuctionStatus: Boolean = false, $enableBreakSpotsGroupings: Boolean = false, $enableCBTData: Boolean = false, $includeVehicleDetails: Boolean = false) {
+  liveEventListings(liveEventListingsInput: $liveEventListingsInput) {
+    eventId
+    pagination @include(if: $includePagination) {
+      nextCursor
+      __typename
+    }
+    liveEventListings {
+      eventId
+      listingId
+      listing {
+        ...EventListing
+        isWatched @include(if: $isAuthenticated)
+        __typename
+      }
+      caseBreakSpot @include(if: $enableBreakSpotsGroupings) {
+        id
+        name
+        break {
+          id
+          name
+          images {
+            url
+            __typename
+          }
+          type
+          __typename
+        }
+        __typename
+      }
+      listingV2 {
+        listingId
+        listing {
+          listingId
+          listingLifecycle {
+            endDate
+            __typename
+          }
+          sellerProduct @include(if: $includeVehicleDetails) {
+            motorVehicleIdentifier {
+              vin
+              __typename
+            }
+            __typename
+          }
+          category {
+            primaryCategory {
+              categoryId
+              name
+              ancestorIds
+              __typename
+            }
+            __typename
+          }
+          listingTerms @include(if: $includeVehicleDetails) {
+            itemLocation {
+              location
+              __typename
+            }
+            listingFulfillmentTerms {
+              inStorePickupSupported
+              __typename
+            }
+            listingPaymentTerms {
+              motorVehicleDeposit {
+                depositRequired
+                depositAmount {
+                  original {
+                    value
+                    currency
+                    __typename
+                  }
+                  __typename
+                }
+                __typename
+              }
+              __typename
+            }
+            __typename
+          }
+          ... on SingleSkuListing {
+            __typename
+            ...ListingV2Quantity
+            ...ListingV2Discount @include(if: $enableSellerDiscountsQuery)
+            items {
+              priceRollups @include(if: $enableCBTData) {
+                feeComputationReferenceData
+                __typename
+              }
+              __typename
+            }
+          }
+          ... on VariationListing {
+            __typename
+            ...ListingV2Quantity
+            ...ListingV2Discount @include(if: $enableSellerDiscountsQuery)
+            items {
+              priceRollups @include(if: $enableCBTData) {
+                feeComputationReferenceData
+                __typename
+              }
+              __typename
+            }
+          }
+          __typename
+        }
+        __typename
+      }
+      auction @skip(if: $skipAuctionStatus) {
+        winner {
+          id
+          userAccountName
+          __typename
+        }
+        __typename
+      }
+      liveAuctionState @skip(if: $skipAuctionStatus) {
+        status
+        recommendedPrices
+        endingAt
+        price {
+          amount
+          currency
+          __typename
+        }
+        leader {
+          id
+          userAccountName
+          __typename
+        }
+        winner @include(if: $enableWinnerForLiveAuctionState) {
+          id
+          userAccountName
+          __typename
+        }
+        __typename
+      }
+      visibility {
+        isVisible
+        __typename
+      }
+      pin
+      hostConsolePurchasable
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment Price on Price {
+  amount
+  currency
+  __typename
+}
+
+fragment Image on Image {
+  id
+  url
+  width
+  height
+  __typename
+}
+
+fragment EventListing on Listing {
+  id
+  title
+  status
+  currentPrice {
+    converted {
+      ...Price
+      __typename
+    }
+    original {
+      ...Price
+      __typename
+    }
+    __typename
+  }
+  image {
+    ...Image
+    __typename
+  }
+  minimalShippingCostToBuyer {
+    shippingType
+    isFree
+    __typename
+  }
+  bidCount
+  saleType
+  liveCommerceSignals @include(if: $includeLiveCommerceSignals) {
+    isExclusive
+    purchasable
+    __typename
+  }
+  endDate
+  __typename
+}
+
+fragment ListingV2Quantity on ListingV2 {
+  totalQuantity
+  items {
+    quantityAvailable
+    quantitySold
+    __typename
+  }
+  __typename
+}
+
+fragment ListingV2Discount on ListingV2 {
+  isItemOnSale
+  sellerDiscounts {
+    bestDiscounts {
+      id
+      startDate
+      endDate
+      offerCheckSumId
+      discountType {
+        id
+        __typename
+      }
+      ... on CodedCouponDiscount {
+        couponCode
+        discountSubType {
+          id
+          __typename
+        }
+        usageLimit {
+          maximumSavings {
+            amount
+            currency
+            __typename
+          }
+          maximumRedemptionsPerBuyer
+          __typename
+        }
+        name
+        rule {
+          discountOffered {
+            ... on SellerDiscountOfferedPercentage {
+              discountPercentage
+              discountApplyLevel
+              __typename
+            }
+            ... on SellerDiscountOfferedAmount {
+              discountAmountOff {
+                amount
+                currency
+                __typename
+              }
+              discountApplyLevel
+              __typename
+            }
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+      ... on MarkdownSellerPromotion {
+        offerCheckSumId
+        endDate
+        __typename
+      }
+      ... on OrderDiscount {
+        offerCheckSumId
+        endDate
+        __typename
+      }
+      ... on ShippingDiscount {
+        offerCheckSumId
+        endDate
+        __typename
+      }
+      ... on VolumeDiscount {
+        offerCheckSumId
+        endDate
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  __typename
+}`;
 
 	function refreshEbayListings() {
 		if (!ebayEventId || !isExtensionOn || !graphqlRefreshNeeded || graphqlPending || Date.now() - graphqlLastAttempt < 30000) return;
@@ -291,11 +576,11 @@
 		var result = details && details.result;
 		var hasSocketAuction = !!details;
 		var state = hasSocketAuction ? details.typename : auction.status;
-		var status = /Ended|ENDED/.test(state) ? "ended" : /Closed/.test(state) ? "closing" : /Running|Started|ACTIVE|RUNNING/.test(state) ? "active" : "ready";
+		var status = /Ended|ENDED/.test(state) ? "ended" : /Closed/.test(state) ? "closing" : /Active|Running|Started|ACTIVE|RUNNING/.test(state) ? "active" : "ready";
 		var winner = hasSocketAuction ? (result && result.winner) : (auction.winner || (graph.auction && graph.auction.winner));
 		var leader = hasSocketAuction ? details.bidder : auction.leader;
 		var price = ebayPrice(hasSocketAuction ? ((result && result.winningBid) || details.winningBid || details.startingPrice || item.originalPrice) : (auction.price || listing.currentPrice));
-		var nextBid = ebayPrice(details && details.recommendedBid);
+		var nextBid = status === "active" || status === "ready" ? ebayPrice(details && details.recommendedBid) : null;
 		var endingAt = hasSocketAuction ? details.endingAt : auction.endingAt;
 		var remaining = endingAt && status === "active" ? Math.max(0, Math.ceil((Date.parse(endingAt) - Date.now() - networkClockOffset) / 1000)) : null;
 		var bidder = leader && (leader.userName || leader.userAccountName) || "";
@@ -324,7 +609,10 @@
 	function currentNetworkAuction() {
 		var pinned = networkListingIds.filter(function (id) { return networkListings[id] ? networkListings[id].isPinnedInEvent : graphqlListings[id] && graphqlListings[id].pin; });
 		var id = pinned[0] || networkListingIds[networkListingIds.length - 1];
-		return id ? networkAuctionSnapshot(id) : null;
+		return id ? networkAuctionSnapshot(id) : networkReady || graphqlReady ? {
+			sourceMode: "network", status: "idle", title: "", cardCount: 0,
+			ebay: { eventId: ebayEventId, listingId: null }
+		} : null;
 	}
 
 	function queueNetworkSnapshots() {
@@ -365,6 +653,8 @@
 		if (kind === "EventListingsUpdated" || kind === "EventListingsUpdatedPatch") {
 			if (!Array.isArray(payload.eventListings)) return;
 			if (kind === "EventListingsUpdated") {
+				if (payload.serverCreatedAt < listingsSnapshotTime) return;
+				listingsSnapshotTime = payload.serverCreatedAt || listingsSnapshotTime;
 				networkListingIds = payload.eventListings.filter(function (item) { return item.isVisibleInEvent !== false; }).map(function (item) { return item.listingId; });
 				var previous = networkListings;
 				networkListings = Object.create(null);
@@ -374,6 +664,8 @@
 			}
 			payload.eventListings.forEach(function (item) {
 				if (!item.listingId) return;
+				if (listingTimes[item.listingId] > payload.serverCreatedAt) return;
+				listingTimes[item.listingId] = payload.serverCreatedAt || 0;
 				if (kind === "EventListingsUpdated") networkListings[item.listingId] = item;
 				else networkListings[item.listingId] = Object.assign({}, networkListings[item.listingId] || {}, item);
 				if (!graphqlListings[item.listingId]) graphqlRefreshNeeded = true;
@@ -382,6 +674,8 @@
 			});
 		} else if (payload.listingId) {
 			var id = payload.listingId;
+			if (listingTimes[id] > payload.serverCreatedAt) return;
+			listingTimes[id] = payload.serverCreatedAt || 0;
 			var previousUpdate = listingUpdates[id];
 			if (previousUpdate && previousUpdate.serverCreatedAt > payload.serverCreatedAt) return;
 			listingUpdates[id] = payload;
@@ -1426,6 +1720,7 @@
 	}
 	
 	function checkViewers(){
+		try { if (window !== window.top && window.top.__ssnEbayNetworkReady) return; } catch (e) {}
 		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
 			try {
 				var views = networkViewerCount !== null ? networkViewerCount : getViewerCountFromDom();
