@@ -11339,7 +11339,10 @@ function setupSocket() {
 					"tipjar"
 				);
 				resp = true;
-			} else if (data.action && data.action === "resetpoll") {
+			} else if (data.action === "commerceControl" && !settings.disablehost && window.handleMonetizationRequest) {
+                window.handleMonetizationRequest({ action: 'commerceControl', command: data.command, url: data.url, seconds: data.seconds });
+                resp = true;
+            } else if (data.action && data.action === "resetpoll") {
 				sendTargetP2P({ cmd: "resetpoll" }, "poll");
 				resp = true;
 			} else if (data.action && data.action === "closepoll") {

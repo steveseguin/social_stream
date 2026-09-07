@@ -7,6 +7,7 @@ import throneRelay from './throne-relay.js';
 import ebayShowcase from './ebay-showcase.js';
 import ninjaRelay from './ninjabacker-relay.js';
 import shopifyRelay from './shopify-relay.js';
+import publicShop from './public-shop.js';
 import fs from 'node:fs';
 
 export async function createServer(options = {}) {
@@ -59,6 +60,15 @@ export async function createServer(options = {}) {
 		app.route({ method: ['GET', 'POST', 'DELETE'], url: '/v1/ebay/*', handler: async (_request, reply) => reply.code(503).send({ code: 'EBAY_NOT_CONFIGURED' }) });
 		app.route({ method: ['GET', 'POST', 'DELETE'], url: '/v1/ebay-sandbox/*', handler: async (_request, reply) => reply.code(503).send({ code: 'EBAY_NOT_CONFIGURED' }) });
 	}
+    if (options.publicShop || process.env.PUBLIC_SHOP_ENABLED === '1') {
+        const db = options.publicShop?.db || new Database(process.env.SSN_MONETIZATION_DB || 'monetization.db');
+        if (!options.publicShop?.db) app.addHook('onClose', async () => db.close());
+        await app.register(publicShop, { db });
+    } else {
+        const unavailable = async (_request, reply) => reply.code(503).send({ error: 'Public shop pages are not configured on the SSN API.' });
+        app.route({ method: ['POST', 'DELETE'], url: '/v1/shop', handler: unavailable });
+        app.get('/v1/shop/:id', unavailable);
+    }
 	app.get('/v1/monetization/health', async () => ({ service: 'ssn-monetization', ok: true }));
 	return app;
 }

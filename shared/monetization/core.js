@@ -29,7 +29,11 @@
 		}).filter(Boolean) };
 	}
 	function commerceCurrent(c, now) {
-		var items = c && c.items || [];
+		var items = c && c.items || [], live = c && c.live;
+        if (live && (!live.until || live.until > now)) {
+            if (live.mode === 'hide') return null;
+            if (live.mode === 'show') return items.filter(function (item) { return item.url === live.url; })[0] || null;
+        }
 		return items.length ? items[c.display === 'first' ? 0 : Math.floor(now / (c.seconds * 1000)) % items.length] : null;
 	}
 	// Public display data only. Receiver authentication remains in the existing relay.

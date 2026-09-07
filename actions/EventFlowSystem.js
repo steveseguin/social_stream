@@ -4093,6 +4093,14 @@ class EventFlowSystem {
 				}
 				break;
 
+            case 'commerceControl': {
+                const request = { cmd: 'monetization', action: 'commerceControl', command: config.command || 'show', url: config.url || '', seconds: Number(config.seconds || 0) };
+                if (typeof window.handleMonetizationRequest === 'function') {
+                    const reply = await window.handleMonetizationRequest(request);
+                    if (reply.error) throw new Error(reply.error);
+                } else this.sendMessageToBackground(request);
+                break;
+            }
 			case 'showText':
 				{
 					const actionPayload = {

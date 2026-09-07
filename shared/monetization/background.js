@@ -63,7 +63,7 @@
 	function publicState() {
 		var c = cfg(),
 			l = list();
-		return { commerce: c.commerce, ebay: ebay.publicState(), throne: { enabled: c.throne.enabled, username: c.throne.username, qr: c.throne.qr, position: c.throne.position, url: c.throne.username ? 'https://throne.com/' + encodeURIComponent(c.throne.username) : '', rank: thronePrivate().gifts + 1, gifts: thronePrivate().gifts }, wishlist: { enabled: c.wishlist.enabled, qr: c.wishlist.qr, position: c.wishlist.position, rank: l.rank, total: l.total, item: l.current ? { name: l.current.name, amount: l.current.amount, currency: l.current.currency, image: l.current.image, url: M.purchaseURL(l.current, l.url) } : null, url: l.url }, ninja: { enabled: c.ninja.enabled, qr: c.ninja.qr, position: c.ninja.position, username: c.ninja.username, url: c.ninja.username ? 'https://ninjabacker.com/' + encodeURIComponent(c.ninja.username) : '' } };
+		return { commerce: commerceState(), ebay: ebay.publicState(), throne: { enabled: c.throne.enabled, username: c.throne.username, qr: c.throne.qr, position: c.throne.position, url: c.throne.username ? 'https://throne.com/' + encodeURIComponent(c.throne.username) : '', rank: thronePrivate().gifts + 1, gifts: thronePrivate().gifts }, wishlist: { enabled: c.wishlist.enabled, qr: c.wishlist.qr, position: c.wishlist.position, rank: l.rank, total: l.total, item: l.current ? { name: l.current.name, amount: l.current.amount, currency: l.current.currency, image: l.current.image, url: M.purchaseURL(l.current, l.url) } : null, url: l.url }, ninja: { enabled: c.ninja.enabled, qr: c.ninja.qr, position: c.ninja.position, username: c.ninja.username, url: c.ninja.username ? 'https://ninjabacker.com/' + encodeURIComponent(c.ninja.username) : '' } };
 	}
 	function broadcast(purchase) {
 		if (!ready || !isExtensionOn) return;
@@ -339,9 +339,97 @@
             throw e;
         } finally { clearTimeout(timer); }
     }
+    var liveCommerce = null, shopStatus = '', lastShopPayload = '', nextShopSync = 0;
+    function shopState() {
+        var p = privateState.publicShop || {};
+        return { url: p.published && /^[a-f0-9]{64}$/.test(p.id || '') ? 'https://socialstream.ninja/shop.html?id=' + p.id : '', published: !!p.published, status: shopStatus };
+    }
+    function commerceState() {
+        var c = cfg().commerce;
+        c.live = liveCommerce;
+        c.viewerURL = shopState().url;
+        return c;
+    }
+    async function syncShop(remove) {
+        var p = privateState.publicShop;
+        if (!p) {
+            var bytes = new Uint8Array(32); crypto.getRandomValues(bytes);
+            p = privateState.publicShop = { key: Array.prototype.map.call(bytes, function (n) { return n.toString(16).padStart(2, '0'); }).join(''), published: false };
+            await store(); // Save the write capability before the first request.
+        }
+        var controller = new AbortController(), timer = setTimeout(function () { controller.abort(); }, 12000);
+        try {
+            var payload = JSON.stringify(commerceState());
+            var headers = { Authorization: 'Bearer ' + p.key };
+            if (!remove) headers['Content-Type'] = 'application/json';
+            var response = await fetch('https://api.socialstream.ninja/v1/shop', { method: remove ? 'DELETE' : 'POST', credentials: 'omit', redirect: 'error', signal: controller.signal, headers: headers, body: remove ? undefined : payload });
+            var result; try { result = await response.json(); } catch (_) { throw new Error('Public pages are unavailable. Try again later.'); }
+            if (!response.ok) throw new Error(result.error || 'Could not update the public page.');
+            if (!remove && !/^[a-f0-9]{64}$/.test(result.id || '')) throw new Error('Invalid public page response.');
+            p.published = !remove; if (!remove) p.id = result.id;
+            await store(); lastShopPayload = remove ? '' : JSON.stringify(commerceState()); shopStatus = remove ? 'Public page removed.' : 'Public page updated.';
+        } catch (error) { shopStatus = 'Public page update failed. The last published version may still be visible.'; throw error; }
+        finally { clearTimeout(timer); }
+    }
+    async function refreshShop() {
+        if (privateState.publicShop && privateState.publicShop.published) {
+            try { await syncShop(false); } catch (_) {} // Local controls still work during an API outage.
+        }
+    }
+    async function importPublicProduct(request) {
+        var url; try { url = new URL(request.url); } catch (_) { throw new Error('Enter a public product URL.'); }
+        var host = url.hostname.toLowerCase();
+        if (url.protocol !== 'https:' || url.username || url.password || url.port || !/(^|\.)(gumroad\.com|itch\.io|ko-fi\.com|buymeacoffee\.com|fourthwall\.com)$/.test(host)) throw new Error('Quick import supports Gumroad, itch.io, Ko-fi, Buy Me a Coffee and Fourthwall links. Other links can be entered manually.');
+        var controller = new AbortController(), timer = setTimeout(function () { controller.abort(); }, 12000);
+        try {
+            var response = await fetch(url.href, { credentials: 'omit', redirect: 'error', signal: controller.signal });
+            if (!response.ok || !/text\/html/i.test(response.headers.get('content-type') || '')) throw new Error('This page could not be imported. Enter its details manually.');
+            var reader = response.body.getReader(), chunks = [], size = 0;
+            while (true) {
+                var part = await reader.read(); if (part.done) break;
+                size += part.value.length; if (size > 1048576) { await reader.cancel(); throw new Error('This page is too large to import. Enter its details manually.'); }
+                chunks.push(part.value);
+            }
+            var bytes = new Uint8Array(size), offset = 0;
+            chunks.forEach(function (chunk) { bytes.set(chunk, offset); offset += chunk.length; });
+            var html = new TextDecoder().decode(bytes);
+            // Parse only inert metadata tags, never page scripts, images, embeds or styles.
+            var tags = html.match(/<meta\s+[^>]*>|<title[^>]*>[^<]*<\/title>/gi) || [];
+            var doc = new DOMParser().parseFromString(tags.join(''), 'text/html');
+            function meta(name) { var node = doc.querySelector('meta[property="' + name + '"],meta[name="' + name + '"]'); return node ? node.getAttribute('content') || '' : ''; }
+            var name = meta('og:title') || meta('twitter:title') || (doc.querySelector('title') || {}).textContent || '';
+            var image = meta('og:image') || meta('twitter:image'), imageURL = '';
+            try { imageURL = image ? M.imageURL(new URL(image, url.href).href) : ''; } catch (_) {}
+            var item = M.commerce({ items: [{ name: name, url: url.href, image: imageURL, amount: null, currency: 'USD', purpose: 'shop' }] }).items[0];
+            if (!item) throw new Error('No public product details found. Enter them manually.');
+            return { item: item };
+        } finally { clearTimeout(timer); }
+    }
 	async function action(request) {
 		if (!ready) throw new Error('Settings are still loading.');
 		var c = cfg();
+        if (request.action === 'productImport') return importPublicProduct(request);
+        if (request.action === 'publishShop' || request.action === 'unpublishShop') {
+            await syncShop(request.action === 'unpublishShop'); broadcast(); return snapshot();
+        }
+        if (request.action === 'commerceControl') {
+            var command = request.command, items = c.commerce.items;
+            if (['show', 'next', 'hide', 'resume'].indexOf(command) === -1) throw new Error('Unknown product control.');
+            var duration = Number(request.seconds || 0);
+            if (!Number.isFinite(duration) || duration < 0 || duration > 3600) throw new Error('Use 0 to 3600 seconds.');
+            if (command === 'resume') liveCommerce = null;
+            else if (command === 'hide') liveCommerce = { mode: 'hide', until: duration ? Date.now() + duration * 1000 : 0 };
+            else {
+                if (!c.commerce.enabled || !items.length) throw new Error('Enable products and save at least one link first.');
+                var product = M.commerceCurrent(commerceState(), Date.now()), index = items.indexOf(product);
+                // Config normalization creates fresh objects; match the public URL instead.
+                index = product ? items.findIndex(function (item) { return item.url === product.url; }) : -1;
+                product = command === 'next' ? items[(index + 1) % items.length] : request.url ? items.filter(function (item) { return item.url === request.url; })[0] : product || items[0];
+                if (!product) throw new Error('Save this product before showing it.');
+                liveCommerce = { mode: 'show', url: product.url, until: duration ? Date.now() + duration * 1000 : 0 };
+            }
+            broadcast(); await refreshShop(); return snapshot();
+        }
         if (request.action === 'shopifyImport') return importShopify(request);
         if (request.action === 'shopifyDisconnect') {
             await shopifyReceiver.disconnect(); c.shopify = { enabled: false, shop: '' };
@@ -380,6 +468,8 @@
 			settings.monetization = { json: JSON.stringify(updated) };
 			await store();
 			connect();
+            if (liveCommerce && liveCommerce.mode === 'show' && !updated.commerce.items.some(function (item) { return item.url === liveCommerce.url; })) liveCommerce = null;
+            await refreshShop();
 			connectThrone();
 			broadcast();
 			if (updated.wishlist.enabled && updated.wishlist.announce && !c.wishlist.enabled) announce('wishlist');
@@ -449,7 +539,7 @@
 		return snapshot();
 	}
 	function snapshot() {
-		return { shopify: shopifyReceiver.snapshot(), receiver: { enabled: !!settings.socketserver, on: !!isExtensionOn, connected: !!(typeof socketserver !== 'undefined' && socketserver && socketserver.readyState === 1), providers: providerActivity }, ninjaReceiver: ninjaReceiver.snapshot(), ebay: ebay.snapshot(), throne: { status: throneStatus, gifts: thronePrivate().gifts, webhook: thronePrivate().hook ? 'https://api.socialstream.ninja/v1/throne/webhook/' + thronePrivate().hook : '' }, config: cfg(), list: list(), tokenSaved: !!privateState.token, status: cfg().ninja.reliable ? ninjaReceiver.snapshot().status : status, canUndo: !!lastPurchase };
+		return { publicShop: shopState(), commerceLive: liveCommerce, shopify: shopifyReceiver.snapshot(), receiver: { enabled: !!settings.socketserver, on: !!isExtensionOn, connected: !!(typeof socketserver !== 'undefined' && socketserver && socketserver.readyState === 1), providers: providerActivity }, ninjaReceiver: ninjaReceiver.snapshot(), ebay: ebay.snapshot(), throne: { status: throneStatus, gifts: thronePrivate().gifts, webhook: thronePrivate().hook ? 'https://api.socialstream.ninja/v1/throne/webhook/' + thronePrivate().hook : '' }, config: cfg(), list: list(), tokenSaved: !!privateState.token, status: cfg().ninja.reliable ? ninjaReceiver.snapshot().status : status, canUndo: !!lastPurchase };
 	}
 	window.handleMonetizationRequest = function (request, sender) {
 		if (sender && sender.tab && sender.tab.id !== null && sender.tab.id !== undefined) return Promise.resolve({ error: 'Use the SSN popup to configure monetization.' });
@@ -464,6 +554,7 @@
 	chrome.storage.local.get(['monetizationPrivate'], function (saved) {
 		var p = saved.monetizationPrivate;
 		if (p && typeof p === 'object') {
+            if (p.publicShop && /^[a-f0-9]{64}$/.test(p.publicShop.key || '')) privateState.publicShop = { key: p.publicShop.key, id: /^[a-f0-9]{64}$/.test(p.publicShop.id || '') ? p.publicShop.id : '', published: p.publicShop.published === true };
 			function ebayProfile(value) {
 				if (!value || !(value.key === '' || /^[a-f0-9]{64}$/.test(value.key || '')) || !Array.isArray(value.items) || !Array.isArray(value.seen)) return null;
 				return { key: value.key, environment: value.environment === 'sandbox' ? 'sandbox' : 'production', items: value.items.slice(0, 20), seen: value.seen.slice(-10000), cursor: Number(value.cursor) || 0 };
@@ -508,6 +599,10 @@
 		ebay.poll();
 		ninjaReceiver.poll();
         shopifyReceiver.poll();
+        if (privateState.publicShop && privateState.publicShop.published && Date.now() >= nextShopSync && JSON.stringify(commerceState()) !== lastShopPayload) {
+            nextShopSync = Date.now() + 60000;
+            queue = queue.then(refreshShop).catch(function () {});
+        }
 		connect();
 		connectThrone();
 		var c = cfg(),

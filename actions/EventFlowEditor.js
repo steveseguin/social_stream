@@ -414,6 +414,7 @@ class EventFlowEditor {
                 actions: [
                     { id: 'playTenorGiphy', name: '🖼️ Display Media Overlay' },
                     { id: 'showAvatar', name: '👤 Show Avatar' },
+                    { id: 'commerceControl', name: '\uD83D\uDECD Products & Support' },
                     { id: 'showText', name: '📝 Show Text' },
                     { id: 'clearLayer', name: '🗑️ Clear Layer' },
                     { id: 'playAudioClip', name: '🔊 Play Audio Clip' },
@@ -3269,6 +3270,8 @@ class EventFlowEditor {
 				case 'showText':
 					node.config = { text: 'Hello {username}!', x: 50, y: 50, width: 80, fontSize: 48, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#ffffff', backgroundColor: 'rgba(0,0,0,0.5)', padding: 20, borderRadius: 10, outlineWidth: 2, outlineColor: '#000000', animation: 'fadeIn', animationDuration: 500, duration: 5000, clearFirst: false };
 					break;
+				case 'commerceControl':
+                    node.config = { command: 'show', url: '', seconds: 0 }; break;
 				case 'clearLayer':
 					node.config = { layer: 'all' };
 					break;
@@ -5570,6 +5573,12 @@ class EventFlowEditor {
 						</label>
 					</div>`;
 				break;
+
+            case 'commerceControl':
+                html += `<div class="property-group"><label class="property-label" for="prop-command">Product control</label><select class="property-input" id="prop-command">${['show', 'next', 'hide', 'resume'].map(command => `<option value="${command}" ${node.config.command === command ? 'selected' : ''}>${{show:'Show now',next:'Next product',hide:'Hide products',resume:'Resume schedule'}[command]}</option>`).join('')}</select></div>
+                <div class="property-group"><label class="property-label" for="prop-url">Saved product URL (optional for Show)</label><input class="property-input" id="prop-url" type="url" value="${this.escapeHtml(node.config.url || '')}"></div>
+                <div class="property-group"><label class="property-label" for="prop-seconds">Seconds (0 = until changed)</label><input class="property-input" id="prop-seconds" type="number" min="0" max="3600" value="${Number(node.config.seconds) || 0}"><div class="property-help">Uses saved Products &amp; support links. Hide keeps activity alerts running. <a href="../docs/product-controls.html" target="_blank" rel="noopener">Guide</a></div></div>`;
+                break;
 
 			case 'clearLayer':
 				html += `<div class="property-group">
