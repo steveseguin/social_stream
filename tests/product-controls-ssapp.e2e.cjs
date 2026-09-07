@@ -138,6 +138,12 @@ fs.writeFileSync(path.join(profile, 'savedSync.json'), JSON.stringify({ streamID
   await controlDock.waitForFunction(()=>document.getElementById('commerce-state').textContent.includes('Disconnected'));
   assert(await controlDock.locator('[data-commerce=show]').isDisabled());
   await controlDock.waitForFunction(()=>!document.querySelector('[data-commerce=show]').disabled);
+  for (const language of ['ar','cs','de','es','fr','pt-br','th','tr','uk','zh-CN','zh-TW']) {
+   await controlDock.evaluate(language=>SSNPageI18n.setLanguage(language),language);
+   assert.equal(await controlDock.evaluate(()=>document.documentElement.dir),language==='ar'?'rtl':'ltr');
+   assert.notEqual(await controlDock.locator('[data-commerce=show]').textContent(),'Show');
+   assert(await controlDock.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Dock overflow: '+language);
+  }
   await controlDock.close();
   send({action:'commerceControl',command:'hide'});
   await bg.waitForFunction(async()=>(await handleMonetizationRequest({action:'get'})).commerceLive.mode==='hide');
@@ -156,6 +162,13 @@ fs.writeFileSync(path.join(profile, 'savedSync.json'), JSON.stringify({ streamID
   await viewer.locator('.shop-item').first().waitFor(); assert.equal(await viewer.locator('.shop-item').count(),2);
   assert.equal(await viewer.locator('.featured h2').textContent(),'Studio & art print');
   assert(await viewer.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  for (const language of ['ar','cs','de','es','fr','pt-br','th','tr','uk','zh-CN','zh-TW']) {
+   await viewer.evaluate(language=>SSNPageI18n.setLanguage(language),language);
+   assert.notEqual(await viewer.locator('h1').textContent(),'Products & support links');
+   assert.notEqual(await viewer.locator('[data-page-translate="commerce-checkout-note"]').textContent(),"Purchases and gifts open on the creator's chosen site. Check the final price and availability there.");
+   assert(await viewer.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Viewer overflow: '+language);
+  }
+  await viewer.evaluate(()=>SSNPageI18n.setLanguage('en-us'));
   if(process.env.SSN_GUIDE_SCREENSHOTS) {
    await app.evaluate(({BrowserWindow},url)=>{const w=BrowserWindow.getAllWindows().find(w=>w.webContents.getURL()===url);w.showInactive();},viewer.url());
    await viewer.waitForTimeout(500);

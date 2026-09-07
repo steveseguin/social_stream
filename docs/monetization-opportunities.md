@@ -65,6 +65,8 @@ The Shopify guide includes cropped, reviewed screenshots from actual SSApp, incl
 
 ## OBS controls and release check (2026-09-07)
 
+Release follow-up: commerce controls are translated across the eleven non-English SSN locales and all eight Stream Deck languages. The public viewer's static labels now use the shared page translation helper. Actual SSApp tests passed translated dock/viewer layouts, including Arabic. Additional Shopify HTTP tests passed Unicode signatures, currency precision, payment boundaries, privacy and test isolation. The production Shopify receiver remains disabled pending merchant delivery validation. See [commerce release checks](commerce-release.md) for deployment preservation and repeatable verification.
+
 The existing OBS Control Dock now includes a saved-product selector, Show/Next/Hide/Resume, timed overrides, and read-only selection state through the same commerce API used by Stream Deck and Event Flow. `?commerce` provides a products-only dock. The Monetization panel links to it; the illustrated OBS guide keeps setup instructions outside the popup. SSApp tests use isolated local traffic and cover commands, timer expiry, reconnects, and the separate audience overlay.
 
 The Stream Deck 0.2.2 commerce package was built in an isolated staging folder, validated with the pinned Elgato CLI 1.9.0, and passed the plugin runtime smoke test (69 presets, 5 actions). The local artifact is `ssn-streamdeck/plugin/release/ninja.socialstream.streamdeck-commerce-0.2.2.streamDeckPlugin`. It was subsequently installed and restarted in the real Stream Deck host; marketplace publication remains separate.
