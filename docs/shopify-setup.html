@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Shopify setup | Social Stream Ninja</title>
+		<link rel="icon" href="../icons/favicon.ico" />
+		<link rel="stylesheet" href="css/styles.css" />
+		<link rel="stylesheet" href="css/guides.css" />
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem('darkMode');
+				var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+				if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) document.documentElement.classList.add('dark-mode');
+			})();
+		</script>
+	</head>
+	<body>
+		<header>
+			<div class="container">
+				<div class="logo">
+					<a href="../index.html"><img src="../icons/logo.svg" alt="Social Stream Ninja Logo" /><span>Social Stream Ninja</span></a>
+				</div>
+				<nav>
+					<ul>
+						<li><a href="../index.html">Home</a></li>
+						<li><a href="features.html">Features</a></li>
+						<li><a href="download.html">Download</a></li>
+						<li><a href="guides.html" class="active">Guides</a></li>
+						<li><a href="commands.html">Commands &amp; API</a></li>
+						<li><a href="supported-sites.html">Supported Sites</a></li>
+						<li><a href="templates.html">Templates</a></li>
+						<li><a href="services.html">Hire</a></li>
+						<li><a href="support.html">Support</a></li>
+					</ul>
+				</nav>
+				<div class="header-controls">
+					<button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+						<svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg
+						><svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+							<circle cx="12" cy="12" r="5"></circle>
+							<line x1="12" y1="1" x2="12" y2="3"></line>
+							<line x1="12" y1="21" x2="12" y2="23"></line>
+							<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+							<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+							<line x1="1" y1="12" x2="3" y2="12"></line>
+							<line x1="21" y1="12" x2="23" y2="12"></line>
+							<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+							<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+						</svg>
+					</button>
+					<div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+				</div>
+			</div>
+		</header>
+		<section class="page-hero">
+			<div class="container"><h1>Show your Shopify products and purchases.</h1></div>
+		</section>
+<main class="guide-section"><div class="container">
+<section class="guide-card"><h2>Shopify in Social Stream Ninja</h2><p>Promote public products with images, prices, readable links and QR codes. Receive signed paid-order notifications as <strong>purchase</strong> alerts in the activity feed, multi-alerts and Event Flow. Product promotion works independently of payment alerts.</p><p><a href="#alerts">Connect purchases</a> &middot; <a href="#products">Import products</a> &middot; <a href="#overlays">OBS overlays</a> &middot; <a href="#tests">Test safely</a> &middot; <a href="#limits">Limits and troubleshooting</a></p><p><strong>Availability:</strong> automatic alerts require the Shopify receiver to be deployed and enabled on the SSN API. If it is unavailable, Save setup reports an error and does not enable Shopify. Public product import and manual promotion work independently. This guide describes the integration code; a live merchant test is still required before claiming live-service validation.</p></section>
+<section class="guide-card" id="alerts"><h2>Connect paid purchases</h2><ol><li>In Shopify, open <strong>Settings &rarr; Notifications &rarr; Webhooks</strong>. Locate the signing secret shown for manually created webhooks. This is different from a Storefront token.</li><li>In SSN, open <strong>Monetization &rarr; Shopify purchases &rarr; Setup</strong>. Enter your permanent <code>your-store.myshopify.com</code> domain and webhook signing secret. Enable Shopify purchases, then click <strong>Save setup</strong>.</li><li>Click <strong>Copy receiver URL</strong>. In Shopify, create a webhook with event <strong>Order payment</strong>, format <strong>JSON</strong>, and that receiver URL. Select a supported stable webhook API version; this integration was developed against the 2026-07 order contract.</li><li>Save the Shopify webhook. Keep SSN on to process purchases. The receiver verifies the raw-body HMAC and matching store before accepting order data.</li></ol>
+<figure class="guide-figure"><a href="images/monetization/shopify-setup.png" target="_blank" rel="noopener"><img class="guide-image" style="max-width:618px;margin:auto" src="images/monetization/shopify-setup.png" alt="SSApp Shopify setup with store domain, cleared signing secret, receiver URL and status" loading="lazy"></a><figcaption>Actual SSApp with an isolated example store. Select the screenshot to enlarge it.</figcaption></figure>
+<p>The signing secret is encrypted on the SSN receiver and cleared from the input after saving. A separate private reader key stays on this device. Neither is included in OBS links or viewer QR codes. Shopify uses its dedicated receiver; the older remote API control toggle is not needed.</p><p>A generated URL means configuration was saved, not that Shopify has delivered anything. Status distinguishes waiting, a verified test, a skipped event and a received purchase. Changing stores requires Disconnect first. Turning Shopify off pauses local processing; Disconnect deletes its receiver and queued events. Remove the corresponding Shopify webhook when disconnecting.</p><p><a href="https://help.shopify.com/en/manual/fulfillment/setup/notifications/webhooks">Shopify: manually creating webhooks</a> &middot; <a href="https://shopify.dev/docs/apps/build/webhooks/verify-deliveries">Shopify: verifying deliveries</a></p></section>
+<section class="guide-card" id="products"><h2>Import a public product</h2><ol><li>Enter your <code>myshopify.com</code> domain in Shopify setup. You do not need to enable purchase alerts or enter a signing secret to import products.</li><li>Expand <strong>Import a product</strong>, paste a public product URL, and click <strong>Load product details</strong>.</li><li>If tokenless access does not expose the product, supply a <strong>public Storefront token</strong>. Shopify's Headless channel can create one. Publish the product to that storefront and the Online Store. Do not paste an Admin API token or private Storefront token.</li><li>SSN opens the existing <strong>Products &amp; support links</strong> editor with the title, image, price and canonical public link returned by Shopify. Review them, click <strong>Add product or link</strong>, enable the catalog and <strong>Save setup</strong>.</li></ol><figure class="guide-figure"><a href="images/monetization/shopify-import.png" target="_blank" rel="noopener"><img class="guide-image" style="max-width:585px;margin:auto" src="images/monetization/shopify-import.png" alt="Imported Shopify product name, image URL, price and canonical public link in the shared product editor" loading="lazy"></a><figcaption>Example product details loaded into the shared editor for review before saving.</figcaption></figure><p>Import reads one product at a time using the Storefront API. The token is optional, used only for that request and cleared afterward. Shopify's canonical Online Store URL becomes the public link, including a custom domain when Shopify returns one. Unavailable products and products without a public Online Store link are excluded.</p><p>A price is filled only when the product's minimum and maximum variant prices match. Otherwise it stays blank; choose a specific price yourself only if it accurately describes the offer. Imported information is a snapshot, not continuous inventory or pricing synchronization. Review it when your store changes. You can always use manual product entry instead.</p><p><a href="https://shopify.dev/docs/api/storefront/2026-07">Shopify Storefront authentication</a> &middot; <a href="https://shopify.dev/docs/api/storefront/latest/queries/product">Product query</a> &middot; <a href="https://shopify.dev/docs/api/storefront-web-components/getting-started">Creating a public token using Headless</a></p></section>
+<section class="guide-card" id="overlays"><h2>Use the existing overlays</h2><p>Under <strong>Overlay link for</strong>, choose <strong>Products &amp; support links</strong>. Use <strong>Product showcase only</strong> for images, prices and QR codes, <strong>Support card only</strong> for a small permanent or periodic shop link, or <strong>Activity alerts only</strong> for purchases. Copy each desired OBS link to a separate Browser Source, starting at 800 &times; 600.</p><p>Set the optional alert source filter to <code>shopify</code> to show only Shopify activity in the generic monetization overlay. Enable Products &amp; support links for that generic view. Existing multi-alerts and the activity feed receive Shopify purchases independently of the product catalog.</p>
+<figure class="guide-figure"><a href="images/monetization/shopify-purchase.png" target="_blank" rel="noopener"><img class="guide-image" style="max-width:476px;margin:auto" src="images/monetization/shopify-purchase.png" alt="Shopify purchase alert with Anonymous buyer and public product title" loading="lazy"></a><figcaption>Paid purchase received through the local signed receiver and displayed by SSApp. Customer identity remains private.</figcaption></figure>
+<p>Product cards link to public product pages. Use <strong>Copy public link</strong> to share the clickable address in chat, and test the QR code from a phone at your final stream size. A purchase alert never borrows a QR code or image from an unrelated rotating product. Order webhooks do not supply reliable product image URLs, so purchase alerts use text; imported promotional cards can show images.</p><p>For Event Flow, choose Event Type <code>purchase</code> and filter the source/type to <code>shopify</code>. Compare <code>meta.commerce.orderTotal</code> for order-value rules and check <code>meta.commerce.currency</code> before comparing amounts. These are purchases: no <code>hasDonation</code> or <code>donoValue</code> is emitted, and donation goals do not increase. A promotional card labelled Gift does not change how order events are classified. Shipping to another person is not evidence of a creator gift.</p></section>
+<section class="guide-card" id="tests"><h2>Preview and test safely</h2><p><strong>Preview sample</strong> opens an isolated sample overlay without a session connection. It never triggers Event Flow, changes totals, or verifies a payment.</p><p>Shopify orders explicitly marked <code>test: true</code> are acknowledged and shown as tests in receiver status, without purchase alerts or actions. Missing test flags, unpaid/partially paid orders, cancelled orders, zero totals, and stale or invalid timestamps are also skipped. Use a development store for end-to-end testing. An admin sample that lacks a trustworthy test flag should not be sent into an active rewards workflow; the SSN preview is the safe appearance check.</p></section>
+<section class="guide-card" id="limits"><h2>Delivery limits and troubleshooting</h2><ul><li><strong>Receiver unavailable:</strong> the SSN API operator must deploy and enable the Shopify receiver. See the <a href="../monetization-server/README.md">server setup</a>. Do not use the legacy unsigned session webhook URL as a substitute.</li><li><strong>Waiting for an event:</strong> verify Order payment, JSON, the exact receiver URL, matching permanent store domain and the signing secret for that webhook. A custom app's webhook uses that app's signing secret, not the manual Notifications secret.</li><li><strong>Signed event skipped:</strong> this integration requires a positive fully paid order, <code>test: false</code> and a signed body <code>updated_at</code> within the past seven days (with five minutes of future-clock tolerance). It does not infer payment from order creation, fulfillment or inventory.</li><li><strong>SSN was offline:</strong> accepted events queue for up to seven days. Restart SSN to resume. Status and pending work survive a receiver restart. The service has bounded storage and asks Shopify to retry when it cannot durably queue work.</li><li><strong>Duplicates:</strong> the receiver deduplicates by store/order, even if Shopify delivery IDs differ. Deduplication records last seven days. SSN persists handled IDs before acknowledgment. A crash between an external action and that save can still repeat the action; use your own idempotency guard for consequential automation.</li><li><strong>Missing buyer name:</strong> intentional. SSN excludes customer names, email, addresses, order notes, line-item custom properties, checkout URLs and raw order IDs. Public product titles remain plain text.</li><li><strong>Refunds or order changes:</strong> this is a live alert feed, not an accounting or fulfillment system. Refunds, cancellations and edited totals do not reverse prior alerts. No order-history reconciliation or automatic product removal is included.</li></ul><p>See the <a href="event-reference.html#shopify-purchases">Shopify event contract</a> and <a href="creator-store-setup.html#obs">shared product and QR guide</a>.</p></section>
+</div></main><script src="js/main.js"></script></body></html>

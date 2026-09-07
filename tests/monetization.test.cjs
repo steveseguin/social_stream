@@ -61,6 +61,7 @@ function service(initialDisk = {}) {
 	vm.createContext(c);
 	vm.runInContext(fs.readFileSync(path.join(root, 'shared/monetization/ebay-service.js'), 'utf8'), c);
 	vm.runInContext(fs.readFileSync(path.join(root, 'shared/monetization/ninja-service.js'), 'utf8'), c);
+	vm.runInContext(fs.readFileSync(path.join(root, 'shared/monetization/shopify-service.js'), 'utf8'), c);
 	vm.runInContext(fs.readFileSync(path.join(root, 'shared/monetization/background.js'), 'utf8'), c);
 	return {
 		c,
@@ -429,3 +430,13 @@ test('An unavailable eBay service cannot enable the source or overwrite other su
   const bad = await s.request('fourthwallImport', { url: 'http://localhost/private', token: 'x' }); assert(bad.error); assert.equal(requests.length, 1);
   s.c.noteMonetizationProvider('kofi', false); const state = await s.request('get'); assert.equal(state.receiver.providers.kofi.accepted, false); assert.equal(state.receiver.connected, false);
  });
+
+test('Shopify import confines tokens to the named store and preserves receiver credentials across app reload', async () => {
+ const s = service(); const calls = [], hook = 'https://api.socialstream.ninja/v1/shopify/webhook/' + 'a'.repeat(64);
+ s.c.fetch = async (url, options) => { calls.push({ url, options }); return { ok: true, json: async () => ({ webhook: hook }), text: async () => JSON.stringify({ data: { product: { title: 'Print', availableForSale: true, onlineStoreUrl: 'https://shop.example/products/print', priceRange: { minVariantPrice: { amount: '10', currencyCode: 'USD' }, maxVariantPrice: { amount: '10', currencyCode: 'USD' } } } } }) }; };
+ let result = await s.request('shopifyImport', { shop: 'fixture.myshopify.com', url: 'https://example.com/products/print?variant=123', token: 'public-token' });
+ assert.equal(result.item.name, 'Print'); assert.equal(calls[0].url, 'https://fixture.myshopify.com/api/2026-07/graphql.json'); assert.equal(calls[0].options.headers['X-Shopify-Storefront-Access-Token'], 'public-token'); assert.equal(calls[0].options.redirect, 'error'); assert(!JSON.stringify(s.disk).includes('public-token'));
+ result = await s.request('shopifyImport', { shop: 'localhost', url: 'https://example.com/products/print', token: 'private-token' }); assert(result.error); assert.equal(calls.length, 1);
+ result = await s.request('save', { config: { shopify: { enabled: true, shop: 'fixture.myshopify.com' } }, shopifySecret: 'fixture-webhook-secret' }); assert(!result.error, result.error); assert.equal(result.shopify.webhook, hook); assert(!JSON.stringify(s.disk).includes('fixture-webhook-secret'));
+ const reload = service(s.disk); const restored = await reload.request('get'); assert.equal(restored.shopify.webhook, hook); assert.equal(s.tips.length, 0);
+});
