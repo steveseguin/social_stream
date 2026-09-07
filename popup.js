@@ -9865,7 +9865,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         // Add success feedback after audio plays
         if (this.audio) {
             this.audio.onended = () => {
-                this.showFeedback(`${serviceName} test completed successfully`, 'success', section);
+                this.showFeedback(`Audio played here. Check OBS playback separately.`, 'success', section);
                 this.audio.onended = originalOnEnded;
                 this.finishedAudio();
             };
@@ -9945,7 +9945,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 this.finishedAudio();
             }
         } catch (error) {
-            this.showFeedback(`Error: ${error.message}`, 'error');
+            this.showFeedback(`Error: ${error.message}`, 'error', section);
             this.finishedAudio();
             console.error(error);
         }
@@ -9981,7 +9981,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 audioElement.src = this.activeAudioUrl;
                 audioElement.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
                 audioElement.onended = () => {
-                    this.showFeedback("System TTS test completed successfully", "success", section);
+                    this.showFeedback("Audio played here. Check OBS playback separately.", "success", section);
                     this.finishedAudio(section);
                 };
                 audioElement.onerror = () => {
@@ -9997,7 +9997,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             }
         }
 
-        if (!window.speechSynthesis) return;
+        if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+            throw new Error("System speech is unavailable here. Choose another TTS provider.");
+        }
         
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = settings.system.lang;
@@ -10006,6 +10008,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         utterance.pitch = settings.system.pitch;
         
         const voices = this.voices && this.voices.length ? this.voices : populateSystemVoiceDropdowns();
+        if (!voices || !voices.length) {
+            throw new Error("No system voices are available yet. Retry, or choose another TTS provider.");
+        }
         if (voices && settings.system.voice) {
             const matchingVoice = resolvePopupSystemVoice(voices, settings.system.voice, settings.system.lang);
             if (matchingVoice) {
@@ -10013,6 +10018,22 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             }
         }
         
+        this.activeSystemUtterance = utterance;
+        this.premiumQueueActive = true;
+        this.setTestRunning(section, true, "Generating...");
+        utterance.onstart = () => {
+            if (this.activeSystemUtterance === utterance) this.setTestRunning(section, true, "Playing...");
+        };
+        utterance.onend = () => {
+            if (this.activeSystemUtterance !== utterance) return;
+            this.showFeedback("Browser reported speech complete. Check OBS playback separately.", "success", section);
+            this.finishedAudio(section);
+        };
+        utterance.onerror = (event) => {
+            if (this.activeSystemUtterance !== utterance) return;
+            this.showFeedback("System voice could not speak (" + (event.error || "unknown error") + "). Try another voice or provider.", "error", section);
+            this.finishedAudio(section);
+        };
         window.speechSynthesis.speak(utterance);
     },
 	
@@ -10041,7 +10062,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                     this.activeAudioUrl = URL.createObjectURL(audioBlob);
 					audioElement.src = this.activeAudioUrl;
 					audioElement.onended = () => {
-                        this.showFeedback("Kokoro TTS test completed successfully", 'success', section);
+                        this.showFeedback("Audio played here. Check OBS playback separately.", 'success', section);
                         this.finishedAudio(section);
                     };
 					
@@ -10075,7 +10096,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 			const audioElement = document.createElement("audio");
             this.activeAudioElement = audioElement;
 			audioElement.onended = () => {
-                this.showFeedback("Kokoro TTS test completed successfully", 'success', section);
+                this.showFeedback("Audio played here. Check OBS playback separately.", 'success', section);
                 this.finishedAudio(section);
             };
 			
@@ -10557,6 +10578,13 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     cancelTest(section = this.currentTtsSection || "") {
         if (!this.premiumQueueActive) return;
         this.cancelRequested = true;
+        if (this.activeSystemUtterance) {
+            this.activeSystemUtterance.onstart = null;
+            this.activeSystemUtterance.onend = null;
+            this.activeSystemUtterance.onerror = null;
+            this.activeSystemUtterance = null;
+            try { window.speechSynthesis.cancel(); } catch (e) {}
+        }
         try {
             if (this.activeAudioElement) {
                 this.activeAudioElement.pause();
@@ -10574,6 +10602,12 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     },
 
     finishTtsTest(section = this.currentTtsSection || "", keepCancelFlag = false) {
+        if (this.activeSystemUtterance) {
+            this.activeSystemUtterance.onstart = null;
+            this.activeSystemUtterance.onend = null;
+            this.activeSystemUtterance.onerror = null;
+            this.activeSystemUtterance = null;
+        }
         if (this.activeAudioUrl) {
             try {
                 URL.revokeObjectURL(this.activeAudioUrl);
