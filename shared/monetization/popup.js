@@ -211,7 +211,13 @@
 			u.searchParams.set('mode', by('mode').value);
             ['view', 'style', 'scale', 'cardevery', 'cardfor', 'onlytype'].forEach(function (key) { if (by(key).value) u.searchParams.set(key, by(key).value); });
             if (typeof getSelectedTranslationLinkParam === 'function') { var language = new URLSearchParams(getSelectedTranslationLinkParam().replace(/^&/, '')).get('ln'); if (language) u.searchParams.set('ln', language); }
-			by('overlay').href = u.href;
+			var control = new URL('obs-control-dock.html', u.href);
+            control.searchParams.set('session', lastResponse.streamID);
+            control.searchParams.set('commerce', '');
+            if (language) control.searchParams.set('ln', language);
+            if (serverValue && /^wss?:\/\//i.test(serverValue)) control.searchParams.set('server', serverValue);
+            by('control-dock').href = control.href;
+            by('overlay').href = u.href;
 			by('overlay').textContent = 'Open ' + (by('mode').value === 'commerce' ? tr('commerce-title', 'Products & support links') : by('mode').value === 'ebay' ? 'eBay Showcase' : by('mode').value === 'wishlist' ? 'Wishlist Rank-Up' : by('mode').value === 'throne' ? 'Throne Gifts' : 'NinjaBacker') + ' overlay';
 		} catch (_) {}
 		var name = by('ninja-username').value.trim();

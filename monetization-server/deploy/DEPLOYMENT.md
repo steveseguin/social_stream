@@ -35,3 +35,14 @@ Throne's public status endpoint, SSE connection and unsigned-webhook rejection w
 The optional receiver is enabled on `/v1/ninjabacker/*`. The service unit enables it; existing PHP/Throne/eBay paths were checked after deployment. Seven server tests passed on the VPS. Actual SSApp tests covered both modes, signed delivery, private setup, offline/server-restart recovery, test-tip isolation, deduplication and acknowledgments. Popup/mobile screenshots were reviewed. Public HTTPS tests with an isolated synthetic receiver passed; its test rows were removed. The actual NinjaBacker sender transport also reached the receiver without any NinjaBacker changes.
 
 Database/key state was backed up locally outside Git after deployment and checksums matched. Future backups must retain the encryption key together with SQLite state; the original full-server backup predates this receiver. Frontend changes require the normal beta publication flow. No real-money payment test was performed.
+
+
+## Public shop release preparation (September 7)
+
+The local service template now enables `PUBLIC_SHOP_ENABLED=1`; Apache has an exact `/v1/shop` path-family proxy, leaving `/v1/shopify` unchanged. These VPS configuration changes have not been applied. SSH connection details are still required; the saved GCP address timed out.
+
+Before applying: inspect the active VPS files, back up the service/configuration and SQLite database together with its encryption key, stage the current server sources plus the shared core at the documented relative path, and run the server tests there. Preserve the current environment file and other API routes. Validate Apache before reload, restart the monetization service, and check existing Throne/NinjaBacker/eBay paths as well as health.
+
+Then use a newly generated isolated publisher key to POST one example.com product, GET its public ID, update its selected/hidden state, and DELETE it; verify the final GET returns the handler's JSON 404. Check the same page and QR destination over public HTTPS. Never use a creator's publishing key or real catalog for this check.
+
+The beta Pages workflow now publishes the standalone root viewer with content-versioned assets. Carry this deployment step forward when releasing the stable branch too, so a later stable-only deployment retains the public viewer.
