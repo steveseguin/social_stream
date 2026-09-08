@@ -194,6 +194,19 @@ async function run() {
  check(!featured.searchParams.has('viewerbarbg') && !featured.searchParams.has('transparent'),'Dock options do not leak into featured URL');
  const audience=d.getElementById('nc-audience-room');
  check(!!audience,'Audience section is registered in the menu');
+ const audienceToggle=d.getElementById('wrapper-audience-room-options');
+ check(!!audienceToggle && !!audience.closest('.wrapper.beginner-basic'),'Audience uses the standard beginner accordion');
+ for(const query of ['Audience Room','Ninja Chatter','Allow Cheer overlay effect','Ingress API Key']) {
+  const results=await search(query);
+  const match=results.find(e=>e.textContent.includes('Audience Room'));
+  check(!!match,'Audience search finds '+query);
+  match.click();
+  check(audienceToggle.checked && visible(audience),'Audience result opens its accordion');
+  if(query==='Allow Cheer overlay effect') check(audience.querySelector('[data-nc-cheer]').closest('details').open,'Cheer search opens optional controls');
+  if(query==='Ingress API Key') check(audience.querySelector('#sscapikey').closest('details').open,'Relay search opens optional controls');
+ }
+ audienceToggle.checked=false;
+
  check(audience.querySelector('[data-nc-status]').textContent.includes('Chrome extension'),'Electron explains the audience pilot limitation');
  check([...audience.querySelectorAll('[data-nc-op]')].every(button=>button.disabled),'Unqualified pairing controls stay disabled');
  check(!!audience.querySelector('[data-setting="ssc"]'),'Existing desktop relay remains available');
@@ -278,6 +291,21 @@ async function run() {
     const input=d.getElementById('searchInput');input.scrollIntoView();
     const scroll=d.scrollingElement;scroll.scrollTop=scroll.scrollHeight;
     await new Promise(r=>setTimeout(r,350));
+    const panel=d.getElementById('nc-audience-room');
+    d.getElementById('wrapper-audience-room-options').checked=true;
+    const field=panel.querySelector('[data-nc-sources]'),label=panel.querySelector('label[for="nc-publish-sources"]');
+    const fr=field.getBoundingClientRect(),lr=label.getBoundingClientRect();
+    if(lr.bottom>fr.top || fr.width<100 || fr.right>w.innerWidth) throw Error('Audience field layout failed');
+    const style=w.getComputedStyle(field);
+    function luminance(color) {
+     const channels=color.match(/[0-9.]+/g).slice(0,3).map(v=>{v=Number(v)/255;return v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4);});
+     return channels[0]*0.2126+channels[1]*0.7152+channels[2]*0.0722;
+    }
+    const fg=luminance(style.color),bg=luminance(style.backgroundColor);
+    if((Math.max(fg,bg)+0.05)/(Math.min(fg,bg)+0.05)<4.5) throw Error('Audience input contrast failed');
+    const header=d.querySelector('label[for="wrapper-audience-room-options"]'),peer=d.querySelector('label[for="wrapper-additional-chat-services-options"]');
+    if(w.getComputedStyle(header).backgroundColor!==w.getComputedStyle(peer).backgroundColor) throw Error('Audience header theme differs');
+    d.getElementById('wrapper-audience-room-options').checked=false;
     const r=input.getBoundingClientRect();
     return {visible:r.width>100 && r.top>=0 && r.bottom<=w.innerHeight && r.right<=w.innerWidth,dark:w.matchMedia('(prefers-color-scheme: dark)').matches};
    })()`);
