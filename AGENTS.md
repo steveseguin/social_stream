@@ -177,7 +177,8 @@ Sample payloads based on the fake test data in [background.js](./background.js):
 
 ## Menu Regression Checks
 
-- Do not automatically launch SSApp or run popup.html checks for every task, run, commit, or push. Run `node tests/popup-search.test.js` and `node tests/popup-search-electron.test.cjs` only when the changes affect popup menus, popup search, or the app integration used by the popup, or when Steve explicitly requests them. These tests are not a blanket prerequisite for the Git Push Contract.
+- Never automatically launch or test SSApp. `node tests/popup-search-electron.test.cjs` is optional, excluded from mandatory test suites and required checks, and must run only when Steve explicitly requests SSApp testing. Popup changes, commits, and pushes do not authorize it.
+- Run `node tests/popup-search.test.js` when changes affect popup menus or popup search, or when Steve explicitly requests it. It is not a blanket prerequisite for the Git Push Contract.
 - The Electron suite requires the sibling `ssapp` checkout and local Playwright; set `SSAPP_REPO` if the app checkout is elsewhere. It uses an isolated profile and local relay, never live source channels.
 
 

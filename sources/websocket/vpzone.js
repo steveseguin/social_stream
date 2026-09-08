@@ -879,9 +879,9 @@
 	function getAdvancedControlSettings() {
 		try {
 			var parsed = JSON.parse(localStorage.getItem(ADVANCED_CONTROLS_KEY) || "{}") || {};
-			return { syncDeleteMessages: !!parsed.syncDeleteMessages, syncBlockUsers: !!parsed.syncBlockUsers };
+			return { syncDeleteMessages: parsed.syncDeleteMessages !== false, syncBlockUsers: !!parsed.syncBlockUsers };
 		} catch (e) {
-			return { syncDeleteMessages: false, syncBlockUsers: false };
+			return { syncDeleteMessages: true, syncBlockUsers: false };
 		}
 	}
 

@@ -408,6 +408,11 @@ window.addEventListener('youtubeDelete', function(e) {
 	if (!e.detail) {
 		return;
 	}
+	extensionRelayQueue = extensionRelayQueue.filter(function(message) {
+		if (e.detail.meta && e.detail.meta.messageId) return String(message.meta && message.meta.messageId) !== String(e.detail.meta.messageId);
+		if (e.detail.userid) return message.userid !== e.detail.userid;
+		return message.chatname !== e.detail.chatname;
+	});
 	try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { delete: e.detail }, function() {
 			if (chrome.runtime.lastError) {

@@ -1933,9 +1933,6 @@ function ensureClientFactory() {
 			if (!deletePayload.id && !deletePayload.username && !deletePayload.chatname) {
 				return;
 			}
-			if (!deletePayload.id) {
-				deletePayload.onlyLast = true;
-			}
 			pushDeleteMessage(deletePayload);
 		});
 
