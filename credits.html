@@ -809,11 +809,6 @@
 		return hasDonationSignal(data) || hasMembershipSignal(data);
 	}
 
-	function getPositiveDonationAmount(value) {
-		const amount = parseFloat(String(value || '').replace(/,/g, ''));
-		return !isNaN(amount) && amount > 0 ? amount : 0;
-	}
-
 	function userHasDonationActivity(user) {
 		return !!(user && (user.hasDonationActivity || user.donations > 0));
 	}
@@ -929,15 +924,12 @@
 		if (hasDonationSignal(data)) {
 			user.hasDonationActivity = true;
 			try {
-				const source = data.type ? data.type.toLowerCase() : '';
-				let donationAmount = getPositiveDonationAmount(data.donoValue);
-				if (!donationAmount) {
-					donationAmount = convertToUSD(data.hasDonation, source);
-				}
+				const donationAmount = getCreditsDonationValue(data);
 
 				if (!isNaN(donationAmount) && donationAmount > 0) {
-					user.donations += donationAmount;
-					console.log(`Added donation of ${donationAmount} for ${data.chatname}`);
+					const increment = getCreditsDonationIncrement(user, data, donationAmount);
+					user.donations += increment;
+					console.log(`Added donation of ${increment} for ${data.chatname}`);
 				} else {
 					console.warn(`Could not determine donation value for ${data.chatname}:`, data.hasDonation);
 				}
@@ -1034,7 +1026,8 @@
 					donations: user.donations,
 					hasDonationActivity: userHasDonationActivity(user),
 					isMember: !!user.isMember,
-					avatarUrl: user.avatarUrl || null
+					avatarUrl: user.avatarUrl || null,
+					giftStreaks: sanitizeCreditsGiftStreaks(user.giftStreaks)
 				});
 			});
 			localStorage.setItem(creditsStorageKey, JSON.stringify({
@@ -1074,6 +1067,7 @@
 					user.hasDonationActivity = user.donations > 0 || savedFilterMode === 'onlydonors' || (savedFilterMode === 'onlysupporters' && !user.isMember);
 				}
 				user.avatarUrl = item.avatarUrl || null;
+				user.giftStreaks = sanitizeCreditsGiftStreaks(item.giftStreaks);
 			});
 		} catch (e) {
 			console.warn('Could not load persisted credits:', e);
@@ -1111,6 +1105,7 @@
 			user.hasDonationActivity = !!item.hasDonationActivity || user.donations > 0;
 			user.isMember = !!item.isMember;
 			user.avatarUrl = item.avatarUrl || null;
+			user.giftStreaks = sanitizeCreditsGiftStreaks(item.giftStreaks);
 			return user;
 		}).filter(Boolean);
 	}

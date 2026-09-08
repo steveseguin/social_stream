@@ -2346,17 +2346,8 @@ function hasBackgroundCreditsMembershipSignal(data) {
 }
 
 function getBackgroundCreditsDonationAmount(data) {
-	var amount = parseFloat(String((data && data.donoValue) || "").replace(/,/g, ""));
-	if (Number.isFinite(amount) && amount > 0) {
-		return amount;
-	}
 	try {
-		if (data && data.hasDonation && typeof convertToUSD === "function") {
-			amount = Number(convertToUSD(data.hasDonation, String(data.type || "").toLowerCase()));
-			if (Number.isFinite(amount) && amount > 0) {
-				return amount;
-			}
-		}
+		return getCreditsDonationValue(data);
 	} catch (e) {}
 	return 0;
 }
@@ -2370,7 +2361,8 @@ function serializeBackgroundCreditsUsers() {
 			donations: user.donations,
 			hasDonationActivity: !!user.hasDonationActivity,
 			isMember: !!user.isMember,
-			avatarUrl: user.avatarUrl || null
+			avatarUrl: user.avatarUrl || null,
+			giftStreaks: sanitizeCreditsGiftStreaks(user.giftStreaks)
 		};
 	});
 }
@@ -2425,7 +2417,8 @@ function ensureBackgroundCreditsLoaded() {
 								donations: Math.max(0, Number(item.donations) || 0),
 								hasDonationActivity: !!item.hasDonationActivity || Number(item.donations) > 0,
 								isMember: !!item.isMember,
-								avatarUrl: item.avatarUrl || null
+								avatarUrl: item.avatarUrl || null,
+								giftStreaks: sanitizeCreditsGiftStreaks(item.giftStreaks)
 							};
 							backgroundCreditsUsers.set(user.name + "-" + user.type, user);
 						});
@@ -2490,7 +2483,7 @@ function captureBackgroundCreditsMessage(data) {
 		if (hasBackgroundCreditsMembershipSignal(data)) user.isMember = true;
 		if (data.hasDonation) {
 			user.hasDonationActivity = true;
-			user.donations += getBackgroundCreditsDonationAmount(data);
+			user.donations += getCreditsDonationIncrement(user, data, getBackgroundCreditsDonationAmount(data));
 		}
 		backgroundCreditsUpdated = Date.now();
 		scheduleBackgroundCreditsSave();
