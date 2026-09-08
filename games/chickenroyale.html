@@ -2087,7 +2087,7 @@
         setTransportConnected('p2p', Object.keys(p2pConnectedPeers).length > 0);
     }
 
-    if (!useServerOnlyTransport()) {
+    if (!urlParams.has('demo') && !useServerOnlyTransport()) {
         const iframe = document.createElement("iframe");
         iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}${lanonly}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
         iframe.style.width = "0px";
@@ -2111,7 +2111,7 @@
     }
 
     // Optional direct WebSocket (?server=wss://...)
-    if (urlParams.has('server')) {
+    if (!urlParams.has('demo') && urlParams.has('server')) {
         const serverURL = urlParams.get('server') || 'wss://io.socialstream.ninja';
         let socket = null; let attempts = 1;
         function connect() {
@@ -2138,7 +2138,7 @@
 
     // Optional extension relay (?server2 / ?server3)
     (function setupExtensionSocket() {
-        if (!(urlParams.has('server2') || urlParams.has('server3'))) return;
+        if (urlParams.has('demo') || !(urlParams.has('server2') || urlParams.has('server3'))) return;
         const serverURL = urlParams.has('server2') ? (urlParams.get('server2') || 'wss://io.socialstream.ninja/extension') : (urlParams.get('server3') || 'wss://io.socialstream.ninja/extension');
         let socket = null; let attempts = 1;
         function connect() {

@@ -42,3 +42,7 @@ Google retired the Tenor API on June 30, 2026. Configure a **GIPHY API key** in 
 Trigger text is removed only after a successful lookup when the hide-trigger option is enabled. Missing keys, empty results, rate limits, and network failures preserve the original chat. Existing direct media URLs and saved Event Flow media actions are unchanged; Tenor's API retirement does not mean every Tenor-hosted URL is unavailable.
 
 References: [Tenor retirement notice](https://support.google.com/tenor/answer/10455265?hl=en), [GIPHY migration guide](https://developers.giphy.com/docs/api/tenor-migration/). Design direction informed by the cozy, cat, retro and minimalist collections in the [Streamlabs library](https://streamlabs.com/library/); artwork and CSS here are original.
+
+## Illustrated collections
+
+Eight matching artwork packs now cover regular chat, featured messages and multi-alerts: Strawberry Cat, Good Company, Pumpkin Haunt, Merry Little Reindeer, Midnight Mixtape, Moss & Mushrooms, Moon Bunny and Crystal Guardian. Choose the same Illustrated preset on each surface. [Preview the gallery](../docs/overlay-gallery.html) or see the [short setup guide](featured-styles/artwork/README.md). The optional character bob reuses the same local assets; `&staticart` or the still-character toggle turns it off.

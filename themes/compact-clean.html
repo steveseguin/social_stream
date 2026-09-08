@@ -262,6 +262,7 @@ body.ultra .content-img {
 #spacer { width: 100%; padding: 0; margin: 0; border: none; background: transparent; }
 </style>
 <link rel="stylesheet" href="./collections.css">
+<link rel="stylesheet" href="./featured-styles/artwork.css">
 </head>
 <body>
 <div id="chat-container">
@@ -272,6 +273,10 @@ body.ultra .content-img {
 <script>
     var urlParams = new URLSearchParams(window.location.search);
     var collectionStyle = urlParams.get('style');
+    if (['art-cat', 'art-dog', 'art-halloween', 'art-christmas', 'art-music', 'art-forest', 'art-space', 'art-dragon'].indexOf(collectionStyle) !== -1) {
+        document.body.classList.add('art-chat', 'style-' + collectionStyle);
+    }
+    if (urlParams.has('staticart')) document.body.classList.add('static-art');
     if (['cute', 'cozy', 'cats', 'music', 'arcade', 'slate', 'paper', 'micro'].indexOf(collectionStyle) !== -1) {
         document.body.classList.add('collection', 'collection-chat', 'style-' + collectionStyle);
     }
@@ -672,7 +677,7 @@ body.ultra .content-img {
         if (data.type) { messageDiv.dataset.sourceType = data.type; }
         messageTimestamps.set(messageId, Date.now());
 
-        var accent = data.nameColor;
+        var accent = data.nameColor || (document.body.classList.contains('art-chat') ? 'var(--art-accent)' : '');
         if (!accent && typeof getColorFromType === 'function' && data.type) {
             try { accent = getColorFromType(data.type); } catch (e) {}
         }

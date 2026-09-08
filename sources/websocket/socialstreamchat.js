@@ -420,7 +420,7 @@ try {
                 sourceIcon: sourceIcon,
 
                 // Meta passthrough for custom fields
-                meta: meta
+                meta: Object.assign({}, meta, {ninjachatter: {room: envelope.room || currentRoomId}})
             };
 
             // Send to SSN extension

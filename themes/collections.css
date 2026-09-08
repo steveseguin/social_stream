@@ -73,7 +73,7 @@
 .collection .alert-actor { color: var(--collection-accent); text-shadow: none; }
 body.custom-textcolor .collection .alert-tail, body.custom-textcolor .collection .alert-message,
 body.custom-textcolor .collection .alert-subtitle, body.custom-textcolor .collection .alert-actor { color: var(--text-main); }
-body.flat-mode .collection .alert-shell { background-image: none; box-shadow: none; backdrop-filter: none; }
+body.flat-mode .collection .alert-shell { background: var(--card-bg, var(--collection-bg)); box-shadow: none; backdrop-filter: none; }
 
 .collection .message-content { min-width: 0; }
 .collection .username, .collection .head { flex-wrap: wrap; }
@@ -84,3 +84,10 @@ body.flat-mode .collection .alert-shell { background-image: none; box-shadow: no
 .collection-featured .message-content > * { min-width: 0; max-width: 100%; }
 
 .collection .username { overflow-wrap: anywhere; }
+
+/* Explicit alert accents override collection colors while preserving preset defaults. */
+.collection.custom-accent .alert-shell { border-color: var(--collection-accent); }
+.theme-cats.custom-accent .alert-shell::after { color: var(--collection-accent); }
+.theme-music.custom-accent .alert-shell::after {
+    background: repeating-linear-gradient(90deg,var(--collection-accent) 0,var(--collection-accent) 3px,transparent 3px,transparent 6px);
+}

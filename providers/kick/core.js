@@ -1,3 +1,5 @@
+import { getKickRoleBadge } from '../../shared/kickBadges.js';
+
 const KICK_DOMAIN = 'https://kick.com';
 
 export const PROFILE_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
@@ -37,27 +39,27 @@ export function mapBadges(badges) {
   if (!Array.isArray(badges) || !badges.length) {
     return [];
   }
-  return badges
+  return [...badges].sort((a, b) => (a?.sort_order ?? Infinity) - (b?.sort_order ?? Infinity))
     .map((badge) => {
       if (!badge) return null;
       if (typeof badge === 'string') {
-        return badge;
+        return getKickRoleBadge(badge) || badge;
       }
-      if (badge.selected === false) {
+      if (badge.selected === false || badge.active === false) {
         return null;
       }
-      const image = badge.image || badge.icon || badge.source;
-      if (image && typeof image === 'object') {
-        const src = image.url || image.light || image.dark;
-        if (src) {
-          return normalizeImage(src);
+      // Accept both Kick assets and our already-normalized chatbadges shape.
+      // Do not let an empty/malformed candidate hide another usable image URL.
+      const images = [badge.src, badge.image_url, badge.image, badge.icon, badge.source, badge.url, badge.asset];
+      for (const image of images) {
+        const candidates = image && typeof image === 'object'
+          ? [image.url, image.src, image.light, image.dark]
+          : [image];
+        for (const src of candidates) {
+          if (typeof src === 'string' && src.trim()) {
+            return normalizeImage(src.trim());
+          }
         }
-      }
-      if (badge.image_url) {
-        return normalizeImage(badge.image_url);
-      }
-      if (badge.asset) {
-        return normalizeImage(badge.asset);
       }
       if (badge.svg) {
         return { type: 'svg', html: badge.svg };
@@ -67,6 +69,8 @@ export function mapBadges(badges) {
       if (badge.type === 'svg' && badge.html) {
         return { type: 'svg', html: badge.html };
       }
+      const roleBadge = getKickRoleBadge(badge);
+      if (roleBadge) return roleBadge;
       if (badge.text) {
         return { type: 'text', text: badge.text };
       }
@@ -146,7 +150,7 @@ export function formatBadgesForDisplay(badges) {
         if (isAsset) {
           return { src: normalizeImage(trimmed), type: 'img' };
         }
-        return { text: trimmed, type: 'badge' };
+        return { text: trimmed, type: 'text' };
       }
       if (badge.type === 'svg' && badge.html) {
         return { type: 'svg', html: badge.html };

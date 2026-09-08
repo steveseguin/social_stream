@@ -22,7 +22,7 @@
 	"permissions": ["webNavigation", "notifications", "storage", "debugger", "tabs", "scripting", "activeTab", "tabCapture", "identity"],
 	"web_accessible_resources": [
 		{
-			"resources": ["providers/kick/core.js", "providers/twitch/chatClient.js", "providers/youtube/liveChat.js", "providers/youtube/contextResolver.js", "shared/utils/scriptLoader.js", "shared/stickers/*", "media/stickers/*", "shared/utils/html.js", "shared/utils/twitchEmotes.js", "shared/aiPrompt/overlayStore.js", "shared/vendor/socket.io.min.js", "shared/vendor/tmi.js", "shared/vendor/tmi.module.js", "shared/ai/browserModelCatalog.js", "shared/ai/localBrowserLLM.js", "local-browser-model-worker.js", "cohost-local-qwen-worker.js"],
+			"resources": ["providers/kick/core.js", "shared/kickBadges.js", "providers/twitch/chatClient.js", "providers/youtube/liveChat.js", "providers/youtube/contextResolver.js", "shared/utils/scriptLoader.js", "shared/alerts/*", "audio/alerts/*", "shared/stickers/*", "shared/monetization/*", "shared/audience-room/*", "media/stickers/*", "shared/utils/html.js", "shared/utils/twitchEmotes.js", "shared/aiPrompt/overlayStore.js", "shared/vendor/socket.io.min.js", "shared/vendor/tmi.js", "shared/vendor/tmi.module.js", "shared/ai/browserModelCatalog.js", "shared/ai/localBrowserLLM.js", "local-browser-model-worker.js", "cohost-local-qwen-worker.js"],
 			"matches": ["<all_urls>"]
 		},
 		{
@@ -584,8 +584,15 @@
 		},
 		{
 			"js": ["./sources/ebay.js"],
+			"run_at": "document_start",
 			"matches": ["https://www.ebay.com/ebaylive/events/*", "https://www.ebay.co.uk/ebaylive/events/*", "https://www.ebay.de/ebaylive/events/*", "https://www.ebay.com.au/ebaylive/events/*", "https://www.ebay.ca/ebaylive/events/*", "https://cafr.ebay.ca/ebaylive/events/*", "https://www.ebay.fr/ebaylive/events/*", "https://www.ebay.it/ebaylive/events/*", "https://www.ebay.es/ebaylive/events/*", "https://www.ebay.nl/ebaylive/events/*", "https://www.ebay.ie/ebaylive/events/*", "https://www.ebay.at/ebaylive/events/*", "https://www.ebay.ch/ebaylive/events/*", "https://www.ebay.pl/ebaylive/events/*", "https://www.ebay.be/ebaylive/events/*", "https://befr.ebay.be/ebaylive/events/*", "https://benl.ebay.be/ebaylive/events/*", "https://www.ebay.com.hk/ebaylive/events/*", "https://www.ebay.com.sg/ebaylive/events/*", "https://www.ebay.com.my/ebaylive/events/*", "https://www.ebay.ph/ebaylive/events/*", "https://ir.ebaystatic.com/cr/ebaylivepubweb/liveassets/shoplive/*"],
 			"all_frames": true
+		},
+		{
+			"js": ["./sources/inject/ebay-ws.js"],
+			"matches": ["https://www.ebay.com/ebaylive/events/*", "https://www.ebay.co.uk/ebaylive/events/*", "https://www.ebay.de/ebaylive/events/*", "https://www.ebay.com.au/ebaylive/events/*", "https://www.ebay.ca/ebaylive/events/*", "https://cafr.ebay.ca/ebaylive/events/*", "https://www.ebay.fr/ebaylive/events/*", "https://www.ebay.it/ebaylive/events/*", "https://www.ebay.es/ebaylive/events/*", "https://www.ebay.nl/ebaylive/events/*", "https://www.ebay.ie/ebaylive/events/*", "https://www.ebay.at/ebaylive/events/*", "https://www.ebay.ch/ebaylive/events/*", "https://www.ebay.pl/ebaylive/events/*", "https://www.ebay.be/ebaylive/events/*", "https://befr.ebay.be/ebaylive/events/*", "https://benl.ebay.be/ebaylive/events/*", "https://www.ebay.com.hk/ebaylive/events/*", "https://www.ebay.com.sg/ebaylive/events/*", "https://www.ebay.com.my/ebaylive/events/*", "https://www.ebay.ph/ebaylive/events/*"],
+			"run_at": "document_start",
+			"world": "MAIN"
 		},
 		{
 			"js": ["./sources/owncast.js"],

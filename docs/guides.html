@@ -136,8 +136,11 @@
 						<small>Install, connect chat, add OBS overlays</small>
 					</summary>
 					<ul>
+						<li><a href="getting-started.html"><i class="fas fa-play-circle" aria-hidden="true"></i><span><strong>Start here: your first chat in SSN</strong><small>Install, connect a source, open the dock, then add TTS and OBS audio.</small></span></a></li>
 						<li><a href="../docs/download.html"><i class="fas fa-download" aria-hidden="true"></i><span><strong>Install or update</strong><small>Extension and desktop app downloads.</small></span></a></li>
-						<li><a href="inspiration.html"><i class="fas fa-lightbulb" aria-hidden="true"></i><span><strong>Find ideas for your stream</strong><small>126 ideas for gaming, music, teaching, making, live sales, and community events.</small></span></a></li>
+						<li><a href="monetization.html"><i class="fas fa-gift" aria-hidden="true"></i><span><strong>Monetization overlays</strong><small>Products, QR codes, gifts and NinjaBacker tips.</small></span></a></li>
+<li><a href="games-gallery.html"><i class="fas fa-gamepad" aria-hidden="true"></i><span><strong>Browse the game gallery</strong><small>Screenshots and quick previews of every game and chat interaction.</small></span></a></li>
+<li><a href="inspiration.html"><i class="fas fa-lightbulb" aria-hidden="true"></i><span><strong>Find ideas for your stream</strong><small>126 ideas for gaming, music, teaching, making, live sales, and community events.</small></span></a></li>
 						<li><a href="../docs/desktop-app-wont-open.html"><i class="fas fa-shield-alt" aria-hidden="true"></i><span><strong>Desktop app will not open</strong><small>Windows, macOS, and Linux security warnings.</small></span></a></li>
 						<li><a href="../docs/windows-administrator-mode.html"><i class="fas fa-user-shield" aria-hidden="true"></i><span><strong>Windows administrator mode</strong><small>Test or persist matching privileges for OBS and Social Stream.</small></span></a></li>
 						<li><a href="../docs/safe-updates-backups.html"><i class="fas fa-shield-alt" aria-hidden="true"></i><span><strong>Safe updates and recovery</strong><small>Back up settings, update safely, and recover a session.</small></span></a></li>
@@ -226,6 +229,7 @@
 						<li><a href="../docs/source-types-guide.html"><i class="fas fa-tags" aria-hidden="true"></i><span><strong>Source types</strong><small>Payload names, YouTube Shorts, Instagram Live, generic capture, and replies.</small></span></a></li>
 						<li><a href="../docs/external-overlay-sources.html"><i class="fas fa-link" aria-hidden="true"></i><span><strong>Discord StreamKit and TikFinity</strong><small>Use third-party overlay links as read-only chat sources.</small></span></a></li>
 						<li><a href="../docs/tiktok-quick-start.html"><i class="fab fa-tiktok" aria-hidden="true"></i><span><strong>TikTok quick start</strong><small>Simple live setup with screenshots.</small></span></a></li>
+						<li><a href="../docs/tikfinity-setup.html"><i class="fab fa-tiktok" aria-hidden="true"></i><span><strong>TikFinity fallback setup</strong><small>Connect TikTok, choose dock activity, and capture it in SSN.</small></span></a></li>
 						<li><a href="../docs/tiktok-guide.html"><i class="fas fa-comment-dots" aria-hidden="true"></i><span><strong>TikTok guide</strong><small>Connection modes and common failures.</small></span></a></li>
 						<li><a href="../docs/tiktok-app-modes-guide.html"><i class="fas fa-mobile-alt" aria-hidden="true"></i><span><strong>TikTok app modes</strong><small>Auto, Standard, signer, polling, proxy modes.</small></span></a></li>
 						<li><a href="../docs/tiktok-signing.html"><i class="fas fa-signature" aria-hidden="true"></i><span><strong>TikTok signing</strong><small>Sign server errors, rate limits, Euler API keys.</small></span></a></li>
@@ -763,17 +767,17 @@
 							<tr>
 								<td><strong>Ko-Fi</strong></td>
 								<td><code>https://io.socialstream.ninja/{sessionID}/kofi</code></td>
-								<td>Donations (public only)</td>
+								<td>Public tips, memberships, shop orders and commissions</td>
 							</tr>
 							<tr>
 								<td><strong>Buy Me A Coffee</strong></td>
 								<td><code>https://io.socialstream.ninja/{sessionID}/bmac</code></td>
-								<td><code>donation.created</code>, <code>membership.started</code></td>
+								<td>Tips, memberships, shop orders, commissions and wishlist funding</td>
 							</tr>
 							<tr>
 								<td><strong>Fourthwall</strong></td>
 								<td><code>https://io.socialstream.ninja/{sessionID}/fourthwall</code></td>
-								<td><code>ORDER_PLACED</code></td>
+								<td>Orders, gifts, donations and new subscriptions</td>
 							</tr>
 						</tbody>
 					</table>
@@ -794,29 +798,7 @@
 					</ol>
 					<p><strong>Testing:</strong> Use Stripe's Test Mode with card <code>4242 4242 4242 4242</code>, any future expiry, any CVC.</p>
 
-					<h4>Ko-Fi Setup:</h4>
-					<ol class="guide-steps">
-						<li>Sign in to <a href="https://ko-fi.com/manage/webhooks" target="_blank">Ko-Fi Webhook Settings</a></li>
-						<li>Paste <code>https://io.socialstream.ninja/YOUR_SESSION_ID/kofi</code> into <strong>Webhook URL</strong>, then click <strong>Update</strong></li>
-						<li>Enable <strong>remote API control of extension</strong>, then reload an already-open dock</li>
-						<li>Click <strong>Send single tip test</strong> and confirm exactly one alert appears</li>
-						<li>Only public donations will appear (private donations are filtered out)</li>
-					</ol>
-
-					<h4>Buy Me A Coffee Setup:</h4>
-					<ol class="guide-steps">
-						<li>Sign in to Buy Me A Coffee and navigate to Settings &rarr; Webhooks</li>
-						<li>Add webhook URL: <code>https://io.socialstream.ninja/YOUR_SESSION_ID/bmac</code></li>
-						<li>Both one-time donations and new memberships are supported</li>
-					</ol>
-
-					<h4>Fourthwall Setup:</h4>
-					<ol class="guide-steps">
-						<li>Go to your Fourthwall admin: Settings &rarr; For Developers &rarr; Webhooks</li>
-						<li>Create webhook with URL: <code>https://io.socialstream.ninja/YOUR_SESSION_ID/fourthwall</code></li>
-						<li>Subscribe to <code>ORDER_PLACED</code> events</li>
-					</ol>
-
+                    <h4>Creator store setup</h4><p>Use the <a href="creator-store-setup.html">illustrated setup guide</a> for Fourthwall, Ko-fi and Buy Me a Coffee, including receiver status, isolated previews and product import.</p>
 					<div class="warning-note">
 						<strong>Security Note:</strong> Keep your session ID private. Anyone with your session ID can send fake donation events to your overlay.
 					</div>

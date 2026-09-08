@@ -6,6 +6,7 @@
     <title>Phrase Guessing Game - Social Stream Ninja</title>
     <link rel="icon" href="../favicon.ico" />
     <style>
+        * { box-sizing: border-box; }
         body {
             font-family: Arial, sans-serif;
             background: #1a1a1a;
@@ -58,6 +59,7 @@
 
         .controls {
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
             justify-content: center;
             margin-bottom: 20px;
@@ -100,6 +102,17 @@
         .config-section h3 {
             margin-top: 0;
             color: #4CAF50;
+        }
+
+        .config-section summary { cursor: pointer; color: #4CAF50; font-weight: bold; }
+        .config-section[open] summary { margin-bottom: 20px; }
+        .config-item input, .config-item select { min-width: 0; }
+        @media (max-width: 500px) {
+            body { padding: 12px; }
+            .container, .config-section { padding: 14px; }
+            h1 { font-size: 25px; }
+            .config-item { flex-wrap: wrap; }
+            .config-item label { flex-basis: 100%; }
         }
 
         .config-item {
@@ -195,8 +208,8 @@
             <button class="btn-secondary" onclick="resetGame()">Reset</button>
         </div>
 
-        <div class="config-section">
-            <h3>⚙️ Game Configuration</h3>
+        <details class="config-section" id="gameConfiguration" open>
+            <summary>Game configuration &amp; phrases</summary>
             
             <h3>📝 Phrases (one per line)</h3>
             <textarea id="phrasesInput" placeholder="Enter phrases here, one per line...">The quick brown fox jumps over the lazy dog
@@ -240,7 +253,7 @@ You can't handle the truth</textarea>
                     <option value="chat">Chat sources (Twitch, YouTube, etc)</option>
                 </select>
             </div>
-        </div>
+        </details>
 
         <div class="message-log" id="messageLog">
             <h4>Recent Activity</h4>
@@ -791,6 +804,8 @@ You can't handle the truth</textarea>
             }
 
             gameState.isActive = true;
+            // Keep the answer list out of the audience view while playing.
+            document.getElementById('gameConfiguration').open = false;
             gameState.currentIndex = -1;
             document.getElementById('gameToggle').textContent = 'Stop Game';
             

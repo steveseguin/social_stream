@@ -5575,6 +5575,7 @@ function routeIndividualLikeEvent(message, alreadyRouted) {
 }
 
 async function processIncomingMessage(message, sender = null) {
+ if (message && message.type === "socialstreamchat" && window.ncAudience && window.ncAudience.ownsRoom(message.meta && message.meta.ninjachatter && message.meta.ninjachatter.room)) return; // Paired connector owns audience return.
 	var individualLikeRouting = { routed: false, stop: false };
 	try {
 		if (sender?.tab && (message.tid === undefined || message.tid === null)) {
@@ -5634,7 +5635,8 @@ async function processIncomingMessage(message, sender = null) {
 
 		if (
 			settings.noduplicates && // filters echos if same TYPE, USERID, and MESSAGE
-			checkDuplicateSources.isDuplicate(message.type, message.userid || message.chatname, message.chatmessage || message.hasDonation || (message.membership && message.event))
+			// Distinct anonymous Shopify orders share display text; compare their stable order IDs.
+			checkDuplicateSources.isDuplicate(message.type, message.userid || message.chatname, (message.type === "shopify" && message.event === "purchase" && /^shopify:[a-f0-9]{64}$/.test(message.id || "")) ? message.id : (message.chatmessage || message.hasDonation || (message.membership && message.event)))
 		) {
 			return;
 		}
@@ -5725,6 +5727,14 @@ async function processIncomingMessage(message, sender = null) {
 }
 
 async function handleRuntimeMessage(request, sender, sendResponseReal) {
+ if (request && request.ncAudience) {
+  // Only the packaged popup may operate the private connector; sources cannot obtain it.
+  const popupOrigin = chrome.runtime.getURL('popup.html');
+  if (!sender || !sender.url || sender.url.split('?')[0] !== popupOrigin) { sendResponseReal({error:'Not authorized'}); return; }
+  try { sendResponseReal(await window.ncAudience.handle(request.ncAudience)); } catch (_) { sendResponseReal({error:'Audience connection unavailable'}); }
+  return;
+ }
+
 	var response = {};
 	var alreadySet = false;
 
@@ -5773,7 +5783,10 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		const senderTabId = hasSenderTabId ? senderTab.id : null;
 		const senderTabUrl = senderTab && typeof senderTab.url === "string" ? senderTab.url : "";
 
-		if (request.action === "clearHistory") {
+		if (request.cmd === "monetization") {
+            sendResponse(window.handleMonetizationRequest ? await window.handleMonetizationRequest(request, sender) : {error:"Monetization is loading."});
+            return response;
+        } else if (request.action === "clearHistory") {
 			const clearHistoryResult = await clearSavedMessageHistory(request.value);
 			if (clearHistoryResult.ok) {
 				sendDataP2P({
@@ -6058,6 +6071,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 						socketserverDock.close();
 					}
 				}
+			}
+			if (["teams", "discord", "slack", "openai", "chime", "meet", "telegram", "whatsapp", "instagram", "xcapture"].includes(request.setting)) {
+				pushSettingChange();
 			}
 			if (request.setting == "textonlymode") {
 				pushSettingChange();
@@ -7914,6 +7930,7 @@ function hasTargetedMetaPayload(message) {
 }
 
 async function sendToDestinations(message, individualLikeAlreadyRouted) {
+
 	if (typeof message == "object") {
 		captureLiveStatsFromMessage(message);
 
@@ -8077,6 +8094,8 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 	if (message && typeof message === "object" && typeof sanitizeRelayPayloadFields === "function") {
 		message = sanitizeRelayPayloadFields(message) || message;
 	}
+
+ if (window.ncAudience && window.ncAudience.paired()) window.ncAudience.publish(message);
 
 	try {
 		captureBackgroundCreditsMessage(message);
@@ -8986,6 +9005,8 @@ function sendToS10(data, fakechat = false, relayed = false) {
 
 // Social Stream Chat integration - send messages to chat.socialstream.ninja
 function sendToSSC(data, fakechat = false, relayed = false) {
+ if (window.ncAudience && window.ncAudience.paired()) return; // Explicit paired path owns publication, including while offline.
+
 	if (settings.ssc && settings.sscapikey && settings.sscapikey.textsetting) {
 		if (settings.blockChannelPointRelays && data && (data.event === "channel_points" || data.event === "reward" || (data.reward && (data.reward.redemptionId || data.reward.cost || data.reward.title)) || (data.hasDonation && typeof data.hasDonation === "string" && data.hasDonation.includes("points")))) {
 			return null;
@@ -10939,6 +10960,19 @@ async function handleStreamDeckBackgroundRequest(request) {
 	}
 
 	const action = router.normalizeAction(request.action);
+    if (action === "getCommerceState") {
+        if (!window.handleMonetizationRequest) return router.makeError(request, "TARGET_UNAVAILABLE", "Product controls are still loading.");
+        const result = await window.handleMonetizationRequest({ action: "getCommerceState" });
+        return router.makeResponse(request, result);
+    }
+    if (router.isCommerceAction(action)) {
+        const control = router.commerceRequest(request);
+        if (!control.ok) return router.makeError(request, "INVALID_VALUE", control.message);
+        if (!window.handleMonetizationRequest) return router.makeError(request, "TARGET_UNAVAILABLE", "Product controls are still loading.");
+        const result = await window.handleMonetizationRequest({ action: "commerceControl", command: control.command, url: control.url, seconds: control.seconds });
+        if (result.error) return router.makeError(request, "TARGET_UNAVAILABLE", result.error);
+        return router.makeResponse(request, { action: action, command: control.command, live: result.commerceLive || null, commerce: result.commerceState });
+    }
 	if (action === "creditsStart" || action === "creditsPreview" || action === "creditsTest" || action === "creditsReset") {
 		const result = await runCreditsCommand(action);
 		if (!result.success) {
@@ -11049,7 +11083,7 @@ async function routeStreamDeckRemoteRequest(request, context) {
 			result: await handleStreamDeckSsappRequest(request)
 		};
 	}
-	if ((router.isVersionedRequest(request) || isCreditsRemoteAction(request.action)) && router.isRemoteSsnRequest(request, "background")) {
+	if ((router.isVersionedRequest(request) || isCreditsRemoteAction(request.action) || router.isCommerceAction(request.action) || request.action === "getCommerceState") && router.isRemoteSsnRequest(request, "background")) {
 		return {
 			kind: "command",
 			result: await handleStreamDeckBackgroundRequest(request)
@@ -11332,7 +11366,10 @@ function setupSocket() {
 					"tipjar"
 				);
 				resp = true;
-			} else if (data.action && data.action === "resetpoll") {
+			} else if (data.action === "commerceControl" && !settings.disablehost && window.handleMonetizationRequest) {
+                window.handleMonetizationRequest({ action: 'commerceControl', command: data.command, url: data.url, seconds: data.seconds });
+                resp = true;
+            } else if (data.action && data.action === "resetpoll") {
 				sendTargetP2P({ cmd: "resetpoll" }, "poll");
 				resp = true;
 			} else if (data.action && data.action === "closepoll") {
@@ -11676,7 +11713,9 @@ function setupSocket() {
 					}
 
 					try {
-						var kofi = JSON.parse(decodeURIComponent(data.kofi.data).replace(/\+/g, " "));
+						var kofi;
+                        try { kofi = JSON.parse(data.kofi.data); }
+                        catch (_) { kofi = JSON.parse(decodeURIComponent(String(data.kofi.data).replace(/\+/g, " "))); }
 					} catch (e) {
 						console.error(e);
 						return;
@@ -11686,43 +11725,13 @@ function setupSocket() {
 					if (isDuplicateInboundWebhook("kofi", kofiWebhookId)) {
 						return false;
 					}
-					relayIncomingWebhook("kofi", data.kofi);
 
-					if (kofi.type !== "Donation") {
-						return false;
-					} else if (!kofi.is_public) {
-						return false;
-					}
 
-					const kofiMessage = {};
-					kofiMessage.chatname = decodeURIComponent(kofi.from_name) || "Anonymous";
-					kofiMessage.chatmessage = decodeURIComponent(kofi.message);
-
-					let kofiCurrency = "";
-
-					try {
-						kofiCurrency = kofi.currency.toLowerCase() || "";
-					} catch (e) {}
-
-					let kofiSymbol = {};
-					if (kofiCurrency && kofiCurrency in Currencies) {
-						kofiSymbol = Currencies[kofiCurrency];
-					}
-
-					if (kofi.amount) {
-						kofiMessage.hasDonation = (kofiSymbol.s || "") + (kofi.amount || "") + " " + (kofi.currency.toUpperCase() || "");
-						kofiMessage.hasDonation = kofiMessage.hasDonation.trim();
-					}
-					kofiMessage.id = parseInt(Math.random() * 100000 + 1000000);
-					kofiMessage.chatbadges = "";
-					kofiMessage.backgroundColor = "";
-					kofiMessage.textColor = "";
-					kofiMessage.nameColor = "";
-					kofiMessage.chatimg = "";
-					kofiMessage.membership = "";
-					kofiMessage.contentimg = "";
-					kofiMessage.type = "kofi";
-					setInboundWebhookMeta(kofiMessage, kofiWebhookId);
+                    const kofiMessage = SSNMonetization.providerEvent("kofi", kofi, kofiWebhookId);
+                    if (typeof noteMonetizationProvider === "function") noteMonetizationProvider("kofi", !!kofiMessage);
+                    if (!kofiMessage) return false;
+                    relayIncomingWebhook("kofi", data.kofi);
+                    setInboundWebhookMeta(kofiMessage, kofiWebhookId);
 
 					data = kofiMessage; // replace inbound stripe message with new message
 
@@ -11760,46 +11769,12 @@ function setupSocket() {
 						if (isDuplicateInboundWebhook("bmac", bmacWebhookId)) {
 							return false;
 						}
-						relayIncomingWebhook("bmac", data.bmac);
-						const bmacMessage = {};
-						if (bmac.type === "membership.started") {
-							bmacMessage.chatname = bmac.data.supporter_name || "Anonymous";
-							bmacMessage.chatmessage = (bmac.data.support_note || "").trim();
-							//We use the donation badge from Kofi to feature the membership level name
-							bmacMessage.hasDonation = bmac.data.membership_level_name || "";
-						}
-						if (bmac.type === "donation.created") {
-							bmacMessage.chatname = bmac.data.supporter_name || "Anonymous";
-							let bmacCurrency = "";
-							try {
-								bmacCurrency = bmac.data.currency.toLowerCase() || "";
-							} catch (e) {}
 
-							let bmacSymbol = {};
-							if (bmacCurrency && bmacCurrency in Currencies) {
-								bmacSymbol = Currencies[bmacCurrency];
-							}
-							var msgParts = [];
-							if (bmac.data.message) {
-								msgParts.push(bmac.data.message);
-							}
-							if (bmac.data.support_note) {
-								msgParts.push("<em>" + bmac.data.support_note + "</em>");
-							}
-							bmacMessage.chatmessage = msgParts.join(" - ").trim();
-							bmacMessage.hasDonation = (bmacSymbol.s || "") + (bmac.data.amount || "") + " " + (bmac.data.currency.toUpperCase() || "");
-							bmacMessage.hasDonation = bmacMessage.hasDonation.trim();
-						}
-						bmacMessage.contentimg = "";
-						bmacMessage.id = parseInt(Math.random() * 100000 + 1000000);
-						bmacMessage.chatbadges = "";
-						bmacMessage.backgroundColor = "";
-						bmacMessage.textColor = "";
-						bmacMessage.nameColor = "";
-						bmacMessage.chatimg = "";
-						bmacMessage.membership = "";
-						bmacMessage.type = "bmac";
-						setInboundWebhookMeta(bmacMessage, bmacWebhookId);
+                        const bmacMessage = SSNMonetization.providerEvent("bmac", bmac, bmacWebhookId);
+                        if (typeof noteMonetizationProvider === "function") noteMonetizationProvider("bmac", !!bmacMessage);
+                    if (!bmacMessage) return false;
+                    relayIncomingWebhook("bmac", data.bmac);
+                        setInboundWebhookMeta(bmacMessage, bmacWebhookId);
 						data = bmacMessage; // replace inbound stripe message with new message
 
 						try {
@@ -11828,7 +11803,7 @@ function setupSocket() {
 				ackInboundWebhookDelivery(socketserver, data);
 				// Dorthwall
 				try {
-					if (!data.fourthwall.data || data.fourthwall.type !== "ORDER_PLACED") {
+					if (!data.fourthwall.data) {
 						return false;
 					}
 
@@ -11836,55 +11811,13 @@ function setupSocket() {
 					if (isDuplicateInboundWebhook("fourthwall", fourthwallWebhookId)) {
 						return false;
 					}
-					relayIncomingWebhook("fourthwall", data.fourthwall);
 
-					const fourthwallData = data.fourthwall.data;
 
-					const fourthwallMessage = {};
-					fourthwallMessage.chatname = fourthwallData.username || fourthwallData.billing?.address?.name || "Anonymous";
-					fourthwallMessage.chatmessage = fourthwallData.message || "";
-
-					let fourthwallCurrency = "";
-					try {
-						fourthwallCurrency = fourthwallData.amounts.total.currency.toLowerCase() || "";
-					} catch (e) {
-						console.error(e);
-					}
-
-					let fourthwallSymbol = {};
-					if (fourthwallCurrency && fourthwallCurrency in Currencies) {
-						fourthwallSymbol = Currencies[fourthwallCurrency];
-					}
-
-					if (fourthwallData.amounts && fourthwallData.amounts.total) {
-						fourthwallMessage.hasDonation = (fourthwallSymbol.s || "") + (fourthwallData.amounts.total.value || "") + " " + (fourthwallData.amounts.total.currency || "");
-						fourthwallMessage.hasDonation = fourthwallMessage.hasDonation.trim();
-					}
-
-					// Add product info to the subtitle
-					if (fourthwallData.offers && fourthwallData.offers.length) {
-						let productInfo = [];
-						fourthwallData.offers.forEach(offer => {
-							if (offer.name && offer.variant && offer.variant.quantity) {
-								productInfo.push(`${offer.variant.quantity}× ${offer.name}`);
-							}
-						});
-
-						if (productInfo.length) {
-							fourthwallMessage.subtitle = productInfo.join(", ");
-						}
-					}
-
-					fourthwallMessage.id = parseInt(Math.random() * 100000 + 1000000);
-					fourthwallMessage.chatbadges = "";
-					fourthwallMessage.backgroundColor = "";
-					fourthwallMessage.textColor = "";
-					fourthwallMessage.nameColor = "";
-					fourthwallMessage.chatimg = "";
-					fourthwallMessage.membership = "";
-					fourthwallMessage.contentimg = "";
-					fourthwallMessage.type = "fourthwall";
-					setInboundWebhookMeta(fourthwallMessage, fourthwallWebhookId);
+                    const fourthwallMessage = SSNMonetization.providerEvent("fourthwall", data.fourthwall, fourthwallWebhookId);
+                    if (typeof noteMonetizationProvider === "function") noteMonetizationProvider("fourthwall", !!fourthwallMessage);
+                    if (!fourthwallMessage) return false;
+                    relayIncomingWebhook("fourthwall", data.fourthwall);
+                    setInboundWebhookMeta(fourthwallMessage, fourthwallWebhookId);
 
 					data = fourthwallMessage; // replace inbound fourthwall message with new message
 
@@ -19151,8 +19084,15 @@ async function fetchData(url, useLocalFs = false) {
 	}
 }
 
-// Example usage in window.onload:
-window.onload = async function () {
+let backgroundInitializationStarted = false;
+async function initializeBackgroundSettings() {
+	if (backgroundInitializationStarted) return;
+	// SSApp's verified downloads can finish after the browser load event.
+	// The loader calls this explicitly once the full script sequence is ready.
+	if (window.ssappBackgroundLoadState?.status === 'loading'
+		&& window.ssappFallback && typeof window.ssappFallback.fetchBackgroundScript === 'function'
+		&& location.protocol === 'https:') return;
+	backgroundInitializationStarted = true;
 	// Pass true as second parameter to force local file system in Electron
 	let programmedSettings = await fetchData("settings.json", true);
 	if (programmedSettings && typeof programmedSettings === "object") {
@@ -19222,7 +19162,8 @@ window.onload = async function () {
 			});
 		});
 	}
-};
+}
+window.onload = initializeBackgroundSettings;
 
 let fileHandleTicker;
 let fileContentTicker = "";
@@ -20150,6 +20091,19 @@ let tmp = new EventFlowSystem({
 tmp.initPromise
 	.then(() => {
 		window.eventFlowSystem = tmp;
+        // Native-only channel, separate from untrusted chat and overlay messages.
+        if (window.ninjafy && typeof window.ninjafy.syncVoiceCommands === 'function') {
+            const syncVoiceCommands = () => {
+                const commands = [];
+                tmp.flows.filter(f => f.active).forEach(f => f.nodes.forEach(n => {
+                    if (n.type === 'trigger' && n.triggerType === 'voicePhrase') commands.push({flowId:f.id,nodeId:n.id,phrase:n.config.phrase || '',cooldown:n.config.cooldown || 5});
+                }));
+                window.ninjafy.syncVoiceCommands(commands).catch(() => {});
+            };
+            window.ninjafy.onVoiceCommand(payload => tmp.processVoiceCommand(payload).catch(() => {}));
+            syncVoiceCommands();setInterval(syncVoiceCommands, 1500);
+        }
+
 		// Start periodic scheduler so time-based triggers (timeInterval/timeOfDay) work without incoming messages
 		try {
 			tmp.startScheduler && tmp.startScheduler();

@@ -3549,10 +3549,12 @@ async function processSummary(data){
 }
 
 async function processMessageWithOllama(data, idx=null) { 
-  if (!data.tid) return;
-  
-  const currentTime = Date.now();
   const botOverlayOnly = Boolean(settings.ollamaoverlayonly || data?.privateBotPrompt);
+  // API messages have no source tab. Only accept them when replies stay on overlays;
+  // platform/account-role routing still requires the original source destination.
+  if (!data || (!data.tid && !botOverlayOnly)) return;
+
+  const currentTime = Date.now();
   if (!reserveBotResponseSlot(data)) return false;
   
   //console.log("starting processing");

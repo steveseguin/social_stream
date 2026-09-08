@@ -124,7 +124,7 @@ const literalTranslationKeys = new Map();
 const literalPatterns = [
 	/data-(?:page-)?translate=["']([^"']+)["']/g,
 	/data-page-(?:title|alt)=["']([^"']+)["']/g,
-	/(?:getTranslation|formatTranslation|dashboardTranslation|SSNPageI18n\.t)\(\s*["']([^"']+)["']/g,
+	/(?:getTranslation|formatTranslation|dashboardTranslation|SSNPageI18n\.t)\(\s*["']([^"']+)["']\s*(?=[,)])/g,
 ];
 
 for (const filePath of sourceFiles) {

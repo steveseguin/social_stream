@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Monetization overlays | Social Stream Ninja</title>
+		<link rel="icon" href="../icons/favicon.ico" />
+		<link rel="stylesheet" href="css/styles.css" />
+		<link rel="stylesheet" href="css/guides.css" />
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem('darkMode');
+				var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+				if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) document.documentElement.classList.add('dark-mode');
+			})();
+		</script>
+	</head>
+	<body>
+		<header>
+			<div class="container">
+				<div class="logo">
+					<a href="../index.html"><img src="../icons/logo.svg" alt="Social Stream Ninja Logo" /><span>Social Stream Ninja</span></a>
+				</div>
+				<nav>
+					<ul>
+						<li><a href="../index.html">Home</a></li>
+						<li><a href="features.html">Features</a></li>
+						<li><a href="download.html">Download</a></li>
+						<li><a href="guides.html" class="active">Guides</a></li>
+						<li><a href="commands.html">Commands &amp; API</a></li>
+						<li><a href="supported-sites.html">Supported Sites</a></li>
+						<li><a href="templates.html">Templates</a></li>
+						<li><a href="services.html">Hire</a></li>
+						<li><a href="support.html">Support</a></li>
+					</ul>
+				</nav>
+				<div class="header-controls">
+					<button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+						<svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg
+						><svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+							<circle cx="12" cy="12" r="5"></circle>
+							<line x1="12" y1="1" x2="12" y2="3"></line>
+							<line x1="12" y1="21" x2="12" y2="23"></line>
+							<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+							<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+							<line x1="1" y1="12" x2="3" y2="12"></line>
+							<line x1="21" y1="12" x2="23" y2="12"></line>
+							<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+							<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+						</svg>
+					</button>
+					<div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+				</div>
+			</div>
+		</header>
+		<section class="page-hero">
+			<div class="container"><h1>Turn support into a stream moment.</h1></div>
+		</section>
+		<main class="guide-section">
+			<div class="container">
+				<div class="guide-card">
+					<p>Open <strong>Monetization</strong> in the SSN popup. Each platform has its own toggle and expandable settings; you can enable several at once. Amazon Wishlist Rank-Up is optional. Click <strong>Save setup</strong> and keep SSN running. Use <strong>Overlay link for</strong> to copy each platform's link into a separate OBS Browser Source; start at 800 &times; 600. The surrounding page is transparent.</p>
+				</div>
+				<section class="guide-card" id="products-support-links">
+<h2>Products and support links from any site</h2><p>For separate activity celebrations with sounds and images, see <a href="alert-effects.html">Alert effects setup</a>.</p><p><a href="shopify-setup.html">Shopify: product import and signed purchase alerts</a></p><p><a href="creator-store-setup.html">Creator store setup: provider connections, Fourthwall import, OBS and QR codes</a></p>
+<p>Open <strong>Products &amp; support links</strong> in Monetization. Add a public HTTPS link, name, optional image and price, and choose Shop, Gift, Support, or Join. Add up to 20 entries, then enable the section and click <strong>Save setup</strong>. Use Edit, Move up and Remove to manage the list. Pin the first entry or rotate through the list; each product stays visible for at least 15 seconds so viewers can scan its QR code.</p>
+<p>These are manually entered public promotions. Adding a Shopify, Fourthwall, Ko-fi, Patreon or other URL does not connect its payment feed. Prices do not update automatically and purchase events do not remove entries. Use the existing provider connection/webhook setup for automatic activity. Never enter private checkout, account-management or customer links.</p>
+<p>Choose <strong>Products &amp; support links</strong> under OBS overlay for. The normal Copy OBS link, Open overlay and Preview buttons include the selected options. Under <strong>Overlay link options</strong>, choose Showcase and alerts, Product showcase only, Support card only, or Activity alerts only. Copy separate links into separate OBS Browser Sources to position or style each independently. The support-card view hides product images and, for manual products, prices. An alert never displays the QR code for an unrelated rotating product.</p>
+<p>Display options include the existing Default appearance, a Compact variant, scale and corner. Leave Show card every at 0 for continuous display, or select an interval and visible duration for periodic promotion. Alerts are independent of that schedule. Options are saved with Save setup. An optional comma-separated source filter, such as <code>fourthwall,kofi,bmac</code>, applies to the generic activity view.</p>
+<p>QR codes and readable URLs point to the selected product or support page. Use <strong>Copy public link</strong> beside an entry to share it in chat, a pinned message or the stream description. Text inside broadcast video is not clickable, and viewers watching on their phone may need that separate link. Automatic chat announcements remain opt-in for the existing platform integrations; adding a manual link sends no chat message.</p>
+<p><a href="../monetization.html?demo&amp;mode=commerce&amp;view=showcase">Preview product showcase</a> &middot; <a href="../monetization.html?demo&amp;mode=commerce&amp;view=card">Preview support card</a> &middot; <a href="../monetization.html?demo&amp;mode=commerce&amp;view=alerts">Preview activity alerts</a></p>
+</section>
+<section class="guide-card">
+					<h2>Amazon Wishlist Rank-Up</h2>
+					<ol>
+						<li>Paste the sharing URL of a public Amazon wishlist and click <strong>Load wishlist</strong>. Review the imported items and prices. Only priced items present in Amazon's response can be imported; check for missing items. Lists requiring login or Amazon's browser check may not import; the manual item form is the fallback.</li>
+						<li>Enable the overlay. It shows the cheapest remaining item, a rank, and an optional QR code.</li>
+						<li>After verifying a purchase yourself, click <strong>Confirm current item bought</strong>. Add a buyer name only if you know it. The overlay celebrates and advances to the next cheapest item. Undo is available for the last confirmation during the current SSN run.</li>
+					</ol>
+					<p>Amazon's public lists can conceal purchase status, and removing an item does not prove that it was bought. SSN does not infer purchases from missing items, identify buyers, or place orders. <a href="https://www.aboutamazon.com/news/retail/amazon-wish-list">Amazon explains its purchased-item and surprise settings here.</a></p>
+					<p>QR codes use the wishlist or a wishlist-linked item URL, so viewers buy through the list. A plain product-page link falls back to the wishlist. SSN does not generate Amazon short links. Importing again preserves existing confirmations; list items that disappeared remain available for host review. Each item counts as one rank-up, regardless of quantity. Use one currency per ladder.</p>
+					<p class="note">Use a list you intend to share publicly and review Amazon's shipping-address settings. Prices are a snapshot, not a live checkout quote.</p>
+					<p><a href="../monetization.html?demo&mode=wishlist">Preview the wishlist overlay</a></p>
+				</section>
+				<section class="guide-card">
+					<h2 id="ninjabacker">NinjaBacker donations</h2>
+                    <p><a href="https://ninjabacker.com">NinjaBacker</a> is a free tipping service from the creators of Social Stream Ninja and VDO.Ninja. It takes <strong>0% platform commission</strong>, with no NinjaBacker subscription required. Tips are charged directly on your connected Stripe account; Stripe processing fees still apply.</p>
+					<ol>
+						<li>Create or open your account at <a href="https://ninjabacker.com">NinjaBacker</a>, connect your own Stripe account, and complete Stripe onboarding so it can accept payments. Share your public username-based tip link with supporters.</li>
+						<li>Enter that username and the private <strong>Tip ID</strong> from the same account's dashboard. The username alone cannot access the private alert feed.</li>
+						<li>Enable the source and save. SSN checks that the Tip ID matches your username and the account can accept payments. New real tips enter SSN's normal donation flow and can appear in docks, alert overlays, and Event Flow. The dedicated NinjaBacker overlay shows a short alert; enable its QR option for a persistent support card.</li>
+					</ol>
+					<p>Your Tip ID is saved only in this SSN installation, separately from shared settings and overlay URLs. Anonymous donations stay anonymous. Connecting does not replay donation history; dashboard test tips preview the dedicated overlay without entering SSN's real donation flow.</p>
+					<p><strong>Choose delivery:</strong> Live feed is the simplest setup; tips missed while disconnected are not replayed. For queued delivery, select <strong>Reliable webhook</strong>, paste the signing secret generated in your NinjaBacker dashboard, and save. Copy the Receiver URL into NinjaBacker's Webhook setting, then use <strong>Send Test Tip</strong>. The preview confirms the connection without paid rewards.</p>
+                    <p>Reliable delivery stores signed tips on the SSN API for up to seven days, including while SSN is off. Keep the signing secret private; it is encrypted on the API server. The private Tip ID is used to verify your account during setup and is not retained by the receiver. Only the active delivery mode runs. Switching back to Live feed deletes the receiver and its queue; remove the old Webhook URL from NinjaBacker too.</p>
+                    <p>Refunds and disputes do not reverse earlier alerts or rewards. The receiver deduplicates delivery IDs and SSN remembers processed deliveries, but a crash between an external action and its acknowledgment can still repeat that action. Irreversible paid actions need their own idempotency checks using the event ID. <a href="https://ninjabacker.com/developers">NinjaBacker receiver guide</a>.</p>
+					<p>NinjaBacker supports USD, EUR, GBP, CAD, AUD, and JPY; choose your charge currency in its dashboard. SSN preserves the currency and amount in donation events. <a href="https://ninjabacker.com">See NinjaBacker for current terms.</a></p>
+					<p><a href="../monetization.html?demo&mode=ninja">Preview the NinjaBacker overlay</a></p>
+				</section>
+				<section class="guide-card" id="ebay-showcase">
+					<h2>eBay product showcase</h2>
+					<ol><li>Open <strong>eBay products &amp; sale alerts settings</strong> in Monetization and connect your seller account.</li><li>Add up to 20 of your own eBay listing URLs. Use one currency throughout the list.</li><li>Choose <strong>Cycle</strong>, <strong>Cheapest</strong>, or <strong>First in list</strong>. Use Move up to arrange the list; cycling supports 10&ndash;300 seconds per product.</li><li>Enable the showcase, save setup, and copy its OBS link. QR codes and chat announcements are optional.</li></ol>
+					<p>A new paid purchase of <em>any</em> selected listing creates an alert, including products that are not currently on screen. The first purchase completes that list entry and removes it from rotation. Further purchases of the same selected listing still produce alerts. This is a one-gift-per-entry showcase, not an inventory or accounting system.</p>
+					<p>Auctions show the last fetched bid and a ticking countdown. Prices and paid orders are checked about once a minute while SSN is on. Ended and unavailable listings leave the rotation; neither an ended auction nor a stock change counts as payment. Shipping, taxes, offers and the final checkout total can differ from the displayed price.</p>
+					<p>Only the connected seller's paid orders can be verified. Adding someone else's listing does not provide their sales feed or make it a gift wishlist. Historical purchases before adding an entry are ignored; a delayed payment can qualify when eBay provides its payment date. Reconnects recover up to 29 days of order changes. Refunds do not automatically reopen completed entries. Buyer names, addresses and payment details are not broadcast, and sales do not increase donation totals.</p>
+					<p><strong>Availability:</strong> requires the SSN eBay service at <code>api.socialstream.ninja</code>, configured with an eBay application that has production Browse and read-only Fulfillment access. Sandbox development is supported separately with sandbox seller accounts and listing URLs; sandbox purchases are labeled as tests. Developer keys alone do not complete seller connection or grant production access. If unavailable, Connect explains this. No NinjaBacker account is needed. Disconnect removes the stored seller tokens; eBay also lets you revoke access in your account settings.</p>
+					<p><a href="../monetization.html?demo&amp;mode=ebay">Preview the showcase</a> &middot; <a href="https://developer.ebay.com/api-docs/sell/static/orders/discovering-unfulfilled-orders.html">eBay seller order access</a> &middot; <a href="https://developer.ebay.com/api-docs/buy/browse/types/gct%3AItem">Listing and auction fields</a></p>
+				</section>
+				<section class="guide-card" id="throne-gifts">
+					<h2>Throne gifts and automatic ranks</h2>
+					<ol>
+						<li>Open <strong>Throne gifts settings</strong> in Monetization. Enter your Throne username, enable alerts, and save.</li>
+						<li>Copy the generated Webhook URL into Throne's Webhook integration. This connects gifts directly to SSN; no NinjaBacker account or tipping setup is required.</li>
+						<li>Add the SSN overlay to OBS. A verified completed gift increases your gift rank. Crowdfunding contributions show alerts; the rank increases only when the gift is fully funded.</li>
+					</ol>
+					<p>The optional QR card links to your public Throne wishlist. Gift announcements and timed chat links are off by default. Anonymous gifts remain anonymous. Reset rank starts a fresh count without replaying previous gifts.</p>
+					<p>This is a completed-gift counter, not a cheapest-first item ladder. Throne's documented notifications do not include a stable wishlist-item ID, so SSN does not guess which item to unlock. Crowdfund completion does not add its full value to donation totals again.</p>
+					<p>Keep SSN enabled and connected while receiving gifts. Brief reconnects can recover recent events, but this is not an offline order history. Rank counts are local to this SSN installation. Refunds and cancellations are not automatically reflected because this integration has no documented refund event.</p>
+					<p><strong>Availability:</strong> the SSN Throne receiver at <code>api.socialstream.ninja</code> must be available. If it is unavailable, SSN explains this when saving and leaves the previous setup unchanged. The receiver validates Throne signatures before forwarding public gift fields; the private listening key stays on your device and out of overlay URLs.</p>
+					<p><a href="https://help.throne.com/en/articles/15935990-how-do-i-set-up-webhook-integration">Throne webhook setup</a> &middot; <a href="https://help.throne.com/en/articles/15606045-what-fees-are-paid-at-checkout">Throne fees</a> &middot; <a href="../monetization.html?demo&amp;mode=throne">Preview the gift overlay</a></p>
+				</section>
+				<section class="guide-card">
+					<h2>Chat announcements</h2>
+					<p>Announcements are off by default. Enable purchase/next-item announcements for the wishlist, or a tipping-link announcement when enabling NinjaBacker. Each option also has a repeating announcement with a minimum five-minute interval. Messages use SSN's existing chat-output path; your connected chat sources must support sending messages. No messages are sent while SSN is off.</p>
+					<p>Choose top left or bottom right for each overlay. These overlays use your SSN session and password; viewers only need the public wishlist or tipping link.</p>
+				</section>
+			</div>
+		<section class="guide-card"><h2>Setup details</h2><p>Save setup applies all platform changes. Each enabled platform uses a separate OBS browser source; selecting a link does not change which platforms are enabled.</p><ul><li>Cheapest first. Confirm purchases here to unlock the next item. Amazon does not provide a reliable public purchase feed or buyer identity.</li><li>The Tip ID stays on this device and is never included in your overlay link. Use the ID from the same account as the username.</li><li>One purchase completes a list entry. Auctions show the current bid and time left; prices refresh about once a minute.</li><li>Completed gifts raise your rank. Contributions show an alert without counting as a completed gift.</li><li>Shows your gift rank, without guessing which wishlist item unlocks next. Throne checkout fees apply.</li><li>Use a separate OBS browser source for each platform you want to display. Choosing a link here does not enable or disable any platform.</li></ul></section>
+</main>
+		<script src="js/main.js"></script>
+	</body>
+</html>

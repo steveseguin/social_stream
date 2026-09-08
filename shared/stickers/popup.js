@@ -27,10 +27,15 @@
         SSNStickers.packs.forEach(function (pack) {
             var row = document.createElement('div'), label = document.createElement('label'), checkbox = document.createElement('input'), price = document.createElement('input');
             checkbox.type = 'checkbox'; checkbox.dataset.stickerPack = pack.id; checkbox.checked = config.packs.indexOf(pack.id) >= 0;
-            label.appendChild(checkbox); label.appendChild(document.createTextNode(' ' + pack.name + ' '));
+            checkbox.id = 'sticker-pack-' + pack.id;
+            label.className = 'switch';
+            var slider = document.createElement('span'); slider.className = 'slider round';
+            label.appendChild(checkbox); label.appendChild(slider);
+            var name = document.createElement('label'); name.htmlFor = checkbox.id;
+            name.textContent = ({arcade: '🚀', cozy: '☕', chaos: '🪿', studio: '🎵', garden: '🌿', party: '🎉'}[pack.id] || '🎟️') + ' ' + pack.name;
             price.type = 'number'; price.min = '1'; price.max = '1000000'; price.value = config.prices[pack.id] || pack.cost;
             price.dataset.stickerPrice = pack.id; price.setAttribute('aria-label', pack.name + ' points per sticker'); price.style.width = '85px';
-            row.style.margin = '8px 0'; row.appendChild(label); row.appendChild(price); row.appendChild(document.createTextNode(' points each')); list.appendChild(row);
+            row.className = 'popup-toggle-row'; row.style.margin = '8px 0'; row.appendChild(label); row.appendChild(name); row.appendChild(price); row.appendChild(document.createTextNode(' points')); list.appendChild(row);
         });
         ['duration', 'userCooldown', 'stickerCooldown', 'gap'].forEach(function (key) { panel.querySelector('[name="sticker-' + key + '"]').value = config[key]; });
         var custom = document.getElementById('sticker-custom-list'); custom.textContent = '';

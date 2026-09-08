@@ -1772,6 +1772,21 @@ class EventFlowSystem {
 		});
 	}
     
+    // Only the native background bridge calls this path. Ordinary chat cannot mark
+    // itself trusted, even if it copies all fields of a host voice payload.
+    async processVoiceCommand(payload) {
+        if (!payload || typeof payload.text !== 'string' || !Number.isFinite(payload.expiresAt) || Date.now() > payload.expiresAt) return;
+        const flow = this.flows.find(f => f.active && f.id === payload.flowId);
+        if (!flow) return;
+        const trigger = flow.nodes.find(n => n.id === payload.nodeId && n.type === 'trigger' && n.triggerType === 'voicePhrase');
+        const normalizeVoice = value => String(value || '').normalize('NFKC').toLocaleLowerCase().replace(/[.,!?;:]/g, '').replace(/\s+/g, ' ').trim();
+        if (!trigger || normalizeVoice(trigger.config.phrase) !== normalizeVoice(payload.text)) return;
+        const message = {chatname:'Host', chatmessage:payload.text, type:'hostvoice', textonly:true};
+        if (!this.voiceMessages) this.voiceMessages = new WeakMap();
+        this.voiceMessages.set(message, payload);
+        try { await this.evaluateFlow(flow, message); } finally { this.voiceMessages.delete(message); }
+    }
+
     async processMessage(message) {
         
         if (!message) {
@@ -2143,6 +2158,18 @@ class EventFlowSystem {
         return text.replace(/\s\s+/g, ' ').trim();
     }
 
+    // Read only own JSON fields; never traverse prototypes through user-entered paths.
+    getMessageProperty(message, path) {
+        const parts = String(path || '').split('.');
+        let value = message;
+        for (const part of parts) {
+            if (!part || ['__proto__', 'prototype', 'constructor'].includes(part) ||
+                !value || typeof value !== 'object' || !Object.prototype.hasOwnProperty.call(value, part)) return undefined;
+            value = value[part];
+        }
+        return value;
+    }
+
     normalizeEventType(eventType) {
         const normalized = typeof eventType === 'string' ? eventType.toLowerCase().trim() : '';
         // Backward compatibility alias: legacy Twitch ad event spelling.
@@ -2202,6 +2229,9 @@ class EventFlowSystem {
     
     async evaluateTrigger(triggerNode, message, flow = null) {
         const { triggerType, config } = triggerNode;
+        const voice = message && this.voiceMessages && this.voiceMessages.get(message);
+        if (voice) return triggerType === 'voicePhrase' && triggerNode.id === voice.nodeId && Date.now() <= voice.expiresAt;
+        if (triggerType === 'voicePhrase') return false;
         // Boolean activity markers are valid payloads, but are not named events.
         const messageEvent = message && typeof message.event === 'string' ? message.event.toLowerCase() : '';
         // Scheduler ticks have no chat payload. Do not match message filters or
@@ -2525,7 +2555,7 @@ class EventFlowSystem {
                 const rawCompareValue = config.value;
 
                 // Get the property value from the message
-                let msgValue = message[prop];
+                let msgValue = this.getMessageProperty(message, prop);
 
                 // Handle special cases for message length and word count
                 if (prop === 'donationAmount' || prop === 'donoValue' ||
@@ -3189,8 +3219,8 @@ class EventFlowSystem {
 			}
 		}
 
-		return text.replace(/\{(\w+)\}/gi, (match, key) => {
-			const val = messageData[key.toLowerCase()];
+		return text.replace(/\{(\w+(?:\.\w+)*)\}/gi, (match, key) => {
+			const val = key.indexOf('.') !== -1 ? this.getMessageProperty(message, key) : messageData[key.toLowerCase()];
 			if (val === undefined || val === null) return '';
 			if (typeof val === 'object') {
 				try {
@@ -3345,6 +3375,16 @@ class EventFlowSystem {
 		return text.trim();
 	}
     
+    async executeCommunityCheer() {
+        if (typeof this.sendTargetP2P !== 'function') return false;
+        // Reuse the established show-text overlay vocabulary, with a fixed bounded preset.
+        const payload = { actionType: 'show_text', text: 'Cheer!', textProcessed: true,
+            x: 50, y: 40, width: 60, fontSize: 48, fontFamily: 'Arial', color: '#ffffff',
+            backgroundColor: 'rgba(0,0,0,0.8)', duration: 3000, animation: 'none', clearFirst: false };
+        const sent = await this.sendTargetP2P({ overlayNinja: payload }, 'actions', { retry: false });
+        return sent === true; // Transport acceptance, never proof that OBS displayed it.
+    }
+
     async executeAction(actionNode, message, flow = null, execution = null) {
         const { actionType, config } = actionNode;
         //console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);
@@ -4063,6 +4103,14 @@ class EventFlowSystem {
 				}
 				break;
 
+            case 'commerceControl': {
+                const request = { cmd: 'monetization', action: 'commerceControl', command: config.command || 'show', url: config.url || '', seconds: Number(config.seconds || 0) };
+                if (typeof window.handleMonetizationRequest === 'function') {
+                    const reply = await window.handleMonetizationRequest(request);
+                    if (reply.error) throw new Error(reply.error);
+                } else this.sendMessageToBackground(request);
+                break;
+            }
 			case 'showText':
 				{
 					const actionPayload = {

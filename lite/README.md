@@ -98,3 +98,13 @@ shared/
 Run `node scripts/lite-obs-modes-regressions.cjs` for the standalone capture path, reload behavior, OAuth view restoration, and dock configuration. These are browser fixtures, not a live OBS authentication certification.
 
 Run `node scripts/lite-ui-regressions.cjs` for onboarding, session links, reconnect controls, and mobile/popout/OBS layouts. Run `node scripts/lite-emote-rendering-regressions.cjs` for rich chat rendering, and `node --test tests/review-critical-regressions.test.cjs` for the shared regression suite. Browser checks use local fixtures and block external network requests; they do not establish live provider availability.
+
+## Facebook (pending approval)
+
+Facebook is implemented but disabled by `FACEBOOK_ENABLED = false` in `features.js`. It is not mounted or connected in any Lite view; there is no URL or saved-setting override. Leave the flag off until Meta approves `pages_show_list`, `pages_read_engagement`, and `pages_read_user_content`, and a live end-to-end check passes.
+
+When enabled, Link Facebook opens the existing same-origin `../sources/websocket/facebook.html?autoconnect=0` sign-in page. Click **Sign in with Facebook** there, then return to Lite. Lite reads its existing `facebookApiAuth` Page credentials locally; it does not embed that capture page or depend on the extension. Page selection discovers the current live video; a video URL/ID skips discovery. Advanced Options accept a manual Page token (tab memory only) and optional Page ID. IDs do not bypass Meta permissions. Saved linked Pages and video configuration allow automatic connection on reload.
+
+Comments go directly from Graph API to the normal Lite activity/dock/standalone-overlay relay. The initial snapshot and comments predating connection are suppressed. Disconnect cancels polling; it does not revoke Facebook authorization or erase the shared source's saved login. Tokens and raw API errors are excluded from relay/activity output. No viewer-count or Stars events are synthesized.
+
+Before release: enable the flag locally, verify linking and Page selection on the same deployed origin as the source page, capture a fresh comment into normal dock and standalone overlay modes, verify reload/disconnect behavior, then update the public source list. No OAuth callback-service change is required by this implementation. Fixture coverage: `node --test tests/facebook-lite.test.cjs` and `node scripts/lite-facebook-regressions.cjs` (temporarily enables Facebook only in isolated browser responses).

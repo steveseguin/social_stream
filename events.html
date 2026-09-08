@@ -1902,6 +1902,13 @@ body.light-mode .meta-value.badge {
 			forceShow = true;
 		}
 
+        const commerceLabels = { gift: 'sent a gift', giftcontribution: 'contributed to a gift', giftfunded: 'fully funded a gift', purchase: 'purchased an item' };
+        if (Object.prototype.hasOwnProperty.call(commerceLabels, normalizedEvent)) {
+            eventSpecificText = { gift: 'Gift', giftcontribution: 'Gift Contribution', giftfunded: 'Gift Fully Funded', purchase: 'Purchase' }[normalizedEvent];
+            if (!message) message = name + ' ' + commerceLabels[normalizedEvent] + (data.subtitle ? ': ' + data.subtitle : '');
+            forceShow = true;
+        }
+
 		if (!message && normalizedEvent === 'new_follower') {
 			const followVerb = data.type === 'youtube' || data.type === 'youtubeshorts'
 				? getTranslation('alert-just-subscribed', 'just subscribed')

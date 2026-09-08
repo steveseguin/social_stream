@@ -443,6 +443,11 @@ async function processMessageQueue() {
 chrome.tabs.onRemoved.addListener(async (tabId) => {
   if (tabId === backgroundPageTabId) {
     log("Background page tab was closed");
+    // A healthy tab being closed is not a failed creation attempt. Allow the
+    // next popup request to reopen it immediately; failed loads stay throttled.
+    if (backgroundPageTabIdLoaded) {
+      lastBackgroundPageCreated = 0;
+    }
     backgroundPageTabId = null;
     backgroundPageTabIdLoaded = false;
     await updateIconToOff();
