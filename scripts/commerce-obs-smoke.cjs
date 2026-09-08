@@ -84,7 +84,8 @@ async function until(fn) { for (let i = 0; i < 100; i++) { try { const v = await
   fs.writeFileSync(path.join(root,'results.json'),JSON.stringify({passed:true,checks:['native OBS custom dock','Show/Next/Hide/Resume','Browser Source QR rendering','scene unload/reload','dock reconnect'],obsVersion:(await request('GetVersion')).obsVersion},null,2));
   console.log('PASS native OBS commerce controls, scene changes and reconnect:',root);
  } finally {
-  clearInterval(heartbeat);if(browser)await browser.close();if(obs)obs.close();relay.clients.forEach(c=>c.terminate());await new Promise(r=>relay.close(r));await new Promise(r=>server.close(r));
+  clearInterval(heartbeat);if(browser)await browser.close();if(obs)obs.close();
   if(processObs && processObs.exitCode===null)processObs.kill();
+  relay.clients.forEach(c=>c.terminate());await new Promise(r=>relay.close(r));await new Promise(r=>server.close(r));
  }
 })().catch(e=>{console.error(e);process.exitCode=1;});

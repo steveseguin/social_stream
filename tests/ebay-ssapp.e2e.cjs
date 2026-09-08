@@ -150,6 +150,7 @@ const ssapp = process.env.SSN_TEST_SSAPP_ROOT || path.resolve(root, '../ssapp'),
 		await main.waitForTimeout(1600);
 		await call('get');
 		assert.equal(await bg.evaluate(() => capturedGifts.length), 1);
+		await popup.locator('#money-ebay-panel details > summary').click();
 		await popup.locator('#money-ebay-position').selectOption('tl');
 		await popup.locator('label.switch:has(#money-ebay-qr)').click();
 		await popup.locator('#money-save').click();

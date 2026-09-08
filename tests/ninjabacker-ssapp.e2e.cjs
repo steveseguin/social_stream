@@ -114,7 +114,16 @@ fs.writeFileSync(path.join(profile, 'savedSync.json'), JSON.stringify({ streamID
   await overlay.screenshot({ path: path.join(os.tmpdir(), 'ssn-ninja-mobile.png'), omitBackground: true });
   assert.equal(await bg.evaluate(() => ninjaTips.length), 1);
   assert.equal(await bg.evaluate(() => ninjaChat.length), 0);
-  await popup.locator('#monetization-settings').screenshot({ path: path.join(os.tmpdir(), 'ssn-ninja-popup.png') });
+  async function capturePopup(filename) {
+   // Native capture works with SSApp's hidden main window; Playwright screenshots can stall there.
+   const png = await app.evaluate(async ({ BrowserWindow }, url) => {
+    const win = BrowserWindow.getAllWindows().find(w => w.webContents.getURL() === url);
+    win.webContents.setBackgroundThrottling(false);
+    return (await win.webContents.capturePage()).toPNG().toString('base64');
+   }, main.url());
+   fs.writeFileSync(path.join(os.tmpdir(), filename), Buffer.from(png, 'base64'));
+  }
+  await capturePopup('ssn-ninja-popup.png');
   const secret = 'c'.repeat(64);
   await popup.locator('#money-ninja-delivery').selectOption('reliable');
   await popup.locator('#money-ninja-secret').fill(secret);
@@ -148,7 +157,7 @@ fs.writeFileSync(path.join(profile, 'savedSync.json'), JSON.stringify({ streamID
   await main.waitForTimeout(500);
   await popup.locator('#money-ninja-reliable-panel').scrollIntoViewIfNeeded();
   console.log('Receiver panel geometry:', await popup.evaluate(() => { const e = document.getElementById('money-ninja-reliable-panel'); return { width: e.clientWidth, content: e.scrollWidth, input: document.getElementById('money-ninja-webhook').getBoundingClientRect().width }; }));
-  await popup.locator('#monetization-settings').screenshot({ path: path.join(os.tmpdir(), 'ssn-ninja-reliable-popup.png') });
+  await capturePopup('ssn-ninja-reliable-popup.png');
   assert.equal(await bg.evaluate(() => ninjaTips.length), 2);
   assert.equal(await bg.evaluate(() => ninjaChat.length), 0);
   await popup.locator('#money-ninja-delivery').selectOption('live');
