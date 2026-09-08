@@ -25,7 +25,7 @@ const isPopupSearchControl = Function(`${controlSource}\nreturn isPopupSearchCon
 
 [
 	"searchInput",
-	"searchIcon",
+	"popupSearchToolbar",
 	"popupSearchNoResults",
 	"popupSearchResults",
 	"activeIcon",
@@ -93,3 +93,38 @@ assert.match(popupSource, /data-\(\?:setting/, "Setting keys must be searchable 
 });
 
 console.log("popup search tests passed");
+
+const searchHelpers = ["normalizePopupSearchText", "getPopupSearchTerms", "addPopupSearchSynonyms", "popupSearchEscapeRegex", "popupSearchTextHasTerm", "popupSearchTextMatches"].map(name => extractFunction(popupSource, name)).join("\n");
+const matchesSearch = Function(`${searchHelpers}
+    return function(text, query) {
+        const parts = [normalizePopupSearchText(text)];
+        addPopupSearchSynonyms(parts);
+        return popupSearchTextMatches(parts.join(' '), getPopupSearchTerms(query));
+    };
+`)();
+[
+    ["Enable TTS", "read chat aloud"],
+    ["Font size", "bigger text"],
+    ["Background opacity", "see through"],
+    ["Profanity filter", "swearing"],
+    ["User blacklist", "blocklist"],
+    ["Show avatar", "profile picture"],
+    ["Show timestamp", "message time"]
+].forEach(([text, query]) => assert.equal(matchesSearch(text, query), true, query));
+assert.equal(matchesSearch("Message delay", "read aloud"), false);
+assert.equal(matchesSearch("Font size", "third party emotes"), false);
+[
+    ["bttv", "Better Twitch TV"],
+    ["bttv", "BetterTTV"],
+    ["seventv", "Seven TV"],
+    ["seventv", "7 TV"],
+    ["ffz", "FrankerFaceZ"],
+    ["ffz", "Franker Face Z"]
+].forEach(([setting, query]) => {
+    const input = popupHtml.indexOf(`data-setting="${setting}"`);
+    const row = popupHtml.slice(popupHtml.lastIndexOf('<div ', input), input);
+    const keywords = row.match(/data-keywords="([^"]+)"/)[1];
+    assert.equal(matchesSearch(keywords, query), true, query);
+    assert.equal(matchesSearch(keywords, "third-party emotes"), true);
+});
+console.log("popup search keyword tests passed");

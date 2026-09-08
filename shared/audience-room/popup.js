@@ -1,0 +1,133 @@
+(function () {
+	"use strict";
+	function tr(key, fallback) {
+		return typeof getTranslation === "function" ? getTranslation("nc-audience-" + key, fallback) : fallback;
+	}
+	function setup() {
+		var root = document.getElementById("nc-audience-room");
+		if (!root) return;
+		var status = root.querySelector("[data-nc-status]"),
+			code = root.querySelector("[data-nc-code]"),
+			sources = root.querySelector("[data-nc-sources]"),
+			cheer = root.querySelector("[data-nc-cheer]"),
+			link = root.querySelector("[data-nc-link]");
+		var feedback = root.querySelector("[data-nc-feedback]"), publicUrl = root.querySelector("[data-nc-public-url]");
+		var current = {};
+		var dirty = false,
+			busy = false;
+		var labels = { disconnected: "Not connected", connecting: "Connecting…", connected: "Connected", paused: "Paused", reconnecting: "Reconnecting…", unavailable: "Room unavailable; check room settings", authorization_required: "Connection revoked; pair again", awaiting_approval: "Approve this code in the NinjaChatter dashboard", pairing_expired: "Pairing expired; start again", storage_error: "Private storage unavailable", effect_error: "Cheer outcome unknown", publication_unknown: "Chat delivery unknown; message not retried", protocol_error: "Connection protocol error" };
+		function call(request) {
+			return new Promise(function (resolve, reject) {
+				chrome.runtime.sendMessage({ ncAudience: request }, function (r) {
+					if (chrome.runtime.lastError || !r || r.error) return reject(Error("Audience room unavailable"));
+					resolve(r);
+				});
+			});
+		}
+		function render(v) {
+			current = v;
+			if (v.unsupported) {
+				status.textContent = tr("unsupported", "Audience pilot requires the Chrome extension. Existing chat relay remains available below.");
+				root.querySelectorAll("[data-nc-op], [data-nc-overlay], [data-nc-copy]").forEach(function (b) {
+					b.disabled = true;
+				});
+				return;
+			}
+			root.querySelectorAll("[data-nc-op]").forEach(function (b) { b.disabled = busy; });
+			status.textContent = tr("state-" + v.state, labels[v.state] || "Not connected");
+			if (v.warning && labels[v.warning]) status.textContent += " — " + tr("state-" + v.warning, labels[v.warning]);
+			code.value = v.code || "";
+			root.querySelector("[data-nc-pairing]").hidden = !v.code;
+			link.hidden = !v.room;
+			link.href = v.room ? "https://ninjachatter.com/" + encodeURIComponent(v.room) : "#";
+			publicUrl.value = v.room ? link.href : "";
+			root.querySelector('[data-nc-copy="room"]').disabled = !v.room;
+			root.querySelector('[data-nc-op="pair"]').disabled = !!v.paired || !!v.code;
+			root.querySelector('[data-nc-op="pause"]').hidden = !v.paired || v.paused;
+			root.querySelector('[data-nc-op="resume"]').hidden = !v.paired || !v.paused;
+			root.querySelector('[data-nc-op="disconnect"]').hidden = !v.paired && !v.code;
+			if (!dirty) {
+				sources.value = (v.sources || []).join(", ");
+				cheer.checked = !!v.cheer;
+			}
+		}
+		if (location.protocol !== "chrome-extension:") {
+			render({ unsupported: true });
+			return;
+		}
+		root.querySelectorAll("[data-nc-copy]").forEach(function (button) {
+            button.onclick = async function () {
+                var field = button.dataset.ncCopy === "code" ? code : publicUrl;
+                if (!field.value) return;
+                try {
+                    await navigator.clipboard.writeText(field.value);
+                    feedback.textContent = tr("copied", "Copied.");
+                } catch (_) {
+                    field.focus(); field.select();
+                    feedback.textContent = tr("copy-manual", "Copy the selected text manually.");
+                }
+            };
+        });
+        root.querySelector("[data-nc-overlay]").onclick = function () {
+            var existing = document.getElementById("flowactionslink");
+            var url;
+            try { url = new URL(existing && existing.href); } catch (_) {}
+            if (!url || url.origin !== "https://socialstream.ninja" || url.pathname !== "/actions.html" || !url.searchParams.get("session")) {
+                feedback.textContent = tr("overlay-unavailable", "Start SSN first, then open the Actions overlay.");
+                return;
+            }
+            window.open(url.href, "_blank", "noopener,noreferrer");
+        };
+        sources.oninput = cheer.onchange = function () {
+			dirty = true;
+		};
+		root.querySelectorAll("[data-nc-op]").forEach(function (button) {
+			button.onclick = async function () {
+				if (busy) return;
+				busy = true;
+				button.disabled = true;
+				try {
+					var op = button.dataset.ncOp,
+						request = { op: op };
+					if (op === "save") {
+						request.sources = sources.value
+							.split(",")
+							.map(function (s) {
+								return s.trim().toLowerCase();
+							})
+							.filter(Boolean);
+						request.cheer = cheer.checked;
+					}
+					var result = await call(request);
+					if (op === "save") {
+                        dirty = false;
+                        feedback.textContent = tr("saved", "Connection options saved.");
+                    }
+                    if (op === "test") feedback.textContent = result.testSent
+                        ? tr("test-sent", "Cheer sent to the Actions overlay. Check the overlay to confirm it appeared.")
+                        : tr("test-failed", "No effect sent. Start SSN and open the Actions overlay, then try again.");
+					render(result);
+				} catch (_) {
+					feedback.textContent = tr("update-error", "Could not update audience room. Ensure SSN is running and the room has the pilot enabled.");
+				} finally {
+					busy = false;
+					render(current);
+				}
+			};
+		});
+		async function refresh() {
+			if (!root.isConnected) return;
+			if (!busy) {
+				try {
+					render(await call({ op: "status" }));
+				} catch (_) {
+					status.textContent = tr("start", "Start SSN to connect an audience room.");
+				}
+			}
+			setTimeout(refresh, 4000);
+		}
+		refresh();
+	}
+	if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", setup);
+	else setup();
+})();

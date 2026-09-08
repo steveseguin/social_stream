@@ -5,6 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Social Stream Control Dock</title>
 	<meta name="robots" content="noindex">
+	<meta name="referrer" content="no-referrer">
 	<link rel="icon" href="./icons/favicon.ico" type="image/x-icon">
 	<style>
 		:root {
@@ -258,6 +259,9 @@
 				grid-template-columns: 1fr;
 			}
 		}
+		#commerce-controls select, #commerce-controls input { width:100%; box-sizing:border-box; min-height:42px; padding:8px; background:var(--panel); color:var(--text); border:1px solid var(--border); border-radius:7px; }
+		#commerce-controls label { display:block; margin-bottom:6px; }
+		#commerce-controls button:disabled { opacity:.5; cursor:default; }
 	</style>
 </head>
 <body>
@@ -277,6 +281,19 @@
 		</form>
 		<p class="setup-hint">Use the same Session ID shown in Social Stream and in your overlay links.</p>
 	</section>
+
+	<details id="commerce-controls" open>
+		<summary data-page-translate="commerce-dock-products">Products &amp; support links</summary>
+		<div class="controls">
+			<div class="wide"><label for="commerce-product" data-page-translate="commerce-dock-product">Saved product</label><select id="commerce-product" disabled><option value="">Waiting for Social Stream</option></select></div>
+			<div class="wide"><label for="commerce-duration" data-page-translate="commerce-dock-duration">Duration in seconds (0 = until changed)</label><input id="commerce-duration" type="number" min="0" max="3600" value="0"></div>
+			<button type="button" class="primary" data-commerce="show" disabled data-page-translate="commerce-dock-show">Show</button><button type="button" data-commerce="next" disabled data-page-translate="commerce-dock-next">Next</button>
+			<button type="button" data-commerce="hide" disabled data-page-translate="commerce-dock-hide">Hide products</button><button type="button" data-commerce="resume" disabled data-page-translate="commerce-dock-resume">Resume schedule</button>
+			<p class="section-note" id="commerce-state" role="status">Waiting for Social Stream.</p>
+			<button type="button" class="wide" id="commerce-refresh" data-page-translate="commerce-dock-refresh">Refresh state</button>
+			<p class="section-note"><span data-page-translate="commerce-dock-note">Selection is controlled by Social Stream; OBS scene visibility is separate. Activity alerts continue when products are hidden.</span> <a href="docs/obs-control-dock-guide.html#commerce" target="_blank" rel="noopener" data-page-translate="commerce-dock-guide">Setup guide</a></p>
+		</div>
+	</details>
 
 	<details open>
 		<summary>Credits</summary>
@@ -323,16 +340,20 @@
 	<div class="command-status" id="commandStatus" role="status" aria-live="polite">Connect to send a command.</div>
 
 	<footer class="dock-footer">
-		<a href="./docs/obs-control-dock-guide.html" target="_blank" rel="noopener">Setup guide</a>
+		<a href="./docs/obs-control-dock-guide.html" target="_blank" rel="noopener" data-page-translate="commerce-dock-guide">Setup guide</a>
 		<a href="./sampleapi.html" id="fullApiLink" target="_blank" rel="noopener">Full API sandbox</a>
 	</footer>
 
+	<script src="translations/page-i18n.js"></script>
+	<script src="shared/monetization/obs-controls.js"></script>
 	<script>
 		(function() {
 			"use strict";
 
 			var STORAGE_KEY = "ssn-obs-control-session-v1";
 			var WEBSOCKET_URL = "wss://io.socialstream.ninja:443";
+			var customServer = new URLSearchParams(location.search).get("server");
+			if (customServer && /^wss?:\/\//i.test(customServer)) WEBSOCKET_URL = customServer;
 			var socket = null;
 			var sessionId = "";
 			var reconnectTimer = null;
@@ -410,6 +431,7 @@
 				Object.keys(pendingRequests).forEach(function(requestId) {
 					var pending = pendingRequests[requestId];
 					clearTimeout(pending.timer);
+					if (pending.reject) pending.reject(new Error(message || "Connection lost"));
 					if (pending.button) pending.button.disabled = false;
 					delete pendingRequests[requestId];
 				});
@@ -448,6 +470,7 @@
 				clearTimeout(pending.timer);
 				if (pending.button) pending.button.disabled = false;
 				delete pendingRequests[requestId];
+				if (pending.resolve) { pending.resolve(data.callback.result); return; }
 				var status = resultMessage(pending.action, data.callback.result);
 				setCommandStatus(status.message, status.type);
 			}
@@ -460,6 +483,8 @@
 					return;
 				}
 
+				failPendingRequests();
+				commerceDock.disconnected();
 				sessionId = nextSession;
 				sessionInput.value = sessionId;
 				fullApiLink.href = "./sampleapi.html?session=" + encodeURIComponent(sessionId);
@@ -489,6 +514,7 @@
 					reconnectDelay = 1000;
 					setConnectionState("connected", "Connected");
 					setCommandStatus("Ready.", "success");
+					commerceDock.refresh();
 				};
 
 				currentSocket.onmessage = handleSocketMessage;
@@ -501,6 +527,7 @@
 				currentSocket.onclose = function() {
 					if (socket !== currentSocket) return;
 					socket = null;
+					commerceDock.disconnected();
 					failPendingRequests("Connection lost; command status is unknown.");
 					setConnectionState("disconnected", "Disconnected");
 					scheduleReconnect();
@@ -582,6 +609,17 @@
 				clearReconnectTimer();
 			});
 
+			var commerceDock = window.SSNCommerceDock(function(action, value) {
+				return new Promise(function(resolve, reject) {
+					if (!socket || socket.readyState !== WebSocket.OPEN) { reject(new Error("Not connected")); return; }
+					var id = "obs-commerce-" + Date.now() + "-" + (++requestCounter);
+					pendingRequests[id] = {resolve:resolve, reject:reject, timer:setTimeout(function() {
+						delete pendingRequests[id]; reject(new Error("No response. Enable remote API control in Social Stream."));
+					}, 5000)};
+					try { socket.send(JSON.stringify({action:action, value:value, protocol:2, apiid:sessionId, get:id})); }
+					catch (error) { clearTimeout(pendingRequests[id].timer); delete pendingRequests[id]; reject(error); }
+				});
+			}, setCommandStatus);
 			var initialSession = getSavedSession();
 			if (initialSession) {
 				sessionInput.value = initialSession;

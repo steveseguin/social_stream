@@ -600,6 +600,7 @@
     // Removed upgrade and mypets functions - no longer needed
     
     function sendChatResponse(message) {
+        if (urlParams.has('demo')) return;
         // Send response back through the overlay system
         const response = {
             chatname: 'PetRaceBot',
@@ -622,11 +623,12 @@
     // Removed points-related functions - no longer needed
     
     function processData(data) {
+        if (!data || typeof data !== 'object') return;
         if (data.content) {
             data = data.content;
         }
         
-        if (!data.chatmessage || !data.chatname) return;
+        if (typeof data.chatmessage !== 'string' || typeof data.chatname !== 'string' || !data.chatmessage || !data.chatname) return;
 
         let rawMessage = data.chatmessage;
         if (!data.textonly) {
@@ -643,7 +645,7 @@
     }
     
     // Setup iframe communication (skip when using WebSocket mode)
-    if (!urlParams.has('server')) {
+    if (!urlParams.has('demo') && !urlParams.has('server')) {
         const iframe = document.createElement("iframe");
         iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
         iframe.style.width = "0px";
@@ -667,7 +669,7 @@
     }
     
     // Handle WebSocket connection if server parameters are provided
-    if (urlParams.has('server')) {
+    if (!urlParams.has('demo') && urlParams.has('server')) {
         const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
         let socketserver = null;
         let reconnectTimeout = null;

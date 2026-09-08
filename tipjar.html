@@ -607,6 +607,121 @@
         text-align: center;
         text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
     }
+    /* Shared palette keeps themes consistent across the goal layouts. */
+    :root {
+        --goal-accent: #66d9b2;
+        --goal-accent-end: #85baff;
+        --goal-panel: rgba(18, 24, 34, 0.94);
+        --goal-track: rgba(255, 255, 255, 0.12);
+        --goal-border: rgba(255, 255, 255, 0.16);
+        --goal-muted: #c1cbd8;
+    }
+    body.neon { --goal-accent: #df8bff; --goal-accent-end: #69e4ef; }
+    body.gold { --goal-accent: #edc56b; --goal-accent-end: #f5dfa7; --goal-panel: rgba(30, 26, 20, 0.95); }
+    body.tipjar-refresh .style-container { min-width: 0; font-variant-numeric: tabular-nums; }
+    body.tipjar-refresh .goal-title, body.tipjar-refresh .fluid-bar-title, body.tipjar-refresh .vertical-title, body.tipjar-refresh #tip-text { overflow-wrap: anywhere; }
+    body.tipjar-refresh .goal-meter-container {
+        background: var(--goal-panel);
+        border: 1px solid var(--goal-border);
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+    }
+    body.tipjar-refresh.neon .goal-meter-container, body.tipjar-refresh.gold .goal-meter-container {
+        background: var(--goal-panel);
+        border: 1px solid var(--goal-accent);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+    }
+    body.tipjar-refresh .goal-title { font-size: 24px; margin-bottom: 16px; }
+    body.tipjar-refresh .meter-wrapper { height: 48px; padding: 0; background: var(--goal-track); box-shadow: none; }
+    body.tipjar-refresh .meter-fill, body.tipjar-refresh.neon .meter-fill, body.tipjar-refresh.gold .meter-fill {
+        background: linear-gradient(90deg, var(--goal-accent), var(--goal-accent-end));
+        box-shadow: none;
+    }
+    body.tipjar-refresh .meter-text { width: calc(100% - 20px); text-align: center; font-size: 20px; overflow-wrap: anywhere; }
+    body.tipjar-refresh .milestones { color: var(--goal-muted); font-size: 12px; }
+    body.tipjar-refresh .recent-tips:empty { display: none; }
+    body.tipjar-refresh .tip-item { border-radius: 8px; background: rgba(255, 255, 255, 0.06); }
+    body.tipjar-refresh .tip-item > :first-child { min-width: 0; overflow-wrap: anywhere; margin-right: 12px; }
+    body.tipjar-refresh .tip-item > :last-child { flex-shrink: 0; }
+    body.tipjar-refresh .minimal-amount { color: var(--goal-accent); font-size: 42px; text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8); overflow-wrap: anywhere; }
+    body.tipjar-refresh .minimal-goal { color: #edf1f7; text-shadow: 0 2px 5px #000; overflow-wrap: anywhere; }
+    body.tipjar-refresh .minimal-percentage { background: none; -webkit-text-fill-color: currentColor; color: var(--goal-accent); font-size: 56px; margin: 12px 0; text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8); }
+    body.tipjar-refresh .fluid-bar-title { font-size: 26px; letter-spacing: 0; }
+    body.tipjar-refresh .fluid-bar-track { border-width: 1px; }
+    body.tipjar-refresh.neon .fluid-bar-track { border-color: var(--goal-accent); box-shadow: 0 0 12px rgba(223, 139, 255, 0.25); }
+    body.tipjar-refresh .fluid-bar-fill::before { opacity: 0.5; }
+    body.tipjar-refresh .fluid-bar-fill::after { opacity: 0.45; }
+    body.tipjar-refresh .compact-header { flex-wrap: wrap; line-height: 1.5; }
+    body.tipjar-refresh #compact-title { min-width: 0; overflow-wrap: anywhere; margin-right: 12px; }
+    body.tipjar-refresh .compact-amount { overflow-wrap: anywhere; }
+    body.tipjar-refresh .vertical-track { box-shadow: inset 0 0 0 4px rgba(0, 0, 0, 0.12); }
+    body.tipjar-refresh .text-line { white-space: normal; overflow-wrap: anywhere; line-height: 1.35; }
+    body.tipjar-refresh #tip-text { padding: 8px 16px; font-size: 22px; line-height: 1.35; }
+
+
+
+    /* Practical alternatives share the same progress state and formatting. */
+    #summary-style { width: 100%; max-width: 460px; padding: 16px; min-width: 0; font-variant-numeric: tabular-nums; }
+    .summary-panel {
+        color: #f7f9fc;
+        background: var(--goal-panel);
+        border: 1px solid var(--goal-border);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+    }
+    .summary-copy { min-width: 0; }
+    .summary-title { font-size: 16px; font-weight: 600; color: var(--goal-muted); line-height: 1.4; overflow-wrap: anywhere; }
+    .summary-amount { font-size: 40px; font-weight: 700; letter-spacing: -1px; margin: 10px 0 4px; overflow-wrap: anywhere; }
+    .summary-goal { color: var(--goal-muted); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+    .summary-footer { display: flex; justify-content: space-between; margin-top: 12px; font-size: 13px; color: var(--goal-muted); }
+    .summary-percent { color: var(--goal-accent); font-weight: 700; }
+    #summary-style.hide-percentage .summary-percent, #summary-style.hide-percentage .ring-percent { display: none; }
+    .summary-track { height: 10px; background: var(--goal-track); border-radius: 6px; margin-top: 20px; overflow: hidden; position: relative; }
+    .summary-fill { height: 100%; width: 0; border-radius: inherit; background: var(--goal-accent); transition: width 0.7s ease; }
+    .summary-ring { display: none; position: relative; width: 160px; height: 160px; margin: 0 auto 20px; }
+    .summary-ring svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring-track, .ring-fill { fill: none; stroke-width: 8; }
+    .ring-track { stroke: var(--goal-track); }
+    .ring-fill { stroke: var(--goal-accent); stroke-dasharray: 100 100; stroke-dashoffset: 100; transition: stroke-dashoffset 0.7s ease; }
+    .ring-percent { position: absolute; top: 50%; left: 0; width: 100%; transform: translateY(-50%); text-align: center; font-size: 32px; font-weight: 700; }
+    #summary-style.layout-ring { max-width: 340px; }
+    .layout-ring .summary-ring { display: block; }
+    .layout-ring .summary-panel { text-align: center; }
+    .layout-ring .summary-track, .layout-ring .summary-footer { display: none; }
+    .layout-ring .summary-amount { font-size: 32px; }
+    #summary-style.layout-lowerthird { max-width: 880px; }
+    .layout-lowerthird .summary-panel { border-radius: 10px; padding: 18px 24px; border-left: 4px solid var(--goal-accent); }
+    .layout-lowerthird .summary-copy { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 20px; align-items: baseline; }
+    .layout-lowerthird .summary-title { grid-row: span 2; font-size: 20px; color: #f7f9fc; }
+    .layout-lowerthird .summary-amount { font-size: 28px; margin: 0; text-align: right; }
+    .layout-lowerthird .summary-goal { text-align: right; }
+    .layout-lowerthird .summary-track { margin-top: 14px; height: 6px; }
+    .layout-lowerthird .summary-footer { display: none; }
+    #summary-style.layout-segmented { max-width: 600px; }
+    .layout-segmented .summary-panel { border-radius: 12px; }
+    .layout-segmented .summary-track {
+        height: 24px;
+        border-radius: 0;
+        -webkit-mask-image: repeating-linear-gradient(90deg, #000 0, #000 calc(5% - 3px), transparent calc(5% - 3px), transparent 5%);
+        mask-image: repeating-linear-gradient(90deg, #000 0, #000 calc(5% - 3px), transparent calc(5% - 3px), transparent 5%);
+    }
+    .layout-segmented .summary-fill { border-radius: 0; }
+    @media (max-width: 420px) {
+        body.tipjar-refresh #meter-style, body.tipjar-refresh #bar-style { padding: 12px; }
+        body.tipjar-refresh .goal-meter-container { padding: 16px; }
+        body.tipjar-refresh .meter-text, body.tipjar-refresh .fluid-bar-text { font-size: 18px; }
+        body.tipjar-refresh .milestones > :nth-child(2), body.tipjar-refresh .milestones > :nth-child(4) { display: none; }
+        .summary-panel { padding: 20px; }
+        .layout-lowerthird .summary-copy { display: block; }
+        .layout-lowerthird .summary-amount, .layout-lowerthird .summary-goal { text-align: left; }
+        .layout-lowerthird .summary-amount { margin-top: 8px; }
+        body.tipjar-refresh .text-line { font-size: 20px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        body.tipjar-refresh .style-container *, body.tipjar-refresh .style-container *::before, body.tipjar-refresh .style-container *::after, #summary-style *, #summary-style *::before, #summary-style *::after { animation: none !important; transition: none !important; }
+    }
     </style>
 </head>
 <body>
@@ -692,6 +807,28 @@
         <div class="text-line" id="text-line">Stream Goal: $0 / $250</div>
     </div>
 
+    <!-- Card, ring, lower third and segmented layouts -->
+    <div id="summary-style" class="style-container">
+        <div class="summary-panel" role="progressbar" aria-label="Goal progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="summary-progress">
+            <div class="summary-ring" aria-hidden="true">
+                <svg viewBox="0 0 120 120">
+                    <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+                    <circle class="ring-fill" id="summary-ring-fill" cx="60" cy="60" r="52" pathLength="100"></circle>
+                </svg>
+                <span class="ring-percent" id="summary-ring-percent">0%</span>
+            </div>
+            <div class="summary-copy">
+                <h2 class="summary-title" id="summary-title">Stream Goal</h2>
+                <div class="summary-amount" id="summary-amount">$0</div>
+                <div class="summary-goal" id="summary-goal">of $250 goal</div>
+            </div>
+            <div class="summary-track">
+                <div class="summary-fill" id="summary-fill"></div>
+            </div>
+            <div class="summary-footer"><span id="summary-status">Goal progress</span><span class="summary-percent" id="summary-percent">0%</span></div>
+        </div>
+    </div>
+
     <!-- Shared Elements -->
     <div id="notification"></div>
     <div class="celebration-container" id="celebration"></div>
@@ -761,7 +898,11 @@
                 caps.upstreamCommands !== true &&
                 caps.customChannel !== true;
         }
-        const style = urlParams.get('style') || 'jar'; // jar, meter, minimal
+        const previewMode = urlParams.has('preview');
+        const refreshedAppearance = urlParams.has('refresh');
+        const summaryStyles = ['card', 'ring', 'lowerthird', 'segmented'];
+        const requestedStyle = urlParams.get('style') || 'jar';
+        const style = ['jar', 'meter', 'minimal', 'bar', 'compact', 'vertical', 'text'].concat(summaryStyles).indexOf(requestedStyle) !== -1 ? requestedStyle : 'jar';
         const theme = urlParams.get('theme') || 'default'; // default, neon, gold
         const requestedHypeMode = urlParams.has('hype') || urlParams.get('mode') === 'hype';
         const goalMetric = normalizeGoalMetric(urlParams.get('goalmetric') || (urlParams.has('countdonations') ? 'count' : 'value'));
@@ -774,8 +915,8 @@
         const parsedGoal = readNumberParam('goal', hypeMode ? 100 : 250, countMode ? 1 : 0.01);
         const goal = countMode ? Math.max(1, Math.round(parsedGoal)) : parsedGoal;
         const celebration = urlParams.get('celebration') || 'hearts'; // hearts, confetti, fireworks, none
-        const persistent = urlParams.has('persistent'); // Keep amount between sessions
-        const sound = urlParams.has('sound'); // Play sound on donation
+        const persistent = !previewMode && urlParams.has('persistent'); // Keep amount between sessions
+        const sound = !previewMode && urlParams.has('sound'); // Play sound on donation
         const hasCustomTitle = urlParams.has('title');
         const customTitle = urlParams.get('title') || (hypeMode ? 'Hype Goal' : (countMode ? getDefaultCountTitle(eventTypeFilter) : 'Stream Goal'));
         const showControls = urlParams.has('controls'); // Show control panel
@@ -802,8 +943,9 @@
         const nativeUnitLabel = urlParams.get('tipjarunitlabel') || getDonationTypeLabel(donationTypeFilter);
 
         // Fluid goal bar styling + recurring goal levels
-        const fillStartColor = urlParams.get('fillstart') || urlParams.get('barcolorstart') || '#2196F3';
-        const fillEndColor = urlParams.get('fillend') || urlParams.get('barcolorend') || '#f44336';
+        const themeFill = !refreshedAppearance ? ['#2196F3', '#f44336'] : theme === 'gold' ? ['#edc56b', '#f5dfa7'] : (theme === 'neon' ? ['#df8bff', '#69e4ef'] : ['#2196F3', '#f44336']);
+        const fillStartColor = urlParams.get('fillstart') || urlParams.get('barcolorstart') || themeFill[0];
+        const fillEndColor = urlParams.get('fillend') || urlParams.get('barcolorend') || themeFill[1];
         const fillMode = (urlParams.get('fillmode') || 'progress').toLowerCase(); // progress | gradient | solid
         const hasCustomFill = urlParams.has('fillstart') || urlParams.has('fillend') || urlParams.has('barcolorstart') || urlParams.has('barcolorend');
         const barLiquid = !urlParams.has('noliquid');
@@ -850,12 +992,29 @@
         document.querySelectorAll('.style-container').forEach(container => {
             container.classList.remove('active');
         });
-        document.getElementById(`${style}-style`)?.classList.add('active');
+        const isSummaryStyle = summaryStyles.indexOf(style) !== -1;
+        const activeStyle = document.getElementById(isSummaryStyle ? 'summary-style' : `${style}-style`);
+        activeStyle.classList.add('active');
+        if (refreshedAppearance) document.body.classList.add('tipjar-refresh');
+        if (isSummaryStyle) activeStyle.classList.add('layout-' + style);
+        if (barTrackColor) document.documentElement.style.setProperty('--goal-track', barTrackColor);
+        if (hasCustomFill) document.documentElement.style.setProperty('--goal-accent', fillStartColor);
+        if (isSummaryStyle) {
+            const panelOpacity = readNumberParam('panelopacity', theme === 'gold' ? 0.95 : 0.94, 0);
+            const panelRgb = theme === 'gold' ? '30, 26, 20' : '18, 24, 34';
+            const panel = document.querySelector('.summary-panel');
+            panel.style.backgroundColor = `rgba(${panelRgb}, ${Math.min(1, panelOpacity)})`;
+            const accent = urlParams.get('accent');
+            if (accent && /^#[0-9a-f]{6}$/i.test(accent)) activeStyle.style.setProperty('--goal-accent', accent);
+            const amountSize = readOptionalNumberParam(['amountsize'], 12);
+            if (amountSize !== null) document.getElementById('summary-amount').style.fontSize = Math.min(96, amountSize) + 'px';
+            if (urlParams.has('hidepercent')) activeStyle.classList.add('hide-percentage');
+        }
 
         // Optional corner-friendly square (or custom) edges for any bar-based style.
         if (barRadius !== null && barRadius !== '') {
             const radiusValue = /^\d+(\.\d+)?$/.test(barRadius) ? barRadius + 'px' : barRadius;
-            document.querySelectorAll('.fluid-bar-track, .compact-track, .vertical-track').forEach(function(el) {
+            document.querySelectorAll('.fluid-bar-track, .compact-track, .vertical-track, .summary-track').forEach(function(el) {
                 el.style.borderRadius = radiusValue;
             });
         }
@@ -950,7 +1109,7 @@
                 }
             });
 
-            Runner.run(engine);
+            Runner.run(Runner.create(), engine);
             Render.run(render);
 
             // Create cup container
@@ -1205,7 +1364,9 @@
             const percentage = state.percentage;
 
             // Update different styles
-            if (style === 'jar') {
+            if (isSummaryStyle) {
+                renderSummary(state);
+            } else if (style === 'jar') {
                 document.getElementById('tip-text').textContent = formatProgressText();
             } else if (style === 'meter') {
                 document.getElementById('meter-fill').style.width = percentage + '%';
@@ -1242,6 +1403,33 @@
             }
 
             updateCompletionDisplay();
+        }
+
+        function renderSummary(state) {
+            const percentage = Math.max(0, Math.min(100, state.percentage));
+            const title = state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle;
+            setElText('summary-title', title);
+            setElText('summary-amount', formatGoalValue(state.current, true));
+            setElText('summary-goal', `of ${formatGoalValue(state.goal)} goal`);
+            setElText('summary-percent', `${Math.round(percentage)}%`);
+            setElText('summary-ring-percent', `${Math.round(percentage)}%`);
+            setElText('summary-status', percentage >= 100 ? 'Goal reached' : 'Goal progress');
+            const fill = document.getElementById('summary-fill');
+            const ring = document.getElementById('summary-ring-fill');
+            fill.style.width = percentage + '%';
+            ring.style.strokeDashoffset = 100 - percentage;
+            if (hasCustomFill) {
+                if (fillMode === 'gradient') {
+                    fill.style.background = `linear-gradient(90deg, ${fillStartColor}, ${fillEndColor})`;
+                } else {
+                    applyFillColor(fill, percentage / 100);
+                }
+                ring.style.stroke = fillMode === 'solid' ? fillStartColor : lerpColor(fillStartRgb, fillEndRgb, percentage / 100);
+            }
+            const progress = document.getElementById('summary-progress');
+            progress.setAttribute('aria-label', title);
+            progress.setAttribute('aria-valuenow', String(Math.round(percentage)));
+            progress.setAttribute('aria-valuetext', formatProgressPair(state));
         }
 
         function applyFillColor(fillEl, t) {
@@ -2370,7 +2558,7 @@
         }
         
         // Initialize socket server if enabled
-        if (serverURL || useLocalServer) {
+        if (!previewMode && (serverURL || useLocalServer)) {
             const finalServerURL = useLocalServer ? SocialStreamLocalServer.getWebSocketUrl() : (serverURL || "wss://io.socialstream.ninja");
             socketserver = new WebSocket(finalServerURL);
             setupSocket();
@@ -2659,7 +2847,7 @@
         }
 
         // IFRAME setup for Social Stream Ninja
-        if (!useServerOnlyTransport()) {
+        if (!previewMode && !useServerOnlyTransport()) {
             const iframe = document.createElement("iframe");
             const filename = "tipjar";
             iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" +

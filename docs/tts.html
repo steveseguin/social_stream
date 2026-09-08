@@ -313,10 +313,10 @@
         
         <h2 id="overview">Overview</h2>
         <div class="card">
-            <p>Social Stream Ninja offers multiple Text-to-Speech (TTS) options, from free system voices to premium services. This guide covers everything you need to know about configuring and using TTS effectively.</p>
+            <p><strong>SSN can read captured chat text from any supported source; the chat platform does not need its own TTS feature.</strong> Your TTS-enabled dock or overlay speaks the messages it receives, subject to its filters and TTS settings. Start with the <a href="tts-setup-guide.html#chat-platforms">short setup guide</a>; this page covers voice options and advanced settings. <a href="tts-setup-guide.html#voice-chooser">Compare providers, hear samples and see the settings.</a></p>
             
             <div class="info">
-                <strong>Quick Start:</strong> Add <code>?speech=en-US</code> to your URL to enable English TTS
+                <strong>Quick Start:</strong> Use <code>dock.html?session=YOUR_SESSION&amp;speech=en-US</code>. This defaults to System TTS. For a free OBS provider, also add <code>&amp;ttsprovider=kokoro</code>. Keep this page open and connected; only one copy should speak.
             </div>
             
             <h3>Where is TTS Used?</h3>
@@ -327,12 +327,12 @@
             </ul>
             
             <div class="warning">
-                <strong>Free TTS Limitations:</strong>
+                <strong>System TTS is not the same as all free TTS:</strong>
                 <ul>
-                    <li>OBS browser sources cannot capture system TTS audio directly</li>
-                    <li>Requires complex audio routing solutions</li>
-                    <li>Limited browser support (Firefox may lack some TTS voices)</li>
-                    <li>Premium services are recommended for easier integration</li>
+                    <li>System voices depend on the browser and operating system. OBS may expose no usable voices, even when Chrome/Edge works.</li>
+                    <li>A missing voice is different from speech playing outside OBS’s audio capture. Audio routing cannot fix missing speech support.</li>
+                    <li>Free providers such as Kokoro, Piper, Kitten, and eSpeak generate page audio instead. Payment is not required for TTS in OBS.</li>
+                    <li><a href="tts-setup-guide.html#obs-voices">Check voice availability, then audio capture.</a></li>
                 </ul>
             </div>
         </div>
@@ -343,7 +343,7 @@
             <ul>
                 <li>Uses your operating system's built-in voices</li>
                 <li>Limited language support based on system installation</li>
-                <li>Audio plays through system speakers - requires special capture methods</li>
+                <li>Voice availability and audio routing depend on the browser and operating system; test in the actual player</li>
                 <li>Browser compatibility varies significantly</li>
             </ul>
             
@@ -425,16 +425,17 @@
             </table>
         </div>
         
-        <h2 id="browser-support">Browser Support</h2>
+        <h2 id="browser-support">System Voice Availability</h2>
+        <p>These are typical capabilities, not guarantees for every installation. OBS uses its own embedded browser and does not inherit an installed Chrome/Edge voice list. A successful SSN app test does not test a separate OBS Browser Source.</p>
         <div class="browser-support">
             <div class="browser-card">
                 <h3>Chrome</h3>
-                <p class="supported">✓ Full Support</p>
+                <p class="supported">✓ System voices available on supported installations</p>
                 <p>Google-powered voices + system voices</p>
             </div>
             <div class="browser-card">
                 <h3>Edge</h3>
-                <p class="supported">✓ Full Support</p>
+                <p class="supported">✓ System voices available on supported installations</p>
                 <p>Microsoft voices + Windows TTS packs</p>
             </div>
             <div class="browser-card">
@@ -462,8 +463,8 @@
         
         <h2 id="audio-capture">Windows TTS Audio Capture Methods for OBS</h2>
         <div class="card">
-            <h3>Premium TTS Services (Recommended)</h3>
-            <p>All premium services play audio directly through the browser:</p>
+            <h3>Page Audio: Free Local and Cloud Providers</h3>
+            <p>SSN’s browser-based local providers and cloud audio providers play generated audio through the page:</p>
             <ul>
                 <li>Simply enable "Control audio via OBS" in browser source</li>
                 <li>No virtual audio cables needed</li>
@@ -472,20 +473,20 @@
             
             <h3>System TTS Capture Methods</h3>
             <div class="warning">
-                <strong>Important:</strong> OBS Studio's browser source cannot capture system-level TTS audio directly. 
-                This limitation affects all browsers and requires special audio routing methods.
+                <strong>Important:</strong> First confirm that System TTS generates speech. OBS’s embedded browser may not expose a usable system voice. If it generates no speech, changing audio routing will not help. Choose another provider, or generate speech in a supported browser and capture that browser’s audio.
             </div>
             
-            <p>Free text-to-speech comes with limitations:</p>
+            <p>For System TTS specifically:</p>
             <ul>
-                <li>Cannot be captured directly by OBS browser sources</li>
+                <li>Do not assume OBS exposes the same voices as Chrome or Edge</li>
                 <li>Limited support across browsers (Firefox may lack some TTS voices)</li>
                 <li>Chrome offers Google-powered options, Edge has Microsoft options</li>
-                <li>Requires complex audio routing for capture</li>
+                <li>If speech plays outside the scene Browser Source, capture that output separately</li>
             </ul>
             <p><strong>Routing downloads:</strong> <a href="https://vb-audio.com/Cable/" target="_blank">VB-Audio Virtual Cable</a> | <a href="https://vb-audio.com/Voicemeeter/" target="_blank">Voicemeeter</a> | <a href="https://github.com/audiorouterdev/audio-router" target="_blank">Audio Router (legacy)</a></p>
 
-            <h4>Method 1: Default Audio Route (Most Common)</h4>
+            <p>Try capturing the speaking browser with OBS application or desktop audio first, where supported. The virtual-cable methods below are optional alternatives; they do not add speech support to OBS.</p>
+            <h4>Method 1: Default Audio Route with a Virtual Cable</h4>
             <div class="code">
 1. Set VB-Audio Virtual Cable as Windows default output
    - Sound Settings > Output > CABLE Input
@@ -537,8 +538,7 @@
             </div>
             
             <div class="info">
-                <strong>Alternatives:</strong> If these methods don't work, consider using premium options 
-                (Google Cloud, ElevenLabs, Speechify) or explore self-hosted open-source TTS solutions.
+                <strong>Alternatives:</strong> Use a free built-in provider such as Kokoro, Piper, Kitten, or eSpeak, a cloud provider, or a self-hosted TTS server.
             </div>
         </div>
         
@@ -639,7 +639,8 @@
                 <li>Works directly with OBS browser source</li>
                 <li>Voice selection: <code>&voicekokoro=af_bella</code></li>
                 <li>Speed control: <code>&kokorospeed=1.2</code></li>
-                <li>Kokoro's built-in voices are English voices; <code>&speech=pt-BR</code>, <code>&speech=es-ES</code>, or matching <code>&language=</code> values will not turn Kokoro into Portuguese or Spanish TTS</li>
+                <li>Choose a voice for the language: <code>&amp;voicekokoro=ef_dora</code> for Spanish or <code>&amp;voicekokoro=pf_dora</code> for Brazilian Portuguese. Changing <code>&amp;speech=</code> alone does not change the selected voice. Existing English voice IDs still work.</li>
+
             </ul>
 
             <h3>Piper TTS (Free, Built-in)</h3>
@@ -731,7 +732,7 @@
             <ul>
                 <li><strong>No audio playing:</strong> Check that TTS is enabled, the TTS-producing page is open, and the browser source is not muted. In a normal browser, click the page once.</li>
                 <li><strong>Voices not showing:</strong> Restart browser after installing language packs</li>
-                <li><strong>OBS not capturing:</strong> For browser/provider TTS, check <strong>Control audio via OBS</strong>. For system TTS, use one of the capture methods above</li>
+                <li><strong>OBS not capturing:</strong> If there is no speech, check voice/provider availability first. If speech exists, check <strong>Control audio via OBS</strong>, mixer mute, and output tracks, or capture the external browser that is speaking</li>
                 <li><strong>Local endpoint works in the app test but not OBS:</strong> OBS is a separate browser. Check the endpoint from the OBS computer, especially if using <code>127.0.0.1</code>.</li>
                 <li><strong>Only the first letter or first words are read:</strong> remove <code>ttsquick</code> from the OBS URL if present.</li>
                 <li><strong>Safari issues:</strong> Safari has limited automatic TTS support</li>
@@ -740,7 +741,7 @@
             
             <h3>Best Practices</h3>
             <ul>
-                <li>Use premium TTS services for easiest OBS integration</li>
+                <li>Use a provider that generates page audio for a simpler OBS setup; free local providers are available</li>
                 <li>Test your setup with simple phrases before going live</li>
                 <li>Consider user-generated content risks with TTS</li>
                 <li>Have a toggle to quickly disable TTS if needed</li>
@@ -748,8 +749,8 @@
         </div>
         
         <div class="tts-test">
-            <h3>Test Your Browser's TTS Support</h3>
-            <p>Click the button below to see available voices in your browser:</p>
+            <h3>Check This Browser's System Voices</h3>
+            <p>This lists <strong>System TTS voices in the browser displaying this guide only</strong>. It does not test OBS, a separate SSN app window, or providers such as Kokoro. An empty list does not mean SSN’s other TTS providers are unavailable.</p>
             <button onclick="window.open('https://socialstream.ninja/tts', '_blank')">Check Available Voices</button>
         </div>
         

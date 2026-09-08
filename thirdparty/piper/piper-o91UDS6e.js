@@ -29,7 +29,7 @@ var createPiperPhonemize = (() => {
         var REMOTE_PACKAGE_NAME = Module["locateFile"] ? Module["locateFile"](REMOTE_PACKAGE_BASE, "") : REMOTE_PACKAGE_BASE;
         var REMOTE_PACKAGE_SIZE = metadata["remote_package_size"];
         function fetchRemotePackage(packageName, packageSize, callback, errback) {
-          if (typeof process === "object" && typeof process.versions === "object" && typeof process.versions.node === "string") {
+          if (typeof window !== "object" && typeof process === "object" && typeof process.versions === "object" && typeof process.versions.node === "string") {
             require("fs").readFile(packageName, function(err2, contents) {
               if (err2) {
                 errback(err2);
@@ -199,7 +199,7 @@ var createPiperPhonemize = (() => {
     };
     var ENVIRONMENT_IS_WEB = typeof window == "object";
     var ENVIRONMENT_IS_WORKER = typeof importScripts == "function";
-    var ENVIRONMENT_IS_NODE = typeof process == "object" && typeof process.versions == "object" && typeof process.versions.node == "string";
+    var ENVIRONMENT_IS_NODE = !ENVIRONMENT_IS_WEB && typeof process == "object" && typeof process.versions == "object" && typeof process.versions.node == "string";
     var scriptDirectory = "";
     function locateFile(path) {
       if (Module["locateFile"]) {

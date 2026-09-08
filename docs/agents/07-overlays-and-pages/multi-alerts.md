@@ -16,7 +16,11 @@ Status: heavy extraction pass started on 2026-06-24.
 
 ## Runtime Validation Status
 
-Current status: not browser-validated from the latest run.
+Current status (2026-09-07): `node scripts/playwright-multi-alerts-overlay-e2e.cjs` passed, including popup effect controls, preview, exact/ranged amounts, first-match priority, media/sound selection and mute/hide-media behavior. Media playback is instrumented in this suite; this does not verify speakers or OBS audio routing. Popup search and the isolated Electron popup suite also passed.
+
+Additional validation (2026-09-07): all five packaged library sounds decoded successfully, and Listen played the real chime at the selected volume. An isolated portable OBS browser source received synthetic $99/$100/$101 donations through a local WebSocket relay. Only $100 loaded the animated GIF and produced audio at the OBS mixer. The saved MP4 was decoded and independently confirmed silence for $99/$101 and a chime for $100 on recording track 1. No live stream was started. This verifies OBS output routing in that test setup, not the user's speakers or an existing production scene.
+
+Shared-library validation (2026-09-07): the expanded 17-clip library passes actual audio decoding. `scripts/alert-library-e2e.cjs` verifies keyboard node editing, sound selection, real synthetic voice playback, saved settings, replacing app-local asset references, previewing a disabled template without activating it, Flow Actions media/audio output, and the advanced template's ordered OBS-filter commands (captured, not sent to OBS). The Electron popup suite also verifies that the actual embedded background Event Flow editor loads the shared library and stylesheet. Both that suite and the Multi-Alerts overlay suite pass.
 
 On 2026-06-24, `node scripts/playwright-multi-alerts-overlay-e2e.cjs` was run from `social_stream`. It failed with:
 
@@ -154,7 +158,7 @@ Category styles:
 - `auctionstyle`
 - `hypestyle`
 
-Default style is `twitch`. HTML/CSS defines `twitch`, `classic`, `minimal`, and `solid` themes. `solid` is a flat preset: opaque card, no blur/glow/accent stripe, 7px default corner radius.
+Default style is `twitch`. HTML/CSS defines `twitch`, `classic`, `minimal`, `solid`, `cute`, `cozy`, `cats`, `music`, `arcade`, `slate`, `paper`, and `micro` themes. `solid` is a flat preset: opaque card, no blur/glow/accent stripe, 7px default corner radius.
 
 Category accent colors (optional overrides; hex like `ff2d5e` or any CSS color):
 
@@ -188,6 +192,24 @@ General audio:
 - `beepvolume`
 - `custombeep`
 
+The shared sound picker (`shared/alerts/sound-library.js`) offers 17 packaged clips in both Multi-Alerts and Event Flow: eight procedural effects (applause, drumroll, whoosh, cash register, boing, record scratch, pop, camera), four synthetic English voice phrases, and the five legacy simple sounds. No upload or external sound service is required. Selecting a sound stores its relative asset URL in the existing field; Multi-Alerts also enables `beep`. **Listen / Stop** previews locally at the configured volume (35% by default), with visible playback/error status. Sound URL/upload controls remain available separately; Event Flow also keeps its app-local file workflow.
+
+Beginner setup uses **When this happens → Show this → Play this sound → Test alert**. Amount bounds are under **Advanced: amount limits**. Both UI surfaces label their output destination: Multi-Alerts uses its own browser source; Event Flow media/audio actions use `actions.html` (Flow Actions). Avoid playing the same event sound in both overlays. The new disabled Event Flow templates provide a donation celebration/voice starter and an advanced animation/sound/delayed OBS-filter sequence. Both use packaged media and retain the existing action contracts. Node properties can be opened with Tab then Enter/Space; new controls have visible focus, labels and live text feedback.
+
+Event animation/sound rules:
+
+- Configure up to three effects in the popup's **Event animations & sound effects** section.
+- `effect1enabled=false`: pauses this rule while preserving its other settings. Missing means enabled for compatibility with existing links.
+- `effect1type`: category (`donation` by default), or `follow`, `subscription`, `bits`, `raid`, `auction`, `hype`.
+- `effect1media`: direct GIF/image/video asset URL. Giphy page links are not asset URLs. GIFs have no audio; video playback remains muted.
+- `effect1sound`: sound asset URL, using the normal `beep` switch and `beepvolume` control.
+- `effect1min` / `effect1max`: optional inclusive estimated USD bounds for donations/bits. Set both to `100` for exactly $100; leave maximum blank for $100 or more. Comparison rounds to cents. Conversion uses the existing currency helper, not live exchange rates. Unlabelled `donoValue` alone is not eligible for amount rules because provider units vary.
+- Replace `effect1` with `effect2` or `effect3` for additional rules. First matching rule wins; put specific rules before broad ones. Empty media/sound fields fall back to the original media/category sound. Clearing both URLs disables a rule.
+- Leave amount bounds blank for non-value categories. Invalid ranges are ignored. Normal category/source/minimum filters, queueing, and `hidemedia` still apply.
+- **Test event in preview** sends a local sample at the rule's minimum (or maximum, or $100) through the normal matcher, so earlier rules still take priority. It does not send a live donation.
+
+Example: `&beep&effect1min=100&effect1max=100&effect1media=ENCODED_GIF_URL&effect1sound=ENCODED_SOUND_URL`. URL-encode each asset URL. Popup controls do this automatically and offer the existing hosted media uploader.
+
 Layout/display:
 
 - `compact`
@@ -196,6 +218,9 @@ Layout/display:
 - `hidesource`
 - `hideamount`
 - `hidesubtitle`
+- `hidetitle`: hide the category title badge
+- `hidemessage`: hide message body text
+- `hideprogress`: hide the countdown bar
 - `align=center`
 - `alignright`
 - `scale`
@@ -269,6 +294,12 @@ Repeated alerts:
 
 ## Remaining Extraction Targets
 
-- Investigate why the Playwright multi-alerts E2E script times out while waiting for the preview iframe overlay API, then rerun it before promoting any runtime claim.
+- The historical June preview iframe timeout below no longer reproduces in the September validation run.
 - Trace popup-generated multi-alert URLs and settings labels outside the failed runtime attempt if a source-level update is needed.
 - Map each platform's current event names into the category classifier.
+
+## Style controls
+
+All 12 presets support `hidetitle` (category title badge), `hidemessage` (message body), and `hideprogress` (countdown bar). These switches are also available in the popup. They preserve the alert headline and display timing.
+
+Presets: twitch, classic, minimal, solid, cute, cozy, cats, music, arcade, slate, paper, micro. Flat mode preserves collection background colors; explicit accent/category/platform colors override collection name and border colors. All presets respect reduced-motion preferences.

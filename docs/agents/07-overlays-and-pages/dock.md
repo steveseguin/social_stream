@@ -214,3 +214,7 @@ OBS-specific notes:
 - Full dock URL parameter behavior matrix.
 - Exact storage/export behavior for dock database/history features.
 - User-facing screenshots/labels for toolbar buttons.
+
+## Optional question tracking
+
+Enable **Track unanswered questions in the dock** in the SSN dock settings, or add `&trackquestions` to the dock URL. Messages containing a visible `?`, plus messages already identified as questions, receive Answered and Dismiss buttons. The Questions button filters to pending items; click it again for normal chat. Click a message as usual to feature it. Tracking is local to each dock and resets on reload. The latest 100 pending questions survive normal vertical-dock pruning; manual deletion, clearing chat, and horizontal ticker retention still apply. Other chat filters remain active. Tracking does not change the featured-message queue.

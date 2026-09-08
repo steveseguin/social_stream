@@ -1,4 +1,47 @@
 (function () {
+// The hosted page owns capture/UI; the isolated content script owns extension
+// messaging, like youtubeMessage in youtube.js. Do not let the shared DOM guard
+// suppress this listener when the page's script has already initialized.
+const hasRuntime = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id && typeof chrome.runtime.sendMessage === 'function';
+const isDesktop = typeof window.__SSAPP_TAB_ID__ !== 'undefined' || !!window.ninjafy || !!window.__ssapp;
+if (hasRuntime && !isDesktop && window.location.protocol !== 'chrome-extension:') {
+  if (window.__ssnFacebookRelayLoaded) return;
+  window.__ssnFacebookRelayLoaded = true;
+  function sendToPage(request) {
+    window.dispatchEvent(new CustomEvent('ssnFacebookSettings', { detail: request }));
+  }
+  function requestSettings() {
+    window.dispatchEvent(new CustomEvent('ssnFacebookRelayReady'));
+    chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
+      if (chrome.runtime.lastError) return;
+      if (response && response.settings) sendToPage({ settings: response.settings });
+    });
+  }
+  window.addEventListener('ssnFacebookRelay', function (event) {
+    const payload = event.detail;
+    if (!payload || typeof payload !== 'object') return;
+    // Only forward Facebook chat envelopes, never arbitrary extension commands.
+    const messages = payload.message ? [payload.message] : payload.messages;
+    if (!Array.isArray(messages) || !messages.length || !messages.every(function (message) {
+      return message && typeof message === 'object' && message.type === 'facebook';
+    })) return;
+    const relay = payload.message ? { message: payload.message } : { messages: payload.messages };
+    chrome.runtime.sendMessage(chrome.runtime.id, relay, function () {
+      if (chrome.runtime.lastError) console.warn('Facebook relay failed:', chrome.runtime.lastError.message);
+    });
+  });
+  window.addEventListener('ssnFacebookRequestSettings', requestSettings);
+  chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    if (request === 'focusChat' || (request && request.settings)) {
+      sendToPage(request);
+      sendResponse(true);
+    } else {
+      sendResponse(false);
+    }
+  });
+  requestSettings();
+  return;
+}
 const guardRoot = typeof document !== 'undefined' ? document.documentElement : null;
 const guardAttr = 'data-ssn-facebook-ws-loaded';
 
@@ -45,6 +88,8 @@ const extension = {
   settingsLoaded: false,
   tabId: TAB_ID
 };
+let pageRelayReady = false;
+const pendingPageRelays = [];
 
 const state = {
   oauthBase: DEFAULT_OAUTH_BASE,
@@ -62,6 +107,9 @@ const state = {
   lastPollAt: null,
   lastViewerAt: 0,
   lastTimestamp: null,
+  captureStartedAt: 0,
+  historyLoaded: false,
+  captureGeneration: 0,
   failureCount: 0,
   messageCount: 0,
   errorCount: 0,
@@ -911,6 +959,16 @@ function applySettings(settings) {
 }
 
 function initExtension() {
+  window.addEventListener('ssnFacebookRelayReady', function () {
+    pageRelayReady = true;
+    while (pendingPageRelays.length) {
+      window.dispatchEvent(new CustomEvent('ssnFacebookRelay', { detail: pendingPageRelays.shift() }));
+    }
+  });
+  window.addEventListener('ssnFacebookSettings', function (event) {
+    handleBridgeRequest(event.detail);
+  });
+  window.dispatchEvent(new CustomEvent('ssnFacebookRequestSettings'));
   if (extension.available) {
     try {
       chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -951,6 +1009,16 @@ function relayPayload(payload) {
     }
     if (window.ninjafy && typeof window.ninjafy.sendMessage === 'function') {
       window.ninjafy.sendMessage(null, payload, null, extension.tabId);
+      return;
+    }
+    if (!isDesktop) {
+      if (pageRelayReady) {
+        window.dispatchEvent(new CustomEvent('ssnFacebookRelay', { detail: payload }));
+      } else {
+        // Capture can finish before document_idle extension injection.
+        if (pendingPageRelays.length >= MAX_DEDUPE) pendingPageRelays.shift();
+        pendingPageRelays.push(payload);
+      }
       return;
     }
     const fallback = { ...payload };
@@ -1034,20 +1102,17 @@ function getViewerCountValue(data) {
   if (!data || typeof data !== 'object') return null;
   const liveViews = parseCount(data.live_views);
   if (liveViews !== null) return liveViews;
-  const liveViewsCount = parseCount(data.live_views_count);
-  if (liveViewsCount !== null) return liveViewsCount;
-  const viewCount = parseCount(data.view_count);
-  if (viewCount !== null) return viewCount;
   return null;
 }
 
 async function pollViewerCount() {
+  if (!isViewerTrackingEnabled()) return;
   const now = Date.now();
   if (now - state.lastViewerAt < VIEWER_POLL_INTERVAL) return;
   state.lastViewerAt = now;
   try {
     const data = await graphRequest(`${encodeURIComponent(state.videoId)}`, {
-      fields: 'live_views,live_views_count,view_count',
+      fields: 'live_views',
       access_token: state.accessToken
     });
     const viewerValue = getViewerCountValue(data);
@@ -1091,8 +1156,9 @@ function buildCommentsParams() {
   } else {
     params.order = 'chronological';
   }
-  if (state.lastTimestamp) {
-    params.since = Math.max(Math.floor(state.lastTimestamp / 1000) - 1, 0);
+  if (state.historyLoaded) {
+    const since = Math.max(state.lastTimestamp || 0, state.captureStartedAt);
+    params.since = Math.max(Math.floor(since / 1000) - 1, 0);
   }
   return params;
 }
@@ -1100,37 +1166,36 @@ function buildCommentsParams() {
 function createMessagePayload(entry) {
   const from = entry.from || {};
   const messageText = entry.message || (entry.attachment && (entry.attachment.title || entry.attachment.description)) || '';
-  const cleanMessage = escapeHtml(messageText || '[Attachment]');
-  const createdAt = entry.created_time ? new Date(entry.created_time) : null;
+  const image = entry.attachment && entry.attachment.media && entry.attachment.media.image;
+  const contentimg = image && typeof image.src === 'string' && /^https?:\/\//i.test(image.src) ? image.src : '';
+  const body = messageText || (entry.attachment && !contentimg ? '[Attachment]' : '');
+  const cleanMessage = state.textOnly ? String(body) : escapeHtml(body);
+  const createdAt = entry.created_time ? Date.parse(entry.created_time) : NaN;
   const chatimg = from.id ? `https://graph.facebook.com/${encodeURIComponent(from.id)}/picture?type=normal` : '';
   const meta = {
-    commentId: entry.id || '',
-    fromId: from.id || '',
-    fromName: from.name || '',
-    createdTime: entry.created_time || '',
+    messageId: entry.id || '',
     permalink: entry.permalink_url || '',
     videoId: state.videoId || '',
     pageId: state.pageId || ''
   };
-  if (entry.attachment) {
-    meta.attachment = entry.attachment;
-  }
-
-  return {
+  const payload = {
     platform: 'facebook',
     type: 'facebook',
     chatname: from.name || 'Facebook User',
     chatmessage: cleanMessage,
     chatimg,
+    contentimg,
     chatbadges: '',
     backgroundColor: '',
     textColor: '',
     hasDonation: '',
     membership: '',
     textonly: state.textOnly,
-    timestamp: createdAt ? createdAt.getTime() : undefined,
     meta
   };
+  if (from.id) payload.userid = String(from.id);
+  if (Number.isFinite(createdAt)) payload.timestamp = createdAt;
+  return payload;
 }
 
 function renderMessage(payload) {
@@ -1152,7 +1217,15 @@ function renderMessage(payload) {
   header.appendChild(time);
   const text = document.createElement('div');
   text.className = 'chat-text';
-  text.innerHTML = payload.chatmessage || '';
+  if (payload.textonly) text.textContent = payload.chatmessage || '';
+  else text.innerHTML = payload.chatmessage || '';
+  if (payload.contentimg) {
+    const image = document.createElement('img');
+    image.src = payload.contentimg;
+    image.alt = 'Comment attachment';
+    image.style.maxWidth = '100%';
+    text.appendChild(image);
+  }
   line.appendChild(header);
   line.appendChild(text);
   els.chatFeed.appendChild(line);
@@ -1185,38 +1258,48 @@ function trackSeenId(id) {
 }
 
 function handleComments(entries) {
-  if (!Array.isArray(entries) || !entries.length) return;
+  if (!Array.isArray(entries)) return;
+  const seedHistory = !state.historyLoaded;
+  state.historyLoaded = true;
   const outgoing = [];
   entries.forEach((entry) => {
     if (!entry || !entry.id) return;
     if (!trackSeenId(entry.id)) return;
     updateLastTimestamp(entry);
     const payload = createMessagePayload(entry);
-    if (!payload.chatmessage) return;
-    outgoing.push(payload);
+    if (!payload.chatmessage && !payload.contentimg) return;
     renderMessage(payload);
+    state.messageCount += 1;
+    // Seed the initial snapshot locally, including comments without timestamps.
+    // The cutoff also rejects older comments returned later by overlapping polls.
+    if (!seedHistory && Number.isFinite(payload.timestamp) && payload.timestamp > state.captureStartedAt) {
+      outgoing.push(payload);
+    }
   });
 
-  if (!outgoing.length) return;
-  state.messageCount += outgoing.length;
   updateStats();
+  if (!outgoing.length) return;
   const relay = outgoing.length === 1 ? { message: outgoing[0] } : { messages: outgoing };
   relayPayload(relay);
 }
 
 async function pollOnce() {
   if (!state.connected || state.polling) return;
+  const generation = state.captureGeneration;
   state.polling = true;
   try {
     const data = await graphRequest(`${encodeURIComponent(state.videoId)}/comments`, buildCommentsParams());
+    if (!state.connected || generation !== state.captureGeneration) return;
     handleComments(data && data.data ? data.data : []);
     await pollViewerCount();
+    if (!state.connected || generation !== state.captureGeneration) return;
     state.failureCount = 0;
     state.lastPollAt = Date.now();
     updateStats();
     setStatus('connected', 'Connected to Facebook Live comments.');
     schedulePoll();
   } catch (err) {
+    if (!state.connected || generation !== state.captureGeneration) return;
     state.failureCount += 1;
     state.errorCount += 1;
     state.lastPollAt = Date.now();
@@ -1244,7 +1327,7 @@ async function pollOnce() {
     const backoff = Math.min(state.pollInterval * Math.pow(2, Math.min(state.failureCount, 4)), 60000);
     schedulePoll(backoff);
   } finally {
-    state.polling = false;
+    if (generation === state.captureGeneration) state.polling = false;
   }
 }
 
@@ -1269,6 +1352,11 @@ function connect() {
     return;
   }
   state.connected = true;
+  state.captureGeneration += 1;
+  state.captureStartedAt = Date.now();
+  state.historyLoaded = false;
+  state.lastTimestamp = null;
+  pendingPageRelays.length = 0;
   state.failureCount = 0;
   state.polling = false;
   setStatus('connecting', 'Connecting to Facebook Page live chat...');
@@ -1277,6 +1365,8 @@ function connect() {
 }
 
 function disconnect() {
+  state.captureGeneration += 1;
+  pendingPageRelays.length = 0;
   state.connected = false;
   state.polling = false;
   state.viewerValue = null;
@@ -1319,6 +1409,9 @@ function bindEvents() {
       saveConfig();
       if (state.connected && checkbox === els.viewerCount) {
         state.lastViewerAt = 0;
+      }
+      if (checkbox === els.autoConnect && state.autoConnect && !state.connected) {
+        autoConnectIfReady();
       }
     });
   });

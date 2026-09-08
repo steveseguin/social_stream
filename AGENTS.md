@@ -153,6 +153,15 @@ Sample payloads based on the fake test data in [background.js](./background.js):
 - When replying to Steve, prefer plain, everyday language over jargon.
 - Keep explanations direct and practical; explain technical terms briefly when they matter.
 
+## Accessibility, UI, UX, and Integrations
+
+- Prioritize accessibility and a clear, consistent user experience when designing or changing features.
+- Popup menus must reuse the existing theme colors, styled buttons, switches, section hierarchy, and meaningful icons/emotes with text labels. Put basic setup first and advanced controls in subsections. Verify input contrast in light and dark modes. Keep menus terse; put longer instructions in `docs/` and link to them from the menu.
+- Shared popup control styling lives in `popup-ui.css`. Reuse its field, focus, action-button, and subsection rules across old and new panels; avoid provider-specific colors or inline styles for equivalent actions. Keep labels above fields, use `.switch` for on/off settings, and reserve `.tts-test-button` for test/play actions rather than reset/clear actions.
+- Keep the default experience simple for new users, with plain labels, sensible defaults, and easy previews. Make advanced options and effects available through clearly labelled optional controls.
+- Provide keyboard access, visible focus, accessible control names, and understandable feedback. Do not rely only on color or sound to communicate state.
+- Inspect existing app integrations, especially the Event Flow editor, before adding new configuration or automation. Reuse existing patterns and capabilities where practical, and avoid disconnected or competing ways to configure the same behavior.
+
 ## Git Safety
 
 - VERY IMPORTANT: Never use `git restore`, `git revert`, or any revert/restore operation unless Steve explicitly asks for that exact action.
@@ -165,3 +174,14 @@ Sample payloads based on the fake test data in [background.js](./background.js):
 - VERY IMPORTANT: Do it serially in this exact order only: `git add -A`, `git commit` (use `--allow-empty` if needed), `git pull --rebase origin beta`, `git push origin beta`.
 - VERY IMPORTANT: Do not parallelize any git commands in that flow.
 - VERY IMPORTANT: Do not add extra git inspection commands unless Steve explicitly asks for them.
+
+## Menu Regression Checks
+
+- Do not automatically launch SSApp or run popup.html checks for every task, run, commit, or push. Run `node tests/popup-search.test.js` and `node tests/popup-search-electron.test.cjs` only when the changes affect popup menus, popup search, or the app integration used by the popup, or when Steve explicitly requests them. These tests are not a blanket prerequisite for the Git Push Contract.
+- The Electron suite requires the sibling `ssapp` checkout and local Playwright; set `SSAPP_REPO` if the app checkout is elsewhere. It uses an isolated profile and local relay, never live source channels.
+
+
+## Commerce overlay use case
+- Monetization presentation is primarily an OBS Browser Source viewed by the audience. Keep operator controls, private session details, setup feedback, and publishing credentials off the viewer overlay.
+- Reuse one commerce state and control API for the SSN popup, Stream Deck, Event Flow, and any optional OBS control dock. A dock is an alternative operator surface, not a requirement for using the overlay.
+- Report selected/hidden/scheduled state without claiming that OBS is live or the source is visible; SSN cannot infer OBS scene visibility from a successful control command.

@@ -286,6 +286,7 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
       subtitleVisible: !!document.querySelector('.alert-subtitle'),
       amountVisible: !!document.querySelector('.alert-amount'),
       mediaVisible: !!document.querySelector('.alert-media'),
+      mediaUrl: document.querySelector('.alert-media img, .alert-media video')?.getAttribute('src') || '',
       scale: rootStyles.getPropertyValue('--overlay-scale').trim(),
       mediaScale: rootStyles.getPropertyValue('--media-scale').trim(),
       headlineScale: rootStyles.getPropertyValue('--headline-scale').trim(),
@@ -342,6 +343,13 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
       const link = document.getElementById('multialertslink');
       return !!(link && link.href && link.href.indexOf('multi-alerts.html?session=testsession') !== -1);
     });
+
+    for (const param of ['hidetitle', 'hidemessage', 'hideprogress']) {
+      await setCheckboxValue(popupPage, `[data-param25='${param}']`, true);
+      assert(new URL(await popupPage.getAttribute('#multialertslink', 'href')).searchParams.has(param), `Popup did not add ${param}.`);
+      await setCheckboxValue(popupPage, `[data-param25='${param}']`, false);
+      assert(!new URL(await popupPage.getAttribute('#multialertslink', 'href')).searchParams.has(param), `Popup did not remove ${param}.`);
+    }
 
     await setCheckboxValue(popupPage, "[data-param25='disablefollows']", true);
     await setCheckboxValue(popupPage, "[data-param25='disablesubs']", true);
@@ -911,6 +919,117 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
       }
     });
     assert(muteSnapshot.audioEvents.length === 0, 'Muted alert overlay should not play audio.');
+
+    // Exercise persisted popup controls and actual rule selection together.
+    const effectMedia = `http://${HOST}:${PORT}/media/user1.jpg`;
+    const effectSound = `http://${HOST}:${PORT}/audio/custom.wav`;
+    await setCheckboxValue(popupPage, '[data-param25="hidemedia"]', false);
+    await setControlValue(popupPage, '[data-optionparam25="effect1type"]', 'donation', ['change']);
+    for (const [param, value] of Object.entries({effect1min: '100', effect1max: '100', effect1media: effectMedia, effect1sound: effectSound})) {
+      await setControlValue(popupPage, `[data-textparam25="${param}"]`, value, ['input', 'change']);
+    }
+    const effectFrame = await waitForPreviewFrame(popupPage);
+    const effectSettings = await effectFrame.evaluate(() => window.__multiAlertsOverlay.getSettings());
+    assert(effectSettings.alertEffects[0].min === 100 && effectSettings.alertEffects[0].max === 100, 'Popup did not pass exact amount bounds to preview.');
+    assert(effectSettings.alertEffects[0].media === effectMedia && effectSettings.alertEffects[0].sound === effectSound, 'Popup lost effect asset URLs.');
+    await clickElement(popupPage, '#multi-alert-effect1-test');
+    await effectFrame.waitForFunction(() => document.querySelector('.alert-media img')?.getAttribute('src').endsWith('/media/user1.jpg'));
+    await setCheckboxValue(popupPage, '#multi-alert-effect1-enabled', false);
+    assert((await popupPage.getAttribute('#multialertslink', 'href')).includes('effect1enabled=false'), 'Paused alert state must be saved in the overlay URL.');
+    await setCheckboxValue(popupPage, '#multi-alert-effect1-enabled', true);
+    await clickElement(popupPage, '#multi-alert-effect2-preset');
+    assert(await popupPage.inputValue('#multi-alert-effect2-min') === '100' && await popupPage.inputValue('#multi-alert-effect2-max') === '100', 'Preset must set exact USD limits.');
+    assert(await popupPage.inputValue('#multi-alert-effect2-sound') === './audio/alerts/voice-thank-you.wav', 'Preset should supply a starter sound.');
+    await setCheckboxValue(popupPage, '#multi-alert-effect2-enabled', false);
+    assert((await popupPage.textContent('#multi-alert-effect2-summary')).includes('Paused'), 'Collapsed summary should show paused state.');
+    await clickElement(popupPage, '#multi-alert-effect2-clear-sound');
+    assert(await popupPage.inputValue('#multi-alert-effect2-sound') === '', 'Clear sound did not clear the saved URL.');
+    assert(await popupPage.inputValue('#multi-alert-effect2-min') === '100', 'Clear sound changed the amount limit.');
+    await clickElement(popupPage, '#multi-alert-effect2-reset');
+    assert(await popupPage.inputValue('#multi-alert-effect2-min') === '' && await popupPage.inputValue('#multi-alert-effect2-state') === '', 'Reset did not restore defaults.');
+    assert(await popupPage.textContent('#multi-alert-effect2-summary') === 'Not configured', 'Reset summary is stale.');
+    assert(await popupPage.inputValue('#multi-alert-effect1-sound') === effectSound, 'Reset changed another alert.');
+
+    const effectUrl = new URL(popupUrl.toString());
+    effectUrl.searchParams.delete('hidemedia');
+    for (const [key, value] of Object.entries({effect1min: '100', effect1max: '100', effect1media: effectMedia, effect1sound: effectSound})) effectUrl.searchParams.set(key, value);
+    await loadOverlay(overlayPage, effectUrl.toString());
+    let effectSnapshot = await getOverlaySnapshot(overlayPage, { category: 'donation', overrides: { hasDonation: '$100 USD' } });
+    assert(effectSnapshot.mediaUrl === effectMedia, 'Exact $100 donation did not select the configured image.');
+    assert(effectSnapshot.audioEvents[0].src === effectSound, 'Exact $100 donation did not select the configured sound.');
+    effectUrl.searchParams.set('effect1enabled', 'false');
+    await loadOverlay(overlayPage, effectUrl.toString());
+    effectSnapshot = await getOverlaySnapshot(overlayPage, { category: 'donation', overrides: { hasDonation: '$100 USD' } });
+    assert(effectSnapshot.mediaUrl !== effectMedia, 'Paused alert still matched.');
+    effectUrl.searchParams.delete('effect1enabled');
+    await loadOverlay(overlayPage, effectUrl.toString());
+    for (const label of ['$99.99 USD', '$100.01 USD', '100 CAD', '100', '']) {
+      effectSnapshot = await getOverlaySnapshot(overlayPage, { category: 'donation', overrides: { hasDonation: label, donoValue: 100 } });
+      assert(effectSnapshot.mediaUrl !== effectMedia, `Exact USD rule incorrectly matched ${label || 'unlabelled donoValue'}.`);
+    }
+    effectUrl.searchParams.delete('effect1max');
+    effectUrl.searchParams.set('effect2min', '100');
+    effectUrl.searchParams.set('effect2media', `http://${HOST}:${PORT}/media/user2.jpg`);
+    await loadOverlay(overlayPage, effectUrl.toString());
+    effectSnapshot = await getOverlaySnapshot(overlayPage, { category: 'donation', overrides: { hasDonation: '$150 USD' } });
+    assert(effectSnapshot.mediaUrl === effectMedia, 'Minimum rule or first-match priority failed.');
+    effectSnapshot = await getOverlaySnapshot(overlayPage, { category: 'follow' });
+    assert(effectSnapshot.mediaUrl !== effectMedia, 'Donation effect leaked into follows.');
+    effectUrl.searchParams.set('effect1max', '50');
+    effectUrl.searchParams.delete('effect2media');
+    await loadOverlay(overlayPage, effectUrl.toString());
+    effectSnapshot = await getOverlaySnapshot(overlayPage, { category: 'donation', overrides: { hasDonation: '$150 USD' } });
+    assert(effectSnapshot.mediaUrl !== effectMedia, 'Invalid range should be ignored.');
+    effectUrl.searchParams.delete('effect1min');
+    effectUrl.searchParams.delete('effect1max');
+    effectUrl.searchParams.set('effect1type', 'follow');
+    effectUrl.searchParams.delete('beep');
+    await loadOverlay(overlayPage, effectUrl.toString());
+    effectSnapshot = await getOverlaySnapshot(overlayPage, { category: 'follow' });
+    assert(effectSnapshot.mediaUrl === effectMedia && effectSnapshot.audioEvents.length === 0, 'Category-only effect or master mute failed.');
+    effectUrl.searchParams.set('hidemedia', '');
+    await loadOverlay(overlayPage, effectUrl.toString());
+    effectSnapshot = await getOverlaySnapshot(overlayPage, { category: 'follow' });
+    assert(!effectSnapshot.mediaVisible, 'Effects must respect hide-media.');
+
+    await setCheckboxValue(popupPage, '[data-param25="beep"]', false);
+    await setControlValue(popupPage, '#multi-alert-effect1-sound-library', './audio/chime.wav', ['change']);
+    const libraryUrl = new URL(await popupPage.getAttribute('#multialertslink', 'href'));
+    assert(libraryUrl.searchParams.get('effect1sound') === './audio/chime.wav', 'Built-in selection did not save a portable relative sound URL.');
+    assert(libraryUrl.searchParams.has('beep'), 'Choosing a built-in sound should enable alert audio.');
+    assert(await popupPage.locator('select[id$="-library"]').count() === 11, 'Sound library should cover global, category and effect sounds.');
+    // Decode the real packaged assets without the overlay audio test stubs.
+    const decodedSounds = await popupPage.evaluate(async () => {
+      const ctx = new AudioContext();
+      try {
+        const choices = Array.from(document.querySelector('#multi-alert-effect1-sound-library').options).filter(option => option.value);
+        return await Promise.all(choices.map(async option => {
+          const response = await fetch(option.value);
+          if (!response.ok) throw new Error('Missing packaged sound: ' + option.value);
+          const buffer = await ctx.decodeAudioData(await response.arrayBuffer());
+          let peak = 0;
+          for (const sample of buffer.getChannelData(0)) peak = Math.max(peak, Math.abs(sample));
+          return {name: option.textContent, duration: buffer.duration, peak};
+        }));
+      } finally { await ctx.close(); }
+    });
+    assert(decodedSounds.length === 17 && decodedSounds.every(sound => sound.duration > 0 && sound.peak > 0), 'Every effect and voice clip must decode to non-silent audio.');
+    await popupPage.evaluate(() => {
+      window.__auditionEvents = [];
+      const original = HTMLMediaElement.prototype.play;
+      HTMLMediaElement.prototype.play = function() {
+        this.addEventListener('playing', () => window.__auditionEvents.push({src: this.src, volume: this.volume}), {once:true});
+        return original.call(this);
+      };
+    });
+    await clickElement(popupPage, '#multi-alert-effect1-sound-listen');
+    await popupPage.waitForFunction(() => window.__auditionEvents.some(event => event.src.endsWith('/audio/chime.wav')));
+    const audition = await popupPage.evaluate(() => window.__auditionEvents.find(event => event.src.endsWith('/audio/chime.wav')));
+    assert(Math.abs(audition.volume - 0.8) < 0.0001, 'Listen did not respect alert volume.');
+    await setControlValue(popupPage, '#multi-alert-effect1-sound', 'http://', ['input', 'change']);
+    await clickElement(popupPage, '#multi-alert-effect1-sound-listen');
+    assert(await popupPage.locator('#multi-alert-effect1-sound-listen').evaluate(button => button.parentElement.textContent.includes('Enter a valid sound URL.')), 'Invalid audition URL should show a useful message.');
+    console.log('Seventeen packaged sounds decoded; built-in selection and real Listen playback passed.');
 
     const server2PreviewUrl = `http://${HOST}:${PORT}/multi-alerts.html?session=testsession&server2&preview`;
     await loadOverlay(overlayPage, server2PreviewUrl);

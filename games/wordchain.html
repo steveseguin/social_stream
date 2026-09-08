@@ -5,172 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Word Chain Game - Social Stream Ninja</title>
     <link rel="icon" href="../favicon.ico" />
-    <style>
-        /* Hide scrollbars */
-        ::-webkit-scrollbar {
-            display: none;
-        }
-
-        * {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            overflow: hidden;
-            font-family: 'Arial', sans-serif;
-            color: white;
-        }
-        
-        #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        #word-display {
-            font-size: 72px;
-            font-weight: bold;
-            text-shadow: 4px 4px 8px rgba(0,0,0,0.5);
-            margin-bottom: 50px;
-            animation: glow 2s ease-in-out infinite alternate;
-        }
-        
-        @keyframes glow {
-            from { text-shadow: 4px 4px 8px rgba(0,0,0,0.5), 0 0 20px rgba(255,255,255,0.5); }
-            to { text-shadow: 4px 4px 8px rgba(0,0,0,0.5), 0 0 30px rgba(255,255,255,0.8); }
-        }
-        
-        #chain-container {
-            position: relative;
-            width: 80%;
-            height: 300px;
-            overflow: hidden;
-        }
-        
-        .chain-word {
-            position: absolute;
-            font-size: 24px;
-            font-weight: bold;
-            padding: 10px 20px;
-            background: rgba(0,0,0,0.5);
-            border-radius: 25px;
-            border: 2px solid rgba(255,255,255,0.3);
-            backdrop-filter: blur(10px);
-            transition: all 0.5s ease;
-            white-space: nowrap;
-        }
-        
-        .chain-link {
-            position: absolute;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
-            transform-origin: left center;
-        }
-        
-        #scoreboard {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.7);
-            padding: 20px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            min-width: 250px;
-        }
-        
-        #scoreboard h3 {
-            margin-top: 0;
-            color: #FFD700;
-            text-align: center;
-        }
-        
-        .score-entry {
-            display: flex;
-            justify-content: space-between;
-            margin: 8px 0;
-            padding: 8px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .score-entry:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateX(5px);
-        }
-        
-        #instructions {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            padding: 15px 30px;
-            border-radius: 15px;
-            text-align: center;
-            font-size: 16px;
-        }
-        
-        #instructions strong {
-            color: #FFD700;
-            font-size: 18px;
-        }
-        
-        #timer {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 36px;
-            font-weight: bold;
-            background: rgba(0,0,0,0.7);
-            padding: 15px 25px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-        }
-        
-        .combo-indicator {
-            position: absolute;
-            font-size: 48px;
-            font-weight: bold;
-            color: #FFD700;
-            animation: comboFlash 1s ease-out forwards;
-        }
-        
-        @keyframes comboFlash {
-            0% { transform: scale(0.5); opacity: 0; }
-            50% { transform: scale(1.5); opacity: 1; }
-            100% { transform: scale(1); opacity: 0; }
-        }
-        
-        .wrong-answer {
-            animation: shake 0.5s ease-in-out;
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-        
-        #theme-indicator {
-            position: absolute;
-            top: 80px;
-            left: 20px;
-            font-size: 24px;
-            background: rgba(0,0,0,0.7);
-            padding: 10px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-        }
-    </style>
+    <link rel="stylesheet" href="wordchain.css" />
 </head>
 <body>
     <div id="game-container">
@@ -240,9 +75,6 @@
         const wordDiv = document.createElement('div');
         wordDiv.className = 'chain-word';
         wordDiv.textContent = word;
-        wordDiv.style.left = '50%';
-        wordDiv.style.top = '50%';
-        wordDiv.style.transform = 'translate(-50%, -50%)';
         
         // Add username attribution
         const userSpan = document.createElement('span');
@@ -254,20 +86,8 @@
         
         container.appendChild(wordDiv);
         
-        // Animate existing words
+        // Keep a readable trail of the eight most recent words.
         const existingWords = container.querySelectorAll('.chain-word');
-        existingWords.forEach((el, index) => {
-            if (el !== wordDiv) {
-                const angle = (index / existingWords.length) * Math.PI * 2;
-                const radius = Math.min(container.offsetWidth, container.offsetHeight) * 0.3;
-                const x = Math.cos(angle) * radius;
-                const y = Math.sin(angle) * radius;
-                el.style.left = `calc(50% + ${x}px)`;
-                el.style.top = `calc(50% + ${y}px)`;
-                el.style.opacity = Math.max(0.3, 1 - (index * 0.1));
-                el.style.transform = 'translate(-50%, -50%) scale(' + Math.max(0.5, 1 - (index * 0.05)) + ')';
-            }
-        });
         
         // Remove old words if too many
         if (existingWords.length > 8) {
@@ -434,6 +254,7 @@
     }
     
     function sendResponse(message) {
+        if (urlParams.has('demo')) return;
         const response = {
             chatname: 'WordChainBot',
             chatmessage: message,
@@ -475,6 +296,7 @@
     setInterval(updateTimer, 1000);
     
     // Setup iframe communication
+    if (!urlParams.has('demo') && !urlParams.has('server')) {
     const iframe = document.createElement("iframe");
     iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
     iframe.style.width = "0px";
@@ -495,8 +317,10 @@
         }
     });
     
+    }
+
     // Handle WebSocket if server parameter provided
-    if (urlParams.has('server')) {
+    if (!urlParams.has('demo') && urlParams.has('server')) {
         const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
         let socketserver = null;
         let reconnectTimeout = null;

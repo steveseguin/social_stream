@@ -12174,7 +12174,8 @@ ${v}`, F = h.createShaderModule({ code: y, label: i.name });
 }, "./src/env.js": (x, C, d) => {
   d.r(C), d.d(C, { apis: () => xe, env: () => g });
   var k = d("?569f"), P = d("?3f59"), j = d("?154a");
-  const O = typeof window < "u" && window.document !== void 0, R = typeof self < "u" && self.constructor?.name === "DedicatedWorkerGlobalScope", X = typeof self < "u" && "caches" in self, W = typeof navigator < "u" && "gpu" in navigator, S = typeof navigator < "u" && "ml" in navigator, q = typeof process < "u", H = q && process?.release?.name === "node", Ae = !b(k), me = !b(P), xe = Object.freeze({ IS_BROWSER_ENV: O, IS_WEBWORKER_ENV: R, IS_WEB_CACHE_AVAILABLE: X, IS_WEBGPU_AVAILABLE: W, IS_WEBNN_AVAILABLE: S, IS_PROCESS_AVAILABLE: q, IS_NODE_ENV: H, IS_FS_AVAILABLE: Ae, IS_PATH_AVAILABLE: me }), Be = Ae && me;
+  // SSN: Electron renderer pages use browser assets, even when Node globals are exposed.
+  const O = typeof window < "u" && window.document !== void 0, R = typeof self < "u" && self.constructor?.name === "DedicatedWorkerGlobalScope", X = typeof self < "u" && "caches" in self, W = typeof navigator < "u" && "gpu" in navigator, S = typeof navigator < "u" && "ml" in navigator, q = typeof process < "u", H = !O && !R && q && process?.release?.name === "node", Ae = !b(k), me = !b(P), xe = Object.freeze({ IS_BROWSER_ENV: O, IS_WEBWORKER_ENV: R, IS_WEB_CACHE_AVAILABLE: X, IS_WEBGPU_AVAILABLE: W, IS_WEBNN_AVAILABLE: S, IS_PROCESS_AVAILABLE: q, IS_NODE_ENV: H, IS_FS_AVAILABLE: Ae, IS_PATH_AVAILABLE: me }), Be = Ae && me;
   let ae = "./";
   if (Be) {
     const e = Object(import.meta).url;
@@ -19938,7 +19939,7 @@ var s2 = {};
 })();
 var O4 = s2.AutoTokenizer, L4 = s2.RawAudio, Y4 = s2.StyleTextToSpeech2Model, Yu = s2.Tensor, pe = pe !== void 0 ? pe : {};
 pe.expectedDataFileDownloads || (pe.expectedDataFileDownloads = 0);
-var H4 = typeof importScripts == "function", Kc = typeof process == "object" && typeof process.versions == "object" && typeof process.versions.node == "string", Hu = typeof atob == "function" ? atob : function(x) {
+var H4 = typeof importScripts == "function", Kc = typeof window === "undefined" && typeof process == "object" && typeof process.versions == "object" && typeof process.versions.node == "string", Hu = typeof atob == "function" ? atob : function(x) {
   var C, d, k, P, j, O, R = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=", X = "", W = 0;
   x = x.replace(/[^A-Za-z0-9\+\/\=]/g, "");
   do
@@ -41410,7 +41411,40 @@ function J4(x) {
 }
 const _4 = new RegExp(`(\\s*[${Ku = ';:,.!?¡¿—…"«»“”(){}[]', Ku.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}]+\\s*)+`, "g");
 var Ku;
+// SSN: non-English voices reuse the packaged Piper phonemizer, without loading a Piper model.
+// The old bundled eSpeak lists these languages but produces empty IPA for them.
+let ssnLanguageEnginePromise = null;
+let ssnLanguageQueue = Promise.resolve();
+function ssnLanguagePhonemes(text, code) {
+  const task = ssnLanguageQueue.then(async () => {
+    if (!ssnLanguageEnginePromise) {
+      ssnLanguageEnginePromise = (async () => {
+        if (!window.ProperPiperTTS) {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = new URL("./piper/piper-tts-proper.js", import.meta.url).href;
+            script.onload = resolve;
+            script.onerror = () => { script.remove(); reject(new Error("Could not load the language phonemizer")); };
+            document.head.appendChild(script);
+          });
+        }
+        const engine = new window.ProperPiperTTS();
+        await engine.loadPhonemizer();
+        await engine.initPhonemizer();
+        return engine;
+      })().catch(error => { ssnLanguageEnginePromise = null; throw error; });
+    }
+    const engine = await ssnLanguageEnginePromise;
+    engine.voiceConfig = { espeak: { voice: code === "e" ? "es" : "pt-br" } };
+    const phonemes = await engine.phonemize(text, true);
+    // Kokoro's multilingual tokenizer uses single symbols for affricates.
+    return phonemes.replace(/d\u0292/g, "\u02a4").replace(/t\u0283/g, "\u02a7").replace(/dz/g, "\u02a3").replace(/ts/g, "\u02a6").replace(/-/g, "").trim();
+  });
+  ssnLanguageQueue = task.catch(() => {});
+  return task;
+}
 async function Zu(x, C = "a", d = !0) {
+  if (C === "e" || C === "p") return ssnLanguagePhonemes(x, C);
   d && (x = function(R) {
     return R.replace(/[‘’]/g, "'").replace(/«/g, "“").replace(/»/g, "”").replace(/[“”]/g, '"').replace(/\(/g, "«").replace(/\)/g, "»").replace(/、/g, ", ").replace(/。/g, ". ").replace(/！/g, "! ").replace(/，/g, ", ").replace(/：/g, ": ").replace(/；/g, "; ").replace(/？/g, "? ").replace(/[^\S \n]/g, " ").replace(/  +/, " ").replace(/(?<=\n) +(?=\n)/g, "").replace(/\bD[Rr]\.(?= [A-Z])/g, "Doctor").replace(/\b(?:Mr\.|MR\.(?= [A-Z]))/g, "Mister").replace(/\b(?:Ms\.|MS\.(?= [A-Z]))/g, "Miss").replace(/\b(?:Mrs\.|MRS\.(?= [A-Z]))/g, "Mrs").replace(/\betc\.(?! [A-Z])/gi, "etc").replace(/\b(y)eah?\b/gi, "$1e'a").replace(/\d*\.\d+|\b\d{4}s?\b|(?<!:)\b(?:[1-9]|1[0-2]):[0-5]\d\b(?!:)/g, X4).replace(/(?<=\d),(?=\d)/g, "").replace(/[$£]\d+(?:\.\d+)?(?: hundred| thousand| (?:[bm]|tr)illion)*\b|[$£]\d+\.\d\d?\b/gi, q4).replace(/\d*\.\d+/g, J4).replace(/(?<=\d)-(?=\d)/g, " to ").replace(/(?<=\d)S/g, " S").replace(/(?<=[BCDFGHJ-NP-TV-Z])'?s\b/g, "'S").replace(/(?<=X')S\b/g, "s").replace(/(?:[A-Za-z]\.){2,} [a-z]/g, (X) => X.replace(/\./g, "-")).replace(/(?<=[A-Z])\.(?=[A-Z])/gi, "-").trim();
   }(x));
@@ -41569,7 +41603,7 @@ class tg {
   }
 }
 var $c = {};
-const I1 = Object.freeze({ af_heart: { name: "Heart", language: "en-us", gender: "Female", traits: "❤️", targetQuality: "A", overallGrade: "A" }, af_alloy: { name: "Alloy", language: "en-us", gender: "Female", targetQuality: "B", overallGrade: "C" }, af_aoede: { name: "Aoede", language: "en-us", gender: "Female", targetQuality: "B", overallGrade: "C+" }, af_bella: { name: "Bella", language: "en-us", gender: "Female", traits: "🔥", targetQuality: "A", overallGrade: "A-" }, af_jessica: { name: "Jessica", language: "en-us", gender: "Female", targetQuality: "C", overallGrade: "D" }, af_kore: { name: "Kore", language: "en-us", gender: "Female", targetQuality: "B", overallGrade: "C+" }, af_nicole: { name: "Nicole", language: "en-us", gender: "Female", traits: "🎧", targetQuality: "B", overallGrade: "B-" }, af_nova: { name: "Nova", language: "en-us", gender: "Female", targetQuality: "B", overallGrade: "C" }, af_river: { name: "River", language: "en-us", gender: "Female", targetQuality: "C", overallGrade: "D" }, af_sarah: { name: "Sarah", language: "en-us", gender: "Female", targetQuality: "B", overallGrade: "C+" }, af_sky: { name: "Sky", language: "en-us", gender: "Female", targetQuality: "B", overallGrade: "C-" }, am_adam: { name: "Adam", language: "en-us", gender: "Male", targetQuality: "D", overallGrade: "F+" }, am_echo: { name: "Echo", language: "en-us", gender: "Male", targetQuality: "C", overallGrade: "D" }, am_eric: { name: "Eric", language: "en-us", gender: "Male", targetQuality: "C", overallGrade: "D" }, am_fenrir: { name: "Fenrir", language: "en-us", gender: "Male", targetQuality: "B", overallGrade: "C+" }, am_liam: { name: "Liam", language: "en-us", gender: "Male", targetQuality: "C", overallGrade: "D" }, am_michael: { name: "Michael", language: "en-us", gender: "Male", targetQuality: "B", overallGrade: "C+" }, am_onyx: { name: "Onyx", language: "en-us", gender: "Male", targetQuality: "C", overallGrade: "D" }, am_puck: { name: "Puck", language: "en-us", gender: "Male", targetQuality: "B", overallGrade: "C+" }, am_santa: { name: "Santa", language: "en-us", gender: "Male", targetQuality: "C", overallGrade: "D-" }, bf_emma: { name: "Emma", language: "en-gb", gender: "Female", traits: "🚺", targetQuality: "B", overallGrade: "B-" }, bf_isabella: { name: "Isabella", language: "en-gb", gender: "Female", targetQuality: "B", overallGrade: "C" }, bm_george: { name: "George", language: "en-gb", gender: "Male", targetQuality: "B", overallGrade: "C" }, bm_lewis: { name: "Lewis", language: "en-gb", gender: "Male", targetQuality: "C", overallGrade: "D+" }, bf_alice: { name: "Alice", language: "en-gb", gender: "Female", traits: "🚺", targetQuality: "C", overallGrade: "D" }, bf_lily: { name: "Lily", language: "en-gb", gender: "Female", traits: "🚺", targetQuality: "C", overallGrade: "D" }, bm_daniel: { name: "Daniel", language: "en-gb", gender: "Male", traits: "🚹", targetQuality: "C", overallGrade: "D" }, bm_fable: { name: "Fable", language: "en-gb", gender: "Male", traits: "🚹", targetQuality: "B", overallGrade: "C" } }), eg = /* @__PURE__ */ new Map();
+const I1 = Object.freeze({ ef_dora: { name: "Dora", language: "es", gender: "Female" }, em_alex: { name: "Alex", language: "es", gender: "Male" }, em_santa: { name: "Santa", language: "es", gender: "Male" }, pf_dora: { name: "Dora", language: "pt-br", gender: "Female" }, pm_alex: { name: "Alex", language: "pt-br", gender: "Male" }, pm_santa: { name: "Santa", language: "pt-br", gender: "Male" }, af_heart: { name: "Heart", language: "en-us", gender: "Female", traits: "❤️", targetQuality: "A", overallGrade: "A" }, af_alloy: { name: "Alloy", language: "en-us", gender: "Female", targetQuality: "B", overallGrade: "C" }, af_aoede: { name: "Aoede", language: "en-us", gender: "Female", targetQuality: "B", overallGrade: "C+" }, af_bella: { name: "Bella", language: "en-us", gender: "Female", traits: "🔥", targetQuality: "A", overallGrade: "A-" }, af_jessica: { name: "Jessica", language: "en-us", gender: "Female", targetQuality: "C", overallGrade: "D" }, af_kore: { name: "Kore", language: "en-us", gender: "Female", targetQuality: "B", overallGrade: "C+" }, af_nicole: { name: "Nicole", language: "en-us", gender: "Female", traits: "🎧", targetQuality: "B", overallGrade: "B-" }, af_nova: { name: "Nova", language: "en-us", gender: "Female", targetQuality: "B", overallGrade: "C" }, af_river: { name: "River", language: "en-us", gender: "Female", targetQuality: "C", overallGrade: "D" }, af_sarah: { name: "Sarah", language: "en-us", gender: "Female", targetQuality: "B", overallGrade: "C+" }, af_sky: { name: "Sky", language: "en-us", gender: "Female", targetQuality: "B", overallGrade: "C-" }, am_adam: { name: "Adam", language: "en-us", gender: "Male", targetQuality: "D", overallGrade: "F+" }, am_echo: { name: "Echo", language: "en-us", gender: "Male", targetQuality: "C", overallGrade: "D" }, am_eric: { name: "Eric", language: "en-us", gender: "Male", targetQuality: "C", overallGrade: "D" }, am_fenrir: { name: "Fenrir", language: "en-us", gender: "Male", targetQuality: "B", overallGrade: "C+" }, am_liam: { name: "Liam", language: "en-us", gender: "Male", targetQuality: "C", overallGrade: "D" }, am_michael: { name: "Michael", language: "en-us", gender: "Male", targetQuality: "B", overallGrade: "C+" }, am_onyx: { name: "Onyx", language: "en-us", gender: "Male", targetQuality: "C", overallGrade: "D" }, am_puck: { name: "Puck", language: "en-us", gender: "Male", targetQuality: "B", overallGrade: "C+" }, am_santa: { name: "Santa", language: "en-us", gender: "Male", targetQuality: "C", overallGrade: "D-" }, bf_emma: { name: "Emma", language: "en-gb", gender: "Female", traits: "🚺", targetQuality: "B", overallGrade: "B-" }, bf_isabella: { name: "Isabella", language: "en-gb", gender: "Female", targetQuality: "B", overallGrade: "C" }, bm_george: { name: "George", language: "en-gb", gender: "Male", targetQuality: "B", overallGrade: "C" }, bm_lewis: { name: "Lewis", language: "en-gb", gender: "Male", targetQuality: "C", overallGrade: "D+" }, bf_alice: { name: "Alice", language: "en-gb", gender: "Female", traits: "🚺", targetQuality: "C", overallGrade: "D" }, bf_lily: { name: "Lily", language: "en-gb", gender: "Female", traits: "🚺", targetQuality: "C", overallGrade: "D" }, bm_daniel: { name: "Daniel", language: "en-gb", gender: "Male", traits: "🚹", targetQuality: "C", overallGrade: "D" }, bm_fable: { name: "Fable", language: "en-gb", gender: "Male", traits: "🚹", targetQuality: "B", overallGrade: "C" } }), eg = /* @__PURE__ */ new Map();
 async function ap(x) {
   if (eg.has(x))
     return eg.get(x);
@@ -41578,7 +41612,7 @@ async function ap(x) {
       const R = typeof __dirname < "u" ? __dirname : import.meta.dirname, X = $c.resolve(R, `../voices/${d}.bin`), { buffer: W } = await $c.readFile(X);
       return W;
     }
-    const k = typeof globalThis < "u" && globalThis.SSNKokoroAssets && typeof globalThis.SSNKokoroAssets.getVoiceUrl == "function" ? globalThis.SSNKokoroAssets.getVoiceUrl(d) : `${typeof globalThis < "u" && globalThis.SSN_KOKORO_REMOTE_HOST ? globalThis.SSN_KOKORO_REMOTE_HOST : "https://largefiles.socialstream.ninja/"}onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/voices/${d}.bin`;
+    const k = /^(ef_dora|em_alex|em_santa|pf_dora|pm_alex|pm_santa)$/.test(d) ? `https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/1939ad2a8e416c0acfeecc08a694d14ef25f2231/voices/${d}.bin` : typeof globalThis < "u" && globalThis.SSNKokoroAssets && typeof globalThis.SSNKokoroAssets.getVoiceUrl == "function" ? globalThis.SSNKokoroAssets.getVoiceUrl(d) : `${typeof globalThis < "u" && globalThis.SSN_KOKORO_REMOTE_HOST ? globalThis.SSN_KOKORO_REMOTE_HOST : "https://largefiles.socialstream.ninja/"}onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/voices/${d}.bin`;
     let P;
     try {
       P = await caches.open("kokoro-voices");
@@ -41588,7 +41622,10 @@ async function ap(x) {
     } catch (R) {
       console.warn("Unable to open cache", R);
     }
-    const j = await fetch(k), O = await j.arrayBuffer();
+    const j = await fetch(k);
+    if (!j.ok) throw new Error(`Kokoro voice download failed: ${j.status}`);
+    const O = await j.arrayBuffer();
+    if (O.byteLength !== 522240) throw new Error("Invalid Kokoro voice data");
     if (P)
       try {
         await P.put(k, new Response(O, { headers: j.headers }));

@@ -372,7 +372,7 @@ function sanitizeRelayBadge(badge) {
 		var safeHtml = filterXSS(badge.html);
 		return safeHtml ? { type: "svg", html: safeHtml } : "";
 	}
-	if (type === "text" && badge.text) {
+	if ((type === "text" || type === "badge") && badge.text) {
 		output.type = "text";
 		output.text = fallbackEscapeHtml(badge.text);
 		if (badge.bgcolor) {

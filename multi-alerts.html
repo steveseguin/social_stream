@@ -353,6 +353,17 @@
       font-size: calc(14px * var(--detail-scale));
     }
 
+    .alert-headline,
+    .alert-message,
+    .alert-subtitle,
+    .alert-pill,
+    .alert-title,
+    .source-badge {
+      overflow-wrap: anywhere;
+      min-width: 0;
+      max-width: 100%;
+    }
+
     .alert-meta {
       display: flex;
       flex-wrap: wrap;
@@ -774,6 +785,18 @@
       }
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      body .alert-card,
+      body .alert-card.is-hiding,
+      body .alert-progress::after {
+        animation: none !important;
+        transition: none !important;
+      }
+      body .alert-card.is-hiding {
+        visibility: hidden;
+      }
+    }
+
     @media (max-width: 720px) {
       body {
         padding: 18px;
@@ -814,6 +837,7 @@
     }
   </style>
 <link rel="stylesheet" href="./themes/collections.css">
+<link rel="stylesheet" href="./themes/featured-styles/artwork.css">
 </head>
 <body data-align="left">
   <div id="alert-stage" aria-live="polite" aria-atomic="true"></div>

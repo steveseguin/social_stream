@@ -3803,6 +3803,8 @@ function syncChatOverlayTemplateLinkFromDock() {
 }
 
 function setupPageLinks(hideLinks, baseURL, streamID, password) {
+  const tipjarPreview = document.getElementById('tipjar-style-preview');
+  if (tipjarPreview) tipjarPreview.href = new URL('tipjar-preview.html', baseURL).href;
   // Get any custom parameters from the current URL
   let customParams = getSelectedTranslationLinkParam();
   try {
@@ -3905,6 +3907,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   });
 
   syncChatOverlayTemplateLinkFromDock();
+  if (window.updateMonetizationLinks) window.updateMonetizationLinks();
   updateAiOverlayGeneratedLinks(hideLinks, baseURL, streamID, password, versionParam);
   
   // Update sample overlay and remote control URLs too
@@ -3913,6 +3916,11 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     sampleOverlay.href = buildGeneratedUrl("sampleoverlay.html", `session=${encodeURIComponent(streamID)}${password}${customParams}${versionParam}`, baseURL);
   }
   
+  ['games_gallery_url', 'games_gallery_menu_url'].forEach(function(id) {
+    const link = document.getElementById(id);
+    if (link) link.href = buildGeneratedUrl("docs/games-gallery.html", `session=${encodeURIComponent(streamID)}${password}`, baseURL);
+  });
+
   const remoteControlUrl = document.getElementById("remote_control_url");
   if (remoteControlUrl) {
     remoteControlUrl.href = buildGeneratedUrl("sampleapi.html", `session=${encodeURIComponent(streamID)}${password}${customParams}${versionParam}`, baseURL);
@@ -4643,7 +4651,7 @@ function update(response, sync = true) {
                         const originalHref = linkElement.href; // Or from a 'data-raw-url' attribute if refreshLinks sets one
                         const cleanedUrl = removeTTSProviderParams(originalHref);
                         linkElement.href = cleanedUrl;
-                        if (linkElement.innerText !== "Click to open link" || !currentHideLinks) { // Avoid overwriting "Click to open" if links are hidden
+                        if (!currentHideLinks || linkElement.textContent !== "Click to open link") { // Read text without forcing layout between link updates.
                            linkElement.innerText = currentHideLinks ? "Click to open link" : getGeneratedLinkDisplayUrl(linkElement, cleanedUrl);
                         }
                         // If your old `sourceElement.raw` was important, you might need to update a similar attribute
@@ -5206,8 +5214,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-setting="socketserver"]',
 		'[data-setting="server2additivedelivery"]',
 		'[data-setting="lanonly"]',
-		'[data-setting="ssc"]',
-		'[data-textsetting="sscapikey"]',
+		'#nc-audience-room',
 		'[data-setting="videostatspoller"]',
 		'[data-textsetting="videostatsurl"]',
 		'[data-textsetting="videostatspublisher"]',
@@ -5303,8 +5310,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-setting="socketserver"]',
 		'[data-setting="server2additivedelivery"]',
 		'[data-setting="lanonly"]',
-		'[data-setting="ssc"]',
-		'[data-textsetting="sscapikey"]',
+		'#nc-audience-room',
 		'[data-setting="videostatspoller"]',
 		'[data-textsetting="videostatsurl"]',
 		'[data-textsetting="videostatspublisher"]',
@@ -7194,13 +7200,14 @@ function refreshGeneratedConnectionLinks(paramName, value) {
         setGeneratedLink(element, replaceGeneratedConnectionParam(element.raw, paramName, value));
     });
 
-    ['sampleoverlay', 'remote_control_url', 'obs_control_dock_url'].forEach(function(elementId) {
+    ['sampleoverlay', 'remote_control_url', 'obs_control_dock_url', 'games_gallery_url', 'games_gallery_menu_url'].forEach(function(elementId) {
         const link = document.getElementById(elementId);
         if (!link || !link.href) return;
         link.href = replaceGeneratedConnectionParam(link.href, paramName, value);
     });
 
     refreshLinks();
+    if (window.updateMonetizationLinks) window.updateMonetizationLinks();
 }
 
 function handleSpecialSettings(ele, sync) {
@@ -7934,6 +7941,50 @@ function validateRoomId(roomId) {
 
 let overlayPreviewSequence = 0;
 
+function attachMultiAlertSoundLibrary(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input || !window.SSNSoundLibrary || document.getElementById(inputId + '-library')) return;
+    const container = document.createElement('div');
+    container.style.width = input.closest('.ssn-alert-setup') ? '100%' : '95%';
+    const custom = document.createElement('details');
+    custom.className = 'ssn-sound-custom';
+    const summary = document.createElement('summary');
+    summary.textContent = '📎 Custom sound URL / upload';
+    custom.appendChild(summary);
+    const inputRow = input.parentElement;
+    inputRow.insertAdjacentElement('beforebegin', container);
+    inputRow.insertAdjacentElement('beforebegin', custom);
+    custom.appendChild(inputRow);
+    window.SSNSoundLibrary.attach({
+        container, input, id: inputId, label: ({
+            'multi-alert-custombeep': 'Default alert sound',
+            'multi-alert-followsound': 'Follow sound',
+            'multi-alert-subsound': 'Subscription sound',
+            'multi-alert-donosound': 'Donation sound',
+            'multi-alert-bitssound': 'Bits / cheer sound',
+            'multi-alert-raidsound': 'Raid sound',
+            'multi-alert-auctionsound': 'Auction win sound',
+            'multi-alert-hypesound': 'Hype train sound'
+        })[inputId] || '🔊 Sound (optional)',
+        getValue: () => input.value,
+        setValue: value => {
+            input.value = value;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            const enabled = document.querySelector('[data-param25="beep"]');
+            if (enabled && !enabled.checked) {
+                enabled.checked = true;
+                enabled.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        },
+        getVolume: () => {
+            const enabled = document.querySelector('[data-param25="beepvolume"]');
+            const volume = document.querySelector('[data-numbersetting25="beepvolume"]');
+            return enabled && enabled.checked && volume ? Number(volume.value) / 100 : 0.35;
+        }
+    });
+}
+
 const overlayPreviewConfigs = Object.freeze({
     multialerts: {
         frameId: 'multi-alerts-preview-frame',
@@ -7945,7 +7996,7 @@ const overlayPreviewConfigs = Object.freeze({
 });
 
 const overlayPreviewState = {
-    multialerts: { pending: null, timer: null, muted: false }
+    multialerts: { pending: null, timer: null, muted: false, loading: false, playOnLoad: false }
 };
 
 function getLocalOverlayUrl(path) {
@@ -8116,7 +8167,42 @@ function buildOverlayPreviewUrl(previewKey) {
     return previewUrl.toString();
 }
 
-function syncOverlayPreview(previewKey) {
+function syncAlertEffectSummaries() {
+    for (let index = 1; index <= 3; index++) {
+        const prefix = 'multi-alert-effect' + index;
+        const summary = document.getElementById(prefix + '-summary');
+        if (!summary) continue;
+        const value = key => document.getElementById(prefix + '-' + key).value.trim();
+        const media = value('media'), sound = value('sound');
+        const parts = [];
+        if (value('state') === 'false') parts.push('Paused');
+        if (!media && !sound) parts.push('Not configured');
+        else {
+            const type = document.getElementById(prefix + '-type');
+            parts.push(type.options[type.selectedIndex].textContent);
+            const min = value('min'), max = value('max');
+            if (min || max) {
+                if (!['donation', 'bits'].includes(type.value) || (min && (!Number.isFinite(Number(min)) || Number(min) < 0)) || (max && (!Number.isFinite(Number(max)) || Number(max) < 0)) || (min && max && Number(min) > Number(max))) parts.push('Check amount limits');
+                else parts.push(min && max && Number(min) === Number(max) ? 'exactly $' + Number(min) + ' USD' : (min && max ? '$' + Number(min) + '–$' + Number(max) + ' USD' : min ? '$' + Number(min) + '+ USD' : 'up to $' + Number(max) + ' USD'));
+            }
+            if (media) parts.push('Media');
+            if (sound) {
+                const entry = window.SSNSoundLibrary && window.SSNSoundLibrary.sounds.find(item => item.url === sound);
+                parts.push(entry ? entry.name : 'Custom sound');
+            } else parts.push('Default sound');
+        }
+        summary.textContent = parts.join(' · ');
+    }
+}
+
+function syncOverlayPreview(previewKey, force = false) {
+    syncAlertEffectSummaries();
+    for (let index = 1; index <= 3; index++) {
+        const toggle = document.getElementById('multi-alert-effect' + index + '-enabled');
+        const saved = document.getElementById('multi-alert-effect' + index + '-state');
+        if (toggle && saved) toggle.checked = saved.value !== 'false';
+    }
+    if (window.SSNSoundLibrary) window.SSNSoundLibrary.syncAll();
     const config = overlayPreviewConfigs[previewKey];
     if (!config) {
         return;
@@ -8127,6 +8213,12 @@ function syncOverlayPreview(previewKey) {
         return;
     }
 
+    // The closed preview should not parse an overlay or create an AudioContext
+    // on every menu opening. Once loaded, keep it in sync even when collapsed.
+    const section = frame.closest('.collapsible');
+    const toggle = section && section.querySelector('input.collapsible-input');
+    if (!force && !frame.dataset.currentPreviewUrl && toggle && !toggle.checked) return;
+
     const nextUrl = buildOverlayPreviewUrl(previewKey);
     if (frame.dataset.currentPreviewUrl === nextUrl) {
         replayOverlayPreview(previewKey, { silent: true });
@@ -8134,6 +8226,7 @@ function syncOverlayPreview(previewKey) {
     }
 
     frame.dataset.currentPreviewUrl = nextUrl;
+    overlayPreviewState[previewKey].loading = true;
     frame.src = nextUrl;
 }
 
@@ -8186,6 +8279,7 @@ function sendOverlayPreview(previewKey, descriptor) {
 
     state.pending = descriptor;
     if (descriptor === false) {
+        state.playOnLoad = false;
         if (state.timer) {
             clearTimeout(state.timer);
             state.timer = null;
@@ -8196,6 +8290,13 @@ function sendOverlayPreview(previewKey, descriptor) {
         return;
     }
 
+    syncOverlayPreview(previewKey, true);
+    if (state.loading) {
+        // Keep an explicit first test (including its sound) until the lazy frame
+        // is ready. Ordinary settings refreshes still replay silently.
+        state.playOnLoad = true;
+        return;
+    }
     replayOverlayPreview(previewKey, { silent: false });
 }
 
@@ -8553,8 +8654,17 @@ function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
 
     const frame = document.getElementById(config.frameId);
     if (frame) {
+        const section = frame.closest('.collapsible');
+        const toggle = section && section.querySelector('input.collapsible-input');
+        if (toggle) toggle.addEventListener('change', () => {
+            if (toggle.checked) syncOverlayPreview(previewKey);
+        });
         frame.addEventListener('load', () => {
-            replayOverlayPreview(previewKey, { silent: true });
+            const state = overlayPreviewState[previewKey];
+            state.loading = false;
+            const silent = !state.playOnLoad;
+            state.playOnLoad = false;
+            replayOverlayPreview(previewKey, { silent });
         });
     }
 
@@ -9706,6 +9816,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 rate: getParam('kokorospeed') ? getNumber('kokorospeed', 1.0) : 1.0,
             },
             
+            piper: {
+                speed: getParam('piperspeed') ? getNumber('piperspeed', 1.0) : 1.0
+            },
+
             // Kitten TTS settings
             kitten: {
                 voice: getId('kittenVoiceSelect')?.selectedOptions[0]?.value || "expr-voice-4-f",
@@ -9821,7 +9935,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     },
     
     testTTS(section = "") {
-        const testPhrase = "The quick brown fox jumps over the lazy dog";
+        const testPhrase = getLocalTtsSample(this.getProviderSelect(section)?.value,
+            document.getElementById('kokoroVoiceSelect' + section)?.value,
+            document.getElementById('piperVoiceSelect' + section)?.value);
         const provider = this.getProviderSelect(section)?.value || "system";
         if (provider === "system") {
             populateSystemVoiceDropdowns();
@@ -9833,7 +9949,11 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             this.showFeedback("A TTS test is already running. Cancel it before starting another test.", 'warning', section, 0);
             return;
         }
-        if (provider === 'piper' || provider === 'espeak') {
+        if (provider === 'piper' && this.piperPreviewBusy) {
+            this.showFeedback("Piper is finishing the previous test. Try again in a moment.", 'info', section);
+            return;
+        }
+        if (provider === 'espeak') {
             let warningMsg = getTranslation("tts-test-not-available", "Testing is not available for {provider}. This TTS provider works during streaming only.");
             warningMsg = warningMsg.replace('{provider}', serviceName);
             this.showFeedback(warningMsg, 'error', section);
@@ -9856,7 +9976,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         // Add success feedback after audio plays
         if (this.audio) {
             this.audio.onended = () => {
-                this.showFeedback(`${serviceName} test completed successfully`, 'success', section);
+                this.showFeedback(`Audio played here. Check OBS playback separately.`, 'success', section);
                 this.audio.onended = originalOnEnded;
                 this.finishedAudio();
             };
@@ -9925,6 +10045,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 if (!this.premiumQueueActive) {
                     await this.kokoroTTS(text, settings, section);
                 }
+            } else if (settings.service == "piper") {
+                await this.piperTTS(text, settings, section);
             } else if (settings.service == "kitten") {
                 if (!this.premiumQueueActive) {
                     await this.kittenTTS(text, settings, section);
@@ -9936,7 +10058,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 this.finishedAudio();
             }
         } catch (error) {
-            this.showFeedback(`Error: ${error.message}`, 'error');
+            this.showFeedback(`Error: ${error.message}`, 'error', section);
             this.finishedAudio();
             console.error(error);
         }
@@ -9972,7 +10094,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 audioElement.src = this.activeAudioUrl;
                 audioElement.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
                 audioElement.onended = () => {
-                    this.showFeedback("System TTS test completed successfully", "success", section);
+                    this.showFeedback("Audio played here. Check OBS playback separately.", "success", section);
                     this.finishedAudio(section);
                 };
                 audioElement.onerror = () => {
@@ -9988,7 +10110,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             }
         }
 
-        if (!window.speechSynthesis) return;
+        if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+            throw new Error("System speech is unavailable here. Choose another TTS provider.");
+        }
         
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = settings.system.lang;
@@ -9997,6 +10121,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         utterance.pitch = settings.system.pitch;
         
         const voices = this.voices && this.voices.length ? this.voices : populateSystemVoiceDropdowns();
+        if (!voices || !voices.length) {
+            throw new Error("No system voices are available yet. Retry, or choose another TTS provider.");
+        }
         if (voices && settings.system.voice) {
             const matchingVoice = resolvePopupSystemVoice(voices, settings.system.voice, settings.system.lang);
             if (matchingVoice) {
@@ -10004,6 +10131,22 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             }
         }
         
+        this.activeSystemUtterance = utterance;
+        this.premiumQueueActive = true;
+        this.setTestRunning(section, true, "Generating...");
+        utterance.onstart = () => {
+            if (this.activeSystemUtterance === utterance) this.setTestRunning(section, true, "Playing...");
+        };
+        utterance.onend = () => {
+            if (this.activeSystemUtterance !== utterance) return;
+            this.showFeedback("Browser reported speech complete. Check OBS playback separately.", "success", section);
+            this.finishedAudio(section);
+        };
+        utterance.onerror = (event) => {
+            if (this.activeSystemUtterance !== utterance) return;
+            this.showFeedback("System voice could not speak (" + (event.error || "unknown error") + "). Try another voice or provider.", "error", section);
+            this.finishedAudio(section);
+        };
         window.speechSynthesis.speak(utterance);
     },
 	
@@ -10012,7 +10155,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             this.premiumQueueActive = true;
             this.cancelRequested = false;
             this.setTestRunning(section, true, "Loading...");
-			if (ssapp){
+			if (ssapp && !/^(ef_dora|em_alex|em_santa|pf_dora|pm_alex|pm_santa)$/.test(settings.kokoro.voice)){
 				try {
                     this.setTestRunning(section, true, "Generating...");
                     this.showFeedback("Generating Kokoro test audio in the desktop app...", 'info', section, 0);
@@ -10032,7 +10175,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                     this.activeAudioUrl = URL.createObjectURL(audioBlob);
 					audioElement.src = this.activeAudioUrl;
 					audioElement.onended = () => {
-                        this.showFeedback("Kokoro TTS test completed successfully", 'success', section);
+                        this.showFeedback("Audio played here. Check OBS playback separately.", 'success', section);
                         this.finishedAudio(section);
                     };
 					
@@ -10048,11 +10191,12 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 			
 			if (!kokoroTtsInstance) {
                 this.showFeedback("Loading Kokoro TTS. First use may download a large model and can take a while.", 'warning', section, 0);
-				const initialized = await initKokoro();
+				const initialized = await initKokoro(true);
                 if (this.cancelRequested) {
                     return;
                 }
 				if (!initialized) {
+                    this.showFeedback("Kokoro could not load. Retry, or choose Piper for a lighter voice.", "error", section, 0);
 					this.finishedAudio(section);
 					return;
 				}
@@ -10066,7 +10210,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 			const audioElement = document.createElement("audio");
             this.activeAudioElement = audioElement;
 			audioElement.onended = () => {
-                this.showFeedback("Kokoro TTS test completed successfully", 'success', section);
+                this.showFeedback("Audio played here. Check OBS playback separately.", 'success', section);
                 this.finishedAudio(section);
             };
 			
@@ -10113,6 +10257,71 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 		}
 	},
     
+    async piperTTS(text, settings, section = "") {
+        const token = {};
+        this.localPiperTest = token;
+        this.piperPreviewBusy = true;
+        this.premiumQueueActive = true;
+        this.setTestRunning(section, true, "Loading...");
+        this.showFeedback("Loading Piper. First use downloads the selected voice.", 'info', section, 0);
+        try {
+            if (!window.ProperPiperTTS) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = './thirdparty/piper/piper-tts-proper.js';
+                    script.onload = resolve;
+                    script.onerror = () => { script.remove(); reject(new Error('Could not load Piper')); };
+                    document.head.appendChild(script);
+                });
+            }
+            if (!window.ort) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = './thirdparty/ort.min.js';
+                    script.onload = resolve;
+                    script.onerror = () => { script.remove(); reject(new Error('Could not load the speech runtime')); };
+                    document.head.appendChild(script);
+                });
+            }
+            const voice = document.getElementById('piperVoiceSelect' + section)?.value || 'en_US-hfc_female-medium';
+            if (!this.piperPreview || this.piperPreview.voiceId !== voice) {
+                if (this.piperPreview?.session?.release) await this.piperPreview.session.release();
+                this.piperPreview = new window.ProperPiperTTS(voice);
+            }
+            const instance = this.piperPreview;
+            await instance.init();
+            if (this.localPiperTest !== token) return;
+            this.setTestRunning(section, true, "Generating...");
+            this.showFeedback('Generating Piper preview...', 'info', section, 0);
+            const blob = await instance.synthesize(text, settings.piper?.speed || 1.0);
+            if (this.localPiperTest !== token) return;
+            const audio = document.createElement('audio');
+            this.activeAudioElement = audio;
+            this.activeAudioUrl = URL.createObjectURL(blob);
+            audio.src = this.activeAudioUrl;
+            audio.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
+            audio.onended = () => {
+                if (this.localPiperTest !== token) return;
+                this.showFeedback("Audio played here. Check OBS playback separately.", 'success', section);
+                this.finishedAudio(section);
+            };
+            audio.onerror = () => {
+                if (this.localPiperTest !== token) return;
+                this.showFeedback("Piper audio could not be played", 'error', section);
+                this.finishedAudio(section);
+            };
+            this.setTestRunning(section, true, "Playing...");
+            this.showFeedback('Playing Piper preview...', 'info', section, 0);
+            await audio.play();
+        } catch (error) {
+            if (this.localPiperTest !== token) return;
+            this.showFeedback("Piper: " + error.message, 'error', section, 0);
+            this.finishedAudio(section);
+        } finally {
+            this.piperPreviewBusy = false;
+        }
+    },
+
     async kittenTTS(text, settings) {
         try {
             const baseUrl = chrome.runtime.getURL('');
@@ -10548,6 +10757,13 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     cancelTest(section = this.currentTtsSection || "") {
         if (!this.premiumQueueActive) return;
         this.cancelRequested = true;
+        if (this.activeSystemUtterance) {
+            this.activeSystemUtterance.onstart = null;
+            this.activeSystemUtterance.onend = null;
+            this.activeSystemUtterance.onerror = null;
+            this.activeSystemUtterance = null;
+            try { window.speechSynthesis.cancel(); } catch (e) {}
+        }
         try {
             if (this.activeAudioElement) {
                 this.activeAudioElement.pause();
@@ -10565,6 +10781,13 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     },
 
     finishTtsTest(section = this.currentTtsSection || "", keepCancelFlag = false) {
+        this.localPiperTest = null;
+        if (this.activeSystemUtterance) {
+            this.activeSystemUtterance.onstart = null;
+            this.activeSystemUtterance.onend = null;
+            this.activeSystemUtterance.onerror = null;
+            this.activeSystemUtterance = null;
+        }
         if (this.activeAudioUrl) {
             try {
                 URL.revokeObjectURL(this.activeAudioUrl);
@@ -10650,11 +10873,11 @@ async function initKokoroWithFallback(preferredDevice) {
 	throw lastError || new Error("Unable to initialize Kokoro TTS");
 }
 
-async function initKokoro() {
-	if (ssapp) return false;
+async function initKokoro(browserOnly = false) {
+	if (ssapp && !browserOnly) return false;
 	if (kokoroDownloadInProgress) return false;
 	
-	if (!KokoroTTS) {
+	if (!KokoroTTS || !kokoroTtsInstance) {
 		try {
 			const kokoroAssets = getKokoroAssets();
 			kokoroDownloadInProgress = true;
@@ -11326,6 +11549,76 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	]);
 	attachTipJarTestDonationButtons();
 	attachReactionTestButton();
+	for (let index = 1; index <= 3; index++) {
+		const prefix = 'multi-alert-effect' + index;
+		const enabled = document.getElementById(prefix + '-enabled');
+		const savedState = document.getElementById(prefix + '-state');
+		const status = document.getElementById(prefix + '-status');
+		const setField = function(key, value) {
+			const input = document.getElementById(prefix + '-' + key);
+			input.value = value;
+			input.dispatchEvent(new Event('change', { bubbles: true }));
+		};
+		document.getElementById(prefix + '-clear-sound').addEventListener('click', function() {
+			if (window.SSNSoundLibrary) window.SSNSoundLibrary.stop();
+			setField('sound', '');
+			status.textContent = 'Sound cleared. Default alert audio still applies.';
+		});
+		document.getElementById(prefix + '-reset').addEventListener('click', function() {
+			if (window.SSNSoundLibrary) window.SSNSoundLibrary.stop();
+			['media', 'sound', 'min', 'max', 'state'].forEach(key => setField(key, ''));
+			setField('type', 'donation');
+			status.textContent = 'Alert reset. Other alerts are unchanged.';
+		});
+		['type', 'media', 'sound', 'min', 'max', 'state'].forEach(function(key) {
+			document.getElementById(prefix + '-' + key).addEventListener('input', syncAlertEffectSummaries);
+			document.getElementById(prefix + '-' + key).addEventListener('change', syncAlertEffectSummaries);
+		});
+		enabled.addEventListener('change', function() {
+			savedState.value = enabled.checked ? '' : 'false';
+			savedState.dispatchEvent(new Event('change', { bubbles: true }));
+			status.textContent = enabled.checked ? 'Alert enabled.' : 'Alert paused. Settings kept.';
+		});
+		document.getElementById(prefix + '-preset').addEventListener('click', function() {
+			const values = { type: 'donation', min: '100', max: '100', state: '' };
+			if (!document.getElementById(prefix + '-sound').value.trim()) values.sound = './audio/alerts/voice-thank-you.wav';
+			Object.keys(values).forEach(function(key) {
+				const input = document.getElementById(prefix + '-' + key);
+				input.value = values[key];
+				input.dispatchEvent(new Event('change', { bubbles: true }));
+			});
+			const audio = document.querySelector('[data-param25="beep"]');
+			if (!audio.checked) { audio.checked = true; audio.dispatchEvent(new Event('change', { bubbles: true })); }
+			document.getElementById(prefix + '-min').closest('details').open = true;
+			status.textContent = 'Exactly $100 USD. Sound ready; add media if you like.';
+		});
+		document.getElementById(prefix + '-test').addEventListener('click', function() {
+			if (!enabled.checked) { status.textContent = 'Enable this alert before testing.'; enabled.focus(); return; }
+			const category = document.getElementById(prefix + '-type').value || 'donation';
+			const minText = document.getElementById(prefix + '-min').value.trim();
+			const maxText = document.getElementById(prefix + '-max').value.trim();
+			const min = minText ? Number(minText) : null;
+			const max = maxText ? Number(maxText) : null;
+			if ((min !== null && (!Number.isFinite(min) || min < 0)) ||
+				(max !== null && (!Number.isFinite(max) || max < 0)) ||
+				(min !== null && max !== null && min > max) ||
+				((min !== null || max !== null) && category !== 'donation' && category !== 'bits')) {
+				alert('Use a valid amount range for donations/bits, or leave both amount fields blank for other events.');
+				return;
+			}
+			const descriptor = buildMultiAlertPreviewDescriptor(category);
+			if (category === 'donation' || category === 'bits') {
+				const amount = min !== null ? min : (max !== null ? max : 100);
+				descriptor.overrides.hasDonation = category === 'bits' ? String(amount * 100) + ' bits' : '$' + amount + ' USD';
+				descriptor.overrides.donoValue = amount;
+			}
+			document.getElementById('wrapper-multi-alert-preview-options').checked = true;
+			const preview = document.getElementById('multi-alerts-preview-frame');
+			preview.scrollIntoView({ block: 'center' });
+			preview.focus({ preventScroll: true });
+			sendOverlayPreview('multialerts', descriptor);
+		});
+	}
 
 	var previewPlatformSelect = document.getElementById('multi-alert-preview-platform');
 	if (previewPlatformSelect) {
@@ -11647,6 +11940,24 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		if (/\bcolor\b|\bcolour\b|\bhue\b|\bbackground\b|\bpagebg\b|\bchroma\b|\btextcolor\b|\bnamecolor\b|\bstroke\b|\bglow\b/.test(text)) {
 			synonyms.push('color colour hue background foreground fill text page chroma stroke glow');
 		}
+        // Expand specific concepts only, so generic searches do not match every row.
+        var aliases = [
+            [/\btts\b|\btext to speech\b/, 'tts text to speech read aloud read chat speech synthesis'],
+            [/\bfont\b/, 'font typeface typography lettering'],
+            [/\bfont size\b|\bfontsize\b/, 'text size lettering size bigger text smaller text'],
+            [/\bopacity\b|\btransparent\b|\btransparency\b/, 'opacity transparency transparent see through'],
+            [/\bprofanity\b|\bswear\b|\bbad words\b/, 'profanity swear swearing bad words cursing language filter'],
+            [/\bblacklist\b|\bblocklist\b/, 'blacklist blocklist blocked denylist'],
+            [/\bwhitelist\b|\ballowlist\b/, 'whitelist allowlist allowed'],
+            [/\bavatar\b|\bprofile picture\b|\bprofile image\b/, 'avatar profile picture profile image user picture'],
+            [/\btimestamp\b|\btime stamp\b/, 'timestamp time stamp message time'],
+            [/\bemotes?\b|\bemoticons?\b/, 'emote emotes emoticon emoticons']
+        ];
+        aliases.forEach(function(alias) {
+            if (alias[0].test(text)) {
+                synonyms.push(alias[1]);
+            }
+        });
 		if (synonyms.length) {
 			parts.push(synonyms.join(' '));
 		}
@@ -11838,6 +12149,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		var target = record && record.element;
 		var wrapper = record && record.wrapper;
 		closePopupSearch();
+		// Search covers all settings; leave the enabled-only view before revealing one.
+		setPopupEnabledFilter(false);
 		if (wrapper) {
 			openPopupSearchSection(wrapper);
 		}
@@ -11854,6 +12167,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	function renderPopupSearchResults(records, totalMatches) {
 		clearPopupSearchResults();
+        var toolbar = document.getElementById('popupSearchToolbar');
+        if (toolbar && popupSearchResults) {
+            popupSearchResults.style.top = Math.ceil(toolbar.getBoundingClientRect().bottom + 4) + 'px';
+        }
+
 		if (!popupSearchResults) {
 			return;
 		}
@@ -11895,7 +12213,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			return false;
 		}
 		return element.id === 'searchInput' ||
-			element.id === 'searchIcon' ||
+			element.id === 'popupSearchToolbar' ||
 			element.id === 'popupSearchNoResults' ||
 			element.id === 'popupSearchResults' ||
 			element.id === 'activeIcon' ||
@@ -12279,8 +12597,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		if (popupSearchInput) {
 			popupSearchInput.value = '';
-			popupSearchInput.style.display = 'none';
-			popupSearchInput.style.width = '0';
 		}
 		clearPopupSearchHidden();
 		clearPopupSearchMatches();
@@ -12320,14 +12636,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		if (!searchInput) {
 			return;
 		}
-		if (searchInput.style.display === 'none' || searchInput.style.display === '') {
-			searchInput.style.display = 'block';
-			searchInput.style.width = 'calc(100% - 35px)'; // Match this with your CSS width
-			searchInput.focus(); // Optional: Focus on the input field when it's shown
-		} else {
-			searchInput.focus();
-			searchInput.select();
-		}
+		searchInput.focus();
+		searchInput.select();
 	}
 
 	document.addEventListener('keydown', function(e) {
@@ -12336,27 +12646,23 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			openPopupSearch();
 		} else if (e.key === 'Escape') {
 			var searchInput = popupSearchInput || document.getElementById('searchInput');
-			if (searchInput && window.getComputedStyle(searchInput).display !== 'none') {
+			if (searchInput && (document.activeElement === searchInput || document.body.classList.contains('popup-searching'))) {
 				e.preventDefault();
 				closePopupSearch();
 			}
 		}
 	});
 
-	document.getElementById('searchIcon').addEventListener('click', function() {
-		var searchInput = popupSearchInput || document.getElementById('searchInput');
-		if (searchInput.style.display === 'none' || searchInput.style.display === '') {
-			openPopupSearch();
-		} else {
-			closePopupSearch();
-		}
-	});
-	
+
 	var activeToggle = false;
 	var activeToggleOpenState = null;
 	var activeToggleScrollY = null;
-	document.getElementById('activeIcon').addEventListener('click', function() {
-		activeToggle = !activeToggle;
+	function setPopupEnabledFilter(enabled) {
+		if (activeToggle === enabled) {
+			return;
+		}
+		activeToggle = enabled;
+		document.getElementById('activeIcon').setAttribute('aria-pressed', String(enabled));
 		if (activeToggle) {
 			// Remember open sections and scroll position so toggling off restores them
 			activeToggleOpenState = [];
@@ -12372,8 +12678,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				ele.checked = true;
 			});
 			
-			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
-				item.style.display = 'none';
+			document.querySelectorAll('button:not(.showalways):not(.popup-search-result)').forEach(function(item) {
+				item.classList.add('popup-enabled-filter-hidden');
 			});
 
 			document.querySelectorAll('.wrapper').forEach(w => {
@@ -12398,22 +12704,22 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 					if (isActive) {
 						matches += 1;
-						item.style.display = '';
+						item.classList.remove('popup-enabled-filter-hidden');
 					} else {
-						item.style.display = 'none';
+						item.classList.add('popup-enabled-filter-hidden');
 					}
 				});
 				
 				if (!matches) {
-					w.style.display = "none";
+					w.classList.add('popup-enabled-filter-hidden');
 				} else {
-					w.style.display = "";
+					w.classList.remove('popup-enabled-filter-hidden');
 				}
 			});
 		} else {
 			
-			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
-				item.style.display = '';
+			document.querySelectorAll('button:not(.showalways):not(.popup-search-result)').forEach(function(item) {
+				item.classList.remove('popup-enabled-filter-hidden');
 			});
 			// Reset to original state
 			if (activeToggleOpenState) {
@@ -12429,16 +12735,20 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				});
 			}
 			document.querySelectorAll('.wrapper').forEach(ele => {
-				ele.style.display = "";
+				ele.classList.remove('popup-enabled-filter-hidden');
 			});
 			document.querySelectorAll('.options_group > div').forEach(ele => {
-				ele.style.display = "";
+				ele.classList.remove('popup-enabled-filter-hidden');
 			});
 			if (typeof activeToggleScrollY === 'number') {
 				restorePopupScrollTop(activeToggleScrollY);
 				activeToggleScrollY = null;
 			}
 		}
+	}
+
+	document.getElementById('activeIcon').addEventListener('click', function() {
+		setPopupEnabledFilter(!activeToggle);
 	});
 	
 	const uploadBadwordsButton = document.getElementById('uploadBadwordsButton');
@@ -13778,6 +14088,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		{ btnId: 'uploadHypeSoundBtn', inputId: 'multi-alert-hypesound' }
 	];
 	alertSoundUploads.forEach(({ btnId, inputId }) => {
+		attachMultiAlertSoundLibrary(inputId);
 		const btn = document.getElementById(btnId);
 		if (btn) {
 			btn.onclick = function() {
@@ -13785,6 +14096,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			};
 		}
 	});
+	for (let index = 1; index <= 3; index++) {
+		['Media', 'Sound'].forEach(function(kind) {
+			if (kind === 'Sound') attachMultiAlertSoundLibrary('multi-alert-effect' + index + '-sound');
+			const btnId = 'uploadMultiEffect' + index + kind + 'Btn';
+			document.getElementById(btnId).onclick = function() {
+				openHostedMediaUploadForInput(document.getElementById('multi-alert-effect' + index + '-' + kind.toLowerCase()), btnId);
+			};
+		});
+	}
 
 	const hostedMediaUploads = [
 		{ btnId: 'uploadDefaultAvatarBtn', inputId: 'default_avatar' },
@@ -13821,3 +14141,37 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		};
 	}
 });
+
+function getLocalTtsSample(provider, kokoroVoice, piperVoice) {
+    const voice = provider === 'kokoro' ? kokoroVoice : provider === 'piper' ? piperVoice : '';
+    if (/^(e[fm]_|es_)/.test(voice || '')) return 'Hola, gracias por participar. ¿Qué jugamos hoy?';
+    if (/^(p[fm]_|pt_BR)/.test(voice || '')) return 'Olá, obrigado por participar. O que vamos jogar hoje?';
+    if (/^pt_PT/.test(voice || '')) return 'Olá, obrigado por participares. O que vamos jogar hoje?';
+    return 'The quick brown fox jumps over the lazy dog';
+}
+function setupLocalTtsLanguageFilters() {
+    document.querySelectorAll('select[id^="kokoroVoiceSelect"], select[id^="piperVoiceSelect"]').forEach(function(voices) {
+        if (document.getElementById(voices.id + 'Language')) return;
+        const filter = document.createElement('select');
+        filter.id = voices.id + 'Language';
+        filter.setAttribute('aria-label', 'Filter voices by language');
+        filter.style.cssText = 'display:block;max-width:100%;margin:6px 0';
+        const choices = [['', 'All languages'], ['en', 'English'], ['es', 'Spanish'], ['pt', 'Portuguese']];
+        choices.forEach(function(choice) { filter.add(new Option(choice[1], choice[0])); });
+        voices.parentNode.insertBefore(filter, voices);
+        voices.addEventListener('change', function() { filter.dispatchEvent(new Event('change')); });
+        filter.addEventListener('change', function() {
+            Array.prototype.forEach.call(voices.options, function(option) {
+                const id = option.value;
+                const language = /^(a[fm]_|b[fm]_|en_)/.test(id) ? 'en' : /^(e[fm]_|es_)/.test(id) ? 'es' : /^(p[fm]_|pt_)/.test(id) ? 'pt' : '';
+                // Preserve the saved voice even if it is outside the current filter.
+                option.hidden = !!filter.value && language !== filter.value && !option.selected;
+            });
+            voices.querySelectorAll('optgroup').forEach(function(group) {
+                group.hidden = Array.prototype.every.call(group.children, function(option) { return option.hidden; });
+            });
+        });
+    });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupLocalTtsLanguageFilters);
+else setupLocalTtsLanguageFilters();

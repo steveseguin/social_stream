@@ -31,6 +31,17 @@ These pages are output/control surfaces. They do not capture platform chat by th
 
 ## Shared Runtime Pattern
 
+### Cooperative games (September 2026)
+
+`games/signallock.html` and `games/crowdquest.html` share the classic scripts `games/audience-engine.js` and `games/audience-page.js`, with `games/audience.css`. The public setup guide is `docs/chat-games.html`; both are in the existing popup game selector.
+
+- Signal Lock: `!code 1234`, four digits from 1 through 6 including repeats, exact/misplaced feedback, 90 seconds from the first valid guess. Five-second per-viewer cooldown, duplicate guesses ignored.
+- Crowd Quest: `!vote 1`, `!vote 2`, or `!vote 3`; five chapters, 30 seconds per chapter starting with the first valid vote. One changeable vote per platform account; outcomes shown in advance. Insufficient-supply routes are unavailable. Ties choose randomly.
+- Both advance after a ten-second result screen. Host buttons pause or restart locally; chat cannot invoke them. State resets on reload, with no loyalty spending or source-chat replies. At most 1,000 players per round; identity combines platform with user ID, username, or display name in that order.
+- Parameters: `session` (aliases `room`, `s`, `id`), `password`, `server`, `demo`, `clean` (hide host controls), `transparent`, `chroma`. `demo` never connects, even if a session is supplied. A missing session never joins a shared fallback room.
+- Use either the normal dock-label iframe bridge or `server` WebSocket (out 2/in 1), never both. Array payloads and `content` envelopes are accepted. Bots, private/reflected traffic, and events are excluded. Only the created bridge may deliver window messages.
+- Word Chain now uses `games/wordchain.css` and a chronological trail of eight words. Scoring, letter matching, themes, and timers remain unchanged.
+
 | Area | Source-Backed Behavior |
 | --- | --- |
 | URL shape | Usually `https://socialstream.ninja/games/FILE.html?session=SESSION_ID`. Root Spam Power uses `https://socialstream.ninja/games.html?session=SESSION_ID`. |
@@ -158,3 +169,15 @@ For Pet Race, open `https://socialstream.ninja/games/petrace.html?session=YOUR_S
 - Trace and test page-local bot responses versus actual platform chat send-back.
 - Generate exact URL parameter rows from source for every game page.
 - Validate mobile/browser sizing and text overflow for command-heavy game UIs.
+
+## Tug of War
+
+`games/tugofwar.html` uses `tug-engine.js`, `tug-view.js`, and the shared `audience-page.js` transport/host controls. Join with `!join`; teams auto-balance and stay fixed per match. Each correct plain-chat answer (or `!answer VALUE`) adds one tug per player per 12-second prompt. Words alternate with generated arithmetic questions. Twenty net tugs or the lead after 180 seconds wins. Ties draw. Teams reset between matches. State is bounded to 1,000 players and 20,000 message IDs; no persistence, points, or outgoing chat commands. Supports standard session/password/server/demo/clean/transparent/chroma parameters.
+
+## Cooperative participation games
+
+`crewkitchen.html`, `beaconrelay.html`, and `meteorshield.html` share `teamplay-engine.js`, `teamplay-view.js`, and the existing `audience-page.js` chat transport/host controls. Kitchen accepts current-recipe `!cook INGREDIENT` contributions every six seconds per viewer, two per ingredient, four orders in 90 seconds. Relay accepts `!pass` from alternating accounts, four seconds per account and 300ms globally, targeting 20 passes in 90 seconds. Shield accepts one changeable `!shield red|blue|gold` choice per account per 12-second wave, with six waves and six hull. Unblocked meteors damage hull; subsequent waves scale with participant count, capped at 12 meteors. All are opt-in by opening their game link, free of loyalty spending, and bounded to 1,000 players and 20,000 accepted message IDs per round.
+
+## Puzzle party games
+
+`memoryparade.html`, `oddoneout.html`, and `sumsquad.html` use `puzzle-party-engine.js`, `puzzle-party-view.js`, and the shared audience transport. Memory: `!ready` starts four 15-second sequences (five seconds visible, ten for answers), with one `!remember DIGITS` submission per viewer per sequence. Odd One Out: five distinct 12-second multiple-choice questions; `!odd 1|2|3` keeps the latest vote per account, limited to one change per second. Both award every correct viewer one score per question and reset scores each match. Sum Squad: alternate viewers using `!add 1` through `!add 9` to reach 20, 30, and 40 within 90 seconds; three-second account cooldown, 300ms global limit, and no overshoots. All use bounded per-match state, classic local scripts, and no loyalty spending or outgoing chat.

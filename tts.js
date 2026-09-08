@@ -1006,6 +1006,8 @@ TTS.configure = function(urlParams) {
         TTS.TTSProvider = "openai";
     }
 
+    TTS.configurationWarning = "";
+
     // Validate provider selection
     if (TTS.TTSProvider !== "system") {
         if (TTS.TTSProvider === "kokoro") {
@@ -1017,19 +1019,24 @@ TTS.configure = function(urlParams) {
         } else if (TTS.TTSProvider === "kitten") {
             TTS.useKitten = true;
         } else if (TTS.TTSProvider === "elevenlabs" && !TTS.ElevenLabsKey) {
-            console.warn("ElevenLabs selected but no API key provided. Falling back to system TTS.");
+            TTS.configurationWarning = "ElevenLabs API key missing. Using System TTS instead; check playback in OBS separately.";
+            console.warn(TTS.configurationWarning);
             TTS.TTSProvider = "system";
         } else if (TTS.TTSProvider === "google" && !TTS.GoogleAPIKey) {
-            console.warn("Google Cloud selected but no API key provided. Falling back to system TTS.");
+            TTS.configurationWarning = "Google Cloud API key missing. Using System TTS instead; check playback in OBS separately.";
+            console.warn(TTS.configurationWarning);
             TTS.TTSProvider = "system";
         } else if (TTS.TTSProvider === "gemini" && !TTS.GeminiAPIKey) {
-            console.warn("Gemini selected but no API key provided. Falling back to system TTS.");
+            TTS.configurationWarning = "Gemini API key missing. Using System TTS instead; check playback in OBS separately.";
+            console.warn(TTS.configurationWarning);
             TTS.TTSProvider = "system";
         } else if (TTS.TTSProvider === "speechify" && !TTS.SpeechifyAPIKey) {
-            console.warn("Speechify selected but no API key provided. Falling back to system TTS.");
+            TTS.configurationWarning = "Speechify API key missing. Using System TTS instead; check playback in OBS separately.";
+            console.warn(TTS.configurationWarning);
             TTS.TTSProvider = "system";
         } else if (TTS.TTSProvider === "openai" && !TTS.OpenAIAPIKey && TTS.isOfficialOpenAIEndpoint(configuredOpenAIEndpoint)) {
-            console.warn("OpenAI selected but no API key provided. Falling back to system TTS.");
+            TTS.configurationWarning = "OpenAI API key missing. Using System TTS instead; check playback in OBS separately.";
+            console.warn(TTS.configurationWarning);
             TTS.TTSProvider = "system";
         }
     } else {
@@ -1422,6 +1429,19 @@ TTS.updateButtonState = function(state) {
             ttsButton.title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
             break;
     }
+    if (TTS.configurationWarning) {
+        ttsButton.title = TTS.configurationWarning + "\n" + ttsButton.title;
+        ttsButton.setAttribute("data-tts-warning", "true");
+        if (!document.getElementById("tts-warning-style")) {
+            var style = document.createElement("style");
+            style.id = "tts-warning-style";
+            style.textContent = "#tts[data-tts-warning] { outline: 2px solid #e0a526; outline-offset: 2px; }";
+            document.head.appendChild(style);
+        }
+    } else {
+        ttsButton.removeAttribute("data-tts-warning");
+    }
+    ttsButton.setAttribute("aria-label", ttsButton.title);
 };
 
 /**
@@ -1977,9 +1997,9 @@ TTS.speechMeta = function(data, allow = false) {
                         TTS.speak(chatname + " has donated " + donoText, allow);
                     }
                 } else if (msgPlain) {
-                    TTS.speak(chatname + "! ! .. " + donoText + "! ! .. " + msgPlain, allow);
+                    TTS.speak(chatname + ". " + donoText + ". " + msgPlain, allow);
                 } else {
-                    TTS.speak(chatname + "! ! .. " + donoText, allow);
+                    TTS.speak(chatname + ". " + donoText, allow);
                 }
             } else if (TTS.English) {
                 // no name but english
@@ -1990,7 +2010,7 @@ TTS.speechMeta = function(data, allow = false) {
                 }
             } else if (msgPlain) {
                 // no name; not english
-                TTS.speak(donoText + "! ! .. " + msgPlain, allow);
+                TTS.speak(donoText + ". " + msgPlain, allow);
             } else {
                 TTS.speak(donoText, allow);
             }
@@ -1999,13 +2019,13 @@ TTS.speechMeta = function(data, allow = false) {
             if (chatname) {
                 // NAME
                 if (TTS.English) {
-                    TTS.speak(chatname + " says! " + msgPlain, allow);
+                    TTS.speak(chatname + " says: " + msgPlain, allow);
                 } else {
-                    TTS.speak(chatname + "! ! .. " + msgPlain, allow);
+                    TTS.speak(chatname + ". " + msgPlain, allow);
                 }
             } else if (TTS.English) {
                 // NO NAME
-                TTS.speak("Someone says! " + msgPlain, allow);
+                TTS.speak("Someone says: " + msgPlain, allow);
             } else {
                 TTS.speak(msgPlain, allow);
             }
@@ -2019,9 +2039,13 @@ TTS.speechMeta = function(data, allow = false) {
  * Initialize the Kokoro TTS system
  * @returns {Promise<boolean>} - Whether initialization was successful
  */
-TTS.initKokoro = async function() {
-    if ((window.ninjafy || window.electronApi)) {
-        return true; // Electron already handles this
+TTS.isNewKokoroVoice = function(voice) {
+    return /^(ef_dora|em_alex|em_santa|pf_dora|pm_alex|pm_santa)$/.test(voice || "");
+};
+
+TTS.initKokoro = async function(voice) {
+    if ((window.ninjafy || window.electronApi) && !TTS.isNewKokoroVoice(voice || TTS.kokoroSettings.voiceName)) {
+        return true; // Electron already handles existing voices
     }
     if (TTS.kokoroDownloadInProgress) return TTS.kokoroDownloadInProgress;
     if (TTS.kokoroTtsInstance) return true;
@@ -2512,7 +2536,7 @@ TTS.kokoroTTS = async function(text, options) {
   const premiumSerial = ++TTS.premiumSerial;
   const voiceOverride = TTS.getVoiceOverride(options);
   try {
-    if ((window.ninjafy || window.electronApi)) {
+    if ((window.ninjafy || window.electronApi) && !TTS.isNewKokoroVoice(voiceOverride || TTS.kokoroSettings.voiceName)) {
       try {
         // Electron implementation remains the same
         let ninjafy = window.ninjafy || window.electronApi;
@@ -2565,7 +2589,7 @@ TTS.kokoroTTS = async function(text, options) {
 
     // Web implementation with fixes aligned to working version
     if (!TTS.kokoroTtsInstance) {
-      const initialized = await TTS.initKokoro();
+      const initialized = await TTS.initKokoro(voiceOverride);
       if (!initialized || !TTS.kokoroTtsInstance) {
         console.error("Failed to initialize Kokoro TTS");
         if (premiumSerial === TTS.premiumSerial) {
@@ -2808,12 +2832,11 @@ TTS.initPiper = async function(voiceName) {
         //console.log("Loading Piper TTS module...");
         
         // Load dependencies in order
-        if (!window.ProperPiperTTS) {
-            const scripts = [
-                './thirdparty/ort.min.js',
-                './thirdparty/piper/piper-tts-proper.js'
-            ];
-            
+        if (!window.ProperPiperTTS || !window.ort) {
+            const scripts = [];
+            if (!window.ort) scripts.push('./thirdparty/ort.min.js');
+            if (!window.ProperPiperTTS) scripts.push('./thirdparty/piper/piper-tts-proper.js');
+
             for (const src of scripts) {
                 await new Promise((resolve, reject) => {
                     const script = document.createElement('script');
@@ -3248,3 +3271,15 @@ TTS.openAITTS = function(text, options) {
         console.error("OpenAI TTS error:", e);
     }
 };
+
+// A short renewable lease suppresses host voice commands during managed playback.
+// It expires if this renderer closes; external/OBS playback requires separate integration.
+(function(){
+    if (!window.ninjafy || typeof window.ninjafy.voicePlayback !== 'function') return;
+    var previous = false;
+    setInterval(function(){
+        var active = !!TTS.premiumQueueActive || !!(window.speechSynthesis && window.speechSynthesis.speaking);
+        if (active || previous) window.ninjafy.voicePlayback(active).catch(function(){});
+        previous = active;
+    }, 400);
+})();

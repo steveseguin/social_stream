@@ -1218,6 +1218,18 @@
 				width: auto;
 				vertical-align: middle;
 			}
+			/* Kick supplies both image and inline-SVG versions of the same badges. */
+			.highlight-chat[data-source-type="kick"] .hl-badge:not(.textbadge) {
+				height: 20px;
+				max-height: 20px;
+				vertical-align: middle;
+			}
+			.highlight-chat[data-source-type="kick"] .hl-badge.svg > svg {
+				height: 100%;
+				max-height: 100%;
+				width: auto;
+				vertical-align: top;
+			}
 			.highlight-chat.compactmode.larger-emojis .hl-message > .hl-badges > .hl-badge.svg {
 				vertical-align: middle;
 			}
@@ -1740,7 +1752,17 @@
 				opacity: 1; /* Firefox */
 			}
 
-			.hl-badge.textbadge {
+			.hl-badge.textbadge,
+			.hl-firstline .hl-name .hl-badge.textbadge {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				vertical-align: middle;
+				line-height: 1;
+				white-space: nowrap;
+				overflow-wrap: normal;
+				max-width: none;
+				flex-shrink: 0;
 				border-radius: 6px;
 				padding: 0 5px;
 				font-size: 50%;
@@ -2744,7 +2766,8 @@
 		}
 
 		</style>
-	</head>
+	<link rel="stylesheet" href="dock-questions.css">
+</head>
 	<body id="main" class="vanilla notcompactmode">
 		<div id="topbar"></div>
 		<div id="topbarSpacer" aria-hidden="true"></div>
@@ -3757,8 +3780,13 @@
 					};
 					  
 					document.addEventListener('DOMContentLoaded', () => {
-						let ninjafy = window.ninjafy || window.electronApi;
-						ninjafy.onCloseFileStream(writerCloseHandler);
+						let fileStreamBridge = window.ninjafy;
+						if (!fileStreamBridge || typeof fileStreamBridge.onCloseFileStream !== 'function') {
+							fileStreamBridge = window.electronApi;
+						}
+						if (fileStreamBridge && typeof fileStreamBridge.onCloseFileStream === 'function') {
+							fileStreamBridge.onCloseFileStream(writerCloseHandler);
+						}
 					});
 				}
 			} catch (e) {
@@ -6410,6 +6438,7 @@
 				var visibleNodes = [];
 				var hiddenNodes = [];
 				Array.prototype.forEach.call(nodes, function(node) {
+                    if (node.classList.contains("ssn-question-pending")) return;
 					if (isDockMessageVisible(node)) {
 						visibleNodes.push(node);
 					} else {
@@ -12111,7 +12140,7 @@
 										}
 									} else if (badge.type && badge.type == "svg" && badge.html) {
 										chatbadges += "<span class='hl-badge svg'>" + badge.html + "</span>";
-									} else if (badge.type && badge.type == "text" && badge.text) {
+									} else if ((badge.type == "text" || badge.type == "badge") && badge.text) {
 										chatbadges += "<span class='hl-badge textbadge'>" + badge.text + "</span>";
 									}
 								} else {
@@ -12744,6 +12773,7 @@
 
 					if (!suppressLiveSideEffects) {
 						applyBotActions(data); // Official actions
+                        if (window.SSNQuestionTracker) window.SSNQuestionTracker.add(node, data);
 
 						if (data.queueme) {
 							selectedQueue.push(node);
@@ -14093,5 +14123,6 @@
 			initHotkeys();
 
 		</script>
-	</body>
+	<script src="dock-questions.js"></script>
+</body>
 </html>

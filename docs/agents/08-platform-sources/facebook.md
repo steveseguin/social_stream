@@ -50,6 +50,8 @@ The page is meant for Pages the user manages. The setup notes in the page say:
 
 The bridge polls live video comments and optionally viewer count. Keep the page open while it should relay Facebook Live comments into SSN.
 
+On each connection, the first successful comment snapshot is displayed locally and seeded into dedupe without being relayed. Later polls relay only previously unseen comments with a valid creation timestamp newer than the connection start. Older or undated comments remain local. Disconnect invalidates pending comment requests so an old response cannot publish after a reconnect. The `autoconnect=0` URL parameter explicitly disables startup capture; use `autoconnect=1` to override saved settings and connect automatically.
+
 ## API Bridge Setup
 
 Normal setup:
@@ -123,25 +125,25 @@ Comment payloads include:
 - `chatname`
 - `chatmessage`
 - `chatimg` from Graph profile picture URL when a sender ID is available
+- `userid` when the API provides the sender ID
+- `contentimg` for an HTTP(S) attachment image when present
 - `chatbadges`
 - `backgroundColor`
 - `textColor`
 - `hasDonation`
 - `membership`
 - `textonly`
-- `timestamp`
+- `timestamp` in Unix milliseconds when the API creation time is valid
 - `meta`
 
 `meta` includes:
 
-- `commentId`
-- `fromId`
-- `fromName`
-- `createdTime`
+- `messageId` (native comment ID; this does not imply delete-sync support)
 - `permalink`
 - `videoId`
 - `pageId`
-- `attachment` when present
+
+Author, time, and image data use the standard fields above rather than duplicate metadata or a raw attachment object. `chatmessage` is raw text when `textonly` is true and escaped HTML otherwise; the local preview respects this flag. Image-only comments are retained. Ordinary comments do not set `event` or infer Stars, memberships, highlights, or replies from message text.
 
 Viewer-count payloads use:
 
@@ -151,6 +153,8 @@ Viewer-count payloads use:
 - `meta` set to the viewer value
 - empty chat fields
 - `textonly: true`
+
+The API counter reads concurrent `live_views` only, and only when viewer tracking is enabled. Cumulative video views are not concurrent viewers. Unavailable values are skipped rather than emitted as zero.
 
 ## Polling And Errors
 

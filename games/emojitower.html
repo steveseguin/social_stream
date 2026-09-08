@@ -531,6 +531,7 @@
     }
     
     function sendResponse(message) {
+        if (urlParams.has('demo')) return;
         const response = {
             chatname: 'TowerBot',
             chatmessage: message,
@@ -549,11 +550,12 @@
     }
     
     function processData(data) {
+        if (!data || typeof data !== 'object') return;
         if (data.content) {
             data = data.content;
         }
         
-        if (!data.chatmessage || !data.chatname) return;
+        if (typeof data.chatmessage !== 'string' || typeof data.chatname !== 'string' || !data.chatmessage || !data.chatname) return;
 
         let rawMessage = data.chatmessage;
         if (!data.textonly) {
@@ -575,6 +577,7 @@
     gameLoop();
     
     // Setup iframe communication
+    if (!urlParams.has('demo') && !urlParams.has('server')) {
     const iframe = document.createElement("iframe");
     iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
     iframe.style.width = "0px";
@@ -595,8 +598,10 @@
         }
     });
     
+    }
+
     // Handle WebSocket if server parameter provided
-    if (urlParams.has('server')) {
+    if (!urlParams.has('demo') && urlParams.has('server')) {
         const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
         let socketserver = null;
         let reconnectTimeout = null;
