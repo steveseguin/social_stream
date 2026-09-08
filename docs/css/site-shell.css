@@ -11,19 +11,31 @@ body.site-editorial { background:var(--site-bg); color:var(--site-text); --paper
 .light-mode .site-editorial .hero-art { background:radial-gradient(ellipse,#e3efda,transparent 70%); }.light-mode .site-editorial .copy-status:not(:empty) { background:#cbf568; }
 .site-editorial .idea-section,.site-editorial .stream-starters { scroll-margin-top:96px; }
 .site-editorial main { max-width:1304px; padding-left:20px; padding-right:20px; }
-.site-header.site-header { position:fixed; top:0; left:0; right:0; width:100%; max-width:none; margin:0; padding:0; height:76px; background:var(--site-bg); color:var(--site-text); border:0; border-bottom:1px solid var(--site-line); box-shadow:none!important; backdrop-filter:none; z-index:2000; font:14px/1.4 var(--site-font); }
-.site-header .site-bar { box-sizing:border-box; max-width:1360px; height:100%; margin:auto; padding:0 48px; display:flex; align-items:center; gap:24px; }
-.site-header .site-brand { display:flex; align-items:center; gap:10px; flex-shrink:0; font:650 18px/1.2 var(--site-font); letter-spacing:-.035em; color:var(--site-text); text-decoration:none; }
+.site-header-offset { padding-top:76px; }
+.site-header.site-header { box-sizing:border-box; position:fixed; top:0; left:0; right:0; width:100%; max-width:none; margin:0; padding:0; height:76px; background:var(--site-bg); color:var(--site-text); border:0; border-bottom:1px solid var(--site-line); box-shadow:none!important; backdrop-filter:none; z-index:2000; font:14px/1.4 var(--site-font); }
+.site-header .site-bar { box-sizing:border-box; width:100%; max-width:1450px; height:100%; margin:auto; padding:0 20px; display:flex; align-items:center; gap:20px; }
+.site-header .site-brand { display:flex; align-items:center; gap:10px; flex-shrink:0; font:650 18px/1.2 var(--site-font); letter-spacing:-.035em; color:var(--site-text); text-decoration:none; white-space:nowrap; }
 .site-header .site-brand img { width:32px; height:32px; margin:0; }
-.site-header nav.site-nav { position:static; display:flex; flex:1; align-items:center; justify-content:center; gap:19px; height:auto; width:auto; padding:0; margin:0; background:none; box-shadow:none; transform:none; visibility:visible; overflow:visible; border:0; }
-.site-header .site-nav a { color:var(--site-muted); font:550 13px/1.4 var(--site-font); text-decoration:none; padding:9px 0; white-space:nowrap; border-bottom:2px solid transparent; }
+.site-header nav.site-nav { position:static; display:flex; flex:1; flex-wrap:nowrap; align-items:center; justify-content:center; gap:20px; height:auto; width:auto; padding:0; margin:0; background:none; box-shadow:none; transform:none; visibility:visible; overflow:visible; border:0; }
+.site-header .site-nav a { box-sizing:border-box; color:var(--site-muted); font:550 15px/1.4 var(--site-font); text-decoration:none; padding:9px 0; white-space:nowrap; border-bottom:2px solid transparent; }
 .site-header .site-nav a:after { display:none; }
 .site-header .site-nav a:hover,.site-header .site-nav a[aria-current="page"] { color:var(--site-text); border-color:var(--site-accent); }
-.site-actions { display:flex; align-items:center; gap:10px; margin-left:auto; }
-.site-header button { appearance:none; background:none; color:var(--site-text); border:1px solid var(--site-line); border-radius:8px; padding:9px 11px; font:550 12px/1.4 var(--site-font); cursor:pointer; margin:0; min-height:36px; }
-.site-header .site-menu { display:none; }
-.site-header a:focus-visible,.site-header button:focus-visible,.site-footer a:focus-visible { outline:2px solid var(--site-accent); outline-offset:4px; }
-@media(max-width:1280px) { .site-header .site-menu { display:block; }.site-header nav.site-nav { position:absolute; top:75px; left:0; right:0; height:auto; max-height:calc(100vh - 76px); background:var(--site-bg); padding:20px 28px; flex-direction:column; align-items:stretch; gap:0; visibility:hidden; overflow:auto; border-bottom:1px solid var(--site-line); }.site-header nav.site-nav.is-open { visibility:visible; }.site-header .site-nav a { padding:13px 8px; font-size:16px; }.site-header .site-bar { gap:12px; } }
-@media(max-width:600px) { .site-header .site-bar { padding:0 16px; }.site-header .site-brand { font-size:16px; gap:8px; }.site-header .site-brand img { width:28px;height:28px; }.site-actions { gap:6px; } }
+.site-header .site-actions { display:flex; align-items:center; gap:8px; margin-left:auto; flex-shrink:0; }
+.site-header button { box-sizing:border-box; appearance:none; background:none; color:var(--site-text); border:1px solid var(--site-line); border-radius:8px; padding:9px; font:550 14px/1.4 var(--site-font); cursor:pointer; margin:0; min-height:44px; min-width:44px; }
+.site-header .site-menu { display:none; font-size:24px; line-height:1; }
+.site-header a:focus,.site-header button:focus,.site-footer a:focus { outline:2px solid var(--site-accent); outline-offset:4px; }
+@media(max-width:1400px) { .site-header .site-nav .site-priority-hire { display:none; } }
+@media(max-width:1300px) { .site-header .site-nav .site-priority-inspiration { display:none; } }
+@media(max-width:1180px) { .site-header .site-nav .site-priority-gallery { display:none; } }
+@media(max-width:1050px) {
+    .site-header .site-menu { display:block; }
+    .site-header nav.site-nav { position:absolute; top:75px; left:0; right:0; height:auto; max-height:calc(100vh - 76px); background:var(--site-bg); padding:10px 20px; flex-direction:column; align-items:stretch; gap:0; visibility:hidden; overflow:auto; border-bottom:1px solid var(--site-line); }
+    .site-header nav.site-nav.is-open { visibility:visible; }
+    .site-header .site-nav a { padding:12px 8px; min-height:44px; font-size:15px; }
+    .site-header .site-nav .site-priority-hire,.site-header .site-nav .site-priority-inspiration,.site-header .site-nav .site-priority-gallery { display:block; }
+    .site-header .site-bar { gap:12px; }
+}
+@media(max-width:600px) { .site-header .site-bar { padding:0 12px; }.site-header .site-brand { font-size:16px; gap:8px; }.site-header .site-brand img { width:28px;height:28px; }.site-header .site-actions { gap:6px; } }
+@media(max-width:360px) { .site-header .site-bar { padding:0 8px; gap:6px; }.site-header .site-brand { font-size:14px; gap:6px; } }
 @media(prefers-reduced-motion:reduce) { .site-page { scroll-behavior:auto; } }
 .site-theme svg { display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round; }
