@@ -1375,9 +1375,6 @@
 				kickDebugLog("delete skipped; no id or chatname", getKickDebugRowInfo(messageEle));
 				return true;
 			}
-			if (!data.id) {
-				data.onlyLast = true;
-			}
 			kickDebugLog("delete sending", {
 				data: data,
 				row: getKickDebugRowInfo(messageEle)

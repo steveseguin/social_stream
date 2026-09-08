@@ -5214,7 +5214,6 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-setting="socketserver"]',
 		'[data-setting="server2additivedelivery"]',
 		'[data-setting="lanonly"]',
-		'#nc-audience-room',
 		'[data-setting="videostatspoller"]',
 		'[data-textsetting="videostatsurl"]',
 		'[data-textsetting="videostatspublisher"]',
@@ -5310,7 +5309,6 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-setting="socketserver"]',
 		'[data-setting="server2additivedelivery"]',
 		'[data-setting="lanonly"]',
-		'#nc-audience-room',
 		'[data-setting="videostatspoller"]',
 		'[data-textsetting="videostatsurl"]',
 		'[data-textsetting="videostatspublisher"]',
@@ -12157,6 +12155,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		if (!target || !document.contains(target)) {
 			return;
 		}
+		// Reveal optional subsections as well as the outer menu accordion.
+		var section = target;
+		while (section && section !== document.body) {
+			if (section.tagName === 'DETAILS') section.open = true;
+			section = section.parentElement;
+		}
 		setPopupSearchMatch(target);
 		target.scrollIntoView({block: 'center'});
 		setTimeout(function() {
@@ -12683,7 +12687,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			});
 
 			document.querySelectorAll('.wrapper').forEach(w => {
-				var menuItems = w.querySelectorAll('.options_group > div');
+				var menuItems = w.querySelectorAll('.options_group > div, .options_group > details');
 				var matches = 0;
 				menuItems.forEach(function(item) {
 					var checkbox = item.querySelector('input[type="checkbox"]');
@@ -12737,7 +12741,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			document.querySelectorAll('.wrapper').forEach(ele => {
 				ele.classList.remove('popup-enabled-filter-hidden');
 			});
-			document.querySelectorAll('.options_group > div').forEach(ele => {
+			document.querySelectorAll('.options_group > div, .options_group > details').forEach(ele => {
 				ele.classList.remove('popup-enabled-filter-hidden');
 			});
 			if (typeof activeToggleScrollY === 'number') {

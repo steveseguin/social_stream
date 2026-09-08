@@ -7060,9 +7060,17 @@
 			
 			function deleteMessages(data, deleteOnlyLast=false) {
 				let selector = "";
+				if (data.delete.meta && data.delete.meta.messageId) {
+					const sourceSelector = data.delete.type ? dataAttributeSelector("data-source-type", data.delete.type) : "";
+					document.querySelectorAll(".highlight-chat" + sourceSelector).forEach(ele => {
+						if (String(getNativeSourceControlMessageId(ele.rawContents || {})) === String(data.delete.meta.messageId)) ele.remove();
+					});
+					return;
+				}
 				if (data.delete.id) {
 					selector = dataAttributeSelector("data-mid", data.delete.id);
-				} else if (data.delete.type === "twitch" && data.delete.meta && data.delete.meta.pluralmind && data.delete.userid) {
+					if (data.delete.type) selector += dataAttributeSelector("data-source-type", data.delete.type);
+				} else if (data.delete.userid && data.delete.type) {
 					selector = dataAttributeSelector("data-userid", data.delete.userid) + dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.type === "twitch" && data.delete.meta && data.delete.meta.pluralmind && data.delete.username) {
 					selector = dataAttributeSelector("data-username", data.delete.username) + dataAttributeSelector("data-source-type", data.delete.type);
