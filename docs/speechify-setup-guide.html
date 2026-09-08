@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speechify Setup Guide - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <style>
+        .tts-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+        .tts-preview { border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.6rem; min-width: 0; }
+        .tts-preview h3 { margin-top: 0; }
+        .tts-preview audio { width: 100%; margin: .8rem 0; }
+        .tts-settings { margin: 1.2rem 0; }
+        .tts-settings summary { cursor: pointer; font-weight: 600; padding: .8rem 0; }
+        .tts-settings summary:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+        .tts-settings img { max-width: 52rem; }
+        .tts-preview code { overflow-wrap: anywhere; }
+        .guide-card [id] { scroll-margin-top: 10rem; }
+        .guide-image-medium { max-width: 52rem; }
+        @media (max-width: 700px) { .tts-preview-grid { grid-template-columns: 1fr; } }
+    </style>
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Set up Speechify voices for eBay Live and other SSN chat sources, change voices and speed, and adjust viewer volume in OBS.">
+<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js"></script>
+</head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero"><div class="container">
+        <h1>Read your chat with Speechify</h1>
+        <p>Set up a voice, change how it reads, and send the sound to your viewers.</p>
+    </div></section>
+    <main class="guide-section"><div class="container">
+        <div class="guide-card">
+            <h2>Before you start</h2>
+            <p>This works with eBay Live or any source whose text messages reach SSN. First, confirm you can see new chat in your SSN dock. If you cannot, follow the <a href="getting-started.html">getting-started guide</a> before setting up speech.</p>
+            <p>You need internet access and a <strong>Speechify API account and key</strong>. Installing the Speechify reading app alone does not connect it to SSN. Check API access and usage charges in your Speechify account. Chat selected for speech is sent to Speechify.</p>
+            <p><a href="#account">Get a key</a> ? <a href="#setup">Set up SSN</a> ? <a href="#voice">Change voice</a> ? <a href="#speed">Read faster</a> ? <a href="#obs">OBS audio</a> ? <a href="#volume">Viewer volume</a> ? <a href="#help">Troubleshooting</a></p>
+        </div>
+        <div class="guide-card" id="account">
+            <h2>1. Get your Speechify API key</h2>
+            <ol class="guide-steps">
+                <li>Open the <a href="https://platform.speechify.ai/">Speechify developer platform</a> and sign in or create an account.</li>
+                <li>Open <a href="https://platform.speechify.ai/api-keys">API Keys</a>. Copy an existing key, or create one if needed.</li>
+                <li>Keep the key ready to paste into SSN. You do not need to install an SDK or run code.</li>
+            </ol>
+            <p>These account steps follow <a href="https://docs.speechify.ai/docs/get-started/quickstart">Speechify's official quickstart</a>.</p>
+            <p><strong>Keep your key and generated SSN link private.</strong> The link can contain your API key. Do not post it in chat or include it in screenshots.</p>
+        </div>
+        <div class="guide-card" id="setup">
+            <h2>2. Select Speechify in SSN</h2>
+            <ol class="guide-steps">
+                <li>Open the desktop app's <strong>Sources and Settings</strong>, or the SSN extension popup.</li>
+                <li>Find <strong>Main chat overlay &amp; control dock</strong>, then expand <strong>Message ? Text to Speech</strong>. You can also search settings for <strong>text to speech</strong>.</li>
+                <li>Turn on <strong>Enable TTS in dock</strong>.</li>
+                <li>Set <strong>TTS Service Provider</strong> to <strong>Speechify</strong>.</li>
+                <li>Paste your key into <strong>Speechify API Key</strong>. For a first English voice, enter <code>henry</code> in <strong>Speechify Voice ID</strong>.</li>
+                <li>Leave Speed at its default for your first test. Leave the optional Model and language switches off.</li>
+            </ol>
+            <figure class="guide-figure"><a href="images/guides/tts-enable-dock-popup.png"><img src="images/guides/tts-enable-dock-popup.png" alt="SSN settings showing the Enable TTS in dock switch" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>Enable chat reading in the dock section.</figcaption></figure>
+            <figure class="guide-figure"><a href="images/guides/tts-settings-speechify.png"><img src="images/guides/tts-settings-speechify.png" alt="Speechify options: API Key, Voice ID, Speed switch and value, Model, and language" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>Enter your own key and voice ID. The screenshot has empty fields; optional switches are off.</figcaption></figure>
+        </div>
+        <div class="guide-card" id="open-link">
+            <h2>3. Open the updated dock link</h2>
+            <ol class="guide-steps">
+                <li>Use <strong>copy link</strong> beside <strong>Main chat overlay &amp; control dock</strong>.</li>
+                <li>Open that newly copied link in the browser where you want speech to play. If using OBS, follow the next OBS section.</li>
+                <li>In a normal browser, click inside the dock once if audio is blocked.</li>
+                <li>Send a short message in your own connected chat. Confirm the new message appears and is spoken.</li>
+            </ol>
+            <p>Keep the source connected and the TTS dock open. New eligible messages are read in sequence; filters and TTS controls can exclude messages. Busy chat can build a queue.</p>
+            <p><strong>After changing voice, speed, or provider, copy the link again.</strong> Replace the old URL wherever speech plays. Refreshing a page that still has the old URL can keep the old settings.</p>
+        </div>
+        <div class="guide-card" id="voice">
+            <h2>Choose another voice</h2>
+            <p>Change <strong>Speechify Voice ID</strong>, then open the updated dock link. Speechify lists <code>henry</code>, <code>george</code>, <code>carly</code>, and <code>sabrina</code> as built-in examples. Use an exact API voice ID, not just a display name from the reading app.</p>
+            <p>To find more, use Speechify's <a href="https://docs.speechify.ai/build/text-to-speech-api#choose-a-voice">Choose a voice instructions</a>. Its voice-list API returns the voices your account can use; copy the selected voice's <code>id</code> into SSN. Match the voice to the model supported by your SSN settings. SSN currently offers English (<code>simba-english</code>) and Multilingual (<code>simba-multilingual</code>); a voice advertised only for a newer model may not work with those.</p>
+            <p>Change the settings under <strong>Main chat overlay &amp; control dock</strong> if that is the page reading chat. Featured Chat and the chat bot have separate TTS settings.</p>
+        </div>
+        <div class="guide-card" id="speed">
+            <h2>Make it read faster</h2>
+            <ol class="guide-steps">
+                <li>Under <strong>Speechify TTS Options</strong>, turn on the switch beside <strong>Speed</strong>.</li>
+                <li>Try <strong>1.2</strong> as a modest increase from the normal value of <strong>1.0</strong>.</li>
+                <li>Copy the updated dock link and replace the URL in your browser or OBS source. Compare the same short sentence at both settings.</li>
+            </ol>
+            <p>The switch must be on for the setting to be included in the link. SSN sends this speed value to Speechify; its effect needs checking with your selected voice and account. If the speed stays the same, see the compatibility note below.</p>
+            <p><strong>Speaking faster is different from starting sooner.</strong> Speed does not remove the time Speechify needs to generate the audio. Shorter messages and turning off username reading can help the queue keep up.</p>
+        </div>
+        <div class="guide-card" id="obs">
+            <h2>Send Speechify audio through OBS</h2>
+            <ol class="guide-steps">
+                <li>In the scene you use for streaming, go to <strong>Sources ? + ? Browser</strong>. Name the source <strong>SSN Speechify</strong>.</li>
+                <li>Paste the updated SSN dock link into <strong>URL</strong>.</li>
+                <li>Tick <strong>Control audio via OBS</strong>, then click <strong>OK</strong>.</li>
+                <li>Send a short chat message and look for movement in that source's <strong>Audio Mixer</strong> meter.</li>
+                <li>Make a short recording and play it back to confirm the voice is in the output.</li>
+            </ol>
+            <figure class="guide-figure"><a href="images/guides/obs-browser-source-properties.png"><img src="images/guides/obs-browser-source-properties.png" alt="OBS Browser Source properties showing the URL field and Control audio via OBS checkbox" class="guide-image" loading="lazy"></a><figcaption>Replace the example OBS URL with your SSN link and tick Control audio via OBS. This reference screenshot shows the checkbox before it is enabled.</figcaption></figure>
+            <p>For audio without visible chat, keep the Browser Source active and position it outside the visible canvas. Do not rely on a source that is shut down when hidden to keep reading.</p>
+            <p><strong>Want to hear it yourself too?</strong> Open <strong>Advanced Audio Properties</strong> from the Audio Mixer and set that source's <strong>Audio Monitoring</strong> to <strong>Monitor and Output</strong>. Avoid <strong>Monitor Only (mute output)</strong> when viewers should hear it. Avoid capturing the monitoring device a second time.</p>
+            <p>An OBS custom dock is a control panel. For these instructions, use a <strong>Browser Source in your scene</strong>. Keep only one copy speaking to avoid doubled voices.</p>
+            <p>Reference: <a href="https://obsproject.com/kb/browser-source">OBS Browser Source documentation</a>.</p>
+        </div>
+        <div class="guide-card" id="volume">
+            <h2>Make it louder for viewers</h2>
+            <ol class="guide-steps">
+                <li>In SSN's dock TTS settings, enable <strong>Volume of speech</strong> and set it to <strong>1.0</strong> (100%). Update the dock URL again. If you lowered the dock's own volume slider, turn it back up.</li>
+                <li>In OBS, unmute <strong>SSN Speechify</strong> and raise its mixer fader toward <strong>0.0 dB</strong> if it was turned down.</li>
+                <li>If it is still too quiet, open that audio source's <strong>Filters</strong>, add a <strong>Gain</strong> audio filter, and try a small boost such as <strong>+3 dB</strong>.</li>
+                <li>Record speech alongside your microphone and background audio. Listen back and adjust the balance. Reduce gain if speech distorts or the meter reaches the red end.</li>
+            </ol>
+            <p>SSN's volume stops at 100%; extra boost belongs in your outgoing audio mix. Turning up your headphones alone does not make the stream louder. OBS documents <a href="https://obsproject.com/kb/filters-guide">Gain and other audio filters here</a>.</p>
+            <p><strong>Streaming directly through eBay or another app?</strong> SSN does not inject sound into that app automatically. It must receive the TTS audio through its selected audio input. The steps depend on your computer and streaming setup; tell support which app sends the stream and which microphone/audio input it uses.</p>
+        </div>
+        <div class="guide-card" id="help">
+            <h2>If something does not work</h2>
+            <ul>
+                <li><strong>No text in the dock:</strong> fix source capture first. Speechify cannot read messages SSN has not received.</li>
+                <li><strong>Still the old voice:</strong> check you changed the dock's settings, selected Speechify, and replaced the old URL. Close or mute any other speaking copies.</li>
+                <li><strong>Text arrives but no speech:</strong> check the TTS switch, API key, account access/usage limits, and voice ID. In a normal browser, click the page once.</li>
+                <li><strong>You hear it but viewers do not:</strong> check the OBS source meter, mute state, output track, and monitoring mode. Test a recording.</li>
+                <li><strong>Echo or repeated speech:</strong> leave one TTS page speaking and avoid capturing both its direct output and monitoring audio.</li>
+                <li><strong>Speed does not change:</strong> check the Speed switch and new URL first. If both are correct, report the SSApp version and voice/model so the Speechify integration can be checked.</li>
+            </ul>
+            <p><strong>Compatibility note ? September 8, 2026:</strong> These instructions were checked against SSN's settings and source code and Speechify's public documentation. Live Speechify generation and speed changes have not been verified with an authenticated account for this guide. Speechify's current API documentation differs from SSN's existing integration; a provider compatibility issue may need a code fix if correct settings still fail.</p>
+            <p>For help, share your app version, voice ID, what step failed, and whether audio runs in SSApp, a browser, or OBS. Remove API keys and private session links from screenshots.</p>
+            <p><a href="tts-setup-guide.html">Back to the general TTS guide</a> ? <a href="getting-started.html">Connect your first chat source</a></p>
+        </div>
+    </div></main>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+        function revealGuideSection() {
+            var target;
+            try { target = document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) { return; }
+            if (!target) return;
+            for (var node = target; node; node = node.parentElement) {
+                if (node.tagName === "DETAILS") node.open = true;
+            }
+            target.scrollIntoView();
+        }
+        window.addEventListener("hashchange", revealGuideSection);
+        revealGuideSection();
+    </script>
+</body>
+</html>

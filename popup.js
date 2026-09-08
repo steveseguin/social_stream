@@ -4841,13 +4841,12 @@ function processLegacySetting(key, value, sync) {
 
 const OPENCODE_ZEN_MODELS_URL = "https://opencode.ai/zen/v1/models";
 const OPENCODE_ZEN_FREE_MODEL_ORDER = [
-    "big-pickle",
-    "deepseek-v4-flash-free",
+    "nemotron-3.5-lightning-free",
     "mimo-v2.5-free",
-    "qwen3.6-plus-free",
-    "minimax-m3-free",
+    "ling-3.0-flash-fin-free",
     "nemotron-3-ultra-free",
-    "nemotron-3-super-free"
+    "big-pickle",
+    "deepseek-v4-flash-free"
 ];
 const OPENCODE_ZEN_MODEL_CACHE_MS = 60 * 60 * 1000;
 let openCodeModelLoadInFlight = null;
@@ -4869,6 +4868,8 @@ function getOpenCodeFreeModelRank(modelId) {
 
 function isOpenCodeChatCompletionsModel(modelId) {
     const value = String(modelId || "").trim().toLowerCase();
+    if (value.indexOf('muse-') === 0 || value.indexOf('grok-') === 0) return false;
+    if (value.indexOf('go/') === 0) return ['go/glm-5.3-flash', 'go/mimo-v2.5', 'go/deepseek-v4-flash'].indexOf(value) !== -1;
     return isOpenCodeFreeModelId(value) ||
         value === "big-pickle" ||
         value.indexOf("deepseek-") === 0 ||
@@ -4910,12 +4911,16 @@ function populateOpenCodeModelSelect(modelIds) {
     autoOption.value = "auto";
     autoOption.textContent = "Auto - free models only";
     select.appendChild(autoOption);
+    const goAuto = document.createElement('option');
+    goAuto.value = 'go-auto';
+    goAuto.textContent = 'Auto - free first, then Go subscription';
+    select.appendChild(goAuto);
 
     sortOpenCodeModelIds((modelIds || []).filter(isOpenCodeChatCompletionsModel)).forEach(function (id) {
         if (!id) return;
         const option = document.createElement("option");
         option.value = id;
-        option.textContent = isOpenCodeFreeModelId(id) ? id + " (free)" : id;
+        option.textContent = id.indexOf("go/") === 0 ? id.slice(3) + " (Go subscription)" : (isOpenCodeFreeModelId(id) ? id + " (free)" : id);
         select.appendChild(option);
     });
 
@@ -4945,7 +4950,7 @@ async function loadOpenCodeModels(force) {
     setOpenCodeModelStatus("Loading OpenCode models...", "#bbb");
     openCodeModelLoadInFlight = (async function () {
         try {
-            const headers = { "Accept": "application/json" };
+            const headers = { "Accept": "application/json", "x-opencode-session": "ssn-model-discovery" };
             const apiKey = getOpenCodeApiKeyFromPopup();
             if (apiKey) headers.Authorization = "Bearer " + apiKey;
             const response = await fetch(OPENCODE_ZEN_MODELS_URL, {
@@ -4964,6 +4969,16 @@ async function loadOpenCodeModels(force) {
                 throw new Error("No models returned");
             }
             const compatibleModels = models.filter(isOpenCodeChatCompletionsModel);
+            try {
+                const goResponse = await fetch('https://opencode.ai/zen/go/v1/models', { headers: headers });
+                if (goResponse.ok) {
+                    const goPayload = await goResponse.json();
+                    (goPayload.data || []).forEach(function (entry) {
+                        const id = 'go/' + entry.id;
+                        if (isOpenCodeChatCompletionsModel(id)) compatibleModels.push(id);
+                    });
+                }
+            } catch (error) { console.warn('[OpenCode] Go model discovery unavailable.'); }
             const modelList = compatibleModels.length ? compatibleModels : OPENCODE_ZEN_FREE_MODEL_ORDER;
             openCodeModelCache = {
                 fetchedAt: Date.now(),

@@ -1,60 +1,30 @@
 # Commit Message Enhancer
 
-A GitHub Action that automatically enhances your commit messages and pull request descriptions using Google's Gemini API.
+Runs on pushes to `beta`, skipping commits marked `[auto-enhanced]` or `[skip pages]`.
+The script summarizes the latest diff, generates a commit message, then amends and pushes it.
 
-## Setup Instructions
+## OpenCode configuration
 
-1. Create the following directory structure in your repository:
-   ```
-   .github/
-     workflows/
-       enhance-commits.yml
-     scripts/
-       enhance-commits.js
-   ```
+Keep the existing `ZEN_API_TOKEN` repository secret; its name is retained for compatibility.
+It must contain a key for your OpenCode workspace with Go access. The scripts also accept
+`OPENCODE_API_KEY` when run directly.
 
-2. Copy the provided files into their respective locations.
+The client checks the live Zen and Go model catalogs. It tries these available free
+chat models first: Nemotron 3.5 Lightning, MiMo V2.5, Ling 3.0 Flash Fin,
+Nemotron 3 Ultra, Big Pickle, and DeepSeek V4 Flash Free.
+Free calls use `https://opencode.ai/zen/v1/chat/completions`.
 
-3. Get a Gemini API key from Google AI Studio (https://makersuite.google.com/).
+If the free models fail, the permitted Go fallbacks are `glm-5.3-flash`,
+`mimo-v2.5`, and `deepseek-v4-flash`, through
+`https://opencode.ai/zen/go/v1/chat/completions`.
+These consume the Go subscription allowance. The client does not send paid requests
+to the Zen pay-as-you-go endpoint or change account billing settings.
 
-4. Add your Gemini API key as a repository secret:
-   - Go to your repository on GitHub
-   - Navigate to Settings > Secrets and variables > Actions
-   - Click "New repository secret"
-   - Name: `GEMINI_API_KEY`
-   - Value: Your Gemini API key
+Every request carries a descriptive user agent and an `x-opencode-session` ID
+that stays stable across the workflow's model attempts. Requests have timeouts and
+an output-token limit; unavailable models are skipped for the rest of the invocation.
+API errors include the failing model and service error message, without logging credentials.
 
-5. Push a commit to trigger the action.
+The manually triggered AI Code Review workflow uses the same client and requires a PR number.
 
-## How It Works
-
-When you push commits to the main/master branch or create/update a pull request:
-
-1. The GitHub Action runs and checks out your code
-2. It extracts the diff of your latest commit
-3. It sends the original commit message and diff to the Gemini API
-4. Gemini generates an enhanced commit message
-5. The action amends your commit with the improved message
-6. For pull requests, it also enhances the PR description
-
-## Configuration
-
-You can modify these variables in `enhance-commits.js` to customize behavior:
-
-- `MAX_DIFF_SIZE`: Maximum characters of diff to process (default: 20000)
-- `MAX_FILES_TO_SAMPLE`: Maximum number of files to include (default: 5)
-- `SAMPLE_LINES_PER_FILE`: Maximum lines to include per file (default: 30)
-
-## Limitations
-
-- Requires force-pushing amended commits (`git push --force`)
-- Works best with smaller, focused commits
-- Large repositories with many files may experience truncated diffs
-
-## Troubleshooting
-
-If you encounter issues:
-
-1. Check the GitHub Actions logs for error messages
-2. Verify that your Gemini API key is valid and properly set
-3. Consider reducing `MAX_DIFF_SIZE` if your commits are very large
+Model API references: https://opencode.ai/docs/zen/ and https://opencode.ai/docs/go/.
