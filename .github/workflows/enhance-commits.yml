@@ -4,6 +4,10 @@ on:
   push:
     branches: [beta]
 
+concurrency:
+  group: enhance-commits-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   enhance-commits:
     if: "!contains(github.event.head_commit.message, '[auto-enhanced]') && !contains(github.event.head_commit.message, '[skip pages]') && github.actor != 'github-pages[bot]'"
