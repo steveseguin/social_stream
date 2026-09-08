@@ -37,3 +37,23 @@ test('Public pages fail clearly when the service is not configured', async () =>
     try { assert.equal((await app.inject({ method: 'POST', url: '/v1/shop', payload: { items: [] } })).statusCode, 503); }
     finally { await app.close(); }
 });
+
+test('Malformed public catalog fields stay bounded and never expose publisher metadata', async () => {
+    const db = new Database(':memory:'), key = randomBytes(32).toString('hex');
+    const app = await createServer({ publicShop: { db } });
+    const headers = { authorization: 'Bearer ' + key };
+    try {
+        for (const value of [null, false, true, '', [], ['USD'], {}, { toString: null }]) {
+            const response = await app.inject({ method: 'POST', url: '/v1/shop', headers, payload: { enabled: true, seconds: value, items: [{ name: 'Mug', url: 'https://example.invalid/mug', amount: value, currency: value, privateToken: key }] } });
+            assert.equal(response.statusCode, 200, response.body);
+            const read = await app.inject('/v1/shop/' + shopId(key));
+            assert.equal(read.statusCode, 200);
+            assert(!read.body.includes(key));
+            assert.equal(read.json().commerce.items[0].amount, null);
+            assert.equal(read.json().commerce.items[0].currency, 'USD');
+        }
+        for (const items of [[null], [{}], Array(21).fill({ name: 'Mug', url: 'https://example.invalid' })]) {
+            assert.equal((await app.inject({ method: 'POST', url: '/v1/shop', headers, payload: { items } })).statusCode, 400);
+        }
+    } finally { await app.close(); db.close(); }
+});

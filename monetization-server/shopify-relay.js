@@ -27,7 +27,8 @@ export default async function shopifyRelay(app, { db, masterKey, now = Date.now 
  if (!db || !Buffer.isBuffer(masterKey) || masterKey.length !== 32) throw new Error('Shopify receiver requires its database and encryption key');
  db.exec(`CREATE TABLE IF NOT EXISTS shopify_receivers (id TEXT PRIMARY KEY, shop TEXT NOT NULL, secret TEXT NOT NULL, received INTEGER NOT NULL DEFAULT 0, lastKind TEXT NOT NULL DEFAULT '');
  CREATE TABLE IF NOT EXISTS shopify_deliveries (channel TEXT NOT NULL, id TEXT NOT NULL, payload TEXT, created INTEGER NOT NULL, ack INTEGER NOT NULL DEFAULT 0, lease TEXT, expires INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(channel,id));
- CREATE INDEX IF NOT EXISTS shopify_pending ON shopify_deliveries(channel,ack,created);`);
+ CREATE INDEX IF NOT EXISTS shopify_pending ON shopify_deliveries(channel,ack,created);
+ CREATE INDEX IF NOT EXISTS shopify_retention ON shopify_deliveries(created);`);
  function seal(value) {
   const iv = crypto.randomBytes(12), cipher = crypto.createCipheriv('aes-256-gcm', masterKey, iv);
   return Buffer.concat([iv, cipher.update(value, 'utf8'), cipher.final(), cipher.getAuthTag()]).toString('base64');

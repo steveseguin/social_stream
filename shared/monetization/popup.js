@@ -5,7 +5,57 @@
 	var ready = false,
 		current = null;
 	var products = [], editingProduct = -1;
+	var feedbackUntil = {};
+	var saveLabel = by('save').textContent;
 	function tr(key, fallback) { return typeof getTranslation === 'function' ? getTranslation(key, fallback) : fallback; }
+    function moneyText(text, values) {
+        text = String(text || '');
+        var shared = { 'Disabled': 'shopify-status-disabled', 'Disconnected': 'shopify-status-disconnected', 'Set up reliable delivery': 'shopify-status-set-up-reliable-delivery' };
+        if (text.indexOf('Sandbox test mode. ') === 0) return moneyText('Sandbox test mode.') + ' ' + moneyText(text.slice(19));
+        var key = shared[text] || 'money-' + text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        return tr(key, text).replace(/\{(\w+)\}/g, function (match, name) { return values && Object.prototype.hasOwnProperty.call(values, name) ? values[name] : match; });
+    }
+    function refreshPlaceholders() {
+        var defaults = { 'shopify-webhook': 'Save setup to generate', 'ninja-username': 'Your username', 'ninja-webhook': 'Save setup to generate', 'throne-username': 'Your Throne username', 'throne-webhook': 'Enable and save to create your connection', buyer: 'Optional' };
+        var entries = typeof translation !== 'undefined' && translation.placeholders || {};
+        Object.keys(defaults).forEach(function (id) {
+            var fallback = defaults[id], key = fallback.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/ /g, '-');
+            by(id).placeholder = Object.prototype.hasOwnProperty.call(entries, key) ? entries[key] : fallback;
+        });
+    }
+    // Merge only edits made in this popup; backend changes still apply to untouched fields.
+    function mergeDraft(saved, baseline, draft) {
+        if (draft && typeof draft === 'object' && !Array.isArray(draft)) {
+            var result = Object.assign({}, saved);
+            Object.keys(draft).forEach(function (key) {
+                result[key] = mergeDraft(saved && saved[key], baseline && baseline[key], draft[key]);
+            });
+            return result;
+        }
+        return JSON.stringify(draft) !== JSON.stringify(baseline) ? draft : saved;
+    }
+    function updateSaveLabel() {
+        if (!ready || !current) return;
+        var dirty = JSON.stringify(mergeDraft(current.config, current.config, values())) !== JSON.stringify(current.config);
+        dirty = dirty || ['ninja-token', 'ninja-secret', 'shopify-secret'].some(function (id) { return !!by(id).value.trim(); }) || by('ninja-clear-token').checked;
+        saveLabel = '\uD83D\uDCBE ' + tr('money-save-setup', 'Save setup');
+        by('save').textContent = dirty ? saveLabel + ' - ' + tr('commerce-draft', 'Unsaved') : saveLabel;
+    }
+    panel.addEventListener('input', updateSaveLabel);
+    panel.addEventListener('change', updateSaveLabel);
+    function feedbackTarget(element) {
+        if (!element) return 'status';
+        var id = element.id || '';
+        var targets = { 'shop-': 'shop-status', 'shopify-': 'shopify-status', 'provider-': 'provider-status', 'fourthwall-': 'fourthwall-status', 'ninja-': 'ninja-status', 'ebay-': 'ebay-status', 'throne-': 'throne-status' };
+        var prefixes = Object.keys(targets);
+        for (var i = 0; i < prefixes.length; i++) {
+            if (id.indexOf('money-' + prefixes[i]) === 0) return targets[prefixes[i]];
+        }
+        return element.closest('#money-commerce-panel') ? 'commerce-live-status' : 'status';
+    }
+    function setStatus(id, text) {
+        if (!feedbackUntil[id] || feedbackUntil[id] < Date.now()) by(id).textContent = moneyText(text);
+    }
 	function resetProductForm() {
         editingProduct = -1;
         ['name', 'url', 'image', 'price'].forEach(function (key) { by('commerce-' + key).value = ''; });
@@ -35,7 +85,7 @@
 					}
 					if (action === 'remove') products.splice(index, 1);
 					else { var previous = products[index - 1]; products[index - 1] = item; products[index] = previous; }
-					resetProductForm(); renderProducts();
+					resetProductForm(); renderProducts(); updateSaveLabel();
 				}; row.appendChild(button);
 			}); rows.appendChild(row);
 		});
@@ -46,19 +96,21 @@
         var text = labels[state.mode] || labels.scheduled;
         if (name && state.mode !== 'hidden') text += ': ' + name;
         if (state.remainingSeconds != null && state.remainingSeconds > 0) text += ' (' + state.remainingSeconds + 's)';
-        by('commerce-live-status').textContent = text;
+        setStatus('commerce-live-status', text);
         var shop = reply.publicShop || {};
         by('shop-url').value = shop.url || ''; by('shop-copy').disabled = !shop.url; by('shop-remove').disabled = !shop.published;
-        by('shop-status').textContent = state.publicPage && state.publicPage.syncing ? tr('commerce-syncing-state', 'Updating public page; local controls are ready.') : shop.status || (shop.published ? tr('commerce-published', 'Saved links are public. Changes update the same viewer link.') : tr('commerce-unpublished', 'Publish your saved links to get a stable viewer URL.'));
+        setStatus('shop-status', state.publicPage && state.publicPage.syncing ? tr('commerce-syncing-state', 'Updating public page; local controls are ready.') : shop.status || (shop.published ? tr('commerce-published', 'Saved links are public. Changes update the same viewer link.') : tr('commerce-unpublished', 'Publish your saved links to get a stable viewer URL.')));
     }
     function control(command, url) {
-        request('commerceControl', { command: command, url: url, seconds: Number(by('commerce-duration').value) }).then(function (reply) { liveStatus(reply); }).catch(function (error) { status(error.message); });
+        delete feedbackUntil['commerce-live-status'];
+        request('commerceControl', { command: command, url: url, seconds: Number(by('commerce-duration').value) }).then(function (reply) { liveStatus(reply); }).catch(function (error) { status(error.message, 'commerce-live-status'); });
     }
     ['next', 'hide', 'resume'].forEach(function (command) { by('commerce-' + command).onclick = function () { control(command); }; });
     ['publish', 'remove'].forEach(function (command) {
         by('shop-' + command).onclick = function () {
             var button = this; button.disabled = true;
-            request(command === 'publish' ? 'publishShop' : 'unpublishShop').then(liveStatus).catch(function (error) { by('shop-status').textContent = error.message; }).then(function () { button.disabled = false; });
+            delete feedbackUntil['shop-status'];
+            request(command === 'publish' ? 'publishShop' : 'unpublishShop').then(liveStatus).catch(function (error) { status(error.message, 'shop-status'); }).then(function () { button.disabled = command === 'remove' && !by('shop-url').value; });
         };
     });
     by('shop-copy').onclick = function () { navigator.clipboard.writeText(by('shop-url').value).then(function () { status(tr('commerce-copied', 'Public link copied.')); }).catch(function () { by('shop-url').focus(); by('shop-url').select(); }); };
@@ -73,8 +125,16 @@
 	function by(id) {
 		return document.getElementById('money-' + id);
 	}
-	function status(text) {
-		by('status').textContent = text;
+	function status(text, target) {
+        text = moneyText(text);
+        target = target || feedbackTarget(document.activeElement);
+        by('status').textContent = text;
+        var actions = document.activeElement && document.activeElement.closest('.money-actions');
+        if (target === 'status' && actions && panel.contains(actions)) actions.insertAdjacentElement('afterend', by('status'));
+        if (target !== 'status') {
+            feedbackUntil[target] = Date.now() + 10000;
+            by(target).textContent = text;
+        }
 	}
 	function request(action, extra) {
 		return new Promise(function (resolve, reject) {
@@ -102,13 +162,13 @@
     function shopifyStatus(reply) {
         var s = reply.shopify || {};
         by('shopify-webhook').value = s.webhook || '';
-        by('shopify-status').textContent = tr('shopify-status-' + (s.status || '').toLowerCase().replace(/[^a-z]+/g, '-'), s.status || 'Set up Shopify on this device');
+        setStatus('shopify-status', tr('shopify-status-' + (s.status || '').toLowerCase().replace(/[^a-z]+/g, '-'), s.status || 'Set up Shopify on this device'));
         by('shopify-secret').placeholder = s.webhook ? tr('shopify-secret-saved', 'Saved on the SSN API') : tr('shopify-secret-placeholder', 'From Shopify Notifications > Webhooks');
         by('shopify-copy').disabled = !s.webhook;
         by('shopify-disconnect').disabled = !s.webhook;
     }
     by('shopify-copy').onclick = function () { navigator.clipboard.writeText(by('shopify-webhook').value).then(function () { status(tr('shopify-copied', 'Shopify receiver URL copied.')); }).catch(function () { by('shopify-webhook').focus(); by('shopify-webhook').select(); }); };
-    by('shopify-disconnect').onclick = function () { run(function () { return request('shopifyDisconnect'); }); };
+    by('shopify-disconnect').onclick = function () { run(function () { return request('shopifyDisconnect'); }, ['shopify']); };
     by('shopify-import').onclick = function () {
         var button = this; button.disabled = true;
         by('shopify-import-status').textContent = tr('commerce-import-loading', 'Loading product...');
@@ -130,7 +190,7 @@
         if (typeof getSelectedTranslationLinkParam === 'function') preview.search += getSelectedTranslationLinkParam();
         by('provider-preview').href = preview.href;
         var s = providerSnapshot;
-        by('provider-status').textContent = !s.enabled ? tr('commerce-receiver-off', 'Receiver off. Open Receiver setting to enable it.') : !s.on ? tr('commerce-ssn-off', 'Turn SSN on to receive alerts.') : s.connected ? tr('commerce-receiver-ready', 'Receiver connected. Provider delivery is confirmed only when an event arrives.') : tr('commerce-receiver-wait', 'Receiver disconnected. Check your connection.');
+        setStatus('provider-status', !s.enabled ? tr('commerce-receiver-off', 'Receiver off. Open Receiver setting to enable it.') : !s.on ? tr('commerce-ssn-off', 'Turn SSN on to receive alerts.') : s.connected ? tr('commerce-receiver-ready', 'Receiver connected. Provider delivery is confirmed only when an event arrives.') : tr('commerce-receiver-wait', 'Receiver disconnected. Check your connection.'));
         var seen = s.providers && s.providers[provider];
         by('provider-seen').textContent = seen ? tr('commerce-last-event', 'Last event received:') + ' ' + new Date(seen.at).toLocaleTimeString() + ' (' + tr(seen.accepted ? 'commerce-event-accepted' : 'commerce-event-skipped', seen.accepted ? 'accepted' : 'test, private or unsupported event skipped') + ')' : tr('commerce-no-event', 'No event received in this app session.');
     }
@@ -170,7 +230,7 @@
 		else if (products.length < 20) products.push(item);
 		else { status(tr('commerce-limit', 'You can add up to 20 products or links.')); return; }
 		resetProductForm();
-		by('commerce-add').textContent = tr('commerce-add', 'Add product or link'); renderProducts(); status(tr('commerce-unsaved', 'List updated. Click Save setup to apply.'));
+		by('commerce-add').textContent = tr('commerce-add', 'Add product or link'); renderProducts(); updateSaveLabel(); status(tr('commerce-unsaved', 'List updated. Click Save setup to apply.'));
 	};
 	['view', 'style', 'scale', 'cardevery', 'cardfor', 'onlytype'].forEach(function (key) { by(key).addEventListener('input', links); });
 	function showMode() {
@@ -186,7 +246,7 @@
 			config[mode].position = by(mode + '-position').value;
 		});
 		config.presentation = {};
-		['view', 'style', 'scale', 'cardevery', 'cardfor', 'onlytype'].forEach(function (key) { config.presentation[key] = by(key).value; });
+		['view', 'style', 'scale', 'cardevery', 'cardfor', 'onlytype'].forEach(function (key) { config.presentation[key] = ['scale', 'cardevery', 'cardfor'].indexOf(key) !== -1 ? Number(by(key).value) : by(key).value; });
 		config.wishlist.url = by('wishlist-url').value;
 		config.ninja.reliable = by('ninja-delivery').value === 'reliable';
 		config.ninja.username = by('ninja-username').value;
@@ -218,7 +278,7 @@
             if (serverValue && /^wss?:\/\//i.test(serverValue)) control.searchParams.set('server', serverValue);
             by('control-dock').href = control.href;
             by('overlay').href = u.href;
-			by('overlay').textContent = 'Open ' + (by('mode').value === 'commerce' ? tr('commerce-title', 'Products & support links') : by('mode').value === 'ebay' ? 'eBay Showcase' : by('mode').value === 'wishlist' ? 'Wishlist Rank-Up' : by('mode').value === 'throne' ? 'Throne Gifts' : 'NinjaBacker') + ' overlay';
+			by('overlay').textContent = tr('money-open-overlay', 'Open overlay') + ': ' + by('mode').options[by('mode').selectedIndex].textContent;
 		} catch (_) {}
 		var name = by('ninja-username').value.trim();
 		by('ninja-link').value = /^[a-z0-9_-]{1,50}$/i.test(name) ? 'https://ninjabacker.com/' + name.toLowerCase() : '';
@@ -230,8 +290,8 @@
 	function showEbayStatus(reply) {
 		var e = reply.ebay || {};
 		by('ebay-environment').value = e.environment || 'production';
-		by('ebay-status').textContent = e.status || 'Connect your seller account';
-		by('ebay-connect').textContent = e.connected ? 'Reconnect eBay' : 'Connect eBay';
+		setStatus('ebay-status', e.status || 'Connect your seller account');
+		by('ebay-connect').textContent = moneyText(e.connected ? 'Reconnect eBay' : 'Connect eBay');
 		if (e.connected) by('ebay-auth').hidden = true;
 		var rows = by('ebay-items');
 		rows.textContent = '';
@@ -244,9 +304,9 @@
 			['Move up', 'Remove'].forEach(function (name) {
 				var button = document.createElement('button');
 				button.type = 'button';
-				button.textContent = name;
+				button.textContent = tr(name === 'Move up' ? 'commerce-up' : 'commerce-remove', name);
 				button.disabled = name === 'Move up' && index === 0;
-				button.setAttribute('aria-label', name + ' ' + item.name);
+				button.setAttribute('aria-label', button.textContent + ': ' + item.name);
 				button.onclick = function () {
 					run(function () {
 						return request(name === 'Remove' ? 'ebayRemove' : 'ebayMove', { id: item.id });
@@ -259,47 +319,54 @@
 	}
 	function showThroneStatus(reply) {
 		var t = reply.throne || {};
-		by('throne-status').textContent = t.status || 'Disabled';
+		setStatus('throne-status', t.status || 'Disabled');
 		by('throne-webhook').value = t.webhook || '';
-		by('throne-rank').textContent = 'Rank ' + ((t.gifts || 0) + 1) + ' \u00b7 ' + (t.gifts || 0) + ' completed gifts';
+		by('throne-rank').textContent = moneyText('Rank {rank} · {gifts} completed gifts', { rank: (t.gifts || 0) + 1, gifts: t.gifts || 0 });
 		by('throne-reset').disabled = !t.gifts;
 	}
-	function render(reply) {
+	function render(reply, baseline, resetKeys) {
 		if (!reply.config) return;
+        refreshPlaceholders();
 		reply.config = SSNMonetization.config(reply.config);
+        var displayConfig = ready ? mergeDraft(reply.config, baseline || current.config, values()) : reply.config;
+        (resetKeys || []).forEach(function (key) {
+            var parts = key.split('.');
+            if (parts.length === 1) displayConfig[key] = reply.config[key];
+            else displayConfig[parts[0]][parts[1]] = reply.config[parts[0]][parts[1]];
+        });
 		current = reply;
         liveStatus(reply);
-        by('shopify-enabled').checked = reply.config.shopify.enabled; by('shopify-shop').value = reply.config.shopify.shop; shopifyStatus(reply);
+        by('shopify-enabled').checked = displayConfig.shopify.enabled; by('shopify-shop').value = displayConfig.shopify.shop; shopifyStatus(reply);
         providerStatus(reply); liveStatus(reply);
-        ['view', 'style', 'scale', 'cardevery', 'cardfor', 'onlytype'].forEach(function (key) { by(key).value = reply.config.presentation[key]; });
-        products = reply.config.commerce.items.slice(); editingProduct = -1; renderProducts();
-        ['enabled', 'qr'].forEach(function (key) { by('commerce-' + key).checked = reply.config.commerce[key]; });
-        ['position', 'display', 'seconds'].forEach(function (key) { by('commerce-' + key).value = reply.config.commerce[key]; });
+        ['view', 'style', 'scale', 'cardevery', 'cardfor', 'onlytype'].forEach(function (key) { by(key).value = displayConfig.presentation[key]; });
+        products = displayConfig.commerce.items.slice(); renderProducts();
+        ['enabled', 'qr'].forEach(function (key) { by('commerce-' + key).checked = displayConfig.commerce[key]; });
+        ['position', 'display', 'seconds'].forEach(function (key) { by('commerce-' + key).value = displayConfig.commerce[key]; });
 		['wishlist', 'ninja', 'throne', 'ebay'].forEach(function (mode) {
-			var cfg = reply.config[mode];
+			var cfg = displayConfig[mode];
 			['enabled', 'qr', 'announce', 'interval'].forEach(function (key) {
 				by(mode + '-' + key).checked = cfg[key];
 			});
 			by(mode + '-minutes').value = cfg.minutes;
 			by(mode + '-position').value = cfg.position;
 		});
-		by('wishlist-url').value = reply.config.wishlist.url;
-		by('ninja-username').value = reply.config.ninja.username;
-		by('ninja-delivery').value = reply.config.ninja.reliable ? 'reliable' : 'live';
+		by('wishlist-url').value = displayConfig.wishlist.url;
+		by('ninja-username').value = displayConfig.ninja.username;
+		by('ninja-delivery').value = displayConfig.ninja.reliable ? 'reliable' : 'live';
 		showNinjaDelivery();
 		by('ninja-webhook').value = reply.ninjaReceiver && reply.ninjaReceiver.webhook || '';
-		by('ninja-secret').placeholder = by('ninja-webhook').value ? 'Saved securely on the SSN API' : 'Generate in the NinjaBacker dashboard';
-		by('throne-username').value = reply.config.throne.username;
-		by('ebay-display').value = reply.config.ebay.display;
-		by('ebay-seconds').value = reply.config.ebay.seconds;
-		by('ebay-cycle').hidden = reply.config.ebay.display !== 'cycle';
-		by('ninja-token').placeholder = reply.tokenSaved ? 'Saved on this device' : 'Private Tip ID';
-		by('ninja-status').textContent = reply.status;
+		by('ninja-secret').placeholder = moneyText(by('ninja-webhook').value ? 'Saved securely on the SSN API' : 'Generate in the NinjaBacker dashboard');
+		by('throne-username').value = displayConfig.throne.username;
+		by('ebay-display').value = displayConfig.ebay.display;
+		by('ebay-seconds').value = displayConfig.ebay.seconds;
+		by('ebay-cycle').hidden = displayConfig.ebay.display !== 'cycle';
+		by('ninja-token').placeholder = moneyText(reply.tokenSaved ? 'Saved on this device' : 'Private Tip ID');
+		setStatus('ninja-status', reply.status);
 		showThroneStatus(reply);
 		showEbayStatus(reply);
 		by('undo').disabled = !reply.canUndo;
 		by('complete').disabled = !reply.list.current;
-		by('current').textContent = reply.list.current ? 'Rank ' + reply.list.rank + ' · Next: ' + reply.list.current.name : reply.list.total ? 'All ' + reply.list.total + ' items unlocked!' : 'Load your wishlist or add its items below.';
+		by('current').textContent = reply.list.current ? moneyText('Rank {rank} · Next: {name}', { rank: reply.list.rank, name: reply.list.current.name }) : reply.list.total ? moneyText('All {total} items unlocked!', { total: reply.list.total }) : moneyText('Load your wishlist or add its items below.');
 		var rows = by('items');
 		rows.textContent = '';
 		reply.list.items.forEach(function (item) {
@@ -309,8 +376,8 @@
 			row.className = 'money-item';
 			label.textContent = (item.bought ? '\u2713 ' : '') + item.name + ' · ' + SSNMonetization.money(item.amount, item.currency);
 			remove.type = 'button';
-			remove.textContent = 'Remove';
-			remove.setAttribute('aria-label', 'Remove ' + item.name);
+			remove.textContent = tr('commerce-remove', 'Remove');
+			remove.setAttribute('aria-label', remove.textContent + ': ' + item.name);
 			remove.onclick = function () {
 				run(function () {
 					return request('remove', { id: item.id });
@@ -321,41 +388,47 @@
 			rows.appendChild(row);
 		});
 		ready = true;
+		updateSaveLabel();
 		links();
 	}
-	async function run(job) {
-		if (!ready) return;
-		panel.setAttribute('aria-busy', 'true');
-		panel.querySelectorAll('button').forEach(function (b) {
-			b.disabled = true;
-		});
-		try {
-			var reply = await job();
-			render(reply.config ? reply : await request('get'));
-			status(reply.message || 'Saved.');
-		} catch (e) {
-			status(e.message);
-		} finally {
-			panel.removeAttribute('aria-busy');
-			panel.querySelectorAll('button').forEach(function (b) {
-				b.disabled = false;
-			});
-			if (current) {
-				by('complete').disabled = !current.list.current;
-				by('undo').disabled = !current.canUndo;
-				by('throne-reset').disabled = !(current.throne && current.throne.gifts);
-				showEbayStatus(current);
-			}
-		}
-	}
-	async function save() {
-		var response = await request('save', { config: values(), token: by('ninja-token').value.trim(), clearToken: by('ninja-clear-token').checked, ninjaSecret: by('ninja-secret').value.trim(), shopifySecret: by('shopify-secret').value.trim() });
-		by('ninja-token').value = '';
-        by('shopify-secret').value = '';
-		by('ninja-secret').value = '';
-		by('ninja-clear-token').checked = false;
-		return response;
-	}
+    async function run(job, resetKeys) {
+        if (!ready || panel.hasAttribute('aria-busy')) return;
+        var target = feedbackTarget(document.activeElement);
+        delete feedbackUntil[target];
+        var buttons = Array.prototype.map.call(panel.querySelectorAll('button'), function (button) {
+            return { button: button, disabled: button.disabled };
+        });
+        function unlock() { buttons.forEach(function (entry) { entry.button.disabled = entry.disabled; }); }
+        panel.setAttribute('aria-busy', 'true');
+        buttons.forEach(function (entry) { entry.button.disabled = true; });
+        try {
+            var reply = await job();
+            var snapshot = reply.config ? reply : await request('get');
+            unlock();
+            render(snapshot, null, resetKeys);
+            status(reply.message || 'Saved.', target);
+        } catch (e) {
+            unlock();
+            // A save may have succeeded before a later import failed.
+            if (current) render(current);
+            status(e.message, target);
+        } finally {
+            panel.removeAttribute('aria-busy');
+            updateSaveLabel();
+        }
+    }
+    async function save() {
+        var submitted = JSON.parse(JSON.stringify(values()));
+        var secrets = {};
+        ['ninja-token', 'ninja-secret', 'shopify-secret'].forEach(function (id) { secrets[id] = by(id).value; });
+        var clearToken = by('ninja-clear-token').checked;
+        var response = await request('save', { config: submitted, token: secrets['ninja-token'].trim(), clearToken: clearToken, ninjaSecret: secrets['ninja-secret'].trim(), shopifySecret: secrets['shopify-secret'].trim() });
+        ['ninja-token', 'ninja-secret', 'shopify-secret'].forEach(function (id) { if (by(id).value === secrets[id]) by(id).value = ''; });
+        if (by('ninja-clear-token').checked === clearToken) by('ninja-clear-token').checked = false;
+        render(response, submitted);
+        panel.querySelectorAll('button').forEach(function (button) { button.disabled = true; });
+        return response;
+    }
 	by('save').onclick = function () {
 		run(save);
 	};
@@ -410,12 +483,12 @@
 			by('ebay-auth').hidden = true;
 			reply.message = 'Environment changed. Each environment keeps its own connection and products. Enable the showcase when ready.';
 			return reply;
-		});
+		}, ['ebay.enabled']);
 	});
 	by('ebay-disconnect').onclick = function () {
 		run(function () {
 			return request('ebayDisconnect');
-		});
+		}, ['ebay.enabled']);
 	};
 	by('ebay-add').onclick = function () {
 		run(async function () {
@@ -475,12 +548,16 @@
 		);
 	};
 	window.updateMonetizationLinks = links;
+    window.updateMonetizationLanguage = function () {
+        if (current && !panel.hasAttribute('aria-busy')) render(current);
+    };
 	setInterval(function () {
-		if (ready && panel.open)
+		if (ready && panel.open && !panel.hasAttribute('aria-busy'))
 			request('get').then(
 				function (reply) {
+                    if (panel.hasAttribute('aria-busy')) return;
 					providerStatus(reply); liveStatus(reply); shopifyStatus(reply);
-                    by('ninja-status').textContent = reply.status;
+                    setStatus('ninja-status', reply.status);
 					showThroneStatus(reply);
 					showEbayStatus(reply);
 				},

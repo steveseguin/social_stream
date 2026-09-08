@@ -1,5 +1,7 @@
 # SSN monetization API
 
+Local fuzz, queue-capacity and sustained receiver checks are recorded in [September 8 validation](VALIDATION-2026-09-08.md), including commands to reproduce them.
+
 Server endpoints for Social Stream Ninja's Monetization section. These belong on `api.socialstream.ninja`, separately from NinjaBacker. NinjaBacker donations continue to use NinjaBacker's existing API without server changes.
 
 Run `npm ci` and `npm start`. The standalone service listens on loopback port 3079 (override with `PORT`). Route `/v1/throne/*`, `/v1/ebay/*`, `/v1/ninjabacker/*`, and `/v1/monetization/health` from the SSN API reverse proxy to it. Preserve existing API routes. Deployment wiring must be checked against the VPS configuration before installation. Nothing in this directory deploys automatically.

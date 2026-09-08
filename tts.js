@@ -310,7 +310,7 @@ TTS.elevenLabsSettings = {
 
 TTS.speechifySettings = {
     speed: 1.0,
-    model: 'simba-english',
+    model: 'simba-3.0',
     voiceName: false
 };
 
@@ -1128,9 +1128,10 @@ TTS.configure = function(urlParams) {
     TTS.elevenLabsSettings.model = urlParams.get("elevenlabsmodel") || "eleven_flash_v2_5";
 
     // Speechify settings
-    TTS.speechifySettings.speed = TTS.parseMinFloatParam(urlParams, "speechifyspeed", TTS.rate, 0.1);
-    TTS.speechifySettings.model = urlParams.get("speechifymodel") || 'simba-english';
+    TTS.speechifySettings.speed = TTS.parseMinFloatParam(urlParams, "speechifyspeed", TTS.rate, 0.5);
+    TTS.speechifySettings.model = urlParams.get("speechifymodel") || 'simba-3.0';
     TTS.speechifySettings.voiceName = urlParams.get("voicespeechify") || false;
+    TTS.speechifySettings.language = urlParams.get("speechifylang") || undefined;
 
     // OpenAI settings
     TTS.openAISettings.apiKey = TTS.OpenAIAPIKey;
@@ -2455,14 +2456,20 @@ TTS.SpeechifyTTS = function(tts, options) {
     TTS.premiumQueueActive = true;
     const premiumSerial = ++TTS.premiumSerial;
     try {
-        const url = "https://api.sws.speechify.com/v1/audio/speech";
+        const url = "https://api.speechify.ai/v1/audio/speech";
+        // Speechify uses SSML percentage adjustments, not a top-level speed field.
+        const speed = Math.max(0.5, Math.min(3, parseFloat(TTS.speechifySettings.speed) || 1));
+        const rate = Math.round((speed - 1) * 100);
+        const escapedText = String(tts).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+        const input = '<speak><prosody rate="' + (rate >= 0 ? '+' : '') + rate + '%">' + escapedText + '</prosody></speak>';
         let model = TTS.speechifySettings.model;
         const data = {
-            input: "<speak>" + tts + "</speak>",
+            input: input,
             voice_id: TTS.getVoiceOverride(options) || TTS.speechifySettings.voiceName || "henry",
             model: model,
             audio_format: "mp3",
-            speed: TTS.speechifySettings.speed
+            language: TTS.speechifySettings.language
         };
         
         const otherparam = {
