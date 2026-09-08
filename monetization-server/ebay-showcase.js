@@ -8,23 +8,24 @@ const failure = (message, statusCode = 400) => Object.assign(new Error(message),
 // Only these public fields leave the service. Orders include private shipping/payment data.
 export function paidSales(orders) {
 	const sales = [];
-	for (const order of orders || []) {
-		if (order.orderPaymentStatus !== "PAID" || (order.cancelStatus?.cancelState && !["NONE_REQUESTED", "CANCEL_REJECTED"].includes(order.cancelStatus.cancelState))) continue;
-		const payments = (order.paymentSummary?.payments || []).filter(p => p.paymentStatus === "PAID");
-		const paidAt = Math.max(0, ...payments.map(p => Date.parse(p.paymentDate) || 0));
-		for (const line of order.lineItems || []) {
-			if (!/^\d{9,15}$/.test(line.legacyItemId || "") || !line.lineItemId || !order.orderId) continue;
-			sales.push({ id: hash(order.orderId + ":" + line.lineItemId), itemId: line.legacyItemId, name: text(line.title), quantity: Math.max(1, Math.min(100000, Number(line.quantity) || 1)), paidAt, createdAt: Date.parse(order.creationDate) || 0 });
+	for (const order of Array.isArray(orders) ? orders : []) {
+		if (!order || order.orderPaymentStatus !== "PAID" || (order.cancelStatus?.cancelState && !["NONE_REQUESTED", "CANCEL_REJECTED"].includes(order.cancelStatus.cancelState))) continue;
+		const payments = Array.isArray(order.paymentSummary?.payments) ? order.paymentSummary.payments : [];
+		const paidAt = payments.reduce((latest, payment) => payment?.paymentStatus === "PAID" ? Math.max(latest, Date.parse(payment.paymentDate) || 0) : latest, 0);
+		for (const line of Array.isArray(order.lineItems) ? order.lineItems : []) {
+			if (!line || !/^\d{9,15}$/.test(line.legacyItemId || "") || !line.lineItemId || !order.orderId || !Number.isSafeInteger(line.quantity) || line.quantity <= 0 || line.quantity > 100000) continue;
+			sales.push({ id: hash(order.orderId + ":" + line.lineItemId), itemId: line.legacyItemId, name: text(line.title), quantity: line.quantity, paidAt, createdAt: Date.parse(order.creationDate) || 0 });
 		}
 	}
 	return sales;
 }
 export function publicItem(item, id, environment = "production") {
-	const auction = (item.buyingOptions || []).includes("AUCTION"),
+	item = item || {};
+	const auction = Array.isArray(item.buyingOptions) && item.buyingOptions.includes("AUCTION"),
 		price = auction ? item.currentBidPrice || item.minimumPriceToBid : item.price;
-	if (!item.title || !price || !Number.isFinite(Number(price.value)) || Number(price.value) < 0 || !/^[A-Z]{3}$/.test(price.currency || "")) throw failure("This listing does not have a supported price.");
+	if (typeof item.title !== "string" || !item.title.trim() || !price || !(typeof price.value === "number" || typeof price.value === "string" && /^\d+(?:\.\d+)?$/.test(price.value)) || !Number.isFinite(Number(price.value)) || Number(price.value) < 0 || typeof price.currency !== "string" || !/^[A-Z]{3}$/.test(price.currency)) throw failure("This listing does not have a supported price.");
 	const image = text(item.image?.imageUrl, 2048);
-	return { id, name: text(item.title), amount: Number(price.value), currency: price.currency, image: /^https:\/\/i\.ebayimg\.com\//i.test(image) ? image : "", url: (environment === "sandbox" ? "https://www.sandbox.ebay.com/itm/" : "https://www.ebay.com/itm/") + id, auction, startingBid: auction && !item.currentBidPrice, endsAt: Date.parse(item.itemEndDate) || 0, available: !(item.estimatedAvailabilities || []).some(a => a.estimatedAvailabilityStatus === "OUT_OF_STOCK"), updatedAt: Date.now() };
+	return { id, name: text(item.title), amount: Number(price.value), currency: price.currency, image: /^https:\/\/i\.ebayimg\.com\//i.test(image) ? image : "", url: (environment === "sandbox" ? "https://www.sandbox.ebay.com/itm/" : "https://www.ebay.com/itm/") + id, auction, startingBid: auction && !item.currentBidPrice, endsAt: Date.parse(item.itemEndDate) || 0, available: !(Array.isArray(item.estimatedAvailabilities) ? item.estimatedAvailabilities : []).some(a => a && a.estimatedAvailabilityStatus === "OUT_OF_STOCK"), updatedAt: Date.now() };
 }
 
 // Optional, read-only seller integration; no listing edits, fulfillment or checkout permissions.

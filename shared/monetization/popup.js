@@ -8,6 +8,21 @@
 	var feedbackUntil = {};
 	var saveLabel = by('save').textContent;
 	function tr(key, fallback) { return typeof getTranslation === 'function' ? getTranslation(key, fallback) : fallback; }
+    function moneyText(text, values) {
+        text = String(text || '');
+        var shared = { 'Disabled': 'shopify-status-disabled', 'Disconnected': 'shopify-status-disconnected', 'Set up reliable delivery': 'shopify-status-set-up-reliable-delivery' };
+        if (text.indexOf('Sandbox test mode. ') === 0) return moneyText('Sandbox test mode.') + ' ' + moneyText(text.slice(19));
+        var key = shared[text] || 'money-' + text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        return tr(key, text).replace(/\{(\w+)\}/g, function (match, name) { return values && Object.prototype.hasOwnProperty.call(values, name) ? values[name] : match; });
+    }
+    function refreshPlaceholders() {
+        var defaults = { 'shopify-webhook': 'Save setup to generate', 'ninja-username': 'Your username', 'ninja-webhook': 'Save setup to generate', 'throne-username': 'Your Throne username', 'throne-webhook': 'Enable and save to create your connection', buyer: 'Optional' };
+        var entries = typeof translation !== 'undefined' && translation.placeholders || {};
+        Object.keys(defaults).forEach(function (id) {
+            var fallback = defaults[id], key = fallback.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/ /g, '-');
+            by(id).placeholder = Object.prototype.hasOwnProperty.call(entries, key) ? entries[key] : fallback;
+        });
+    }
     // Merge only edits made in this popup; backend changes still apply to untouched fields.
     function mergeDraft(saved, baseline, draft) {
         if (draft && typeof draft === 'object' && !Array.isArray(draft)) {
@@ -23,6 +38,7 @@
         if (!ready || !current) return;
         var dirty = JSON.stringify(mergeDraft(current.config, current.config, values())) !== JSON.stringify(current.config);
         dirty = dirty || ['ninja-token', 'ninja-secret', 'shopify-secret'].some(function (id) { return !!by(id).value.trim(); }) || by('ninja-clear-token').checked;
+        saveLabel = '\uD83D\uDCBE ' + tr('money-save-setup', 'Save setup');
         by('save').textContent = dirty ? saveLabel + ' - ' + tr('commerce-draft', 'Unsaved') : saveLabel;
     }
     panel.addEventListener('input', updateSaveLabel);
@@ -38,7 +54,7 @@
         return element.closest('#money-commerce-panel') ? 'commerce-live-status' : 'status';
     }
     function setStatus(id, text) {
-        if (!feedbackUntil[id] || feedbackUntil[id] < Date.now()) by(id).textContent = text;
+        if (!feedbackUntil[id] || feedbackUntil[id] < Date.now()) by(id).textContent = moneyText(text);
     }
 	function resetProductForm() {
         editingProduct = -1;
@@ -110,6 +126,7 @@
 		return document.getElementById('money-' + id);
 	}
 	function status(text, target) {
+        text = moneyText(text);
         target = target || feedbackTarget(document.activeElement);
         by('status').textContent = text;
         var actions = document.activeElement && document.activeElement.closest('.money-actions');
@@ -261,7 +278,7 @@
             if (serverValue && /^wss?:\/\//i.test(serverValue)) control.searchParams.set('server', serverValue);
             by('control-dock').href = control.href;
             by('overlay').href = u.href;
-			by('overlay').textContent = 'Open ' + (by('mode').value === 'commerce' ? tr('commerce-title', 'Products & support links') : by('mode').value === 'ebay' ? 'eBay Showcase' : by('mode').value === 'wishlist' ? 'Wishlist Rank-Up' : by('mode').value === 'throne' ? 'Throne Gifts' : 'NinjaBacker') + ' overlay';
+			by('overlay').textContent = tr('money-open-overlay', 'Open overlay') + ': ' + by('mode').options[by('mode').selectedIndex].textContent;
 		} catch (_) {}
 		var name = by('ninja-username').value.trim();
 		by('ninja-link').value = /^[a-z0-9_-]{1,50}$/i.test(name) ? 'https://ninjabacker.com/' + name.toLowerCase() : '';
@@ -274,7 +291,7 @@
 		var e = reply.ebay || {};
 		by('ebay-environment').value = e.environment || 'production';
 		setStatus('ebay-status', e.status || 'Connect your seller account');
-		by('ebay-connect').textContent = e.connected ? 'Reconnect eBay' : 'Connect eBay';
+		by('ebay-connect').textContent = moneyText(e.connected ? 'Reconnect eBay' : 'Connect eBay');
 		if (e.connected) by('ebay-auth').hidden = true;
 		var rows = by('ebay-items');
 		rows.textContent = '';
@@ -287,9 +304,9 @@
 			['Move up', 'Remove'].forEach(function (name) {
 				var button = document.createElement('button');
 				button.type = 'button';
-				button.textContent = name;
+				button.textContent = tr(name === 'Move up' ? 'commerce-up' : 'commerce-remove', name);
 				button.disabled = name === 'Move up' && index === 0;
-				button.setAttribute('aria-label', name + ' ' + item.name);
+				button.setAttribute('aria-label', button.textContent + ': ' + item.name);
 				button.onclick = function () {
 					run(function () {
 						return request(name === 'Remove' ? 'ebayRemove' : 'ebayMove', { id: item.id });
@@ -304,11 +321,12 @@
 		var t = reply.throne || {};
 		setStatus('throne-status', t.status || 'Disabled');
 		by('throne-webhook').value = t.webhook || '';
-		by('throne-rank').textContent = 'Rank ' + ((t.gifts || 0) + 1) + ' \u00b7 ' + (t.gifts || 0) + ' completed gifts';
+		by('throne-rank').textContent = moneyText('Rank {rank} · {gifts} completed gifts', { rank: (t.gifts || 0) + 1, gifts: t.gifts || 0 });
 		by('throne-reset').disabled = !t.gifts;
 	}
 	function render(reply, baseline, resetKeys) {
 		if (!reply.config) return;
+        refreshPlaceholders();
 		reply.config = SSNMonetization.config(reply.config);
         var displayConfig = ready ? mergeDraft(reply.config, baseline || current.config, values()) : reply.config;
         (resetKeys || []).forEach(function (key) {
@@ -337,18 +355,18 @@
 		by('ninja-delivery').value = displayConfig.ninja.reliable ? 'reliable' : 'live';
 		showNinjaDelivery();
 		by('ninja-webhook').value = reply.ninjaReceiver && reply.ninjaReceiver.webhook || '';
-		by('ninja-secret').placeholder = by('ninja-webhook').value ? 'Saved securely on the SSN API' : 'Generate in the NinjaBacker dashboard';
+		by('ninja-secret').placeholder = moneyText(by('ninja-webhook').value ? 'Saved securely on the SSN API' : 'Generate in the NinjaBacker dashboard');
 		by('throne-username').value = displayConfig.throne.username;
 		by('ebay-display').value = displayConfig.ebay.display;
 		by('ebay-seconds').value = displayConfig.ebay.seconds;
 		by('ebay-cycle').hidden = displayConfig.ebay.display !== 'cycle';
-		by('ninja-token').placeholder = reply.tokenSaved ? 'Saved on this device' : 'Private Tip ID';
+		by('ninja-token').placeholder = moneyText(reply.tokenSaved ? 'Saved on this device' : 'Private Tip ID');
 		setStatus('ninja-status', reply.status);
 		showThroneStatus(reply);
 		showEbayStatus(reply);
 		by('undo').disabled = !reply.canUndo;
 		by('complete').disabled = !reply.list.current;
-		by('current').textContent = reply.list.current ? 'Rank ' + reply.list.rank + ' · Next: ' + reply.list.current.name : reply.list.total ? 'All ' + reply.list.total + ' items unlocked!' : 'Load your wishlist or add its items below.';
+		by('current').textContent = reply.list.current ? moneyText('Rank {rank} · Next: {name}', { rank: reply.list.rank, name: reply.list.current.name }) : reply.list.total ? moneyText('All {total} items unlocked!', { total: reply.list.total }) : moneyText('Load your wishlist or add its items below.');
 		var rows = by('items');
 		rows.textContent = '';
 		reply.list.items.forEach(function (item) {
@@ -358,8 +376,8 @@
 			row.className = 'money-item';
 			label.textContent = (item.bought ? '\u2713 ' : '') + item.name + ' · ' + SSNMonetization.money(item.amount, item.currency);
 			remove.type = 'button';
-			remove.textContent = 'Remove';
-			remove.setAttribute('aria-label', 'Remove ' + item.name);
+			remove.textContent = tr('commerce-remove', 'Remove');
+			remove.setAttribute('aria-label', remove.textContent + ': ' + item.name);
 			remove.onclick = function () {
 				run(function () {
 					return request('remove', { id: item.id });
@@ -530,6 +548,9 @@
 		);
 	};
 	window.updateMonetizationLinks = links;
+    window.updateMonetizationLanguage = function () {
+        if (current && !panel.hasAttribute('aria-busy')) render(current);
+    };
 	setInterval(function () {
 		if (ready && panel.open && !panel.hasAttribute('aria-busy'))
 			request('get').then(

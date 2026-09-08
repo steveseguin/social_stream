@@ -2048,6 +2048,7 @@ class EventFlowSystem {
                                     if (asyncResult.modified && asyncResult.message) {
                                         asyncMessage = { ...asyncResult.message };
                                     }
+                                    if (asyncResult.stopChain) return;
                                     // If this action also wants to continue async, it will spawn its own setTimeout
                                     if (asyncResult.continueAsync) {
                                         // Already running async, so just continue normally
@@ -2078,6 +2079,8 @@ class EventFlowSystem {
                     return; // Return immediately, downstream runs async
                 }
             }
+
+            if (actionResult && actionResult.stopChain) return;
 
             // Find and execute downstream actions (synchronous path)
             let downstreamConnections = flow.connections.filter(conn => conn.from === actionId);
@@ -3385,6 +3388,31 @@ class EventFlowSystem {
         return sent === true; // Transport acceptance, never proof that OBS displayed it.
     }
 
+    requestCommerceControl(request) {
+        return new Promise((resolve) => {
+            let settled = false;
+            const finish = (reply) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                resolve(reply && typeof reply === 'object' ? reply : { error: 'Product control did not return a result.' });
+            };
+            const timer = setTimeout(() => finish({ error: 'Product control timed out. Check SSN before retrying.' }), 8000);
+            try {
+                if (typeof window.handleMonetizationRequest === 'function') {
+                    Promise.resolve(window.handleMonetizationRequest(request)).then(finish, error => finish({ error: error && error.message || String(error) }));
+                } else if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                    chrome.runtime.sendMessage(request, reply => {
+                        const error = chrome.runtime.lastError;
+                        finish(error ? { error: error.message || 'Product control is unavailable.' } : reply);
+                    });
+                } else if (this.sendMessageToBackground) {
+                    Promise.resolve(this.sendMessageToBackground(request)).then(finish, error => finish({ error: error && error.message || String(error) }));
+                } else finish({ error: 'Product control is unavailable.' });
+            } catch (error) { finish({ error: error && error.message || String(error) }); }
+        });
+    }
+
     async executeAction(actionNode, message, flow = null, execution = null) {
         const { actionType, config } = actionNode;
         //console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);
@@ -4105,10 +4133,18 @@ class EventFlowSystem {
 
             case 'commerceControl': {
                 const request = { cmd: 'monetization', action: 'commerceControl', command: config.command || 'show', url: config.url || '', seconds: Number(config.seconds || 0) };
-                if (typeof window.handleMonetizationRequest === 'function') {
-                    const reply = await window.handleMonetizationRequest(request);
-                    if (reply.error) throw new Error(reply.error);
-                } else this.sendMessageToBackground(request);
+                const reply = await this.requestCommerceControl(request);
+                const controlResult = reply.error || !reply.commerceState || typeof reply.commerceState !== 'object' || Array.isArray(reply.commerceState)
+                    ? { success: false, error: String(reply.error || 'Product control did not return its state.') }
+                    : { success: true, commerce: reply.commerceState };
+                if (message?.meta != null && (typeof message.meta !== 'object' || Array.isArray(message.meta))) {
+                    result.commerceControlResult = controlResult;
+                } else {
+                    result.message = { ...(message || {}), meta: { ...(message?.meta || {}), commerceControlResult: controlResult } };
+                    result.modified = true;
+                }
+                // Stop dependent actions without suppressing the original purchase or tip.
+                if (!controlResult.success) result.stopChain = true;
                 break;
             }
 			case 'showText':

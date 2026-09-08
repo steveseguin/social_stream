@@ -3674,7 +3674,7 @@ class EventFlowEditor {
     }
 
 	showNodeProperties(node) {
-        if (window.SSNSoundLibrary) window.SSNSoundLibrary.stop();
+        if (typeof window !== 'undefined' && window.SSNSoundLibrary) window.SSNSoundLibrary.stop();
 		const propertiesContent = document.getElementById('node-properties-content');
 		const eventReferenceUrl = this.escapeHtml(this.resolveGuideTarget('event-reference') || '#');
 		const eventReferenceCrossPlatformUrl = this.escapeHtml(this.resolveGuideTarget('event-reference-cross-platform') || '#');
@@ -5078,7 +5078,7 @@ class EventFlowEditor {
 							<label>Alignment<select class="property-input" id="prop-textAlign"><option value="left" ${node.config.textAlign === 'left' ? 'selected' : ''}>Left</option><option value="center" ${node.config.textAlign !== 'left' && node.config.textAlign !== 'right' ? 'selected' : ''}>Center</option><option value="right" ${node.config.textAlign === 'right' ? 'selected' : ''}>Right</option></select></label>
 							<label>Copies<input type="number" class="property-input" id="prop-copies" value="${node.config.copies ?? 1}" min="1" max="99" step="1"></label>
 						</div>
-						<div class="property-help">To bold just the buyer, choose Selected text and enter <code>**{username}**</code> above <code>{itemName}</code>. Item fields must come from your event or an earlier node.</div>
+						<div class="property-help">To bold just the supporter, choose Selected text and enter <code>**{username}**</code> above <code>{subtitle}</code>. Commerce events use {subtitle} for product names; {meta.commerce.quantity} prints a known quantity.</div>
 					</div>
 					<div class="property-group">
 						<label class="property-label">Printer override (optional)</label>
@@ -5091,7 +5091,7 @@ class EventFlowEditor {
 						<input type="number" class="property-input" id="prop-labelHeight" value="${node.config.labelHeight ?? 0}" min="0" max="4000" step="0.1">
 						<div class="property-help">0 uses the global setting or content-sized receipt paper. For die-cut labels, enter their exact feed-direction length; fixed labels do not add extra feed.</div>
 					</div>
-					<div class="property-help">Connect a <strong>Donation / Tip</strong> trigger to print only donations. Its Minimum Amount field can restrict printing to donations at or above a chosen value. Use the editor's Test Flow panel to send a physical test label.</div>`;
+					<div class="property-help">Use <strong>Donation / Tip</strong> for tips and paid gifts, or <strong>Event Type: Purchase</strong> for sales. Check <code>meta.thermalPrintResult.success</code> in later nodes. Test Flow sends a physical label. <a href="../docs/thermal-printer-guide.html" target="_blank" rel="noopener">Printer guide</a></div>`;
 				break;
 			case 'webhook':
 				html += `<div class="property-group"><label class="property-label">URL</label><input type="url" class="property-input" id="prop-url" value="${node.config.url || ''}"></div>
@@ -5577,7 +5577,7 @@ class EventFlowEditor {
             case 'commerceControl':
                 html += `<div class="property-group"><label class="property-label" for="prop-command">Product control</label><select class="property-input" id="prop-command">${['show', 'next', 'hide', 'resume'].map(command => `<option value="${command}" ${node.config.command === command ? 'selected' : ''}>${{show:'Show now',next:'Next product',hide:'Hide products',resume:'Resume schedule'}[command]}</option>`).join('')}</select></div>
                 <div class="property-group"><label class="property-label" for="prop-url">Saved product URL (optional for Show)</label><input class="property-input" id="prop-url" type="url" value="${this.escapeHtml(node.config.url || '')}"></div>
-                <div class="property-group"><label class="property-label" for="prop-seconds">Seconds (0 = until changed)</label><input class="property-input" id="prop-seconds" type="number" min="0" max="3600" value="${Number(node.config.seconds) || 0}"><div class="property-help">Uses saved Products &amp; support links. Hide keeps activity alerts running. <a href="../docs/product-controls.html" target="_blank" rel="noopener">Guide</a></div></div>`;
+                <div class="property-group"><label class="property-label" for="prop-seconds">Seconds (0 = until changed)</label><input class="property-input" id="prop-seconds" type="number" min="0" max="3600" value="${Number(node.config.seconds) || 0}"><div class="property-help">Uses saved Products &amp; support links. Hide keeps activity alerts running. Waits for SSN; failure stops this chain. Confirmed selection is in <code>meta.commerceControlResult.commerce</code>; OBS visibility is unknown. <a href="../docs/product-controls.html" target="_blank" rel="noopener">Guide</a></div></div>`;
                 break;
 
 			case 'clearLayer':
@@ -6385,7 +6385,7 @@ class EventFlowEditor {
 						 <div class="property-group">
 							<label class="property-label" for="prop-volume">Volume (0 = silent, 1 = full volume)</label>
 							<input type="number" class="property-input" id="prop-volume" value="${node.config.volume ?? 1.0}" min="0" max="1" step="0.1">
-						</div>`;
+						</div><div class="property-help">Live sound plays through your Flow Actions browser source. Use sound in only one overlay for the same event to avoid doubling it. <a href="event-flow-guide.html" target="_blank" rel="noopener">Setup guide</a></div>`;
 				break;
 
 			default:

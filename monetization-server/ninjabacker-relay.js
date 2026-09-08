@@ -16,7 +16,8 @@ export default async function ninjaRelay(app, { db, masterKey, fetch: transport 
  if (!db || !Buffer.isBuffer(masterKey) || masterKey.length !== 32) throw new Error('NinjaBacker receiver requires its database and encryption key');
  db.exec(`CREATE TABLE IF NOT EXISTS ninja_receivers (id TEXT PRIMARY KEY, username TEXT NOT NULL, secret TEXT NOT NULL, received INTEGER NOT NULL DEFAULT 0);
  CREATE TABLE IF NOT EXISTS ninja_deliveries (channel TEXT NOT NULL, id TEXT NOT NULL, payload TEXT, created INTEGER NOT NULL, ack INTEGER NOT NULL DEFAULT 0, lease TEXT, expires INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(channel,id));
- CREATE INDEX IF NOT EXISTS ninja_pending ON ninja_deliveries(channel,ack,created);`);
+ CREATE INDEX IF NOT EXISTS ninja_pending ON ninja_deliveries(channel,ack,created);
+ CREATE INDEX IF NOT EXISTS ninja_retention ON ninja_deliveries(created);`);
  function seal(value) {
   const iv = crypto.randomBytes(12), cipher = crypto.createCipheriv('aes-256-gcm', masterKey, iv);
   return Buffer.concat([iv, cipher.update(value, 'utf8'), cipher.final(), cipher.getAuthTag()]).toString('base64');
