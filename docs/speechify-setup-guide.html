@@ -30,7 +30,7 @@
         @media (max-width: 700px) { .tts-preview-grid { grid-template-columns: 1fr; } }
     </style>
     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
-    <meta name="description" content="Set up Speechify voices for eBay Live and other SSN chat sources, change voices and speed, and adjust viewer volume in OBS.">
+    <meta name="description" content="Set up Speechify in Social Stream Ninja, choose a voice, adjust reading speed and volume, and optionally send audio through OBS.">
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
 </head>
@@ -39,12 +39,12 @@
 
     <section class="page-hero"><div class="container">
         <h1>Read your chat with Speechify</h1>
-        <p>Set up a voice, change how it reads, and send the sound to your viewers.</p>
+        <p>Connect Speechify to SSN, choose a voice, and adjust speech speed and volume.</p>
     </div></section>
     <main class="guide-section"><div class="container">
         <div class="guide-card">
             <h2>Before you start</h2>
-            <p>This works with eBay Live or any source whose text messages reach SSN. First, confirm you can see new chat in your SSN dock. If you cannot, follow the <a href="getting-started.html">getting-started guide</a> before setting up speech.</p>
+            <p>Start with chat connected in SSN. If you have not set that up yet, follow the <a href="getting-started.html">getting-started guide</a>.</p>
             <p>You need internet access and a <strong>Speechify API account and key</strong>. Installing the Speechify reading app alone does not connect it to SSN. Check API access and usage charges in your Speechify account. Chat selected for speech is sent to Speechify.</p>
             <p><a href="#account">Get a key</a> &middot; <a href="#setup">Set up SSN</a> &middot; <a href="#voice">Change voice</a> &middot; <a href="#speed">Read faster</a> &middot; <a href="#obs">OBS audio</a> &middot; <a href="#volume">Viewer volume</a> &middot; <a href="#help">Troubleshooting</a></p>
         </div>
@@ -66,10 +66,10 @@
                 <li>Turn on <strong>Enable TTS in dock</strong>.</li>
                 <li>Set <strong>TTS Service Provider</strong> to <strong>Speechify</strong>.</li>
                 <li>Paste your key into <strong>Speechify API Key</strong>. For a first English voice, enter <code>henry</code> in <strong>Speechify Voice ID</strong>.</li>
-                <li>Leave Speed at its default for your first test. Leave the optional Model and language switches off.</li>
+                <li>Leave Speed at its default for your first test. Leave the optional Model and language switches off; SSN uses Simba 3.0 by default.</li>
             </ol>
             <figure class="guide-figure"><a href="images/guides/tts-enable-dock-popup.png"><img src="images/guides/tts-enable-dock-popup.png" alt="SSN settings showing the Enable TTS in dock switch" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>Enable chat reading in the dock section.</figcaption></figure>
-            <figure class="guide-figure"><a href="images/guides/tts-settings-speechify.png"><img src="images/guides/tts-settings-speechify.png" alt="Speechify options: API Key, Voice ID, Speed switch and value, Model, and language" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>Enter your own key and voice ID. The screenshot has empty fields; optional switches are off.</figcaption></figure>
+            <figure class="guide-figure"><a href="images/guides/tts-settings-speechify.png"><img src="images/guides/tts-settings-speechify.png" alt="Speechify options: API Key, Voice ID, Speed switch and value, Model, and language" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>Example: Henry with Speed enabled at 1.2 and Model set to Simba 3.0. The API key is omitted.</figcaption></figure>
         </div>
         <div class="guide-card" id="open-link">
             <h2>3. Open the updated dock link</h2>
@@ -85,7 +85,7 @@
         <div class="guide-card" id="voice">
             <h2>Choose another voice</h2>
             <p>Change <strong>Speechify Voice ID</strong>, then open the updated dock link. Speechify lists <code>henry</code>, <code>george</code>, <code>carly</code>, and <code>sabrina</code> as built-in examples. Use an exact API voice ID, not just a display name from the reading app.</p>
-            <p>To find more, use Speechify's <a href="https://docs.speechify.ai/build/text-to-speech-api#choose-a-voice">Choose a voice instructions</a>. Its voice-list API returns the voices your account can use; copy the selected voice's <code>id</code> into SSN. Match the voice to the model supported by your SSN settings. SSN currently offers English (<code>simba-english</code>) and Multilingual (<code>simba-multilingual</code>); a voice advertised only for a newer model may not work with those.</p>
+            <p>To find more, use Speechify's <a href="https://docs.speechify.ai/build/text-to-speech-api#choose-a-voice">Choose a voice instructions</a>. Its voice-list API returns the voices your account can use; copy the selected voice's <code>id</code> into SSN. Match the voice to the model supported by your SSN settings. SSN uses <strong>Simba 3.0</strong> by default. For English, you can enable the Model switch and choose <strong>Simba 3.2 (English)</strong>. Keep your chosen voice ID; Henry and Carly were tested with the current models. The legacy models remain available for existing configurations.</p>
             <p>Change the settings under <strong>Main chat overlay &amp; control dock</strong> if that is the page reading chat. Featured Chat and the chat bot have separate TTS settings.</p>
         </div>
         <div class="guide-card" id="speed">
@@ -95,11 +95,11 @@
                 <li>Try <strong>1.2</strong> as a modest increase from the normal value of <strong>1.0</strong>.</li>
                 <li>Copy the updated dock link and replace the URL in your browser or OBS source. Compare the same short sentence at both settings.</li>
             </ol>
-            <p>The switch must be on for the setting to be included in the link. SSN sends this speed value to Speechify; its effect needs checking with your selected voice and account. If the speed stays the same, see the compatibility note below.</p>
+            <p>The switch must be on for the setting to be included in the link. Use <strong>1.0</strong> for normal speed, a higher number for faster speech, or a lower number for slower speech. The supported range is <strong>0.5 to 3.0</strong>.</p>
             <p><strong>Speaking faster is different from starting sooner.</strong> Speed does not remove the time Speechify needs to generate the audio. Shorter messages and turning off username reading can help the queue keep up.</p>
         </div>
         <div class="guide-card" id="obs">
-            <h2>Send Speechify audio through OBS</h2>
+            <h2>Optional: send Speechify audio through OBS</h2>
             <ol class="guide-steps">
                 <li>In the scene you use for streaming, go to <strong>Sources &rarr; + &rarr; Browser</strong>. Name the source <strong>SSN Speechify</strong>.</li>
                 <li>Paste the updated SSN dock link into <strong>URL</strong>.</li>
@@ -122,7 +122,7 @@
                 <li>Record speech alongside your microphone and background audio. Listen back and adjust the balance. Reduce gain if speech distorts or the meter reaches the red end.</li>
             </ol>
             <p>SSN's volume stops at 100%; extra boost belongs in your outgoing audio mix. Turning up your headphones alone does not make the stream louder. OBS documents <a href="https://obsproject.com/kb/filters-guide">Gain and other audio filters here</a>.</p>
-            <p><strong>Streaming directly through eBay or another app?</strong> SSN does not inject sound into that app automatically. It must receive the TTS audio through its selected audio input. The steps depend on your computer and streaming setup; tell support which app sends the stream and which microphone/audio input it uses.</p>
+            <p><strong>Using another streaming app?</strong> Route the TTS audio to an input that app can capture. The setup depends on your operating system and the app's audio controls.</p>
         </div>
         <div class="guide-card" id="help">
             <h2>If something does not work</h2>
@@ -132,9 +132,9 @@
                 <li><strong>Text arrives but no speech:</strong> check the TTS switch, API key, account access/usage limits, and voice ID. In a normal browser, click the page once.</li>
                 <li><strong>You hear it but viewers do not:</strong> check the OBS source meter, mute state, output track, and monitoring mode. Test a recording.</li>
                 <li><strong>Echo or repeated speech:</strong> leave one TTS page speaking and avoid capturing both its direct output and monitoring audio.</li>
-                <li><strong>Speed does not change:</strong> check the Speed switch and new URL first. If both are correct, report the SSApp version and voice/model so the Speechify integration can be checked.</li>
+                <li><strong>Speed or model does not change:</strong> turn on its switch and copy the updated link. Older SSN settings pages had a bug that could send these controls to the wrong overlay. Reload settings to get the updated controls.</li>
             </ul>
-            <p><strong>Compatibility note &mdash; September 8, 2026:</strong> These instructions were checked against SSN's settings and source code and Speechify's public documentation. Live Speechify generation and speed changes have not been verified with an authenticated account for this guide. Speechify's current API documentation differs from SSN's existing integration; a provider compatibility issue may need a code fix if correct settings still fail.</p>
+            <p><strong>Model unavailable?</strong> Select Simba 3.0 or Simba 3.2 and use a voice your Speechify account supports. Speechify is retiring the older English and Multilingual models; see its <a href="https://docs.speechify.ai/build/guides/concepts/models">current model reference</a>.</p>
             <p>For help, share your app version, voice ID, what step failed, and whether audio runs in SSApp, a browser, or OBS. Remove API keys and private session links from screenshots.</p>
             <p><a href="tts-setup-guide.html">Back to the general TTS guide</a> &middot; <a href="getting-started.html">Connect your first chat source</a></p>
         </div>
