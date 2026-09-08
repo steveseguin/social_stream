@@ -7950,40 +7950,7 @@ input:checked + .slider:before {
                                 </div>
 								<hr>
 
-<details id="nc-audience-room" class="options_group">
- <summary data-translate="nc-audience-title">Audience Room · NinjaChatter</summary>
- <p data-translate="nc-audience-intro">Give viewers a public room for chat and Cheer. Your private SSN links stay private.</p>
- <p data-nc-status role="status">Not connected</p>
- <div class="textInputContainer"><label for="nc-pair-code" data-translate="nc-audience-pair-code">Pairing code</label><input id="nc-pair-code" class="textInput" data-nc-code readonly autocomplete="off"></div>
- <button type="button" data-nc-op="pair" data-translate="nc-audience-connect">Connect a room</button>
- <a href="https://ninjachatter.com/dashboard.html" target="_blank" rel="noopener noreferrer" data-translate="nc-audience-settings">Open room settings</a>
- <a data-nc-link href="#" hidden target="_blank" rel="noopener noreferrer" data-translate="nc-audience-public">Open public audience room</a>
- <div class="textInputContainer"><label for="nc-publish-sources" data-translate="nc-audience-sources">Publish these sources (comma separated)</label><input id="nc-publish-sources" class="textInput" data-nc-sources placeholder="youtube, twitch" autocomplete="off"></div>
- <p data-translate="nc-audience-sources-note">Only selected ordinary chat is published. Audience replies return for display without triggering bots or commands.</p>
- <div><label class="switch"><input id="nc-cheer-enabled" type="checkbox" data-nc-cheer><span class="slider round"></span></label><label for="nc-cheer-enabled" data-translate="nc-audience-cheer">Allow Cheer overlay effect</label></div>
- <p data-translate="nc-audience-preset">Uses the fixed Event Flow Cheer preset. Open your SSN Actions overlay to see it.</p>
- <button type="button" data-nc-op="save" data-translate="nc-audience-save">Save connection options</button>
- <button type="button" data-nc-op="pause" data-translate="nc-audience-pause">Pause</button>
- <button type="button" data-nc-op="resume" data-translate="nc-audience-resume">Resume</button>
- <button type="button" data-nc-op="disconnect" data-translate="nc-audience-disconnect">Disconnect</button>
- <details><summary data-translate="nc-audience-legacy">Existing chat relay</summary>
-								<!-- Social Stream Chat Integration -->
-								<div title="Relay all messages to Ninja Chatter">
-								  <label class="switch">
-									  <input type="checkbox" id="ssc" data-setting="ssc" />
-									  <span class="slider round"></span>
-								  </label>
-								  <img class="icon" src="./sources/images/socialstream.png" style="display: inline-block;" />📨 <span>Send messages to <a href="https://ninjachatter.com/" target="_blank" class="lightblue" style="font-size: 13px;" title="Free public-facing embeddable chat">Ninja Chatter</a></span>
-								</div>
-								<div>
-								  <div class="textInputContainer" style="display: inline-grid; width: 300px; ">
-									  <input type="text" id="sscapikey" class="textInput" autocomplete="off" placeholder="API Key (from Bot & Webhook section)" data-textsetting="sscapikey" />
-									  <label for="sscapikey"><span class="popup-control-icon" aria-hidden="true">🔑</span><span>&gt; Ingress API Key</span></label>
-								  </div>
-								</div>
-								<hr>
 
-</details></details>
 								<!-- Video Stats Polling -->
 								<div title="Poll a video server stats endpoint and send bitrate/health data as meta events.">
 									<label class="switch">
@@ -14690,6 +14657,73 @@ input:checked + .slider:before {
 					</div>
 				</div>
 			</div>
+
+<div class="link beginner-basic" title="Audience Room NinjaChatter">
+<details id="nc-audience-room" class="options_group popup-settings-panel">
+ <summary><span aria-hidden="true">💬</span> <span data-translate="nc-audience-title">Audience Room · NinjaChatter</span></summary>
+ <p data-translate="nc-audience-intro">Give viewers a public room for chat and Cheer. Your private SSN links stay private.</p>
+ <p data-nc-status role="status" aria-live="polite">Not connected</p>
+ <a class="popup-guide-link" href="https://socialstream.ninja/docs/ninjachatter-audience.md" target="_blank" rel="noopener noreferrer" data-translate="nc-audience-guide">Setup guide</a>
+ <h4 data-translate="nc-audience-step-connect">1. Connect your room</h4>
+ <p data-translate="nc-audience-pair-help">Create or open a room in NinjaChatter, enable its audience connection, then approve the code below.</p>
+ <div class="nc-audience-actions">
+  <a href="https://ninjachatter.com/dashboard.html" target="_blank" rel="noopener noreferrer" data-translate="nc-audience-settings">Open room settings</a>
+  <button type="button" data-nc-op="pair" data-translate="nc-audience-connect">Connect a room</button>
+ </div>
+ <div data-nc-pairing hidden>
+  <div class="textInputContainer"><input id="nc-pair-code" class="textInput" data-nc-code readonly autocomplete="off"><label for="nc-pair-code" data-translate="nc-audience-pair-code">Pairing code</label></div>
+  <button type="button" data-nc-copy="code" data-translate="nc-audience-copy-code">Copy pairing code</button>
+ </div>
+ <div class="popup-subsection">
+  <h4 data-translate="nc-audience-step-chat">2. Choose what viewers see</h4>
+  <div class="textInputContainer"><input id="nc-publish-sources" class="textInput" data-nc-sources placeholder="youtube, twitch" autocomplete="off" aria-describedby="nc-sources-help"><label for="nc-publish-sources" data-translate="nc-audience-sources">Publish these sources (comma separated)</label></div>
+  <p id="nc-sources-help" data-translate="nc-audience-sources-note">Only selected ordinary chat is published. Audience replies return for display without triggering bots or commands.</p>
+  <p data-translate="nc-audience-empty-sources">Leave sources empty to receive audience chat without publishing captured chat.</p>
+ </div>
+ <div class="popup-subsection">
+  <h4 data-translate="nc-audience-step-share">3. Share your public room</h4>
+  <div class="textInputContainer"><input id="nc-public-url" class="textInput" data-nc-public-url readonly autocomplete="off"><label for="nc-public-url" data-translate="nc-audience-public-url">Public audience link</label></div>
+  <div class="nc-audience-actions">
+   <button type="button" data-nc-copy="room" disabled data-translate="nc-audience-copy-room">Copy public link</button>
+   <a data-nc-link href="#" hidden target="_blank" rel="noopener noreferrer" data-translate="nc-audience-public">Open public audience room</a>
+  </div>
+ </div>
+ <details class="popup-subsection"><summary data-translate="nc-audience-optional-cheer">Optional: audience Cheer</summary>
+  <div class="popup-toggle-row"><label class="switch"><input id="nc-cheer-enabled" type="checkbox" data-nc-cheer><span class="slider round"></span></label><label for="nc-cheer-enabled" data-translate="nc-audience-cheer">Allow Cheer overlay effect</label></div>
+  <p data-translate="nc-audience-preset">Uses the fixed Event Flow Cheer preset. Open your SSN Actions overlay to see it.</p>
+  <p data-translate="nc-audience-cheer-help">Also enable Cheer in your room settings. This test sends the same effect to your Actions overlay; it does not post to chat.</p>
+  <div class="nc-audience-actions">
+   <button type="button" data-nc-overlay data-translate="nc-audience-open-overlay">Open Actions overlay</button>
+   <button type="button" class="tts-test-button" data-nc-op="test" data-translate="nc-audience-test">Test Cheer</button>
+  </div>
+  <p data-translate="nc-audience-overlay-private">The Actions overlay link is private. Share only the public audience link above.</p>
+ </details>
+ <p data-nc-feedback role="status" aria-live="polite"></p>
+ <div class="nc-audience-actions popup-subsection">
+  <button type="button" data-nc-op="save" data-translate="nc-audience-save">Save connection options</button>
+  <button type="button" data-nc-op="pause" data-translate="nc-audience-pause">Pause</button>
+  <button type="button" data-nc-op="resume" data-translate="nc-audience-resume">Resume</button>
+  <button type="button" data-nc-op="disconnect" data-translate="nc-audience-disconnect">Disconnect</button>
+ </div>
+ <details><summary data-translate="nc-audience-legacy">Existing chat relay</summary>
+								<!-- Social Stream Chat Integration -->
+								<div title="Relay all messages to Ninja Chatter">
+								  <label class="switch">
+									  <input type="checkbox" id="ssc" data-setting="ssc" />
+									  <span class="slider round"></span>
+								  </label>
+								  <img class="icon" src="./sources/images/socialstream.png" style="display: inline-block;" />📨 <span>Send messages to <a href="https://ninjachatter.com/" target="_blank" class="lightblue" style="font-size: 13px;" title="Free public-facing embeddable chat">Ninja Chatter</a></span>
+								</div>
+								<div>
+								  <div class="textInputContainer" style="display: inline-grid; width: 300px; ">
+									  <input type="text" id="sscapikey" class="textInput" autocomplete="off" placeholder="API Key (from Bot & Webhook section)" data-textsetting="sscapikey" />
+									  <label for="sscapikey"><span class="popup-control-icon" aria-hidden="true">🔑</span><span>&gt; Ingress API Key</span></label>
+								  </div>
+								</div>
+								<hr>
+
+</details></details>
+</div>
 
 <div class="link" title="Monetization"><h2 class="monetization-title"><span>💵 Monetization</span></h2>
 <details id="monetization-settings" class="popup-settings-panel"><summary>🛍️ Platforms, products &amp; tips</summary>

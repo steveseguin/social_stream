@@ -22,6 +22,11 @@
 			});
 		});
 	}
+    async function testCheer() {
+        if (typeof isExtensionOn !== "undefined" && !isExtensionOn) return false;
+        if (!window.eventFlowSystem) return false;
+        return window.eventFlowSystem.executeCommunityCheer();
+    }
 	var connector = new NCAudienceConnector({
 		storage: { load: load, save: save },
 		cleanText: function (value) {
@@ -32,11 +37,7 @@
 			// Display path only: bypass bots, Event Flow, points, webhooks, and platform replies.
 			sendDataP2P(sanitizeRelayPayloadFields({ id: row.id, chatname: escapeHtml(row.name), chatmessage: row.text, chatimg: "", type: "socialstreamchat", platform: "ninjachatter", textonly: true, meta: { ninjachatter: { origin: "audience", provider: row.provider, room: connector.config.room } } }));
 		},
-		onCheer: async function () {
-			if (typeof isExtensionOn !== "undefined" && !isExtensionOn) return false;
-			if (!window.eventFlowSystem) return false;
-			return window.eventFlowSystem.executeCommunityCheer();
-		}
+		onCheer: testCheer
 	});
 	window.ncAudience = {
 		paired: function () {
@@ -47,7 +48,7 @@
 		},
 		publish: function (message) {
 			connector.publish(message).catch(function () {
-				connector.notify("publication_unknown");
+				connector.warn("publication_unknown");
 			});
 		},
 		handle: async function (request) {
@@ -55,6 +56,8 @@
 			switch (request.op) {
 				case "status":
 					return Object.assign(connector.status(), { unsupported: electron });
+				case "test":
+					return Object.assign(connector.status(), { testSent: await testCheer() === true });
 				case "pair":
 					return connector.beginPair();
 				case "save":

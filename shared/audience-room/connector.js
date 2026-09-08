@@ -16,6 +16,7 @@
 		this.instance = id();
 		this.config = { sources: [], cheer: false, receipts: [] };
 		this.state = "disconnected";
+		this.warning = null;
 		this.generation = 0;
 		this.seen = new Set();
 		this.running = new Set();
@@ -26,12 +27,16 @@
 		this.inflight = 0;
 	}
 	Connector.prototype.status = function () {
-		return { state: this.state, room: this.config.room || null, paired: !!this.config.credential, code: this.pairing ? this.pairing.code : null, sources: this.config.sources || [], cheer: !!this.config.cheer };
+		return { state: this.state, warning: this.warning, paused: this.paused, room: this.config.room || null, paired: !!this.config.credential, code: this.pairing ? this.pairing.code : null, sources: this.config.sources || [], cheer: !!this.config.cheer };
 	};
 	Connector.prototype.notify = function (state) {
 		this.state = state;
 		if (this.options.onState) this.options.onState(this.status());
 	};
+	Connector.prototype.warn = function (warning) {
+        this.warning = warning;
+        if (this.options.onState) this.options.onState(this.status());
+    };
 	Connector.prototype.request = async function (path, body, key) {
 		var abort = new AbortController(),
 			timer = setTimeout(function () {
@@ -138,6 +143,7 @@
 		this.pairing = null;
 		this.config = { sources: [], cheer: false, receipts: [] };
 		await this.options.storage.save(this.config);
+		this.warning = null;
 		this.notify("disconnected");
 	};
 	Connector.prototype.configure = async function (input) {
@@ -181,7 +187,7 @@
 						self.notify("connected");
 						(Array.isArray(data.requests) ? data.requests : []).forEach(function (r) {
 							self.execute(r, gen).catch(function () {
-								self.notify("effect_error");
+								if (gen === self.generation) self.warn("effect_error");
 							});
 						});
 					} else if (data.type === "audience_chat" && typeof data.id === "string" && !self.seen.has(data.id)) {
@@ -190,7 +196,7 @@
 						if (self.options.onChat) self.options.onChat({ id: data.id, name: String(data.name || "Viewer"), text: String(data.text || ""), provider: String(data.provider || "guest") });
 					}
 				} catch (_) {
-					self.notify("protocol_error");
+					self.warn("protocol_error");
 				}
 			};
 			socket.onerror = function () {
@@ -237,11 +243,12 @@
 		if (this.state !== "connected" || this.inflight >= 4 || !message || message.private || message.suppressRelay || message.event || message.bot || message.type === "socialstreamchat" || !this.config.sources.includes(message.type) || !message.chatmessage) return;
 		var text = message.textonly ? String(message.chatmessage) : this.options.cleanText(message.chatmessage);
 		if (!text.trim() || new TextEncoder().encode(text).length > 2048) return;
+		var gen = this.generation;
 		this.inflight++;
 		try {
 			await this.op("chat", { id: id(), text: text, name: String(message.chatname || "Viewer").slice(0, 80), source: message.type });
 		} catch (_) {
-			this.notify("publication_unknown");
+			if (gen === this.generation) this.warn("publication_unknown");
 		} finally {
 			this.inflight--;
 		}
