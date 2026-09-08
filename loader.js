@@ -11,8 +11,19 @@ function loadScript(src) {
             // without setting a src attribute and starting a second download.
             Object.defineProperty(script, 'src', { value: sourceUrl });
             script.textContent = result.text + '\n;document.currentScript.dataset.ssappExecuted = "1";\n//# sourceURL=' + sourceUrl;
-            document.body.appendChild(script);
-            if (script.dataset.ssappExecuted !== '1') throw new Error('Script execution failed: ' + src);
+            let executionError = '';
+            const captureError = event => {
+                if (event.filename === sourceUrl) executionError = event.message || 'Unknown execution error';
+            };
+            window.addEventListener('error', captureError);
+            try {
+                document.body.appendChild(script);
+            } finally {
+                window.removeEventListener('error', captureError);
+            }
+            if (script.dataset.ssappExecuted !== '1') {
+                throw new Error('Script execution failed: ' + src + (executionError ? ': ' + executionError : ''));
+            }
         });
     }
     return new Promise((resolve, reject) => {
