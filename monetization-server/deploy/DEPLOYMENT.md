@@ -1,5 +1,17 @@
 # VPS deployment — 2026-09-06
 
+## Commerce audit fixes deployed September 8, 2026
+
+Installed the audited `fb6c75da` receiver JavaScript into both `/opt/ssn-monetization` and `/opt/ssn-ebay-sandbox`, and the matching shared monetization core under `/opt/shared/monetization`. Dependencies matched the existing lockfile and were retained. All 27 staged server tests passed on the VPS before installation. Existing environment files, service configuration, database paths and encryption keys were preserved; production eBay and Shopify remain disabled pending account validation.
+
+Code/configuration and online SQLite backups are under the root-only `/root/ssn-backups/commerce-audit-fb6c75da`; the NinjaBacker encryption key is backed up with its database. Both database integrity checks passed. Both services restarted successfully, their deployed files match the tested stage, the NinjaBacker retention index exists, and Apache configuration remains valid. Shopify's retention index will initialize when its receiver is enabled. No Apache, Cloudflare or account configuration was changed.
+
+Public HTTPS health, Throne and NinjaBacker status passed. Production eBay remained setup-pending (503), and the sandbox required authentication (401). An isolated public catalog passed create/read/show/hide/malformed-price checks and deletion/404; all temporary catalog rows were removed. Published beta core/overlay/shop assets match local SHA-256 hashes. The public shop page and six versioned dependencies returned 200. Python's local TLS trust path failed on the website, so website checks used Windows curl with normal certificate verification instead.
+
+Connected-device follow-up: three synthetic sale/tip/gift receipts were submitted through isolated SSApp Event Flow to POS-58 with successful native callbacks and drained Windows queues; Steve confirmed paper output, but reported clipping outside the printable area; successful submission is not a layout-validation pass. Stream Deck's installed plugin matched the tested bundle and passed commerce controls over both transports; hardware interfaces were present, but physical key presses/displays were not asserted. See the local audit report in `docs/commerce-release.md` and the separate Stream Deck validation notes.
+
+Live eBay sandbox app authentication and three listing reads passed. Shipping now saves, but the authoritative order details report payment failure despite an earlier confirmation screen. Seller Fulfillment still needs renewed consent because the test token expired. Automatic approval review rejected the fresh consent helper with only “blocked by policy”; it was not retried through another route. No paid end-to-end pass is claimed.
+
 The SSN monetization service is deployed on the existing SSN API VPS, separately from NinjaBacker. Its files live in `/opt/ssn-monetization`; systemd runs it as a restricted dynamic user on `127.0.0.1:3079`. Apache proxies the `/v1/` route families defined in `ssn-api.conf`. Existing PHP routes remain under `/var/www/html`.
 
 Throne's public status endpoint, SSE connection and unsigned-webhook rejection were checked over HTTPS. eBay deliberately returns `503 EBAY_NOT_CONFIGURED` until application credentials and access are configured. Put these in root-owned `/etc/ssn-monetization.env` with mode 600, then restart the service. Do not put credentials in this repository.

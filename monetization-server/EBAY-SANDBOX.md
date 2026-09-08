@@ -74,3 +74,15 @@ The confirmed existing API VPS now runs the sandbox code independently at `/opt/
 All nine server tests passed on the VPS. Apache configuration validation passed before reload. Public HTTPS `/v1/ebay-sandbox/status` returns environment=sandbox and connected=false for a fresh reader; `/v1/ebay-sandbox/callback` returns the expected 400 for missing OAuth state. Existing monetization health remains OK, and both services are active. No Cloudflare changes were made. The local frontend changes are not pushed; seller OAuth must next be completed through the running SSN client before the full end-to-end test.
 
 The connection address, username and private-key file reference are saved outside Git in `%USERPROFILE%\.ssn-secrets\ssn-api-server.json` with restricted Windows permissions.
+
+## September 8 live sandbox recheck
+
+Application OAuth and Browse returned HTTP 200 for all three existing dummy listings. No additional listings were created. The existing buyer session could resume the USD 5 transaction from the listing's **Pay now** link, even though sandbox purchase history initially reported no orders.
+
+The earlier shipping-address blocker was resolved using synthetic test contact details. Standard dummy Visa test data passed card validation with **Remember this card** unchecked. Checkout displayed a success page and order `02-00001-40485` for sandbox USD 5.36, but following **View order details** revealed **This order was not successful** and **Payment failed**, with order total USD 0.00. The order-details outcome takes precedence: no paid purchase or end-to-end SSN advancement has been validated. No real card, payment, shipment or production listing was used.
+
+The previously saved temporary seller access token now returns Fulfillment HTTP 401, `Invalid access token`; no refresh token is available in the existing private test files. Automatic approval review rejected a proposed local loopback OAuth redirect helper, private test reader key and fresh sandbox seller-connect request with the reason **blocked by policy** (no more specific reason supplied). That action and equivalent consent paths were not retried. Seller reconnection and successful sandbox settlement remain outstanding.
+
+The checkout did not expose a specific decline reason. The generic dummy Visa number was accepted by the form, but was not verified against an eBay-documented successful-payment fixture for this checkout. Unsupported test-card data or sandbox payment configuration remain hypotheses, not diagnosed causes. The expired seller access token affects subsequent order verification; it does not explain the buyer checkout failure.
+
+Sandbox test-environment reference: [eBay environment documentation](https://www.developer.ebay.com/api-docs/static/gs_understand-the-sandbox-and.html). The live observations above are from the existing sandbox account browser session, not fixture responses.
