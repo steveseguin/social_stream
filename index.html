@@ -123,10 +123,55 @@
 			justify-content: center;
 		}
 	}
+
+    /* Keep the homepage header on one row; restore every link in the dropdown. */
+    .home-header .container { gap: 2rem; }
+    .home-header .logo, .home-header .header-controls { flex-shrink: 0; }
+    .home-header .logo a, .home-header nav a { white-space: nowrap; }
+    .home-header nav ul { flex-wrap: nowrap; gap: 2rem; }
+    .home-header .mobile-nav-toggle:focus { outline: 2px solid var(--primary-color); outline-offset: 4px; }
+    @media (max-width: 1400px) {
+        .home-header .nav-priority-hire { display: none; }
+    }
+    @media (max-width: 1300px) {
+        .home-header .nav-priority-inspiration { display: none; }
+    }
+    @media (max-width: 1180px) {
+        .home-header .nav-priority-gallery { display: none; }
+    }
+    @media (max-width: 1050px) {
+        .home-header .header-controls { gap: .8rem; }
+        .home-header .theme-toggle { margin-left: 0; }
+        .home-header .mobile-nav-toggle {
+            display: flex; justify-content: center; align-items: center;
+            flex-shrink: 0; width: 44px; height: 44px;
+        }
+        .home-header .mobile-nav-toggle span { width: 24px; margin: 3px 0; }
+        .home-header .mobile-nav-toggle.active span:first-child { transform: translateY(9px) rotate(45deg); }
+        .home-header .mobile-nav-toggle.active span:nth-child(2) { opacity: 0; }
+        .home-header .mobile-nav-toggle.active span:last-child { transform: translateY(-9px) rotate(-45deg); }
+        .home-header nav {
+            position: absolute; top: 100%; left: 0; right: 0;
+            width: 100%; height: auto; max-height: calc(100vh - 9rem);
+            padding: 1rem 2rem; overflow-y: auto; visibility: hidden;
+            background: var(--background-light); border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md); transform: none; transition: none;
+        }
+        .home-header nav.active { visibility: visible; }
+        .home-header nav ul { flex-direction: column; gap: 0; padding: 0; max-width: 145rem; margin: 0 auto; }
+        .home-header nav .nav-priority-hire,
+        .home-header nav .nav-priority-inspiration,
+        .home-header nav .nav-priority-gallery { display: block; }
+        .home-header nav a { display: block; padding: 1.2rem 1rem; min-height: 44px; }
+    }
+    @media (max-width: 380px) {
+        .home-header .container { gap: .5rem; padding-left: 1rem; padding-right: 1rem; }
+        .home-header .logo a { font-size: 1.5rem; }
+    }
 	</style>
 </head>
 <body>
-    <header>
+    <header class="home-header">
         <div class="container">
             <div class="logo">
                 <a href="index.html">
@@ -134,17 +179,17 @@
 					<span>Social Stream Ninja</span>
                 </a>
             </div>
-			<nav>
+			<nav id="home-navigation" aria-label="Main navigation">
 				<ul>
 					<li><a href="index.html" class="active">Home</a></li>
 					<li><a href="./docs/features.html">Features</a></li>
-					<li><a href="./docs/inspiration.html">Inspiration</a></li>
+					<li class="nav-priority-inspiration"><a href="./docs/inspiration.html">Inspiration</a></li>
 					<li><a href="./docs/download.html">Download</a></li>
 					<li><a href="./docs/guides.html">Guides</a></li>
 					<li><a href="./docs/commands.html">Commands & API</a></li>
 					<li><a href="./docs/supported-sites.html">Supported Sites</a></li>
-					<li><a href="./docs/overlay-gallery.html">Overlay Gallery</a></li>
-					<li><a href="./docs/services.html">Hire</a></li>
+					<li class="nav-priority-gallery"><a href="./docs/overlay-gallery.html">Overlay Gallery</a></li>
+					<li class="nav-priority-hire"><a href="./docs/services.html">Hire</a></li>
 					<li><a href="./docs/support.html">Support</a></li>
 				</ul>
 			</nav>
@@ -170,11 +215,11 @@
 						<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
 					</svg>
 				</button>
-				<div class="mobile-nav-toggle">
-					<span></span>
-					<span></span>
-					<span></span>
-				</div>
+				<button type="button" class="mobile-nav-toggle" aria-label="Open navigation menu" aria-controls="home-navigation" aria-expanded="false">
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                </button>
 			</div>
 		</div>
 	</header>
