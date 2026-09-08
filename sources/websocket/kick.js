@@ -281,7 +281,7 @@ const state = {
         type: 'user'
     },
     advancedControls: {
-        syncDeleteMessages: false,
+        syncDeleteMessages: true,
         syncBlockUsers: false,
         hideMetrics: false
     },
@@ -2426,11 +2426,11 @@ function initElements() {
 function loadAdvancedControls() {
     try {
         const parsed = JSON.parse(localStorage.getItem(KICK_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
-        state.advancedControls.syncDeleteMessages = !!parsed.syncDeleteMessages;
+        state.advancedControls.syncDeleteMessages = parsed.syncDeleteMessages !== false;
         state.advancedControls.syncBlockUsers = !!parsed.syncBlockUsers;
         state.advancedControls.hideMetrics = !!parsed.hideMetrics;
     } catch (_) {
-        state.advancedControls.syncDeleteMessages = false;
+        state.advancedControls.syncDeleteMessages = true;
         state.advancedControls.syncBlockUsers = false;
         state.advancedControls.hideMetrics = false;
     }
@@ -7359,10 +7359,6 @@ function forwardDeletedMessage(evt, bridgeMeta) {
         ],
         ''
     );
-    if (!messageId) {
-        log('Delete event received without message ID.', 'warning');
-        return;
-    }
 
     const actorSources = [
         evt?.sender,
@@ -7386,10 +7382,12 @@ function forwardDeletedMessage(evt, bridgeMeta) {
         ]) ||
         '';
 
-    const payload = {
-        type: 'kick',
-        id: String(messageId)
-    };
+    if (!messageId && !chatname) {
+        log('Delete event received without message ID or user.', 'warning');
+        return;
+    }
+    const payload = { type: 'kick' };
+    if (messageId) payload.id = String(messageId);
     if (chatname) {
         payload.chatname = chatname;
     }
