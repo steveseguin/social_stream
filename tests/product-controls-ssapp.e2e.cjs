@@ -103,7 +103,9 @@ fs.writeFileSync(path.join(profile, 'savedSync.json'), JSON.stringify({ streamID
   const invalidReply = await bg.evaluate(()=>routeStreamDeckRemoteRequest({protocol:2,action:'commerceNext',value:-1,get:'commerce-key-invalid'},{transport:'websocket'}));
   assert.equal(invalidReply.result.ok,false);
   await bg.waitForFunction(()=>!!window.eventFlowSystem);
-  await bg.evaluate(()=>eventFlowSystem.executeAction({actionType:'commerceControl',config:{command:'show',url:'https://creator.gumroad.com/l/print',seconds:1}},{}));
+  const flowResult=await bg.evaluate(()=>eventFlowSystem.executeAction({actionType:'commerceControl',config:{command:'show',url:'https://creator.gumroad.com/l/print',seconds:1}},{}));
+  assert.equal(flowResult.message.meta.commerceControlResult.success,true);
+  assert.equal(flowResult.message.meta.commerceControlResult.commerce.selected.url,'https://creator.gumroad.com/l/print');
   config=await request({cmd:'monetization',action:'get'}); assert(config.commerceLive.until>Date.now()-1500);
   await bg.evaluate(port=>{settings.socketserver=true;serverURL='ws://127.0.0.1:'+port;setupSocket();},relay.address().port);
   await bg.waitForFunction(()=>socketserver && socketserver.readyState===1);
@@ -161,6 +163,18 @@ fs.writeFileSync(path.join(profile, 'savedSync.json'), JSON.stringify({ streamID
   await viewer.evaluate(()=>window.dispatchEvent(new CustomEvent('ssn-page-language-changed')));
   await viewer.locator('.shop-item').first().waitFor(); assert.equal(await viewer.locator('.shop-item').count(),2);
   assert.equal(await viewer.locator('.featured h2').textContent(),'Studio & art print');
+  const focusedURL=await viewer.locator('.shop-item a').first().evaluate(e=>{e.focus();return e.href;});
+  await viewer.evaluate(()=>window.dispatchEvent(new CustomEvent('ssn-page-language-changed')));
+  await viewer.waitForTimeout(250);
+  assert.equal(await viewer.evaluate(()=>document.activeElement.href),focusedURL,'Catalog refresh must preserve keyboard focus');
+  await viewer.evaluate(()=>{window.goodCatalogFetch=fetch;window.fetch=()=>Promise.resolve({ok:true,json:()=>Promise.resolve({bad:'catalog'})});window.dispatchEvent(new CustomEvent('ssn-page-language-changed'));});
+  await viewer.waitForFunction(()=>document.getElementById('shop-status').textContent.includes('Showing the last loaded links'));
+  assert.equal(await viewer.locator('.shop-item').count(),2,'Malformed updates must preserve the last valid catalog');
+  await viewer.evaluate(()=>{window.fetch=window.goodCatalogFetch;window.dispatchEvent(new CustomEvent('ssn-page-language-changed'));});
+  await viewer.emulateMedia({colorScheme:'dark'});
+  await viewer.waitForFunction(()=>document.documentElement.classList.contains('dark-mode'));
+  await viewer.emulateMedia({colorScheme:'light'});
+  await viewer.waitForFunction(()=>!document.documentElement.classList.contains('dark-mode'));
   assert(await viewer.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   for (const language of ['ar','cs','de','es','fr','pt-br','th','tr','uk','zh-CN','zh-TW']) {
    await viewer.evaluate(language=>SSNPageI18n.setLanguage(language),language);

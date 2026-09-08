@@ -111,9 +111,10 @@
 				<h3>Bold the buyer, keep the item normal</h3>
 				<p>Choose <strong>Weight → Selected text (**bold**)</strong>, then enter:</p>
 				<pre><code>**{username}**
-{itemName}</code></pre>
-				<p>Use single braces. If your earlier node creates <code>buyer</code>, use <code>**{buyer}**</code> instead. The purchase source or an earlier node must supply <code>itemName</code>. Only text wrapped in <code>**</code> becomes bold; no custom JavaScript or HTML is needed. Existing All bold and Normal labels keep their formatting.</p>
-				<div class="guide-note"><p>For purchase events, use the matching event trigger and print the fields supplied by that integration. Add a Counter before the print action when you want one running order number for the stream.</p></div>
+{subtitle}</code></pre>
+				<p>Use single braces. Recent commerce integrations put the product title in <code>subtitle</code>; quantity may be available as <code>{meta.commerce.quantity}</code>. If your earlier node creates <code>buyer</code>, use <code>**{buyer}**</code> instead. Shopify and eBay omit buyer identity, so use a local order counter or a product-only tag for those sources. Only text wrapped in <code>**</code> becomes bold; no custom JavaScript or HTML is needed. Existing All bold and Normal labels keep their formatting.</p>
+				<div class="guide-note"><p>For sales, use Event Type with <code>purchase</code>; Donation / Tip requires <code>hasDonation</code> and will not match most sales. Use <code>gift</code> or <code>giftfunded</code> when the label marks a completed gift, and filter the provider if needed. Add a Counter before the print action when you want one running order number for the stream. See the <a href="event-reference.html#commerce-events">commerce event fields</a>.</p></div>
+				<p>The action exposes <code>meta.thermalPrintResult.success</code> and an optional error/code for later flow steps. Success means the job was submitted, not that paper came out. Check the Windows queue before retrying an uncertain job to avoid duplicate labels.</p>
 				<p>A Counter numbers purchases, not unique buyers. Reusing one ID for every purchase by the same buyer needs a separate buyer-to-ID mapping and an explicit reset at the start of each stream. User Memory's reason field is descriptive text, not a dedicated buyer-ID counter.</p>
 			</div>
 

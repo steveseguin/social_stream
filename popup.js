@@ -1381,6 +1381,7 @@ function miniTranslate(ele, ident = false, direct=false) {
 			" (OBS Browser Source is already transparent by default)"
 		);
 	}
+	if (ele === document.body && window.updateMonetizationLanguage) window.updateMonetizationLanguage();
 }
 
 if (urlParams.has("ln")) {
