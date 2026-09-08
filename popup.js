@@ -1381,6 +1381,7 @@ function miniTranslate(ele, ident = false, direct=false) {
 			" (OBS Browser Source is already transparent by default)"
 		);
 	}
+	if (ele === document.body && window.updateMonetizationLanguage) window.updateMonetizationLanguage();
 }
 
 if (urlParams.has("ln")) {
@@ -4840,13 +4841,12 @@ function processLegacySetting(key, value, sync) {
 
 const OPENCODE_ZEN_MODELS_URL = "https://opencode.ai/zen/v1/models";
 const OPENCODE_ZEN_FREE_MODEL_ORDER = [
-    "big-pickle",
-    "deepseek-v4-flash-free",
+    "nemotron-3.5-lightning-free",
     "mimo-v2.5-free",
-    "qwen3.6-plus-free",
-    "minimax-m3-free",
+    "ling-3.0-flash-fin-free",
     "nemotron-3-ultra-free",
-    "nemotron-3-super-free"
+    "big-pickle",
+    "deepseek-v4-flash-free"
 ];
 const OPENCODE_ZEN_MODEL_CACHE_MS = 60 * 60 * 1000;
 let openCodeModelLoadInFlight = null;
@@ -4868,6 +4868,8 @@ function getOpenCodeFreeModelRank(modelId) {
 
 function isOpenCodeChatCompletionsModel(modelId) {
     const value = String(modelId || "").trim().toLowerCase();
+    if (value.indexOf('muse-') === 0 || value.indexOf('grok-') === 0) return false;
+    if (value.indexOf('go/') === 0) return ['go/glm-5.3-flash', 'go/mimo-v2.5', 'go/deepseek-v4-flash'].indexOf(value) !== -1;
     return isOpenCodeFreeModelId(value) ||
         value === "big-pickle" ||
         value.indexOf("deepseek-") === 0 ||
@@ -4909,12 +4911,16 @@ function populateOpenCodeModelSelect(modelIds) {
     autoOption.value = "auto";
     autoOption.textContent = "Auto - free models only";
     select.appendChild(autoOption);
+    const goAuto = document.createElement('option');
+    goAuto.value = 'go-auto';
+    goAuto.textContent = 'Auto - free first, then Go subscription';
+    select.appendChild(goAuto);
 
     sortOpenCodeModelIds((modelIds || []).filter(isOpenCodeChatCompletionsModel)).forEach(function (id) {
         if (!id) return;
         const option = document.createElement("option");
         option.value = id;
-        option.textContent = isOpenCodeFreeModelId(id) ? id + " (free)" : id;
+        option.textContent = id.indexOf("go/") === 0 ? id.slice(3) + " (Go subscription)" : (isOpenCodeFreeModelId(id) ? id + " (free)" : id);
         select.appendChild(option);
     });
 
@@ -4944,7 +4950,7 @@ async function loadOpenCodeModels(force) {
     setOpenCodeModelStatus("Loading OpenCode models...", "#bbb");
     openCodeModelLoadInFlight = (async function () {
         try {
-            const headers = { "Accept": "application/json" };
+            const headers = { "Accept": "application/json", "x-opencode-session": "ssn-model-discovery" };
             const apiKey = getOpenCodeApiKeyFromPopup();
             if (apiKey) headers.Authorization = "Bearer " + apiKey;
             const response = await fetch(OPENCODE_ZEN_MODELS_URL, {
@@ -4963,6 +4969,16 @@ async function loadOpenCodeModels(force) {
                 throw new Error("No models returned");
             }
             const compatibleModels = models.filter(isOpenCodeChatCompletionsModel);
+            try {
+                const goResponse = await fetch('https://opencode.ai/zen/go/v1/models', { headers: headers });
+                if (goResponse.ok) {
+                    const goPayload = await goResponse.json();
+                    (goPayload.data || []).forEach(function (entry) {
+                        const id = 'go/' + entry.id;
+                        if (isOpenCodeChatCompletionsModel(id)) compatibleModels.push(id);
+                    });
+                }
+            } catch (error) { console.warn('[OpenCode] Go model discovery unavailable.'); }
             const modelList = compatibleModels.length ? compatibleModels : OPENCODE_ZEN_FREE_MODEL_ORDER;
             openCodeModelCache = {
                 fetchedAt: Date.now(),
@@ -6581,10 +6597,8 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
                         targetElement.raw = updateURL(`lang=${langValue}`, targetElement.raw);
                         targetElement.raw = updateURL(`voice=${encodeURIComponent(voiceValue)}`, targetElement.raw);
                     } else if (keyOnly === 'speechifylang') {
-                        // Remove existing parameter first
-                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voicespeechify');
-                        // Speechify only uses voice parameter
-                        targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
+                        targetElement.raw = updateURL(`speechifylang=${langValue}`, targetElement.raw);
+                        if (voiceValue) targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
                     } else if (keyOnly.endsWith('lang')) {
                         // Generic handling for other *lang parameters
                         const prefix = keyOnly.slice(0, -4);
@@ -6657,7 +6671,7 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
         } else if (keyOnly === 'lang' || keyOnly === 'systemlang') {
             targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voice');
         } else if (keyOnly === 'speechifylang') {
-            targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voicespeechify');
+            // Speechify voice ID is independent of the optional language override.
         } else if (keyOnly.endsWith('lang')) {
             // Generic handling for other *lang parameters
             const prefix = keyOnly.slice(0, -4);
@@ -6956,8 +6970,8 @@ function handleOptionParam(ele, targetId, paramType, sync) {
                     targetElement.raw = updateURL(`googlelang=${langValue}`, targetElement.raw);
                     targetElement.raw = updateURL(`voicegoogle=${voiceValue}`, targetElement.raw);
                 } else if (paramValue === 'speechifylang') {
-                    // Speechify doesn't use separate lang param, just voice
-                    targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
+                    targetElement.raw = updateURL(`speechifylang=${langValue}`, targetElement.raw);
+                    if (voiceValue) targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
                 } else if (paramValue === 'lang' || paramValue === 'systemlang') {
                     // System TTS uses generic lang and voice
                     targetElement.raw = updateURL(`lang=${langValue}`, targetElement.raw);
@@ -9862,9 +9876,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             speechify: {
                 key: getId('speechifyAPIKey')?.value || getText('speechifykey'),
                 voice: getId('speechifyVoiceID')?.value || getText('voicespeechify'),
-                lang: getParam('speechifylang') ? getOption('speechifylang', 'en-US') : 'en-US',
+                lang: getParam('speechifylang') ? getOption('speechifylang', 'en-US') : undefined,
                 speed: getParam('speechifyspeed') ? getNumber('speechifyspeed', 1.0) : 1.0,
-                model: getParam('speechifymodel') ? getOption('speechifymodel', 'simba-english') : 'simba-english'
+                model: getParam('speechifymodel') ? getOption('speechifymodel', 'simba-3.0') : 'simba-3.0'
             },
             
             // OpenAI settings
@@ -10637,18 +10651,23 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     
     speechifyTTS(text, settings) {
         this.premiumQueueActive = true;
-        const url = "https://api.sws.speechify.com/v1/audio/speech";
+        const url = "https://api.speechify.ai/v1/audio/speech";
+        // Speechify uses SSML percentage adjustments, not a top-level speed field.
+        const speed = Math.max(0.5, Math.min(3, parseFloat(settings.speechify.speed) || 1));
+        const rate = Math.round((speed - 1) * 100);
+        const escapedText = String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+        const input = '<speak><prosody rate="' + (rate >= 0 ? '+' : '') + rate + '%">' + escapedText + '</prosody></speak>';
         
         const data = {
-            input: `<speak>${text}</speak>`,
+            input: input,
             voice_id: settings.speechify.voice || "henry",
             model: settings.speechify.model,
             audio_format: "mp3",
-            speed: settings.speechify.speed,
             language: settings.speechify.lang
         };
         
-        this.fetchAudioContent(url, {
+        return this.fetchAudioContent(url, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${settings.speechify.key}`,

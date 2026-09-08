@@ -194,7 +194,7 @@ test('Popup retries incomplete startup replies and keeps its mode switch after g
 		const page = await browser.newPage();
 		const html = fs.readFileSync(path.join(root, 'popup.html'), 'utf8');
 		const start = html.indexOf('<details id="monetization-settings"'),
-			end = html.indexOf('</details></div>', html.indexOf('id="money-status"', start)) + 10;
+			end = html.indexOf('</details></div>', html.indexOf('id="money-copy"', start)) + 10;
 		await page.route('https://ssn.test/popup.html', route => route.fulfill({ contentType: 'text/html', body: html.slice(start, end) }));
         await page.goto('https://ssn.test/popup.html');
 		await page.evaluate(() => {

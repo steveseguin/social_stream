@@ -172,10 +172,21 @@ body.ebay #support-card {
 	color: #b8d8ff;
 }
 
-#support-card { transform: scale(var(--monetization-scale, 1)); transform-origin: bottom right; }
+#support-card { transform: scale(var(--monetization-fit-scale, var(--monetization-scale, 1))); transform-origin: bottom right; }
 body.tl #support-card { transform-origin: top left; }
 body.compact #support-card { padding: 12px; border-radius: 10px; }
 body.compact h1 { font-size: 18px; }
 body.compact #item-image { width: 48px; height: 48px; }
 body.card-view #item-image { display: none; }
 #support-link:focus { outline: 2px solid currentColor; outline-offset: 3px; }
+
+/* Bound long content while keeping the complete text available to assistive technology. */
+#title, #detail, #support-link, #footer {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+#title { -webkit-line-clamp: 3; }
+#detail { -webkit-line-clamp: 4; }
+#support-link { -webkit-line-clamp: 2; }
+#footer { -webkit-line-clamp: 3; }
