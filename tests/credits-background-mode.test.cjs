@@ -8,7 +8,7 @@ const vm = require("vm");
 const repoRoot = path.resolve(__dirname, "..");
 const backgroundSource = fs.readFileSync(path.join(repoRoot, "background.js"), "utf8");
 const creditsSource = fs.readFileSync(path.join(repoRoot, "credits.html"), "utf8");
-const popupSource = fs.readFileSync(path.join(repoRoot, "popup.js"), "utf8");
+const popupSource = fs.readFileSync(path.join(repoRoot, "popup.js"), "utf8").replace(/\r\n/g, "\n");
 const popupHtml = fs.readFileSync(path.join(repoRoot, "popup.html"), "utf8");
 const creditsGuideSource = fs.readFileSync(path.join(repoRoot, "docs", "credits-roll-guide.html"), "utf8");
 
@@ -77,6 +77,7 @@ function createBackgroundHarness(initialStorage = {}) {
 		}
 	};
 	vm.createContext(sandbox);
+	vm.runInContext(fs.readFileSync(path.join(repoRoot, "currency.js"), "utf8"), sandbox);
 	vm.runInContext(
 		backgroundSource.slice(creditsStateStart, creditsStateEnd) +
 			backgroundSource.slice(remoteHandlerStart, remoteHandlerEnd) +
@@ -119,6 +120,29 @@ function createBackgroundHarness(initialStorage = {}) {
 	assert.strictEqual(creditsUiElements.creditsBackgroundTestBtn.hidden, true);
 
 	const harness = createBackgroundHarness();
+	const gifts = createBackgroundHarness();
+	gifts.api.resetBackgroundCreditsCollection();
+	for (const count of [1, 2, 3, 3, 2]) {
+		gifts.api.captureBackgroundCreditsMessage({ chatname: "Gift Donor", type: "tiktok", event: "gift",
+			hasDonation: count + " coins", meta: { tiktokGiftStreakId: "test-streak", tiktokGiftCount: count } });
+	}
+	let giftSnapshot = await gifts.api.getBackgroundCreditsSnapshot();
+	assert.ok(Math.abs(giftSnapshot[0].donations - 0.03) < 1e-9);
+	gifts.api.captureBackgroundCreditsMessage({ chatname: "Unknown Gift", type: "tiktok", hasDonation: "3 gifts" });
+	const unknownGift = (await gifts.api.getBackgroundCreditsSnapshot()).find(user => user.name === "Unknown Gift");
+	assert.strictEqual(unknownGift.donations, 0);
+	assert.strictEqual(unknownGift.hasDonationActivity, true);
+	await new Promise(resolve => setTimeout(resolve, 350));
+	const resumedGifts = createBackgroundHarness(gifts.storage);
+	await resumedGifts.api.getBackgroundCreditsSnapshot();
+	resumedGifts.api.captureBackgroundCreditsMessage({ chatname: "Gift Donor", type: "tiktok", event: "gift",
+		hasDonation: "4 coins", meta: { tiktokGiftStreakId: "test-streak", tiktokGiftCount: 4 } });
+	assert.ok(Math.abs((await resumedGifts.api.getBackgroundCreditsSnapshot()).find(user => user.name === "Gift Donor").donations - 0.04) < 1e-9);
+	for (const count of [3, 2]) {
+		resumedGifts.api.captureBackgroundCreditsMessage({ chatname: "Native Gift", type: "tiktok", event: "gift",
+			hasDonation: count + " 💎", donoValue: count * 0.005 });
+	}
+	assert.ok(Math.abs((await resumedGifts.api.getBackgroundCreditsSnapshot()).find(user => user.name === "Native Gift").donations - 0.025) < 1e-9);
 	harness.api.resetBackgroundCreditsCollection();
 	harness.api.captureBackgroundCreditsMessage({ chatname: "Chatter", type: "youtube", chatmessage: "hello" });
 	harness.api.captureBackgroundCreditsMessage({ chatname: "Member", type: "twitch", event: "channel_subscription_new" });
