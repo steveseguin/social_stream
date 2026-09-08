@@ -2483,7 +2483,7 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
               "speechifymodel"
             ],
             "values": "string",
-            "description": "Model selection (e.g., 'simba-english')"
+            "description": "Speechify model selection (default 'simba-3.0'; 'simba-3.2' for English)"
           },
           {
             "key": "voicespeechify",

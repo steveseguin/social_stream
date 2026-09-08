@@ -6597,10 +6597,8 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
                         targetElement.raw = updateURL(`lang=${langValue}`, targetElement.raw);
                         targetElement.raw = updateURL(`voice=${encodeURIComponent(voiceValue)}`, targetElement.raw);
                     } else if (keyOnly === 'speechifylang') {
-                        // Remove existing parameter first
-                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voicespeechify');
-                        // Speechify only uses voice parameter
-                        targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
+                        targetElement.raw = updateURL(`speechifylang=${langValue}`, targetElement.raw);
+                        if (voiceValue) targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
                     } else if (keyOnly.endsWith('lang')) {
                         // Generic handling for other *lang parameters
                         const prefix = keyOnly.slice(0, -4);
@@ -6673,7 +6671,7 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
         } else if (keyOnly === 'lang' || keyOnly === 'systemlang') {
             targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voice');
         } else if (keyOnly === 'speechifylang') {
-            targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voicespeechify');
+            // Speechify voice ID is independent of the optional language override.
         } else if (keyOnly.endsWith('lang')) {
             // Generic handling for other *lang parameters
             const prefix = keyOnly.slice(0, -4);
@@ -6972,8 +6970,8 @@ function handleOptionParam(ele, targetId, paramType, sync) {
                     targetElement.raw = updateURL(`googlelang=${langValue}`, targetElement.raw);
                     targetElement.raw = updateURL(`voicegoogle=${voiceValue}`, targetElement.raw);
                 } else if (paramValue === 'speechifylang') {
-                    // Speechify doesn't use separate lang param, just voice
-                    targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
+                    targetElement.raw = updateURL(`speechifylang=${langValue}`, targetElement.raw);
+                    if (voiceValue) targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
                 } else if (paramValue === 'lang' || paramValue === 'systemlang') {
                     // System TTS uses generic lang and voice
                     targetElement.raw = updateURL(`lang=${langValue}`, targetElement.raw);
@@ -9878,9 +9876,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             speechify: {
                 key: getId('speechifyAPIKey')?.value || getText('speechifykey'),
                 voice: getId('speechifyVoiceID')?.value || getText('voicespeechify'),
-                lang: getParam('speechifylang') ? getOption('speechifylang', 'en-US') : 'en-US',
+                lang: getParam('speechifylang') ? getOption('speechifylang', 'en-US') : undefined,
                 speed: getParam('speechifyspeed') ? getNumber('speechifyspeed', 1.0) : 1.0,
-                model: getParam('speechifymodel') ? getOption('speechifymodel', 'simba-english') : 'simba-english'
+                model: getParam('speechifymodel') ? getOption('speechifymodel', 'simba-3.0') : 'simba-3.0'
             },
             
             // OpenAI settings
@@ -10653,18 +10651,23 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     
     speechifyTTS(text, settings) {
         this.premiumQueueActive = true;
-        const url = "https://api.sws.speechify.com/v1/audio/speech";
+        const url = "https://api.speechify.ai/v1/audio/speech";
+        // Speechify uses SSML percentage adjustments, not a top-level speed field.
+        const speed = Math.max(0.5, Math.min(3, parseFloat(settings.speechify.speed) || 1));
+        const rate = Math.round((speed - 1) * 100);
+        const escapedText = String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+        const input = '<speak><prosody rate="' + (rate >= 0 ? '+' : '') + rate + '%">' + escapedText + '</prosody></speak>';
         
         const data = {
-            input: `<speak>${text}</speak>`,
+            input: input,
             voice_id: settings.speechify.voice || "henry",
             model: settings.speechify.model,
             audio_format: "mp3",
-            speed: settings.speechify.speed,
             language: settings.speechify.lang
         };
         
-        this.fetchAudioContent(url, {
+        return this.fetchAudioContent(url, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${settings.speechify.key}`,

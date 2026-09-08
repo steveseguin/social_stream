@@ -1527,7 +1527,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "speechifyspeed": {
     type: "number",
     category: "speechify_tts_options",
-    description: "Playback speed multiplier for Speechify TTS voices."
+    description: "Speechify speaking speed multiplier (0.5-3), applied through SSML prosody."
   },
   "speed": {
     type: "number",
