@@ -323,15 +323,17 @@
 	
 	function deleteThis(ele) {
 	  if (ele.deleted) return;
-	  ele.deleted = true;
 	  try {
 		const chatname = ele.querySelector("#author-name");
-		if (chatname) {
+		const id = parseInt(ele.dataset.mid, 10);
+		if (chatname || Number.isFinite(id)) {
 		  const data = {
-			chatname: escapeHtml(chatname.innerText),
 			type: (youtubeShorts ? "youtubeshorts" : "youtube")
 		  };
-		  ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
+		  if (chatname) data.chatname = escapeHtml(chatname.innerText);
+		  if (Number.isFinite(id)) data.id = id;
+		  if (!data.id && !data.chatname) return;
+		  ele.deleted = true;
 		  chrome.runtime.sendMessage(chrome.runtime.id, { "delete": data }, function(e) {});
 		}
 	  } catch (e) {

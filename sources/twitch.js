@@ -1826,9 +1826,6 @@
 			if (!data.id && !data.username && !data.chatname) {
 				return;
 			}
-			if (!data.id) {
-				data.onlyLast = true;
-			}
 
 			try {
 				chrome.runtime.sendMessage(

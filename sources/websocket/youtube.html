@@ -4177,6 +4177,18 @@ function enableBackgroundKeepAlive() {
 		return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 	}
 
+	const deletedYouTubeMessageIds = new Set();
+	function forwardYouTubeDelete(data) {
+		if (data.meta && data.meta.messageId) {
+			deletedYouTubeMessageIds.add(String(data.meta.messageId));
+			if (deletedYouTubeMessageIds.size > 2000) deletedYouTubeMessageIds.delete(deletedYouTubeMessageIds.values().next().value);
+		}
+		messageQueue = messageQueue.filter(message => data.meta && data.meta.messageId
+			? String(message.messageId) !== String(data.meta.messageId)
+			: data.userid ? message.authorChannelId !== data.userid : message.authorName !== data.chatname);
+		window.dispatchEvent(new CustomEvent('youtubeDelete', { detail: data, bubbles: true }));
+	}
+
 	function processYouTubeUserBanned(item) {
 		try {
 			const snippet = item && item.snippet ? item.snippet : {};
@@ -4214,6 +4226,9 @@ function enableBackgroundKeepAlive() {
 				endsAt
 			};
 
+			if (meta.userId || displayName) {
+				forwardYouTubeDelete({ type: meta.platform, userid: meta.userId, chatname: displayName });
+			}
 			pushMessage(applySourceIdentity({
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "user_banned",
@@ -4257,6 +4272,15 @@ function enableBackgroundKeepAlive() {
 
 			normalizedItems.forEach(item => {
 				if (!item || !item.snippet) return;
+				const deletedDetails = item.snippet.messageDeletedDetails || item.snippet.message_deleted_details;
+				const retractedDetails = item.snippet.messageRetractedDetails || item.snippet.message_retracted_details;
+				if (deletedDetails || retractedDetails || item.snippet.type === 'messageDeletedEvent' || item.snippet.type === 'messageRetractedEvent' || item.snippet.type === 'tombstone') {
+					const details = deletedDetails || retractedDetails || {};
+					const messageId = details.deletedMessageId || details.deleted_message_id || details.retractedMessageId || details.retracted_message_id || (item.snippet.type === 'tombstone' ? item.id : '');
+					// The event author can be the moderator; never use that author as the deletion target.
+					if (messageId) forwardYouTubeDelete({ type: youtubeShorts ? 'youtubeshorts' : 'youtube', meta: { messageId: String(messageId) } });
+					return;
+				}
 				const hasUserBannedDetails = !!(item.snippet.userBannedDetails || item.snippet.user_banned_details);
 				if (!item.authorDetails && item.snippet.type !== 'userBannedEvent' && !hasUserBannedDetails) return;
 				const publishedAt = new Date(item.snippet.publishedAt);
@@ -6538,6 +6562,7 @@ function enableBackgroundKeepAlive() {
 	var youtubeShorts = getInitialYouTubeShortsMode();
 
 	function processMessage(messageData, options = {}) {
+		if (messageData.messageId && deletedYouTubeMessageIds.has(String(messageData.messageId))) return;
 		const { suppressRelay = false } = options;
 		try {
 			// Apply member chat only filter if enabled
