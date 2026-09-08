@@ -32,16 +32,16 @@ const root = path.resolve(__dirname, "..");
     const guide = fs.readFileSync(guidePath, "utf8");
     assert(guide.includes('class="skip-link" href="#main-content"'));
     assert(guide.includes('id="main-content"'));
-    assert(guide.includes('<button type="button" class="mobile-nav-toggle"'));
+    assert(guide.includes('class="site-menu" type="button"'));
     assert(guide.includes('aria-expanded="false"'));
-    assert(guide.includes('aria-controls="site-navigation"'));
+    assert(guide.includes('aria-controls="ssn-site-nav"'));
   }
 
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage({ viewport: { width: 480, height: 800 } });
     await page.goto(pathToFileURL(guidePaths[0]).href);
-    const menuButton = page.locator(".mobile-nav-toggle");
+    const menuButton = page.locator(".site-menu");
     await menuButton.click();
     assert.strictEqual(await menuButton.getAttribute("aria-expanded"), "true");
     await page.keyboard.press("Escape");

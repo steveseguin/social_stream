@@ -1,5 +1,15 @@
 (function () {
     'use strict';
+    // One navigation definition for the homepage, documentation, and galleries.
+    var siteRoot = new URL('../../', document.currentScript.src);
+    var navigation = [
+        ['Home', 'index.html'], ['Features', 'docs/features.html'],
+        ['Inspiration', 'docs/inspiration.html', 'inspiration'],
+        ['Download', 'docs/download.html'], ['Guides', 'docs/guides.html'],
+        ['Commands & API', 'docs/commands.html'], ['Supported Sites', 'docs/supported-sites.html'],
+        ['Overlay Gallery', 'docs/overlay-gallery.html', 'gallery'],
+        ['Hire', 'docs/services.html', 'hire'], ['Support', 'docs/support.html']
+    ];
     var media = window.matchMedia('(prefers-color-scheme: dark)');
     function preference() { try { return localStorage.getItem('darkMode'); } catch (_) { return null; } }
     function apply(dark, save) {
@@ -8,7 +18,6 @@
         if (document.body) document.body.classList.toggle('dark-mode', dark);
         if (save) { try { localStorage.setItem('darkMode', String(dark)); } catch (_) {} }
         document.querySelectorAll('.site-theme').forEach(function (button) {
-            button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + (dark ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>' : '<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/>') + '</svg>';
             button.setAttribute('aria-label', 'Switch to ' + (dark ? 'light' : 'dark') + ' theme');
         });
         var readerTheme = document.getElementById('themeToggle');
@@ -17,18 +26,32 @@
     var saved = preference(); apply(saved === null ? media.matches : saved === 'true', false);
     window.SSNSiteTheme = { apply: apply };
     document.addEventListener('DOMContentLoaded', function () {
+        var navigationElement = document.getElementById('ssn-site-nav');
+        if (navigationElement) {
+            navigationElement.textContent = '';
+            navigation.forEach(function (item) {
+                var link = document.createElement('a');
+                link.href = new URL(item[1], siteRoot).href;
+                link.textContent = item[0];
+                if (item[2]) link.className = 'site-priority-' + item[2];
+                if (location.pathname === new URL(link.href).pathname ||
+                    (item[1] === 'index.html' && location.pathname === siteRoot.pathname)) link.setAttribute('aria-current', 'page');
+                navigationElement.appendChild(link);
+            });
+        }
         apply(document.documentElement.classList.contains('dark-mode'), false);
         var toggle = document.querySelector('.site-menu'), nav = document.getElementById('ssn-site-nav');
         function open(value) {
             nav.classList.toggle('is-open', value); toggle.setAttribute('aria-expanded', String(value));
-            toggle.textContent = value ? 'Close' : 'Menu';
+            toggle.setAttribute('aria-label', value ? 'Close navigation menu' : 'Open navigation menu');
+            toggle.querySelector('span').textContent = value ? '\u2715' : '\u2630';
         }
         if (toggle && nav) {
             toggle.addEventListener('click', function () { open(toggle.getAttribute('aria-expanded') !== 'true'); });
             nav.addEventListener('click', function (event) { if (event.target.closest('a')) open(false); });
             document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && nav.classList.contains('is-open')) { open(false); toggle.focus(); } });
             document.addEventListener('click', function (event) { if (!event.target.closest('.site-header')) open(false); });
-            window.addEventListener('resize', function () { if (window.innerWidth > 1280) open(false); });
+            window.addEventListener('resize', function () { if (window.innerWidth > 1050) open(false); });
         }
         document.querySelectorAll('.site-theme').forEach(function (button) { button.onclick = function () { apply(!document.documentElement.classList.contains('dark-mode'), true); }; });
         var year = document.getElementById('current-year'); if (year) year.textContent = new Date().getFullYear();
