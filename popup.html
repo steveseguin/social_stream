@@ -13301,6 +13301,7 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group giveaway">
+                                <div class="textInputContainer"><input id="giveaway-id" class="textInput" type="text" placeholder="default" maxlength="64" data-textparam14="giveaway" /><label for="giveaway-id">Giveaway ID</label></div>
                                 <h3><span class="popup-control-icon" aria-hidden="true">&#9881;</span>Entry setup</h3>
                                 <div class="textInputContainer">
                                     <input id="giveaway-keyword" class="textInput" type="text" maxlength="80" value="!enter" data-textsetting="giveawayKeyword" />
@@ -13312,16 +13313,27 @@ input:checked + .slider:before {
                                 </div>
                                 <div><label class="switch"><input type="checkbox" data-setting="giveawayMembersOnly" aria-label="Only members can enter" /><span class="slider round"></span></label><span>Only members can enter</span></div>
                                 <div><label class="switch"><input type="checkbox" data-setting="giveawayRepeatWinners" aria-label="Allow repeat winners" /><span class="slider round"></span></label><span>Allow repeat winners</span></div>
-                                <p>One entry per user per platform. Entry changes apply when you open entries. Reset clears the pool and winners; closing entries preserves them.</p>
+                                <p>One free entry per viewer. Rules lock after the first entry; new rounds keep past winners in history.</p>
+                                <details class="popup-settings-subsection"><summary>Tickets and point prizes</summary>
+                                    <div class="textInputContainer"><select id="giveaway-kind" class="textInput" data-optionsetting="giveawayKind"><option value="giveaway">Giveaway</option><option value="coin">Coin Flip Pot</option><option value="number">Number Hunt (host-controlled)</option></select><label for="giveaway-kind">Round type</label></div>
+                                    <div class="textInputContainer"><input id="giveaway-cost" class="textInput" type="number" min="0" max="10000" value="0" data-numbersetting="giveawayCost" /><label for="giveaway-cost">Points per ticket (0 = free)</label></div>
+                                    <div class="textInputContainer"><input id="giveaway-limit" class="textInput" type="number" min="1" max="10000" value="100" data-numbersetting="giveawayLimit" /><label for="giveaway-limit">Tickets per viewer, maximum</label></div>
+                                    <div class="textInputContainer"><input id="giveaway-prize" class="textInput" type="number" min="0" max="1000000" value="0" data-numbersetting="giveawayPrize" /><label for="giveaway-prize">Point prize per winner (0 = none)</label></div>
+                                    <div class="textInputContainer"><input id="giveaway-winners" class="textInput" type="number" min="1" max="20" value="1" data-numbersetting="giveawayWinners" /><label for="giveaway-winners">Number of prizes</label></div>
+                                    <p>Tickets reserve SSN points. Drawing spends them; cancellation refunds them. Point prizes add new points. Coin Flip Pot requires 1 point per stake, 1 outcome and no extra prize.</p>
+                                </details>
                                 <h3><span class="popup-control-icon" aria-hidden="true">&#127918;</span>Run giveaway</h3>
                                 <div class="giveaway-actions">
                                     <button type="button" data-giveaway-action="startgiveaway">&#9654; Open entries</button>
                                     <button type="button" data-giveaway-action="closegiveaway">&#9208; Close entries</button>
                                     <button type="button" data-giveaway-action="drawgiveaway">&#127942; Draw winner</button>
-                                    <button type="button" data-giveaway-action="resetgiveaway">&#8634; Reset giveaway</button>
+                                    <button type="button" data-giveaway-action="cancelgiveaway">&#9632; Cancel and refund</button>
+                                    <button type="button" data-giveaway-action="resetgiveaway">&#8634; New round</button>
                                     <button type="button" data-giveaway-action="getgiveawaystate">Refresh status</button>
                                 </div>
                                 <p id="giveaway-control-status" role="status" aria-live="polite">Select Refresh status to check the current pool.</p>
+                                <button type="button" id="giveaway-manage">Manage giveaways and history</button>
+                                <a class="popup-guide-link" href="https://socialstream.ninja/docs/giveaway-points-guide.html" target="_blank" rel="noopener">Giveaway, points and recovery guide</a>
                                 <h3><span class="popup-control-icon" aria-hidden="true">&#127912;</span>Presentation</h3>
                                 <div class="textInputContainer">
                                     <select id="giveaway-presentation" class="textInput" data-optionparam14="presentation"><option value="card">Winner card</option><option value="reel">Name reel</option><option value="wheel">Community wheel</option></select>
@@ -13332,6 +13344,7 @@ input:checked + .slider:before {
                                     <label for="giveaway-theme">Style</label>
                                 </div>
                                 <div class="textInputContainer"><input id="giveaway-title" class="textInput" type="text" placeholder="Giveaway" data-textparam14="title" /><label for="giveaway-title">Display title</label></div>
+                                <div class="textInputContainer"><select id="giveaway-backdrop" class="textInput" data-optionparam14="backdrop"><option value="transparent">Transparent (OBS)</option><option value="panel">Themed panel</option></select><label for="giveaway-backdrop">Background</label></div>
                                 <div><button type="button" id="giveaway-preview" class="tts-test-button">&#9654; Preview display</button></div>
                                 <details><summary>Advanced and integrations</summary>
                                     <p>Keep SSN running: the host owns the pool, so all open giveaway displays show the same result. Restarting SSN or changing sessions clears the pool. Preview uses sample names only.</p>

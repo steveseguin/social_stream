@@ -795,7 +795,7 @@
             if (keyword) {
                 document.getElementById('current-keyword').textContent = keyword;
                 try {
-                    localStorage.setItem('giveaway_keyword_' + roomID + '_' + password, keyword);
+                    localStorage.setItem('giveaway_keyword_' + JSON.stringify([roomID, password]), keyword);
                 } catch (e) {}
             }
         }
@@ -962,7 +962,7 @@
         // ------------------------------------------------------------------
         (function init() {
             try {
-                var wheelState = localStorage.getItem('giveawayWheelState_' + roomID + '_' + password);
+                var wheelState = localStorage.getItem('giveawayWheelState_' + JSON.stringify([roomID, password]));
                 if (wheelState) {
                     var state = JSON.parse(wheelState);
                     if (state && state.entrants) {
@@ -971,7 +971,7 @@
                 }
             } catch (error) {}
             try {
-                var savedKeyword = localStorage.getItem('giveaway_keyword_' + roomID + '_' + password);
+                var savedKeyword = localStorage.getItem('giveaway_keyword_' + JSON.stringify([roomID, password]));
                 if (savedKeyword) {
                     document.getElementById('current-keyword').textContent = savedKeyword;
                 }

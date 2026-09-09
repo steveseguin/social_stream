@@ -578,7 +578,9 @@ console.log("PASS popup link generation regressions");
     assert.ok(popupHtml.includes('data-edit-link="' + target + '"'));
     assert.ok(popupHtml.includes('id="' + target + '-edit-status"'));
     const url = 'https://socialstream.ninja/' + config.path + '?session=old-session&customfuture=keep#fragment';
-    assert.equal(functions.normalizeEditableGeneratedLink(url, target).href, url);
+    const expected = new URL(url);
+    if (target === 'giveaway') expected.searchParams.set('managed', '');
+    assert.equal(functions.normalizeEditableGeneratedLink(url, target).href, expected.href);
     assert.throws(() => functions.normalizeEditableGeneratedLink('https://socialstream.ninja/' + config.path, target), /session ID/);
     for (const other of targets.filter(id => id !== target)) {
       const wrongUrl = 'https://socialstream.ninja/' + functions.getEditableGeneratedLinkConfig(other).path + '?session=old';

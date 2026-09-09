@@ -1373,3 +1373,29 @@ The existing `commerceControl` action accepts `{ "command": "show", "url": "http
 `{"protocol":2,"action":"getCommerceState","get":"product-state-1"}` returns `payload.commerce`: `enabled`, `hostOn`, `mode` (`offline`, `disabled`, `hidden`, `pinned`, `scheduled`), `selected` (name/URL or null), `expiresAt` (epoch milliseconds or 0), `remainingSeconds` (or null), saved `items` (name/URL only), and `publicPage` publishing/synchronization status. The existing host-control/session permissions apply. It returns no publishing key, session key or buyer data.
 
 Commerce control replies also include this state. Local display commands acknowledge immediately after applying the selection; public-page synchronization runs separately, coalesces newer selections, and retries failures. A successful response confirms SSN state only, not OBS recording/streaming, scene visibility, or public-page synchronization. The same read/write contract supports operator controls in Stream Deck, Event Flow, the SSN popup, or a future OBS browser dock; audience overlays need no controls.
+
+
+### Managed giveaways
+
+Managed giveaways persist on the host. Use `giveaway.html?session=YOUR_SESSION&managed&giveaway=default` for synchronized card, reel, or community-wheel displays. Optional `backdrop=panel` enables an opaque themed panel; transparent is the default.
+
+All commands accept `value.giveawayId` (default `default`). Mutations accept `operationId` for retry protection and `roundId` to reject actions against a replaced round. Responses return `{ok, operationId?, giveaway}` or `{ok:false,error}` inside the existing protocol 2 envelope. The callback `get` field is separate from `operationId`.
+
+| Action | Value / behavior |
+| --- | --- |
+| `startgiveaway` | Optional `config`: `keyword`, `match` (`exact`/`word`), `membersOnly`, `removeWinner`, `ticketCost` (0–10000), `maxTickets` (1–10000), `prizePoints` (0–1000000), `winnerCount` (1–20), `kind` (`giveaway`, `coin`, `number`). Legacy top-level keyword configuration remains accepted. |
+| `closegiveaway` | Closes entries, preserving reservations. |
+| `drawgiveaway` | Commits the next winner and point award; consumes ticket reservations. Number Hunt is solved by guessing instead. |
+| `cancelgiveaway` | Refunds outstanding reservations before any result is committed. |
+| `resetgiveaway` | Archives history and creates a new closed round; rejects outstanding reservations. |
+| `getgiveawaystate` | Current audience-safe snapshot. |
+| `listgiveaways` | `{ok,giveaways:[...]}` summaries for the session. |
+| `getgiveawayhistory` | `{ok,history:[...]}` current and archived winner records. |
+| `getgiveawayentries` | Optional `page` (100 rows per page); private operator response `{ok,roundId,page,total,entries}`. |
+| `removegiveawayentry` | `entryId`; removes and refunds an entry before a result. |
+| `entergiveaway` | `actor`; one free entry. |
+| `buygiveawaytickets` | `actor`, integer `count`, optional `side` (`heads`/`tails` for Coin Flip Pot). Atomic reservation and entry. |
+| `grantgiveawaytickets` | `actor`, integer `count`; operator grant without charge, unavailable for a pot game. |
+| `guessgiveaway` | `actor`, integer `guess` in the current range; Number Hunt awards the first correct solver. |
+
+Actors use captured `chatname`, `type`, optional native `userid`/`username`, and membership fields. Do not expose operator API access to arbitrary viewers. Ticket/prize features require SSN points enabled. Balances remain local to a profile; changing sessions does not create another wallet. Recovered open rounds are closed for review. See the [complete giveaway/points guide](docs/giveaway-points-guide.html) for funding, limits, refunds, game rules, Event Flow, Stream Deck, and recovery.

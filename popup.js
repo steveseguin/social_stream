@@ -962,6 +962,7 @@ function normalizeEditableGeneratedLink(rawUrl, targetId) {
 		throw new Error("That link is missing its session ID.");
 	}
 
+	if (targetId === "giveaway") parsed.searchParams.set("managed", "");
 	return parsed;
 }
 
@@ -3501,7 +3502,7 @@ const SERVER_PARAM_SUPPORT_BY_TARGET = {
   eventsdashboard: { server: true, server2: true, server3: false },
   flowactions: { server: true, server2: true, server3: false },
   timer: { server: true, server2: false, server3: false },
-  giveaway: { server: true, server2: false, server3: false },
+  giveaway: { server: true, server2: true, server3: false },
   credits: { server: false, server2: true, server3: true },
   leaderboard: { server: false, server2: true, server3: true },
   waitlist: NO_SERVER_LINK_SUPPORT,

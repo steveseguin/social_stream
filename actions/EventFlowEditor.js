@@ -404,7 +404,8 @@ class EventFlowEditor {
 					{ id: 'printThermal', name: '🖨️ Print Thermal Label' },
                     { id: 'webhook', name: '🌐 Call Webhook' },
                     { id: 'addPoints', name: '⬆️ Add Points' },
-                    { id: 'spendPoints', name: '⬇️ Spend Points' }
+                    { id: 'spendPoints', name: '⬇️ Spend Points' },
+                    { id: 'giveawayControl', name: '🎁 Giveaway / Tickets' }
                 ]
             },
             {
@@ -2280,6 +2281,7 @@ class EventFlowEditor {
                 }
                 case 'addPoints': return `Add: ${node.config.amount || 100} points`;
                 case 'spendPoints': return `Spend: ${node.config.amount || 100} points`;
+                case 'giveawayControl': return `Giveaway: ${node.config.giveawayId || 'default'}`;
                 case 'delay': return `Delay: ${node.config.delayMs || 1000}ms`;
                 case 'obsChangeScene': return `Scene: ${node.config.sceneName || 'Not set'}`;
                 case 'obsToggleSource': {
@@ -2870,6 +2872,7 @@ class EventFlowEditor {
     }
 	
 	runTestFlow(testMessage) {
+        testMessage = Object.assign({}, testMessage, {meta:Object.assign({}, testMessage.meta || {}, {economyTest:true})});
 		if (!this.currentFlow) {
 			alert('No flow is currently active. Please create or select a flow to test.');
 			return { success: false, message: 'No active flow' };
@@ -3259,6 +3262,8 @@ class EventFlowEditor {
 					node.config = { amount: 100 }; break;
                 case 'spendPoints':
 					node.config = { amount: 100 }; break;
+                case 'giveawayControl':
+                    node.config = { command:'entergiveaway', giveawayId:'default', count:1, side:'' }; break;
                 case 'customJs':
 					node.config = { code: 'message.chatmessage += " (edited)";\nreturn { modified: true, message };' }; break;
 				case 'playTenorGiphy':
@@ -5101,6 +5106,13 @@ class EventFlowEditor {
 						 <div class="property-group"><label class="property-label"><input type="checkbox" class="property-input" id="prop-syncMode" ${node.config.syncMode ? 'checked' : ''}> Synchronous mode (await webhook)</label><div class="property-help">When enabled, the flow waits for the webhook to finish. With "Block on error" enabled, a non-2xx or network error blocks this message; otherwise it proceeds and attaches any response.</div></div>
 						 <div class="property-group"><label class="property-label"><input type="checkbox" class="property-input" id="prop-blockOnFailure" ${node.config.blockOnFailure ? 'checked' : ''}> Block on error (4xx/5xx or network)</label><div class="property-help">If "Synchronous mode" is OFF, the message is never blocked by webhook results. If ON, failures block the message when this is enabled.</div></div>`;
 				break;
+            case 'giveawayControl':
+                html += `<div class="property-group"><label class="property-label" for="prop-command">Giveaway action</label><select id="prop-command" class="property-input">${[['entergiveaway','Enter free giveaway'],['buygiveawaytickets','Buy tickets (spend and enter)'],['grantgiveawaytickets','Grant free tickets'],['closegiveaway','Close entries'],['drawgiveaway','Draw winner'],['cancelgiveaway','Cancel and refund'],['getgiveawaystate','Query state']].map(([v,l])=>`<option value="${v}" ${node.config.command===v?'selected':''}>${l}</option>`).join('')}</select></div>
+                <div class="property-group"><label class="property-label" for="prop-giveawayId">Giveaway ID</label><input class="property-input" id="prop-giveawayId" value="${this.escapeHtml(node.config.giveawayId || 'default')}" maxlength="64"></div>
+                <div class="property-group"><label class="property-label" for="prop-count">Tickets</label><input class="property-input" id="prop-count" type="number" min="1" max="10000" value="${Number(node.config.count)||1}"></div>
+                <div class="property-group"><label class="property-label" for="prop-side">Coin Flip Pot side</label><select class="property-input" id="prop-side"><option value="">Not a pot game</option><option value="heads" ${node.config.side==='heads'?'selected':''}>Heads</option><option value="tails" ${node.config.side==='tails'?'selected':''}>Tails</option></select></div>
+                <p class="property-help">Uses the captured viewer. Failure stops dependent actions without hiding chat. Test runs do not charge or enter real rounds. <a href="../docs/giveaway-points-guide.html" target="_blank" rel="noopener">Guide</a></p>`;
+                break;
 			case 'addPoints':
 				html += `<div class="property-group"><label class="property-label">Amount to Add</label><input type="number" class="property-input" id="prop-amount" value="${node.config.amount || 100}" min="0"></div>`;
 				break;

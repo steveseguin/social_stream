@@ -103,7 +103,7 @@ class PointsSystem {
 
     async initDatabase() {
         return new Promise((resolve, reject) => {
-            const request = indexedDB.open(this.dbName, 1);
+            const request = indexedDB.open(this.dbName, 2);
             
             request.onupgradeneeded = event => {
                 const db = event.target.result;
@@ -115,19 +115,28 @@ class PointsSystem {
                     store.createIndex('type', 'type');
                     store.createIndex('username_type', ['username', 'type']);
                 }
+                if (!db.objectStoreNames.contains('economyRecords')) {
+                    db.createObjectStore('economyRecords', { keyPath: 'id' });
+                }
             };
             
             request.onsuccess = event => {
                 this.db = event.target.result;
+                this.db.onversionchange = () => {
+                    this.db.close();
+                    this.db = null;
+                    this.initPromise = null;
+                };
                 resolve();
             };
             
             request.onerror = () => reject(request.error);
+            request.onblocked = () => console.warn('Points database upgrade is waiting for another SSN window to close.');
         });
     }
 
     async ensureDB() {
-        if (!this.db) await this.initPromise;
+        if (!this.db) await (this.initPromise || (this.initPromise = this.initDatabase()));
         return this.db;
     }
 
@@ -152,9 +161,7 @@ class PointsSystem {
     async getUserPoints(username, type = 'default') {
         const userKey = this.getUserKey(username, type);
         
-        if (this.cache.has(userKey)) {
-            return this.cache.get(userKey);
-        }
+        // Another host window may have committed an update. The database is authoritative.
 
         const db = await this.ensureDB();
         
@@ -191,6 +198,7 @@ class PointsSystem {
     }
 
     async saveUserPoints(userData) {
+        if(!Number.isFinite(userData.points) || !Number.isFinite(userData.pointsSpent) || Math.abs(userData.points)>Number.MAX_SAFE_INTEGER || userData.pointsSpent<0 || userData.pointsSpent>Number.MAX_SAFE_INTEGER)throw new Error('Invalid points balance.');
         const userKey = userData.userKey || this.getUserKey(userData.username, userData.type);
         // Callers may have changed the cached object. Keep it out of the cache until committed.
         this.cache.delete(userKey);
@@ -199,7 +207,18 @@ class PointsSystem {
         return new Promise((resolve, reject) => {
             const tx = db.transaction(this.storeName, 'readwrite');
             const store = tx.objectStore(this.storeName);
-            const request = store.put(userData);
+            const request = store.get(userKey);
+            let writeError;
+            request.onsuccess = () => {
+                const current = request.result;
+                if (current && ((current.revision || 0) !== (userData.revision || 0) || current.pointsReserved > 0)) {
+                    writeError = new Error('Balance changed or points are reserved. Refresh before editing.');
+                    tx.abort();
+                    return;
+                }
+                userData = Object.assign({}, userData, { revision: (current && current.revision || 0) + 1 });
+                store.put(userData);
+            };
             
             tx.oncomplete = () => {
                 this.cache.set(userKey, userData);
@@ -207,11 +226,45 @@ class PointsSystem {
             };
             const fail = () => {
                 this.cache.delete(userKey);
-                reject(tx.error || request.error || new Error('Points write failed'));
+                reject(writeError || tx.error || request.error || new Error('Points write failed'));
             };
             request.onerror = fail;
             tx.onerror = fail;
             tx.onabort = fail;
+        });
+    }
+
+    // The callback is synchronous: read, validate, and write inside one transaction.
+    // This serializes *all* instances, unlike a per-window lock or cached read.
+    async mutateUserPoints(username, type, mutate) {
+        const db = await this.ensureDB();
+        const userKey = this.getUserKey(username, type);
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            const request = store.get(userKey);
+            let result, committed, failure;
+            request.onsuccess = () => {
+                try {
+                    const user = request.result || this.createDefaultUserData(username, type);
+                    result = mutate(user);
+                    if (result && result.success === false) return;
+                    if (!Number.isFinite(user.points) || !Number.isFinite(user.pointsSpent) ||
+                        Math.abs(user.points) > Number.MAX_SAFE_INTEGER || Math.abs(user.pointsSpent) > Number.MAX_SAFE_INTEGER) {
+                        throw new Error('Points balance exceeds the supported range.');
+                    }
+                    user.revision = (user.revision || 0) + 1;
+                    store.put(user);
+                    committed = user;
+                } catch (error) { failure = error; tx.abort(); }
+            };
+            tx.oncomplete = () => {
+                if (committed) this.cache.set(userKey, committed);
+                resolve(result);
+            };
+            const fail = () => { this.cache.delete(userKey); reject(failure || tx.error || request.error || new Error('Points update failed')); };
+            request.onerror = fail;
+            tx.onerror = fail; tx.onabort = fail;
         });
     }
 
@@ -221,8 +274,7 @@ class PointsSystem {
         const userKey = this.getUserKey(username, type);
 
         // Use lock to prevent race conditions with concurrent messages
-        return this.withUserLock(userKey, async () => {
-            const userData = await this.getUserPoints(username, type);
+        return this.mutateUserPoints(username, type, userData => {
             const now = timestamp;
 
             // Check if this engagement is in a new window from the last one
@@ -263,7 +315,6 @@ class PointsSystem {
 
             userData.lastActive = now;
 
-            await this.saveUserPoints(userData);
             return userData;
         });
     }
@@ -274,12 +325,10 @@ class PointsSystem {
         const userKey = this.getUserKey(username, type);
 
         // Use lock to prevent race conditions
-        return this.withUserLock(userKey, async () => {
-            const userData = await this.getUserPoints(username, type);
+        return this.mutateUserPoints(username, type, userData => {
 
             userData.points += amount;
             userData.lastActive = Date.now();
-            await this.saveUserPoints(userData);
 
             return {
                 success: true,
@@ -291,14 +340,14 @@ class PointsSystem {
         });
     }
     
-    async spendPoints(username, type = 'default', amount) {
+    async spendPoints(username, type = 'default', amount, operationId) {
         if (!Number.isFinite(amount) || amount <= 0) return { success: false, message: "Amount must be a positive number" };
+        if (operationId) return this.pointRedemption(username,type,amount,operationId,'reserve');
 
         const userKey = this.getUserKey(username, type);
 
         // Use lock to prevent race conditions (critical for spending to prevent double-spend)
-        return this.withUserLock(userKey, async () => {
-            const userData = await this.getUserPoints(username, type);
+        return this.mutateUserPoints(username, type, userData => {
 
             // Calculate available points
             const availablePoints = userData.points - userData.pointsSpent;
@@ -313,7 +362,6 @@ class PointsSystem {
             }
 
             userData.pointsSpent += amount;
-            await this.saveUserPoints(userData);
 
             return {
                 success: true,
@@ -324,14 +372,56 @@ class PointsSystem {
         });
     }
 
-    async refundPoints(username, type = 'default', amount) {
+    async refundPoints(username, type = 'default', amount, operationId) {
         if (!Number.isFinite(amount) || amount <= 0) throw new Error('Invalid refund amount');
-        return this.withUserLock(this.getUserKey(username, type), async () => {
-            const userData = Object.assign({}, await this.getUserPoints(username, type));
-            userData.pointsSpent = Math.max(0, userData.pointsSpent - amount);
-            await this.saveUserPoints(userData);
+        if (operationId) return this.pointRedemption(username,type,amount,operationId,'refund');
+        return this.mutateUserPoints(username, type, userData => {
+            userData.pointsSpent = Math.max(userData.pointsReserved || 0, userData.pointsSpent - amount);
             return { success: true, remaining: userData.points - userData.pointsSpent };
         });
+    }
+
+    async pointRedemption(username,type,amount,operationId,action) {
+        if(!Number.isFinite(amount) || amount<=0 || !['reserve','refund','complete'].includes(action))throw new Error('Invalid redemption operation.');
+        const db=await this.ensureDB(), key=this.getUserKey(username,type), id='redemption:'+operationId;
+        if(typeof operationId!=='string' || operationId.length>600)throw new Error('Invalid redemption ID.');
+        return new Promise((resolve,reject)=>{
+            const tx=db.transaction([this.storeName,'economyRecords'],'readwrite'),users=tx.objectStore(this.storeName),records=tx.objectStore('economyRecords');
+            const account=users.get(key),receipt=records.get(id);let ready=0,result,failure;
+            const apply=()=>{if(++ready!==2)return;try{
+                const user=account.result || this.createDefaultUserData(username,type),prior=receipt.result;
+                if(prior && (prior.userKey!==key || prior.amount!==amount))throw new Error('Redemption parameters changed.');
+                if(action==='reserve'){
+                    if(prior){result={success:false,duplicate:true,message:'This redemption was already processed.'};return;}
+                    if(user.points-user.pointsSpent<amount){result={success:false,available:user.points-user.pointsSpent,message:'Not enough points'};return;}
+                    user.pointsSpent+=amount;user.pointsReserved=(user.pointsReserved||0)+amount;
+                    records.put({id:id,version:1,userKey:key,username:username,type:type,amount:amount,status:'pending',expiresAt:Date.now()+45000});
+                }else{
+                    if(!prior)throw new Error('Redemption receipt missing.');
+                    if(prior.status!=='pending'){result={success:prior.status===(action==='refund'?'refunded':'completed'),duplicate:true};return;}
+                    user.pointsReserved=(user.pointsReserved||0)-amount;
+                    if(action==='refund')user.pointsSpent-=amount;
+                    prior.status=action==='refund'?'refunded':'completed';prior.completedAt=Date.now();records.put(prior);
+                }
+                if(user.pointsReserved<0 || !Number.isFinite(user.pointsSpent) || user.pointsSpent>Number.MAX_SAFE_INTEGER)throw new Error('Invalid redemption balance.');
+                user.revision=(user.revision||0)+1;users.put(user);result={success:true,spent:amount,remaining:user.points-user.pointsSpent};
+            }catch(error){failure=error;tx.abort();}};
+            account.onsuccess=apply;receipt.onsuccess=apply;
+            tx.oncomplete=()=>{this.cache.delete(key);resolve(result);if(action==='reserve' && result.success)this.recoverPendingRedemptions().catch(error=>console.warn('Pending redemption recovery unavailable',error));};
+            tx.onabort=()=>{this.cache.delete(key);reject(failure||tx.error||new Error('Redemption write aborted'));};
+        });
+    }
+
+    async recoverPendingRedemptions() {
+        const db=await this.ensureDB();
+        const pending=await new Promise((resolve,reject)=>{const tx=db.transaction('economyRecords','readonly'),req=tx.objectStore('economyRecords').getAll(IDBKeyRange.bound('redemption:','redemption:\uffff'));req.onsuccess=()=>resolve(req.result.filter(r=>r.status==='pending'));req.onerror=()=>reject(req.error);});
+        let next=Infinity;
+        for(const receipt of pending){
+            if(receipt.expiresAt<=Date.now())await this.pointRedemption(receipt.username,receipt.type,receipt.amount,receipt.id.slice(11),'refund');
+            else next=Math.min(next,receipt.expiresAt);
+        }
+        if(this.redemptionRecoveryTimer)clearTimeout(this.redemptionRecoveryTimer);
+        if(Number.isFinite(next))this.redemptionRecoveryTimer=setTimeout(()=>this.recoverPendingRedemptions().catch(error=>console.warn('Redemption recovery failed',error)),Math.max(100,next-Date.now()+100));
     }
 
     async getLeaderboard(limit = 10, type = null) {
@@ -377,9 +467,18 @@ class PointsSystem {
         const db = await this.ensureDB();
 
         return new Promise((resolve, reject) => {
-            const tx = db.transaction(this.storeName, 'readwrite');
+            const tx = db.transaction([this.storeName, 'economyRecords'], 'readwrite');
             const store = tx.objectStore(this.storeName);
-            const request = store.clear();
+            const request = store.getAll();
+            let failure;
+            request.onsuccess = () => {
+                if (request.result.some(user => user.pointsReserved > 0)) {
+                    failure = new Error('Cancel or settle paid rounds before resetting points.');
+                    tx.abort(); return;
+                }
+                store.clear();
+                tx.objectStore('economyRecords').put({ id: 'migration', version: 1, complete: true, resetAt: Date.now() });
+            };
 
             tx.oncomplete = () => {
                 this.cache.clear();
@@ -388,7 +487,7 @@ class PointsSystem {
 
             request.onerror = () => reject(request.error);
             tx.onerror = () => reject(tx.error || new Error('Points reset failed'));
-            tx.onabort = () => reject(tx.error || new Error('Points reset aborted'));
+            tx.onabort = () => reject(failure || tx.error || new Error('Points reset aborted'));
         });
     }
 
@@ -397,23 +496,26 @@ class PointsSystem {
         const db = await this.ensureDB();
 
         return new Promise((resolve, reject) => {
-            const tx = db.transaction(this.storeName, 'readonly');
+            const tx = db.transaction([this.storeName, 'economyRecords'], 'readonly');
             const store = tx.objectStore(this.storeName);
             const request = store.getAll();
+            const recordsRequest = tx.objectStore('economyRecords').getAll();
 
-            request.onsuccess = () => {
+            tx.oncomplete = () => {
                 const users = request.result || [];
                 const exportData = {
-                    version: 1,
+                    version: 2,
                     exported: Date.now(),
                     exportedDate: new Date().toISOString(),
                     userCount: users.length,
-                    users: users
+                    users: users,
+                    economyRecords: recordsRequest.result || []
                 };
                 resolve(JSON.stringify(exportData, null, 2));
             };
 
             request.onerror = () => reject(request.error);
+            tx.onabort = () => reject(tx.error || new Error('Backup read aborted'));
         });
     }
 
@@ -428,6 +530,9 @@ class PointsSystem {
 
         if (!data || !Array.isArray(data.users)) {
             return { success: false, message: 'Invalid backup format: missing users array' };
+        }
+        if (data.users.some(user => user && user.pointsReserved > 0)) {
+            return {success:false,message:'This backup contains reserved points. Use complete recovery on a fresh host, not a balance-only import.'};
         }
 
         const db = await this.ensureDB();
@@ -446,6 +551,7 @@ class PointsSystem {
 
                 // Older backups may omit activity fields, but malformed values must not reach live scoring.
                 user = Object.assign(this.createDefaultUserData(user.username, user.type || 'default'), user);
+                user.pointsReserved = 0;
                 const invalidActivity = ['pointsSpent', 'lastEngagement', 'currentStreak', 'lastActive'].some(key =>
                     !Number.isFinite(user[key]) || user[key] < 0);
                 if (invalidActivity || !Array.isArray(user.engagementHistory) ||
@@ -456,11 +562,14 @@ class PointsSystem {
 
                 if (mode === 'replace') {
                     // Replace mode: overwrite all data
+                    const current = await this.getUserPoints(user.username, user.type);
+                    user.revision = current.revision || 0;
                     await this.saveUserPoints(user);
                     imported++;
                 } else {
                     // Merge mode: keep higher point values
                     const existing = await this.getUserPoints(user.username, user.type || 'default');
+                    user.revision = existing.revision || 0;
 
                     if (user.points > existing.points) {
                         // Import has more points, use imported data
@@ -491,6 +600,59 @@ class PointsSystem {
             errors,
             total: data.users.length
         };
+    }
+
+    // Full recovery only into an empty host. Never merge journals or silently rewind balances.
+    async recoverEconomyBackup(jsonString) {
+        const data = JSON.parse(jsonString);
+        if (!data || data.version !== 2 || !Array.isArray(data.users) || !Array.isArray(data.economyRecords)) throw new Error('Choose a complete version 2 backup.');
+        const users = new Map(), records = new Set(), reserved = new Map();
+        for (const user of data.users) {
+            if (!user || typeof user.username !== 'string' || !user.username || typeof user.type !== 'string' ||
+                user.userKey !== this.getUserKey(user.username,user.type) || users.has(user.userKey) ||
+                ['points','pointsSpent','lastEngagement','currentStreak','lastActive'].some(k=>!Number.isFinite(user[k]) || Math.abs(user[k])>Number.MAX_SAFE_INTEGER) ||
+                !Number.isSafeInteger(user.pointsReserved || 0) || (user.pointsReserved || 0)<0 || user.pointsSpent<(user.pointsReserved || 0) || !Array.isArray(user.engagementHistory)) throw new Error('Invalid account in backup.');
+            users.set(user.userKey,user);
+        }
+        for (const record of data.economyRecords) {
+            if (!record || typeof record.id !== 'string' || records.has(record.id) || !/^(giveaway:|summary:|archive:|operation:|redemption:|migration$)/.test(record.id)) throw new Error('Invalid economy record in backup.');
+            records.add(record.id);
+            if(record.id.startsWith('redemption:') && record.status==='pending'){
+                if(!Number.isFinite(record.amount) || record.amount<=0 || !Number.isFinite(record.expiresAt))throw new Error('Invalid pending redemption.');
+                reserved.set(record.userKey,(reserved.get(record.userKey)||0)+record.amount);
+            }
+            if (record.id.startsWith('giveaway:') || record.id.startsWith('archive:')) {
+                if (!record.config || !Array.isArray(record.entries) || !Array.isArray(record.winners) || !Array.isArray(record.won) || !record.roundId || !record.session ||
+                    !['draft','open','locked','cancelled','completed'].includes(record.status) || record.entries.length>10000) throw new Error('Invalid round in backup.');
+                const config=record.config;
+                if(!['giveaway','coin','number'].includes(config.kind) || typeof config.keyword!=='string' || !['exact','word'].includes(config.match) ||
+                    !Number.isSafeInteger(config.ticketCost) || config.ticketCost<0 || config.ticketCost>10000 || !Number.isSafeInteger(config.maxTickets) || config.maxTickets<1 || config.maxTickets>10000 ||
+                    !Number.isSafeInteger(config.prizePoints) || config.prizePoints<0 || config.prizePoints>1000000 || !Number.isSafeInteger(config.winnerCount) || config.winnerCount<1 || config.winnerCount>20)throw new Error('Invalid rules in backup.');
+                const identities=new Set();
+                for(const entry of record.entries){
+                    if (!entry || identities.has(entry.id) || entry.accountKey!==this.getUserKey(entry.name,entry.platform) || !Number.isSafeInteger(entry.tickets) || entry.tickets<1 ||
+                        !Number.isSafeInteger(entry.reserved) || entry.reserved<0) throw new Error('Invalid ticket record.');
+                    identities.add(entry.id);
+                    if(record.id.startsWith('giveaway:'))reserved.set(entry.accountKey,(reserved.get(entry.accountKey)||0)+entry.reserved);
+                    else if(entry.reserved) throw new Error('Archived rounds cannot reserve points.');
+                }
+            }
+        }
+        for(const [key,amount] of reserved){if(amount && (!users.has(key) || users.get(key).pointsReserved!==amount))throw new Error('Reserved points do not match tickets.');}
+        for(const [key,user] of users){if((user.pointsReserved||0)!==(reserved.get(key)||0))throw new Error('Account reservations do not match rounds.');}
+        const db=await this.ensureDB();
+        return new Promise((resolve,reject)=>{
+            const tx=db.transaction([this.storeName,'economyRecords'],'readwrite'), userStore=tx.objectStore(this.storeName), recordStore=tx.objectStore('economyRecords');
+            const count=userStore.count(), current=recordStore.getAll();let ready=0,failure;
+            const load=()=>{if(++ready!==2)return;if(count.result || current.result.some(r=>r.id!=='migration')){failure=new Error('Recovery requires a fresh host with no balances or giveaway records. Existing data was not changed.');tx.abort();return;}
+                for(const user of data.users)userStore.put(user);
+                for(const record of data.economyRecords){if(record.status==='open')record.status='locked';if(record.id.startsWith('summary:') && record.state){record.state.open=false;if(record.state.status==='open')record.state.status='locked';}recordStore.put(record);}
+                recordStore.put({id:'migration',version:1,complete:true});
+            };
+            count.onsuccess=load;current.onsuccess=load;
+            tx.oncomplete=()=>{this.cache.clear();this.migrationComplete=true;resolve({success:true,users:data.users.length});};
+            tx.onabort=()=>reject(failure||tx.error||new Error('Recovery aborted; nothing was changed.'));
+        });
     }
 
     // Get users with the same name across different platforms
@@ -524,6 +686,14 @@ class PointsSystem {
             return false;
         }
         
+        const db = await this.ensureDB();
+        const marker = await new Promise((resolve, reject) => {
+            const tx = db.transaction('economyRecords', 'readonly');
+            const request = tx.objectStore('economyRecords').get('migration');
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        if (marker && marker.complete) return false;
         // Check if we need to migrate (if the store is empty)
         const leaderboard = await this.getLeaderboard(1);
         return leaderboard.length === 0;
@@ -621,6 +791,7 @@ class PointsSystem {
                     // Keep only the last 100 engagements in history
                     userData.engagementHistory = engagementHistory.slice(-100);
                     
+                    // Compare-and-set prevents migration overwriting engagement earned meanwhile.
                     await this.saveUserPoints(userData);
                     processedCount++;
                     
@@ -632,6 +803,13 @@ class PointsSystem {
             }
             
             console.log(`Points migration complete! Processed ${processedCount} users.`);
+            const db = await this.ensureDB();
+            await new Promise((resolve, reject) => {
+                const tx = db.transaction('economyRecords', 'readwrite');
+                tx.objectStore('economyRecords').put({ id: 'migration', version: 1, complete: true });
+                tx.oncomplete = resolve;
+                tx.onabort = () => reject(tx.error || new Error('Migration marker write failed'));
+            });
             this.migrationComplete = true;
             this.migrationInProgress = false;
             return true;
@@ -808,6 +986,7 @@ function ensurePointsSystemInitialized() {
     pointsSystemInitPromise = (async () => {
         try {
             await pointsSystem.ensureDB();
+            pointsSystem.recoverPendingRedemptions().catch(error=>console.warn('Point redemption recovery failed',error));
             syncPointsSystemConfigFromSettings();
 
             // Attempt migration if needed, but don't block initialization

@@ -19,21 +19,21 @@
             var previous = config;
             config = Object.assign({}, config);
             try {
-            if (Object.prototype.hasOwnProperty.call(next, 'keyword')) {
-                var keyword = String(next.keyword || '').trim();
-                if (!keyword || keyword.length > 80) throw new Error('Enter a keyword between 1 and 80 characters.');
-                config.keyword = keyword;
-            }
-            if (next.match !== undefined) {
-                if (['exact', 'word'].indexOf(next.match) === -1) throw new Error('Choose exact or word matching.');
-                config.match = next.match;
-            }
-            ['membersOnly', 'removeWinner'].forEach(function(key) {
-                if (next[key] !== undefined) {
-                    if (typeof next[key] !== 'boolean') throw new Error(key + ' must be true or false.');
-                    config[key] = next[key];
+                if (Object.prototype.hasOwnProperty.call(next, 'keyword')) {
+                    var keyword = String(next.keyword || '').trim();
+                    if (!keyword || keyword.length > 80) throw new Error('Enter a keyword between 1 and 80 characters.');
+                    config.keyword = keyword;
                 }
-            });
+                if (next.match !== undefined) {
+                    if (['exact', 'word'].indexOf(next.match) === -1) throw new Error('Choose exact or word matching.');
+                    config.match = next.match;
+                }
+                ['membersOnly', 'removeWinner'].forEach(function(key) {
+                    if (next[key] !== undefined) {
+                        if (typeof next[key] !== 'boolean') throw new Error(key + ' must be true or false.');
+                        config[key] = next[key];
+                    }
+                });
             } catch (error) { config = previous; throw error; }
         }
         function ingest(data) {

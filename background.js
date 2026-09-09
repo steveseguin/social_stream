@@ -7206,8 +7206,11 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if (request.cmd && request.cmd === "livestatssaveStop") {
 			sendResponse({ state: isExtensionOn });
 			await overwriteLiveStatsFile("stop");
+        } else if (request.cmd === 'recoverEconomyBackup') {
+            try { await window.pointsSystemReady(); sendResponse(await window.pointsSystem.recoverEconomyBackup(request.data)); }
+            catch(error) {sendResponse({success:false,error:error.message});}
 		} else if (isGiveawayAction(request.cmd)) {
-			sendResponse(handleGiveawayAction(request.cmd, request.value));
+			sendResponse(await handleGiveawayAction(request.cmd, request.value));
 			return;
 		} else if (request.cmd && request.cmd === "selectwinner") {
 			////console.logrequest);
@@ -10262,6 +10265,12 @@ function setupSocketDock() {
 			return;
 		}
 
+		// Give managed audience displays the same snapshot they can already receive.
+		if (data && data.action === "getgiveawaystate" && settings.server2 && isExtensionOn && !settings.disablehost) {
+			publishGiveawayState();
+			return;
+		}
+
 		// Only handle inbound messages when allowed
 		if (!(settings.server3 && isExtensionOn)) {
 			return;
@@ -11028,7 +11037,7 @@ async function handleStreamDeckBackgroundRequest(request) {
 		return router.makeResponse(request, clearHistoryResult);
 	}
 	if (isGiveawayAction(action)) {
-		const result = handleGiveawayAction(action, request.value);
+		const result = await handleGiveawayAction(action, request.value);
 		return result.ok ? router.makeResponse(request, result) : router.makeError(request, "GIVEAWAY_ERROR", result.error);
 	}
 	if (action === "getpollpresets") {
@@ -11084,7 +11093,7 @@ async function routeStreamDeckRemoteRequest(request, context) {
 			result: await handleStreamDeckSsappRequest(request)
 		};
 	}
-	if ((router.isVersionedRequest(request) || isCreditsRemoteAction(request.action) || router.isCommerceAction(request.action) || request.action === "getCommerceState") && router.isRemoteSsnRequest(request, "background")) {
+	if ((router.isVersionedRequest(request) || isGiveawayAction(request.action) || isCreditsRemoteAction(request.action) || router.isCommerceAction(request.action) || request.action === "getCommerceState") && router.isRemoteSsnRequest(request, "background")) {
 		return {
 			kind: "command",
 			result: await handleStreamDeckBackgroundRequest(request)
@@ -11371,7 +11380,7 @@ function setupSocket() {
                 window.handleMonetizationRequest({ action: 'commerceControl', command: data.command, url: data.url, seconds: data.seconds });
                 resp = true;
             } else if (isGiveawayAction(data.action)) {
-                resp = handleGiveawayAction(data.action, data.value);
+                resp = await handleGiveawayAction(data.action, data.value);
             } else if (data.action && data.action === "resetpoll") {
 				sendTargetP2P({ cmd: "resetpoll" }, "poll");
 				resp = true;
@@ -13320,47 +13329,78 @@ function broadcastLeaderboardReset() {
 var giveawayHost = null;
 var giveawayHostSession = null;
 var giveawayBroadcastTimer = null;
-function getGiveawayHost() {
+var giveawayPendingStates = new Map();
+async function getGiveawayHost() {
+    await window.pointsSystemReady();
     if (!giveawayHost || giveawayHostSession !== streamID) {
+        if(giveawayBroadcastTimer)clearTimeout(giveawayBroadcastTimer);
+        giveawayBroadcastTimer=null;giveawayPendingStates.clear();
         giveawayHostSession = streamID;
-        giveawayHost = SSNGiveaway.create({ crypto: window.crypto });
+        giveawayHost = new SSNGiveawayService(window.pointsSystem, streamID);
+        await giveawayHost.recoverRounds();
     }
     return giveawayHost;
 }
-function publishGiveawayState() {
-    if (giveawayBroadcastTimer) clearTimeout(giveawayBroadcastTimer);
-    giveawayBroadcastTimer = null;
-    var payload = { event: "giveaway_state", meta: { giveaway: getGiveawayHost().snapshot() } };
-    sendTargetP2P(payload, "giveaway");
-    if (settings.server2 && socketserverDock && socketserverDock.readyState === WebSocket.OPEN) socketserverDock.send(JSON.stringify(payload));
+async function publishGiveawayState(state) {
+    try {
+        var states = state && state.epoch ? [state] : await (await getGiveawayHost()).list(true);
+        for (var current of states) {
+            var payload = { event: "giveaway_state", meta: { giveaway: current } };
+            sendTargetP2P(payload, "giveaway");
+            if (settings.server2 && socketserverDock && socketserverDock.readyState === WebSocket.OPEN) socketserverDock.send(JSON.stringify(payload));
+            if (settings.socketserver && socketserver && socketserver.readyState === WebSocket.OPEN) socketserver.send(JSON.stringify(payload));
+        }
+    } catch (error) { console.warn('Giveaway state unavailable', error); }
 }
 function isGiveawayAction(action) {
-    return ["startgiveaway", "closegiveaway", "drawgiveaway", "resetgiveaway", "getgiveawaystate"].indexOf(action) !== -1;
+    return ["startgiveaway", "closegiveaway", "drawgiveaway", "resetgiveaway", "getgiveawaystate", "cancelgiveaway", "listgiveaways", "getgiveawayhistory", "entergiveaway", "buygiveawaytickets", "grantgiveawaytickets", "guessgiveaway", "getgiveawayentries", "removegiveawayentry"].indexOf(action) !== -1;
 }
-function handleGiveawayAction(action, value) {
+async function handleGiveawayAction(action, value, actor) {
     if (settings.disablehost) return { ok: false, error: "Host controls are disabled." };
     try {
-        var config = value;
-        if (action === "startgiveaway" && (!config || typeof config !== "object")) {
-            config = {
+        value = value && typeof value === 'object' ? Object.assign({}, value) : {};
+        if (action === "startgiveaway" && !value.config) {
+            value.config = Object.prototype.hasOwnProperty.call(value, 'keyword') ? Object.assign({}, value) : {
                 keyword: settings.giveawayKeyword ? settings.giveawayKeyword.textsetting : "!enter",
                 match: settings.giveawayMatch ? settings.giveawayMatch.optionsetting : "exact",
                 membersOnly: getSettingFlag("giveawayMembersOnly"),
                 removeWinner: !getSettingFlag("giveawayRepeatWinners")
             };
         }
-        var state = getGiveawayHost().command(action, config);
-        if (action !== "getgiveawaystate") publishGiveawayState();
-        return { ok: true, giveaway: state };
+        var host = await getGiveawayHost();
+        if (action === 'listgiveaways') return {ok:true, giveaways:await host.list()};
+        if (action === 'getgiveawayhistory') return {ok:true, history:await host.history()};
+        if (action === 'getgiveawayentries') return host.entries(value.giveawayId,value.page);
+        var rules = value.config;
+        if ((rules && (rules.ticketCost || rules.prizePoints || rules.kind === 'coin') || action === 'buygiveawaytickets') && !isPointsSystemEnabled()) {
+            throw new Error('Enable SSN loyalty points before using paid tickets or point prizes.');
+        }
+        var result = await host.run(action, value, actor || value.actor);
+        if (['entergiveaway','buygiveawaytickets','grantgiveawaytickets','guessgiveaway'].includes(action)) {
+            giveawayPendingStates.set(result.giveaway.giveawayId,result.giveaway);
+            if(!giveawayBroadcastTimer)giveawayBroadcastTimer=setTimeout(function(){giveawayBroadcastTimer=null;var pending=Array.from(giveawayPendingStates.values());giveawayPendingStates.clear();pending.forEach(s=>publishGiveawayState(s));},150);
+        } else {giveawayPendingStates.delete(result.giveaway.giveawayId);await publishGiveawayState(result.giveaway);}
+        try {if (typeof window.requestPointsLeaderboardBroadcast === 'function') window.requestPointsLeaderboardBroadcast('giveaway');}catch(error){console.warn('Giveaway committed; leaderboard refresh failed',error);}
+        return result;
     } catch (error) { return { ok: false, error: error.message }; }
 }
-function processGiveawayEntry(message) {
-    if (!giveawayHost) return;
-    var host = getGiveawayHost();
-    if (!host.isOpen()) return;
+async function processGiveawayEntry(message) {
+    if (!message || !message.chatmessage || message.event || message.bot || message.private || message.history || message.replay || message.reflection || message.reload) return;
     if (message && message.textonly === false && typeof message.chatmessage === "string") message = Object.assign({}, message, { chatmessage: decodeAndCleanHtml(message.chatmessage) });
-    if (!host.ingest(message) || giveawayBroadcastTimer) return;
-    giveawayBroadcastTimer = setTimeout(publishGiveawayState, 150);
+    try {
+        var host = await getGiveawayHost(), rounds = await host.list();
+        var text = String(message.chatmessage || '').trim();
+        var ticket = text.match(/^!ticket\s+([a-zA-Z0-9_-]+)\s+(\d+)(?:\s+(heads|tails))?$/i);
+        var guess = text.match(/^!guess\s+([a-zA-Z0-9_-]+)\s+(\d+)$/i);
+        var matches = guess ? rounds.filter(r=>r.giveawayId===guess[1] && r.config.kind==='number') : ticket ? rounds.filter(r => r.giveawayId === ticket[1]) : rounds.filter(r => r.open && r.config.kind==='giveaway' && !r.config.ticketCost &&
+            (r.config.match === 'exact' ? text.toLowerCase() === r.keyword.toLowerCase() : text.toLowerCase().split(/\s+/).includes(r.keyword.toLowerCase())));
+        if (matches.length !== 1) return;
+        var round = matches[0];
+        var nativeId = message.meta && message.meta.messageId;
+        var operationId = nativeId ? 'chat:' + JSON.stringify([message.type,message.tid || '',nativeId,round.roundId]) : undefined;
+        var result = await handleGiveawayAction(guess ? 'guessgiveaway' : ticket ? 'buygiveawaytickets' : 'entergiveaway', {giveawayId:round.giveawayId,roundId:round.roundId,guess:guess ? Number(guess[2]) : undefined,count:ticket ? Number(ticket[2]) : 1,side:ticket && ticket[3] ? ticket[3].toLowerCase() : undefined,operationId:operationId}, message);
+        if (ticket && typeof sendMessageToTabs === 'function') sendMessageToTabs({response:'@' + message.chatname + ' ' + (result.ok ? 'Tickets accepted for ' + round.giveawayId + '.' : result.error),type:message.type,tid:message.tid,bot:true},false,null,false,false,false);
+    } catch (error) { console.warn('Giveaway entry failed', error); }
 }
 
 var timerState = {
