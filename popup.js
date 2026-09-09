@@ -3933,7 +3933,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "poll", path: "poll.html" },
     { id: "chatbot", path: "bot.html", linkPath: "chatbot.html" },
 	{ id: "cohost", path: "cohost.html", capability: true },
-    { id: "giveaway", path: "giveaway.html" },
+    { id: "giveaway", path: "giveaway.html", defaultParams: "&managed" },
     { id: "credits", path: "credits.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
     { id: "aiprompt", path: "aiprompt.html" },

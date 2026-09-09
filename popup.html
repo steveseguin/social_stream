@@ -13287,13 +13287,63 @@ input:checked + .slider:before {
 					<div class="help-warning">⚠️ <strong>Note:</strong> Community-contributed feature - may have occasional bugs.</div>
 				</div>
 				<h3>
-                    <span data-translate="giveaway-made">
-                       A giveaway made by a community member -- ⚠️ it's not yet considered "stable", so I may avoid this for now.
+                    <span data-translate="giveaway-tools-description">
+                       One giveaway pool with a winner card, name reel, or community wheel. Control entries and draws below or through the API / Stream Deck.
                     </span>
                 </h3>
                 <div id="giveaway" data-raw="" class="streaming_chat"><a href="" id="giveawaylink"></a></div>
 				<div id="giveaway-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
+            <div class="wrapper">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-giveaway-options" />
+                    <label class="collapsible-label" for="wrapper-giveaway-options"><span>&#127873; Giveaway Options</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group giveaway">
+                                <h3><span class="popup-control-icon" aria-hidden="true">&#9881;</span>Entry setup</h3>
+                                <div class="textInputContainer">
+                                    <input id="giveaway-keyword" class="textInput" type="text" maxlength="80" value="!enter" data-textsetting="giveawayKeyword" />
+                                    <label for="giveaway-keyword">Entry keyword</label>
+                                </div>
+                                <div class="textInputContainer">
+                                    <select id="giveaway-match" class="textInput" data-optionsetting="giveawayMatch"><option value="exact">Exact message</option><option value="word">Keyword anywhere (separate word)</option></select>
+                                    <label for="giveaway-match">Match messages</label>
+                                </div>
+                                <div><label class="switch"><input type="checkbox" data-setting="giveawayMembersOnly" aria-label="Only members can enter" /><span class="slider round"></span></label><span>Only members can enter</span></div>
+                                <div><label class="switch"><input type="checkbox" data-setting="giveawayRepeatWinners" aria-label="Allow repeat winners" /><span class="slider round"></span></label><span>Allow repeat winners</span></div>
+                                <p>One entry per user per platform. Entry changes apply when you open entries. Reset clears the pool and winners; closing entries preserves them.</p>
+                                <h3><span class="popup-control-icon" aria-hidden="true">&#127918;</span>Run giveaway</h3>
+                                <div class="giveaway-actions">
+                                    <button type="button" data-giveaway-action="startgiveaway">&#9654; Open entries</button>
+                                    <button type="button" data-giveaway-action="closegiveaway">&#9208; Close entries</button>
+                                    <button type="button" data-giveaway-action="drawgiveaway">&#127942; Draw winner</button>
+                                    <button type="button" data-giveaway-action="resetgiveaway">&#8634; Reset giveaway</button>
+                                    <button type="button" data-giveaway-action="getgiveawaystate">Refresh status</button>
+                                </div>
+                                <p id="giveaway-control-status" role="status" aria-live="polite">Select Refresh status to check the current pool.</p>
+                                <h3><span class="popup-control-icon" aria-hidden="true">&#127912;</span>Presentation</h3>
+                                <div class="textInputContainer">
+                                    <select id="giveaway-presentation" class="textInput" data-optionparam14="presentation"><option value="card">Winner card</option><option value="reel">Name reel</option><option value="wheel">Community wheel</option></select>
+                                    <label for="giveaway-presentation">Giveaway display</label>
+                                </div>
+                                <div class="textInputContainer">
+                                    <select id="giveaway-theme" class="textInput" data-optionparam14="theme"><option value="midnight">Midnight</option><option value="classic">Classic</option><option value="neon">Neon</option><option value="sunset">Sunset</option><option value="casino">Casino</option><option value="mono">Mono</option></select>
+                                    <label for="giveaway-theme">Style</label>
+                                </div>
+                                <div class="textInputContainer"><input id="giveaway-title" class="textInput" type="text" placeholder="Giveaway" data-textparam14="title" /><label for="giveaway-title">Display title</label></div>
+                                <div><button type="button" id="giveaway-preview" class="tts-test-button">&#9654; Preview display</button></div>
+                                <details><summary>Advanced and integrations</summary>
+                                    <p>Keep SSN running: the host owns the pool, so all open giveaway displays show the same result. Restarting SSN or changing sessions clears the pool. Preview uses sample names only.</p>
+                                    <p>API / Stream Deck actions: <code>startgiveaway</code>, <code>closegiveaway</code>, <code>drawgiveaway</code>, <code>resetgiveaway</code>, <code>getgiveawaystate</code>.</p>
+                                    <p><a href="docs/polls-giveaways-waitlists-guide.html#giveaway" target="_blank" rel="noopener noreferrer">Giveaway setup and API guide</a> &middot; <a href="#waitlist">Existing Wait List / Winner Draw</a></p>
+                                </details>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 
 
 			<div class="link" title="Polling system">
@@ -16175,6 +16225,7 @@ input:checked + .slider:before {
         <script src="shared/stickers/popup.js"></script>
 <script src="shared/monetization/core.js"></script>
 <script src="shared/monetization/popup.js"></script>
+<script src="shared/giveaway/popup.js"></script>
 <script src="shared/audience-room/popup.js"></script>
         <script type="text/javascript" src="spotify-auth-helper.js"></script>
     </body>

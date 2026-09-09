@@ -7206,6 +7206,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if (request.cmd && request.cmd === "livestatssaveStop") {
 			sendResponse({ state: isExtensionOn });
 			await overwriteLiveStatsFile("stop");
+		} else if (isGiveawayAction(request.cmd)) {
+			sendResponse(handleGiveawayAction(request.cmd, request.value));
+			return;
 		} else if (request.cmd && request.cmd === "selectwinner") {
 			////console.logrequest);
 			if ("value" in request) {
@@ -8121,6 +8124,7 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 		console.error(e);
 	}
 	try {
+		processGiveawayEntry(message);
 		if (settings.pollEnabled) {
 			sendTargetP2P(message, "poll");
 		}
@@ -11023,6 +11027,10 @@ async function handleStreamDeckBackgroundRequest(request) {
 		sendDataP2P(historyClearedPayload);
 		return router.makeResponse(request, clearHistoryResult);
 	}
+	if (isGiveawayAction(action)) {
+		const result = handleGiveawayAction(action, request.value);
+		return result.ok ? router.makeResponse(request, result) : router.makeError(request, "GIVEAWAY_ERROR", result.error);
+	}
 	if (action === "getpollpresets") {
 		const presets = await new Promise(resolve => getPollPresets(resolve));
 		return router.makeResponse(request, presets);
@@ -11362,6 +11370,8 @@ function setupSocket() {
 			} else if (data.action === "commerceControl" && !settings.disablehost && window.handleMonetizationRequest) {
                 window.handleMonetizationRequest({ action: 'commerceControl', command: data.command, url: data.url, seconds: data.seconds });
                 resp = true;
+            } else if (isGiveawayAction(data.action)) {
+                resp = handleGiveawayAction(data.action, data.value);
             } else if (data.action && data.action === "resetpoll") {
 				sendTargetP2P({ cmd: "resetpoll" }, "poll");
 				resp = true;
@@ -13307,6 +13317,52 @@ function broadcastLeaderboardReset() {
 	}
 }
 
+var giveawayHost = null;
+var giveawayHostSession = null;
+var giveawayBroadcastTimer = null;
+function getGiveawayHost() {
+    if (!giveawayHost || giveawayHostSession !== streamID) {
+        giveawayHostSession = streamID;
+        giveawayHost = SSNGiveaway.create({ crypto: window.crypto });
+    }
+    return giveawayHost;
+}
+function publishGiveawayState() {
+    if (giveawayBroadcastTimer) clearTimeout(giveawayBroadcastTimer);
+    giveawayBroadcastTimer = null;
+    var payload = { event: "giveaway_state", meta: { giveaway: getGiveawayHost().snapshot() } };
+    sendTargetP2P(payload, "giveaway");
+    if (settings.server2 && socketserverDock && socketserverDock.readyState === WebSocket.OPEN) socketserverDock.send(JSON.stringify(payload));
+}
+function isGiveawayAction(action) {
+    return ["startgiveaway", "closegiveaway", "drawgiveaway", "resetgiveaway", "getgiveawaystate"].indexOf(action) !== -1;
+}
+function handleGiveawayAction(action, value) {
+    if (settings.disablehost) return { ok: false, error: "Host controls are disabled." };
+    try {
+        var config = value;
+        if (action === "startgiveaway" && (!config || typeof config !== "object")) {
+            config = {
+                keyword: settings.giveawayKeyword ? settings.giveawayKeyword.textsetting : "!enter",
+                match: settings.giveawayMatch ? settings.giveawayMatch.optionsetting : "exact",
+                membersOnly: getSettingFlag("giveawayMembersOnly"),
+                removeWinner: !getSettingFlag("giveawayRepeatWinners")
+            };
+        }
+        var state = getGiveawayHost().command(action, config);
+        if (action !== "getgiveawaystate") publishGiveawayState();
+        return { ok: true, giveaway: state };
+    } catch (error) { return { ok: false, error: error.message }; }
+}
+function processGiveawayEntry(message) {
+    if (!giveawayHost) return;
+    var host = getGiveawayHost();
+    if (!host.isOpen()) return;
+    if (message && message.textonly === false && typeof message.chatmessage === "string") message = Object.assign({}, message, { chatmessage: decodeAndCleanHtml(message.chatmessage) });
+    if (!host.ingest(message) || giveawayBroadcastTimer) return;
+    giveawayBroadcastTimer = setTimeout(publishGiveawayState, 150);
+}
+
 var timerState = {
 	version: 1,
 	mode: "countdown",
@@ -14604,6 +14660,8 @@ async function initTransport(roomStreamID, pass = false) {
 						try {
 							initializeWaitlist();
 						} catch (e) {}
+					} else if (label === "giveaway") {
+						 publishGiveawayState();
 					} else if (label === "poll") {
 						try {
 							initializePoll();
@@ -14650,6 +14708,8 @@ async function initTransport(roomStreamID, pass = false) {
 							try {
 								initializeWaitlist();
 							} catch (e) {}
+						} else if (label === "giveaway") {
+						 publishGiveawayState();
 						} else if (label === "poll") {
 							try {
 								initializePoll();
@@ -15816,6 +15876,8 @@ eventer(messageEvent, async function (e) {
 						processTicker();
 					} else if (connectedPeers[e.data.UUID] == "waitlist") {
 						initializeWaitlist();
+					} else if (connectedPeers[e.data.UUID] == "giveaway") {
+						publishGiveawayState();
 					} else if (connectedPeers[e.data.UUID] == "poll") {
 						initializePoll();
 					} else if (connectedPeers[e.data.UUID] == "timer") {
@@ -15846,6 +15908,8 @@ eventer(messageEvent, async function (e) {
 						processTicker();
 					} else if (connectedPeers[e.data.UUID] == "waitlist") {
 						initializeWaitlist();
+					} else if (connectedPeers[e.data.UUID] == "giveaway") {
+						publishGiveawayState();
 					} else if (connectedPeers[e.data.UUID] == "poll") {
 						initializePoll();
 					} else if (connectedPeers[e.data.UUID] == "timer") {
