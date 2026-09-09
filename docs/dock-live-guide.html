@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Using the Dock during a stream - Social Stream Ninja</title>
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/guides.css">
+	<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Feature messages, prepare a queue, reply to viewers, and keep up with a busy chat.">
+<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="css/workflow-guides.css">
+</head>
+<body class="workflow-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation">
+<a href="../index.html">Home</a>
+<a href="../docs/features.html">Features</a>
+<a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a>
+<a href="../docs/download.html">Download</a>
+<a href="../docs/guides.html">Guides</a>
+<a href="../docs/commands.html">Commands &amp; API</a>
+<a href="../docs/supported-sites.html">Supported Sites</a>
+<a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a>
+<a href="../docs/services.html" class="site-priority-hire">Hire</a>
+<a href="../docs/support.html">Support</a>
+</nav>
+<div class="site-actions">
+<button class="site-theme" type="button" aria-label="Switch theme">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>Using the Dock during a stream</h1>
+<p>Feature messages, prepare a queue, reply to viewers, and keep up with a busy chat.</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="On this page">
+<a href="guides.html">All guides</a>
+<a href="#setup">1. Open your operator Dock</a>
+<a href="#feature">2. Feature and clear a message</a>
+<a href="#queue">3. Prepare your next questions</a>
+<a href="#reply">4. Reply to the right chat</a>
+<a href="#busy">5. Manage a busy chat</a>
+<a href="#check">Before going live</a>
+</nav>
+<section class="guide-card" id="setup">
+<h2>1. Open your operator Dock</h2>
+<p>Start with chat arriving in SSN. In the extension, open its popup; in the desktop app, open <strong>Sources and Settings</strong>. Open the generated <strong>Streaming Chat Dock</strong> link. Keep your source chats and SSN running.</p>
+<p>Add the generated <strong>Featured Chat</strong> link to OBS as a Browser Source, using the same session and password. The Dock is your control window; Featured Chat is the audience view. See <a href="obs-quick-start.html">OBS quick start</a> if those are not connected yet.</p>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>Capture</strong>
+<span>Your platform chats</span>
+</li>
+<li>
+<strong>Operate</strong>
+<span>Streaming Chat Dock</span>
+</li>
+<li>
+<strong>Display</strong>
+<span>Featured Chat in OBS</span>
+</li>
+</ol>
+<figcaption>The Dock selects the message. OBS displays the separate featured overlay.</figcaption>
+</figure>
+</section>
+<section class="guide-card" id="feature">
+<h2>2. Feature and clear a message</h2>
+<ol class="guide-steps">
+<li>Click a chat message in the Dock. It should appear in the connected featured overlay.</li>
+<li>Click another message to replace it.</li>
+<li>Use the broom button, <strong>Clear the featured message (not this chat)</strong>, to remove it from the overlay.</li>
+</ol>
+<p>If you enabled <strong>Must manually select via context-menu</strong>, right-click and use <strong>Feature</strong> instead. Turn off auto-feature when you want to review each message before showing it.</p>
+<figure class="guide-figure">
+<a href="images/guides/dock-live-controls.png">
+<img class="guide-image" src="images/guides/dock-live-controls.png" alt="Dock with sample chat and the bottom toolbar, including queue and clear-featured controls" loading="lazy">
+</a>
+<figcaption>Actual browser Dock, using fictional sample messages in an isolated preview. Hover over toolbar buttons to read their labels.</figcaption>
+</figure>
+</section>
+<section class="guide-card" id="queue">
+<h2>3. Prepare your next questions</h2>
+<ol class="guide-steps">
+<li>Hold <strong>Ctrl</strong> while clicking messages to add them to the queue, or right-click a message and select <strong>Toggle Queue</strong>.</li>
+<li>Look for the queue count in the bottom toolbar. Use <strong>Show only the messages in queue</strong> to review your picks.</li>
+<li>Use <strong>Feature next message in queue</strong> to advance. Toggle Queue again to remove an unwanted queued message.</li>
+</ol>
+<p>
+<strong>Pinning is separate:</strong> Alt-click or use the Pin context-menu action to keep a message in the Dock’s pinned area. Queuing prepares a sequence to feature.</p>
+</section>
+<section class="guide-card" id="reply">
+<h2>4. Reply to the right chat</h2>
+<p>Right-click the viewer’s message and select <strong>Reply</strong>. Check the recipient and enter your response, then select <strong>SEND</strong>. The source must support replies and be signed in with permission to post.</p>
+<div class="warning-note">
+<strong>Check the destination warning.</strong> If a message has no originating tab, the reply dialog warns that it will go to all destinations. Do not send a targeted reply from that dialog until the routing is right.</div>
+<p>The general speech-bubble toolbar button opens the send-message controls. Review its destinations before sending. A successful incoming capture does not prove outgoing replies work. For separate sender accounts, see <a href="twitch-bot-account-chatbot.html">Bot accounts for replies</a>.</p>
+</section>
+<section class="guide-card" id="busy">
+<h2>5. Manage a busy chat</h2>
+<table class="guide-table guide-table-stack">
+<thead>
+<tr>
+<th scope="col">Control</th>
+<th scope="col">Use it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td data-label="Control">Pause / Play incoming chat</td>
+<td data-label="Use it for">Pause the Dock display while reading; resume to process its buffered messages. This does not stop source capture or other overlays.</td>
+</tr>
+<tr>
+<td data-label="Control">Filter</td>
+<td data-label="Use it for">Find relevant messages; clear the filter to return to the full view.</td>
+</tr>
+<tr>
+<td data-label="Control">Donations / Members filters</td>
+<td data-label="Use it for">Temporarily narrow the displayed chat. Turn these off if normal messages seem missing.</td>
+</tr>
+<tr>
+<td data-label="Control">Back to live / Scroll to bottom</td>
+<td data-label="Use it for">Return to recent messages after reading older chat.</td>
+</tr>
+</tbody>
+</table>
+<p>Keep <strong>Exclude filtered messages from auto-selecting</strong> enabled if you use automatic featuring with filters. A viewing filter alone is not a moderation policy. See <a href="moderation-filtering-guide.html">Moderation and filtering</a>.</p>
+</section>
+<section class="guide-card" id="check">
+<h2>Before going live</h2>
+<p>Using <a href="test-message-guide.html">test messages</a>, feature one message, queue two more, advance once, and clear the overlay. If the Dock works but OBS stays blank, check the saved OBS URL, session/password, and that the featured Browser Source is loaded. See <a href="obs-troubleshooting.html">OBS troubleshooting</a>.</p>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">Browse all guides</a>
+</p>
+</div>
+</div>
+</footer>
+<script src="js/main.js">
+</script>
+</body>
+</html>

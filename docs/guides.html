@@ -104,6 +104,7 @@
 						<li><a href="../docs/obs-quick-start.html"><i class="fas fa-desktop" aria-hidden="true"></i><span><strong>OBS quick start</strong><small>Session, dock, overlay, browser source.</small></span></a></li>
 						<li><a href="../docs/sessions-passwords-relay-modes.html"><i class="fas fa-key" aria-hidden="true"></i><span><strong>Sessions, passwords, and server fallback</strong><small>Keep source, Dock, overlay, read, and reply routing aligned.</small></span></a></li>
 						<li><a href="../docs/platform-setup-picker.html"><i class="fas fa-map-signs" aria-hidden="true"></i><span><strong>Platform setup picker</strong><small>Choose browser, popout, app, or source page.</small></span></a></li>
+						<li><a href="../lite/guide.html"><i class="fas fa-feather" aria-hidden="true"></i><span><strong>Lite setup</strong><small>Capture supported chats from a browser or OBS without installing the full app.</small></span></a></li>
 						<li><a href="../docs/standalone-app-modes.html"><i class="fas fa-window-restore" aria-hidden="true"></i><span><strong>Standalone app modes</strong><small>Standard, WebSocket, TikTok presets, source windows.</small></span></a></li>
 						<li><a href="../docs/local-services-guide.html"><i class="fas fa-network-wired" aria-hidden="true"></i><span><strong>Local servers and services</strong><small>Choose the local relay, automation API, headless hosting, or media service.</small></span></a></li>
 						<li><a href="../docs/ssapp.html"><i class="fas fa-book-open" aria-hidden="true"></i><span><strong>Desktop app walkthrough</strong><small>Video guide, first source, key features, and help.</small></span></a></li>
@@ -111,6 +112,17 @@
 						<li><a href="../docs/vdo-native-social-stream-guide.html"><i class="fas fa-mobile-alt" aria-hidden="true"></i><span><strong>VDO native app + SSN</strong><small>Send SSN chat into the VDO.Ninja mobile app.</small></span></a></li>
 						<li><a href="#extension-getting-started"><i class="fas fa-puzzle-piece" aria-hidden="true"></i><span><strong>Browser extension setup</strong><small>Open chat, dock, and overlay links.</small></span></a></li>
 						<li><a href="#standalone-getting-started"><i class="fas fa-window-restore" aria-hidden="true"></i><span><strong>Desktop app setup</strong><small>Managed source windows instead of tabs.</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary><span class="guide-tree-title"><i class="fas fa-broadcast-tower" aria-hidden="true"></i> Running Your Stream</span><small>Dock controls, moderation, relays, and participation</small></summary>
+					<ul>
+						<li><a href="dock-live-guide.html"><i class="fas fa-columns" aria-hidden="true"></i><span><strong>Using the Dock during a stream</strong><small>Feature, clear, queue, pin, reply, and manage busy chat.</small></span></a></li>
+						<li><a href="moderation-filtering-guide.html"><i class="fas fa-shield-alt" aria-hidden="true"></i><span><strong>Moderation and message filtering</strong><small>Users, words, bots, commands, and global versus page filters.</small></span></a></li>
+						<li><a href="chat-relay-guide.html"><i class="fas fa-exchange-alt" aria-hidden="true"></i><span><strong>Relay chat between platforms</strong><small>Twitch and YouTube flows, sender accounts, and echo troubleshooting.</small></span></a></li>
+						<li><a href="polls-giveaways-waitlists-guide.html"><i class="fas fa-vote-yea" aria-hidden="true"></i><span><strong>Polls, giveaways, and waitlists</strong><small>Run a vote, draw a winner, or advance a viewer queue.</small></span></a></li>
+						<li><a href="loyalty-points-guide.html"><i class="fas fa-coins" aria-hidden="true"></i><span><strong>Loyalty points and rewards</strong><small>Earning, balances, sticker redemptions, and points backups.</small></span></a></li>
+						<li><a href="multiple-overlays-guide.html"><i class="fas fa-layer-group" aria-hidden="true"></i><span><strong>Multiple channels and separate overlays</strong><small>One operator Dock with separate platform and source views.</small></span></a></li>
 					</ul>
 				</details>
 				<details class="guide-tree-group">
@@ -140,6 +152,7 @@
 						<small>API, commands, Event Flow, webhooks</small>
 					</summary>
 					<ul>
+						<li><a href="../streamdeck/index.html"><i class="fas fa-th" aria-hidden="true"></i><span><strong>Stream Deck setup</strong><small>Install the plugin, connect your session, and test a control.</small></span></a></li>
 						<li><a href="../docs/thermal-printer-guide.html"><i class="fas fa-print" aria-hidden="true"></i><span><strong>Thermal printers and stream labels</strong><small>Print names, donations, purchases, receipts, and fixed-size stickers from Event Flow.</small></span></a></li>
 						<li><a href="sticker-gallery.html"><i class="fas fa-star" aria-hidden="true"></i><span><strong>Sticker packs and loyalty rewards</strong><small>Preview six packs; set point prices, cooldowns, custom images, and GIPHY GIF rewards.</small></span></a></li>
 						<li><a href="../docs/local-services-guide.html"><i class="fas fa-network-wired" aria-hidden="true"></i><span><strong>Local servers and services</strong><small>Understand which SSApp local service matches your goal.</small></span></a></li>
@@ -623,7 +636,7 @@
 					</ol>
 
 					<div class="guide-note">
-						<p><strong>Important:</strong> Enable "No Reflections" when relaying chat to prevent infinite echo loops. For detailed documentation, see the <a href="../actions/event-flow-guide.html">Event Flow Guide</a>. For Kick reward sounds or media, use the <a href="index.html?file=kick-channel-points-event-flow.md">Kick Channel Points / Rewards guide</a>.</p>
+						<p><strong>Important:</strong> Current Relay Chat actions skip recognized reflections automatically. Use a <strong>Reflection Filter</strong> node to control whether captured echoes appear in the Dock and overlays. See the <a href="chat-relay-guide.html">chat relay walkthrough</a> for setup. For detailed documentation, see the <a href="../actions/event-flow-guide.html">Event Flow Guide</a>. For Kick reward sounds or media, use the <a href="index.html?file=kick-channel-points-event-flow.md">Kick Channel Points / Rewards guide</a>.</p>
 					</div>
 				</div>
 

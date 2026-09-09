@@ -116,6 +116,12 @@
 		createpoll: true,
 		resetpoll: true,
 		closepoll: true,
+		startgiveaway: true,
+		closegiveaway: true,
+		drawgiveaway: true,
+		resetgiveaway: true,
+		getgiveawaystate: true,
+
 		startmap: true,
 		pausemap: true,
 		resetmap: true,
@@ -126,6 +132,12 @@
 	};
 
 	const REMOTE_SSN_ACTION_DESCRIPTORS = {
+		startgiveaway: { owner: "background", phase: 2, category: "giveaway", label: "Open giveaway entries", risk: "mutating", callback: "guaranteed" },
+		closegiveaway: { owner: "background", phase: 2, category: "giveaway", label: "Close giveaway entries", risk: "mutating", callback: "guaranteed" },
+		drawgiveaway: { owner: "background", phase: 2, category: "giveaway", label: "Draw giveaway winner", risk: "mutating", callback: "guaranteed" },
+		resetgiveaway: { owner: "background", phase: 2, category: "giveaway", label: "Reset giveaway", risk: "mutating", callback: "guaranteed" },
+		getgiveawaystate: { owner: "background", phase: 2, category: "giveaway", label: "Get giveaway state", risk: "read-only", callback: "guaranteed" },
+
         getCommerceState: { owner: "background", phase: 2, category: "commerce", label: "Get product display state", risk: "read-only", callback: "guaranteed" },
 		commerceShow: { owner: "background", phase: 2, category: "commerce", label: "Show product", risk: "mutating", callback: "guaranteed" },
 		commerceNext: { owner: "background", phase: 2, category: "commerce", label: "Next product", risk: "mutating", callback: "guaranteed" },
