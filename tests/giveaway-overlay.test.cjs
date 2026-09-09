@@ -21,6 +21,12 @@ const os=require('node:os');
    assert.equal(await page.locator('.giveaway-result img').count(),0);
    await page.screenshot({path:path.join(os.tmpdir(),'ssn-giveaway-'+presentation+'.png')});
    assert.deepEqual(errors,[],presentation);
+   if(presentation==='wheel') {
+    await page.setViewportSize({width:1280,height:720});
+    await page.waitForTimeout(250);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight),true,'Managed wheel fits a 720p source');
+    assert.equal(await page.locator('#wheel-canvas').evaluate(el=>el.getBoundingClientRect().bottom<=innerHeight),true,'Entire wheel remains visible');
+   }
    // Reset during a reveal must not let a stale timer announce the old winner.
    await page.evaluate(()=>window.dispatchEvent(new MessageEvent('message',{source:iframe.contentWindow,data:{dataReceived:{overlayNinja:{event:'giveaway_state',meta:{giveaway:{epoch:'preview',revision:3,draw:0,open:false,keyword:'!enter',count:0,entrants:[],winners:[]}}}}}})));
    assert.equal(await page.locator('.giveaway-result').textContent(),'Good luck!');
