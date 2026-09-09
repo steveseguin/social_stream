@@ -13331,6 +13331,7 @@ var giveawayHostSession = null;
 var giveawayBroadcastTimer = null;
 var giveawayPendingStates = new Map();
 var giveawayRouting = new Map();
+var giveawayCaptureEpoch = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
 async function getGiveawayHost() {
     await window.pointsSystemReady();
     if (!giveawayHost || giveawayHostSession !== streamID) {
@@ -13361,6 +13362,7 @@ async function handleGiveawayAction(action, value, actor) {
     if (settings.disablehost) return { ok: false, error: "Host controls are disabled." };
     try {
         value = value && typeof value === 'object' ? Object.assign({}, value) : {};
+        var useStoredRules = action === 'startgiveaway' && !value.config && !Object.prototype.hasOwnProperty.call(value,'keyword');
         if (action === "startgiveaway" && !value.config) {
             value.config = Object.prototype.hasOwnProperty.call(value, 'keyword') ? Object.assign({}, value) : {
                 keyword: settings.giveawayKeyword ? settings.giveawayKeyword.textsetting : "!enter",
@@ -13370,6 +13372,11 @@ async function handleGiveawayAction(action, value, actor) {
             };
         }
         var host = await getGiveawayHost();
+        if(useStoredRules){
+            var current=(await host.run('getgiveawaystate',{giveawayId:value.giveawayId})).giveaway;
+            if(current.roundId)value.config=current.config;
+            else Object.assign(value.config,{ticketCost:getNumericSettingValue('giveawayCost',0),maxTickets:getNumericSettingValue('giveawayLimit',100),prizePoints:getNumericSettingValue('giveawayPrize',0),winnerCount:getNumericSettingValue('giveawayWinners',1),kind:settings.giveawayKind ? settings.giveawayKind.optionsetting : 'giveaway'});
+        }
         if (action === 'listgiveaways') return {ok:true, giveaways:await host.list()};
         if (action === 'getgiveawayhistory') return {ok:true, history:await host.history()};
         if (action === 'getgiveawayentries') return await host.entries(value.giveawayId,value.page);
@@ -13400,9 +13407,11 @@ async function processGiveawayEntry(message) {
             (r.config.match === 'exact' ? text.toLowerCase() === r.keyword.toLowerCase() : text.toLowerCase().split(/\s+/).includes(r.keyword.toLowerCase())));
         if (matches.length !== 1) return;
         var round = matches[0];
+        if(message.meta && Array.isArray(message.meta.giveawayHandled) && message.meta.giveawayHandled.includes(round.giveawayId))return;
         var nativeId = message.meta && message.meta.messageId;
-        var operationId = nativeId ? 'chat:' + JSON.stringify([message.type,message.tid || '',nativeId,round.roundId]) : undefined;
-        var result = await handleGiveawayAction(guess ? 'guessgiveaway' : ticket ? 'buygiveawaytickets' : 'entergiveaway', {giveawayId:round.giveawayId,roundId:round.roundId,guess:guess ? Number(guess[2]) : undefined,count:ticket ? Number(ticket[2]) : 1,side:ticket && ticket[3] ? ticket[3].toLowerCase() : undefined,operationId:operationId}, message);
+        var sourceKey=nativeId ? 'native:'+nativeId : message.id!=null ? 'capture:'+giveawayCaptureEpoch+':'+message.id : null;
+        var operationId = sourceKey ? 'chat:' + JSON.stringify([message.type,message.userid || message.chatname,sourceKey,round.roundId]) : undefined;
+        var result = ticket && !sourceKey ? {ok:false,error:'This source did not provide a message ID. No points spent.'} : await handleGiveawayAction(guess ? 'guessgiveaway' : ticket ? 'buygiveawaytickets' : 'entergiveaway', {giveawayId:round.giveawayId,roundId:round.roundId,guess:guess ? Number(guess[2]) : undefined,count:ticket ? Number(ticket[2]) : 1,side:ticket && ticket[3] ? ticket[3].toLowerCase() : undefined,operationId:operationId}, message);
         if (ticket && typeof sendMessageToTabs === 'function') sendMessageToTabs({response:'@' + message.chatname + ' ' + (result.ok ? 'Tickets accepted for ' + round.giveawayId + '.' : result.error),type:message.type,tid:message.tid,bot:true},false,null,false,false,false);
     } catch (error) { console.warn('Giveaway entry failed', error); }
 }

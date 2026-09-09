@@ -318,8 +318,8 @@ class PointsActions {
             };
         }
         
-        const amount = parseInt(args[0], 10);
-        if (isNaN(amount) || amount <= 0) {
+        const amount = Number(args[0]);
+        if (!Number.isFinite(amount) || amount <= 0) {
             return {
                 success: false,
                 message: `@${message.chatname}, please provide a valid amount to spend`,
