@@ -90,12 +90,28 @@ function toDataURL(url, callback) {
 				"[class^='ChatUserMessage_userName__']",
 				"[class^='ChatUserMessage_repeatUser__'] [class^='ChatUserMessage_userName__']",
 				"[class^='ChatUserMessage_user__'] > :not([class^='ChatUserMessage_userBadges'])"
-			]);
+			]) || getChatUserMessagePart(ele, "userName");
 			if (chatnameNode){
 				chatname = escapeHtml((chatnameNode.textContent || "").trim());
 			}
 		} catch(e){}
 		return chatname;
+	}
+
+	function getChatUserMessagePart(root, part) {
+		// Owncast 0.3 uses Turbopack: ChatUserMessage-module-scss-module__HASH__part.
+		// Match individual class tokens so extra classes and changing hashes are harmless.
+		var nodes = root.querySelectorAll("[class*='ChatUserMessage-module']");
+		var suffix = "__" + part;
+		for (var i = 0; i < nodes.length; i++) {
+			for (var j = 0; j < nodes[i].classList.length; j++) {
+				var token = nodes[i].classList[j];
+				if (token.indexOf("ChatUserMessage-module") === 0 && token.slice(-suffix.length) === suffix) {
+					return nodes[i];
+				}
+			}
+		}
+		return null;
 	}
 
 	function getChatMessage(ele) {
@@ -105,7 +121,7 @@ function toDataURL(url, callback) {
 				"[class^='ChatUserMessage_message__']",
 				".ChatUserMessage_message__JJiP9",
 				".message-text"
-			]);
+			]) || getChatUserMessagePart(ele, "message");
 			if (messageNode){
 				chatmessage = getAllContentNodes(messageNode);
 			}
@@ -178,7 +194,9 @@ function toDataURL(url, callback) {
 	  
 	  var chatbadges = [];
 	  
-	  ele.querySelectorAll("[class^='ChatUserMessage_userBadges'] svg, [class^='ChatUserMessage_userBadges'] img").forEach(badge=>{
+	  var badgeContainer = ele.querySelector("[class^='ChatUserMessage_userBadges']") || getChatUserMessagePart(ele, "userBadges");
+	  var badges = badgeContainer ? badgeContainer.querySelectorAll("svg, img") : [];
+	  badges.forEach(badge=>{
 		try {
 			if (badge && badge.nodeName == "IMG"){
 				var tmp = {};

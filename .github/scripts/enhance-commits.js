@@ -439,44 +439,11 @@ ${recentCommitLines}
  * @param {string} newMessage - The new commit message.
  * @returns {Promise<boolean>} - True if successful, false otherwise.
  */
-async function updateCommitMessage(newMessage) {
-  log('info', 'Updating commit message...');
-  const tempFilePath = path.join(process.cwd(), `.git-commit-msg-${Date.now()}.tmp`); 
-
-  try {
-    try {
-        await runCommand('git config user.name');
-        await runCommand('git config user.email');
-        log('debug', 'Git user already configured.');
-    } catch {
-        log('info', 'Configuring Git user for commit amend...');
-        await runCommand('git config --global user.name "GitHub Action (Commit Enhancer)"');
-        await runCommand('git config --global user.email "actions@github.com"');
-    }
-
-    log('debug', `Writing new commit message to temporary file: ${tempFilePath}`);
-    const finalMessage = `${newMessage}\n\n[auto-enhanced]`; 
-    await fs.writeFile(tempFilePath, finalMessage);
-
-    log('info', 'Amending commit with new message...');
-    await runCommand(`git commit --amend -F "${tempFilePath}"`); 
-
-    log('info', 'Force-pushing amended commit (with --no-verify)...');
-    await runCommand('git push --force --no-verify');
-
-    log('info', 'Commit amended and pushed successfully.');
-    return true;
-  } catch (error) {
-    log('error', 'Failed to update commit message and push.');
-    return false;
-  } finally {
-    try {
-      log('debug', `Cleaning up temporary file: ${tempFilePath}`);
-      await fs.unlink(tempFilePath);
-    } catch (cleanupError) {
-      log('warn', `Failed to delete temporary commit message file: ${tempFilePath}`, { error: cleanupError.message });
-    }
-  }
+async function updateCommitMessage(newMessage, expectedSha, branchName) {
+  const { amendAndPush } = require('./safe-commit-push.cjs');
+  const pushed = await amendAndPush(newMessage, expectedSha, branchName);
+  if (!pushed) log('info', 'Enhancement skipped because the remote branch changed.');
+  return true; // A protected skip is a successful no-op.
 }
 
 // --- PR Description Update (Optional) ---
@@ -682,7 +649,7 @@ async function main() {
     }
 
     // Update the commit message and force push
-    const updated = await updateCommitMessage(enhancedMessage);
+    const updated = await updateCommitMessage(enhancedMessage, commitSha, branchName);
 
     if (updated) {
       log('info', 'Commit message enhanced and pushed successfully.');

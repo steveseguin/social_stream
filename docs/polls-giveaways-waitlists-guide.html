@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Polls, giveaways, and waitlists - Social Stream Ninja</title>
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/guides.css">
+	<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Run a chat vote, draw a winner, or organize the next viewers to participate.">
+<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="css/workflow-guides.css">
+</head>
+<body class="workflow-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation">
+<a href="../index.html">Home</a>
+<a href="../docs/features.html">Features</a>
+<a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a>
+<a href="../docs/download.html">Download</a>
+<a href="../docs/guides.html">Guides</a>
+<a href="../docs/commands.html">Commands &amp; API</a>
+<a href="../docs/supported-sites.html">Supported Sites</a>
+<a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a>
+<a href="../docs/services.html" class="site-priority-hire">Hire</a>
+<a href="../docs/support.html">Support</a>
+</nav>
+<div class="site-actions">
+<button class="site-theme" type="button" aria-label="Switch theme">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>Polls, giveaways, and waitlists</h1>
+<p><a href="giveaway-points-guide.html">Giveaways, paid tickets, game prizes and recovery guide</a></p>
+<p>Run a chat vote, draw a winner, or organize the next viewers to participate.</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="On this page">
+<a href="guides.html">All guides</a>
+<a href="#choose">1. Choose the tool</a>
+<a href="#poll">2. Run a multiple-choice poll</a>
+<a href="#draw">3. Draw a winner</a>
+<a href="#queue">4. Run a viewer queue</a>
+<a href="#check">5. Rehearse and recover</a>
+</nav>
+<section class="guide-card" id="choose">
+<h2>1. Choose the tool</h2>
+<table class="guide-table guide-table-stack">
+<thead>
+<tr>
+<th scope="col">Goal</th>
+<th scope="col">Open in SSN</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td data-label="Goal">Let chat vote on the next activity</td>
+<td data-label="Open in SSN">
+<strong>Graphical Poll → Poll Options</strong>
+</td>
+</tr>
+<tr>
+<td data-label="Goal">Pick a random entrant</td>
+<td data-label="Open in SSN">
+<strong>Wait List / Winner Draw</strong>, with winner-draw mode enabled</td>
+</tr>
+<tr>
+<td data-label="Goal">Take viewers in queue order</td>
+<td data-label="Open in SSN">
+<strong>Wait List / Winner Draw</strong>, with winner-draw mode disabled</td>
+</tr>
+</tbody>
+</table>
+<p>Use the generated link from that section as an OBS Browser Source. Keep SSN and your chat sources active, and preserve the link’s session, password, and server options. The <strong>Giveaway Tool</strong> offers a separate pool with winner-card, name-reel, and community-wheel presentations. Use its Giveaway Options panel for dedicated giveaway controls; Wait List / Winner Draw remains available independently.</p>
+</section>
+<section class="guide-card" id="poll">
+<h2>2. Run a multiple-choice poll</h2>
+<ol class="guide-steps">
+<li>Open <strong>Graphical Poll → Poll Options</strong>. Set <strong>Poll Type</strong> to <strong>Multiple Choice</strong>.</li>
+<li>Enter <strong>What should we play next?</strong> as the question and <code>Adventure, Puzzle</code> as the comma-separated options. Set <strong>Vote Matching</strong> to <strong>Exact vote only</strong>.</li>
+<li>Leave <strong>Allow multiple votes per user</strong> and <strong>Donation-weighted voting</strong> off for a simple one-vote poll. Turn on <strong>Enable Poll</strong>.</li>
+<li>Copy the generated poll link into OBS. Ask viewers to send <code>1</code> or <code>2</code> as their whole message. Matching option text also works.</li>
+<li>Select <strong>End Poll</strong> to close voting. Note the result before selecting <strong>Reset Poll</strong> for another round.</li>
+</ol>
+<figure class="guide-figure">
+<a href="images/guides/poll-guide-preview.png">
+<img class="guide-image" src="images/guides/poll-guide-preview.png" alt="Graphical poll with Adventure and Puzzle options and fictional sample votes" loading="lazy">
+</a>
+<figcaption>Actual poll page with sample votes. This is a preview, not a live audience result.</figcaption>
+</figure>
+<p>Free-form polls accept hashtag votes; <strong>Hashtag anywhere</strong> allows a hashtag within a longer message. <strong>Save Current Poll</strong> saves a preset for reuse; it is not a permanent record of audience results. Repeated votes from the same voter are ignored unless multiple votes are enabled.</p>
+</section>
+<section class="guide-card" id="giveaway"><h2>Dedicated giveaway tools</h2>
+<p>Open <strong>Giveaway Tool &rarr; Giveaway Options</strong>. Set the entry keyword, choose exact-message or separate-word matching, and optionally restrict entries to members. Click <strong>Open entries</strong>, then <strong>Draw winner</strong> when ready. Drawing closes entries automatically. Open entries again to resume the same pool; Reset clears entries and winner history and leaves entries closed.</p>
+<p>Choose <strong>Winner card</strong>, <strong>Name reel</strong>, or <strong>Community wheel</strong>, and one of six styles. Preview uses fictional names and never joins your session. Copy the generated <code>giveaway.html?session=YOUR_SESSION&amp;managed</code> link into OBS. The managed audience display contains no operator controls or session details. Style and title are link settings; entry rules are host settings applied when entries open.</p>
+<p>All managed displays share the host's pool and selected winner. Selection uses secure random numbers with equal odds per eligible entry. Identity is deduplicated within each platform using the supplied user ID, username, or display name; different platforms are separate identities. Winners cannot re-enter until reset unless repeat winners are allowed. The pool holds up to 10,000 entries; the wheel illustrates a sample of up to 120 names for large pools, but selection always uses the entire eligible pool.</p>
+<p>Keep SSN running. The pool is held in host memory and clears on restart or session change. Refreshing an audience page receives the current result. Membership restrictions require sources that supply membership information. Historical, replayed, private, bot, and event-only messages are excluded. Entry text must contain the configured keyword; donation value does not change odds.</p>
+<h3>API, Stream Deck, and Event Flow</h3>
+<p>The same host actions serve popup buttons, the existing HTTP/WebSocket API, and Stream Deck's generic SSN action interface. No giveaway display needs to be open to collect entries or draw. Use the existing Event Flow Webhook action with your SSN API endpoint to automate these commands.</p>
+<table class="guide-table"><thead><tr><th>Action</th><th>Effect</th></tr></thead><tbody>
+<tr><td><code>startgiveaway</code></td><td>Open or resume entries. Optional value: <code>{"keyword":"!enter","match":"exact","membersOnly":false,"removeWinner":true}</code>. Without a value, use popup entry settings.</td></tr>
+<tr><td><code>closegiveaway</code></td><td>Close entries and retain the pool.</td></tr>
+<tr><td><code>drawgiveaway</code></td><td>Close entries and select one eligible winner. Returns an error for an empty pool.</td></tr>
+<tr><td><code>resetgiveaway</code></td><td>Clear entries and winners; leave entries closed.</td></tr>
+<tr><td><code>getgiveawaystate</code></td><td>Read entry count, open/closed state, entry rules, and recent winners.</td></tr>
+</tbody></table>
+<pre>{"action":"drawgiveaway","get":"draw-1"}</pre>
+<p>Protocol 2 Stream Deck requests use the same action names and receive correlated host responses. These responses describe giveaway state, not OBS visibility. The older standalone community wheel remains available by omitting <code>managed</code>; it has its own local pool and is not controlled by these host actions. Its local storage is now scoped by session and password, exact matching means the whole message, and its draw uses secure randomness.</p></section><section class="guide-card" id="draw">
+<h2>3. Draw a winner</h2>
+<ol class="guide-steps">
+<li>Open <strong>Wait List / Winner Draw → Enable and customize</strong>. Enable the trigger and set a clear command such as <code>!join</code>.</li>
+<li>Turn on <strong>Configure as winner-draw mode instead of queue</strong>. Copy the updated link to the OBS Browser Source.</li>
+<li>Tell viewers the entry command and any eligibility rule. If using <strong>Only members can enter</strong>, first check that the source supplies membership information.</li>
+<li>Watch the entry count increase. Select <strong>Stop entries</strong> when the entry period ends, then <strong>Select winner</strong>.</li>
+<li>Use <strong>Download list</strong> to retain entries before <strong>Reset draw</strong> clears the round.</li>
+</ol>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>Open entries</strong>
+<span>Viewers type !join</span>
+</li>
+<li>
+<strong>Stop entries</strong>
+<span>Close the pool</span>
+</li>
+<li>
+<strong>Select winner</strong>
+<span>Display the selection</span>
+</li>
+<li>
+<strong>Reset draw</strong>
+<span>Clear for another round</span>
+</li>
+</ol>
+<figcaption>Close entry collection before drawing. Save the list before clearing it.</figcaption>
+</figure>
+</section>
+<section class="guide-card" id="queue">
+<h2>4. Run a viewer queue</h2>
+<p>Use the same waitlist setup, but turn winner-draw mode off and copy its updated URL. Viewers join using your configured command.</p>
+<table class="guide-table guide-table-stack">
+<thead>
+<tr>
+<th scope="col">Button</th>
+<th scope="col">What to do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td data-label="Button">Highlight top entry</td>
+<td data-label="What to do">Call attention to the next viewer.</td>
+</tr>
+<tr>
+<td data-label="Button">Remove top entry</td>
+<td data-label="What to do">Advance after that viewer has taken their turn.</td>
+</tr>
+<tr>
+<td data-label="Button">Select a name</td>
+<td data-label="What to do">Make a random selection rather than following queue order.</td>
+</tr>
+<tr>
+<td data-label="Button">Stop entries</td>
+<td data-label="What to do">Close the queue to new arrivals.</td>
+</tr>
+<tr>
+<td data-label="Button">Download list / Reset queue</td>
+<td data-label="What to do">Save a TSV copy, then clear entries when the activity is finished.</td>
+</tr>
+</tbody>
+</table>
+<p>Choose whether removed viewers may rejoin with the rejoin option. Optional <strong>waitlist control commands</strong> are limited to mod/host/admin users: <code>!wlstop</code>, <code>!wlremove</code>, <code>!wlreset</code>, <code>!wlpick</code>, and <code>!wlhighlight</code>. Enable these deliberately; the viewer entry command alone does not enable them.</p>
+</section>
+<section class="guide-card" id="check">
+<h2>5. Rehearse and recover</h2>
+<p>Use distinct fictional users in <a href="test-message-guide.html">test messages</a> to check voting and entry behavior. One person using two platforms is not reliably one shared identity. Confirm the result appears in OBS before inviting viewers to participate.</p>
+<ul class="guide-list">
+<li>
+<strong>No votes:</strong> check Enable Poll, whether voting was ended, exact matching, and whether that user already voted.</li>
+<li>
+<strong>No entries:</strong> check the waitlist trigger, exact command, stopped-entry state, and member-only restriction.</li>
+<li>
+<strong>Count but no list:</strong> winner-draw mode presents a pool and winners rather than a normal queue.</li>
+<li>
+<strong>OBS disagrees:</strong> replace its saved URL, check the session/password, and avoid running independently configured duplicate poll pages.</li>
+</ul>
+<p>For hardware or OBS-side buttons, see <a href="../streamdeck/index.html">Stream Deck setup</a> and <a href="obs-control-dock-guide.html">OBS control dock</a>.</p>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">Browse all guides</a>
+</p>
+</div>
+</div>
+</footer>
+<script src="js/main.js">
+</script>
+</body>
+</html>

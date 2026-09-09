@@ -128,6 +128,12 @@
 
 	function pushMessage(data, target) {
 		try {
+			// Parse gifts before applying the text-only presentation setting.
+			if (data.textonly && data.chatmessage) {
+				const message = document.createElement("div");
+				message.innerHTML = data.chatmessage;
+				data.chatmessage = message.textContent || "";
+			}
 			var payload = {
 				"message": data
 			};
@@ -180,7 +186,8 @@
 		var nameKey = normalizeTikTokNameKey(data.chatname || "unknown");
 		var stableIndexKey = indexValue ? "idx=" + indexValue : "";
 		return {
-			key: stableIndexKey || (nameKey + ":" + giftId),
+			// TikTok recycles row slots, including the shared event-banner slot.
+			key: nameKey + ":" + giftId + (stableIndexKey ? ":" + stableIndexKey : ""),
 			quantity: quantity,
 			hasStableIndex: !!stableIndexKey
 		};
@@ -428,9 +435,9 @@
 		xhr.send();
 	}
 
-	function escapeHtml(unsafe) {
+	function escapeHtml(unsafe, force = false) {
 		try {
-			if (settings.textonlymode) {
+			if (settings.textonlymode && !force) {
 				return unsafe;
 			}
 			return unsafe
@@ -453,7 +460,7 @@
 		
 		if (!element.children || !element.children.length) {
 			if (element.textContent) {
-				return escapeHtml(element.textContent) || "";
+				return escapeHtml(element.textContent, true) || "";
 			} else {
 				return "";
 			}
@@ -465,19 +472,17 @@
 				resp += getAllContentNodes(node, true).trim() + " ";
 			} else if ((node.nodeType === 3) && node.textContent) {
 				if (node && node.dataset && node.dataset.skip){return;}
-				resp += escapeHtml(node.textContent);
+				resp += escapeHtml(node.textContent, true);
 			} else if (node.nodeType === 1) {
-				if (!settings.textonlymode) {
-					if ((node.nodeName == "IMG") && node.src) {
-						if ((node.dataset && node.dataset.skip) || node.src.includes("_badge_")) {
-							isBadge = true;
-							return;
-						}
-						node.src = node.src + "";
-						resp += "<img src='" + node.src + "' />";
-					} else if (node.nodeName == "SVG") {
-						resp += node.outerHTML;
+				if ((node.nodeName == "IMG") && node.src) {
+					if ((node.dataset && node.dataset.skip) || node.src.includes("_badge_")) {
+						isBadge = true;
+						return;
 					}
+					node.src = node.src + "";
+					resp += "<img src='" + node.src + "' />";
+				} else if (node.nodeName == "SVG") {
+					resp += node.outerHTML;
 				}
 			}
 		});
@@ -953,6 +958,8 @@
 
 
 	function getIdFromUrl(url) {
+		const hashMatch = url.match(/\/([a-f0-9]{32})(?:~|\.)/i);
+		if (hashMatch) return hashMatch[1].toLowerCase();
 		let resourceMatch = url.match(/resource\/([^.]+)(?:\.png|\.webp)/);
 		if (resourceMatch) return resourceMatch[1];
 		resourceMatch = url.match(/webcast-sg\/([^.]+)(?:\.png|\.webp)/);
@@ -1313,9 +1320,7 @@
 				if (eles.length > 1) {
 					for (var i = eles.length - 1; i >= 1; i--) {
 						if (eles[i].nodeName === "#text") {
-							chatmessage = escapeHtml(eles[i].textContent);
-						} else if (settings.textonlymode) {
-							chatmessage = escapeHtml(eles[i].textContent);
+							chatmessage = escapeHtml(eles[i].textContent, true);
 						} else {
 							chatmessage = getAllContentNodes(eles[i]);
 						}
@@ -1323,11 +1328,7 @@
 					}
 				} else if (eles.length == 1) {
 					for (var i = eles[0].childNodes.length - 1; i >= 1; i--) {
-						if (settings.textonlymode) {
-							chatmessage = escapeHtml(eles[0].childNodes[i].textContent);
-						} else {
-							chatmessage = getAllContentNodes(eles[0].childNodes[i]);
-						}
+						chatmessage = getAllContentNodes(eles[0].childNodes[i]);
 						if (chatmessage) break;
 					}
 				}
@@ -1377,7 +1378,7 @@
 		try {
 			// Normalize HTML entity to multiplication sign
 			if (chatmessage) chatmessage = chatmessage.replace(/&times;?/g, '×');
-			if (chatmessage.includes("×") && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")) {
+			if (/[x×]\s*\d+/i.test(chatmessage) && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")) {
 				chatmessage = chatmessage.replace("<img src=", " <img src=");
 				chatmessage = chatmessage.replace('.png">×', '.png"> ×');
 				chatmessage = chatmessage.replace(".png'>×", ".png'> ×");
@@ -1386,9 +1387,9 @@
 				
 				if (settings.tiktokdonations || !settings.notiktokdonations) {
 					// Extract image URL and quantity directly
-					var imgMatch = chatmessage.match(/<img src="([^"]+\.tiktokcdn\.com\/img\/[^"]+)"[^>]*>\s*×\s*(\d+)/i);
+					var imgMatch = chatmessage.match(/<img src="([^"]+\.tiktokcdn\.com\/img\/[^"]+)"[^>]*>\s*[x×]\s*(\d+)/i);
 					if (!imgMatch) {
-						imgMatch = chatmessage.match(/<img src='([^']+\.tiktokcdn\.com\/img\/[^']+)'[^>]*>\s*×\s*(\d+)/i);
+						imgMatch = chatmessage.match(/<img src='([^']+\.tiktokcdn\.com\/img\/[^']+)'[^>]*>\s*[x×]\s*(\d+)/i);
 					}
 					
 					if (imgMatch) {
@@ -1396,9 +1397,8 @@
 						var quantity = parseInt(imgMatch[2]) || 1;
 						
 						// Extract gift ID from URL
-						var giftidMatch = imageSrc.match(/\/([a-f0-9]{32})(?:~|\.)/);
-						if (giftidMatch) {
-							var giftid = giftidMatch[1];
+						var giftid = getIdFromUrl(imageSrc);
+						if (giftid) {
 							var giftData = giftMapping[giftid];
 							
 							if (giftData && giftData.coins) {
@@ -1428,6 +1428,7 @@
 		} catch (e) {
 			console.error("Donation parsing error:", e);
 		}
+		if (hasdonation) ital = "gift";
 		if (!chatmessage && !chatbadges) {
 			return;
 		} else if (chatmessage) {
@@ -1516,16 +1517,9 @@
 		const isGiftMessage =
 			ital === "gift" ||
 			(!!chatmessage && chatmessage.includes(".tiktokcdn.com/img/") && chatmessage.includes("×"));
-		let giftIndexKey = "";
-		if (isGiftMessage) {
-			try {
-				const indexValue = ele?.dataset?.index || ele?.closest?.("[data-index]")?.dataset?.index || "";
-				if (indexValue) {
-					giftIndexKey = `idx=${indexValue}`;
-				}
-			} catch (e) {}
-		}
-		if ((!isGiftMessage || giftIndexKey) && messageLog?.isDuplicate(chatname, chatmessage, giftIndexKey)) {
+		// Gift counts repeat legitimately in later streaks on recycled DOM slots.
+		// Their bounded streak tracker below handles duplicate renders instead.
+		if (!isGiftMessage && messageLog?.isDuplicate(chatname, chatmessage)) {
 			////console.log("duplicate message; skipping",chatname, chatmessage);
 			return;
 		}
@@ -1641,12 +1635,15 @@
 		} catch (e) {}
 		var hasdonation = "";
 		var ital = true;
-		if (chatmessage && (ele.classList.contains("DivGiftMessage") || ele.querySelector("[class*='SpanGiftCount']"))) {
+		// Current LIVE rows no longer carry the legacy gift/count class names.
+		// Keep those variants and also accept the existing structured gift format.
+		if (chatmessage && (ele.classList.contains("DivGiftMessage") || ele.querySelector("[class*='SpanGiftCount']") ||
+			(chatmessage.includes(".tiktokcdn.com/img/") && validateTikTokDonationMessage(chatmessage)))) {
 			ital = "gift";
 					try {
 						// Normalize HTML entity to multiplication sign
 						if (chatmessage) chatmessage = chatmessage.replace(/&times;?/g, '×');
-						if ((chatmessage.includes("×")) && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")) {
+						if (/[x×]\s*\d+/i.test(chatmessage) && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")) {
 						chatmessage = chatmessage.replace("<img src=", " <img src=");
 						chatmessage = chatmessage.replace('.png">×', '.png"> ×');
 						chatmessage = chatmessage.replace(".png'>×", ".png'> ×");

@@ -1,6 +1,13 @@
 (function () {
     'use strict';
     var params = new URLSearchParams(location.search), mode = document.body.dataset.game;
+    // Only the explicitly managed Number Hunt variant uses the authoritative host.
+    // Other games and legacy Number Hunt keep their existing local behavior.
+    if(mode==='number' && params.has('managed')){
+        var managedUrl=new URL('../giveaway.html',location.href);managedUrl.search=params.toString();managedUrl.searchParams.set('managed','');
+        if(!params.has('title'))managedUrl.searchParams.set('title','Number Hunt');
+        location.replace(managedUrl.href);return;
+    }
     var demo = params.has('demo'), session = params.get('session') || params.get('room') || params.get('s') || params.get('id');
     var game = new SSNAudienceGame.Game(mode), paused = false, pausedAt = 0, nextAt = 0, lastRender = '';
     var status = document.getElementById('connection'), history = document.getElementById('history');

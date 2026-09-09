@@ -68,6 +68,7 @@ function extractFunction(source, name) {
 async function testBackgroundCommandHandler() {
 	const background = read("background.js");
 	const source = [
+		extractFunction(background, "isGiveawayAction"),
 		extractFunction(background, "isStreamDeckTimerAction"),
 		extractFunction(background, "isStreamDeckResetConfirmed"),
 		extractFunction(background, "handleStreamDeckBackgroundRequest")
