@@ -8127,7 +8127,7 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 		console.error(e);
 	}
 	try {
-		processGiveawayEntry(message);
+		if (giveawayHost) await processGiveawayEntry(message);
 		if (settings.pollEnabled) {
 			sendTargetP2P(message, "poll");
 		}
@@ -13330,14 +13330,16 @@ var giveawayHost = null;
 var giveawayHostSession = null;
 var giveawayBroadcastTimer = null;
 var giveawayPendingStates = new Map();
+var giveawayRouting = new Map();
 async function getGiveawayHost() {
     await window.pointsSystemReady();
     if (!giveawayHost || giveawayHostSession !== streamID) {
         if(giveawayBroadcastTimer)clearTimeout(giveawayBroadcastTimer);
-        giveawayBroadcastTimer=null;giveawayPendingStates.clear();
+        giveawayBroadcastTimer=null;giveawayPendingStates.clear();giveawayRouting.clear();
         giveawayHostSession = streamID;
         giveawayHost = new SSNGiveawayService(window.pointsSystem, streamID);
         await giveawayHost.recoverRounds();
+        (await giveawayHost.list()).forEach(state=>giveawayRouting.set(state.giveawayId,state));
     }
     return giveawayHost;
 }
@@ -13370,12 +13372,14 @@ async function handleGiveawayAction(action, value, actor) {
         var host = await getGiveawayHost();
         if (action === 'listgiveaways') return {ok:true, giveaways:await host.list()};
         if (action === 'getgiveawayhistory') return {ok:true, history:await host.history()};
-        if (action === 'getgiveawayentries') return host.entries(value.giveawayId,value.page);
+        if (action === 'getgiveawayentries') return await host.entries(value.giveawayId,value.page);
         var rules = value.config;
         if ((rules && (rules.ticketCost || rules.prizePoints || rules.kind === 'coin') || action === 'buygiveawaytickets') && !isPointsSystemEnabled()) {
             throw new Error('Enable SSN loyalty points before using paid tickets or point prizes.');
         }
         var result = await host.run(action, value, actor || value.actor);
+        if(host.session!==String(streamID))return result;
+        if(result.giveaway)giveawayRouting.set(result.giveaway.giveawayId,result.giveaway);
         if (['entergiveaway','buygiveawaytickets','grantgiveawaytickets','guessgiveaway'].includes(action)) {
             giveawayPendingStates.set(result.giveaway.giveawayId,result.giveaway);
             if(!giveawayBroadcastTimer)giveawayBroadcastTimer=setTimeout(function(){giveawayBroadcastTimer=null;var pending=Array.from(giveawayPendingStates.values());giveawayPendingStates.clear();pending.forEach(s=>publishGiveawayState(s));},150);
@@ -13385,10 +13389,10 @@ async function handleGiveawayAction(action, value, actor) {
     } catch (error) { return { ok: false, error: error.message }; }
 }
 async function processGiveawayEntry(message) {
-    if (!message || !message.chatmessage || message.event || message.bot || message.private || message.history || message.replay || message.reflection || message.reload) return;
+    if (!giveawayHost || !message || !message.chatmessage || message.event || message.bot || message.private || message.history || message.replay || message.reflection || message.reload || message.meta && message.meta.economyTest) return;
     if (message && message.textonly === false && typeof message.chatmessage === "string") message = Object.assign({}, message, { chatmessage: decodeAndCleanHtml(message.chatmessage) });
     try {
-        var host = await getGiveawayHost(), rounds = await host.list();
+        var host = await getGiveawayHost(), rounds = Array.from(giveawayRouting.values());
         var text = String(message.chatmessage || '').trim();
         var ticket = text.match(/^!ticket\s+([a-zA-Z0-9_-]+)\s+(\d+)(?:\s+(heads|tails))?$/i);
         var guess = text.match(/^!guess\s+([a-zA-Z0-9_-]+)\s+(\d+)$/i);

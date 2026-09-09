@@ -3948,6 +3948,7 @@ class EventFlowSystem {
 				break;
                 
             case 'addPoints':
+                if (message && message.meta && message.meta.economyTest) break;
 				try {
 					if (!this.pointsSystem && typeof window !== 'undefined' && typeof window.pointsSystemReady === 'function') {
 						await window.pointsSystemReady();
@@ -3975,6 +3976,7 @@ class EventFlowSystem {
 				break;
                 
             case 'spendPoints':
+                if (message && message.meta && message.meta.economyTest) break;
 				try {
 					if (!this.pointsSystem && typeof window !== 'undefined' && typeof window.pointsSystemReady === 'function') {
 						await window.pointsSystemReady();
@@ -4020,8 +4022,8 @@ class EventFlowSystem {
                         reply = await window.handleGiveawayAction(config.command,{giveawayId:config.giveawayId || 'default',count:Number(config.count || 1),side:config.side || undefined,operationId:operationId},message);
                     }
                 } catch (error) { reply = {ok:false,error:error.message}; }
-                result.message = {...message,meta:{...(message && typeof message.meta === 'object' && !Array.isArray(message.meta) ? message.meta : {}),giveawayControlResult:reply}};
-                result.modified = true;
+                if(message && message.meta != null && (typeof message.meta!=='object' || Array.isArray(message.meta)))result.giveawayControlResult=reply;
+                else {result.message = {...message,meta:{...(message && message.meta || {}),giveawayControlResult:reply}};result.modified = true;}
                 if (!reply.ok) result.stopChain = true;
                 break;
             }

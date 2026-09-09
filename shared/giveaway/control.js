@@ -91,7 +91,7 @@
         status.textContent = 'Complete recovery must run on the host.';
         return;
     } run(async function () { var data = await file.text(); var reply = await new Promise(function (resolve) { chrome.runtime.sendMessage({ cmd: 'recoverEconomyBackup', data: data }, resolve); }); if (!reply || !reply.success)
-        throw new Error(reply && reply.error || 'Recovery failed.'); status.textContent = 'Recovered ' + reply.users + ' accounts. Review restored rounds before reopening.'; }); };
+        throw new Error(reply && reply.error || 'Recovery failed.'); status.textContent = 'Recovered ' + reply.users + ' accounts. Review closed rounds before reopening. Set the popup stream ID to the original backup session: ' + (reply.sessions || []).join(', '); }); };
     if (native) {
         run(refresh);
         return;

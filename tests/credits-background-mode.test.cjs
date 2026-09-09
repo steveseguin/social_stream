@@ -22,6 +22,9 @@ assert.ok(creditsStateStart >= 0 && creditsStateEnd > creditsStateStart, "backgr
 const remoteHandlerStart = backgroundSource.indexOf("async function handleStreamDeckBackgroundRequest(request)");
 const remoteHandlerEnd = backgroundSource.indexOf("function sendStreamDeckPeerResult", remoteHandlerStart);
 assert.ok(remoteHandlerStart >= 0 && remoteHandlerEnd > remoteHandlerStart, "remote-control background router is missing");
+const giveawayActionStart = backgroundSource.indexOf("function isGiveawayAction(action)");
+const giveawayActionEnd = backgroundSource.indexOf("async function handleGiveawayAction(", giveawayActionStart);
+assert.ok(giveawayActionStart >= 0 && giveawayActionEnd > giveawayActionStart, "giveaway action classifier is missing");
 const creditsUiSyncStart = popupSource.indexOf("function syncCreditsControlUi()");
 const creditsUiSyncEnd = popupSource.indexOf("\n\nfunction update(", creditsUiSyncStart);
 assert.ok(creditsUiSyncStart >= 0 && creditsUiSyncEnd > creditsUiSyncStart, "credits UI sync function is missing");
@@ -80,6 +83,7 @@ function createBackgroundHarness(initialStorage = {}) {
 	vm.runInContext(fs.readFileSync(path.join(repoRoot, "currency.js"), "utf8"), sandbox);
 	vm.runInContext(
 		backgroundSource.slice(creditsStateStart, creditsStateEnd) +
+			backgroundSource.slice(giveawayActionStart, giveawayActionEnd) +
 			backgroundSource.slice(remoteHandlerStart, remoteHandlerEnd) +
 			"\nthis.creditsApi = { captureBackgroundCreditsMessage, getBackgroundCreditsSnapshot, resetBackgroundCreditsCollection, getBackgroundCreditsTestSnapshot, sendCreditsCommandPacket, isCreditsRemoteAction, runCreditsCommand, handleStreamDeckBackgroundRequest, routeStreamDeckRemoteRequest };",
 		sandbox,
