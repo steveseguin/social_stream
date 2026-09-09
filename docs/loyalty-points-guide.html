@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Loyalty points and rewards - Social Stream Ninja</title>
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/guides.css">
+	<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Award points for participation, let viewers redeem approved rewards, and back up their balances.">
+<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="css/workflow-guides.css">
+</head>
+<body class="workflow-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation">
+<a href="../index.html">Home</a>
+<a href="../docs/features.html">Features</a>
+<a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a>
+<a href="../docs/download.html">Download</a>
+<a href="../docs/guides.html">Guides</a>
+<a href="../docs/commands.html">Commands &amp; API</a>
+<a href="../docs/supported-sites.html">Supported Sites</a>
+<a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a>
+<a href="../docs/services.html" class="site-priority-hire">Hire</a>
+<a href="../docs/support.html">Support</a>
+</nav>
+<div class="site-actions">
+<button class="site-theme" type="button" aria-label="Switch theme">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>Loyalty points and rewards</h1>
+<p><a href="giveaway-points-guide.html">Giveaways, paid tickets, game prizes and recovery guide</a></p>
+<p>Award points for participation, let viewers redeem approved rewards, and back up their balances.</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="On this page">
+<a href="guides.html">All guides</a>
+<a href="#enable">1. Enable participation points</a>
+<a href="#balances">2. Check and manage balances</a>
+<a href="#reward">3. Offer a sticker reward</a>
+<a href="#custom">4. Add optional Event Flow rewards</a>
+<a href="#backup">5. Preserve points across moves</a>
+<a href="#check">Troubleshooting</a>
+</nav>
+<section class="guide-card" id="enable">
+<h2>1. Enable participation points</h2>
+<ol class="guide-steps">
+<li>Open SSN’s <strong>Global settings and tools → Points System</strong>. Turn on <strong>Enable loyalty points system</strong>.</li>
+<li>Start with <strong>Points per engagement: 1</strong> and <strong>Engagement window (minutes): 15</strong>, then adjust to suit your stream.</li>
+<li>Enable <strong>!points</strong>, <strong>!leaderboard</strong>, and <strong>!rewards</strong> commands if you want those chat replies.</li>
+<li>Keep SSN and the source chats capturing. Ask a test viewer to send a normal message, then inspect <strong>Manage User Points</strong>.</li>
+</ol>
+<p>Points reward captured participation, not silent viewing time or every message. After an award, the viewer needs a later qualifying message outside the engagement window to earn again. Participation streaks can add bonuses. Repeated messages inside the same window do not repeatedly award points.</p>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>Participate</strong>
+<span>Captured chat activity</span>
+</li>
+<li>
+<strong>Earn</strong>
+<span>Eligible engagement window</span>
+</li>
+<li>
+<strong>Redeem</strong>
+<span>Balance and cooldown checks</span>
+</li>
+<li>
+<strong>Display</strong>
+<span>Connected reward overlay</span>
+</li>
+</ol>
+<figcaption>The engagement window limits earning; a reward separately checks price and cooldown.</figcaption>
+</figure>
+</section>
+<section class="guide-card" id="balances">
+<h2>2. Check and manage balances</h2>
+<p>Viewers use <code>!points</code> for their balance and <code>!leaderboard</code> for rankings when enabled. Replies require a source that can post back to chat; if no reply arrives, check the balance through <strong>Manage User Points</strong> before assuming no points were earned.</p>
+<p>Use <strong>Manage User Points</strong> for a specific viewer and platform, or <strong>View Leaderboard</strong> for an overview. Accounts are keyed by username and source type: matching names on Twitch and YouTube have separate balances. Do not assume a viewer’s accounts are automatically linked.</p>
+</section>
+<section class="guide-card" id="reward">
+<h2>3. Offer a sticker reward</h2>
+<ol class="guide-steps">
+<li>In <strong>Points System → Sticker rewards</strong>, enable sticker rewards and choose the packs you want available. Set a point price suited to your earning rate.</li>
+<li>Copy the <strong>OBS browser source</strong> link into OBS and keep the sticker source loaded.</li>
+<li>In <strong>Timing &amp; chat replies</strong>, set the display time, per-viewer cooldown, per-sticker cooldown, and quiet gap. Enable command replies if desired.</li>
+<li>Have a test viewer type <code>!stickers</code> to list enabled sticker codes and prices, then <code>!sticker rocket</code> if that code is enabled and affordable.</li>
+<li>Check the displayed sticker and remaining balance before announcing the reward.</li>
+</ol>
+<p>
+<strong>Approval happens when you choose the catalog.</strong> Enabled stickers redeem automatically; there is no per-redemption approval queue. For custom images or GIFs, you supply and approve the direct HTTPS asset URL. Viewers cannot submit arbitrary artwork through the sticker command.</p>
+<p>A cooldown or offline overlay rejects the request without spending points. If display delivery fails after spending, SSN attempts a refund and reports failures that need a host correction. A connected overlay does not prove that OBS currently shows its scene.</p>
+<p>See <a href="sticker-gallery.html">Sticker packs and setup</a> for previews, custom artwork, and GIF choices. <code>!stickers</code> is the sticker catalog command; <code>!rewards</code> lists the general points reward commands.</p>
+</section>
+<section class="guide-card" id="custom">
+<h2>4. Add optional Event Flow rewards</h2>
+<p>For custom actions, use the existing Event Flow editor and its <strong>Spend Points</strong> action. Put your exact command condition before spending, set <strong>Amount to Spend</strong>, and connect the paid action after a successful spend. Include a cooldown in the flow.</p>
+<p>Test both an insufficient balance and a sufficient balance before enabling a reward. A custom action that fails after charging does not automatically inherit the sticker system’s delivery/refund behavior. Review failure handling before attaching paid commands to media or external actions. See <a href="../actions/event-flow-guide.html">Event Flow</a>.</p>
+</section>
+<section class="guide-card" id="backup">
+<h2>5. Preserve points across moves</h2>
+<p>Points live in local browser/app storage. Sharing a session ID with another computer or installation does not synchronize balances.</p>
+<ol class="guide-steps">
+<li>Use <strong>Points System → Backup &amp; Restore → Export Points</strong> and retain the JSON file.</li>
+<li>On the destination installation, export any existing points first, then use <strong>Import Points</strong> and select the intended import mode.</li>
+<li>Choose carefully: <strong>Merge</strong> keeps higher point values; <strong>Replace</strong> overwrites the existing points data. Review the import result, spot-check viewers and platforms in Manage User Points, and confirm balances before resuming rewards.</li>
+</ol>
+<p>Keep a dedicated points export alongside your <a href="safe-updates-backups.html">settings backup</a>. <strong>Reset All Points</strong> clears the points ledger; use it only for an intentional reset after exporting.</p>
+</section>
+<section class="guide-card" id="check">
+<h2>Troubleshooting</h2>
+<ul class="guide-list">
+<li>
+<strong>Balance stays unchanged:</strong> check capture, the master switch, the engagement window, and the viewer’s platform account.</li>
+<li>
+<strong>Sticker says unavailable:</strong> check pack/code selection, sufficient funds, cooldowns, and the loaded OBS sticker source.</li>
+<li>
+<strong>Points missing after a move:</strong> import the points export into the installation doing the capture; a session link alone is not a backup.</li>
+</ul>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">Browse all guides</a>
+</p>
+</div>
+</div>
+</footer>
+<script src="js/main.js">
+</script>
+</body>
+</html>

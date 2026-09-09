@@ -8,7 +8,7 @@ const vm = require("vm");
 const repoRoot = path.resolve(__dirname, "..");
 const backgroundSource = fs.readFileSync(path.join(repoRoot, "background.js"), "utf8");
 const creditsSource = fs.readFileSync(path.join(repoRoot, "credits.html"), "utf8");
-const popupSource = fs.readFileSync(path.join(repoRoot, "popup.js"), "utf8");
+const popupSource = fs.readFileSync(path.join(repoRoot, "popup.js"), "utf8").replace(/\r\n/g, "\n");
 const popupHtml = fs.readFileSync(path.join(repoRoot, "popup.html"), "utf8");
 const creditsGuideSource = fs.readFileSync(path.join(repoRoot, "docs", "credits-roll-guide.html"), "utf8");
 
@@ -22,6 +22,9 @@ assert.ok(creditsStateStart >= 0 && creditsStateEnd > creditsStateStart, "backgr
 const remoteHandlerStart = backgroundSource.indexOf("async function handleStreamDeckBackgroundRequest(request)");
 const remoteHandlerEnd = backgroundSource.indexOf("function sendStreamDeckPeerResult", remoteHandlerStart);
 assert.ok(remoteHandlerStart >= 0 && remoteHandlerEnd > remoteHandlerStart, "remote-control background router is missing");
+const giveawayActionStart = backgroundSource.indexOf("function isGiveawayAction(action)");
+const giveawayActionEnd = backgroundSource.indexOf("async function handleGiveawayAction(", giveawayActionStart);
+assert.ok(giveawayActionStart >= 0 && giveawayActionEnd > giveawayActionStart, "giveaway action classifier is missing");
 const creditsUiSyncStart = popupSource.indexOf("function syncCreditsControlUi()");
 const creditsUiSyncEnd = popupSource.indexOf("\n\nfunction update(", creditsUiSyncStart);
 assert.ok(creditsUiSyncStart >= 0 && creditsUiSyncEnd > creditsUiSyncStart, "credits UI sync function is missing");
@@ -77,8 +80,10 @@ function createBackgroundHarness(initialStorage = {}) {
 		}
 	};
 	vm.createContext(sandbox);
+	vm.runInContext(fs.readFileSync(path.join(repoRoot, "currency.js"), "utf8"), sandbox);
 	vm.runInContext(
 		backgroundSource.slice(creditsStateStart, creditsStateEnd) +
+			backgroundSource.slice(giveawayActionStart, giveawayActionEnd) +
 			backgroundSource.slice(remoteHandlerStart, remoteHandlerEnd) +
 			"\nthis.creditsApi = { captureBackgroundCreditsMessage, getBackgroundCreditsSnapshot, resetBackgroundCreditsCollection, getBackgroundCreditsTestSnapshot, sendCreditsCommandPacket, isCreditsRemoteAction, runCreditsCommand, handleStreamDeckBackgroundRequest, routeStreamDeckRemoteRequest };",
 		sandbox,
@@ -119,6 +124,29 @@ function createBackgroundHarness(initialStorage = {}) {
 	assert.strictEqual(creditsUiElements.creditsBackgroundTestBtn.hidden, true);
 
 	const harness = createBackgroundHarness();
+	const gifts = createBackgroundHarness();
+	gifts.api.resetBackgroundCreditsCollection();
+	for (const count of [1, 2, 3, 3, 2]) {
+		gifts.api.captureBackgroundCreditsMessage({ chatname: "Gift Donor", type: "tiktok", event: "gift",
+			hasDonation: count + " coins", meta: { tiktokGiftStreakId: "test-streak", tiktokGiftCount: count } });
+	}
+	let giftSnapshot = await gifts.api.getBackgroundCreditsSnapshot();
+	assert.ok(Math.abs(giftSnapshot[0].donations - 0.03) < 1e-9);
+	gifts.api.captureBackgroundCreditsMessage({ chatname: "Unknown Gift", type: "tiktok", hasDonation: "3 gifts" });
+	const unknownGift = (await gifts.api.getBackgroundCreditsSnapshot()).find(user => user.name === "Unknown Gift");
+	assert.strictEqual(unknownGift.donations, 0);
+	assert.strictEqual(unknownGift.hasDonationActivity, true);
+	await new Promise(resolve => setTimeout(resolve, 350));
+	const resumedGifts = createBackgroundHarness(gifts.storage);
+	await resumedGifts.api.getBackgroundCreditsSnapshot();
+	resumedGifts.api.captureBackgroundCreditsMessage({ chatname: "Gift Donor", type: "tiktok", event: "gift",
+		hasDonation: "4 coins", meta: { tiktokGiftStreakId: "test-streak", tiktokGiftCount: 4 } });
+	assert.ok(Math.abs((await resumedGifts.api.getBackgroundCreditsSnapshot()).find(user => user.name === "Gift Donor").donations - 0.04) < 1e-9);
+	for (const count of [3, 2]) {
+		resumedGifts.api.captureBackgroundCreditsMessage({ chatname: "Native Gift", type: "tiktok", event: "gift",
+			hasDonation: count + " 💎", donoValue: count * 0.005 });
+	}
+	assert.ok(Math.abs((await resumedGifts.api.getBackgroundCreditsSnapshot()).find(user => user.name === "Native Gift").donations - 0.025) < 1e-9);
 	harness.api.resetBackgroundCreditsCollection();
 	harness.api.captureBackgroundCreditsMessage({ chatname: "Chatter", type: "youtube", chatmessage: "hello" });
 	harness.api.captureBackgroundCreditsMessage({ chatname: "Member", type: "twitch", event: "channel_subscription_new" });

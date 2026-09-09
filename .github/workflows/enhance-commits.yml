@@ -4,6 +4,10 @@ on:
   push:
     branches: [beta]
 
+concurrency:
+  group: enhance-commits-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   enhance-commits:
     if: "!contains(github.event.head_commit.message, '[auto-enhanced]') && !contains(github.event.head_commit.message, '[skip pages]') && github.actor != 'github-pages[bot]'"
@@ -31,7 +35,7 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions Commit Enhancer"
           git config --global user.email "actions@github.com"
-          
+
       - name: Enhance commit messages
         id: enhance
         env:

@@ -474,6 +474,49 @@ function convertToUSD(valueStr, source = '') {
   return amount;
 }
 
+// Credits keep supporter activity even when a gift's monetary value is unknown.
+// Preserve the existing source-specific coin/diamond estimates; a generic gift
+// count or gift name is not a price and must not become a made-up dollar total.
+function getCreditsDonationValue(data) {
+  if (!data) return 0;
+  const captured = parseFloat(String(data.donoValue || '').replace(/,/g, ''));
+  if (Number.isFinite(captured) && captured > 0) return captured;
+  const source = String(data.type || '').toLowerCase();
+  const label = String(data.hasDonation || '');
+  const pricedTikTokLabel = /^\s*[\d,.]+\s*(?:coins?|diamonds?|\uD83D\uDC8E)\s*$/i.test(label) ||
+    /^\s*[$€£¥]\s*\d/.test(label) || /^\s*[\d,.]+\s*[$€£¥]\s*$/.test(label);
+  if (source === 'tiktok' && !pricedTikTokLabel) return 0;
+  const amount = Number(convertToUSD(label, source));
+  return Number.isFinite(amount) && amount > 0 ? amount : 0;
+}
+
+// Private credits bookkeeping, not part of an outgoing chat/gift payload.
+// Persist recent totals so reconnecting an overlay mid-streak does not add the
+// cumulative amount again. Bound retained state per donor.
+function sanitizeCreditsGiftStreaks(value, now = Date.now()) {
+  if (!Array.isArray(value)) return [];
+  return value.filter(entry => entry && typeof entry.id === 'string' && entry.id.length <= 256 &&
+    Number.isFinite(entry.total) && entry.total >= 0 && Number.isFinite(entry.updated) &&
+    entry.updated > now - 30 * 60 * 1000 && entry.updated <= now + 60000
+  ).slice(-128).map(entry => ({ id: entry.id, total: entry.total, updated: entry.updated }));
+}
+
+function getCreditsDonationIncrement(user, data, amount) {
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
+  const meta = data && data.meta;
+  if (String(data && data.type || '').toLowerCase() !== 'tiktok' || !meta ||
+      typeof meta.tiktokGiftStreakId !== 'string' || !meta.tiktokGiftStreakId ||
+      meta.tiktokGiftStreakId.length > 256 || !(Number(meta.tiktokGiftCount) > 0)) return amount;
+  const now = Date.now();
+  const entries = sanitizeCreditsGiftStreaks(user.giftStreaks, now);
+  const previous = entries.find(entry => entry.id === meta.tiktokGiftStreakId);
+  const previousTotal = previous ? previous.total : 0;
+  user.giftStreaks = entries.filter(entry => entry.id !== meta.tiktokGiftStreakId);
+  user.giftStreaks.push({ id: meta.tiktokGiftStreakId, total: Math.max(previousTotal, amount), updated: now });
+  user.giftStreaks = user.giftStreaks.slice(-128);
+  return Math.max(0, amount - previousTotal);
+}
+
 // Convert a normalized donation label into any fiat currency supported by the
 // internal USD rate table. This is intentionally global so Event Flow Custom
 // Code can call convertCurrency(message.hasDonation, 'EUR', message.type).

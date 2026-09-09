@@ -110,24 +110,31 @@ function toDataURL(url, callback) {
 		var nameEle = ele.querySelector('[property="sender.name"]');
 		var bodyEle = ele.querySelector('[property="body"]');
 		var service = ele.querySelector('[property="service"]')?.getAttribute("value") || "";
+		var header = null;
 
 		// Beam removed its ChatMessage microdata in 2026. Current rows are direct
-		// children of .scroll, with a data-ts value, a header first, and a body span.
+		// children of .scroll, with a data-ts value, a header, and a body span.
 		if (!nameEle && ele.dataset?.ts && ele.parentElement?.classList.contains("scroll")){
-			var header = ele.firstElementChild;
-			nameEle = header?.querySelector('a[target="_blank"][href]') || null;
+			// Beam CSS-module classes identify unlinked names and headers after replies.
+			// Keep a structural fallback for linked names when those classes change.
+			header = ele.querySelector(':scope > ._PXuVA') || ele.firstElementChild;
+			nameEle = header?.querySelector('._tHR7B') || Array.from(header?.querySelectorAll('a[target="_blank"][href]') || []).find(function(link){
+				return !link.querySelector('img, [aria-hidden="true"]') && link.textContent.trim();
+			}) || null;
+			// Notices/events also have data-ts; only a message header may omit a name.
+			if (!nameEle && !header?.classList.contains("_PXuVA")){return;}
 			bodyEle = Array.from(ele.children).find(function(child){
 				return child !== header && child.tagName === "SPAN";
 			}) || null;
 			try {
 				var serviceHost = new URL(nameEle?.href || "").hostname.toLowerCase().replace(/^www\./, "");
-				service = serviceHost.split(".")[0] || "";
+				service = serviceHost === "beamstream.gg" || serviceHost.endsWith(".beamstream.gg") ? "" : serviceHost.split(".")[0] || "";
 			} catch(e) {}
 		}
 		
 		try {
-			name = nameEle.innerText || "";
-			name = escapeHtml(name);
+			name = nameEle ? (nameEle.textContent || "").trim() : "";
+			if (!nameEle && !header){return;}
 		} catch(e){
 			return;
 		}
@@ -136,6 +143,7 @@ function toDataURL(url, callback) {
 		console.log("..");
 		var contentimg = "";
 		try {
+		if (!header) {
 			let images1 = getNextElement(nameEle);
 			//console.log(images1.nodeName, images1);
 			if ((images1?.nodeName == "IMG") && images1.src){
@@ -154,7 +162,7 @@ function toDataURL(url, callback) {
 					msg += getAllContentNodes(nameEle) + " ";
 				}
 			}
-			
+		}
 		}catch(e){
 		//	console.log(e);
 			return;
@@ -167,8 +175,24 @@ function toDataURL(url, callback) {
 		
 		
 		var chatimg = '';
+		var chatbadges = [];
 		try {
 			chatimg = ele.querySelector('[property="sender.avatar"][src]')?.src || "";
+			if (header){
+				chatimg = chatimg || header.querySelector('img._fzVmZ, :scope > a > img, :scope > img')?.src || "";
+				var badges = header.querySelector('._p04YN');
+				if (badges){
+					badges.querySelectorAll('img, svg').forEach(function(badge){
+						if (badge.tagName.toLowerCase() === "img"){
+							if (badge.src){chatbadges.push(badge.src);}
+						} else {
+							var svg = badge.cloneNode(true);
+							svg.setAttribute("style", "height: 1em; width: auto; vertical-align: middle; color: " + getComputedStyle(badge).color);
+							chatbadges.push({type: "svg", html: svg.outerHTML});
+						}
+					});
+				}
+			}
 			
 		} catch(e){
 			//console.log(e);
@@ -177,7 +201,7 @@ function toDataURL(url, callback) {
 		
 		var data = {};
 		data.chatname = name;
-		data.chatbadges = "";
+		data.chatbadges = chatbadges.length ? chatbadges : "";
 		data.backgroundColor = "";
 		data.textColor = "";
 		data.chatmessage = msg;

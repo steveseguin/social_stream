@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Manage giveaways — Social Stream Ninja</title><link rel="stylesheet" href="popup-ui.css"><link rel="stylesheet" href="shared/giveaway/control.css"></head>
+<body><main class="popup-settings-panel"><h1>🎁 Manage giveaways</h1><p>Private host controls. Audience displays use the giveaway link from the popup.</p>
+<p><a href="docs/giveaway-points-guide.html" target="_blank" rel="noopener">Setup, points and recovery guide</a></p>
+<div class="textInputContainer"><input class="textInput" id="giveaway" maxlength="64" value="default"><label for="giveaway">Giveaway ID</label></div>
+<div class="giveaway-actions"><button id="refresh">Refresh</button><button data-action="startgiveaway">Open entries</button><button data-action="closegiveaway">Close entries</button><button data-action="drawgiveaway">Draw winner</button><button data-action="cancelgiveaway">Cancel and refund</button><button data-action="resetgiveaway">New round</button></div>
+<p id="status" role="status" aria-live="polite">Connecting to the host…</p>
+<section><h2>Active rules</h2><p id="rules">Select a giveaway to inspect its committed rules.</p><p>Configure tickets and prizes in the popup before opening entries. A new ID starts as a free keyword giveaway.</p></section>
+<section><h2>Giveaways</h2><div id="rounds"></div></section>
+<section><h2>Participants</h2><p>Removing an entry before the draw returns its reserved points.</p><button id="entries-refresh">Refresh participants</button> <button id="entries-prev">Previous page</button> <button id="entries-next">Next page</button><div id="entries"></div></section>
+<section><h2>Winner history</h2><button id="history-refresh">Refresh history</button> <button id="export">Export winner history</button><div id="history"></div></section>
+<section><h2>Backup</h2><p>Save a complete local points and giveaway backup. No data is uploaded. Backups contain private account records; keep them somewhere safe.</p><button id="backup">Save full backup</button><p id="backup-status" role="status"></p></section>
+<section><h2>Recover on a fresh host</h2><p>Complete recovery requires an empty host. It restores balances, tickets and receipts together, and keeps restored rounds closed until reviewed.</p><label for="recover">Choose a complete backup</label> <input id="recover" type="file" accept="application/json,.json"></section>
+</main><script src="shared/giveaway/control.js"></script></body></html>

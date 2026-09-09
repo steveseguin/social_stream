@@ -1,0 +1,24 @@
+'use strict';
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+(async()=>{
+ const calls=[];
+ const sandbox={window:{location:{search:''},handleGiveawayAction:async(action,value,actor)=>{calls.push({action,value,actor});return {ok:false,error:'Not enough points'};}},console:{warn(){}},setTimeout,clearTimeout,setInterval,clearInterval,indexedDB:{open:()=>({})}};
+ vm.createContext(sandbox);vm.runInContext(fs.readFileSync('actions/EventFlowSystem.js','utf8')+'\nwindow.EFS=EventFlowSystem;',sandbox);
+ const system=Object.create(sandbox.window.EFS.prototype);
+ const node={id:'buy',actionType:'giveawayControl',config:{command:'buygiveawaytickets',giveawayId:'friday',count:3}},flow={id:'flow-1'},message={chatname:'Avery',type:'youtube',id:1};
+ const failed=await system.executeAction(node,message,flow);
+ assert.equal(failed.stopChain,true);assert.equal(failed.blocked,false);assert.equal(failed.message.meta.giveawayControlResult.error,'Not enough points');
+ await system.executeAction(node,message,flow);
+ assert.equal(calls[0].value.operationId,calls[1].value.operationId);
+ assert.equal(calls[0].actor.chatname,'Avery');assert.equal(calls[0].value.count,3);
+ const simulated=await system.executeAction(node,{...message,meta:{economyTest:true}},flow);
+ assert.equal(simulated.message.meta.giveawayControlResult.simulated,true);assert.equal(calls.length,2);
+ const missing=await system.executeAction(node,{chatname:'Avery',type:'youtube'},flow);
+ assert.equal(missing.stopChain,true);assert.equal(calls.length,2);
+ const unavailable=await system.executeAction({id:'spend',actionType:'spendPoints',config:{amount:3}},message,flow);
+ assert.equal(unavailable.stopChain,true);assert.equal(unavailable.blocked,false);
+ const primitive=await system.executeAction(node,{...message,meta:12},flow);assert.equal(primitive.message.meta,12);assert.equal(primitive.giveawayControlResult.ok,false);
+ let spent=0;system.pointsSystem={spendPoints:async()=>{spent++;}};
+ await system.executeAction({id:'spend',actionType:'spendPoints',config:{amount:3}},{...message,meta:{economyTest:true}},flow);assert.equal(spent,0);
+ console.log('Event Flow atomic giveaway action, retry identity, simulation, and failure isolation passed.');
+})().catch(e=>{console.error(e);process.exitCode=1;});

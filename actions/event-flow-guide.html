@@ -488,11 +488,11 @@ Trigger ──────────────────▲
                     Incoming triggers and outgoing Relay Chat destinations both distinguish <code>youtube</code> from <code>youtubeshorts</code>. Use two relay actions when a message should reach both variants. See <a href="../docs/source-types-guide.html#youtube-shorts-event-flow">YouTube Shorts and Event Flow</a>.
                 </div>
                 <div class="callout.danger">
-                    <strong>Turn on "No Reflections" in Relay Chat.</strong><br>
-                    When you use the Relay Chat action node, enable the <em>No Reflections</em> (sometimes labeled <em>No Echo</em>) filter. That flag marks outgoing messages so the relay ignores anything it previously injected. Without it, each relayed line re-enters the flow and triggers new relays.
+                    <strong>Relay Chat skips recognized reflections automatically.</strong><br>
+                    A reflection is an outgoing message captured again from a destination chat. Current Relay Chat actions skip these recognized reflections; there is no separate No Reflections checkbox. To hide or limit their display in the Dock and overlays, use a <strong>Reflection Filter</strong> action with <strong>Block All</strong>, <strong>Allow First</strong>, or <strong>Allow All</strong>. This controls display on re-ingest, not sending. Follow the <a href="../docs/chat-relay-guide.html">Twitch and YouTube relay walkthrough</a> for a complete setup.
                 </div>
                 <ul>
-                    <li><strong>Tag relayed messages.</strong> Set <code>meta.source = "relay"</code> before sending, then add a "Skip if meta.source = relay" gate near your entry nodes.</li>
+                    <li><strong>Avoid duplicate relay systems.</strong> Disable global Relay all when using equivalent Event Flow routes, and check for other services bridging the same chats. Custom metadata is not guaranteed to survive a trip through a platform chat.</li>
                     <li><strong>Use Debounce or Cooldown nodes</strong> for alerts that should only fire once every X seconds.</li>
                     <li><strong>Break cycles intentionally.</strong> If two branches feed each other, add a logic node that checks a state variable ("currentlyRelaying") so the flow exits early when the flag is set.</li>
                 </ul>
