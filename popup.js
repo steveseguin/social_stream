@@ -847,6 +847,28 @@ if (typeof(chrome.runtime)=='undefined'){
 	}
 }
 
+async function copyStreamId(event) {
+	var button = event.currentTarget;
+	var sessionId = lastResponse && lastResponse.streamID;
+	var originalLabel = button.innerHTML;
+	button.disabled = true;
+	try {
+		if (!sessionId) {
+			button.textContent = "[stream ID unavailable]";
+			return;
+		}
+		await navigator.clipboard.writeText(sessionId);
+		button.textContent = "[stream ID copied]";
+	} catch (error) {
+		button.textContent = "[copy failed; try again]";
+	} finally {
+		setTimeout(function() {
+			button.innerHTML = originalLabel;
+			button.disabled = false;
+		}, 2000);
+	}
+}
+
 function copyToClipboard(event) {
 	
 	// if (event.target.parentNode.parentNode.querySelector("[data-raw] a[href]")){ // DEPRECATED data-raw
@@ -873,10 +895,43 @@ function copyToClipboard(event) {
 	}
 }
 
+function getEditableGeneratedLinkConfig(targetId) {
+	// Only pages whose controls use an independent getTargetMap namespace belong here.
+	// Template collections, games, and commerce have separate configuration flows.
+	var pages = {
+		dock: ["dock.html", "Main Chat"],
+		overlay: ["featured.html", "Featured Chat (Classic)"],
+		multialerts: ["multi-alerts.html", "Multi-Stream Alert Box"],
+		eventsdashboard: ["events.html", "Events Dashboard"],
+		reactions: ["reactions.html", "Reactions"],
+		emoteswall: ["emotes.html", "Emote Wall"],
+		hypemeter: ["hype.html", "Hype Meter"],
+		meta: ["meta.html", "Meta Bar"],
+		tipjar: ["tipjar.html", "Tip Jar"],
+		waitlist: ["waitlist.html", "Waitlist"],
+		flowactions: ["actions.html", "Flow Actions"],
+		giveaway: ["giveaway.html", "Giveaway"],
+		poll: ["poll.html", "Poll"],
+		map: ["map.html", "Map"],
+		credits: ["credits.html", "Credits"],
+		leaderboard: ["leaderboard.html", "Leaderboard"],
+		scoreboard: ["scoreboard.html", "Scoreboard"],
+		ticker: ["ticker.html", "Ticker"],
+		wordcloud: ["wordcloud.html", "Word Cloud"],
+		"custom-gif-commands": ["gif.html", "Custom GIF Commands"],
+		timer: ["timer.html", "Timer"],
+		spotify: ["spotify-overlay.html", "Spotify"]
+	};
+	var page = Object.prototype.hasOwnProperty.call(pages, targetId) ? pages[targetId] : null;
+	return page ? { path: page[0], label: page[1] } : null;
+}
+
 function normalizeEditableGeneratedLink(rawUrl, targetId) {
+	var config = getEditableGeneratedLinkConfig(targetId);
+	if (!config) throw new Error("This link editor is not available.");
 	var trimmed = String(rawUrl || "").trim();
 	if (!trimmed) {
-		throw new Error("Paste an existing Main Chat link.");
+		throw new Error("Paste an existing " + config.label + " link.");
 	}
 
 	var targetElement = document.getElementById(targetId);
@@ -897,10 +952,10 @@ function normalizeEditableGeneratedLink(rawUrl, targetId) {
 		throw new Error("Only web or local file links can be edited.");
 	}
 
-	var expectedFile = targetId === "dock" ? "dock.html" : "";
+	var expectedFile = config.path;
 	var fileName = parsed.pathname.split("/").pop().toLowerCase();
 	if (!expectedFile || fileName !== expectedFile) {
-		throw new Error("Paste a Main Chat dock.html link here.");
+		throw new Error("Paste a " + config.label + " " + expectedFile + " link here.");
 	}
 
 	if (!parsed.searchParams.get("session") && !parsed.searchParams.get("room")) {
@@ -1063,7 +1118,7 @@ function applyImportedGeneratedLink(targetId, parsedUrl) {
 	Array.prototype.slice.call(document.querySelectorAll(numberSelector)).forEach(function(element) {
 		var setting = element.dataset[numberType];
 		var effectiveKey = normalizeParamKey(setting);
-		if (!linkOwnedNumberKeys[effectiveKey]) {
+		if (paramNum === 1 && !linkOwnedNumberKeys[effectiveKey]) {
 			return;
 		}
 		var importedValue = null;
@@ -1156,7 +1211,25 @@ function applyImportedGeneratedLink(targetId, parsedUrl) {
 		if (element.dataset.optionsetting) {
 			handleOptionSetting(element, false);
 		}
+		if (paramNum !== 1 && setting === "ttsprovider") {
+			var providerSettingType = "optionsetting" + paramNum;
+			if (element.dataset[providerSettingType]) {
+				saveImportedLinkControl(element, providerSettingType, element.dataset[providerSettingType], imported.value);
+			}
+			if (paramNum === 2) handleTTSProvider2Visibility(imported.value);
+			if (paramNum === 18) handleTTSProvider18Visibility(imported.value);
+		}
+
 	});
+
+	if (targetId === "overlay") {
+		var presetSelector = document.getElementById("featured-preset-select");
+		if (presetSelector) {
+			presetSelector.value = "";
+			saveImportedLinkControl(presetSelector, "optionsetting", "featuredOverlayStyle", "");
+			applyFeaturedOverlayPreset("");
+		}
+	}
 
 	setGeneratedLink(targetElement, parsedUrl.href);
 	if (targetId === "dock") {
@@ -1176,28 +1249,30 @@ function showImportedLinkStatus(targetId, loadedControlCount) {
 }
 
 function openEditGeneratedLinkDialog(targetId) {
+	var config = getEditableGeneratedLinkConfig(targetId);
+	if (!config) return;
 	var modal = document.createElement("div");
 	modal.className = "arc-modal";
 	modal.setAttribute("role", "dialog");
 	modal.setAttribute("aria-modal", "true");
-	modal.setAttribute("aria-label", "Edit an existing Main Chat link");
+	modal.setAttribute("aria-label", "Edit an existing " + config.label + " link");
 
 	var dialog = document.createElement("div");
 	dialog.className = "arc-dialog";
 
 	var title = document.createElement("p");
-	title.textContent = "Edit an existing Main Chat link";
+	title.textContent = "Edit an existing " + config.label + " link";
 
 	var note = document.createElement("span");
 	note.className = "edit-link-dialog-note";
-	note.textContent = "Paste the old dock.html link. This replaces the current Main Chat customization controls; links already in OBS are not changed.";
+	note.textContent = "Paste the old " + config.path + " link. This replaces only the " + config.label + " link controls. Other overlays and your global stream ID stay unchanged; links already in OBS are not changed.";
 
 	var input = document.createElement("input");
 	input.type = "text";
 	input.className = "arc-input";
-	input.placeholder = "https://socialstream.ninja/dock.html?session=...";
+	input.placeholder = "https://socialstream.ninja/" + config.path + "?session=...";
 	input.autocomplete = "off";
-	input.setAttribute("aria-label", "Existing Main Chat link");
+	input.setAttribute("aria-label", "Existing " + config.label + " link");
 	var currentLinkElement = document.getElementById(targetId);
 	input.value = currentLinkElement && currentLinkElement.raw ? currentLinkElement.raw : "";
 
@@ -1231,7 +1306,7 @@ function openEditGeneratedLinkDialog(targetId) {
 			var loadedControlCount = applyImportedGeneratedLink(targetId, parsedUrl);
 			closeDialog();
 			showImportedLinkStatus(targetId, loadedControlCount);
-			showPopupToast("success", "Main Chat link loaded", "Customize it below, then copy the updated link.");
+			showPopupToast("success", config.label + " link loaded", "Customize it below, then copy the updated link.");
 		} catch (error) {
 			errorBox.textContent = error && error.message ? error.message : "The link could not be loaded.";
 			input.focus();
@@ -11539,6 +11614,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		updateSettings(newCommandEntry, true);
 	});
 	
+	document.getElementById("copy-stream-id").onclick = copyStreamId;
+
 	document.querySelectorAll("[data-copy]").forEach(ele=>{
 		ele.onclick = copyToClipboard;
 	});
