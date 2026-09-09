@@ -43,7 +43,7 @@
             count.textContent = state.count + (state.count === 1 ? ' eligible entry' : ' eligible entries');
             if(state.number){stateLabel.textContent=state.open?'Guess '+state.number.low+'–'+state.number.high+': !guess '+giveawayId+' NUMBER':'Round closed';count.textContent=state.number.guesses.map(function(g){return g.name+': '+g.guess+' ('+g.hint+')';}).join(' · ') || 'One guess per viewer every 5 seconds.';}
             var winner = state.winners[0];
-            if (state.outcome) winner = {name:state.outcome.charAt(0).toUpperCase()+state.outcome.slice(1)};
+            if (state.outcome) winner = {id:state.outcome,name:state.outcome.charAt(0).toUpperCase()+state.outcome.slice(1)};
             var newDraw = lastDraw !== null && state.draw !== lastDraw && winner;
             if (state.draw !== lastDraw) {
                 cancelReveal();
@@ -61,6 +61,7 @@
             }
             if (mode === 'wheel') {
                 var visible = state.entrants.filter(function(entry) { return !winner || entry.id !== winner.id; }).slice(0, 119);
+                if(state.config && state.config.kind==='coin')visible=[{id:'heads',name:'Heads'},{id:'tails',name:'Tails'}].filter(function(e){return !winner || e.id!==winner.id;});
                 if (winner) visible.push(winner);
                 entrants.clear();
                 visible.forEach(function(entry) { entrants.set(entry.id, entry); });

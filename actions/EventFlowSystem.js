@@ -4023,7 +4023,11 @@ class EventFlowSystem {
                     }
                 } catch (error) { reply = {ok:false,error:error.message}; }
                 if(message && message.meta != null && (typeof message.meta!=='object' || Array.isArray(message.meta)))result.giveawayControlResult=reply;
-                else {result.message = {...message,meta:{...(message && message.meta || {}),giveawayControlResult:reply}};result.modified = true;}
+                else {
+                    const meta={...(message && message.meta || {}),giveawayControlResult:reply};
+                    if(['entergiveaway','buygiveawaytickets','grantgiveawaytickets'].includes(config.command))meta.giveawayHandled=Array.from(new Set([...(Array.isArray(meta.giveawayHandled)?meta.giveawayHandled:[]),config.giveawayId || 'default']));
+                    result.message = {...message,meta:meta};result.modified = true;
+                }
                 if (!reply.ok) result.stopChain = true;
                 break;
             }

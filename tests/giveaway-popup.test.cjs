@@ -77,6 +77,7 @@ const {chromium}=require('playwright');
   await manager.waitForFunction(()=>document.getElementById('history').textContent.includes('Morgan'));
   for(const colorScheme of ['light','dark']){await manager.emulateMedia({colorScheme});await manager.screenshot({path:path.join(os.tmpdir(),'ssn-giveaway-manager-'+colorScheme+'.png'),fullPage:true});}
   await manager.close();
+  assert.equal(await background.evaluate(async()=>{await handleGiveawayAction('closegiveaway',{giveawayId:'paid'});return (await handleGiveawayAction('startgiveaway',{giveawayId:'paid'})).giveaway.config.ticketCost;}),1);
   await popup.locator('[data-giveaway-action="cancelgiveaway"]').click();
   await popup.waitForFunction(()=>document.getElementById('giveaway-control-status').textContent.includes('Cancelled'));
   const disabled=await background.evaluate(async()=>{settings.disablehost=true;const result=await handleGiveawayAction('startgiveaway',{});settings.disablehost=false;return result;});

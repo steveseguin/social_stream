@@ -39,19 +39,20 @@
     }
     function config(value) {
         value = value || {};
-        var keyword = String(value.keyword || '!enter').trim();
+        var keyword = String(value.keyword === undefined ? '!enter' : value.keyword || '').trim();
         if (!keyword || keyword.length > 80)
             fail('Enter a keyword between 1 and 80 characters.');
         var match = value.match || 'exact';
         if (['exact', 'word'].indexOf(match) < 0)
             fail('Choose exact or word matching.');
         var kind = value.kind || 'giveaway';
+        ['membersOnly','removeWinner'].forEach(function(key){if(value[key]!==undefined && typeof value[key]!=='boolean')fail(key+' must be true or false.');});
         if (['giveaway', 'coin', 'number'].indexOf(kind) < 0)
             fail('Unknown game type.');
         return { keyword: keyword, match: match, membersOnly: value.membersOnly === true, removeWinner: value.removeWinner !== false,
             title: String(value.title || 'Giveaway').slice(0, 160), ticketCost: integer(value.ticketCost === undefined ? 0 : value.ticketCost, 0, 10000, 'Ticket cost'),
             maxTickets: integer(value.maxTickets === undefined ? 100 : value.maxTickets, 1, 10000, 'Ticket limit'),
-            prizePoints: integer(value.prizePoints || 0, 0, LIMIT, 'Point prize'),
+            prizePoints: integer(value.prizePoints === undefined ? 0 : value.prizePoints, 0, LIMIT, 'Point prize'),
             winnerCount: integer(value.winnerCount === undefined ? 1 : value.winnerCount, 1, 20, 'Winner count'), kind: kind };
     }
     function snapshot(round) {
