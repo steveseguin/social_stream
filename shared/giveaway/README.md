@@ -57,3 +57,21 @@ manager. `giveaway-overlay.test.cjs` checks audience modes and transport handlin
 search and existing points/sticker regression tests too. Do not launch SSApp unless
 Steve expressly requests that runtime's tests. Native plugin tests live in the
 separate `ssn-streamdeck` repository.
+
+`node tests/giveaway-recovery.test.cjs` forcibly terminates only its own Windows
+Chromium process tree to check committed purchase/payout recovery and an
+interrupted draw transaction. The popup suite also imports its downloaded backup
+through the manager in a fresh extension profile, restores the original session
+through the popup, and refunds recovered tickets.
+
+Optional integration checks (never part of an automatic app-launch suite):
+
+- Set `SSN_GIVEAWAY_PLUGIN_BUNDLE` to the built `.sdPlugin` directory, then run
+  `node tests/giveaway-popup.test.cjs`. It copies the plugin to a temporary directory
+  and drives protocol key events against the real isolated extension. It does not
+  modify device profiles or press physical keys.
+- With OBS already running, idle, and its existing unauthenticated loopback
+  WebSocket on port 4455 available, set `SSN_OBS_GIVEAWAY_TEST=1` and run
+  `node tests/giveaway-obs.test.cjs`. It uses a temporary scene, returns to the
+  original scene, and removes its own sources. It never changes OBS security,
+  starts a stream/recording, or launches SSApp. Screenshots go to the OS temp folder.

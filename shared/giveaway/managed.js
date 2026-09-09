@@ -24,6 +24,20 @@
         var count = document.createElement('p');
         stage.appendChild(title); stage.appendChild(stateLabel); stage.appendChild(result); stage.appendChild(count);
         document.querySelector('.col-left').insertBefore(stage, document.querySelector('.col-left').firstChild);
+        function fitWheel() {
+            if (mode !== 'wheel') return;
+            var card = document.querySelector('.col-left > .card');
+            var cardStyle = getComputedStyle(card);
+            var available = window.innerHeight - card.getBoundingClientRect().top -
+                parseFloat(cardStyle.paddingTop) - parseFloat(cardStyle.paddingBottom) -
+                parseFloat(cardStyle.marginBottom) - parseFloat(getComputedStyle(document.body).paddingBottom) - 4;
+            var size = Math.max(0, Math.min(460, card.clientWidth -
+                parseFloat(cardStyle.paddingLeft) - parseFloat(cardStyle.paddingRight), available));
+            wheelBox.style.width = size + 'px';
+            wheelBox.style.height = size + 'px';
+            if (syncCanvasSize()) wheel.rebuildNow();
+        }
+        window.addEventListener('resize', fitWheel);
         var lastDraw = null, lastRevision = -1, lastEpoch = null, lastGeneration = -1, animation = null, finishTimer = null, wheelFrame = null;
         function cancelReveal() {
             clearInterval(animation); clearTimeout(finishTimer);
@@ -60,6 +74,7 @@
                 }
             }
             if (mode === 'wheel') {
+                fitWheel();
                 var visible = state.entrants.filter(function(entry) { return !winner || entry.id !== winner.id; }).slice(0, 119);
                 if(state.config && state.config.kind==='coin')visible=[{id:'heads',name:'Heads'},{id:'tails',name:'Tails'}].filter(function(e){return !winner || e.id!==winner.id;});
                 if (winner) visible.push(winner);

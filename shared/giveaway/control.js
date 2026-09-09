@@ -27,7 +27,8 @@
     function describe(s) {
         state = s;
         status.textContent = s.giveawayId + ': ' + s.status + ' — ' + s.count + ' viewers, ' + s.ticketCount + ' tickets.' + (s.outcome ? ' ' + s.outcome + ' wins.' : '');
-        document.getElementById('rules').textContent = s.config.kind === 'coin' ? 'Coin Flip Pot: 1 point per stake, heads or tails. Winners split the pot.' :
+        document.getElementById('rules').textContent = s.config.kind === 'number' ? '!guess ' + s.giveawayId + ' NUMBER — guess ' + (s.number ? s.number.low + '–' + s.number.high : '1–100') + '; one guess per viewer every 5 seconds; ' + s.config.prizePoints + ' point prize. The first correct guess wins automatically.' :
+            s.config.kind === 'coin' ? '!ticket ' + s.giveawayId + ' COUNT heads (or tails) — 1 point per stake. Winners split the pot.' :
             s.config.ticketCost ? '!ticket ' + s.giveawayId + ' COUNT — ' + s.config.ticketCost + ' points per ticket; maximum ' + s.config.maxTickets + ' per viewer; ' + s.config.prizePoints + ' point prize per winner.' :
                 s.keyword + ' — one free entry per viewer; ' + s.config.prizePoints + ' point prize per winner.';
     }

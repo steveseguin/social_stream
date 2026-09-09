@@ -59,3 +59,35 @@ Optional server backup/sync remains explicitly out of scope. Source-native messa
 IDs give stronger replay protection than capture IDs after restarts. History and
 receipts currently have no automatic pruning policy. Benchmark the maximum-size
 round before raising participant limits or adding additional game adapters.
+
+## Acceptance follow-up — September 8–9, 2026
+
+- Fixed manager instructions for Number Hunt and added the exact Coin Flip Pot
+  entry command for the selected giveaway ID.
+- Real OBS 32.2.2 browser-source testing found a clipped wheel and scrollbar at
+  1280×720. The managed layout now targets the actual page wrapper and fits the
+  wheel to remaining viewport height. The legacy interactive wheel is unaffected.
+- Card, reel and wheel received draws from popup button clicks in an isolated
+  extension through a local relay. Actual OBS source PNGs verified transparent
+  corners with empty custom CSS; screenshots were visually reviewed.
+  Refreshing the OBS browser source requested and rendered the saved winner again.
+  Temporary sources/scenes were removed and the original scene selection returned.
+- The installed native Stream Deck plugin was restarted through Elgato's CLI.
+  A separate copy of the packaged plugin passed all six giveaway presets against
+  the real extension router, including query-key counts, paid cancellation/refund
+  and a duplicate prize command that did not award twice. All 75 presets and five
+  action types also passed the packaged runtime suite in all eight languages.
+- Popup UI tests now configure and finish Number Hunt and Coin Flip Pot, export a
+  complete backup with outstanding tickets, import it through the manager in a
+  fresh extension profile, set the original session in the popup, refund recovered
+  tickets, and review recovered winner history.
+- Forced termination of isolated Chromium process trees verified committed ticket
+  recovery/refund, committed prize replay, rollback of a draw held open after its
+  wallet/round writes, and exactly-once settlement when retrying that aborted draw.
+- The points/sticker/giveaway/Event Flow regression run passed 43 checks. Popup
+  search, real IndexedDB economy, and audience-display checks passed.
+
+Physical key switches, knobs, USB interruption, OS sleep, real network P2P recovery,
+and SSApp were not tested in this follow-up. Device protocol events are not physical
+button presses. No live chat messages, server synchronization, push or deployment
+were performed. See `shared/giveaway/README.md` for repeatable test commands.
