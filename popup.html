@@ -2508,7 +2508,7 @@ input:checked + .slider:before {
 					<span class="heading-actions">
 						<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 						<a class="edit-link rounded_area" title="Load an existing Main Chat link for editing" data-edit-link="dock">[edit link]</a>
-						<a class="options-link rounded_area" href="#streaming-chat-options" title="Jump to dockable streaming chat link options."><span data-translate="options">[options]</span></a>
+						<button type="button" id="copy-stream-id" class="copy-link rounded_area" title="Copy your stream ID (session ID) to the clipboard" aria-live="polite"><span data-translate="copy-stream-id">[copy stream ID]</span></button>
 						<label for="help-dock" class="help-link rounded_area" title="Click for detailed help">[?]</label>
 					</span>
                 </h2>
@@ -5170,11 +5170,12 @@ input:checked + .slider:before {
                 <h2 class="featured_chat_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🌟</span><span data-translate="featured-chat-overlay">Featured chat overlay </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-                    <a class="options-link rounded_area" href="#single-message-options" title="Jump to single message overlay link options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="overlay" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-featured" class="help-link rounded_area" title="Click for detailed help">[?]</label>
                 </h2>
 				<small class="beginner-section-note">Shows one selected message at a time. Select messages from the control dock, or use full mode for auto-feature rules.</small>
                 <div id="overlay" data-raw="" class="single_message"></div>
+				<div id="overlay-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 				<input type="checkbox" id="help-featured" class="link-help-toggle">
 				<div class="link-help-content">
 					<strong>Displays ONE highlighted message at a time on your stream.</strong>
@@ -6448,10 +6449,11 @@ input:checked + .slider:before {
 				<h2 class="multi_alert_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">🚨</span><span>Multi-Stream Alert Box</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#multi-alert-options" title="Jump to multi-alert overlay options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="multialerts" title="Load an existing link for this overlay">[edit link]</button>
 				</h2>
 				<small class="beginner-section-note">Shows follows, subs, donations, bits, and raids as alert popups, plus optional auction winner and hype train alerts. Use the sections below for common alert controls.</small>
 				<div id="multialerts" data-raw="" class="single_message"><a href="" id="multialertslink"></a></div>
+				<div id="multialerts-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 				<div class="help-tip" style="margin-top: 10px;">🎯 Choose alerts · 🧪 Preview · 📋 Copy OBS link</div>
 			</div>
 			<a href="" id="multi-alert-options"></a>
@@ -7241,7 +7243,6 @@ input:checked + .slider:before {
             <div class="generic_category_title beginner-basic">
                 <h2>
                     <span data-translate="global-settings-and-tools">🛠️ Global settings and tools </span>
-                    <a class="options-link rounded_area" href="#global-settings-and-tools-options" title="Jump to the global settings and tools."><span data-translate="options">[options]</span></a>
                 </h2>
 				<small class="beginner-section-note">Global settings affect every overlay and source, including stream events, filters, highlights, and source behavior.</small>
                 <div id="globalsettings" class="global_settings"></div>
@@ -9600,7 +9601,6 @@ input:checked + .slider:before {
             <div class="chatbot_category_title beginner-advanced">
                 <h2 class="chatbot_wall_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🤖</span><span data-translate="chatbot-settings-and-tools">Chat Bots and AI services</span></span>
-                    <a class="options-link rounded_area" href="#chatbot-settings-and-tools-options" title="Jump to the chatbot settings and tools."><span data-translate="options">[options]</span></a>
                 </h2>
                 <div id="chatbotsettings" class="chatbot_settings"></div>
             </div>
@@ -10946,7 +10946,7 @@ input:checked + .slider:before {
 				<h2 class="events_dashboard_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">📊</span><span data-translate="eventsdashboard">Events Dashboard</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#eventsdashboard-options" title="Jump to the events dashboard options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="eventsdashboard" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-events" class="help-link rounded_area" title="Click for detailed help">[?]</label>
 				</h2>
 				<input type="checkbox" id="help-events" class="link-help-toggle">
@@ -10967,6 +10967,7 @@ input:checked + .slider:before {
 					</span>
 				</h3>
 			<div id="eventsdashboard" data-raw="" class="eventsdashboard"><a href="" id="eventsdashboardlink"></a></div>
+				<div id="eventsdashboard-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
 			<a href="" id="eventsdashboard-options"></a>
 
@@ -11134,7 +11135,7 @@ input:checked + .slider:before {
 				<h2 class="reactions_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">💖</span><span>Reactions Overlay</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#reactions-options" title="Jump to the reactions overlay options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="reactions" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-reactions" class="help-link rounded_area" title="Click for detailed help">[?]</label>
 				</h2>
 				<input type="checkbox" id="help-reactions" class="link-help-toggle">
@@ -11149,6 +11150,7 @@ input:checked + .slider:before {
 					</ul>
 				</div>
 				<div id="reactions" data-raw="" class="single_message"><a href="" id="reactionslink"></a></div>
+				<div id="reactions-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 				<div style="margin: 8px 0 12px;">
 					<button type="button" id="test-reaction-button" class="glowingButton" style="width: 190px; margin-left: 0;" title="Open the Reactions Overlay link first, then send a test reaction.">
 						<span>Send test reaction</span>
@@ -11277,10 +11279,11 @@ input:checked + .slider:before {
                 <h2 class="emotes_wall_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">😄</span><span data-translate="emotes-wall">Emotes wall </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#emote-wall-options" title="Jump to the emote wall link options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="emoteswall" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-emotes" class="help-link rounded_area" title="Click for detailed help">[?]</label>
                 </h2>
                 <div id="emoteswall" data-raw="" class="emotes_wall"></div>
+				<div id="emoteswall-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 				<input type="checkbox" id="help-emotes" class="link-help-toggle">
 				<div class="link-help-content">
 					<strong>Animated emote display that reacts to chat.</strong>
@@ -11417,7 +11420,7 @@ input:checked + .slider:before {
 				<h2 class="hype_mode_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">🔥</span><span data-translate="viewer-count-and-chat-activity-overlay">Viewer Count &amp; Chat Activity Overlay</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#hype-meter" title="Jump to the hype meter link options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="hypemeter" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-hype" class="help-link rounded_area" title="Click for detailed help">[?]</label>
                 </h2>
 				<input type="checkbox" id="help-hype" class="link-help-toggle">
@@ -11438,6 +11441,7 @@ input:checked + .slider:before {
                     </span>
                 </h3>
                 <div id="hypemeter" data-raw="" class="hype_meter"></div>
+				<div id="hypemeter-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
             <a href="" id="hype-meter"></a>
 
@@ -11711,7 +11715,7 @@ input:checked + .slider:before {
 				<h2 class="meta_mode_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">📦</span><span>Meta Data Bar</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#meta-bar" title="Jump to the meta bar link options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="meta" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-meta" class="help-link rounded_area" title="Click for detailed help">[?]</label>
 				</h2>
 				<input type="checkbox" id="help-meta" class="link-help-toggle">
@@ -11733,6 +11737,7 @@ input:checked + .slider:before {
 						</span>
 					</h3>
 					<div id="meta" data-raw="" class="streaming_chat"><a href="" id="metalink"></a></div>
+				<div id="meta-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 					<div class="sticky-action-row top-67">
 						<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="auction" title="Send a fake auction_update meta event">
 							<span>Fake Auction Meta</span>
@@ -11966,7 +11971,7 @@ input:checked + .slider:before {
 				<h2 class="tipjar_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">💰</span><span data-translate="tipjar">Tip Jar and Goal Meter</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#tipjarhref" title="Jump to the tip jar link options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="tipjar" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-tipjar" class="help-link rounded_area" title="Click for detailed help">[?]</label>
                 </h2>
 				<input type="checkbox" id="help-tipjar" class="link-help-toggle">
@@ -11988,6 +11993,7 @@ input:checked + .slider:before {
                     </span>
                 </h3>
                 <div id="tipjar" data-raw="" class="tipjar"></div>
+				<div id="tipjar-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
             <a href="" id="tipjarhref"></a>
             <div class="wrapper">
@@ -12350,7 +12356,7 @@ input:checked + .slider:before {
                 <h2 class="waitlist_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🏆</span><span data-translate="wait-list">Wait List / Winner Draw</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#waitlist" title="Jump to the waitlist link options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="waitlist" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-waitlist" class="help-link rounded_area" title="Click for detailed help">[?]</label>
                 </h2>
 				<input type="checkbox" id="help-waitlist" class="link-help-toggle">
@@ -12373,6 +12379,7 @@ input:checked + .slider:before {
                     <span data-translate="in-chat-to-be-added-to-an-ordered-list-of-users-stopstart-to-reset-the-queue"> (or a custom command) in chat to be added to an ordered list of users. Stop/start to reset the queue/draw.</span>
                 </h3>
                 <div id="waitlist" data-raw="" class="waitlist"></div>
+				<div id="waitlist-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
             <a href="" id="wait-list"></a>
             <div class="wrapper hidden" id="waitlistbuttons">
@@ -12632,7 +12639,7 @@ input:checked + .slider:before {
                 <h2 class="flowactions_mode_title">
                     <span data-translate="flowactions">🔄 Flow actions</span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#flowactions" title="Jump to the Flow Actions link options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="flowactions" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-flowactions" class="help-link rounded_area" title="Click for detailed help">[?]</label>
                 </h2>
 				<input type="checkbox" id="help-flowactions" class="link-help-toggle">
@@ -12655,6 +12662,7 @@ input:checked + .slider:before {
                     </span>
                 </h3>
                 <div id="flowactions" data-raw="" class="flowactions_chat"><a href="" id="flowactionslink"></a></div>
+				<div id="flowactions-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
 
 			<div class="wrapper">
@@ -13263,7 +13271,7 @@ input:checked + .slider:before {
                 <h2 class="giveaway_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🎁</span><span data-translate="giveaway">Giveaway Tool</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#giveaway" title="Jump to the giveaway link options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="giveaway" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-giveaway" class="help-link rounded_area" title="Click for detailed help">[?]</label>
                 </h2>
 				<input type="checkbox" id="help-giveaway" class="link-help-toggle">
@@ -13284,6 +13292,7 @@ input:checked + .slider:before {
                     </span>
                 </h3>
                 <div id="giveaway" data-raw="" class="streaming_chat"><a href="" id="giveawaylink"></a></div>
+				<div id="giveaway-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
 
 
@@ -13291,7 +13300,7 @@ input:checked + .slider:before {
                 <h2 class="poll_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🗳️</span><span data-translate="pollmeter">Graphical Poll </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#poll" title="Jump to the poll link options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="poll" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-poll" class="help-link rounded_area" title="Click for detailed help">[?]</label>
                 </h2>
 				<input type="checkbox" id="help-poll" class="link-help-toggle">
@@ -13312,6 +13321,7 @@ input:checked + .slider:before {
                     </span>
                 </h3>
 				<div id="poll" data-raw="" class="streaming_chat"><a href="" id="polllink"></a></div>
+				<div id="poll-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
 			<div class="wrapper">
 				<div class="collapsible">
@@ -13431,7 +13441,7 @@ input:checked + .slider:before {
                 <h2 class="map_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🗺️</span><span data-translate="mapmeter">User Map </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#map" title="Jump to the map link options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="map" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-map" class="help-link rounded_area" title="Click for detailed help">[?]</label>
                 </h2>
 				<input type="checkbox" id="help-map" class="link-help-toggle">
@@ -13452,6 +13462,7 @@ input:checked + .slider:before {
                     </span>
                 </h3>
 				<div id="map" data-raw="" class="streaming_chat"><a href="" id="maplink"></a></div>
+				<div id="map-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
 			<div class="wrapper">
 				<div class="collapsible">
@@ -13623,7 +13634,7 @@ input:checked + .slider:before {
                 <h2 class="credits_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🎬</span><span data-translate="creditsmeter">Credits roll</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#credits" title="Jump to the credits link options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="credits" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-credits" class="help-link rounded_area" title="Click for detailed help">[?]</label>
 				</h2>
 				<input type="checkbox" id="help-credits" class="link-help-toggle">
@@ -13644,6 +13655,7 @@ input:checked + .slider:before {
 					</span>
 				</h3>
 				<div id="credits" data-raw="" class="streaming_chat"><a href="" id="creditslink"></a></div>
+				<div id="credits-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
 			<div class="wrapper">
 				<div class="collapsible">
@@ -13857,7 +13869,7 @@ input:checked + .slider:before {
                 <h2 class="leaderboard_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🏅</span><span data-translate="leaderboardmeter">Leaderboard</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#leaderboard" title="Jump to the leaderboard link options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="leaderboard" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-leaderboard" class="help-link rounded_area" title="Click for detailed help">[?]</label>
 				</h2>
 				<input type="checkbox" id="help-leaderboard" class="link-help-toggle">
@@ -13879,6 +13891,7 @@ input:checked + .slider:before {
 					</span>
 				</h3>
 				<div id="leaderboard" data-raw="" class="streaming_chat"><a href="" id="leaderboardlink"></a></div>
+				<div id="leaderboard-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
 			<div class="wrapper">
 				<div class="collapsible">
@@ -14082,7 +14095,7 @@ input:checked + .slider:before {
 				<h2 class="scoreboard_mode_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">🧮</span><span data-translate="scoreboard">Scoreboard</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#scoreboard" title="Jump to the scoreboard link options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="scoreboard" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-scoreboard" class="help-link rounded_area" title="Click for detailed help">[?]</label>
 				</h2>
 				<input type="checkbox" id="help-scoreboard" class="link-help-toggle">
@@ -14103,6 +14116,7 @@ input:checked + .slider:before {
 					</span>
 				</h3>
 				<div id="scoreboard" data-raw="" class="streaming_chat"><a href="" id="scoreboardlink"></a></div>
+				<div id="scoreboard-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
 			<div class="wrapper">
 				<div class="collapsible">
@@ -14842,7 +14856,6 @@ input:checked + .slider:before {
 				<h2 class="games_mode_title">
 					<span data-translate="interactive-games">🎮 Interactive Games</span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#games" title="Jump to the games link options."><span data-translate="options">[options]</span></a>
 					<label for="help-games" class="help-link rounded_area" title="Click for detailed help">[?]</label>
 				</h2>
 				<input type="checkbox" id="help-games" class="link-help-toggle">
@@ -15259,7 +15272,7 @@ input:checked + .slider:before {
                 <h2 class="ticker_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">📰</span><span data-translate="tickermeter">Ticker </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#ticker" title="Jump to the ticker link options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="ticker" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-ticker" class="help-link rounded_area" title="Click for detailed help">[?]</label>
                 </h2>
 				<input type="checkbox" id="help-ticker" class="link-help-toggle">
@@ -15280,6 +15293,7 @@ input:checked + .slider:before {
                     </span>
                 </h3>
 				<div id="ticker" data-raw="" class="streaming_chat"><a href="" id="tickerlink"></a></div>
+				<div id="ticker-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
             <div class="wrapper">
                 <div class="collapsible">
@@ -15442,7 +15456,7 @@ input:checked + .slider:before {
                 <h2 class="wordcloud_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">☁️</span><span data-translate="wordcloudmeter">Word Cloud </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#wordcloud" title="Jump to the wordcloud link options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="wordcloud" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-wordcloud" class="help-link rounded_area" title="Click for detailed help">[?]</label>
                 </h2>
 				<input type="checkbox" id="help-wordcloud" class="link-help-toggle">
@@ -15463,6 +15477,7 @@ input:checked + .slider:before {
                     </span>
                 </h3>
 				<div id="wordcloud" data-raw="" class="streaming_chat"><a href="" id="wordcloudlink"></a></div>
+				<div id="wordcloud-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
             <div class="wrapper">
                 <div class="collapsible">
@@ -15542,7 +15557,7 @@ input:checked + .slider:before {
                 <h2 class="custom_gif_commands_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🖼️</span><span data-translate="custom-gif-commands">Custom GIF Commands </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#custom-gif-commands" title="Jump to the custom GIF commands options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="custom-gif-commands" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-gif" class="help-link rounded_area" title="Click for detailed help">[?]</label>
 				</h2>
 				<input type="checkbox" id="help-gif" class="link-help-toggle">
@@ -15563,6 +15578,7 @@ input:checked + .slider:before {
 					</span>
 				</h3>
 				<div id="custom-gif-commands" data-raw="" class="streaming_chat"><a href="" id="custom-gif-commandslink"></a></div>
+				<div id="custom-gif-commands-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
 
 			<div class="wrapper">
@@ -15610,7 +15626,7 @@ input:checked + .slider:before {
 					<span class="title-group"><span class="emoji" aria-hidden="true">⏳</span>Timer</span>
 					<span class="options-link-group" style="float: right; display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center;">
 						<a class="copy-link rounded_area" title="Copy timer link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-						<a class="options-link rounded_area" href="#timer" title="Jump to the timer options."><span data-translate="options">[options]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="timer" title="Load an existing link for this overlay">[edit link]</button>
 						<label for="help-timer" class="help-link rounded_area" title="Click for detailed help">[?]</label>
 					</span>
 				</h2>
@@ -15627,6 +15643,7 @@ input:checked + .slider:before {
 				</div>
 				<h3><span class="popup-control-icon" aria-hidden="true">⏱️</span><span>A focused timer overlay for breaks, interviews, countdowns, and on-stream pacing.</span></h3>
 				<div id="timer" data-raw="" class="streaming_chat"><a href="" id="timerlink"></a></div>
+				<div id="timer-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
 
 			<div class="wrapper">
@@ -15726,6 +15743,7 @@ input:checked + .slider:before {
 					<span class="title-group"><span class="emoji" aria-hidden="true">🎵</span>Spotify Integration</span>
 					<span class="options-link-group" style="float: right; display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center;">
 						<a class="copy-link rounded_area" title="Copy overlay link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<button type="button" class="edit-link rounded_area" data-edit-link="spotify" title="Load an existing link for this overlay">[edit link]</button>
 						<label for="help-spotify" class="help-link rounded_area" title="Click for detailed help">[?]</label>
 					</span>
 				</h2>
@@ -15744,6 +15762,7 @@ input:checked + .slider:before {
 				</div>
 				<h3><span class="popup-control-icon" aria-hidden="true">🔌</span><span>Connect your Spotify account to create a widget overlay or announce to chat the current song.</span></h3>
 				<div id="spotify" data-raw="" class="streaming_chat"><a href="" id="spotifylink"></a></div>
+				<div id="spotify-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
 
 			<div class="wrapper">
