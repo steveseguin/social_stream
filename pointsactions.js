@@ -329,24 +329,13 @@ class PointsActions {
         
         const rewardName = args.slice(1).join(' ');
         
-        // TODO: Implement custom reward handling logic
-        // For now, just spend the points
-        const result = await this.pointsSystem.spendPoints(message.chatname, message.type, amount);
-        if (!result.success) {
-            return {
-                success: false,
-                message: `@${message.chatname}, you don't have enough points. ${result.available} available, ${amount} needed.`,
-                commandName: '!spend'
-            };
+        const targetName = (rewardName.startsWith('!') ? rewardName : '!' + rewardName).toLowerCase();
+        const reward = this.customCommands.get(targetName);
+        if (!reward || reward.isDefault || reward.isMetaCommand || reward.cost !== amount ||
+            !(reward.mediaUrl || reward.responseMessage || reward.webhookUrl)) {
+            return {success:false, commandName:'!spend', type:'chat', message:'No matching configured reward at that price. No points spent. Use !rewards or !ticket GIVEAWAY COUNT.'};
         }
-        triggerPointsLeaderboardRefresh('manual-spend');
-        
-        return {
-            success: true,
-            message: `@${message.chatname} spent ${amount} points on "${rewardName}". ${result.remaining} points remaining.`,
-            commandName: '!spend',
-            type: 'chat'
-        };
+        return this.processCommand(Object.assign({}, message, {chatmessage:targetName}));
     }
     
     async handlePointsCommand(message) {
@@ -356,7 +345,7 @@ class PointsActions {
         
         return {
             success: true,
-            message: `@${chatname}, you have ${availablePoints} points (${userData.points} earned, ${userData.pointsSpent} spent). Current streak: ${userData.currentStreak}x`,
+            message: `@${chatname}, you have ${availablePoints} points (${userData.points} earned, ${userData.pointsSpent - (userData.pointsReserved || 0)} spent, ${userData.pointsReserved || 0} reserved). Current streak: ${userData.currentStreak}x`,
             commandName: '!points',
             type: 'chat'
         };
@@ -599,12 +588,13 @@ async function initializePointsActions() {
                 const commandResult = await pointsActions.processCommand(message);
                 
                 // Handle command response if needed
-                if (commandResult && commandResult.success && commandResult.message && commandResult.type === 'chat') {
+                if (commandResult && commandResult.message && (commandResult.type === 'chat' || !commandResult.success)) {
                     // Create a response message
                     const responseMessage = {
                         chatname: 'PointsBot',
                         chatmessage: commandResult.message,
                         type: 'bot',
+                        bot: true,
                         timestamp: Date.now()
                     };
                     

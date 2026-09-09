@@ -3981,7 +3981,8 @@ class EventFlowSystem {
 						this.pointsSystem = window.pointsSystem || this.pointsSystem;
 					}
 					const system = this.pointsSystem;
-					if (system && config.amount > 0) {
+                    if (!system || !Number.isFinite(config.amount) || config.amount <= 0) throw new Error('Points system or amount is unavailable.');
+                    if (system && config.amount > 0) {
 						const spendResult = await system.spendPoints( // Capture the result
 							message.chatname,
 							message.type,
@@ -3998,8 +3999,32 @@ class EventFlowSystem {
 					}
 				} catch (e) {
 					console.warn('[ExecuteAction - spendPoints] failed', e);
+                    result.stopChain = true;
 				}
 				break;
+
+            case 'giveawayControl': {
+                const allowed = ['entergiveaway','buygiveawaytickets','grantgiveawaytickets','closegiveaway','drawgiveaway','cancelgiveaway','getgiveawaystate'];
+                let reply;
+                try {
+                    if (!allowed.includes(config.command)) throw new Error('Choose a giveaway action.');
+                    if (message && message.meta && message.meta.economyTest) {
+                        reply = {ok:true,simulated:true,message:'Simulation only: no entries or points changed.'};
+                    } else {
+                        if (typeof window.handleGiveawayAction !== 'function') throw new Error('Giveaway actions must run on the SSN host.');
+                        if (!this.economyEpoch) this.economyEpoch = Date.now() + '-' + Math.random();
+                        const sourceId = message && message.meta && message.meta.messageId;
+                        const localId = message && message.id;
+                        if (!sourceId && localId === undefined) throw new Error('A captured message ID is required for safe giveaway automation.');
+                        const operationId = 'flow:' + JSON.stringify([flow.id,actionNode.id,sourceId || this.economyEpoch + ':' + localId,message.type]);
+                        reply = await window.handleGiveawayAction(config.command,{giveawayId:config.giveawayId || 'default',count:Number(config.count || 1),side:config.side || undefined,operationId:operationId},message);
+                    }
+                } catch (error) { reply = {ok:false,error:error.message}; }
+                result.message = {...message,meta:{...(message && typeof message.meta === 'object' && !Array.isArray(message.meta) ? message.meta : {}),giveawayControlResult:reply}};
+                result.modified = true;
+                if (!reply.ok) result.stopChain = true;
+                break;
+            }
                 
             case 'customJs':
                 if (!this.allowEvalCustomJs) {

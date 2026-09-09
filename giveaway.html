@@ -1121,7 +1121,7 @@
             compileKeyword();
             document.getElementById('current-keyword').textContent = currentKeyword;
             try {
-                localStorage.setItem('giveaway_keyword_' + roomID + '_' + password, currentKeyword);
+                localStorage.setItem('giveaway_keyword_' + JSON.stringify([roomID, password]), currentKeyword);
             } catch (e) {}
             sendGiveawayMessage({ action: 'keyword_update', keyword: currentKeyword, timestamp: Date.now() });
             input.value = '';
@@ -1133,7 +1133,7 @@
                 compileKeyword();
                 document.getElementById('current-keyword').textContent = currentKeyword;
                 try {
-                    localStorage.setItem('giveaway_keyword_' + roomID + '_' + password, currentKeyword);
+                    localStorage.setItem('giveaway_keyword_' + JSON.stringify([roomID, password]), currentKeyword);
                 } catch (e) {}
             }
         }
@@ -1145,6 +1145,7 @@
             if (!data || typeof data !== 'object') {
                 return;
             }
+            if (data.bot || data.reflection || data.replay || data.history || data.reload || data.private || data.event || isSpinning) return;
             var msg = data.chatmessage;
             if (typeof msg !== 'string' || !msg) {
                 return;
@@ -1357,7 +1358,7 @@
                 saveTimer = null;
             }
             try {
-                localStorage.setItem('giveawayWheelState_' + roomID + '_' + password, JSON.stringify({ entrants: buildEntrantsObject(), timestamp: Date.now() }));
+                localStorage.setItem('giveawayWheelState_' + JSON.stringify([roomID, password]), JSON.stringify({ entrants: buildEntrantsObject(), timestamp: Date.now() }));
             } catch (e) {
                 dbg('saveNow failed', e);
             }
@@ -1799,7 +1800,7 @@
             }
             renderWinners();
             try {
-                localStorage.setItem('giveaway_winners_' + roomID + '_' + password, JSON.stringify(winners));
+                localStorage.setItem('giveaway_winners_' + JSON.stringify([roomID, password]), JSON.stringify(winners));
             } catch (e) {}
         }
 
@@ -1836,7 +1837,7 @@
             winners = [];
             renderWinners();
             try {
-                localStorage.removeItem('giveaway_winners_' + roomID + '_' + password);
+                localStorage.removeItem('giveaway_winners_' + JSON.stringify([roomID, password]));
             } catch (e) {}
         }
 
@@ -1857,13 +1858,13 @@
             settings.removeWinner = document.getElementById('remove-winner').checked;
             settings.spinDuration = parseInt(document.getElementById('spin-duration').value, 10) || 4000;
             try {
-                localStorage.setItem('giveaway_settings_' + roomID + '_' + password, JSON.stringify(settings));
+                localStorage.setItem('giveaway_settings_' + JSON.stringify([roomID, password]), JSON.stringify(settings));
             } catch (e) {}
         }
 
         function loadSettings() {
             try {
-                var saved = localStorage.getItem('giveaway_settings_' + roomID + '_' + password);
+                var saved = localStorage.getItem('giveaway_settings_' + JSON.stringify([roomID, password]));
                 if (saved) {
                     var parsed = JSON.parse(saved);
                     if (parsed && typeof parsed === 'object') {
@@ -1964,7 +1965,7 @@
             if (urlParams.has("managed")) { startManagedGiveaway(); return; }
             loadSettings();
             try {
-                var savedKeyword = localStorage.getItem('giveaway_keyword_' + roomID + '_' + password);
+                var savedKeyword = localStorage.getItem('giveaway_keyword_' + JSON.stringify([roomID, password]));
                 if (savedKeyword) {
                     currentKeyword = savedKeyword;
                     document.getElementById('current-keyword').textContent = currentKeyword;
@@ -1973,7 +1974,7 @@
             compileKeyword();
 
             try {
-                var savedState = localStorage.getItem('giveawayWheelState_' + roomID + '_' + password);
+                var savedState = localStorage.getItem('giveawayWheelState_' + JSON.stringify([roomID, password]));
                 if (savedState) {
                     var state = JSON.parse(savedState);
                     if (state && state.entrants) {
@@ -1983,7 +1984,7 @@
             } catch (e) {}
 
             try {
-                var savedWinners = localStorage.getItem('giveaway_winners_' + roomID + '_' + password);
+                var savedWinners = localStorage.getItem('giveaway_winners_' + JSON.stringify([roomID, password]));
                 if (savedWinners) {
                     var parsedWinners = JSON.parse(savedWinners);
                     if (Array.isArray(parsedWinners)) {

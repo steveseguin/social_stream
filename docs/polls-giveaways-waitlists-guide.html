@@ -57,6 +57,7 @@
 <section class="page-hero">
 <div class="container">
 <h1>Polls, giveaways, and waitlists</h1>
+<p><a href="giveaway-points-guide.html">Giveaways, paid tickets, game prizes and recovery guide</a></p>
 <p>Run a chat vote, draw a winner, or organize the next viewers to participate.</p>
 </div>
 </section>
@@ -98,7 +99,7 @@
 </tr>
 </tbody>
 </table>
-<p>Use the generated link from that section as an OBS Browser Source. Keep SSN and your chat sources active, and preserve the link’s session, password, and server options. The separate community <strong>Giveaway Tool</strong> is marked unstable in the menu; this walkthrough uses the built-in Wait List / Winner Draw.</p>
+<p>Use the generated link from that section as an OBS Browser Source. Keep SSN and your chat sources active, and preserve the link’s session, password, and server options. The <strong>Giveaway Tool</strong> offers a separate pool with winner-card, name-reel, and community-wheel presentations. Use its Giveaway Options panel for dedicated giveaway controls; Wait List / Winner Draw remains available independently.</p>
 </section>
 <section class="guide-card" id="poll">
 <h2>2. Run a multiple-choice poll</h2>
@@ -117,7 +118,22 @@
 </figure>
 <p>Free-form polls accept hashtag votes; <strong>Hashtag anywhere</strong> allows a hashtag within a longer message. <strong>Save Current Poll</strong> saves a preset for reuse; it is not a permanent record of audience results. Repeated votes from the same voter are ignored unless multiple votes are enabled.</p>
 </section>
-<section class="guide-card" id="draw">
+<section class="guide-card" id="giveaway"><h2>Dedicated giveaway tools</h2>
+<p>Open <strong>Giveaway Tool &rarr; Giveaway Options</strong>. Set the entry keyword, choose exact-message or separate-word matching, and optionally restrict entries to members. Click <strong>Open entries</strong>, then <strong>Draw winner</strong> when ready. Drawing closes entries automatically. Open entries again to resume the same pool; Reset clears entries and winner history and leaves entries closed.</p>
+<p>Choose <strong>Winner card</strong>, <strong>Name reel</strong>, or <strong>Community wheel</strong>, and one of six styles. Preview uses fictional names and never joins your session. Copy the generated <code>giveaway.html?session=YOUR_SESSION&amp;managed</code> link into OBS. The managed audience display contains no operator controls or session details. Style and title are link settings; entry rules are host settings applied when entries open.</p>
+<p>All managed displays share the host's pool and selected winner. Selection uses secure random numbers with equal odds per eligible entry. Identity is deduplicated within each platform using the supplied user ID, username, or display name; different platforms are separate identities. Winners cannot re-enter until reset unless repeat winners are allowed. The pool holds up to 10,000 entries; the wheel illustrates a sample of up to 120 names for large pools, but selection always uses the entire eligible pool.</p>
+<p>Keep SSN running. The pool is held in host memory and clears on restart or session change. Refreshing an audience page receives the current result. Membership restrictions require sources that supply membership information. Historical, replayed, private, bot, and event-only messages are excluded. Entry text must contain the configured keyword; donation value does not change odds.</p>
+<h3>API, Stream Deck, and Event Flow</h3>
+<p>The same host actions serve popup buttons, the existing HTTP/WebSocket API, and Stream Deck's generic SSN action interface. No giveaway display needs to be open to collect entries or draw. Use the existing Event Flow Webhook action with your SSN API endpoint to automate these commands.</p>
+<table class="guide-table"><thead><tr><th>Action</th><th>Effect</th></tr></thead><tbody>
+<tr><td><code>startgiveaway</code></td><td>Open or resume entries. Optional value: <code>{"keyword":"!enter","match":"exact","membersOnly":false,"removeWinner":true}</code>. Without a value, use popup entry settings.</td></tr>
+<tr><td><code>closegiveaway</code></td><td>Close entries and retain the pool.</td></tr>
+<tr><td><code>drawgiveaway</code></td><td>Close entries and select one eligible winner. Returns an error for an empty pool.</td></tr>
+<tr><td><code>resetgiveaway</code></td><td>Clear entries and winners; leave entries closed.</td></tr>
+<tr><td><code>getgiveawaystate</code></td><td>Read entry count, open/closed state, entry rules, and recent winners.</td></tr>
+</tbody></table>
+<pre>{"action":"drawgiveaway","get":"draw-1"}</pre>
+<p>Protocol 2 Stream Deck requests use the same action names and receive correlated host responses. These responses describe giveaway state, not OBS visibility. The older standalone community wheel remains available by omitting <code>managed</code>; it has its own local pool and is not controlled by these host actions. Its local storage is now scoped by session and password, exact matching means the whole message, and its draw uses secure randomness.</p></section><section class="guide-card" id="draw">
 <h2>3. Draw a winner</h2>
 <ol class="guide-steps">
 <li>Open <strong>Wait List / Winner Draw → Enable and customize</strong>. Enable the trigger and set a clear command such as <code>!join</code>.</li>

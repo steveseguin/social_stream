@@ -2,6 +2,8 @@
     'use strict';
     window.startManagedGiveaway = function() {
         document.body.classList.add('managed-giveaway');
+        document.body.setAttribute('data-backdrop',urlParams.get('backdrop') === 'panel' ? 'panel' : 'transparent');
+        var giveawayId = urlParams.get('giveaway') || 'default';
         var mode = urlParams.get('presentation') || 'card';
         if (['card', 'reel', 'wheel'].indexOf(mode) === -1) mode = 'card';
         document.body.setAttribute('data-presentation', mode);
@@ -22,7 +24,7 @@
         var count = document.createElement('p');
         stage.appendChild(title); stage.appendChild(stateLabel); stage.appendChild(result); stage.appendChild(count);
         document.querySelector('.col-left').insertBefore(stage, document.querySelector('.col-left').firstChild);
-        var lastDraw = null, lastRevision = -1, lastEpoch = null, animation = null, finishTimer = null, wheelFrame = null;
+        var lastDraw = null, lastRevision = -1, lastEpoch = null, lastGeneration = -1, animation = null, finishTimer = null, wheelFrame = null;
         function cancelReveal() {
             clearInterval(animation); clearTimeout(finishTimer);
             if (wheelFrame !== null) cancelAnimationFrame(wheelFrame);
@@ -32,12 +34,16 @@
         function receive(payload) {
             var state = payload && payload.event === 'giveaway_state' && payload.meta && payload.meta.giveaway;
             if (!state || !Array.isArray(state.entrants) || !Array.isArray(state.winners)) return;
+            if ((state.giveawayId || 'default') !== giveawayId) return;
+            if (Number.isFinite(state.generation)) {if(state.generation < lastGeneration)return;lastGeneration=state.generation;}
             if (state.epoch !== lastEpoch) { lastEpoch = state.epoch; lastRevision = -1; lastDraw = null; }
             if (state.revision <= lastRevision) return;
             lastRevision = state.revision;
-            stateLabel.textContent = state.open ? 'Type ' + state.keyword + ' to enter' : 'Entries closed';
+            stateLabel.textContent = state.open ? (state.config && state.config.ticketCost ? 'Enter: !ticket ' + giveawayId + ' 1' + (state.config.kind === 'coin' ? ' heads (or tails)' : '') : 'Type ' + state.keyword + ' to enter') : 'Entries closed';
             count.textContent = state.count + (state.count === 1 ? ' eligible entry' : ' eligible entries');
+            if(state.number){stateLabel.textContent=state.open?'Guess '+state.number.low+'–'+state.number.high+': !guess '+giveawayId+' NUMBER':'Round closed';count.textContent=state.number.guesses.map(function(g){return g.name+': '+g.guess+' ('+g.hint+')';}).join(' · ') || 'One guess per viewer every 5 seconds.';}
             var winner = state.winners[0];
+            if (state.outcome) winner = {name:state.outcome.charAt(0).toUpperCase()+state.outcome.slice(1)};
             var newDraw = lastDraw !== null && state.draw !== lastDraw && winner;
             if (state.draw !== lastDraw) {
                 cancelReveal();
@@ -83,20 +89,24 @@
             if (event.source !== iframe.contentWindow) return;
             receive(event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja);
         });
-        if (roomID !== 'test') document.body.appendChild(iframe);
+        if (roomID !== 'test' && !urlParams.has('preview')) document.body.appendChild(iframe);
         if (urlParams.has('preview')) {
             receive({event:'giveaway_state', meta:{giveaway:{epoch:'preview', revision:1, draw:0, open:true, keyword:'!enter', count:3,
                 entrants:[{id:'1',name:'Avery',platform:'youtube'},{id:'2',name:'Morgan',platform:'twitch'},{id:'3',name:'Sam',platform:'kick'}], winners:[]}}});
         }
         syncCanvasSize();
         // An optional websocket follows the normal overlay receive channel.
-        if ((urlParams.has('server') || urlParams.has('localserver')) && roomID !== 'test') {
+        if ((urlParams.has('server') || urlParams.has('server2') || urlParams.has('localserver')) && roomID !== 'test' && !urlParams.has('preview')) {
             var socket;
             var stopped = false;
             function connect() {
                 var server = urlParams.has('localserver') ? SocialStreamLocalServer.getWebSocketUrl() : (urlParams.get('server') || 'wss://io.socialstream.ninja/api');
                 socket = new WebSocket(server);
-                socket.onopen = function() { socket.send(JSON.stringify({join:roomID.split(',')[0], out:2, in:1})); };
+                socket.onopen = function() {
+                    var displayFeed = urlParams.has('server2');
+                    socket.send(JSON.stringify({join:roomID.split(',')[0], out:displayFeed ? 3 : 1, in:displayFeed ? 4 : 2}));
+                    socket.send(JSON.stringify({action:'getgiveawaystate'}));
+                };
                 socket.onmessage = function(event) { try { receive(JSON.parse(event.data)); } catch (error) {} };
                 socket.onclose = function() { if (!stopped) setTimeout(connect, 2000); };
             }

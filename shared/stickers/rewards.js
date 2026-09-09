@@ -61,24 +61,28 @@
                 return { success: false, message: 'Sticker settings changed; no points spent. Please try again.' };
             }
             // Use the existing points ledger's account key; do not create a second balance system.
-            var debit = await system.spendPoints(message.chatname, message.type, reward.cost);
+            var nativeId = message.meta && message.meta.messageId;
+            var redemptionId = nativeId ? 'sticker-' + JSON.stringify([message.type,nativeId,reward.id]) : 'sticker-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+            var debit = await system.spendPoints(message.chatname, message.type, reward.cost, redemptionId);
+            if(debit.duplicate)return {success:false,message:'This sticker request was already processed; no additional points spent.'};
             if (!debit.success) return { success: false, message: 'Not enough points for ' + reward.name + ' (' + reward.cost + ' points).' };
             spent = true;
-            var redemptionId = 'sticker-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
             delivered = await options.send({ platform: message.type, type: message.type, event: 'sticker',
                 chatname: message.chatname, chatmessage: '', textonly: true, contentimg: reward.url || 'media/stickers/' + reward.image,
                 meta: { sticker: { id: reward.id, pack: reward.pack, name: reward.name, cost: reward.cost,
                     duration: reward.duration, motion: reward.motion, redemptionId: redemptionId, expiresAt: Date.now() + 20000 } } });
             if (!delivered) throw new Error('Sticker display was not confirmed');
+            if(system.pointRedemption && !(await system.pointRedemption(message.chatname,message.type,reward.cost,redemptionId,'complete')).success) throw new Error('Point settlement was not confirmed');
             this.users.set(identity, Date.now() + config.userCooldown * 1000);
             this.stickers.set(reward.id, Date.now() + config.stickerCooldown * 1000);
             this.nextAt = Date.now() + (reward.duration + config.gap) * 1000;
             if (options.changed) { try { options.changed(); } catch (_) {} }
             return { success: true, message: reward.name + ' redeemed for ' + reward.cost + ' points. ' + debit.remaining + ' remaining.' };
         } catch (error) {
+            if(delivered)return {success:false,message:'Sticker displayed, but point settlement could not be confirmed. The host will recover the pending payment.'};
             if (spent && !delivered && system) {
                 try {
-                    await system.refundPoints(message.chatname, message.type, reward.cost);
+                    await system.refundPoints(message.chatname, message.type, reward.cost, redemptionId);
                     return { success: false, message: 'Sticker delivery failed; your points were returned.' };
                 } catch (refundError) {
                     console.error('Sticker refund failed', refundError);
