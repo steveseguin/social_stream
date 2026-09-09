@@ -17,5 +17,8 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
  assert.equal(missing.stopChain,true);assert.equal(calls.length,2);
  const unavailable=await system.executeAction({id:'spend',actionType:'spendPoints',config:{amount:3}},message,flow);
  assert.equal(unavailable.stopChain,true);assert.equal(unavailable.blocked,false);
+ const primitive=await system.executeAction(node,{...message,meta:12},flow);assert.equal(primitive.message.meta,12);assert.equal(primitive.giveawayControlResult.ok,false);
+ let spent=0;system.pointsSystem={spendPoints:async()=>{spent++;}};
+ await system.executeAction({id:'spend',actionType:'spendPoints',config:{amount:3}},{...message,meta:{economyTest:true}},flow);assert.equal(spent,0);
  console.log('Event Flow atomic giveaway action, retry identity, simulation, and failure isolation passed.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
