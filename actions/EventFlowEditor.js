@@ -1,6 +1,15 @@
 // Predefined flow templates for quick setup
 // Node positions are arranged top-to-bottom to match visual flow direction
 const FLOW_TEMPLATES = {
+    'streamdeck-workflow': {
+        name: 'Stream Deck / API button', active: false,
+        description: 'Starts disabled. Save and enable, then choose Run Workflow in Stream Deck and refresh. Open Flow Actions to see the text. Each press starts a run.',
+        nodes: [
+            { id: 'api_button', type: 'trigger', triggerType: 'apiTrigger', x: 100, y: 50, config: { trigger: 'intermission' } },
+            { id: 'api_text', type: 'action', actionType: 'showText', x: 100, y: 230, config: { text: 'Back in five minutes', duration: 5000 } }
+        ],
+        connections: [{ from: 'api_button', to: 'api_text' }]
+    },
     'donation-celebration': {
         name: "Donation: celebration + voice",
         description: "Output: Flow Actions overlay. Synthetic thank-you voice and celebration. Starts disabled: test, then enable. Disable donation sound in Multi-Alerts if both handle the same event.",
@@ -94,6 +103,26 @@ const FLOW_TEMPLATES = {
     },
 
     // === INTERMEDIATE TEMPLATES ===
+    'obs-hourly-message': {
+        name: 'Hourly message while OBS is live',
+        description: 'Starts disabled. Choose your message and chat platform in Send Message, connect Flow Actions to OBS, then enable before starting your stream. Repeats every 3600 seconds while the switch is ON. The schedule does not restart with OBS; the first message may arrive sooner than one hour.',
+        active: false,
+        nodes: [
+            { id: 'obs_started', type: 'trigger', triggerType: 'obsStreamStarted', x: 50, y: 50, config: {} },
+            { id: 'hourly_timer', type: 'trigger', triggerType: 'timeInterval', x: 320, y: 50, config: { interval: 3600 } },
+            { id: 'obs_stopped', type: 'trigger', triggerType: 'obsStreamStopped', x: 590, y: 50, config: {} },
+            { id: 'switch_on', type: 'action', actionType: 'setGateState', label: 'Turn reminders ON', x: 50, y: 230, config: { targetNodeId: 'live_switch', state: 'ALLOW' } },
+            { id: 'live_switch', type: 'state', stateType: 'GATE', x: 320, y: 230, config: { name: 'OBS live reminders', defaultState: 'BLOCK', autoResetMs: 0 } },
+            { id: 'switch_off', type: 'action', actionType: 'setGateState', label: 'Turn reminders OFF', x: 590, y: 230, config: { targetNodeId: 'live_switch', state: 'BLOCK' } },
+            { id: 'send_reminder', type: 'action', actionType: 'sendMessage', x: 320, y: 410, config: { destination: 'twitch', template: 'Enjoying the stream? Remember to follow and stay hydrated!', timeout: 0, sanitizeMode: 'safe' } }
+        ],
+        connections: [
+            { from: 'obs_started', to: 'switch_on' },
+            { from: 'hourly_timer', to: 'live_switch' },
+            { from: 'live_switch', to: 'send_reminder' },
+            { from: 'obs_stopped', to: 'switch_off' }
+        ]
+    },
     'bad-words-filter': {
         name: 'Bad Words Filter',
         description: 'Block messages containing profanity',
@@ -266,6 +295,10 @@ class EventFlowEditor {
         // Initialize all node type definitions here
         // Grouped trigger types for collapsible sections (like actions)
         this.triggerGroups = [
+            {
+                id: 'remote-control', name: 'Stream Deck & API', expanded: true,
+                triggers: [{ id: 'apiTrigger', name: '▶ Run from Stream Deck / API' }]
+            },
             {
                 id: 'stream-events',
                 name: '📣 Stream Events',
@@ -737,6 +770,8 @@ class EventFlowEditor {
                                 <option value="skip-song">Skip Song Command (Mods)</option>
                             </optgroup>
                             <optgroup label="Intermediate">
+                                <option value="streamdeck-workflow">Stream Deck / API button</option>
+                                <option value="obs-hourly-message">Hourly message while OBS is live</option>
                                 <option value="bad-words-filter">Bad Words Filter</option>
                                 <option value="alert-overlay">Chat Alert Overlay</option>
                                 <option value="vip-highlight">VIP Message Highlight</option>
@@ -1820,21 +1855,7 @@ class EventFlowEditor {
             // Deep copy the template to avoid modifying the original
             const flowData = JSON.parse(JSON.stringify(template));
 
-            // Generate unique node IDs for this instance
-            const idMap = {};
-            flowData.nodes = flowData.nodes.map(node => {
-                const newId = `node_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
-                idMap[node.id] = newId;
-                return { ...node, id: newId };
-            });
-
-            // Update connection references with new IDs
-            flowData.connections = flowData.connections.map(conn => ({
-                from: idMap[conn.from] || conn.from,
-                to: idMap[conn.to] || conn.to
-            }));
-
-            // Import using existing method - get the saved flow back
+            // The importer assigns fresh IDs and remaps both wires and state-node targets.
             const savedFlow = await this.importSingleFlow(flowData, true);
             if (savedFlow && savedFlow.id) {
                 await this.loadFlowList();
@@ -2222,6 +2243,7 @@ class EventFlowEditor {
                     const eventType = node.config.eventType || 'Not set';
                     return `Event: ${eventType}`;
                 }
+                case 'apiTrigger': return `API: ${node.config.trigger || 'Set a trigger name'}`;
                 case 'eventCustom': {
                     const eventType = node.config.eventType || 'Custom';
                     return `Custom: ${eventType}`;
@@ -3206,6 +3228,7 @@ class EventFlowEditor {
                 case 'eventRaid': node.config = { sources: [], minViewers: 0 }; break;
                 case 'eventCheer': node.config = { sources: [], minBits: 0 }; break;
                 case 'eventOther': node.config = { eventType: '' }; break;
+                case 'apiTrigger': node.config = { trigger: '' }; break;
                 case 'eventCustom': node.config = { eventType: '', customCondition: '' }; break;
                 case 'obsStreamStarted': node.config = {}; break;
                 case 'obsStreamStopped': node.config = {}; break;
@@ -3262,6 +3285,10 @@ class EventFlowEditor {
 					node.config = { amount: 100 }; break;
                 case 'spendPoints':
 					node.config = { amount: 100 }; break;
+                case 'spotifyVolume':
+                    node.config = { volume: 50 }; break;
+                case 'ttsVolume':
+                    node.config = { volume: 100 }; break;
                 case 'giveawayControl':
                     node.config = { command:'entergiveaway', giveawayId:'default', count:1, side:'' }; break;
                 case 'customJs':
@@ -4167,6 +4194,20 @@ class EventFlowEditor {
 					</div>`;
 				break;
 
+			case 'apiTrigger':
+                html += `
+                    <div class="property-group">
+                        <label class="property-label" for="prop-trigger">Trigger name</label>
+                        <input type="text" class="property-input" id="prop-trigger" maxlength="100" value="${this.escapeHtml(node.config.trigger || '')}" placeholder="e.g., intermission">
+                        <div class="property-help">Use an exact, case-sensitive name. Save and enable this flow, then select <strong>Run Workflow</strong> in Stream Deck. Only flows with this trigger can be called.</div>
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">API request</label>
+                        <pre class="property-help" style="white-space:pre-wrap;overflow-wrap:anywhere">${this.escapeHtml(JSON.stringify({ action: 'triggerWorkflow', value: { trigger: node.config.trigger || 'intermission' } }, null, 2))}</pre>
+                        <div class="property-help">Optional JSON data is available as <code>{meta.workflow.data.name}</code>. Each press starts a run; use a Rate Limiter node for a cooldown. The API acknowledges acceptance, not completion of delayed or external actions.</div>
+                        <a href="../docs/streamdeck-event-flow.html" target="_blank" rel="noopener">Workflow setup and API guide</a>
+                    </div>`;
+                break;
 			case 'eventCustom':
 				html += `
 					<div class="property-group">
@@ -5985,10 +6026,10 @@ class EventFlowEditor {
 					<div class="property-group">
 						<label class="property-label">Volume Level</label>
 						<input type="range" class="property-input" id="prop-volume"
-							value="${node.config.volume || 50}" min="0" max="100" step="5"
+							value="${node.config.volume ?? 50}" min="0" max="100" step="5"
 							oninput="document.getElementById('volume-display').textContent = this.value + '%'">
 						<div style="text-align: center; margin-top: 5px;">
-							<span id="volume-display">${node.config.volume || 50}%</span>
+							<span id="volume-display">${node.config.volume ?? 50}%</span>
 						</div>
 						<div class="property-help">Set the playback volume (0-100%)</div>
 					</div>

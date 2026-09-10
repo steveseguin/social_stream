@@ -71,6 +71,8 @@
 	};
 
 	const SSN_ACTIONS = {
+		getWorkflowTriggers: true,
+		triggerWorkflow: true,
         getCommerceState: true,
 		commerceShow: true,
 		commerceNext: true,
@@ -141,6 +143,14 @@
 	};
 
 	const REMOTE_SSN_ACTION_DESCRIPTORS = {
+		getWorkflowTriggers: { owner: "background", phase: 2, category: "workflows", label: "List enabled workflow triggers", risk: "read-only", callback: "guaranteed" },
+		triggerWorkflow: {
+			owner: "background", phase: 2, category: "workflows", label: "Run Event Flow workflow", risk: "mutating", callback: "guaranteed",
+			valueSchema: { anyOf: [
+				{ type: "string", minLength: 1, maxLength: 32768, description: "Trigger name or JSON-encoded workflow value." },
+				{ type: "object", required: ["trigger"], properties: { trigger: { type: "string", minLength: 1, maxLength: 100 }, flowId: { type: "string", minLength: 1 }, data: { type: "object" } }, additionalProperties: false }
+			] }
+		},
 		getgiveawayentries: { owner: "background", phase: 2, category: "giveaway", label: "Giveaway entries", risk: "read-only", callback: "guaranteed" },
 		removegiveawayentry: { owner: "background", phase: 2, category: "giveaway", label: "Remove and refund entry", risk: "mutating", callback: "guaranteed" },
 		guessgiveaway: { owner: "background", phase: 2, category: "giveaway", label: "Guess Number Hunt", risk: "mutating", callback: "guaranteed" },

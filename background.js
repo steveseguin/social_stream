@@ -10966,6 +10966,14 @@ async function handleStreamDeckBackgroundRequest(request) {
 	}
 
 	const action = router.normalizeAction(request.action);
+    if (action === "getWorkflowTriggers" || action === "triggerWorkflow") {
+        const system = window.eventFlowSystem;
+        if (!system || typeof system.triggerWorkflow !== "function") return router.makeError(request, "TARGET_UNAVAILABLE", "Event Flow is still loading.");
+        if (action === "getWorkflowTriggers") return router.makeResponse(request, { triggers: system.getWorkflowTriggers() });
+        const result = system.triggerWorkflow(request.value);
+        if (!result.ok) return router.makeError(request, result.code, result.message);
+        return router.makeResponse(request, { trigger: result.trigger, matchedFlows: result.matchedFlows, flows: result.flows }, "accepted");
+    }
     if (action === "getCommerceState") {
         if (!window.handleMonetizationRequest) return router.makeError(request, "TARGET_UNAVAILABLE", "Product controls are still loading.");
         const result = await window.handleMonetizationRequest({ action: "getCommerceState" });
@@ -11093,7 +11101,7 @@ async function routeStreamDeckRemoteRequest(request, context) {
 			result: await handleStreamDeckSsappRequest(request)
 		};
 	}
-	if ((router.isVersionedRequest(request) || isGiveawayAction(request.action) || isCreditsRemoteAction(request.action) || router.isCommerceAction(request.action) || request.action === "getCommerceState") && router.isRemoteSsnRequest(request, "background")) {
+	if ((router.isVersionedRequest(request) || isGiveawayAction(request.action) || isCreditsRemoteAction(request.action) || router.isCommerceAction(request.action) || request.action === "getCommerceState" || request.action === "triggerWorkflow" || request.action === "getWorkflowTriggers") && router.isRemoteSsnRequest(request, "background")) {
 		return {
 			kind: "command",
 			result: await handleStreamDeckBackgroundRequest(request)
