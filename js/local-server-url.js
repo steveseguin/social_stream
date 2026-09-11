@@ -65,7 +65,9 @@
 	// game links retain their server/P2P behavior.
 	function getChatRelayConfig(searchParams) {
 		var params = getSearchParams(searchParams);
-		var extensionFeed = !!(params && params.has("localserver") && params.has("server2"));
+		// An explicit API relay keeps its original address and channel even when
+		// a generated local link also carries the captured-chat flag.
+		var extensionFeed = !!(params && params.has("localserver") && params.has("server2") && !params.get("server"));
 		return {
 			enabled: !!(params && (params.has("server") || extensionFeed)),
 			url: getRelayUrl(params, extensionFeed ? "server2" : "server",
