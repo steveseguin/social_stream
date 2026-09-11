@@ -13257,14 +13257,15 @@ async function trySendTargetP2P(data, target) {
 	if (target === "actions" && urlParams.has("localserver")) {
 		var localActionSocket = socketserverDock && socketserverDock.readyState === WebSocket.OPEN ? socketserverDock
 			: socketserver && socketserver.readyState === WebSocket.OPEN ? socketserver : null;
-		if (!localActionSocket) return false;
-		try {
-			localActionSocket.send(JSON.stringify(Object.assign({}, data, { out: 6 })));
-			return true;
-		} catch (error) {
-			console.warn("Local action delivery failed", error);
-			return false;
+		if (localActionSocket) {
+			try {
+				localActionSocket.send(JSON.stringify(Object.assign({}, data, { out: 6 })));
+				return true;
+			} catch (error) {
+				console.warn("Local action delivery failed", error);
+			}
 		}
+		// With every relay route disabled, keep the existing connected-peer path.
 	}
 	// function to send data to a labelled page via the VDO.Ninja API
 	if (ninjaBridge && ninjaBridge.isReady()) {
