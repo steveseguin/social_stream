@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="js/local-server-url.js"></script>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Social Stream Control Dock</title>
@@ -351,7 +352,7 @@
 			"use strict";
 
 			var STORAGE_KEY = "ssn-obs-control-session-v1";
-			var WEBSOCKET_URL = "wss://io.socialstream.ninja:443";
+			var WEBSOCKET_URL = SocialStreamLocalServer.getRelayUrl(new URLSearchParams(location.search), null, "wss://io.socialstream.ninja:443");
 			var customServer = new URLSearchParams(location.search).get("server");
 			if (customServer && /^wss?:\/\//i.test(customServer)) WEBSOCKET_URL = customServer;
 			var socket = null;
@@ -487,7 +488,12 @@
 				commerceDock.disconnected();
 				sessionId = nextSession;
 				sessionInput.value = sessionId;
-				fullApiLink.href = "./sampleapi.html?session=" + encodeURIComponent(sessionId);
+				var apiUrl = new URL('./sampleapi.html', location.href);
+				apiUrl.searchParams.set('session', sessionId);
+				['server', 'localserver', 'localserverport'].forEach(function (key) {
+					if (getUrlParams().has(key)) apiUrl.searchParams.set(key, getUrlParams().get(key));
+				});
+				fullApiLink.href = apiUrl.href;
 				shouldReconnect = true;
 				clearReconnectTimer();
 				if (socket) {

@@ -3580,13 +3580,16 @@ function getGameServerParamSupport(contextPath) {
     return FULL_SERVER_LINK_SUPPORT;
   }
   if (gamePath.indexOf("games/") === 0) {
-    return { server: true, server2: false, server3: false };
+    return { server: true, server2: urlParams.has('localserver'), server3: false };
   }
   return SERVER_PARAM_SUPPORT_BY_TARGET.games || FULL_SERVER_LINK_SUPPORT;
 }
 
 function getServerParamSupportForTarget(targetId, contextPath) {
   if (targetId === "chatoverlaytemplate") {
+    if (urlParams.has('localserver') && normalizeGeneratedPath(contextPath || getSelectedChatOverlayTemplatePath()) === 'themes/LuckyLootTube/luckyloottube.html') {
+      return { server: true, server2: true, server3: false };
+    }
     return CHAT_OVERLAY_SERVER_PARAM_SUPPORT[normalizeGeneratedPath(contextPath || getSelectedChatOverlayTemplatePath())] || NO_SERVER_LINK_SUPPORT;
   }
   if (targetId === "overlay") {
@@ -4005,7 +4008,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
 
   const obsControlDockUrl = document.getElementById("obs_control_dock_url");
   if (obsControlDockUrl) {
-    obsControlDockUrl.href = buildGeneratedUrl("obs-control-dock.html", `session=${encodeURIComponent(streamID)}`, baseURL);
+    obsControlDockUrl.href = buildGeneratedUrl("obs-control-dock.html", `session=${encodeURIComponent(streamID)}${getLocalServerConnectionParams()}`, baseURL);
   }
 
 	const streamElementsImporterUrl = document.getElementById("streamelements_importer_link");
@@ -4699,7 +4702,7 @@ function update(response, sync = true) {
             document.getElementById("remote_control_url").href = baseURL + "sampleapi.html?session=" + response.streamID + password;
             const obsControlDockUrl = document.getElementById("obs_control_dock_url");
             if (obsControlDockUrl) {
-                obsControlDockUrl.href = baseURL + "obs-control-dock.html?session=" + encodeURIComponent(response.streamID);
+                obsControlDockUrl.href = baseURL + "obs-control-dock.html?session=" + encodeURIComponent(response.streamID) + getLocalServerConnectionParams();
             }
             // The hideLinks variable is not reset to false globally here, its state is managed by the checkbox and classList.
 
@@ -13703,7 +13706,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			overlayLink.style.display = '';
 
 			const getGameBaseParams = function(rawUrl, gamePath) {
-				const keepParams = ['session', 'room', 'password', 'v'];
+				const keepParams = ['session', 'room', 'password', 'v', 'localserver', 'localserverport'];
 				const cleanParams = new URLSearchParams();
 				if (rawUrl && rawUrl.includes('?')) {
 					const params = new URLSearchParams(rawUrl.split('?')[1]);

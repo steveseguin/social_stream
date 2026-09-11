@@ -258,8 +258,8 @@
 			}
 			if (params.has("server2") || params.has("server3")) {
 				var extensionServerURL = params.has("server2")
-					? (params.get("server2") || "wss://io.socialstream.ninja/extension")
-					: (params.get("server3") || "wss://io.socialstream.ninja/extension");
+					? (SocialStreamLocalServer.getRelayUrl(params, "server2", "wss://io.socialstream.ninja/extension"))
+					: (SocialStreamLocalServer.getRelayUrl(params, "server3", "wss://io.socialstream.ninja/extension"));
 				connectSocket(extensionServerURL, socketRoomID, 3, 4);
 			}
 		}

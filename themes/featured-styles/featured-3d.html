@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="../../js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Featured Message - 3D Styles</title>
@@ -607,6 +608,7 @@
         let currentMessage = null;
 
         function createIframe() {
+            if (SocialStreamLocalServer.connectLocalRelay(urlParams, roomID, processMessage, true)) return;
             const iframe = document.createElement('iframe');
             iframe.src = `https://vdo.socialstream.ninja/?ln&password=${encodeURIComponent(password)}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
             iframe.style.cssText = 'width:0;height:0;position:fixed;left:-100px;top:-100px;';

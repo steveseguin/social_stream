@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="js/local-server-url.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chat Leaderboard</title>
@@ -3463,7 +3464,7 @@
         // Optional: Extension relay via server2/server3 for dock-labeled pages
         (function setupExtensionSocket(){
             if (!(urlParams.has('server2') || urlParams.has('server3'))) return;
-            let serverURL = urlParams.has('server2') ? (urlParams.get('server2') || 'wss://io.socialstream.ninja/extension') : (urlParams.get('server3') || 'wss://io.socialstream.ninja/extension');
+            let serverURL = urlParams.has('server2') ? (SocialStreamLocalServer.getRelayUrl(urlParams, 'server2', 'wss://io.socialstream.ninja/extension')) : (SocialStreamLocalServer.getRelayUrl(urlParams, 'server3', 'wss://io.socialstream.ninja/extension'));
             let socket = null;
             let attempts = 1;
             function connect(){

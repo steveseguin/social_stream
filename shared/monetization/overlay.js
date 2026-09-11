@@ -12,6 +12,7 @@
 		until = 0,
 		qrURL = '',
 		lastStateAt = 0;
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(params);
 	if (mode !== 'wishlist') {
 		document.body.classList.add(mode);
 		state = {};
@@ -262,8 +263,8 @@
 		status.textContent = ot('open-setup', 'Open this overlay from SSN > Monetization');
 		return;
 	}
-	if (params.has('server')) {
-		var endpoint = params.get('server') || 'wss://io.socialstream.ninja',
+	if (chatRelay.enabled) {
+		var endpoint = chatRelay.url,
 			socket,
 			closing = false,
 			retry;
@@ -278,7 +279,7 @@
 			if (closing) return;
 			socket = new WebSocket(endpoint);
 			socket.onopen = function () {
-				socket.send(JSON.stringify({ join: session.split(',')[0], out: 2, in: 1 }));
+				socket.send(JSON.stringify({ join: session.split(',')[0], out: chatRelay.out, in: chatRelay.in }));
 			};
 			socket.onmessage = function (e) {
 				if (typeof e.data === 'string' && e.data.length < 256000)
