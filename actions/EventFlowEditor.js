@@ -652,7 +652,13 @@ class EventFlowEditor {
         try {
             if (link && link.href) return new URL(link.href, window.location.href).search;
         } catch (_) { }
-        return window.location.search || '';
+        const search = window.location.search || '';
+        // The embedded editor keeps the active password in the background page,
+        // while its own URL only contains app configuration.
+        if (typeof password === 'string' && password && !new URLSearchParams(search).has('password')) {
+            return search + (search ? '&' : '?') + 'password=' + encodeURIComponent(password);
+        }
+        return search;
     }
 
     getCurrentSessionId() {

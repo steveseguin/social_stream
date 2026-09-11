@@ -292,7 +292,7 @@
         }
     }
     
-    function paintArea(x, y, team, username, radius = PAINT_RADIUS) {
+    function paintArea(x, y, team, username, radius = PAINT_RADIUS, playerKey = username) {
         const gridX = Math.floor(x / GRID_SIZE);
         const gridY = Math.floor(y / GRID_SIZE);
         const radiusInGrid = Math.ceil(radius / GRID_SIZE);
@@ -317,10 +317,10 @@
         }
         
         // Update player stats
-        const playerData = teams[team].players.get(username) || { paintedCells: 0, splashes: 0 };
+        const playerData = teams[team].players.get(playerKey) || { name: username, paintedCells: 0, splashes: 0 };
         playerData.paintedCells += paintedCells;
         playerData.splashes++;
-        teams[team].players.set(username, playerData);
+        teams[team].players.set(playerKey, playerData);
         
         // Create visual splash effect
         createSplash(x, y, teams[team].color, radius);
@@ -376,7 +376,7 @@
         }
     }
     
-    function checkPowerUpCollection(x, y, team, username) {
+    function checkPowerUpCollection(x, y, team, username, playerKey = username) {
         for (let i = powerUps.length - 1; i >= 0; i--) {
             const powerUp = powerUps[i];
             const distance = Math.sqrt(Math.pow(x - powerUp.x, 2) + Math.pow(y - powerUp.y, 2));
@@ -385,7 +385,7 @@
                 // Apply power-up effect
                 switch (powerUp.type) {
                     case '🚀': // Speed paint - larger radius
-                        paintArea(x, y, team, username, PAINT_RADIUS * 2);
+                        paintArea(x, y, team, username, PAINT_RADIUS * 2, playerKey);
                         sendResponse(`🚀 ${username} got a MEGA SPLASH!`);
                         break;
                     case '💣': // Paint bomb - multiple splashes
@@ -393,14 +393,14 @@
                             const angle = (Math.PI * 2 / 5) * j;
                             const bx = x + Math.cos(angle) * 100;
                             const by = y + Math.sin(angle) * 100;
-                            paintArea(bx, by, team, username);
+                            paintArea(bx, by, team, username, PAINT_RADIUS, playerKey);
                         }
                         sendResponse(`💣 ${username} triggered a PAINT BOMB!`);
                         break;
                     case '⭐': // Star power - bonus points
-                        const playerData = teams[team].players.get(username) || { paintedCells: 0, splashes: 0 };
+                        const playerData = teams[team].players.get(playerKey) || { name: username, paintedCells: 0, splashes: 0 };
                         playerData.paintedCells += 100;
-                        teams[team].players.set(username, playerData);
+                        teams[team].players.set(playerKey, playerData);
                         sendResponse(`⭐ ${username} got bonus points!`);
                         break;
                     case '🌈': // Rainbow - paint all colors randomly
@@ -409,7 +409,7 @@
                             const rx = x + (Math.random() - 0.5) * 200;
                             const ry = y + (Math.random() - 0.5) * 200;
                             const randomTeam = allTeams[Math.floor(Math.random() * allTeams.length)];
-                            paintArea(rx, ry, randomTeam, username, PAINT_RADIUS / 2);
+                            paintArea(rx, ry, randomTeam, username, PAINT_RADIUS / 2, playerKey);
                         }
                         sendResponse(`🌈 ${username} created CHAOS!`);
                         break;
@@ -450,7 +450,7 @@
         Object.entries(teams).forEach(([team, data]) => {
             data.players.forEach((stats, username) => {
                 allPlayers.push({
-                    username,
+                    username: stats.name,
                     team,
                     paintedCells: stats.paintedCells,
                     color: teams[team].color
@@ -580,15 +580,15 @@
         updateLeaderboard();
     }
     
-    function processPaint(username, team) {
+    function processPaint(username, team, playerKey = username) {
         if (!gameActive || !teams[team]) return;
         
         // Random position for the paint
         const x = Math.random() * (canvas.width - 100) + 50;
         const y = Math.random() * (canvas.height - 200) + 100;
         
-        paintArea(x, y, team, username);
-        checkPowerUpCollection(x, y, team, username);
+        paintArea(x, y, team, username, PAINT_RADIUS, playerKey);
+        checkPowerUpCollection(x, y, team, username, playerKey);
         
         updateScores();
         updateLeaderboard();
@@ -631,7 +631,7 @@
         if (message.startsWith('!')) {
             const team = message.substring(1);
             if (teams[team]) {
-                processPaint(stripHtml(data.chatname), team);
+                processPaint(String(data.chatname), team, JSON.stringify([data.type || '', String(data.userid || data.username || data.chatname)]));
             }
         }
     }

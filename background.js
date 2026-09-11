@@ -2510,11 +2510,16 @@ function getBackgroundCreditsTestSnapshot() {
 	];
 }
 
-function sendCreditsCommandPacket(packet) {
-	return sendTargetP2P(packet, "credits").then(function(sent) {
-		if (sent) return true;
-		return sendTargetP2P(packet, "dock", { retry: true, timeoutMs: 5000, intervalMs: 250 });
-	});
+async function sendCreditsCommandPacket(packet) {
+	packet = prepareOverlayControl(packet, "credits");
+	// Older Credits pages advertise the dock label. A relay acknowledgement must
+	// not prevent those connected WebRTC displays receiving the same command.
+	var results = await Promise.all([
+		sendTargetP2P(packet, "credits"),
+		sendTargetP2P(packet, "dock", { retry: false })
+	]);
+	if (results.some(Boolean)) return true;
+	return sendTargetP2P(packet, "dock", { retry: true, timeoutMs: 5000, intervalMs: 250 });
 }
 
 function isCreditsRemoteAction(action) {
@@ -7382,7 +7387,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			updateReplaySpeed(request.sessionId, request.speed);
 			sendResponse({ success: true, state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "sidUpdated") {
-			const previousLocalRelaySession = streamID;
+			const previousRelaySession = streamID;
 			const previousCohostCapabilityScope = String(streamID || "") + "\n" + String(password || "");
 			if (request.streamID) {
 				streamID = request.streamID;
@@ -7432,8 +7437,8 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				openAIRealtimeCohostCapabilityMustRotate = true;
 			}
 			persistSession({ streamId: streamID, state: isExtensionOn });
-			if (urlParams.has("localserver") && previousLocalRelaySession !== streamID) {
-				// A local socket joins its room once. Recreate both enabled routes
+			if (previousRelaySession !== streamID) {
+				// Each relay socket joins its room once. Recreate both enabled routes
 				// before sending chat or actions for the newly selected session.
 				clearTimeout(reconnectionTimeout);
 				clearTimeout(reconnectionTimeoutDock);
@@ -7449,6 +7454,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				socketserverDock = false;
 				setupSocket();
 				setupSocketDock();
+				pollControlState = null;
+                mapControlState = null;
+                overlayStateSnapshots.clear();
 			}
 			if (iframe) {
 				if (iframe.src) {
@@ -10239,13 +10247,17 @@ function setupSocketDock() {
 	}
 
 	socketserverDock = new WebSocket(serverURLDock);
+	const joinedDockSession = streamID;
+	const joinedDockSocket = socketserverDock;
 
 	socketserverDock.onerror = function (error) {
+		if (socketserverDock !== joinedDockSocket) return;
 		console.error("WebSocket error:", error);
 		socketserverDock.close();
 	};
 
 	socketserverDock.onclose = function () {
+		if (socketserverDock !== joinedDockSocket) return;
 		if ((settings.server2 || settings.server3) && isExtensionOn) {
 			// Fast first retry, then exponential backoff with jitter (cap 30s)
 			const nextAttempt = Math.min(conConDock + 1, 10);
@@ -10270,10 +10282,12 @@ function setupSocketDock() {
 		}
 	};
 	socketserverDock.onopen = function () {
+		if (streamID !== joinedDockSession || socketserverDock !== joinedDockSocket) return;
 		conConDock = 0;
 		socketserverDock.send(JSON.stringify({ join: streamID, out: 4, in: 3 }));
 	};
 	socketserverDock.addEventListener("message", async function (event) {
+		if (streamID !== joinedDockSession || socketserverDock !== joinedDockSocket) return;
 		if (!event.data) {
 			return;
 		}
@@ -10285,6 +10299,7 @@ function setupSocketDock() {
 		}
 
 		// Give managed audience displays the same snapshot they can already receive.
+		if (handleOverlayControlRequest(data, socketserverDock, 3, !!settings.server2)) return;
 		if (data && data.action === "getgiveawaystate" && settings.server2 && isExtensionOn && !settings.disablehost) {
 			publishGiveawayState();
 			return;
@@ -10732,21 +10747,17 @@ async function getStreamDeckCapabilities() {
 }
 
 function sendStreamDeckCallback(socket, request, result) {
-	if (!request || !request.get || !socket || socket.readyState !== WebSocket.OPEN) {
-		return false;
-	}
-	socket.send(
-		JSON.stringify({
-			callback: {
-				get: request.get,
-				result
-			}
-		})
-	);
-	return true;
+    if (!socket || socket.readyState !== WebSocket.OPEN) return false;
+    var packet = buildStreamDeckCallbackPacket(request, result);
+    if (!packet) return false;
+    socket.send(JSON.stringify(packet));
+    return true;
 }
 
 function buildStreamDeckCallbackPacket(request, result) {
+    if (request && request.get && request.replyFormat === "commandResult") {
+        return { type: "commandResult", action: request.action || null, get: request.get, result: result };
+    }
 	if (!request || !request.get) {
 		return null;
 	}
@@ -10771,6 +10782,13 @@ function buildStreamDeckCommandResultPacket(request, result) {
 function sendStreamDeckCommandResult(socket, request, result) {
 	if (!socket || socket.readyState !== WebSocket.OPEN) {
 		return false;
+	}
+	// Hosted relays consume callback envelopes for their own HTTP requests.
+	// The browser Giveaway Manager opts into the existing commandResult shape
+	// instead, retaining result.request for correlation. Other clients are unchanged.
+	if (request && request.replyFormat === "commandResult" && isGiveawayAction(request.action)) {
+		socket.send(JSON.stringify({ type: "commandResult", action: request.action, result }));
+		return true;
 	}
 	if (sendStreamDeckCallback(socket, request, result)) {
 		return true;
@@ -11196,13 +11214,17 @@ function setupSocket() {
 	}
 
 	socketserver = new WebSocket(serverURL);
+	const joinedApiSession = streamID;
+	const joinedApiSocket = socketserver;
 
 	socketserver.onerror = function (error) {
+		if (socketserver !== joinedApiSocket) return;
 		console.error("WebSocket error:", error);
 		socketserver.close();
 	};
 
 	socketserver.onclose = function () {
+		if (socketserver !== joinedApiSocket) return;
 		if (settings.socketserver && isExtensionOn) {
 			// Fast first retry, then exponential backoff with jitter (cap 30s)
 			const nextAttempt = Math.min(conCon + 1, 10);
@@ -11227,10 +11249,12 @@ function setupSocket() {
 		}
 	};
 	socketserver.onopen = function () {
+		if (streamID !== joinedApiSession || socketserver !== joinedApiSocket) return;
 		conCon = 0;
 		socketserver.send(JSON.stringify({ join: streamID, out: 2, in: 1 }));
 	};
 	socketserver.addEventListener("message", async function (event) {
+		if (streamID !== joinedApiSession || socketserver !== joinedApiSocket) return;
 		if (event.data) {
 			var resp = false;
 
@@ -11242,6 +11266,8 @@ function setupSocket() {
 				return;
 			}
 
+			if (handleOverlayControlRequest(data, socketserver, 1, !!settings.socketserver)) return;
+
 			// Lightweight API: allow requesting a Hype snapshot and respond on the same paired channel
 			// Expected request formats:
 			//  - { action: "getHype", get: "token123" }
@@ -11251,7 +11277,7 @@ function setupSocket() {
 					try {
 						const snapshot = combineHypeData();
 						const ret = { callback: { get: data.get || "hype", result: { hype: snapshot } } };
-						socketserver && socketserver.send(JSON.stringify(ret));
+						socketserver && sendStreamDeckCallback(socketserver, Object.assign({}, data, { get: ret.callback.get }), ret.callback.result);
 					} catch (e) {
 						console.warn("Failed to respond to getHype on /api", e);
 					}
@@ -11453,7 +11479,7 @@ function setupSocket() {
 				resp = true;
 			} else if (data.action && data.action === "gettimerstate" && !settings.disablehost) {
 				if (data.get) {
-					socketserver.send(JSON.stringify({ callback: { get: data.get, result: exportTimerState() } }));
+					sendStreamDeckCallback(socketserver, data, exportTimerState());
 					data.get = false;
 				}
 				resp = true;
@@ -11477,7 +11503,7 @@ function setupSocket() {
 						ret.callback = {};
 						ret.callback.get = data.get;
 						ret.callback.result = presets;
-						socketserver.send(JSON.stringify(ret));
+						sendStreamDeckCallback(socketserver, Object.assign({}, data, { get: ret.callback.get }), ret.callback.result);
 					}
 				});
 				resp = true;
@@ -11892,7 +11918,7 @@ function setupSocket() {
 				ret.callback = {};
 				ret.callback.get = data.get;
 				ret.callback.result = resp;
-				socketserver.send(JSON.stringify(ret));
+				sendStreamDeckCallback(socketserver, Object.assign({}, data, { get: ret.callback.get }), ret.callback.result);
 			}
 		}
 	});
@@ -13145,11 +13171,13 @@ function combineHypeData() {
 	return result;
 }
 function sendHypeP2P(data, uid = null) {
+	var packet = uid ? { hype: data } : prepareOverlayControl({ hype: data }, "hype");
+	if (!uid) sendOverlayControlRelay(packet, "hype");
 	// function to send data to the HYPE overlay via the transport
 	if (ninjaBridge && ninjaBridge.isReady()) {
 		try {
 			if (!uid) {
-				ninjaBridge.sendToLabel({ hype: data }, "hype");
+				ninjaBridge.sendToLabel(packet, "hype");
 			} else {
 				ninjaBridge.send({ hype: data }, uid);
 			}
@@ -13167,20 +13195,21 @@ function sendHypeP2P(data, uid = null) {
 					var UUID = keys[i];
 					const peerLabel = connectedPeers[UUID];
 					if (peerLabel === "hype") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { hype: data } }, type: "pcs", UUID: UUID }, "*");
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: packet }, type: "pcs", UUID: UUID }, "*");
 					}
 				} catch (e) {}
 			}
 		} else {
 			const peerLabel = connectedPeers[uid];
 			if (peerLabel === "hype") {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { hype: data } }, type: "pcs", UUID: uid }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: packet }, type: "pcs", UUID: uid }, "*");
 			}
 		}
 	}
 }
 //////
 function sendSpotifyOverlay(payload, uid = null) {
+    if (!uid) { sendTargetP2P({ spotify: payload }, "spotify", { retry: false }); return; }
 	if (!payload) {
 		return;
 	}
@@ -13269,23 +13298,123 @@ function sendAiOverlayCommand(input = {}, defaults = {}) {
 	return payload;
 }
 
-async function trySendTargetP2P(data, target) {
-	// The actions page listens on channel 6 in explicit local relay mode.
-	// Use an existing background connection, so captured-chat Event Flows do
-	// not require a WebRTC peer or an additional public connection.
-	if (target === "actions" && urlParams.has("localserver")) {
-		var localActionSocket = socketserverDock && socketserverDock.readyState === WebSocket.OPEN ? socketserverDock
-			: socketserver && socketserver.readyState === WebSocket.OPEN ? socketserver : null;
-		if (localActionSocket) {
-			try {
-				localActionSocket.send(JSON.stringify(Object.assign({}, data, { out: 6 })));
-				return true;
-			} catch (error) {
-				console.warn("Local action delivery failed", error);
-			}
-		}
-		// With every relay route disabled, keep the existing connected-peer path.
+var overlayControlPending = new Map();
+var pollControlState = null;
+var mapControlState = null;
+var overlayStateEpoch = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+var overlayStateSnapshots = new Map();
+var overlayStateSequence = 0;
+const POLL_CONTROL_KEYS = ["pollEnabled", "pollType", "pollQuestion", "multipleChoiceOptions", "pollMatchMode",
+	"pollStyle", "pollTimer", "pollTimerState", "pollTally", "pollSpam", "pollDonationWeighted"];
+function pollControlSettings(input) {
+	var selected = {};
+	POLL_CONTROL_KEYS.forEach(key => { if (Object.prototype.hasOwnProperty.call(input, key)) selected[key] = input[key]; });
+	return selected;
+}
+const MAP_CONTROL_KEYS = ["mapTitle", "mapShowList", "mapShowTotals", "mapAllowChanges", "mapEnabled", "mapType", "mapStyle", "mapOpacity", "mapopacity", "mapSpam", "mapRegion", "mapMotion", "mapAutoFit", "mapHideNumbers", "mapColorIntensity", "mapScale"];
+function prepareOverlayControl(data, target) {
+	if (!data || data.ssnControl) return data;
+	if (!(target === "actions" || (target === "credits" && data.creditsCommand) ||
+		(target === "poll" && (data.settings || data.setting || data.cmd)) || (target === "hype" && data.hype) ||
+        (target === "map" && (data.settings || data.setting || ["startmap", "pausemap", "resetmap"].includes(data.cmd))) ||
+        (target === "timer" && data.timer) || (target === "ticker" && data.ticker) || (target === "spotify" && data.spotify) ||
+        (target === "tipjar" && ["resettipjar", "settipjaramount"].includes(data.cmd)) ||
+        (target === "alerts" && data.action === "clearAlerts") || (target === "bot" && data.action === "clearBotOverlay") ||
+        (target === "wordcloud" && (data.chatmessage || "state" in data)) || (target === "gif" && data.contentimg) ||
+        (target === "reactions" && ["reaction", "liked", "like"].includes(data.event)) ||
+        (target === "waitlist" && ("drawmode" in data || "drawPoolSize" in data)))) return data;
+	var packet = Object.assign({}, data);
+    if (target === "map") {
+        if (data.setting && !MAP_CONTROL_KEYS.includes(data.setting)) return data;
+        if (!mapControlState || mapControlState.session !== streamID) mapControlState = { session: streamID, epoch: overlayStateEpoch + ":" + (++overlayStateSequence), revision: 0, reset: 0, paused: null };
+        if (packet.cmd === "resetmap") { mapControlState.reset++; mapControlState.revision++; }
+        if (packet.cmd === "startmap" || packet.cmd === "pausemap") { mapControlState.paused = packet.cmd === "pausemap"; mapControlState.revision++; }
+        packet.mapState = { epoch: mapControlState.epoch, revision: mapControlState.revision, reset: mapControlState.reset, paused: mapControlState.paused };
+        if (data.settings) {
+            packet.settings = {};
+            MAP_CONTROL_KEYS.forEach(key => { if (Object.prototype.hasOwnProperty.call(data.settings, key)) packet.settings[key] = data.settings[key]; });
+        }
+        var mapConfig = JSON.stringify(MAP_CONTROL_KEYS.map(key => settings[key]));
+        if (mapControlState.config !== mapConfig) { mapControlState.config = mapConfig; mapControlState.revision++; }
+        packet.mapState.revision = mapControlState.revision;
+    }
+	if (target === "poll") {
+		if (data.settings) packet.settings = pollControlSettings(data.settings);
+		if (data.setting && !POLL_CONTROL_KEYS.includes(data.setting)) return data;
+		var config = JSON.stringify(["pollType", "pollMatchMode", "pollQuestion", "multipleChoiceOptions"].map(key => settings[key]));
+		if (!pollControlState || pollControlState.session !== streamID) pollControlState = { session: streamID, config, closed: false, epoch: overlayStateEpoch + ":" + (++overlayStateSequence), revision: 0, reset: 0 };
+		if (pollControlState.config !== config) { pollControlState.config = config; pollControlState.closed = false; pollControlState.reset++; pollControlState.revision++; }
+		if (packet.cmd === "closepoll") { pollControlState.closed = true; pollControlState.revision++; }
+		if (packet.cmd === "startpoll" || packet.cmd === "resetpoll") { pollControlState.closed = false; pollControlState.reset++; pollControlState.revision++; }
+        packet.pollState = { epoch: pollControlState.epoch, revision: pollControlState.revision, reset: pollControlState.reset, closed: pollControlState.closed };
 	}
+	packet.ssnControl = { id: "control-" + Date.now().toString(36) + "-" + Array.from(crypto.getRandomValues(new Uint32Array(4))).join("-"), target };
+    if (target === "timer" || target === "ticker" || target === "spotify") {
+        var prior = overlayStateSnapshots.get(target);
+        var stateValue = packet[target];
+        if (target === "timer") {
+            stateValue = Object.assign({}, stateValue);
+            ["displayMs", "remainingToTargetMs", "done", "overtime", "progress"].forEach(key => delete stateValue[key]);
+        }
+        var signature = JSON.stringify(stateValue);
+        var sameSession = prior && prior.session === streamID;
+        packet.ssnState = { epoch: sameSession ? prior.packet.ssnState.epoch : overlayStateEpoch + ":" + (++overlayStateSequence),
+            revision: sameSession ? prior.packet.ssnState.revision + (signature === prior.signature ? 0 : 1) : 0 };
+        overlayStateSnapshots.set(target, { session: streamID, packet: packet, signature: signature });
+    }
+	return packet;
+}
+function handleOverlayControlRequest(data, socket, replyChannel, allowSnapshot) {
+	if (!data || (!data.ssnControlRequest && !data.ssnControlAck)) return false;
+	if (!isExtensionOn || settings.disablehost) return true;
+	if (data.ssnControlAck) {
+		var pending = overlayControlPending.get(data.ssnControlAck.id);
+		if (pending && pending.session === streamID && pending.target === data.ssnControlAck.target) pending.resolve(true);
+		return true;
+	}
+	if (!allowSnapshot) return true;
+	var request = data.ssnControlRequest, packet;
+	if (request.target === "poll") {
+		packet = prepareOverlayControl({ settings: settings }, "poll");
+
+	} else if (request.target === "hype") {
+		packet = prepareOverlayControl({ hype: combineHypeData() }, "hype");
+	} else if (request.target === "map") {
+        packet = prepareOverlayControl({ settings: settings }, "map");
+    } else if (request.target === "timer" && timerStateInitialized) {
+        packet = prepareOverlayControl({ timer: exportTimerState() }, "timer");
+    } else if (request.target === "ticker" || request.target === "spotify") {
+        var saved = overlayStateSnapshots.get(request.target);
+        if (!saved || saved.session !== streamID) return true;
+        packet = Object.assign({}, saved.packet, { ssnControl: Object.assign({}, saved.packet.ssnControl) });
+    } else return true;
+	packet.ssnControl.client = String(request.client || "").slice(0, 160);
+	packet.ssnControl.reply = replyChannel;
+	socket.send(JSON.stringify(Object.assign({}, packet, { out: 7 })));
+	return true;
+}
+function sendOverlayControlRelay(data, target) {
+	if (!data || !data.ssnControl || data.ssnControl.target !== target || !isExtensionOn || settings.disablehost) return Promise.resolve(false);
+	var routes = [];
+	if ((settings.server2 || (target === "actions" && settings.server3)) && socketserverDock && socketserverDock.readyState === 1) routes.push([socketserverDock, 3]);
+	if (settings.socketserver && socketserver && socketserver.readyState === 1) routes.push([socketserver, 1]);
+	if (!routes.length) return Promise.resolve(false);
+	return new Promise(resolve => {
+		var id = data.ssnControl.id;
+		var timer = setTimeout(() => finish(false), 750);
+		function finish(delivered) { clearTimeout(timer); overlayControlPending.delete(id); resolve(delivered); }
+		overlayControlPending.set(id, { target, session: streamID, resolve: finish });
+		routes.forEach(([socket, reply]) => {
+			try { socket.send(JSON.stringify(Object.assign({}, data, { out: target === "actions" ? 6 : 7,
+				ssnControl: Object.assign({}, data.ssnControl, { reply }) }))); }
+			catch (error) { console.warn("[Overlay control] Relay send failed", error); }
+		});
+	});
+}
+async function trySendTargetP2P(data, target) {
+	// Relay delivery must never suppress connected WebRTC displays. Current
+	// receivers deduplicate the same control ID across both transports.
+	var relayDelivery = sendOverlayControlRelay(data, target);
 	// function to send data to a labelled page via the VDO.Ninja API
 	if (ninjaBridge && ninjaBridge.isReady()) {
 		try {
@@ -13324,18 +13453,21 @@ async function trySendTargetP2P(data, target) {
 			} catch (e) {}
 		}
 	}
-	return sent;
+	return sent || await relayDelivery;
 }
 
 async function sendTargetP2P(data, target, options) {
 	data = getOverlayDisplayPayload(data);
+	data = prepareOverlayControl(data, target);
 	options = options || {};
 	var retry = typeof options.retry === "boolean" ? options.retry : target === "actions";
 	var timeoutMs = Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : 10000;
 	var intervalMs = Number(options.intervalMs) > 0 ? Number(options.intervalMs) : 500;
 	var expiresAt = Date.now() + timeoutMs;
+	var targetSession = streamID;
 
 	do {
+		if (targetSession !== streamID) return false;
 		if (await trySendTargetP2P(data, target)) {
 			return true;
 		}
@@ -13512,6 +13644,7 @@ function exportTimerState(now = Date.now()) {
 }
 
 function sendTimerP2P(payload, uid = null) {
+    if (!uid) { sendTargetP2P({ timer: payload }, "timer", { retry: false }); return; }
 	if (ninjaBridge && ninjaBridge.isReady()) {
 		try {
 			if (!uid) {
@@ -13970,6 +14103,7 @@ async function handleCohostToolRequest(request) {
 }
 
 function sendTickerP2P(data, uid = null) {
+    if (!uid) { sendTargetP2P({ ticker: data }, "ticker", { retry: false }); return; }
 	// function to send data to the DOCk via the VDO.Ninja API
 
 	if (ninjaBridge && ninjaBridge.isReady()) {
@@ -14182,16 +14316,7 @@ function processWaitlist(data) {
 			drawListCount += 1;
 
 			if (settings.drawmode) {
-				var keys = Object.keys(connectedPeers);
-				for (var i = 0; i < keys.length; i++) {
-					try {
-						var UUID = keys[i];
-						var label = connectedPeers[UUID];
-						if (label === "waitlist") {
-							iframe.contentWindow.postMessage({ sendData: { overlayNinja: { drawPoolSize: drawListCount } }, type: "pcs", UUID: UUID }, "*");
-						}
-					} catch (e) {}
-				}
+				sendTargetP2P({ drawPoolSize: drawListCount }, "waitlist");
 			} else {
 				sendWaitlistConfig(waitlist, false);
 			}
@@ -14495,142 +14620,18 @@ async function downloadWaitlist() {
 }
 
 function sendWaitlistConfig(data = null, sendMessage = true, clear = false) {
-	//console.warn("sendWaitlistConfig");
-	if (iframe) {
-		if (sendMessage) {
-			var trigger = "!join";
-			if (settings.customwaitlistcommand && settings.customwaitlistcommand.textsetting.trim()) {
-				trigger = settings.customwaitlistcommand.textsetting.trim();
-			}
-			var message = "Type " + trigger + " to join this wait list";
-			if (settings.drawmode) {
-				if (!allowNewEntries) {
-					message = "No new entries allowed";
-				} else {
-					message = "Type " + trigger + " to join the random draw";
-				}
-			}
-			if (settings.customwaitlistmessagetoggle) {
-				if (settings.customwaitlistmessage) {
-					message = settings.customwaitlistmessage.textsetting.trim();
-					message = message.replace(/{trigger}/g, trigger);
-				} else {
-					message = "";
-				}
-			}
-		}
-
-		//console.log(data);
-
-		var keys = Object.keys(connectedPeers);
-		for (var i = 0; i < keys.length; i++) {
-			try {
-				var UUID = keys[i];
-				var label = connectedPeers[UUID];
-				if (label === "waitlist") {
-					if (sendMessage) {
-						if (data === null) {
-							if (settings.drawmode) {
-								iframe.contentWindow.postMessage(
-									{
-										sendData: {
-											overlayNinja: {
-												waitlistmessage: message,
-												drawPoolSize: drawListCount,
-												drawmode: true,
-												clearWinner: clear
-											}
-										},
-										type: "pcs",
-										UUID: UUID
-									},
-									"*"
-								);
-							} else {
-								iframe.contentWindow.postMessage(
-									{
-										sendData: {
-											overlayNinja: {
-												waitlistmessage: message,
-												drawmode: false
-											}
-										},
-										type: "pcs",
-										UUID: UUID
-									},
-									"*"
-								);
-							}
-						} else if (settings.drawmode) {
-							iframe.contentWindow.postMessage(
-								{
-									sendData: {
-										overlayNinja: {
-											waitlistmessage: message,
-											winlist: data,
-											drawPoolSize: drawListCount,
-											drawmode: true,
-											clearWinner: clear
-										}
-									},
-									type: "pcs",
-									UUID: UUID
-								},
-								"*"
-							);
-						} else {
-							iframe.contentWindow.postMessage(
-								{
-									sendData: {
-										overlayNinja: {
-											waitlist: data,
-											waitlistmessage: message,
-											drawmode: false
-										}
-									},
-									type: "pcs",
-									UUID: UUID
-								},
-								"*"
-							);
-						}
-					} else if (data !== null) {
-						if (settings.drawmode) {
-							iframe.contentWindow.postMessage(
-								{
-									sendData: {
-										overlayNinja: {
-											drawPoolSize: drawListCount,
-											drawmode: true,
-											clearWinner: clear,
-											waitlist: data
-										}
-									},
-									type: "pcs",
-									UUID: UUID
-								},
-								"*"
-							);
-						} else {
-							iframe.contentWindow.postMessage(
-								{
-									sendData: {
-										overlayNinja: {
-											drawmode: false,
-											waitlist: data
-										}
-									},
-									type: "pcs",
-									UUID: UUID
-								},
-								"*"
-							);
-						}
-					}
-				}
-			} catch (e) {}
-		}
-	}
+    if (!sendMessage && data === null) return;
+    var packet = { drawmode: !!settings.drawmode };
+    if (sendMessage) {
+        var trigger = settings.customwaitlistcommand && settings.customwaitlistcommand.textsetting.trim() || "!join";
+        var message = "Type " + trigger + " to join this wait list";
+        if (settings.drawmode) message = allowNewEntries ? "Type " + trigger + " to join the random draw" : "No new entries allowed";
+        if (settings.customwaitlistmessagetoggle) message = settings.customwaitlistmessage ? settings.customwaitlistmessage.textsetting.trim().replace(/{trigger}/g, trigger) : "";
+        packet.waitlistmessage = message;
+    }
+    if (settings.drawmode) { packet.drawPoolSize = drawListCount; packet.clearWinner = clear; }
+    if (data !== null) packet[sendMessage && settings.drawmode ? "winlist" : "waitlist"] = data;
+    return sendTargetP2P(packet, "waitlist");
 }
 
 ///
@@ -15249,7 +15250,13 @@ async function processIncomingRequest(request, UUID = false) {
 		}
 		sendMessageToTabs(request, false, null, false, false, false);
 	} else if ("action" in request) {
-		if (request.action === "openChat") {
+		if (request.action === "phraseGuessResponse") {
+			// Game-only dock announcements use the native inbound relay contract.
+			// setupSocketDock still requires server3, and disablehost is checked above.
+			const value = request.value;
+			if (!isExtensionOn || !value || value.type !== "bot" || typeof value.chatname !== "string" || typeof value.chatmessage !== "string" || value.chatmessage.length > 2000) return;
+			return sendToDestinations({type: "bot", chatname: value.chatname.slice(0, 200), chatmessage: value.chatmessage, textonly: true});
+		} else if (request.action === "openChat") {
 			openchat(request.value || null);
 		} else if (request.action === "askBot" && typeof request.value === "string" && request.value.trim()) {
 			if (isAiChatbotEnabled() && typeof processMessageWithOllama === "function") {

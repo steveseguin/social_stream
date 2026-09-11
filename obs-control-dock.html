@@ -464,6 +464,7 @@
 				} catch (error) {
 					return;
 				}
+				if (data && data.type === "commandResult") data = { callback: { get: data.get || (data.result && data.result.request), result: data.result } };
 				if (!data || !data.callback || !data.callback.get) return;
 				var requestId = String(data.callback.get);
 				var pending = pendingRequests[requestId];
@@ -564,7 +565,7 @@
 				var message = {
 					action: action,
 					apiid: sessionId,
-					get: requestId
+					get: requestId, replyFormat: "commandResult"
 				};
 				var value = parseButtonValue(button);
 				if (value !== undefined) message.value = value;
@@ -622,7 +623,7 @@
 					pendingRequests[id] = {resolve:resolve, reject:reject, timer:setTimeout(function() {
 						delete pendingRequests[id]; reject(new Error("No response. Enable remote API control in Social Stream."));
 					}, 5000)};
-					try { socket.send(JSON.stringify({action:action, value:value, protocol:2, apiid:sessionId, get:id})); }
+					try { socket.send(JSON.stringify({action:action, value:value, protocol:2, apiid:sessionId, get:id, replyFormat:"commandResult"})); }
 					catch (error) { clearTimeout(pendingRequests[id].timer); delete pendingRequests[id]; reject(error); }
 				});
 			}, setCommandStatus);

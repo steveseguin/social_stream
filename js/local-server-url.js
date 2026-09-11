@@ -60,14 +60,14 @@
 		return explicitUrl || (params && params.has("localserver") ? getWebSocketUrl(params) : defaultUrl);
 	}
 
-	// Local games can receive captured chat directly from the extension route,
-	// even with no Dock open to republish it on the API feed. Existing hosted
-	// game links retain their server/P2P behavior.
+	// Games and displays can receive captured chat directly from the extension route,
+	// even with no Dock open to republish it on the API feed. Explicit
+	// API-feed choices keep their existing channels.
 	function getChatRelayConfig(searchParams) {
 		var params = getSearchParams(searchParams);
 		// An explicit API relay keeps its original address and channel even when
 		// a generated local link also carries the captured-chat flag.
-		var extensionFeed = !!(params && params.has("localserver") && params.has("server2") && !params.get("server"));
+		var extensionFeed = !!(params && params.has("server2") && !params.get("server"));
 		return {
 			enabled: !!(params && (params.has("server") || extensionFeed)),
 			url: getRelayUrl(params, extensionFeed ? "server2" : "server",
@@ -77,14 +77,14 @@
 		};
 	}
 
-	// Opt-in adapter for older display templates. Returning false leaves their
-	// existing WebRTC path untouched outside explicit local relay mode.
+	// Opt-in relay adapter for older display templates. Returning false leaves their
+	// existing WebRTC path untouched when no supported server route is requested.
 	function connectLocalRelay(searchParams, session, receive, featured) {
 		var params = getSearchParams(searchParams);
-		if (!params || !params.has("localserver") || !session) return false;
+		if (!params || !session) return false;
 		var parameter = params.has("server") ? "server" : params.has("server2") ? "server2" : params.has("server3") ? "server3" : null;
 		if (!parameter || (!featured && parameter === "server3")) return false;
-		var endpoint = getRelayUrl(params, parameter, "");
+		var endpoint = getRelayUrl(params, parameter, parameter === "server" ? "wss://io.socialstream.ninja/api" : "wss://io.socialstream.ninja/extension");
 		var channel = featured ? (parameter === "server" ? 2 : parameter === "server2" ? 4 : 1) : (parameter === "server" ? 1 : 4);
 		var socket, retry, closed = false;
 		function connect() {

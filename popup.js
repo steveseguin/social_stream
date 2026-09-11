@@ -3500,14 +3500,14 @@ const SERVER_PARAM_SUPPORT_BY_TARGET = {
   ticker: { server: true, server2: true, server3: false },
   tipjar: { server: true, server2: true, server3: false },
   eventsdashboard: { server: true, server2: true, server3: false },
-  flowactions: { server: true, server2: true, server3: false },
-  timer: { server: true, server2: false, server3: false },
+  flowactions: FULL_SERVER_LINK_SUPPORT,
+  timer: { server: true, server2: true, server3: false },
   giveaway: { server: true, server2: true, server3: false },
   credits: { server: false, server2: true, server3: true },
   leaderboard: { server: false, server2: true, server3: true },
-  waitlist: NO_SERVER_LINK_SUPPORT,
-  wordcloud: NO_SERVER_LINK_SUPPORT,
-  "custom-gif-commands": NO_SERVER_LINK_SUPPORT,
+  waitlist: { server: true, server2: true, server3: false },
+  wordcloud: { server: true, server2: true, server3: false },
+  "custom-gif-commands": { server: true, server2: true, server3: false },
   privatechatbot: NO_SERVER_LINK_SUPPORT
 };
 
@@ -3580,14 +3580,14 @@ function getGameServerParamSupport(contextPath) {
     return FULL_SERVER_LINK_SUPPORT;
   }
   if (gamePath.indexOf("games/") === 0) {
-    return { server: true, server2: urlParams.has('localserver'), server3: false };
+    return { server: true, server2: true, server3: false };
   }
   return SERVER_PARAM_SUPPORT_BY_TARGET.games || FULL_SERVER_LINK_SUPPORT;
 }
 
 function getServerParamSupportForTarget(targetId, contextPath) {
   if (targetId === "chatoverlaytemplate") {
-    if (urlParams.has('localserver') && normalizeGeneratedPath(contextPath || getSelectedChatOverlayTemplatePath()) === 'themes/LuckyLootTube/luckyloottube.html') {
+    if (normalizeGeneratedPath(contextPath || getSelectedChatOverlayTemplatePath()) === 'themes/LuckyLootTube/luckyloottube.html') {
       return { server: true, server2: true, server3: false };
     }
     return CHAT_OVERLAY_SERVER_PARAM_SUPPORT[normalizeGeneratedPath(contextPath || getSelectedChatOverlayTemplatePath())] || NO_SERVER_LINK_SUPPORT;
@@ -3663,6 +3663,12 @@ function syncSupportedServerParamsForTarget(targetId, targetElement, sourceEleme
       targetElement.raw = updateURL(getServerParamToken(paramName, sourceElement, sourceTokens), targetElement.raw);
     }
   });
+	// Flow Actions has an independent command channel. An explicitly enabled
+	// API receiver can carry actions even when chat forwarding is disabled.
+	if (targetId === "flowactions" && !isBothParamChecked("server") && !isBothParamChecked("server2") && !isBothParamChecked("server3")
+		&& document.querySelector('input[data-setting="socketserver"]')?.checked) {
+		targetElement.raw = updateURL(getServerParamToken("server", sourceElement, sourceTokens), targetElement.raw);
+	}
   targetElement.raw = cleanURL(targetElement.raw);
 }
 
@@ -3898,6 +3904,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     'elevensimilarity', 'elevenstyle', 'elevenspeakerboost', 'elevenrate',
     'googleapikey', 'googlevoice', 'googleaudioprofile', 'googlerate', 'googlelang',
     'geminikey', 'geminimodel', 'voicegemini', 'geminilang', 'geministyle', 'geminiprompt',
+    'fishkey', 'voicefish', 'fishmodel', 'fishspeed', 'fishendpoint',
     'speechifykey', 'speechifyvoice', 'voicespeechify', 'speechifymodel', 'speechifylang', 'speechifyspeed',
     'kokorokey', 'voicekokoro', 'kokorospeed'
   ];
@@ -4183,6 +4190,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
         elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate','voice11'],
         google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
         gemini: ['geminikey', 'geminimodel', 'voicegemini', 'geminilang', 'geministyle', 'geminiprompt'],
+        fish: ['fishkey', 'voicefish', 'fishmodel', 'fishspeed', 'fishendpoint'],
         speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
         kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed'],
         kitten: ['kittenvoice', 'kittenspeed', 'kittensamplerate'],
@@ -5736,7 +5744,7 @@ function isOpenAITTSProvider(provider) {
 // Handle TTS provider visibility
 function handleTTSProviderVisibility(provider) {
     // Hide all TTS elements
-    ["systemTTS", "elevenlabsTTS", "googleTTS", "geminiTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS", "piperTTS", "espeakTTS"].forEach(id => {
+    ["systemTTS", "elevenlabsTTS", "googleTTS", "geminiTTS", "fishTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS", "piperTTS", "espeakTTS"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -5749,6 +5757,8 @@ function handleTTSProviderVisibility(provider) {
         document.getElementById("googleTTS").classList.remove("hidden");
     } else if (provider == "gemini") {
         document.getElementById("geminiTTS").classList.remove("hidden");
+    } else if (provider == "fish") {
+        document.getElementById("fishTTS").classList.remove("hidden");
     } else if (provider == "speechify") {
         document.getElementById("speechifyTTS").classList.remove("hidden");
     } else if (provider == "kokoro") {
@@ -5767,7 +5777,7 @@ function handleTTSProviderVisibility(provider) {
 // Handle secondary TTS provider visibility
 function handleTTSProvider10Visibility(provider) {
     // Hide all TTS10 elements
-    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "geminiTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10", "piperTTS10", "espeakTTS10"].forEach(id => {
+    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "geminiTTS10", "fishTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10", "piperTTS10", "espeakTTS10"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -5780,6 +5790,8 @@ function handleTTSProvider10Visibility(provider) {
         document.getElementById("googleTTS10").classList.remove("hidden");
     } else if (provider == "gemini") {
         document.getElementById("geminiTTS10").classList.remove("hidden");
+    } else if (provider == "fish") {
+        document.getElementById("fishTTS10").classList.remove("hidden");
     } else if (provider == "speechify") {
         document.getElementById("speechifyTTS10").classList.remove("hidden");
     } else if (provider == "kokoro") {
@@ -5798,7 +5810,7 @@ function handleTTSProvider10Visibility(provider) {
 // Handle featured TTS provider visibility (param2)
 function handleTTSProvider2Visibility(provider) {
     // Hide all TTS2 elements
-    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "geminiTTS2", "speechifyTTS2", "kokoroTTS2", "kittenTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
+    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "geminiTTS2", "fishTTS2", "speechifyTTS2", "kokoroTTS2", "kittenTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -5811,6 +5823,8 @@ function handleTTSProvider2Visibility(provider) {
         document.getElementById("googleTTS2").classList.remove("hidden");
     } else if (provider == "gemini") {
         document.getElementById("geminiTTS2").classList.remove("hidden");
+    } else if (provider == "fish") {
+        document.getElementById("fishTTS2").classList.remove("hidden");
     } else if (provider == "speechify") {
         document.getElementById("speechifyTTS2").classList.remove("hidden");
     } else if (provider == "kokoro") {
@@ -5829,7 +5843,7 @@ function handleTTSProvider2Visibility(provider) {
 // Handle Flow Actions TTS provider visibility (param18)
 function handleTTSProvider18Visibility(provider) {
     // Hide all TTS18 elements
-    ["systemTTS18", "elevenlabsTTS18", "googleTTS18", "geminiTTS18", "speechifyTTS18", "kokoroTTS18", "kittenTTS18", "openaiTTS18", "piperTTS18", "espeakTTS18"].forEach(id => {
+    ["systemTTS18", "elevenlabsTTS18", "googleTTS18", "geminiTTS18", "fishTTS18", "speechifyTTS18", "kokoroTTS18", "kittenTTS18", "openaiTTS18", "piperTTS18", "espeakTTS18"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
 
@@ -5842,6 +5856,8 @@ function handleTTSProvider18Visibility(provider) {
         document.getElementById("googleTTS18")?.classList.remove("hidden");
     } else if (provider == "gemini") {
         document.getElementById("geminiTTS18")?.classList.remove("hidden");
+    } else if (provider == "fish") {
+        document.getElementById("fishTTS18").classList.remove("hidden");
     } else if (provider == "speechify") {
         document.getElementById("speechifyTTS18")?.classList.remove("hidden");
     } else if (provider == "kokoro") {
@@ -7221,6 +7237,10 @@ function handleSetting(ele, sync) {
         }
     }
     
+    if (ele.dataset.setting === "socketserver") {
+        syncSupportedServerParamsForTarget("flowactions", document.getElementById("flowactions"), document.getElementById("dock"), "actions.html");
+        refreshLinks();
+    }
     if (ele.dataset.setting === "hideyourlinks") {
         refreshLinks();
     }
@@ -7462,7 +7482,7 @@ function handleOptionSetting(ele, sync) {
         const suffix = settingType === 'optionsetting2' ? '2' : (settingType === 'optionsetting10' ? '10' : (settingType === 'optionsetting18' ? '18' : ''));
         const ttsProviderElements = [
             `systemTTS${suffix}`, `elevenlabsTTS${suffix}`, `googleTTS${suffix}`, `geminiTTS${suffix}`,
-            `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `kittenTTS${suffix}`, `openaiTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
+            `fishTTS${suffix}`, `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `kittenTTS${suffix}`, `openaiTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
         ];
         
         ttsProviderElements.forEach(id => {
@@ -9951,6 +9971,13 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 				speakingRate: getParam('elevenrate') ? getNumber('elevenrate', 1.0) : 1.0
 			},
             
+            fish: {
+                endpoint: (getId('fishEndpoint')?.value || getText('fishendpoint') || '').trim(),
+                key: (getId('fishAPIKey')?.value || getText('fishkey') || '').trim(),
+                voice: (getId('fishVoiceID')?.value || getText('voicefish') || '').trim(),
+                model: getOption('fishmodel', 's2.1-pro-free'),
+                speed: getParam('fishspeed') ? Math.max(0.5, Math.min(2, getNumber('fishspeed', 1))) : 1
+            },
             // Speechify settings
             speechify: {
                 key: getId('speechifyAPIKey')?.value || getText('speechifykey'),
@@ -10084,6 +10111,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             if (provider === 'elevenlabs' && !settings.elevenLabs.key) {
                 throw new Error('ElevenLabs API key is required');
             }
+            if (provider === 'fish' && !settings.fish.key && !settings.fish.endpoint) {
+                throw new Error('Fish Audio API key is required');
+            }
             if (provider === 'speechify' && !settings.speechify.key) {
                 throw new Error('Speechify API key is required');
             }
@@ -10120,6 +10150,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 if (!this.premiumQueueActive) {
                     await this.elevenLabsTTS(text, settings, section);
                 } 
+            } else if (settings.service === "fish" && (settings.fish.key || settings.fish.endpoint)) {
+                if (!this.premiumQueueActive) await this.fishTTS(text, settings, section);
             } else if ((settings.service == "speechify") && settings.speechify.key) {
                 if (!this.premiumQueueActive) {
                     await this.speechifyTTS(text, settings, section);
@@ -10728,6 +10760,54 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 	},
 
     
+    async fishTTS(text, settings, section = this.currentTtsSection || "") {
+        this.premiumQueueActive = true;
+        this.setTestRunning(section, true, "Generating...");
+        const audio = document.createElement("audio");
+        this.activeAudioElement = audio;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000);
+        try {
+            const bridge = settings.fish.endpoint;
+            const data = bridge
+                ? { input: text, voice: settings.fish.voice || "", model: settings.fish.model, response_format: "mp3", speed: settings.fish.speed }
+                : { text: text, format: "mp3", prosody: { speed: settings.fish.speed } };
+            if (!bridge && settings.fish.voice) data.reference_id = settings.fish.voice;
+            const headers = { "Content-Type": "application/json", "Accept": "audio/mpeg" };
+            if (settings.fish.key) headers.Authorization = "Bearer " + settings.fish.key;
+            if (!bridge) headers.model = settings.fish.model;
+            const response = await fetch(bridge || "https://api.fish.audio/v1/tts", {
+                method: "POST", headers: headers,
+                body: JSON.stringify(data), signal: controller.signal
+            });
+            if (!response.ok) throw new Error("Fish Audio request failed with HTTP " + response.status);
+            const blob = await response.blob();
+            if (!blob.size) throw new Error("Fish Audio returned empty audio");
+            if (this.activeAudioElement !== audio) return;
+            this.activeAudioUrl = URL.createObjectURL(blob);
+            audio.src = this.activeAudioUrl;
+            audio.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
+            audio.onended = () => {
+                if (this.activeAudioElement !== audio) return;
+                this.showFeedback("Audio played here. Check OBS playback separately.", "success", section);
+                this.finishedAudio(section);
+            };
+            audio.onerror = () => {
+                if (this.activeAudioElement !== audio) return;
+                this.showFeedback("Fish Audio playback failed.", "error", section);
+                this.finishedAudio(section);
+            };
+            this.setTestRunning(section, true, "Playing...");
+            await audio.play();
+        } catch (error) {
+            if (this.activeAudioElement !== audio) return;
+            this.showFeedback(error.name === "AbortError" ? "Fish Audio request timed out. Try again." : error.message, "error", section);
+            this.finishedAudio(section);
+        } finally {
+            clearTimeout(timeout);
+        }
+    },
+
     speechifyTTS(text, settings) {
         this.premiumQueueActive = true;
         const url = "https://api.speechify.ai/v1/audio/speech";

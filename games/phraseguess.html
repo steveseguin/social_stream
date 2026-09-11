@@ -430,8 +430,9 @@ You can't handle the truth</textarea>
                 // Join the session - match dock.html pattern
                 socketserver.send(JSON.stringify({ 
                     join: sessionId.split(",")[0], 
-                    in: urlParams.has('localserver') && urlParams.has('server2') ? chatRelay.in : 2,
-                    out: urlParams.has('localserver') && urlParams.has('server2') ? chatRelay.out : 1
+                    // Keep legacy API channels; direct server2 chat uses the helper on hosted and local relays.
+                    in: urlParams.has('server2') && (!urlParams.get('server') || urlParams.has('localserver')) ? chatRelay.in : 2,
+                    out: urlParams.has('server2') && (!urlParams.get('server') || urlParams.has('localserver')) ? chatRelay.out : 1
                 }));
             };
 
@@ -486,24 +487,25 @@ You can't handle the truth</textarea>
                 // WebSocket mode - send as action based on mode
                 if (sendMode === 'chat') {
                     // Send to chat sources (actual chat)
-                    socketserver.send(JSON.stringify({
+                    socketserver.send(JSON.stringify(chatRelay.in === 4 ? {response: message} : {
                         action: 'sendChat',
                         value: message
                     }));
-                    addMessage(`[Bot sent to chat] ${message}`);
+                    addMessage(`[Chat reply requested${chatRelay.in === 4 ? '; host incoming messages must be enabled' : ''}] ${message}`);
                 } else {
                     // Send to dock (display only)
                     const response = {
                         chatname: config.botName,
                         chatmessage: message,
                         type: 'bot',
-                        timestamp: Date.now()
+                        timestamp: Date.now(),
+                        textonly: true
                     };
                     socketserver.send(JSON.stringify({
-                        action: 'extContent',
-                        value: JSON.stringify(response)
+                        action: chatRelay.in === 4 ? 'phraseGuessResponse' : 'extContent',
+                        value: chatRelay.in === 4 ? response : JSON.stringify(response)
                     }));
-                    addMessage(`[Bot sent to dock] ${message}`);
+                    addMessage(`[Dock reply requested${chatRelay.in === 4 ? '; host incoming messages must be enabled' : ''}] ${message}`);
                 }
             } else if (iframe && window.parent !== window) {
                 // We're embedded in an iframe - send to parent
@@ -559,6 +561,8 @@ You can't handle the truth</textarea>
                     });
                     addMessage(`[Bot sent to dock] ${message}`);
                 }
+            } else {
+                addMessage('[Reply unavailable: disconnected]');
             }
         }
 

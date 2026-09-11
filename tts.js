@@ -308,6 +308,8 @@ TTS.elevenLabsSettings = {
     model: "eleven_flash_v2_5" // Default to fastest model for streaming
 };
 
+TTS.fishSettings = { model: "s2.1-pro-free", voice: "", speed: 1.0, endpoint: "" };
+
 TTS.speechifySettings = {
     speed: 1.0,
     model: 'simba-3.0',
@@ -493,6 +495,7 @@ TTS.kittenSettings = {
 // TTS providers
 TTS.GoogleAPIKey = false;
 TTS.ElevenLabsKey = false;
+TTS.FishAPIKey = false;
 TTS.SpeechifyAPIKey = false;
 TTS.OpenAIAPIKey = false;
 TTS.GeminiAPIKey = false;
@@ -990,6 +993,8 @@ TTS.configure = function(urlParams) {
     // API Keys
     TTS.GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
     TTS.ElevenLabsKey = urlParams.get("elevenlabskey") || false;
+    TTS.FishAPIKey = (urlParams.get("fishkey") || "").trim() || false;
+    TTS.fishSettings.endpoint = (urlParams.get("fishendpoint") || "").trim();
     TTS.SpeechifyAPIKey = urlParams.get("speechifykey") || false;
     TTS.OpenAIAPIKey = urlParams.get("openaikey") || urlParams.get("customttskey") || urlParams.get("localttskey") || false;
     TTS.GeminiAPIKey = urlParams.get("geminikey") || urlParams.get("geminiapikey") || urlParams.get("geminiApiKey") || false;
@@ -1028,6 +1033,10 @@ TTS.configure = function(urlParams) {
             TTS.TTSProvider = "system";
         } else if (TTS.TTSProvider === "gemini" && !TTS.GeminiAPIKey) {
             TTS.configurationWarning = "Gemini API key missing. Using System TTS instead; check playback in OBS separately.";
+            console.warn(TTS.configurationWarning);
+            TTS.TTSProvider = "system";
+        } else if (TTS.TTSProvider === "fish" && !TTS.FishAPIKey && !TTS.fishSettings.endpoint) {
+            TTS.configurationWarning = "Fish Audio API key missing. Using System TTS instead; check playback in OBS separately.";
             console.warn(TTS.configurationWarning);
             TTS.TTSProvider = "system";
         } else if (TTS.TTSProvider === "speechify" && !TTS.SpeechifyAPIKey) {
@@ -1126,6 +1135,11 @@ TTS.configure = function(urlParams) {
     TTS.elevenLabsSettings.speakerBoost = urlParams.has("elevenspeakerboost");
     TTS.elevenLabsSettings.voiceName = urlParams.get("voice11") || urlParams.get("elevenlabsvoice") || false;
     TTS.elevenLabsSettings.model = urlParams.get("elevenlabsmodel") || "eleven_flash_v2_5";
+
+    // Fish Audio settings (model is sent as a header, voice as reference_id).
+    TTS.fishSettings.model = urlParams.get("fishmodel") || "s2.1-pro-free";
+    TTS.fishSettings.voice = (urlParams.get("voicefish") || "").trim();
+    TTS.fishSettings.speed = Math.min(2, TTS.parseMinFloatParam(urlParams, "fishspeed", TTS.rate, 0.5));
 
     // Speechify settings
     TTS.speechifySettings.speed = TTS.parseMinFloatParam(urlParams, "speechifyspeed", TTS.rate, 0.5);
@@ -1565,6 +1579,12 @@ TTS.speak = function(text, allow = false, options = {}) {
 				return;
 			}
 			return; // Change from break to return
+        case "fish":
+            if (TTS.FishAPIKey || TTS.fishSettings.endpoint) {
+                if (!TTS.premiumQueueActive) TTS.fishTTS(text, options);
+                else TTS.queuePremiumTTS(text, allow, options);
+            }
+            return;
 		case "speechify":
 			if (TTS.SpeechifyAPIKey) {
 				if (!TTS.premiumQueueActive) {
@@ -2164,6 +2184,60 @@ TTS.ElevenLabsTTS = async function(tts, options) {
     } catch (error) {
         console.error("ElevenLabs TTS error:", error);
     } finally {
+        if (premiumSerial === TTS.premiumSerial) {
+            TTS.finishedAudio();
+        }
+    }
+};
+
+// Fish Audio uses the same queued blob playback and skip guards as ElevenLabs.
+TTS.fishTTS = async function(tts, options) {
+    TTS.premiumQueueActive = true;
+    const premiumSerial = ++TTS.premiumSerial;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    try {
+        const voice = TTS.getVoiceOverride(options) || TTS.fishSettings.voice;
+        const bridge = TTS.fishSettings.endpoint;
+        const data = bridge
+            ? { input: tts, voice: voice || "", model: TTS.fishSettings.model, response_format: "mp3", speed: TTS.fishSettings.speed }
+            : { text: tts, format: "mp3", prosody: { speed: TTS.fishSettings.speed } };
+        if (!bridge && voice) data.reference_id = voice;
+        const headers = { "Content-Type": "application/json", "Accept": "audio/mpeg" };
+        if (TTS.FishAPIKey) headers.Authorization = "Bearer " + TTS.FishAPIKey;
+        if (!bridge) headers.model = TTS.fishSettings.model;
+        const response = await fetch(bridge || "https://api.fish.audio/v1/tts", {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify(data),
+            signal: controller.signal
+        });
+
+        if (!response.ok) {
+            throw new Error("Fish Audio request failed with HTTP " + response.status);
+        }
+
+        const audioBlob = await response.blob();
+        if (!audioBlob || !audioBlob.size) {
+            throw new Error("Fish Audio returned an empty audio response");
+        }
+
+        if (premiumSerial !== TTS.premiumSerial) {
+            return; // skipped while the audio was being fetched
+        }
+
+        if (TTS.neuroSyncEnabled) {
+            await TTS.sendToNeuroSync(audioBlob);
+        } else {
+            const played = await TTS.playAudioBlobAndWait(audioBlob);
+            if (!played) {
+                console.warn("Fish Audio could not be played.");
+            }
+        }
+    } catch (error) {
+        console.error("Fish Audio TTS error:", error);
+    } finally {
+        clearTimeout(timeout);
         if (premiumSerial === TTS.premiumSerial) {
             TTS.finishedAudio();
         }

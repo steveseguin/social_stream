@@ -14,7 +14,9 @@ function arg(name, fallback) {
 }
 
 const mode = (arg("mode", process.env.SSN_TTS_TARGET_MODE || "openai") || "openai").toLowerCase();
-const defaultTarget = mode === "gptsovits"
+const defaultTarget = mode === "fish"
+    ? "https://api.fish.audio/v1/tts"
+    : mode === "gptsovits"
     ? "http://127.0.0.1:9880/tts"
     : mode === "f5"
         ? "http://127.0.0.1:7860/synthesize_speech/"
@@ -69,6 +71,29 @@ function getExtraJson() {
 }
 
 function buildTargetRequest(incomingBuffer, target) {
+    if (mode === "fish") {
+        const input = parseJson(incomingBuffer);
+        const model = input.model || "s2.1-pro-free";
+        // Fish falls back to a paid model for unknown names. Reject typos here.
+        if (!["s2.1-pro-free", "s2.1-pro", "s2-pro", "s1"].includes(model)) {
+            const error = new Error("Unsupported Fish Audio model");
+            error.statusCode = 400;
+            throw error;
+        }
+        const speed = Number(input.speed);
+        const payload = {
+            text: input.input || "",
+            format: input.response_format || "mp3",
+            prosody: { speed: Number.isFinite(speed) && speed > 0 ? Math.max(0.5, Math.min(2, speed)) : 1 }
+        };
+        if (input.voice) payload.reference_id = input.voice;
+        return {
+            method: "POST",
+            path: target.pathname + target.search,
+            body: Buffer.from(JSON.stringify(payload)),
+            headers: { "Content-Type": "application/json", "model": model }
+        };
+    }
     if (mode === "f5") {
         const input = parseJson(incomingBuffer);
         const f5Target = new URL(target.toString());

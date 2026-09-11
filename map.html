@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="shared/overlay-control-transport.js"></script>
+<script src="js/transport-dedupe.js"></script>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2338,7 +2340,19 @@
             updateStatusBanner();
         }
 
-        function processInput(data) {
+        var transportDeliveryDedupe = SocialStreamTransportDedupe.create();
+        var mapStateTracker = SSNOverlayControl.createStateTracker();
+        function processInput(data, source) {
+            if (!SSNOverlayControl.accept(data, "map")) return;
+            if (data && data.mapState) {
+                var transition = mapStateTracker(data.mapState);
+                if (!transition.accept) return;
+                if (transition.reset && data.cmd !== "resetmap") resetMap();
+                if (!data.cmd && data.mapState.paused !== null) {
+                    if (data.mapState.paused) pauseCollection(); else startCollection();
+                }
+            }
+            if (data && data.chatmessage && transportDeliveryDedupe(data, source || "direct")) return;
             if (!data) return;
 
             if (data.cmd && handleCommand(data.cmd)) {
@@ -2525,6 +2539,7 @@
             const password = urlParams.get('password') || 'false';
 
             const label = urlParams.get('label') || 'map';
+            if (label === 'map') SSNOverlayControl.connect(urlParams, session, 'map', processInput);
             if (!useServerOnlyTransport()) {
                 const iframe = document.createElement('iframe');
                 iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(session)}&novideo&noaudio&label=${encodeURIComponent(label)}&cleanoutput&room=${encodeURIComponent(session)}`;
@@ -2534,7 +2549,7 @@
                 window.addEventListener('message', (event) => {
                     if (event.source !== iframe.contentWindow) return;
                     if (event.data?.dataReceived?.overlayNinja) {
-                        processInput(event.data.dataReceived.overlayNinja);
+                        processInput(event.data.dataReceived.overlayNinja, "p2p");
                     }
                 });
             }
@@ -2547,7 +2562,7 @@
                         session,
                         2,
                         1,
-                        (data) => processInput(data)
+                        (data) => processInput(data, "api")
                     );
                 },
                 setupExtensionSocket() {
@@ -2563,7 +2578,7 @@
                             4,
                             (data) => {
                                 if (urlParams.has('server2') || urlParams.has('server3')) {
-                                    processInput(data);
+                                    processInput(data, "extension");
                                 }
                             }
                         );

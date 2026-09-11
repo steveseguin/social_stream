@@ -116,8 +116,8 @@
             var socket;
             var stopped = false;
             function connect() {
-                var displayFeed = urlParams.has('server2') && !(urlParams.has('localserver') && urlParams.get('server'));
-                var server = urlParams.has('localserver') ? SocialStreamLocalServer.getRelayUrl(urlParams, displayFeed ? 'server2' : 'server', '') : (urlParams.get('server') || 'wss://io.socialstream.ninja/api');
+                var displayFeed = urlParams.has('server2') && !urlParams.get('server');
+                var server = SocialStreamLocalServer.getRelayUrl(urlParams, displayFeed ? 'server2' : 'server', displayFeed ? 'wss://io.socialstream.ninja/extension' : 'wss://io.socialstream.ninja/api');
                 socket = new WebSocket(server);
                 socket.onopen = function() {
                     socket.send(JSON.stringify({join:roomID.split(',')[0], out:displayFeed ? 3 : 1, in:displayFeed ? 4 : 2}));

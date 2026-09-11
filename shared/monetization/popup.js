@@ -270,6 +270,7 @@
 			var connectionParams = new URLSearchParams(u.search);
 			u.search = '';
 			if (keepServer) u.searchParams.set('server', serverValue || '');
+			if (connectionParams.has('server2')) u.searchParams.set('server2', connectionParams.get('server2'));
 			if (connectionParams.has('localserver')) {
 				['localserver', 'localserverport', 'server2'].forEach(function (key) {
 					if (connectionParams.has(key)) u.searchParams.set(key, connectionParams.get(key));

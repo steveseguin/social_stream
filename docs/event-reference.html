@@ -363,6 +363,8 @@
             </section>
 
             <section class="meta-guidance" id="meta-conventions">
+                <p>Overlay control transport is separate from captured chat/events. Updated receivers use an <code>ssnControl</code> envelope containing a delivery <code>id</code>, feature <code>target</code>, optional reply channel and snapshot client ID. Existing feature bodies remain intact. Public feature controls use channel 7; Actions retains channel 6. Poll and Map state includes a host <code>epoch</code>, <code>revision</code> and <code>reset</code> marker; Timer, Ticker and Spotify use <code>ssnState</code> with an epoch and revision. These markers describe host state, not restored vote/chat history. Sources must not add control-envelope fields to captured messages. A receipt acknowledgement does not establish action completion or OBS visibility. See the <a href="transport-migration-status.md">migration status</a> for supported features, reply negotiation and reconnect limits.</p>
+                <p>Phrase Guess uses the native <code>{response: text}</code> request for server2 chat replies and <code>{action: "phraseGuessResponse", value: {type: "bot", chatname: name, chatmessage: text}}</code> for dock-only announcements. The host must enable incoming server3 messages; disabling host control still blocks these requests. Dock announcements are forwarded as ordinary bot chat rows with <code>textonly: true</code>, without sending them to capture-source chat inputs. Legacy API mode retains its existing command format.</p>
                 <h2>Meta Conventions</h2>
                 <p>To keep dashboards and automations aligned, follow these conventions when extending <code>data.meta</code>:</p>
                 <ul>

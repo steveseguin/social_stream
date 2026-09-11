@@ -20,7 +20,19 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.1.0 | 0.4.2 | Versioned responses, request and operation IDs, SSE status events, token-file and stored credentials, visible-app controls, expanded source/settings discovery, and version-aware MCP tools |
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
-## Unreleased local relay correction
+## Unreleased hosted and local overlay-control correction
+
+Minimum verified runtime: SSApp 0.4.28 with the updated Social Stream beta page sources containing `shared/overlay-control-transport.js`. No released minimum containing all changes has been assigned. Remote page revisions can change independently of the app version; do not assume a published 0.4.28 build contains this update. Existing API/MCP responses still expose the running SSApp version.
+
+Actions channel 6 now sends to enabled relay routes alongside connected WebRTC peers. Poll/Credits/Hype controls and snapshots use dedicated channel 7. `ssnControl` carries command IDs and feature targets for duplicate suppression and acknowledgements; `ssnControlRequest` only reads Poll/Hype state. Existing enabled receiver switches and session boundaries apply. A receipt confirms delivery, not OBS visibility or external action completion. Reconnect reads do not replay Credits starts or Poll resets.
+
+Poll also suppresses duplicate copies of the same captured message ID across transports when repeat voting is enabled; distinct messages from the same viewer still count.
+
+Hosted and local Giveaway Manager requests opt into `replyFormat: "commandResult"` for existing protocol-2 giveaway actions, retaining `get` as the request ID. Replies use `{type:"commandResult", action, result}`, correlated by `result.request`. Only opted-in giveaway requests select this envelope; ordinary callbacks and other clients are unchanged. This avoids hosted relays consuming the manager's replies. No mutation is automatically replayed after connection loss.
+
+The Local AI `/api/v1` API and MCP commands, schemas, version numbers and intentional loopback trust boundary are unchanged. Full details and runtime evidence are in `docs/local-server-review.md`.
+
+## Unreleased local relay correction (earlier work)
 
 Minimum supported build: the SSApp development checkout based on 0.4.28 containing the local WebSocket callback correction; a released minimum version has not yet been assigned. A published 0.4.28 build must not be assumed to contain it.
 

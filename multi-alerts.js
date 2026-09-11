@@ -330,6 +330,7 @@ if (settings.previewOnly) {
 }
 
 if (!settings.previewOnly && settings.roomID) {
+  SSNOverlayControl.connect(urlParams, settings.roomID, "alerts", handleIncomingPayload);
   if (!settings.useServerOnlyTransport) {
     setupBridgeIframe();
   }
@@ -2013,6 +2014,7 @@ function handlePreviewMessage(previewMessage) {
 }
 
 function handleIncomingPayload(payload) {
+  if (!SSNOverlayControl.accept(payload, "alerts")) return;
   if (payload && typeof payload === 'object' && payload.action === 'clearAlerts') {
     clearAlert({ clearQueue: true });
     updateStatus('Alerts cleared');

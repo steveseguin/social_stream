@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="shared/overlay-control-transport.js"></script>
 <script src="js/local-server-url.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -590,11 +591,11 @@
 	    // Transport migration guard: only pages with full server parity may skip the legacy bridge.
 	    var TRANSPORT_CAPABILITIES = {
             serverFeed: true,
-            serverTargeted: false,
+            serverTargeted: true,
             upstreamCommands: false,
             customChannel: false,
             legacyBridgeRequired: true,
-            legacyBridgeReason: "Credits start/preview/reset commands are still sent with sendTargetP2P."
+            legacyBridgeReason: "Credits controls support relay channel 7; retain the bridge for older hosts and mixed displays."
 	    };
 	    function versionAtLeast(value, minimum) {
 	        const a = String(value || "").split(".");
@@ -870,6 +871,7 @@
 		return false;
 	}
 	function processData(data) {
+        if (!SSNOverlayControl.accept(data, "credits")) return;
 		if (isDuplicateTransportDelivery(data)) {
 			return;
 		}
@@ -1316,6 +1318,8 @@
             }
         });
     }
+
+    SSNOverlayControl.connect(urlParams, creditsSession, "credits", processData);
 
     // Optional: Extension server relay (server2/server3) for dock-labeled pages
     (function setupExtensionSocket(){

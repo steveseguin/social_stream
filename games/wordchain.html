@@ -102,10 +102,11 @@
         scoreList.innerHTML = '';
         
         const sortedScores = Array.from(scores.entries())
-            .sort((a, b) => b[1] - a[1])
+            .sort((a, b) => b[1].score - a[1].score)
             .slice(0, 5);
         
-        sortedScores.forEach(([username, score], index) => {
+        sortedScores.forEach(([, player], index) => {
+            const username = player.name, score = player.score;
             const scoreDiv = document.createElement('div');
             scoreDiv.className = 'score-entry';
             
@@ -118,7 +119,7 @@
         });
     }
     
-    function processWord(username, word) {
+    function processWord(username, word, playerKey = username) {
         if (!gameActive) return;
         
         word = word.toUpperCase().trim();
@@ -151,7 +152,7 @@
         
         // Calculate points
         let points = word.length;
-        if (username === lastContributor) {
+        if (playerKey === lastContributor) {
             comboMultiplier = Math.min(comboMultiplier + 0.5, 3);
         } else {
             comboMultiplier = 1;
@@ -159,8 +160,8 @@
         points = Math.floor(points * comboMultiplier);
         
         // Update score
-        scores.set(username, (scores.get(username) || 0) + points);
-        roundScores.set(username, (roundScores.get(username) || 0) + points);
+        scores.set(playerKey, {name: username, score: (scores.get(playerKey) || {score: 0}).score + points});
+        roundScores.set(playerKey, {name: username, score: (roundScores.get(playerKey) || {score: 0}).score + points});
         
         // Update display
         document.getElementById('word-display').textContent = currentWord;
@@ -172,7 +173,7 @@
             showCombo(comboMultiplier);
         }
         
-        lastContributor = username;
+        lastContributor = playerKey;
         
         // Add bonus time for good words
         if (word.length >= 7) {
@@ -245,10 +246,10 @@
         
         // Find round winner
         const winner = Array.from(roundScores.entries())
-            .sort((a, b) => b[1] - a[1])[0];
+            .sort((a, b) => b[1].score - a[1].score)[0];
         
         if (winner) {
-            sendResponse(`🏆 Round over! Winner: ${winner[0]} with ${winner[1]} points! Chain length: ${wordChain.length} words`);
+            sendResponse(`🏆 Round over! Winner: ${winner[1].name} with ${winner[1].score} points! Chain length: ${wordChain.length} words`);
         }
         
         // Start new round after delay
@@ -290,7 +291,7 @@
         // Check if it's a plausible word attempt (starts with the required letter)
         if (gameActive && message.length >= 3 && /^[a-zA-Z]+$/.test(message) &&
             message[0].toUpperCase() === currentWord[currentWord.length - 1]) {
-            processWord(stripHtml(data.chatname), message);
+            processWord(String(data.chatname), message, JSON.stringify([data.type || '', String(data.userid || data.username || data.chatname)]));
         }
     }
     
