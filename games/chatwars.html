@@ -527,7 +527,8 @@
                 rawMessage = stripHtml(rawMessage);
             }
             const message = rawMessage.toLowerCase().trim();
-            const username = stripHtml(data.chatname);
+            const username = String(data.chatname);
+            const playerKey = JSON.stringify([data.type || '', String(data.userid || data.username || data.chatname)]);
 
             // Check for team join commands
             const teamMatch = message.match(/^!(red|blue|green|yellow)$/);
@@ -536,14 +537,14 @@
                 
                 // Remove player from all teams
                 Object.values(gameState.teams).forEach(team => {
-                    team.players.delete(username);
+                    team.players.delete(playerKey);
                 });
 
                 // Add to new team (cap roster at 200, keeping most recent)
                 if (gameState.teams[newTeam].players.size >= 200) {
                     gameState.teams[newTeam].players = new Set(Array.from(gameState.teams[newTeam].players).slice(-100));
                 }
-                gameState.teams[newTeam].players.add(username);
+                gameState.teams[newTeam].players.add(playerKey);
 
                 // Log team join
                 const logEntry = document.createElement('div');
@@ -558,7 +559,7 @@
 
             // Find player's team and add power
             for (const [teamName, team] of Object.entries(gameState.teams)) {
-                if (team.players.has(username)) {
+                if (team.players.has(playerKey)) {
                     team.power += 1;
                     
                     // Chance to capture territory based on team activity

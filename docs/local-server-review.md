@@ -1,4 +1,45 @@
-# Local Server review — 2026-09-10
+# Server transport review — 2026-09-10
+
+## Server-mode follow-up (unreleased)
+
+The earlier review below tested local relay operation. It did **not** establish hosted server-mode parity. Compatibility comments described the old implementation, not a requirement to preserve broken controls. The historical “left unchanged” and “hosted unchanged” statements below are superseded for the features in this follow-up.
+
+- Confirmed the Flow Actions regression in real SSApp with live WebRTC: a local relay socket was open, a WebRTC-only Actions display was connected, and a captured-chat action did not reach that display. The corrected sender delivers through enabled relay routes **and** connected WebRTC peers. Current pages suppress duplicate command IDs across those paths. An open socket alone no longer counts as a relay receipt.
+- Poll receives its own settings and Start/End/Reset controls; initial/reconnect reads do not reset existing votes. Credits receives Start/Preview/Test/Reset and the background-collected snapshot without replaying a roll when it reconnects. Hype receives initial snapshots and updates. These paths use hosted `io.socialstream.ninja`, local, or explicit compatible relay addresses.
+- A separate live mixed-mode test found that Poll's repeat-voting setting counted the same captured message twice, once per transport. Poll now suppresses matching message IDs across its transports while allowing subsequent messages from the same viewer. This is separate from command-ID suppression and does not change other overlays' chat handling.
+- Giveaway Manager retains server mode in generated links. The hosted relay consumes ordinary `callback` packets instead of forwarding them to page clients (confirmed with an isolated live relay probe). The manager therefore opts into the existing `commandResult` format, correlated by `result.request`; native and WebRTC controls and other API clients retain their formats.
+- Session changes recreate enabled hosted as well as local connections. Old socket callbacks are guarded against acting on the new session. Password-only changes retain their existing behavior.
+- Generated Flow Actions links include the independent action route with API-only or command-only receivers, in hosted and local modes. No receiver is enabled automatically.
+
+### Protocol and scope
+
+Only Actions, Poll controls, Credits controls and Hype snapshots use the new `ssnControl` delivery metadata (`id`, `target`, optional `reply` and snapshot `client`). This is an overlay-control envelope, not a captured chat/event field. Actions retains channel 6; the other three use a separate channel 7 subscription so their settings and commands do not reach ordinary chat consumers. Existing chat channels and custom chat-channel parameters are unchanged. The selected explicit relay endpoint takes precedence over a local default.
+
+`ssnControlRequest` permits read-only Poll/Hype snapshots through an enabled API receiver or chat-forwarding route. `ssnControlAck` confirms receipt by the intended feature, not OBS visibility or successful completion of an external action. The host uses only enabled sockets; command-only `server3` permits the existing independent Actions route, not unrestricted snapshot publication. Poll settings are allowlisted; other settings and credentials are not included. Retries keep the same ID. Receivers retain IDs for 60 seconds (bounded to 4096), longer than the sender's retry window. Updated pages keep the legacy bridge for older-host compatibility.
+
+No Electron flags, security defaults, preload scripts, platform capture code, Cloudflare settings, tags, releases or deployed services were changed. Both host and overlay page sources need this update; an SSApp version number alone does not identify remotely loaded page revisions.
+
+### Follow-up validation
+
+`ssapp/tests/electron/server-controls-e2e.cjs` runs actual source capture, popup controls, overlay windows and host sockets in isolated SSApp profiles. Default mode blocks external DNS and uses the real local relay. `SSAPP_TEST_HOSTED=1` uses the actual hosted relay. `SSAPP_TEST_LIVE_WEBRTC=1` permits live VDO.Ninja assets/signaling for WebRTC-only and mixed-display checks. The normal Electron session, preload and compatibility settings remain in effect. No live source channel is used.
+
+Completed expanded local and hosted runs: `%TEMP%/ssapp-server-controls-9jMpld/report.json` and `%TEMP%/ssapp-server-controls-pzpqD5/report.json`. Poll settings/votes/End/Reset, Credits Start/Preview/Test/Reset, disabled receivers and recovery, Hype snapshot/reload, Giveaway Manager entries/close/draw/reset, individual Flow Actions receiver switches, explicit Poll relay addresses, host reconnect, and two session changes passed.
+
+`%TEMP%/ssapp-server-controls-REtdJu/report.json` records the pre-fix WebRTC-only Actions failure. `%TEMP%/ssapp-server-controls-9LYSfP/report.json` is the completed live WebRTC/mixed run: the WebRTC-only Actions page and a second page connected through both WebRTC and the local relay each rendered exactly one action per captured message. The remaining controls, custom relay address and session/reconnect checks also passed in that run.
+
+`SSAPP_TEST_RELAY_RESTART=1` exercises the actual Stop/Enable Local Server menu commands. `%TEMP%/ssapp-server-controls-juSC6N/report.json` passed: the existing Poll retained its votes and closed state, Credits did not rebuild/restart its roll, and fresh Actions and Poll controls worked after all page sockets reconnected. The earlier broad local suite also passed again with session/giveaway flags; evidence is `%TEMP%/ssapp-local-pages-BTKW0i/report.json`.
+
+`SSAPP_TEST_LIVE_WEBRTC=1 SSAPP_TEST_POLL_REPEAT=1` checks real repeat voting with both transports connected. `%TEMP%/ssapp-server-controls-2v4qR9/report.json` records the pre-fix duplicate (two votes from one captured message). `%TEMP%/ssapp-server-controls-MPDnFk/report.json` passed after correction: the first captured message counted once and a second message from the same viewer increased the count to two. The full hosted suite passed again after this Poll change: `%TEMP%/ssapp-server-controls-XHfnVC/report.json`.
+
+`tests/server-controls-extension-e2e.cjs` loaded the actual unpacked extension in headed Chromium, used its real manifest-injected YouTube capture script with a local chat fixture, and delivered through the actual hosted relay with WebRTC unavailable. `%TEMP%/ssn-extension-controls-1hYKp9/report.json` records passing Poll settings/votes/End, background Credits collection/Start, Hype display snapshots, and the unchanged native extension Giveaway Manager entry workflow. This establishes the listed extension workflows, not every extension overlay or OBS behavior.
+
+### Remaining control audit
+
+Code review still finds bridge-only routes for Map Start/Pause/Reset, targeted Reactions, Ticker updates (`sendTickerP2P`), Spotify updates (`sendSpotifyOverlay`), Tip Jar reset/set, legacy waitlist/draw updates used by Confetti, and Events feature/clear clicks. Their chat receipt does not prove control parity. Waitlist, Word Cloud, Custom GIF commands, private chatbot and co-host upstream requests remain separate follow-up work. The recent mini-game direct `server2` feed and legacy-template adapters also remain local-only additions; ordinary hosted chat/API paths are not evidence that those additions work hosted. None of those paths was silently converted by this change.
+
+OBS Browser Source, LAN clients and packaged-release checks remain unverified in this follow-up. The other overlay-control routes listed above were reviewed in code, not newly exercised end-to-end.
+
+## Historical local review
 
 This review covers the SSApp checkout based on 0.4.28 and the Social Stream beta source checkout. These source corrections require a subsequent packaged app release for the wrapper changes. The tests run the real SSApp Electron runtime with isolated profiles, real source-window capture, the real local relay, and locally served copies of the primary source files. Test-only network restrictions prevent contact with live channels and production services.
 

@@ -506,15 +506,12 @@
             return false;
         }
         function processData(data) {
+            if (data && data.content) data = data.content;
             if (isDuplicateTransportDelivery(data)) {
                 return;
             }
             if (!gameState.isActive) return;
             
-            // Handle different data formats from Social Stream
-            if (data && data.content) {
-                data = data.content;
-            }
             
             if (!data || !data.chatmessage || !data.chatname) return;
             
@@ -652,14 +649,26 @@
         // Handle WebSocket connection if server parameters are provided
         if (!urlParams.has('demo') && urlParams.has('server')) {
             const serverURL = urlParams.get('server') || (urlParams.has('localserver') ? SocialStreamLocalServer.getWebSocketUrl() : 'wss://io.socialstream.ninja');
-            const socketserver = new WebSocket(serverURL);
-            socketserver.onopen = function() {
-                socketserver.send(JSON.stringify({ join: sessionId.split(",")[0], out: 2, in: 1 }));
-            };
-            socketserver.onmessage = function(event) {
-                if (!event.data) return;
-                try { processData(JSON.parse(event.data)); } catch (e) {}
-            };
+            let socketserver, retry, closed = false;
+            function connectServer() {
+                if (closed) return;
+                socketserver = new WebSocket(serverURL);
+                socketserver.onopen = function() {
+                    socketserver.send(JSON.stringify({ join: sessionId.split(",")[0], out: 2, in: 1 }));
+                };
+                socketserver.onmessage = function(event) {
+                    if (!event.data) return;
+                    try { processData(JSON.parse(event.data)); } catch (e) {}
+                };
+                socketserver.onerror = function() { socketserver.close(); };
+                socketserver.onclose = function() {
+                    if (!closed) { clearTimeout(retry); retry = setTimeout(connectServer, 5000); }
+                };
+            }
+            window.addEventListener('beforeunload', function() {
+                closed = true; clearTimeout(retry); if (socketserver) socketserver.close();
+            });
+            connectServer();
         }
 
         // Optional: Extension relay via server2/server3

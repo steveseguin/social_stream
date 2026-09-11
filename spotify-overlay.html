@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="shared/overlay-control-transport.js"></script>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1">
@@ -635,7 +636,11 @@ body {
 		ariaStatus.textContent = `${track?.name || 'No track'} ${badge}`;
 	}
 
-	function processPayload(raw) {
+    var spotifyStateTracker = SSNOverlayControl.createStateTracker();
+	if (label === 'spotify') SSNOverlayControl.connect(urlParams, sessionId, "spotify", processPayload);
+function processPayload(raw) {
+    if (!SSNOverlayControl.accept(raw, "spotify")) return;
+    if (raw && raw.ssnState) { var transition = spotifyStateTracker(raw.ssnState); if (!transition.accept || !transition.changed) return; }
 		const payload = raw?.spotify || raw;
 		if (!payload || typeof payload !== 'object') return;
 

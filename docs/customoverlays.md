@@ -2,6 +2,10 @@
 
 ## 1\. Introduction
 
+Transport migration: `server`, `server2` and `server3` are page-specific routes, not interchangeable switches. For maintained direct-chat consumers, `server2` receives captured chat on channel 4; Featured selections normally use channel 2. `localserver` changes the endpoint and does not grant host publishing/control permissions. Explicit route URLs take precedence over the local default. See the [current transport status](transport-migration-status.md) before claiming server-only support for a custom overlay.
+
+If an overlay retains P2P while receiving the same chat through a socket, deduplicate at the shared ingress before rendering or counting. Reuse `js/transport-dedupe.js` and pass the actual source (`p2p`, `api`, or `extension`). Public feature controls use the packaged `shared/overlay-control-transport.js`; private AI requests still use their existing client-bound bridge. Publish shared helpers alongside standalone pages.
+
 Social Stream Ninja (SSN) is a versatile application for consolidating and managing live social media streams. While it offers several built-in overlay pages (like `dock.html`, `featured.html`, `events.html`, etc.), users and developers can create their own custom HTML/CSS/JavaScript-based overlays to tailor the visual experience and functionality to specific needs.
 
 This guide explains how to build such custom pages, focusing on connecting to the SSN backend, receiving and processing messages, and displaying them, all *without* modifying the core `background.js` application.

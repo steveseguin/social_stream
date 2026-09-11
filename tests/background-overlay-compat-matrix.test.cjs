@@ -161,7 +161,7 @@ function makeContractPayloads() {
 	];
 }
 
-function simulateBackgroundRemoteCommand(build, options) {
+async function simulateBackgroundRemoteCommand(build, options) {
 	const sockets = [];
 	const commands = [];
 	function FakeWebSocket(url) {
@@ -207,7 +207,7 @@ function simulateBackgroundRemoteCommand(build, options) {
 	};
 	vm.createContext(sandbox);
 	vm.runInContext(
-		`${build.setupSocketDockSource}\nthis.__setupSocketDock = setupSocketDock;`,
+		`${build.source.includes("function handleOverlayControlRequest(") ? extractFunction(build.source, "handleOverlayControlRequest") : ""}\n${build.setupSocketDockSource}\nthis.__setupSocketDock = setupSocketDock;`,
 		sandbox,
 		{ filename: `background-${build.label}-setupSocketDock.js` }
 	);
@@ -217,12 +217,12 @@ function simulateBackgroundRemoteCommand(build, options) {
 		socket.readyState = FakeWebSocket.OPEN;
 		if (typeof socket.onopen === "function") socket.onopen();
 		const listener = socket.listeners.message;
-		if (listener) listener({ data: JSON.stringify(options.command) });
+		if (listener) await listener({ data: JSON.stringify(options.command) });
 	}
 	return { socket, commands };
 }
 
-function assertHistoricalBackgroundContracts(builds) {
+async function assertHistoricalBackgroundContracts(builds) {
 	const payloads = makeContractPayloads();
 	const remoteCommand = { action: "clearOverlay", target: "extension" };
 	for (const build of builds) {
@@ -246,7 +246,7 @@ function assertHistoricalBackgroundContracts(builds) {
 			}
 		}
 
-		const remoteEnabled = simulateBackgroundRemoteCommand(build, {
+		const remoteEnabled = await simulateBackgroundRemoteCommand(build, {
 			server2: true,
 			server3: true,
 			command: remoteCommand
@@ -259,7 +259,7 @@ function assertHistoricalBackgroundContracts(builds) {
 		);
 		assert.deepStrictEqual(remoteEnabled.commands, [remoteCommand], `${build.label}: remote API command was not processed once`);
 
-		const feedOnly = simulateBackgroundRemoteCommand(build, {
+		const feedOnly = await simulateBackgroundRemoteCommand(build, {
 			server2: true,
 			server3: false,
 			command: remoteCommand
@@ -267,7 +267,7 @@ function assertHistoricalBackgroundContracts(builds) {
 		assert(feedOnly.socket, `${build.label}: server2 did not open its feed WebSocket`);
 		assert.strictEqual(feedOnly.commands.length, 0, `${build.label}: server2 accepted a server3-only remote command`);
 
-		const transportsOff = simulateBackgroundRemoteCommand(build, {
+		const transportsOff = await simulateBackgroundRemoteCommand(build, {
 			server2: false,
 			server3: false,
 			command: remoteCommand
@@ -776,7 +776,8 @@ async function runTaskPool(tasks, worker, concurrency) {
 
 async function run() {
 	const builds = loadBackgroundBuilds();
-	assertHistoricalBackgroundContracts(builds);
+	await assertHistoricalBackgroundContracts(builds);
+	if (process.env.SSN_COMPAT_CONTRACTS_ONLY === "1") return;
 	const entries = makeOverlayEntries();
 	assert(entries.length > 0, `No overlays matched SSN_COMPAT_MATRIX_FILTER=${matrixFilter}`);
 	const tasks = makeOverlayTasks(entries);
@@ -805,7 +806,9 @@ async function run() {
 	}
 }
 
-run().catch(error => {
+module.exports = { createStaticServer, closeServer, configureNetworkMocks, waitForCondition, markerCount };
+
+if (require.main === module) run().catch(error => {
 	console.error(error && error.stack || error);
 	process.exitCode = 1;
 });

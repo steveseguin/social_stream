@@ -413,7 +413,7 @@
         return 'southeast';
     }
     
-    function dig(username, coordinate) {
+    function dig(username, coordinate, playerKey = username) {
         // Parse coordinate (e.g., "B5" -> row 4, col 1)
         const match = coordinate.match(/^([A-J])(\d|10)$/i);
         if (!match) {
@@ -453,7 +453,7 @@
         // Check if treasure found
         const treasure = grid[row][col];
         if (treasure) {
-            foundTreasure(username, treasure, cell);
+            foundTreasure(username, treasure, cell, playerKey);
         } else {
             // Give proximity hint
             const distance = getNearestTreasureDistance(row, col);
@@ -491,14 +491,14 @@
         return minDistance;
     }
     
-    function foundTreasure(username, treasure, cell) {
+    function foundTreasure(username, treasure, cell, playerKey = username) {
         // Show treasure
         cell.textContent = treasure.emoji;
         cell.classList.add('treasure');
         
         // Update score
-        const currentScore = scores.get(username) || 0;
-        scores.set(username, currentScore + treasure.value);
+        const currentScore = (scores.get(playerKey) || {score: 0}).score;
+        scores.set(playerKey, {name: username, score: currentScore + treasure.value});
         updateScoreboard();
         
         // Show found animation
@@ -560,11 +560,12 @@
         scoreList.innerHTML = '';
         
         const sortedScores = Array.from(scores.entries())
-            .sort((a, b) => b[1] - a[1])
+            .sort((a, b) => b[1].score - a[1].score)
             .slice(0, 5);
         
         const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-        sortedScores.forEach(([username, score], index) => {
+        sortedScores.forEach(([, player], index) => {
+            const username = player.name, score = player.score;
             const entry = document.createElement('div');
             entry.className = 'score-entry';
             entry.innerHTML = `
@@ -623,7 +624,7 @@
 
         if (message.toLowerCase().startsWith('!dig ')) {
             const coordinate = message.substring(5).trim().toUpperCase();
-            dig(stripHtml(data.chatname), coordinate);
+            dig(String(data.chatname), coordinate, JSON.stringify([data.type || '', String(data.userid || data.username || data.chatname)]));
         }
     }
     

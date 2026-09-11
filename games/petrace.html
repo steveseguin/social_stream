@@ -555,13 +555,13 @@
         setTimeout(() => points.remove(), 2000);
     }
     
-    function processJoinRace(username, petType) {
+    function processJoinRace(username, petType, playerKey = username) {
         if (raceInProgress) {
             sendChatResponse(`@${username}, a race is already in progress! Wait for the next one.`);
             return;
         }
         
-        if (racers.has(username)) {
+        if (racers.has(playerKey)) {
             sendChatResponse(`@${username}, you're already in the race!`);
             return;
         }
@@ -585,7 +585,7 @@
         }
         
         const racer = new Racer(username, petType, laneNumber);
-        racers.set(username, racer);
+        racers.set(playerKey, racer);
         
         updateBettingBoard();
         sendChatResponse(`${PET_TYPES[petType].emoji} ${username} joined with a ${PET_TYPES[petType].name}!`);
@@ -642,7 +642,7 @@
 
         if (command === '!join') {
             const petType = parts[1]; // Optional pet type
-            processJoinRace(stripHtml(data.chatname), petType);
+            processJoinRace(data.chatname, petType, JSON.stringify([data.type || '', String(data.userid || data.username || data.chatname)]));
         }
     }
     

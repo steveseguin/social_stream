@@ -2194,12 +2194,17 @@ body.light-mode .meta-value.badge {
     });
 
     function featureEventMessage(dataToFeature) {
+        // Featured output has its own channel; serve socket and P2P viewers.
+        if (dataToFeature !== false) {
+            dataToFeature = Object.assign({}, dataToFeature, { clicked: true, timestamp: Date.now() });
+            delete dataToFeature.id;
+        }
+        sendViaWebSocketFallback(dataToFeature);
         // Handle clearing the featured message
         if (dataToFeature === false) {
             const payload = { overlayNinja: false };
             
             if (iframe && iframe.contentWindow && iframe.connectedPeers) {
-                let sentViaIframe = false;
                 const keys = Object.keys(iframe.connectedPeers);
                 for (let i = 0; i < keys.length; i++) {
                     const uuid = keys[i];
@@ -2207,25 +2212,16 @@ body.light-mode .meta-value.badge {
                     if (label === "overlay" || label === false || typeof label === 'undefined') {
                         try {
                             iframe.contentWindow.postMessage({ sendData: payload, type: "pcs", UUID: uuid }, "*");
-                            sentViaIframe = true;
                         } catch (e) {
                             console.error("Error sending clear message via iframe to peer:", uuid, e);
                         }
                     }
                 }
-                if (!sentViaIframe) {
-                    sendViaWebSocketFallback(false);
-                }
-            } else {
-                sendViaWebSocketFallback(false);
             }
             return;
         }
         
-        const messageToSend = { ...dataToFeature, clicked: true, timestamp: Date.now() };
-        if (messageToSend.id) {
-             delete messageToSend.id;
-        }
+        const messageToSend = dataToFeature;
 
         const payload = { overlayNinja: messageToSend };
 
@@ -2248,28 +2244,19 @@ body.light-mode .meta-value.badge {
             }
             if (sentViaIframe) {
                  log("Featured message sent via iframe.");
-            } else {
-                console.warn('No suitable "overlay" peer found to send featured message to via iframe. Attempting WebSocket.');
-                // Fallback to WebSocket if no iframe peer was found or if sending failed
-                sendViaWebSocketFallback(messageToSend);
             }
-        } else {
-            console.warn('iframe or connectedPeers not ready. Attempting WebSocket to feature message.');
-            sendViaWebSocketFallback(messageToSend);
         }
     }
 
     function sendViaWebSocketFallback(messageToSend) {
         if (socketserver && socketserver.readyState === WebSocket.OPEN) {
             if (messageToSend === false) {
-                socketserver.send(JSON.stringify({ overlayNinja: false }));
-                log("Clear message sent via WebSocket as fallback.");
+                socketserver.send(JSON.stringify({ out: 2, overlayNinja: false }));
+                log("Clear message sent to Featured relay viewers.");
             } else {
-                socketserver.send(JSON.stringify({ content: messageToSend }));
-                log("Featured message sent via WebSocket as fallback.");
+                socketserver.send(JSON.stringify({ out: 2, content: messageToSend }));
+                log("Featured message sent to Featured relay viewers.");
             }
-        } else {
-            console.error('Neither iframe nor WebSocket available to send message.');
         }
     }
 

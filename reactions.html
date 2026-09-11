@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
+  <script src="./shared/overlay-control-transport.js"></script>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>Social Stream - Reactions Overlay</title>
@@ -583,6 +584,7 @@ body {
 		}
 	}
 
+    if (label === 'reactions') SSNOverlayControl.connect(urlParams, sessionId, 'reactions', processPayload);
 	function processPayload(raw) {
 		var payload = raw;
 		var eventName;
@@ -600,6 +602,7 @@ body {
 			return false;
 		}
 
+        if (!SSNOverlayControl.accept(payload, 'reactions')) return false;
 		eventName = normalizeEventName(payload.event);
 		if (eventName !== "reaction" && eventName !== "liked" && eventName !== "like") {
 			return false;

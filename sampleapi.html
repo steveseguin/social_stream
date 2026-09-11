@@ -1052,12 +1052,13 @@ Developer Notes:
 			socket.send(JSON.stringify({
 				action: 'gettimerstate',
 				apiid: sessionID,
-				get: callbackId
+				get: callbackId, replyFormat: "commandResult"
 			}));
 
 			socket.addEventListener('message', function handleTimerState(event) {
 				try {
-					const data = JSON.parse(event.data);
+					let data = JSON.parse(event.data);
+                    if (data && data.type === "commandResult") data = { callback: { get: data.get || (data.result && data.result.request), result: data.result } };
 					if (data.callback && data.callback.get === callbackId) {
 						socket.removeEventListener('message', handleTimerState);
 						const messageDiv = document.createElement('div');
@@ -1085,13 +1086,14 @@ Developer Notes:
 			socket.send(JSON.stringify({
 				action: 'getpollpresets',
 				apiid: sessionID,
-				get: callbackId
+				get: callbackId, replyFormat: "commandResult"
 			}));
 			
 			// Listen for response
 			socket.addEventListener('message', function handlePresets(event) {
 				try {
-					const data = JSON.parse(event.data);
+					let data = JSON.parse(event.data);
+                    if (data && data.type === "commandResult") data = { callback: { get: data.get || (data.result && data.result.request), result: data.result } };
 					if (data.callback && data.callback.get === callbackId) {
 						// Remove this listener
 						socket.removeEventListener('message', handlePresets);

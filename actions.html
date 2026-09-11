@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="shared/overlay-control-transport.js"></script>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -342,11 +343,11 @@
         // Transport migration guard: only pages with full server parity may skip the legacy bridge.
         var TRANSPORT_CAPABILITIES = {
             serverFeed: false,
-            serverTargeted: false,
+            serverTargeted: true,
             upstreamCommands: false,
             customChannel: true,
             legacyBridgeRequired: true,
-            legacyBridgeReason: "Flow Actions uses channel 6 and sendTargetP2P('actions') is still bridge-only."
+            legacyBridgeReason: "Flow Actions supports relay channel 6; retain the bridge for older hosts and mixed displays."
         };
         function versionAtLeast(value, minimum) {
             var a = String(value || "").split(".");
@@ -1307,9 +1308,9 @@
             }
             
             // Actions use their own channel, independently of the chat-forwarding
-            // switches. A generated local URL must listen even with API-only input.
-            if (urlParams.has("server") || urlParams.has("server2") || urlParams.has("localserver")) {
-                serverURL = urlParams.get("server") || urlParams.get("server2") || serverURL;
+            // switches. Generated relay URLs also support API-only and command-only input.
+            if (urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3") || urlParams.has("localserver")) {
+                serverURL = urlParams.get("server") || urlParams.get("server2") || urlParams.get("server3") || serverURL;
                 socketserver = new WebSocket(serverURL);
                 setupSocket();
             }
@@ -1360,6 +1361,7 @@
                     try {
                         var data = JSON.parse(event.data);
                         processInput(data);
+                        SSNOverlayControl.acknowledge(socketserver, data, "actions");
                         if (data.get) {
                             var ret = {};
                             ret.callback = {};
@@ -1375,6 +1377,7 @@
         }
 
 		function processInput(data) {
+            if (!SSNOverlayControl.accept(data, "actions")) return;
 			if (data.actionType) {
 				// Handle direct action object
 				handleAction(data);
