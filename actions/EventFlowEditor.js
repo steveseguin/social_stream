@@ -661,7 +661,11 @@ class EventFlowEditor {
         try {
             if (typeof lastResponse !== 'undefined' && lastResponse && lastResponse.streamID) return lastResponse.streamID;
         } catch (_) { }
-        return '';
+        // The embedded background editor stores its active session in streamID,
+        // rather than in the popup's input/response or the background page URL.
+        if (typeof streamID === 'string' && streamID) return streamID;
+        const params = new URLSearchParams(window.location.search);
+        return params.get('session') || params.get('s') || params.get('id') || '';
     }
 
     async refreshLocalMediaStatus(node) {
