@@ -13251,6 +13251,21 @@ function sendAiOverlayCommand(input = {}, defaults = {}) {
 }
 
 async function trySendTargetP2P(data, target) {
+	// The actions page listens on channel 6 in explicit local relay mode.
+	// Use an existing background connection, so captured-chat Event Flows do
+	// not require a WebRTC peer or an additional public connection.
+	if (target === "actions" && urlParams.has("localserver")) {
+		var localActionSocket = socketserverDock && socketserverDock.readyState === WebSocket.OPEN ? socketserverDock
+			: socketserver && socketserver.readyState === WebSocket.OPEN ? socketserver : null;
+		if (!localActionSocket) return false;
+		try {
+			localActionSocket.send(JSON.stringify(Object.assign({}, data, { out: 6 })));
+			return true;
+		} catch (error) {
+			console.warn("Local action delivery failed", error);
+			return false;
+		}
+	}
 	// function to send data to a labelled page via the VDO.Ninja API
 	if (ninjaBridge && ninjaBridge.isReady()) {
 		try {

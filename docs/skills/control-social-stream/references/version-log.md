@@ -20,6 +20,14 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.1.0 | 0.4.2 | Versioned responses, request and operation IDs, SSE status events, token-file and stored credentials, visible-app controls, expanded source/settings discovery, and version-aware MCP tools |
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
+## Unreleased local relay correction
+
+Minimum supported build: the SSApp development checkout based on 0.4.28 containing the local WebSocket callback correction; a released minimum version has not yet been assigned. A published 0.4.28 build must not be assumed to contain it.
+
+Page-owned callback replies now follow the local relay's existing room/channel routing instead of being consumed without delivery. This repairs confirmations in the OBS control dock and WebSocket API clients. The Local AI `/api/v1` API and MCP schemas, version numbers, and loopback binding are unchanged. The local chat relay remains a separate WebSocket service; it does not implement the hosted API's HTTP or webhook endpoints.
+
+The corresponding beta page sources also route Event Flow visual actions to the local actions channel when Local Server is selected. This is a page routing correction, with no new control command or schema. Existing hosted actions and other labelled targets retain their previous transport.
+
 ## Unreleased voice preview
 
 Minimum supported build: an unreleased SSApp build after 0.4.25 containing `ninjafy.voiceControl`; no released minimum version is assigned yet. Feature-detect the bridge rather than assuming support from the version number of a development checkout.

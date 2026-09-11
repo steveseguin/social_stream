@@ -33,6 +33,8 @@ Many "blank overlay" reports are actually correct empty/transparent featured ove
 
 ## Quick Checks
 
+For chat and Multi Alerts in one tab/source, use `combine.html`: paste the Dock URL as the bottom layer and the Multi Alerts URL above it. The page saves drafts in browser-local storage and creates a combined link/QR code containing both URLs and layer options; it does not capture events or change source settings. Scan the QR on mobile and bookmark the result. Settings are a snapshot in that link, not automatic session-ID sync; regenerate it after editing. Leave the alert layer click-through so chat remains interactive. See [the combined-view guide](../../multiple-overlays-guide.html#combine). There is no popup integration. External pages must permit framing and provide their own transparency; mobile audio still follows browser autoplay rules.
+
 1. Does the Browser Source URL include `session=SESSION_ID`?
 2. Does that session match the extension/app/dock?
 3. Is there an active source sending messages?

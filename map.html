@@ -2553,8 +2553,8 @@
                 setupExtensionSocket() {
                     if (urlParams.has('server2') || urlParams.has('server3')) {
                         const serverURL = urlParams.has('server2')
-                            ? (urlParams.get('server2') || 'wss://io.socialstream.ninja/extension')
-                            : (urlParams.get('server3') || 'wss://io.socialstream.ninja/extension');
+                            ? (SocialStreamLocalServer.getRelayUrl(urlParams, 'server2', 'wss://io.socialstream.ninja/extension'))
+                            : (SocialStreamLocalServer.getRelayUrl(urlParams, 'server3', 'wss://io.socialstream.ninja/extension'));
 
                         this.setupSocket(
                             serverURL,

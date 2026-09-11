@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phrase Guessing Game - Social Stream Ninja</title>
@@ -265,9 +266,10 @@ You can't handle the truth</textarea>
     <script>
         // Configuration and state
         const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
         const sessionId = urlParams.get('session') || '';
         const password = urlParams.get('password') || 'false';
-        const serverUrl = urlParams.has('server') ? (urlParams.get('server') || 'wss://io.socialstream.ninja') : '';
+        const serverUrl = chatRelay.enabled ? (chatRelay.url) : '';
         const demo = urlParams.has('demo');
         
         const config = {
@@ -428,8 +430,8 @@ You can't handle the truth</textarea>
                 // Join the session - match dock.html pattern
                 socketserver.send(JSON.stringify({ 
                     join: sessionId.split(",")[0], 
-                    in: 2,    // Listen to dock channel
-                    out: 1    // Send to main channel
+                    in: urlParams.has('localserver') && urlParams.has('server2') ? chatRelay.in : 2,
+                    out: urlParams.has('localserver') && urlParams.has('server2') ? chatRelay.out : 1
                 }));
             };
 

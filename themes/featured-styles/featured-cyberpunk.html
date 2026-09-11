@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="../../js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Featured Message - Cyberpunk Effects</title>
@@ -667,6 +668,7 @@
 
         // Create VDO.Ninja iframe for receiving messages
         function createIframe() {
+            if (SocialStreamLocalServer.connectLocalRelay(urlParams, roomID, processData, true)) return;
             var iframe = document.createElement("iframe");
             
             iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(password) + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="js/local-server-url.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stream Credits</title>
@@ -1319,7 +1320,7 @@
     // Optional: Extension server relay (server2/server3) for dock-labeled pages
     (function setupExtensionSocket(){
         if (!(urlParams.has('server2') || urlParams.has('server3'))) return;
-		const defaultServerURL = 'wss://io.socialstream.ninja/extension';
+		const defaultServerURL = SocialStreamLocalServer.getRelayUrl(urlParams, null, 'wss://io.socialstream.ninja/extension');
 		const requestedServerURL = urlParams.has('server2') ? urlParams.get('server2') : urlParams.get('server3');
 		let serverURL = defaultServerURL;
 		try {

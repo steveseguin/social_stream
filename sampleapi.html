@@ -505,6 +505,20 @@
         let quick = true;
 		
 		const urlParams = new URLSearchParams(window.location.search);
+		const localRelayOnly = urlParams.has('localserver');
+		const relayUrl = SocialStreamLocalServer.getRelayUrl(urlParams, 'server', 'wss://io.socialstream.ninja:443');
+		if (localRelayOnly) {
+			var localNote = document.createElement('p');
+			localNote.className = 'note';
+			localNote.textContent = 'Local Server uses WebSocket at ' + relayUrl + '. HTTP GET and POST are unavailable in this mode.';
+			document.getElementById('connectionStatus').parentNode.appendChild(localNote);
+			document.querySelectorAll('button[onclick*="sendCustomMessage"]').forEach(function (button) {
+				if (/true/.test(button.getAttribute('onclick'))) {
+					button.disabled = true;
+					button.title = 'Local Server supports WebSocket only.';
+				}
+			});
+		}
 
         function getSessionIdFromURL() {
             return urlParams.get('session');
@@ -531,7 +545,7 @@
             const channelIn = channelInInput ? parseInt(channelInInput) : 
                              (parseInt(urlParams.get('channelin')) || 2);
             
-            socket = new WebSocket(urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : 'wss://io.socialstream.ninja:443');
+            socket = new WebSocket(relayUrl);
             socket.onopen = function() {
                 socket.send(JSON.stringify({
                     join: sessionID,
@@ -599,6 +613,7 @@
 		}
 
         function originalSendCustomMessage(action, isEncodedGet = false, isPost = false) {
+			if (localRelayOnly && (isEncodedGet || isPost)) return;
 		
             const message = document.getElementById('customMessage').value;
             if (!message) {
@@ -626,6 +641,7 @@
         }
 		
 		function sendCustomMessage(action, isEncodedGet = false, isPost = false) {
+			if (localRelayOnly && (isEncodedGet || isPost)) return;
 			const message = document.getElementById('customMessage').value;
 			const selectedChannel = parseInt(document.getElementById('channelSelect').value);
 			
@@ -743,7 +759,7 @@
 		}
 
 		function sendRawPayloadToChannel(currentSessionID, payload, channel, container) {
-			const wsUrl = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : 'wss://io.socialstream.ninja:443';
+			const wsUrl = relayUrl;
 			const tempSocket = new WebSocket(wsUrl);
 			let completed = false;
 			const timeout = setTimeout(function() {
@@ -844,7 +860,7 @@
 			if (socket && socket.readyState === WebSocket.OPEN) {
 				socket.send(JSON.stringify(wsMessage));
 			} else {
-				alert('WebSocket not connected - message not sent. Connect first or use GET/POST methods.');
+				alert(localRelayOnly ? 'Local WebSocket not connected - message not sent. Enable Local Server in SSApp and check the port.' : 'WebSocket not connected - message not sent. Connect first or use GET/POST methods.');
 			}
 		}
 
@@ -952,7 +968,7 @@
 			if (socket && socket.readyState === WebSocket.OPEN) {
 				socket.send(JSON.stringify(wsMessage));
 			} else {
-				alert('WebSocket not connected - message not sent. Connect first or use GET/POST methods.');
+				alert(localRelayOnly ? 'Local WebSocket not connected - message not sent. Enable Local Server in SSApp and check the port.' : 'WebSocket not connected - message not sent. Connect first or use GET/POST methods.');
 			}
 		}
 
@@ -994,6 +1010,8 @@ Developer Notes:
 		var lastLog = null;
 		
 		function logRequest(element, requestData) {
+			if (localRelayOnly && /^HTTP/.test(requestData.type)) return;
+			if (requestData.type === 'WebSocket') requestData = Object.assign({}, requestData, { url: relayUrl });
 			if (!element) return; // Guard against null element
 			let container = element;
 			if (element?.classList.contains('btn')) {

@@ -712,7 +712,7 @@ body {
 		setupSocket(serverURL, outChannel, inChannel);
 	}
 	if (urlParams.has("server2") || urlParams.has("server3")) {
-		const serverURL = urlParams.get("server2") || urlParams.get("server3") || "wss://io.socialstream.ninja/extension";
+		const serverURL = urlParams.get("server2") || SocialStreamLocalServer.getRelayUrl(urlParams, "server3", "wss://io.socialstream.ninja/extension");
 		setupSocket(serverURL, outChannel, inChannel);
 	}
 

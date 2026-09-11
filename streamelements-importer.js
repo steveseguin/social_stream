@@ -1125,6 +1125,7 @@
 			}
 
 			function buildExportHTML(options) {
+				var connectionParams = new URLSearchParams(location.search);
 				var config = {
 					fieldData: state.fieldData || {},
 					session: (sessionInput.value || "").trim(),
@@ -1133,6 +1134,9 @@
 					sourceName: state.sourceName || "imported-overlay",
 					hasWidgetScript: !!String(state.js || "").trim()
 				};
+				if (connectionParams.has("localserver")) {
+					config.localRelayURL = connectionParams.get("server") || connectionParams.get("server2") || SocialStreamLocalServer.getWebSocketUrl(connectionParams);
+				}
 				var bodyMarkup = stripScriptTags(extractBodyMarkup(state.html));
 				var htmlScripts = extractScriptTags(state.html);
 				var extraHead = extractHeadMarkup(state.html);
@@ -1228,7 +1232,11 @@
 						applyRuntimeFieldOverrides(fieldData);
 						var roomID = urlParams.get("session") || config.session || "";
 						var password = urlParams.get("password") || config.password || "false";
-						var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja";
+						// Exported HTML runs alone, without the importer's helper script.
+						var localPortValue = urlParams.get("localserverport") || "";
+						var localPort = /^\d+$/.test(localPortValue.trim()) ? Number(localPortValue) : 3000;
+						if (localPort < 1024 || localPort > 65535) localPort = 3000;
+						var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:" + localPort : (config.localRelayURL || "wss://io.socialstream.ninja");
 						var socketserver = false;
 						var reconnectDelay = 1;
 						var nameToUserId = {};
@@ -1365,7 +1373,7 @@
 						}
 
 						function setupSocketBridge() {
-							if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("localserver"))) return;
+							if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("localserver") || config.localRelayURL)) return;
 							if (!roomID) return;
 							serverURL = urlParams.get("server") || urlParams.get("server2") || serverURL;
 							connectSocket();

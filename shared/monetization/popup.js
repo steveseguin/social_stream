@@ -191,6 +191,9 @@
         by('provider-preview').href = preview.href;
         var s = providerSnapshot;
         setStatus('provider-status', !s.enabled ? tr('commerce-receiver-off', 'Receiver off. Open Receiver setting to enable it.') : !s.on ? tr('commerce-ssn-off', 'Turn SSN on to receive alerts.') : s.connected ? tr('commerce-receiver-ready', 'Receiver connected. Provider delivery is confirmed only when an event arrives.') : tr('commerce-receiver-wait', 'Receiver disconnected. Check your connection.'));
+        if (new URLSearchParams(location.search).has('localserver')) {
+            setStatus('provider-status', tr('commerce-receiver-local', 'Local Server is selected. These public webhook URLs need the hosted API receiver; turn off Local Server to receive them here.'));
+        }
         var seen = s.providers && s.providers[provider];
         by('provider-seen').textContent = seen ? tr('commerce-last-event', 'Last event received:') + ' ' + new Date(seen.at).toLocaleTimeString() + ' (' + tr(seen.accepted ? 'commerce-event-accepted' : 'commerce-event-skipped', seen.accepted ? 'accepted' : 'test, private or unsupported event skipped') + ')' : tr('commerce-no-event', 'No event received in this app session.');
     }
@@ -264,14 +267,23 @@
 			u = new URL(base || document.getElementById('docklink').href);
 			u.pathname = u.pathname.replace(/[^/]*$/, 'monetization.html');
 			var keepServer = u.searchParams.has('server'), serverValue = u.searchParams.get('server');
+			var connectionParams = new URLSearchParams(u.search);
 			u.search = '';
 			if (keepServer) u.searchParams.set('server', serverValue || '');
+			if (connectionParams.has('localserver')) {
+				['localserver', 'localserverport', 'server2'].forEach(function (key) {
+					if (connectionParams.has(key)) u.searchParams.set(key, connectionParams.get(key));
+				});
+			}
 			u.searchParams.set('session', lastResponse.streamID);
 			if (lastResponse.password) u.searchParams.set('password', lastResponse.password);
 			u.searchParams.set('mode', by('mode').value);
             ['view', 'style', 'scale', 'cardevery', 'cardfor', 'onlytype'].forEach(function (key) { if (by(key).value) u.searchParams.set(key, by(key).value); });
             if (typeof getSelectedTranslationLinkParam === 'function') { var language = new URLSearchParams(getSelectedTranslationLinkParam().replace(/^&/, '')).get('ln'); if (language) u.searchParams.set('ln', language); }
 			var control = new URL('obs-control-dock.html', u.href);
+			['localserver', 'localserverport'].forEach(function (key) {
+				if (connectionParams.has('localserver') && connectionParams.has(key)) control.searchParams.set(key, connectionParams.get(key));
+			});
             control.searchParams.set('session', lastResponse.streamID);
             control.searchParams.set('commerce', '');
             if (language) control.searchParams.set('ln', language);
