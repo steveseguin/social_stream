@@ -71,7 +71,8 @@
 	// settings.captureevents
 	
 	
-	var dataIndex = -5;
+	var seenMessageIndexes = new Set();
+	var rowSelector = '[data-index], [data-item-index]';
 	
 	var channelName = "";
 	
@@ -89,11 +90,6 @@
 			}
 		}
 		
-		if (ele.skip){
-			return;
-		}
-
-		
 		var chatimg = ""
 
 		try {
@@ -103,13 +99,13 @@
 		
 		var name="";
 		try {
-			name = escapeHtml(ele.querySelector(".flex-grow.text-sm > [class][style][role]").textContent);
+			name = ele.querySelector(".grow.text-sm > [role=button], .flex-grow.text-sm > [role=button]").textContent.trim();
 		} catch(e){
 		}
 		
 		var namecolor="";
 		try {
-			namecolor = ele.querySelector(".flex-grow.text-sm > [class][style][role]").style.color;
+			namecolor = ele.querySelector(".grow.text-sm > [role=button], .flex-grow.text-sm > [role=button]").style.color;
 		} catch(e){
 		}
 		
@@ -123,7 +119,7 @@
 
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector(".flex-grow.text-sm > div.inline > span, .flex-grow.text-sm > div.mt-1 > span")).trim();
+			msg = getAllContentNodes(ele.querySelector(".grow.text-sm > div.inline > span, .grow.text-sm > div.mt-1 > span, .flex-grow.text-sm > div.inline > span, .flex-grow.text-sm > div.mt-1 > span")).trim();
 		} catch(e){
 		}
 		
@@ -133,19 +129,13 @@
 			return;
 		}
 		
-		if (ele.dataset.index){
-			let indexx = parseInt(ele.dataset.index);
-			if (indexx>dataIndex){
-				dataIndex = indexx;
-			} else {
-				//console.log("bad dataIndex");
-				return;
-			}
+		var index = ele.getAttribute('data-item-index') || ele.getAttribute('data-index');
+		if (index === null || seenMessageIndexes.has(index)) return;
+		seenMessageIndexes.add(index);
+		if (seenMessageIndexes.size > 2000) {
+			seenMessageIndexes.delete(seenMessageIndexes.values().next().value);
 		}
-		
-		ele.skip = true;
-		
-		
+
 		var data = {};
 		data.chatname = name;
 		data.chatbadges = badges;
@@ -260,41 +250,60 @@
 		}
 	);
 
-	var lastURL =  "";
+	var lastStreamPath = "";
 	var observer = null;
 	
 	
-	function onElementInserted(target) {
-		var onMutationsObserved = function(mutations) {
-			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
-				//	console.log(mutation.addedNodes);
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try {
-							const addedNode = mutation.addedNodes[i];
-							if (addedNode.nodeType !== 1) continue; // Only process element nodes
+	var observedContainer = null;
+	var pendingRows = new Set();
+	var pendingTimer = null;
 
-							if (addedNode.skip){continue;}
-
-							setTimeout(()=>{
-									processMessage(addedNode);
-							},300);
-
-						} catch(e){
-							console.error("Error processing added node:", e);
-						}
-					}
-				}
+	function queueRow(node) {
+		if (!node) return;
+		var element = node.nodeType === 1 ? node : node.parentElement;
+		if (!element) return;
+		var row = element.closest(rowSelector);
+		if (row && observedContainer && observedContainer.contains(row)) pendingRows.add(row);
+		element.querySelectorAll(rowSelector).forEach(function(child) {
+			if (observedContainer && observedContainer.contains(child)) pendingRows.add(child);
+		});
+		if (pendingTimer || !pendingRows.size) return;
+		pendingTimer = setTimeout(function() {
+			pendingTimer = null;
+			var rows = Array.from(pendingRows);
+			pendingRows.clear();
+			if (!isExtensionOn || window.location.pathname !== lastStreamPath) return;
+			rows.forEach(function(row) {
+				if (observedContainer && observedContainer.contains(row)) processMessage(row);
 			});
-		};
-		
-		var config = { childList: true, subtree: false };
-		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		
-		observer = new MutationObserver(onMutationsObserved);
-		observer.observe(target, config);
+		}, 100);
 	}
-	
+
+	function disconnectChat() {
+		if (observer) observer.disconnect();
+		observer = null;
+		observedContainer = null;
+		clearTimeout(pendingTimer);
+		pendingTimer = null;
+		pendingRows.clear();
+	}
+
+	function onElementInserted(target) {
+		observedContainer = target;
+		observer = new MutationObserver(function(mutations) {
+			mutations.forEach(function(mutation) {
+				queueRow(mutation.target);
+				mutation.addedNodes.forEach(queueRow);
+			});
+		});
+		observer.observe(target, {
+			childList: true, subtree: true, characterData: true,
+			attributes: true, attributeFilter: ['data-index', 'data-item-index', 'data-known-size']
+		});
+		// The list may first appear together with message zero. Capture those rows too.
+		queueRow(target);
+	}
+
 	console.log("social stream injected");
 
 
@@ -308,17 +317,19 @@
 		}
 		checking = setInterval(function(){
 			try {
-				if (!window.location.href.startsWith("https://arena.social/live/")){return;}
+				if (lastStreamPath !== window.location.pathname) {
+					disconnectChat();
+					seenMessageIndexes.clear();
+					lastStreamPath = window.location.pathname;
+				}
+				if (!window.location.href.startsWith("https://arena.social/live/")) return;
 				var container = document.querySelector("[data-testid='virtuoso-item-list']");
-				if (!container.marked){
-					container.marked=true;
-
-					console.log("CONNECTED chat detected");
-
-					setTimeout(function(){
-						dataIndex = 0;
+				if (container !== observedContainer) {
+					disconnectChat();
+					if (container) {
+						console.log("CONNECTED chat detected");
 						onElementInserted(container);
-					},2000);
+					}
 				}
 				checkViewers();
 			} catch(e){}
