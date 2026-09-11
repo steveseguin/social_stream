@@ -7382,6 +7382,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			updateReplaySpeed(request.sessionId, request.speed);
 			sendResponse({ success: true, state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "sidUpdated") {
+			const previousLocalRelaySession = streamID;
 			const previousCohostCapabilityScope = String(streamID || "") + "\n" + String(password || "");
 			if (request.streamID) {
 				streamID = request.streamID;
@@ -7431,6 +7432,24 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				openAIRealtimeCohostCapabilityMustRotate = true;
 			}
 			persistSession({ streamId: streamID, state: isExtensionOn });
+			if (urlParams.has("localserver") && previousLocalRelaySession !== streamID) {
+				// A local socket joins its room once. Recreate both enabled routes
+				// before sending chat or actions for the newly selected session.
+				clearTimeout(reconnectionTimeout);
+				clearTimeout(reconnectionTimeoutDock);
+				reconnectionTimeout = null;
+				reconnectionTimeoutDock = null;
+				for (const socket of [socketserver, socketserverDock]) {
+					if (socket) {
+						socket.onclose = null;
+						socket.close();
+					}
+				}
+				socketserver = false;
+				socketserverDock = false;
+				setupSocket();
+				setupSocketDock();
+			}
 			if (iframe) {
 				if (iframe.src) {
 					iframe.src = null;

@@ -3,16 +3,26 @@
     var params = new URLSearchParams(location.search), field = document.getElementById('giveaway'), status = document.getElementById('status');
     field.value = params.get('giveaway') || 'default';
     var native = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage, bridge, peer, pending = new Map(), state = null, history = [], entryPage = 1;
+    var local = params.has('localserver'), socket, retry, refreshRetry, stopped = false;
     function id() { return Date.now().toString(36) + '-' + Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-'); }
     function call(action, value) {
         return new Promise(function (resolve, reject) {
-            var key = id(), timer = setTimeout(function () { pending.delete(key); reject(new Error('Host did not answer. Refresh to check whether the action committed.')); }, 10000);
+            var key = id(), timer = setTimeout(function () { pending.delete(key); reject(new Error('Host did not answer. ' + (local && !native ? 'Enable remote API control of extension in the SSN popup. ' : '') + 'Refresh to check whether the action committed.')); }, 10000);
             function done(reply) { clearTimeout(timer); pending.delete(key); if (!reply || !reply.ok)
                 reject(new Error(reply && (reply.error && reply.error.message || reply.error) || 'Host unavailable.'));
             else
                 resolve(reply); }
             if (native) {
                 chrome.runtime.sendMessage({ cmd: action, value: value }, done);
+                return;
+            }
+            if (local) {
+                if (!socket || socket.readyState !== WebSocket.OPEN) {
+                    done({ ok: false, error: 'Waiting for the local server. Check that it is running in SSApp.' });
+                    return;
+                }
+                pending.set(key, done);
+                socket.send(JSON.stringify({ protocol: 2, action: action, value: value, get: key }));
                 return;
             }
             if (!peer) {
@@ -99,6 +109,55 @@
     }
     if (!params.get('session')) {
         status.textContent = 'Open this controller from the SSN popup to connect to your host.';
+        return;
+    }
+    if (local) {
+        // The relay can accept connections before the host has rejoined after
+        // a restart. Retry only reads; never replay an unconfirmed control.
+        function refreshLocal() {
+            run(async function () {
+                try { await refresh(); }
+                catch (error) {
+                    if (!stopped && socket.readyState === WebSocket.OPEN) refreshRetry = setTimeout(refreshLocal, 2000);
+                    throw error;
+                }
+            });
+        }
+        function connect() {
+            if (stopped) return;
+            try { socket = new WebSocket(SocialStreamLocalServer.getRelayUrl(params, 'server', '')); }
+            catch (error) { status.textContent = 'Invalid local server address.'; return; }
+            socket.onopen = function () {
+                socket.send(JSON.stringify({ join: params.get('session').split(',')[0], out: 1, in: 2 }));
+                clearTimeout(refreshRetry);
+                refreshLocal();
+            };
+            socket.onmessage = function (event) {
+                try {
+                    var callback = JSON.parse(event.data).callback;
+                    if (callback && pending.has(callback.get)) {
+                        var reply = callback.result;
+                        pending.get(callback.get)(reply && reply.payload || reply);
+                    }
+                } catch (error) { console.warn('[Giveaway] Invalid host reply', error); }
+            };
+            socket.onerror = function () { socket.close(); };
+            socket.onclose = function () {
+                clearTimeout(refreshRetry);
+                pending.forEach(function (done) { done({ ok: false, error: 'Local connection lost. Refresh after reconnecting to check whether the action committed.' }); });
+                if (!stopped) {
+                    status.textContent = 'Local server disconnected. Reconnecting...';
+                    retry = setTimeout(connect, 2000);
+                }
+            };
+        }
+        window.addEventListener('beforeunload', function () {
+            stopped = true;
+            clearTimeout(retry);
+            clearTimeout(refreshRetry);
+            if (socket) socket.close();
+        });
+        connect();
         return;
     }
     bridge = document.createElement('iframe');
