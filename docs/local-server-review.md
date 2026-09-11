@@ -40,12 +40,17 @@ No app-wide Electron flags, security defaults, sessions, request hooks, or sourc
 | Website assets and saved flows | Local Server is a WebSocket relay, not a website host. A fully offline startup can select the packaged interface, which retains its separate origin/storage. This work prevents a relay toggle from causing that switch; it does not merge independent databases. |
 | Waitlist | Its dedicated `sendWaitlistConfig` exchange remains WebRTC-only. Generated links intentionally do not advertise server support. |
 | Word Cloud and Custom GIF Commands | Dedicated legacy bridge routes remain required. |
+| Poll settings and controls | Real local votes work when configured through URL parameters. With WebRTC unavailable, the generated page stays on “Loading poll ...”, and the popup's End Poll button does not stop voting. The page explicitly retains its bridge for settings/control commands. Left unchanged pending a decision to extend local-only support. |
+| Credits controls | Background collection works while the display is closed. With only the local relay available, Start Credits does not deliver that snapshot and Test credits reports “No credits source connected.” Its compatibility guard explicitly retains the bridge for start/preview/reset. Left unchanged. |
+| Hype Meter snapshots | The local API returns the captured chatter count, but the generated Hype display receives no pushed snapshot without WebRTC. The page explicitly declares its snapshot transport bridge-only. Left unchanged. |
 | Private chatbot, AI Prompt editing, co-host control | These use upstream WebRTC requests independently of the local incoming chat feed. AI-generated overlay URLs preserve local parameters. |
 | Older sample pages | `baretempate.html`, `sampleemote.html`, and `septapus.html` remain legacy WebRTC examples. They are not converted into relay clients by this work. |
 | Public webhook URLs | The public HTTP API cannot deliver directly to a loopback relay. Use the hosted receiver for these URLs. Provider-specific reliable receivers remain separate and were not contacted. |
 | Local Giveaway Manager | Requires the popup's existing remote API control switch. It does not turn on that receiver automatically. Full economy backup/recovery still uses the host's native controls; the local manager does not expose those operations over WebSocket. |
 | OBS browser sources and LAN clients | Already-copied URLs do not update themselves. Recopy after changing mode/port. Loopback addresses refer to the machine running the page; a different device needs an explicitly configured LAN endpoint. |
 | Other local services | Local AI/control API, media serving, local models/TTS, voice control, and OBS's own WebSocket service use separate ports and protocols. Relay port changes must not repoint them. |
+
+The latest review makes no application behavior changes. The three gaps above were reproduced in the real Electron runtime with external networking unavailable. Changing those transport contracts would require an intentional compatibility decision, rather than assuming every page's relay connection provides all of its controls. Map, Reactions, Spotify, Ticker, Tip Jar, Confetti and Events also declare bridge-dependent control/update paths in their compatibility metadata; these declarations were reviewed but their complete workflows were not tested in this round. The existing Local Server join, room/channel filtering, stop/start, port configuration and LAN-toggle code was also reviewed without changes; LAN behavior was not newly tested.
 
 ## Validation
 
@@ -59,10 +64,14 @@ Supporting checks include popup link generation/search regressions, local-port c
 
 `SSAPP_LOCAL_SESSION_CHANGE=1` changes the session through the actual popup twice and verifies new-room game joins, captured-chat actions, API replies and absence of chat in the previous room. `SSAPP_LOCAL_GIVEAWAY_WORKFLOWS=1` exercises generated audience/manager links, captured entries, snapshots after reload, drawing/resetting, history, participant removal, explicit endpoint overrides, server restarts and the API receiver switch.
 
+`SSAPP_LOCAL_TRANSPORT_REVIEW=1` verifies actual leaderboard counts, opted-in persistence, popup reset and fresh counting after reset. It then records the Credits/Poll/Hype workflows above, using real source capture, popup controls and the local API. It reports their outcomes instead of asserting that the current bridge limitations must remain forever; a successful diagnostic exit does not mean those unsupported controls worked.
+
 The local fixtures exercise connection failures deterministically; they do not establish why the reporter's machine could not download the remote files. The reporter's OBS runtime, firewall, network, production services, and packaged release still require a release/user check. Transport receipt across the inventory is distinguished from complete UI workflows below.
 
 ### Completed in-app checks
 
+- A local message-ranked leaderboard counted three captured messages, restored that count after reload, cleared both displayed and persisted entries through the popup Reset button, and started at one for the next captured message.
+- Credits background collection, URL-configured poll voting and the Hype API snapshot worked. Popup Credits/Poll control delivery and Hype display updates failed with the bridge unavailable, as detailed above; these are recorded limitations, not passing control tests.
 - Two popup session changes passed with game joins, captured-chat visual actions and API replies in the newly selected session; no matching captured chat reached the previous session.
 - Managed giveaways accepted two real captured entries, restored the count after a display reload, drew a winner, restored that winner on a second API display and reset both displays. The popup-opened local manager loaded history, opened/closed entries and removed a participant. Explicit API and captured-chat addresses worked with a deliberately incorrect default port. Two relay restarts preserved the manager document and restored working controls; disabling/re-enabling the API receiver produced useful guidance and recovered after Refresh.
 - 111 relay-capable pages connected to the chosen loopback port and received a packet on their actual subscribed channel. This includes 34 mini-game pages. Two additional pages were classified as a legacy bridge/custom external input rather than relay clients.
@@ -77,6 +86,7 @@ The local fixtures exercise connection failures deterministically; they do not e
 
 ### Evidence and reproduction
 
+- `%TEMP%/ssapp-local-pages-9snQbU/report.json`: completed transport review. Leaderboard count/reload/reset passed. Credits collected the named viewer but could not start/test locally. Poll counted two votes, remained open after popup End Poll and accepted a third vote. Hype's API snapshot contained one YouTube chatter while the generated display had zero displayed sources. The report includes each page's declared transport capabilities.
 - `%TEMP%/ssapp-local-pages-DjlERn/report.json`: final combined session/giveaway run passed all the workflows above, including two manager reconnects without document reload and disabled-API recovery.
 - `%TEMP%/ssapp-local-pages-W7Oobm/report.json`: isolated session-change fix passed both directions. `%TEMP%/ssapp-local-pages-Ssa6Gf/report.json` records the pre-fix captured chat remaining in the old session.
 - `%TEMP%/ssapp-local-pages-HojsJA/report.json`: pre-fix manager URL lost local parameters and remained on “Connecting to the host.” `%TEMP%/ssapp-local-pages-D1a6Lh/report.json` records the managed display ignoring an explicit relay address. `%TEMP%/ssapp-local-pages-Dg5QBY/report.json` records the initial manager reconnect request failing while the host was still starting; the final run adds safe state-read retries.
