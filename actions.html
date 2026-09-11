@@ -1306,8 +1306,9 @@
                 document.head.appendChild(externalJavaascript);
             }
             
-            // Setup WebSocket if server parameter is provided
-            if (urlParams.has("server") || urlParams.has("server2")) {
+            // Actions use their own channel, independently of the chat-forwarding
+            // switches. A generated local URL must listen even with API-only input.
+            if (urlParams.has("server") || urlParams.has("server2") || urlParams.has("localserver")) {
                 serverURL = urlParams.get("server") || urlParams.get("server2") || serverURL;
                 socketserver = new WebSocket(serverURL);
                 setupSocket();
