@@ -64,6 +64,7 @@ The local fixtures exercise connection failures deterministically; they do not e
 
 - `%TEMP%/ssapp-local-pages-HeLXmC/report.json`: final complete 111-page relay sweep, all 14 legacy-template renders, actual generated-link control/export workflows, and flow action/persistence/restart checks passed with no page-sweep failures.
 - `%TEMP%/ssapp-local-pages-SGWBCU/report.json`: combined-overlay local transport/rendering and generated-link/QR/reload checks passed, along with the control and export workflows.
+- `%TEMP%/ssapp-local-pages-2EBasU/report.json`: repeated combined-overlay checks after the editable-link persistence correction; edits survive reload, local chat/actions still render, and control/export workflows pass.
 - `%TEMP%/ssapp-local-pages-4tcbHU/report.json`: all 14 game participation workflows and a full Memory Parade match passed. This stronger run then reproduced the previously missed captured-chat Event Flow action failure, corrected by local channel-6 routing.
 - `%TEMP%/ssapp-script-recovery-DQP4xy/report.json`: all 16 background-loader failure/recovery cases passed on the re-review.
 - `%TEMP%/ssapp-session-migration-e2e-Dszl4x/report.json`: all 18 pending legacy-session upgrade/recovery cases passed with isolated relay fixtures, including published old app runtimes and current-app restarts.
