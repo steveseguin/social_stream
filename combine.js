@@ -166,7 +166,10 @@
     qrCode.textContent = '';
     setStatus('');
     saveDraft(draftConfig());
-    updateLinks();
+    var config = updateLinks();
+    // Keep an editable shared link current too: reloading must not restore the
+    // old fragment over a newer autosaved draft.
+    history.replaceState(null, '', config ? combinedUrl(config, true) : location.pathname + '?edit=1');
   }
 
   function button(text, label, handler) {
@@ -213,8 +216,8 @@
       title.textContent = 'Layer ' + (index + 1) + (index === 0 ? ' · Bottom' : index === layers.length - 1 ? ' · Top' : '');
       var tools = document.createElement('div');
       tools.className = 'layer-tools';
-      var lower = button('↓', 'Move layer ' + (index + 1) + ' behind', function () { moveLayer(index, -1); });
-      var higher = button('↑', 'Move layer ' + (index + 1) + ' in front', function () { moveLayer(index, 1); });
+      var lower = button('↑', 'Move layer ' + (index + 1) + ' behind', function () { moveLayer(index, -1); });
+      var higher = button('↓', 'Move layer ' + (index + 1) + ' in front', function () { moveLayer(index, 1); });
       lower.disabled = index === 0;
       higher.disabled = index === layers.length - 1;
       var remove = button('Remove', 'Remove layer ' + (index + 1), function () {
