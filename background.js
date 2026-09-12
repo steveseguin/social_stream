@@ -5586,6 +5586,9 @@ async function processIncomingMessage(message, sender = null) {
 			return;
 		}
 
+        if (message.event === 'purchase' && window.recordCommercePurchase) window.recordCommercePurchase(message);
+        if (message.event === 'auction_update' && (message.type === 'whatnot' || message.type === 'ebay') && window.recordCommerceAuction) window.recordCommerceAuction(message);
+
 		if (settings.filtercommands && message.chatmessage && message.chatmessage.startsWith("!")) {
 			return;
 		}
@@ -11020,7 +11023,7 @@ async function handleStreamDeckBackgroundRequest(request) {
         const control = router.commerceRequest(request);
         if (!control.ok) return router.makeError(request, "INVALID_VALUE", control.message);
         if (!window.handleMonetizationRequest) return router.makeError(request, "TARGET_UNAVAILABLE", "Product controls are still loading.");
-        const result = await window.handleMonetizationRequest({ action: "commerceControl", command: control.command, url: control.url, seconds: control.seconds });
+        const result = await window.handleMonetizationRequest({ action: "commerceControl", command: control.command, url: control.url, seconds: control.seconds, data: control.data });
         if (result.error) return router.makeError(request, "TARGET_UNAVAILABLE", result.error);
         return router.makeResponse(request, { action: action, command: control.command, live: result.commerceLive || null, commerce: result.commerceState });
     }
@@ -11430,7 +11433,7 @@ function setupSocket() {
 				);
 				resp = true;
 			} else if (data.action === "commerceControl" && !settings.disablehost && window.handleMonetizationRequest) {
-                window.handleMonetizationRequest({ action: 'commerceControl', command: data.command, url: data.url, seconds: data.seconds });
+                window.handleMonetizationRequest({ action: 'commerceControl', command: data.command, url: data.url, seconds: data.seconds, data: data.data });
                 resp = true;
             } else if (isGiveawayAction(data.action)) {
                 resp = await handleGiveawayAction(data.action, data.value);

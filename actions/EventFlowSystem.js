@@ -4228,7 +4228,19 @@ class EventFlowSystem {
 
             case 'commerceControl': {
                 const request = { cmd: 'monetization', action: 'commerceControl', command: config.command || 'show', url: config.url || '', seconds: Number(config.seconds || 0) };
-                const reply = await this.requestCommerceControl(request);
+                let reply;
+                if (['boardSave','boardSpot','boardVisibility','saleAdd','saleRemove','salesClear','salesSettings'].includes(request.command)) {
+                    try {
+                        const data = typeof config.data === 'string' ? JSON.parse(config.data || '{}') : (config.data || {});
+                        if (!data || typeof data !== 'object' || Array.isArray(data) || JSON.stringify(data).length > 16000) throw new Error('Use a JSON object for board and sales fields.');
+                        request.data = {};
+                        for (const key of Object.keys(data)) {
+                            if (['__proto__','prototype','constructor'].includes(key)) throw new Error('Invalid commerce field.');
+                            request.data[key] = typeof data[key] === 'string' ? this.replaceTemplateVars(data[key], message) : data[key];
+                        }
+                    } catch (error) { reply = { error:error.message }; }
+                }
+                if (!reply) reply = await this.requestCommerceControl(request);
                 const controlResult = reply.error || !reply.commerceState || typeof reply.commerceState !== 'object' || Array.isArray(reply.commerceState)
                     ? { success: false, error: String(reply.error || 'Product control did not return its state.') }
                     : { success: true, commerce: reply.commerceState };

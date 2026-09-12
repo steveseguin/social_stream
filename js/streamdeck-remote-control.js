@@ -666,6 +666,11 @@
         if (Array.isArray(value) || (value !== undefined && value !== null && typeof value === "boolean")) return { ok: false, message: "Invalid product control value." };
         const options = value && typeof value === "object" ? value : {};
         const command = { commerceShow: "show", commerceNext: "next", commerceHide: "hide", commerceResume: "resume" }[action] || options.command || request.command;
+        if (action === 'commerceControl' && ['boardSave', 'boardSpot', 'boardVisibility', 'saleAdd', 'saleRemove', 'salesClear', 'salesSettings'].indexOf(command) !== -1) {
+            const data = options.data !== undefined ? options.data : request.data;
+            if (!data || typeof data !== 'object' || Array.isArray(data) || JSON.stringify(data).length > 16000) return {ok:false, message:'Use a commerce board data object.'};
+            return {ok:true, command:command, data:data};
+        }
         const url = options.url !== undefined ? options.url : action === "commerceShow" && typeof value === "string" ? value : request.url || "";
         const duration = options.seconds !== undefined ? options.seconds : (action === "commerceNext" || action === "commerceHide") && value != null && typeof value !== "object" ? value : request.seconds === undefined ? 0 : request.seconds;
         const seconds = Number(duration);

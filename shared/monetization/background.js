@@ -15,6 +15,7 @@
 		throneSource = null,
 		throneSourceKey = '',
 		throneStatus = 'Disabled';
+    var auctionDraft = null;
 	var ebay = SSNEbayService({
 		privateState: function () {
 			return privateState;
@@ -63,7 +64,7 @@
 	function publicState() {
 		var c = cfg(),
 			l = list();
-		return { commerce: commerceState(), ebay: ebay.publicState(), throne: { enabled: c.throne.enabled, username: c.throne.username, qr: c.throne.qr, position: c.throne.position, url: c.throne.username ? 'https://throne.com/' + encodeURIComponent(c.throne.username) : '', rank: thronePrivate().gifts + 1, gifts: thronePrivate().gifts }, wishlist: { enabled: c.wishlist.enabled, qr: c.wishlist.qr, position: c.wishlist.position, rank: l.rank, total: l.total, item: l.current ? { name: l.current.name, amount: l.current.amount, currency: l.current.currency, image: l.current.image, url: M.purchaseURL(l.current, l.url) } : null, url: l.url }, ninja: { enabled: c.ninja.enabled, qr: c.ninja.qr, position: c.ninja.position, username: c.ninja.username, url: c.ninja.username ? 'https://ninjabacker.com/' + encodeURIComponent(c.ninja.username) : '' } };
+		return { boards: SSNCommerceBoards.publicState(privateState.boards), commerce: commerceState(), ebay: ebay.publicState(), throne: { enabled: c.throne.enabled, username: c.throne.username, qr: c.throne.qr, position: c.throne.position, url: c.throne.username ? 'https://throne.com/' + encodeURIComponent(c.throne.username) : '', rank: thronePrivate().gifts + 1, gifts: thronePrivate().gifts }, wishlist: { enabled: c.wishlist.enabled, qr: c.wishlist.qr, position: c.wishlist.position, rank: l.rank, total: l.total, item: l.current ? { name: l.current.name, amount: l.current.amount, currency: l.current.currency, image: l.current.image, url: M.purchaseURL(l.current, l.url) } : null, url: l.url }, ninja: { enabled: c.ninja.enabled, qr: c.ninja.qr, position: c.ninja.position, username: c.ninja.username, url: c.ninja.username ? 'https://ninjabacker.com/' + encodeURIComponent(c.ninja.username) : '' } };
 	}
 	function broadcast(purchase) {
 		if (!ready || !isExtensionOn) return;
@@ -351,9 +352,11 @@
         return c;
     }
     function controlState() {
+        var auctionSource = privateState.boards && privateState.boards.auctionSource;
+        var auction = isExtensionOn && auctionDraft && auctionDraft.source === auctionSource && Date.now() - auctionDraft.at < 300000 ? auctionDraft : null;
         var c = commerceState(), now = Date.now(), live = liveCommerce && (!liveCommerce.until || liveCommerce.until > now) ? liveCommerce : null;
         var selected = M.commerceCurrent(c, now);
-        return { enabled: c.enabled, hostOn: !!isExtensionOn, mode: !isExtensionOn ? 'offline' : !c.enabled ? 'disabled' : live ? live.mode === 'hide' ? 'hidden' : 'pinned' : 'scheduled', selected: selected ? { name: selected.name, url: selected.url } : null, expiresAt: live && live.until || 0, remainingSeconds: live && live.until ? Math.max(0, Math.ceil((live.until - now) / 1000)) : null, items: c.items.map(function (item) { return { name: item.name, url: item.url }; }), publicPage: { published: shopState().published, syncing: shopPending, status: shopStatus } };
+        return { boards: SSNCommerceBoards.controlState(privateState.boards), auction: auction, enabled: c.enabled, hostOn: !!isExtensionOn, mode: !isExtensionOn ? 'offline' : !c.enabled ? 'disabled' : live ? live.mode === 'hide' ? 'hidden' : 'pinned' : 'scheduled', selected: selected ? { name: selected.name, url: selected.url } : null, expiresAt: live && live.until || 0, remainingSeconds: live && live.until ? Math.max(0, Math.ceil((live.until - now) / 1000)) : null, items: c.items.map(function (item) { return { name: item.name, url: item.url }; }), publicPage: { published: shopState().published, syncing: shopPending, status: shopStatus } };
     }
     function enqueueShop(remove) {
         var job = shopQueue.then(function () { return syncShop(remove); });
@@ -436,6 +439,13 @@
         }
         if (request.action === 'commerceControl') {
             var command = request.command, items = c.commerce.items;
+            if (SSNCommerceBoards.commands.indexOf(command) !== -1) {
+                var previous = privateState.boards;
+                privateState.boards = SSNCommerceBoards.apply(previous, command, request.data);
+                try { await store(); } catch (error) { privateState.boards = previous; throw error; }
+                if (!previous || previous.auctionSource !== privateState.boards.auctionSource) auctionDraft = null;
+                broadcast(); return snapshot();
+            }
             if (['show', 'next', 'hide', 'resume'].indexOf(command) === -1) throw new Error('Unknown product control.');
             var duration = Number(request.seconds || 0);
             if (!Number.isFinite(duration) || duration < 0 || duration > 3600) throw new Error('Use 0 to 3600 seconds.');
@@ -566,7 +576,7 @@
 	window.handleMonetizationRequest = function (request, sender) {
 		if (sender && sender.tab && sender.tab.id !== null && sender.tab.id !== undefined) return Promise.resolve({ error: 'Use the SSN popup to configure monetization.' });
         if (request.action === 'getCommerceState') return Promise.resolve({ commerce: controlState() });
-        if (request.action === 'commerceControl') return action(request).catch(function (e) { return { error: e.message }; });
+        if (request.action === 'commerceControl' && SSNCommerceBoards.commands.indexOf(request.command) === -1) return action(request).catch(function (e) { return { error: e.message }; });
 		var job = queue.then(function () {
 			return request.action === 'get' ? snapshot() : action(request);
 		});
@@ -575,6 +585,24 @@
 			return { error: e.message || 'Monetization action failed.' };
 		});
 	};
+    window.recordCommerceAuction = function (event) {
+        if (!ready || !isExtensionOn || !privateState.boards || !privateState.boards.auctionSource || event.type !== privateState.boards.auctionSource) return;
+        var draft = SSNCommerceBoards.auction(event, Date.now());
+        if (draft) auctionDraft = draft.title && draft.status !== 'idle' ? draft : null;
+    };
+    window.recordCommercePurchase = function (event) {
+        if (!ready || !isExtensionOn || !privateState.boards || !privateState.boards.automatic) return;
+        event = Object.assign({}, event); // Retain the provider ID before normal chat routing can replace it.
+        var job = queue.then(async function () {
+            var updated = SSNCommerceBoards.purchase(privateState.boards, event);
+            if (!updated) return;
+            var previous = privateState.boards; privateState.boards = updated;
+            try { await store(); } catch (error) { privateState.boards = previous; throw error; }
+            broadcast();
+        });
+        queue = job.catch(function () {});
+        return queue;
+    };
 	chrome.storage.local.get(['monetizationPrivate'], function (saved) {
 		var p = saved.monetizationPrivate;
 		if (p && typeof p === 'object') {
@@ -583,6 +611,7 @@
 				if (!value || !(value.key === '' || /^[a-f0-9]{64}$/.test(value.key || '')) || !Array.isArray(value.items) || !Array.isArray(value.seen)) return null;
 				return { key: value.key, environment: value.environment === 'sandbox' ? 'sandbox' : 'production', items: value.items.slice(0, 20), seen: value.seen.slice(-10000), cursor: Number(value.cursor) || 0 };
 			}
+			privateState.boards = SSNCommerceBoards.normalize(p.boards);
 			var savedEbay = ebayProfile(p.ebay);
 			if (savedEbay) privateState.ebay = savedEbay;
 			privateState.ebayProfiles = {};

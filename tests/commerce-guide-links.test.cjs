@@ -6,7 +6,7 @@ const { test } = require('node:test');
 const root = path.resolve(__dirname, '..');
 const guides = ['monetization.html', 'creator-store-setup.html', 'shopify-setup.html',
   'product-controls.html', 'obs-control-dock-guide.html', 'alert-effects.html',
-  'thermal-printer-guide.html'];
+  'thermal-printer-guide.html', 'commerce-boards.html'];
 
 test('commerce guides link to packaged pages, anchors and screenshots', () => {
   for (const guide of guides) {
