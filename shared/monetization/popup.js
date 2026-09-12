@@ -5,6 +5,11 @@
 	var ready = false,
 		current = null;
 	var products = [], editingProduct = -1;
+    var boardsPanel = document.createElement('details'); boardsPanel.className = 'popup-subsection commerce-board-controls';
+    panel.appendChild(boardsPanel);
+    window.SSNCommerceBoardControls(boardsPanel, request, function () {
+        links(); return by('overlay').href;
+    });
 	var feedbackUntil = {};
 	var saveLabel = by('save').textContent;
 	function tr(key, fallback) { return typeof getTranslation === 'function' ? getTranslation(key, fallback) : fallback; }

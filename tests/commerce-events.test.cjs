@@ -35,6 +35,14 @@ for (const sample of samples) test(`${sample.type}/${sample.event || 'tip'} rout
     assert(receipt.html.includes(sample.chatname)); assert.equal(printed.message.meta.thermalPrintResult.success, true);
     assert.equal(sample.meta.thermalPrintResult, undefined);
 });
+test('native commerce action passes board fields and safely substitutes sale names', async () => {
+ const f=flow();let sent;f.requestCommerceControl=async request=>{sent=request;return {commerceState:{boards:{}}};};
+ let result=await f.executeAction({actionType:'commerceControl',config:{command:'boardSpot',data:'{"id":"12","status":"claimed"}'}},{});
+ assert.equal(sent.data.id,'12');assert.equal(result.message.meta.commerceControlResult.success,true);
+ await f.executeAction({actionType:'commerceControl',config:{command:'saleAdd',data:'{"title":"{subtitle}"}'}},{subtitle:'Card "A"\nSigned'});assert.equal(sent.data.title,'Card "A"\nSigned');
+ sent=null;result=await f.executeAction({actionType:'commerceControl',config:{command:'saleAdd',data:'[]'}},{});
+ assert.equal(sent,null);assert.equal(result.stopChain,true);
+});
 test('Nested gift details filter correctly without treating completion or re-gifting as another donation', async () => {
     const f = flow();
     assert.equal(await f.evaluateTrigger({ triggerType: 'compareProperty', config: { property: 'meta.commerce.recipient', operator: 'eq', value: 'creator' } }, gift('gift_purchased')), true);

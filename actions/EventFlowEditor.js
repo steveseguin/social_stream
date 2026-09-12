@@ -5638,9 +5638,10 @@ class EventFlowEditor {
 				break;
 
             case 'commerceControl':
-                html += `<div class="property-group"><label class="property-label" for="prop-command">Product control</label><select class="property-input" id="prop-command">${['show', 'next', 'hide', 'resume'].map(command => `<option value="${command}" ${node.config.command === command ? 'selected' : ''}>${{show:'Show now',next:'Next product',hide:'Hide products',resume:'Resume schedule'}[command]}</option>`).join('')}</select></div>
-                <div class="property-group"><label class="property-label" for="prop-url">Saved product URL (optional for Show)</label><input class="property-input" id="prop-url" type="url" value="${this.escapeHtml(node.config.url || '')}"></div>
+                html += `<div class="property-group"><label class="property-label" for="prop-command">Commerce control</label><select class="property-input" id="prop-command">${['show', 'next', 'hide', 'resume','boardSave','boardSpot','boardVisibility','saleAdd','saleRemove','salesClear','salesSettings'].map(command => `<option value="${command}" ${node.config.command === command ? 'selected' : ''}>${{show:'Show now',next:'Next product',hide:'Hide products',resume:'Resume schedule',boardSave:'Create / replace board',boardSpot:'Change spot state',boardVisibility:'Show / hide board',saleAdd:'Record confirmed sale',saleRemove:'Remove sale',salesClear:'Clear recent sales',salesSettings:'Sales display options'}[command]}</option>`).join('')}</select></div>
+                <div id="commerce-product-fields"><div class="property-group"><label class="property-label" for="prop-url">Saved product URL (optional for Show)</label><input class="property-input" id="prop-url" type="url" value="${this.escapeHtml(node.config.url || '')}"></div>
                 <div class="property-group"><label class="property-label" for="prop-seconds">Seconds (0 = until changed)</label><input class="property-input" id="prop-seconds" type="number" min="0" max="3600" value="${Number(node.config.seconds) || 0}"><div class="property-help">Uses saved Products &amp; support links. Hide keeps activity alerts running. Waits for SSN; failure stops this chain. Confirmed selection is in <code>meta.commerceControlResult.commerce</code>; OBS visibility is unknown. <a href="../docs/product-controls.html" target="_blank" rel="noopener">Guide</a></div></div>`;
+                html += `</div><details id="commerce-board-fields"><summary>Board / sales fields</summary><div class="property-group"><label class="property-label" for="prop-data">Fields (JSON object)</label><textarea class="property-input" id="prop-data" rows="5" placeholder='{"id":"12","status":"claimed"}'>${this.escapeHtml(typeof node.config.data === 'string' ? node.config.data : JSON.stringify(node.config.data || {}, null, 2))}</textarea><div class="property-help">String values accept event variables such as {subtitle}. Use confirmed purchase events for sale actions; auction updates do not confirm payment. <a href="../docs/commerce-boards.html#automation" target="_blank" rel="noopener">Commands and fields</a></div></div></details>`;
                 break;
 
 			case 'clearLayer':
@@ -6551,6 +6552,15 @@ class EventFlowEditor {
                 });
             }
         });
+
+        if (nodeData.actionType === 'commerceControl') {
+            const select = document.getElementById('prop-command');
+            const products = document.getElementById('commerce-product-fields'), boards = document.getElementById('commerce-board-fields');
+            if (select && products && boards) {
+                const updateCommerceFields = () => { const isBoard = !['show','next','hide','resume'].includes(select.value); products.hidden = isBoard; boards.hidden = !isBoard; boards.open = isBoard; };
+                select.addEventListener('change', updateCommerceFields); updateCommerceFields();
+            }
+        }
 
         // Special handling for relay destination dropdown
         const destinationSelect = document.getElementById('prop-destination-select');

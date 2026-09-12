@@ -3,20 +3,25 @@ const fs = require('fs'), path = require('path'), os = require('os'), http = req
 const { spawn } = require('child_process');
 const { WebSocketServer, WebSocket } = require(require.resolve('ws', { paths: [path.resolve(__dirname, '../../ssapp')] }));
 const M = require('../shared/monetization/core.js');
+const B = require('../shared/monetization/boards.js');
 const repo = path.resolve(__dirname, '..');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function port() { const s = net.createServer(); await new Promise(r => s.listen(0, '127.0.0.1', r)); const p = s.address().port; await new Promise(r => s.close(r)); return p; }
-async function until(fn) { for (let i = 0; i < 100; i++) { try { const v = await fn(); if (v) return v; } catch (_) {} await sleep(300); } throw new Error('Timed out waiting for OBS'); }
+async function until(fn) { const deadline=Date.now()+30000; while(Date.now()<deadline) { try { const v = await fn(); if (v) return v; } catch (_) {} await sleep(300); } throw new Error('Timed out waiting for OBS'); }
 (async () => {
  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ssn-commerce-obs-'));
  const installed = process.env.OBS_INSTALL_ROOT || 'C:/Program Files/obs-studio';
  assert(fs.existsSync(path.join(installed, 'bin/64bit/obs64.exe')));
  for (const dir of ['bin','data','obs-plugins']) fs.symlinkSync(path.join(installed, dir), path.join(root, dir), 'junction');
  const obsPort = await port(), cdpPort = await port(), password = crypto.randomBytes(24).toString('hex');
+ let boards=B.apply({},'boardSave',{title:'Choose your spot',count:120,columns:20});
+ boards=B.apply(boards,'boardSpot',{id:'12',status:'revealed',result:'Collector card'});
+ ['Studio art print','Sealed booster pack','Signed rookie card','Collector jersey','Display case','Collector card'].forEach((title,i)=>{boards=B.apply(boards,'saleAdd',{title,amount:25+i*5,currency:'USD'});});
+ boards.salesVisible=true;
  let live = null, processObs, browser, obs, heartbeat;
  const items = [{name:'Studio art print',url:'https://example.com/print',purpose:'shop',amount:25,currency:'USD'}, {name:'Support the show',url:'https://ninjabacker.com/example',purpose:'support'}];
  const commerce = () => ({enabled:true,qr:true,position:'br',display:'first',seconds:15,items,live});
- function state() { if (live && live.until && live.until < Date.now()) live = null; const c = commerce(), selected = M.commerceCurrent(c, Date.now()); return {hostOn:true,enabled:true,mode:live ? live.mode === 'hide' ? 'hidden' : 'pinned' : 'scheduled',selected,items,remainingSeconds:live && live.until ? Math.ceil((live.until-Date.now())/1000) : null}; }
+ function state() { if (live && live.until && live.until < Date.now()) live = null; const c = commerce(), selected = M.commerceCurrent(c, Date.now()); return {boards:B.controlState(boards),auction:null,hostOn:true,enabled:true,mode:live ? live.mode === 'hide' ? 'hidden' : 'pinned' : 'scheduled',selected,items,remainingSeconds:live && live.until ? Math.ceil((live.until-Date.now())/1000) : null}; }
  const server = http.createServer((req,res) => {
   const file = path.resolve(repo, '.' + decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname));
   if (!file.startsWith(repo + path.sep)) {res.writeHead(403);res.end();return;}
@@ -24,11 +29,12 @@ async function until(fn) { for (let i = 0; i < 100; i++) { try { const v = await
  });
  await new Promise(r=>server.listen(0,'127.0.0.1',r)); const base='http://127.0.0.1:'+server.address().port;
  const relay = new WebSocketServer({server});
- function broadcast() { state(); const data=JSON.stringify({event:'monetization_update',meta:{monetization:{commerce:commerce()}}}); relay.clients.forEach(c=>{if(c.readyState===1)c.send(data);}); }
+ function broadcast() { state(); const data=JSON.stringify({event:'monetization_update',meta:{monetization:{boards:B.publicState(boards),commerce:commerce()}}}); relay.clients.forEach(c=>{if(c.readyState===1)c.send(data);}); }
  relay.on('connection',socket=>socket.on('message',raw=>{
   const data=JSON.parse(String(raw)); if(data.join){socket.operator=data.out===1 && data.in===2; broadcast();return;}
   if(!data.action)return;
-  if(data.action==='commerceControl') { const v=data.value, c=commerce(); const selected=M.commerceCurrent(c,Date.now()); const index=items.findIndex(i=>selected && i.url===selected.url); const item=v.command==='next'?items[(index+1)%items.length]:items.find(i=>i.url===v.url)||items[0]; live=v.command==='resume'?null:{mode:v.command==='hide'?'hide':'show',url:item.url,until:v.seconds?Date.now()+v.seconds*1000:0}; }
+  if(data.action==='commerceControl'&&B.commands.includes(data.value.command)) {boards=B.apply(boards,data.value.command,data.value.data);}
+  else if(data.action==='commerceControl') { const v=data.value, c=commerce(); const selected=M.commerceCurrent(c,Date.now()); const index=items.findIndex(i=>selected && i.url===selected.url); const item=v.command==='next'?items[(index+1)%items.length]:items.find(i=>i.url===v.url)||items[0]; live=v.command==='resume'?null:{mode:v.command==='hide'?'hide':'show',url:item.url,until:v.seconds?Date.now()+v.seconds*1000:0}; }
   socket.send(JSON.stringify({callback:{get:data.get,result:{ok:true,payload:{commerce:state()}}}}));broadcast();
  }));
  const dockUrl=base+'/obs-control-dock.html?session=obs-commerce-fixture&commerce&server=ws://127.0.0.1:'+server.address().port;
@@ -59,7 +65,7 @@ async function until(fn) { for (let i = 0; i < 100; i++) { try { const v = await
    let id=0;const calls=new Map();ws.on('message',raw=>{const m=JSON.parse(String(raw)),p=calls.get(m.id);if(p){calls.delete(m.id);clearTimeout(p.timer);m.error?p.reject(new Error(m.error.message)):p.resolve(m.result);}});
    const call=(method,params={})=>new Promise((resolve,reject)=>{const n=++id;calls.set(n,{resolve,reject,timer:setTimeout(()=>{calls.delete(n);reject(new Error(method+' timed out'));},10000)});ws.send(JSON.stringify({id:n,method,params}));});
    const evaluate=async expression=>{const r=await call('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw new Error(r.exceptionDetails.text);return r.result.value;};
-   return {setDefaultTimeout:()=>{},waitForFunction:fn=>until(()=>evaluate('('+fn.toString()+')()')),locator:selector=>({
+   return {evaluate,setDefaultTimeout:()=>{},waitForFunction:fn=>until(()=>evaluate('('+fn.toString()+')()')),locator:selector=>({
     selectOption:value=>evaluate('(function(){var e=document.querySelector('+JSON.stringify(selector)+');e.value='+JSON.stringify(value)+';e.dispatchEvent(new Event("change",{bubbles:true}));})()'),
     click:()=>until(async()=>{if(await evaluate('document.querySelector('+JSON.stringify(selector)+').disabled'))return false;await evaluate('document.querySelector('+JSON.stringify(selector)+').click()');return true;}),
     isDisabled:()=>evaluate('document.querySelector('+JSON.stringify(selector)+').disabled'),
@@ -81,7 +87,33 @@ async function until(fn) { for (let i = 0; i < 100; i++) { try { const v = await
   await request('SetCurrentProgramScene',{sceneName:'CommerceTest'});overlay=await findPage('monetization.html');await overlay.waitForFunction(()=>document.getElementById('title').textContent==='Support the show');
   relay.clients.forEach(c=>{if(c.operator)c.terminate();});await dock.waitForFunction(()=>document.getElementById('commerce-state').textContent.includes('Disconnected'));assert(await dock.locator('[data-commerce=show]').isDisabled());await dock.waitForFunction(()=>!document.querySelector('[data-commerce=show]').disabled);
   await dock.locator('#commerce-controls').screenshot({path:path.join(root,'product-dock.png')});
-  fs.writeFileSync(path.join(root,'results.json'),JSON.stringify({passed:true,checks:['native OBS custom dock','Show/Next/Hide/Resume','Browser Source QR rendering','scene unload/reload','dock reconnect'],obsVersion:(await request('GetVersion')).obsVersion},null,2));
+  await dock.evaluate("document.querySelector('.commerce-board-controls').open=true");
+  await dock.waitForFunction(()=>document.querySelectorAll('.cb-spots button').length===120);
+  await dock.locator('[data-spot="120"]').click();
+  await dock.locator('[data-action=claimed]').click();
+  await dock.waitForFunction(()=>document.querySelector('[data-selected]').textContent.includes('claimed'));
+  assert.equal(boards.board.spots[119].status,'claimed');
+  await request('CreateInput',{sceneName:'CommerceTest',inputName:'CommerceBoard',inputKind:'browser_source',inputSettings:{url:base+'/commerce-board.html?session=obs-commerce-fixture&server=ws://127.0.0.1:'+server.address().port,width:1920,height:1080,shutdown:true,restart_when_active:true},sceneItemEnabled:true});
+  let boardPage=await findPage('commerce-board.html');
+  await boardPage.waitForFunction(()=>document.querySelectorAll('.spot').length===120);
+  assert.equal(await boardPage.evaluate("document.querySelectorAll('.spot.claimed').length"),1);
+  assert(await boardPage.evaluate("(function(){var heights=Array.from(document.querySelectorAll('.spot')).map(e=>e.getBoundingClientRect().height);return Math.max.apply(null,heights)-Math.min.apply(null,heights)<1;})()"),'reveal keeps grid rows aligned');
+  for(const [view,width,height] of [['board',1920,1080],['sales',800,600],['wall',1280,720],['ticker',1280,400]]) {
+   await request('SetInputSettings',{inputName:'CommerceBoard',inputSettings:{url:base+'/commerce-board.html?session=obs-commerce-fixture&server=ws://127.0.0.1:'+server.address().port+'&view='+view,width,height},overlay:true});
+   boardPage=await findPage('&view='+view);
+   await boardPage.waitForFunction(()=>!document.getElementById('commerce-display').hidden);
+   assert(await boardPage.evaluate('document.documentElement.scrollWidth<=innerWidth+1'));
+   assert(await boardPage.evaluate('document.getElementById("commerce-display").getBoundingClientRect().bottom<=innerHeight'),view+' fits source');
+   await request('SaveSourceScreenshot',{sourceName:'CommerceBoard',imageFormat:'png',imageFilePath:path.join(root,'board-'+view+'.png')});
+  }
+  boards=B.apply(boards,'boardSave',{style:'teams',title:'Team break',columns:6,labels:'Atlanta\nBoston\nBrooklyn\nChicago\nDallas\nDenver\nDetroit\nHouston\nIndiana\nMemphis\nMiami\nMilwaukee\nMinnesota\nNew Orleans\nNew York\nOrlando\nPhiladelphia\nPhoenix\nPortland\nSacramento\nSan Antonio\nToronto\nUtah\nWashington'});
+  await request('SetInputSettings',{inputName:'CommerceBoard',inputSettings:{url:base+'/commerce-board.html?session=obs-commerce-fixture&server=ws://127.0.0.1:'+server.address().port+'&style=teams',width:1280,height:900},overlay:true});
+  boardPage=await findPage('&style=teams');await boardPage.waitForFunction(()=>document.querySelectorAll('.spot').length===24);
+  await request('SaveSourceScreenshot',{sourceName:'CommerceBoard',imageFormat:'png',imageFilePath:path.join(root,'board-teams.png')});
+  await request('SetCurrentProgramScene',{sceneName:'Away'});await sleep(1200);await request('SetCurrentProgramScene',{sceneName:'CommerceTest'});
+  boardPage=await findPage('commerce-board.html');await boardPage.waitForFunction(()=>document.querySelectorAll('.spot').length===24);
+  console.log('PASS native OBS board commands, five layouts and scene reload');
+  fs.writeFileSync(path.join(root,'results.json'),JSON.stringify({passed:true,checks:['native OBS custom dock','Show/Next/Hide/Resume','Browser Source QR rendering','scene unload/reload','dock reconnect','board claim command','equal board rows after reveal','five board and sales layouts','board scene reload'],obsVersion:(await request('GetVersion')).obsVersion},null,2));
   console.log('PASS native OBS commerce controls, scene changes and reconnect:',root);
  } finally {
   clearInterval(heartbeat);if(browser)await browser.close();if(obs)obs.close();
