@@ -1,0 +1,25 @@
+:root { color-scheme:dark; }
+* { box-sizing:border-box; }
+body { margin:0; background:#101d27; color:#e8f0f3; font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
+#game-container { max-width:1200px; min-height:100vh; margin:auto; padding:40px; display:grid; grid-template-columns:1fr 280px; grid-template-rows:auto auto 1fr auto; gap:24px 40px; position:relative; }
+#timer { grid-column:1; font-size:20px; font-variant-numeric:tabular-nums; color:#9edccc; }
+#theme-indicator { grid-column:2; grid-row:1; color:#9aaebc; font-size:13px; align-self:center; }
+#word-display { grid-column:1; grid-row:2; font-size:clamp(38px,7vw,88px); font-weight:650; letter-spacing:-.045em; overflow-wrap:anywhere; line-height:1.1; margin:24px 0; }
+#word-display:before { content:"THE NEXT WORD STARTS WITH MY LAST LETTER"; display:block; font:700 10px/1.6 system-ui,sans-serif; letter-spacing:.13em; color:#9edccc; margin-bottom:20px; }
+#chain-container { grid-column:1; grid-row:3; min-height:190px; display:flex; flex-wrap:wrap; gap:10px; align-content:flex-start; padding:24px 0; border-top:1px solid #ffffff18; }
+.chain-word { padding:10px 14px; border:1px solid #ffffff22; background:#ffffff06; border-radius:10px; font-size:18px; overflow-wrap:anywhere; max-width:100%; }
+.chain-word:last-child { background:#9edccc18; border-color:#9edccc66; color:#b8eee0; }
+.chain-word span { display:block; margin:3px 0 0!important; color:#a8b9c5; }
+#scoreboard { grid-column:2; grid-row:2 / 4; background:#ffffff04; border:1px solid #ffffff18; border-radius:18px; padding:22px; align-self:start; }
+#scoreboard h3 { margin:0 0 20px; font-size:14px; font-weight:600; }
+.score-entry { display:flex; justify-content:space-between; gap:12px; padding:12px 0; border-top:1px solid #ffffff12; font-size:13px; }
+.score-entry span:first-child { min-width:0; overflow-wrap:anywhere; }.score-entry span:last-child { white-space:nowrap; color:#9edccc; }
+#score-list:empty:after { content:"Your first word starts the leaderboard."; color:#9aaebc; font-size:13px; }
+#instructions { grid-column:1 / -1; grid-row:4; border-top:1px solid #ffffff18; padding:24px 0 0; color:#a8b9c5; font-size:14px; }
+#instructions strong { display:block; font-size:20px; color:#e8f0f3; margin-bottom:8px; }
+.combo-indicator { position:absolute; font-size:28px; font-weight:700; padding:10px 20px; border-radius:12px; background:#9edccc; color:#101d27; animation:comboFlash 1s ease-out forwards; pointer-events:none; }
+.wrong-answer { animation:shake .4s ease-out; }
+@keyframes comboFlash { 0% { opacity:0; } 30% { opacity:1; } 100% { opacity:0; } }
+@keyframes shake { 25% { transform:translateX(-4px); } 75% { transform:translateX(4px); } }
+@media(max-width:720px) { #game-container { padding:24px; grid-template-columns:1fr; gap:16px; } #theme-indicator { grid-column:1; grid-row:2; } #word-display { grid-row:3; margin:12px 0; } #chain-container { grid-row:4; min-height:130px; } #scoreboard { grid-column:1; grid-row:5; } #instructions { grid-row:6; } }
+@media(prefers-reduced-motion:reduce) { * { animation:none!important; transition:none!important; } }

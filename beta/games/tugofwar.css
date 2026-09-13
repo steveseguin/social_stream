@@ -1,0 +1,30 @@
+body[data-game="tug"] { background:#101e29; --accent:#ffe2a2; --muted:#a8bdc9; }
+.tug-shell { max-width:1120px; }
+.tug-shell .topline { margin-top:26px; }
+.tug-board { background:radial-gradient(ellipse at 50% 50%,#294651,#192e3b 75%); border:1px solid #ffffff20; border-radius:24px; overflow:hidden; }
+.tug-teams { display:flex; justify-content:space-between; padding:24px 30px 12px; }
+.team-0 { color:#ffafa3; }.team-1 { color:#97e2d0; }
+.tug-teams > :last-child { text-align:right; }.tug-teams h2 { margin:3px 0 5px; font-size:24px;letter-spacing:-.04em; }
+.tug-teams b { margin-left:8px; }.tug-teams span,.tug-teams b { font-size:12px; }
+.prompt-card { position:relative; width:calc(100% - 48px); max-width:510px; margin:8px auto 0; background:#f8edce; color:#253946; border-radius:16px; padding:12px 24px 18px; box-shadow:0 8px 0 #0002; z-index:1; }
+.prompt-top { display:flex; justify-content:space-between; gap:8px; font-size:11px; text-transform:uppercase; letter-spacing:.07em; }
+#tug-prompt { font-size:clamp(23px,4vw,42px); font-weight:800; letter-spacing:-.035em; text-align:center; padding-top:8px; overflow-wrap:anywhere; }
+#tug-prompt.drop { animation:prompt-drop .35s ease-out; }
+@keyframes prompt-drop { from { opacity:0;transform:translateY(-12px); } to { opacity:1;transform:translateY(0); } }
+.arena { position:relative; height:220px; overflow:hidden; }
+.center-line,.win-line { position:absolute; top:35px; bottom:34px; width:1px; border-left:2px dashed #e6d9b343; left:50%; }.win-line { border-color:#ffffff14; }.left-line {left:23%;}.right-line {left:77%;}
+.rope-party { position:absolute; top:0; left:0; width:100%;height:100%; transform:translateX(var(--pull)); transition:transform .35s ease-out; }
+.rope { position:absolute; top:135px; left:19%; right:19%; height:9px; border-radius:5px; background:repeating-linear-gradient(125deg,#b59c6a 0,#b59c6a 4px,#f1d496 4px,#f1d496 8px);box-shadow:0 3px 0 #0003; }
+.rope-flag { position:absolute; left:calc(50% - 8px);top:130px; width:16px;height:33px;background:#f8edce;clip-path:polygon(0 0,100% 0,100% 100%,50% 75%,0 100%); }
+.monster { position:absolute; width:160px;height:170px;top:29px;filter:drop-shadow(0 6px 0 #0002); }
+.coral { left:calc(19% - 120px);--fur:#ed8b83;--edge:#ad5b65; }
+.mint { right:calc(19% - 120px);transform:scaleX(-1);--fur:#7bccbb;--edge:#488e8e; }
+.monster .fur { fill:var(--fur); }.monster .horn { fill:#f3dfb6; }.monster .limb { stroke:var(--edge);stroke-width:16px;stroke-linecap:round;fill:none; }
+.ground { position:absolute;bottom:20px;left:3%;width:94%;height:6px;border-radius:50%;background:#ffffff0a; }
+.tug-balance { display:flex; justify-content:space-between; align-items:center; margin:0 28px; padding:0 0 18px; border-bottom:1px solid #ffffff15;font-size:12px;color:var(--muted); }.tug-balance strong { color:#f8edce; }
+.tug-rosters { display:grid;grid-template-columns:1fr 1fr;gap:28px;padding:14px 28px; }.tug-rosters ul { margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px;align-content:start; }.tug-rosters li { display:flex;gap:8px;max-width:100%;font-size:12px;border:1px solid #ffffff18;border-radius:6px;padding:3px 7px;background:#0001; }.tug-rosters li span { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }.tug-rosters li b {color:#fff;}
+.tug-meta { display:flex;justify-content:space-between;gap:12px;font-size:11px;color:var(--muted);margin-top:14px; }
+.tug-feed { display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;min-height:28px;margin-top:10px; }.tug-activity { max-width:100%;overflow-wrap:anywhere; }
+.game-paused #tug-prompt { animation-play-state:paused; }
+body[data-game="tug"].chroma { background:#00ff00; }body[data-game="tug"].transparent { background:transparent; }
+@media(max-width:600px) { .tug-teams {padding:18px 18px 10px;}.tug-teams h2 {font-size:21px;}.tug-teams b {display:block;margin:2px 0;}.prompt-card {padding:12px 14px;width:calc(100% - 32px);}.prompt-top {font-size:9px;}.arena {height:175px;}.monster {width:105px;height:120px;top:36px;}.coral {left:calc(19% - 75px);}.mint {right:calc(19% - 75px);}.rope {top:111px;}.rope-flag {top:107px;}.tug-balance {margin:0 18px;}.tug-rosters {padding:12px 18px;gap:12px;}.tug-meta {font-size:10px;} }

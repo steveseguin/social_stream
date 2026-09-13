@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tip Jar Style Preview</title>
+    <link rel="icon" href="./favicon.ico">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #111720; color: #eef3fa; font: 15px/1.5 Arial, sans-serif; }
+        main { max-width: 1500px; margin: auto; padding: 28px; }
+        h1 { margin: 0; font-size: 28px; }
+        p { color: #bdcadb; margin: 8px 0 20px; }
+        .controls { display: flex; flex-wrap: wrap; align-items: end; margin: 0 -8px; }
+        label { display: block; margin: 8px; }
+        input, select, button { font: inherit; border: 1px solid #536177; border-radius: 6px; padding: 8px; background: #202b3b; color: #fff; }
+        input[type="number"] { width: 100px; }
+        input[type="color"] { width: 70px; height: 40px; padding: 4px; vertical-align: middle; }
+        input[type="checkbox"] { margin-right: 6px; }
+        select { display: block; }
+        button { cursor: pointer; }
+        button:hover { background: #344763; }
+        :focus-visible { outline: 2px solid #81dfbc; outline-offset: 3px; }
+        .link-label { margin: 18px 0 8px; }
+        #overlay-link { display: block; width: 100%; margin-top: 6px; }
+        #status { min-height: 24px; color: #81dfbc; margin: 8px 0 18px; }
+        .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        article { min-width: 0; border: 1px solid #364254; border-radius: 12px; overflow: hidden; background: #192230; }
+        .caption { padding: 16px; }
+        h2 { font-size: 18px; margin: 0 0 4px; }
+        .caption p { min-height: 45px; margin: 0 0 12px; font-size: 14px; }
+        .sample { position: relative; height: 420px; overflow: hidden; background: #354155; }
+        body.light .sample { background: #e0e5ed; }
+        iframe { display: block; position: absolute; left: 50%; top: 50%; border: 0; pointer-events: none; }
+        .note { margin-top: 16px; font-size: 13px; }
+        @media (max-width: 400px) { main { padding: 16px; } .gallery { grid-template-columns: minmax(0, 1fr); } }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Find your tip jar style</h1>
+    <p>Sample totals only. These previews never connect to your stream or read or save donation totals.</p>
+    <div class="controls">
+        <label>Theme<select id="theme"><option value="default">Default</option><option value="neon">Neon</option><option value="gold">Gold</option></select></label>
+        <label>Sample progress<select id="progress"><option value="0">Empty</option><option value="63.5" selected>In progress</option><option value="100">Complete</option></select></label>
+        <label><input type="checkbox" id="refresh">Refreshed appearance for existing styles</label>
+        <label><input type="checkbox" id="light">Light preview background</label>
+    </div>
+    <div class="controls">
+        <label>New panels: opacity<br><input id="panelopacity" type="number" min="0" max="1" step="0.05" placeholder="Default"></label>
+        <label><input type="checkbox" id="customaccent">Custom accent <input id="accent" type="color" value="#66d9b2" aria-label="Accent color"></label>
+        <label>Total text size (px)<br><input id="amountsize" type="number" min="12" max="96" placeholder="Default"></label>
+        <label><input type="checkbox" id="hidepercent">Hide percentage</label>
+    </div>
+    <p class="note">Panel controls apply to Goal Card, Progress Ring, Lower Third, and Segmented Bar. Existing styles keep their original appearance unless you select the refresh. Bar-only and bar text size settings apply to Fluid Goal Bar.</p>
+    <label class="link-label">Your current tip jar link (optional, for copying a styled link)
+        <input id="overlay-link" type="url" placeholder="Paste your existing tip jar link" autocomplete="off" spellcheck="false">
+    </label>
+    <div id="status" role="status" aria-live="polite"></div>
+    <div id="gallery" class="gallery"></div>
+</main>
+<script src="./js/tipjar-preview.js"></script>
+</body>
+</html>

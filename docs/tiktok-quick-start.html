@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Quick Start - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <meta name="description" content="Quick setup guide for connecting TikTok live chat to Social Stream Ninja.">
+<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js"></script>
+</head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>TikTok Quick Start</h1>
+            <p>Use this first when you just need TikTok Live chat working.</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>1. Search For TikTok</h3>
+                <p>Open the <a href="supported-sites.html">Supported Sites</a> page and search for TikTok. This confirms the basic setup rule before you start changing OBS.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/tiktok-supported-sites-search.png" alt="Supported Sites page filtered to TikTok Live" class="guide-image">
+                    <figcaption>If TikTok Live appears here, click it to see the current setup note.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>2. Open The TikTok Live Page</h3>
+                <p>For the browser extension, open the creator's live page and keep the chat visible.</p>
+                <pre>https://www.tiktok.com/@CHANNEL/live</pre>
+                <figure class="guide-figure">
+                    <img src="images/guides/tiktok-live-setup-modal.png" alt="TikTok Live setup popup showing the live URL format and visible chat requirement" class="guide-image">
+                    <figcaption>The important part is simple: use the live page and leave chat open.</figcaption>
+                </figure>
+                <p>If browser tabs keep pausing or hiding chat, try the desktop app path instead.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>3. Use One Session ID</h3>
+                <p>Pick one short session ID. Use that exact same ID in the TikTok source, the dock, and OBS.</p>
+                <pre>YOUR_SESSION_ID</pre>
+            </div>
+
+            <div class="guide-card">
+                <h3>4. Check The Dock Before OBS</h3>
+                <p>Open the dock with your session ID. Send or wait for one TikTok chat message.</p>
+                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID</pre>
+                <figure class="guide-figure">
+                    <img src="images/guides/obs-dock-message-check.png" alt="Social Stream Ninja dock showing received chat messages" class="guide-image">
+                    <figcaption>If the dock receives messages, Social Stream Ninja is working. OBS is the next step.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>5. Add The Overlay To OBS</h3>
+                <p>Add a Browser Source in OBS and use the same session ID.</p>
+                <pre>https://socialstream.ninja/featured.html?session=YOUR_SESSION_ID</pre>
+                <figure class="guide-figure">
+                    <img src="images/guides/obs-featured-overlay-preview.png" alt="Featured overlay preview with a sample chat message" class="guide-image">
+                    <figcaption>Use a template if you want a full chat layout instead of a single featured message.</figcaption>
+                </figure>
+                <p>Template setup: <a href="overlay-template-quick-start.html">Overlay Template Quick Start</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>If TikTok Does Not Show Up</h3>
+                <ul class="guide-list">
+                    <li>Make sure the TikTok live page is actually live.</li>
+                    <li>Keep the chat visible when using the browser extension.</li>
+                    <li>Confirm the dock and OBS use the same session ID.</li>
+                    <li>Refresh the dock after changing the session ID.</li>
+                    <li>Try the desktop app if the browser tab is being throttled.</li>
+                </ul>
+                <p>More detail: <a href="tiktok-guide.html">Full TikTok Guide</a>.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alert effects setup | Social Stream Ninja</title>
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/guides.css">
+<script>
+(function () {
+    var saved = localStorage.getItem('darkMode');
+    if (saved === 'true' || (saved !== 'false' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark-mode');
+})();
+</script>
+</head>
+<body>
+<header>
+<div class="container">
+<a href="guides.html">Social Stream Ninja &middot; Guides</a>
+</div>
+</header>
+<main class="container">
+<h1>Animation and sound alerts</h1>
+<section class="guide-card">
+<h2>Set up your first alert</h2>
+<ol>
+<li>Open Multi-Alerts &rarr; Event animations &amp; sound effects.</li>
+<li>Enable an alert, then choose the event. The $100 donation preset fills both amount limits and supplies a synthetic Thank you sound if none is selected.</li>
+<li>Add an optional direct GIF, image, or video URL, or upload media. A GIPHY page link is not a direct media URL. GIF images have no audio; choose a separate sound.</li>
+<li>Choose a sound and use Listen to hear it locally. Custom URL and upload options are below the picker.</li>
+<li>Use Test alert, then add your Multi-Alerts link as an OBS browser source.</li>
+</ol>
+</section>
+<section class="guide-card">
+<h2>Amount limits and priority</h2>
+<p>Donations and bits use estimated USD values from the currency helper. For exactly $100, set both limits to 100. For $100 or more, leave the maximum blank. Blank limits allow any amount; other event types should have no amount limits.</p>
+<p>The first matching alert wins. Put specific rules before broad ones. Platform and category filters still apply.</p>
+</section>
+<section class="guide-card" id="testing">
+<h2>Preview and sound</h2>
+<p>Test alert opens and focuses the local preview. It does not send an event to your live channels. The preview uses your current overlay settings, filters, media, and timing. Sound volume is under Sound &amp; Timing.</p>
+<p>Clear sound removes the custom sound override; default alert audio still applies. Disable Play alert sound to mute overlay audio. Enable alert pauses a rule while preserving its settings. Reset alert clears that rule alone.</p>
+<p>Voiced phrases are labelled synthetic recordings. For names or changing text, use the Event Flow editor's Speak Text action.</p>
+</section>
+<section class="guide-card">
+<h2>Event Flow and OBS effects</h2>
+<p>Use Event Flow templates for sequences and OBS effects. Those media and sound actions play in the Flow Actions overlay. Use one overlay for each event's sound to avoid hearing it twice. OBS templates need a source and filter selected before use.</p>
+<p>
+<a href="../actions/event-flow-guide.html">Event Flow guide</a>
+</p>
+</section>
+</main>
+</body>
+</html>

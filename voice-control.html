@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+	<head>
+    <meta name="robots" content="noindex">
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>Voice Control | Social Stream Ninja</title>
+		<link rel="stylesheet" href="voice-control.css" />
+	</head>
+	<body>
+		<main>
+			<header>
+				<small>SOCIAL STREAM NINJA</small>
+				<h1>Voice Control</h1>
+				<p>Say a phrase. Start something fun.</p>
+			</header>
+			<section>
+				<div class="status"><b id="phase">Connecting</b><span id="mode">TEST MODE</span></div>
+				<p id="message" role="status">Open this page in SSApp.</p>
+				<div class="meter" aria-label="Microphone level"><div id="level"></div></div>
+				<label for="microphone">Microphone</label>
+				<div class="row">
+					<select id="microphone">
+						<option value="">System default</option></select
+					><button id="devices">Choose microphone</button>
+				</div>
+				<div class="buttons"><button id="start" class="primary">Start listening</button><button id="stop" disabled>Stop</button></div>
+				<label class="arm"><input id="arm" type="checkbox" disabled /> Run matching Event Flows</label>
+				<p class="hint">Start in Test mode. Only enable actions after your phrase is recognized correctly.</p>
+			</section>
+			<section>
+				<h2>Last heard</h2>
+				<p id="heard" class="heard">Nothing yet.</p>
+				<p id="match"></p>
+				<p id="commands" class="hint">Add a &ldquo;When I say...&rdquo; trigger in Event Flow.</p>
+			</section>
+			<section id="desktop-tools">
+				<h2>Keep the controls in OBS</h2>
+				<button id="dock">Create OBS dock link</button><button id="revoke">Revoke dock access</button><input id="dock-link" readonly hidden aria-label="Private OBS dock URL" />
+				<p class="hint">Add the private link as an OBS Custom Browser Dock. SSApp must stay open.</p>
+			</section>
+			<p class="note">Preview feature &middot; Local English Whisper &middot; No subscription<br />Use a headset and distinctive phrases. External speakers or OBS TTS can still trigger commands. Listening starts off; transcripts are not saved.</p>
+		</main>
+		<script src="voice-control.js"></script>
+	</body>
+</html>

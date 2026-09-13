@@ -1,0 +1,123 @@
+{
+  "name": "Kick Reward: Sound + Media",
+  "description": "Triggers when a Kick channel reward is redeemed. Replace the reward name, audio URL, and media URL before going live.",
+  "active": true,
+  "nodes": [
+    {
+      "id": "trigger_kick_reward",
+      "type": "trigger",
+      "triggerType": "channelPointRedemption",
+      "label": "Kick reward redeemed",
+      "x": 80,
+      "y": 80,
+      "config": {
+        "rewardName": "REPLACE_WITH_KICK_REWARD_NAME"
+      }
+    },
+    {
+      "id": "trigger_source_kick",
+      "type": "trigger",
+      "triggerType": "fromSource",
+      "label": "Source is Kick",
+      "x": 80,
+      "y": 260,
+      "config": {
+        "source": "kick"
+      }
+    },
+    {
+      "id": "logic_kick_reward_only",
+      "type": "logic",
+      "logicType": "AND",
+      "label": "Kick reward only",
+      "x": 380,
+      "y": 170,
+      "config": {}
+    },
+    {
+      "id": "action_play_sound",
+      "type": "action",
+      "actionType": "playAudioClip",
+      "label": "Play reward sound",
+      "x": 680,
+      "y": 60,
+      "config": {
+        "audioUrl": "https://vdo.ninja/media/join.wav",
+        "volume": 1
+      }
+    },
+    {
+      "id": "action_show_media",
+      "type": "action",
+      "actionType": "playTenorGiphy",
+      "label": "Show reward media",
+      "x": 680,
+      "y": 210,
+      "config": {
+        "mediaUrl": "https://giphy.com/embed/X9izlczKyCpmCSZu0l",
+        "mediaType": "iframe",
+        "duration": 10000,
+        "width": 50,
+        "height": 50,
+        "x": 25,
+        "y": 20,
+        "randomX": false,
+        "randomY": false,
+        "useLayer": true,
+        "clearFirst": true
+      }
+    },
+    {
+      "id": "action_show_text",
+      "type": "action",
+      "actionType": "showText",
+      "label": "Show reward text",
+      "x": 680,
+      "y": 390,
+      "config": {
+        "text": "{username} redeemed: {message}",
+        "x": 10,
+        "y": 72,
+        "width": 80,
+        "fontSize": 42,
+        "fontFamily": "Arial",
+        "fontWeight": "bold",
+        "textAlign": "center",
+        "color": "#ffffff",
+        "backgroundColor": "rgba(0,0,0,0.65)",
+        "padding": 18,
+        "borderRadius": 8,
+        "outlineWidth": 2,
+        "outlineColor": "#000000",
+        "animation": "fadeIn",
+        "animationDuration": 300,
+        "duration": 8000,
+        "clearFirst": true
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "trigger_kick_reward",
+      "to": "logic_kick_reward_only"
+    },
+    {
+      "from": "trigger_source_kick",
+      "to": "logic_kick_reward_only"
+    },
+    {
+      "from": "logic_kick_reward_only",
+      "to": "action_play_sound"
+    },
+    {
+      "from": "logic_kick_reward_only",
+      "to": "action_show_media"
+    },
+    {
+      "from": "logic_kick_reward_only",
+      "to": "action_show_text"
+    }
+  ],
+  "version": "1.0.0",
+  "exportedBy": "Social Stream Event Flow System"
+}

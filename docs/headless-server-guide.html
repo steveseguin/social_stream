@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Run Social Stream Ninja Headlessly - Social Stream Ninja</title>
+	<meta name="description" content="Run the Social Stream Ninja desktop app on an Ubuntu or Debian home server or VPS with Xvfb, persistent settings, remote control, and optional local AI automation.">
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/guides.css">
+	<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js"></script>
+</head>
+<body class="guides-page">
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+	<section class="page-hero">
+		<div class="container">
+			<h1>Run Social Stream Ninja Headlessly</h1>
+			<p>Keep the full desktop app capturing on an Ubuntu or Debian home server or VPS without a physical monitor.</p>
+		</div>
+	</section>
+
+	<main class="guide-section">
+		<div class="container">
+<p>Jump to <a href="#setup">initial setup</a>, <a href="#http-api">HTTP API</a>, <a href="#mcp">MCP</a>, <a href="#owncast">Owncast and Rocket.Chat</a>, or <a href="#verify">checking capture</a>.</p>
+			<div class="guide-card">
+				<h2>Yes — Use the Normal Linux AppImage</h2>
+<p>Download the usual Linux app and make it executable. On a VPS without a desktop, launching the AppImage alone is not enough: use a virtual display and the <code>--ssapp-headless-control</code> flag. The steps below keep chat capture running after you disconnect from SSH and after a server reboot.</p>
+				<p>Headless mode keeps SSApp's Electron windows hidden, but the source pages are still real browser windows. Linux therefore needs a virtual display such as Xvfb. This is not a small background-only chat daemon.</p>
+				<div class="guide-note">
+					<p><strong>Headless mode does not create a public control API.</strong> A controller on another computer uses the same Social Stream session and normal WebRTC or hosted WebSocket transport as other remote-control workflows.</p>
+				</div>
+			</div>
+
+			<div class="guide-card">
+				<h2>Before You Start</h2>
+				<ul class="guide-list">
+					<li>Use Ubuntu 22.04+, Debian 12+, or a similar Linux distribution.</li>
+					<li>Allow at least 2 GB of memory for a small setup and more for several source windows.</li>
+					<li>Choose a persistent profile directory for settings, sources, sessions, and browser data.</li>
+					<li>Plan a one-time desktop or VNC session for sign-ins and other private setup.</li>
+				</ul>
+				<p>Public source URLs that do not require sign-in are the easiest to operate remotely. OAuth, CAPTCHA, passwords, cookies, and account setup still require a person.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>1. Install Xvfb and the AppImage</h2>
+				<pre><code>sudo apt-get update
+sudo apt-get install -y xvfb x11-utils xauth curl
+sudo mkdir -p /opt/socialstream
+sudo mv ./YOUR_DOWNLOADED_FILE.AppImage /opt/socialstream/socialstreamninja.AppImage
+sudo chmod 755 /opt/socialstream/socialstreamninja.AppImage</code></pre>
+				<p>Download the current Linux AppImage from the <a href="download.html#standalone">Social Stream Ninja download page</a>. Choose the download matching your server architecture (<code>uname -m</code>), then replace <code>YOUR_DOWNLOADED_FILE.AppImage</code> above with its exact filename. A source checkout and separate Node installation are not required.</p>
+			</div>
+
+
+			<div class="guide-card" id="setup">
+				<h2>2. Prepare the Profile and Sign In Once</h2>
+<p>Use the same account and data directory for setup and the background service. Create a dedicated account:</p><pre><code>id ssapp &gt;/dev/null 2&gt;&amp;1 || sudo useradd --system --create-home --home-dir /var/lib/ssapp --shell /usr/sbin/nologin ssapp
+sudo install -d -o ssapp -g ssapp -m 700 /var/lib/ssapp
+sudo apt-get install -y x11vnc
+sudo -u ssapp Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp -extension GLX</code></pre>
+<p>Leave that terminal running. In a second SSH terminal, open SSApp visibly on that virtual display:</p><pre><code>sudo -u ssapp env DISPLAY=:99 SSAPP_USER_DATA_DIR=/var/lib/ssapp SSAPP_HEADLESS_CONTROL=0 \
+  /opt/socialstream/socialstreamninja.AppImage --ozone-platform=x11 --no-hwa</code></pre>
+<p>In a third SSH terminal, start temporary VNC access, restricted to the server itself:</p><pre><code>sudo -u ssapp x11vnc -display :99 -localhost -rfbport 5900 -nopw -forever</code></pre>
+<p>On your own computer, open an SSH tunnel:</p><pre><code>ssh -N -L 5900:127.0.0.1:5900 you@your-server</code></pre>
+<p>Connect your VNC viewer to <code>localhost:5900</code>. Set the Social Stream session ID and optional password, add sources, and complete any sign-ins. Enable <strong>Auto-activate</strong> on the sources you want to start when SSApp starts. Copy your chat dock and featured overlay links for later use.</p>
+<p>Quit SSApp after setup, then stop VNC, the tunnel, and Xvfb with Ctrl+C in their terminals. Do not run setup and the service against the same profile at the same time. VNC attached to an already-headless instance will normally show an empty display because its windows are hidden.</p>
+<p>Use <code>SSAPP_USER_DATA_DIR</code>, not Chromium's <code>--user-data-dir</code>. Complete sign-ins on the VPS; browser cookies copied from another OS may not decrypt.</p>
+			</div>
+			<div class="guide-card">
+				<h2>3. Start the App Headlessly</h2>
+				<pre><code>sudo -u ssapp env SSAPP_USER_DATA_DIR=/var/lib/ssapp xvfb-run -a -s "-screen 0 1920x1080x24 -nolisten tcp -extension GLX" \
+  /opt/socialstream/socialstreamninja.AppImage \
+  --ozone-platform=x11 --ssapp-headless-control --no-hwa</code></pre>
+				<p>The <code>--ssapp-headless-control</code> flag keeps the app windows hidden. This foreground command stops when you stop it; use the systemd service below for unattended operation. The main application still needs Xvfb; <code>--ozone-platform=headless</code> is not a replacement for the virtual display.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>4. Control It from Another Computer</h2>
+				<p>Use the same Social Stream session ID and optional password on the headless app and the remote controller. WebRTC is the normal transport. If it is unsuitable for the environment, use Social Stream's hosted WebSocket server mode.</p>
+				<p>Supported remote controls can add, start, stop, restart, mute, and hide public sources. They do not remotely complete sign-in, OAuth, CAPTCHA, cookies, credentials, or other private account setup.</p>
+				<p>See <a href="sessions-passwords-relay-modes.html">Sessions, Passwords, Relay, and Server Modes</a> when the remote controller connects but messages or commands do not arrive.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Keep It Running with systemd</h2>
+<p>Stop the foreground app with Ctrl+C first. Create <code>/etc/systemd/system/ssapp.service</code> with <code>sudo nano /etc/systemd/system/ssapp.service</code> and paste this unit:</p>
+				<pre><code>[Unit]
+Description=Social Stream Ninja (headless)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ssapp
+StateDirectory=ssapp
+WorkingDirectory=/opt/socialstream
+Environment=SSAPP_USER_DATA_DIR=/var/lib/ssapp
+ExecStart=/usr/bin/xvfb-run -a -s "-screen 0 1920x1080x24 -nolisten tcp -extension GLX" /opt/socialstream/socialstreamninja.AppImage --ozone-platform=x11 --ssapp-headless-control --no-hwa
+Restart=on-failure
+RestartSec=10
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+				<pre><code>sudo systemctl daemon-reload
+sudo systemctl enable --now ssapp
+journalctl -u ssapp -f</code></pre>
+				<p>The service uses the account and profile created in step 2. It starts at boot and restarts after an app failure. If you changed the installation path, update <code>ExecStart</code> to match.</p>
+			</div>
+
+
+			<div class="guide-card" id="http-api">
+				<h2>Optional HTTP API for Scripts on the VPS</h2>
+<p>Headless mode does not enable the control API. To enable it for your service, run <code>sudo systemctl edit ssapp</code> and save this override:</p><pre><code>[Service]
+Environment=SSAPP_CONTROL_API=1</code></pre><pre><code>sudo systemctl daemon-reload
+sudo systemctl restart ssapp
+curl -sS http://127.0.0.1:17777/api/v1/capabilities
+curl -sS http://127.0.0.1:17777/api/v1/status</code></pre>
+<p>For a manual launch, add <code>--ssapp-control-api</code> to the app command instead. Run the following commands in an SSH shell <strong>on the VPS</strong>. The API intentionally has no token and binds only to <code>127.0.0.1</code>; it is separate from your Owncast or Rocket.Chat web server. Keep it local.</p>
+<p>Read <code>ssappVersion</code>, <code>apiVersion</code>, and the supported platforms in capabilities first. For example, if Twitch is supported, add a source (replace <code>CHANNEL_NAME</code>):</p><pre><code>curl -sS http://127.0.0.1:17777/api/v1/command \
+  -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;action&quot;:&quot;addSource&quot;,&quot;value&quot;:{&quot;target&quot;:&quot;twitch&quot;,&quot;username&quot;:&quot;CHANNEL_NAME&quot;,&quot;autoActivate&quot;:true}}&#x27;
+
+curl -sS http://127.0.0.1:17777/api/v1/command \
+  -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;action&quot;:&quot;getSources&quot;,&quot;value&quot;:{}}&#x27; </code></pre>
+<p>Copy the source's stable <code>id</code> from the returned source list and replace <code>SOURCE_ID</code> below. Adding a source leaves it inactive; <code>autoActivate</code> controls future app launches.</p><pre><code>curl -sS http://127.0.0.1:17777/api/v1/command \
+  -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;action&quot;:&quot;startSource&quot;,&quot;value&quot;:{&quot;sourceId&quot;:&quot;SOURCE_ID&quot;}}&#x27;
+
+curl -sS http://127.0.0.1:17777/api/v1/command \
+  -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;action&quot;:&quot;getSourceDiagnostics&quot;,&quot;value&quot;:{&quot;sourceId&quot;:&quot;SOURCE_ID&quot;}}&#x27;
+
+curl -sS http://127.0.0.1:17777/api/v1/command \
+  -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;action&quot;:&quot;stopSource&quot;,&quot;value&quot;:{&quot;sourceId&quot;:&quot;SOURCE_ID&quot;}}&#x27; </code></pre>
+<p>Check <code>ok</code> and <code>payload</code> in each response; failures return <code>error</code>. Read state after a change. If a request times out, check state before retrying it. Stop a source before changing its connection fields. Reload, removal, and shutdown commands require <code>confirm: true</code>.</p>
+<p><code>curl -N http://127.0.0.1:17777/api/v1/events</code> follows the Server-Sent Events feed until Ctrl+C. See the <a href="llm-control-guide.html">API and MCP guide</a> for the complete reference. These are app/source controls; overlay actions such as featuring a chat message use the Social Stream dock and <a href="commands.html">Social Stream commands</a>.</p>
+			</div>
+
+			<div class="guide-card" id="mcp">
+				<h2>Optional MCP for an AI Client on the VPS</h2>
+<p>MCP lets a compatible AI client call SSApp controls as tools. Enable the API above and keep the main app service running. Register this configuration in a client running <strong>on the VPS</strong>:</p><pre><code>{
+  &quot;mcpServers&quot;: {
+    &quot;social-stream&quot;: {
+      &quot;command&quot;: &quot;/opt/socialstream/socialstreamninja.AppImage&quot;,
+      &quot;args&quot;: [&quot;--ssapp-mcp&quot;, &quot;--ozone-platform=headless&quot;],
+      &quot;env&quot;: {
+        &quot;SSAPP_CONTROL_URL&quot;: &quot;http://127.0.0.1:17777&quot;
+      }
+    }
+  }
+}</code></pre>
+<p>The configuration location depends on the client. This launches a separate adapter over standard input/output; it does not start the main capture app. A client on your home computer would point at its own localhost, not your VPS. Use Social Stream's normal remote controls from another computer.</p>
+<p>The packaged adapter is available from SSApp 0.4.7; 0.4.14 and newer advertise the complete tool set even before the app is available. Live capabilities still decide which calls work. No separate Node installation is needed. The headless Ozone flag here applies only to the MCP adapter; keep Xvfb for the main app.</p>
+<p>Try: <em>“Call ssapp_get_capabilities, then ssapp_get_status and ssapp_list_sources. Tell me which sources are capturing and whether any report errors.”</em> Tools also cover source start/stop, diagnostics, captured events, screenshots, and approved app-window interactions. Private sign-ins and CAPTCHA still need a person.</p>
+<p>See the <a href="llm-control-guide.html">Local Control API and MCP guide</a> for the optional agent skill, version compatibility, and more controls.</p>
+			</div>
+
+			<div class="guide-card" id="owncast">
+				<h2>Owncast, Rocket.Chat, and Featured Messages</h2>
+<p>You can run SSApp on the same VPS as Owncast and Rocket.Chat if it has enough resources. Installing SSApp does not by itself connect Rocket.Chat or put overlays into the video.</p>
+<pre><code>Supported chat source → SSApp → Social Stream dock / featured overlay
+                                           ↓
+Video input → server broadcaster renders overlays → Owncast → viewers</code></pre>
+<p>There is no built-in Rocket.Chat connector in the source trees checked for this guide. A separate integration is needed to bring those messages into Social Stream. Prove that messages reach the dock before configuring the video overlay.</p>
+<p>Use the dock and featured overlay URLs copied during setup, with the same session/password and transport. Select a captured message in the dock to feature it. Your server broadcaster needs browser-source rendering to place these pages over video before sending the combined stream to Owncast. See <a href="https://owncast.online/docs/broadcasting/">Owncast's broadcasting instructions</a>. SSApp is not that video broadcaster.</p>
+<p>An overlay positioned over an embedded player on your website is a different option: it appears on that page, rather than being part of the video received by other players or recordings. Owncast documents <a href="https://owncast.online/docs/embed/">embedding video and chat</a>.</p>
+<p>To switch off your home computer, the video source, broadcaster, chat capture, and any Rocket.Chat integration must all keep running independently of it. Budget for video rendering and encoding separately from SSApp's chat-capture memory.</p>
+			</div>
+
+			<div class="guide-card" id="verify">
+				<h2>Check the Complete Workflow Before Leaving It Unattended</h2>
+<ol class="guide-steps">
+<li>Send a real message in a connected chat and confirm it arrives in your Social Stream dock.</li>
+<li>Feature that message and confirm the featured overlay changes. For Owncast, verify it in the actual viewer video too.</li>
+<li>Disconnect VNC and SSH, then send more messages over several minutes. Capture should continue.</li>
+<li>Run <code>sudo systemctl restart ssapp</code>, then confirm the same session and sources return and auto-activated sources receive new messages.</li>
+<li>During a maintenance window, reboot the VPS and repeat the message check. A running process or successful API response alone does not prove chat capture works.</li>
+</ol>
+<p>Use <code>sudo systemctl status ssapp</code> and <code>sudo journalctl -u ssapp -n 100 --no-pager</code> for service status and recent logs. To stop deliberately, use <code>sudo systemctl stop ssapp</code>.</p>
+<p>For updates, stop the service, back up <code>/var/lib/ssapp</code>, replace the AppImage at the same path, and start the service again. Retain the previous executable until the new version passes the message checks.</p>
+			</div>
+			<div class="guide-card">
+				<h2>Troubleshooting</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Problem</th><th>What To Check</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Problem"><span><code>Missing X server or $DISPLAY</code></span></td><td data-label="What To Check"><span>Launch through <code>xvfb-run</code> or start Xvfb and set <code>DISPLAY</code>.</span></td></tr>
+						<tr><td data-label="Problem"><span>Xvfb exits immediately</span></td><td data-label="What To Check"><span>Keep <code>-extension GLX</code> in the Xvfb arguments; some installed GPU drivers break its GLX startup.</span></td></tr>
+						<tr><td data-label="Problem"><span>The AppImage will not mount</span></td><td data-label="What To Check"><span>Extract with <code>./socialstreamninja.AppImage --appimage-extract</code> in a writable directory, then put the extracted folder in <code>/opt/socialstream/squashfs-root</code>. Replace the AppImage path in setup, service, and MCP commands with <code>/opt/socialstream/squashfs-root/socialstreamninja</code>.</span></td></tr>
+						<tr><td data-label="Problem"><span>Remote commands do not arrive</span></td><td data-label="What To Check"><span>Confirm both sides use the same session and password and that WebRTC or the hosted WebSocket mode is connected.</span></td></tr>
+						<tr><td data-label="Problem"><span>Sources or settings mix between instances</span></td><td data-label="What To Check"><span>Give every instance a different <code>SSAPP_USER_DATA_DIR</code> and virtual display.</span></td></tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="guide-card">
+				<h2>Related Guides</h2>
+				<ul class="guide-list">
+					<li><a href="local-services-guide.html">Local Servers and Services Explained</a></li>
+					<li><a href="llm-control-guide.html">Local Control API and MCP</a></li>
+					<li><a href="standalone-app-modes.html">Standalone App Modes</a></li>
+				</ul>
+			</div>
+		</div>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+	<script src="js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

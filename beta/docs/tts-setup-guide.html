@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS Setup Guide - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <style>
+        .tts-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+        .tts-preview { border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.6rem; min-width: 0; }
+        .tts-preview h3 { margin-top: 0; }
+        .tts-preview audio { width: 100%; margin: .8rem 0; }
+        .tts-settings { margin: 1.2rem 0; }
+        .tts-settings summary { cursor: pointer; font-weight: 600; padding: .8rem 0; }
+        .tts-settings summary:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+        .tts-settings img { max-width: 52rem; }
+        .tts-preview code { overflow-wrap: anywhere; }
+        .guide-card [id] { scroll-margin-top: 10rem; }
+        .guide-image-medium { max-width: 52rem; }
+        @media (max-width: 700px) { .tts-preview-grid { grid-template-columns: 1fr; } }
+    </style>
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Plain-English setup guide for Social Stream Ninja text-to-speech, OBS audio, browser voices, local voices, and TTS server modes.">
+<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js"></script>
+</head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>TTS Setup Guide</h1>
+            <p>Hear your chat in three steps. Start free, with no account or API key.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>1. Switch on chat reading</h2>
+                <p><strong>No chat connected yet?</strong> <a href="getting-started.html">Start here: install SSN, add your source and open the dock.</a></p>
+                <p>Open the <strong>SSN extension popup</strong> or the desktop app’s <strong>Sources and Settings</strong>.</p>
+                <p>Under <strong>Main chat overlay &amp; control dock</strong>, expand <strong>Message — Text to Speech</strong>. Turn on the switch shown here:</p>
+                <figure class="guide-figure">
+                    <a href="images/guides/tts-enable-dock-popup.png"><img src="images/guides/tts-enable-dock-popup.png" alt="Actual popup: Message — Text to Speech, with Enable TTS in dock switched on" class="guide-image guide-image-medium"></a>
+                    <figcaption>Blue switch = chat reading is on.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>2. Choose a free voice</h2>
+                <p>In the same section, scroll to <strong>TTS Service Provider</strong>. Choose <strong>Piper TTS</strong>, then a voice.</p>
+                <figure class="guide-figure">
+                    <a href="images/guides/tts-select-provider-popup.png"><img src="images/guides/tts-select-provider-popup.png" alt="Actual popup: Piper TTS selected, with English US Female HFC Medium voice" class="guide-image guide-image-medium" loading="lazy"></a>
+                    <figcaption>Piper needs no account or API key. Allow time for its first voice download.</figcaption>
+                </figure>
+                <p>Use <strong>copy link</strong> beside <strong>Main chat overlay &amp; control dock</strong> to get your updated link.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="obs-voices">3. Play it in OBS</h2>
+                <ol class="guide-steps">
+                    <li>Add an OBS <strong>Browser Source</strong> and paste that link.</li>
+                    <li>Enable <strong>Control audio via OBS</strong> in its properties.</li>
+                    <li>Send a chat message. Check the source’s audio meter, then make a short recording.</li>
+                </ol>
+                <p><strong>Want to hear it yourself?</strong> In OBS Advanced Audio Properties, choose <strong>Monitor and Output</strong> for that source. Keep only one copy reading chat.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-samples">Listen to the free voices</h2>
+                <p>Prefer another sound? These four voices are free. Press play to compare.</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper</h3><p>English US Female (HFC), medium quality.<br><code>en_US-hfc_female-medium</code></p><audio controls preload="none" aria-label="Piper voice sample"><source src="audio/tts/piper-hfc.mp3" type="audio/mpeg"><a href="audio/tts/piper-hfc.mp3">Download Piper sample</a></audio><p><a href="#settings-piper">View settings and voices</a></p></div>
+<div class="tts-preview"><h3>Kokoro</h3><p>Bella, American female. Tested using CPU/WASM, q8.<br><code>af_bella</code></p><audio controls preload="none" aria-label="Kokoro voice sample"><source src="audio/tts/kokoro-bella.mp3" type="audio/mpeg"><a href="audio/tts/kokoro-bella.mp3">Download Kokoro sample</a></audio><p><a href="#settings-kokoro">View settings and voices</a></p></div>
+<div class="tts-preview"><h3>Kitten</h3><p>Voice 4, female. Bundled nano v0.1 model.<br><code>expr-voice-4-f</code></p><audio controls preload="none" aria-label="Kitten voice sample"><source src="audio/tts/kitten-4f.mp3" type="audio/mpeg"><a href="audio/tts/kitten-4f.mp3">Download Kitten sample</a></audio><p><a href="#settings-kitten">View settings and voices</a></p></div>
+<div class="tts-preview"><h3>eSpeak</h3><p>English. A synthetic voice with a small footprint.<br><code>en</code></p><audio controls preload="none" aria-label="eSpeak voice sample"><source src="audio/tts/espeak-en.mp3" type="audio/mpeg"><a href="audio/tts/espeak-en.mp3">Download eSpeak sample</a></audio><p><a href="#settings-espeak">View settings and voices</a></p></div>
+</div>
+                <details class="tts-settings"><summary>Spanish and Portuguese samples</summary>
+                <p>Choose a language above the voice list in SSN settings, then use <strong>Test</strong>. Piper offers Spain, Mexico, Brazil and Portugal; Kokoro adds three Spanish and three Brazilian Portuguese voices.</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper - Spanish (Spain)</h3><p>DaveFX</p><audio controls preload="none" aria-label="Piper - Spanish (Spain) sample"><source src="audio/tts/piper-spanish.mp3" type="audio/mpeg"><a href="audio/tts/piper-spanish.mp3">Download sample</a></audio></div>
+<div class="tts-preview"><h3>Kokoro - Spanish</h3><p>Dora</p><audio controls preload="none" aria-label="Kokoro - Spanish sample"><source src="audio/tts/kokoro-spanish.mp3" type="audio/mpeg"><a href="audio/tts/kokoro-spanish.mp3">Download sample</a></audio></div>
+<div class="tts-preview"><h3>Piper - Portuguese (Brazil)</h3><p>Faber</p><audio controls preload="none" aria-label="Piper - Portuguese (Brazil) sample"><source src="audio/tts/piper-portuguese.mp3" type="audio/mpeg"><a href="audio/tts/piper-portuguese.mp3">Download sample</a></audio></div>
+<div class="tts-preview"><h3>Kokoro - Portuguese (Brazil)</h3><p>Dora</p><audio controls preload="none" aria-label="Kokoro - Portuguese (Brazil) sample"><source src="audio/tts/kokoro-portuguese.mp3" type="audio/mpeg"><a href="audio/tts/kokoro-portuguese.mp3">Download sample</a></audio></div>
+                </div><p>Free local synthesis, with an initial download. Samples omit loading time. Piper is the lighter starting point; Kokoro can be slow on CPU. Use Piper if speech falls behind the chat.</p></details>
+                <details class="tts-settings"><summary>Sample words and test details</summary>
+                <p>The four English samples read: <em>Welcome to the stream! Thanks for joining us. Which game should we play next?</em> Name reading is disabled.</p>
+                <p>Checked September 7, 2026 in OBS 32.2.2 on Windows 11: a chat message reached the real dock, generated speech, moved the Browser Source meter and appeared in a recording. Kokoro took noticeably longer to start speaking in this CPU test. These clips preview the voice, not the waiting time.</p>
+                <p>System TTS exposed five voices on this machine but produced no audio in the Browser Source recording. That result is specific to this setup; always test your final URL and recording. Cloud voices are not included because no paid credentials were used.</p>
+            </details>
+            </div>
+
+            <div class="guide-card">
+                <h2>Need help?</h2>
+                <details class="tts-settings"><summary>Does my chat platform support TTS?</summary><p id="chat-platforms">If SSN receives the chat as text, it can read it aloud. YouTube, Twitch, TikTok and other sources use the same feature. Your chat platform does not need its own TTS support.</p></details>
+                <details class="tts-settings"><summary>No speech?</summary><p>Check that the dock receives chat, then check the TTS switch, provider and filters. Use the newly copied link. Allow the first model download to finish.</p></details>
+                <details class="tts-settings"><summary>Works in Chrome/Edge, but not OBS?</summary><p>OBS has a separate browser and voice list. System TTS may not work there, even when it lists voices. Try Piper, Kokoro, Kitten or eSpeak. A virtual audio cable cannot fix missing speech.</p></details>
+                <details class="tts-settings"><summary>The meter moves, but the recording is silent?</summary><p>Check mute and recording-track assignments in OBS. Use Monitor and Output if you also want to hear it; avoid capturing that monitoring output a second time. <a href="https://obsproject.com/kb/audio-mixer-guide">OBS audio guide</a>.</p></details>
+                <details class="tts-settings"><summary>Can I use an OBS dock or Featured Chat instead?</summary><p>An OBS Custom Browser Dock is a control panel, not the scene Browser Source used above. For Featured Chat, enable TTS in that overlay’s own popup options and copy its link. Keep one page speaking to avoid doubled voices.</p></details>
+            </div>
+
+            <div class="guide-card">
+                <details class="tts-settings" id="voice-chooser"><summary>Compare all providers: requirements, cost and trade-offs</summary>
+                <p><strong>Start with Piper for a free local voice, or compare Kokoro if you prefer its sound.</strong> Try eSpeak when responsiveness matters more than realism. Kitten is another compact English option. Listen before deciding.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Provider</th><th>Good for</th><th>Trade-off</th><th>Requirements / cost</th></tr></thead><tbody>
+<tr><td data-label="Provider">Kokoro</td><td data-label="Good for">English, Spanish and Brazilian Portuguese voices.</td><td data-label="Trade-off">More CPU work; first speech can be slow.</td><td data-label="Requirements / cost">Free, no key. Downloads model/voice assets; CPU or supported WebGPU.</td></tr>
+<tr><td data-label="Provider">Piper</td><td data-label="Good for">Local neural voices; English, Spanish and Portuguese options.</td><td data-label="Trade-off">Quality and pronunciation vary by voice.</td><td data-label="Requirements / cost">Free, no key. Downloads the selected model (HFC medium: about 63 MB), plus engine files.</td></tr>
+<tr><td data-label="Provider">Kitten</td><td data-label="Good for">Compact English model, eight voice choices.</td><td data-label="Trade-off">Fewer languages and voice styles.</td><td data-label="Requirements / cost">Free, no key. Current bundled model: about 24 MB, plus engine/voice files; CPU.</td></tr>
+<tr><td data-label="Provider">eSpeak</td><td data-label="Good for">Lightweight, many languages, quick to start.</td><td data-label="Trade-off">Deliberately synthetic/robotic sound.</td><td data-label="Requirements / cost">Free, no key. Loads packaged engine/language files; no neural model or GPU needed.</td></tr>
+<tr><td data-label="Provider">System TTS</td><td data-label="Good for">Uses voices exposed by your browser or desktop app.</td><td data-label="Trade-off">Voice list and OBS capture vary; some voices need internet.</td><td data-label="Requirements / cost">No SSN provider fee. Requires a working system/browser voice; test on the actual playback page.</td></tr>
+<tr><td data-label="Provider">ElevenLabs</td><td data-label="Good for">Voice IDs, model selection and stability/style controls.</td><td data-label="Trade-off">Account limits, network delay and API charges can apply.</td><td data-label="Requirements / cost">Internet, API key and accessible voice ID. Chat text goes to the provider.</td></tr>
+<tr><td data-label="Provider">Google Cloud</td><td data-label="Good for">Named voices and language, rate and pitch controls.</td><td data-label="Trade-off">Not every voice supports every control.</td><td data-label="Requirements / cost">Internet, enabled Cloud TTS API, API key and matching voice/language. Billing/quota applies.</td></tr>
+<tr><td data-label="Provider">Gemini</td><td data-label="Good for">Voice styles and written delivery instructions.</td><td data-label="Trade-off">Preview models and quotas can change; latency varies.</td><td data-label="Requirements / cost">Internet, Gemini API key and access to the selected TTS model. Check account limits/billing.</td></tr>
+<tr><td data-label="Provider">Speechify</td><td data-label="Good for">Voice ID with speed, language and model controls.</td><td data-label="Trade-off">Needs API access; available voices depend on account.</td><td data-label="Requirements / cost">Internet and Speechify API key. API usage terms/limits apply.</td></tr>
+<tr><td data-label="Provider">OpenAI</td><td data-label="Good for">Named voices with model and format controls.</td><td data-label="Trade-off">API billing and internet required; account subscription is separate.</td><td data-label="Requirements / cost">API key with TTS access. Chat text is sent to the configured endpoint.</td></tr>
+<tr><td data-label="Provider">Custom / Local</td><td data-label="Good for">Use your own compatible voice server.</td><td data-label="Trade-off">Most setup: endpoint, model, voice and browser access must agree.</td><td data-label="Requirements / cost">A reachable OpenAI-compatible speech endpoint; key if required. Local hardware or hosting costs vary.</td></tr>
+</tbody></table>
+                <p>Download sizes above are model files, not total memory use or all required assets. Local providers use the computer running the dock/overlay; first use can be slower, and OBS has its own cache. Cloud providers save local computation but send the text off-device.</p>
+                <p><strong>OBS:</strong> the four local providers below passed Browser Source recording tests. Cloud/custom providers return audio for the page to play, but were not tested with live accounts in this review. System TTS needs a separate test even when it lists voices.</p>
+            </details>
+            </div>
+
+            <div class="guide-card">
+                <details class="tts-settings" id="provider-settings"><summary>Provider settings and voice names</summary>
+                <p>Actual desktop-app settings, captured with a fresh profile. Open the provider you want; the API-key fields are intentionally empty. These controls configure the selected SSN dock or overlay. Select a screenshot to see it at full size.</p>
+<details class="tts-settings" id="settings-system"><summary>System TTS</summary><p>The language list is empty in this fresh profile. Available voices depend on the browser/app and installed voices; there is no universal SSN voice list.</p><figure class="guide-figure"><a href="images/guides/tts-settings-system.png"><img src="images/guides/tts-settings-system.png" alt="Actual SSN System TTS provider settings" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="tts-settings" id="settings-kokoro"><summary>Kokoro</summary><p>Choose a voice in SSN; the model loads on the page that speaks. The selection includes English US/UK, Spanish and Brazilian Portuguese. Use the language filter to find voices; Test plays a short phrase in the selected language. For lower CPU use, try Piper.</p><figure class="guide-figure"><a href="images/guides/tts-settings-kokoro.png"><img src="images/guides/tts-settings-kokoro.png" alt="Actual SSN Kokoro provider settings" class="guide-image" loading="lazy"></a></figure>
+<details><summary>Voice names and URL values</summary><ul class="guide-list">
+<li>Heart (American Female) — <code>af_heart</code></li>
+<li>Alloy (American Female) — <code>af_alloy</code></li>
+<li>Aoede (American Female) — <code>af_aoede</code></li>
+<li>Bella (American Female) — <code>af_bella</code></li>
+<li>Jessica (American Female) — <code>af_jessica</code></li>
+<li>Kore (American Female) — <code>af_kore</code></li>
+<li>Nicole (American Female) — <code>af_nicole</code></li>
+<li>Nova (American Female) — <code>af_nova</code></li>
+<li>River (American Female) — <code>af_river</code></li>
+<li>Sarah (American Female) — <code>af_sarah</code></li>
+<li>Sky (American Female) — <code>af_sky</code></li>
+<li>Adam (American Male) — <code>am_adam</code></li>
+<li>Echo (American Male) — <code>am_echo</code></li>
+<li>Eric (American Male) — <code>am_eric</code></li>
+<li>Fenrir (American Male) — <code>am_fenrir</code></li>
+<li>Liam (American Male) — <code>am_liam</code></li>
+<li>Michael (American Male) — <code>am_michael</code></li>
+<li>Onyx (American Male) — <code>am_onyx</code></li>
+<li>Puck (American Male) — <code>am_puck</code></li>
+<li>Santa (American Male) — <code>am_santa</code></li>
+<li>Emma (British Female) — <code>bf_emma</code></li>
+<li>Isabella (British Female) — <code>bf_isabella</code></li>
+<li>George (British Male) — <code>bm_george</code></li>
+<li>Lewis (British Male) — <code>bm_lewis</code></li>
+<li>Alice (British Female) — <code>bf_alice</code></li>
+<li>Lily (British Female) — <code>bf_lily</code></li>
+<li>Daniel (British Male) — <code>bm_daniel</code></li>
+<li>Fable (British Male) — <code>bm_fable</code></li>
+<li>Dora (Spanish) - <code>ef_dora</code></li>
+<li>Alex (Spanish) - <code>em_alex</code></li>
+<li>Santa (Spanish) - <code>em_santa</code></li>
+<li>Dora (Brazilian Portuguese) - <code>pf_dora</code></li>
+<li>Alex (Brazilian Portuguese) - <code>pm_alex</code></li>
+<li>Santa (Brazilian Portuguese) - <code>pm_santa</code></li>
+</ul></details>
+</details>
+<details class="tts-settings" id="settings-kitten"><summary>Kitten</summary><p>Eight English voices: male and female variants numbered 2, 3, 4 and 5. The sample uses Voice 4 (Female).</p><figure class="guide-figure"><a href="images/guides/tts-settings-kitten.png"><img src="images/guides/tts-settings-kitten.png" alt="Actual SSN Kitten provider settings" class="guide-image" loading="lazy"></a></figure>
+<details><summary>Voice names and URL values</summary><ul class="guide-list">
+<li>Voice 2 (Male) — <code>expr-voice-2-m</code></li>
+<li>Voice 2 (Female) — <code>expr-voice-2-f</code></li>
+<li>Voice 3 (Male) — <code>expr-voice-3-m</code></li>
+<li>Voice 3 (Female) — <code>expr-voice-3-f</code></li>
+<li>Voice 4 (Male) — <code>expr-voice-4-m</code></li>
+<li>Voice 4 (Female) — <code>expr-voice-4-f</code></li>
+<li>Voice 5 (Male) — <code>expr-voice-5-m</code></li>
+<li>Voice 5 (Female) — <code>expr-voice-5-f</code></li>
+</ul></details>
+</details>
+<details class="tts-settings" id="settings-piper"><summary>Piper</summary><p>Choose a matching language and model. The sample uses HFC medium. A language setting alone does not translate a voice.</p><figure class="guide-figure"><a href="images/guides/tts-settings-piper.png"><img src="images/guides/tts-settings-piper.png" alt="Actual SSN Piper provider settings" class="guide-image" loading="lazy"></a></figure>
+<details><summary>Voice names and URL values</summary><ul class="guide-list">
+<li>English US Female (HFC) - Medium — <code>en_US-hfc_female-medium</code></li>
+<li>Spanish Spain (DaveFX) - Medium — <code>es_ES-davefx-medium</code></li>
+<li>Spanish Mexico (Ald) - Medium — <code>es_MX-ald-medium</code></li>
+<li>Brazilian Portuguese (Faber) - Medium — <code>pt_BR-faber-medium</code></li>
+<li>Brazilian Portuguese (Edresson) - Low — <code>pt_BR-edresson-low</code></li>
+<li>Portuguese Portugal (Tugao) - Medium — <code>pt_PT-tugÃ£o-medium</code></li>
+</ul></details>
+</details>
+<details class="tts-settings" id="settings-espeak"><summary>eSpeak</summary><p>Choose a language voice and optionally adjust speaking rate. This engine sounds robotic by design.</p><figure class="guide-figure"><a href="images/guides/tts-settings-espeak.png"><img src="images/guides/tts-settings-espeak.png" alt="Actual SSN eSpeak provider settings" class="guide-image" loading="lazy"></a></figure>
+<details><summary>Voice names and URL values</summary><ul class="guide-list">
+<li>English — <code>en</code></li>
+<li>Spanish — <code>es</code></li>
+<li>Portuguese Brazil — <code>pt-br</code></li>
+<li>Portuguese Portugal — <code>pt-pt</code></li>
+</ul></details>
+</details>
+<details class="tts-settings" id="settings-elevenlabs"><summary>ElevenLabs</summary><p>Enter your API key, then use List My Available Voices to find a voice ID your account can use. <a href="https://elevenlabs.io/docs/api-reference/text-to-speech/convert">Provider reference</a>.</p><figure class="guide-figure"><a href="images/guides/tts-settings-elevenlabs.png"><img src="images/guides/tts-settings-elevenlabs.png" alt="Actual SSN ElevenLabs provider settings" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="tts-settings" id="settings-google"><summary>Google Cloud</summary><p>Enter a Google Cloud TTS API key and exact voice name, with its matching language. <a href="https://cloud.google.com/text-to-speech/docs/voices">Voice names and supported controls</a>.</p><figure class="guide-figure"><a href="images/guides/tts-settings-google.png"><img src="images/guides/tts-settings-google.png" alt="Actual SSN Google Cloud provider settings" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="tts-settings" id="settings-gemini"><summary>Gemini</summary><p>Select a supported TTS model and voice; style instructions change delivery. These are Gemini API settings, separate from Google Cloud TTS. <a href="https://ai.google.dev/gemini-api/docs/speech-generation">Voice examples and requirements</a>.</p><figure class="guide-figure"><a href="images/guides/tts-settings-gemini.png"><img src="images/guides/tts-settings-gemini.png" alt="Actual SSN Gemini provider settings" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="tts-settings" id="settings-fish"><summary>Fish Audio</summary>
+<p>Select <strong>Fish Audio</strong> in the TTS provider menu for the chat dock, featured overlay, TTS page, or Flow Actions. Enter your own <a href="https://fish.audio/app/api-keys">Fish Audio API key</a>, then use the existing Test TTS button. An optional Voice ID selects a voice from <a href="https://fish.audio/">Fish Audio</a>; copy the voice model ID, not its name or page URL. Leave it empty to use the service's default voice.</p>
+<p>Advanced options include the model and speaking rate (0.5&ndash;2). SSN defaults to <code>s2.1-pro-free</code>; free-tier availability and fair-use terms are controlled by Fish Audio. Paid models require account credit. SSN does not retry a failed free request with a paid model. Use More TTS options for viewer volume. Text is sent to Fish Audio, and language is detected by the service.</p>
+<p><strong>OBS / browser setup:</strong> Run SSN's existing <a href="../local-tts-bridge/README.md#fish-audio-for-obs">local TTS bridge in Fish mode</a> on the OBS computer. Set its <code>SSN_TTS_TARGET_BEARER</code> environment variable to your Fish API key and start <code>node scripts/local-tts-bridge.cjs --mode fish</code>. In the Fish Audio panel, set <strong>OBS / browser bridge URL</strong> to <code>http://127.0.0.1:8124/v1/audio/speech</code>; the popup API Key field can stay empty. Leave the bridge running, test the voice, and use the generated overlay URL in OBS. Enable Control audio via OBS in the Browser Source settings if you want its audio in the OBS mixer. Direct Fish requests from hosted browser pages lack CORS permission; the bridge provides the browser-accessible audio response.</p>
+<p>With the bridge, add <code>&amp;fishendpoint=http%3A%2F%2F127.0.0.1%3A8124%2Fv1%2Faudio%2Fspeech</code> to the URL and omit <code>fishkey</code> when the bridge holds the key.</p>
+<p>URL parameters: <code>&amp;ttsprovider=fish&amp;fishkey=YOUR_KEY&amp;voicefish=VOICE_ID&amp;fishmodel=s2.1-pro-free&amp;fishspeed=1</code>. Enable TTS using the usual controls. Keep generated URLs containing your key private. Event Flow's existing Speak Text voice override accepts a Fish voice ID when the receiving page uses Fish Audio.</p>
+<p><a href="https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech">Fish Audio API reference</a> &middot; <a href="https://fish.audio/blog/s2-1-pro-free-api/">Free model announcement and terms</a></p>
+</details>
+<details class="tts-settings" id="settings-speechify"><summary>Speechify</summary><p><a href="speechify-setup-guide.html"><strong>Speechify step-by-step guide: API key, voices, speed, and viewer volume.</strong></a></p><p>Enter the API key and voice ID from your Speechify API account. <a href="https://docs.speechify.ai/docs/get-started/overview">Provider setup</a>.</p><figure class="guide-figure"><a href="images/guides/tts-settings-speechify.png"><img src="images/guides/tts-settings-speechify.png" alt="Actual SSN Speechify provider settings" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="tts-settings" id="settings-openai"><summary>OpenAI</summary><p>Choose a supported voice/model and enter an API key. A ChatGPT subscription does not supply API credits. Keep the default endpoint for OpenAI.</p><figure class="guide-figure"><a href="images/guides/tts-settings-openai.png"><img src="images/guides/tts-settings-openai.png" alt="Actual SSN OpenAI provider settings" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="tts-settings" id="settings-customtts"><summary>Custom / Local TTS</summary><p>This option reuses the OpenAI-compatible controls, so the heading still says OpenAI. Enter your server endpoint and its supported voice/model; authentication depends on your server. See the <a href="local-tts.html">local server guide</a>.</p><figure class="guide-figure"><a href="images/guides/tts-settings-customtts.png"><img src="images/guides/tts-settings-customtts.png" alt="Actual SSN Custom / Local TTS provider settings" class="guide-image" loading="lazy"></a></figure>
+</details>
+</details>
+            </div>
+
+            <div class="guide-card"><details class="tts-settings"><summary>Advanced: edit a TTS URL manually</summary>
+                <p>Good first tests:</p>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=kokoro</pre>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=piper</pre>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=kitten</pre>
+                <p>For Portuguese or Spanish, start with one of these instead:</p>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=pt-BR&amp;ttsprovider=piper&amp;pipervoice=pt_BR-faber-medium</pre>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=pt-BR&amp;ttsprovider=espeak&amp;espeakvoice=pt-br</pre>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=es-ES&amp;ttsprovider=piper&amp;pipervoice=es_ES-davefx-medium</pre>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=es-ES&amp;ttsprovider=espeak&amp;espeakvoice=es</pre>
+                <p><a href="tts.html">Full TTS reference</a> · <a href="local-tts.html">Local TTS server guide</a></p></details></div>
+
+            <div class="guide-card">
+                <details class="tts-settings" id="local-server"><summary>Advanced: run your own local TTS server</summary>
+                <p>A local TTS server is useful when you want private voices, a specific voice model, or a server such as Kokoro-FastAPI or openedai-speech. The page that plays TTS must be able to reach the endpoint.</p>
+                <figure class="guide-figure">
+                    <img src="images/local-tts/tts-bridge-flow.png" alt="Diagram showing OBS Browser Source sending TTS requests through the Social Stream Ninja local TTS bridge to a TTS server" class="guide-image">
+                    <figcaption>For OBS, the local bridge usually works best when it runs on the same computer as OBS.</figcaption>
+                </figure>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&amp;voiceopenai=af_bella</pre>
+                <p><code>localhost</code> means the computer running the page. If your TTS server is on another computer, use that computer's LAN IP or run the bridge on the OBS computer.</p>
+            </details>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+        function revealGuideSection() {
+            var target;
+            try { target = document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) { return; }
+            if (!target) return;
+            for (var node = target; node; node = node.parentElement) {
+                if (node.tagName === "DETAILS") node.open = true;
+            }
+            target.scrollIntoView();
+        }
+        window.addEventListener("hashchange", revealGuideSection);
+        revealGuideSection();
+    </script>
+</body>
+</html>

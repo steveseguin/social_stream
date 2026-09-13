@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><head>
+    <meta name="robots" content="noindex"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tug of War · Social Stream Ninja</title><link rel="icon" href="../favicon.ico"><link rel="stylesheet" href="audience.css"><link rel="stylesheet" href="tugofwar.css"></head>
+<body data-game="tug"><main class="shell tug-shell">
+<header class="masthead"><span class="brand">SSN / Play together</span><span id="connection" class="status" role="status">Waiting for chat</span></header>
+<div class="topline"><div><p class="eyebrow">A little friendly rivalry</p><h1>Tug of War</h1></div><div class="clock"><span id="clock-value">180s</span><small id="clock-label">Join both teams to start</small></div></div>
+<p id="result" class="result" role="status" hidden></p>
+<section class="tug-board" aria-label="Team tug of war">
+<div class="tug-teams"><div class="team-0"><span class="eyebrow">Left side</span><h2>Team Coral</h2><span id="team-count-0">0 players</span> <b id="team-pulls-0">0 tugs</b></div><div class="team-1"><span class="eyebrow">Right side</span><h2>Team Mint</h2><span id="team-count-1">0 players</span> <b id="team-pulls-1">0 tugs</b></div></div>
+<div class="prompt-card"><div class="prompt-top"><span id="prompt-kind">Join the game</span><span id="prompt-clock">Waiting for both teams</span></div><div id="tug-prompt" aria-live="polite">Two teams. One rope.</div></div>
+<div id="arena" class="arena" style="--pull:0%">
+<div class="center-line" aria-hidden="true"></div><div class="win-line left-line" aria-hidden="true"></div><div class="win-line right-line" aria-hidden="true"></div>
+<div class="rope-party" aria-hidden="true"><div class="rope"></div><div class="rope-flag"></div>
+<svg class="monster coral" viewBox="0 0 160 170"><path class="limb" d="M50 135 30 156M108 135 128 156"/><path class="horn" d="M35 55 22 18 58 39M105 38 138 18 124 61"/><path class="fur" d="M28 74C20 15 133 17 132 74L143 127Q145 151 113 150H46Q13 150 18 122Z"/><ellipse cx="79" cy="80" rx="34" ry="32" fill="#fff5e4"/><ellipse cx="90" cy="82" rx="13" ry="20" fill="#263041"/><circle cx="95" cy="75" r="5" fill="white"/><path d="M62 120q18 13 35-2" fill="none" stroke="#743b45" stroke-width="6" stroke-linecap="round"/><path class="limb" d="M115 109 155 105"/><path d="m72 126 8 10 6-10" fill="#fff5e4"/></svg>
+<svg class="monster mint" viewBox="0 0 160 170"><path class="limb" d="M50 135 30 156M108 135 128 156"/><path class="horn" d="M35 55 22 18 58 39M105 38 138 18 124 61"/><path class="fur" d="M28 74C20 15 133 17 132 74L143 127Q145 151 113 150H46Q13 150 18 122Z"/><ellipse cx="79" cy="80" rx="34" ry="32" fill="#fff5e4"/><ellipse cx="90" cy="82" rx="13" ry="20" fill="#263041"/><circle cx="95" cy="75" r="5" fill="white"/><path d="M62 120q18 13 35-2" fill="none" stroke="#2d716b" stroke-width="6" stroke-linecap="round"/><path class="limb" d="M115 109 155 105"/><path d="m72 126 8 10 6-10" fill="#fff5e4"/></svg>
+</div><div class="ground" aria-hidden="true"></div></div>
+<div id="tug-progress" class="tug-balance" role="meter" aria-label="Rope position" aria-valuemin="-20" aria-valuemax="20" aria-valuenow="0"><span>← Coral</span><strong id="balance">Even footing</strong><span>Mint →</span></div>
+<div class="tug-rosters"><ul id="team-roster-0" class="team-0" aria-label="Coral teammates"></ul><ul id="team-roster-1" class="team-1" aria-label="Mint teammates"></ul></div>
+</section>
+<div class="tug-meta"><span id="round">Match 1</span><span><b id="participants">0</b> players · 20 net tugs to win</span></div>
+<div id="history" class="tug-feed" aria-live="polite"></div>
+<div class="footer"><div><p class="command">Type <code>!join</code>, then answer the prompt in chat.</p><p class="hint">Teams are assigned evenly. One correct answer per person per prompt = one tug. New prompt every 12 seconds. After 3 minutes, the leading side wins.</p></div><div id="host-controls" class="controls"><button id="pause" type="button">Pause</button><button id="next" type="button" hidden>Next match</button><button id="restart" type="button">New game</button></div></div>
+<a class="guide-link" href="../docs/chat-games.html#tug-of-war">Setup &amp; rules</a>
+</main><script src="tug-engine.js"></script><script src="tug-view.js"></script><script src="audience-page.js"></script></body></html>

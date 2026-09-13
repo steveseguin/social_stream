@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Multiple channels and separate overlays - Social Stream Ninja</title>
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/guides.css">
+	<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Read all your chats in one Dock while choosing which platforms appear in each audience overlay.">
+<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="css/workflow-guides.css">
+</head>
+<body class="workflow-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation">
+<a href="../index.html">Home</a>
+<a href="../docs/features.html">Features</a>
+<a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a>
+<a href="../docs/download.html">Download</a>
+<a href="../docs/guides.html">Guides</a>
+<a href="../docs/commands.html">Commands &amp; API</a>
+<a href="../docs/supported-sites.html">Supported Sites</a>
+<a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a>
+<a href="../docs/services.html" class="site-priority-hire">Hire</a>
+<a href="../docs/support.html">Support</a>
+</nav>
+<div class="site-actions">
+<button class="site-theme" type="button" aria-label="Switch theme">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>Multiple channels and separate overlays</h1>
+<p>Read all your chats in one Dock while choosing which platforms appear in each audience overlay.</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="On this page">
+<a href="guides.html">All guides</a>
+<a href="#setup">1. Combine capture in one session</a>
+<a href="#rolling">2. Split rolling chat by platform</a>
+<a href="#featured">3. Split selected messages</a>
+<a href="#channels">4. Two channels on the same platform</a>
+<a href="#check">5. Verify each audience view</a>
+<a href="#combine">6. Chat and alerts in one browser tab</a>
+</nav>
+<section class="guide-card" id="setup">
+<h2>1. Combine capture in one session</h2>
+<p>Add the intended source chats in SSN and confirm one fresh message from each reaches the same unfiltered <strong>Streaming Chat Dock</strong>. Keep that Dock as your operator view.</p>
+<p>Copy generated links so their session, password, version, and server settings remain intact. Add each audience view as a separate OBS Browser Source. Give OBS sources descriptive names such as <strong>Twitch chat</strong> and <strong>YouTube chat</strong>.</p>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>Capture</strong>
+<span>Twitch + YouTube</span>
+</li>
+<li>
+<strong>One SSN session</strong>
+<span>Operator Dock sees both</span>
+</li>
+<li>
+<strong>OBS views</strong>
+<span>Twitch-only and YouTube-only</span>
+</li>
+</ol>
+<figcaption>One captured feed can supply several differently filtered views.</figcaption>
+</figure>
+</section>
+<section class="guide-card" id="rolling">
+<h2>2. Split rolling chat by platform</h2>
+<p>For rolling chat, make two copies of your generated <code>dock.html</code> URL. Append these options to the respective copies:</p>
+<table class="guide-table guide-table-stack">
+<thead>
+<tr>
+<th scope="col">Audience view</th>
+<th scope="col">Append to its Dock URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td data-label="Audience view">Twitch chat</td>
+<td data-label="Append to its Dock URL">
+<code>&amp;onlyfrom=twitch&amp;hidemenu</code>
+</td>
+</tr>
+<tr>
+<td data-label="Audience view">YouTube chat</td>
+<td data-label="Append to its Dock URL">
+<code>&amp;onlyfrom=youtube&amp;hidemenu</code>
+</td>
+</tr>
+<tr>
+<td data-label="Audience view">Twitch and YouTube together</td>
+<td data-label="Append to its Dock URL">
+<code>&amp;onlyfrom=twitch,youtube&amp;hidemenu</code>
+</td>
+</tr>
+<tr>
+<td data-label="Audience view">Everything except Discord</td>
+<td data-label="Append to its Dock URL">
+<code>&amp;hidefrom=discord&amp;hidemenu</code>
+</td>
+</tr>
+</tbody>
+</table>
+<p>For example, with a default connection:</p>
+<pre>
+<code>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;onlyfrom=twitch&amp;hidemenu</code>
+</pre>
+<p>Use <strong>onlyfrom</strong> and <strong>hidefrom</strong> for these pages. Do not assume an option such as <code>onlytype</code> from another overlay works here. Use <code>youtubeshorts</code> separately when the capture reports that type. See <a href="source-types-guide.html">Source types</a>.</p>
+</section>
+<section class="guide-card" id="featured">
+<h2>3. Split selected messages</h2>
+<p>For selected rather than rolling chat, duplicate your generated <code>featured.html</code> link and add <code>&amp;onlyfrom=twitch</code> to one copy and <code>&amp;onlyfrom=youtube</code> to the other. Keep the operator Dock open to select messages.</p>
+<p>The current Featured Chat <code>onlyfrom</code> accepts one source type. The Dock’s comma-separated example above should not be copied into that field on Featured Chat.</p>
+<div class="guide-note">This filters which selections a featured page accepts. It does not create independent operator queues, and a rejected selection is not a clear command. Clear the featured message explicitly when switching segments so an older accepted selection is not left visible.</div>
+</section>
+<section class="guide-card" id="channels">
+<h2>4. Two channels on the same platform</h2>
+<p>
+<code>onlyfrom=twitch</code> selects Twitch as a platform, not a particular Twitch channel. Channel names and stream titles are metadata, not interchangeable URL filter names. Add <code>&amp;showchannelname</code> to show channel names when supplied by the source.</p>
+<p>For advanced Dock filtering, <code>&amp;filtertid=123</code> accepts the numeric originating tab ID; comma-separated IDs are supported. Inspect an actual captured payload to obtain its <code>tid</code> (see <a href="event-reference.html">Event reference</a> and <a href="commands.html">Commands &amp; API</a>). Do not use a platform channel ID here. Tab IDs can change when sources reopen, and sources without a matching tab ID may be excluded. This is a Dock option, not a general Featured Chat channel filter.</p>
+<p>For fully independent productions, use separate capture instances/profiles with distinct sessions and open only each production’s intended sources there. Giving one overlay a different session without matching capture will leave it idle. An overlay’s <code>label</code> identifies a page for routing; it is not a channel filter.</p>
+</section>
+<section class="guide-card" id="check">
+<h2>5. Verify each audience view</h2>
+<ol class="guide-steps">
+<li>Send a fictional Twitch test message and a fictional YouTube test message into an isolated session using <a href="test-message-guide.html">Create test messages</a>.</li>
+<li>Confirm both appear in the operator Dock, and each rolling overlay shows only its intended source.</li>
+<li>Feature each message and test the clear button. Check all visible featured pages after switching platforms.</li>
+<li>Repeat with a real message from each of your own connected sources, since synthetic messages cannot establish actual source-tab IDs.</li>
+</ol>
+<p>If a view is blank, remove its filter temporarily. If chat returns, check the exact source type or tab ID. If it remains blank, use <a href="sessions-passwords-relay-modes.html">session and routing troubleshooting</a>. Changing an OBS source’s name does not update its saved URL.</p>
+</section>
+<section class="guide-card" id="combine">
+<h2>6. Chat and alerts in one browser tab</h2>
+<p>Use <a href="../combine.html">Combine overlays</a> to layer existing overlay URLs in one tab or one OBS Browser Source. This is useful when reading chat on a phone during an IRL stream.</p>
+<ol class="guide-steps">
+<li>Paste your generated Streaming Chat Dock URL into the bottom layer and your Multi-Stream Alert Box URL into the top layer. Keep the session, password, and connection options in both links.</li>
+<li>Leave <strong>Transparent SSN background</strong> checked. Allow taps and scrolling on the chat layer; leave it unchecked for alerts so they do not block chat interaction.</li>
+<li>Select <strong>Preview</strong>, then <strong>Show QR code</strong> and scan it with your phone’s camera. Or select <strong>Copy combined link</strong> to paste the result into a browser source. The combined view has no setup controls.</li>
+</ol>
+<p>You can add up to eight URLs and use the arrow buttons to move a layer behind or in front of another. Every layer fills the same viewport; this layers pages over each other rather than splitting the screen. Each overlay retains its own layout and settings. Use the editable link to reopen the setup with your URLs filled in. To edit a combined link later, add <code>?edit=1</code> before its <code>#</code>.</p>
+<p>Your links and layer options are saved automatically in this browser, including unfinished setups. Reopen <a href="../combine.html">Combine overlays</a> to continue editing, or select <strong>Clear saved setup</strong> to start over. Browser storage may be unavailable or temporary in private browsing.</p>
+<p>The combined link and QR code contain the complete layout and URLs. Set up on desktop, scan once on mobile, then bookmark the combined view. Opening it also saves that setup in the phone’s browser. Changes on desktop do not automatically update an older link: copy or scan the new link after editing. This feature does not sync settings through your session ID.</p>
+<p>Keep combined links and QR codes as private as the individual overlay links. SSN capture must still be running, and the phone must be able to reach the servers used by the original URLs. A <code>localhost</code> or <code>127.0.0.1</code> address points to the device opening the link. Very long URLs may exceed QR capacity; the combined link can still be copied.</p>
+<h3>If a layer is blank or covers chat</h3>
+<ul class="guide-list">
+<li>Open each original URL separately first. Alerts normally remain empty until an event arrives; combining pages does not capture new events.</li>
+<li>Automatic transparency supports <code>dock.html</code>, <code>featured.html</code>, <code>multi-alerts.html</code>, and <code>minecraft.html</code>. Other pages need their own transparent background settings. Some external sites block embedding entirely.</li>
+<li>A transparent layer can still block taps. Turn off <strong>Allow taps and scrolling</strong> on any layer above the chat that does not need interaction.</li>
+<li>Mobile browsers may require interaction with a page before playing sound. If needed, enable interaction for that layer and tap it; browser autoplay restrictions still apply. Check audio on the actual phone before relying on it.</li>
+</ul>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">Browse all guides</a>
+</p>
+</div>
+</div>
+</footer>
+<script src="js/main.js">
+</script>
+</body>
+</html>
