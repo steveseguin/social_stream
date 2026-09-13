@@ -12278,8 +12278,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		if (!element) {
 			return 'Open matching option';
 		}
-		var preferred = element.querySelector ? element.querySelector('label:not(.switch), h3, h4, h5, button span, a, span') : null;
-		var label = (preferred && preferred.textContent) || element.textContent || element.getAttribute('title') || element.getAttribute('placeholder') || '';
+		// Read the complete row: its first span may be an icon or an empty switch slider.
+		var parts = [];
+		var walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
+		var node;
+		while ((node = walker.nextNode())) {
+			var parent = node.parentElement;
+			if (parent && !shouldSkipPopupSearchText(parent) && !parent.closest('.switch, .popup-control-icon, [aria-hidden="true"]') && !isPopupSearchExplicitlyHidden(parent)) {
+				parts.push(node.nodeValue);
+			}
+		}
+		var label = parts.join(' ').replace(/\s+/g, ' ').trim() || element.getAttribute('aria-label') || element.getAttribute('title') || element.getAttribute('placeholder') || '';
+		if (!label && /^(input|select|textarea)$/i.test(element.tagName || '')) {
+			var controlLabel = element.labels && element.labels[0];
+			var previous = element.previousElementSibling;
+			if (!controlLabel && previous && /^(label|span)$/i.test(previous.tagName) && !isPopupSearchExplicitlyHidden(previous)) {
+				controlLabel = previous;
+			}
+			label = controlLabel ? controlLabel.textContent : normalizePopupSearchText(getPopupSearchTargetKeys(element).split('|')[0]);
+		}
 		label = String(label).replace(/\s+/g, ' ').trim();
 		if (!label) {
 			label = 'Open matching option';
