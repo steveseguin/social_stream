@@ -291,3 +291,118 @@ test('every host route-switch combination respects relay permissions and keeps P
     await c.sendOverlayControlRelay(c.prepareOverlayControl({cmd:'resetpoll'},'poll'),'poll');
     assert.equal(sent.length,0,'disabled extension must not publish controls');
 });
+
+
+test('Featured selections and clears reach the modern theme from the Events publisher endpoint', () => {
+    const c = relayContext(), shown = [], hidden = [];
+    Object.assign(c, {urlParams:new URLSearchParams('server'), roomID:'fixture', pseudodock:false,
+        showMessage:value=>shown.push(value), hideMessage:()=>hidden.push(true)});
+    vm.runInContext(functions('themes/featured-styles/featured-modern.html',['createIframe','processData']),c);
+    c.createIframe(); const receiver=c.sockets[0]; receiver.onopen();
+    const publisher={urlParams:new URLSearchParams('server'), SocialStreamLocalServer:c.SocialStreamLocalServer,
+        WebSocket:{OPEN:1}, log(){}, iframe:null};
+    vm.createContext(publisher);
+    const endpoint = read('events.html').match(/var serverURL = [^;]+;/)[0];
+    vm.runInContext(endpoint,publisher);
+    assert.equal(receiver.url,publisher.serverURL,'Featured must subscribe to the publisher endpoint');
+    publisher.socketserver={readyState:1,send:raw=>{
+        const packet=JSON.parse(raw);
+        if(receiver.url===publisher.serverURL && packet.out===receiver.sent[0].in)receiver.onmessage({data:raw});
+    }};
+    vm.runInContext(functions('events.html',['featureEventMessage','sendViaWebSocketFallback']),publisher);
+    publisher.featureEventMessage({chatname:'Fixture',chatmessage:'Selected'});
+    publisher.featureEventMessage(false);
+    assert.equal(shown.length,1);assert.equal(shown[0].chatmessage,'Selected');assert.equal(hidden.length,1);
+});
+
+test('modern autoshow consumes dock chat, while command-only Featured keeps its iframe', () => {
+    for(const query of ['server&autoshow','server2&autoshow','server3','server3&autoshow']) {
+        const c=relayContext(),shown=[],frames=[];
+        Object.assign(c,{urlParams:new URLSearchParams(query),roomID:'fixture',password:'false',pseudodock:query.includes('autoshow'),
+            showMessage:value=>shown.push(value),hideMessage(){},
+            document:{createElement:()=>({style:{}}),body:{appendChild:el=>frames.push(el)}}});
+        vm.runInContext(functions('themes/featured-styles/featured-modern.html',['createIframe','processData']),c);
+        c.createIframe();
+        if(query.startsWith('server3')) {
+            assert.equal(c.sockets.length,0);assert.equal(frames.length,1);
+            assert(frames[0].src.includes('label='+ (c.pseudodock?'dock':'overlay')));continue;
+        }
+        const socket=c.sockets[0];socket.onopen();assert.equal(frames.length,0);
+        assert.equal(socket.sent[0].in,query.startsWith('server2')?4:1);
+        assert.equal(socket.url,'wss://io.socialstream.ninja/'+(query.startsWith('server2')?'extension':'api'));
+        socket.onmessage({data:JSON.stringify({target:'dock',chatname:'Fixture',chatmessage:'Raw chat'})});
+        assert.equal(shown.length,1);assert.equal(shown[0].chatmessage,'Raw chat');
+        socket.onmessage({data:JSON.stringify({target:'overlay',contents:{chatmessage:'Wrong target'}})});
+        assert.equal(shown.length,1);
+    }
+});
+
+test('legacy relay preserves explicit addresses and ignores server3 without a feed', () => {
+    for(const featured of [true,false])for(const query of ['server3','server3&localserver','server3=ws%3A%2F%2Fcustom.invalid']) {
+        const c=relayContext();
+        assert.equal(c.SocialStreamLocalServer.connectLocalRelay(new URLSearchParams(query),'fixture',()=>{},featured),false);
+        assert.equal(c.sockets.length,0);
+    }
+    for(const query of ['server&localserver&localserverport=4567','server=ws%3A%2F%2Fcustom.invalid&localserver','server2&server3']) {
+        const c=relayContext();
+        assert(c.SocialStreamLocalServer.connectLocalRelay(new URLSearchParams(query),'fixture',()=>{},true));
+        assert.equal(c.sockets[0].url,query.includes('custom')?'ws://custom.invalid':query.includes('localserver')?'ws://127.0.0.1:4567':'wss://io.socialstream.ninja/extension');
+    }
+});
+
+test('Flow Actions joins the appropriate channel-6 publisher with API-only links', () => {
+    for(const [query,url] of [
+        ['server','wss://io.socialstream.ninja/api'],['server2','wss://io.socialstream.ninja/extension'],
+        ['server3','wss://io.socialstream.ninja/extension'],['server&localserver&localserverport=4567','ws://127.0.0.1:4567'],
+        ['server=ws%3A%2F%2Fcustom.invalid&localserver','ws://custom.invalid'],
+        ['server&server2=ws%3A%2F%2Fcustom.invalid','ws://custom.invalid']
+    ]) {
+        const c=relayContext(); c.WebSocket.prototype.addEventListener=function(){};
+        Object.assign(c,{urlParams:new URLSearchParams(query),roomID:'fixture',console:{log(){}},
+            conCon:1,useServerOnlyTransport:()=>true});
+        vm.runInContext(read('actions.html').match(/var serverURL = [^;]+;/)[0],c);
+        vm.runInContext(functions('actions.html',['initializeWithSessionId','setupSocket']),c);
+        c.initializeWithSessionId();const socket=c.sockets[0];socket.onopen();
+        assert.equal(socket.url,url);assert.equal(socket.sent[0].in,6);
+    }
+});
+
+test('Spotify caches normal broadcasts before initializing a newly connected overlay', () => {
+    const broadcasts=[],direct=[];
+    const c={Date,latestSpotifyOverlay:null,sendTargetP2P:packet=>broadcasts.push(packet),
+        ninjaBridge:{isReady:()=>true,send:(packet,uid)=>direct.push({packet,uid})}};
+    vm.runInNewContext(functions('background.js',['sendSpotifyOverlay']),c);
+    c.sendSpotifyOverlay(null);assert.equal(broadcasts.length,0);
+    const payload={title:'Current track'};c.sendSpotifyOverlay(payload);
+    assert.equal(c.latestSpotifyOverlay,payload);assert(payload.receivedAt);assert.equal(broadcasts.length,1);
+    c.sendSpotifyOverlay(c.latestSpotifyOverlay,'new-viewer');
+    assert.equal(direct[0].packet.spotify.title,'Current track');assert.equal(direct[0].uid,'new-viewer');
+});
+
+test('Giveaway Manager preserves popup route flags and uses P2P for extension-only feeds', () => {
+    for(const query of ['server2','server2=ws%3A%2F%2Fcustom.invalid','server2&localserver&localserverport=4567','server3','server2&server3','server','localserver','server=ws%3A%2F%2Fcustom.invalid']) {
+        const elements=new Map(),frames=[];
+        const element=id=>{if(!elements.has(id))elements.set(id,{value:'',addEventListener(type,fn){this[type]=fn;}});return elements.get(id);};
+        element('giveaway').raw='https://socialstream.ninja/giveaway.html?session=fixture&password=secret&'+query;
+        const c=relayContext();
+        Object.assign(c,{URL,location:{href:'https://socialstream.ninja/popup.html'},
+            document:{getElementById:element,querySelectorAll:()=>[],addEventListener:(_,fn)=>fn()},
+            open:url=>{c.opened=url;}});
+        vm.runInContext(read('shared/giveaway/popup.js'),c);element('giveaway-manage').click();
+        const expected=new URLSearchParams('session=fixture&password=secret&'+query),params=new URL(c.opened).searchParams;
+        for(const flag of ['server','server2','server3','localserver','localserverport','password','session']) {
+            assert.equal(params.has(flag),expected.has(flag),query+' '+flag);assert.equal(params.get(flag),expected.get(flag));
+        }
+        Object.assign(c,{location:{search:new URL(c.opened).search},crypto:require('node:crypto').webcrypto,
+            setTimeout:()=>1,clearTimeout(){}});
+        c.document.createElement=()=>({});c.document.body={appendChild:el=>frames.push(el)};
+        vm.runInContext(read('shared/giveaway/control.js'),c);
+        const api=params.has('server')||query==='localserver';
+        assert.equal(c.sockets.length,api?1:0,query);assert.equal(frames.length,api?0:1,query);
+        if(api) {
+            const socket=c.sockets[0];socket.onopen();
+            assert.equal(socket.sent[0].out,1);assert.equal(socket.sent[0].in,2);
+            assert.equal(socket.url,params.get('server')||(query==='localserver'?'ws://127.0.0.1:3000':'wss://io.socialstream.ninja/api'));
+        } else assert(frames[0].src.includes('label=giveaway'));
+    }
+});

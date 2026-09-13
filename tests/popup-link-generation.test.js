@@ -25,11 +25,13 @@ for (const flag of ["server", "server2", "server3"]) {
     assert.strictEqual(SocialStreamLocalServer.getRelayUrl(params, flag, "wss://example.test/api"), "ws://192.0.2.1:32124/relay");
   }
 }
-for (const query of ["", "server2", "server3", "localserver", "localserver&server3"]) {
+for (const query of ["", "server3", "localserver", "localserver&server3"]) {
   assert.strictEqual(SocialStreamLocalServer.getChatRelayConfig(new URLSearchParams(query)).enabled, false, query);
 }
 assert.deepStrictEqual(SocialStreamLocalServer.getChatRelayConfig(new URLSearchParams("server&server2")),
-  { enabled: true, url: "wss://io.socialstream.ninja", out: 2, in: 1 });
+  { enabled: true, url: "wss://io.socialstream.ninja/extension", out: 3, in: 4 });
+assert.deepStrictEqual(SocialStreamLocalServer.getChatRelayConfig(new URLSearchParams("server2")),
+  { enabled: true, url: "wss://io.socialstream.ninja/extension", out: 3, in: 4 });
 assert.deepStrictEqual(SocialStreamLocalServer.getChatRelayConfig(new URLSearchParams("localserver&localserverport=32123&server2")),
   { enabled: true, url: "ws://127.0.0.1:32123", out: 3, in: 4 });
 assert.deepStrictEqual(SocialStreamLocalServer.getChatRelayConfig(new URLSearchParams("localserver&localserverport=32123&server&server2")),
@@ -38,9 +40,9 @@ assert.deepStrictEqual(SocialStreamLocalServer.getChatRelayConfig(new URLSearchP
   { enabled: true, url: "ws://192.0.2.1:32124/relay", out: 2, in: 1 });
 assert.deepStrictEqual(SocialStreamLocalServer.getChatRelayConfig(new URLSearchParams("localserver&localserverport=32123&server2=ws://192.0.2.1:32124/relay")),
   { enabled: true, url: "ws://192.0.2.1:32124/relay", out: 3, in: 4 });
-for (const query of ["", "server", "server2", "server3", "localserver"]) {
+for (const query of ["", "server3", "localserver"]) {
   assert.strictEqual(SocialStreamLocalServer.connectLocalRelay(new URLSearchParams(query), "test", () => {}), false,
-    "Legacy pages must retain their existing bridge outside an explicit local relay route");
+    "Legacy pages must retain their existing bridge without a supported chat feed");
 }
 for (const invalidPort of ["", "80", "1023", "65536", "3000/path", "3000@example.com", "3.5", "port"]) {
   assert.strictEqual(SocialStreamLocalServer.normalizeExplicitPort(invalidPort), null, `accepted invalid port: ${invalidPort}`);

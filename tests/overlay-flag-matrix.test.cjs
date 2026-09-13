@@ -72,8 +72,8 @@ function expected(entry,p){
   return key?{input:7,output:key==='server'?1:3,url:custom(key)||(key==='server'?'wss://io.socialstream.ninja/api':'wss://io.socialstream.ninja/extension')}:null;
  }
  const key=p.has('server')?'server':p.has('server2')?'server2':p.has('server3')?'server3':null;
- if(!key || entry.family==='legacy-chat'&&key==='server3')return null;
- return {input:entry.family==='featured'?(key==='server'?2:key==='server2'?4:1):(key==='server'?1:4),output:3,url:custom(key)||(key==='server'?'wss://io.socialstream.ninja/api':'wss://io.socialstream.ninja/extension')};
+ if(!key || key==='server3')return null;
+ return {input:entry.family==='featured'?(key==='server'?2:4):(key==='server'?1:4),output:3,url:custom(key)||(key==='server'?(entry.family==='featured'?'wss://io.socialstream.ninja':'wss://io.socialstream.ninja/api'):'wss://io.socialstream.ninja/extension')};
 }
 const report={output,cases:[],failures:[]};
 async function runCase(context,base,entry,mode,index){

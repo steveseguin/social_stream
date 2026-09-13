@@ -52,13 +52,9 @@
             var raw=document.getElementById('giveaway').raw;
             if(raw){try{
                 var source=new URL(raw);
-                ['session','password','localserver','localserverport'].forEach(function(key){
+                ['session','password','localserver','localserverport','server','server2','server3'].forEach(function(key){
                     if(source.searchParams.has(key))url.searchParams.set(key,source.searchParams.get(key));
                 });
-                if(['localserver','server','server2','server3'].some(function(key){return source.searchParams.has(key);})) {
-                    var relay=source.searchParams.get('server') || source.searchParams.get('server2') || source.searchParams.get('server3') || '';
-                    url.searchParams.set('server',relay);
-                }
             }catch(_) {}}
             window.open(url.href,'_blank','noopener');
         });

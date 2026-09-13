@@ -3,7 +3,8 @@
     var params = new URLSearchParams(location.search), field = document.getElementById('giveaway'), status = document.getElementById('status');
     field.value = params.get('giveaway') || 'default';
     var native = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage, bridge, peer, pending = new Map(), state = null, history = [], entryPage = 1;
-    var relayMode = params.has('localserver') || params.has('server') || params.has('server2') || params.has('server3'), socket, retry, refreshRetry, stopped = false;
+    // Extension feeds do not return manager command replies; keep their P2P bridge.
+    var relayMode = params.has('server') || (params.has('localserver') && !params.has('server2') && !params.has('server3')), socket, retry, refreshRetry, stopped = false;
     function id() { return Date.now().toString(36) + '-' + Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-'); }
     function call(action, value) {
         return new Promise(function (resolve, reject) {
@@ -125,7 +126,7 @@
         }
         function connect() {
             if (stopped) return;
-            try { socket = new WebSocket(SocialStreamLocalServer.getRelayUrl(params, params.has('server') ? 'server' : params.has('server2') ? 'server2' : 'server3', 'wss://io.socialstream.ninja/api')); }
+            try { socket = new WebSocket(SocialStreamLocalServer.getRelayUrl(params, 'server', 'wss://io.socialstream.ninja/api')); }
             catch (error) { status.textContent = 'Invalid relay address.'; return; }
             socket.onopen = function () {
                 socket.send(JSON.stringify({ join: params.get('session').split(',')[0], out: 1, in: 2 }));
