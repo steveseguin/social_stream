@@ -5,6 +5,8 @@ Protocol: `ssn-remote-control` version `2`
 
 This contract covers capability-driven remote control of Social Stream and the approved SSApp source subset. Existing unversioned HTTP, WebSocket, Dock, StreamDeck, and Companion commands remain supported.
 
+Hosts with named Event Flow support advertise `getWorkflowTriggers` and `triggerWorkflow` as background-owned SSN actions. See the [workflow guide](streamdeck-event-flow.html) for setup, value schemas, discovery, extra data and acceptance semantics. These commands use the existing protocol version; capability discovery determines whether the loaded host supports them.
+
 ## Request shape
 
 Version 2 clients send a unique `get` value with every command or query:

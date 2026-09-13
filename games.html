@@ -506,15 +506,12 @@
             return false;
         }
         function processData(data) {
+            if (data && data.content) data = data.content;
             if (isDuplicateTransportDelivery(data)) {
                 return;
             }
             if (!gameState.isActive) return;
             
-            // Handle different data formats from Social Stream
-            if (data && data.content) {
-                data = data.content;
-            }
             
             if (!data || !data.chatmessage || !data.chatname) return;
             
@@ -652,20 +649,32 @@
         // Handle WebSocket connection if server parameters are provided
         if (!urlParams.has('demo') && urlParams.has('server')) {
             const serverURL = urlParams.get('server') || (urlParams.has('localserver') ? SocialStreamLocalServer.getWebSocketUrl() : 'wss://io.socialstream.ninja');
-            const socketserver = new WebSocket(serverURL);
-            socketserver.onopen = function() {
-                socketserver.send(JSON.stringify({ join: sessionId.split(",")[0], out: 2, in: 1 }));
-            };
-            socketserver.onmessage = function(event) {
-                if (!event.data) return;
-                try { processData(JSON.parse(event.data)); } catch (e) {}
-            };
+            let socketserver, retry, closed = false;
+            function connectServer() {
+                if (closed) return;
+                socketserver = new WebSocket(serverURL);
+                socketserver.onopen = function() {
+                    socketserver.send(JSON.stringify({ join: sessionId.split(",")[0], out: 2, in: 1 }));
+                };
+                socketserver.onmessage = function(event) {
+                    if (!event.data) return;
+                    try { processData(JSON.parse(event.data)); } catch (e) {}
+                };
+                socketserver.onerror = function() { socketserver.close(); };
+                socketserver.onclose = function() {
+                    if (!closed) { clearTimeout(retry); retry = setTimeout(connectServer, 5000); }
+                };
+            }
+            window.addEventListener('beforeunload', function() {
+                closed = true; clearTimeout(retry); if (socketserver) socketserver.close();
+            });
+            connectServer();
         }
 
         // Optional: Extension relay via server2/server3
         (function setupExtensionSocket(){
             if (urlParams.has('demo') || !(urlParams.has('server2') || urlParams.has('server3'))) return;
-            const serverURL = urlParams.has('server2') ? (urlParams.get('server2') || 'wss://io.socialstream.ninja/extension') : (urlParams.get('server3') || 'wss://io.socialstream.ninja/extension');
+            const serverURL = urlParams.has('server2') ? (SocialStreamLocalServer.getRelayUrl(urlParams, 'server2', 'wss://io.socialstream.ninja/extension')) : (SocialStreamLocalServer.getRelayUrl(urlParams, 'server3', 'wss://io.socialstream.ninja/extension'));
             let socket = null; let attempts = 1;
             function connect(){
                 if (socket){ socket.onclose=null; try{socket.close();}catch(e){} }

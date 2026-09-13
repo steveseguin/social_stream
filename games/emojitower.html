@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emoji Tower - Social Stream Ninja</title>
@@ -254,6 +255,7 @@
     
     // URL parameters
     const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
     const sessionId = urlParams.get('session') || 'test';
     const password = urlParams.get('password') || 'false';
     
@@ -369,7 +371,7 @@
         return tmp.textContent || tmp.innerText || '';
     }
 
-    function dropEmoji(username) {
+    function dropEmoji(username, playerKey = username) {
         if (dropCooldown) {
             sendResponse(`@${username}, wait a moment before dropping!`);
             return;
@@ -386,11 +388,12 @@
         towerBlocks.push(block);
         
         // Update contributor stats
-        contributors.set(username, (contributors.get(username) || 0) + 1);
+        const prior = contributors.get(playerKey);
+        contributors.set(playerKey, {name: username, count: (prior ? prior.count : 0) + 1});
         updateContributors();
         
         // Check for combo
-        if (username === lastDropper) {
+        if (playerKey === lastDropper) {
             combo++;
             if (combo > 1) {
                 showCombo(combo);
@@ -398,7 +401,7 @@
         } else {
             combo = 0;
         }
-        lastDropper = username;
+        lastDropper = playerKey;
         
         // Set cooldown
         dropCooldown = true;
@@ -495,10 +498,11 @@
         list.innerHTML = '';
         
         const sorted = Array.from(contributors.entries())
-            .sort((a, b) => b[1] - a[1])
+            .sort((a, b) => b[1].count - a[1].count)
             .slice(0, 5);
         
-        sorted.forEach(([username, blocks]) => {
+        sorted.forEach(([, player]) => {
+            const username = player.name, blocks = player.count;
             const div = document.createElement('div');
             div.className = 'contributor-entry';
             div.innerHTML = `
@@ -564,7 +568,7 @@
         const message = rawMessage.trim().toLowerCase();
 
         if (message === '!drop') {
-            dropEmoji(stripHtml(data.chatname));
+            dropEmoji(data.chatname, JSON.stringify([data.type || '', String(data.userid || data.username || data.chatname)]));
         }
     }
     
@@ -577,7 +581,7 @@
     gameLoop();
     
     // Setup iframe communication
-    if (!urlParams.has('demo') && !urlParams.has('server')) {
+    if (!urlParams.has('demo') && !chatRelay.enabled) {
     const iframe = document.createElement("iframe");
     iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
     iframe.style.width = "0px";
@@ -601,8 +605,8 @@
     }
 
     // Handle WebSocket if server parameter provided
-    if (!urlParams.has('demo') && urlParams.has('server')) {
-        const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
+    if (!urlParams.has('demo') && chatRelay.enabled) {
+        const serverUrl = chatRelay.url;
         let socketserver = null;
         let reconnectTimeout = null;
 
@@ -612,8 +616,7 @@
             socketserver.onopen = function() {
                 socketserver.send(JSON.stringify({
                     join: sessionId.split(",")[0],
-                    out: 2,
-                    in: 1
+                    out: chatRelay.out, in: chatRelay.in
                 }));
             };
 

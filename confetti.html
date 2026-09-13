@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
+  <script src="./shared/overlay-control-transport.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Confetti Celebration</title>
@@ -214,7 +215,9 @@
 			document.documentElement.style.setProperty("--background-color", "#0000", "important");
 		}
 		
+        SSNOverlayControl.connect(urlParams, roomID, 'waitlist', processInput);
 		function processInput(data){
+            if (!SSNOverlayControl.accept(data, 'waitlist')) return;
 			if ("drawmode" in data){
 				drawmode = data.drawmode || false;
 			}

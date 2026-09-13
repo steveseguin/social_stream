@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Combine overlays — Social Stream Ninja</title>
+  <meta name="description" content="Layer chat and alerts in one browser tab or browser source. Paste your overlay links and copy one combined link.">
+  <link rel="icon" href="icons/favicon.ico">
+  <style>
+    :root { color-scheme: light; --page: #f3f5f9; --card: #fff; --text: #15181f; --muted: #566173; --border: #cdd4e0; --accent: #6930cc; --error: #b42318; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; font-family: system-ui, "Segoe UI", sans-serif; background: transparent; color: var(--text); }
+    [hidden] { display: none !important; }
+    body.editing { background: var(--page); }
+    a { color: var(--accent); }
+    button, input, textarea { font: inherit; }
+    button, .button { min-height: 44px; padding: 10px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); cursor: pointer; text-decoration: none; text-align: center; }
+    button:hover, .button:hover { border-color: var(--accent); }
+    button:disabled { opacity: .45; cursor: default; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 650; }
+    #editor { max-width: 1120px; margin: auto; padding: 28px 24px 48px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 15px; }
+    .brand img { width: 30px; height: 30px; }
+    h1 { margin: 28px 0 8px; font-size: clamp(28px, 4vw, 38px); letter-spacing: -.035em; }
+    h2 { margin: 0; font-size: 19px; }
+    p { line-height: 1.5; }
+    .intro { margin: 0 0 26px; color: var(--muted); }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+    .section-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .hint { color: var(--muted); font-size: 14px; margin: 8px 0 16px; line-height: 1.5; }
+    #layers { list-style: none; padding: 0; margin: 0; }
+    .layer { padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); margin-bottom: 12px; }
+    .layer-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .layer-title { font-weight: 650; }
+    .layer-tools { display: flex; gap: 6px; }
+    .layer-tools button { padding: 7px 11px; font-size: 14px; }
+    .url-label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; }
+    .url-input, textarea { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 11px; background: var(--card); color: var(--text); }
+    .url-input[aria-invalid="true"] { border-color: var(--error); }
+    .layer-options { display: grid; gap: 4px; margin-top: 10px; }
+    .layer-options label { display: flex; gap: 9px; align-items: center; min-height: 38px; font-size: 14px; cursor: pointer; }
+    input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    #status { min-height: 24px; margin-bottom: 8px; overflow-wrap: anywhere; }
+    #status.error { color: var(--error); }
+    #link-panel { margin-top: 18px; }
+    #combined-url { min-height: 88px; resize: vertical; font-size: 14px; }
+    #qr-panel { margin-top: 18px; }
+    #qr-code { display: inline-block; background: #fff; line-height: 0; max-width: 100%; }
+    #qr-code canvas { display: block; max-width: 100%; height: auto; image-rendering: pixelated; }
+    .saved-setup { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 16px; }
+    .saved-setup .hint { margin: 0; }
+    #clear-saved { font-size: 14px; }
+    #preview { height: 520px; position: relative; overflow: hidden; border: 1px solid #3b4250; border-radius: 12px; background: #14161d; }
+    #preview-empty { color: #bfc7d6; text-align: center; padding: 30px; position: absolute; inset: 0; display: grid; place-content: center; line-height: 1.6; }
+    #preview-stage { position: absolute; inset: 0; }
+    .overlay-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; color-scheme: normal; }
+    html.viewing { color-scheme: normal; }
+    .overlay-frame.pass-through { pointer-events: none; }
+    #output { position: fixed; inset: 0; overflow: hidden; background: transparent; }
+    .guide-link { margin-top: 28px; font-size: 14px; }
+    @media (max-width: 760px) {
+      #editor { padding: 20px 16px 32px; }
+      .workspace { grid-template-columns: minmax(0, 1fr); }
+      #preview { height: 480px; }
+      .actions > * { flex: 1; }
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { color-scheme: dark; --page: #14161d; --card: #1b1e27; --text: #e9edf5; --muted: #afb9c9; --border: #444d5e; --accent: #b49aff; --error: #ffaba4; }
+      .primary { color: #1b1233; }
+    }
+  </style>
+  <script src="thirdparty/pako.min.js" defer></script>
+  <script src="thirdparty/qrcode.min.js" defer></script>
+  <script src="combine.js" defer></script>
+</head>
+<body>
+  <main id="editor" hidden>
+    <div class="brand"><img src="icons/logo.svg" alt="">Social Stream Ninja</div>
+    <h1>Combine overlays</h1>
+    <p class="intro">Chat and alerts in one tab. Paste your existing links, then copy one combined link.</p>
+    <div class="workspace">
+      <section aria-labelledby="layers-heading">
+        <div class="section-title"><h2 id="layers-heading">Your layers</h2><button id="add-layer" type="button">+ Add URL</button></div>
+        <p class="hint">Bottom layer first. Each URL after it appears on top.</p>
+        <ol id="layers"></ol>
+        <p class="hint">Start with chat below and alerts above. Leave taps off for alerts so you can scroll chat underneath.</p>
+        <div class="saved-setup">
+          <p id="save-status" class="hint" role="status">Links are saved in this browser as you edit.</p>
+          <button id="clear-saved" type="button">Clear saved setup</button>
+        </div>
+        <div class="actions">
+          <button id="copy-link" class="primary" type="button">Copy combined link</button>
+          <button id="show-qr" type="button">Show QR code</button>
+          <button id="preview-button" type="button">Preview</button>
+        </div>
+        <section id="qr-panel" aria-labelledby="qr-heading" hidden>
+          <h2 id="qr-heading">Open on your phone</h2>
+          <p class="hint">Scan with your phone’s camera. All your layers and settings are included.</p>
+          <div id="qr-code" role="img" aria-label="QR code for the combined view"></div>
+          <p id="qr-status" class="hint" role="status"></p>
+        </section>
+        <p id="status" role="status" aria-live="polite"></p>
+        <div id="link-panel" hidden>
+          <label class="url-label" for="combined-url">Combined link</label>
+          <textarea id="combined-url" readonly spellcheck="false"></textarea>
+          <div class="actions">
+            <a id="open-link" class="button" target="_blank" rel="noopener noreferrer">Open combined view</a>
+            <a id="edit-link" class="button" target="_blank" rel="noopener noreferrer">Open editable link</a>
+          </div>
+        </div>
+      </section>
+      <section aria-labelledby="preview-heading">
+        <div class="section-title"><h2 id="preview-heading">Preview</h2></div>
+        <div id="preview">
+          <div id="preview-empty">Your overlays will appear here.<br>Paste your links and select Preview.</div>
+          <div id="preview-stage"></div>
+        </div>
+        <p class="hint">The preview has a dark background. The combined view has no background or setup controls.</p>
+        <p class="hint">Transparency works with Dock, Featured Chat and Multi Alerts. Other pages use their own background settings and must allow embedding.</p>
+      </section>
+    </div>
+    <p class="guide-link"><a href="docs/multiple-overlays-guide.html#combine">Setup and troubleshooting</a></p>
+  </main>
+  <div id="output" hidden></div>
+  <noscript>This page needs JavaScript to combine your overlays.</noscript>
+</body>
+</html>

@@ -1,6 +1,7 @@
 (function () {
     'use strict';
     var params = new URLSearchParams(location.search), mode = document.body.dataset.game;
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(params);
     // Only the explicitly managed Number Hunt variant uses the authoritative host.
     // Other games and legacy Number Hunt keep their existing local behavior.
     if(mode==='number' && params.has('managed')){
@@ -123,14 +124,14 @@
         return; // Demo never opens a session or sends messages.
     }
     if (!session) { status.textContent = 'Add your SSN session link to connect'; return; }
-    if (params.has('server')) {
-        var endpoint = params.get('server') || 'wss://io.socialstream.ninja', socket, retry;
+    if (chatRelay.enabled) {
+        var endpoint = chatRelay.url, socket, retry;
         try { var parsed = new URL(endpoint); if (parsed.protocol !== 'wss:' && parsed.protocol !== 'ws:') throw new Error(); }
         catch (_) { status.textContent = 'Invalid WebSocket address'; return; }
         function connect() {
             status.textContent = 'Connecting to chat…';
             try { socket = new WebSocket(endpoint); } catch (_) { status.textContent = 'Could not open chat connection'; return; }
-            socket.onopen = function () { socket.send(JSON.stringify({ join: session.split(',')[0], out: 2, in: 1 })); status.textContent = 'Relay connected · waiting for chat'; };
+            socket.onopen = function () { socket.send(JSON.stringify({ join: session.split(',')[0], out: chatRelay.out, in: chatRelay.in })); status.textContent = 'Relay connected · waiting for chat'; };
             socket.onmessage = function (event) { if (typeof event.data !== 'string' || event.data.length > 256000) return; try { receive(JSON.parse(event.data)); } catch (_) {} };
             socket.onerror = function () { socket.close(); };
             socket.onclose = function () { status.textContent = 'Reconnecting to chat…'; clearTimeout(retry); retry = setTimeout(connect, 5000); };

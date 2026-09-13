@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="./js/local-server-url.js"></script>
+    <script src="./shared/overlay-control-transport.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stable Word Cloud Overlay - Social Stream Ninja</title>
@@ -361,6 +363,7 @@
 		}
 
         function processData(data) {
+            if (!SSNOverlayControl.accept(data, 'wordcloud')) return;
             if (data.content) {
                 data = data.content;
             }
@@ -417,6 +420,7 @@
 
         // Initialize everything
         initializeWordCloud();
+        SSNOverlayControl.connect(urlParams, urlParams.get('session'), 'wordcloud', processData);
         setupIframe();
         window.addEventListener('resize', handleResize);
     })();

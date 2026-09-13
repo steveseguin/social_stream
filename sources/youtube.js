@@ -2601,7 +2601,7 @@
 			return;
 		}
 
-		console.warn("[YouTube] Live chat DOM appears stale while network activity continues; reloading chat popout.", {
+		console.info("[YouTube] Live chat DOM appears stale while network activity continues; reloading chat popout.", {
 			secondsSinceChatActivity: Math.round((now - youtubeLastChatActivityAt) / 1000),
 			staleReloadSeconds: Math.round(staleReloadMs / 1000)
 		});

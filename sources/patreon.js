@@ -54,10 +54,10 @@
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
-						node.src = node.src+"";
-						node.style = "";
-						node.className = "";
-						resp += node.outerHTML;
+						var image = node.cloneNode(false);
+						image.removeAttribute("style");
+						image.removeAttribute("class");
+						resp += image.outerHTML;
 					}
 					// resp += node.outerHTML;
 				}
@@ -70,117 +70,57 @@
 	// settings.textonlymode
 	// settings.captureevents
 	
-	var channelName = "";
-	var messageHistory = [];
-	
-	var lastMg = {};
-	var mxchat = 0;
-	
-	function processMessage(ele){
-		//console.log(ele);
-		if (!ele || !ele.isConnected){return;}
-		
-		if (ele && ele.marked){
-		  return;
-		} else {
-		  ele.marked = true;
-		}
-		
-		if (ele.dataset.knownSize){
-			if (!parseInt(ele.dataset.knownSize)){
-				console.log("no knownSize");
-				return;
-			}
-		}
-		
-		var id = false
-		if (ele.dataset){
-			id = ele.dataset?.index;
-		}
-		
-		if (id!==false){
-			if (messageHistory.includes(id)){
-				return;
-			}
-			messageHistory = messageHistory.slice(-5000);
-			messageHistory.push(id);
-		} else {
+	var chatStates = new Map();
+	var activeState = null;
+	var activeKey = "";
+	var container = null;
+	var observer = null;
+	var scanTimer = null;
+	var messageSelector = '[data-tag="chat-message"][data-id]';
+
+	function rememberMessage(state, id) {
+		state.seen.add(id);
+		if (state.seen.size > 5000) state.seen.delete(state.seen.values().next().value);
+	}
+
+	function processMessage(message, state, skip) {
+		var id = message.getAttribute("data-id");
+		if (!id || state.seen.has(id)) return;
+		if (skip || !isExtensionOn) {
+			rememberMessage(state, id);
 			return;
 		}
-		
-		
-		var chatimg = ""
-		try {
-			chatimg = escapeHtml(ele.querySelector("picture img[src]").src);
-		} catch(e){
-			//console.error(e);
+
+		var text = message.querySelector('[data-tag="chat-message-text-content"]');
+		var msg = text ? (settings.textonlymode ? text.textContent : getAllContentNodes(text)).trim() : "";
+		var postedImage = message.querySelector('picture img[src][alt="User posted image"]');
+		if (!msg && !postedImage) return; // Retry rows whose content has not hydrated yet.
+
+		var avatar = message.querySelector('picture img[src]:not([alt="User posted image"])');
+		var header = message.querySelector('[class*="messageBubbleTopHeader"] strong');
+		var name = header ? header.textContent.trim() : "";
+		// Consecutive messages often omit the header, but retain the author's avatar.
+		if (!name && avatar) {
+			var alt = avatar.getAttribute("alt") || "";
+			if (/'s profile picture$/.test(alt)) name = alt.replace(/'s profile picture$/, "").trim();
 		}
-		
-		var msg="";
-		try {
-			msg = getAllContentNodes(ele.querySelector('[data-tag="chat-message-text-content"]')).trim()
-			
-		} catch(e){
-			//console.error(e);
-		}
-		
-		
-		var name="";
-		
-			while (!name && ele){
-				try {
-					name = escapeHtml(ele.querySelector("strong").textContent);
-				} catch(e){
-					//console.error(e);
-				}
-				if (name){break;}
-				if (!ele.previousSibling){break;}
-				ele = ele.previousSibling;
-			}
-		
-		
-		
-		var badges=[];
-		
-		var contentImg = "";
-		
-		try {
-			contentImg = escapeHtml(ele.querySelector("picture img[src][alt='User posted image']").src);
-		} catch(e){}
-		
-		if (!(msg || contentImg)){
-			console.error("SIP");
-			return;
-		}
-		
-		
-		var data = {};
-		data.chatname = name || lastMg.chatname;
-		data.chatbadges = badges;
-		data.chatmessage = msg;
-		if (!name && lastMg.chatname){
-			data.chatimg = chatimg || lastMg.chatimg;
-		} else {
-			data.chatimg = chatimg;
-		}
-		data.hasDonation = "";
-		data.membership = "";
-		data.contentimg = contentImg;
-		data.textonly = settings.textonlymode || false;
-		data.type = "patreon";
-		
-		lastMg = data;
-		
-		if (id!==false){
-			if (parseInt(id)<mxchat){
-				return;
-			} else {
-				mxchat = parseInt(id);
-			}
-		}
-		
-		
-		pushMessage(data);
+		if (!name && avatar) name = state.authors.get(avatar.src) || "";
+		if (!name) return; // Never attribute a new author to the previous sender.
+		if (avatar) state.authors.set(avatar.src, name);
+		if (state.authors.size > 1000) state.authors.delete(state.authors.keys().next().value);
+
+		rememberMessage(state, id);
+		pushMessage({
+			chatname: name,
+			chatbadges: [],
+			chatmessage: msg,
+			chatimg: avatar ? avatar.src : "",
+			hasDonation: "",
+			membership: "",
+			contentimg: postedImage ? postedImage.src : "",
+			textonly: settings.textonlymode || false,
+			type: "patreon"
+		});
 	}
 
 	function pushMessage(data){
@@ -264,58 +204,49 @@
 		}
 	);
 
-	var lastURL =  "";
-	var observer = null;
-	
-	
-	function onElementInserted(target) {
-		var onMutationsObserved = function(mutations) {
-			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try {
-							if (mutation.addedNodes[i].skip){continue;}
-							mutation.addedNodes[i].skip = true;
-							if (!mutation.addedNodes[i].dataset.index){continue;}
+	function scanChat() {
+		if (scanTimer) clearTimeout(scanTimer);
+		scanTimer = null;
+		// Event identity ignores tracking parameters; community-chat query routing is preserved.
+		var key = location.pathname + (/\/events\/[^/]+/.test(location.pathname) ? "" : location.search);
+		if (key !== activeKey) {
+			activeKey = key;
+			if (!chatStates.has(key)) chatStates.set(key, { seen: new Set(), authors: new Map(), initialized: false });
+			activeState = chatStates.get(key);
+			if (chatStates.size > 10) chatStates.delete(chatStates.keys().next().value);
+		}
 
-							setTimeout(function(ee){
-									processMessage(ee); // maybe here
-							}, 300, mutation.addedNodes[i]);
-							
-						} catch(e){}
-					}
-				}
-			});
-		};
-		
-		var config = { childList: true, subtree: false };
-		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		
-		observer = new MutationObserver(onMutationsObserved);
-		observer.observe(target, config);
-	}
-	
-	console.log("social stream injected");
-
-
-	var container = "";
-	setInterval(function(){
-		try {
-			if (container){return;};
-			
-			container = document.querySelector('[data-index][data-known-size');
-			
-			if (!container.parentNode.marked){
-				container.parentNode.marked=true;
-
-				console.log("CONNECTED chat detected");
-
-				setTimeout(function(xx){
-					onElementInserted(xx);
-				},2000, container.parentNode);
+		var first = document.querySelector(messageSelector);
+		var nextContainer = first && (first.closest('[data-testid="virtuoso-list"]') ||
+			(first.closest('[data-index]') && first.closest('[data-index]').parentElement));
+		if (!nextContainer) nextContainer = document.querySelector('[data-testid="virtuoso-list"]');
+		if (nextContainer !== container) {
+			if (observer) observer.disconnect();
+			container = nextContainer;
+			if (container) {
+				observer = new MutationObserver(function () {
+					if (!scanTimer) scanTimer = setTimeout(scanChat, 150);
+				});
+				observer.observe(container, { childList: true, subtree: true, characterData: true,
+					attributes: true, attributeFilter: ["data-id", "src", "alt"] });
 			}
-			// checkViewers();
-		} catch(e){}
-	},2000);
+		}
+		if (!container || !activeState) return;
 
+		var composer = document.querySelector('#send-message');
+		var closed = composer && (composer.disabled || composer.getAttribute("aria-disabled") === "true") &&
+			/this chat has closed/i.test((composer.getAttribute("placeholder") || "") + " " +
+				(composer.getAttribute("aria-label") || ""));
+		// Attach without replaying the visible history. A remount in the same chat retains IDs.
+		var skip = !activeState.initialized || closed;
+		container.querySelectorAll(messageSelector).forEach(function (message) {
+			processMessage(message, activeState, skip);
+		});
+		activeState.initialized = true;
+	}
+
+	console.log("social stream injected");
+	// Polling also discovers a replacement panel, an initially empty chat, or SPA navigation.
+	setInterval(scanChat, 1000);
+	scanChat();
 })();

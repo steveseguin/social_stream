@@ -1,27 +1,45 @@
 (function () {
 	 
 	function toDataURL(url, callback) {
-	  var xhr = new XMLHttpRequest();
-	  xhr.onload = function() {
-		  
-		var blob = xhr.response;
-    
-		if (blob.size > (25 * 1024)) {
-		  callback(url); // Image size is larger than 25kb.
-		  return;
+		var completed = false;
+		function finish(value) {
+			if (completed) { return; }
+			completed = true;
+			callback(value || url);
 		}
-
-		var reader = new FileReader();
-		
-		
-		reader.onloadend = function() {
-		  callback(reader.result);
+		function fallback() {
+			finish(url);
 		}
-		reader.readAsDataURL(xhr.response);
-	  };
-	  xhr.open('GET', url);
-	  xhr.responseType = 'blob';
-	  xhr.send();
+		try {
+			var xhr = new XMLHttpRequest();
+			xhr.onload = function() {
+				var blob = xhr.response;
+				// Keep failed downloads and oversized images as URLs; never block the chat message.
+				if (xhr.status < 200 || xhr.status >= 300 || !blob || !blob.size || blob.size > (25 * 1024) ||
+					(blob.type && blob.type.indexOf("image/") !== 0)) {
+					fallback();
+					return;
+				}
+				try {
+					var reader = new FileReader();
+					reader.onload = function() { finish(reader.result); };
+					reader.onerror = fallback;
+					reader.onabort = fallback;
+					reader.readAsDataURL(blob);
+				} catch(e) {
+					fallback();
+				}
+			};
+			xhr.onerror = fallback;
+			xhr.onabort = fallback;
+			xhr.ontimeout = fallback;
+			xhr.open("GET", url);
+			xhr.responseType = "blob";
+			xhr.timeout = 5000;
+			xhr.send();
+		} catch(e) {
+			fallback();
+		}
 	}
 	
 	function escapeHtml(unsafe){
@@ -188,6 +206,7 @@
 					data.sourceImg = dataUrl;
 					if (data.chatimg){
 						toDataURL(data.chatimg, function(dataUrl) {
+							data.chatimg = dataUrl;
 							pushMessage(data);
 						});
 					} else {

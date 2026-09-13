@@ -100,6 +100,9 @@
 				</figure>
 				<p>New installations normally use <code>127.0.0.1:3003</code>. An upgraded installation that already used port <code>3000</code> may keep it. A generated local two-way Dock link may contain:</p>
 				<pre><code>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;server&amp;server2&amp;server3&amp;localserver&amp;localserverport=3003</code></pre>
+				<p>For mini-games, enable <strong>Send messages to Dock from Extension via server</strong> and copy the game link after selecting the game. Local game links with <code>server2</code> receive captured chat directly from SSApp, even when no Dock is open. Changing games keeps the local mode and port.</p>
+				<p>The API sample and test-message tool use WebSocket in local mode. The local relay does not accept the public API's HTTP GET, POST, or webhook URLs. Public webhook receivers need the hosted relay; provider-specific reliable receivers are separate services.</p>
+				<p>Local Server does not make every feature work offline. Waitlist, Word Cloud, Custom GIF Commands, private chatbot requests, and AI/co-host control bridges still use WebRTC for some or all communication. Website files, platform chat, and external AI, voice, music, or payment services can still require internet access.</p>
 			</div>
 
 			<div class="guide-card">
@@ -129,6 +132,8 @@
 						<tr><td data-label="Problem"><span>Hosted WebSocket will not connect</span></td><td data-label="What To Check"><span>A regional, corporate, school, or filtered network may block the public relay. Try another network first; advanced SSApp users can use Local Server instead.</span></td></tr>
 						<tr><td data-label="Problem"><span>The link uses port 3000 but SSApp shows 3003</span></td><td data-label="What To Check"><span>Replace the old link. New installs add <code>localserverport=3003</code>; older installs may intentionally remain on <code>3000</code>.</span></td></tr>
 						<tr><td data-label="Problem"><span>Local Server will not start</span></td><td data-label="What To Check"><span>Another program may own the port. Choose another unused port, restart the relay, and recopy links.</span></td></tr>
+						<tr><td data-label="Problem"><span>Game joins work intermittently</span></td><td data-label="What To Check"><span>Copy the game link again after selecting the preset. Confirm its session, <code>localserverport</code>, and incoming chat route match SSApp. Saved OBS URLs do not change automatically when you toggle Local Server or change its port.</span></td></tr>
+						<tr><td data-label="Problem"><span>Event Flows reports a background loading error</span></td><td data-label="What To Check"><span>This concerns website files, not the chat relay. Retry loading when the connection recovers. Toggling the relay preserves the selected Event Flow storage origin; a separate offline startup can still open the packaged interface with its own storage.</span></td></tr>
 						<tr><td data-label="Problem"><span>LAN device cannot connect</span></td><td data-label="What To Check"><span>Confirm LAN access is enabled, the client uses the SSApp computer's LAN IP, and the firewall permits the selected port.</span></td></tr>
 					</tbody>
 				</table>

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="shared/overlay-control-transport.js"></script>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -539,7 +540,11 @@
 		tickerElement.style.transform = "";
 	}
 
-	function processInput(data){
+    var tickerStateTracker = SSNOverlayControl.createStateTracker();
+	SSNOverlayControl.connect(urlParams, roomID, "ticker", processInput);
+function processInput(data){
+    if (!SSNOverlayControl.accept(data, "ticker")) return;
+    if (data.ssnState) { var transition = tickerStateTracker(data.ssnState); if (!transition.accept || !transition.changed) return; }
 		console.log(data);
 		if (!("ticker" in data)){return;}
 		var entries = normalizeTickerEntries(data.ticker);

@@ -1,5 +1,13 @@
 # Creator store guide screenshots
 
+`live-sale-controls.png` is captured by the commerce boards SSApp test below. It shows a fictional eBay Live auction copied into a seller-confirmed sale linked to a board spot. The test also runs Whatnot/eBay auction snapshots through app intake, verifies drafts do not become purchases, protects typed drafts from the next auction, and checks that a linked refund clears the sale and reopens its spot. The audience source is checked with an eBay filter and no buyer identity.
+
+Spot boards and recent sales: `SSN_GUIDE_SCREENSHOTS=1 node tests/commerce-boards-ssapp.e2e.cjs` captures `spot-board.png`, `team-board.png`, `sales-wall.png` and `board-controls.png` using actual SSApp with an isolated profile and fictional data. Board images are native overlay crops; the popup screenshot has its fixture connection field cleared before capture. No real sale, buyer or account is used. The same test checks desktop/mobile guide layouts and the host controls, purchase deduplication, persistent state and local overlay feed.
+
+Run `node tests/commerce-visual-ssapp.e2e.cjs` for the extended visual audit. It saves both guides in light/dark themes, expanded sections, all five overlay layouts, long-label cases, and popup/OBS dock controls in its printed temporary directory. Checks cover 320–1280px guide widths, 200% text, recommended OBS source sizes, keyboard focus/scroll during incoming sales, and commands during a delayed refresh. It uses fictional data and the isolated SSApp runtime; no live accounts or payments.
+
+The native OBS smoke test below also covers board commands, equal tile heights after a reveal, all five board/sales layouts, and board reload after a scene change. Its screenshots use OBS Browser Sources directly.
+
 Captured September 7, 2026 from the actual sibling SSApp runtime using an isolated profile and fixture product data. No live payment or creator account is used. Each screenshot is cropped to its relevant controls or card; private webhook URLs stay masked and the transient storefront token has been cleared.
 
 Regenerate with `SSN_GUIDE_SCREENSHOTS=1 node tests/commerce-ssapp.e2e.cjs` (set the environment variable using your shell). Screenshot mode briefly shows the isolated app because headless-control mode suppresses native window painting. The ordinary test remains hidden.

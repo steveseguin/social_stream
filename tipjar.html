@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="shared/overlay-control-transport.js"></script>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2461,7 +2462,9 @@
                 : (hypeMode ? `${donator} added ${formatGoalValue(goalValue)}!` : `${donator} tipped ${displayLabel}!`));
         }
 
-        function processData(data) {
+        if (!previewMode) SSNOverlayControl.connect(urlParams, roomID, "tipjar", processData);
+function processData(data) {
+    if (!SSNOverlayControl.accept(data, "tipjar")) return;
             console.log(data);
             
             if (data.content) {

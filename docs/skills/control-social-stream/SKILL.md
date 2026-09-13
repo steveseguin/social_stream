@@ -48,6 +48,13 @@ API. Environment variables are also supported.
 Do not use this localhost API as a cloud remote-control interface. Remote users and Stream
 Deck use Social Stream's existing WebRTC or WebSocket transport instead.
 
+Server mode includes hosted `io.socialstream.ninja`, local and explicit compatible relays.
+Unreleased updated page sources add Poll/Credits/Hype controls and snapshots, mixed-transport
+Flow Actions delivery, hosted Giveaway Manager replies, and relay session-change recovery.
+These are page/relay capabilities, not new Local AI `/api/v1` or MCP commands. Check the
+page-source compatibility entry in `references/version-log.md`; do not infer availability
+or full overlay-control support from an open socket, chat receipt, or SSApp version alone.
+
 ## Control workflow
 
 1. Call `ssapp_get_capabilities`, or `GET /api/v1/capabilities` when using HTTP directly, before assuming a command exists. Record `ssappVersion` and `apiVersion`.

@@ -86,3 +86,13 @@ The previously saved temporary seller access token now returns Fulfillment HTTP 
 The checkout did not expose a specific decline reason. The generic dummy Visa number was accepted by the form, but was not verified against an eBay-documented successful-payment fixture for this checkout. Unsupported test-card data or sandbox payment configuration remain hypotheses, not diagnosed causes. The expired seller access token affects subsequent order verification; it does not explain the buyer checkout failure.
 
 Sandbox test-environment reference: [eBay environment documentation](https://www.developer.ebay.com/api-docs/static/gs_understand-the-sandbox-and.html). The live observations above are from the existing sandbox account browser session, not fixture responses.
+
+## September 12 browser-plugin recheck
+
+The Chrome browser plugin completed sign-in using the saved sandbox buyer and seller credentials. Application authentication and Browse reads of all three existing listings also passed again. No new listings were created.
+
+Retried the existing USD 5 notebook transaction with synthetic shipping details and a dummy Visa, leaving Remember this card unchecked. Checkout displayed order `02-00001-45053` and a USD 5.00 confirmation. After a further buyer sign-in, its order-details page explicitly reported **This order was not successful**, **Payment failed**, and USD 0.00 total. The failure therefore reproduces outside SSN's checkout-independent integration. No specific decline reason was exposed and no paid-order/overlay advancement pass is claimed.
+
+The saved seller login succeeded, but My eBay > Selling (`/mys/active`) reported **There was a problem loading your items. Please try again later.** The sandbox Seller Center link also returned a missing-page screen. Seller API consent was not renewed during this retry.
+
+Correction to the earlier test-card uncertainty: [eBay Developer Support's sandbox guidance](https://community.ebay.com/t5/Token-Messaging-Sandbox-related/How-to-use-sandbox/td-p/33985322) says dummy credit/debit cards can be used. That guidance does not explain this account/order's failure; unsupported dummy-card data should not be presented as the diagnosed cause. No real funds, payment details, production listings or shipments were used.

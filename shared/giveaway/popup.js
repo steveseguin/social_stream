@@ -50,7 +50,12 @@
         document.getElementById('giveaway-manage').addEventListener('click',function() {
             var url = new URL('giveaway-control.html',location.href); url.searchParams.set('giveaway',giveawayId());
             var raw=document.getElementById('giveaway').raw;
-            if(raw){try{var source=new URL(raw);['session','password'].forEach(function(key){if(source.searchParams.has(key))url.searchParams.set(key,source.searchParams.get(key));});}catch(_) {}}
+            if(raw){try{
+                var source=new URL(raw);
+                ['session','password','localserver','localserverport','server','server2','server3'].forEach(function(key){
+                    if(source.searchParams.has(key))url.searchParams.set(key,source.searchParams.get(key));
+                });
+            }catch(_) {}}
             window.open(url.href,'_blank','noopener');
         });
         document.getElementById('giveaway-id').addEventListener('input',function() {state=null;status.textContent='Refresh to inspect this giveaway.';});

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="js/transport-dedupe.js"></script>
+<script src="shared/overlay-control-transport.js"></script>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -379,11 +381,11 @@ const SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
 // Transport migration guard: only pages with full server parity may skip the legacy bridge.
 var TRANSPORT_CAPABILITIES = {
 	serverFeed: true,
-	serverTargeted: false,
+	serverTargeted: true,
 	upstreamCommands: false,
 	customChannel: false,
 	legacyBridgeRequired: true,
-	legacyBridgeReason: "Poll settings and control commands are still sent with sendTargetP2P."
+	legacyBridgeReason: "Poll controls support relay channel 7; retain the bridge for older hosts and mixed displays."
 };
 function versionAtLeast(value, minimum) {
     const a = String(value || "").split(".");
@@ -791,6 +793,12 @@ function shouldProcessPollMessage(data) {
     return !data.event || !!data.hasDonation || !!data.donation;
 }
 
+// Pair mirrored transport copies without suppressing genuine repeated votes.
+const transportDeliveryDedupe = SocialStreamTransportDedupe.create();
+function isDuplicatePollDelivery(data, source) {
+    return transportDeliveryDedupe(data, source || "direct");
+}
+
 function queueVote(vote, name, source, userId, hasDonation = null) {
     messageQueue.push({vote, name, source, userId, hasDonation});
     debugLog('Queued vote message', { vote, name, source, userId, hasDonation });
@@ -984,7 +992,13 @@ function updatePollVisibility() {
     }
     debugLog('Poll visibility updated', { visible: settings.pollEnabled });
 }
-function processData(data) {
+const pollStateTracker = SSNOverlayControl.createStateTracker();
+function processData(data, source) {
+    if (!SSNOverlayControl.accept(data, "poll")) return;
+    const recoveredState = data && data.pollState;
+    const transition = recoveredState ? pollStateTracker(recoveredState) : null;
+    if (transition && !transition.accept) return;
+    if (transition && transition.reset && !data.cmd) resetPoll();
     if (data.setting && !data.settings) {
         if (data.type === "setting") {
             data.settings = {
@@ -1160,6 +1174,7 @@ function processData(data) {
             debugLog('UI adjustments applied alongside core reset', { uiChanges });
         }
     } else if (shouldProcessPollMessage(data)) {
+        if (isDuplicatePollDelivery(data, source)) return;
         queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data), data.hasDonation || data.donation);
     } else if (data.chatmessage) {
         debugLog('Poll message ignored: event payload', { chatmessage: data.chatmessage, event: data.event, type: data.type });
@@ -1171,6 +1186,10 @@ function processData(data) {
         } else if (data.cmd === "startpoll") {
             startPoll();
         }
+    }
+    if (recoveredState) {
+        if (recoveredState.closed) closePoll();
+        else if (settings.pollClosed) { settings.pollClosed = false; pollTitle.innerText = settings.pollQuestion; updatePollResults(); }
     }
 }
 
@@ -1210,7 +1229,7 @@ function resetPoll() {
     });
 }
 
-function processInput(data) {
+function processInput(data, source) {
     if (!data) return false;
 	
 	debugLog('Incoming payload', data);
@@ -1226,6 +1245,7 @@ function processInput(data) {
         }
         return true;
     } else if (shouldProcessPollMessage(data)) {
+        if (isDuplicatePollDelivery(data, source)) return false;
         debugLog('Chat message received for poll', { chatmessage: data.chatmessage, chatname: data.chatname, source: data.type, hasDonation: data.hasDonation });
         queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data), data.hasDonation || data.donation);
         return true;
@@ -1259,7 +1279,7 @@ const ConnectionManager = {
                 urlParams.get("server") || (urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/api"),
                 session,
                 2, 1,
-                (data) => processInput(data)
+                (data) => processInput(data, "api")
             );
         }
     },
@@ -1272,8 +1292,8 @@ const ConnectionManager = {
         }
         if (urlParams.has("server2") || urlParams.has("server3")) {
             const serverURL = urlParams.has("server2") ? 
-                (urlParams.get("server2") || "wss://io.socialstream.ninja/extension") : 
-                (urlParams.get("server3") || "wss://io.socialstream.ninja/extension");
+                (SocialStreamLocalServer.getRelayUrl(urlParams, "server2", "wss://io.socialstream.ninja/extension")) :
+                (SocialStreamLocalServer.getRelayUrl(urlParams, "server3", "wss://io.socialstream.ninja/extension"));
             
             this.setupSocket(
                 serverURL,
@@ -1281,7 +1301,7 @@ const ConnectionManager = {
                 3, 4,
                 (data) => {
                     if ((urlParams.has("server2") || urlParams.has("server3"))) {
-                        processInput(data);
+                        processInput(data, "extension");
                     }
                 }
             );
@@ -1359,10 +1379,15 @@ if (session && !useServerOnlyTransport()) {
     window.addEventListener("message", (event) => {
         if (event.source !== iframe.contentWindow) return;
         if (event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja) {
-            processData(event.data.dataReceived.overlayNinja);
+            processData(event.data.dataReceived.overlayNinja, "p2p");
         }
     });
 }
+
+SSNOverlayControl.connect(urlParams, session, "poll", function(data) {
+    processData(data);
+
+});
 
 // Setup socket connections
 ConnectionManager.setupMainSocket();

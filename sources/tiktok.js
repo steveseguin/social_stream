@@ -185,15 +185,33 @@
 
 		var nameKey = normalizeTikTokNameKey(data.chatname || "unknown");
 		var stableIndexKey = indexValue ? "idx=" + indexValue : "";
+		var nativeMeta = data.meta || {};
+		var nativeKey = nativeMeta.tiktokGiftMessageId ? "message:" + nativeMeta.tiktokGiftMessageId : "";
+		if (nativeMeta.groupId && String(nativeMeta.groupId) !== "0" && nativeMeta.giftId && nativeMeta.tiktokGiftSenderId) {
+			nativeKey = "group:" + JSON.stringify([nativeMeta.tiktokGiftSenderId, nativeMeta.giftId, nativeMeta.groupId]);
+		}
 		return {
 			// TikTok recycles row slots, including the shared event-banner slot.
-			key: nameKey + ":" + giftId + (stableIndexKey ? ":" + stableIndexKey : ""),
+			key: nativeKey || nameKey + ":" + giftId + (stableIndexKey ? ":" + stableIndexKey : ""),
 			quantity: quantity,
-			hasStableIndex: !!stableIndexKey
+			hasStableIndex: !!(nativeKey || stableIndexKey),
+			repeatEnd: nativeMeta.repeatEnd === true
 		};
 	}
 
 	function markTikTokGiftUpdate(data, ele) {
+		if (data && data.type === "tiktok" && data.event === "gift") {
+			try {
+				var nativeGift = window.__ssnReadTikTokGift ? window.__ssnReadTikTokGift(ele) : null;
+				if (!nativeGift && ele && ele.dispatchEvent) {
+					ele.removeAttribute("data-ssn-tiktok-gift");
+					ele.dispatchEvent(new CustomEvent("ssn-read-tiktok-gift", { bubbles: true }));
+					nativeGift = JSON.parse(ele.getAttribute("data-ssn-tiktok-gift") || "null");
+					ele.removeAttribute("data-ssn-tiktok-gift");
+				}
+				if (nativeGift) data.meta = Object.assign({}, data.meta || {}, nativeGift);
+			} catch (e) {}
+		}
 		var identity = getTikTokGiftUpdateIdentity(data, ele);
 		if (!identity) {
 			return true;
@@ -204,11 +222,12 @@
 		if (tracked) {
 			var isSameRender =
 				identity.quantity === tracked.quantity &&
+				(!identity.repeatEnd || tracked.repeatEnd) &&
 				(identity.hasStableIndex || (now - tracked.updatedAt) <= TIKTOK_GIFT_DUPLICATE_WINDOW_MS);
 			if (isSameRender) {
 				return false;
 			}
-			if (identity.quantity <= tracked.quantity) {
+			if (identity.quantity <= tracked.quantity && !(identity.quantity === tracked.quantity && identity.repeatEnd && !tracked.repeatEnd)) {
 				if (tracked.timer) {
 					clearTimeout(tracked.timer);
 				}
@@ -220,12 +239,14 @@
 			tracked = {
 				id: "tiktok-gift-" + tikTokGiftStreakInstanceId + "-" + (++tikTokGiftStreakSequence),
 				quantity: identity.quantity,
+				repeatEnd: identity.repeatEnd,
 				updatedAt: now,
 				timer: null
 			};
 			trackedTikTokGiftStreaks.set(identity.key, tracked);
 		} else {
 			tracked.quantity = identity.quantity;
+			tracked.repeatEnd = identity.repeatEnd;
 			tracked.updatedAt = now;
 			if (tracked.timer) {
 				clearTimeout(tracked.timer);

@@ -84,6 +84,7 @@ async function until(check, label, timeout = 30000) {
     });
     await pause(6500);
     console.log('Source injection ready');
+    assert.strictEqual(await source.evaluate(() => typeof window.__ssnReadTikTokGift), 'function', 'TikTok native gift helper loaded through SSApp');
     const creditsUrl = pathToFileURL(path.join(sourceRoot, 'credits.html')).href +
       `?session=${room}&server2=ws://127.0.0.1:${relayPort}&loop&persistcredits&onlydonors&showamounts`;
     await app.evaluate(({ BrowserWindow }, url) => { const w = new BrowserWindow({ show: false }); w.loadURL(url); }, creditsUrl);
@@ -184,6 +185,25 @@ async function until(check, label, timeout = 30000) {
     if (process.env.GIFT_TEXTONLY === '1') assert.strictEqual(plain.chatmessage, 'sent Rose x 2 <b>literal</b> & text');
     await until(() => credits.locator('#credits-content').textContent().then(text => text.includes('Long Streak')), 'visible credits donor');
     await credits.screenshot({ path: path.join(profile, 'credits.png') });
+    for (const nativeId of ['native-one', 'native-one', 'native-two']) {
+      await source.evaluate(nativeId => {
+        const row = document.createElement('div');
+        row.dataset.index = '199';
+        row.innerHTML = '<div><span data-e2e="message-owner-name">Native Donor</span></div><div>sent Rose <img src="https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png"> x1</div>';
+        row.firstElementChild.__reactFiberFixture = { memoizedProps: { message: {
+          messageType: 'GiftMessage', msgId: nativeId, payload: {
+            group_id: nativeId, gift_id: '5655', repeat_count: '1', repeat_end: 1,
+            gift: { name: 'Rose', type: 1 }, user: { id: 'native-donor-id' }
+          }
+        } } };
+        document.getElementById('events').append(row);
+      }, nativeId);
+      await pause(250);
+    }
+    await until(() => captures.filter(m => m.chatname === 'Native Donor').length === 2, 'distinct native gifts on a recycled row');
+    const nativeGifts = captures.filter(m => m.chatname === 'Native Donor');
+    assert.deepStrictEqual(nativeGifts.map(m => m.meta.tiktokGiftMessageId), ['native-one', 'native-two']);
+    assert(nativeGifts.every(m => m.meta.giftName === 'Rose' && m.meta.repeatEnd));
     console.log(JSON.stringify({ passed: true, gifts: captures.length, profile }));
   } finally {
     if (socket) socket.close();

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="shared/overlay-control-transport.js"></script>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
@@ -341,17 +342,28 @@
             var n = String(action || cmd || "").toLowerCase();
             return /^(starttimer|pausetimer|toggletimer|resettimer|timeradd|timersubtract|settimer|gettimerstate)$/.test(n) ? n : "";
         }
-        function respondState(token) {
+        function respondState(token, replyFormat) {
             if (!socketserver || socketserver.readyState !== WebSocket.OPEN || !token) { return; }
-            socketserver.send(JSON.stringify({ callback: { get: token, result: exported(Date.now()) } }));
+            socketserver.send(JSON.stringify(replyFormat === "commandResult" ? { type: "commandResult", get: token, result: exported(Date.now()) } : { callback: { get: token, result: exported(Date.now()) } }));
         }
-        function processInput(data) {
+        var lastHostTimerKey = null;
+        var timerStateTracker = SSNOverlayControl.createStateTracker();
+        SSNOverlayControl.connect(urlParams, sessionId, "timer", processInput);
+function processInput(data) {
+    if (!SSNOverlayControl.accept(data, "timer")) return;
             if (!data || typeof data !== "object") { return false; }
             if (data.callback && data.callback.result && data.callback.result.currentMs !== undefined) { applyExported(data.callback.result); render(); return true; }
-            if (data.timer && typeof data.timer === "object") { applyExported(data.timer); render(); return true; }
+            if (data.timer && typeof data.timer === "object") {
+                if (data.ssnState) { var transition = timerStateTracker(data.ssnState); if (!transition.accept || !transition.changed) return true; }
+                // Repeated snapshots must not overwrite subsequent page-owned controls.
+                var hostKey = JSON.stringify([data.timer.updatedAt, data.timer.currentMs, data.timer.startedAt, data.timer.running, data.timer.durationMs, data.timer.mode]);
+                if (!data.ssnState && hostKey === lastHostTimerKey) return true;
+                lastHostTimerKey = hostKey;
+                applyExported(data.timer); render(); return true;
+            }
             var name = actionName(data.action, data.cmd);
             if (!name) { return false; }
-            if (name === "gettimerstate") { respondState(data.get); return true; }
+            if (name === "gettimerstate") { respondState(data.get, data.replyFormat); return true; }
             act(name, data.value);
             render();
             return true;

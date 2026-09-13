@@ -284,6 +284,18 @@ OBS Studio</div>
 
             <section id="recipes">
                 <h2>5. Useful recipes</h2>
+                <div class="panel" id="hourly-message">
+                    <h3>Hourly message while OBS is live</h3>
+                    <p>In the Event Flow editor, choose <strong>Start with a template → Intermediate → Hourly message while OBS is live</strong>. It starts disabled and contains three branches in one flow:</p>
+                    <ul>
+                        <li><strong>OBS Stream Started → Set Gate State: ON</strong></li>
+                        <li><strong>Time Interval (3600 seconds) → ON/OFF Switch → Send Message</strong></li>
+                        <li><strong>OBS Stream Stopped → Set Gate State: OFF</strong></li>
+                    </ul>
+                    <p>Both Set Gate State actions already target the same switch, which defaults to OFF. Edit <strong>Send Message</strong> to choose your chat platform (the example uses Twitch) and message. Choose a platform or All Platforms; Reply to Source cannot reply to an OBS event or timer tick.</p>
+                    <p><a href="#setup">Connect Flow Actions to OBS</a>, keep Social Stream and the destination chat connected, then save and enable the flow <strong>before starting your stream</strong>. The switch waits for an OBS start event; loading it during an existing stream does not turn it ON. Restarting Social Stream also resets the switch to OFF.</p>
+                    <p><strong>Timing:</strong> the interval runs on its own schedule, so the first reminder may arrive sooner than one hour after streaming starts. Later reminders repeat every hour while the switch is ON. Change the Time Interval value for a different frequency; it is measured in seconds.</p>
+                </div>
                 <div class="grid">
                     <div class="card">
                         <h3>Counter text in OBS</h3>

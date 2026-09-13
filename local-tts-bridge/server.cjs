@@ -3,6 +3,7 @@
 
 const http = require("http");
 const https = require("https");
+const crypto = require("crypto");
 const { URL } = require("url");
 
 function arg(name, fallback) {
@@ -14,7 +15,9 @@ function arg(name, fallback) {
 }
 
 const mode = (arg("mode", process.env.SSN_TTS_TARGET_MODE || "openai") || "openai").toLowerCase();
-const defaultTarget = mode === "gptsovits"
+const defaultTarget = mode === "fish"
+    ? "https://api.fish.audio/v1/tts"
+    : mode === "gptsovits"
     ? "http://127.0.0.1:9880/tts"
     : mode === "f5"
         ? "http://127.0.0.1:7860/synthesize_speech/"
@@ -24,6 +27,16 @@ const port = parseInt(arg("port", process.env.PORT || process.env.SSN_TTS_BRIDGE
 const host = arg("host", process.env.SSN_TTS_BRIDGE_HOST || "127.0.0.1");
 const targetBearer = process.env.SSN_TTS_TARGET_BEARER || "";
 const forwardAuth = process.env.SSN_TTS_FORWARD_AUTH === "1";
+// Only Fish mode with a stored upstream key needs a separate caller credential.
+const bridgeToken = mode === "fish" && targetBearer
+    ? (process.env.SSN_TTS_BRIDGE_TOKEN || crypto.randomBytes(32).toString("hex")) : "";
+
+function authorized(req) {
+    if (!bridgeToken) return true;
+    const received = Buffer.from(req.headers.authorization || "");
+    const expected = Buffer.from("Bearer " + bridgeToken);
+    return received.length === expected.length && crypto.timingSafeEqual(received, expected);
+}
 
 function corsHeaders(extra) {
     return Object.assign({
@@ -69,6 +82,29 @@ function getExtraJson() {
 }
 
 function buildTargetRequest(incomingBuffer, target) {
+    if (mode === "fish") {
+        const input = parseJson(incomingBuffer);
+        const model = input.model || "s2.1-pro-free";
+        // Fish falls back to a paid model for unknown names. Reject typos here.
+        if (!["s2.1-pro-free", "s2.1-pro", "s2-pro", "s1"].includes(model)) {
+            const error = new Error("Unsupported Fish Audio model");
+            error.statusCode = 400;
+            throw error;
+        }
+        const speed = Number(input.speed);
+        const payload = {
+            text: input.input || "",
+            format: input.response_format || "mp3",
+            prosody: { speed: Number.isFinite(speed) && speed > 0 ? Math.max(0.5, Math.min(2, speed)) : 1 }
+        };
+        if (input.voice) payload.reference_id = input.voice;
+        return {
+            method: "POST",
+            path: target.pathname + target.search,
+            body: Buffer.from(JSON.stringify(payload)),
+            headers: { "Content-Type": "application/json", "model": model }
+        };
+    }
     if (mode === "f5") {
         const input = parseJson(incomingBuffer);
         const f5Target = new URL(target.toString());
@@ -192,6 +228,12 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    if (!authorized(req)) {
+        sendJson(res, 401, { error: "Enter the local bridge token in the Fish Audio API Key field." });
+        req.resume();
+        return;
+    }
+
     try {
         const body = await readBody(req);
         requestTarget(req, res, body);
@@ -203,4 +245,5 @@ const server = http.createServer(async (req, res) => {
 server.listen(port, host, () => {
     console.log("SSN local TTS bridge listening on http://" + host + ":" + port + "/v1/audio/speech");
     console.log("Mode: " + mode + " Target: " + targetUrl);
+    if (bridgeToken) console.log("Local bridge token (Fish Audio API Key field): " + bridgeToken);
 });
