@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import ebayDeletion from "./ebay-deletion.js";
 
 const scope = "https://api.ebay.com/oauth/api_scope/sell.fulfillment.readonly";
 const hash = value => crypto.createHash("sha256").update(value).digest("hex");
@@ -34,19 +35,28 @@ export default async function ebayShowcase(app, options = {}) {
 		clientId = options.clientId || process.env.EBAY_CLIENT_ID,
 		secret = options.clientSecret || process.env.EBAY_CLIENT_SECRET,
 		ruName = options.ruName || process.env.EBAY_RUNAME;
-	if (!db || !clientId || !secret || !ruName) throw new Error("eBay requires a database, EBAY_CLIENT_ID, EBAY_CLIENT_SECRET and EBAY_RUNAME");
+	const deletionToken = options.deletionToken || process.env.EBAY_DELETION_VERIFICATION_TOKEN;
+	const deletionEndpoint = options.deletionEndpoint || process.env.EBAY_DELETION_ENDPOINT;
+	if (!db || !clientId || !secret || (!ruName && !deletionToken)) throw new Error("eBay requires a database, EBAY_CLIENT_ID, EBAY_CLIENT_SECRET and EBAY_RUNAME");
 	const environment = options.environment || process.env.EBAY_ENVIRONMENT || "production";
 	if (!["sandbox", "production"].includes(environment)) throw new Error("EBAY_ENVIRONMENT must be sandbox or production");
 	if (environment === "production" && (clientId.includes("-SBX-") || secret.startsWith("SBX-"))) throw new Error("Sandbox credentials require EBAY_ENVIRONMENT=sandbox");
 	const apiOrigin = environment === "sandbox" ? "https://api.sandbox.ebay.com" : "https://api.ebay.com",
 		authOrigin = environment === "sandbox" ? "https://auth.sandbox.ebay.com" : "https://auth.ebay.com";
 	const route = environment === "sandbox" ? "/v1/ebay-sandbox" : "/v1/ebay";
+	const sellerScope = scope + (deletionToken ? " https://api.ebay.com/oauth/api_scope/commerce.identity.readonly" : "");
+	let deletionRevision = 0;
 	let browseToken = null;
 	const transport = options.fetch || fetch,
 		pending = new Map(),
 		cache = new Map(),
 		busy = new Set();
 	db.exec("CREATE TABLE IF NOT EXISTS ebay_connections (id TEXT PRIMARY KEY, token TEXT NOT NULL, created INTEGER NOT NULL)");
+	if (deletionToken) {
+		if (new URL(deletionEndpoint).pathname !== route + "/account-deletion") throw new Error("eBay deletion endpoint must match its environment");
+		db.pragma("secure_delete = ON");
+		db.exec("CREATE TABLE IF NOT EXISTS ebay_account_links (id TEXT PRIMARY KEY, user_hash TEXT NOT NULL); CREATE INDEX IF NOT EXISTS ebay_account_user ON ebay_account_links(user_hash)");
+	}
 	function seal(value, key) {
 		const iv = crypto.randomBytes(12),
 			cipher = crypto.createCipheriv("aes-256-gcm", Buffer.from(key, "hex"), iv);
@@ -63,11 +73,11 @@ export default async function ebayShowcase(app, options = {}) {
 		if (!match) throw failure("Connect eBay from SSN first.", 401);
 		return { key: match[1], id: hash((environment === "sandbox" ? "ssn-ebay:sandbox:" : "ssn-ebay:") + match[1]) };
 	}
-	async function api(path, init) {
+	async function api(path, init, origin = apiOrigin) {
 		const controller = new AbortController(),
 			timeout = setTimeout(() => controller.abort(), 12000);
 		try {
-			const response = await transport(apiOrigin + path, { ...init, redirect: "error", signal: controller.signal });
+			const response = await transport(origin + path, { ...init, redirect: "error", signal: controller.signal });
 			if (!response.ok) throw failure(response.status === 401 ? "Reconnect your eBay seller account." : response.status === 429 ? "eBay rate limit reached; retry shortly." : "eBay could not complete the request. Check API access and listing availability.", 502);
 			return await response.json();
 		} finally {
@@ -77,13 +87,22 @@ export default async function ebayShowcase(app, options = {}) {
 	function token(body) {
 		return api("/identity/v1/oauth2/token", { method: "POST", headers: { Authorization: "Basic " + Buffer.from(clientId + ":" + secret).toString("base64"), "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(body).toString() });
 	}
+	async function applicationToken() {
+		if (!browseToken || browseToken.expires < Date.now() + 60000) {
+			const value = await token({ grant_type: "client_credentials", scope: "https://api.ebay.com/oauth/api_scope" });
+			if (!value.access_token) throw failure("eBay application access is unavailable.", 502);
+			browseToken = { value: value.access_token, expires: Date.now() + Number(value.expires_in || 0) * 1000 };
+		}
+		return browseToken.value;
+	}
 	async function access(c) {
 		const row = db.prepare("SELECT token FROM ebay_connections WHERE id = ?").get(c.id);
 		if (!row) throw failure("Connect your eBay seller account first.", 401);
 		let data = unseal(row.token, c.key);
 		if (data.expires < Date.now() + 60000) {
-			const result = await token({ grant_type: "refresh_token", refresh_token: data.refresh, scope });
+			const result = await token({ grant_type: "refresh_token", refresh_token: data.refresh, scope: sellerScope });
 			if (!result.access_token) throw failure("Reconnect your eBay account.", 502);
+			if (!db.prepare("SELECT id FROM ebay_connections WHERE id = ?").get(c.id)) throw failure("Reconnect your eBay account.", 401);
 			data = { ...data, access: result.access_token, expires: Date.now() + Number(result.expires_in || 0) * 1000 };
 			db.prepare("UPDATE ebay_connections SET token = ? WHERE id = ?").run(seal(data, c.key), c.id);
 		}
@@ -92,32 +111,46 @@ export default async function ebayShowcase(app, options = {}) {
 	app.addHook("onSend", async (_request, reply) => {
 		reply.header("Cache-Control", "no-store").header("Referrer-Policy", "no-referrer");
 	});
-	app.get(route + "/status", async request => {
+	app.get(route + "/status", async (request, reply) => {
+		if (!ruName) return reply.code(503).send({ code: "EBAY_NOT_CONFIGURED" });
 		const c = credentials(request);
 		return { protocol: "ssn-ebay-1", environment, connected: !!db.prepare("SELECT id FROM ebay_connections WHERE id = ?").get(c.id) };
 	});
-	app.post(route + "/connect", async request => {
+	app.post(route + "/connect", async (request, reply) => {
+		if (!ruName) return reply.code(503).send({ code: "EBAY_NOT_CONFIGURED" });
 		const c = credentials(request);
 		for (const [key, value] of pending) if (value.expires < Date.now() || value.id === c.id) pending.delete(key);
 		if (pending.size >= 1000 || db.prepare("SELECT count(*) AS count FROM ebay_connections").get().count >= 10000) throw failure("Connection service is busy. Try again later.", 503);
 		const state = crypto.randomBytes(32).toString("hex");
 		pending.set(state, { ...c, expires: Date.now() + 600000 });
-		return { environment, url: authOrigin + "/oauth2/authorize?" + new URLSearchParams({ client_id: clientId, redirect_uri: ruName, response_type: "code", scope, state }) };
+		return { environment, url: authOrigin + "/oauth2/authorize?" + new URLSearchParams({ client_id: clientId, redirect_uri: ruName, response_type: "code", scope: sellerScope, state }) };
 	});
 	app.get(route + "/callback", { logLevel: "silent" }, async (request, reply) => {
 		const state = text(request.query.state, 64),
 			c = pending.get(state);
 		pending.delete(state);
 		if (!c || c.expires < Date.now() || !request.query.code || request.query.error) return reply.code(400).type("text/plain").send("Connection cancelled or expired. Return to SSN and connect again.");
+		const revision = deletionRevision;
 		const result = await token({ grant_type: "authorization_code", code: text(request.query.code, 8192), redirect_uri: ruName });
 		if (!result.refresh_token || !result.access_token) throw failure("eBay did not grant seller access.", 502);
-		db.prepare("INSERT OR REPLACE INTO ebay_connections (id, token, created) VALUES (?, ?, ?)").run(c.id, seal({ refresh: result.refresh_token, access: result.access_token, expires: Date.now() + Number(result.expires_in || 0) * 1000 }, c.key), Date.now());
+		let userId;
+		if (deletionToken) {
+			const identity = await api("/commerce/identity/v1/user/", { headers: { Authorization: "Bearer " + result.access_token } }, environment === "sandbox" ? "https://apiz.sandbox.ebay.com" : "https://apiz.ebay.com");
+			userId = identity.userId;
+			if (typeof userId !== "string" || !userId || userId.length > 256) throw failure("eBay seller identity is unavailable.", 502);
+			if (revision !== deletionRevision) throw failure("Connection interrupted. Connect eBay again.", 409);
+		}
+		db.transaction(() => {
+			db.prepare("INSERT OR REPLACE INTO ebay_connections (id, token, created) VALUES (?, ?, ?)").run(c.id, seal({ refresh: result.refresh_token, access: result.access_token, expires: Date.now() + Number(result.expires_in || 0) * 1000 }, c.key), Date.now());
+			if (deletionToken) db.prepare("INSERT OR REPLACE INTO ebay_account_links (id, user_hash) VALUES (?, ?)").run(c.id, hash(environment + ":" + userId));
+		})();
 		cache.delete(c.id);
 		return reply.type("text/plain").send("eBay connected. Return to SSN, add your own listings, and enable the showcase.");
 	});
 	app.delete(route + "/connection", async request => {
 		const c = credentials(request);
 		db.prepare("DELETE FROM ebay_connections WHERE id = ?").run(c.id);
+		if (deletionToken) db.prepare("DELETE FROM ebay_account_links WHERE id = ?").run(c.id);
 		cache.delete(c.id);
 		for (const [state, value] of pending) if (value.id === c.id) pending.delete(state);
 		return { connected: false };
@@ -127,12 +160,7 @@ export default async function ebayShowcase(app, options = {}) {
 			id = request.params.id;
 		if (!/^\d{9,15}$/.test(id)) throw failure("Use a full eBay item link.");
 		await access(c);
-		if (!browseToken || browseToken.expires < Date.now() + 60000) {
-			const value = await token({ grant_type: "client_credentials", scope: "https://api.ebay.com/oauth/api_scope" });
-			if (!value.access_token) throw failure("eBay Browse access is unavailable.", 502);
-			browseToken = { value: value.access_token, expires: Date.now() + Number(value.expires_in || 0) * 1000 };
-		}
-		const bearer = browseToken.value;
+		const bearer = await applicationToken();
 		return publicItem(await api("/buy/browse/v1/item/get_item_by_legacy_id?legacy_item_id=" + id, { headers: { Authorization: "Bearer " + bearer, "X-EBAY-C-MARKETPLACE-ID": "EBAY_US" } }), id, environment);
 	});
 	app.get(route + "/sales", async request => {
@@ -144,6 +172,7 @@ export default async function ebayShowcase(app, options = {}) {
 		if (old && old.at > now - 55000 && old.since <= since) return old.result;
 		if (busy.has(c.id)) throw failure("Sales are updating. Retry shortly.", 429);
 		busy.add(c.id);
+		const revision = deletionRevision;
 		try {
 			const bearer = await access(c),
 				sales = [];
@@ -158,11 +187,28 @@ export default async function ebayShowcase(app, options = {}) {
 				if (!result.orders.length || offset >= 10000) throw failure("Too many orders for this time window. Please narrow it.", 502);
 			}
 			const result = { sales, through: now };
+			if (revision !== deletionRevision || !db.prepare("SELECT id FROM ebay_connections WHERE id = ?").get(c.id)) throw failure("Reconnect your eBay account.", 401);
 			if (cache.size >= 1000) cache.delete(cache.keys().next().value);
 			cache.set(c.id, { at: now, since, result });
 			return result;
 		} finally {
 			busy.delete(c.id);
+		}
+	});
+	if (deletionToken) await app.register(ebayDeletion, {
+		endpoint: deletionEndpoint, verificationToken: deletionToken, applicationToken, api,
+		removeAccount: userId => {
+			deletionRevision++;
+			const userHash = hash(environment + ":" + userId);
+			const rows = db.prepare("SELECT id FROM ebay_account_links WHERE user_hash = ?").all(userHash);
+			db.transaction(() => {
+				for (const row of rows) db.prepare("DELETE FROM ebay_connections WHERE id = ?").run(row.id);
+				db.prepare("DELETE FROM ebay_account_links WHERE user_hash = ?").run(userHash);
+			})();
+			cache.clear();
+			for (const row of rows) for (const [state, value] of pending) if (value.id === row.id) pending.delete(state);
+			// Flush deleted pages when this dedicated database uses WAL mode.
+			db.pragma("wal_checkpoint(TRUNCATE)");
 		}
 	});
 	app.addHook("onClose", async () => {

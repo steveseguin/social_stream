@@ -1,5 +1,7 @@
 # eBay sandbox setup
 
+Production application setup was subsequently enabled on September 13; see [production setup and remaining seller validation](EBAY-PRODUCTION.md). This does not change the sandbox test/payment limitations below.
+
 See the [seller/streamer implementation plan](EBAY-SELLER-PLAN.md) for the next milestones and comprehensive feature scope. Steve completed developer verification and eBay created the sandbox RuName on September 7, 2026. It is now stored in the private environment file. The separate sandbox service and callback route were deployed and verified over public HTTPS on September 7, 2026.
 
 The sandbox keyset authenticated successfully on September 7, 2026. It is stored outside Git at `%USERPROFILE%\.ssn-secrets\ebay-sandbox.env`, with file access restricted to Steve's Windows account. Never copy its contents into the client, repository, screenshots or logs. The Dev ID is retained there but REST OAuth uses only the Client ID and Client Secret.
@@ -96,3 +98,69 @@ Retried the existing USD 5 notebook transaction with synthetic shipping details 
 The saved seller login succeeded, but My eBay > Selling (`/mys/active`) reported **There was a problem loading your items. Please try again later.** The sandbox Seller Center link also returned a missing-page screen. Seller API consent was not renewed during this retry.
 
 Correction to the earlier test-card uncertainty: [eBay Developer Support's sandbox guidance](https://community.ebay.com/t5/Token-Messaging-Sandbox-related/How-to-use-sandbox/td-p/33985322) says dummy credit/debit cards can be used. That guidance does not explain this account/order's failure; unsupported dummy-card data should not be presented as the diagnosed cause. No real funds, payment details, production listings or shipments were used.
+
+## September 13 developer API recheck
+
+- Public production `/v1/ebay/status` returned HTTP 503 with `EBAY_NOT_CONFIGURED`.
+  The production option is not operational; this is separate from eBay Live
+  browser capture and its regional sign-in fix. In a fresh actual SSApp profile,
+  the production Connect eBay button displayed the missing-application-credentials
+  error and did not open a seller OAuth window.
+- Public sandbox `/v1/ebay-sandbox/status` returned HTTP 200 with the expected
+  `ssn-ebay-1` protocol and `sandbox` environment. A fresh isolated reader was
+  correctly reported as not connected.
+- Real sandbox application OAuth passed. Browse returned HTTP 200 and the
+  expected USD 5, 10 and 20 prices for all three existing synthetic listings.
+  No new listings, purchases or seller consent were created.
+- All four backend eBay tests passed. The actual SSApp fixture workflow passed
+  connection/callback, listing import, first/cheapest/cycle selection, auction
+  price/countdown, the normal 60-second paid-sale poll, one-time purchase alert,
+  QR/mobile display and disconnect. No unsolicited chat was sent.
+- These passes do not establish renewable seller OAuth, real sandbox settlement
+  or production readiness. Production application credentials/API access and a
+  successful seller consent/order flow remain outstanding. The API showcase
+  also currently requests the US Browse marketplace and emits US item links;
+  regional browser-capture support is not evidence of regional API parity.
+
+## September 13 seller authorization and checkout investigation
+
+The expired diagnostic token was renewed, and seller consent completed through
+the deployed SSN sandbox `/connect` and `/callback` flow. Public `/status` now
+returns HTTP 200, `environment=sandbox`, `connected=true` for the isolated test
+reader. Private test credentials and reader details remain outside Git. Real
+Browse, Fulfillment and Identity API requests all returned HTTP 200. This
+supersedes the earlier expired-token/reconnection blocker; token refresh over
+time has not yet been exercised.
+
+A fresh purchase of the existing USD 10 listing `110590594059` reproduced the
+checkout failure with a different dummy Visa, ending in 4242, and synthetic
+shipping details. Remember this card was unchecked. eBay created transaction
+`10000013057410` and displayed a USD 10 success confirmation for order
+`02-00001-46169`. After buyer sign-in, **View order details** explicitly showed
+**This order was not successful**, **Payment failed**, and USD 0.00 total.
+Trading `GetOrders` independently reported this transaction as Active,
+CheckoutStatus Incomplete, PaymentMethod None and AmountPaid 0. No specific
+payment decline reason was exposed. The failure occurs within eBay checkout,
+independently of SSN, but the underlying eBay payment-service cause is unknown.
+
+For a separate documented sandbox simulation, Trading `CompleteSale` with
+`Paid=true` succeeded for the older USD 5 order
+`110590594057-10000012446210`. `GetOrders` then reported Completed,
+CheckoutStatus Complete, AmountPaid 5 and PaidTime
+`2026-09-13T18:46:49.971Z`. This was a manual test paid marker, not successful
+card settlement; no shipment or feedback was submitted.
+
+Fulfillment `getOrders` still returned HTTP 200, total 0, both unfiltered and
+with explicit order IDs, using independently issued developer-portal and SSN
+seller tokens. The public SSN `/sales` endpoint therefore correctly returned
+an empty list. The paid-order-to-overlay flow remains unverified against real
+sandbox responses. Do not substitute Trading's manual paid marker for the
+production Fulfillment payment checks merely to make this test pass.
+
+The next external diagnostic is eBay Developer Support investigating the test
+order above and why the completed Trading test order is absent from
+Fulfillment. No support request has been sent. Production setup status is
+tracked separately in [EBAY-PRODUCTION.md](EBAY-PRODUCTION.md).
+
+References: [CompleteSale sandbox testing and Paid field](https://developer.ebay.com/DevZone/XML/docs/Reference/ebay/CompleteSale.html),
+[Fulfillment only covers completed checkout](https://developer.ebay.com/support/knowledge-base/5204).

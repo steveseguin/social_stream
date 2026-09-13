@@ -53,7 +53,7 @@ export async function createServer(options = {}) {
     }
 
 	if (options.ebay || process.env.EBAY_SHOWCASE_ENABLED === '1') {
-		const db = options.ebay?.db || new Database(process.env.SSN_MONETIZATION_DB || 'monetization.db');
+		const db = options.ebay?.db || new Database(process.env.EBAY_DB || process.env.SSN_MONETIZATION_DB || 'monetization.db');
 		if (!options.ebay?.db) app.addHook('onClose', async () => db.close());
 		await app.register(ebayShowcase, { ...options.ebay, db });
 	} else {

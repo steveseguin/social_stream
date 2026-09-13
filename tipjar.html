@@ -905,6 +905,7 @@
         const requestedStyle = urlParams.get('style') || 'jar';
         const style = ['jar', 'meter', 'minimal', 'bar', 'compact', 'vertical', 'text'].concat(summaryStyles).indexOf(requestedStyle) !== -1 ? requestedStyle : 'jar';
         const theme = urlParams.get('theme') || 'default'; // default, neon, gold
+        const hideCurrency = urlParams.has('hidecurrency');
         const requestedHypeMode = urlParams.has('hype') || urlParams.get('mode') === 'hype';
         const goalMetric = normalizeGoalMetric(urlParams.get('goalmetric') || (urlParams.has('countdonations') ? 'count' : 'value'));
         const countMode = goalMetric === 'count';
@@ -1899,7 +1900,7 @@
                 return `${formatNumber(value)} ${nativeUnitLabel}`;
             }
             const num = Number(value) || 0;
-            return `$${forceCents ? num.toFixed(2) : formatNumber(num)}`;
+            return `${hideCurrency ? '' : '$'}${forceCents ? num.toFixed(2) : formatNumber(num)}`;
         }
 
         function getRollingGoalCompletions(amount) {
