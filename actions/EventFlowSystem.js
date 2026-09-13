@@ -1787,6 +1787,66 @@ class EventFlowSystem {
         try { await this.evaluateFlow(flow, message); } finally { this.voiceMessages.delete(message); }
     }
 
+    // Only flows that explicitly opt in with a named API trigger are callable.
+    getWorkflowTriggers() {
+        const triggers = [];
+        for (const flow of this.flows || []) {
+            if (!flow.active) continue;
+            const names = new Set();
+            for (const node of flow.nodes || []) {
+                const name = node.type === 'trigger' && node.triggerType === 'apiTrigger'
+                    && typeof node.config?.trigger === 'string' ? node.config.trigger.trim() : '';
+                if (!name || name.length > 100 || names.has(name)) continue;
+                names.add(name);
+                triggers.push({ flowId: flow.id, flowName: flow.name, trigger: name });
+            }
+        }
+        return triggers;
+    }
+
+    createWorkflowMessage(trigger, data) {
+        const message = {
+            type: 'api', event: 'workflow_trigger', chatname: 'Stream Deck / API',
+            chatmessage: '', textonly: true,
+            meta: { workflow: { trigger, data: JSON.parse(JSON.stringify(data || {})) } }
+        };
+        if (!this.workflowMessages) this.workflowMessages = new WeakMap();
+        this.workflowMessages.set(message, trigger);
+        return message;
+    }
+
+    triggerWorkflow(value) {
+        if (typeof value === 'string') {
+            const text = value.trim();
+            if (text[0] === '{') {
+                try { value = JSON.parse(text); } catch (_) { return { ok: false, code: 'INVALID_VALUE', message: 'Workflow value must be a trigger name or valid JSON.' }; }
+            } else value = { trigger: text };
+        }
+        if (!value || typeof value !== 'object' || Array.isArray(value)
+            || Object.keys(value).some(key => !['trigger', 'flowId', 'data'].includes(key))
+            || typeof value.trigger !== 'string' || !value.trigger.trim() || value.trigger.trim().length > 100
+            || (value.flowId !== undefined && (typeof value.flowId !== 'string' || !value.flowId.trim()))
+            || (value.data !== undefined && (!value.data || typeof value.data !== 'object' || Array.isArray(value.data)))) {
+            return { ok: false, code: 'INVALID_VALUE', message: 'Use a trigger name (1–100 characters), optional flowId, and optional data object.' };
+        }
+        try {
+            if (JSON.stringify(value).length > 32768) return { ok: false, code: 'INVALID_VALUE', message: 'Workflow value must fit within 32,768 characters.' };
+        } catch (_) {
+            return { ok: false, code: 'INVALID_VALUE', message: 'Workflow data must be JSON serializable.' };
+        }
+        const trigger = value.trigger.trim();
+        const matches = this.getWorkflowTriggers().filter(item => item.trigger === trigger && (!value.flowId || item.flowId === value.flowId));
+        if (!matches.length) return { ok: false, code: 'WORKFLOW_NOT_FOUND', message: 'No enabled, saved workflow has this Stream Deck / API trigger.' };
+        matches.forEach(item => {
+            const flow = this.flows.find(candidate => candidate.id === item.flowId);
+            const message = this.createWorkflowMessage(trigger, value.data);
+            Promise.resolve().then(() => this.evaluateFlow(flow, message)).catch(error => {
+                console.warn('[Event Flow] Workflow failed:', item.flowName, error);
+            }).finally(() => this.workflowMessages.delete(message));
+        });
+        return { ok: true, trigger, matchedFlows: matches.length, flows: matches, status: 'accepted' };
+    }
+
     async processMessage(message) {
         
         if (!message) {
@@ -2232,6 +2292,10 @@ class EventFlowSystem {
     
     async evaluateTrigger(triggerNode, message, flow = null) {
         const { triggerType, config } = triggerNode;
+        if (triggerType === 'apiTrigger') {
+            const trigger = message && this.workflowMessages && this.workflowMessages.get(message);
+            return !!trigger && trigger === String(config?.trigger || '').trim();
+        }
         const voice = message && this.voiceMessages && this.voiceMessages.get(message);
         if (voice) return triggerType === 'voicePhrase' && triggerNode.id === voice.nodeId && Date.now() <= voice.expiresAt;
         if (triggerType === 'voicePhrase') return false;
@@ -3278,7 +3342,7 @@ class EventFlowSystem {
 	 * @returns {string} Rendered JSON body
 	 */
 	renderWebhookBody(template, message) {
-		if (typeof template !== 'string' || !/\{\w+\}/i.test(template)) {
+		if (typeof template !== 'string' || !/\{\w+(?:\.\w+)*\}/i.test(template)) {
 			return template;
 		}
 
@@ -4164,7 +4228,19 @@ class EventFlowSystem {
 
             case 'commerceControl': {
                 const request = { cmd: 'monetization', action: 'commerceControl', command: config.command || 'show', url: config.url || '', seconds: Number(config.seconds || 0) };
-                const reply = await this.requestCommerceControl(request);
+                let reply;
+                if (['boardSave','boardSpot','boardVisibility','saleAdd','saleRemove','salesClear','salesSettings'].includes(request.command)) {
+                    try {
+                        const data = typeof config.data === 'string' ? JSON.parse(config.data || '{}') : (config.data || {});
+                        if (!data || typeof data !== 'object' || Array.isArray(data) || JSON.stringify(data).length > 16000) throw new Error('Use a JSON object for board and sales fields.');
+                        request.data = {};
+                        for (const key of Object.keys(data)) {
+                            if (['__proto__','prototype','constructor'].includes(key)) throw new Error('Invalid commerce field.');
+                            request.data[key] = typeof data[key] === 'string' ? this.replaceTemplateVars(data[key], message) : data[key];
+                        }
+                    } catch (error) { reply = { error:error.message }; }
+                }
+                if (!reply) reply = await this.requestCommerceControl(request);
                 const controlResult = reply.error || !reply.commerceState || typeof reply.commerceState !== 'object' || Array.isArray(reply.commerceState)
                     ? { success: false, error: String(reply.error || 'Product control did not return its state.') }
                     : { success: true, commerce: reply.commerceState };

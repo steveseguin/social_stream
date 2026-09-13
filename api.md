@@ -6,6 +6,8 @@ There is an easy to use sandbox to play with some of the common API commands and
 
 Capability-driven control clients should use the versioned [Social Stream Remote-Control Protocol](docs/remote-control-protocol.md). The legacy commands documented below remain supported.
 
+**Run a custom Event Flow:** add the **Run from Stream Deck / API** trigger to a flow, name it, save and enable it. Send `{"action":"triggerWorkflow","value":{"trigger":"intermission"},"get":"run-1"}` through the same SSN connection. `getWorkflowTriggers` discovers callable flow IDs/names; optional `value.flowId` selects one flow and `value.data` supplies template values such as `{meta.workflow.data.minutes}`. Check the host's advertised capabilities first. A successful callback means the run was accepted; delayed or external actions may finish later. See the [complete Stream Deck and API workflow guide](docs/streamdeck-event-flow.html) for HTTP, WebSocket, P2P, examples, failures, and setup.
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**

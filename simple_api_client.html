@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<script src="js/local-server-url.js"></script>
     <title>Simple API Client</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
@@ -35,7 +36,7 @@
                 return;
             }
             
-            socket = new WebSocket('wss://io.socialstream.ninja:443');
+            socket = new WebSocket(SocialStreamLocalServer.getRelayUrl(new URLSearchParams(location.search), 'server', 'wss://io.socialstream.ninja:443'));
             
             socket.onopen = function() {
                 socket.send(JSON.stringify({

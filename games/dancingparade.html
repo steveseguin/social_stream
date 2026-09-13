@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dancing Parade - Social Stream Ninja</title>
@@ -223,6 +224,7 @@
     
     // URL parameters
     const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
     const sessionId = urlParams.get('session') || 'test';
     const password = urlParams.get('password') || 'false';
     
@@ -324,10 +326,10 @@
         }
     }
     
-    function addDancer(username) {
-        if (dancers.has(username)) {
+    function addDancer(username, playerKey = username) {
+        if (dancers.has(playerKey)) {
             // Make existing dancer dance
-            dancers.get(username).dance();
+            dancers.get(playerKey).dance();
             return;
         }
         
@@ -340,7 +342,7 @@
         // Pick random character
         const character = availableCharacters[Math.floor(Math.random() * availableCharacters.length)];
         const dancer = new Dancer(username, character);
-        dancers.set(username, dancer);
+        dancers.set(playerKey, dancer);
         
         // Create join effect
         createConfetti();
@@ -351,8 +353,8 @@
         sendResponse(`${character} ${username} joined the parade!`);
     }
     
-    function makeDance(username) {
-        const dancer = dancers.get(username);
+    function makeDance(username, playerKey = username) {
+        const dancer = dancers.get(playerKey);
         if (dancer) {
             dancer.dance();
             
@@ -481,17 +483,18 @@
             rawMessage = stripHtml(rawMessage);
         }
         const message = rawMessage.trim().toLowerCase();
-        const username = stripHtml(data.chatname);
+        const username = String(data.chatname);
+        const playerKey = JSON.stringify([data.type || '', String(data.userid || data.username || data.chatname)]);
 
         if (message === '!join') {
-            addDancer(username);
+            addDancer(username, playerKey);
         } else if (message === '!dance') {
-            makeDance(username);
+            makeDance(username, playerKey);
         } else if (message === '!leave') {
-            const dancer = dancers.get(username);
+            const dancer = dancers.get(playerKey);
             if (dancer) {
                 dancer.remove();
-                dancers.delete(username);
+                dancers.delete(playerKey);
                 sendResponse(`${username} left the parade 👋`);
             }
         }
@@ -518,7 +521,7 @@
     update();
     
     // Setup iframe communication
-    if (!urlParams.has('demo') && !urlParams.has('server')) {
+    if (!urlParams.has('demo') && !chatRelay.enabled) {
         const iframe = document.createElement("iframe");
         iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
         iframe.style.width = "0px";
@@ -541,8 +544,8 @@
     }
 
     // Handle WebSocket if server parameter provided
-    if (!urlParams.has('demo') && urlParams.has('server')) {
-        const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
+    if (!urlParams.has('demo') && chatRelay.enabled) {
+        const serverUrl = chatRelay.url;
         let socketserver = null;
         let reconnectTimeout = null;
 
@@ -552,8 +555,7 @@
             socketserver.onopen = function() {
                 socketserver.send(JSON.stringify({
                     join: sessionId.split(",")[0],
-                    out: 2,
-                    in: 1
+                    out: chatRelay.out, in: chatRelay.in
                 }));
             };
 

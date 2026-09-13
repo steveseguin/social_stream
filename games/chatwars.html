@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Wars - Social Stream Ninja</title>
@@ -261,6 +262,7 @@
     <script>
         // URL parameters
         const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
         const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
         const password = urlParams.get('password') || 'false';
 
@@ -525,7 +527,8 @@
                 rawMessage = stripHtml(rawMessage);
             }
             const message = rawMessage.toLowerCase().trim();
-            const username = stripHtml(data.chatname);
+            const username = String(data.chatname);
+            const playerKey = JSON.stringify([data.type || '', String(data.userid || data.username || data.chatname)]);
 
             // Check for team join commands
             const teamMatch = message.match(/^!(red|blue|green|yellow)$/);
@@ -534,14 +537,14 @@
                 
                 // Remove player from all teams
                 Object.values(gameState.teams).forEach(team => {
-                    team.players.delete(username);
+                    team.players.delete(playerKey);
                 });
 
                 // Add to new team (cap roster at 200, keeping most recent)
                 if (gameState.teams[newTeam].players.size >= 200) {
                     gameState.teams[newTeam].players = new Set(Array.from(gameState.teams[newTeam].players).slice(-100));
                 }
-                gameState.teams[newTeam].players.add(username);
+                gameState.teams[newTeam].players.add(playerKey);
 
                 // Log team join
                 const logEntry = document.createElement('div');
@@ -556,7 +559,7 @@
 
             // Find player's team and add power
             for (const [teamName, team] of Object.entries(gameState.teams)) {
-                if (team.players.has(username)) {
+                if (team.players.has(playerKey)) {
                     team.power += 1;
                     
                     // Chance to capture territory based on team activity
@@ -570,7 +573,7 @@
         }
 
         // Setup iframe communication
-        if (!urlParams.has('demo') && !urlParams.has('server')) {
+        if (!urlParams.has('demo') && !chatRelay.enabled) {
             const iframe = document.createElement("iframe");
             iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
             iframe.style.width = "0px";
@@ -594,8 +597,8 @@
         }
 
         // Handle WebSocket connection
-        if (!urlParams.has('demo') && urlParams.has('server')) {
-            const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
+        if (!urlParams.has('demo') && chatRelay.enabled) {
+            const serverUrl = chatRelay.url;
             let socketserver = null;
             let reconnectTimeout = null;
 
@@ -605,8 +608,7 @@
                 socketserver.onopen = function() {
                     socketserver.send(JSON.stringify({
                         join: sessionId.split(",")[0],
-                        out: 2,
-                        in: 1
+                        out: chatRelay.out, in: chatRelay.in
                     }));
                 };
 

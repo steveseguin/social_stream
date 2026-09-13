@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
+  <script src="./shared/overlay-control-transport.js"></script>
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
 	<meta content="utf-8" http-equiv="encoding" />
@@ -849,7 +850,9 @@
 		return Math.floor(Math.random() * (max - min) + min);
 	}
 
+    SSNOverlayControl.connect(urlParams, roomID, 'waitlist', processInput);
 	function processInput(data){
+        if (!SSNOverlayControl.accept(data, 'waitlist')) return;
 
 		console.log(data);
 
