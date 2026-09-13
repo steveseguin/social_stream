@@ -1189,6 +1189,8 @@ TTS.configure = function(urlParams) {
         }
     }
 
+    TTS.simpleGiftSpeech = urlParams.has("simpletts") || urlParams.has("simpletts2");
+
     // Simplified TTS
     if (urlParams.has("simpletts")) {
         TTS.English = false;
@@ -1901,36 +1903,56 @@ TTS.speechMeta = function(data, allow = false) {
         return;
     }
 
-    const tikTokGiftStreakId =
-        data.type === "tiktok" &&
-        isDonation &&
-        meta.tiktokGiftStreakId &&
-        !meta.tiktokGiftTtsReady
-            ? String(meta.tiktokGiftStreakId)
-            : "";
-    if (tikTokGiftStreakId) {
-        const existingPending = TTS.pendingTikTokGiftSpeech.get(tikTokGiftStreakId);
-        if (existingPending && existingPending.timer) {
-            clearTimeout(existingPending.timer);
+    // Native IDs match across DOM, WebSocket and duplicate source windows.
+    // Never dedupe gifts by display text: identical-looking gifts can be separate purchases.
+    var tikTokGift = data.type === "tiktok" && (data.event === "gift" || (isDonation && meta.tiktokGiftStreakId));
+    var giftSpeechKeys = [];
+    if (tikTokGift) {
+        var nativeMessageId = meta.tiktokGiftMessageId || data.msgId;
+        if (meta.groupId && String(meta.groupId) !== "0" && meta.giftId && meta.tiktokGiftSenderId) {
+            giftSpeechKeys.push("group:" + JSON.stringify([String(meta.tiktokGiftSenderId), String(meta.giftId), String(meta.groupId)]));
         }
-
-        const configuredQuietMs = Number(meta.tiktokGiftQuietMs);
-        const quietMs = Number.isFinite(configuredQuietMs)
-            ? Math.max(500, Math.min(30000, configuredQuietMs))
-            : 4500;
-        const settledData = Object.assign({}, data, {
+        if (nativeMessageId) giftSpeechKeys.push("message:" + String(nativeMessageId));
+        if (!giftSpeechKeys.length && meta.tiktokGiftStreakId) giftSpeechKeys.push("legacy:" + String(meta.tiktokGiftStreakId));
+    }
+    var giftSpeechKey = giftSpeechKeys[0];
+    var giftSpeechCount = Number(meta.tiktokGiftCount || meta.count || meta.repeatCount) || 1;
+    if (giftSpeechKey && !allow) {
+        if (!TTS.completedTikTokGiftSpeech) TTS.completedTikTokGiftSpeech = new Map();
+        var giftSpeechNow = Date.now();
+        TTS.completedTikTokGiftSpeech.forEach(function(entry, key) {
+            if (giftSpeechNow - entry.at > 600000) TTS.completedTikTokGiftSpeech.delete(key);
+        });
+        if (giftSpeechKeys.some(function(key) {
+            var previous = TTS.completedTikTokGiftSpeech.get(key);
+            return previous && previous.count >= giftSpeechCount;
+        })) return;
+    }
+    if (giftSpeechKey && !meta.tiktokGiftTtsReady && !allow) {
+        var existingPending = TTS.pendingTikTokGiftSpeech.get(giftSpeechKey);
+        if (existingPending && existingPending.count > giftSpeechCount) return;
+        if (existingPending && existingPending.count === giftSpeechCount && !meta.repeatEnd) return;
+        if (existingPending && existingPending.timer) clearTimeout(existingPending.timer);
+        var configuredQuietMs = Number(meta.tiktokGiftQuietMs);
+        var quietMs = Number.isFinite(configuredQuietMs) ? Math.max(500, Math.min(30000, configuredQuietMs)) : 4500;
+        var settledData = Object.assign({}, data, {
             meta: Object.assign({}, meta, { tiktokGiftTtsReady: true })
         });
-        const pending = {
-            timer: setTimeout(function() {
-                if (TTS.pendingTikTokGiftSpeech.get(tikTokGiftStreakId) !== pending) {
-                    return;
-                }
-                TTS.pendingTikTokGiftSpeech.delete(tikTokGiftStreakId);
+        var pending = { count: giftSpeechCount, timer: null };
+        // Explicitly ongoing streaks wait for completion; legacy payloads use the quiet timer.
+        if (!(meta.streakable === true && meta.repeatEnd === false)) {
+            pending.timer = setTimeout(function() {
+                if (TTS.pendingTikTokGiftSpeech.get(giftSpeechKey) !== pending) return;
+                TTS.pendingTikTokGiftSpeech.delete(giftSpeechKey);
                 TTS.speechMeta(settledData, allow);
-            }, quietMs)
-        };
-        TTS.pendingTikTokGiftSpeech.set(tikTokGiftStreakId, pending);
+            }, quietMs);
+        } else {
+            // Abandon interrupted streaks without announcing a partial total.
+            pending.timer = setTimeout(function() {
+                if (TTS.pendingTikTokGiftSpeech.get(giftSpeechKey) === pending) TTS.pendingTikTokGiftSpeech.delete(giftSpeechKey);
+            }, 120000);
+        }
+        TTS.pendingTikTokGiftSpeech.set(giftSpeechKey, pending);
         return;
     }
 
@@ -2001,6 +2023,59 @@ TTS.speechMeta = function(data, allow = false) {
         var chatname = "";
         if (TTS.ttsSpeakChatname && data.chatname) {
             chatname = sanitizeSpeechText(data.chatname.toLowerCase());
+        }
+
+        if (tikTokGift) {
+            var giftName = typeof meta.giftName === "string" ? meta.giftName : "";
+            var giftCount = Number(meta.tiktokGiftCount || meta.count || meta.repeatCount);
+            var giftMatch = msgPlain.match(/^(?:sent\s+)?(.+?)\s*[x\u00d7]\s*(\d+)$/i);
+            if (!giftName && giftMatch) giftName = giftMatch[1];
+            if (!(giftCount > 0) && giftMatch) giftCount = Number(giftMatch[2]);
+            if (!giftName && typeof data.title === "string") giftName = data.title;
+            if (!giftName && !/^sent\s/i.test(msgPlain)) giftName = msgPlain;
+            if (giftName) {
+                giftName = sanitizeSpeechText(giftName).replace(/\s+/g, " ").trim();
+                if (!(giftCount > 0) || !Number.isFinite(giftCount)) giftCount = 1;
+                if (giftSpeechKey && !allow) {
+                    giftSpeechKeys.forEach(function(key) {
+                        TTS.completedTikTokGiftSpeech.set(key, { at: Date.now(), count: giftSpeechCount });
+                    });
+                    while (TTS.completedTikTokGiftSpeech.size > 2000) {
+                        TTS.completedTikTokGiftSpeech.delete(TTS.completedTikTokGiftSpeech.keys().next().value);
+                    }
+                }
+                // Speech language, not popup/UI language or the stream's country.
+                var giftLanguage = TTS.speechLang || (TTS.English ? "en" : "");
+                var giftProvider = TTS.TTSProvider || "system";
+                if (giftProvider === "system") {
+                    var giftVoice = TTS.voice;
+                    if (!giftVoice && TTS.voiceName && typeof TTS.findSystemVoice === "function") {
+                        giftVoice = TTS.findSystemVoice(TTS.voiceName, TTS.speechLang);
+                    }
+                    if (giftVoice && giftVoice.lang) giftLanguage = giftVoice.lang;
+                } else if (giftProvider === "google" && TTS.googleSettings) {
+                    var googleGiftVoice = String(TTS.googleSettings.voiceName || "").match(/^([a-z]{2,3}-[a-z]{2})-/i);
+                    giftLanguage = TTS.googleSettings.lang || (googleGiftVoice && googleGiftVoice[1]) || giftLanguage;
+                } else if (giftProvider === "gemini" && TTS.geminiSettings) {
+                    giftLanguage = TTS.geminiSettings.lang || giftLanguage;
+                } else if (giftProvider === "speechify" && TTS.speechifySettings) {
+                    giftLanguage = TTS.speechifySettings.language || giftLanguage;
+                } else if (giftProvider === "espeak" && TTS.espeakSettings) {
+                    giftLanguage = TTS.espeakSettings.voice || giftLanguage;
+                }
+                giftLanguage = String(giftLanguage).toLowerCase().split(/[-_]/)[0];
+                var giftVerbs = {
+                    en: "sent", es: "envi\u00f3", pt: "enviou", fr: "a envoy\u00e9",
+                    de: "sendete", it: "ha inviato", nl: "stuurde"
+                };
+                var giftVerb = TTS.simpleGiftSpeech || (giftLanguage === "en" && !TTS.English) ? "" : giftVerbs[giftLanguage];
+                // Keep platform gift names intact; never guess translations from their IDs.
+                var giftSpeech = (chatname ? chatname + (giftVerb ? " " : ". ") : "") +
+                    (giftVerb ? giftVerb + " " : "") + giftCount + " " + giftName;
+                if (!chatname && giftVerb) giftSpeech = giftSpeech.charAt(0).toUpperCase() + giftSpeech.slice(1);
+                TTS.speak(giftSpeech, allow);
+                return;
+            }
         }
 
         if (data.hasDonation) {
