@@ -520,6 +520,8 @@
 			data.hasDonation = formatCoins(diamondCount * repeatCount);
 			data.contentimg = payload.giftPictureUrl || "";
 			meta.giftId = payload.giftId;
+			if (payload.msgId) meta.tiktokGiftMessageId = String(payload.msgId);
+			if (payload.userId) meta.tiktokGiftSenderId = String(payload.userId);
 			meta.giftName = payload.giftName || "";
 			meta.repeatCount = repeatCount;
 			meta.diamondCount = diamondCount;

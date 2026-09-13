@@ -661,6 +661,12 @@
 			"matches": ["https://substack.com/*", "https://*.substack.com/*"]
 		},
 		{
+			"js": ["./sources/inject/tiktok-gift.js"],
+			"matches": ["https://www.tiktok.com/*live*", "https://livecenter.tiktok.com/*"],
+			"world": "MAIN",
+			"run_at": "document_start"
+		},
+		{
 			"js": ["./sources/tiktok.js"],
 			"matches": ["https://www.tiktok.com/*live*", "https://livecenter.tiktok.com/*", "http://localhost:8080/*/fav.html", "http://localhost:8181/*/fav.html"]
 		},

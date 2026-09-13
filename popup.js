@@ -5548,10 +5548,14 @@ function markBeginnerAdvancedSections() {
 }
 
 function applyPopupBeginnerMode(enabled) {
+	var modeChanged = document.body.classList.contains("beginner-mode") !== !!enabled;
 	markBeginnerAdvancedSections();
 	document.body.classList.toggle("beginner-mode", !!enabled);
 	if (typeof checkImportantChanges === "function" && popupImportantChangesReady === true) {
 		checkImportantChanges();
+	}
+	if (modeChanged) {
+		document.dispatchEvent(new Event("popup-beginner-mode-changed"));
 	}
 }
 
@@ -12808,6 +12812,18 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		restorePopupSearchScrollContext();
 		popupSearchIndex = null;
 	}
+
+	function refreshPopupSearchIndex() {
+		popupSearchIndex = null;
+		if (popupSearchTimer) {
+			clearTimeout(popupSearchTimer);
+			popupSearchTimer = null;
+		}
+		if (popupSearchInput && popupSearchInput.value.trim()) {
+			applyPopupSearchNow(popupSearchInput.value);
+		}
+	}
+	document.addEventListener('popup-beginner-mode-changed', refreshPopupSearchIndex);
 
 	if (popupSearchInput) {
 		popupSearchInput.addEventListener('input', function() {
