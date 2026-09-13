@@ -17,6 +17,7 @@ function service(initialDisk = {}) {
 		disk = {};
 	const c = {
 		SSNMonetization: M,
+		SSNCommerceBoards: require('../shared/monetization/boards.js'),
 		crypto: require('node:crypto').webcrypto,
 		Uint8Array,
 		TextEncoder,
@@ -77,6 +78,35 @@ function service(initialDisk = {}) {
 		}
 	};
 }
+test('Commerce boards persist across host reload and failed saves do not replace state', async () => {
+ const s = service();
+ await s.request('commerceControl',{command:'boardSave',data:{count:120,columns:20}});
+ await s.request('commerceControl',{command:'boardSpot',data:{id:'12',status:'revealed',result:'Card'}});
+ await s.request('commerceControl',{command:'salesSettings',data:{automatic:true,visible:true}});
+ const event={type:'shopify',event:'purchase',id:'purchase-id',subtitle:'Card'};
+ await s.c.recordCommercePurchase(event);
+ const reloaded=service(s.disk);
+ let state=(await reloaded.request('getCommerceState')).commerce.boards;
+ assert.equal(state.board.spots[11].result,'Card');assert.equal(state.sales.length,1);
+ await reloaded.c.recordCommercePurchase(event);assert.equal((await reloaded.request('getCommerceState')).commerce.boards.sales.length,1);
+ reloaded.c.chrome.storage.local.set=(_,cb)=>{reloaded.c.chrome.runtime.lastError={message:'fixture failure'};cb();delete reloaded.c.chrome.runtime.lastError;};
+ const failed=await reloaded.request('commerceControl',{command:'boardSpot',data:{id:'12',status:'available'}});
+ assert(failed.error);assert.equal((await reloaded.request('getCommerceState')).commerce.boards.board.spots[11].status,'revealed');
+ assert.equal(s.tips.length,0);assert.equal(s.chat.length,0);
+});
+test('auction helper is opt-in, provider-scoped, temporary and never broadcasts draft data', async () => {
+ const s=service();const event={type:'whatnot',event:'auction_update',meta:{title:'Private fixture draft',status:'won',priceText:'$42',bidder:'Private winner'}};
+ s.c.recordCommerceAuction(event);assert.equal((await s.request('getCommerceState')).commerce.auction,null);
+ await s.request('commerceControl',{command:'salesSettings',data:{auctionSource:'whatnot'}});
+ s.c.recordCommerceAuction(event);let state=(await s.request('getCommerceState')).commerce;
+ assert.equal(state.auction.title,'Private fixture draft');assert.equal(state.boards.sales.length,0);
+ s.c.recordCommerceAuction({...event,type:'ebay',meta:{title:'Other show'}});assert.equal((await s.request('getCommerceState')).commerce.auction.title,'Private fixture draft');
+ s.advance(300001);assert.equal((await s.request('getCommerceState')).commerce.auction,null);
+ s.c.recordCommerceAuction(event);s.c.recordCommerceAuction({...event,meta:{status:'idle'}});assert.equal((await s.request('getCommerceState')).commerce.auction,null);
+ s.c.recordCommerceAuction(event);s.c.isExtensionOn=false;assert.equal((await s.request('getCommerceState')).commerce.auction,null);
+ assert(!JSON.stringify(s.sent).includes('Private fixture draft'));assert(!JSON.stringify(s.sent).includes('Private winner'));assert(!JSON.stringify(s.sent).includes('auctionSource'));
+ assert(!JSON.stringify(s.disk).includes('Private fixture draft'));
+});
 test('Wishlist URLs, prices and purchase links retain the correct list context', () => {
 	assert.equal(M.amazonURL(url + '?ref_=wl_share', true), url);
 	for (const bad of ['https://amazon.com.evil.test/hz/wishlist/ls/ABC123', 'http://amazon.com/hz/wishlist/ls/ABC123', 'https://user:pass@amazon.com/hz/wishlist/ls/ABC123', 'https://localhost/hz/wishlist/ls/ABC123']) assert.equal(M.amazonURL(bad, true), '');
@@ -209,6 +239,7 @@ test('Popup retries incomplete startup replies and keeps its mode switch after g
 			};
 		});
 		await page.addScriptTag({ path: path.join(root, 'shared/monetization/core.js') });
+		await page.addScriptTag({ path: path.join(root, 'shared/monetization/board-controls.js') });
 		await page.addScriptTag({ path: path.join(root, 'shared/monetization/popup.js') });
 		await page.waitForFunction(() => document.getElementById('money-current').textContent.includes('Load your wishlist'));
 		assert(await page.evaluate(() => calls >= 2));

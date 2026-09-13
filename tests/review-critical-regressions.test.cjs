@@ -674,6 +674,70 @@ test('Scheduler runs timed actions in a flow that also contains chat-dependent t
     assert.equal(effects.length, 1, 'The time interval must still be respected');
 });
 
+test('Hourly OBS template keeps its gate targets when loaded and repeats only after OBS starts', async () => {
+    const { system, context } = flowSystem();
+    context.fixtureNow = 10000000;
+    vm.runInContext('Date.now = () => fixtureNow;', context);
+    const editorContext = vm.createContext({ console });
+    vm.runInContext(read('actions/EventFlowEditor.js')
+        + '\nglobalThis.Editor = EventFlowEditor; globalThis.templates = FLOW_TEMPLATES;', editorContext);
+    const editor = Object.create(editorContext.Editor.prototype);
+    editor.eventFlowSystem = system;
+    editor.loadFlowList = async () => {};
+    editor.loadFlow = async () => {};
+    editor.showNotification = () => {};
+    const originalTemplate = JSON.stringify(editorContext.templates['obs-hourly-message']);
+    await editor.loadTemplate('obs-hourly-message');
+    await editor.loadTemplate('obs-hourly-message');
+    assert.equal(system.flows.length, 2);
+    const [flow, second] = system.flows;
+    const allIds = system.flows.flatMap(item => item.nodes.map(node => node.id));
+    assert.equal(new Set(allIds).size, allIds.length, 'Each imported copy owns independent nodes');
+    for (const copy of system.flows) {
+        assert.equal(copy.active, false, 'The user must configure and enable the template');
+        const gate = copy.nodes.find(node => node.stateType === 'GATE');
+        assert.equal(gate.config.defaultState, 'BLOCK');
+        const controls = copy.nodes.filter(node => node.actionType === 'setGateState');
+        assert.equal(controls.length, 2);
+        assert.ok(controls.every(node => node.config.targetNodeId === gate.id), 'Both controls target their own switch');
+    }
+    assert.equal(JSON.stringify(editorContext.templates['obs-hourly-message']), originalTemplate);
+
+    const sent = [];
+    system.sanitizeRelay = value => value;
+    system.sendMessageToTabs = message => sent.push(message);
+    await system._runTimeBasedTick();
+    assert.equal(sent.length, 0, 'Disabled templates cannot send');
+    flow.active = true;
+    second.active = true;
+    await system._runTimeBasedTick();
+    assert.equal(sent.length, 0, 'Both switches start OFF');
+    context.fixtureNow += 1800000;
+    await system.evaluateFlow(flow, { type: 'obs', event: 'stream_started', meta: {} });
+    assert.equal(sent.length, 0, 'Stream start opens the switch without sending immediately');
+    context.fixtureNow += 1799999;
+    await system._runTimeBasedTick();
+    assert.equal(sent.length, 0, 'No reminder before the interval is due');
+    context.fixtureNow += 1;
+    await system._runTimeBasedTick();
+    assert.equal(sent.length, 1, 'The timer keeps its schedule; the other copy stays OFF');
+    assert.equal(sent[0].destination, 'twitch');
+    assert.equal(sent[0].response, flow.nodes.find(node => node.actionType === 'sendMessage').config.template);
+    await system._runTimeBasedTick();
+    assert.equal(sent.length, 1, 'Repeated ticks cannot duplicate the hourly reminder');
+    context.fixtureNow += 3600000;
+    await system._runTimeBasedTick();
+    assert.equal(sent.length, 2, 'The reminder repeats at the next hourly interval');
+    await system.evaluateFlow(flow, { type: 'obs', event: 'stream_stopped', meta: {} });
+    context.fixtureNow += 3600000;
+    await system._runTimeBasedTick();
+    assert.equal(sent.length, 2, 'OBS stop blocks later reminders');
+    await system.evaluateFlow(flow, { type: 'twitch', event: 'stream_started', meta: {} });
+    context.fixtureNow += 3600000;
+    await system._runTimeBasedTick();
+    assert.equal(sent.length, 2, 'A non-OBS event cannot reopen the switch');
+});
+
 test('Message triggers do not match or count scheduler ticks, while optional no-message triggers still work', async () => {
     const { system } = flowSystem();
     const cases = [

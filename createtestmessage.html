@@ -223,6 +223,7 @@
 		</form>
 	</div>
 
+	<script src="js/local-server-url.js"></script>
 	<script>
 		var urlParams = new URLSearchParams(window.location.search);
 
@@ -406,6 +407,9 @@
 				apiid: sessionID,
 				value: JSON.stringify(userData)
 			};
+			if (urlParams.has("localserver")) {
+				return sendDirectWebSocket(sessionID, body, 1);
+			}
 			var xhr = new XMLHttpRequest();
 			xhr.open("POST", "https://io.socialstream.ninja/" + encodeURIComponent(sessionID) + "?channel=1", true);
 			xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
@@ -429,7 +433,7 @@
 		}
 
 		function sendDirectWebSocket(sessionID, userData, channel) {
-			var socket = new WebSocket("wss://io.socialstream.ninja:443");
+			var socket = new WebSocket(SocialStreamLocalServer.getRelayUrl(urlParams, "server", "wss://io.socialstream.ninja:443"));
 			var completed = false;
 			var timeout = setTimeout(function() {
 				if (completed) return;

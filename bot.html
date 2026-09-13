@@ -1,5 +1,6 @@
 <html lang="en" style="font-size: 10px; font-family: Roboto, Arial, sans-serif">
 	<head>
+<script src="shared/overlay-control-transport.js"></script>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
@@ -2073,7 +2074,10 @@
 			  ttsCompletionTimer = createReliableTimer(checkPlayback, 100);
 			}
 
-			function processData(data) {
+			SSNOverlayControl.connect(urlParams, roomID, "bot", processData);
+function processData(data) {
+    if (!SSNOverlayControl.accept(data, "bot")) return;
+    if (data && data.action === "clearBotOverlay") return clearBotOverlay({ clearQueue: true });
 			  if (pseudodock) {
 				if (data && !data.contents) {
 				  var tmp = {};

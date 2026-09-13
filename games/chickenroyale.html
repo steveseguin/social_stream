@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chicken Royale - Social Stream Ninja</title>
@@ -278,11 +279,11 @@
     // Career chicken dinners (persistent leaderboard)
     let careerWins = {};
     try { careerWins = JSON.parse(localStorage.getItem('chickenRoyaleDinners') || '{}') || {}; } catch (e) { careerWins = {}; }
-    function getCareerWins(name) { return careerWins[name.toLowerCase()] || 0; }
-    function addCareerWin(name) {
-        careerWins[name.toLowerCase()] = getCareerWins(name) + 1;
+    function getCareerWins(key) { return Number(careerWins[key]) || 0; }
+    function addCareerWin(key) {
+        careerWins[key] = getCareerWins(key) + 1;
         try { localStorage.setItem('chickenRoyaleDinners', JSON.stringify(careerWins)); } catch (e) {}
-        return careerWins[name.toLowerCase()];
+        return careerWins[key];
     }
 
     // ====================== Theme ======================
@@ -679,7 +680,7 @@
         constructor(name, opts) {
             opts = opts || {};
             this.name = name;
-            this.key = name.toLowerCase();
+            this.key = opts.playerKey || name.toLowerCase();
             this.platform = opts.platform || '';
             this.avatar = (typeof opts.avatar === 'string' && /^https?:\/\//.test(opts.avatar)) ? opts.avatar : '';
             this.isBot = !!opts.isBot;
@@ -808,7 +809,7 @@
             const ctx = this.labelCanvas.getContext('2d');
             ctx.clearRect(0, 0, 256, 96);
             let display = this.name.length > 16 ? this.name.slice(0, 15) + '…' : this.name;
-            const wins = getCareerWins(this.name);
+            const wins = getCareerWins(this.key);
             if (wins > 0) display = '👑' + (wins > 1 ? wins : '') + ' ' + display;
             ctx.font = 'bold 26px Arial';
             ctx.textAlign = 'center';
@@ -1308,7 +1309,7 @@
     // ====================== Game flow ======================
     function joinPlayer(name, opts) {
         if (G.mode === 'winner') return;
-        const key = name.toLowerCase();
+        const key = opts && opts.playerKey || name.toLowerCase();
         if (G.players.has(key)) {
             return;
         }
@@ -1333,9 +1334,9 @@
         updateHUD();
     }
 
-    function tryForceStart(byName, isMod) {
+    function tryForceStart(byName, isMod, playerKey = byName.toLowerCase()) {
         if (G.mode !== 'lobby' || G.players.size < 2) return;
-        if (!isMod && !G.players.has(byName.toLowerCase())) return;
+        if (!isMod && !G.players.has(playerKey)) return;
         const left = G.countdownEnd - performance.now();
         if (left > 5500) {
             G.countdownEnd = performance.now() + 5000;
@@ -1391,7 +1392,7 @@
             winner.state = 'wander';
             winner.buffUntil = 0;
             winner.boostSprite.visible = false;
-            const dinners = addCareerWin(winner.name);
+            const dinners = addCareerWin(winner.key);
             winner.labelDirty = true;
 
             // Confetti feathers around the champion
@@ -2013,14 +2014,15 @@
         return false;
     }
     function processData(data) {
+        if (data && data.content) data = data.content;
         if (isDuplicateTransportDelivery(data)) {
             return;
         }
         try {
-            if (data && data.content) data = data.content;
             if (!data || typeof data !== 'object') return;
 
-            const name = sanitizeText(data.chatname);
+            const name = typeof data.chatname === 'string' ? data.chatname.trim() : '';
+            const playerKey = JSON.stringify([data.type || '', String(data.userid || data.username || data.chatname)]);
             const message = sanitizeText(data.chatmessage);
             if (!name || name === 'ChickenRoyale') return;
 
@@ -2033,6 +2035,7 @@
             if (command === '!join' || command === '!play' || command === '!chicken') {
                 joinPlayer(name, {
                     platform: data.type || '',
+                    playerKey: playerKey,
                     avatar: data.chatimg,
                     nameColor: data.nameColor
                 });
@@ -2040,13 +2043,14 @@
             }
 
             if (command === '!start') {
-                tryForceStart(name, !!(data.mod || data.admin || data.host));
+                tryForceStart(name, !!(data.mod || data.admin || data.host), playerKey);
                 return;
             }
 
             if (G.mode === 'lobby' && AUTO_JOIN && message) {
                 joinPlayer(name, {
                     platform: data.type || '',
+                    playerKey: playerKey,
                     avatar: data.chatimg,
                     nameColor: data.nameColor
                 });
@@ -2055,7 +2059,7 @@
 
             // Any chat from a living chicken = CLUCK POWER boost
             if (G.mode === 'battle' && message) {
-                const player = G.players.get(name.toLowerCase());
+                const player = G.players.get(playerKey);
                 if (player && player.alive) {
                     if (donated) {
                         player.boost(30, 8);
@@ -2112,7 +2116,7 @@
 
     // Optional direct WebSocket (?server=wss://...)
     if (!urlParams.has('demo') && urlParams.has('server')) {
-        const serverURL = urlParams.get('server') || 'wss://io.socialstream.ninja';
+        const serverURL = SocialStreamLocalServer.getRelayUrl(urlParams, 'server', 'wss://io.socialstream.ninja');
         let socket = null; let attempts = 1;
         function connect() {
             if (socket) { socket.onclose = null; try { socket.close(); } catch (e) {} }
@@ -2139,7 +2143,7 @@
     // Optional extension relay (?server2 / ?server3)
     (function setupExtensionSocket() {
         if (urlParams.has('demo') || !(urlParams.has('server2') || urlParams.has('server3'))) return;
-        const serverURL = urlParams.has('server2') ? (urlParams.get('server2') || 'wss://io.socialstream.ninja/extension') : (urlParams.get('server3') || 'wss://io.socialstream.ninja/extension');
+        const serverURL = urlParams.has('server2') ? (SocialStreamLocalServer.getRelayUrl(urlParams, 'server2', 'wss://io.socialstream.ninja/extension')) : (SocialStreamLocalServer.getRelayUrl(urlParams, 'server3', 'wss://io.socialstream.ninja/extension'));
         let socket = null; let attempts = 1;
         function connect() {
             if (socket) { socket.onclose = null; try { socket.close(); } catch (e) {} }

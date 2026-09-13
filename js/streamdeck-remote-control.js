@@ -71,6 +71,8 @@
 	};
 
 	const SSN_ACTIONS = {
+		getWorkflowTriggers: true,
+		triggerWorkflow: true,
         getCommerceState: true,
 		commerceShow: true,
 		commerceNext: true,
@@ -141,6 +143,14 @@
 	};
 
 	const REMOTE_SSN_ACTION_DESCRIPTORS = {
+		getWorkflowTriggers: { owner: "background", phase: 2, category: "workflows", label: "List enabled workflow triggers", risk: "read-only", callback: "guaranteed" },
+		triggerWorkflow: {
+			owner: "background", phase: 2, category: "workflows", label: "Run Event Flow workflow", risk: "mutating", callback: "guaranteed",
+			valueSchema: { anyOf: [
+				{ type: "string", minLength: 1, maxLength: 32768, description: "Trigger name or JSON-encoded workflow value." },
+				{ type: "object", required: ["trigger"], properties: { trigger: { type: "string", minLength: 1, maxLength: 100 }, flowId: { type: "string", minLength: 1 }, data: { type: "object" } }, additionalProperties: false }
+			] }
+		},
 		getgiveawayentries: { owner: "background", phase: 2, category: "giveaway", label: "Giveaway entries", risk: "read-only", callback: "guaranteed" },
 		removegiveawayentry: { owner: "background", phase: 2, category: "giveaway", label: "Remove and refund entry", risk: "mutating", callback: "guaranteed" },
 		guessgiveaway: { owner: "background", phase: 2, category: "giveaway", label: "Guess Number Hunt", risk: "mutating", callback: "guaranteed" },
@@ -656,6 +666,11 @@
         if (Array.isArray(value) || (value !== undefined && value !== null && typeof value === "boolean")) return { ok: false, message: "Invalid product control value." };
         const options = value && typeof value === "object" ? value : {};
         const command = { commerceShow: "show", commerceNext: "next", commerceHide: "hide", commerceResume: "resume" }[action] || options.command || request.command;
+        if (action === 'commerceControl' && ['boardSave', 'boardSpot', 'boardVisibility', 'saleAdd', 'saleRemove', 'salesClear', 'salesSettings'].indexOf(command) !== -1) {
+            const data = options.data !== undefined ? options.data : request.data;
+            if (!data || typeof data !== 'object' || Array.isArray(data) || JSON.stringify(data).length > 16000) return {ok:false, message:'Use a commerce board data object.'};
+            return {ok:true, command:command, data:data};
+        }
         const url = options.url !== undefined ? options.url : action === "commerceShow" && typeof value === "string" ? value : request.url || "";
         const duration = options.seconds !== undefined ? options.seconds : (action === "commerceNext" || action === "commerceHide") && value != null && typeof value !== "object" ? value : request.seconds === undefined ? 0 : request.seconds;
         const seconds = Number(duration);

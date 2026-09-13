@@ -15,6 +15,33 @@ const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, "..", "manif
 
 assert.strictEqual(SocialStreamLocalServer.getPort(new URLSearchParams()), 3000);
 assert.strictEqual(SocialStreamLocalServer.getWebSocketUrl(new URLSearchParams("localserverport=3003")), "ws://127.0.0.1:3003");
+// Relay routing must retain hosted behavior and explicit server addresses.
+for (const flag of ["server", "server2", "server3"]) {
+  for (const suffix of ["", "&localserver", "&localserver&localserverport=32123"]) {
+    const params = new URLSearchParams(flag + suffix);
+    assert.strictEqual(SocialStreamLocalServer.getRelayUrl(params, flag, "wss://example.test/api"),
+      suffix ? "ws://127.0.0.1:" + (suffix.includes("32123") ? "32123" : "3000") : "wss://example.test/api");
+    params.set(flag, "ws://192.0.2.1:32124/relay");
+    assert.strictEqual(SocialStreamLocalServer.getRelayUrl(params, flag, "wss://example.test/api"), "ws://192.0.2.1:32124/relay");
+  }
+}
+for (const query of ["", "server2", "server3", "localserver", "localserver&server3"]) {
+  assert.strictEqual(SocialStreamLocalServer.getChatRelayConfig(new URLSearchParams(query)).enabled, false, query);
+}
+assert.deepStrictEqual(SocialStreamLocalServer.getChatRelayConfig(new URLSearchParams("server&server2")),
+  { enabled: true, url: "wss://io.socialstream.ninja", out: 2, in: 1 });
+assert.deepStrictEqual(SocialStreamLocalServer.getChatRelayConfig(new URLSearchParams("localserver&localserverport=32123&server2")),
+  { enabled: true, url: "ws://127.0.0.1:32123", out: 3, in: 4 });
+assert.deepStrictEqual(SocialStreamLocalServer.getChatRelayConfig(new URLSearchParams("localserver&localserverport=32123&server&server2")),
+  { enabled: true, url: "ws://127.0.0.1:32123", out: 3, in: 4 });
+assert.deepStrictEqual(SocialStreamLocalServer.getChatRelayConfig(new URLSearchParams("localserver&localserverport=32123&server=ws://192.0.2.1:32124/relay&server2")),
+  { enabled: true, url: "ws://192.0.2.1:32124/relay", out: 2, in: 1 });
+assert.deepStrictEqual(SocialStreamLocalServer.getChatRelayConfig(new URLSearchParams("localserver&localserverport=32123&server2=ws://192.0.2.1:32124/relay")),
+  { enabled: true, url: "ws://192.0.2.1:32124/relay", out: 3, in: 4 });
+for (const query of ["", "server", "server2", "server3", "localserver"]) {
+  assert.strictEqual(SocialStreamLocalServer.connectLocalRelay(new URLSearchParams(query), "test", () => {}), false,
+    "Legacy pages must retain their existing bridge outside an explicit local relay route");
+}
 for (const invalidPort of ["", "80", "1023", "65536", "3000/path", "3000@example.com", "3.5", "port"]) {
   assert.strictEqual(SocialStreamLocalServer.normalizeExplicitPort(invalidPort), null, `accepted invalid port: ${invalidPort}`);
 }

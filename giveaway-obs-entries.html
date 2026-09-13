@@ -927,9 +927,7 @@
             if (!urlParams.has("server") && !urlParams.has("localserver")) {
                 return;
             }
-            var serverURL = urlParams.has("localserver")
-                ? SocialStreamLocalServer.getWebSocketUrl()
-                : (urlParams.get("server") || "wss://io.socialstream.ninja/api");
+            var serverURL = SocialStreamLocalServer.getRelayUrl(urlParams, "server", "wss://io.socialstream.ninja/api");
 
             function connect() {
                 socketserver = new WebSocket(serverURL);

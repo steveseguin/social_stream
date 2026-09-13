@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Treasure Hunt - Social Stream Ninja</title>
@@ -297,6 +298,7 @@
     
     // URL parameters
     const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
     const sessionId = urlParams.get('session') || 'test';
     const password = urlParams.get('password') || 'false';
 
@@ -411,7 +413,7 @@
         return 'southeast';
     }
     
-    function dig(username, coordinate) {
+    function dig(username, coordinate, playerKey = username) {
         // Parse coordinate (e.g., "B5" -> row 4, col 1)
         const match = coordinate.match(/^([A-J])(\d|10)$/i);
         if (!match) {
@@ -451,7 +453,7 @@
         // Check if treasure found
         const treasure = grid[row][col];
         if (treasure) {
-            foundTreasure(username, treasure, cell);
+            foundTreasure(username, treasure, cell, playerKey);
         } else {
             // Give proximity hint
             const distance = getNearestTreasureDistance(row, col);
@@ -489,14 +491,14 @@
         return minDistance;
     }
     
-    function foundTreasure(username, treasure, cell) {
+    function foundTreasure(username, treasure, cell, playerKey = username) {
         // Show treasure
         cell.textContent = treasure.emoji;
         cell.classList.add('treasure');
         
         // Update score
-        const currentScore = scores.get(username) || 0;
-        scores.set(username, currentScore + treasure.value);
+        const currentScore = (scores.get(playerKey) || {score: 0}).score;
+        scores.set(playerKey, {name: username, score: currentScore + treasure.value});
         updateScoreboard();
         
         // Show found animation
@@ -558,11 +560,12 @@
         scoreList.innerHTML = '';
         
         const sortedScores = Array.from(scores.entries())
-            .sort((a, b) => b[1] - a[1])
+            .sort((a, b) => b[1].score - a[1].score)
             .slice(0, 5);
         
         const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-        sortedScores.forEach(([username, score], index) => {
+        sortedScores.forEach(([, player], index) => {
+            const username = player.name, score = player.score;
             const entry = document.createElement('div');
             entry.className = 'score-entry';
             entry.innerHTML = `
@@ -621,7 +624,7 @@
 
         if (message.toLowerCase().startsWith('!dig ')) {
             const coordinate = message.substring(5).trim().toUpperCase();
-            dig(stripHtml(data.chatname), coordinate);
+            dig(String(data.chatname), coordinate, JSON.stringify([data.type || '', String(data.userid || data.username || data.chatname)]));
         }
     }
     
@@ -630,7 +633,7 @@
     placeTreasures();
     
     // Setup iframe communication
-    if (!urlParams.has('demo') && !urlParams.has('server')) {
+    if (!urlParams.has('demo') && !chatRelay.enabled) {
     const iframe = document.createElement("iframe");
     iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
     iframe.style.width = "0px";
@@ -654,8 +657,8 @@
     }
 
     // Handle WebSocket if server parameter provided
-    if (!urlParams.has('demo') && urlParams.has('server')) {
-        const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
+    if (!urlParams.has('demo') && chatRelay.enabled) {
+        const serverUrl = chatRelay.url;
         let socketserver = null;
         let reconnectTimeout = null;
 
@@ -665,8 +668,7 @@
             socketserver.onopen = function() {
                 socketserver.send(JSON.stringify({
                     join: sessionId.split(",")[0],
-                    out: 2,
-                    in: 1
+                    out: chatRelay.out, in: chatRelay.in
                 }));
             };
 

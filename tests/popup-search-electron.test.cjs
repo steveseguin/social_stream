@@ -161,6 +161,19 @@ async function run() {
  filter();await search('read aloud');escape();
  check(!visible(row),'Escape preserves enabled filter');filter();
  check(wrappers.every((e,i)=>e.checked===state[i]),'Escape plus filter off restores sections');
+ const wasBeginner=d.body.classList.contains('beginner-mode');
+ w.applyPopupBeginnerMode(false);escape();
+ for(const query of ['relay','chat relay','relay all']) {
+  const relayResults=await search(query);
+  const relay=relayResults.find(e=>(e.getAttribute('data-search-targets')||'').split('|').includes('relayall'));
+  check(!!relay && relay.textContent.includes('Relay all messages'),'Relay setting has its full title for '+query);
+ }
+ const titleResults=await search('font');
+ check(titleResults.length>0 && titleResults.every(e=>{
+  const copy=e.cloneNode(true);copy.querySelectorAll('.popup-search-result-section').forEach(s=>s.remove());
+  return /[a-z]{2}/i.test(copy.textContent) && !copy.textContent.includes('Open matching option');
+ }),'Font search results have readable option titles');
+ w.applyPopupBeginnerMode(wasBeginner);escape();
  let results=await search('this-query-has-no-results-9398');
  check(results.length===0 && d.getElementById('popupSearchResults').textContent.includes('No matching'),'No-results message works');
  await search('');

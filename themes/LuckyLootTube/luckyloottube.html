@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+<script src="../../js/local-server-url.js"></script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>From LuckyLootTube with Love</title>
@@ -981,7 +982,7 @@ if (data.chatmessage || data.contentimg || data.hasDonation) addMessage(data);
 }
 
 const session = urlParams.get('session');
-if (session) {
+if (session && !SocialStreamLocalServer.connectLocalRelay(urlParams, session, processData, false)) {
 const iframe = document.createElement("iframe");
 const filename = "dock";
 const password = urlParams.get('password') || 'false';

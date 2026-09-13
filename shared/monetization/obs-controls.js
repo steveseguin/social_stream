@@ -6,6 +6,12 @@
         var select = document.getElementById('commerce-product');
         var stateText = document.getElementById('commerce-state');
         var buttons = section.querySelectorAll('[data-commerce]');
+        var boardsPanel = document.createElement('details'); boardsPanel.className = 'commerce-board-controls'; section.appendChild(boardsPanel);
+        window.SSNCommerceBoardControls(boardsPanel, function (action, data) {
+            return request(action, data).then(function (reply) {
+                var value = result(reply); return value;
+            });
+        }, function () { return location.href; });
         var state = null, busy = false, flight = null, generation = 0;
         if (new URLSearchParams(location.search).has('commerce')) {
             document.querySelectorAll('body > details').forEach(function (el) { el.hidden = el !== section; });

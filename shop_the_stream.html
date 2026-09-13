@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<script src="js/local-server-url.js"></script>
     <title>Shop the Stream Overlay</title>
     <style>
         :root {
@@ -250,7 +251,8 @@ function connectWebSocket() {
         config.socket.close();
     }
     
-    const wsUrl = `wss://io.socialstream.ninja/join/${config.sessionId}/${config.inChannel}/${config.outChannel}`;
+    const relayBase = SocialStreamLocalServer.getRelayUrl(new URLSearchParams(location.search), 'server', 'wss://io.socialstream.ninja');
+    const wsUrl = `${relayBase.replace(/\/$/, '')}/join/${config.sessionId}/${config.inChannel}/${config.outChannel}`;
     config.socket = new WebSocket(wsUrl);
     
     config.socket.onopen = () => {

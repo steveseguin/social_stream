@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="js/local-server-url.js"></script>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Social Stream Control Dock</title>
@@ -345,13 +346,15 @@
 	</footer>
 
 	<script src="translations/page-i18n.js"></script>
-	<script src="shared/monetization/obs-controls.js"></script>
+	<link rel="stylesheet" href="shared/monetization/board-controls.css">
+    <script src="shared/monetization/board-controls.js"></script>
+    <script src="shared/monetization/obs-controls.js"></script>
 	<script>
 		(function() {
 			"use strict";
 
 			var STORAGE_KEY = "ssn-obs-control-session-v1";
-			var WEBSOCKET_URL = "wss://io.socialstream.ninja:443";
+			var WEBSOCKET_URL = SocialStreamLocalServer.getRelayUrl(new URLSearchParams(location.search), null, "wss://io.socialstream.ninja:443");
 			var customServer = new URLSearchParams(location.search).get("server");
 			if (customServer && /^wss?:\/\//i.test(customServer)) WEBSOCKET_URL = customServer;
 			var socket = null;
@@ -463,6 +466,7 @@
 				} catch (error) {
 					return;
 				}
+				if (data && data.type === "commandResult") data = { callback: { get: data.get || (data.result && data.result.request), result: data.result } };
 				if (!data || !data.callback || !data.callback.get) return;
 				var requestId = String(data.callback.get);
 				var pending = pendingRequests[requestId];
@@ -487,7 +491,12 @@
 				commerceDock.disconnected();
 				sessionId = nextSession;
 				sessionInput.value = sessionId;
-				fullApiLink.href = "./sampleapi.html?session=" + encodeURIComponent(sessionId);
+				var apiUrl = new URL('./sampleapi.html', location.href);
+				apiUrl.searchParams.set('session', sessionId);
+				['server', 'localserver', 'localserverport'].forEach(function (key) {
+					if (getUrlParams().has(key)) apiUrl.searchParams.set(key, getUrlParams().get(key));
+				});
+				fullApiLink.href = apiUrl.href;
 				shouldReconnect = true;
 				clearReconnectTimer();
 				if (socket) {
@@ -558,7 +567,7 @@
 				var message = {
 					action: action,
 					apiid: sessionId,
-					get: requestId
+					get: requestId, replyFormat: "commandResult"
 				};
 				var value = parseButtonValue(button);
 				if (value !== undefined) message.value = value;
@@ -616,7 +625,7 @@
 					pendingRequests[id] = {resolve:resolve, reject:reject, timer:setTimeout(function() {
 						delete pendingRequests[id]; reject(new Error("No response. Enable remote API control in Social Stream."));
 					}, 5000)};
-					try { socket.send(JSON.stringify({action:action, value:value, protocol:2, apiid:sessionId, get:id})); }
+					try { socket.send(JSON.stringify({action:action, value:value, protocol:2, apiid:sessionId, get:id, replyFormat:"commandResult"})); }
 					catch (error) { clearTimeout(pendingRequests[id].timer); delete pendingRequests[id]; reject(error); }
 				});
 			}, setCommandStatus);

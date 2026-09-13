@@ -1,5 +1,6 @@
 <html lang="en">
 <head>
+<script src="shared/overlay-control-transport.js"></script>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
@@ -571,11 +572,11 @@ var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
 // Transport migration guard: only pages with full server parity may skip the legacy bridge.
 var TRANSPORT_CAPABILITIES = {
 	serverFeed: false,
-	serverTargeted: false,
+	serverTargeted: true,
 	upstreamCommands: false,
 	customChannel: false,
 	legacyBridgeRequired: true,
-	legacyBridgeReason: "Hype snapshots are still sent with sendHypeP2P."
+	legacyBridgeReason: "Hype snapshots support relay channel 7; retain the bridge for older hosts and mixed displays."
 };
 function versionAtLeast(value, minimum) {
     var a = String(value || "").split(".");
@@ -1184,6 +1185,7 @@ function handleClearAction(clearAction) {
 }
 
 function processInput(data) {
+    if (!SSNOverlayControl.accept(data, "hype")) return;
 
     if (!data || !("hype" in data)) {
         return;
@@ -1469,6 +1471,8 @@ function fadeOutNode(node) {
         node.remove();
     }, 1000, node);
 }
+SSNOverlayControl.connect(urlParams, roomID, "hype", processInput);
+
 if (!useServerOnlyTransport()) {
     iframe = document.createElement("iframe");
     iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + "&solo&view=" + roomID + "&novideo&noaudio&label=hype&cleanoutput&room=" + roomID;

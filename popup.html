@@ -2427,6 +2427,7 @@ input:checked + .slider:before {
 
         </style>
     <link rel="stylesheet" href="shared/monetization/popup.css">
+    <link rel="stylesheet" href="shared/monetization/board-controls.css">
 </head>
 
     <body>
@@ -3339,6 +3340,7 @@ input:checked + .slider:before {
 									<option value="elevenlabs">ElevenLabs</option>
 									<option value="google">Google Cloud</option>
 									<option value="gemini">Gemini (Preview TTS)</option>
+								<option value="fish">Fish Audio</option>
 								<option value="speechify">Speechify</option>
 								<option value="openai">OpenAI</option>
 								<option value="customtts">Custom / Local TTS Endpoint</option>
@@ -3740,8 +3742,42 @@ input:checked + .slider:before {
 								<label for="geminiStyleInstructions"><span class="popup-control-icon" aria-hidden="true">🎨</span>Style instructions</label>
 							</div>
 						</div>
-						<!-- Speechify TTS Options -->
-						<div class="tts-provider-options options_group hidden" id="speechifyTTS">
+						<!-- Fish Audio TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="fishTTS">
+                            <h4><span class="popup-control-icon" aria-hidden="true">&#128031;</span><span>Fish Audio TTS Options</span></h4>
+                            <div class="textInputContainer">
+                                <input type="password" id="fishAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Fish Audio API key" data-textparam1="fishkey" />
+                                <label for="fishAPIKey">&#128273; API Key (optional with bridge)</label>
+                            </div>
+                            <div class="textInputContainer">
+                                <input type="text" id="fishVoiceID" class="textInput instant" autocomplete="off" placeholder="Optional voice model ID" data-textparam1="voicefish" />
+                                <label for="fishVoiceID">&#128266; Voice ID</label>
+                            </div>
+                            <div class="textInputContainer">
+                                <input type="url" id="fishEndpoint" class="textInput instant" autocomplete="off" placeholder="http://127.0.0.1:8124/v1/audio/speech" data-textparam1="fishendpoint" />
+                                <label for="fishEndpoint">Bridge URL (required for OBS / browsers)</label>
+                            </div>
+                            <p>OBS / browser playback requires the separate SSN TTS bridge. It must stay running on the playback computer and is not built into SSApp. <a href="docs/tts-setup-guide.html#settings-fish" target="_blank" rel="noopener">Bridge setup instructions</a></p>
+                            <details class="popup-subsection">
+                                <summary>Advanced options</summary>
+                                <div class="textInputContainer">
+                                <select class="textInput" id="fishModel" data-optionparam1="fishmodel">
+                                    <option value="s2.1-pro-free">S2.1 Pro Free (availability varies)</option>
+                                    <option value="s2.1-pro">S2.1 Pro (paid)</option>
+                                    <option value="s2-pro">S2 Pro (paid)</option>
+                                    <option value="s1">S1 (paid)</option>
+                                </select>
+                                <label for="fishModel">&#129302; Model</label>
+                                </div>
+                                <div class="options indent">
+                                    <label class="switch"><input type="checkbox" data-param1="fishspeed" aria-label="Use custom Fish Audio speaking rate" /><span class="slider round"></span></label>
+                                    <label for="fishSpeed">&#9889; Speaking rate</label>
+                                    <input id="fishSpeed" type="number" min="0.5" max="2" step="0.1" value="1" data-numbersetting="fishspeed" />
+                                </div>
+                            </details>
+                        </div>
+                        <!-- Speechify TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="speechifyTTS">
 							<h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-speechify-options">Speechify TTS Options</span></h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="speechifyAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam1="speechifykey" />
@@ -5524,6 +5560,7 @@ input:checked + .slider:before {
                                 <option value="kitten">Kitten TTS (browser-based)</option>
                                 <option value="elevenlabs">ElevenLabs</option>
                                 <option value="google">Google Cloud</option>
+                                <option value="fish">Fish Audio</option>
                                 <option value="speechify">Speechify</option>
                                 <option value="openai">OpenAI</option>
                                 <option value="customtts">Custom / Local TTS Endpoint</option>
@@ -5854,8 +5891,42 @@ input:checked + .slider:before {
 							</div>
 						</div>
 
-						<!-- Speechify TTS Options -->
-						<div class="tts-provider-options options_group hidden" id="speechifyTTS2">
+						<!-- Fish Audio TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="fishTTS2">
+                            <h4><span class="popup-control-icon" aria-hidden="true">&#128031;</span><span>Fish Audio TTS Options</span></h4>
+                            <div class="textInputContainer">
+                                <input type="password" id="fishAPIKey2" class="textInput instant" autocomplete="off" placeholder="Your Fish Audio API key" data-textparam2="fishkey" />
+                                <label for="fishAPIKey2">&#128273; API Key (optional with bridge)</label>
+                            </div>
+                            <div class="textInputContainer">
+                                <input type="text" id="fishVoiceID2" class="textInput instant" autocomplete="off" placeholder="Optional voice model ID" data-textparam2="voicefish" />
+                                <label for="fishVoiceID2">&#128266; Voice ID</label>
+                            </div>
+                            <div class="textInputContainer">
+                                <input type="url" id="fishEndpoint2" class="textInput instant" autocomplete="off" placeholder="http://127.0.0.1:8124/v1/audio/speech" data-textparam2="fishendpoint" />
+                                <label for="fishEndpoint2">Bridge URL (required for OBS / browsers)</label>
+                            </div>
+                            <p>OBS / browser playback requires the separate SSN TTS bridge. It must stay running on the playback computer and is not built into SSApp. <a href="docs/tts-setup-guide.html#settings-fish" target="_blank" rel="noopener">Bridge setup instructions</a></p>
+                            <details class="popup-subsection">
+                                <summary>Advanced options</summary>
+                                <div class="textInputContainer">
+                                <select class="textInput" id="fishModel2" data-optionparam2="fishmodel">
+                                    <option value="s2.1-pro-free">S2.1 Pro Free (availability varies)</option>
+                                    <option value="s2.1-pro">S2.1 Pro (paid)</option>
+                                    <option value="s2-pro">S2 Pro (paid)</option>
+                                    <option value="s1">S1 (paid)</option>
+                                </select>
+                                <label for="fishModel2">&#129302; Model</label>
+                                </div>
+                                <div class="options indent">
+                                    <label class="switch"><input type="checkbox" data-param2="fishspeed" aria-label="Use custom Fish Audio speaking rate" /><span class="slider round"></span></label>
+                                    <label for="fishSpeed2">&#9889; Speaking rate</label>
+                                    <input id="fishSpeed2" type="number" min="0.5" max="2" step="0.1" value="1" data-numbersetting2="fishspeed" />
+                                </div>
+                            </details>
+                        </div>
+                        <!-- Speechify TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="speechifyTTS2">
 							<h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-speechify-options">Speechify TTS Options</span></h4>
                             <div class="textInputContainer" style="width: 95%;">
                                 <input type="password" id="speechifyAPIKey2" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam2="speechifykey" />
@@ -8334,7 +8405,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="announce-donations-across-all-chats">🙏 Announce donations across all chats </span>
                                 </div>
-                                <div>
+                                <div data-keywords="chat relay relay all messages between chats">
                                     <label class="switch">
                                         <input type="checkbox" id="relayall" data-setting="relayall" />
                                         <span class="slider round"></span>
@@ -10228,6 +10299,7 @@ input:checked + .slider:before {
 								<option value="elevenlabs">ElevenLabs</option>
 								<option value="google">Google Cloud</option>
 								<option value="gemini">Gemini (Preview TTS)</option>
+								<option value="fish">Fish Audio</option>
 								<option value="speechify">Speechify</option>
 								<option value="openai">OpenAI</option>
 								<option value="customtts">Custom / Local TTS Endpoint</option>
@@ -10479,8 +10551,42 @@ input:checked + .slider:before {
 							</div>
 
 						</div>
-						<!-- Speechify TTS Options -->
-						<div class="tts-provider-options options_group hidden" id="speechifyTTS10">
+						<!-- Fish Audio TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="fishTTS10">
+                            <h4><span class="popup-control-icon" aria-hidden="true">&#128031;</span><span>Fish Audio TTS Options</span></h4>
+                            <div class="textInputContainer">
+                                <input type="password" id="fishAPIKey10" class="textInput instant" autocomplete="off" placeholder="Your Fish Audio API key" data-textparam10="fishkey" />
+                                <label for="fishAPIKey10">&#128273; API Key (optional with bridge)</label>
+                            </div>
+                            <div class="textInputContainer">
+                                <input type="text" id="fishVoiceID10" class="textInput instant" autocomplete="off" placeholder="Optional voice model ID" data-textparam10="voicefish" />
+                                <label for="fishVoiceID10">&#128266; Voice ID</label>
+                            </div>
+                            <div class="textInputContainer">
+                                <input type="url" id="fishEndpoint10" class="textInput instant" autocomplete="off" placeholder="http://127.0.0.1:8124/v1/audio/speech" data-textparam10="fishendpoint" />
+                                <label for="fishEndpoint10">Bridge URL (required for OBS / browsers)</label>
+                            </div>
+                            <p>OBS / browser playback requires the separate SSN TTS bridge. It must stay running on the playback computer and is not built into SSApp. <a href="docs/tts-setup-guide.html#settings-fish" target="_blank" rel="noopener">Bridge setup instructions</a></p>
+                            <details class="popup-subsection">
+                                <summary>Advanced options</summary>
+                                <div class="textInputContainer">
+                                <select class="textInput" id="fishModel10" data-optionparam10="fishmodel">
+                                    <option value="s2.1-pro-free">S2.1 Pro Free (availability varies)</option>
+                                    <option value="s2.1-pro">S2.1 Pro (paid)</option>
+                                    <option value="s2-pro">S2 Pro (paid)</option>
+                                    <option value="s1">S1 (paid)</option>
+                                </select>
+                                <label for="fishModel10">&#129302; Model</label>
+                                </div>
+                                <div class="options indent">
+                                    <label class="switch"><input type="checkbox" data-param10="fishspeed" aria-label="Use custom Fish Audio speaking rate" /><span class="slider round"></span></label>
+                                    <label for="fishSpeed10">&#9889; Speaking rate</label>
+                                    <input id="fishSpeed10" type="number" min="0.5" max="2" step="0.1" value="1" data-numbersetting10="fishspeed" />
+                                </div>
+                            </details>
+                        </div>
+                        <!-- Speechify TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="speechifyTTS10">
 							<h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-speechify-options">Speechify TTS Options</span></h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="speechifyAPIKey10" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam10="speechifykey" />
@@ -12761,6 +12867,7 @@ input:checked + .slider:before {
                                 <option value="elevenlabs">ElevenLabs</option>
                                 <option value="google">Google Cloud</option>
                                 <option value="gemini">Gemini (Preview TTS)</option>
+                                <option value="fish">Fish Audio</option>
                                 <option value="speechify">Speechify</option>
                                 <option value="openai">OpenAI</option>
                                 <option value="customtts">Custom / Local TTS Endpoint</option>
@@ -13099,6 +13206,40 @@ input:checked + .slider:before {
                             </div>
                         </div>
 
+                        <!-- Fish Audio TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="fishTTS18">
+                            <h4><span class="popup-control-icon" aria-hidden="true">&#128031;</span><span>Fish Audio TTS Options</span></h4>
+                            <div class="textInputContainer">
+                                <input type="password" id="fishAPIKey18" class="textInput instant" autocomplete="off" placeholder="Your Fish Audio API key" data-textparam18="fishkey" />
+                                <label for="fishAPIKey18">&#128273; API Key (optional with bridge)</label>
+                            </div>
+                            <div class="textInputContainer">
+                                <input type="text" id="fishVoiceID18" class="textInput instant" autocomplete="off" placeholder="Optional voice model ID" data-textparam18="voicefish" />
+                                <label for="fishVoiceID18">&#128266; Voice ID</label>
+                            </div>
+                            <div class="textInputContainer">
+                                <input type="url" id="fishEndpoint18" class="textInput instant" autocomplete="off" placeholder="http://127.0.0.1:8124/v1/audio/speech" data-textparam18="fishendpoint" />
+                                <label for="fishEndpoint18">Bridge URL (required for OBS / browsers)</label>
+                            </div>
+                            <p>OBS / browser playback requires the separate SSN TTS bridge. It must stay running on the playback computer and is not built into SSApp. <a href="docs/tts-setup-guide.html#settings-fish" target="_blank" rel="noopener">Bridge setup instructions</a></p>
+                            <details class="popup-subsection">
+                                <summary>Advanced options</summary>
+                                <div class="textInputContainer">
+                                <select class="textInput" id="fishModel18" data-optionparam18="fishmodel">
+                                    <option value="s2.1-pro-free">S2.1 Pro Free (availability varies)</option>
+                                    <option value="s2.1-pro">S2.1 Pro (paid)</option>
+                                    <option value="s2-pro">S2 Pro (paid)</option>
+                                    <option value="s1">S1 (paid)</option>
+                                </select>
+                                <label for="fishModel18">&#129302; Model</label>
+                                </div>
+                                <div class="options indent">
+                                    <label class="switch"><input type="checkbox" data-param18="fishspeed" aria-label="Use custom Fish Audio speaking rate" /><span class="slider round"></span></label>
+                                    <label for="fishSpeed18">&#9889; Speaking rate</label>
+                                    <input id="fishSpeed18" type="number" min="0.5" max="2" step="0.1" value="1" data-numbersetting18="fishspeed" />
+                                </div>
+                            </details>
+                        </div>
                         <!-- Speechify TTS Options -->
                         <div class="tts-provider-options options_group hidden" id="speechifyTTS18">
                             <h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-speechify-options">Speechify TTS Options</span></h4>
@@ -16237,6 +16378,7 @@ input:checked + .slider:before {
         <script src="shared/stickers/catalog.js"></script>
         <script src="shared/stickers/popup.js"></script>
 <script src="shared/monetization/core.js"></script>
+<script src="shared/monetization/board-controls.js"></script>
 <script src="shared/monetization/popup.js"></script>
 <script src="shared/giveaway/popup.js"></script>
 <script src="shared/audience-room/popup.js"></script>
