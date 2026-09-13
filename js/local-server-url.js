@@ -83,9 +83,9 @@
 		var params = getSearchParams(searchParams);
 		if (!params || !session) return false;
 		var parameter = params.has("server") ? "server" : params.has("server2") ? "server2" : params.has("server3") ? "server3" : null;
-		if (!parameter || (!featured && parameter === "server3")) return false;
-		var endpoint = getRelayUrl(params, parameter, parameter === "server" ? "wss://io.socialstream.ninja/api" : "wss://io.socialstream.ninja/extension");
-		var channel = featured ? (parameter === "server" ? 2 : parameter === "server2" ? 4 : 1) : (parameter === "server" ? 1 : 4);
+		if (!parameter || parameter === "server3") return false;
+		var endpoint = getRelayUrl(params, parameter, parameter === "server" ? (featured ? "wss://io.socialstream.ninja" : "wss://io.socialstream.ninja/api") : "wss://io.socialstream.ninja/extension");
+		var channel = parameter === "server" ? (featured ? 2 : 1) : 4;
 		var socket, retry, closed = false;
 		function connect() {
 			if (closed) return;

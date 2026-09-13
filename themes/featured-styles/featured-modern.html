@@ -497,7 +497,7 @@
 
         // Create VDO.Ninja iframe for receiving messages
         function createIframe() {
-            if (SocialStreamLocalServer.connectLocalRelay(urlParams, roomID, processData, true)) return;
+            if (SocialStreamLocalServer.connectLocalRelay(urlParams, roomID, processData, !pseudodock)) return;
 			var iframe = document.createElement("iframe");
 
 			if (pseudodock) {

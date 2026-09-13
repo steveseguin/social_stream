@@ -144,3 +144,18 @@ test('Spam Power reconnects its server route and continues the same round', asyn
         await page.waitForFunction(before=>gameState.totalPower>before,before); await context.close();
     } finally { await browser.close(); await closeServer(server.server); }
 });
+
+
+test('Chicken Royale shows old name totals separately without assigning them to current accounts', () => {
+    const rows=[],list={textContent:'',appendChild:row=>rows.push(row)},panel={hidden:true},roster={classList:{toggle(){}}};
+    const first=JSON.stringify(['youtube','one']),second=JSON.stringify(['twitch','one']);
+    const c={careerWins:{alice:12,bob:3,[first]:2,[second]:1,'<img src=x onerror=alert(1)>':4},
+        document:{getElementById:id=>id==='legacy-wins'?panel:id==='roster'?roster:list,createElement:()=>({})},
+        localStorage:{setItem(){}}};
+    vm.createContext(c);vm.runInContext(functions('games/chickenroyale.html',['getCareerWins','addCareerWin','showLegacyCareerWins']),c);
+    c.showLegacyCareerWins();assert.equal(panel.hidden,false);
+    assert.deepEqual(rows.map(row=>row.textContent),['alice: 12 wins','<img src=x onerror=alert(1)>: 4 wins','bob: 3 wins']);
+    assert(rows.every(row=>!('innerHTML' in row)));
+    c.addCareerWin(first);assert.equal(c.getCareerWins(first),3);assert.equal(c.getCareerWins(second),1);assert.equal(c.getCareerWins('alice'),12);
+    c.careerWins={[first]:3};rows.length=0;c.showLegacyCareerWins();assert.equal(panel.hidden,true);assert.equal(rows.length,0);
+});

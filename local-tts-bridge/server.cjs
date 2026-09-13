@@ -3,6 +3,7 @@
 
 const http = require("http");
 const https = require("https");
+const crypto = require("crypto");
 const { URL } = require("url");
 
 function arg(name, fallback) {
@@ -26,6 +27,16 @@ const port = parseInt(arg("port", process.env.PORT || process.env.SSN_TTS_BRIDGE
 const host = arg("host", process.env.SSN_TTS_BRIDGE_HOST || "127.0.0.1");
 const targetBearer = process.env.SSN_TTS_TARGET_BEARER || "";
 const forwardAuth = process.env.SSN_TTS_FORWARD_AUTH === "1";
+// Only Fish mode with a stored upstream key needs a separate caller credential.
+const bridgeToken = mode === "fish" && targetBearer
+    ? (process.env.SSN_TTS_BRIDGE_TOKEN || crypto.randomBytes(32).toString("hex")) : "";
+
+function authorized(req) {
+    if (!bridgeToken) return true;
+    const received = Buffer.from(req.headers.authorization || "");
+    const expected = Buffer.from("Bearer " + bridgeToken);
+    return received.length === expected.length && crypto.timingSafeEqual(received, expected);
+}
 
 function corsHeaders(extra) {
     return Object.assign({
@@ -217,6 +228,12 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    if (!authorized(req)) {
+        sendJson(res, 401, { error: "Enter the local bridge token in the Fish Audio API Key field." });
+        req.resume();
+        return;
+    }
+
     try {
         const body = await readBody(req);
         requestTarget(req, res, body);
@@ -228,4 +245,5 @@ const server = http.createServer(async (req, res) => {
 server.listen(port, host, () => {
     console.log("SSN local TTS bridge listening on http://" + host + ":" + port + "/v1/audio/speech");
     console.log("Mode: " + mode + " Target: " + targetUrl);
+    if (bridgeToken) console.log("Local bridge token (Fish Audio API Key field): " + bridgeToken);
 });

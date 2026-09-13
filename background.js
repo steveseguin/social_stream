@@ -13212,7 +13212,6 @@ function sendHypeP2P(data, uid = null) {
 }
 //////
 function sendSpotifyOverlay(payload, uid = null) {
-    if (!uid) { sendTargetP2P({ spotify: payload }, "spotify", { retry: false }); return; }
 	if (!payload) {
 		return;
 	}
@@ -13220,6 +13219,7 @@ function sendSpotifyOverlay(payload, uid = null) {
 	// Remember last payload for newly connected overlays
 	payload.receivedAt = payload.receivedAt || Date.now();
 	latestSpotifyOverlay = payload;
+	if (!uid) { sendTargetP2P({ spotify: payload }, "spotify", { retry: false }); return; }
 
 	if (ninjaBridge && ninjaBridge.isReady()) {
 		try {

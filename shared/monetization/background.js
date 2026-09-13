@@ -680,7 +680,9 @@
 			next.throne = now + c.throne.minutes * 60000;
 			next.ebay = now + c.ebay.minutes * 60000;
 		}
-		if ((c.commerce.enabled || c.wishlist.enabled || c.ninja.enabled || c.throne.enabled || c.ebay.enabled) && now - lastBroadcast > 10000) broadcast();
+		var boards = privateState.boards;
+		var boardVisible = boards && ((boards.board && boards.board.visible && boards.board.spots.length) || (boards.salesVisible && boards.sales.length));
+		if ((c.commerce.enabled || c.wishlist.enabled || c.ninja.enabled || c.throne.enabled || c.ebay.enabled || boardVisible) && now - lastBroadcast > 10000) broadcast();
 		['wishlist', 'ninja', 'throne', 'ebay'].forEach(function (mode) {
 			if (c[mode].enabled && c[mode].interval && now >= next[mode]) {
 				next[mode] = now + c[mode].minutes * 60000;

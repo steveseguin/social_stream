@@ -70,6 +70,9 @@
         }
         #roster h4 { margin: 0 0 6px 0; color: #FFD700; font-size: 15px; }
         #roster-list span { display: inline-block; margin: 2px 6px 2px 0; opacity: 0.95; }
+        #roster.has-legacy-wins { bottom: 160px; overflow-y: auto; }
+        #legacy-wins-list { max-height: 12vh; overflow-y: auto; }
+        #legacy-wins summary:focus, #legacy-wins-list:focus { outline: 2px solid #FFD700; outline-offset: 2px; }
 
         #event-banner {
             position: absolute;
@@ -160,6 +163,11 @@
     <div id="roster" class="hud-panel">
         <h4>🐔 Lobby <span id="roster-count">(0)</span></h4>
         <div id="roster-list">Connecting to chat...</div>
+        <details id="legacy-wins" open hidden>
+            <summary>Past name-based wins</summary>
+            <p>Older totals were shared by display name across platforms.</p>
+            <div id="legacy-wins-list" tabindex="0" role="region" aria-label="Past name-based wins"></div>
+        </details>
     </div>
 
     <div id="event-banner"></div>
@@ -285,6 +293,27 @@
         try { localStorage.setItem('chickenRoyaleDinners', JSON.stringify(careerWins)); } catch (e) {}
         return careerWins[key];
     }
+
+    function showLegacyCareerWins() {
+        const list = document.getElementById('legacy-wins-list');
+        list.textContent = '';
+        const names = Object.keys(careerWins).filter(function (key) {
+            // Account tuples cannot establish ownership of historical name-only wins.
+            try {
+                const identity = JSON.parse(key);
+                if (Array.isArray(identity) && identity.length === 2) return false;
+            } catch (e) {}
+            return getCareerWins(key) > 0;
+        }).sort(function (a, b) { return getCareerWins(b) - getCareerWins(a); });
+        names.forEach(function (name) {
+            const row = document.createElement('div');
+            row.textContent = name + ': ' + getCareerWins(name) + ' wins';
+            list.appendChild(row);
+        });
+        document.getElementById('legacy-wins').hidden = !names.length;
+        document.getElementById('roster').classList.toggle('has-legacy-wins', !!names.length);
+    }
+    showLegacyCareerWins();
 
     // ====================== Theme ======================
     const THEME = (() => {

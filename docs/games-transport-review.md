@@ -7,7 +7,7 @@ Scope: all 34 HTML pages under `games/`, their shared adapters and engines, plus
 - Unwrap before deduplication in both mixed games.
 - Retry Spam Power?s server socket without restarting gameplay.
 - Phrase Guess uses native server2 reply requests and truthful request/disconnection status; host permissions and legacy API/P2P behavior remain intact.
-- Chicken Royale, Chat Wars, Dancing Parade, Pet Race, Color Wars, Emoji Tower, Treasure Hunt and Word Chain now use platform/account identity internally, keeping readable names in the UI. Chicken Royale retains old name-only saved records but starts account-specific win counters; historical records cannot safely be attributed to an account.
+- Chicken Royale, Chat Wars, Dancing Parade, Pet Race, Color Wars, Emoji Tower, Treasure Hunt and Word Chain now use platform/account identity internally, keeping readable names in the UI. Chicken Royale retains old name-only saved records in a separate "Past name-based wins" lobby list and starts account-specific win counters; historical records cannot safely be attributed to an account.
 - Added isolated regression coverage in `tests/games-transport-regressions.test.cjs`: all 6 tests passed, including account identity, reset behavior, reply permissions, persisted counters, duplicate handling and reconnect recovery.
 - Re-ran all 35 games across 19 flag/endpoint modes: 665/665 passed (`%TEMP%/ssn-overlay-flags-65kMAh/report.json`). Existing 44 game/transport tests and popup search checks passed; all 35 HTML game scripts parse at the Chrome 80 syntax baseline.
 - Release version: 3.50.10. The experimental additive toggle remains unchanged.

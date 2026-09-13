@@ -535,3 +535,26 @@ test('Product controls and state remain responsive while public sync stalls; lat
  assert.equal(writes.at(-1).live.url,b.url);
  assert.equal(s.chat.length,0);assert.equal(s.tips.length,0);
 });
+
+
+test('standalone boards and sales receive heartbeats without enabling older commerce features', async () => {
+    for(const view of ['board','sales']) {
+        const s=service();s.advance(1);
+        if(view==='board')await s.request('commerceControl',{command:'boardSave',data:{count:3,columns:3}});
+        else {
+            await s.request('commerceControl',{command:'saleAdd',data:{title:'Fixture'}});
+            await s.request('commerceControl',{command:'salesSettings',data:{visible:true}});
+        }
+        for(let n=0;n<5;n++) {
+            const before=s.sent.length;s.advance(11000);assert.equal(s.sent.length,before+1,view);
+            const state=s.sent.at(-1).meta.monetization.boards;
+            assert(view==='board'?state.board.visible:state.salesVisible);
+        }
+        assert.equal(s.chat.length,0);assert.equal(s.tips.length,0);
+        s.c.isExtensionOn=false;let before=s.sent.length;s.advance(11000);assert.equal(s.sent.length,before);
+        s.c.isExtensionOn=true;
+        await s.request('commerceControl',{command:view==='board'?'boardVisibility':'salesSettings',data:{visible:false}});
+        before=s.sent.length;s.advance(40000);assert.equal(s.sent.length,before,'hidden displays do not enable heartbeats');
+    }
+    const idle=service();idle.advance(1);const before=idle.sent.length;idle.advance(40000);assert.equal(idle.sent.length,before);
+});
