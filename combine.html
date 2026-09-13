@@ -37,8 +37,16 @@
     .layer-tools { display: flex; gap: 6px; }
     .layer-tools button { padding: 7px 11px; font-size: 14px; }
     .url-label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; }
-    .url-input, textarea { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 11px; background: var(--card); color: var(--text); }
-    .url-input[aria-invalid="true"] { border-color: var(--error); }
+    .url-input, .size-input, textarea { width: 100%; min-width: 0; border: 1px solid var(--border); border-radius: 6px; padding: 11px; background: var(--card); color: var(--text); }
+    input[aria-invalid="true"] { border-color: var(--error); }
+    .size-input::placeholder { color: var(--muted); opacity: 1; }
+    .layer-layout { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
+    .layer-layout summary { cursor: pointer; min-height: 32px; font-weight: 600; font-size: 14px; }
+    .size-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .size-fields label { display: block; font-size: 14px; }
+    .size-fields input { display: block; margin-top: 6px; }
+    .layout-reset { margin-top: 12px; font-size: 14px; }
+    .preview-size { margin-bottom: 16px; }
     .layer-options { display: grid; gap: 4px; margin-top: 10px; }
     .layer-options label { display: flex; gap: 9px; align-items: center; min-height: 38px; font-size: 14px; cursor: pointer; }
     input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
@@ -53,10 +61,10 @@
     .saved-setup { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 16px; }
     .saved-setup .hint { margin: 0; }
     #clear-saved { font-size: 14px; }
-    #preview { height: 520px; position: relative; overflow: hidden; border: 1px solid #3b4250; border-radius: 12px; background: #14161d; }
+    #preview { height: 292px; position: relative; overflow: hidden; border: 1px solid #3b4250; border-radius: 12px; background: #14161d; }
     #preview-empty { color: #bfc7d6; text-align: center; padding: 30px; position: absolute; inset: 0; display: grid; place-content: center; line-height: 1.6; }
-    #preview-stage { position: absolute; inset: 0; }
-    .overlay-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; color-scheme: normal; }
+    #preview-stage { position: absolute; top: 0; left: 0; transform-origin: top left; }
+    .overlay-frame { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; background: transparent; color-scheme: normal; }
     html.viewing { color-scheme: normal; }
     .overlay-frame.pass-through { pointer-events: none; }
     #output { position: fixed; inset: 0; overflow: hidden; background: transparent; }
@@ -64,7 +72,6 @@
     @media (max-width: 760px) {
       #editor { padding: 20px 16px 32px; }
       .workspace { grid-template-columns: minmax(0, 1fr); }
-      #preview { height: 480px; }
       .actions > * { flex: 1; }
     }
     @media (prefers-color-scheme: dark) {
@@ -114,6 +121,11 @@
       </section>
       <section aria-labelledby="preview-heading">
         <div class="section-title"><h2 id="preview-heading">Preview</h2></div>
+        <div class="size-fields preview-size">
+          <label for="preview-width">Browser source width (px)<input id="preview-width" class="size-input" type="number" min="1" max="16384" step="1" value="1920"></label>
+          <label for="preview-height">Browser source height (px)<input id="preview-height" class="size-input" type="number" min="1" max="16384" step="1" value="1080"></label>
+        </div>
+        <p class="hint">Match your OBS Browser Source dimensions to preview placement. These fields only size the preview; the combined view fills its browser.</p>
         <div id="preview">
           <div id="preview-empty">Your overlays will appear here.<br>Paste your links and select Preview.</div>
           <div id="preview-stage"></div>
