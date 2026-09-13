@@ -7,6 +7,9 @@
   var TRANSPARENT_PAGES = ['dock.html', 'featured.html', 'multi-alerts.html', 'minecraft.html'];
   var encodedConfig = { json: '', hash: '' };
   var layers = [];
+  var LAYOUT_FIELDS = ['width', 'height', 'left', 'top'];
+  var LAYOUT_LABELS = { width: 'Width', height: 'Height', left: 'Left', top: 'Top' };
+  var LAYOUT_DEFAULTS = { width: '100%', height: '100%', left: '0', top: '0' };
   var nextId = 0;
   var editor = document.getElementById('editor');
   var list = document.getElementById('layers');
@@ -22,7 +25,7 @@
 
   function draftConfig() {
     return { v: 1, layers: layers.map(function (layer) {
-      return { url: layer.url, interactive: layer.interactive, transparent: layer.transparent };
+      return { url: layer.url, interactive: layer.interactive, transparent: layer.transparent, layout: layer.layout };
     }) };
   }
 
@@ -55,8 +58,19 @@
     status.classList.toggle('error', !!error);
   }
 
-  function makeLayer(url, interactive, transparent) {
-    return { id: ++nextId, url: url || '', interactive: !!interactive, transparent: transparent !== false };
+  function makeLayer(url, interactive, transparent, layout) {
+    return { id: ++nextId, url: url || '', interactive: !!interactive, transparent: transparent !== false,
+      layout: Object.assign({}, layout || {}) };
+  }
+
+  function layoutValue(value, key) {
+    if (value === undefined || value.trim() === '') return LAYOUT_DEFAULTS[key];
+    var match = /^(-?(?:\d+(?:\.\d+)?|\.\d+))(px|%)?$/.exec(value.trim());
+    var size = match ? Number(match[1]) : NaN;
+    if (!isFinite(size) || Math.abs(size) > 16384 || ((key === 'width' || key === 'height') && size <= 0)) {
+      throw new Error(LAYOUT_LABELS[key] + ': enter ' + (key === 'width' || key === 'height' ? 'a positive size' : 'an offset') + ' in pixels or %, up to 16384 (for example, 450 or 100%).');
+    }
+    return String(size) + (match[2] || 'px');
   }
 
   function parseOverlayUrl(value) {
@@ -104,9 +118,11 @@
     var config = { v: 1, layers: [] };
     layers.forEach(function (layer, index) {
       var input = document.getElementById('url-' + layer.id);
+      var entry;
       try {
         var url = parseOverlayUrl(layer.url);
-        config.layers.push({ url: url.href, interactive: layer.interactive, transparent: layer.transparent });
+        entry = { url: url.href, interactive: layer.interactive, transparent: layer.transparent };
+        config.layers.push(entry);
         if (input) input.removeAttribute('aria-invalid');
       } catch (error) {
         valid = false;
@@ -116,6 +132,24 @@
         }
         if (reportError && input) input.setAttribute('aria-invalid', 'true');
       }
+      var layout = {};
+      LAYOUT_FIELDS.forEach(function (key) {
+        var field = document.getElementById(key + '-' + layer.id);
+        try {
+          layoutValue(layer.layout[key], key);
+          if (layer.layout[key] && layer.layout[key].trim()) layout[key] = layer.layout[key].trim();
+          if (field) field.removeAttribute('aria-invalid');
+        } catch (error) {
+          valid = false;
+          if (reportError && !firstInvalid) {
+            firstInvalid = field;
+            document.getElementById('layout-' + layer.id).open = true;
+            setStatus('Layer ' + (index + 1) + ': ' + error.message, true);
+          }
+          if (reportError && field) field.setAttribute('aria-invalid', 'true');
+        }
+      });
+      if (entry && Object.keys(layout).length) entry.layout = layout;
     });
     if (firstInvalid) firstInvalid.focus();
     if (JSON.stringify(config).length > MAX_CONFIG_LENGTH) {
@@ -257,6 +291,51 @@
       options.appendChild(option(layer, 'transparent', 'Transparent SSN background'));
       options.appendChild(option(layer, 'interactive', 'Allow taps and scrolling on this layer'));
       row.appendChild(options);
+      var placement = document.createElement('details');
+      placement.id = 'layout-' + layer.id;
+      placement.className = 'layer-layout';
+      placement.open = Object.keys(layer.layout).some(function (key) { return !!layer.layout[key]; });
+      var summary = document.createElement('summary');
+      summary.textContent = 'Size and position';
+      placement.appendChild(summary);
+      var hint = document.createElement('p');
+      hint.className = 'hint';
+      hint.id = 'layout-hint-' + layer.id;
+      hint.textContent = 'Use pixels (450) or percentages (100%). Blank width and height fill the browser. Left and top offset the layer from the top-left corner; blank means 0.';
+      placement.appendChild(hint);
+      var fields = document.createElement('div');
+      fields.className = 'size-fields';
+      LAYOUT_FIELDS.forEach(function (key) {
+        var fieldLabel = document.createElement('label');
+        fieldLabel.textContent = LAYOUT_LABELS[key];
+        var field = document.createElement('input');
+        field.id = key + '-' + layer.id;
+        fieldLabel.htmlFor = field.id;
+        field.type = 'text';
+        field.className = 'size-input';
+        field.placeholder = LAYOUT_DEFAULTS[key];
+        field.value = layer.layout[key] || '';
+        field.setAttribute('aria-describedby', hint.id);
+        field.addEventListener('input', function () {
+          layer.layout[key] = field.value;
+          changed();
+        });
+        fieldLabel.appendChild(field);
+        fields.appendChild(fieldLabel);
+      });
+      placement.appendChild(fields);
+      var reset = button('Reset to fullscreen', 'Reset layer ' + (index + 1) + ' to fullscreen', function () {
+        layer.layout = {};
+        LAYOUT_FIELDS.forEach(function (key) {
+          var field = document.getElementById(key + '-' + layer.id);
+          field.value = '';
+          field.removeAttribute('aria-invalid');
+        });
+        changed();
+      });
+      reset.className = 'layout-reset';
+      placement.appendChild(reset);
+      row.appendChild(placement);
       list.appendChild(row);
     });
     document.getElementById('add-layer').disabled = layers.length >= MAX_LAYERS;
@@ -269,6 +348,11 @@
       frame.className = 'overlay-frame' + (layer.interactive ? '' : ' pass-through');
       frame.title = 'Overlay layer ' + (index + 1) + ': ' + new URL(layer.url).hostname;
       frame.style.zIndex = String(index);
+      if (layer.layout) {
+        LAYOUT_FIELDS.forEach(function (key) {
+          frame.style[key] = layoutValue(layer.layout[key], key);
+        });
+      }
       frame.setAttribute('allow', 'autoplay; fullscreen');
       frame.setAttribute('referrerpolicy', 'no-referrer');
       frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation allow-downloads');
@@ -287,6 +371,17 @@
         throw new Error('This combined link contains an invalid layer.');
       }
       if (checkUrls) parseOverlayUrl(layer.url);
+      if (layer.layout !== undefined) {
+        if (!layer.layout || typeof layer.layout !== 'object' || Array.isArray(layer.layout)) {
+          throw new Error('This combined link contains an invalid layer layout.');
+        }
+        LAYOUT_FIELDS.forEach(function (key) {
+          if (layer.layout[key] !== undefined && typeof layer.layout[key] !== 'string') {
+            throw new Error('This combined link contains an invalid layer size or position.');
+          }
+          if (checkUrls) layoutValue(layer.layout[key], key);
+        });
+      }
     });
   }
 
@@ -341,12 +436,41 @@
     }
     var draft = config || loadDraft();
     layers = draft ? draft.layers.map(function (layer) {
-      return makeLayer(layer.url, layer.interactive, layer.transparent);
+      return makeLayer(layer.url, layer.interactive, layer.transparent, layer.layout);
     }) : [makeLayer('', true), makeLayer('', false)];
     renderEditor();
+    resizePreview();
     updateLinks();
     setStatus(errorMessage, !!errorMessage);
   }
+
+  function resizePreview() {
+    var widthInput = document.getElementById('preview-width');
+    var heightInput = document.getElementById('preview-height');
+    var valid = true;
+    [widthInput, heightInput].forEach(function (input) {
+      var size = Number(input.value);
+      if (!Number.isInteger(size) || size < 1 || size > 16384) {
+        input.setAttribute('aria-invalid', 'true');
+        valid = false;
+      } else input.removeAttribute('aria-invalid');
+    });
+    if (!valid) return false;
+    var width = Number(widthInput.value);
+    var height = Number(heightInput.value);
+    var box = document.getElementById('preview');
+    var scale = box.clientWidth / width;
+    box.style.height = (height * scale + 2) + 'px';
+    preview.style.width = width + 'px';
+    preview.style.height = height + 'px';
+    preview.style.transform = 'scale(' + scale + ')';
+    return true;
+  }
+
+  ['preview-width', 'preview-height'].forEach(function (id) {
+    document.getElementById(id).addEventListener('input', resizePreview);
+  });
+  window.addEventListener('resize', resizePreview);
 
   document.getElementById('add-layer').addEventListener('click', function () {
     if (layers.length >= MAX_LAYERS) return;
@@ -412,6 +536,11 @@
   document.getElementById('preview-button').addEventListener('click', function () {
     var config = collectConfig(true);
     if (!config) return;
+    if (!resizePreview()) {
+      setStatus('Enter whole preview dimensions between 1 and 16384 pixels.', true);
+      document.querySelector('.preview-size [aria-invalid="true"]').focus();
+      return;
+    }
     mountFrames(preview, config);
     previewEmpty.hidden = true;
     setStatus('Preview opened. Live overlays may stay empty until a message or alert arrives.');
