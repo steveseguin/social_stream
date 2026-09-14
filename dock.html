@@ -5134,6 +5134,7 @@
 			if (urlParams.has("hidebadges") || urlParams.has("nobadges")) {
 				showbadges = false;
 			}
+			var stripMemberships = urlParams.has("stripmemberships");
 
 			var doNotAutoshowFiltered = false;
 			if (urlParams.has("excludefiltered")) {
@@ -12403,6 +12404,10 @@
 						node.dataset.member = "true";
 					} else {
 						data.membership = "";
+					}
+
+					if (stripMemberships) {
+						memebershipHTML = "";
 					}
 
 					if (data.membership && !bubble && highlightMembers) {
