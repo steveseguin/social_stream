@@ -133,6 +133,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `hidesource` | boolean | Hides the source platform icons (YouTube, Twitch, etc.) |
 | `noavatar` or `noavatars` | boolean | Hides user avatars |
 | `nobadges` or `hidebadges` | boolean | Hides user badges |
+| `stripmemberships` | boolean | Hides membership labels (off by default). Works independently in dock.html and featured.html; keeps badge icons and chat messages. In the dock, member filtering, highlighting, and forwarded membership data are preserved. |
 | `limitbadges` | number | Limits number of badges shown per message |
 | `notime` or `notimestamp` or `nodate` | boolean | Hides timestamp |
 | `24hr` | boolean | Displays timestamps using 24-hour format |
