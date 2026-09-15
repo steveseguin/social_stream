@@ -4,6 +4,7 @@
 // unique test room. No source channels or existing user profiles are opened.
 const assert = require('assert/strict');
 const fs = require('fs');
+const net = require('net');
 const os = require('os');
 const path = require('path');
 const { pathToFileURL } = require('url');
@@ -14,26 +15,29 @@ const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'ssapp-transport-lifecycle
 const room = 'lifecycle' + Date.now();
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 let app;
+let stalledServer;
+const stalledSockets = [];
 const errors = [];
 
 async function run() {
     fs.writeFileSync(path.join(profile, 'savedSync.json'), JSON.stringify({
         streamID: room, password: 'false', state: false, settings: { sdk: { setting: true } }, wsServer: false
     }));
-    app = await _electron.launch({
+    const launchOptions = {
         executablePath: require(path.join(ssapp, 'node_modules/electron')), cwd: ssapp,
         args: [path.join(ssapp, 'bootstrap.js'), '--running-from-source', '--multiinstance',
             '--filesource', pathToFileURL(social + path.sep).href],
         env: { ...process.env, SSAPP_USER_DATA_DIR: profile, UV_THREADPOOL_SIZE: '2' }, timeout: 60000
-    });
+    };
+    app = await _electron.launch(launchOptions);
     app.process().stdout.on('data', data => fs.appendFileSync(path.join(profile, 'stdout.log'), data));
     app.process().stderr.on('data', data => fs.appendFileSync(path.join(profile, 'stderr.log'), data));
-    const main = await app.firstWindow();
+    let main = await app.firstWindow();
     main.on('pageerror', error => errors.push(error.message));
     await main.waitForFunction(() => typeof document.getElementById('frame2')?.contentWindow?.saveAiPromptOverlays === 'function', null, { timeout: 60000 });
     await delay(6500);
-    const bg = main.frames().find(frame => frame.url().includes('/background.html'));
-    const popup = main.frames().find(frame => frame.url().includes('/popup.html'));
+    let bg = main.frames().find(frame => frame.url().includes('/background.html'));
+    let popup = main.frames().find(frame => frame.url().includes('/popup.html'));
     assert(bg && popup);
     const setOn = value => main.evaluate(value => ipcRenderer.sendSync('fromPopup', { cmd: 'setOnOffState', data: { value } }), value);
     const settled = () => bg.waitForFunction(() => !transportTask, null, { timeout: 60000 });
@@ -67,7 +71,7 @@ async function run() {
     const pendingWindow = app.waitForEvent('window');
     await main.evaluate(url => ipcRenderer.sendSync('createWindow', { url, visible: true, size: { width: 850, height: 650 } }),
         pathToFileURL(path.join(social, 'aioverlay.html')).href + '?session=' + room + '&overlay=fixture');
-    const overlay = await pendingWindow;
+    let overlay = await pendingWindow;
     overlay.on('pageerror', error => errors.push(error.message));
     const loaded = () => overlay.waitForFunction(() => document.getElementById('overlayFrame')?.contentDocument?.body?.textContent.includes('Lifecycle overlay ready'), null, { timeout: 60000 });
     const fake = async () => {
@@ -155,10 +159,79 @@ async function run() {
     await loaded();
     await fake();
     console.log('PASS session updates dispose the previous SDK and can reclaim the original room');
+    for (let cycle = 0; cycle < 8; cycle++) {
+        await main.evaluate(cycle => {
+            for (let i = 0; i < 8; i++) {
+                ipcRenderer.sendSync('fromPopup', { cmd: 'setOnOffState', data: { value: i % 2 === 0 } });
+            }
+            ipcRenderer.sendSync('fromPopup', { cmd: 'setOnOffState', data: { value: cycle % 2 === 0 } });
+        }, cycle);
+        await settled();
+        await delay(500);
+        assert.equal(await alive(), cycle % 2 === 0 ? 1 : 0);
+        if (cycle % 2 === 0) {
+            await overlay.reload();
+            await loaded();
+            await fake();
+        }
+    }
+    console.log('PASS 72 rapid service changes converge on the final state with no extra live SDK');
+    await setOn(true);
+    await settled();
+    await delay(1500);
+    await app.close();
+    app = await _electron.launch(launchOptions);
+    main = await app.firstWindow();
+    main.on('pageerror', error => errors.push(error.message));
+    await main.waitForFunction(() => typeof document.getElementById('frame2')?.contentWindow?.saveAiPromptOverlays === 'function', null, { timeout: 60000 });
+    await delay(6500);
+    bg = main.frames().find(frame => frame.url().includes('/background.html'));
+    popup = main.frames().find(frame => frame.url().includes('/popup.html'));
+    await settled();
+    assert.deepEqual(await bg.evaluate(() => ({ room: streamID, on: isExtensionOn, ready: ninjaBridge?.isReady(), publishing: ninjaBridge?.vdo?.state?.publishing })),
+        { room, on: true, ready: true, publishing: true });
+    const reopened = app.waitForEvent('window');
+    await main.evaluate(url => ipcRenderer.sendSync('createWindow', { url, visible: true, size: { width: 850, height: 650 } }),
+        pathToFileURL(path.join(social, 'aioverlay.html')).href + '?session=' + room + '&overlay=fixture');
+    overlay = await reopened;
+    overlay.on('pageerror', error => errors.push(error.message));
+    await loaded();
+    await fake();
+    assert.equal(await popup.evaluate(() => document.getElementById('extensionState').checked), true);
+    console.log('PASS app restart preserves enabled SDK, room and saved overlay, then delivers chat');
+    await setOn(false);
+    await settled();
+    // A real TCP peer accepts the connection but never upgrades it to WebSocket.
+    stalledServer = net.createServer(socket => {
+        stalledSockets.push(socket);
+        socket.on('data', () => {});
+    });
+    await new Promise(resolve => stalledServer.listen(0, '127.0.0.1', resolve));
+    await bg.evaluate(port => {
+        window.diagRealBridge = NinjaBridge;
+        window.NinjaBridge = class extends diagRealBridge {
+            constructor(options) { super(Object.assign({}, options, { wss: 'ws://127.0.0.1:' + port })); }
+        };
+    }, stalledServer.address().port);
+    await setOn(true);
+    await bg.waitForFunction(() => ninjaBridge?.vdo?.signaling?.readyState === 0);
+    await delay(500);
+    assert(stalledSockets.length > 0, 'The stalled server accepted the real SDK connection');
+    await setOn(false);
+    await bg.waitForFunction(() => !transportTask && !ninjaBridge, null, { timeout: 3000 });
+    await delay(1000);
+    assert(stalledSockets.every(socket => socket.destroyed), 'Cancellation closed the pending handshake');
+    await bg.evaluate(() => { window.NinjaBridge = diagRealBridge; });
+    await setOn(true);
+    await settled();
+    await overlay.reload();
+    await loaded();
+    await fake();
+    console.log('PASS stalled WebSocket handshake cancels promptly and a fresh connection delivers chat');
     await setOn(false);
     await settled();
     await delay(1500);
-    assert.equal(await alive(), 0);
+    assert.equal(await bg.evaluate(() => !!ninjaBridge), false);
     assert.deepEqual(errors, [], 'No uncaught page errors');
     console.log('PASS switching back to SDK, sustained delivery and final teardown');
     console.log('Artifacts: ' + profile);
@@ -167,4 +240,6 @@ async function run() {
 run().catch(error => { console.error(error); process.exitCode = 1; }).finally(async () => {
     fs.writeFileSync(path.join(profile, 'page-errors.json'), JSON.stringify(errors, null, 2));
     if (app) await app.close();
+    stalledSockets.forEach(socket => socket.destroy());
+    if (stalledServer) stalledServer.close();
 });
