@@ -4094,7 +4094,7 @@ function updateExtensionState(sync = true) {
 		// document.title = "Idle - Social Stream Ninja";
 
 		// Invalidate pending starts before they can publish after the service stops.
-		transportGeneration++;
+		cancelPendingNinjaTransport();
 		queueTransportTask(destroyNinjaTransport);
 
 		if (iframe) {
@@ -7471,7 +7471,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (isExtensionOn) {
 				initTransport(streamID, password);
 			} else {
-				transportGeneration++;
+				cancelPendingNinjaTransport();
 				queueTransportTask(destroyNinjaTransport);
 			}
 
@@ -14683,6 +14683,14 @@ function sendToDisk(data) {
 	}
 }
 
+function cancelPendingNinjaTransport() {
+	transportGeneration++;
+	if (ninjaBridge && typeof ninjaBridge.cancelPendingInit === "function") {
+		ninjaBridge.cancelPendingInit();
+	}
+	return transportGeneration;
+}
+
 function queueTransportTask(task) {
 	const previous = transportTask;
 	const pending = (async function () {
@@ -14728,7 +14736,7 @@ function initTransport(roomStreamID, pass = false) {
 	}
 
 	log("Init transport for VDO", useNinjaSDK ? "SDK" : "IFRAME");
-	const generation = ++transportGeneration;
+	const generation = cancelPendingNinjaTransport();
 	const sdkEnabled = useNinjaSDK;
 	return queueTransportTask(async function () {
 		if (!isExtensionOn || generation !== transportGeneration) return;
