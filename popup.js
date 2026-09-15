@@ -4826,6 +4826,9 @@ function update(response, sync = true) {
 
         if (("state" in response) && streamID) {
             isExtensionOn = response.state;
+            // The status is dynamic; a later language fetch must not replace it
+            // with the static "Extension active" translation for toggle-on-off.
+            document.getElementById("disableButtonText").removeAttribute("data-translate");
             if (isExtensionOn) {
                 document.body.classList.add("extension-enabled");
                 document.body.classList.remove("extension-disabled");

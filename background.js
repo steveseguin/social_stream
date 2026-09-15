@@ -11,6 +11,8 @@ var isExtensionOn = false;
 var iframe = null;
 // Optional: Use VDONinjaSDK instead of iframe transport to reduce memory
 var ninjaBridge = null;
+var transportGeneration = 0;
+var transportTask = null;
 var useNinjaSDK = false; // toggled via URL params &sdk/&beta, or can be wired to settings in future
 
 var settings = {};
@@ -4091,12 +4093,9 @@ function updateExtensionState(sync = true) {
 	} else {
 		// document.title = "Idle - Social Stream Ninja";
 
-		if (ninjaBridge) {
-			try {
-				ninjaBridge.destroy();
-			} catch (e) {}
-			ninjaBridge = null;
-		}
+		// Invalidate pending starts before they can publish after the service stops.
+		transportGeneration++;
+		queueTransportTask(destroyNinjaTransport);
 
 		if (iframe) {
 			iframe.src = null;
@@ -7471,6 +7470,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			}
 			if (isExtensionOn) {
 				initTransport(streamID, password);
+			} else {
+				transportGeneration++;
+				queueTransportTask(destroyNinjaTransport);
 			}
 
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, cohostCapability: await getOpenAIRealtimeCohostCapability() });
@@ -14681,10 +14683,30 @@ function sendToDisk(data) {
 	}
 }
 
-async function initTransport(roomStreamID, pass = false) {
-	// this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
-	resetP2PTransportStateForStream(roomStreamID);
+function queueTransportTask(task) {
+	const previous = transportTask;
+	const pending = (async function () {
+		if (previous) await previous;
+		await task();
+	})().catch(error => console.warn("[Transport] Lifecycle operation failed", error));
+	transportTask = pending;
+	pending.then(function () {
+		if (transportTask === pending) transportTask = null;
+	});
+	return pending;
+}
 
+async function destroyNinjaTransport() {
+	const bridge = ninjaBridge;
+	ninjaBridge = null;
+	if (bridge) {
+		try {
+			await bridge.destroy();
+		} catch (e) {}
+	}
+}
+
+function initTransport(roomStreamID, pass = false) {
 	// Re-evaluate effective SDK flag each init, based on flexible truthy parsing
 	try {
 		const raw = settings && (settings.sdk !== undefined ? settings.sdk : settings.usesdk);
@@ -14706,12 +14728,34 @@ async function initTransport(roomStreamID, pass = false) {
 	}
 
 	log("Init transport for VDO", useNinjaSDK ? "SDK" : "IFRAME");
+	const generation = ++transportGeneration;
+	const sdkEnabled = useNinjaSDK;
+	return queueTransportTask(async function () {
+		if (!isExtensionOn || generation !== transportGeneration) return;
+		try {
+			await initializeTransport(roomStreamID, pass, sdkEnabled, generation);
+		} finally {
+			// Finish disposing this attempt before a newer start may claim the session.
+			if (!isExtensionOn || generation !== transportGeneration) {
+				await destroyNinjaTransport();
+			}
+		}
+	});
+}
+
+async function initializeTransport(roomStreamID, pass, sdkEnabled, generation) {
+	function isCurrent() {
+		return isExtensionOn && generation === transportGeneration;
+	}
+	resetP2PTransportStateForStream(roomStreamID);
 
 	// If SDK is enabled and available, use it (lazy-load SDK/bridge if needed)
-	if (useNinjaSDK) {
+	if (sdkEnabled) {
+		let bridge = ninjaBridge;
 		try {
 			// Lazy load SDK and bridge if not present
 			await ensureNinjaSDKLoaded();
+			if (!isCurrent()) return;
 			if (typeof NinjaBridge === "undefined") throw new Error("NinjaBridge unavailable");
 			// Clean any existing iframe (graceful teardown to release streamID)
 			if (iframe) {
@@ -14722,28 +14766,28 @@ async function initTransport(roomStreamID, pass = false) {
 				try {
 					await new Promise(r => setTimeout(r, 300));
 				} catch (e) {}
+				if (!isCurrent()) return;
 				try {
 					iframe.remove();
 				} catch (e) {}
 				iframe = null;
 			}
 			// Reuse existing bridge if room changes? Destroy and recreate for safety
-			if (ninjaBridge) {
-				try {
-					await ninjaBridge.destroy();
-				} catch (e) {}
-				ninjaBridge = null;
-			}
+			await destroyNinjaTransport();
+			if (!isCurrent()) return;
 			// short wait to let signaling release prior streamID
 			try {
 				await new Promise(r => setTimeout(r, 600));
 			} catch (e) {}
-			ninjaBridge = new NinjaBridge({ debug: devmode });
+			if (!isCurrent()) return;
+			bridge = new NinjaBridge({ debug: devmode });
+			ninjaBridge = bridge;
 			try {
 				window.ninjaBridge = ninjaBridge;
 			} catch (e) {}
-			bindNinjaBridgeTransportTracking(ninjaBridge);
-			ninjaBridge.addEventListener("peerLabel", ev => {
+			bindNinjaBridgeTransportTracking(bridge);
+			bridge.addEventListener("peerLabel", ev => {
+				if (!isCurrent()) return;
 				try {
 					const { uuid, label } = ev.detail || {};
 					if (!uuid || !label) return;
@@ -14777,22 +14821,28 @@ async function initTransport(roomStreamID, pass = false) {
 			});
 			// Try initializing SDK; if it fails (eg, streamID still in use), retry once
 			try {
-				await ninjaBridge.init({ room: roomStreamID, password: pass, streamID: roomStreamID });
-				bindNinjaBridgeTransportTracking(ninjaBridge);
+				await bridge.init({ room: roomStreamID, password: pass, streamID: roomStreamID });
+				if (!isCurrent()) return;
+				bindNinjaBridgeTransportTracking(bridge);
 			} catch (e1) {
+				if (!isCurrent()) return;
 				console.warn("SDK init failed; retrying after short delay…", e1?.message || e1);
 				try {
 					await new Promise(r => setTimeout(r, 900));
 				} catch (e) {}
+				if (!isCurrent()) return;
 				try {
-					await ninjaBridge.destroy();
+					await bridge.destroy();
 				} catch (e) {}
-				ninjaBridge = new NinjaBridge({ debug: devmode });
+				if (!isCurrent()) return;
+				bridge = new NinjaBridge({ debug: devmode });
+				ninjaBridge = bridge;
 				try {
 					window.ninjaBridge = ninjaBridge;
 				} catch (e) {}
-				bindNinjaBridgeTransportTracking(ninjaBridge);
-				ninjaBridge.addEventListener("peerLabel", ev => {
+				bindNinjaBridgeTransportTracking(bridge);
+				bridge.addEventListener("peerLabel", ev => {
+					if (!isCurrent()) return;
 					try {
 						const { uuid, label } = ev.detail || {};
 						if (!uuid || !label) return;
@@ -14823,13 +14873,15 @@ async function initTransport(roomStreamID, pass = false) {
 						console.warn(e);
 					}
 				});
-				await ninjaBridge.init({ room: roomStreamID, password: pass, streamID: roomStreamID });
-				bindNinjaBridgeTransportTracking(ninjaBridge);
+				await bridge.init({ room: roomStreamID, password: pass, streamID: roomStreamID });
+				if (!isCurrent()) return;
+				bindNinjaBridgeTransportTracking(bridge);
 			}
 			try {
 				// NinjaBridge normalizes both SDK event shapes into one event. Listening
 				// directly to the SDK as well would process each P2P message twice.
 				const handleSDKData = ev => {
+					if (!isCurrent()) return;
 					try {
 						const detail = ev.detail || {};
 						const pkt = detail.data || detail;
@@ -14857,12 +14909,13 @@ async function initTransport(roomStreamID, pass = false) {
 						console.warn(e);
 					}
 				};
-				ninjaBridge.addEventListener("data", handleSDKData);
+				bridge.addEventListener("data", handleSDKData);
 			} catch (e) {
 				console.warn(e);
 			}
 			return; // success
 		} catch (e) {
+			if (!isCurrent()) return;
 			markP2PFailure("sdkInit");
 			console.warn("Falling back to iframe transport:", e);
 			// If SDK fails, fall through to iframe
@@ -14872,18 +14925,14 @@ async function initTransport(roomStreamID, pass = false) {
 	// IFRAME fallback
 	// Ensure SDK bridge is torn down before creating iframe, to avoid streamID collision
 	if (ninjaBridge) {
-		try {
-			await ninjaBridge.destroy();
-		} catch (e) {}
-		ninjaBridge = null;
-		try {
-			window.ninjaBridge = null;
-		} catch (e) {}
+		await destroyNinjaTransport();
+		if (!isCurrent()) return;
 		// small delay to allow signaling server to release streamID
 		try {
 			await new Promise(r => setTimeout(r, 600));
 		} catch (e) {}
 	}
+	if (!isCurrent()) return;
 	var lanonly = "";
 	try {
 		if (settings["lanonly"]) {
