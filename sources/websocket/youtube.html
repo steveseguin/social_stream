@@ -8,8 +8,10 @@
     <link rel="icon" href="https://www.youtube.com/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="youtube.css" /> 
     <link rel="stylesheet" href="websocket-responsive.css">
+    <link rel="stylesheet" href="../../shared/compact-source-layout.css?v=20260916-setup">
+    <script src="../../shared/utils/compactSourceLayout.js?v=20260916-setup" defer></script>
 </head>
-<body>
+<body data-compact-source="youtube">
     <div class="container">
         <div id="quota-warning" class="quota-warning hidden">
             <span id="quota-warning-text">We've hit the default YouTube API quota. In the desktop app, you can add your own YouTube project to use your own quota.</span>
@@ -3885,6 +3887,9 @@ function enableBackgroundKeepAlive() {
 				throw new Error('YouTube live chat stream response is not readable.');
 			}
 			const reader = response.body.getReader();
+			if (liveChatStreamAbortController === controller && !controller.signal.aborted) {
+				document.getElementById('textarea').setAttribute('data-connected', 'true');
+			}
 			const decoder = new TextDecoder();
 			while (true) {
 				const result = await reader.read();
@@ -4247,6 +4252,7 @@ function enableBackgroundKeepAlive() {
 		const recommendedInterval = data.pollingIntervalMillis || youtubeRecommendedInterval || 5000;
 		youtubeRecommendedInterval = recommendedInterval;
 		lastSuccessfulPollTime = Date.now();
+		document.getElementById('textarea').setAttribute('data-connected', 'true');
 
 		const normalizedItems = Array.isArray(data.items) ? data.items.map(normalizeLiveChatMessageItem) : [];
 		const richChatVideoId = (currentStream && currentStream.id) || videoId;
@@ -6202,6 +6208,7 @@ function enableBackgroundKeepAlive() {
 		}
 		
 		liveChatId = null;
+		document.getElementById('textarea').setAttribute('data-connected', 'false');
 		nextPageToken = null;
 		liveChatPollingFallbackActive = false;
 		lastMessageTime = null;
@@ -6350,6 +6357,7 @@ function enableBackgroundKeepAlive() {
 									 streamInfoToUse.snippet.liveBroadcastContent === 'none';
 				if (isVideoEnded) {
 					liveChatId = null;
+					document.getElementById('textarea').setAttribute('data-connected', 'false');
 					effectiveChannelIdToUse = streamInfoToUse.snippet.channelId;
 					streamTitleToUse = streamInfoToUse.snippet.title;
 					channelInfoForHeaderAndStats = await getChannelInfo(effectiveChannelIdToUse);
