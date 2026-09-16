@@ -3563,7 +3563,7 @@ function enableBackgroundKeepAlive() {
 
 	function scheduleLiveChatStreamReconnect(delayMs = 2000) {
 		if (!liveChatId || fetchTimeout || liveChatStreamActive || liveChatStreamAbortController) return;
-		updateLiveChatStreamIndicator('reconnecting');
+		if (!liveChatPollingFallbackActive) updateLiveChatStreamIndicator('reconnecting');
 		fetchTimeout = setTrackedTimeout(startLiveChatStream, delayMs, !isPageVisible);
 	}
 
