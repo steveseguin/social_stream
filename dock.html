@@ -621,6 +621,10 @@
 			.hl-content .reply-context * {
 				color: var(--reply-color, #a8b3cf) !important;
 			}
+			.hl-content .reply-label,
+			.hl-content .reply-label * {
+				color: var(--reply-label-color, #fff) !important;
+			}
 
 			body {
 				font-family: "NotoColorEmojiLimited", var(--font-family);
@@ -3675,6 +3679,10 @@
 			var replyColorEnabled = urlParams.has("replycolor");
 			if (replyColorEnabled) {
 				document.documentElement.style.setProperty("--reply-color", normalizeColor(urlParams.get("replycolor")) || "#a8b3cf");
+			}
+			var replyLabelColorEnabled = urlParams.has("replylabelcolor");
+			if (replyLabelColorEnabled) {
+				document.documentElement.style.setProperty("--reply-label-color", normalizeColor(urlParams.get("replylabelcolor")) || "#ffffff");
 			}
 
 			var nameColorParam = normalizeColor(urlParams.get("namecolor"));
@@ -10559,13 +10567,58 @@
 				}
 			}
 
+			function colorReplyLabel(chatmessage, data) {
+				if (!replyLabelColorEnabled) {
+					return chatmessage;
+				}
+				var template = document.createElement("template");
+				template.innerHTML = chatmessage;
+				var context = template.content.firstElementChild;
+				if (context && context.tagName === "I") {
+					context = context.firstElementChild;
+				}
+				if (!context) {
+					return chatmessage;
+				}
+				var text = context.textContent;
+				var label = text.match(/^Replying to\s+[^:]+:/i);
+				var author = data.meta && data.meta.reply && data.meta.reply.author;
+				if (!label && typeof author === "string" && author && text.indexOf(author + ":") === 0) {
+					label = [author + ":"];
+				}
+				if (!label) {
+					return chatmessage;
+				}
+				// Wrap only the label's text range, preserving nested name formatting and quoted emotes.
+				var remaining = label[0].length;
+				var walker = document.createTreeWalker(context, 4);
+				var textNode;
+				while ((textNode = walker.nextNode())) {
+					if (remaining <= textNode.length) {
+						var range = document.createRange();
+						range.selectNodeContents(context);
+						range.setEnd(textNode, remaining);
+						var span = document.createElement("span");
+						span.className = "reply-label";
+						span.appendChild(range.extractContents());
+						range.insertNode(span);
+						return template.innerHTML;
+					}
+					remaining -= textNode.length;
+				}
+				return chatmessage;
+			}
+
 			function colorReplyContext(chatmessage, data) {
-				if (!replyColorEnabled || DoNotShowInitialReply || !data.initial || !data.reply || !chatmessage) {
+				if ((!replyColorEnabled && !replyLabelColorEnabled) || DoNotShowInitialReply || !data.initial || !data.reply || !chatmessage) {
 					return chatmessage;
 				}
 				// Sources wrap the quoted context in <i><small>; leave the actual reply intact.
 				if (!data.textonly && !stripHTML && /^<i><small>/i.test(chatmessage)) {
-					return chatmessage.replace(/^<i>/i, '<i class="reply-context">');
+					if (replyColorEnabled) {
+						chatmessage = chatmessage.replace(/^<i>/i, '<i class="reply-context">');
+					}
+					return colorReplyLabel(chatmessage, data);
 				}
 				if (data.textonly || stripHTML) {
 					var prefix = String(data.initial).replace(/[\r\n]+/g, "").replace(/\s+/g, " ").trim() + ":";
@@ -10576,7 +10629,8 @@
 						prefix = normalizeText(prefix, false);
 					}
 					if (chatmessage.indexOf(prefix) === 0) {
-						return '<span class="reply-context">' + chatmessage.slice(0, prefix.length) + '</span>' + chatmessage.slice(prefix.length);
+						chatmessage = '<span' + (replyColorEnabled ? ' class="reply-context"' : '') + '>' + chatmessage.slice(0, prefix.length) + '</span>' + chatmessage.slice(prefix.length);
+						return colorReplyLabel(chatmessage, data);
 					}
 				}
 				return chatmessage;
