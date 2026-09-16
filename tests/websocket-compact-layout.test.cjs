@@ -85,6 +85,19 @@ async function connection(page, source, connected) {
             page.on('pageerror', error => errors.push(error.message));
             await page.route('**/*', route => route.request().url().startsWith(origin) ? route.continue() : route.abort());
             await page.goto(`${origin}/sources/websocket/${source}.html`);
+            if (source === 'youtube') {
+                const html = fs.readFileSync(path.join(root, 'sources/websocket/youtube.html'), 'utf8');
+                // Run the real late spinner initialization: it must preserve layout classes.
+                await page.addScriptTag({ content:
+                    html.slice(html.indexOf('function updateLiveChatStreamIndicator('), html.indexOf('function scheduleLiveChatStreamReconnect(')) +
+                    html.slice(html.indexOf('function updatePollSpinner('), html.indexOf('function queueMessage(')) +
+                    'initializeSpinner();' });
+                await page.evaluate(() => {
+                    document.getElementById('current-user').textContent = 'Sample creator';
+                    document.getElementById('current-channel').textContent = 'Sample creator (Upcoming: A long test live stream title)';
+                    document.getElementById('user-avatar').innerHTML = '<div class="header-avatar"></div>';
+                });
+            }
             if (source === 'kick') {
                 await page.evaluate(() => { window.__kickWsBootstrapped = true; });
                 await page.addScriptTag({ content: fs.readFileSync(path.join(root, 'sources/websocket/kick.js'), 'utf8') });
@@ -157,7 +170,13 @@ async function connection(page, source, connected) {
             await menu.click();
             await connection(page, source, true);
             assert.equal(await menu.getAttribute('aria-expanded'), 'true', `${source}: reconnect respects open menu`);
+            if (source === 'youtube') {
+                await page.setViewportSize({ width: 320, height: 500 });
+                assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'YouTube: signed-in setup must fit at 320px');
+                await page.screenshot({ path: path.join(output, 'youtube-signed-in-setup.png') });
+            }
             await page.keyboard.press('Escape');
+            if (source === 'youtube') assert.equal(await page.locator('.chat-header').isVisible(), false, 'YouTube: spinner initialization preserves compact header hiding');
             assert.equal(await menu.getAttribute('aria-expanded'), 'false', `${source}: Escape closes setup`);
             assert(await menu.evaluate(node => node === document.activeElement), `${source}: Escape focus`);
             for (const width of [581, 1280]) {
