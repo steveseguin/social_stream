@@ -2524,7 +2524,7 @@
 			}
 			if (urlParams.has("server")) {
 				serverURL = urlParams.get("server") || serverURL;
-				setupSocket();
+				setupSocket(pseudodock ? 2 : false);
 			} else if (urlParams.has("server2")) {
 				serverURL = urlParams.get("server2") || serverURL;
 				setupSocket(1);
