@@ -617,6 +617,11 @@
 				unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 			}
 
+			.hl-content .reply-context,
+			.hl-content .reply-context * {
+				color: var(--reply-color, #a8b3cf) !important;
+			}
+
 			body {
 				font-family: "NotoColorEmojiLimited", var(--font-family);
 				color: var(--font-color);
@@ -3665,6 +3670,11 @@
 			var fontColorParam = normalizeColor(urlParams.get("fontcolor"));
 			if (hasValue(fontColorParam)) {
 				document.documentElement.style.setProperty("--font-color", fontColorParam);
+			}
+
+			var replyColorEnabled = urlParams.has("replycolor");
+			if (replyColorEnabled) {
+				document.documentElement.style.setProperty("--reply-color", normalizeColor(urlParams.get("replycolor")) || "#a8b3cf");
 			}
 
 			var nameColorParam = normalizeColor(urlParams.get("namecolor"));
@@ -10549,6 +10559,29 @@
 				}
 			}
 
+			function colorReplyContext(chatmessage, data) {
+				if (!replyColorEnabled || DoNotShowInitialReply || !data.initial || !data.reply || !chatmessage) {
+					return chatmessage;
+				}
+				// Sources wrap the quoted context in <i><small>; leave the actual reply intact.
+				if (!data.textonly && !stripHTML && /^<i><small>/i.test(chatmessage)) {
+					return chatmessage.replace(/^<i>/i, '<i class="reply-context">');
+				}
+				if (data.textonly || stripHTML) {
+					var prefix = String(data.initial).replace(/[\r\n]+/g, "").replace(/\s+/g, " ").trim() + ":";
+					if (data.textonly) {
+						prefix = escapeHtml(prefix);
+					}
+					if (NormalizeText) {
+						prefix = normalizeText(prefix, false);
+					}
+					if (chatmessage.indexOf(prefix) === 0) {
+						return '<span class="reply-context">' + chatmessage.slice(0, prefix.length) + '</span>' + chatmessage.slice(prefix.length);
+					}
+				}
+				return chatmessage;
+			}
+
 			function escapeAttributeValue(value) {
 				return escapeHtml(String(value == null ? "" : value));
 			}
@@ -12287,6 +12320,8 @@
 						chatmessage = normalizeText(data.chatmessage, data.textonly || false);
 					}
 					
+					chatmessage = colorReplyContext(chatmessage, data);
+
 					// Trusted relay HTML: chatname/chatmessage are sanitized upstream in background.js before rendering here.
 					if (largeavatar) {
 						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + safeDataType + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + channelSourceName + timeArrived  +  "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");

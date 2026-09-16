@@ -4454,6 +4454,20 @@ input:checked + .slider:before {
                                     ✒️<span><span class="popup-control-icon" aria-hidden="true">🔤</span><span data-translate="reduce-text-outlining">Decrease text outline by 33%</span></span>
                                 </div>
 								<h3><span class="popup-control-icon" aria-hidden="true">🔤</span>Font Styling</h3>
+								<div class="popup-toggle-row" title="Color the quoted text a message is replying to, so the new reply is easier to find." data-keywords="reply quoted context original message text color highlight">
+									<label class="switch">
+										<input type="checkbox" id="dock_reply_color_enabled" data-param1="replycolor" aria-labelledby="dock_reply_color_label" />
+										<span class="slider round"></span>
+									</label>
+									<label for="dock_reply_color_enabled" id="dock_reply_color_label"><span class="popup-control-icon" aria-hidden="true">↩️</span>Custom quoted reply text color</label>
+								</div>
+								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+									<div class="textInputContainer" style="flex:1; margin-right:5px;">
+										<input type="text" id="dock_reply_color" class="textInput instant" autocomplete="off" placeholder="Default: #a8b3cf" data-textparam1="replycolor" data-palette="dock_reply_color_palette" />
+										<label for="dock_reply_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Quoted reply text color</label>
+									</div>
+									<input type="color" data-color="dock_reply_color" id="dock_reply_color_palette" value="#a8b3cf" class="colorPicker" title="Pick a quoted reply text color" aria-label="Pick a quoted reply text color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+								</div>
 								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
 									<div class="textInputContainer" style="flex:1; margin-right:5px;">
 										<input type="text" id="dock_font_color" class="textInput instant" autocomplete="off" placeholder="e.g. #ffffff" data-textparam1="fontcolor" data-palette="dock_font_color_palette" />
