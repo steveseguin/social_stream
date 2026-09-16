@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overlay Template Quick Start - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <meta name="description" content="Quick setup guide for adding Social Stream Ninja overlay templates to OBS.">
+<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js"></script>
+</head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Overlay Template Quick Start</h1>
+            <p>Pick a layout, add your session ID, and paste it into OBS.</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>1. Open The Template Gallery</h3>
+                <p>Use the <a href="templates.html">Templates Gallery</a> when you want a ready-made chat look instead of building CSS from scratch.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/template-gallery-browse.png" alt="Template Gallery showing search, filters, and template cards" class="guide-image">
+                    <figcaption>Search or use the filter buttons, then pick a layout that is easy to read on your stream.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>2. Add Your Session ID</h3>
+                <p>Every overlay URL needs your session ID. Replace the placeholder with the same session used by your chat source and dock.</p>
+                <pre>https://socialstream.ninja/sampleoverlay.html?session=YOUR_SESSION_ID</pre>
+            </div>
+
+            <div class="guide-card">
+                <h3>3. Preview The Look</h3>
+                <p>Open the template URL in a browser first. If it looks right there, it should be easier to debug in OBS.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/template-sample-overlay-preview.png" alt="Sample overlay preview with a chat message, name, platform icon, and donation badge" class="guide-image">
+                    <figcaption>This is the kind of overlay preview you should expect before adding it to OBS.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>4. Add It To OBS</h3>
+                <ol class="guide-steps">
+                    <li>In OBS, add a new Browser Source.</li>
+                    <li>Paste the template URL with your session ID.</li>
+                    <li>Set the width and height. A common start is 1920 by 1080.</li>
+                    <li>Click OK, then send a test message.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h3>5. Confirm Chat Is Arriving</h3>
+                <p>If the overlay is blank, test the dock before changing template settings.</p>
+                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID</pre>
+                <figure class="guide-figure">
+                    <img src="images/guides/obs-dock-message-check.png" alt="Dock page with chat messages received from multiple sources" class="guide-image">
+                    <figcaption>If the dock is empty too, fix the chat source first. The template is waiting for messages.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>Simple Fixes</h3>
+                <ul class="guide-list">
+                    <li>Use the same session ID in the source, dock, and OBS.</li>
+                    <li>Refresh the OBS browser source after changing the URL.</li>
+                    <li>Keep the chat source page or desktop source window open.</li>
+                    <li>Pick a high-contrast template if text is hard to read.</li>
+                </ul>
+                <p>More details: <a href="obs-quick-start.html">OBS Quick Start</a>.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

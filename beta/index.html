@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <script>
+        if (window.location.search.includes('session=') || window.location.search.includes('id=') || window.location.search.includes('s=')) {
+            window.location.href = 'featured.html' + window.location.search;
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Stream Ninja | One Live Chat for Every Platform</title>
+    <meta name="description" content="Bring live chat from YouTube, Twitch, TikTok, Facebook, Kick, and 100+ sources into one dashboard with OBS overlays, TTS, automation, and optional AI cohosts. Free and open source.">
+    <meta name="keywords" content="social stream, live chat, OBS overlay, AI cohost, chat bot, text to speech, chat relay, multi-platform chat, content creators, live streaming tools, youtube chat, twitch chat, facebook live">
+    <meta name="author" content="Social Stream Ninja">
+    <link rel="canonical" href="https://socialstream.ninja" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://socialstream.ninja">
+    <meta property="og:title" content="Social Stream Ninja | One Live Chat for Every Platform">
+    <meta property="og:description" content="Combine 100+ live-chat sources with OBS overlays, TTS, automation, and optional AI cohosts. Free and open source.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://socialstream.ninja">
+    <meta property="twitter:title" content="Social Stream Ninja | One Live Chat for Every Platform">
+    <meta property="twitter:description" content="Combine 100+ live-chat sources with OBS overlays, TTS, automation, and optional AI cohosts.">
+    <meta property="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    
+    <link rel="icon" href="./icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="docs/css/styles.css">
+	<style>
+	.header-controls {
+		width: auto;
+	}
+	.hero .hero-buttons {
+		justify-content: flex-start;
+	}
+	.hero-proof {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem;
+		margin-top: 2.8rem;
+	}
+	.hero-proof span {
+		padding: .65rem 1.1rem;
+		border: 1px solid var(--border-color);
+		border-radius: 999px;
+		background: var(--card-background);
+		color: var(--text-secondary);
+		font-size: 1.4rem;
+		font-weight: 600;
+	}
+	.ai-showcase {
+		padding: 8rem 0;
+		background: var(--background-dark);
+	}
+	.ai-showcase-header {
+		max-width: 84rem;
+		margin: 0 auto 4rem;
+		text-align: center;
+	}
+	.ai-showcase-header p {
+		color: var(--text-secondary);
+		font-size: 1.9rem;
+	}
+	.ai-options-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 2rem;
+		margin-bottom: 3.5rem;
+	}
+	.ai-option {
+		padding: 2.8rem;
+		border: 1px solid var(--border-color);
+		border-radius: var(--radius-lg);
+		background: var(--card-background);
+		box-shadow: var(--shadow-sm);
+	}
+	.ai-option-label {
+		display: inline-block;
+		margin-bottom: 1.6rem;
+		padding: .45rem .9rem;
+		border-radius: 999px;
+		background: var(--accent-soft);
+		color: var(--primary-color);
+		font-size: 1.3rem;
+		font-weight: 700;
+		letter-spacing: .04em;
+		text-transform: uppercase;
+	}
+	.ai-option p {
+		color: var(--text-secondary);
+	}
+	.ai-showcase-actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 1.5rem;
+	}
+	@media (max-width: 900px) {
+		.ai-options-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+	@media (max-width: 768px) {
+		.hero .hero-buttons {
+			justify-content: center;
+		}
+		.hero-proof {
+			justify-content: center;
+		}
+	}
+
+	</style>
+<link rel="stylesheet" href="docs/css/site-shell.css">
+<script src="docs/js/site-shell.js"></script>
+</head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="index.html"><img src="icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="index.html" aria-current="page">Home</a><a href="docs/features.html">Features</a><a href="docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="docs/download.html">Download</a><a href="docs/guides.html">Guides</a><a href="docs/commands.html">Commands &amp; API</a><a href="docs/supported-sites.html">Supported Sites</a><a href="docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="docs/services.html" class="site-priority-hire">Hire</a><a href="docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>One live chat. Every platform. Your stream, your way.</h1>
+                <p>Bring messages from YouTube, Twitch, TikTok, Facebook, Kick, and more into one dashboard—then display, speak, relay, moderate, or answer them with AI.</p>
+                <div class="hero-buttons">
+                    <a href="./docs/download.html" class="btn btn-primary">Get Social Stream Ninja</a>
+                    <a href="./docs/overlay-gallery.html" class="btn btn-secondary">Browse Overlay Gallery</a>
+                </div>
+                <div class="hero-proof" aria-label="Product highlights">
+                    <span>100+ sources</span>
+                    <span>Free &amp; open source</span>
+                    <span>Chrome &amp; desktop</span>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="./media/logo.png" alt="Social Stream Ninja logo">
+            </div>
+        </div>
+    </section>
+
+    <section class="features-preview">
+        <div class="container">
+            <h2>Why Choose Social Stream Ninja?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="./icons/chat.png" alt="Chat Icon">
+                    </div>
+                    <h3>Multi-Platform Support</h3>
+                    <p>Connect with Facebook, Youtube, Twitch, Zoom, Instagram, TikTok and more - all from one dashboard.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="./icons/featured-chat-overlay.png" alt="Overlay Icon">
+                    </div>
+                    <h3>Featured Chat Overlay</h3>
+                    <p>Display selected messages on stream with customizable themes and animations.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="./icons/bot-commands.png" alt="Bot Icon">
+                    </div>
+                    <h3>Bot Commands</h3>
+                    <p>Automate responses and create custom commands with scriptable plugins.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="./icons/llm-support.png" alt="AI Icon">
+                    </div>
+                    <h3>AI Cohosts &amp; Chat Bots</h3>
+                    <p>Use local or cloud AI for a voice cohost, chat replies, moderation, translation, summaries, and more.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="./icons/text-to-speech.png" alt="TTS Icon">
+                    </div>
+                    <h3>Text-to-Speech</h3>
+                    <p>Convert chat messages to speech with free and premium TTS services.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="./icons/message-relaying.png" alt="Relay Icon">
+                    </div>
+                    <h3>Message Relaying</h3>
+                    <p>Automatically send messages from one platform to others with cross-platform chat.</p>
+                </div>
+				
+				<div class="feature-card">
+					<div class="feature-icon">
+						<img src="./icons/game.png" alt="Games Icon">
+					</div>
+					<h3>Interactive Games</h3>
+					<p>Battle Royal mini-game and viewer engagement tools to keep your chat entertained.</p>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon">
+						<img src="./icons/polls.png" alt="Poll Icon">
+					</div>
+					<h3>Polls and Giveaways</h3>
+					<p>Create interactive polls, votes, and host giveaways, all with customizable themes.</p>
+				</div>
+				
+            </div>
+            <div class="features-cta">
+                <a href="./docs/features.html" class="btn btn-secondary">Explore All Features</a>
+            </div>
+        </div>
+    </section>
+
+	<section class="ai-showcase" id="ai">
+		<div class="container">
+			<div class="ai-showcase-header">
+				<h2>Use AI the way your stream needs it</h2>
+				<p>Talk with a voice cohost, run a separate chat bot, or capture a ChatGPT browser conversation as another source. Each mode is optional.</p>
+			</div>
+			<div class="ai-options-grid">
+				<article class="ai-option">
+					<span class="ai-option-label">Live companion</span>
+					<h3>Voice AI Cohost</h3>
+					<p>Share your microphone and selected live-chat messages with the same cohost session, then broadcast its spoken responses.</p>
+				</article>
+				<article class="ai-option">
+					<span class="ai-option-label">No API key</span>
+					<h3>ChatGPT Browser Source</h3>
+					<p>Open a normal ChatGPT conversation in Chrome and capture new user and completed ChatGPT turns in Social Stream Ninja.</p>
+				</article>
+				<article class="ai-option">
+					<span class="ai-option-label">Automation</span>
+					<h3>Bots &amp; Processing</h3>
+					<p>Generate chat replies, moderate or censor messages, translate, summarize, use RAG context, and build overlays with AI.</p>
+				</article>
+			</div>
+			<div class="ai-showcase-actions">
+				<a href="./docs/ai-modes-guide.html" class="btn btn-primary">Explore Every AI Option</a>
+				<a href="./docs/ai-cohost-guide.html" class="btn btn-secondary">Set Up a Voice Cohost</a>
+			</div>
+		</div>
+	</section>
+
+<section class="platforms">
+    <div class="container">
+        <h2>Supported Platforms</h2>
+        <p class="section-subtitle">Connect with audiences across all your favorite platforms</p>
+        <div class="platform-logos">
+            <img src="./sources/images/youtube.png" alt="YouTube">
+            <img src="./sources/images/twitch.png" alt="Twitch">
+            <img src="./sources/images/facebook.png" alt="Facebook">
+            <img src="./sources/images/tiktok.png" alt="TikTok">
+            <img src="./sources/images/instagram.png" alt="Instagram">
+            <img src="./sources/images/zoom.png" alt="Zoom">
+            <img src="./sources/images/discord.png" alt="Discord">
+            <img src="./sources/images/kick.png" alt="Kick">
+            <img src="./sources/images/rumble.png" alt="Rumble">
+			<img src="./sources/images/x.png" alt="X">
+			<img src="./sources/images/openai.png" alt="ChatGPT">
+            
+            <!-- Added 25 more popular platforms -->
+            <img src="./sources/images/linkedin.png" alt="LinkedIn">
+            <img src="./sources/images/telegram.png" alt="Telegram">
+            <img src="./sources/images/whatsapp.png" alt="WhatsApp">
+            <img src="./sources/images/teams.png" alt="Microsoft Teams">
+            <img src="./sources/images/webex.png" alt="Webex">
+            <img src="./sources/images/slack.png" alt="Slack">
+            <img src="./sources/images/vimeo.png" alt="Vimeo">
+            <img src="./sources/images/odysee.png" alt="Odysee">
+            <img src="./sources/images/bilibili.png" alt="Bilibili">
+            <img src="./sources/images/threads.png" alt="Threads">
+			<img src="./sources/images/lfg.png" alt="LFG">
+            
+            <img src="./sources/images/bitchute.png" alt="BitChute">
+            <img src="./sources/images/younow.png" alt="YouNow">
+            <img src="./sources/images/livestream.png" alt="Livestream">
+            <img src="./sources/images/mixcloud.png" alt="Mixcloud">
+            <img src="./sources/images/restream.png" alt="Restream">
+            <img src="./sources/images/substack.png" alt="Substack">
+        </div>
+        <p class="platforms-more">Over 100 platforms supported!</p>
+        <a href="./docs/supported-sites.html" class="btn btn-text">See the full list →</a>
+    </div>
+</section>
+
+	<section class="discord-banner">
+		<div class="container">
+			<div>
+				<h3>Need Help? Join Our Discord!</h3>
+				<p>Get instant support from our friendly community and the developer</p>
+			</div>
+			<a href="https://discord.socialstream.ninja" target="_blank" class="btn btn-primary">
+				<img src="./icons/discord.svg" alt="Discord">
+				Join Discord Community
+			</a>
+		</div>
+	</section>
+
+    <section class="testimonials">
+        <div class="container">
+            <h2>What Streamers Are Saying</h2>
+            <div class="testimonials-slider">
+                <div class="testimonial">
+                    <div class="testimonial-content">
+                        <p>"Social Stream Ninja completely changed how I interact with my audience. Being able to see and respond to comments from multiple platforms in one place has made my streams so much more engaging."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="./media/user1.jpg" alt="Testimonial Author">
+                        <div>
+                            <h4>Meghan Riley</h4>
+                            <span>Twitch & YouTube Creator</span>
+                        </div>
+                    </div>
+                </div>
+				<div class="testimonial">
+                    <div class="testimonial-content">
+                        <p>"Since rediscovering SSN it has opened up a world of opportunities with extreme customization abilities & broad range of interconnectivity with many platforms, Steve & the team  have something truly amazing going on 👍"</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="./media/user4.png" alt="Testimonial Author">
+                        <div>
+                            <h4>Maseiy</h4>
+                            <span>Multi-platform Streamer</span>
+                        </div>
+                    </div>
+                </div>
+				<div class="testimonial">
+                    <div class="testimonial-content">
+                        <p>"Social Stream enabled us to expand into multi-platform streaming without the headache of fractured  community engagement.  It effortlessly merges chat feeds from every platform into a single easy to manage and customize interface.  The ability to feature messages and donors on-screen greatly increases the production value as well as viewer engagement.  The fact that Social Stream is entirely free, and so superbly supported has made this a tool a lifeline for us"</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="./media/user5.jpg" alt="Testimonial Author">
+                        <div>
+                            <h4>Apollo and Frens</h4>
+                            <span>YouTube Creator</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial">
+                    <div class="testimonial-content">
+                        <p>"The featured chat overlay is a game changer. My viewers love seeing their comments highlighted on screen, and the customization options let me match it perfectly with my stream's aesthetic."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="./media/user2.jpg" alt="Testimonial Author">
+                        <div>
+                            <h4>Mike Tanner</h4>
+                            <span>Gaming Streamer</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial">
+                    <div class="testimonial-content">
+                        <p>"I never thought I'd be able to manage chat across 5 different platforms without going crazy. Social Stream Ninja makes it possible, and it's completely free. Incredible tool!"</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="./media/user3.jpg" alt="Testimonial Author">
+                        <div>
+                            <h4>Elena Patel</h4>
+                            <span>Multi-platform Creator</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-dots">
+                <span class="dot active"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+				<span class="dot"></span>
+            </div>
+        </div>
+    </section>
+	
+    <section class="get-started">
+        <div class="container">
+            <h2>Ready to bring your chat together?</h2>
+            <p>Get the app or extension, connect your sources, and add your overlay.</p>
+            <div class="get-started-cta">
+                <a href="./docs/download.html" class="btn btn-primary">Download Now</a>
+                <a href="./docs/guides.html" class="btn btn-secondary">View Installation Guide</a>
+            </div>
+        </div>
+    </section>
+
+        <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>Consolidates your live social messaging streams and more. Free and open source.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="./icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="./icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="./icons/x.svg" alt="X.com"></a>
+						<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="./icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="./docs/features.html">Features</a></li>
+                        <li><a href="./docs/download.html">Download</a></li>
+                        <li><a href="./docs/guides.html">Guides</a></li>
+                        <li><a href="./docs/commands.html">Commands & API</a></li>
+						<li><a href="./docs/supported-sites.html">Supported Sites</a></li>
+                        <li><a href="./docs/overlay-gallery.html">Overlay Gallery</a></li>
+                        <li><a href="./docs/services.html">Hire</a></li>
+                        <li><a href="./docs/support.html">Support</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="./docs/guides.html#installation">Installation Guide</a></li>
+                        <li><a href="./docs/guides.html#customization">Customization Guide</a></li>
+                        <li><a href="./docs/guides.html#faq">FAQ</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Report an Issue</a></li>
+                        <li><a href="./privacy.html">Privacy Policy</a></li>
+                        <li><a href="./TOS.html">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Community</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Join our Discord</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub Repository</a></li>
+                        <li><a href="./docs/support.html#contribute">Contribute</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">Donate</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License. Created by <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> with contributions from the community.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script type="text/javascript" src="docs/js/main.js"></script>
+    <script>
+        // Set current year in footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
