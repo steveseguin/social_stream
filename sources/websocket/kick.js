@@ -3603,7 +3603,17 @@ function resetKickViewerHeartbeatState() {
     updateKickViewerCountDisplay(null);
 }
 
+function updateCompactChatState() {
+    if (!els.socketState) return;
+    const connected = state.socket.pusherStatus === 'connected'
+        || (supportsLocalSocket() && state.socket.status === 'connected')
+        || (state.bridge.status === 'connected' && !state.bridge.chatDisabled);
+    // The compact layout also reads this across extension isolated worlds.
+    els.socketState.setAttribute('data-connected', connected ? 'true' : 'false');
+}
+
 function updateSocketState(payload = {}) {
+    updateCompactChatState();
     notifyKickCaptureStatus(payload);
     syncKickViewerHeartbeat(true);
     if (!els.socketState) return;
@@ -6497,6 +6507,7 @@ function bridgeEventMatchesCurrentChannel(packet) {
 }
 
 function updateBridgeState() {
+    updateCompactChatState();
     syncKickViewerHeartbeat(true);
     if (!els.bridgeState) return;
     if (state.bridge.status === 'connected') {
