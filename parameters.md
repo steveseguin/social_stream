@@ -50,6 +50,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `compact` or `overlaymode` | boolean | Enables compact mode with less spacing |
 | `inline` | boolean | In the standard row layout, keeps normal spacing while allowing the message to start beside the username and wrap naturally below. Specialized layouts such as `compact`, `horizontal`, `twolines`, `split`, `largeavatar`, and `bubble` take precedence |
 | `padding` | number | Sets padding between messages in pixels |
+| `sidepadding` | number (0–99) | Adds padding to the left and right edges of dock chat; defaults to 8 pixels when enabled without a value. Off by default |
 | `largeavatar` | boolean | Shows larger user avatars on the left side |
 | `emoji` or `emojis` | number | Sets emoji size scaling (percentage, default: 140) |
 | `nooutline` | boolean | Removes text outline effects |

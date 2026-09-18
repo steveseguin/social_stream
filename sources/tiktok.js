@@ -2245,6 +2245,9 @@
 	}
 
 	function findTikTokChatMessageForMutationNode(node) {
+		if (node && node.nodeType === 3) {
+			node = node.parentElement;
+		}
 		if (!node || node.nodeType !== 1) {
 			return null;
 		}
@@ -2391,6 +2394,13 @@
 					return;
 				}
 				mutations.forEach((mutation) => {
+					if (mutation.type === "characterData") {
+						var updatedMessage = findTikTokChatMessageForMutationNode(mutation.target);
+						if (updatedMessage && updatedMessage.isConnected) {
+							setTimeout(processMessage, 10, updatedMessage);
+						}
+						return;
+					}
 					if (mutation.addedNodes.length) {
 						//console.warn(mutation.addedNodes);
 						for (let i = 0; i < mutation.addedNodes.length; i++) {
@@ -2449,6 +2459,7 @@
 			});
 			observer.observe(target, {
 				childList: true,
+				characterData: subtree,
 				subtree: subtree
 			});
 			observedDomElementForObserver1 = target;
