@@ -389,6 +389,12 @@
 				margin-bottom: calc((46px  + var(--locked-chatbar)) / var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
 			}
 
+			#output.sidepadding {
+				box-sizing: border-box;
+				padding-left: var(--side-padding);
+				padding-right: var(--side-padding);
+			}
+
 			.horizontal-ticker-root {
 				position: relative;
 				width: 100%;
@@ -5501,6 +5507,14 @@
 
 			if (urlParams.has("padding")) {
 				document.documentElement.style.setProperty("--padding-rows", (parseInt(urlParams.get("padding") || 5)) + "px");
+			}
+			if (urlParams.has("sidepadding")) {
+				var sidePadding = parseInt(urlParams.get("sidepadding"), 10);
+				if (!isFinite(sidePadding)) {
+					sidePadding = 8;
+				}
+				document.documentElement.style.setProperty("--side-padding", Math.max(0, Math.min(99, sidePadding)) + "px");
+				getById("output").classList.add("sidepadding");
 			}
 			
 			var NormalizeText = false;
