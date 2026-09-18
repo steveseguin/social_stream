@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>OBS Control Dock Guide - Social Stream Ninja</title>
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/guides.css">
+	<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Add the Social Stream Ninja control dock to OBS and remotely start Credits, control featured chat, run timers, and manage a waitlist.">
+<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js"></script>
+</head>
+<body>
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+	<section class="page-hero">
+		<div class="container">
+			<h1>OBS Control Dock Guide</h1>
+			<p>Keep common Social Stream controls inside OBS, including Credits Start, Preview, Test, and Reset.</p>
+		</div>
+	</section>
+
+	<main class="guide-section">
+		<div class="container">
+			<div class="guide-card">
+				<h2>Quick setup</h2>
+				<ol class="guide-steps">
+					<li>In Social Stream Ninja, open <strong>Global settings and tools</strong> &rarr; <strong>Mechanics</strong>.</li>
+					<li>Enable <strong>remote API control of extension</strong>. Keep Social Stream Ninja active during the stream.</li>
+					<li>Copy the Session ID shown in Social Stream Ninja.</li>
+					<li>In OBS, open <strong>Docks</strong> &rarr; <strong>Custom Browser Docks</strong>.</li>
+					<li>Name the dock <strong>Social Stream Controls</strong> and use this URL:</li>
+				</ol>
+				<pre><code>https://socialstream.ninja/obs-control-dock.html?session=YOUR_SESSION_ID</code></pre>
+				<ol class="guide-steps" start="6">
+					<li>Select <strong>Apply</strong>, close the settings window, and place the new dock where you want it in OBS.</li>
+					<li>Confirm the dock says <strong>Connected</strong>. If the URL did not include a session, enter it in the dock and select <strong>Save &amp; connect</strong>.</li>
+				</ol>
+				<p><a href="../obs-control-dock.html" class="btn btn-primary">Open the Control Dock</a></p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Which server settings are required?</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Setting</th><th>For this control dock</th><th>Purpose</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Setting">remote API control of extension</td><td data-label="For this control dock"><strong>Required</strong></td><td data-label="Purpose">Lets the control dock send commands to the Social Stream app or extension on channel 1.</td></tr>
+						<tr><td data-label="Setting">Enable Dock to use and publish via API server</td><td data-label="For this control dock">Not required</td><td data-label="Purpose">Optional direct server transport for the Streaming Chat Dock.</td></tr>
+						<tr><td data-label="Setting">Send chat messages to API server</td><td data-label="For this control dock">Not required</td><td data-label="Purpose">Used when an external program needs to receive captured chat on channel 4.</td></tr>
+						<tr><td data-label="Setting">Dock sends its commands to Extension via server</td><td data-label="For this control dock">Not required</td><td data-label="Purpose">Used when the Streaming Chat Dock itself must send commands back through the server.</td></tr>
+					</tbody>
+				</table>
+				<div class="guide-note"><strong>No <code>&amp;server</code> is needed on the control-dock or Credits URLs.</strong> The control dock already opens its own WebSocket control connection. OBS's <strong>WebSocket Server Settings</strong> are unrelated and can remain off.</div>
+				<p>If you intentionally use direct API transport for <code>dock.html</code>, use the generated Dock link after enabling its server setting, or add <code>&amp;server</code> to that Dock URL. This is optional and does not change how Credits commands work.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Using it with end-of-stream Credits</h2>
+				<ol class="guide-steps">
+					<li>Before the stream, set Credits <strong>Trigger Mode</strong> to <strong>Background collection</strong>. This lets the app collect chatters, members, and donors while the Credits Browser Source is closed.</li>
+					<li>Add the generated Credits URL to the OBS ending scene using the same Session ID.</li>
+					<li>At the end of the stream, switch to the ending scene first so the Credits Browser Source is loaded and connected.</li>
+					<li>Select <strong>Start Credits</strong> in the OBS control dock.</li>
+				</ol>
+				<div class="warning-note"><strong>Load before Start:</strong> background collection can work while the Credits page is closed, but Start, Preview, and Test need a connected Credits Browser Source to display anything.</div>
+				<p>See the <a href="credits-roll-guide.html">Credits Roll Guide</a> for collection modes, filters, and troubleshooting missing names.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>What each Credits button does</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Button</th><th>Result</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Button">Start Credits</td><td data-label="Result">Runs the real collected list.</td></tr>
+						<tr><td data-label="Button">Preview</td><td data-label="Result">Runs the real list without consuming page-collected entries.</td></tr>
+						<tr><td data-label="Button">Test Credits</td><td data-label="Result">Displays built-in participant, member, and donor examples. It does not prove that real names were collected.</td></tr>
+						<tr><td data-label="Button">Reset Saved Credits</td><td data-label="Result">Clears the saved Background collection for the active Social Stream session.</td></tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="guide-card" id="commerce">
+				<h2>Products &amp; support links</h2>
+				<p>In Social Stream, open Monetization, save and enable your products, then choose <strong>Open OBS control dock</strong>. Copy that private control URL into OBS's Custom Browser Docks. For a products-only dock, use <code>obs-control-dock.html?session=YOUR_SESSION_ID&amp;commerce</code>.</p>
+				<p>Keep Social Stream on and enable <strong>remote API control of extension</strong> as described above. Add the separate monetization overlay URL as an OBS Browser Source for viewers. The control dock is for you; never share its session URL with viewers.</p>
+				<a href="images/monetization/obs-native-product-controls.png"><img src="images/monetization/obs-native-product-controls.png" alt="OBS product controls with a saved product selector, duration, Show, Next, Hide products, Resume schedule, and selected product state" style="display:block;width:100%;max-width:390px;height:auto;margin:16px auto;"></a>
+				<ul class="guide-list">
+					<li><strong>Show:</strong> select a saved product and pin it. <strong>Next:</strong> advance from the current product.</li>
+					<li><strong>Hide products:</strong> hide promotional cards; activity alerts continue. <strong>Resume schedule:</strong> return to your saved first-product or rotation setting.</li>
+					<li><strong>Duration:</strong> Show, Next, and Hide return to the saved schedule after this many seconds. Use 0 to keep the override until changed.</li>
+					<li><strong>State:</strong> refreshes every five seconds while this section is open. It reports Social Stream's selection, not whether an OBS scene is visible. Lost or unconfirmed connections disable product buttons until state is available again.</li>
+				</ul>
+				<p>The dock, popup, Stream Deck, and Event Flow share the same controls. Edit and save the catalog in Social Stream. See <a href="product-controls.html">Product controls</a> for setup and automation.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Other controls and their required pages</h2>
+				<ul class="guide-list">
+					<li><strong>Featured Chat:</strong> keep the normal Streaming Chat Dock and featured overlay connected on the same session.</li>
+					<li><strong>Timer:</strong> keep the Timer page connected on the same session if it needs to display the timer.</li>
+					<li><strong>Waitlist &amp; Giveaway:</strong> configure the waitlist in Social Stream first; Reset clears the current entries.</li>
+				</ul>
+				<p>The dock reconnects automatically if the API connection drops. A green <strong>Connected</strong> status only confirms the control connection; the target page still needs to be open when a command displays something.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Direct API examples</h2>
+				<p>The same buttons can be scripted with HTTP GET requests:</p>
+				<pre><code>https://io.socialstream.ninja/SESSION_ID/creditsStart
+https://io.socialstream.ninja/SESSION_ID/creditsPreview
+https://io.socialstream.ninja/SESSION_ID/creditsTest
+https://io.socialstream.ninja/SESSION_ID/creditsReset</code></pre>
+				<p>Replace <code>SESSION_ID</code> with the active Social Stream session. See <a href="commands.html">Commands &amp; API</a> or the <a href="../sampleapi.html">full API sandbox</a> for more actions.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Troubleshooting</h2>
+				<ul class="guide-list">
+					<li><strong>Session needed:</strong> use the exact Session ID from Social Stream, without the word <code>session=</code>.</li>
+					<li><strong>Disconnected:</strong> enable remote API control, confirm Social Stream is active, and reopen the dock after changing its URL.</li>
+					<li><strong>Credits says no source accepted the command:</strong> reveal the ending scene, wait for its Browser Source to load, then retry.</li>
+					<li><strong>Test works but Start is empty:</strong> Test uses built-in names. Select Background collection before the stream and confirm normal chat sources are capturing.</li>
+					<li><strong>Featured Chat button has no visible effect:</strong> confirm the Streaming Chat Dock and featured overlay use the same session and are loaded.</li>
+				</ul>
+			</div>
+		</div>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+	<script src="js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

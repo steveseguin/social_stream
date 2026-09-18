@@ -1,0 +1,1964 @@
+(function () {
+	if (window.__ssnEbayCaptureActive) return;
+	window.__ssnEbayCaptureActive = true;
+	 
+	 
+	var checking = false;
+	
+	function toDataURL(url, callback) {
+	  var xhr = new XMLHttpRequest();
+	  xhr.onload = function() {
+		  
+		var blob = xhr.response;
+    
+		if (blob.size > (55 * 1024)) {
+		  callback(url); // Image size is larger than 25kb.
+		  return;
+		}
+
+		var reader = new FileReader();
+		
+		
+		reader.onloadend = function() {
+		  callback(reader.result);
+		}
+		reader.readAsDataURL(xhr.response);
+	  };
+	  xhr.open('GET', url);
+	  xhr.responseType = 'blob';
+	  xhr.send();
+	}
+
+	function escapeHtml(unsafe){ // when goofs be trying to hack me
+		return unsafe
+			 .replace(/&/g, "&amp;")
+			 .replace(/</g, "&lt;")
+			 .replace(/>/g, "&gt;")
+			 .replace(/"/g, "&quot;")
+			 .replace(/'/g, "&#039;") || "";
+	}
+
+	function getAllContentNodes(element) { // takes an element.
+		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent)+" ";
+			} else if (node.nodeType === 1){
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
+					resp += node.outerHTML;
+				}
+			}
+		});
+		return resp;
+	}
+	
+	var settings = {};
+	// settings.textonlymode
+	// settings.captureevents
+	
+	
+	var dataIndex = -5;
+	
+	var channelName = "";
+	
+	function processMessage(ele){
+	//	console.log(ele);
+		if (!ele || !ele.isConnected){
+		//	console.log("no connected");
+			return;
+		}
+		
+		if (ele.dataset.knownSize){
+			if (!parseInt(ele.dataset.knownSize)){
+		//		console.log("no knownSize");
+				return;
+			}
+		}
+		
+		if (ele.skip){
+			return;
+		}
+
+		
+		var chatimg = ""
+
+		try {
+			chatimg = ele.querySelector("img.aspect-square[src]").src;
+		} catch(e){
+		}
+		
+		var name="";
+		// The chat-only page exposes stable attributes instead of the stream's
+		// class names. Threaded rows contain a quoted parent before the new reply.
+		var messageRoot = ele.querySelector('[data-chat-element="thread-reply"]') || ele;
+		try {
+			name = escapeHtml(messageRoot.querySelector("[data-chat-element='author-name'], .user-name, [class*='_username_'], [class*='chatAuthor-']").textContent);
+		} catch(e){
+		}
+		
+		var namecolor="";
+		
+		var badges=[];
+		/* try {
+			ele.querySelectorAll("img[class^='ChatBadge_image_'][src]").forEach(badge=>{
+				badges.push(badge.src);
+			});
+		} catch(e){
+		} */
+
+		var msg="";
+		try {
+			if (messageRoot.querySelector("[data-chat-element='message-content']")){
+				msg = getAllContentNodes(messageRoot.querySelector("[data-chat-element='message-content']")).trim();
+			} else if (ele.querySelector(".message-content")){
+				msg = getAllContentNodes(ele.querySelector(".message-content")).trim();
+			} else if (ele.querySelector("[class*='chatText-']")){
+				msg = getAllContentNodes(ele.querySelector("[class*='chatText-']")).trim();
+			} else {
+				msg = getAllContentNodes(ele).trim();
+				msg = msg.replace(name,"").trim();
+			}
+		} catch(e){
+			
+		}
+		
+		
+		if (!msg || !name){
+	//		console.log("no name");
+			return;
+		}
+		
+		if (ele.dataset.index){
+			let indexx = parseInt(ele.dataset.index);
+			if (indexx>dataIndex){
+				dataIndex = indexx;
+			} else {
+				//console.log("bad dataIndex");
+				return;
+			}
+		}
+		
+		if (ele.dataset.id){
+			if (ele.dataset.processedId === ele.dataset.id){
+				return;
+			}
+			ele.dataset.processedId = ele.dataset.id;
+		}
+		
+		ele.skip = true;
+		
+		
+		var data = {};
+		data.chatname = name;
+		data.chatbadges = badges;
+		data.backgroundColor = "";
+		data.textColor = "";
+		data.nameColor = namecolor;
+		data.chatmessage = msg;
+		data.chatimg = chatimg;
+		data.hasDonation = "";
+		data.membership = "";
+		data.contentimg = "";
+		data.textonly = settings.textonlymode || false;
+		data.type = "ebay";
+		
+		
+		pushMessage(data);
+	}
+
+	function pushMessage(data, target){
+		try{
+			var request = { "message": data };
+			if (target) {
+				request.target = target;
+			}
+			chrome.runtime.sendMessage(chrome.runtime.id, request, function(e){});
+		} catch(e){
+		}
+	}
+	var isExtensionOn = true;
+	var lastViewerCount = null;
+	var lastAuctionSnapshot = "";
+	var lastCommerceSnapshot = "";
+	var reactionObserver = null;
+	var reactionObserverTarget = null;
+	var lastSellerStatsFetchAt = 0;
+	var lastSellerStatsSeller = "";
+	var sellerStatsInFlight = false;
+	var EBAY_SELLER_STATS_ENDPOINT = "https://vps-1122d8c8.vps.ovh.us:1443/seller?seller=";
+	var EBAY_SELLER_STATS_INTERVAL_MS = 60 * 1000;
+
+	// Both /chat and /stream subscribe to /liveevents/<id>. GraphQL supplies
+	// listing details; the fanout feed supplies the current auction and inventory.
+	var ebayEventMatch = location.pathname.match(/^\/ebaylive\/events\/([a-zA-Z0-9]+)\/(?:chat|stream)\/?$/);
+	var ebayEventId = ebayEventMatch ? ebayEventMatch[1] : "";
+	var networkListings = Object.create(null);
+	var graphqlListings = Object.create(null);
+	var listingUpdates = Object.create(null);
+	var networkListingIds = [];
+	var networkReady = false;
+	var graphqlReady = false;
+	var networkViewerCount = null;
+	var networkRevision = 0;
+	var networkSeen = new Set();
+	var networkSeenOrder = [];
+	var networkTimer = null;
+	var graphqlPending = false;
+	var graphqlLastAttempt = 0;
+	var graphqlRefreshNeeded = true;
+	var networkClockOffset = 0;
+	var listingTimes = Object.create(null);
+	var listingsSnapshotTime = 0;
+
+	// Read-only fields used by eBay's HostLiveEventListings query. No account,
+	// bidding or checkout mutations, and no personalized watch/payment fields.
+	var ebayListingsQuery = `query HostLiveEventListings($liveEventListingsInput: LiveEventListingsInput!, $isAuthenticated: Boolean!, $enableSellerDiscountsQuery: Boolean = false, $includeLiveCommerceSignals: Boolean = true, $enableWinnerForLiveAuctionState: Boolean = true, $includePagination: Boolean = false, $skipAuctionStatus: Boolean = false, $enableBreakSpotsGroupings: Boolean = false, $enableCBTData: Boolean = false, $includeVehicleDetails: Boolean = false) {
+  liveEventListings(liveEventListingsInput: $liveEventListingsInput) {
+    eventId
+    pagination @include(if: $includePagination) {
+      nextCursor
+      __typename
+    }
+    liveEventListings {
+      eventId
+      listingId
+      listing {
+        ...EventListing
+        isWatched @include(if: $isAuthenticated)
+        __typename
+      }
+      caseBreakSpot @include(if: $enableBreakSpotsGroupings) {
+        id
+        name
+        break {
+          id
+          name
+          images {
+            url
+            __typename
+          }
+          type
+          __typename
+        }
+        __typename
+      }
+      listingV2 {
+        listingId
+        listing {
+          listingId
+          listingLifecycle {
+            endDate
+            __typename
+          }
+          sellerProduct @include(if: $includeVehicleDetails) {
+            motorVehicleIdentifier {
+              vin
+              __typename
+            }
+            __typename
+          }
+          category {
+            primaryCategory {
+              categoryId
+              name
+              ancestorIds
+              __typename
+            }
+            __typename
+          }
+          listingTerms @include(if: $includeVehicleDetails) {
+            itemLocation {
+              location
+              __typename
+            }
+            listingFulfillmentTerms {
+              inStorePickupSupported
+              __typename
+            }
+            listingPaymentTerms {
+              motorVehicleDeposit {
+                depositRequired
+                depositAmount {
+                  original {
+                    value
+                    currency
+                    __typename
+                  }
+                  __typename
+                }
+                __typename
+              }
+              __typename
+            }
+            __typename
+          }
+          ... on SingleSkuListing {
+            __typename
+            ...ListingV2Quantity
+            ...ListingV2Discount @include(if: $enableSellerDiscountsQuery)
+            items {
+              priceRollups @include(if: $enableCBTData) {
+                feeComputationReferenceData
+                __typename
+              }
+              __typename
+            }
+          }
+          ... on VariationListing {
+            __typename
+            ...ListingV2Quantity
+            ...ListingV2Discount @include(if: $enableSellerDiscountsQuery)
+            items {
+              priceRollups @include(if: $enableCBTData) {
+                feeComputationReferenceData
+                __typename
+              }
+              __typename
+            }
+          }
+          __typename
+        }
+        __typename
+      }
+      auction @skip(if: $skipAuctionStatus) {
+        winner {
+          id
+          userAccountName
+          __typename
+        }
+        __typename
+      }
+      liveAuctionState @skip(if: $skipAuctionStatus) {
+        status
+        recommendedPrices
+        endingAt
+        price {
+          amount
+          currency
+          __typename
+        }
+        leader {
+          id
+          userAccountName
+          __typename
+        }
+        winner @include(if: $enableWinnerForLiveAuctionState) {
+          id
+          userAccountName
+          __typename
+        }
+        __typename
+      }
+      visibility {
+        isVisible
+        __typename
+      }
+      pin
+      hostConsolePurchasable
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment Price on Price {
+  amount
+  currency
+  __typename
+}
+
+fragment Image on Image {
+  id
+  url
+  width
+  height
+  __typename
+}
+
+fragment EventListing on Listing {
+  id
+  title
+  status
+  currentPrice {
+    converted {
+      ...Price
+      __typename
+    }
+    original {
+      ...Price
+      __typename
+    }
+    __typename
+  }
+  image {
+    ...Image
+    __typename
+  }
+  minimalShippingCostToBuyer {
+    shippingType
+    isFree
+    __typename
+  }
+  bidCount
+  saleType
+  liveCommerceSignals @include(if: $includeLiveCommerceSignals) {
+    isExclusive
+    purchasable
+    __typename
+  }
+  endDate
+  __typename
+}
+
+fragment ListingV2Quantity on ListingV2 {
+  totalQuantity
+  items {
+    quantityAvailable
+    quantitySold
+    __typename
+  }
+  __typename
+}
+
+fragment ListingV2Discount on ListingV2 {
+  isItemOnSale
+  sellerDiscounts {
+    bestDiscounts {
+      id
+      startDate
+      endDate
+      offerCheckSumId
+      discountType {
+        id
+        __typename
+      }
+      ... on CodedCouponDiscount {
+        couponCode
+        discountSubType {
+          id
+          __typename
+        }
+        usageLimit {
+          maximumSavings {
+            amount
+            currency
+            __typename
+          }
+          maximumRedemptionsPerBuyer
+          __typename
+        }
+        name
+        rule {
+          discountOffered {
+            ... on SellerDiscountOfferedPercentage {
+              discountPercentage
+              discountApplyLevel
+              __typename
+            }
+            ... on SellerDiscountOfferedAmount {
+              discountAmountOff {
+                amount
+                currency
+                __typename
+              }
+              discountApplyLevel
+              __typename
+            }
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+      ... on MarkdownSellerPromotion {
+        offerCheckSumId
+        endDate
+        __typename
+      }
+      ... on OrderDiscount {
+        offerCheckSumId
+        endDate
+        __typename
+      }
+      ... on ShippingDiscount {
+        offerCheckSumId
+        endDate
+        __typename
+      }
+      ... on VolumeDiscount {
+        offerCheckSumId
+        endDate
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  __typename
+}`;
+
+	function refreshEbayListings() {
+		if (!ebayEventId || !isExtensionOn || !graphqlRefreshNeeded || graphqlPending || Date.now() - graphqlLastAttempt < 30000) return;
+		graphqlPending = true;
+		graphqlLastAttempt = Date.now();
+		graphqlRefreshNeeded = false;
+		var revision = networkRevision;
+		var controller = new AbortController();
+		var timeout = setTimeout(function () { controller.abort(); }, 15000);
+		fetch("/ebaylive/graphql", {
+			method: "POST", credentials: "same-origin", signal: controller.signal,
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ operationName: "HostLiveEventListings", query: ebayListingsQuery,
+				variables: { isAuthenticated: false, enableSellerDiscountsQuery: false, includeLiveCommerceSignals: false,
+					enableWinnerForLiveAuctionState: true, includePagination: false, skipAuctionStatus: false,
+					enableBreakSpotsGroupings: true, enableCBTData: false, includeVehicleDetails: false,
+					liveEventListingsInput: { eventId: ebayEventId, pagination: { maxPageSize: 1000 } } } })
+		}).then(function (response) {
+			if (!response.ok) throw new Error("eBay listings HTTP " + response.status);
+			return response.json();
+		}).then(function (response) {
+			var result = response.data && response.data.liveEventListings;
+			if (!result || result.eventId !== ebayEventId || !Array.isArray(result.liveEventListings)) throw new Error("eBay listing data unavailable");
+			var next = Object.create(null);
+			result.liveEventListings.forEach(function (item) { if (item.listingId) next[item.listingId] = item; });
+			graphqlListings = next;
+			graphqlReady = true;
+			window.__ssnEbayNetworkReady = true;
+			// A response that crossed a socket update may enrich titles/images but
+			// must never replace the newer live auction state or selected cards.
+			if (!networkReady && revision === networkRevision) {
+				networkListingIds = result.liveEventListings.filter(function (item) { return item.pin; }).map(function (item) { return item.listingId; });
+			}
+			queueNetworkSnapshots();
+		}).catch(function () {
+			graphqlRefreshNeeded = true; // Bounded retry; DOM and socket capture continue.
+		}).finally(function () {
+			clearTimeout(timeout);
+			graphqlPending = false;
+		});
+	}
+
+	function ebayPrice(value) {
+		if (!value) return null;
+		var price = value.original || value;
+		var amount = Number(price.amount);
+		return price.amount != null && Number.isFinite(amount) ? { amount: amount, currency: price.currencyCode || price.currency || "" } : null;
+	}
+
+	function ebayPriceText(price) {
+		if (!price) return "";
+		try { return new Intl.NumberFormat(document.documentElement.lang || "en-US", { style: "currency", currency: price.currency }).format(price.amount); }
+		catch (e) { return String(price.amount) + (price.currency ? " " + price.currency : ""); }
+	}
+
+	function networkAuctionSnapshot(id) {
+		var item = networkListings[id] || {};
+		var graph = graphqlListings[id] || {};
+		var listing = graph.listing || {};
+		var details = item.saleInfo && item.saleInfo.details;
+		var auction = graph.liveAuctionState || {};
+		var result = details && details.result;
+		var hasSocketAuction = !!details;
+		var state = hasSocketAuction ? details.typename : auction.status;
+		var status = /Ended|ENDED/.test(state) ? "ended" : /Closed/.test(state) ? "closing" : /Active|Running|Started|ACTIVE|RUNNING/.test(state) ? "active" : "ready";
+		var winner = hasSocketAuction ? (result && result.winner) : (auction.winner || (graph.auction && graph.auction.winner));
+		var leader = hasSocketAuction ? details.bidder : auction.leader;
+		var price = ebayPrice(hasSocketAuction ? ((result && result.winningBid) || details.winningBid || details.startingPrice || item.originalPrice) : (auction.price || listing.currentPrice));
+		var nextBid = status === "active" || status === "ready" ? ebayPrice(details && details.recommendedBid) : null;
+		var endingAt = hasSocketAuction ? details.endingAt : auction.endingAt;
+		var remaining = endingAt && status === "active" ? Math.max(0, Math.ceil((Date.parse(endingAt) - Date.now() - networkClockOffset) / 1000)) : null;
+		var bidder = leader && (leader.userName || leader.userAccountName) || "";
+		var winnerName = winner && (winner.userName || winner.userAccountName) || "";
+		var bids = hasSocketAuction ? (details.bidRound == null ? null : details.bidRound) : listing.bidCount;
+		return {
+			title: item.title || listing.title || "", status: winnerName ? "sold" : status,
+			statusText: winnerName ? winnerName + " won" : bidder && status === "active" ? bidder + " is winning" : status,
+			bidder: bidder, winnerName: winnerName, currentPrice: price ? price.amount : null,
+			currentPriceText: ebayPriceText(price), price: price ? price.amount : null, priceText: ebayPriceText(price),
+			nextBid: nextBid ? nextBid.amount : null, nextBidText: ebayPriceText(nextBid),
+			bids: bids == null ? null : bids, bidsText: bids == null ? "" : bids + " Bids",
+			timer: remaining !== null && Number.isFinite(remaining) ? String(Math.floor(remaining / 60)).padStart(2, "0") + ":" + String(remaining % 60).padStart(2, "0") : "",
+			endingAt: endingAt || null, sourceMode: "network", cardCount: networkListingIds.length,
+			ebay: { eventId: ebayEventId, listingId: id, listing: graph, eventListing: item, update: listingUpdates[id] || null }
+		};
+	}
+
+	function networkCommerceSnapshot() {
+		if (!networkReady && !graphqlReady) return null;
+		return { sourceMode: "network", eventId: ebayEventId,
+			playerCards: networkListingIds.map(networkAuctionSnapshot),
+			navigation: { viewerCount: networkViewerCount } };
+	}
+
+	function currentNetworkAuction() {
+		var pinned = networkListingIds.filter(function (id) { return networkListings[id] ? networkListings[id].isPinnedInEvent : graphqlListings[id] && graphqlListings[id].pin; });
+		var id = pinned[0] || networkListingIds[networkListingIds.length - 1];
+		return id ? networkAuctionSnapshot(id) : networkReady || graphqlReady ? {
+			sourceMode: "network", status: "idle", title: "", cardCount: 0,
+			ebay: { eventId: ebayEventId, listingId: null }
+		} : null;
+	}
+
+	function queueNetworkSnapshots() {
+		if (networkTimer) return;
+		networkTimer = setTimeout(function () {
+			networkTimer = null;
+			checkAuctionUpdates();
+			checkCommerceUpdates();
+		}, 50);
+	}
+
+	function handleEbayPayload(payload, replay) {
+		if (!payload || !ebayEventId) return;
+		var kind = payload.typename;
+		if (kind === "ServerTimeBeacon") {
+			var time = Date.parse(payload.timestamp);
+			if (Number.isFinite(time)) networkClockOffset = time - Date.now();
+			return;
+		}
+		if (kind === "LiveEventViewerStatsUpdatedV2") {
+			if (Number.isFinite(payload.concurrentViewers)) networkViewerCount = payload.concurrentViewers;
+			return;
+		}
+		if (kind === "GetMessagesFromKeystoneEventResponse" || kind === "ReplayEventMessagesResponse") {
+			if (payload.eventId !== "/liveevents/" + ebayEventId || !Array.isArray(payload.messages)) return;
+			payload.messages.forEach(function (message) { handleEbayPayload(message, true); });
+			if (payload.hasMore || payload.isStale) graphqlRefreshNeeded = true;
+			queueNetworkSnapshots();
+			return;
+		}
+		if (payload.eventId !== ebayEventId || !/^(EventListingsUpdated(?:Patch)?|Auction\w+|BidTimeExtended|FlashDeal\w+)$/.test(kind)) return;
+		var key = JSON.stringify(payload);
+		if (networkSeen.has(key)) return;
+		networkSeen.add(key);
+		networkSeenOrder.push(key);
+		if (networkSeenOrder.length > 1000) networkSeen.delete(networkSeenOrder.shift());
+		networkRevision++;
+		if (kind === "EventListingsUpdated" || kind === "EventListingsUpdatedPatch") {
+			if (!Array.isArray(payload.eventListings)) return;
+			if (kind === "EventListingsUpdated") {
+				if (payload.serverCreatedAt < listingsSnapshotTime) return;
+				listingsSnapshotTime = payload.serverCreatedAt || listingsSnapshotTime;
+				networkListingIds = payload.eventListings.filter(function (item) { return item.isVisibleInEvent !== false; }).map(function (item) { return item.listingId; });
+				var previous = networkListings;
+				networkListings = Object.create(null);
+				networkListingIds.forEach(function (id) { if (previous[id]) networkListings[id] = previous[id]; });
+				networkReady = true;
+				window.__ssnEbayNetworkReady = true;
+			}
+			payload.eventListings.forEach(function (item) {
+				if (!item.listingId) return;
+				if (listingTimes[item.listingId] > payload.serverCreatedAt) return;
+				listingTimes[item.listingId] = payload.serverCreatedAt || 0;
+				if (kind === "EventListingsUpdated") networkListings[item.listingId] = item;
+				else networkListings[item.listingId] = Object.assign({}, networkListings[item.listingId] || {}, item);
+				if (!graphqlListings[item.listingId]) graphqlRefreshNeeded = true;
+				if (item.isVisibleInEvent === false) networkListingIds = networkListingIds.filter(function (id) { return id !== item.listingId; });
+				else if (item.isVisibleInEvent === true && networkListingIds.indexOf(item.listingId) === -1) networkListingIds.push(item.listingId);
+			});
+		} else if (payload.listingId) {
+			var id = payload.listingId;
+			if (listingTimes[id] > payload.serverCreatedAt) return;
+			listingTimes[id] = payload.serverCreatedAt || 0;
+			var previousUpdate = listingUpdates[id];
+			if (previousUpdate && previousUpdate.serverCreatedAt > payload.serverCreatedAt) return;
+			listingUpdates[id] = payload;
+			var item = networkListings[id];
+			if (!item) {
+				var graph = graphqlListings[id] || {};
+				var listing = graph.listing || {};
+				item = networkListings[id] = { listingId: id, title: listing.title || "", originalPrice: listing.currentPrice,
+					isPinnedInEvent: !!graph.pin, imageUrl: listing.image && listing.image.url };
+				if (networkListingIds.indexOf(id) === -1) networkListingIds.push(id);
+				graphqlRefreshNeeded = true;
+			}
+			var details = Object.assign({}, item.saleInfo && item.saleInfo.details);
+			if (kind === "AuctionStarted") details = Object.assign({}, payload, { typename: "RunningAuctionDetails", bidRound: 0 });
+			else if (kind === "AuctionReset" || kind === "AuctionWillStart") details = Object.assign({}, payload, { typename: "ReadyAuctionDetails", bidRound: 0 });
+			else if (kind === "AuctionEnded") details = Object.assign({}, details, payload, { typename: "EndedAuctionDetails", endingAt: null });
+			else if (kind === "AuctionBiddingClosed") details.typename = "ClosedAuctionDetails";
+			else if (kind === "AuctionNewBidLeader") Object.assign(details, { winningBid: payload.winningBid, bidder: payload.bidder, bidRound: payload.bidRound, recommendedBid: payload.recommendedBid });
+			else if (kind === "BidTimeExtended") details.endingAt = payload.endingAt;
+			else graphqlRefreshNeeded = true;
+			item.saleInfo = Object.assign({}, item.saleInfo, { details: details });
+		}
+		if (!replay) queueNetworkSnapshots();
+	}
+
+	function handleEbaySocketFrame(data) {
+		if (typeof data !== "string" || !ebayEventId) return;
+		// eBay uses STOMP with LF or CRLF headers and NUL-delimited frames.
+		data.split("\x00").forEach(function (frame) {
+			var separator = frame.match(/\r?\n\r?\n/);
+			if (!separator || !/^\s*MESSAGE\r?\n/.test(frame)) return;
+			var headers = frame.slice(0, separator.index);
+			var destination = headers.match(/(?:^|\n)(?:subscription|for-destination):([^\r\n]+)/);
+			if (destination && destination[1].indexOf("/liveevents/") === 0 && destination[1] !== "/liveevents/" + ebayEventId) return;
+			try { handleEbayPayload(JSON.parse(frame.slice(separator.index + separator[0].length)).payload, false); } catch (e) {}
+		});
+	}
+
+	if (ebayEventId) {
+		if (window.ninjafy && window.ninjafy.onWebSocketMessage) {
+			window.ninjafy.onWebSocketMessage(function (event) {
+				try { if (new URL(event.url).hostname !== "fanout.ebay.com") return; } catch (e) { return; }
+				if (event.type === "message") handleEbaySocketFrame(event.data);
+				if (event.type === "open") graphqlRefreshNeeded = true;
+			});
+		} else {
+			window.addEventListener("message", function (event) {
+				if (event.source !== window || event.origin !== location.origin || !event.data) return;
+				if (event.data.source === "ebay-ws-observer") handleEbaySocketFrame(event.data.data);
+				if (event.data.source === "ebay-ws-available") window.postMessage({ source: "ebay-ws-ready" }, location.origin);
+			});
+			window.postMessage({ source: "ebay-ws-ready" }, location.origin);
+		}
+	}
+
+	function normalizeText(value) {
+		if (value === null || typeof value === "undefined") {
+			return "";
+		}
+		return String(value).replace(/\s+/g, " ").trim();
+	}
+
+	function parseCompactNumber(value) {
+		if (value === null || typeof value === "undefined") {
+			return null;
+		}
+		var raw = normalizeText(String(value)).replace(/,/g, "").toUpperCase();
+		if (!raw) {
+			return null;
+		}
+		var match = raw.match(/(-?\d+(?:\.\d+)?)([KMB])?/);
+		if (!match || !match[1]) {
+			return null;
+		}
+		var numeric = parseFloat(match[1]);
+		if (!Number.isFinite(numeric)) {
+			return null;
+		}
+		var suffix = match[2] || "";
+		if (suffix === "K") {
+			numeric *= 1000;
+		} else if (suffix === "M") {
+			numeric *= 1000000;
+		} else if (suffix === "B") {
+			numeric *= 1000000000;
+		}
+		return Math.round(numeric);
+	}
+
+	function parseIntegerValue(value) {
+		var raw = normalizeText(value).replace(/,/g, "");
+		var match = raw.match(/-?\d+/);
+		if (!match || !match[0]) {
+			return null;
+		}
+		var parsed = parseInt(match[0], 10);
+		return Number.isFinite(parsed) ? parsed : null;
+	}
+
+	function parseCurrencyValue(value) {
+		var raw = normalizeText(value).replace(/,/g, "");
+		var match = raw.match(/-?\d+(?:\.\d+)?/);
+		if (!match || !match[0]) {
+			return null;
+		}
+		var parsed = parseFloat(match[0]);
+		return Number.isFinite(parsed) ? parsed : null;
+	}
+
+	function parseWatchingCountFromText(value) {
+		var raw = normalizeText(value);
+		if (!raw) {
+			return null;
+		}
+		var watchingMatch = raw.match(/([\d.,]+\s*[KMB]?)\s*(watching|viewers?)/i);
+		if (watchingMatch && watchingMatch[1]) {
+			return parseCompactNumber(watchingMatch[1]);
+		}
+		if (/^[\d.,]+\s*[KMB]?$/i.test(raw)) {
+			return parseCompactNumber(raw);
+		}
+		return null;
+	}
+
+	function textFrom(root, selector) {
+		if (!root) {
+			return "";
+		}
+		var node = root.querySelector(selector);
+		return normalizeText(node ? node.textContent : "");
+	}
+
+	function toAbsoluteUrl(value) {
+		var raw = normalizeText(value);
+		if (!raw) {
+			return "";
+		}
+		try {
+			return new URL(raw, window.location.origin).href;
+		} catch (e) {
+			return raw;
+		}
+	}
+
+	function normalizePath(value) {
+		var raw = normalizeText(value || "");
+		if (!raw) {
+			return "";
+		}
+		return raw.toLowerCase().replace(/\/+$/, "");
+	}
+
+	function parseEventTags(section) {
+		if (!section) {
+			return [];
+		}
+		var nodes = Array.from(section.querySelectorAll("[class*='_tags_'] li, li[class*='_tag_']"));
+		var seen = {};
+		var tags = [];
+		for (var i = 0; i < nodes.length; i++) {
+			var value = normalizeText(nodes[i].textContent);
+			if (!value) {
+				continue;
+			}
+			if (seen[value]) {
+				continue;
+			}
+			seen[value] = true;
+			tags.push(value);
+		}
+		return tags;
+	}
+
+	function parseSectionEvent(section, index) {
+		if (!section) {
+			return null;
+		}
+
+		var titleNode = section.querySelector("[data-testid='a-event-card'] h3, [class*='_title_']");
+		var linkNode = section.querySelector("[data-testid='a-event-card']");
+		var sellerNode = section.querySelector("[data-testid='a-seller-link']");
+		var previewImage = section.querySelector("[data-testid='clickable-media-event-card'] img, [data-testid='clickable-media-event-card'] source");
+		var pillNode = section.querySelector("[data-testid='event-item-pill']");
+		var countNode = section.querySelector("[data-testid='event-item-pill'] [aria-label*='watching' i], [data-testid='event-item-pill'] [aria-label*='viewer' i], [data-testid='event-item-pill'] [aria-label*='viewers' i]");
+		var triggerNode = section.querySelector("[data-testid='trigger']");
+
+		var title = normalizeText(titleNode ? titleNode.textContent : "");
+		if (!title && linkNode) {
+			title = normalizeText(linkNode.getAttribute("aria-label") || linkNode.textContent);
+		}
+		if (!title) {
+			return null;
+		}
+
+		var href = toAbsoluteUrl(linkNode ? linkNode.getAttribute("href") : "");
+		var sellerName = textFrom(section, "[data-testid='a-seller-link'] [class*='_username_'], [data-testid='a-seller-link']");
+		var sellerUrl = toAbsoluteUrl(sellerNode ? sellerNode.getAttribute("href") : "");
+
+		var liveText = normalizeText(pillNode ? pillNode.textContent : "");
+		var viewerCount = null;
+		if (countNode) {
+			viewerCount = parseWatchingCountFromText(countNode.getAttribute("aria-label"));
+			if (viewerCount === null) {
+				viewerCount = parseCompactNumber(countNode.textContent);
+			}
+		}
+		if (viewerCount === null && liveText) {
+			var liveMatch = liveText.match(/LIVE\s*[·•]?\s*([\d.,]+\s*[KMB]?)/i);
+			if (liveMatch && liveMatch[1]) {
+				viewerCount = parseCompactNumber(liveMatch[1]);
+			}
+		}
+
+		var scheduleText = textFrom(section, "[data-testid='trigger'] [class*='_text_']");
+		if (!scheduleText && triggerNode) {
+			scheduleText = normalizeText(triggerNode.textContent);
+		}
+
+		var reminderLabel = normalizeText(triggerNode ? triggerNode.getAttribute("aria-label") : "");
+		var tags = parseEventTags(section);
+		var imageUrl = normalizeText(previewImage ? (previewImage.currentSrc || previewImage.src) : "");
+		var isLive = !!(pillNode && /live/i.test(liveText || ""));
+
+		return {
+			index: index,
+			title: title,
+			href: href,
+			sellerName: sellerName,
+			sellerUrl: sellerUrl,
+			isLive: isLive,
+			liveText: liveText,
+			viewerCount: viewerCount,
+			scheduleText: scheduleText,
+			reminderLabel: reminderLabel,
+			tags: tags,
+			image: imageUrl
+		};
+	}
+
+	function parseEventSections(selector, predicate) {
+		var sections = Array.from(document.querySelectorAll(selector));
+		if (!sections.length) {
+			return [];
+		}
+		var events = [];
+		var seen = {};
+		for (var i = 0; i < sections.length; i++) {
+			var section = sections[i];
+			if (typeof predicate === "function" && !predicate(section)) {
+				continue;
+			}
+			var parsed = parseSectionEvent(section, events.length);
+			if (!parsed) {
+				continue;
+			}
+			var key = (parsed.href || "") + "|" + parsed.title;
+			if (seen[key]) {
+				continue;
+			}
+			seen[key] = true;
+			parsed.index = events.length;
+			events.push(parsed);
+		}
+		return events;
+	}
+
+	function summarizeEvents(items) {
+		if (!Array.isArray(items) || !items.length) {
+			return null;
+		}
+		var watchingTotal = 0;
+		var liveCount = 0;
+		for (var i = 0; i < items.length; i++) {
+			var row = items[i];
+			if (typeof row.viewerCount === "number" && Number.isFinite(row.viewerCount)) {
+				watchingTotal += row.viewerCount;
+			}
+			if (row.isLive) {
+				liveCount += 1;
+			}
+		}
+		return {
+			total: items.length,
+			liveCount: liveCount,
+			watchingTotal: watchingTotal,
+			items: items
+		};
+	}
+
+	function parseLivePreviewSnapshot() {
+		var items = parseEventSections(
+			"section",
+			function (section) {
+				return !!section.querySelector("[data-testid='a-event-card']") &&
+					!!section.querySelector("[data-testid='event-item-pill']");
+			}
+		);
+		if (!items.length) {
+			items = parseEventSections(
+				"section",
+				function (section) {
+					return !!section.querySelector("[data-testid='a-event-card']") &&
+						!!section.querySelector("[aria-label*='watching' i], [aria-label*='viewer' i], [aria-label*='viewers' i]");
+				}
+			);
+		}
+		if (!items.length) {
+			return null;
+		}
+		var summary = summarizeEvents(items);
+		if (!summary) {
+			return null;
+		}
+		var currentPath = normalizePath(window.location.pathname);
+		var currentEvent = items.find(function (item) {
+			try {
+				return normalizePath(new URL(item.href, window.location.origin).pathname) === currentPath;
+			} catch (e) {
+				return false;
+			}
+		}) || items[0];
+		summary.current = currentEvent || null;
+		return summary;
+	}
+
+	function parseUpcomingEventsSnapshot() {
+		var items = parseEventSections(
+			"section",
+			function (section) {
+				return !!section.querySelector("[data-testid='a-event-card']") &&
+					!!section.querySelector("[data-testid='trigger']") &&
+					!section.querySelector("[data-testid='event-item-pill']");
+			}
+		);
+		if (!items.length) {
+			return null;
+		}
+		return {
+			total: items.length,
+			items: items
+		};
+	}
+
+	function getViewerCountFromDom() {
+		var labelNodes = document.querySelectorAll(
+			"[class*='_viewCount_'][aria-label], [class*='viewCount_'][aria-label], [aria-label*='watching'], [aria-label*='viewers']"
+		);
+		for (var i = 0; i < labelNodes.length; i++) {
+			var countFromLabel = parseWatchingCountFromText(labelNodes[i].getAttribute("aria-label"));
+			if (countFromLabel !== null) {
+				return countFromLabel;
+			}
+		}
+
+		var countNode = document.querySelector(
+			"[class*='_viewCount_'] [class*='_count_'], [class*='viewCount_'] [class*='count_']"
+		);
+		if (countNode && countNode.textContent) {
+			var countFromNode = parseCompactNumber(countNode.textContent);
+			if (countFromNode !== null) {
+				return countFromNode;
+			}
+		}
+
+		var previewSnapshot = parseLivePreviewSnapshot();
+		if (previewSnapshot && previewSnapshot.current && typeof previewSnapshot.current.viewerCount === "number") {
+			return previewSnapshot.current.viewerCount;
+		}
+
+		return null;
+	}
+
+	function parseNavigationSnapshot() {
+		var snapshot = {};
+		var previewSnapshot = parseLivePreviewSnapshot();
+		var viewerCount = getViewerCountFromDom();
+		if (viewerCount !== null) {
+			snapshot.viewerCount = viewerCount;
+		}
+
+		var viewerText = textFrom(document, "[class*='_viewCount_'] [class*='_count_']");
+		if (viewerText) {
+			snapshot.viewerCountText = viewerText;
+		}
+
+		var itemsLabel = textFrom(document, "[data-testid='items-button'] [class*='_label_'], [data-testid='items-button']");
+		if (itemsLabel) {
+			snapshot.itemsButtonLabel = itemsLabel;
+		}
+		var walletLabel = textFrom(document, "[data-testid='wallet-button'] [class*='_label_'], [data-testid='wallet-button']");
+		if (walletLabel) {
+			snapshot.walletButtonLabel = walletLabel;
+		}
+		var moreLabel = textFrom(document, "[data-testid='more-button'] [class*='_label_'], [data-testid='more-button']");
+		if (moreLabel) {
+			snapshot.moreButtonLabel = moreLabel;
+		}
+
+		if (document.querySelector("[data-testid='items-button'] [class*='_flashBadge_']")) {
+			snapshot.itemsHasAttention = true;
+		}
+		if (document.querySelector("[data-testid='wallet-button'] [class*='_badge_']")) {
+			snapshot.walletHasBadge = true;
+		}
+
+		if (previewSnapshot) {
+			snapshot.livePreviewCount = previewSnapshot.total;
+			if (typeof previewSnapshot.watchingTotal === "number") {
+				snapshot.livePreviewWatchingTotal = previewSnapshot.watchingTotal;
+			}
+			if (previewSnapshot.current) {
+				snapshot.currentEventTitle = previewSnapshot.current.title;
+				snapshot.currentEventSeller = previewSnapshot.current.sellerName;
+			}
+		}
+
+		return Object.keys(snapshot).length ? snapshot : null;
+	}
+
+	function parsePlayerCard(card, index) {
+		if (!card) {
+			return null;
+		}
+		var item = {};
+		item.index = index;
+		item.title = textFrom(card, "[data-testid='player-card-title'], [class*='_title_']");
+		if (!item.title) {
+			return null;
+		}
+
+		item.currentPriceText = textFrom(card, "[data-testid='player-card-current-price']");
+		item.currentPrice = parseCurrencyValue(item.currentPriceText);
+		item.shippingPriceText = textFrom(card, "[data-testid='player-card-shipping-price']");
+		item.shippingPrice = parseCurrencyValue(item.shippingPriceText);
+		item.winnerIcon = textFrom(card, "[data-testid='player-card-winner-icon']");
+		item.winnerName = textFrom(card, "[data-testid='player-card-winner-name']");
+		item.timer = textFrom(card, "[data-testid='player-card-timer']");
+
+		var primaryButton = card.querySelector("[data-testid='player-card-primary-cta']");
+		if (primaryButton) {
+			item.primaryActionText = normalizeText(primaryButton.textContent);
+			item.primaryActionDisabled = !!primaryButton.disabled;
+		}
+
+		var maxBidButton = card.querySelector("[data-testid='player-card-max-bid']");
+		if (maxBidButton) {
+			item.maxBidText = normalizeText(maxBidButton.textContent);
+			item.maxBidDisabled = !!maxBidButton.disabled;
+		}
+
+		var cardText = normalizeText(card.textContent);
+		var bidsMatch = cardText.match(/([\d,]+)\s+bids?/i);
+		if (bidsMatch && bidsMatch[1]) {
+			item.bids = parseIntegerValue(bidsMatch[1]);
+			item.bidsText = bidsMatch[1] + " bids";
+		}
+
+		var nextBidMatch = (item.primaryActionText || "").match(/bid\s+\$?\s*([\d,.]+)/i);
+		if (nextBidMatch && nextBidMatch[1]) {
+			item.nextBid = parseCurrencyValue(nextBidMatch[1]);
+			item.nextBidText = "$" + nextBidMatch[1];
+		}
+
+		var lowerAction = normalizeText(item.primaryActionText).toLowerCase();
+		var lowerWinner = normalizeText(item.winnerName).toLowerCase();
+		item.status = "active";
+		if (/sold/.test(lowerAction) || /sold/.test(cardText.toLowerCase())) {
+			item.status = "sold";
+		} else if (/winning/.test(lowerWinner) || item.winnerIcon === "💸") {
+			item.status = "winning";
+		} else if (item.winnerIcon === "🏆") {
+			item.status = "won";
+		} else if (item.timer === "00:00" && item.winnerName) {
+			item.status = "won";
+		}
+		item.statusText = item.status;
+
+		return item;
+	}
+
+	function parsePlayerCardsSnapshot() {
+		var cards = Array.from(document.querySelectorAll("[data-testid='player-card'], [class*='_itemCard_'][data-testid='player-card']"));
+		if (!cards.length) {
+			return null;
+		}
+
+		var items = [];
+		var sold = 0;
+		var winning = 0;
+		for (var i = 0; i < cards.length; i++) {
+			var parsed = parsePlayerCard(cards[i], i);
+			if (!parsed) {
+				continue;
+			}
+			if (parsed.status === "sold") {
+				sold += 1;
+			} else if (parsed.status === "winning") {
+				winning += 1;
+			}
+			items.push(parsed);
+		}
+
+		if (!items.length) {
+			return null;
+		}
+
+		return {
+			total: items.length,
+			sold: sold,
+			winning: winning,
+			active: Math.max(0, items.length - sold),
+			items: items
+		};
+	}
+
+	function parseLiveEventCardsSnapshot() {
+		var previewSnapshot = parseLivePreviewSnapshot();
+		if (previewSnapshot) {
+			return {
+				total: previewSnapshot.total,
+				watchingTotal: previewSnapshot.watchingTotal,
+				current: previewSnapshot.current || null,
+				items: previewSnapshot.items
+			};
+		}
+
+		var cards = Array.from(document.querySelectorAll("[data-testid='a-event-card']"));
+		if (!cards.length) {
+			return null;
+		}
+
+		var items = [];
+		var seen = {};
+		for (var i = 0; i < cards.length; i++) {
+			var card = cards[i];
+			var href = toAbsoluteUrl(card.getAttribute("href"));
+			var title = textFrom(card, "h3, [class*='_title_']");
+			if (!title) {
+				title = normalizeText(card.textContent);
+			}
+			if (!title) {
+				continue;
+			}
+			var key = (href || "") + "|" + title;
+			if (seen[key]) {
+				continue;
+			}
+			seen[key] = true;
+			items.push({
+				index: items.length,
+				title: title,
+				href: href
+			});
+		}
+
+		if (!items.length) {
+			return null;
+		}
+
+		return {
+			total: items.length,
+			watchingTotal: 0,
+			current: items[0],
+			items: items
+		};
+	}
+
+	function createAuctionSnapshot() {
+		var cards = parsePlayerCardsSnapshot();
+		var navigation = parseNavigationSnapshot();
+		var previewSnapshot = parseLivePreviewSnapshot();
+		var snapshot = null;
+
+		if (cards && cards.items && cards.items.length) {
+			var primary = cards.items.find(function (item) {
+				return item && item.status === "winning";
+			}) || cards.items[0];
+			if (!primary) {
+				return null;
+			}
+
+			snapshot = {
+				title: primary.title,
+				status: primary.status,
+				statusText: primary.statusText,
+				timer: primary.timer,
+				bidder: primary.winnerName,
+				winnerName: primary.winnerName,
+				winnerIcon: primary.winnerIcon,
+				currentPrice: primary.currentPrice,
+				currentPriceText: primary.currentPriceText,
+				price: primary.currentPrice,
+				priceText: primary.currentPriceText,
+				shippingPrice: primary.shippingPrice,
+				shippingPriceText: primary.shippingPriceText,
+				shipping: primary.shippingPriceText,
+				primaryActionText: primary.primaryActionText,
+				primaryActionDisabled: primary.primaryActionDisabled,
+				maxBidText: primary.maxBidText,
+				maxBidDisabled: primary.maxBidDisabled,
+				nextBid: primary.nextBid,
+				nextBidText: primary.nextBidText,
+				bids: primary.bids,
+				bidsText: primary.bidsText,
+				cardCount: cards.total,
+				sourceMode: "player_card"
+			};
+		} else if (previewSnapshot && previewSnapshot.current) {
+			var current = previewSnapshot.current;
+			snapshot = {
+				title: current.title,
+				status: current.isLive ? "live" : "scheduled",
+				statusText: current.isLive ? "Live" : "Scheduled",
+				timer: "",
+				bidder: "",
+				winnerName: "",
+				winnerIcon: current.isLive ? "🔴" : "",
+				currentPrice: null,
+				currentPriceText: "",
+				price: null,
+				priceText: "",
+				shippingPrice: null,
+				shippingPriceText: "",
+				shipping: "",
+				primaryActionText: "",
+				primaryActionDisabled: false,
+				maxBidText: "",
+				maxBidDisabled: false,
+				nextBid: null,
+				nextBidText: "",
+				bids: null,
+				bidsText: "",
+				cardCount: 0,
+				viewerCount: current.viewerCount,
+				watchingText: current.liveText,
+				sellerName: current.sellerName,
+				sellerUrl: current.sellerUrl,
+				href: current.href,
+				scheduleText: current.scheduleText,
+				tags: current.tags,
+				sourceMode: "event_card"
+			};
+		}
+
+		if (!snapshot) {
+			return null;
+		}
+
+		if (navigation && navigation.viewerCount !== null && typeof navigation.viewerCount !== "undefined") {
+			snapshot.viewerCount = navigation.viewerCount;
+		}
+		if (navigation && navigation.itemsButtonLabel) {
+			snapshot.itemsButtonLabel = navigation.itemsButtonLabel;
+		}
+		if (previewSnapshot && previewSnapshot.current) {
+			if (!snapshot.sellerName) {
+				snapshot.sellerName = previewSnapshot.current.sellerName;
+			}
+			if (!snapshot.tags || !snapshot.tags.length) {
+				snapshot.tags = previewSnapshot.current.tags;
+			}
+		}
+
+		return snapshot;
+	}
+
+	function createCommerceSnapshot() {
+		var snapshot = {};
+		var navigation = parseNavigationSnapshot();
+		var cards = parsePlayerCardsSnapshot();
+		var events = parseLiveEventCardsSnapshot();
+		var previewSnapshot = parseLivePreviewSnapshot();
+		var upcomingEvents = parseUpcomingEventsSnapshot();
+
+		if (navigation) {
+			snapshot.navigation = navigation;
+		}
+		if (cards) {
+			snapshot.playerCards = cards;
+		}
+		if (events) {
+			snapshot.liveEvents = events;
+		}
+		if (previewSnapshot) {
+			snapshot.livePreview = previewSnapshot;
+			if (previewSnapshot.current) {
+				snapshot.currentEvent = previewSnapshot.current;
+			}
+		}
+		if (upcomingEvents) {
+			snapshot.upcomingEvents = upcomingEvents;
+		}
+
+		return Object.keys(snapshot).length ? snapshot : null;
+	}
+
+	function sendMetaEvent(eventName, meta) {
+		if (!eventName || !meta) {
+			return;
+		}
+		pushMessage({
+			type: "ebay",
+			event: eventName,
+			meta: meta
+		});
+	}
+
+	function isTopFrame() {
+		try {
+			return window.top === window;
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function normalizeSellerSlug(value) {
+		var raw = normalizeText(value).toLowerCase();
+		if (!raw) {
+			return "";
+		}
+		raw = raw.replace(/^@+/, "");
+		raw = raw.replace(/\s+/g, "");
+		raw = raw.replace(/[^a-z0-9_-]/g, "");
+		return raw;
+	}
+
+	function getSellerSlugFromStoreUrl(value) {
+		var raw = normalizeText(value);
+		if (!raw) {
+			return "";
+		}
+		try {
+			var parsed = new URL(raw, window.location.origin);
+			var match = parsed.pathname.match(/\/str\/([^\/?#]+)/i);
+			if (match && match[1]) {
+				return normalizeSellerSlug(decodeURIComponent(match[1]));
+			}
+		} catch (e) {}
+		return "";
+	}
+
+	function getCurrentSellerSlug() {
+		var links = [];
+		try {
+			links = Array.from(document.querySelectorAll("a[href*='/str/']"));
+		} catch (e) {}
+		for (var i = 0; i < links.length; i++) {
+			var storeSlug = getSellerSlugFromStoreUrl(links[i].getAttribute("href"));
+			if (storeSlug) {
+				return storeSlug;
+			}
+		}
+
+		var sellerText = textFrom(document, "[data-testid='a-seller-link'] [class*='_username_'], [data-testid='a-seller-link']");
+		var sellerSlug = normalizeSellerSlug(sellerText);
+		if (sellerSlug) {
+			return sellerSlug;
+		}
+
+		var previewSnapshot = parseLivePreviewSnapshot();
+		if (previewSnapshot && previewSnapshot.current && previewSnapshot.current.sellerName) {
+			var currentSellerSlug = normalizeSellerSlug(previewSnapshot.current.sellerName);
+			if (currentSellerSlug) {
+				return currentSellerSlug;
+			}
+		}
+
+		return "";
+	}
+
+	function sendFollowerUpdate(count) {
+		pushMessage({
+			type: "ebay",
+			event: "follower_update",
+			meta: count,
+			tid: false
+		});
+	}
+
+	function fetchSellerStatsDirect(seller, callback) {
+		if (typeof fetch !== "function") {
+			callback(null);
+			return;
+		}
+		fetch(EBAY_SELLER_STATS_ENDPOINT + encodeURIComponent(seller), {
+			cache: "no-store",
+			credentials: "omit"
+		}).then(function(response) {
+			if (!response || !response.ok) {
+				return null;
+			}
+			return response.json();
+		}).then(function(result) {
+			callback(result || null);
+		}).catch(function() {
+			callback(null);
+		});
+	}
+
+	function fetchSellerStatsFromBackground(seller, callback) {
+		if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.sendMessage) {
+			return false;
+		}
+
+		function handleResponse(response, tryWorkerRoute) {
+			if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) {
+				response = null;
+			}
+			if (response && response.ok && response.data) {
+				callback(response.data, false);
+				return;
+			}
+			if (response && response.ok === false) {
+				callback(null, false);
+				return;
+			}
+			if (tryWorkerRoute) {
+				try {
+					chrome.runtime.sendMessage(chrome.runtime.id, {
+						type: "toBackground",
+						data: {
+							cmd: "ebaySellerStats",
+							seller: seller
+						}
+					}, function(workerResponse) {
+						handleResponse(workerResponse, false);
+					});
+					return;
+				} catch (e) {}
+			}
+			callback(null, true);
+		}
+
+		try {
+			chrome.runtime.sendMessage(chrome.runtime.id, {
+				cmd: "ebaySellerStats",
+				seller: seller
+			}, function(response) {
+				handleResponse(response, true);
+			});
+			return true;
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function fetchSellerStats(seller, callback) {
+		if (fetchSellerStatsFromBackground(seller, function(result, allowDirectFallback) {
+			if (result) {
+				callback(result);
+				return;
+			}
+			if (allowDirectFallback) {
+				fetchSellerStatsDirect(seller, callback);
+				return;
+			}
+			callback(null);
+		})) {
+			return;
+		}
+		fetchSellerStatsDirect(seller, callback);
+	}
+
+	function checkSellerStats() {
+		if (!isExtensionOn || !isTopFrame() || sellerStatsInFlight) {
+			return;
+		}
+		var seller = getCurrentSellerSlug();
+		if (!seller) {
+			return;
+		}
+		if (seller !== lastSellerStatsSeller) {
+			lastSellerStatsSeller = seller;
+			lastSellerStatsFetchAt = 0;
+		}
+		var now = Date.now();
+		if (lastSellerStatsFetchAt && now - lastSellerStatsFetchAt < EBAY_SELLER_STATS_INTERVAL_MS) {
+			return;
+		}
+		lastSellerStatsFetchAt = now;
+		sellerStatsInFlight = true;
+		fetchSellerStats(seller, function(result) {
+			if (!result || !result.ok || !result.data) {
+				sellerStatsInFlight = false;
+				return;
+			}
+			var followers = parseIntegerValue(result.data.followers);
+			if (followers === null) {
+				sellerStatsInFlight = false;
+				return;
+			}
+			sendFollowerUpdate(followers);
+			sellerStatsInFlight = false;
+		});
+	}
+
+	function getNodeClassName(node) {
+		if (!node || node.nodeType !== 1) {
+			return "";
+		}
+		try {
+			return node.getAttribute("class") || "";
+		} catch (e) {
+			return "";
+		}
+	}
+
+	function isReactionAnimationNode(node) {
+		if (!node || node.nodeType !== 1) {
+			return false;
+		}
+		var testId = "";
+		try {
+			testId = node.getAttribute("data-testid") || "";
+		} catch (e) {}
+		if (testId === "heart-box") {
+			return true;
+		}
+		var className = getNodeClassName(node);
+		if (/floatingHeart/i.test(className)) {
+			return true;
+		}
+		if (/reactionsAnimation/i.test(className) && !/reactionsAnimationsContainer|reactionsAnimationPreload/i.test(className)) {
+			return true;
+		}
+		return false;
+	}
+
+	function hasReactionAnimationNode(node) {
+		if (!node || node.nodeType !== 1) {
+			return false;
+		}
+		if (isReactionAnimationNode(node)) {
+			return true;
+		}
+		var nodes = [];
+		try {
+			nodes = node.querySelectorAll("[data-testid='heart-box'], [class*='floatingHeart'], [class*='reactionsAnimation']");
+		} catch (e) {
+			return false;
+		}
+		for (var i = 0; i < nodes.length; i++) {
+			if (isReactionAnimationNode(nodes[i])) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	function sendReactionEvent() {
+		if (!isExtensionOn) {
+			return;
+		}
+		pushMessage({
+			chatname: "eBay Live",
+			chatbadges: [],
+			backgroundColor: "",
+			textColor: "",
+			nameColor: "",
+			chatmessage: "",
+			chatimg: "",
+			hasDonation: "",
+			membership: "",
+			contentimg: "",
+			textonly: settings.textonlymode || false,
+			type: "ebay",
+			event: "reaction",
+			meta: {
+				reactionType: "heart",
+				source: "dom_animation"
+			}
+		}, "reactions");
+	}
+
+	function observeEbayReactions() {
+		if (!document.body) {
+			return;
+		}
+		if (reactionObserver && reactionObserverTarget === document.body) {
+			return;
+		}
+		if (reactionObserver) {
+			try {
+				reactionObserver.disconnect();
+			} catch (e) {}
+		}
+		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		reactionObserver = new MutationObserver(function(mutations) {
+			var sawReaction = false;
+			for (var i = 0; i < mutations.length; i++) {
+				var addedNodes = mutations[i].addedNodes;
+				for (var j = 0; j < addedNodes.length; j++) {
+					var node = addedNodes[j];
+					if (!node || node.nodeType !== 1) {
+						continue;
+					}
+					if (hasReactionAnimationNode(node)) {
+						sawReaction = true;
+					}
+				}
+			}
+			if (sawReaction) {
+				sendReactionEvent();
+			}
+		});
+		reactionObserver.observe(document.body, { childList: true, subtree: true });
+		reactionObserverTarget = document.body;
+	}
+
+	function checkAuctionUpdates() {
+		if (!isExtensionOn) {
+			return;
+		}
+		try { if (window !== window.top && window.top.__ssnEbayNetworkReady) return; } catch (e) {}
+		var snapshot = currentNetworkAuction() || (networkReady || graphqlReady ? null : createAuctionSnapshot());
+		if (!snapshot) {
+			return;
+		}
+		var serialized = JSON.stringify(snapshot);
+		if (serialized === lastAuctionSnapshot) {
+			return;
+		}
+		lastAuctionSnapshot = serialized;
+		sendMetaEvent("auction_update", snapshot);
+	}
+
+	function checkCommerceUpdates() {
+		if (!isExtensionOn) {
+			return;
+		}
+		try { if (window !== window.top && window.top.__ssnEbayNetworkReady) return; } catch (e) {}
+		var snapshot = networkCommerceSnapshot() || createCommerceSnapshot();
+		if (!snapshot) {
+			return;
+		}
+		var serialized = JSON.stringify(snapshot);
+		if (serialized === lastCommerceSnapshot) {
+			return;
+		}
+		lastCommerceSnapshot = serialized;
+		sendMetaEvent("commerce_update", snapshot);
+	}
+	
+	function checkViewers(){
+		try { if (window !== window.top && window.top.__ssnEbayNetworkReady) return; } catch (e) {}
+		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
+			try {
+				var views = networkViewerCount !== null ? networkViewerCount : getViewerCountFromDom();
+				if (views === null || views === lastViewerCount) {
+					return;
+				}
+				lastViewerCount = views;
+				chrome.runtime.sendMessage(
+					chrome.runtime.id,
+					({message:{
+							type: 'ebay',
+							event: 'viewer_update',
+							meta: views
+						}
+					}),
+					function (e) {}
+				);
+			} catch (e) {
+			}
+		}
+	}
+
+
+	// OnlineViewers_root_orkvv
+	
+	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) { return; }
+		response = response || {};
+		if ("settings" in response){
+			settings = response.settings;
+		}
+		if ("state" in response){
+			isExtensionOn = response.state;
+		}
+		if (!checking){
+			startCheck();
+		}
+	});
+
+	chrome.runtime.onMessage.addListener(
+		function (request, sender, sendResponse) {
+			try{
+				
+				if (!checking){
+					startCheck();
+				}
+				
+				if ("getSource" == request){sendResponse("ebay");	return;	}
+				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+					document.querySelector('textarea.msg-content').focus();
+					sendResponse(true);
+					return;
+				}
+				if (typeof request === "object"){
+					if ("state" in request) {
+						isExtensionOn = request.state;
+						
+						if (!checking){
+							startCheck();
+						}
+					
+					}
+					
+					if ("settings" in request){
+						settings = request.settings;
+						sendResponse(true);
+						return;
+					}
+				}
+				
+				
+			} catch(e){}
+			sendResponse(false);
+		}
+	);
+
+	var lastURL =  "";
+	var observer = null;
+	var observerTarget = null;
+	
+	
+	function onElementInserted(target) {
+		var onMutationsObserved = function(mutations) {
+			mutations.forEach(function(mutation) {
+				if (mutation.addedNodes.length) {
+				//	console.log(mutation.addedNodes);
+					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+						try {
+							const addedNode = mutation.addedNodes[i];
+							if (addedNode.nodeType !== 1) continue;
+
+							if (addedNode.skip){continue;}
+							if (!addedNode.dataset.id && !addedNode.dataset.index && !addedNode.querySelector(".user-name, [class*='_username_'], [class*='chatAuthor-']")){continue;}
+
+							setTimeout(()=>{
+									processMessage(addedNode);
+							},300);
+
+						} catch(e){
+							console.error("Error processing added node:", e);
+						}
+					}
+				}
+			});
+		};
+		
+		var config = { childList: true, subtree: false };
+		if (!target){return;}
+		if (observer && observerTarget === target && target.isConnected) {
+			return;
+		}
+		if (observer){
+			try {
+				observer.disconnect();
+			} catch(e){}
+		}
+		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		
+		observer = new MutationObserver(onMutationsObserved);
+		observer.observe(target, config);
+		observerTarget = target;
+	}
+	
+	console.log("social stream injected");
+
+
+	function startCheck(){
+		if (isExtensionOn && checking){return;}
+
+		clearInterval(checking);
+		checking = false;
+		if (!isExtensionOn){
+			return;
+		}
+		
+		
+		checking = setInterval(function(){
+			try {
+				refreshEbayListings();
+				var container = document.querySelector("#chatting-container, [data-testid='chat-messages-container'], [data-testid='message-list-container']");
+				if (container){
+					var observeTarget = container.querySelector("ul[class*='chatFeed-'], ul[aria-live='polite']") || container;
+				}
+				if (container && observeTarget && (!container.marked || !observer || observerTarget !== observeTarget || !observeTarget.isConnected)){
+					container.marked=true;
+
+					setTimeout(function(){
+						dataIndex = 0;
+						var latestObserveTarget = container.querySelector("ul[class*='chatFeed-'], ul[aria-live='polite']") || container;
+						onElementInserted(latestObserveTarget);
+					},2000);
+				}
+
+				checkViewers();
+				checkSellerStats();
+				checkAuctionUpdates();
+				checkCommerceUpdates();
+				observeEbayReactions();
+			} catch(e){}
+		},2000);
+	}
+	
+	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
+	try {
+		var receiveChannelCallback = function (event) {
+			remoteConnection.datachannel = event.channel;
+			remoteConnection.datachannel.onmessage = function (e) {};
+			remoteConnection.datachannel.onopen = function (e) {};
+			remoteConnection.datachannel.onclose = function (e) {};
+			setInterval(function () {
+				remoteConnection.datachannel.send("KEEPALIVE");
+			}, 1000);
+		};
+		var errorHandle = function (e) {};
+		var localConnection = new RTCPeerConnection();
+		var remoteConnection = new RTCPeerConnection();
+		localConnection.onicecandidate = e => !e.candidate || remoteConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.onicecandidate = e => !e.candidate || localConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.ondatachannel = receiveChannelCallback;
+		localConnection.sendChannel = localConnection.createDataChannel("sendChannel");
+		localConnection.sendChannel.onopen = function (e) {
+			localConnection.sendChannel.send("CONNECTED");
+		};
+		localConnection.sendChannel.onclose = function (e) {};
+		localConnection.sendChannel.onmessage = function (e) {};
+		localConnection
+			.createOffer()
+			.then(offer => localConnection.setLocalDescription(offer))
+			.then(() => remoteConnection.setRemoteDescription(localConnection.localDescription))
+			.then(() => remoteConnection.createAnswer())
+			.then(answer => remoteConnection.setLocalDescription(answer))
+			.then(() => {
+				localConnection.setRemoteDescription(remoteConnection.localDescription);
+				console.log("KEEP ALIVE TRICk ENABLED");
+			})
+			.catch(errorHandle);
+	} catch (e) {
+		console.log(e);
+	}
+	
+	
+	function preventBackgroundThrottling() {
+		window.onblur = null;
+		window.blurred = false;
+		document.hidden = false;
+		document.mozHidden = false;
+		document.webkitHidden = false;
+		
+		document.hasFocus = () => true;
+		window.onFocus = () => true;
+
+		Object.defineProperties(document, {
+			mozHidden: { value: false, configurable: true },
+			msHidden: { value: false, configurable: true },
+			webkitHidden: { value: false, configurable: true },
+			hidden: { value: false, configurable: true, writable: true },
+			visibilityState: { 
+				get: () => "visible",
+				configurable: true
+			}
+		});
+	}
+
+	const events = [
+		"visibilitychange",
+		"webkitvisibilitychange",
+		"blur",
+		"mozvisibilitychange",
+		"msvisibilitychange"
+	];
+
+	events.forEach(event => {
+		window.addEventListener(event, (e) => {
+			e.stopImmediatePropagation();
+			e.preventDefault();
+		}, true);
+	});
+
+	setInterval(preventBackgroundThrottling, 200);
+
+})();

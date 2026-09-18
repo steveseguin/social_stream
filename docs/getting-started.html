@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <style>
+        .start-paths { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1.2rem 0; }
+        .start-paths button { font: inherit; font-weight: 600; padding: 1rem 1.6rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--card-bg, transparent); color: var(--text-primary); cursor: pointer; }
+        .start-paths button[aria-pressed="true"] { background: #6837ce; color: white; border-color: #6837ce; }
+        .start-paths button:focus-visible, summary:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+        [data-start-path][hidden] { display: none; }
+        .guide-card [id] { scroll-margin-top: 10rem; }
+        .guide-image-medium { max-width: 76rem; }
+        .start-small { max-width: 52rem; margin: 0 auto; }
+        .start-status { max-width: 32rem; margin: 0 auto; }
+        .start-check { border-left: 3px solid #43a47a; padding-left: 1.2rem; }
+        .start-extra { margin-top: 1.4rem; }
+        .start-extra summary { cursor: pointer; font-weight: 600; padding: .6rem 0; }
+    </style>
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="A beginner walkthrough: install SSN, capture eBay Live or other chat, open your dock, enable free text-to-speech, and hear it in OBS. Real app screenshots.">
+<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js"></script>
+</head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero"><div class="container"><h1>Your first chat in SSN</h1><p>Connect your chat. See it in one place. Then add a voice.</p></div></section>
+    <main class="guide-section"><div class="container">
+        <div class="guide-card">
+            <p><strong>Source</strong> = the chat you capture. <strong>Dock</strong> = the SSN window showing those messages. <strong>OBS</strong> = where you put them on your stream.</p>
+            <p>Choose one way to run SSN. You do not need both.</p>
+            <div class="start-paths" aria-label="Choose your SSN setup">
+                <button type="button" data-choose-path="app" aria-pressed="true">Desktop app</button>
+                <button type="button" data-choose-path="extension" aria-pressed="false">Browser extension</button>
+            </div>
+            <noscript><p>The desktop steps are shown below. <a href="guides.html#extension-getting-started">Browser extension instructions</a>.</p></noscript>
+        </div>
+        <div class="guide-card">
+            <h2 id="install">1. Open SSN and turn it on</h2>
+            <div data-start-path="app">
+                <p><a href="download.html#standalone">Download the desktop app</a> for your computer, install it, then open <strong>Social Stream Ninja</strong>.</p>
+                <p>Go to <strong>Sources and Settings</strong>. If the right panel says <strong>Service Disabled</strong>, click it once. It should say <strong>Service Active</strong>.</p>
+            </div>
+            <div data-start-path="extension" hidden>
+                <p>Install <a href="https://chromewebstore.google.com/detail/social-stream-ninja/cppibjhfemifednoimlblfcmjgfhfjeg">Social Stream Ninja from the Chrome Web Store</a> in Chrome or Edge.</p>
+                <p>Click your browser’s <strong>Extensions</strong> (puzzle-piece) button, then <strong>Social Stream Ninja</strong>. Pin it for next time.</p>
+                <p>If the popup says <strong>Extension Disabled</strong>, click it once. It should say <strong>Extension active</strong>.</p>
+            </div>
+<figure class="guide-figure"><a href="images/guides/beginner-service-active.png"><img src="images/guides/beginner-service-active.png" alt="Actual SSN Service Active control, switched on" class="guide-image start-small" loading="lazy"></a><figcaption>Desktop app shown. The extension calls this “Extension active”.</figcaption></figure>
+            <details class="start-extra"><summary>The desktop app will not open?</summary><p><a href="desktop-app-wont-open.html">Follow the Windows, macOS or Linux opening instructions.</a> Installing SSN does not automatically connect a chat.</p></details>
+        </div>
+        <div class="guide-card">
+            <h2 id="source">2. Add the chat you want to read</h2>
+            <div data-start-path="app">
+                <p>In <strong>Sources and Settings</strong>, choose your platform from the buttons on the left. Scroll that list if needed.</p>
+                <p><strong>eBay Live example:</strong> click <strong>eBay Live</strong>, paste the link to your live event, then click <strong>Continue</strong>.</p>
+<figure class="guide-figure"><a href="images/guides/beginner-ebay-source.png"><img src="images/guides/beginner-ebay-source.png" alt="Actual Add eBay Live dialog: event or seller link field and Continue button" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>Use your event’s link from eBay, not an individual product listing.</figcaption></figure>
+                <p>Your new source appears under <strong>Added Sources</strong>. Click <strong>Activate source</strong>. If the site asks you to sign in, use <strong>Sign-in</strong>, then activate the source again.</p>
+<figure class="guide-figure"><a href="images/guides/beginner-activate-source.png"><img src="images/guides/beginner-activate-source.png" alt="Actual added eBay Live source with Activate source and Sign-in buttons" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>Example event shown. Use your own live event. Keep its capture page running.</figcaption></figure>
+                <details class="start-extra"><summary>Where are those controls?</summary><figure class="guide-figure"><a href="images/guides/beginner-app-sources.png"><img src="images/guides/beginner-app-sources.png" alt="Actual desktop app: platform buttons on the left, added source in the middle, SSN settings on the right" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>Sources on the left; SSN settings and dock link on the right.</figcaption></figure></details>
+            </div>
+            <div data-start-path="extension" hidden>
+                <p>In the <strong>same browser that has the extension</strong>, open the live stream’s chat page. Sign in to the platform if needed, and keep that tab open.</p>
+                <p><strong>eBay Live example:</strong> open your live event on eBay and make sure its chat is visible. A product listing or seller’s shop page is not the live chat.</p>
+                <p>You do not add a source row in SSN for this method: the extension captures supported chat pages you open.</p>
+            </div>
+            <p class="start-check"><strong>Check:</strong> you can see new messages appearing on the original platform’s chat page.</p>
+            <details class="start-extra"><summary>Using another platform?</summary><p>Use that platform’s live chat or pop-out chat link. <a href="platform-setup-picker.html">Find the setup steps for your platform.</a></p></details>
+        </div>
+        <div class="guide-card">
+            <h2 id="dock">3. Open your SSN dock</h2>
+            <p>Return to SSN’s settings <span data-start-path="app">on the right of the app</span><span data-start-path="extension" hidden>by clicking its browser extension icon</span>. Find <strong>Main chat overlay &amp; control dock</strong>.</p>
+            <p><strong>Click the long link underneath that heading.</strong> It opens your chat dock. Use <strong>copy link</strong> when you need to paste it somewhere else.</p>
+<figure class="guide-figure"><a href="images/guides/beginner-open-dock.png"><img src="images/guides/beginner-open-dock.png" alt="Actual Main chat overlay and control dock heading, generated link and copy link button" class="guide-image start-small" loading="lazy"></a><figcaption>Use the link in your own settings. GUIDE_DEMO in this screenshot is only an example.</figcaption></figure>
+            <p>Ask someone to send a new chat message, or send one yourself on the original platform. It should appear in the SSN dock.</p>
+<figure class="guide-figure"><a href="images/guides/beginner-dock-chat.png"><img src="images/guides/beginner-dock-chat.png" alt="Actual SSN dock displaying three example eBay chat messages" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>Example messages in the real dock. Your own chat should appear here.</figcaption></figure>
+            <p class="start-check"><strong>Chat appears here? You are connected.</strong> Get this working before changing TTS or OBS settings.</p>
+            <details class="start-extra"><summary>My dock is empty</summary><p>Check SSN is active, the source is running and its chat is visible. Send a <em>new</em> message; old messages may not be replayed. Open the dock link from this same SSN app/extension, not a screenshot or another session.</p><p>If needed, use <strong>Trigger a fake test message</strong> in SSN settings. If that appears but real chat does not, investigate the source. If neither appears, check the dock link and connection.</p></details>
+        </div>
+        <div class="guide-card">
+            <h2 id="tts">4. Optional: read chat aloud</h2>
+            <p><strong>Yes—TTS can read incoming chat automatically, one message at a time.</strong> eBay does not need its own TTS feature. SSN must already be receiving the text.</p>
+            <p>Back in SSN settings, below your main dock link, expand <strong>Message — Text to Speech</strong>. Turn on <strong>Enable TTS in dock</strong>:</p>
+<figure class="guide-figure"><a href="images/guides/tts-enable-dock-popup.png"><img src="images/guides/tts-enable-dock-popup.png" alt="Actual popup TTS section with incoming-message reading switched on" class="guide-image start-small" loading="lazy"></a><figcaption>The blue switch enables reading incoming messages.</figcaption></figure>
+            <p>Scroll down in that section. Choose <strong>Piper TTS</strong> under <strong>TTS Service Provider</strong>, then select a voice. No API key or paid account is needed.</p>
+<figure class="guide-figure"><a href="images/guides/tts-select-provider-popup.png"><img src="images/guides/tts-select-provider-popup.png" alt="Actual Piper TTS provider and voice selectors" class="guide-image start-small" loading="lazy"></a><figcaption>Allow time for the first voice download.</figcaption></figure>
+            <p><strong>Copy your main dock link again.</strong> The updated link includes TTS. An older copied link does not gain the new settings.</p>
+            <details class="start-extra"><summary>I only want to hear it on my computer</summary><p>Open the updated dock link and send a new chat message. Click inside the page if your browser blocks audio. You can stop here if you do not need OBS.</p></details>
+        </div>
+        <div class="guide-card">
+            <h2 id="obs">5. Add your dock to OBS</h2>
+            <ol class="guide-steps">
+                <li>In your OBS scene, find <strong>Sources</strong>. Click <strong>+</strong> → <strong>Browser</strong>. Name it <strong>SSN Chat</strong>, then click <strong>OK</strong>.</li>
+                <li>Replace the default <strong>URL</strong> with the dock link you just copied. Leave <strong>Local file</strong> unchecked.</li>
+                <li>For TTS, check <strong>Control audio via OBS</strong>. Click <strong>OK</strong>.</li>
+            </ol>
+<figure class="guide-figure"><a href="images/guides/obs-browser-source-properties.png"><img src="images/guides/obs-browser-source-properties.png" alt="Actual OBS Browser Source properties showing URL, width, height and Control audio via OBS" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>Default OBS dialog shown: replace its URL with yours, and check Control audio via OBS.</figcaption></figure>
+            <p>Drag the chat box in the OBS preview to move it. Drag a corner to resize it. If you already added this source, open its <strong>Properties</strong> and replace the old URL instead.</p>
+            <details class="start-extra"><summary>I want the voice without showing chat</summary><p>Keep the Browser Source enabled, but place it behind an opaque camera/game source, or move it off the canvas. Do not switch off its eye icon or unload it while relying on its audio.</p></details>
+            <details class="start-extra"><summary>What about an OBS Custom Browser Dock?</summary><p>That is a control panel for you. It is different from the scene <strong>Browser Source</strong> above. Start with the Browser Source for captured TTS audio. <a href="obs-quick-start.html">More about docks and overlays.</a></p></details>
+        </div>
+        <div class="guide-card">
+            <h2 id="audio">6. Check the sound before going live</h2>
+            <ol class="guide-steps">
+                <li>Send another chat message. Look for movement on <strong>SSN Chat</strong> in OBS’s <strong>Audio Mixer</strong>.</li>
+                <li>To hear it yourself, open <strong>Edit → Advanced Audio Properties</strong>. Set that source to <strong>Monitor and Output</strong>.</li>
+                <li>Make a short OBS recording and play it back. You should hear the message once.</li>
+            </ol>
+            <p class="start-check"><strong>Chat visible + voice in the recording = ready.</strong> Your live broadcast must use OBS’s audio for viewers to hear it; SSN does not automatically add sound to a separate phone broadcast.</p>
+            <details class="start-extra"><summary>Silent, or hearing it twice?</summary><p><strong>No meter movement:</strong> check the new URL, TTS switch, voice download and Control audio via OBS. Start with Piper rather than System TTS in OBS.</p><p><strong>Meter moves but recording is silent:</strong> check mute and recording-track assignments.</p><p><strong>Hearing it twice:</strong> close the extra speaking dock/browser, or disable its TTS. Avoid recording both the OBS source and a second copy of its monitored sound.</p></details>
+            <p><a href="tts-setup-guide.html">Compare voices and troubleshoot TTS</a> · <a href="https://obsproject.com/kb/browser-source">OBS source help</a> · <a href="https://obsproject.com/kb/audio-mixer-guide">OBS audio help</a></p>
+        </div>
+        <div class="guide-card"><details class="start-extra"><summary>Next time you stream</summary><p>Open SSN, activate your source (or open the chat tab), and open OBS. If eBay gives the next stream a new event link, update the source to that event. Keep using the dock link from the same SSN session.</p></details><details class="start-extra"><summary>More advanced options</summary><p><a href="tts-setup-guide.html#voice-chooser">Other voice providers</a> · <a href="local-tts.html">Run your own TTS server</a> · <a href="guides.html">All guides</a></p></details></div>
+    </div></main>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+        function choosePath(path) {
+            document.querySelectorAll("[data-start-path]").forEach(function(node) { node.hidden = node.getAttribute("data-start-path") !== path; });
+            document.querySelectorAll("[data-choose-path]").forEach(function(button) { button.setAttribute("aria-pressed", String(button.getAttribute("data-choose-path") === path)); });
+        }
+        document.querySelectorAll("[data-choose-path]").forEach(function(button) { button.addEventListener("click", function() { choosePath(button.getAttribute("data-choose-path")); }); });
+    </script>
+</body>
+</html>

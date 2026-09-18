@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Templates Gallery - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/templates.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <meta name="description" content="Browse and download custom templates for Social Stream Ninja to enhance your streaming experience.">
+    <link rel="canonical" href="https://socialstream.ninja/docs/templates">
+<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js"></script>
+</head>
+<body>
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Templates Gallery</h1>
+            <p>Browse the <a href="overlay-gallery.html">complete visual overlay gallery</a>, or explore custom templates and imports below.</p>
+        </div>
+    </section>
+
+    <section class="template-banner">
+        <div class="container">
+            <h2>Choose a look for your stream</h2>
+            <p>Preview chat, featured-message, and alert overlays, then add your favorite to OBS or Streamlabs.</p>
+            <div class="hero-buttons">
+                <a href="overlay-gallery.html" class="btn btn-primary">Browse Overlay Gallery</a>
+                <a href="#how-to-use" class="btn btn-secondary">🚀 Setup</a>
+                <a href="#make-your-own" class="btn btn-secondary">🛠️ Make Your Own</a>
+                <a href="#ai-prompts" class="btn btn-secondary">✨ Copy AI Prompts</a>
+                <a href="../streamelements-importer.html" class="btn btn-secondary">Import StreamElements Widget</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="template-details" aria-labelledby="choose-overlay">
+        <div class="container">
+            <h2 id="choose-overlay">🧭 Choose your overlay type</h2>
+            <div class="template-features">
+                <div class="template-feature"><h3>💬 Consolidated chat</h3><p>A running feed from your connected platforms. Start with a chat template or <a href="../dock.html">the dock</a>.</p></div>
+                <div class="template-feature"><h3>⭐ Featured message</h3><p>One message you select in the dock. Choose a featured design for interviews, Q&amp;A, or shout-outs.</p></div>
+                <div class="template-feature"><h3>🎉 Event alerts</h3><p>Celebrate follows, memberships, and donations. Configure animations and audio in SSN’s alert settings. <a href="alert-effects.html">Alert guide</a></p></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="template-library" class="template-library">
+        <div class="container">
+            <h2>Template Library</h2>
+            <p class="section-subtitle">Find the perfect template for your stream</p>
+            
+            <div class="template-search">
+                <label for="template-search-input">🔎 Find a template or theme pack</label>
+                <input type="search" id="template-search-input" placeholder="Search templates by name, type, or feature...">
+            </div>
+            
+            <p id="template-results" role="status"></p>
+            <div class="tag-filters" aria-label="Filter templates">
+                <button type="button" class="filter-tag" data-filter="matching" aria-pressed="false">🎨 Matching packs</button>
+                <button type="button" class="filter-tag active" data-filter="all" aria-pressed="true">All Templates</button>
+                <button type="button" class="filter-tag" data-filter="gaming" aria-pressed="false">Gaming</button>
+                <button type="button" class="filter-tag" data-filter="minimal" aria-pressed="false">Minimal</button>
+                <button type="button" class="filter-tag" data-filter="animated" aria-pressed="false">Animated</button>
+                <button type="button" class="filter-tag" data-filter="retro" aria-pressed="false">Retro</button>
+                <button type="button" class="filter-tag" data-filter="modern" aria-pressed="false">Modern</button>
+                <button type="button" class="filter-tag" data-filter="youtube-compatible" aria-pressed="false">YouTube Compatible</button>
+            </div>
+            
+<div id="matching-packs" class="template-category"><div class="category-header"><h3>🎨 Matching theme packs</h3></div><p>One look across three browser sources. In the gallery, choose <strong>Use matching set</strong>, enter your session details, then copy the links for OBS. Motion is optional.</p><div class="templates-main-grid"><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute cat cats kitten">
+ <div class="template-preview"><img src="images/overlay-gallery/featured-art-cat.webp" loading="lazy" width="640" height="360" alt="Sleepy calico, strawberry milk and blush stationery"></div>
+ <div class="template-content"><h3>🐱 Strawberry Cat</h3><p class="template-description">Sleepy calico, strawberry milk and blush stationery. Includes matching chat, featured-message, and alert styles.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-cat">Preview &amp; use pack</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute dog dogs corgi puppy">
+ <div class="template-preview"><img src="images/overlay-gallery/featured-art-dog.webp" loading="lazy" width="640" height="360" alt="A cheerful corgi on a sky-blue postcard"></div>
+ <div class="template-content"><h3>🐶 Good Company</h3><p class="template-description">A cheerful corgi on a sky-blue postcard. Includes matching chat, featured-message, and alert styles.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-dog">Preview &amp; use pack</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute forest">
+ <div class="template-preview"><img src="images/overlay-gallery/featured-art-forest.webp" loading="lazy" width="640" height="360" alt="A storybook frog in a peaceful woodland"></div>
+ <div class="template-content"><h3>🍄 Moss &amp; Mushrooms</h3><p class="template-description">A storybook frog in a peaceful woodland. Includes matching chat, featured-message, and alert styles.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-forest">Preview &amp; use pack</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute space">
+ <div class="template-preview"><img src="images/overlay-gallery/featured-art-space.webp" loading="lazy" width="640" height="360" alt="An astronaut bunny drifting through lilac stardust"></div>
+ <div class="template-content"><h3>🌙 Moon Bunny</h3><p class="template-description">An astronaut bunny drifting through lilac stardust. Includes matching chat, featured-message, and alert styles.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-space">Preview &amp; use pack</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute dragon">
+ <div class="template-preview"><img src="images/overlay-gallery/featured-art-dragon.webp" loading="lazy" width="640" height="360" alt="A tiny dragon with a luminous enchanted crystal"></div>
+ <div class="template-content"><h3>🐉 Crystal Guardian</h3><p class="template-description">A tiny dragon with a luminous enchanted crystal. Includes matching chat, featured-message, and alert styles.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-dragon">Preview &amp; use pack</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute music">
+ <div class="template-preview"><img src="images/overlay-gallery/featured-art-music.webp" loading="lazy" width="640" height="360" alt="Headphone raccoon and vinyl in mint and plum"></div>
+ <div class="template-content"><h3>🎵 Midnight Mixtape</h3><p class="template-description">Headphone raccoon and vinyl in mint and plum. Includes matching chat, featured-message, and alert styles.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-music">Preview &amp; use pack</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute halloween">
+ <div class="template-preview"><img src="images/overlay-gallery/featured-art-halloween.webp" loading="lazy" width="640" height="360" alt="Friendly ghost, glowing pumpkin and midnight plum"></div>
+ <div class="template-content"><h3>🎃 Pumpkin Haunt</h3><p class="template-description">Friendly ghost, glowing pumpkin and midnight plum. Includes matching chat, featured-message, and alert styles.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-halloween">Preview &amp; use pack</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute christmas">
+ <div class="template-preview"><img src="images/overlay-gallery/featured-art-christmas.webp" loading="lazy" width="640" height="360" alt="Scarf-wrapped reindeer and festive evergreen"></div>
+ <div class="template-content"><h3>🎄 Merry Little Reindeer</h3><p class="template-description">Scarf-wrapped reindeer and festive evergreen. Includes matching chat, featured-message, and alert styles.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-christmas">Preview &amp; use pack</a></div></article></div></div>
+            <div id="themed-packages" class="template-category">
+                <div class="category-header">
+                    <h3>Themed Packages</h3>
+                </div>
+                <p>Complete themed packages with documentation, sample images, and guides</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="gaming animated modern">
+                        <div class="template-badge badge-featured">Featured</div>
+                        <div class="template-preview">
+                            <img src="../media/deuks.png" alt="Deuk's Theme">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Complete Package</span>
+                            <h3>Deuk's Theme</h3>
+                            <p class="template-description">A sophisticated, fully animated theme with customizable colors and smooth transitions. Perfect for gaming streams.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By Deuk</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/tree/main/themes/deuks_overlay" class="btn btn-primary">Get</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="retro">
+                        <div class="template-badge badge-new">New</div>
+                        <div class="template-preview">
+                            <img src="../media/windows.png" alt="Windows 3.1 Theme">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Retro Style</span>
+                            <h3>Windows 3.1 Theme</h3>
+                            <p class="template-description">Nostalgic Windows 3.1 style chat overlay with classic window design and pixel-perfect detailing.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By RetroTech</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/tree/main/themes/Windows3.1" class="btn btn-primary">Get</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="modern animated">
+                        <div class="template-preview">
+                            <img src="../media/neutron.png" alt="Neutron Theme">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Modern Design</span>
+                            <h3>Neutron Theme</h3>
+                            <p class="template-description">Clean, modern design with smooth animations and excellent readability. Customizable color schemes.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By NeutronStudio</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/Neutron/" class="btn btn-primary">Get</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>Simple Drop-in Templates</h3>
+                </div>
+                <p>Ready-to-use templates that only require your session ID</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-badge badge-popular">Popular</div>
+                        <div class="template-preview">
+                            <img src="../media/simple.png" alt="Sample Template">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Minimal</span>
+                            <h3>Sample Template</h3>
+                            <p class="template-description">A clean, lightweight template with essential features. Perfect starting point for customization.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/sampleoverlay.html?session=YOURSESSIONIDHERE" class="btn btn-primary">Use</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="animated modern">
+                        <div class="template-preview">
+                            <img src="../media/prettyoverlay.png" alt="Pretty Template">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Animated</span>
+                            <h3>Pretty Template</h3>
+                            <p class="template-description">Elegant design with smooth animations and visual effects. Eye-catching yet not distracting.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONIDHERE" class="btn btn-primary">Use</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="gaming">
+                        <div class="template-preview">
+                            <img src="../media/t3nk3y.png" alt="t3nk3y's Theme">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Gaming</span>
+                            <h3>t3nk3y's Theme</h3>
+                            <p class="template-description">Bold, high-contrast theme designed for gaming streams with excellent visibility even in fast-paced content.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By t3nk3y</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/t3nk3y/?session=YOURSESSIONIDHERE" class="btn btn-primary">Use</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="template-card" data-tags="liquid-glass">
+                        <div class="template-preview">
+                            <img src="../media/luckyloottube.png" alt="LuckyLootTube Liquid Glass Theme">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Liquid Glass</span>
+                            <h3>LuckyLootTube's Theme</h3>
+                            <p class="template-description">Sleek animated liquid-glass style chat overlay with smooth animations and cool emote rendering.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By LuckyLootTube</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/LuckyLootTube/luckyloottube.html?session=YOURSESSIONIDHERE&v=3.40.2" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Use</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>YouTube-CSS Compatible Templates</h3>
+                </div>
+                <p>Templates that work with YouTube CSS styles</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="youtube-compatible">
+                        <div class="template-preview">
+                            <img src="../media/septapus.png" alt="YouTube-CSS Template">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">YouTube Compatible</span>
+                            <h3>YouTube-CSS Template</h3>
+                            <p class="template-description">Use CSS designed for YouTube with our YouTube-structured overlay page. Compatible with Septapus styles.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/septapus" class="btn btn-primary">Setup</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>Developer Templates</h3>
+                </div>
+                <p>Starting points for creating your own custom overlays</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-preview">
+                            <img  alt="Bare Template">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Developer</span>
+                            <h3>Bare Template</h3>
+                            <p class="template-description">Minimal code needed to create your own overlay from scratch. Perfect for developers and LLM-assisted coding.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/blob/main/baretempate.html" target="_blank" class="btn btn-primary">Source Code</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-preview">
+                            <img src="../media/simple.png" alt="Sample Overlay">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Developer</span>
+                            <h3>Sample Overlay Template</h3>
+                            <p class="template-description">A more complete starting point with comments and documentation to help you build your own custom overlays.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/blob/main/sampleoverlay.html" class="btn btn-primary">Source Code</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="submit-template">
+                <h3>Have a Template to Share?</h3>
+                <p>Created an awesome template for Social Stream Ninja? Share it with the community by submitting a pull request to our GitHub repository.</p>
+                <a href="https://github.com/steveseguin/social_stream" target="_blank" class="btn btn-primary">Submit on GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="streamelements-importer-guide" class="how-to-use">
+        <div class="container">
+            <h2>Use a StreamElements Chat Widget with Social Stream Ninja</h2>
+            <p class="section-subtitle">This works with both the SSN Windows desktop app and Chrome extension—no code editing is required.</p>
+
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Confirm SSN Is Receiving Chat</h4>
+                        <p>Open your platform sources in the SSN app or extension, then send a test message. Continue only after it appears in the SSN dock.</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Get the Original Widget Export</h4>
+                        <p>Use the ZIP, folder, or files supplied by the widget designer. A useful export normally contains HTML, CSS, JavaScript, fields/data, and assets. A screenshot or StreamElements overlay URL is not enough.</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Open the Importer</h4>
+                        <p>Open the importer and choose the ZIP, folder, or files. It detects the widget parts and immediately shows a demo preview.</p>
+                        <a href="../streamelements-importer.html" class="btn btn-primary">Open Widget Importer</a>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Add Your SSN Session ID</h4>
+						<p>Opening the importer from the SSN popup fills the session ID and password automatically. If you opened it directly, copy them from <strong>Session Options</strong> in the app or extension. You enter the session ID once in the importer; it is saved inside the downloaded file.</p>
+                    </div>
+                </div>
+
+				<div class="step-card">
+					<div class="step-number"></div>
+					<div class="step-content">
+						<h4>Choose Message History</h4>
+						<p>If the imported widget provides compatible settings, use <strong>Message history</strong> to turn off timed removal or change how many messages stay on screen. This changes widget settings, not its code.</p>
+					</div>
+				</div>
+
+				<div class="step-card">
+					<div class="step-number"></div>
+					<div class="step-content">
+						<h4>Test Before Downloading</h4>
+                        <p><strong>Demo Preview</strong> checks the design with sample messages. <strong>Live Preview</strong> checks the session using real chat from the running SSN app or extension.</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Download and Add It to OBS</h4>
+						<p>Click <strong>Download OBS HTML</strong>. In OBS, add a Browser Source, enable <strong>Local file</strong>, and select the downloaded HTML file. <strong>Do not add the session ID or edit the URL in OBS.</strong> Keep SSN running while streaming; the importer and StreamElements may be closed.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="template-features" style="margin-top: 2rem;">
+                <div class="template-feature">
+                    <h4>Demo is blank</h4>
+                    <p>Review the detected files in the importer and use Advanced file selection if it chose the wrong HTML, CSS, or JavaScript.</p>
+                </div>
+                <div class="template-feature">
+                    <h4>Live Preview is blank</h4>
+                    <p>Confirm chat reaches the SSN dock and that the session ID and optional password match exactly.</p>
+                </div>
+                <div class="template-feature">
+                    <h4>OBS is blank</h4>
+                    <p>Use the downloaded HTML file—not the importer page, original ZIP, or StreamElements URL—then refresh the OBS Browser Source.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-to-use" class="how-to-use">
+        <div class="container">
+            <h2>How to Use Templates</h2>
+            <p class="section-subtitle">Follow these simple steps to get started</p>
+            
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Choose Your Template</h4>
+                        <p>Browse the template library and select one that fits your stream style. Use the screenshot gallery to compare designs; most built-in templates work directly from a URL, with no download.</p>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Add Your Session ID</h4>
+                        <p>Replace <code>YOURSESSIONID</code> in the template URL with your actual Social Stream Ninja session ID found under Session Options in the SSN app or extension. Include the optional password if your session uses one.</p>
+                        <div class="code-block">
+                            <code>https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONID</code>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Add to OBS/Streamlabs</h4>
+                        <p>Add the modified URL as a Browser Source in your streaming software:</p>
+                        <ol>
+                            <li>In OBS, click the + under Sources and select "Browser"</li>
+                            <li>Name your source and click OK</li>
+                            <li>Paste your template URL with session ID</li>
+                            <li>Set width and height (recommended: 1920×1080)</li>
+                            <li>Click OK to add it to your scene</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Customize Your Template</h4>
+                        <p>Personalize your overlay with custom CSS in one of these ways:</p>
+                        <ul>
+                            <li><strong>OBS Custom CSS:</strong> Add your CSS in the Browser Source properties</li>
+                            <li><strong>URL Parameter:</strong> Append <code>&css=URL_TO_YOUR_CSS_FILE</code> to your template URL</li>
+                            <li><strong>Base64 CSS:</strong> For inline CSS, use <code>&b64css=YOUR_BASE64_ENCODED_CSS</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="make-your-own" class="how-to-use"><div class="container">
+<h2>🛠️ Make your own template</h2><p>Start with a working overlay, then change its appearance.</p>
+<div class="template-features">
+<div class="template-feature"><h3>🎨 Change the look</h3><p>Use OBS Browser Source <strong>Custom CSS</strong> for colors, spacing, and typography. Keep the original SSN URL and connection.</p></div>
+<div class="template-feature"><h3>📦 Bring a widget</h3><p>Have a StreamElements chat widget export? <a href="../streamelements-importer.html">Open the StreamElements converter</a>, preview it, then download the OBS HTML. Use the original ZIP or files, not a screenshot or overlay URL. <a href="#streamelements-importer-guide">See setup below</a>.</p></div>
+<div class="template-feature"><h3>🧩 Change behavior</h3><p>Copy a working starter and edit its HTML, CSS, and JavaScript. <a href="overlay-template-quick-start.html">Quick start</a> · <a href="https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md">Developer guide</a> · <a href="event-reference.html">Event fields</a></p></div>
+</div>
+<details class="template-instructions"><summary>🔧 Files, routing, and testing</summary><ol>
+<li>Use <a href="../sampleoverlay.html">sampleoverlay.html</a> for consolidated chat, <a href="../themes/featured-styles/featured-modern.html">featured-modern.html</a> for selected messages, or <a href="../multi-alerts.html">multi-alerts.html</a> for events. Download the source and required assets from <a href="https://github.com/steveseguin/social_stream/tree/beta">the beta repository</a>.</li>
+<li>Keep the original connection code. Chat and featured overlays receive different feeds; styling a chat feed does not make it a selected-message overlay.</li>
+<li>Keep referenced shared scripts, fonts, and images alongside your file with the same relative paths, or ask your AI for a self-contained export. Renaming one HTML file does not bundle its dependencies.</li>
+<li>Host your files and use their URL with your session and optional password. For a self-contained local export, follow its configuration instructions; OBS Local file has no URL field for session parameters.</li>
+<li>Preview fake data first, then test with your own SSN session. Check selected messages, clearing, long names, images, and transparent backgrounds. Keep SSN running during live use.</li>
+</ol><p>For trigger-based behavior, start with the <a href="../actions/event-flow-guide.html">Event Flow editor</a> and <a href="alert-effects.html">alert effect rules</a> before writing a new overlay.</p></details>
+</div></section>
+<section id="ai-prompts" class="how-to-use"><div class="container"><h2>✨ Copy a prompt for your AI</h2><p>Choose a starting point, copy the prompt, and replace the bracketed design details. Attach source files if your AI cannot read links. Leave your private session ID and password out of the conversation.</p>
+<details class="template-instructions"><summary>💬 Consolidated chat</summary><label for="prompt-chat">Editable prompt</label><textarea id="prompt-chat" class="template-prompt" rows="10" spellcheck="false">Create a styled SSN consolidated chat overlay from https://github.com/steveseguin/social_stream/blob/beta/sampleoverlay.html . Receive the normal live feed (dock label), with a bounded message list, configurable count and optional expiry. Preserve platform icons, donation and membership presentation.
+First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema.
+References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html
+Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields.
+Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-chat">📋 Copy prompt</button></details>
+<details class="template-instructions"><summary>⭐ Featured message</summary><label for="prompt-featured">Editable prompt</label><textarea id="prompt-featured" class="template-prompt" rows="10" spellcheck="false">Customize https://github.com/steveseguin/social_stream/blob/beta/themes/featured-styles/featured-modern.html for a single selected message. Preserve its default featured/overlay routing and clear behavior; do not automatically show every chat message. Explain how to select a message from the SSN dock.
+First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema.
+References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html
+Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields.
+Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-featured">📋 Copy prompt</button></details>
+<details class="template-instructions"><summary>🎉 Alerts with sound</summary><label for="prompt-alerts">Editable prompt</label><textarea id="prompt-alerts" class="template-prompt" rows="10" spellcheck="false">Customize https://github.com/steveseguin/social_stream/blob/beta/multi-alerts.html . Inspect its shared alert dependencies and https://socialstream.ninja/beta/docs/alert-effects.html first. Reuse existing alert type filters, queue, sound library, mute/volume and effect rules. Keep USD thresholds on the existing currency.js conversion path; do not compare formatted currency strings. Support an optional animation and sound for a $100 USD donation rule, respecting enabled state and existing range semantics. Avoid duplicate playback. Use only audio I supply or have permission to use.
+First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema.
+References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html
+Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields.
+Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-alerts">📋 Copy prompt</button></details>
+<details class="template-instructions"><summary>🎨 CSS-only makeover</summary><label for="prompt-css">Editable prompt</label><textarea id="prompt-css" class="template-prompt" rows="10" spellcheck="false">Restyle my existing SSN overlay using CSS only. I will provide its URL and source HTML/CSS. Keep all JavaScript and message routing unchanged. Inspect actual DOM selectors before writing CSS. Deliver CSS for the OBS Browser Source Custom CSS box plus any necessary local font/image assets.
+First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema.
+References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html
+Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields.
+Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-css">📋 Copy prompt</button></details>
+<p>Converting a more complex widget? <a href="../streamelements-importer-prompt.md">Use the full StreamElements / Streamlabs conversion prompt</a>.</p><p id="prompt-copy-status" role="status" aria-live="polite"></p></div></section>
+    <section class="guide-section alt">
+        <div class="container">
+            <h2>Video Tutorial</h2>
+            <p class="section-subtitle">Learn how to create a custom chat overlay with AI assistance</p>
+            
+            <div style="max-width: 800px; margin: 0 auto; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+                <iframe width="100%" height="100%" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/GDy5ijQPTkU" title="Creating a Custom Chat Overlay for Social Stream Ninja" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            
+            <div style="max-width: 800px; margin: 3rem auto 0;">
+                <h3>Quick Guide from the Video</h3>
+                <ol class="guide-steps">
+                    <li>Find the sample overlay template (sampleoverlay.html)</li>
+                    <li>Copy the template code to your clipboard</li>
+                    <li>Use an AI assistant like Claude to help customize it</li>
+                    <li>Prompt the AI to modify the CSS for your preferred style</li>
+                    <li>Configure OBS to use your customized template</li>
+                    <li>Apply your custom CSS through OBS browser source settings</li>
+                </ol>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CSS Modal (hidden by default) -->
+    <div id="css-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 1000; overflow: auto;">
+        <div style="background-color: var(--background-card); margin: 10% auto; padding: 20px; width: 80%; max-width: 800px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 id="css-modal-title" style="margin: 0;">CSS Snippet</h2>
+                <button onclick="closeCssModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <pre id="css-modal-content" style="background-color: var(--background-dark); padding: 20px; border-radius: var(--radius-sm); overflow-x: auto; max-height: 60vh;"></pre>
+            <div style="margin-top: 20px; text-align: right;">
+                <button onclick="copyCss()" class="btn btn-primary">Copy to Clipboard</button>
+                <button onclick="closeCssModal()" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+        <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>Consolidates your live social messaging streams and more. Free and open source.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../icons/x.svg" alt="X.com"></a>
+					<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../docs/features.html">Features</a></li>
+                        <li><a href="../docs/download.html">Download</a></li>
+                        <li><a href="../docs/guides.html">Guides</a></li>
+                        <li><a href="../docs/commands.html">Commands & API</a></li>
+                        <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                        <li><a href="../docs/templates.html">Templates</a></li>
+                        <li><a href="../docs/support.html">Support</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="../docs/guides.html#extension-getting-started">Installation Guide</a></li>
+                        <li><a href="../docs/guides.html#extension-customization">Customization Guide</a></li>
+                        <li><a href="../docs/guides.html#faq">FAQ</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Report an Issue</a></li>
+                        <li><a href="../privacy.html">Privacy Policy</a></li>
+                        <li><a href="../TOS.html">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Community</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Join our Discord</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub Repository</a></li>
+                        <li><a href="../docs/support.html#contribute">Contribute</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">Donate</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License. Created by <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> with contributions from the community.</p>
+            </div>
+        </div>
+    </footer>
+	<script src="js/main.js"></script>
+    <script src="js/templates.js"></script>
+    <script>
+        // Current year for copyright
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        
+        function showCssModal(cssType) {
+            const modal = document.getElementById('css-modal');
+            const title = document.getElementById('css-modal-title');
+            const content = document.getElementById('css-modal-content');
+            
+            title.textContent = cssType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) + ' CSS';
+            content.textContent = cssSnippets[cssType] || 'CSS not found';
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeCssModal() {
+            document.getElementById('css-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+		function copyCss() {
+            const content = document.getElementById('css-modal-content').textContent;
+            navigator.clipboard.writeText(content)
+                .then(() => {
+                    alert('CSS copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Could not copy text: ', err);
+                    alert('Failed to copy. Try selecting and copying manually.');
+                });
+        }
+		
+		
+        
+       document.addEventListener('DOMContentLoaded', () => {
+            // Number the steps
+			document.querySelectorAll('.steps-container').forEach(container => {
+				container.querySelectorAll('.step-number').forEach((el, index) => {
+					el.textContent = (index + 1).toString();
+				});
+            });
+            
+            // Auto-scroll to sections when clicking nav links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        e.preventDefault();
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        });
+ </script>
+</body>
+</html>

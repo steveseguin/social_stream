@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Moderation and message filtering - Social Stream Ninja</title>
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/guides.css">
+	<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Choose what reaches SSN outputs and what appears in an individual Dock or overlay.">
+<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="css/workflow-guides.css">
+</head>
+<body class="workflow-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation">
+<a href="../index.html">Home</a>
+<a href="../docs/features.html">Features</a>
+<a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a>
+<a href="../docs/download.html">Download</a>
+<a href="../docs/guides.html">Guides</a>
+<a href="../docs/commands.html">Commands &amp; API</a>
+<a href="../docs/supported-sites.html">Supported Sites</a>
+<a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a>
+<a href="../docs/services.html" class="site-priority-hire">Hire</a>
+<a href="../docs/support.html">Support</a>
+</nav>
+<div class="site-actions">
+<button class="site-theme" type="button" aria-label="Switch theme">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>Moderation and message filtering</h1>
+<p>Choose what reaches SSN outputs and what appears in an individual Dock or overlay.</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="On this page">
+<a href="guides.html">All guides</a>
+<a href="#scope">1. Choose where to filter</a>
+<a href="#users">2. Block or restore a user</a>
+<a href="#words">3. Filter words and commands</a>
+<a href="#roles">4. Handle bots and trusted links</a>
+<a href="#check">5. Verify the boundary</a>
+</nav>
+<section class="guide-card" id="scope">
+<h2>1. Choose where to filter</h2>
+<p>Open SSN’s popup or desktop <strong>Sources and Settings</strong>. Use menu search to find the exact labels below.</p>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>Incoming chat</strong>
+<span>Captured source messages</span>
+</li>
+<li>
+<strong>Global settings</strong>
+<span>Filter before distribution</span>
+</li>
+<li>
+<strong>Individual pages</strong>
+<span>Each page applies its own URL options</span>
+</li>
+</ol>
+<figcaption>Global filtering happens before distribution. A Dock URL filter affects only that Dock.</figcaption>
+</figure>
+<table class="guide-table guide-table-stack">
+<thead>
+<tr>
+<th scope="col">Where</th>
+<th scope="col">Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td data-label="Where">
+<strong>Global settings and tools → Message - Visibility</strong>
+</td>
+<td data-label="Effect">Drops or changes captured messages for downstream SSN outputs. Use when something should not reach any output.</td>
+</tr>
+<tr>
+<td data-label="Where">
+<strong>Streaming Chat Dock link options</strong>
+</td>
+<td data-label="Effect">Changes that generated Dock URL. Other open Docks and overlays keep their own options.</td>
+</tr>
+<tr>
+<td data-label="Where">
+<strong>Native platform moderation</strong>
+</td>
+<td data-label="Effect">Controls the original platform chat. Hiding someone inside SSN does not establish a native platform ban.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="guide-card" id="users">
+<h2>2. Block or restore a user</h2>
+<ol class="guide-steps">
+<li>For a message already in the Dock, right-click and open <strong>User Actions → Block User</strong>. This removes that user’s messages and adds them to the SSN hide-user list.</li>
+<li>For a prepared list, find <strong>Blocked users</strong> under global Message - Visibility. Enable its switch and enter comma-separated usernames.</li>
+<li>To unblock, remove the username from that list. Test with a new message; previously removed rows do not automatically return.</li>
+</ol>
+<p>Use the platform’s own moderation tools when you need to ban or time out someone on the source platform. SSN’s visibility and role lists are not a substitute for platform permissions.</p>
+</section>
+<section class="guide-card" id="words">
+<h2>3. Filter words and commands</h2>
+<p>For global profanity handling, search for <strong>Censor</strong> or <strong>Block messages that contain swear words</strong>. Censoring replaces matched text; blocking removes the whole message. Choose the behavior you want before testing.</p>
+<p>For a custom Dock-only phrase list, find <strong>Contains text or name</strong> in the Streaming Chat Dock options. Turn it on, enter a word or phrase, and select <strong>Add</strong>. Matching is case-insensitive and checks both message text and the chatter’s name. A short fragment can match inside a longer word. If blur mode is enabled, matches can be blurred instead of removed.</p>
+<p>Copy the updated Dock link and replace the URL wherever that Dock is open. For command clutter, the Dock supports <code>&amp;hidecommands</code>. For example:</p>
+<pre>
+<code>dock.html?session=YOUR_SESSION_ID&amp;hidecommands&amp;blockedwords=spoiler</code>
+</pre>
+<p>This example changes a Dock’s presentation. It does not disable commands in Points, Waitlist, or Event Flow.</p>
+</section>
+<section class="guide-card" id="roles">
+<h2>4. Handle bots and trusted links</h2>
+<p>Under global <strong>Message - Visibility → Assign roles/classes to certain users</strong>, use <strong>Identify by name who are bots</strong>. Enter, for example, <code>moobot:twitch,nightbot:twitch</code>. A platform suffix limits classification to that source type.</p>
+<p>Then choose a global bot-hiding option if no output needs those messages, or add <code>&amp;hidebots</code> to a Dock URL to hide them only there. To replace ordinary links while allowing bot links, use:</p>
+<pre>
+<code>dock.html?session=YOUR_SESSION_ID&amp;striplinks&amp;allowbotlinks</code>
+</pre>
+<p>The bot must be identified first. Assigning an SSN role does not grant privileges on Twitch or another platform. See the <a href="index.html?file=role-based-controls.md">role controls reference</a>.</p>
+</section>
+<section class="guide-card" id="check">
+<h2>5. Verify the boundary</h2>
+<p>Open one unfiltered Dock and one filtered Dock on the same session. Send fictional <a href="test-message-guide.html">test messages</a>: a normal line, a blocked phrase, a command, and a bot message. Local filters should affect only the configured page; global filters should affect downstream outputs. Test manual and automatic featuring separately.</p>
+<p>If too much disappears, turn off the last filter you added, check the blocked-user list, and check donation/member/queue-only toolbar modes. Old OBS URLs retain old options. For a reviewed-message workflow, see <a href="dock-live-guide.html">Using the Dock</a>.</p>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">Browse all guides</a>
+</p>
+</div>
+</div>
+</footer>
+<script src="js/main.js">
+</script>
+</body>
+</html>

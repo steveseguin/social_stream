@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UA‑CH Inspector</title>
+  <style>
+    :root{
+      --bg:#0b0d10; --card:#111418; --ink:#e8eef6; --muted:#9bb0c3; --accent:#5aa7ff; --ok:#2ecc71; --warn:#ffb020; --bad:#ff5a5a;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,#0b0d10,#0a0c0f 60%,#090b0e);color:var(--ink);font:15px/1.4 Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;}
+    .wrap{max-width:980px;margin:0 auto;padding:24px}
+    header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
+    h1{font-weight:700;font-size:22px;margin:0}
+    .btns{display:flex;gap:8px;flex-wrap:wrap}
+    button{appearance:none;border:1px solid #2a3140;background:#151a22;color:var(--ink);padding:10px 14px;border-radius:12px;cursor:pointer}
+    button:hover{border-color:#3a4254}
+    button:active{transform:translateY(1px)}
+    .card{background:var(--card);border:1px solid #1b212b;border-radius:16px;padding:16px}
+    .row{display:flex;gap:16px;flex-wrap:wrap}
+    .col{flex:1 1 420px}
+    pre{margin:0;white-space:pre-wrap;word-break:break-word;background:#0d1015;border-radius:12px;padding:12px;border:1px solid #1b212b}
+    code{font-family:var(--mono);font-size:13px}
+    .kv{display:grid;grid-template-columns:180px 1fr;gap:8px 12px}
+    .kv div{min-height:24px}
+    .pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:6px 10px;border:1px solid #213048;background:#121926}
+    .dot{width:8px;height:8px;border-radius:50%}
+    .ok{background:var(--ok)}.warn{background:var(--warn)}.bad{background:var(--bad)}
+    footer{opacity:.7;margin-top:18px;font-size:12px}
+    a{color:var(--accent);text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>UA‑CH Inspector</h1>
+      <div class="btns">
+        <button id="copyBtn" title="Copy JSON to clipboard">Copy JSON</button>
+        <button id="downloadBtn" title="Download JSON file">Download JSON</button>
+        <button id="refreshBtn" title="Re-run detection">Refresh</button>
+      </div>
+    </header>
+
+    <div class="row">
+      <section class="col card">
+        <h3 style="margin-top:0">Normalized Output</h3>
+        <pre><code id="jsonOut">{ /* collecting… */ }</code></pre>
+      </section>
+      <section class="col card">
+        <h3 style="margin-top:0">Raw Sources</h3>
+        <div class="kv">
+          <div><strong>navigator.userAgentData</strong></div>
+          <div><code id="hasUACH">checking…</code></div>
+          <div><strong>brands</strong></div>
+          <div><code id="brands">–</code></div>
+          <div><strong>mobile</strong></div>
+          <div><code id="mobile">–</code></div>
+          <div><strong>platform</strong></div>
+          <div><code id="platform">–</code></div>
+          <div><strong>fullVersionList</strong></div>
+          <div><code id="fvl">–</code></div>
+          <div><strong>high‑entropy</strong></div>
+          <div>
+            <span class="pill"><span class="dot" id="heDot"></span><code id="he">–</code></span>
+          </div>
+          <div><strong>userAgent (fallback)</strong></div>
+          <div><code id="ua">–</code></div>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      <p>
+        Uses <code>navigator.userAgentData</code> (User‑Agent Client Hints) when available and falls back to <code>navigator.userAgent</code> parsing.
+        "enhancedHeaders" is marked true when high‑entropy hints resolve successfully via JS (a good proxy for servers also opting‑in with Accept‑CH).
+      </p>
+    </footer>
+  </div>
+
+  <script>
+  async function getUAInfo(){
+    const result = {
+      brands: [],
+      mobile: false,
+      platform: navigator.userAgentData?.platform || navigator.platform || "",
+      fullVersionList: [],
+      architecture: undefined,
+      bitness: undefined,
+      model: undefined,
+      platformVersion: undefined,
+      uaFullVersion: undefined,
+      wow64: undefined,
+      enhancedHeaders: false
+    };
+
+    const hasUACH = !!navigator.userAgentData;
+    document.getElementById('hasUACH').textContent = String(hasUACH);
+
+    try{
+      if(hasUACH){
+        // Low‑entropy (always available without permission)
+        const { brands = [], mobile = false, platform = result.platform } = navigator.userAgentData;
+        result.brands = (brands||[]).map(b => ({ brand: b.brand, version: (b.version||"").split('.')[0] || b.version || "" }));
+        result.mobile = !!mobile;
+        result.platform = platform || result.platform;
+        document.getElementById('brands').textContent = JSON.stringify(brands || []);
+        document.getElementById('mobile').textContent = String(result.mobile);
+        document.getElementById('platform').textContent = result.platform;
+
+        // High‑entropy (requires JS call; headers usually enabled too if server opts‑in)
+        const highEntropyHints = [
+          "architecture",
+          "bitness",
+          "model",
+          "platformVersion",
+          "uaFullVersion",
+          "fullVersionList",
+          "wow64"
+        ];
+
+        const he = await navigator.userAgentData.getHighEntropyValues(highEntropyHints);
+        result.architecture = he.architecture;
+        result.bitness = he.bitness;
+        result.model = he.model;
+        result.platformVersion = he.platformVersion;
+        result.uaFullVersion = he.uaFullVersion;
+        result.wow64 = he.wow64;
+
+        if (Array.isArray(he.fullVersionList)){
+          result.fullVersionList = he.fullVersionList.map(x => ({ brand: x.brand, version: x.version }));
+        }
+
+        // If we successfully resolved high‑entropy, call it enhanced
+        result.enhancedHeaders = !!(he && (he.uaFullVersion || (he.fullVersionList && he.fullVersionList.length)));
+
+        document.getElementById('fvl').textContent = JSON.stringify(result.fullVersionList || []);
+        document.getElementById('he').textContent = JSON.stringify({
+          architecture: he.architecture,
+          bitness: he.bitness,
+          model: he.model,
+          platformVersion: he.platformVersion,
+          uaFullVersion: he.uaFullVersion,
+          wow64: he.wow64
+        });
+        document.getElementById('heDot').className = 'dot ' + (result.enhancedHeaders ? 'ok' : 'warn');
+      }
+    }catch(err){
+      // If high‑entropy request failed, mark it clearly
+      result.enhancedHeaders = false;
+      document.getElementById('he').textContent = 'error: ' + (err && err.message ? err.message : String(err));
+      document.getElementById('heDot').className = 'dot bad';
+    }
+
+    // Fallback UA parse to fill gaps if needed
+    const uaStr = navigator.userAgent || '';
+    document.getElementById('ua').textContent = uaStr || '—';
+
+    // If some fields are still empty and UA string can hint values, do light parsing
+    try{
+      const isWindows = /Windows/i.test(uaStr);
+      const isMac = /Mac OS X|Macintosh/i.test(uaStr);
+      const isAndroid = /Android/i.test(uaStr);
+      const isIOS = /(iPhone|iPad|iPod)/i.test(uaStr);
+      if (!result.platform) {
+        result.platform = isWindows ? 'Windows' : isMac ? 'macOS' : isAndroid ? 'Android' : isIOS ? 'iOS' : '';
+      }
+      if (result.brands.length === 0){
+        // Extract a coarse brand/version (best effort)
+        const m = uaStr.match(/(Chrome|Chromium)\/(\d+)/i);
+        if (m){
+          result.brands = [{ brand: m[1] === 'Chrome' ? 'Google Chrome' : 'Chromium', version: m[2] }];
+        }
+      }
+    }catch(_){/* ignore */}
+
+    return result;
+  }
+
+  function render(data){
+    const out = document.getElementById('jsonOut');
+    out.textContent = JSON.stringify(data, null, 2);
+  }
+
+  function downloadJSON(data){
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'ua-ch.json'; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function run(){
+    const data = await getUAInfo();
+    render(data);
+  }
+
+  // Wire buttons
+  document.getElementById('copyBtn').addEventListener('click', async () => {
+    try{
+      await navigator.clipboard.writeText(document.getElementById('jsonOut').textContent);
+      const b = document.getElementById('copyBtn');
+      const old = b.textContent; b.textContent = 'Copied!';
+      setTimeout(() => b.textContent = old, 1100);
+    }catch(e){
+      alert('Copy failed: ' + (e && e.message ? e.message : e));
+    }
+  });
+  document.getElementById('downloadBtn').addEventListener('click', async () => {
+    try{ const data = JSON.parse(document.getElementById('jsonOut').textContent); downloadJSON(data); }
+    catch{ alert('Nothing to download yet.'); }
+  });
+  document.getElementById('refreshBtn').addEventListener('click', run);
+
+  run();
+  </script>
+</body>
+</html>
