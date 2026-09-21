@@ -38,6 +38,10 @@ body {
     display: none !important;
 }
 
+.compact-toolbar {
+    display: none;
+}
+
 a {
     color: var(--kick-green-dark);
 }
@@ -674,5 +678,152 @@ img.zero-width-emote-centered {
 
     .channel-picker-row button {
         width: 100%;
+    }
+}
+
+/* Only Kick's narrow source windows use the chat popout layout. */
+@media (max-width: 580px) {
+    body.kick-page {
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    .kick-page .container {
+        height: 100%;
+        gap: 0;
+        grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .kick-page .compact-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--kick-border);
+        background: var(--kick-panel);
+    }
+
+    .kick-page .compact-toolbar button {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .kick-page button:focus,
+    .kick-page input:focus,
+    .kick-page textarea:focus,
+    .kick-page select:focus {
+        outline: 2px solid var(--kick-green);
+        outline-offset: -2px;
+    }
+
+    .kick-page:not(.compact-settings-open) .channel-header,
+    .kick-page:not(.compact-settings-open) #kick-events,
+    .kick-page:not(.compact-settings-open) .sidebar,
+    .kick-page .chat-panel > .panel-summary,
+    .kick-page .chat-panel .panel-body > .hint {
+        display: none;
+    }
+
+    .kick-page .layout,
+    .kick-page .main-content {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        gap: 0;
+    }
+
+    .kick-page .main-content,
+    .kick-page .chat-panel {
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+    }
+
+    .kick-page .chat-panel {
+        position: relative;
+        padding: 0 !important;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .kick-page .chat-panel .panel-body {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 100%;
+        min-height: 0;
+        padding: 0;
+        gap: 0;
+    }
+
+    .kick-page .chat-feed {
+        flex: 1;
+        min-height: 0 !important;
+        max-height: none;
+        border: 0;
+        border-radius: 0;
+    }
+
+    .kick-page .chat-line {
+        flex-shrink: 0;
+        padding: 6px 10px;
+    }
+
+    .kick-page .chat-input-footer {
+        flex-shrink: 0;
+        margin: 0;
+        padding: 8px;
+    }
+
+    .kick-page .chat-input-footer label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+    }
+
+    .kick-page .chat-input-footer textarea {
+        display: block;
+        height: 44px;
+        max-height: 80px;
+    }
+
+    .kick-page .chat-input-footer .button-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        margin-top: 6px;
+    }
+
+    .kick-page #chat-status:empty {
+        display: none;
+    }
+
+    body.kick-page.compact-settings-open {
+        overflow: auto;
+    }
+
+    .kick-page.compact-settings-open .container {
+        height: auto;
+        min-height: 100%;
+        grid-template-rows: auto auto 1fr;
+        gap: 10px;
+    }
+
+    .kick-page.compact-settings-open .compact-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .kick-page.compact-settings-open .chat-panel {
+        display: none;
+    }
+
+    .kick-page.compact-settings-open .layout {
+        gap: 10px;
     }
 }

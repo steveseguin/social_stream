@@ -4127,6 +4127,13 @@ input:checked + .slider:before {
                                 </div>
                                 <div>
                                     <label class="switch">
+                                        <input type="checkbox" data-param1="stripmemberships" aria-labelledby="dock-hide-membership-labels" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span id="dock-hide-membership-labels" data-translate="hide-membership-labels">💛 Hide membership labels</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
                                         <input type="checkbox" data-param1="limitbadges=2" />
                                         <span class="slider round"></span>
                                     </label>
@@ -4418,6 +4425,17 @@ input:checked + .slider:before {
                                     🤏 <span><span class="popup-control-icon" aria-hidden="true">📐</span><span data-translate="padding-to-add">Padding between messages</span></span>
 									<input type="number" style="max-width: 4ch;" max="99" min="0" value="3" size="3" data-numbersetting="padding" />px
                                 </div>
+                                <div title="Add space at the left and right edges of the dock chat.">
+                                    <label class="switch">
+                                        <input type="checkbox" id="dockSidePaddingEnabled" data-param1="sidepadding" aria-labelledby="dockSidePaddingLabel" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <label for="dockSidePaddingEnabled" id="dockSidePaddingLabel"><span class="popup-control-icon" aria-hidden="true">↔️</span><span data-translate="dock-side-padding">Side padding</span></label>
+                                    <div class="textInputContainer">
+                                        <input type="number" id="dockSidePadding" class="textInput" max="99" min="0" step="1" value="8" data-numbersetting="sidepadding" />
+                                        <label for="dockSidePadding" data-translate="dock-side-padding-pixels">Pixels on each side</label>
+                                    </div>
+                                </div>
 								<div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="donationright" />
@@ -4447,6 +4465,34 @@ input:checked + .slider:before {
                                     ✒️<span><span class="popup-control-icon" aria-hidden="true">🔤</span><span data-translate="reduce-text-outlining">Decrease text outline by 33%</span></span>
                                 </div>
 								<h3><span class="popup-control-icon" aria-hidden="true">🔤</span>Font Styling</h3>
+								<div class="popup-toggle-row" title="Color the quoted text a message is replying to, so the new reply is easier to find." data-keywords="reply quoted context original message text color highlight">
+									<label class="switch">
+										<input type="checkbox" id="dock_reply_color_enabled" data-param1="replycolor" aria-labelledby="dock_reply_color_label" />
+										<span class="slider round"></span>
+									</label>
+									<label for="dock_reply_color_enabled" id="dock_reply_color_label"><span class="popup-control-icon" aria-hidden="true">↩️</span>Custom quoted reply text color</label>
+								</div>
+								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+									<div class="textInputContainer" style="flex:1; margin-right:5px;">
+										<input type="text" id="dock_reply_color" class="textInput instant" autocomplete="off" placeholder="Default: #a8b3cf" data-textparam1="replycolor" data-palette="dock_reply_color_palette" />
+										<label for="dock_reply_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Quoted reply text color</label>
+									</div>
+									<input type="color" data-color="dock_reply_color" id="dock_reply_color_palette" value="#a8b3cf" class="colorPicker" title="Pick a quoted reply text color" aria-label="Pick a quoted reply text color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+								</div>
+								<div class="popup-toggle-row" title="Give the 'Replying to name:' label its own color when the source identifies it. The quoted message keeps its separate color." data-keywords="reply replying to name author label header color white">
+									<label class="switch">
+										<input type="checkbox" id="dock_reply_label_color_enabled" data-param1="replylabelcolor" aria-labelledby="dock_reply_label_color_label" />
+										<span class="slider round"></span>
+									</label>
+									<label for="dock_reply_label_color_enabled" id="dock_reply_label_color_label"><span class="popup-control-icon" aria-hidden="true">↩️</span>Custom "Replying to name" color</label>
+								</div>
+								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+									<div class="textInputContainer" style="flex:1; margin-right:5px;">
+										<input type="text" id="dock_reply_label_color" class="textInput instant" autocomplete="off" placeholder="Default: #ffffff" data-textparam1="replylabelcolor" data-palette="dock_reply_label_color_palette" />
+										<label for="dock_reply_label_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; "Replying to name" color</label>
+									</div>
+									<input type="color" data-color="dock_reply_label_color" id="dock_reply_label_color_palette" value="#ffffff" class="colorPicker" title="Pick a replying-to name color" aria-label="Pick a replying-to name color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+								</div>
 								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
 									<div class="textInputContainer" style="flex:1; margin-right:5px;">
 										<input type="text" id="dock_font_color" class="textInput instant" autocomplete="off" placeholder="e.g. #ffffff" data-textparam1="fontcolor" data-palette="dock_font_color_palette" />
@@ -6177,10 +6223,10 @@ input:checked + .slider:before {
                                 </div>
 								<div>
                                     <label class="switch">
-                                        <input type="checkbox" data-param2="stripmemberships" />
+                                        <input type="checkbox" data-param2="stripmemberships" aria-labelledby="featured-hide-membership-labels" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="stripmemberships">💛 Strip out Memberships </span>
+                                    <span id="featured-hide-membership-labels" data-translate="hide-membership-labels">💛 Hide membership labels</span>
                                 </div>
 								<div>
                                     <label class="switch">
@@ -14665,6 +14711,13 @@ input:checked + .slider:before {
 									<span data-translate="compact-nobadges">
 										🏷️ Hide chat badges
 									</span>
+								</div>
+								<div id="compact-clean-membership-option" style="display: none;">
+									<label class="switch">
+										<input type="checkbox" data-param30="stripmemberships" aria-labelledby="compact-clean-hide-membership-labels" />
+										<span class="slider round"></span>
+									</label>
+									<span id="compact-clean-hide-membership-labels" data-translate="compact-clean-hide-membership-labels">🏷️ Hide membership labels (subscriber/sponsorship)</span>
 								</div>
 								<div>
 									<label class="switch">

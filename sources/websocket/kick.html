@@ -5,12 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Social Stream - Kick</title>
     <link rel="icon" href="https://kick.com/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="kick.css">
+    <link rel="stylesheet" href="kick.css?v=20260916-compact">
     <link rel="stylesheet" href="websocket-responsive.css">
+    <script src="kick-layout.js?v=20260916-setup" defer></script>
 </head>
-<body>
+<body class="kick-page">
     <div class="container">
-        <header class="channel-header">
+        <div class="compact-toolbar">
+            <strong>Kick Chat</strong>
+            <button id="compact-menu-toggle" class="button-secondary" aria-expanded="false" aria-controls="kick-setup kick-events kick-sidebar">
+                <span aria-hidden="true">&#9776;</span> <span id="compact-menu-label">Settings</span>
+            </button>
+        </div>
+        <header id="kick-setup" class="channel-header">
             <div class="header-main-row">
                 <div class="header-copy">
                     <h1>Kick Alerts for Social Stream</h1>
@@ -41,7 +48,7 @@
                 </div>
             </div>
             <div class="channel-picker-row">
-                <input type="text" id="channel-input" placeholder="Enter Kick channel slug">
+                <input type="text" id="channel-input" aria-label="Kick channel slug" placeholder="Enter Kick channel slug">
                 <button id="connect-channel" class="button-secondary">Connect channel</button>
             </div>
             <p class="hint channel-picker-hint">Use this to switch channels without adding <code>?channel=</code> to the URL.</p>
@@ -74,7 +81,7 @@
                     </div>
                 </details>
 
-                <details class="panel collapsible-panel" open>
+                <details id="kick-events" class="panel collapsible-panel" open>
                     <summary class="panel-summary">
                         <h2>Live Event Feed</h2>
                         <span class="panel-summary-icon" aria-hidden="true"></span>
@@ -86,7 +93,7 @@
                 </details>
             </main>
 
-            <aside class="sidebar">
+            <aside id="kick-sidebar" class="sidebar">
                 <section class="panel">
                     <h2>Followers & Donations</h2>
                     <p class="hint">Latest Kick alerts appear here.</p>

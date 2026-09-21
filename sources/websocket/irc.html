@@ -57,8 +57,10 @@
         .status { font-style: italic; }
     </style>
     <link rel="stylesheet" href="websocket-responsive.css">
+    <link rel="stylesheet" href="../../shared/compact-source-layout.css?v=20260916-setup">
+    <script src="../../shared/utils/compactSourceLayout.js?v=20260916-setup" defer></script>
 </head>
-<body>
+<body data-compact-source="irc">
     <div id="connectionForm">
         <h2>IRC Connection</h2>
         <select id="serverSelect">
@@ -257,6 +259,8 @@
             });
 
             client.onStatus((status, isError) => {
+                document.getElementById('status').setAttribute('data-connected',
+                    !isError && client && client.ws && client.ws.readyState === WebSocket.OPEN ? 'true' : 'false');
                 updateStatus(status, isError);
                 if (!isError) {
                     saveSettings(true);
@@ -270,6 +274,7 @@
         }
 
         function disconnect() {
+            document.getElementById('status').setAttribute('data-connected', 'false');
             if (client) {
                 client.disconnect();
                 client = null;

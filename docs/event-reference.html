@@ -86,6 +86,8 @@
                                 <li><a href="#favorited">Favorited Studio</a></li>
                                 <li><a href="#beamstream">BEAM</a></li>
 								<li><a href="#castyr">Castyr</a></li>
+                                <li><a href="#streamspace">Stream.space</a></li>
+                                <li><a href="#wtv-prime">w.tv and Prime</a></li>
                             </ul>
                         </div>
                     </div>
@@ -2146,6 +2148,29 @@
 						</tbody>
 					</table>
 				</article>
+            </section>
+
+            <section class="section-summary" id="sooplive">
+                <h2>SOOP - Player DOM Capture</h2>
+                <p class="source-note">Implementation: <code>sources/sooplive.js</code>. Supports the unified <code>play.sooplive.com</code> player and legacy <code>play.sooplive.co.kr</code> URLs. The former global chat layout remains recognized when served.</p>
+                <p>Public chat emits <code>type</code>/<code>platform: "sooplive"</code>, plain-text <code>chatname</code>/<code>userid</code>, <code>nameColor</code>, and sanitized <code>chatmessage</code>. Existing rows, duplicate message IDs, translation copies, and private whispers are excluded. Emotes become safe images or alt text in text-only mode.</p>
+                <p>With <code>showviewercount</code> or <code>hypemode</code> enabled, <code>viewer_update</code> carries an integer <code>meta</code> from the player's <code>#nAllViewer</code>. Chat-only popouts may not expose this count. SSApp uses the full player when opening a detached popup, since current SOOP popouts depend on their opener.</p>
+            </section>
+
+            <section class="section-summary" id="streamspace">
+                <h2>Stream.space - Experimental DOM Capture</h2>
+                <p class="source-note">Implementation: <code>sources/streamspace.js</code>. Matches only <code>https://beta.stream.space/chat-popup.php?channel=USERNAME</code> and the equivalent <code>https://stream.space</code> popup.</p>
+                <p>New rendered chat rows emit <code>type: "streamspace"</code>, <code>platform: "streamspace"</code>, plain-text <code>chatname</code>/<code>userid</code>, <code>chatmessage</code>, avatar <code>chatimg</code>, image-based level <code>chatbadges</code>, and <code>nameColor</code>. Inline emotes are rebuilt as safe images, or their alt text when <code>textonlymode</code> is enabled. Existing history, welcome notices, reply previews, and pinned duplicates are excluded.</p>
+                <p><code>viewer_update</code> carries an integer <code>meta</code> read from <code>#popupViewersNum</code> when <code>showviewercount</code> or <code>hypemode</code> is enabled. No donation, membership, or moderation events are inferred.</p>
+                <p>Experimental: the beta popup remained on Loading during inspection. SSApp loaded the popup and captured viewer updates, but live chat delivery and the production popup remain unverified. SSN cannot capture messages that the site does not render.</p>
+            </section>
+
+            <section class="section-summary" id="wtv-prime">
+                <h2>w.tv and Prime - DOM Capture</h2>
+                <p class="source-note">Implementations: <code>sources/wtv.js</code> on <code>https://w.tv/USERNAME/chat</code> and <code>sources/prime.js</code> on <code>https://prime.gs/USERNAME?chat_popout=1</code>.</p>
+                <p>New chat rows use <code>type</code>/<code>platform</code> of <code>wtv</code> or <code>prime</code>, plain-text <code>chatname</code>, <code>nameColor</code>, and sanitized <code>chatmessage</code>. Inline emotes become safe images or alt text in text-only mode. Prime also includes the row's <code>userid</code> and supports both signed-in profile links and signed-out username labels. Avatars and badges are left empty when not available in the verified row structure.</p>
+                <p>Initial history, pinned cards, and reply previews are excluded. w.tv virtualizes its chat: keep it scrolled to the newest messages for capture. Its DOM test IDs are render indexes, not native message IDs. Prime skips older history loaded above the initial messages and ignored-user placeholders.</p>
+                <p>Neither popup exposes a verified stream viewer count, so these adapters do not emit viewer updates or infer donation, subscription, or moderation events.</p>
             </section>
 
             <section class="section-summary" id="cross-platform">

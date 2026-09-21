@@ -65,6 +65,35 @@ async function createBridge() {
   return bridge;
 }
 
+for (const phase of ['connect', 'joinRoom', 'announce']) {
+  test('destroy cancels pending ' + phase + ' and ignores its late completion', async () => {
+    const original = FakeSDK.prototype[phase];
+    let finish;
+    FakeSDK.prototype[phase] = function (...args) {
+      this.calls.push([phase, ...args]);
+      return new Promise(resolve => { finish = resolve; });
+    };
+    try {
+      const bridge = new window.NinjaBridge();
+      const initializing = bridge.init({ room: 'cancel-room', password: false });
+      const sdk = bridge.vdo;
+      for (let i = 0; i < 10 && !finish; i++) await new Promise(resolve => setImmediate(resolve));
+      assert.equal(typeof finish, 'function');
+      await bridge.destroy();
+      assert.equal(await initializing, false);
+      assert.equal(bridge.isReady(), false);
+      const callsAtStop = sdk.calls.filter(call => ['connect', 'joinRoom', 'announce'].includes(call[0]));
+      finish();
+      await new Promise(resolve => setImmediate(resolve));
+      assert.equal(bridge.isReady(), false);
+      assert.deepEqual(sdk.calls.filter(call => ['connect', 'joinRoom', 'announce'].includes(call[0])), callsAtStop);
+      assert.equal(sdk.calls[sdk.calls.length - 1][0], 'disconnect');
+    } finally {
+      FakeSDK.prototype[phase] = original;
+    }
+  });
+}
+
 test('uses only supported joinRoom options', async () => {
   const bridge = await createBridge();
   const joinCall = bridge.vdo.calls.find((call) => call[0] === 'joinRoom');

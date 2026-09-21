@@ -389,6 +389,12 @@
 				margin-bottom: calc((46px  + var(--locked-chatbar)) / var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
 			}
 
+			#output.sidepadding {
+				box-sizing: border-box;
+				padding-left: var(--side-padding);
+				padding-right: var(--side-padding);
+			}
+
 			.horizontal-ticker-root {
 				position: relative;
 				width: 100%;
@@ -615,6 +621,15 @@
 				font-display: swap;
 				src: url(./thirdparty//xMQbuFFYT72XzQUpDg.woff2) format("woff2");
 				unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+			}
+
+			.hl-content .reply-context,
+			.hl-content .reply-context * {
+				color: var(--reply-color, #a8b3cf) !important;
+			}
+			.hl-content .reply-label,
+			.hl-content .reply-label * {
+				color: var(--reply-label-color, #fff) !important;
 			}
 
 			body {
@@ -3667,6 +3682,15 @@
 				document.documentElement.style.setProperty("--font-color", fontColorParam);
 			}
 
+			var replyColorEnabled = urlParams.has("replycolor");
+			if (replyColorEnabled) {
+				document.documentElement.style.setProperty("--reply-color", normalizeColor(urlParams.get("replycolor")) || "#a8b3cf");
+			}
+			var replyLabelColorEnabled = urlParams.has("replylabelcolor");
+			if (replyLabelColorEnabled) {
+				document.documentElement.style.setProperty("--reply-label-color", normalizeColor(urlParams.get("replylabelcolor")) || "#ffffff");
+			}
+
 			var nameColorParam = normalizeColor(urlParams.get("namecolor"));
 			if (hasValue(nameColorParam)) {
 				document.documentElement.style.setProperty("--font-color-name", nameColorParam);
@@ -5134,6 +5158,7 @@
 			if (urlParams.has("hidebadges") || urlParams.has("nobadges")) {
 				showbadges = false;
 			}
+			var stripMemberships = urlParams.has("stripmemberships");
 
 			var doNotAutoshowFiltered = false;
 			if (urlParams.has("excludefiltered")) {
@@ -5482,6 +5507,14 @@
 
 			if (urlParams.has("padding")) {
 				document.documentElement.style.setProperty("--padding-rows", (parseInt(urlParams.get("padding") || 5)) + "px");
+			}
+			if (urlParams.has("sidepadding")) {
+				var sidePadding = parseInt(urlParams.get("sidepadding"), 10);
+				if (!isFinite(sidePadding)) {
+					sidePadding = 8;
+				}
+				document.documentElement.style.setProperty("--side-padding", Math.max(0, Math.min(99, sidePadding)) + "px");
+				getById("output").classList.add("sidepadding");
 			}
 			
 			var NormalizeText = false;
@@ -10548,6 +10581,75 @@
 				}
 			}
 
+			function colorReplyLabel(chatmessage, data) {
+				if (!replyLabelColorEnabled) {
+					return chatmessage;
+				}
+				var template = document.createElement("template");
+				template.innerHTML = chatmessage;
+				var context = template.content.firstElementChild;
+				if (context && context.tagName === "I") {
+					context = context.firstElementChild;
+				}
+				if (!context) {
+					return chatmessage;
+				}
+				var text = context.textContent;
+				var label = text.match(/^Replying to\s+[^:]+:/i);
+				var author = data.meta && data.meta.reply && data.meta.reply.author;
+				if (!label && typeof author === "string" && author && text.indexOf(author + ":") === 0) {
+					label = [author + ":"];
+				}
+				if (!label) {
+					return chatmessage;
+				}
+				// Wrap only the label's text range, preserving nested name formatting and quoted emotes.
+				var remaining = label[0].length;
+				var walker = document.createTreeWalker(context, 4);
+				var textNode;
+				while ((textNode = walker.nextNode())) {
+					if (remaining <= textNode.length) {
+						var range = document.createRange();
+						range.selectNodeContents(context);
+						range.setEnd(textNode, remaining);
+						var span = document.createElement("span");
+						span.className = "reply-label";
+						span.appendChild(range.extractContents());
+						range.insertNode(span);
+						return template.innerHTML;
+					}
+					remaining -= textNode.length;
+				}
+				return chatmessage;
+			}
+
+			function colorReplyContext(chatmessage, data) {
+				if ((!replyColorEnabled && !replyLabelColorEnabled) || DoNotShowInitialReply || !data.initial || !data.reply || !chatmessage) {
+					return chatmessage;
+				}
+				// Sources wrap the quoted context in <i><small>; leave the actual reply intact.
+				if (!data.textonly && !stripHTML && /^<i><small>/i.test(chatmessage)) {
+					if (replyColorEnabled) {
+						chatmessage = chatmessage.replace(/^<i>/i, '<i class="reply-context">');
+					}
+					return colorReplyLabel(chatmessage, data);
+				}
+				if (data.textonly || stripHTML) {
+					var prefix = String(data.initial).replace(/[\r\n]+/g, "").replace(/\s+/g, " ").trim() + ":";
+					if (data.textonly) {
+						prefix = escapeHtml(prefix);
+					}
+					if (NormalizeText) {
+						prefix = normalizeText(prefix, false);
+					}
+					if (chatmessage.indexOf(prefix) === 0) {
+						chatmessage = '<span' + (replyColorEnabled ? ' class="reply-context"' : '') + '>' + chatmessage.slice(0, prefix.length) + '</span>' + chatmessage.slice(prefix.length);
+						return colorReplyLabel(chatmessage, data);
+					}
+				}
+				return chatmessage;
+			}
+
 			function escapeAttributeValue(value) {
 				return escapeHtml(String(value == null ? "" : value));
 			}
@@ -12286,6 +12388,8 @@
 						chatmessage = normalizeText(data.chatmessage, data.textonly || false);
 					}
 					
+					chatmessage = colorReplyContext(chatmessage, data);
+
 					// Trusted relay HTML: chatname/chatmessage are sanitized upstream in background.js before rendering here.
 					if (largeavatar) {
 						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + safeDataType + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + channelSourceName + timeArrived  +  "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
@@ -12403,6 +12507,10 @@
 						node.dataset.member = "true";
 					} else {
 						data.membership = "";
+					}
+
+					if (stripMemberships) {
+						memebershipHTML = "";
 					}
 
 					if (data.membership && !bubble && highlightMembers) {

@@ -24,6 +24,7 @@
       this.password = false;
       this.streamID = null;
       this.connected = false;
+      this._cancelInit = null;
 
       // uuid -> label mapping (eg. 'dock', 'ticker', ...)
       this.labelsByUUID = {};
@@ -51,28 +52,47 @@
         reconnectDelay: 2000,
       });
 
-      this._bindEvents();
-      // Set up auto-view handlers before we join so we don't miss initial listing
-      this._enableAutoView();
-      await this.vdo.connect();
-      const publishStreamID = this.streamID || room;
-
-      // Join the room using the same data-only stream ID that overlays will view.
-      await this.vdo.joinRoom({
-        room,
-        password: this.password || false,
+      const sdk = this.vdo;
+      let cancelled = false;
+      let cancelInit;
+      const cancellation = new Promise(resolve => {
+        cancelInit = () => { cancelled = true; resolve(false); };
       });
+      this._cancelInit = cancelInit;
+      // A stalled WebSocket handshake must not hold the background's lifecycle
+      // queue open. Late SDK work belongs to this instance and is disposed too.
+      const waitForStep = operation => Promise.race([
+        Promise.resolve(operation).then(async () => {
+          if (cancelled) {
+            try { await sdk.disconnect(); } catch (e) {}
+            return false;
+          }
+          return true;
+        }),
+        cancellation,
+      ]);
+      try {
+        this._bindEvents();
+        // Set up auto-view handlers before we join so we don't miss initial listing.
+        this._enableAutoView();
+        if (!await waitForStep(sdk.connect()) || cancelled) return false;
+        const publishStreamID = this.streamID || room;
 
-      // Publish a data-only stream whose streamID equals the room's ID
-      // so overlays can subscribe to it, mirroring the iframe's &push=room behavior.
-      await this._announcePublishStream(publishStreamID);
+        // Join and publish the data-only stream that overlay viewers subscribe to.
+        if (!await waitForStep(sdk.joinRoom({ room, password: this.password || false })) || cancelled) return false;
+        if (!await waitForStep(this._announcePublishStream(publishStreamID)) || cancelled) return false;
 
-      // Auto-view handlers already enabled above
+        this.connected = true;
+        this._syncGlobalPeers();
+        this.dispatchEvent(new CustomEvent('ready'));
+        return true;
+      } finally {
+        if (this._cancelInit === cancelInit) this._cancelInit = null;
+      }
+    }
 
-      this.connected = true;
-      this._syncGlobalPeers();
-      this.dispatchEvent(new CustomEvent('ready'));
-      return true;
+    cancelPendingInit() {
+      if (this._cancelInit) this._cancelInit();
     }
 
     async _announcePublishStream(publishStreamID) {
@@ -328,6 +348,7 @@
     }
 
     async destroy() {
+      this.cancelPendingInit();
       try {
         if (this.vdo) {
           try { this.vdo.stopPublishing && this.vdo.stopPublishing(); } catch(e){}

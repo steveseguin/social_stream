@@ -819,7 +819,57 @@ function isRecoverableWebGPUExecutionError(error) {
     return errorMessage.includes('ortrun') || errorMessage.includes('invalid buffer') || errorMessage.includes('mapasync') || errorMessage.includes('device lost') || errorMessage.includes('webgpu');
 }
 
+function isQwenModerationRequest(message, stateless) {
+    return message.moderation === true && stateless && message.providerKey === 'localqwen' &&
+        !(message.images && message.images.length) && initializedModelClass === 'Qwen3_5ForConditionalGeneration' &&
+        /(?:^|\/)qwen3\.5-0\.8b-onnx-opt\/?$/.test(initializedModelId);
+}
+
+function releaseModerationTensors(value, seen = new Set()) {
+    if (!value || typeof value !== 'object' || seen.has(value)) return;
+    seen.add(value);
+    if (typeof value.dispose === 'function') { value.dispose(); return; }
+    if (ArrayBuffer.isView(value)) return;
+    for (const item of Object.values(value)) releaseModerationTensors(item, seen);
+}
+
+async function runQwenModerationPass(prompt) {
+    const split = prompt.indexOf('\n\nRecent chat:\n');
+    if (split < 0 || !prompt.startsWith('Reply with only OK or BLOCK.')) {
+        throw new Error('Unexpected binary moderation prompt.');
+    }
+    const context = prompt.slice(split + 2);
+    const singleMessage = context.startsWith('Recent chat:\nNone\n\nCompact candidates:\nNone\n\nLatest message:\n');
+    // The shorter framing was validated on single messages. Preserve legacy framing when
+    // explicit context is present; neither path may import unrelated co-host memory/facts.
+    const messages = singleMessage ? [
+        { role: 'system', content: prompt.slice(0, split) },
+        { role: 'user', content: context }
+    ] : [
+        { role: 'system', content: CONVERSATION_GUIDANCE },
+        { role: 'user', content: prompt }
+    ];
+    const rendered = processor.apply_chat_template(messages, { tokenize: false, add_generation_prompt: true });
+    const inputs = await processor(rendered);
+    let output;
+    try {
+        const tokenIds = ['OK', 'BLOCK'].map(label => processor.tokenizer.encode(label, { add_special_tokens: false }));
+        if (tokenIds.some(ids => ids.length !== 1)) throw new Error('Moderation labels must be single tokens.');
+        // All 24 layers and the vocabulary projection still execute. Read two final-position scores;
+        // do not run another forward pass merely to emit the end-of-reply token.
+        output = await model(inputs);
+        const logits = output.logits, offset = logits.data.length - logits.dims[logits.dims.length - 1];
+        const scores = tokenIds.map(ids => Number(logits.data[offset + ids[0]]));
+        if (!scores.every(Number.isFinite)) throw new Error('Invalid moderation scores.');
+        return { text: scores[1] > scores[0] ? 'BLOCK' : 'OK', finishReason: 'moderation_decision', guardReason: '' };
+    } finally {
+        releaseModerationTensors(output);
+        releaseModerationTensors(inputs);
+    }
+}
+
 async function runGenerationPass(message, prompt, stateless) {
+    if (isQwenModerationRequest(message, stateless)) return runQwenModerationPass(prompt);
     const rawImages = await prepareImages(message.images);
     const generationProfiles = message.runtime?.generation || initializedGenerationConfig || {};
     const generationDefaults = (rawImages.length ? generationProfiles.vision : generationProfiles.text) || {};
