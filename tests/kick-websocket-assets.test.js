@@ -341,7 +341,7 @@ function findImage(result, className) {
 		assert.strictEqual(giftMessage.chatmessage, "1 KICK - Hell Yeah");
 		assert.strictEqual(giftMessage.hasDonation, "1 KICK");
 		assert.strictEqual(giftMessage.contentimg, "https://files.kick.com/kicks/gifts/hell-yeah.webp");
-		assert.ok(!Object.prototype.hasOwnProperty.call(giftMessage, "event"));
+		assert.strictEqual(giftMessage.event, "gift");
 		assert.strictEqual(giftMessage.meta.giftId, "hell_yeah");
 
 		captured = await page.evaluate((body) => window.__kickAssetTest.captureBridgePacket({

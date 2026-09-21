@@ -241,6 +241,13 @@ function processIncomingSSNMessage(data) {
         // displayDonation(data);
     }
 
+    // Kick paid support, including older KICKs rows without an event marker.
+    if (data.type === 'kick' && data.hasDonation) {
+        // displayKickDonation(data);
+    }
+    // Current KICKs gifts also have event === 'gift'; tips use 'donation'.
+    // hasDonation contains the amount, for example "1000 KICKs".
+
     // 4. Filter for messages from VIPs
     if (data.vip) {
         // console.log("VIP Message from", data.chatname, ":", data.chatmessage);

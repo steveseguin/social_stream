@@ -1171,9 +1171,9 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="membership-event"><code>gift</code></td>
-                                <td>Gift sub events detected via chat text matching.</td>
-                                <td><code>chatmessage</code> contains the system line; basic gift detection only.</td>
+                                <td class="donation-event"><code>gift</code></td>
+                                <td>KICKs gifts detected via the sticker image and visible Kick currency amount.</td>
+                                <td><code>hasDonation</code> carries <code>N KICKs</code> (<code>1 KICK</code> for one) when the visible amount is available; <code>contentimg</code> carries the gift image. Existing message text is preserved.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>reward</code></td>
@@ -1237,8 +1237,13 @@
                             </tr>
                             <tr>
                                 <td><code>donation</code></td>
-                                <td><code>kicks.gifted</code> and support/tip events detected via event type heuristics.</td>
+                                <td>Support/tip events detected via event type heuristics; KICKs gifts use <code>gift</code> below.</td>
                                 <td><code>hasDonation</code> carries the formatted amount; <code>meta</code> contains { amount, currency, supporter, message, giftName }.</td>
+                            </tr>
+                            <tr>
+                                <td><code>gift</code></td>
+                                <td><code>kicks.gifted</code> (KICKs gifts), matching the DOM scraper.</td>
+                                <td><code>hasDonation</code> carries <code>N KICKs</code> (<code>1 KICK</code> for one); <code>contentimg</code> carries the gift image when available. Structured gift details remain under <code>meta</code>.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>raid</code></td>
@@ -1288,7 +1293,8 @@
                             <tr><td><code>resub</code></td><td>Subscription renewal</td></tr>
                             <tr><td><code>subscription_gift</code></td><td>Gifted subs</td></tr>
                             <tr><td><code>reward</code></td><td>Channel reward redemption or reward-style chat/system message</td></tr>
-                            <tr><td><code>donation</code></td><td>Tip/support/KICKs gift event</td></tr>
+                            <tr><td><code>donation</code></td><td>Tip/support event</td></tr>
+                            <tr><td><code>gift</code></td><td>KICKs gift event</td></tr>
                             <tr><td><code>raid</code></td><td>Compatibility-only legacy host/raid input; not a current official Kick subscription</td></tr>
                             <tr><td><code>follower_update</code></td><td>Total follower count</td></tr>
                             <tr><td><code>stream_online</code></td><td>Stream went live</td></tr>
