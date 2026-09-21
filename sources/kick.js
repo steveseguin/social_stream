@@ -1810,19 +1810,29 @@
 	  if (chatname && ele.querySelector("img[alt='sticker'][src]")){
 		  try {
 			  if (!chatmessage) {
-				  chatmessage = getAllContentNodes(ele.querySelector("div.flex-shrink-0.break-normal"));
-				  chatmessage = chatmessage.replace(chatname, "").trim();
+				  var kickGiftMessage = ele.querySelector("span.whitespace-pre-line");
+				  if (kickGiftMessage) {
+					  chatmessage = getAllContentNodes(kickGiftMessage).trim();
+				  } else {
+					  var kickGiftLabel = ele.querySelector("div.flex-shrink-0.break-normal, div.shrink-0.break-normal");
+					  chatmessage = kickGiftLabel ? escapeHtml(kickGiftLabel.textContent) : "";
+					  chatmessage = chatmessage.replace(chatname, "").trim();
+				  }
 				  contentImg = ele.querySelector("img[alt='sticker'][src]").src;
 			  }
-			  var kickAmountIcon = ele.querySelector("svg path[d^='M7.67318 0.0611465L3.07733 1.75287C2.86614']");
-			  var kickAmountNode = kickAmountIcon && kickAmountIcon.parentNode.nextElementSibling;
+			  var kickAmountIcon = ele.querySelector("svg[data-ds-icon='KicksColor']");
+			  if (!kickAmountIcon) {
+				  var kickAmountPath = ele.querySelector("svg path[d^='M7.67318 0.0611465L3.07733 1.75287C2.86614']");
+				  kickAmountIcon = kickAmountPath && kickAmountPath.parentNode;
+			  }
+			  var kickAmountNode = kickAmountIcon && kickAmountIcon.nextElementSibling;
 			  if (kickAmountNode) {
+				  eventName = "gift";
+				  contentImg = ele.querySelector("img[alt='sticker'][src]").src;
 				  var kickAmountText = kickAmountNode.textContent.replace(/[,\s]/g, "");
-				  var kickAmount = /^\d+$/.test(kickAmountText) ? parseInt(kickAmountText, 10) : 0;
+				  var kickAmount = parseInt(kickAmountText, 10);
 				  if (kickAmount > 0) {
 					  hasDonation = kickAmount + (kickAmount === 1 ? " KICK" : " KICKs");
-					  eventName = "gift";
-					  contentImg = ele.querySelector("img[alt='sticker'][src]").src;
 				  }
 			  }
 		  } catch(e){
