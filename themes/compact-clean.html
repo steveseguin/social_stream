@@ -23,6 +23,7 @@ URL PARAMETERS:
   align=left|right  anchor side (default left)
   noavatar          hide avatars
   nobadges          hide platform badges
+  stripmemberships  hide membership labels (subscriber/sponsorship)
   noicon            hide the small source platform icon
   time              show a clock timestamp per message
   light             light theme cards instead of dark
@@ -325,6 +326,7 @@ body.ultra .content-img {
     var deleteOnlyLast = urlParams.has("deleteonlylast");
     var hideAvatar = urlParams.has("noavatar");
     var hideBadges = urlParams.has("nobadges");
+    var stripMemberships = urlParams.has("stripmemberships");
     var hideIcon = urlParams.has("noicon");
     var showClock = urlParams.has("time");
     var hideBots = urlParams.has("hidebots");
@@ -691,7 +693,7 @@ body.ultra .content-img {
         var clockHtml = showClock ? "<span class='timestamp'>" + nowClock() + "</span>" : "";
         var nameHtml = data.chatname
             ? "<span class='name'" + (accent ? " style='color:" + accent + "'" : "") + ">" + escapeHtml(data.chatname) + "</span>" : "";
-        var membershipHtml = data.membership ? "<div class='membership'>" + escapeHtml(data.membership) + "</div>" : "";
+        var membershipHtml = (!stripMemberships && data.membership) ? "<div class='membership'>" + escapeHtml(data.membership) + "</div>" : "";
         var msg = data.chatmessage ? (data.textonly ? escapeHtml(data.chatmessage) : data.chatmessage) : "";
         var textHtml = msg ? "<div class='text" + (data.event ? " event-text" : "") + "'>" + msg + "</div>" : "";
         var donation = data.hasDonation || data.donation || "";

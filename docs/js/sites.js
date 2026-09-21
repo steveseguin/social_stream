@@ -1166,9 +1166,8 @@ document.addEventListener('DOMContentLoaded', function() {
 			type: 'popout',
 			instructions: `
 				<ul>
-					<li>URL: https://www.sooplive.com/chat/*</li>
-					<li>URL: https://play.sooplive.com/*?vtype=chat</li>
-					<li>Pop out the chat to use</li>
+					<li>Open https://play.sooplive.com/USERNAME/ with chat visible (legacy play.sooplive.co.kr links are also supported).</li>
+					<li>Browser popouts need their original player kept open. SSApp uses the full player because detached popouts cannot connect.</li>
 				</ul>
 			`
 		},
@@ -1209,6 +1208,35 @@ document.addEventListener('DOMContentLoaded', function() {
 				</ul>
 			`,
 			notes: 'Captures new chat messages, emotes, avatars, name colors, user/message IDs, and optional viewer-count updates.'
+		},
+		{
+			name: 'w.tv',
+			icon: 'wtv.png',
+			description: 'Live streaming platform with pop-out chat.',
+			type: 'popout',
+			instructions: `<ul><li>Open https://w.tv/USERNAME/chat and keep the chat scrolled to the newest messages.</li></ul>`,
+			notes: 'Captures newly rendered chat, name colors, and inline emotes. Older messages, pinned cards, and reply previews are excluded. The popup does not expose a verified stream viewer count.'
+		},
+		{
+			name: 'Prime',
+			icon: 'prime.png',
+			description: 'Live streaming platform with pop-out chat.',
+			type: 'popout',
+			instructions: `<ul><li>Open https://prime.gs/USERNAME?chat_popout=1</li><li>Sign in on Prime if the chat requires it.</li></ul>`,
+			notes: 'Captures newly rendered chat, user IDs, name colors, and inline emotes. Existing history, pinned messages, and reply previews are excluded; no viewer count is inferred from the popup.'
+		},
+		{
+			name: 'Stream.space (experimental)',
+			icon: 'streamspace.png',
+			description: 'Live streaming platform with pop-out chat.',
+			type: 'popout',
+			instructions: `
+				<ul>
+					<li>Open https://beta.stream.space/chat-popup.php?channel=USERNAME</li>
+					<li>The same popup path on https://stream.space is also recognized.</li>
+				</ul>
+			`,
+			notes: 'Experimental: captures newly rendered chat, emotes, avatars, level badges, and optional viewer counts. The beta chat was stuck loading during validation; live capture and the production popup remain unverified.'
 		},
 		{
 			name: 'Castyr',
