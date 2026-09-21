@@ -78,24 +78,69 @@ const constants = declarations.filter(node => node.type === 'VariableDeclaration
             assert.strictEqual(message.hasDonation, expected);
             assert.strictEqual(message.event, event);
             assert.strictEqual(message.textonly, textonly);
-            assert.strictEqual(message.contentimg || '', expected || (!text && fallback && sticker) ? 'https://example.invalid/gift.webp' : '');
+            assert.strictEqual(message.contentimg || '', event === 'gift' || (!text && fallback && sticker) ? 'https://example.invalid/gift.webp' : '');
             assert.strictEqual(result.total, 1, 'reprocessing must not duplicate the row');
             assert.strictEqual(result.retries, 0, 'valid gift must not wait for chat text');
             count++;
         }
+        // Reduced from a real gift row captured in SSApp on 2026-09-21.
+        async function checkCurrentGift({ textonly, amount = '100', text = '', sticker = true, icon = true }) {
+            const result = await page.evaluate(async fixture => {
+                captured = []; retries = 0; processedMessages.clear();
+                settings.textonlymode = fixture.textonly;
+                document.body.innerHTML = '<div id="current-gift" data-index="193"><div class="flex flex-1 gap-4"><div class="flex min-w-0 flex-1 flex-col"><div class="shrink-0 break-normal"><span class="relative inline-block"><div class="inline-flex"><button class="inline font-bold" data-prevent-expand="true">FixtureViewer</button></div></span> sent <div class="inline-flex items-center gap-1 font-semibold"><svg data-ds-icon="KicksColor"><path d="m9.63 1.07-5.17 1.9"></path></svg><span><span title="100">100</span></span></div></div></div><img alt="sticker" src="https://example.invalid/gift.webp"></div></div>';
+                const row = document.body.firstElementChild;
+                const svg = row.querySelector('svg');
+                svg.nextElementSibling.textContent = fixture.amount;
+                if (!fixture.icon) svg.remove();
+                if (!fixture.sticker) row.querySelector('img').remove();
+                if (fixture.text) {
+                    const body = document.createElement('span');
+                    body.className = 'max-w-full whitespace-pre-line';
+                    body.textContent = fixture.text;
+                    row.querySelector('.break-normal').parentElement.appendChild(body);
+                }
+                await processMessageNew(row);
+                await processMessageNew(row);
+                return { captured, retries };
+            }, { textonly, amount, text, sticker, icon });
+            if (!sticker) {
+                assert.strictEqual(result.captured.length, 0, 'currency icon alone is not a gift');
+            } else {
+                assert.strictEqual(result.captured.length, 1, 'current gift must be emitted exactly once');
+                const message = result.captured[0];
+                assert.strictEqual(message.chatname, 'FixtureViewer');
+                assert.strictEqual(message.chatmessage, text ? (textonly ? text : text.replace(/</g, '&lt;')) : 'sent ' + amount);
+                assert.strictEqual(message.hasDonation, icon ? parseInt(amount.replace(/[,\s]/g, ''), 10) + ' KICKs' : '');
+                assert.strictEqual(message.event, icon ? 'gift' : '');
+                assert.strictEqual(message.contentimg, 'https://example.invalid/gift.webp');
+                assert.strictEqual(message.textonly, textonly);
+                assert.strictEqual(result.retries, 0);
+            }
+            count++;
+        }
         for (const textonly of [false, true]) {
+            await checkCurrentGift({ textonly });
+            await checkCurrentGift({ textonly, amount: '1,000' });
+            await checkCurrentGift({ textonly, text: 'Great stream! <3' });
+            await checkCurrentGift({ textonly, icon: false });
+            await checkCurrentGift({ textonly, sticker: false });
             await check({ textonly, expected: '1000 KICKs', event: 'gift' });
             await check({ textonly, amount: '1', expected: '1 KICK', event: 'gift' });
             await check({ textonly, amount: '10,000', expected: '10000 KICKs', event: 'gift' });
             await check({ textonly, amount: '1\u00a0000', expected: '1000 KICKs', event: 'gift' });
+            await check({ textonly, amount: '100 KICKs', expected: '100 KICKs', event: 'gift' });
+            await check({ textonly, amount: '1,000 KICKs', expected: '1000 KICKs', event: 'gift' });
+            await check({ textonly, text: '', fallback: 'FixtureViewer sent a gift', amount: '100 KICKs', expected: '100 KICKs', event: 'gift' });
             await check({ textonly, text: '', expected: '1000 KICKs', event: 'gift' });
             await check({ textonly, text: '', fallback: 'FixtureViewer sent a gift', expected: '1000 KICKs', event: 'gift' });
             await check({ textonly, text: '', icon: false, fallback: 'FixtureViewer sent a sticker' });
             await check({ textonly, sticker: false, icon: false });
             await check({ textonly, icon: false });
             await check({ textonly, sticker: false });
-            await check({ textonly, amount: 'unknown' });
-            await check({ textonly, amount: '0' });
+            await check({ textonly, amount: 'unknown', event: 'gift' });
+            await check({ textonly, amount: '', event: 'gift' });
+            await check({ textonly, amount: '0', event: 'gift' });
         }
         console.log('kick-gifts-dom: ' + count + ' fixtures passed');
     } finally {
