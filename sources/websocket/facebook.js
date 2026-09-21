@@ -1296,6 +1296,7 @@ async function pollOnce() {
     state.failureCount = 0;
     state.lastPollAt = Date.now();
     updateStats();
+    els.chatFeed.setAttribute('data-connected', 'true');
     setStatus('connected', 'Connected to Facebook Live comments.');
     schedulePoll();
   } catch (err) {

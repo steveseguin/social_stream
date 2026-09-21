@@ -489,7 +489,9 @@ test('YouTube API Super Chat emits one paid row, with normal chat and backlog be
     const paidEnd = source.indexOf('function processYouTubeGift(', paidStart);
     assert.ok(handlerStart >= 0 && handlerEnd > handlerStart && paidStart >= 0 && paidEnd > paidStart);
     const queued = [], sent = [];
+    const chatStatus = {};
     const context = vm.createContext({ console, Date,
+        document: { getElementById: () => ({ setAttribute: (key, value) => { chatStatus[key] = value; } }) },
         youtubeRecommendedInterval: 5000, lastSuccessfulPollTime: 0, currentStream: null, videoId: null,
         initialBacklogProcessing: false, initialBacklogTimestamp: 0, lastMessageTime: null, nextPageToken: null,
         LIVE_CHAT_MAX_RESULTS: 200, consecutiveMaxMessages: 0, consecutiveEmptyPolls: 0, quickPollCount: 0,
@@ -504,6 +506,7 @@ test('YouTube API Super Chat emits one paid row, with normal chat and backlog be
         snippet: { type: 'superChatEvent', publishedAt: '2026-09-05T12:00:00Z', displayMessage: 'Thanks!',
             superChatDetails: { amountDisplayString: '$5.00', userComment: 'Thanks!', tier: 1 } } };
     await context.processLiveChatResponseData({ items: [paid] });
+    assert.equal(chatStatus['data-connected'], 'true', 'A successful chat response marks the compact view ready');
     assert.equal(queued.length, 0, 'Paid chat must not also enqueue a plain chat duplicate');
     assert.equal(sent.length, 1);
     assert.equal(sent[0].event, 'superchat');

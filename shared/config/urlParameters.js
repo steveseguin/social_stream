@@ -858,6 +858,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Hides user badges"
           },
           {
+            "key": "stripmemberships",
+            "displayName": "stripmemberships",
+            "aliases": [
+              "stripmemberships"
+            ],
+            "values": "boolean",
+            "description": "Hides membership labels (off by default). Works independently in dock.html and featured.html; keeps badge icons and chat messages. In the dock, member filtering, highlighting, and forwarded membership data are preserved."
+          },
+          {
             "key": "limitbadges",
             "displayName": "limitbadges",
             "aliases": [

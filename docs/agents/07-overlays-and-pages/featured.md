@@ -41,14 +41,18 @@ If clicking a dock message does nothing, verify session ID match before debuggin
 
 | Parameter | Use |
 | --- | --- |
-| `server` | Connects featured page to the API server path. |
-| `server2` | Alternate server routing mode. |
-| `server3` | Alternate server routing mode for extension/server routing. |
+| `server` | Receives dock selections on channel 2; with `autoshow`, receives API chat on channel 1. The dock also needs `server` to publish selections. |
+| `server2` | Without `server`, receives every captured chat message on channel 4, even without `autoshow`. |
+| `server3` | Without `server` or `server2`, the classic Featured page receives channel 1. These flags mean different things on the dock. |
 | `password` | Session password when configured. |
 | `lanonly` | Restricts peer routing to LAN-only behavior where supported. |
 | `label` | Names the featured instance for targeted commands. |
 
-For normal users, a plain `session` URL is the first thing to test. Add server/label parameters only when the workflow requires them.
+Generated links include a matching `server` route on the Dock and manual Featured overlay when server forwarding/fallback is enabled. Explicit Featured `autoshow` keeps the incoming chat route. Other overlay links retain their own routing.
+
+For older saved links that auto-feature everything and ignore dock clicks, add `&server` to both the Dock and Featured URLs, leaving the other parameters intact, then reload both. With local relay enabled, retain matching `localserver` and port settings; removing them changes the connection endpoint. Do not replace a server-connected setup with plain session-only URLs as an equivalent test.
+
+No `autoshow` in a Featured URL does not by itself prove manual routing: check these server flags and the dock's auto-feature button. The Featured settings toggle writes a URL parameter; it is not a hidden override of a separately opened URL.
 
 ## Display Timing And Animation
 

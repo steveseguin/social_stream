@@ -1,7 +1,5 @@
 (function () {
-	 
-	
-	var isExtensionOn = true;
+	if (window.__SSN_SOOPLIVE_ACTIVE__) return;
 	function isSSAppContext() {
 		return !!(
 			window.ninjafy ||
@@ -26,8 +24,10 @@
 				}
 			}
 
-			if (url.hostname === "play.sooplive.com" && url.pathname.length > 1 && url.searchParams.get("vtype") !== "chat") {
-				url.searchParams.set("vtype", "chat");
+			if (/^play\.sooplive\.(com|co\.kr)$/.test(url.hostname) && url.pathname.length > 1 && url.searchParams.get("vtype") === "chat" && !window.opener) {
+				// The current popup borrows its connection from window.opener.liveView.
+				// A standalone SSApp source needs the full player to establish chat.
+				url.searchParams.delete("vtype");
 				window.location.replace(url.toString());
 				return true;
 			}
@@ -39,206 +39,160 @@
 	if (normalizeSoopLiveUrl()) {
 		return;
 	}
-function toDataURL(url, callback) {
-	  var xhr = new XMLHttpRequest();
-	  xhr.onload = function() {
-		  
-		var blob = xhr.response;
-    
-		if (blob.size > (25 * 1024)) {
-		  callback(url); // Image size is larger than 25kb.
-		  return;
-		}
 
-		var reader = new FileReader();
-		
-		
-		reader.onloadend = function() {
-		  callback(reader.result);
-		}
-		reader.readAsDataURL(xhr.response);
-	  };
-	  xhr.open('GET', url);
-	  xhr.responseType = 'blob';
-	  xhr.send();
-	}
-
-	function escapeHtml(unsafe){ // success is when goofs be trying to hack me
-		return unsafe
-			 .replace(/&/g, "&amp;")
-			 .replace(/</g, "&lt;")
-			 .replace(/>/g, "&gt;")
-			 .replace(/"/g, "&quot;")
-			 .replace(/'/g, "&#039;") || "";
-	}
-	function getAllContentNodes(element) {
-		var resp = "";
-		
-		if (!element.childNodes || !element.childNodes.length){
-			if (element.nodeType===3){
-				return escapeHtml(element.textContent) || "";
-			}
-		}
-		
-		element.childNodes.forEach(node=>{
-			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent);
-			} else if (node.nodeType === 1){
-				if (!settings.textonlymode){
-					if ((node.nodeName == "IMG") && node.src){
-						node.src = node.src+"";
-					}
-					resp += node.outerHTML;
-				}
-			}
-		});
-		return resp;
-	}
-	
-	
-	function processMessage(ele){
-		//console.log(ele);
-		var chatimg = "";
-		
-		var nameColor = "";
-		var name="";
-		try {
-			var nameEle = ele.querySelector(".channel-text");
-			if (nameEle){
-				name = nameEle.textContent.trim();
-				name = escapeHtml(name);
-				
-				var style = getComputedStyle(nameEle);
-				nameColor = style.color;
-			} else {
-				nameEle = ele.querySelector(".username [user_nick]");
-				if (nameEle){
-					name = nameEle.getAttribute("user_nick") || nameEle.textContent.trim();
-					name = escapeHtml(name);
-					var colorEle = ele.querySelector(".username .author[data-color]");
-					if (colorEle && colorEle.dataset && colorEle.dataset.color){
-						nameColor = "#" + colorEle.dataset.color;
-					} else if (nameEle.dataset && nameEle.dataset.color){
-						nameColor = "#" + nameEle.dataset.color;
-					}
-				}
-			}
-		} catch(e){
-		//	console.warn(e);
-		}
-		
-		
-		var msg="";
-		try {
-			var msgEle = ele.querySelector("span[type^='body'][color='label/labelSecondary']");
-			if (!msgEle){
-				msgEle = ele.querySelector(".message-text");
-			}
-			msg = getAllContentNodes(msgEle);
-		} catch(e){
-		//	console.warn(e);
-		}
-		
-		if (!name || !msg){
-			return;
-		}
-		
-		var data = {};
-		data.chatname = name;
-		data.nameColor = nameColor;
-		data.chatbadges = "";
-		data.backgroundColor = "";
-		data.textColor = "";
-		data.chatmessage = msg;
-		data.chatimg = chatimg;
-		data.hasDonation = "";
-		data.membership = "";;
-		data.contentimg = "";
-		data.textonly = settings.textonlymode || false;
-		data.type = "sooplive";
-		
-	//	console.log(data);
-		
-		pushMessage(data);
-	}
-
-	function pushMessage(data){
-		try{
-			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
-		} catch(e){
-		}
-	}
-	
+	window.__SSN_SOOPLIVE_ACTIVE__ = true;
 	var settings = {};
-	// settings.textonlymode
-	// settings.captureevents
-	
-	
-	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-		if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) { return; }
-		response = response || {};
-		if ("settings" in response){
-			settings = response.settings;
-		}
-	});
-
-	chrome.runtime.onMessage.addListener(
-		function (request, sender, sendResponse) {
-			try{
-				if ("getSource" == request){sendResponse("sooplive");	return;	}
-				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('[contenteditable="true"],textarea').focus();
-					sendResponse(true);
-					return;
-				}
-				if (typeof request === "object"){
-					if ("settings" in request){
-						settings = request.settings;
-						sendResponse(true);
-						return;
-					}
-				}
-			} catch(e){}
-			sendResponse(false);
-		}
-	);
-
-	var lastURL =  "";
-	var observer = null;
-	
-	
-	function onElementInserted(containerSelector) {
-		var target = document.body;
-		if (!target){return;}
-		
-		
-		var onMutationsObserved = function(mutations) {
-			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try {
-							if (mutation.addedNodes[i].skip){continue;}
-							mutation.addedNodes[i].skip = true;
-							processMessage(mutation.addedNodes[i]);
-						} catch(e){}
-					}
-				}
-			});
-		};
-		
-		var config = { childList: true, subtree: true };
-		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		
-		observer = new MutationObserver(onMutationsObserved);
-		observer.observe(target, config);
+	var enabled = true;
+	var seen = new Set();
+	var processedRows = new WeakSet();
+	var channel = location.pathname;
+	var lastViewerCount = null;
+	function hasRuntime() {
+		return typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id;
 	}
-	
-	console.log("social stream injected");
 
-	setTimeout(function(){
-		onElementInserted(document.body);
-	},3000);
+	function sendToApp(payload, callback) {
+		try {
+			if (hasRuntime()) {
+				chrome.runtime.sendMessage(chrome.runtime.id, payload, callback || function () {});
+			} else if (window.ninjafy && typeof window.ninjafy.sendMessage === "function") {
+				window.ninjafy.sendMessage(null, payload, null, window.__SSAPP_TAB_ID__);
+			}
+		} catch (e) {}
+	}
 
+	function escapeHtml(value) {
+		return String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+	}
+
+	function resourceUrl(value) {
+		try {
+			if (!value) return "";
+			var url = new URL(value, location.href);
+			return /^https?:$/.test(url.protocol) ? url.href : "";
+		} catch (e) { return ""; }
+	}
+
+	function messageContent(node) {
+		if (node.nodeType === 3) {
+			return settings.textonlymode ? node.textContent : escapeHtml(node.textContent);
+		}
+		if (node.nodeType !== 1 || /^(SCRIPT|STYLE|IFRAME|OBJECT|SVG|BUTTON)$/.test(node.nodeName)) return "";
+		if (node.nodeName === "BR") return settings.textonlymode ? "\n" : "<br>";
+		if (node.nodeName === "IMG") {
+			var alt = node.getAttribute("alt") || "";
+			var src = resourceUrl(node.getAttribute("src"));
+			if (settings.textonlymode) return alt;
+			return src ? '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt) + '">' : escapeHtml(alt);
+		}
+		var result = "";
+		for (var i = 0; i < node.childNodes.length; i++) result += messageContent(node.childNodes[i]);
+		return result;
+	}
+
+
+	function remember(row, key) {
+		processedRows.add(row);
+		if (key) {
+			seen.add(key);
+			if (seen.size > 1000) seen.delete(seen.values().next().value);
+		}
+	}
+
+	function processRow(row, skip) {
+		if (processedRows.has(row)) return;
+		// Private whispers and system notices are not public chat rows.
+		if (row.closest('.whispering') || row.querySelector('.whispering')) return;
+		var nameElement = row.querySelector('.username [user_nick], .channel-text');
+		var body = row.querySelector('.message-text, span[type^="body"][color="label/labelSecondary"]');
+		if (!nameElement || !body) return;
+		var name = (nameElement.getAttribute('user_nick') || nameElement.textContent).trim();
+		var key = body.id || '';
+		if (skip || !enabled || (key && seen.has(key))) { remember(row, key); return; }
+		// Translation markup repeats the original text and includes controls.
+		var copy = body.cloneNode(true);
+		var extras = copy.querySelectorAll('.message-translation, .text-translated, button');
+		for (var i = 0; i < extras.length; i++) extras[i].remove();
+		var message = messageContent(copy).trim();
+		if (!name || !message) return;
+		var colorElement = nameElement.querySelector('.author') || nameElement;
+		var color = colorElement.getAttribute('data-color');
+		color = color && /^[0-9a-f]{6}$/i.test(color) ? '#' + color : getComputedStyle(colorElement).color;
+		remember(row, key);
+		sendToApp({ message: {
+			chatname: name, chatmessage: message, nameColor: color || '',
+			chatimg: '', chatbadges: '', backgroundColor: '', textColor: '',
+			contentimg: '', hasDonation: '', membership: '',
+			userid: nameElement.getAttribute('user_id') || '',
+			textonly: !!settings.textonlymode, platform: 'sooplive', type: 'sooplive'
+		} });
+	}
+
+	function scanMessages(skip) {
+		if (location.pathname !== channel) {
+			channel = location.pathname;
+			seen.clear();
+			processedRows = new WeakSet();
+			lastViewerCount = null;
+			skip = true;
+		}
+		var rows = document.querySelectorAll('#chat_area .chatting-list-item, #chatbox .chatting-list-item');
+		for (var i = 0; i < rows.length; i++) processRow(rows[i], skip);
+		// Retain the former global site's layout for installations still serving it.
+		var names = document.querySelectorAll('.channel-text');
+		for (var j = 0; j < names.length; j++) {
+			var row = names[j].parentElement;
+			while (row && row !== document.body) {
+				if (row.querySelector('span[type^="body"][color="label/labelSecondary"]')) {
+					if (row.querySelectorAll('.channel-text').length === 1) processRow(row, skip);
+					break;
+				}
+				row = row.parentElement;
+			}
+		}
+	}
+
+	function updateViewers() {
+		if (!enabled || !(settings.showviewercount || settings.hypemode)) { lastViewerCount = null; return; }
+		var element = document.querySelector('#nAllViewer');
+		if (!element) return;
+		var value = element.textContent.trim().replace(/,/g, '');
+		if (!/^\d+$/.test(value)) return;
+		var count = Number(value);
+		if (!Number.isSafeInteger(count) || count === lastViewerCount) return;
+		lastViewerCount = count;
+		sendToApp({ message: { type: 'sooplive', platform: 'sooplive', event: 'viewer_update', meta: count } });
+	}
+
+	if (hasRuntime()) {
+		chrome.runtime.onMessage.addListener(function (request, sender, respond) {
+			if (request === 'getSource') { respond('sooplive'); return; }
+			if (request === 'focusChat') {
+				var input = document.querySelector('#write_area[contenteditable="true"], #m_write_area[contenteditable="true"], [contenteditable="true"], textarea');
+				if (input && !input.disabled) { input.focus(); respond(true); return; }
+			}
+			if (request && typeof request === 'object') {
+				if ('settings' in request) settings = request.settings || {};
+				if ('state' in request) { scanMessages(true); enabled = !!request.state; }
+				updateViewers();
+				respond(true); return;
+			}
+			respond(false);
+		});
+		sendToApp({ getSettings: true }, function (response) {
+			if (chrome.runtime.lastError || !response) return;
+			settings = response.settings || {};
+			if ('state' in response) enabled = !!response.state;
+			updateViewers();
+		});
+	}
+	function start() {
+		scanMessages(true);
+		var observer = new MutationObserver(function () { scanMessages(false); });
+		observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+		setInterval(function () { scanMessages(false); updateViewers(); }, 2000);
+	}
+	if (document.body) start();
+	else document.addEventListener('DOMContentLoaded', start, { once: true });
 })();
