@@ -37,6 +37,21 @@ const {chromium}=require('playwright');
   assert.ok(await popup.evaluate(()=>document.getElementById('giveaway').raw.includes('managed')));
   await popup.locator('#giveaway-presentation').selectOption('reel');
   await popup.waitForFunction(()=>document.getElementById('giveaway').raw.includes('presentation=reel'));
+  // The preview must boot under the real extension CSP, with no live session.
+  for(const presentation of ['card','reel','wheel']) {
+   await popup.locator('#giveaway-presentation').selectOption(presentation);
+   const previewOpened=context.waitForEvent('page');
+   await popup.locator('#giveaway-preview').click();
+   const preview=await previewOpened;
+   await preview.waitForLoadState();
+   await preview.waitForSelector('.giveaway-stage');
+   assert.equal(new URL(preview.url()).searchParams.get('session'),'test');
+   assert.equal(await preview.locator('body').getAttribute('data-presentation'),presentation);
+   assert.equal(await preview.locator('.giveaway-stage').textContent(),'GiveawayType !enter to enterGood luck!3 eligible entries');
+   assert.equal(await preview.locator('#spin-btn').isVisible(),false);
+   assert.equal(await preview.locator('iframe').count(),0,'Preview must not join a live session');
+   await preview.close();
+  }
   for(const colorScheme of ['light','dark']) {
    await popup.emulateMedia({colorScheme});
    await popup.waitForTimeout(400);
