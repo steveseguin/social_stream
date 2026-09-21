@@ -8320,6 +8320,7 @@ function forwardKicksGifted(eventType, evt, bridgeMeta) {
     };
     const messagePayload = {
         type: 'kick',
+        event: 'gift',
         chatname,
         chatmessage: escapeHtml(chatmessage),
         chatimg: chatimg || '',

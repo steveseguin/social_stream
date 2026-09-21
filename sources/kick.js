@@ -1807,26 +1807,29 @@
 	  var contentImg = "";
 	  var hasDonation = '';
 	  
-	  if (!chatmessage && chatname && ele.querySelector("img[alt='sticker'][src]")){
+	  if (chatname && ele.querySelector("img[alt='sticker'][src]")){
 		  try {
-			  chatmessage = getAllContentNodes(ele.querySelector("div.flex-shrink-0.break-normal"));
-			  chatmessage = chatmessage.replace(chatname,"").trim();
-			  contentImg = ele.querySelector("img[alt='sticker'][src]").src;
-			  
-			  hasDonation = parseInt(ele.querySelector("svg path[d^='M7.67318 0.0611465L3.07733 1.75287C2.86614']").parentNode.nextElementSibling.textContent);
-			  if (hasDonation===1){
-				  hasDonation = hasDonation + " KICK";
-			  } else if (hasDonation){
-				  hasDonation = hasDonation + " KICKs";
-			  } else {
-				  hasDonation = "";
+			  if (!chatmessage) {
+				  chatmessage = getAllContentNodes(ele.querySelector("div.flex-shrink-0.break-normal"));
+				  chatmessage = chatmessage.replace(chatname, "").trim();
+				  contentImg = ele.querySelector("img[alt='sticker'][src]").src;
 			  }
-			  eventName = "gift";
+			  var kickAmountIcon = ele.querySelector("svg path[d^='M7.67318 0.0611465L3.07733 1.75287C2.86614']");
+			  var kickAmountNode = kickAmountIcon && kickAmountIcon.parentNode.nextElementSibling;
+			  if (kickAmountNode) {
+				  var kickAmountText = kickAmountNode.textContent.replace(/[,\s]/g, "");
+				  var kickAmount = /^\d+$/.test(kickAmountText) ? parseInt(kickAmountText, 10) : 0;
+				  if (kickAmount > 0) {
+					  hasDonation = kickAmount + (kickAmount === 1 ? " KICK" : " KICKs");
+					  eventName = "gift";
+					  contentImg = ele.querySelector("img[alt='sticker'][src]").src;
+				  }
+			  }
 		  } catch(e){
 		  }
 	  }
 	  
-	  if (!chatmessage){
+	  if (!chatmessage && !hasDonation){
 		if (scheduleKickEmptyMessageRetry(ele, messageId, chatname)) {
 			return;
 		}
