@@ -3824,6 +3824,11 @@ function syncChatOverlayTemplateConfig(templatePath) {
   const normalizedPath = (templatePath || DEFAULT_CHAT_OVERLAY_TEMPLATE).split("?")[0];
   const configId = CHAT_OVERLAY_TEMPLATE_CONFIGS[normalizedPath] || "";
 
+  const membershipOption = document.getElementById("compact-clean-membership-option");
+  if (membershipOption) {
+    membershipOption.style.display = normalizedPath === "themes/compact-clean.html" ? "" : "none";
+  }
+
   document.querySelectorAll(".overlay-config-section").forEach(function(section) {
     section.style.display = "none";
   });
