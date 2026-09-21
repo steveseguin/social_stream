@@ -1096,7 +1096,7 @@ let tmpModelFallback = "";
 let localBrowserLLMClient = null;
 let localBrowserActiveRequestState = null;
 let localBrowserLLMQueue = Promise.resolve();
-const LOCAL_BROWSER_WORKER_VERSION = '18';
+const LOCAL_BROWSER_WORKER_VERSION = '19';
 
 function getLocalBrowserWorkerPath() {
     if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
@@ -1513,7 +1513,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                 ...(Number.isFinite(localBrowserGeneration.topP) ? { topP: localBrowserGeneration.topP } : {}),
                 ...(Number.isFinite(localBrowserGeneration.topK) ? { topK: localBrowserGeneration.topK } : {}),
                 images: requestImages,
-                stateless: localBrowserStateless
+                stateless: localBrowserStateless,
+                moderation: provider === 'localqwen' && options.localBrowserModeration === true
             }, {
                 modelOverride: model,
                 remoteHost: endpoint
@@ -2543,6 +2544,7 @@ async function censorMessageWithLLM(data) {
             null,
             {
                 localBrowserStateless: isLocalBrowserProvider(providerKey),
+                localBrowserModeration: providerKey === 'localqwen',
                 localBrowserGeneration: shouldUseBinaryCensorPrompt(providerKey)
                     ? { maxNewTokens: 8, temperature: 0.15, topP: 0.9 }
                     : null
