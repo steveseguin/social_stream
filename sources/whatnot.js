@@ -14,6 +14,7 @@
 	var recentWebSocketMessageLookup = Object.create(null);
 	var recentWebSocketActivityIds = [];
 	var recentWebSocketActivityLookup = Object.create(null);
+	var recentCommercePackets = new Map();
 	var webSocketActivityWindowMs = 30000;
 	var lastWebSocketLivestreamState = "";
 	var lastWebSocketGiveawayState = "";
@@ -989,6 +990,83 @@
 		scheduleWebSocketSnapshotRefresh();
 	}
 
+	function handleWebSocketCommerceEvent(payload, wsChannel, eventType) {
+		if (!isExtensionOn || !payload || typeof payload !== "object" || Array.isArray(payload)) {
+			return;
+		}
+		// The page interceptor and desktop monitor can deliver the same packet.
+		// Only suppress a brief duplicate, not later sales of the same product.
+		var packetKey = wsChannel + "|" + eventType + "|" + JSON.stringify(payload);
+		var now = Date.now();
+		if (recentCommercePackets.has(packetKey) && now - recentCommercePackets.get(packetKey) < 1000) {
+			return;
+		}
+		recentCommercePackets.delete(packetKey);
+		recentCommercePackets.set(packetKey, now);
+		if (recentCommercePackets.size > 250) {
+			recentCommercePackets.delete(recentCommercePackets.keys().next().value);
+		}
+
+		var product = payload.product || {};
+		var bid = product.highestBid || {};
+		var user = payload.user || payload.purchaserUser || product.purchaserUser || {};
+		if (eventType === "new_bid" || eventType === "auction_ended") {
+			user = payload.highestBidder || bid.user || user;
+		} else if (eventType === "product_sold" && !user.id && !user.username) {
+			user = bid.user || user;
+		}
+		var title = typeof product.name === "string" ? product.name : "";
+		var labels = {
+			auction_started: "Auction started",
+			new_bid: "Bid placed",
+			auction_ended: "Auction ended",
+			product_sold: "Item sold",
+			payment_failed: "Payment failed"
+		};
+		var data = createWebSocketChatData(user, "");
+		data.platform = "whatnot";
+		data.event = eventType;
+		data.chatname = typeof user.username === "string" ? user.username : "";
+		data.chatmessage = labels[eventType] + (title ? ": " + title : "");
+		data.textonly = true;
+		data.subtitle = title;
+		data.meta = buildWebSocketMeta(wsChannel, eventType, payload, user);
+
+		// Keep structured details small; do not forward raw order/payment objects.
+		var details = {
+			productId: payload.productId || product.id,
+			auctionId: payload.auctionId || product.auctionId,
+			orderId: payload.orderId || product.orderId,
+			transactionId: payload.transactionId,
+			livestreamId: payload.livestreamId || product.livestreamId,
+			bidId: bid.id,
+			bids: product.bidCount,
+			auctionEndTime: product.auctionEndTime,
+			status: product.status,
+			paymentStatus: eventType === "payment_failed" ? "failed" : payload.paymentStatus || product.paymentStatus
+		};
+		Object.keys(details).forEach(function (key) {
+			var value = details[key];
+			if ((typeof value === "string" && value) || (typeof value === "number" && Number.isFinite(value))) {
+				data.meta[key] = value;
+			}
+		});
+		var price = bid.price || (typeof bid.priceCents === "number" ? bid.priceCents : product.askingPrice);
+		if (price == null && typeof product.askingPriceCents === "number") price = product.askingPriceCents;
+		if (eventType === "auction_started") {
+			price = product.auctionMinimumPrice || product.auctionMinimumCents;
+		}
+		var money = getMoneyDetails(price);
+		if (money) {
+			data.meta.price = money.amount;
+			data.meta.priceText = formatMoneyValue(price);
+			if (money.currency) data.meta.currency = money.currency;
+		}
+		// Sold/end notifications do not prove that payment succeeded.
+		pushMessage(data);
+		scheduleWebSocketSnapshotRefresh();
+	}
+
 	function handleWebSocketBoostContribution(activity, wsChannel) {
 		if (!activity || typeof activity !== "object") {
 			return;
@@ -1167,6 +1245,13 @@
 		var payload = parsedArray[4] || {};
 
 		switch (eventType) {
+			case "auction_started":
+			case "new_bid":
+			case "auction_ended":
+			case "product_sold":
+			case "payment_failed":
+				handleWebSocketCommerceEvent(parsedArray[4], wsChannel, eventType);
+				return;
 			case "new_msg":
 				handleWebSocketChatMessage(payload, wsChannel);
 				return;
@@ -1193,9 +1278,10 @@
 			case "product_created":
 			case "product_updated":
 			case "product_deleted":
+			case "product_pinned":
+			case "product_unpinned":
 			case "giveaway_started":
 			case "giveaway_won":
-			case "payment_failed":
 			case "user_joined":
 				handleWebSocketSnapshotPayload(payload);
 				return;
