@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Whatnot Chat - Social Stream Ninja</title>
+	<style>
+		body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; background: #1a1a1a; color: #e0e0e0; }
+		label { display: block; margin-bottom: 6px; }
+		input { box-sizing: border-box; width: 100%; padding: 10px; background: #333; color: #e0e0e0; border: 1px solid #666; border-radius: 3px; }
+		button { padding: 8px 16px; margin: 10px 5px 0 0; cursor: pointer; background: #2a5a8a; color: #fff; border: none; border-radius: 3px; }
+		button:hover { background: #3a6a9a; }
+		button:disabled { background: #444; cursor: not-allowed; }
+		:focus-visible { outline: 2px solid #8fc5ff; outline-offset: 3px; }
+		#socket-state { padding: 10px 0; }
+		#chat-feed { height: 400px; overflow-y: auto; border: 1px solid #444; padding: 10px; background: #2a2a2a; overflow-wrap: anywhere; }
+		.message { margin: 6px 0; white-space: pre-wrap; }
+		.chatname { font-weight: bold; }
+		.hint { color: #bbb; line-height: 1.5; }
+	</style>
+	<link rel="stylesheet" href="websocket-responsive.css">
+	<link rel="stylesheet" href="../../shared/compact-source-layout.css?v=20260916-setup">
+	<script src="../../shared/utils/compactSourceLayout.js?v=20260916-setup" defer></script>
+	<script src="../whatnot.js" defer></script>
+	<script src="whatnot.js" defer></script>
+</head>
+<body data-compact-source="whatnot" data-whatnot-chat-only="true">
+	<form id="connection-form">
+		<h2>Whatnot Chat</h2>
+		<p class="hint">Capture public live chat without loading the video.</p>
+		<label for="channel-input">Live show URL or show ID</label>
+		<input id="channel-input" type="text" required autocomplete="off" spellcheck="false" placeholder="https://www.whatnot.com/live/..." aria-label="Live show URL or show ID" aria-describedby="channel-help">
+		<p id="channel-help" class="hint">Use a live show link. Capture starts with new messages and uses your existing chat history and export settings.</p>
+		<button id="connect-button" type="submit">Connect</button>
+		<button id="disconnect-button" type="button" disabled>Disconnect</button>
+	</form>
+	<div id="socket-state" role="status" aria-live="polite" data-connected="false">Waiting to connect.</div>
+	<section id="chat-pane" aria-label="Live chat">
+		<div id="chat-feed" role="log" aria-live="polite" aria-relevant="additions"></div>
+	</section>
+</body>
+</html>
