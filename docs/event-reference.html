@@ -1059,7 +1059,7 @@
                     <h3>Whatnot</h3>
                     <p class="source-note">Implementation: <code>sources/whatnot.js</code></p>
                     <ul class="requirements">
-                        <li>Open the live Whatnot show page with chat visible; websocket transport now assists chat, raids, donations, and fast viewer updates, while product/giveaway snapshots still rely on DOM sections rendered in the show view.</li>
+                        <li>Open the live Whatnot show page with chat visible; the existing websocket capture supplies chat, auction/sale notifications, payment failures, raids, donations, and fast viewer updates. Product/giveaway snapshots still rely on DOM sections rendered in the show view.</li>
                         <li><em>Capture Stream Events</em> controls Whatnot system events plus auction/catalog metadata updates; joined rows also require <em>Capture "joined" stream events</em>; viewer counts still follow the viewer/hype toggles.</li>
                     </ul>
                     <table class="event-table">
@@ -1101,9 +1101,20 @@
                                 <td>When catalog sections change (products, surprise sets, upcoming giveaways), often accelerated by websocket giveaway/product lifecycle packets.</td>
                                 <td>Metadata-only snapshot with section counts and item arrays under <code>meta.products</code>, <code>meta.surpriseSets</code>, and <code>meta.upcomingGiveaways</code>.</td>
                             </tr>
+                            <tr>
+                                <td><code>auction_started</code>, <code>new_bid</code>, <code>auction_ended</code>, <code>product_sold</code></td>
+                                <td>The corresponding live websocket notification arrives. These are individual events, separate from the existing display snapshots.</td>
+                                <td><code>platform/type: "whatnot"</code>, plain-text <code>chatname</code>, <code>userid</code> when supplied, product name in <code>subtitle</code>, and a plain-text <code>chatmessage</code> with <code>textonly: true</code>. Available identifiers and auction details are under <code>meta</code>: <code>productId</code>, <code>auctionId</code>, <code>orderId</code>, <code>transactionId</code>, <code>livestreamId</code>, <code>bidId</code>, <code>bids</code>, <code>auctionEndTime</code>, and <code>status</code>. Optional <code>price</code> is in major currency units, with <code>priceText</code> and <code>currency</code> when supplied.</td>
+                            </tr>
+                            <tr>
+                                <td><code>payment_failed</code></td>
+                                <td>A live payment-failure websocket notification arrives.</td>
+                                <td>The same available buyer, product and identifier fields, with <code>meta.paymentStatus: "failed"</code>. Missing buyer/product details stay empty; no buyer is inferred from a different or previous auction.</td>
+                            </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Auction/commerce updates are still DOM-backed snapshots; websocket packets mainly provide faster triggers and cleaner event metadata. Keep downstream rendering keyed off <code>data.event</code> + <code>data.meta</code>.</p>
+                    <p class="field-highlights">Auction/commerce display updates remain DOM-backed snapshots. The individual websocket events can be selected by name in Event Flow's <em>Other Event</em> trigger. Labels can use <code>**{username}**\n{subtitle}</code> with selected text weight; conditions can compare <code>meta.paymentStatus</code> with <code>failed</code>. Existing stream-event capture settings still apply.</p>
+                    <p class="field-highlights">An auction ending or an item being marked sold does not confirm successful payment: these notifications are not emitted as paid <code>purchase</code> events and do not set donation amounts. Other <code>paymentStatus</code> values are forwarded only when explicitly supplied in a captured packet. Missing identifiers are omitted; a product ID alone may cover multiple sales, so use a supplied order/auction ID to correlate notifications. No payment-success event, transaction matching or delayed printing is inferred. Brief duplicate packets from the two existing capture bridges are suppressed. Raw order/payment objects are not forwarded.</p>
                 </article>
 
                 <article class="platform-card" id="ebay">
