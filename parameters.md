@@ -408,6 +408,15 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `filtertid` | comma-separated numbers | Filter by thread IDs |
 | `branded` | boolean | Shows channel icon |
 
+## Viewer Count & Chat Activity Title (`hype.html`)
+
+Set **Custom title** under **Viewer Count & Chat Activity Overlay → Enable and customize**, then copy the updated overlay link into OBS.
+
+| Parameter | Values | Description |
+|-----------|--------|-------------|
+| `title` | string | Overrides the title with plain text, e.g. `&title=Watching%20now`. Missing, empty, or whitespace-only values keep the default title for the selected viewer/chatter mode |
+| `hidetitle` | boolean | Hides the title, including a custom title. Minimal and Dock Style also hide the title |
+
 ## Tip Jar & Goal Meter Parameters (`tipjar.html`)
 
 | Parameter | Values | Description |
