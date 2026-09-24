@@ -1010,6 +1010,13 @@
 		var product = payload.product || {};
 		var bid = product.highestBid || {};
 		var user = payload.user || payload.purchaserUser || product.purchaserUser || {};
+		// Payment notifications can identify the purchaser without a user object.
+		// Use only the identity on this packet; never borrow a previous buyer.
+		var purchaserId = product.purchaserUserId;
+		if ((eventType === "product_sold" || eventType === "payment_failed" || eventType === "payment_succeeded") && !user.id && !user.username &&
+			((typeof purchaserId === "string" && purchaserId.trim()) || (typeof purchaserId === "number" && Number.isFinite(purchaserId)))) {
+			user = { id: purchaserId };
+		}
 		if (eventType === "new_bid" || eventType === "auction_ended") {
 			user = payload.highestBidder || bid.user || user;
 		} else if (eventType === "product_sold" && !user.id && !user.username) {
@@ -1021,7 +1028,8 @@
 			new_bid: "Bid placed",
 			auction_ended: "Auction ended",
 			product_sold: "Item sold",
-			payment_failed: "Payment failed"
+			payment_failed: "Payment failed",
+			payment_succeeded: "Payment succeeded"
 		};
 		var data = createWebSocketChatData(user, "");
 		data.platform = "whatnot";
@@ -1033,8 +1041,13 @@
 		data.meta = buildWebSocketMeta(wsChannel, eventType, payload, user);
 
 		// Keep structured details small; do not forward raw order/payment objects.
+		var paymentStatus = payload.paymentStatus || product.paymentStatus;
+		if (eventType === "payment_failed") paymentStatus = "failed";
+		if (eventType === "payment_succeeded") paymentStatus = "succeeded";
 		var details = {
 			productId: payload.productId || product.id,
+			catalogProductId: product.productId,
+			parentProductId: product.parentId,
 			auctionId: payload.auctionId || product.auctionId,
 			orderId: payload.orderId || product.orderId,
 			transactionId: payload.transactionId,
@@ -1043,7 +1056,9 @@
 			bids: product.bidCount,
 			auctionEndTime: product.auctionEndTime,
 			status: product.status,
-			paymentStatus: eventType === "payment_failed" ? "failed" : payload.paymentStatus || product.paymentStatus
+			transactionType: product.transactionType,
+			placeOrderErrorReason: payload.placeOrderErrorReason || product.placeOrderErrorReason,
+			paymentStatus: paymentStatus
 		};
 		Object.keys(details).forEach(function (key) {
 			var value = details[key];
@@ -1250,6 +1265,7 @@
 			case "auction_ended":
 			case "product_sold":
 			case "payment_failed":
+			case "payment_succeeded":
 				handleWebSocketCommerceEvent(parsedArray[4], wsChannel, eventType);
 				return;
 			case "new_msg":
