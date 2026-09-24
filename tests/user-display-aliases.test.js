@@ -36,6 +36,7 @@ const context = vm.createContext({
   Promise,
   setTimeout,
   console,
+  streamID: "alias-test-session",
   settings: {},
   settingUserDisplayAliasCache: new Map(),
   filterXSS: value => value,
@@ -58,6 +59,8 @@ ${extractFunction(backgroundSource, "findUserDisplayAlias")}
 ${extractFunction(backgroundSource, "applyUserDisplayAlias")}
 ${extractFunction(backgroundSource, "getOverlayDisplayMessage")}
 ${extractFunction(backgroundSource, "getOverlayDisplayPayload")}
+${extractFunction(backgroundSource, "prepareOverlayControl")}
+${extractFunction(backgroundSource, "sendOverlayControlRelay")}
 ${extractFunction(backgroundSource, "sendDataToStreamDeckPeersP2P")}
 ${extractFunction(backgroundSource, "sendDataP2P")}
 async ${extractFunction(backgroundSource, "trySendTargetP2P")}
@@ -90,6 +93,18 @@ assert.strictEqual(userIdDisplay.chatname, "YT Friend");
 assert.strictEqual(userIdDisplay.userid, "UC123");
 assert.ok(!("username" in userIdDisplay), "an existing userid should prevent a fallback username from being added");
 assert.strictEqual(userIdIdentity.chatname, "Original YouTube Name");
+
+// Merging platforms must not carry an alias or author across source boundaries.
+context.settings.userdisplayaliases.object.push({ type: "piczel", identifier: "Shared", displayName: "Piczel Alias" });
+const mergedMessages = [
+  { type: "picarto", chatname: "Shared", chatmessage: "one" },
+  { type: "piczel", chatname: "Shared", chatmessage: "two" },
+  { type: "piczel", chatname: "Different", chatmessage: "three" },
+  { type: "picarto", chatname: "Shared", chatmessage: "four" }
+];
+assert.deepStrictEqual(mergedMessages.map(message => context.getOverlayDisplayPayload(message).chatname),
+  ["Shared", "Piczel Alias", "Different", "Shared"]);
+assert.deepStrictEqual(mergedMessages.map(message => message.chatname), ["Shared", "Shared", "Different", "Shared"]);
 
 const usernameIdentity = { type: "kick", username: "kick_login", chatname: "Original Kick Name" };
 const usernameDisplay = context.getOverlayDisplayPayload(usernameIdentity);
