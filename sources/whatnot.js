@@ -1,4 +1,7 @@
 (function () {
+	var chatOnly = /\/sources\/websocket\/whatnot(?:\.html)?\/?$/i.test(window.location.pathname)
+		&& document.body && document.body.getAttribute("data-whatnot-chat-only") === "true";
+	var chatOnlyMessageHandler = null;
 	var isExtensionOn = true;
 	var settings = {};
 	var observer = null;
@@ -1375,6 +1378,10 @@
 	}
 
 	function pushMessage(data) {
+		if (chatOnly) {
+			if (chatOnlyMessageHandler) chatOnlyMessageHandler(data);
+			return;
+		}
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, { message: data }, function () {});
 		} catch (e) {}
@@ -1520,6 +1527,19 @@
 		}
 		observeChatList(listElement);
 		checkViewers(true);
+	}
+
+	// Reuse chat normalization in the lightweight source without installing the
+	// Whatnot website's DOM observers, commerce polling, or socket interception.
+	if (chatOnly) {
+		window.SSNWhatnotChat = {
+			configure: function (options) {
+				settings = options.settings || {};
+				chatOnlyMessageHandler = typeof options.onMessage === "function" ? options.onMessage : null;
+			},
+			processMessage: handleWebSocketChatMessage
+		};
+		return;
 	}
 
 		chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
