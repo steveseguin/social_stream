@@ -10588,7 +10588,7 @@
 				var template = document.createElement("template");
 				template.innerHTML = chatmessage;
 				var context = template.content.firstElementChild;
-				if (context && context.tagName === "I") {
+				while (context && context.tagName === "I") {
 					context = context.firstElementChild;
 				}
 				if (!context) {
@@ -10627,15 +10627,21 @@
 				if ((!replyColorEnabled && !replyLabelColorEnabled) || DoNotShowInitialReply || !data.initial || !data.reply || !chatmessage) {
 					return chatmessage;
 				}
-				// Sources wrap the quoted context in <i><small>; leave the actual reply intact.
-				if (!data.textonly && !stripHTML && /^<i><small>/i.test(chatmessage)) {
+				// Event rows add an outer <i>; color only the source's quoted <i><small> context.
+				if (!data.textonly && !stripHTML && /^(<i>)?<i><small>/i.test(chatmessage)) {
 					if (replyColorEnabled) {
-						chatmessage = chatmessage.replace(/^<i>/i, '<i class="reply-context">');
+						chatmessage = chatmessage.replace(/^(<i>)?<i><small>/i, function (match, eventWrapper) {
+							return (eventWrapper || "") + '<i class="reply-context"><small>';
+						});
 					}
 					return colorReplyLabel(chatmessage, data);
 				}
 				if (data.textonly || stripHTML) {
-					var prefix = String(data.initial).replace(/[\r\n]+/g, "").replace(/\s+/g, " ").trim() + ":";
+					var initial = String(data.initial);
+					if (stripHTML && !data.textonly) {
+						initial = stripHtmlFunction(initial);
+					}
+					var prefix = initial.replace(/[\r\n]+/g, "").replace(/\s+/g, " ").trim() + ":";
 					if (data.textonly) {
 						prefix = escapeHtml(prefix);
 					}
