@@ -56,7 +56,21 @@ const product = { id: 'fixture-product', name: 'Blue mug', auctionId: 'auction-1
                     { id: 'both', type: 'logic', logicType: 'AND', config: {} },
                     { id: 'mark', type: 'action', actionType: 'addPrefix', config: { prefix: '[FAILED] ' } }
                 ], connections: [{ from: 'event', to: 'both' }, { from: 'status', to: 'both' }, { from: 'both', to: 'mark' }] });
+            await eventFlowSystem.saveFlow({ id: 'whatnot-success-fixture', name: 'Whatnot payment success', active: true,
+                nodes: [
+                    { id: 'success-event', type: 'trigger', triggerType: 'eventType', x: 80, y: 80, config: { eventType: 'payment_succeeded' } },
+                    { id: 'success-source', type: 'trigger', triggerType: 'fromSource', x: 80, y: 260, config: { source: 'whatnot' } },
+                    { id: 'success-both', type: 'logic', logicType: 'AND', x: 380, y: 170, config: {} },
+                    { id: 'success-mark', type: 'action', actionType: 'addPrefix', x: 680, y: 170, config: { prefix: '[PAID] ' } }
+                ], connections: [{ from: 'success-event', to: 'success-both' }, { from: 'success-source', to: 'success-both' }, { from: 'success-both', to: 'success-mark' }] });
         });
+        // Verify that users can configure the supported Custom Event trigger in the editor.
+        await main.locator('#main-navigation a[data-page="event-flow-editor"]').click();
+        await bg.locator('.flow-item').filter({ hasText: 'Whatnot payment success' }).click();
+        await bg.locator('.node[data-id="success-event"]').click();
+        assert.equal(await bg.locator('#prop-eventType-select').inputValue(), '_custom');
+        assert.equal(await bg.locator('#prop-eventType').inputValue(), 'payment_succeeded');
+        await bg.locator('#save-flow-btn').click();
         await main.evaluate(args => ipcRenderer.sendSync('createWindow', args), {
             url, visible: true, sourceFiles: ['sources/whatnot.js'], config
         });
@@ -74,10 +88,10 @@ const product = { id: 'fixture-product', name: 'Blue mug', auctionId: 'auction-1
             throw new Error('The existing WebSocket capture did not receive the readiness packet');
         };
         await ready('ready-1');
-        for (const event of ['auction_started', 'new_bid', 'auction_ended', 'product_sold', 'payment_failed']) {
+        for (const event of ['auction_started', 'new_bid', 'auction_ended', 'product_sold', 'payment_failed', 'payment_succeeded']) {
             send(packet(event, { product, user: buyer, highestBidder: buyer }));
         }
-        await bg.waitForFunction(() => whatnotAfter.some(m => m?.event === 'payment_failed'), null, { timeout: 15000 });
+        await bg.waitForFunction(() => whatnotAfter.some(m => m?.event === 'payment_succeeded'), null, { timeout: 15000 });
         const results = await bg.evaluate(() => ({ before: whatnotBefore, after: whatnotAfter }));
         const sale = results.before.find(m => m.event === 'product_sold');
         const failed = results.after.find(m => m.event === 'payment_failed');
@@ -89,6 +103,19 @@ const product = { id: 'fixture-product', name: 'Blue mug', auctionId: 'auction-1
         assert.equal(failed.meta.paymentStatus, 'failed');
         assert.match(failed.chatmessage, /^\[FAILED\] Payment failed: Blue mug/);
         assert.equal(await bg.evaluate(message => eventFlowSystem.replaceTemplateVars('{username}|{subtitle}|{meta.orderId}', message), sale), 'Fixture Buyer|Blue mug|order-1');
+        const success = results.after.find(m => m.event === 'payment_succeeded');
+        assert.equal(success.meta.paymentStatus, 'succeeded');
+        assert.equal(success.meta.orderId, sale.meta.orderId);
+        assert.equal(success.userid, buyer.id);
+        assert.equal(success.subtitle, product.name);
+        assert.match(success.chatmessage, /^\[PAID\] Payment succeeded: Blue mug/);
+        assert.equal(success.hasDonation, '');
+        assert.equal(success.donoValue, undefined);
+        assert(!results.after.some(m => m?.event === 'purchase'));
+        assert.equal(results.after.filter(m => m?.chatmessage?.startsWith('[PAID]')).length, 1);
+        assert.equal(await bg.evaluate(message => eventFlowSystem.replaceTemplateVars('{username}|{subtitle}|{meta.orderId}', message), success), 'Fixture Buyer|Blue mug|order-1');
+        const otherSource = await bg.evaluate(() => eventFlowSystem.processMessage({ type: 'ebay', event: 'payment_succeeded', chatname: 'Other buyer', chatmessage: 'Ignore' }));
+        assert.equal(otherSource.chatmessage, 'Ignore');
 
         // A second purchase of the same product must still arrive.
         send(packet('product_sold', { product: { ...product, orderId: 'order-2', auctionId: 'auction-2' } }));
@@ -101,6 +128,40 @@ const product = { id: 'fixture-product', name: 'Blue mug', auctionId: 'auction-1
         assert.equal(partial.chatname, '');
         assert.equal(partial.subtitle, '');
         assert.match(partial.chatmessage, /^\[FAILED\] Payment failed/);
+        // A later event is self-contained: no remembered buyer/title from the sale.
+        send(packet('payment_failed', { product: { id: 'listing-4', orderId: 'order-4',
+            purchaserUserId: 'buyer-id-only', productId: 'catalog-4', parentId: 'parent-4',
+            transactionType: 'BUY_IT_NOW', placeOrderErrorReason: 'card_authorization_required' } }));
+        await bg.waitForFunction(() => whatnotAfter.some(m => m?.meta?.orderId === 'order-4'));
+        const idOnly = await bg.evaluate(() => whatnotAfter.find(m => m?.meta?.orderId === 'order-4'));
+        assert.equal(idOnly.userid, 'buyer-id-only');
+        assert.equal(idOnly.chatname, '');
+        assert.equal(idOnly.subtitle, '');
+        assert.equal(idOnly.meta.productId, 'listing-4');
+        assert.equal(idOnly.meta.catalogProductId, 'catalog-4');
+        assert.equal(idOnly.meta.parentProductId, 'parent-4');
+        assert.equal(idOnly.meta.transactionType, 'BUY_IT_NOW');
+        assert.equal(idOnly.meta.placeOrderErrorReason, 'card_authorization_required');
+        assert.match(idOnly.chatmessage, /^\[FAILED\] Payment failed/);
+        assert.equal(await bg.evaluate(async message => {
+            const matches = await eventFlowSystem.evaluateTrigger({ triggerType: 'compareProperty',
+                config: { property: 'meta.transactionType', operator: 'eq', value: 'BUY_IT_NOW' } }, message);
+            return matches && eventFlowSystem.replaceTemplateVars('{meta.parentProductId}|{meta.placeOrderErrorReason}', message);
+        }, idOnly), 'parent-4|card_authorization_required');
+        // Success can be the first event received for an order, including after reload.
+        send(packet('payment_succeeded', { product: { ...product, orderId: 'order-5' } }));
+        await bg.waitForFunction(() => whatnotAfter.some(m => m?.meta?.orderId === 'order-5'));
+        const paidAfterReload = await bg.evaluate(() => whatnotAfter.find(m => m?.meta?.orderId === 'order-5'));
+        assert.match(paidAfterReload.chatmessage, /^\[PAID\] Payment succeeded: Blue mug/);
+        assert.equal(paidAfterReload.userid, buyer.id);
+        send(packet('payment_succeeded', { orderId: 'order-6' }));
+        await bg.waitForFunction(() => whatnotAfter.some(m => m?.meta?.orderId === 'order-6'));
+        const paidPartial = await bg.evaluate(() => whatnotAfter.find(m => m?.meta?.orderId === 'order-6'));
+        assert.equal(paidPartial.chatname, '');
+        assert.equal(paidPartial.subtitle, '');
+        assert.equal(paidPartial.userid, undefined);
+        assert.equal(paidPartial.meta.paymentStatus, 'succeeded');
+        assert.equal(paidPartial.chatmessage, '[PAID] Payment succeeded');
         console.log('PASS real SSApp capture, auction/sale/payment fields, Event Flow filtering/templates, repeated sales, and source reload');
     } finally {
         if (app) await app.close();
