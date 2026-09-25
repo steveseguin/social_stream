@@ -5245,6 +5245,10 @@
 			if (urlParams.has("autoyoutubememberchat")) {
 				autoyoutubememberchat = true;
 			}
+
+			if (!autoshow && (autoshowdonos || autoshowmembers || autoshowcontentimages)) {
+				autoShow(); // the donation/member/content-image filters imply auto-feature
+			}
 			
 			var giveVIPBadge = false;
 			if (urlParams.has("showvipbadge")) {
