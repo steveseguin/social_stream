@@ -51,6 +51,27 @@ Confirmed behavior:
 
 Standard mode is best when the user needs replies from SSN and the live TikTok page is visible/usable.
 
+## Gift Price Catalog
+
+The bundled fallback tables in `sources/tiktok.js` and SSApp's `tiktok/gift-mapping.json` are synchronized by `scripts/update-tiktok-gifts.cjs`. The 2026-09-25 refresh contains 1,787 lookup keys: 1,644 normalized names, 33 numeric gift IDs, and 110 image/legacy aliases. It expands the former 93-entry table and corrects the unambiguous LIVE STAR, Diamond Crown, and TikTok Crown fallback prices.
+
+Sources:
+
+- [BeetGames public JSON catalog](https://beetgames.com/tiktok-gifts.json), snapshot updated 2026-09-24: 1,682 rows / 1,627 distinct normalized names. This is a third-party catalog, not a guarantee of every TikTok gift.
+- [Archived TikTok gift-list response](https://gist.github.com/alberand/ce890338db1a97af07802d5d59c72309), 2022-02-19: numeric IDs and image aliases are imported only when that gift name and price also appear in the current catalog. Archived `diamond_count` is used here as the catalog's coin price; this does not change the existing runtime diamond-to-USD conversion.
+
+Fifty catalog names have multiple prices. The name-only fallback uses the price listed in the most distinct non-RU regions (ties use the lower price); the publisher identifies RU as a historical listing. Existing specific image/ID aliases retain their price where the current name is ambiguous. Captured per-gift pricing and visible coin values take precedence; specific gift IDs/images take precedence over name-only guesses. Names normalize case, whitespace, Unicode width, and curly apostrophes. An image's gift-name alt text can also supply the name. Unmatched gifts still use one coin per gift, and `donoValue` remains USD.
+
+Refresh both repositories together from the Social Stream repository:
+
+```sh
+node scripts/update-tiktok-gifts.cjs --ssapp ../ssn_app
+# Offline/reproducible refresh:
+node scripts/update-tiktok-gifts.cjs --ssapp ../ssn_app --catalog current-catalog.json --archive archived-tiktok-gifts.json
+```
+
+The refresh is a developer command; capture does not contact these catalog publishers at runtime. Review changed prices and regional ambiguity before publishing an updated table.
+
 ## TikTok DOM Events
 
 Confirmed from `sources/tiktok.js` and `docs/event-reference.html`:

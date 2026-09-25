@@ -75,7 +75,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `questionhighlightcolor` | hex/color | Custom question row highlight color; 6-digit colors are shown with stronger shading automatically |
 | `trivialhighlightcolor` | hex/color | Custom trivial event background color, including host mentions, in row and bubble layouts. Requires `trivialevents`; leave empty to retain the supplied event colors |
 | `hideshadow` | boolean | Removes alternating card drop shadows |
-| `largecontent` | boolean | Enlarges embedded content or image cards |
+| `largecontent` | boolean or 1-5 | Enlarges content images, GIFs and videos. An optional multiplier scales the 240px size from 1x to 5x, capped to the message width; the bare flag keeps the existing 240px size. Regular emotes are unchanged |
 | `donationright` | number | Sets donation amount margin-right in pixels |
 | `bubbleopacity` | 0.0-1.0 | Sets message bubble background opacity |
 | `namebubblecolor` | hex/color | Background color for the rounded name bubble |
