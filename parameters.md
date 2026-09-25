@@ -275,9 +275,12 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `beep` | boolean | Enables sound notification for new messages |
 | `beeponlymod` | boolean | Enables sound notifications only for moderator messages |
 | `beepvolume` | 0-100 | Sets volume for notification sound (percentage) |
+| `loudbeep` | boolean | Uses a louder built-in dock beep preset. Custom beep URLs take priority; still requires beeps to be enabled. |
 | `custombeep` | URL | Custom sound file URL for notifications |
 | `beepwords` | boolean | Replaces asterisks with "beep" in messages |
 | `quietcommands` | boolean | Disables the TTS beep when command shortcuts trigger |
+
+In Dock settings → Message Mechanics, enable **Louder built-in beep** and use **Preview louder beep** to try it at your Beep volume. Reopen the updated dock link (or update and refresh the OBS browser source) to apply it. The preset is compressed and peak-limited ahead of time; it does not amplify custom sounds or change the 0–100% volume range.
 
 ### OBS Integration Parameters
 

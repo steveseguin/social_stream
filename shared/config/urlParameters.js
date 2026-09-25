@@ -207,6 +207,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Enables compact mode with less spacing"
           },
           {
+            "key": "inline",
+            "displayName": "inline",
+            "aliases": [
+              "inline"
+            ],
+            "values": "boolean",
+            "description": "In the standard row layout, keeps normal spacing while allowing the message to start beside the username and wrap naturally below. Specialized layouts such as compact, horizontal, twolines, split, largeavatar, and bubble take precedence"
+          },
+          {
             "key": "padding",
             "displayName": "padding",
             "aliases": [
@@ -214,6 +223,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "number",
             "description": "Sets padding between messages in pixels"
+          },
+          {
+            "key": "sidepadding",
+            "displayName": "sidepadding",
+            "aliases": [
+              "sidepadding"
+            ],
+            "values": "number (0–99)",
+            "description": "Adds padding to the left and right edges of dock chat; defaults to 8 pixels when enabled without a value. Off by default"
           },
           {
             "key": "largeavatar",
@@ -1423,6 +1441,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Auto-queues question cards"
           },
           {
+            "key": "trackquestions",
+            "displayName": "trackquestions",
+            "aliases": [
+              "trackquestions"
+            ],
+            "values": "boolean",
+            "description": "Adds a pending-question filter and Answered/Dismiss controls to the host dock. Tracks visible question marks and identified questions. Keeps the latest 100 during normal vertical chat pruning; local to this dock and resets on reload."
+          },
+          {
             "key": "skipdonations",
             "displayName": "skipdonations",
             "aliases": [
@@ -1874,7 +1901,7 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
       {
         "title": "Notification & Sound Parameters",
         "slug": "notification-sound-parameters",
-        "description": "",
+        "description": "In Dock settings → Message Mechanics, enable **Louder built-in beep** and use **Preview louder beep** to try it at your Beep volume. Reopen the updated dock link (or update and refresh the OBS browser source) to apply it. The preset is compressed and peak-limited ahead of time; it does not amplify custom sounds or change the 0–100% volume range.",
         "items": [
           {
             "key": "beep",
@@ -1902,6 +1929,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "0-100",
             "description": "Sets volume for notification sound (percentage)"
+          },
+          {
+            "key": "loudbeep",
+            "displayName": "loudbeep",
+            "aliases": [
+              "loudbeep"
+            ],
+            "values": "boolean",
+            "description": "Uses a louder built-in dock beep preset. Custom beep URLs take priority; still requires beeps to be enabled."
           },
           {
             "key": "custombeep",
@@ -2501,7 +2537,7 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
               "speechifymodel"
             ],
             "values": "string",
-            "description": "Speechify model selection (default 'simba-3.0'; 'simba-3.2' for English)"
+            "description": "Model selection (e.g., 'simba-english')"
           },
           {
             "key": "voicespeechify",
@@ -2664,6 +2700,38 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
     ]
   },
   {
+    "title": "Viewer Count & Chat Activity Title (`hype.html`)",
+    "slug": "viewer-count-chat-activity-title-hype-html",
+    "description": "Set **Custom title** under **Viewer Count & Chat Activity Overlay → Enable and customize**, then copy the updated overlay link into OBS.",
+    "sections": [
+      {
+        "title": "General Parameters",
+        "slug": "general-parameters",
+        "description": "",
+        "items": [
+          {
+            "key": "title",
+            "displayName": "title",
+            "aliases": [
+              "title"
+            ],
+            "values": "string",
+            "description": "Overrides the title with plain text, e.g. &title=Watching%20now. Missing, empty, or whitespace-only values keep the default title for the selected viewer/chatter mode"
+          },
+          {
+            "key": "hidetitle",
+            "displayName": "hidetitle",
+            "aliases": [
+              "hidetitle"
+            ],
+            "values": "boolean",
+            "description": "Hides the title, including a custom title. Minimal and Dock Style also hide the title"
+          }
+        ]
+      }
+    ]
+  },
+  {
     "title": "Tip Jar & Goal Meter Parameters (`tipjar.html`)",
     "slug": "tip-jar-goal-meter-parameters-tipjar-html",
     "description": "",
@@ -2699,6 +2767,52 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "string",
             "description": "Sets the visible goal title (e.g. Star Goal, SuperChat Goal)"
+          },
+          {
+            "key": "goalmetric",
+            "displayName": "goalmetric",
+            "aliases": [
+              "goalmetric"
+            ],
+            "values": "value, count",
+            "description": "Uses donation value by default. count adds one per qualifying donation event regardless of its monetary value and takes priority over Hype scoring"
+          },
+          {
+            "key": "countdonations",
+            "displayName": "countdonations",
+            "aliases": [
+              "countdonations"
+            ],
+            "values": "boolean",
+            "description": "Alias for goalmetric=count"
+          },
+          {
+            "key": "tipjarevent",
+            "displayName": "tipjarevent or tipjarevents",
+            "aliases": [
+              "tipjarevent",
+              "tipjarevents"
+            ],
+            "values": "comma-separated event names",
+            "description": "Counts only matching paid event types, such as superchat, supersticker, or superchat,supersticker"
+          },
+          {
+            "key": "countlabel",
+            "displayName": "countlabel",
+            "aliases": [
+              "countlabel"
+            ],
+            "values": "string",
+            "description": "Overrides the plural unit label used by count goals, such as Super Chats"
+          },
+          {
+            "key": "countsingular",
+            "displayName": "countsingular",
+            "aliases": [
+              "countsingular"
+            ],
+            "values": "string",
+            "description": "Optional singular label used for one counted event, such as Super Chat"
           },
           {
             "key": "tipjartype",
@@ -2781,6 +2895,27 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Enables hype cup scoring mode"
+          },
+          {
+            "key": "notips",
+            "displayName": "notips, nosubs, noresubs, nogifts",
+            "aliases": [
+              "notips",
+              "nosubs",
+              "noresubs",
+              "nogifts"
+            ],
+            "values": "boolean",
+            "description": "Excludes that contribution class from Hype scoring"
+          },
+          {
+            "key": "excludegiftpurchase",
+            "displayName": "excludegiftpurchase",
+            "aliases": [
+              "excludegiftpurchase"
+            ],
+            "values": "boolean",
+            "description": "Excludes YouTube gifted-membership purchase events from the Tip Jar, including Hype scoring"
           },
           {
             "key": "levelsize",

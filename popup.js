@@ -9151,6 +9151,33 @@ async function openHostedMediaUploadForInput(inputElement, popupName = 'uploadMe
     window.addEventListener('message', handler);
 }
 
+function setupDockBeepPreview() {
+    const button = document.getElementById('dock-loud-beep-preview');
+    const status = document.getElementById('dock-loud-beep-status');
+    if (!button || !status) return;
+    let audio = null;
+    button.onclick = function() {
+        if (!audio) audio = new Audio('./audio/tone-loud.wav');
+        const enabled = document.querySelector('[data-param1="beepvolume"]');
+        const volume = document.getElementById('dock-beep-volume-range');
+        const requestedVolume = enabled && enabled.checked && volume ? parseInt(volume.value, 10) / 100 : 1;
+        audio.volume = Number.isFinite(requestedVolume) ? Math.min(1, Math.max(0, requestedVolume)) : 1;
+        audio.currentTime = 0;
+        button.disabled = true;
+        function finish(message) {
+            button.disabled = false;
+            status.textContent = message;
+        }
+        audio.onended = function() { finish('Preview finished.'); };
+        audio.onerror = function() { finish('Could not play the beep preview.'); };
+        status.textContent = 'Playing preview at ' + Math.round(audio.volume * 100) + '% volume.';
+        audio.play().catch(function() { finish('Could not play the beep preview.'); });
+    };
+    window.addEventListener('pagehide', function() {
+        if (audio) audio.pause();
+    });
+}
+
 function triggerCustomGifPreview(entry) {
     const commandInput = entry?.querySelector('.custom-command');
     const mediaUrlInput = entry?.querySelector('.custom-media-url');
@@ -14299,6 +14326,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	}
 
+
+	setupDockBeepPreview();
 
 	// Handle custom beep upload buttons
 	const uploadBeepBtn = document.getElementById('uploadBeepBtn');
