@@ -59,6 +59,9 @@ body .textInputContainer .textInput { grid-area:2 / 1 / 3 / 3; min-height:32px; 
 body .textInputContainer .textInput + label { position:static; grid-area:1 / 1 / 2 / 3; max-width:100%; padding:0; font-size:1em; color:var(--default-text-color); white-space:normal; }
 body .textInputContainer .textInput + label::before { display:none; }
 body .textInputContainer .textInputUploadButton { grid-area:2 / 2; position:static; }
+.colorInputRow { display:flex; align-items:center; gap:8px; }
+.colorInputRow > .textInputContainer { flex:1; margin-right:5px; }
+.colorInputRow > .colorPicker { cursor:pointer; width:27px; height:27px; padding:0; background:transparent; }
 
 /* Normal actions are neutral; test/play actions keep the familiar blue style. */
 body .options button:not(.glowingButton):not(.copy-link-btn),
