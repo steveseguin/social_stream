@@ -9125,8 +9125,10 @@ function sendToSSC(data, fakechat = false, relayed = false) {
 			// Donations/Super Chats
 			if (data.hasDonation) {
 				payload.payload.donation = data.hasDonation;
-				if (data.donoValue) {
-					payload.payload.donationValue = data.donoValue;
+				const usdValue = typeof data.donoValue === 'number' ? data.donoValue :
+					(typeof data.donoValue === 'string' && data.donoValue.trim() ? Number(data.donoValue.replace(/,/g, '')) : NaN);
+				if (Number.isFinite(usdValue)) {
+					payload.payload.donationValue = usdValue;
 				}
 				if (data.backgroundColor) {
 					payload.payload.backgroundColor = data.backgroundColor;

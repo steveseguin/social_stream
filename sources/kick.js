@@ -127,17 +127,18 @@
 
 	function mergeEmotes() { // BTTV takes priority over 7TV in this all.
 		EMOTELIST = {};
+		// Keep provider caches separate so disabling 7TV removes its cached emotes.
 		if (BTTV) {
 			if (settings.bttv) {
 				try {
 					if (BTTV.channelEmotes) {
-						EMOTELIST = BTTV.channelEmotes;
+						EMOTELIST = deepMerge({}, BTTV.channelEmotes);
 					}
 					if (BTTV.sharedEmotes) {
-						EMOTELIST = deepMerge(BTTV.sharedEmotes, EMOTELIST);
+						EMOTELIST = deepMerge(deepMerge({}, BTTV.sharedEmotes), EMOTELIST);
 					}
 					if (BTTV.globalEmotes) {
-						EMOTELIST = deepMerge(BTTV.globalEmotes, EMOTELIST);
+						EMOTELIST = deepMerge(deepMerge({}, BTTV.globalEmotes), EMOTELIST);
 					}
 				} catch (e) {}
 			}
@@ -146,12 +147,12 @@
 			if (settings.seventv) {
 				try {
 					if (SEVENTV.channelEmotes) {
-						EMOTELIST = deepMerge(SEVENTV.channelEmotes, EMOTELIST);
+						EMOTELIST = deepMerge(deepMerge({}, SEVENTV.channelEmotes), EMOTELIST);
 					}
 				} catch (e) {}
 				try {
 					if (SEVENTV.globalEmotes) {
-						EMOTELIST = deepMerge(SEVENTV.globalEmotes, EMOTELIST);
+						EMOTELIST = deepMerge(deepMerge({}, SEVENTV.globalEmotes), EMOTELIST);
 					}
 				} catch (e) {}
 			}
@@ -160,12 +161,12 @@
 			if (settings.ffz) {
 				try {
 					if (FFZ.channelEmotes) {
-						EMOTELIST = deepMerge(FFZ.channelEmotes, EMOTELIST);
+						EMOTELIST = deepMerge(deepMerge({}, FFZ.channelEmotes), EMOTELIST);
 					}
 				} catch (e) {}
 				try {
 					if (FFZ.globalEmotes) {
-						EMOTELIST = deepMerge(FFZ.globalEmotes, EMOTELIST);
+						EMOTELIST = deepMerge(deepMerge({}, FFZ.globalEmotes), EMOTELIST);
 					}
 				} catch (e) {}
 			}
@@ -790,9 +791,8 @@
 	
 	function getAllContentNodes(element) {
 		var resp = "";
-		
-		
-		if (!element){return resp;}
+		element = getKickRenderedContentNode(element);
+		if (!element || isKickIgnoredContentNode(element)){return resp;}
 		
 		if (!element.childNodes || !element.childNodes.length){
 			if (element.textContent){
@@ -804,7 +804,7 @@
 		
 		if (settings.textonlymode) {
 			element.childNodes.forEach(node=>{
-				if (isKickIgnoredContentNode(node)) {
+				if (isKickIgnoredContentNode(node) || getKickRenderedContentNode(node) !== node) {
 					return;
 				}
 				if (node.childNodes.length){
@@ -820,7 +820,7 @@
 		
 		
 		element.childNodes.forEach(node=>{
-			if (isKickIgnoredContentNode(node)) {
+			if (isKickIgnoredContentNode(node) || getKickRenderedContentNode(node) !== node) {
 				return;
 			}
 			if (node.childNodes.length){
@@ -1017,10 +1017,62 @@
 		if (!node || node.nodeType !== 1 || isKickIgnoredContentNode(node)) {
 			return false;
 		}
-		if (node.closest && node.closest("button")) {
+		if (node.closest && node.closest("button, .chat-message-identity, .seventv-badge-list")) {
+			return false;
+		}
+		if (node.matches("seventv-container") && node.querySelector(".seventv-badge-list")) {
 			return false;
 		}
 		return Boolean(node.matches && node.matches(".chat-entry-content, .chat-emote-container, .break-all, seventv-container, .seventv-painted-content, span[class*='font-normal'], div[class*='font-normal']"));
+	}
+
+	function getKickRenderedContentNode(node) {
+		if (!node || node.nodeType !== 1) {
+			return node;
+		}
+		// 7TV leaves each original span hidden beside its rendered replacement.
+		// Prefer the rendered emotes, or the original emote codes in text-only mode.
+		var rendered = node.tagName === "SEVENTV-CONTAINER" ? node : node.nextElementSibling;
+		var original = rendered ? rendered.previousElementSibling : null;
+		if (rendered && rendered.tagName === "SEVENTV-CONTAINER" && original &&
+			(original.hidden || original.style.display === "none") &&
+			((rendered.textContent || "").trim() || rendered.querySelector("img[src], svg"))) {
+			return settings.textonlymode ? original : rendered;
+		}
+		// Keep the native content until 7TV has populated its replacement.
+		return node;
+	}
+
+	function getKickMessageText(ele, useInline) {
+		var inlineNode = useInline ? getKickInlineMessageNode(ele) : null;
+		var nodes = [];
+		if (inlineNode) {
+			// A message can have separate text and native-emote siblings.
+			while (inlineNode && isKickMessageTextNode(inlineNode)) {
+				nodes.push(inlineNode);
+				inlineNode = inlineNode.nextElementSibling;
+			}
+		} else {
+			nodes = Array.from(ele.querySelectorAll(KICK_MESSAGE_CONTENT_SELECTOR)).filter(isKickMessageTextNode);
+		}
+		if (!nodes.length && useInline) {
+			var fallback = ele.querySelector("span[aria-hidden] ~ span, div span[class*='font-normal']");
+			if (fallback) { nodes.push(fallback); }
+		}
+		// Read only outermost roots: reading a parent already includes its children.
+		var roots = nodes.filter(function(node) {
+			return !nodes.some(function(parent) { return parent !== node && parent.contains(node); });
+		});
+		var seen = new Set();
+		var parts = [];
+		roots.forEach(function(node) {
+			var content = getKickRenderedContentNode(node);
+			if (seen.has(content)) { return; }
+			seen.add(content);
+			var text = getAllContentNodes(content);
+			if (text) { parts.push(text); }
+		});
+		return parts.join(" ").trim();
 	}
 
 	function getKickInlineMessageNode(ele) {
@@ -1462,27 +1514,9 @@
 	  
 	  // settings.excludeReplyingTo
 	  
-	  if (!settings.textonlymode){
-		  try {
-			var chatNodes = ele.querySelectorAll("seventv-container"); // 7tv support, as of june 20th
-			
-			if (!chatNodes.length){
-				chatNodes = ele.querySelectorAll(".chat-entry-content, .chat-emote-container, .break-all");
-			} else {
-				chatNodes = ele.querySelectorAll("seventv-container, .chat-emote-container, .seventv-painted-content"); // 7tv support, as of june 20th
-				
-			}
-			for (var i=0;i<chatNodes.length;i++){
-				chatmessage += getAllContentNodes(chatNodes[i])+" ";
-			}
-			chatmessage = chatmessage.trim();
-		  } catch(e){
-		  }
-	  } else {
-		  try{
-			chatmessage = escapeHtml(ele.querySelector(".chat-entry-content").innerText);
-		  } catch(e){}
-	  }
+	  try {
+		chatmessage = getKickMessageText(ele, false);
+	  } catch(e){}
 	  
 	  if (!chatmessage){return;}
 	  
@@ -1758,7 +1792,6 @@
 	  var nameColor = "";
 	  var name ="";
 	  var chatbadges = [];
-	  var chatNodes = [];
 	  
 	  
 	  try {
@@ -1767,42 +1800,9 @@
 	  } catch(e){}
 	  
 	   
-	  if (!settings.textonlymode){
-		  try {
-			var inlineMessageNode = getKickInlineMessageNode(ele);
-			if (inlineMessageNode) {
-				chatmessage = getAllContentNodes(inlineMessageNode).trim();
-			}
-			chatNodes = chatmessage ? [] : ele.querySelectorAll("seventv-container"); // 7tv support, as of june 20th
-			
-			if (!chatNodes.length){
-				chatNodes = chatmessage ? [] : ele.querySelectorAll(".chat-entry-content, .chat-emote-container, .break-all");
-			} else {
-				chatNodes = ele.querySelectorAll("seventv-container, .chat-emote-container, .seventv-painted-content"); // 7tv support, as of june 20th
-			}
-			
-			if (!chatmessage && !chatNodes.length){
-				let tmp = ele.querySelector("span[aria-hidden] ~ span, div span[class*='font-normal']");
-				if (tmp){
-					chatmessage = getAllContentNodes(tmp);
-					chatmessage = chatmessage.trim();
-				}
-			} 
-		  } catch(e){
-		  }
-	  } else {
-		let tmp = getKickInlineMessageNode(ele) || ele.querySelector("span[aria-hidden] ~ span, div span[class*='font-normal']");
-		if (tmp){
-			chatmessage = getAllContentNodes(tmp);
-			chatmessage = chatmessage.trim();
-		}
-	  }
-	  if (chatNodes.length){
-		for (var i=0;i<chatNodes.length;i++){
-			chatmessage += getAllContentNodes(chatNodes[i])+" ";
-		}
-		chatmessage = chatmessage.trim();
-	  }
+	  try {
+		chatmessage = getKickMessageText(ele, true);
+	  } catch(e){}
 	  
 	  var contentImg = "";
 	  var hasDonation = '';
@@ -2022,6 +2022,7 @@
 				}
 				if ("settings" in request) {
 					settings = request.settings;
+					mergeEmotes();
 					kickDebugLog("settings updated", {
 						textonlymode: Boolean(settings.textonlymode),
 						delaykick: Boolean(settings.delaykick),

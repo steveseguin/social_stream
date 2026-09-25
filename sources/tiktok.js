@@ -199,6 +199,43 @@
 		};
 	}
 
+	function applyTikTokGiftDonationValue(data) {
+		if (!data || data.event !== "gift" || !(settings.tiktokdonations || !settings.notiktokdonations)) return;
+		var meta = data.meta || {};
+		var container = document.createElement("div");
+		container.innerHTML = data.chatmessage || "";
+		var countMatch = (container.textContent || "").match(/[x\u00d7]\s*(\d+)/i);
+		var quantity = Number(meta.tiktokGiftCount) || (countMatch ? Number(countMatch[1]) : 0);
+		if (!(quantity > 0) || !Number.isFinite(quantity)) return;
+		var diamonds = Number(meta.diamondsPerGift);
+		var coins = Number(meta.coinsPerGift);
+		if (Number.isFinite(diamonds) && diamonds > 0) {
+			data.hasDonation = (quantity * diamonds) + " \uD83D\uDC8E";
+			data.donoValue = quantity * diamonds * 0.005;
+			return;
+		}
+		if (!(Number.isFinite(coins) && coins > 0) && meta.giftName) {
+			var name = String(meta.giftName).trim().toLowerCase();
+			var mapped = Object.values(giftMapping).find(function(gift) {
+				return gift.name && gift.name.toLowerCase() === name;
+			});
+			if (mapped) coins = Number(mapped.coins);
+		}
+		if (Number.isFinite(coins) && coins > 0) {
+			data.hasDonation = (quantity * coins) + " coins";
+			data.donoValue = quantity * coins * 0.01;
+			return;
+		}
+		var coinLabel = String(data.hasDonation || "").match(/^([\d,.]+)\s+coins?$/i);
+		if (coinLabel) {
+			data.donoValue = Number(coinLabel[1].replace(/,/g, "")) * 0.01;
+		} else {
+			// Preserve the display label; an unpriced gift is estimated at one coin.
+			if (!data.hasDonation) data.hasDonation = quantity + (quantity === 1 ? " gift" : " gifts");
+			data.donoValue = quantity * 0.01;
+		}
+	}
+
 	function markTikTokGiftUpdate(data, ele) {
 		if (data && data.type === "tiktok" && data.event === "gift") {
 			try {
@@ -212,6 +249,7 @@
 				if (nativeGift) data.meta = Object.assign({}, data.meta || {}, nativeGift);
 			} catch (e) {}
 		}
+		applyTikTokGiftDonationValue(data);
 		var identity = getTikTokGiftUpdateIdentity(data, ele);
 		if (!identity) {
 			return true;

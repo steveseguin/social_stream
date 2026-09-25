@@ -5135,7 +5135,7 @@
 
 			function getColorForAmount(data) {
 				
-				let amount = data.donoValue || toUSD(data.donation || data.hasDonation, data.type);
+				let amount = getDonationValueUSD(data);
 				
 				for (const [threshold, color] of tiers) {
 					if (amount >= threshold) return color;

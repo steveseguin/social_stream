@@ -35,6 +35,8 @@ If you need more context on how Electron wiring differs from the extension boots
 
 ## Message Contracts
 
+- `donoValue` is always a numeric USD amount, supplied optionally by the source when it has better context. Consumers must honor a valid override (including zero) before using `currency.js` to estimate USD from `hasDonation` and the source. Keep the original display amount/unit in `hasDonation`; do not put raw coins or foreign-currency amounts in `donoValue`. Unpriced TikTok gifts default to one coin per gift at the existing USD-per-coin rate.
+
 - Every outbound event follows the canonical structure referenced in `docs/event-reference.html`. Required fields (`platform`, `type`, `chatname`, `chatmessage`, etc.) must stay intact.
 - `textonly` applies only to `chatmessage`: `true` means render `chatmessage` as plain text, while `false` means `chatmessage` may contain sanitized/renderable HTML. Other normal fields are expected to be plain text; media fields such as `chatimg` and `contentimg` carry URLs/data.
 - Donation-style chat rows should use `hasDonation` and optional `donoValue`. Do not set `event: "donation"` just because a normal chat/tip row has a donation value; `event` changes routing/filter behavior and should only be used for true normalized platform actions or paid item types.

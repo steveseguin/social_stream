@@ -104,8 +104,8 @@
 									
 									if (eventData.type === 'tip' || eventData.type === 'donation') {
 										messageData.event = "donation";
-										messageData.hasDonation = `$${eventData.data?.amount || 0}`;
-										messageData.donoValue = eventData.data?.amount || 0;
+										messageData.hasDonation = `${eventData.data?.amount || 0} ${eventData.data?.currency || "USD"}`;
+										if (!eventData.data?.currency || String(eventData.data.currency).toUpperCase() === "USD") messageData.donoValue = Number(eventData.data?.amount) || 0;
 										messageData.chatmessage = eventData.data?.message || "";
 										messageData.title = "TIP";
 										messageData.currency = eventData.data?.currency || "USD";
@@ -279,8 +279,8 @@
 									
 									if (eventData.type === 'tip' || eventData.type === 'donation') {
 										messageData.event = "donation";
-										messageData.hasDonation = `$${eventData.data?.amount || 0}`;
-										messageData.donoValue = eventData.data?.amount || 0;
+										messageData.hasDonation = `${eventData.data?.amount || 0} ${eventData.data?.currency || "USD"}`;
+										if (!eventData.data?.currency || String(eventData.data.currency).toUpperCase() === "USD") messageData.donoValue = Number(eventData.data?.amount) || 0;
 										messageData.chatmessage = eventData.data?.message || "";
 										messageData.title = "TIP";
 										messageData.currency = eventData.data?.currency || "USD";
@@ -355,8 +355,8 @@
 									messageData.chatimg = eventData.event?.avatar || "";
 									messageData.chatmessage = `Test ${eventData.listener || 'event'}`;
 									if (eventData.listener && eventData.listener.includes('tip')) {
-										messageData.hasDonation = `$${eventData.event?.amount || 0}`;
-										messageData.donoValue = eventData.event?.amount || 0;
+										messageData.hasDonation = `${eventData.event?.amount || 0} ${eventData.event?.currency || "USD"}`;
+										if (!eventData.event?.currency || String(eventData.event.currency).toUpperCase() === "USD") messageData.donoValue = Number(eventData.event?.amount) || 0;
 										messageData.title = "TEST TIP";
 									}
 								}

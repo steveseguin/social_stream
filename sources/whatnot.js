@@ -1096,7 +1096,7 @@
 		var money = getMoneyDetails(info.contributionMoney);
 		data.event = "donation";
 		data.hasDonation = formatMoneyValue(info.contributionMoney);
-		if (money) {
+		if (money && String(money.currency).toUpperCase() === "USD") {
 			data.donoValue = money.amount;
 		}
 		var meta = buildWebSocketMeta(wsChannel, activity.eventName || "COMMUNITY_BOOST_CONTRIBUTION_PURCHASED", activity, user);
@@ -1202,7 +1202,7 @@
 		data.event = "donation";
 		data.hasDonation = formatMoneyValue(tip.tipValue, tip.magnitude);
 		var money = getMoneyDetails(tip.tipValue, tip.magnitude);
-		if (money) {
+		if (money && String(money.currency).toUpperCase() === "USD") {
 			data.donoValue = money.amount;
 		}
 		data.meta = buildWebSocketMeta(wsChannel, "tip_sent", payload, user);

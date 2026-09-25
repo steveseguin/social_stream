@@ -32,7 +32,14 @@ async function until(check, label, timeout = 30000) {
 }
 
 (async () => {
+  const webhookRequests = [];
   const server = http.createServer((req, res) => {
+    if (req.url === '/usd-webhook') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', () => { webhookRequests.push(body); res.writeHead(200, { 'Content-Type': 'application/json' }); res.end('{}'); });
+      return;
+    }
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.end('<div class="live-room-container"><div id="chat"><div data-index="0"></div></div>' +
       '<div class="DivBottomStickyMessageContainer" id="events"></div></div>');
@@ -55,8 +62,15 @@ async function until(check, label, timeout = 30000) {
     app = await _electron.launch({ executablePath: require(path.join(appRoot, 'node_modules/electron')),
       args: ['.', '--running-from-source', '--multiinstance', '--filesource', pathToFileURL(sourceRoot + path.sep).href,
         '--ssapp-headless-control', '--ssapp-control-api', `--ssapp-control-port=${controlPort}`,
-        `--ssapp-local-server-port=${relayPort}`, '--no-hwa'], cwd: appRoot,
-      env: { ...process.env, SSAPP_USER_DATA_DIR: profile, SSAPP_DIAGNOSTICS_SAFE_GPU: '1' }, timeout: 60000 });
+        `--ssapp-local-server-port=${relayPort}`], cwd: appRoot,
+      env: { ...process.env, SSAPP_USER_DATA_DIR: profile, SSAPP_DIAGNOSTICS_SAFE_GPU: '0' }, timeout: 60000 });
+    app.context().on('page', page => page.on('crash', () => console.error('Renderer crashed:', page.url())));
+    app.process().stderr.on('data', chunk => {
+      if (String(chunk).includes('render-process-gone:crashed')) {
+        console.error('SSApp renderer crashed during the functional test');
+        app.evaluate(({ app }) => app.exit(1)).catch(() => {});
+      }
+    });
     const main = await until(() => app.windows().find(p => p.url().includes('/index.html')), 'main window');
     console.log('Main window ready');
     await main.waitForFunction(() => window.stateManager && stateManager.initialized && typeof configReady !== 'undefined' && configReady, { timeout: 60000 });
@@ -90,6 +104,7 @@ async function until(check, label, timeout = 30000) {
     await app.evaluate(({ BrowserWindow }, url) => { const w = new BrowserWindow({ show: false }); w.loadURL(url); }, creditsUrl);
     const credits = await until(() => app.windows().find(p => p.url().includes('/credits.html')), 'credits overlay');
     await credits.waitForFunction(() => typeof processData === 'function');
+    console.log('Credits overlay ready');
     await pause(1000);
     async function gift(name, count, variant = 'current', hash = 'eba3a9bb85c33e017f3648eaf88d7189', sign = '×') {
       await source.evaluate(({ name, count, variant, hash, sign }) => {
@@ -126,6 +141,7 @@ async function until(check, label, timeout = 30000) {
     await until(() => credits.evaluate(() => [...users.values()].some(u => u.name === 'Streak Donor')), 'donor in credits');
     async function donor(name) { return credits.evaluate(name => [...users.values()].find(u => u.name === name), name); }
     assert(Math.abs((await donor('Streak Donor')).donations - 0.03) < 1e-9, 'credits must count 3, not 1+2+3');
+    console.log('Initial streak USD verified');
     await gift('Other Donor', 1, 'legacy');
     await gift('Count Class', 1, 'count-class');
     await gift('Finger Heart', 2, 'current', 'a4c4dc437fd3a6632aba149769491f49');
@@ -135,7 +151,11 @@ async function until(check, label, timeout = 30000) {
     assert.notStrictEqual(captures.find(m => m.chatname === 'Other Donor').meta.tiktokGiftStreakId, streak[0].meta.tiktokGiftStreakId);
     assert.strictEqual(captures.find(m => m.chatname === 'Unknown Donor').hasDonation, '1 gift');
     await until(() => donor('Unknown Donor'), 'unknown donor presence');
-    assert.strictEqual((await donor('Unknown Donor')).donations, 0);
+    assert.strictEqual(captures.find(m => m.chatname === 'Unknown Donor').donoValue, 0.01);
+    assert.strictEqual((await donor('Unknown Donor')).donations, 0.01);
+    await gift('Unknown Image Path', 4, 'current', 'x999/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    await until(() => captures.some(m => m.chatname === 'Unknown Image Path'), 'unknown gift with digits in image URL');
+    assert.strictEqual(captures.find(m => m.chatname === 'Unknown Image Path').donoValue, 0.04);
     await gift('Ascii Count', 2, 'current', 'eba3a9bb85c33e017f3648eaf88d7189', 'x');
     await until(() => captures.some(m => m.chatname === 'Ascii Count'), 'ASCII count gift');
     assert.strictEqual(captures.find(m => m.chatname === 'Ascii Count').hasDonation, '2 coins');
@@ -157,6 +177,7 @@ async function until(check, label, timeout = 30000) {
     for (let count = 1; count <= 120; count++) {
       await gift('Long Streak', count);
       if (count === 30) { await credits.evaluate(() => flushPersistedCredits()); await credits.reload(); }
+      if (count % 30 === 0) console.log('Long streak:', count);
     }
     await until(() => captures.filter(m => m.chatname === 'Long Streak').length === 120, 'long streak delivery');
     const long = captures.filter(m => m.chatname === 'Long Streak');
@@ -204,10 +225,89 @@ async function until(check, label, timeout = 30000) {
     const nativeGifts = captures.filter(m => m.chatname === 'Native Donor');
     assert.deepStrictEqual(nativeGifts.map(m => m.meta.tiktokGiftMessageId), ['native-one', 'native-two']);
     assert(nativeGifts.every(m => m.meta.giftName === 'Rose' && m.meta.repeatEnd));
+
+    for (const spec of [
+      { name: 'Native Price', gift: { name: 'Unlisted priced gift', diamond_count: 40 }, count: 3, usd: 0.6 },
+      { name: 'Native Coins', gift: { name: 'Unlisted coin gift', coins: 20 }, count: 3, usd: 0.6 },
+      { name: 'Native Unknown', gift: { name: 'Unlisted unknown gift' }, count: 4, usd: 0.04 }
+    ]) {
+      await source.evaluate(spec => {
+        const row = document.createElement('div');
+        row.dataset.index = spec.name;
+        row.innerHTML = '<div><span data-e2e="message-owner-name"></span></div><div>sent gift <img src="https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~tplv-obj.png"> x' + spec.count + '</div>';
+        row.querySelector('span').textContent = spec.name;
+        row.firstElementChild.__reactFiberFixture = { memoizedProps: { message: {
+          messageType: 'GiftMessage', msgId: spec.name, payload: {
+            group_id: spec.name, gift_id: spec.name, repeat_count: spec.count, repeat_end: 1,
+            gift: spec.gift, user: { id: spec.name }
+          }
+        } } };
+        document.getElementById('events').append(row);
+      }, spec);
+      const captured = await until(() => captures.find(m => m.chatname === spec.name), spec.name);
+      assert(Math.abs(captured.donoValue - spec.usd) < 1e-9, JSON.stringify(captured));
+    }
+
+    // Exercise conflicting display/USD amounts through source IPC, the real
+    // background, relay, rendered overlays, persisted history and a local webhook.
+    const mediaUrl = pathToFileURL(path.join(sourceRoot, 'media', 'logo.png')).href;
+    async function overlay(file, params) {
+      const url = pathToFileURL(path.join(sourceRoot, file)).href + `?session=${room}&server2=ws://127.0.0.1:${relayPort}&` + params;
+      await app.evaluate(({ BrowserWindow }, url) => { const w = new BrowserWindow({ show: false }); w.loadURL(url); }, url);
+      return until(() => app.windows().find(p => p.url() === url), file);
+    }
+    const alerts = await overlay('multi-alerts.html', `effect1min=12.34&effect1max=12.34&effect1media=${encodeURIComponent(mediaUrl)}&showtime=15000&cooldown=0`);
+    const jar = await overlay('tipjar.html', 'persistent&style=bar');
+    await alerts.waitForFunction(() => window.__multiAlertsOverlay);
+    await jar.waitForFunction(() => typeof processData === 'function');
+    await background.waitForFunction(() => window.eventFlowSystem && window.eventFlowSystem.db);
+    await background.evaluate(async url => {
+      await eventFlowSystem.saveFlow({ id: 'usd-override-check', name: 'USD override check', active: true,
+        nodes: [
+          { id: 'minimum', type: 'trigger', triggerType: 'eventDonation', config: { minAmount: 12 } },
+          { id: 'notify', type: 'action', actionType: 'webhook', config: { url, body: '{"amount":"{donoValue}"}', syncMode: true } }
+        ], connections: [{ from: 'minimum', to: 'notify' }]
+      });
+    }, `http://127.0.0.1:${server.address().port}/usd-webhook`);
+    await pause(1500);
+    async function sourceMessage(message) {
+      await source.evaluate(message => new Promise(resolve => chrome.runtime.sendMessage(chrome.runtime.id, { message }, resolve)), message);
+    }
+    await sourceMessage({ type: 'tiktok', event: 'gift', chatname: 'USD Override', chatmessage: 'Override integration', hasDonation: '500 gifts', donoValue: 12.34, id: 'usd-override', textonly: true });
+    await until(() => webhookRequests.length === 1, 'USD threshold webhook');
+    assert.equal(JSON.parse(webhookRequests[0]).amount, '12.34');
+    await until(() => alerts.evaluate(() => state.currentAlert && state.currentAlert.actor === 'USD Override'), 'USD alert rendered');
+    assert.equal(await alerts.evaluate(() => state.currentAlert.cashValue), 12.34);
+    assert.equal(await alerts.locator('.alert-media img').getAttribute('src'), mediaUrl, 'USD-specific clip selected');
+    assert((await alerts.locator('body').textContent()).includes('500 gifts'), 'original label retained');
+    await until(() => jar.evaluate(() => donationHistory.some(d => d.donator === 'USD Override')), 'USD tip history');
+    assert.equal(await jar.evaluate(() => donationHistory.find(d => d.donator === 'USD Override').usdValue), 12.34);
+    await jar.reload();
+    await jar.waitForFunction(() => typeof processData === 'function');
+    assert.equal(await jar.evaluate(() => donationHistory.find(d => d.donator === 'USD Override').usdValue), 12.34, 'USD survives reload');
+    await sourceMessage({ type: 'tiktok', event: 'gift', chatname: 'Zero Override', chatmessage: 'Zero integration', hasDonation: '5000 gifts', donoValue: 0, id: 'usd-zero', textonly: true });
+    await pause(1800);
+    assert.equal(webhookRequests.length, 1, 'zero override does not trigger the monetary threshold');
+    assert.equal(await jar.evaluate(() => donationHistory.filter(d => d.donator === 'Zero Override').length), 0);
+    await alerts.screenshot({ path: path.join(profile, 'usd-alert.png') });
+    const euro = await background.evaluate(() => SSNMonetization.tip({ type: 'tip', amount: 10, currency: 'EUR', fromLabel: 'Euro Donor', tipId: 'eur-functional' }));
+    assert(euro.donoValue > 0 && euro.donoValue !== 10, 'source adapter converts EUR to USD');
+    assert.equal(euro.chatname, 'Euro Donor');
+    await sourceMessage(euro);
+    await until(() => jar.evaluate(() => donationHistory.some(d => d.donator === 'Euro Donor')), 'foreign currency source donation');
+    assert.equal(await jar.evaluate(() => donationHistory.find(d => d.donator === 'Euro Donor').usdValue), euro.donoValue);
+    const fallback = { ...euro, chatname: 'Euro Fallback', id: 'eur-fallback-functional' };
+    delete fallback.donoValue;
+    await sourceMessage(fallback);
+    await until(() => jar.evaluate(() => donationHistory.some(d => d.donator === 'Euro Fallback')), 'foreign currency fallback donation');
+    assert.equal(await jar.evaluate(() => donationHistory.find(d => d.donator === 'Euro Fallback').usdValue), euro.donoValue);
     console.log(JSON.stringify({ passed: true, gifts: captures.length, profile }));
+  } catch (error) {
+    console.error('Functional test failed:', error);
+    throw error;
   } finally {
     if (socket) socket.close();
-    if (app) await app.close();
+    if (app) await app.evaluate(({ app }) => app.exit()).catch(() => {});
     server.close();
   }
 })().catch(error => { console.error(error); process.exitCode = 1; });

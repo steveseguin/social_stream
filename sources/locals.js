@@ -324,7 +324,6 @@ function toDataURL(url, callback) {
 
 	function extractDonationDetails(ele){
 		let donationText = "";
-		let donationValue = "";
 		try {
 			let textNodes = ele.querySelectorAll("div, span, p");
 			for (let i=0; i<textNodes.length; i++){
@@ -365,12 +364,11 @@ function toDataURL(url, callback) {
 		} catch(e){}
 
 		if (!donationText){
-			return { hasDonation: "", donoValue: "" };
+			return { hasDonation: "" };
 		}
 
 		let parsedValue = parseNumericValue(donationText);
 		if (parsedValue !== null){
-			donationValue = parsedValue;
 			if (!/[A-Za-z$]/.test(donationText)){
 				let prettyValue = Number.isInteger(parsedValue) ? parsedValue : parsedValue.toFixed(2);
 				donationText = prettyValue + " coins";
@@ -378,8 +376,7 @@ function toDataURL(url, callback) {
 		}
 
 		return {
-			hasDonation: escapeHtml(donationText.trim()),
-			donoValue: donationValue
+			hasDonation: escapeHtml(donationText.trim())
 		};
 	}
 
@@ -818,9 +815,6 @@ function toDataURL(url, callback) {
 		data.chatimg = chatimg;
 		data.hasDonation = hasDonation;
 		data.membership = badgeData.membership || "";
-		if (donationData.donoValue !== ""){
-			data.donoValue = donationData.donoValue;
-		}
 		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
 		data.type = "locals";
