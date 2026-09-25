@@ -455,11 +455,25 @@ var lastMessage = {};
 	}
 
 	// Updated getAllContentNodes to handle both old and new DOM structures
-	function getAllContentNodes(element) {
+	function getAllContentNodes(element, flattenListText) {
 	  let resp = "";
 	  
 	  if (!element) {
 		return resp;
+	  }
+
+	  // Keep lists as one chat message, with punctuation between items.
+	  if (element.nodeName === "OL" || element.nodeName === "UL") {
+		const items = [];
+		element.childNodes.forEach(node => {
+		  if (node.nodeName === "LI") {
+			const item = getAllContentNodes(node, true).trim();
+			if (item) {
+			  items.push(item);
+			}
+		  }
+		});
+		return items.length ? items.join("; ") + " " : "";
 	  }
 	  
 	  
@@ -470,9 +484,10 @@ var lastMessage = {};
 		
 		
 		if (node.childNodes.length) {
-		  resp += getAllContentNodes(node);
+		  resp += getAllContentNodes(node, flattenListText);
 		} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
-		  resp += escapeHtml(node.textContent.trim()) + " ";
+		  const text = flattenListText ? node.textContent.replace(/\s+/g, " ").trim() : node.textContent.trim();
+		  resp += escapeHtml(text) + " ";
 		} else if (node.nodeType === 1) {
 		  if (!settings.textonlymode) {
 			if ((node.nodeName == "IMG") && node.src) {
@@ -498,7 +513,8 @@ var lastMessage = {};
 		  } else {
 			// In text-only mode, just use the alt text if available
 			if ((node.nodeName == "IMG") && node.alt) {
-				resp += escapeHtml(node.alt) + " ";
+				const alt = flattenListText ? node.alt.replace(/\s+/g, " ").trim() : node.alt;
+				resp += escapeHtml(alt) + " ";
 			}
 		  }
 		}
