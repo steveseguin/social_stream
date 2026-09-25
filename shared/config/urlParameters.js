@@ -418,6 +418,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Custom question row highlight color; 6-digit colors are shown with stronger shading automatically"
           },
           {
+            "key": "trivialhighlightcolor",
+            "displayName": "trivialhighlightcolor",
+            "aliases": [
+              "trivialhighlightcolor"
+            ],
+            "values": "hex/color",
+            "description": "Custom trivial event background color, including host mentions, in row and bubble layouts. Requires trivialevents; leave empty to retain the supplied event colors"
+          },
+          {
             "key": "hideshadow",
             "displayName": "hideshadow",
             "aliases": [

@@ -3908,6 +3908,7 @@
 			if (urlParams.has("trivialevents")) {
 				trivialevents = true;
 			}
+			var trivialHighlightColor = normalizeColor(urlParams.get("trivialhighlightcolor"));
 
 			var filterNamesNotMessages = false;
 			if (urlParams.has("namefilter")) {
@@ -12462,8 +12463,8 @@
 
 					if (data.highlightColor && trivialevents) {
 						node.classList.add("special-highlight");
-						if (!bubble) {
-							node.style.backgroundColor = data.highlightColor;
+						if (!bubble || trivialHighlightColor) {
+							node.style.backgroundColor = trivialHighlightColor || data.highlightColor;
 						}
 					}
 					

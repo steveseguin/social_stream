@@ -73,6 +73,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `memberhighlightcolor` | hex/color | Custom member row highlight color; 6-digit colors are shown with stronger shading automatically |
 | `firsttimehighlightcolor` | hex/color | Custom first-time chatter row highlight color; 6-digit colors are shown with stronger shading automatically |
 | `questionhighlightcolor` | hex/color | Custom question row highlight color; 6-digit colors are shown with stronger shading automatically |
+| `trivialhighlightcolor` | hex/color | Custom trivial event background color, including host mentions, in row and bubble layouts. Requires `trivialevents`; leave empty to retain the supplied event colors |
 | `hideshadow` | boolean | Removes alternating card drop shadows |
 | `largecontent` | boolean | Enlarges embedded content or image cards |
 | `donationright` | number | Sets donation amount margin-right in pixels |
