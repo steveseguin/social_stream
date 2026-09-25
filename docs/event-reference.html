@@ -338,6 +338,11 @@
                             <td>Applies only to <code>data.chatmessage</code>. <code>true</code> means render <code>chatmessage</code> as plain text; <code>false</code> means <code>chatmessage</code> may contain sanitized/renderable HTML. Other normal fields are expected to be plain text, except media fields such as <code>chatimg</code> and <code>contentimg</code>.</td>
                         </tr>
                         <tr>
+                            <td><code>data.contentimg</code></td>
+                            <td>string (optional)</td>
+                            <td>Content image or supported media URL. In the extension and desktop app, the opt-in <code>allowExternalGifs</code> setting fills an empty field from the first direct HTTP(S) GIF link in the message text or an HTML link. The URL path must end in <code>.gif</code> (case-insensitive); query parameters and fragments are preserved. It requires no API key, preserves <code>chatmessage</code> and existing attachments, and respects <code>removeContentImage</code>. The optional <code>hideExternalGifUrl</code> setting adds <code>meta.hideExternalGifUrl: true</code>; the dock and featured overlay then hide the matching GIF link only after their image loads, retaining surrounding text and the original payload. Failed or timed-out images collapse their attachment container and leave the link visible. The GIF-only overlay tries direct image display if fetching image bytes fails, using the configured display time when animation timing is unavailable; failed or stalled loads advance its queue. It does not add an <code>event</code> or change the source <code>type</code>. External images are not content-filtered and may fail to load if the host blocks embedding.</td>
+                        </tr>
+                        <tr>
                             <td><code>data.membership</code></td>
                             <td>string</td>
                             <td>Readable membership state such as <code>MEMBERSHIP</code>, <code>new_sponsor</code>, <code>gift_recipient</code>. Surfaces use it for badges, filters, and announcements.</td>

@@ -8628,6 +8628,22 @@ input:checked + .slider:before {
 									<button id="deleteCustomJsButton" class="glowingButton" style="width: 160px; margin-left: 0px;" title="Delete uploaded JavaScript file"><span>⛔ Delete</span></button>
 								</div>
                                 <h3><span class="popup-control-icon" aria-hidden="true">🖼️</span><span>GIFs and stickers ? Powered By GIPHY</span></h3>
+                                <div data-keywords="external GIF links sites Klipy Slinky self hosted animated images">
+                                    <label class="switch">
+                                        <input type="checkbox" id="allowExternalGifs" data-setting="allowExternalGifs" aria-labelledby="allowExternalGifsLabel" aria-describedby="allowExternalGifsHelp" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <label for="allowExternalGifs" id="allowExternalGifsLabel"><span class="popup-control-icon" aria-hidden="true">🖼️</span><span data-translate="allow-external-gif-links">Allow external GIF links</span></label>
+                                    <br /><small id="allowExternalGifsHelp">Direct .gif links only (query parameters allowed). No API key needed. Images are not content-filtered.</small>
+                                </div>
+                                <div data-keywords="external GIF hide URL link after loading">
+                                    <label class="switch">
+                                        <input type="checkbox" id="hideExternalGifUrl" data-setting="hideExternalGifUrl" aria-labelledby="hideExternalGifUrlLabel" aria-describedby="hideExternalGifUrlHelp" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <label for="hideExternalGifUrl" id="hideExternalGifUrlLabel"><span class="popup-control-icon" aria-hidden="true">🔗</span><span data-translate="hide-external-gif-url">Hide the GIF link after the image loads</span></label>
+                                    <br /><small id="hideExternalGifUrlHelp">For external GIF links in the dock and featured overlay. Keeps other message text and retains the link if loading fails.</small>
+                                </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" id="giphy" data-setting="giphy" />

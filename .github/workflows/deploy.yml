@@ -53,6 +53,10 @@ jobs:
               test -f "$checkout/shared/monetization/board-controls.js"
               test -f "$checkout/shared/monetization/board-controls.css"
             fi
+            # Content-image handling is shared by the dock and featured overlay.
+            if grep -q 'shared/utils/contentImage.js' "$checkout/dock.html" "$checkout/featured.html"; then
+              test -f "$checkout/shared/utils/contentImage.js"
+            fi
             # Alert sounds and their shared picker must ship together on the site.
             if [ -f "$checkout/shared/alerts/sound-library.js" ]; then
               test -f "$checkout/shared/alerts/sound-library.css"
