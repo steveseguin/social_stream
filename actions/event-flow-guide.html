@@ -560,7 +560,7 @@ Trigger ──────────────────▲
                     </thead>
                     <tbody>
                         <tr><td><code>{displayname}</code></td><td>Display name (alternate field)</td><td>CoolViewer123</td></tr>
-                        <tr><td><code>{donoValue}</code></td><td>Numeric donation value when known; Event Flow derives threshold values from normalized <code>hasDonation</code> labels such as value, <code>$</code>value, value + unit, or compact unit/value. Unknown named virtual units use 100 units = $0.01 USD. <code>{donationAmount}</code> is a legacy alias</td><td>5.00</td></tr>
+                        <tr><td><code>{donoValue}</code></td><td>USD donation equivalent, supplied or estimated; Event Flow derives threshold values from normalized <code>hasDonation</code> labels such as value, <code>$</code>value, value + unit, or compact unit/value. Unknown named virtual units use 100 units = $0.01 USD; unpriced TikTok gifts use one coin per gift ($0.01 each). <code>{donationAmount}</code> is a legacy alias</td><td>5.00</td></tr>
                         <tr><td><code>{event}</code></td><td>Event type identifier</td><td>cheer, raid, new_follower</td></tr>
                         <tr><td><code>{membership}</code></td><td>Membership state</td><td>MEMBERSHIP, new_sponsor</td></tr>
                         <tr><td><code>{subtitle}</code></td><td>Additional context</td><td>Member for 3 months</td></tr>
@@ -723,7 +723,7 @@ Trigger ──────────────────▲
                         <tr><td><code>message.userid</code></td><td>string</td><td>Platform user ID</td><td><code>"12345678"</code></td></tr>
                         <tr><td><code>message.type</code></td><td>string</td><td>Source platform (lowercase)</td><td><code>"twitch"</code>, <code>"youtube"</code>, <code>"kick"</code></td></tr>
                         <tr><td><code>message.hasDonation</code></td><td>string</td><td>Formatted donation string if present</td><td><code>"$5.00"</code>, <code>"500 bits"</code></td></tr>
-                        <tr><td><code>message.donoValue</code></td><td>number&nbsp;/&nbsp;string</td><td>Numeric donation value when the source can provide one. Event Flow falls back to <code>currency.js</code> conversion of normalized <code>hasDonation</code> labels for threshold comparisons, including 100 unknown named units = $0.01 USD. It does not parse <code>chatmessage</code> prose for donation values.</td><td><code>5</code></td></tr>
+                        <tr><td><code>message.donoValue</code></td><td>number&nbsp;/&nbsp;string</td><td>USD donation equivalent when the source provides one; valid zero values are honored. Event Flow falls back to <code>currency.js</code> conversion of normalized <code>hasDonation</code> labels for threshold comparisons, including 100 unknown named units = $0.01 USD. It does not parse <code>chatmessage</code> prose for donation values.</td><td><code>5</code></td></tr>
                         <tr><td><code>message.event</code></td><td>string</td><td>Event type identifier</td><td><code>"new_follower"</code>, <code>"cheer"</code>, <code>"raid"</code></td></tr>
                         <tr><td><code>message.membership</code></td><td>string</td><td>Membership state when applicable</td><td><code>"MEMBERSHIP"</code></td></tr>
                         <tr><td><code>message.subtitle</code></td><td>string</td><td>Secondary context line</td><td><code>"Member for 3 months"</code></td></tr>

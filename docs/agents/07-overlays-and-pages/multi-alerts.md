@@ -116,13 +116,7 @@ The alert card builder looks at many common SSN fields:
 - `channelId`
 - `meta`
 
-For donations and bits, it tries to parse a cash-like value from labels and numeric fields such as:
-
-- `donoValue`
-- `donationValue`
-- `meta.donoValue`
-- `meta.donationValue`
-- `meta.amount`
+For donations and bits, a valid `donoValue` is the USD amount, including zero. Otherwise, the shared currency helper converts original amount/currency metadata or the donation label. Legacy `donationValue`, `meta.donoValue`, and `meta.donationValue` remain USD fallbacks when no label is supplied; a bare `meta.amount` needs its currency.
 
 If `mindonation` or `mincash` is set, donation/bits alerts below that parsed value are skipped.
 
@@ -203,7 +197,7 @@ Event animation/sound rules:
 - `effect1type`: category (`donation` by default), or `follow`, `subscription`, `bits`, `raid`, `auction`, `hype`.
 - `effect1media`: direct GIF/image/video asset URL. Giphy page links are not asset URLs. GIFs have no audio; video playback remains muted.
 - `effect1sound`: sound asset URL, using the normal `beep` switch and `beepvolume` control.
-- `effect1min` / `effect1max`: optional inclusive estimated USD bounds for donations/bits. Set both to `100` for exactly $100; leave maximum blank for $100 or more. Comparison rounds to cents. Conversion uses the existing currency helper, not live exchange rates. Unlabelled `donoValue` alone is not eligible for amount rules because provider units vary.
+- `effect1min` / `effect1max`: optional inclusive estimated USD bounds for donations/bits. Set both to `100` for exactly $100; leave maximum blank for $100 or more. Comparison rounds to cents. Conversion uses the existing currency helper, not live exchange rates. A valid `donoValue` is already USD and takes priority over labels and provider metadata, including zero. Unpriced TikTok gifts use a one-coin-per-gift USD estimate.
 - Replace `effect1` with `effect2` or `effect3` for additional rules. First matching rule wins; put specific rules before broad ones. Empty media/sound fields fall back to the original media/category sound. Clearing both URLs disables a rule.
 - Leave amount bounds blank for non-value categories. Invalid ranges are ignored. Normal category/source/minimum filters, queueing, and `hidemedia` still apply.
 - **Test event in preview** sends a local sample at the rule's minimum (or maximum, or $100) through the normal matcher, so earlier rules still take priority. It does not send a live donation.

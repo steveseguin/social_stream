@@ -246,7 +246,6 @@
 			data.chatmessage = renderText(String(plainText || "").trim());
 			data.username = supporter.toLowerCase();
 			data.hasDonation = String(amount) + " " + currency;
-			data.donoValue = amount;
 			data.meta = {
 				eventType: "Tipped",
 				supporter: supporter,
@@ -407,7 +406,6 @@
 		if (message.createdAt || message.sent_at) data.timestamp = message.createdAt || message.sent_at;
 		if (eventName === "donation" && details.amount != null) {
 			data.hasDonation = String(details.amount) + " " + details.currency;
-			data.donoValue = details.amount;
 		}
 		if (eventName === "donation") {
 			data.meta = {

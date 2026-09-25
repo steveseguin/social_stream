@@ -95,8 +95,8 @@
     const amountMatch = amountToken || (message.match(/[$€£¥]\s*\d+([\.,]\d+)?/i) || [])[0];
     if (amountMatch) {
       const hasDonation = currencyToken ? `${amountMatch} ${currencyToken}` : amountMatch;
-      const numeric = Number.parseFloat(amountMatch.replace(/[^0-9.]+/g, ''));
-      return { hasDonation, donoValue: Number.isFinite(numeric) ? numeric : null };
+      // Let the shared converter interpret both the currency and localized separators.
+      return { hasDonation, donoValue: null };
     }
     return { hasDonation: '', donoValue: null };
   }

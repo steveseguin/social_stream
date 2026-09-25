@@ -9,14 +9,15 @@ const { chromium } = require('playwright');
 const source = fs.readFileSync(path.join(__dirname, '../sources/kick.js'), 'utf8');
 const declarations = acorn.parse(source, { ecmaVersion: 'latest' }).body[0].expression.callee.body.body;
 const names = ['processMessageNew', 'getKickUsernameButton', 'getKickInlineMessageNode',
-    'isKickMessageTextNode', 'isKickIgnoredContentNode', 'getAllContentNodes', 'escapeHtml'];
+    'isKickMessageTextNode', 'isKickIgnoredContentNode', 'getAllContentNodes', 'escapeHtml',
+    'getKickRenderedContentNode', 'getKickMessageText'];
 const functions = names.map(name => {
     const node = declarations.find(item => item.type === 'FunctionDeclaration' && item.id.name === name);
     assert.ok(node, name);
     return source.slice(node.start, node.end);
 }).join('\n');
 const constants = declarations.filter(node => node.type === 'VariableDeclaration' &&
-    node.declarations.some(item => /^KICK_MOD_ACTIONS/.test(item.id.name))).map(node => source.slice(node.start, node.end)).join('\n');
+    node.declarations.some(item => /^KICK_MOD_ACTIONS|^KICK_MESSAGE_CONTENT_SELECTOR$/.test(item.id.name))).map(node => source.slice(node.start, node.end)).join('\n');
 
 (async () => {
     const browser = await chromium.launch({ headless: true, args: ['--renderer-process-limit=1', '--js-flags=--single-threaded'] });

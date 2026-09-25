@@ -70,9 +70,9 @@ Evidence labels: `focused-node-test` and `ssapp-electron-e2e`. This does not val
 
 ## Donation Value Semantics
 
-Event Flow treats `hasDonation` as the paid-support display label and `donoValue` as the exact numeric value when a source provides one. Threshold logic for `eventDonation`, `compareProperty` on `donoValue`/`donationAmount`, and numeric `hasDonation` comparisons uses the exact `donoValue` first, then legacy `donationAmount`, then `currency.js` conversion of `hasDonation` with the source `type`.
+Event Flow treats `hasDonation` as the paid-support display label and `donoValue` as the source-supplied numeric USD equivalent (known or estimated). Threshold logic for `eventDonation`, `compareProperty` on `donoValue`/`donationAmount`, and numeric `hasDonation` comparisons uses a valid USD `donoValue` first, including zero, then `currency.js` conversion of original amount/currency metadata or `hasDonation` with the source `type`; `donationAmount` remains a fallback label.
 
-This conversion is only for normalized donation labels such as `1500 bits`, `$15 CAD`, `500 Stars`, `100 gifted subs`, `cheer100`, or `200 Jewels`. Event Flow does not parse `chatmessage` prose for donation values. Unknown named virtual units use the shared fallback of 100 units = $0.01 USD.
+This conversion is only for normalized donation labels such as `1500 bits`, `$15 CAD`, `500 Stars`, `100 gifted subs`, `cheer100`, or `200 Jewels`. Event Flow does not parse `chatmessage` prose for donation values. Unknown named virtual units use the shared fallback of 100 units = $0.01 USD; TikTok gifts instead default to one coin per gift ($0.01 each).
 
 `eventDonation` matches the named paid-support events `superchat`, `supersticker`, `jeweldonation`, legacy `donation`, and Twitch `cheer`; value-only rows with no `event` still use the `hasDonation` trigger.
 

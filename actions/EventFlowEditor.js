@@ -3007,8 +3007,7 @@ class EventFlowEditor {
 
 		const amount = this.parseTestDonationAmount(rawValue, 10);
 		const payload = {
-			hasDonation: '$' + amount.toFixed(2) + ' CAD',
-			donoValue: amount
+			hasDonation: '$' + amount.toFixed(2) + ' CAD'
 		};
 
 		if (platform === 'youtube' || platform === 'youtubeshorts') {

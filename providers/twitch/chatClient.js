@@ -406,6 +406,7 @@ export function createTwitchChatClient(options = {}) {
       chatbadges: badgeMapToChatBadges(badgeMap),
       hasDonation: tags?.bits ? (parseInt(tags.bits) === 1 ? '1 bit' : `${tags.bits} bits`) : '',
       bits: ensureNumber(tags?.bits, 0),
+      ...(tags?.bits ? { donoValue: ensureNumber(tags.bits, 0) / 100 } : {}),
       isModerator: tags?.mod === true || tags?.mod === '1' || Boolean(badgeMap?.moderator),
       isOwner: Boolean(badgeMap?.broadcaster),
       isSubscriber: Boolean(badgeMap?.subscriber),
@@ -552,6 +553,7 @@ export function createTwitchChatClient(options = {}) {
       timestamp: Number(userstate?.['tmi-sent-ts'] || formatters.now()),
       hasDonation: userstate?.bits ? (parseInt(userstate.bits) === 1 ? '1 bit' : `${userstate.bits} bits`) : '',
       bits: ensureNumber(userstate?.bits, 0),
+      donoValue: ensureNumber(userstate?.bits, 0) / 100,
       event: 'cheer',
       rawMessage: typeof message === 'string' ? message : '',
       raw: { channel: channelName, userstate, message }

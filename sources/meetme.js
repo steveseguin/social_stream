@@ -782,9 +782,6 @@ function toDataURL(url, callback) {
 			event: "donation",
 			meta: cleanMeta(meta)
 		};
-		if (amount) {
-			data.donoValue = amount;
-		}
 		emitWsData(data);
 	}
 
@@ -1064,9 +1061,6 @@ function toDataURL(url, callback) {
 			amount: giftAmount || "",
 			currency: giftAmount ? "credits" : ""
 		});
-		if (giftAmount) {
-			data.donoValue = giftAmount;
-		}
 
 		pushMessage(data);
 	}

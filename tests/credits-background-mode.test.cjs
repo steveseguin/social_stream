@@ -42,6 +42,9 @@ function createBackgroundHarness(initialStorage = {}) {
 		Date,
 		Math,
 		settings: { triggermode: { optionparam13: "background" } },
+		prepareOverlayControl(packet, target) {
+			return { ...packet, ssnControl: { id: 'credits-unit-test', target } };
+		},
 		streamID: "credits-test-session",
 		isExtensionOn: true,
 		remoteRouter: require(path.join(repoRoot, "js", "streamdeck-remote-control.js")),
@@ -134,7 +137,7 @@ function createBackgroundHarness(initialStorage = {}) {
 	assert.ok(Math.abs(giftSnapshot[0].donations - 0.03) < 1e-9);
 	gifts.api.captureBackgroundCreditsMessage({ chatname: "Unknown Gift", type: "tiktok", hasDonation: "3 gifts" });
 	const unknownGift = (await gifts.api.getBackgroundCreditsSnapshot()).find(user => user.name === "Unknown Gift");
-	assert.strictEqual(unknownGift.donations, 0);
+	assert.strictEqual(unknownGift.donations, 0.03);
 	assert.strictEqual(unknownGift.hasDonationActivity, true);
 	await new Promise(resolve => setTimeout(resolve, 350));
 	const resumedGifts = createBackgroundHarness(gifts.storage);
@@ -167,7 +170,7 @@ function createBackgroundHarness(initialStorage = {}) {
 
 	await harness.api.sendCreditsCommandPacket({ creditsCommand: "start", creditsSnapshot: snapshot });
 	assert.deepStrictEqual(harness.targeted.map(entry => entry.target), ["credits", "dock"]);
-	assert.strictEqual(harness.targeted[1].options.retry, true);
+	assert.strictEqual(harness.targeted[1].options.retry, false);
 	assert.strictEqual(harness.api.isCreditsRemoteAction("creditsStart"), true);
 	assert.strictEqual(harness.api.isCreditsRemoteAction("creditsTest"), true);
 	assert.strictEqual(harness.api.isCreditsRemoteAction("creditsUnknown"), false);

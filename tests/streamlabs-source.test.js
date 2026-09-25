@@ -44,4 +44,10 @@ const largeCheer = deriveDonation({ amount: '1,500' }, 'Alice cheered 1,500 bits
 assert.strictEqual(largeCheer.hasDonation, '1,500 bits');
 assert.strictEqual(largeCheer.donoValue, 15);
 
+for (const [amount, currency] of [['10', 'CAD'], ['1.234,56', 'USD']]) {
+  const donation = deriveDonation({ amount, currency }, '', 'donation');
+  assert.strictEqual(donation.hasDonation, `${amount} ${currency}`);
+  assert.strictEqual(donation.donoValue, null, 'display amounts must use the shared USD converter');
+}
+
 console.log('streamlabs-source tests passed');
