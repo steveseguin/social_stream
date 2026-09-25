@@ -63,6 +63,11 @@ body .textInputContainer .textInputUploadButton { grid-area:2 / 2; position:stat
 .colorInputRow > .textInputContainer { flex:1; margin-right:5px; }
 .colorInputRow > .colorPicker { cursor:pointer; width:27px; height:27px; padding:0; background:transparent; }
 
+/* Related sliders sit below their toggle and retain the shared range styling. */
+.popup-range-field { margin:6px 0 8px 40px; }
+.popup-range-field > label, .popup-range-field > small { display:block; margin:4px 0; }
+body .options .popup-range-field input[type="range"] { width:150px; max-width:calc(100% - 64px); margin-left:0; }
+
 /* Normal actions are neutral; test/play actions keep the familiar blue style. */
 body .options button:not(.glowingButton):not(.copy-link-btn),
 body .popup-settings-panel button, body .popup-secondary-button {

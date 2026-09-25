@@ -459,8 +459,8 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "aliases": [
               "largecontent"
             ],
-            "values": "boolean",
-            "description": "Enlarges embedded content or image cards"
+            "values": "boolean or 1-5",
+            "description": "Enlarges content images, GIFs and videos. An optional multiplier scales the 240px size from 1x to 5x, capped to the message width; the bare flag keeps the existing 240px size. Regular emotes are unchanged"
           },
           {
             "key": "donationright",

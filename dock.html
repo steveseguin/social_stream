@@ -497,11 +497,11 @@
 				min-width: 0;
 			}
 			.largeContent .hl-imgContent img, .largeContent .hl-imgContent video {
-				width: 240px;
+				width: var(--large-content-size, 240px);
 				max-width: calc(100% - 4px) !important;
 				margin: 0 2px;
 				height: auto !important;
-				max-height: 240px !important;
+				max-height: var(--large-content-size, 240px) !important;
 				object-fit: contain;
 			}
 			.largeContent .hl-content {
@@ -5179,6 +5179,9 @@
 			colorized = nameColorMode !== "none";
 
 			if (urlParams.has("largecontent")) {
+				var largeContentScale = parseFloat(urlParams.get("largecontent"));
+				largeContentScale = Number.isFinite(largeContentScale) ? Math.max(1, Math.min(5, largeContentScale)) : 1;
+				getById("output").style.setProperty("--large-content-size", (240 * largeContentScale) + "px");
 				getById("output").classList.add("largeContent");
 			}
 

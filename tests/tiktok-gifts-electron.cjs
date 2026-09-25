@@ -229,16 +229,23 @@ async function until(check, label, timeout = 30000) {
     for (const spec of [
       { name: 'Native Price', gift: { name: 'Unlisted priced gift', diamond_count: 40 }, count: 3, usd: 0.6 },
       { name: 'Native Coins', gift: { name: 'Unlisted coin gift', coins: 20 }, count: 3, usd: 0.6 },
-      { name: 'Native Unknown', gift: { name: 'Unlisted unknown gift' }, count: 4, usd: 0.04 }
+      { name: 'Native Unknown', gift: { name: 'Unlisted unknown gift' }, count: 4, usd: 0.04 },
+      { name: 'Catalog Name', gift: { name: '  GALAXY  ' }, count: 2, usd: 20 },
+      { name: 'Catalog ID', giftId: '5731', gift: {}, count: 2, usd: 9.98 },
+      { name: 'Catalog Icon', hash: 'd4faa402c32bf4f92bee654b2663d9f1', gift: {}, count: 2, usd: 9.98 },
+      { name: 'Catalog Image Name', gift: {}, alt: 'Galaxy', count: 2, usd: 20 },
+      { name: 'Native Beats Catalog', gift: { name: 'Galaxy', coins: 12 }, count: 3, usd: 0.36 }
     ]) {
       await source.evaluate(spec => {
         const row = document.createElement('div');
         row.dataset.index = spec.name;
         row.innerHTML = '<div><span data-e2e="message-owner-name"></span></div><div>sent gift <img src="https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~tplv-obj.png"> x' + spec.count + '</div>';
         row.querySelector('span').textContent = spec.name;
+        if (spec.hash) row.querySelector('img').src = 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/' + spec.hash + '~tplv-obj.png';
+        if (spec.alt) row.querySelector('img').alt = spec.alt;
         row.firstElementChild.__reactFiberFixture = { memoizedProps: { message: {
           messageType: 'GiftMessage', msgId: spec.name, payload: {
-            group_id: spec.name, gift_id: spec.name, repeat_count: spec.count, repeat_end: 1,
+            group_id: spec.name, gift_id: spec.giftId || spec.name, repeat_count: spec.count, repeat_end: 1,
             gift: spec.gift, user: { id: spec.name }
           }
         } } };
