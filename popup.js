@@ -704,13 +704,19 @@ if (typeof(chrome.runtime)=='undefined'){
 				// Generate unique callback ID
 				const callbackId = ++callbackIdCounter;
 				const isGetSettingsRequest = !!(data && data.cmd === "getSettings");
-				const timeoutMs = isGetSettingsRequest ? 3000 : 500;
+				const isLLMProviderTestRequest = !!(data && data.cmd === "testLLMProvider");
+				const timeoutMs = isLLMProviderTestRequest ? 60000 : (isGetSettingsRequest ? 3000 : 500);
 				
 				// Create promise with timeout
 				const promise = new Promise((resolve) => {
 					// Store callback with timeout
 					const timeoutId = setTimeout(() => {
 						pendingCallbacks.delete(callbackId);
+						if (isLLMProviderTestRequest) {
+							// The provider may still be working. Never resubmit a timed-out test.
+							resolve({ success: false, error: 'Connection test timed out.' });
+							return;
+						}
 						if (isGetSettingsRequest) {
 							// For startup hydration, avoid forcing a synchronous fallback from potentially stale cache.
 							// Let periodic retries continue, and allow late async callback responses to update the UI.
@@ -5731,11 +5737,12 @@ async function testSelectedLLMProvider() {
     output.textContent = '';
 
     try {
-        const response = await sendPopupBackgroundCommand({
+        // Submit once: the generic background-command fallback can repeat a slow request.
+        const response = await sendRuntimeCommandMessage({
             cmd: 'testLLMProvider',
             prompt: 'Reply with one short sentence confirming this chatbot connection works.',
             settingsOverride: collectLLMProviderTestSettings()
-        }, 60000);
+        }, 60000, false);
 
         if (response && response.success) {
             status.textContent = 'Connected';
@@ -5750,7 +5757,7 @@ async function testSelectedLLMProvider() {
     } catch (error) {
         status.textContent = 'Failed';
         status.style.color = '#ff8a8a';
-        output.textContent = error?.message || String(error);
+        output.textContent = error?.message === 'Response timeout' ? 'Connection test timed out.' : (error?.message || String(error));
         console.error('[LLM Test] Provider test threw:', error);
     } finally {
         output.style.display = 'block';

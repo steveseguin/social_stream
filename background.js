@@ -935,23 +935,25 @@ if (typeof chrome.runtime == "undefined") {
 		});
 	});
 
-	fetchNode = function (URL, headers = {}, method = "GET", body = null, diagnostics = null) {
+	fetchNode = function (URL, headers = {}, method = "GET", body = null, diagnostics = null, timeout = undefined) {
 		return ipcRenderer.sendSync("nodefetch", {
 			url: URL,
 			headers: headers,
 			method: method,
 			body: body,
-			diagnostics: diagnostics
+			diagnostics: diagnostics,
+			timeout: timeout
 		});
 	};
 
-	fetchNodeAsync = function (URL, headers = {}, method = "GET", body = null, diagnostics = null) {
+	fetchNodeAsync = function (URL, headers = {}, method = "GET", body = null, diagnostics = null, timeout = undefined) {
 		return ipcRenderer.invoke("nodefetch", {
 			url: URL,
 			headers: headers,
 			method: method,
 			body: body,
-			diagnostics: diagnostics
+			diagnostics: diagnostics,
+			timeout: timeout
 		});
 	};
 
@@ -5841,7 +5843,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			}
 		} else if (request.cmd && request.cmd === "testLLMProvider") {
 			try {
-				const llmResponse = await callLLMAPI(request.prompt || "Reply with one short sentence confirming this chatbot connection works.", null, null, null, null, null, { settings: request.settingsOverride || null });
+				const llmResponse = await callLLMAPI(request.prompt || "Reply with one short sentence confirming this chatbot connection works.", null, null, null, null, null, { settings: request.settingsOverride || null, requestTimeoutMs: 60000 });
 				sendResponse({ success: true, response: llmResponse });
 			} catch (error) {
 				let payload;
