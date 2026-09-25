@@ -4895,6 +4895,8 @@
 
 			if (urlParams.get("custombeep")) {
 				updateAudioSource(urlParams.get("custombeep"));
+			} else if (urlParams.has("loudbeep")) {
+				updateAudioSource("./audio/tone-loud.wav");
 			}
 
 			if (urlParams.has("beepvolume")) {

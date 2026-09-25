@@ -2859,6 +2859,16 @@ input:checked + .slider:before {
                                         <span class="range-value" id="dock-beep-volume-display">30%</span>
                                     </span>
                                 </div>
+                                <div class="popup-toggle-row" title="Use a louder version of the built-in notification sound. Enable new-message beeps separately. Custom beep URLs take priority." data-keywords="louder beep preset notification sound volume boost amplify gain">
+                                    <label class="switch">
+                                        <input type="checkbox" id="dock-loud-beep" data-param1="loudbeep" aria-labelledby="dock-loud-beep-label" aria-describedby="dock-loud-beep-help" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <label for="dock-loud-beep" id="dock-loud-beep-label"><span class="popup-control-icon" aria-hidden="true">🔊</span>Louder built-in beep</label>
+                                    <button type="button" id="dock-loud-beep-preview" class="tts-test-button" title="Preview the louder preset using your Beep volume setting"><span aria-hidden="true">▶</span> Preview louder beep</button>
+                                </div>
+                                <small id="dock-loud-beep-help">Custom beep URLs take priority.</small>
+                                <span id="dock-loud-beep-status" role="status" aria-live="polite"></span>
                                 <div class="textInputContainer textInputWithUpload" style="width: 95%;" title="Specify a URL for a custom beep audio file">
                                     <input type="text" id="custombeep" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-translate="placeholder-audio-url" data-textparam1="custombeep" />
                                     <label for="custombeep"><span class="popup-control-icon" aria-hidden="true">🔗</span><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>
