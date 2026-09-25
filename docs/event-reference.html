@@ -72,6 +72,8 @@
                                 <li><a href="#instagram">Instagram</a></li>
                                 <li><a href="#onlinechurch">Online Church</a></li>
                                 <li><a href="#shareplay">SharePlay</a></li>
+                                <li><a href="#gosh">Gosh</a></li>
+                                <li><a href="#livacha">Livacha</a></li>
                                 <li><a href="#streamplace">Streamplace</a></li>
                                 <li><a href="#worldswave">WorldsWave</a></li>
                                 <li><a href="#flextv">FLEX TV</a></li>
@@ -2184,6 +2186,20 @@
                 <p class="source-note">Implementation: <code>sources/sooplive.js</code>. Supports the unified <code>play.sooplive.com</code> player and legacy <code>play.sooplive.co.kr</code> URLs. The former global chat layout remains recognized when served.</p>
                 <p>Public chat emits <code>type</code>/<code>platform: "sooplive"</code>, plain-text <code>chatname</code>/<code>userid</code>, <code>nameColor</code>, and sanitized <code>chatmessage</code>. Existing rows, duplicate message IDs, translation copies, and private whispers are excluded. Emotes become safe images or alt text in text-only mode.</p>
                 <p>With <code>showviewercount</code> or <code>hypemode</code> enabled, <code>viewer_update</code> carries an integer <code>meta</code> from the player's <code>#nAllViewer</code>. Chat-only popouts may not expose this count. SSApp uses the full player when opening a detached popup, since current SOOP popouts depend on their opener.</p>
+            </section>
+
+            <section class="section-summary" id="gosh">
+                <h2>Gosh - Channel Chat Capture</h2>
+                <p class="source-note">Implementation: <code>sources/gosh.js</code>. Open <code>https://gosh.com/USERNAME</code> with chat visible, or paste that URL into SSApp's Add other source. A chat popout is not required.</p>
+                <p>New chat rows emit <code>type</code>/<code>platform: "gosh"</code>, plain-text <code>chatname</code>, <code>nameColor</code>, and sanitized <code>chatmessage</code>. Inline images and GIFs retain safe HTTP(S) URLs. With <code>textonlymode</code>, images become alt text or <code>[image]</code> when no alt text is available. Avatars, badges, donations, and memberships remain empty when absent from the captured row.</p>
+                <p>Keep the virtualized chat scrolled to the newest messages. Existing history, rerendered rows, and authorless system notices are excluded. Render indexes stay internal and are not emitted as native message IDs. No follow, donation, viewer-count, or moderation events are inferred.</p>
+            </section>
+
+            <section class="section-summary" id="livacha">
+                <h2>Livacha - Chat Room Capture</h2>
+                <p class="source-note">Implementation: <code>sources/livacha.js</code>. Open <code>https://livacha.com/chat/ROOM</code> with chat visible, or paste the room URL into SSApp's Add other source.</p>
+                <p>New chat rows emit <code>type</code>/<code>platform: "livacha"</code>, plain-text <code>chatname</code>, <code>chatimg</code>, <code>nameColor</code>, and sanitized <code>chatmessage</code>. Relative avatar and inline image URLs become absolute HTTP(S) URLs. Paragraphs, line breaks, and lists are flattened into one chat message. With <code>textonlymode</code>, images become alt text or <code>[image]</code>.</p>
+                <p>Message IDs are used internally to avoid recapturing edits and remounted rows. Initial history and prepended older messages are skipped; timestamps and reaction menus are outside the captured body. No donation, membership, moderation, or viewer-count events are inferred.</p>
             </section>
 
             <section class="section-summary" id="streamspace">
