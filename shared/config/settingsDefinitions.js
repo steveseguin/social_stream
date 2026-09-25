@@ -774,6 +774,16 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "configure_llm_api",
     description: "Gemini model identifier to call (for example gemini-2.5-flash)."
   },
+  "allowExternalGifs": {
+    type: "boolean",
+    category: "giphy_tenor_support",
+    description: "Display the first direct HTTP(S) GIF link in chat, including .gif URLs with query parameters. Disabled by default; no API key required. External images are not content-filtered."
+  },
+  "hideExternalGifUrl": {
+    type: "boolean",
+    category: "giphy_tenor_support",
+    description: "Hide a detected external GIF link in the dock and featured overlay only after its image loads. Preserve other text and keep the link on failure. Disabled by default."
+  },
   "giphy": {
     type: "boolean",
     category: "giphy_tenor_support",

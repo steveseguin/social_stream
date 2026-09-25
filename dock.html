@@ -11,6 +11,7 @@
 		<meta name="robots" content="noindex">
 		<script type="text/javascript" src="currency.js"></script>
 		<script type="text/javascript" src="./libs/objects.js"></script>
+		<script src="./shared/utils/contentImage.js"></script>
 
 		<style>
 			:root {
@@ -12019,10 +12020,10 @@
 
 					var addImage = "";
 					if (data.contentimg) {
-						if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
-							addImage = '<div class="hl-imgContent"><video autoplay="true" muted="true" src="' + data.contentimg + '" onerror="this.style.display = \'none\';" /></video></div>';
+						if (/\.(mp4|webm)$/i.test(data.contentimg.split(/[?#]/)[0])){
+							addImage = '<div class="hl-imgContent"><video autoplay="true" muted="true" src="' + escapeAttributeValue(data.contentimg) + '" /></video></div>';
 						} else {
-							addImage = '<div class="hl-imgContent"><img src="' + data.contentimg + '" onerror="this.style.display = \'none\';" /></div>';
+							addImage = '<div class="hl-imgContent"><img alt="" src="' + escapeAttributeValue(data.contentimg) + '" /></div>';
 						}
 					} else if (attachmentsonly) {
 						data.chatmessage = "";
@@ -12673,6 +12674,7 @@
 					if (chatmessage && hlMessage && (stripLinksForMessage || activeLinks || shortlink)) {
 						processURLs(hlMessage, { makeClickable: activeLinks, stripLinks: stripLinksForMessage, shortenURLs: shortlink });
 					} 
+					SSNContentImage.watch(node, data, contentElement || hlMessage);
 					
 					if (data.type && data.type == "twitch" && avatars && data.chatimg && data.chatname) { 
 						// Load Twitch avatar
