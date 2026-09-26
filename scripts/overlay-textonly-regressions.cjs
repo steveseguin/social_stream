@@ -12,9 +12,63 @@ async function loadInlinePage(browser, relativePath) {
   return page;
 }
 
+async function loadSessionPage(browser, relativePath) {
+  const page = await browser.newPage();
+  const pageUrl = "http://127.0.0.1/overlay-test?session=LOCAL_TEST_ONLY";
+  await page.route("**/*", route => route.request().url() === pageUrl
+    ? route.fulfill({ contentType: "text/html", body: fs.readFileSync(path.join(root, relativePath), "utf8") })
+    : route.abort());
+  await page.goto(pageUrl, { waitUntil: "domcontentloaded" });
+  return page;
+}
+
+async function renderMessage(page, relativePath, payload) {
+  await page.evaluate(({ relativePath, payload }) => {
+    if (relativePath === "samplefeatured.html") {
+      App.showMessage(payload);
+    } else {
+      addMessageToOverlay(payload);
+    }
+  }, { relativePath, payload });
+}
+
 (async () => {
   const browser = await chromium.launch({ headless: true });
   try {
+    for (const relativePath of ["sampleoverlay.html", "samplefeatured.html", "themes/overlay-typewriter.html"]) {
+      const page = await loadSessionPage(browser, relativePath);
+      await page.evaluate(() => {
+        window.__textonlyExecuted = false;
+        if (typeof TYPE_SPEED !== "undefined") {
+          TYPE_SPEED = 0;
+          Math.random = () => 0;
+        }
+      });
+      const plainText = '<img id="message-payload" src="data:image/png;base64,broken" onerror="window.__textonlyExecuted=true"> &lt;b&gt; & "\' 👋';
+      const payload = { chatname: "Alice", chatmessage: plainText, chatbadges: [], textonly: true, type: "twitch" };
+      const message = page.locator(relativePath === "samplefeatured.html" ? "#message" : ".message .text").last();
+      await renderMessage(page, relativePath, payload);
+      await page.waitForFunction(() => !document.querySelector(".text.typing"));
+      await page.waitForTimeout(50);
+      assert.strictEqual(await page.evaluate(() => window.__textonlyExecuted), false, relativePath);
+      assert.strictEqual(await page.locator("#message-payload").count(), 0, relativePath);
+      assert.strictEqual(await message.locator("*").count(), 0, relativePath);
+      assert.strictEqual(await message.textContent(), plainText, relativePath);
+
+      // Sanitized relay HTML and legacy messages without textonly must retain formatting and emotes.
+      for (const textonly of [false, undefined]) {
+        await renderMessage(page, relativePath, {
+          ...payload,
+          textonly,
+          chatmessage: '<b>Hello</b> <img class="emote" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=" alt="wave">'
+        });
+        assert.strictEqual(await message.locator("b").textContent(), "Hello", relativePath);
+        assert.strictEqual(await message.locator("img.emote").count(), 1, relativePath);
+        assert.strictEqual(await message.evaluate(element => element.classList.contains("typing")), false, relativePath);
+      }
+      await page.close();
+    }
+
     for (const relativePath of [
       "themes/deuks_overlay/overlay1.html",
       "themes/huan-kiara/index.html"
