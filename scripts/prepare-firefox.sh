@@ -21,6 +21,9 @@ rsync -a \
     --exclude='.agents/' \
     --exclude='.claude/' \
     --exclude='.codex*/' \
+    --exclude='/.codex-tmp-*.diff' \
+    --exclude='.playwright-mcp/' \
+    --exclude='.npm-cache/' \
     --include='docs/' \
     --include='docs/css/' \
     --include='docs/js/' \
@@ -43,7 +46,15 @@ rsync -a \
     --exclude='scripts/' \
     --exclude='node_modules/' \
     --exclude='tmp/' \
+    --exclude='/tmp-*' \
+    --exclude='/tmp_*' \
+    --exclude='/.tmp_*' \
     --exclude='artifacts/' \
+    --exclude='playwright-report/' \
+    --exclude='test-results/' \
+    --exclude='/%SystemDrive%/' \
+    --exclude='/face-preview.png' \
+    --exclude='*.log' \
     --exclude='local-tts-bridge/' \
     --exclude='ssn-streamdeck/' \
     --exclude='electron_app_reference/' \
