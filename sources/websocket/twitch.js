@@ -3793,6 +3793,7 @@ async function ensureChatClientInstance() {
 			data.timestamp = normalizedPayload.timestamp;
 		}
 		data.hasDonation = hasDonation;
+		if (hasDonation) data.donoValue = Number(parsedMessage.tags.bits) / 100;
 		if (sourceInfo.image) {
 			data.sourceImg = sourceInfo.image;
 		}
@@ -4797,6 +4798,7 @@ async function cleanupCurrentConnection() {
 			bits: event.bits,
 			chatmessage: getEventSubMessageText(event.message),
 			hasDonation: formatBitAmount(event.bits),
+			donoValue: Number(event.bits) / 100,
 			meta: { userId: event.user_id, bits: event.bits },
 			title: getTranslation("cheers", "CHEERS"),
 			textonly: settings.textonlymode || false

@@ -43,6 +43,8 @@ tests/*
 !tests/discord-streamkit-source.test.js
 !tests/discord-webhook-format.test.js
 !tests/kick-websocket-assets.test.js
+!tests/kick-replies.test.js
+!tests/kick-gifts-dom.test.js
 !tests/websocket-compact-layout.test.cjs
 !tests/youtube-polling-status.test.cjs
 !tests/kick-badges-electron.test.cjs
@@ -65,7 +67,12 @@ tests/*
 !tests/server-controls-extension-e2e.cjs
 !tests/dock-filtered-history.test.js
 !tests/popup-search.test.js
+!tests/llm-provider-test-ssapp.e2e.cjs
+!tests/gosh-source-ssapp.e2e.cjs
+!tests/livacha-source-ssapp.e2e.cjs
 !tests/twitch-gif-message.test.js
+!tests/external-gifs.test.js
+!tests/gif-display.test.js
 !tests/twitch-watch-streak.test.js
 !tests/twitch-watch-streak-dom.test.js
 !tests/pluralmind-integration.test.js
@@ -109,8 +116,15 @@ tests/cohost-customopenai*.playwright.js
 # Generated benchmark/stress outputs
 artifacts/
 tests/artifacts/
+.playwright-mcp/
+playwright-report/
+test-results/
 tmp/
-debug.log
+/tmp-*
+/tmp_*
+*.log
+/face-preview.png
+/tests/voice-recordings-results.json
 docs/md/
 .tmp_*
 .codex-tmp/
@@ -180,7 +194,6 @@ tests/fixtures/*
 !tests/build-voice-corpus.py
 !tests/voice-recordings-ssapp.e2e.cjs
 !tests/voice-capture.test.cjs
-!tests/voice-recordings-results.json
 !tests/voice-thread-benchmark.cjs
 !tests/voice-windows-benchmark.ps1
 !tests/voice-native-benchmark.cjs
@@ -197,6 +210,7 @@ tests/fixtures/*
 !tests/piper-local-assets.test.js
 
 !scripts/build-alert-sounds.cjs
+!scripts/build-loud-beep.cjs
 !scripts/alert-library-e2e.cjs
 !tests/popup-settings-a11y.test.cjs
 !tests/popup-extension-click.test.cjs
@@ -246,3 +260,18 @@ tests/fixtures/*
 !tests/featured-routing-ssapp.e2e.cjs
 
 !tests/sooplive-source.test.js
+!tests/source-author-attribution.test.js
+!tests/whatnot-source.test.cjs
+!tests/whatnot-ssapp.e2e.cjs
+
+# Keep the source-to-overlay security review and local reproduction runnable.
+!tests/chat-security-boundaries.test.cjs
+!tests/chat-security-boundaries.md
+!tests/chat-security-demo.html
+!tests/chat-security-demo.js
+!tests/chat-security-demo.test.cjs
+!tests/serve-chat-security-demo.cjs
+!tests/helpers/
+tests/helpers/*
+!tests/helpers/chat-security-harness.cjs
+!tests/fixtures/chat-security-demo/

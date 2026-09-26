@@ -2859,6 +2859,16 @@ input:checked + .slider:before {
                                         <span class="range-value" id="dock-beep-volume-display">30%</span>
                                     </span>
                                 </div>
+                                <div class="popup-toggle-row" title="Use a louder version of the built-in notification sound. Enable new-message beeps separately. Custom beep URLs take priority." data-keywords="louder beep preset notification sound volume boost amplify gain">
+                                    <label class="switch">
+                                        <input type="checkbox" id="dock-loud-beep" data-param1="loudbeep" aria-labelledby="dock-loud-beep-label" aria-describedby="dock-loud-beep-help" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <label for="dock-loud-beep" id="dock-loud-beep-label"><span class="popup-control-icon" aria-hidden="true">🔊</span>Louder built-in beep</label>
+                                    <button type="button" id="dock-loud-beep-preview" class="tts-test-button" title="Preview the louder preset using your Beep volume setting"><span aria-hidden="true">▶</span> Preview louder beep</button>
+                                </div>
+                                <small id="dock-loud-beep-help">Custom beep URLs take priority.</small>
+                                <span id="dock-loud-beep-status" role="status" aria-live="polite"></span>
                                 <div class="textInputContainer textInputWithUpload" style="width: 95%;" title="Specify a URL for a custom beep audio file">
                                     <input type="text" id="custombeep" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-translate="placeholder-audio-url" data-textparam1="custombeep" />
                                     <label for="custombeep"><span class="popup-control-icon" aria-hidden="true">🔗</span><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>
@@ -2905,7 +2915,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param1="autoshow" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="auto-select-new-messages-skipping-as-needed">🔖 Automatically feature new messages (requires the dock to remain open) </span>
+                                    <span data-translate="auto-select-new-messages-skipping-as-needed">🔖 Automatically feature new messages — all of them, unless limited by the options below (requires the dock to remain open) </span>
                                 </div>
 								<div data-keywords="manual selection context menu alt control choose yourself">
                                     <label class="switch">
@@ -2983,21 +2993,21 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param1="autoshowdonos" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="when-auto-selecting-is-on-only-auto-select-donations">🏷️ When auto-select is on, select donations </span>
+                                    <span data-translate="when-auto-selecting-is-on-only-auto-select-donations">🏷️ Auto-feature donations </span>
                                 </div>
                                 <div data-keywords="memberships supporters subs loyalty program priority vip">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="autoshowmembers" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="when-auto-selecting-is-on-only-auto-select-members">👑 When auto-select is on, select those from members </span>
+                                    <span data-translate="when-auto-selecting-is-on-only-auto-select-members">👑 Auto-feature messages from members </span>
                                 </div>
 								<div data-keywords="Show messages that contain a content-image; such as those created using #giphy option">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="autoshowcontentimages" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="autoshowcontentimages">😺 When auto-select is on, select those with a content image</span>
+                                    <span data-translate="autoshowcontentimages">😺 Auto-feature messages with a content image</span>
                                 </div>
 								<div data-keywords="youtube membership loyalty badge monthly support highlight">
                                     <label class="switch">
@@ -4568,12 +4578,18 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="make-emojis-larger">😊 Make emojis larger </span>
                                 </div>
-                                <div>
-                                    <label class="switch" title="Show content images and videos up to 240px, including Twitch GIFs and stickers (does not resize regular emotes)">
-                                        <input type="checkbox" data-param1="largecontent" />
+                                <div data-keywords="content image size scale GIF Giphy Klipy Slinky external media video stickers enlarge bigger">
+                                    <label class="switch">
+                                        <input type="checkbox" id="dock-largecontent-enabled" data-param1="largecontent" aria-labelledby="dock-largecontent-label" aria-describedby="dock-largecontent-help" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="make-content-images-larger-giphyetc">🖼️ Make content-images larger (giphy,etc) </span>
+                                    <label for="dock-largecontent-enabled" id="dock-largecontent-label"><span data-translate="make-content-images-larger-giphyetc">🖼️ Make content-images larger (giphy,etc) </span></label>
+                                    <div class="popup-range-field">
+                                        <label for="dock-largecontent-range">Content image size</label>
+                                        <input type="range" id="dock-largecontent-range" min="1" max="5" step="0.25" value="1" data-numbersetting="largecontent" data-range-display="dock-largecontent-display" data-range-suffix="x" aria-describedby="dock-largecontent-help" />
+                                        <span class="range-value" id="dock-largecontent-display">1.00x</span>
+                                        <small id="dock-largecontent-help">1× = 240px. Fits the message width. Includes GIFs, images and videos; regular emotes keep their size.</small>
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -4804,6 +4820,13 @@ input:checked + .slider:before {
 											<label for="dock_question_highlight_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Question highlight color</label>
 										</div>
 										<input type="color" data-color="dock_question_highlight_color" id="dock_question_highlight_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									</div>
+									<div class="colorInputRow" title="Requires Allow background shading for trivial events. Leave blank to use the default colors." data-keywords="trivial event @host mention highlight background color colour">
+										<div class="textInputContainer">
+											<input type="text" id="dock_trivial_highlight_color" class="textInput instant" autocomplete="off" placeholder="e.g. #4b206b" data-textparam1="trivialhighlightcolor" data-palette="dock_trivial_highlight_color_palette" />
+											<label id="dock_trivial_highlight_color_label" for="dock_trivial_highlight_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Trivial event highlight color</label>
+										</div>
+										<input type="color" data-color="dock_trivial_highlight_color" id="dock_trivial_highlight_color_palette" class="colorPicker" value="#fff387" aria-labelledby="dock_trivial_highlight_color_label" />
 									</div>
 								</div>
                                 <div>
@@ -8628,6 +8651,22 @@ input:checked + .slider:before {
 									<button id="deleteCustomJsButton" class="glowingButton" style="width: 160px; margin-left: 0px;" title="Delete uploaded JavaScript file"><span>⛔ Delete</span></button>
 								</div>
                                 <h3><span class="popup-control-icon" aria-hidden="true">🖼️</span><span>GIFs and stickers ? Powered By GIPHY</span></h3>
+                                <div data-keywords="external GIF links sites Klipy Slinky self hosted animated images">
+                                    <label class="switch">
+                                        <input type="checkbox" id="allowExternalGifs" data-setting="allowExternalGifs" aria-labelledby="allowExternalGifsLabel" aria-describedby="allowExternalGifsHelp" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <label for="allowExternalGifs" id="allowExternalGifsLabel"><span class="popup-control-icon" aria-hidden="true">🖼️</span><span data-translate="allow-external-gif-links">Allow external GIF links</span></label>
+                                    <br /><small id="allowExternalGifsHelp">Direct .gif links only (query parameters allowed). No API key needed. Images are not content-filtered.</small>
+                                </div>
+                                <div data-keywords="external GIF hide URL link after loading">
+                                    <label class="switch">
+                                        <input type="checkbox" id="hideExternalGifUrl" data-setting="hideExternalGifUrl" aria-labelledby="hideExternalGifUrlLabel" aria-describedby="hideExternalGifUrlHelp" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <label for="hideExternalGifUrl" id="hideExternalGifUrlLabel"><span class="popup-control-icon" aria-hidden="true">🔗</span><span data-translate="hide-external-gif-url">Hide the GIF link after the image loads</span></label>
+                                    <br /><small id="hideExternalGifUrlHelp">For external GIF links in the dock and featured overlay. Keeps other message text and retains the link if loading fails.</small>
+                                </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" id="giphy" data-setting="giphy" />
@@ -11720,10 +11759,14 @@ input:checked + .slider:before {
                                 </div>
                                 <div>
                                     <label class="switch">
-                                        <input type="checkbox" data-param4="hidetitle" aria-label="Hide alert title" />
+                                        <input type="checkbox" data-param4="hidetitle" aria-label="Hide overlay title" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="do-not-show-the-sub-title">🧹 Do not show the title "current viewer count"</span>
+                                </div>
+                                <div class="textInputContainer" title="Leave blank to use the default title. The hide title option also hides custom titles.">
+                                    <input type="text" id="hype_title_text" class="textInput instant" autocomplete="off" placeholder="Leave blank for the default title" data-textparam4="title" />
+                                    <label for="hype_title_text"><span data-translate="custom-title">📝 Custom title</span></label>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -13525,6 +13568,7 @@ input:checked + .slider:before {
                                 </div>
                                 <p id="giveaway-control-status" role="status" aria-live="polite">Select Refresh status to check the current pool.</p>
                                 <button type="button" id="giveaway-manage">Manage giveaways and history</button>
+                                <a class="popup-guide-link" href="https://socialstream.ninja/docs/giveaway-guide.html" target="_blank" rel="noopener">How to run your first giveaway</a>
                                 <a class="popup-guide-link" href="https://socialstream.ninja/docs/giveaway-points-guide.html" target="_blank" rel="noopener">Giveaway, points and recovery guide</a>
                                 <h3><span class="popup-control-icon" aria-hidden="true">&#127912;</span>Presentation</h3>
                                 <div class="textInputContainer">
@@ -13539,7 +13583,7 @@ input:checked + .slider:before {
                                 <div class="textInputContainer"><select id="giveaway-backdrop" class="textInput" data-optionparam14="backdrop"><option value="transparent">Transparent (OBS)</option><option value="panel">Themed panel</option></select><label for="giveaway-backdrop">Background</label></div>
                                 <div><button type="button" id="giveaway-preview" class="tts-test-button">&#9654; Preview display</button></div>
                                 <details><summary>Advanced and integrations</summary>
-                                    <p>Keep SSN running: the host owns the pool, so all open giveaway displays show the same result. Restarting SSN or changing sessions clears the pool. Preview uses sample names only.</p>
+                                    <p>Keep SSN running: the host owns the pool, so all open giveaway displays show the same result. Saved rounds remain after restarting SSN, with entries closed for review. Each session has its own giveaways. Preview uses sample names only.</p>
                                     <p>API / Stream Deck actions: <code>startgiveaway</code>, <code>closegiveaway</code>, <code>drawgiveaway</code>, <code>resetgiveaway</code>, <code>getgiveawaystate</code>.</p>
                                     <p><a href="docs/polls-giveaways-waitlists-guide.html#giveaway" target="_blank" rel="noopener noreferrer">Giveaway setup and API guide</a> &middot; <a href="#waitlist">Existing Wait List / Winner Draw</a></p>
                                 </details>

@@ -1884,7 +1884,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						kind: 'llm',
 						provider,
 						model: message.model
-					});
+					}, options.requestTimeoutMs);
 					
 					if (response.status !== 200) {
 						let errorMessage = '';

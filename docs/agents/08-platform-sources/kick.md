@@ -133,7 +133,8 @@ Important event names from `docs/event-reference.html` and `sources/websocket/ki
 - `new_subscriber`: new subscription.
 - `resub`: subscription renewal.
 - `subscription_gift`: gifted subs.
-- `donation`: KICKs/tips/support events.
+- `gift`: KICKs gifts (DOM scraper and bridge).
+- `donation`: tips/support events.
 - `raid`: incoming host/raid.
 - `new_follower`: follow event.
 - `follower_update`: total follower count.

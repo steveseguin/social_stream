@@ -368,7 +368,7 @@ img.ssn-content-image {
         // Calculate USD value if donation
         let usdValue = 0;
         if (data.hasDonation) {
-            usdValue = convertToUSD(data.hasDonation, data.type);
+            usdValue = getDonationValueUSD(data);
             
             // Add value-based class
             if (usdValue >= 50) {

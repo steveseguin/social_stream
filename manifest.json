@@ -2,7 +2,7 @@
 	"name": "Social Stream Ninja",
 	"description": "Capture live chat from 100+ supported sites and consolidate it into a single dashboard for live production workflows",
 	"manifest_version": 3,
-	"version": "3.50.14",
+	"version": "3.50.15",
 	"homepage_url": "http://socialstream.ninja/",
 	"browser_specific_settings": {
 		"gecko": {
@@ -22,7 +22,7 @@
 	"permissions": ["webNavigation", "notifications", "storage", "debugger", "tabs", "scripting", "activeTab", "tabCapture", "identity"],
 	"web_accessible_resources": [
 		{
-			"resources": ["providers/kick/core.js", "shared/kickBadges.js", "providers/twitch/chatClient.js", "providers/youtube/liveChat.js", "providers/youtube/contextResolver.js", "shared/utils/scriptLoader.js", "shared/utils/compactSourceLayout.js", "shared/compact-source-layout.css", "shared/overlay-control-transport.js", "shared/alerts/*", "audio/alerts/*", "shared/stickers/*", "shared/monetization/*", "shared/audience-room/*", "shared/giveaway/*", "media/stickers/*", "shared/utils/html.js", "shared/utils/twitchEmotes.js", "shared/aiPrompt/overlayStore.js", "shared/vendor/socket.io.min.js", "shared/vendor/tmi.js", "shared/vendor/tmi.module.js", "shared/ai/browserModelCatalog.js", "shared/ai/localBrowserLLM.js", "local-browser-model-worker.js", "cohost-local-qwen-worker.js"],
+			"resources": ["providers/kick/core.js", "shared/kickBadges.js", "providers/twitch/chatClient.js", "providers/youtube/liveChat.js", "providers/youtube/contextResolver.js", "shared/utils/scriptLoader.js", "shared/utils/contentImage.js", "shared/utils/compactSourceLayout.js", "shared/compact-source-layout.css", "shared/overlay-control-transport.js", "shared/alerts/*", "audio/alerts/*", "shared/stickers/*", "shared/monetization/*", "shared/audience-room/*", "shared/giveaway/*", "media/stickers/*", "shared/utils/html.js", "shared/utils/twitchEmotes.js", "shared/aiPrompt/overlayStore.js", "shared/vendor/socket.io.min.js", "shared/vendor/tmi.js", "shared/vendor/tmi.module.js", "shared/ai/browserModelCatalog.js", "shared/ai/localBrowserLLM.js", "local-browser-model-worker.js", "cohost-local-qwen-worker.js"],
 			"matches": ["<all_urls>"]
 		},
 		{
@@ -148,6 +148,14 @@
 		{
 			"js": ["./sources/castyr.js"],
 			"matches": ["https://castyr.live/homebeta/popout-chat/*"]
+		},
+		{
+			"js": ["./sources/gosh.js"],
+			"matches": ["https://gosh.com/*", "https://www.gosh.com/*"]
+		},
+		{
+			"js": ["./sources/livacha.js"],
+			"matches": ["https://livacha.com/chat/*", "https://www.livacha.com/chat/*"]
 		},
 		{
 			"js": ["./sources/streamspace.js"],
@@ -537,6 +545,10 @@
 		{
 			"js": ["./sources/websocket/vpzone.js"],
 			"matches": ["https://socialstream.ninja/sources/websocket/vpzone*", "https://beta.socialstream.ninja/sources/websocket/vpzone*", "https://socialstream.ninja/beta/sources/websocket/vpzone*", "file:///C:/Users/steve/Code/social_stream/sources/websocket/vpzone.html*", "http://localhost:8080/*/vpzone.html*", "http://localhost:8181/*/vpzone.html*"]
+		},
+		{
+			"js": ["./sources/websocket/whatnot.js"],
+			"matches": ["https://socialstream.ninja/sources/websocket/whatnot*", "https://beta.socialstream.ninja/sources/websocket/whatnot*", "https://socialstream.ninja/beta/sources/websocket/whatnot*", "file:///C:/Users/steve/Code/social_stream/sources/websocket/whatnot.html*", "http://localhost:8080/*/whatnot.html*", "http://localhost:8181/*/whatnot.html*"]
 		},
 		{
 			"js": ["./sources/websocket/irc.js"],

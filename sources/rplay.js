@@ -79,10 +79,6 @@
 			hasDonation: donation ? donation.textContent.trim() : "", membership: "",
 			textonly: !!settings.textonlymode, type: "rplay"
 		};
-		if (donation) {
-			var amount = donation.textContent.replace(/,/g, "").match(/^\s*(\d+(?:\.\d+)?)/);
-			if (amount) { data.donoValue = Number(amount[1]); }
-		}
 		sendToApp({ message: data });
 	}
 	function scanMessages() {

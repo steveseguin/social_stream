@@ -392,7 +392,7 @@ async function enhanceCommitMessage(originalMessage, diff, branchName, dirSummar
     * Use bullet points (-) for distinct changes if applicable.
     * Reference specific files, components (e.g., \`dock.html\`, TTS module, GitHub Actions), or features affected.
     * Incorporate context from the branch name, directory summary, and recent commits if relevant (e.g., "Continues work on feature X from previous commits").
-4.  **Tone:** Professional and clear.
+4.  **Tone:** Professional and clear. Never include assistant names, AI attribution, or AI co-author trailers. Do not mention Claude or its instruction filename; refer to those files generically as repository contribution guidelines.
 5.  **Focus:** The message should *only* contain the commit message itself, starting directly with the type/scope. Do not add introductions like "Here is the enhanced commit message:". Crucially, do not include bracketed tags like '[skip ci]', '[auto-enhanced]', '[skip pages]', etc., in your generated message text.`;
 
   const userPrompt = `Analyze the provided information and generate an improved commit message:

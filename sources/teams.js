@@ -123,17 +123,7 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 		var chatimg = "";
 		try{
 			chatimg = ele.querySelector('[data-tid="message-avatar"]').querySelector("img").src;
-		} catch(e){
-			
-			if (!chatimg){
-				try {
-					chatimg = document.querySelector("profile-picture>.user-picture").src;
-				} catch(e){
-					//console.error(e);
-				}
-			}
-				
-		}
+		} catch(e){}
 		
 		
         var name = "";
@@ -141,10 +131,13 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 			name = escapeHtml(ele.querySelector(".ui-chat__message__author").innerText);
 		} 
 
-		if (!chatimg){
+		// Only headerless continuation rows can inherit a sender. A missing
+		// avatar must never replace a name already present on this message.
+		if (!name && !chatimg){
 			try {
 				var prev = ele;
 				for (var i=0; i<50;i++){
+					if (!prev || prev.querySelector('.ui-chat__message__author')){break;}
 					if (prev.querySelector('.ui-chat__message__timestamp')){
 						if (window.getComputedStyle(prev.querySelector('.ui-chat__message__timestamp')).width != "1px"){
 							break;
@@ -155,8 +148,9 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 						prev = prev.previousElementSibling;
 					}
 				}
-				chatimg = prev.querySelector('[data-tid="message-avatar"]').querySelector("img").src
 				name = escapeHtml(prev.querySelector(".ui-chat__message__author").innerText);
+				var previousAvatar = prev.querySelector('[data-tid="message-avatar"] img[src]');
+				chatimg = previousAvatar ? previousAvatar.src : "";
 				
 			} catch(e){} 
 		}
@@ -229,23 +223,21 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 				chatimg = ele.querySelector('[data-tid="message-avatar"] img[src], profile-picture img[src]').src;
 			}
 			
-			try {
-				var prev = ele;
-				for (var i=0; i<50;i++){
-					if (!chatimg && prev.querySelector('[data-tid="message-avatar"] img[src], profile-picture img[src]')){
-						chatimg = prev.querySelector('[data-tid="message-avatar"] img[src], profile-picture img[src]').src;
-					}
-					if (prev.querySelector('[data-tid="message-author-name"]')){ //  ts-message-list-item
-						break;
-					} else {
+			if (!name && !chatimg){
+				try {
+					var prev = ele;
+					for (var i=0; i<50;i++){
+						if (!prev || prev.querySelector('[data-tid="message-author-name"], [data-tid="threadBodyDisplayName"]')){
+							break;
+						}
 						prev = prev.previousElementSibling;
 					}
-				}
-				
-                name = escapeHtml(prev.querySelector('[data-tid="message-author-name"]').innerText);
-                nameEscaped = true;
-                
-            } catch(e){} 
+					name = escapeHtml(prev.querySelector('[data-tid="message-author-name"], [data-tid="threadBodyDisplayName"]').innerText);
+					nameEscaped = true;
+					var previousAvatar = prev.querySelector('[data-tid="message-avatar"] img[src], profile-picture img[src]');
+					chatimg = previousAvatar ? previousAvatar.src : "";
+				} catch(e){}
+			}
         }
         
         if (!nameEscaped){

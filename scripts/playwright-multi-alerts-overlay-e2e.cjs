@@ -965,8 +965,14 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     await loadOverlay(overlayPage, effectUrl.toString());
     for (const label of ['$99.99 USD', '$100.01 USD', '100 CAD', '100', '']) {
       effectSnapshot = await getOverlaySnapshot(overlayPage, { category: 'donation', overrides: { hasDonation: label, donoValue: 100 } });
-      assert(effectSnapshot.mediaUrl !== effectMedia, `Exact USD rule incorrectly matched ${label || 'unlabelled donoValue'}.`);
+      assert(effectSnapshot.mediaUrl === effectMedia, `Source USD override was ignored for ${label || 'unlabelled donoValue'}.`);
     }
+    for (const label of ['$99.99 USD', '$100.01 USD', '100 CAD']) {
+      effectSnapshot = await getOverlaySnapshot(overlayPage, { category: 'donation', overrides: { hasDonation: label, donoValue: undefined } });
+      assert(effectSnapshot.mediaUrl !== effectMedia, `Fallback conversion incorrectly matched ${label}.`);
+    }
+    effectSnapshot = await getOverlaySnapshot(overlayPage, { category: 'donation', overrides: { hasDonation: '$100 USD', donoValue: 0 } });
+    assert(effectSnapshot.mediaUrl !== effectMedia, 'Zero USD override was ignored.');
     effectUrl.searchParams.delete('effect1max');
     effectUrl.searchParams.set('effect2min', '100');
     effectUrl.searchParams.set('effect2media', `http://${HOST}:${PORT}/media/user2.jpg`);

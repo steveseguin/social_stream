@@ -935,23 +935,25 @@ if (typeof chrome.runtime == "undefined") {
 		});
 	});
 
-	fetchNode = function (URL, headers = {}, method = "GET", body = null, diagnostics = null) {
+	fetchNode = function (URL, headers = {}, method = "GET", body = null, diagnostics = null, timeout = undefined) {
 		return ipcRenderer.sendSync("nodefetch", {
 			url: URL,
 			headers: headers,
 			method: method,
 			body: body,
-			diagnostics: diagnostics
+			diagnostics: diagnostics,
+			timeout: timeout
 		});
 	};
 
-	fetchNodeAsync = function (URL, headers = {}, method = "GET", body = null, diagnostics = null) {
+	fetchNodeAsync = function (URL, headers = {}, method = "GET", body = null, diagnostics = null, timeout = undefined) {
 		return ipcRenderer.invoke("nodefetch", {
 			url: URL,
 			headers: headers,
 			method: method,
 			body: body,
-			diagnostics: diagnostics
+			diagnostics: diagnostics,
+			timeout: timeout
 		});
 	};
 
@@ -5841,7 +5843,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			}
 		} else if (request.cmd && request.cmd === "testLLMProvider") {
 			try {
-				const llmResponse = await callLLMAPI(request.prompt || "Reply with one short sentence confirming this chatbot connection works.", null, null, null, null, null, { settings: request.settingsOverride || null });
+				const llmResponse = await callLLMAPI(request.prompt || "Reply with one short sentence confirming this chatbot connection works.", null, null, null, null, null, { settings: request.settingsOverride || null, requestTimeoutMs: 60000 });
 				sendResponse({ success: true, response: llmResponse });
 			} catch (error) {
 				let payload;
@@ -9125,8 +9127,10 @@ function sendToSSC(data, fakechat = false, relayed = false) {
 			// Donations/Super Chats
 			if (data.hasDonation) {
 				payload.payload.donation = data.hasDonation;
-				if (data.donoValue) {
-					payload.payload.donationValue = data.donoValue;
+				const usdValue = typeof data.donoValue === 'number' ? data.donoValue :
+					(typeof data.donoValue === 'string' && data.donoValue.trim() ? Number(data.donoValue.replace(/,/g, '')) : NaN);
+				if (Number.isFinite(usdValue)) {
+					payload.payload.donationValue = usdValue;
 				}
 				if (data.backgroundColor) {
 					payload.payload.backgroundColor = data.backgroundColor;
@@ -18850,6 +18854,7 @@ async function applyBotActions(data, tab = false) {
 			//}
 		}
 
+		applyExternalGifToMessage(data, settings);
 		await applyGiphyToMessage(data, settings);
 	} catch (e) {
 		console.error(e);
@@ -20342,6 +20347,59 @@ window.addEventListener("beforeunload", async function () {
 window.addEventListener("unload", async function () {
 	document.title = "Close me - Social Stream Ninja";
 });
+
+function getExternalGifUrl(value) {
+    if (typeof value !== "string" || value.length > 2048) return "";
+    try {
+        const safeUrl = sanitizeRelayUrl(value, false);
+        const url = new URL(safeUrl);
+        if (!/^https?:$/.test(url.protocol) || url.username || url.password || !/\.gif$/i.test(url.pathname)) return "";
+        return url.href;
+    } catch (e) {
+        return "";
+    }
+}
+
+function findExternalGifInText(text) {
+    const links = /(?:^|[\s([{<>"'\u0060\u2018\u201c])(https?:\/\/[^\s<>"'\u0060\u2018\u2019\u201c\u201d]+)/gi;
+    let match;
+    while ((match = links.exec(text))) {
+        // Keep valid query strings intact; trim sentence punctuation only when needed.
+        const url = getExternalGifUrl(match[1]) || getExternalGifUrl(match[1].replace(/[.,!?;:)\]}]+$/, ""));
+        if (url) return url;
+    }
+    return "";
+}
+
+function applyExternalGifToMessage(data, gifSettings) {
+    if (!gifSettings.allowExternalGifs || gifSettings.removeContentImage || data.contentimg || typeof data.chatmessage !== "string") return;
+    let url = "";
+    if (data.textonly) {
+        url = findExternalGifInText(data.chatmessage);
+    } else {
+        // A template keeps source HTML inert: extracting links must not load images or run scripts.
+        const template = document.createElement("template");
+        template.innerHTML = data.chatmessage;
+        template.content.querySelectorAll("script,style,noscript,template,iframe,object").forEach(node => node.remove());
+        const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+        let node;
+        while ((node = walker.nextNode())) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                url = findExternalGifInText(node.textContent);
+            } else if (node.tagName === "A") {
+                url = getExternalGifUrl(node.getAttribute("href"));
+            }
+            if (url) break;
+        }
+    }
+    // Preserve the message/link as a fallback if the remote image cannot load.
+    if (url) {
+        data.contentimg = url;
+        if (gifSettings.hideExternalGifUrl && (data.meta == null || (typeof data.meta === "object" && !Array.isArray(data.meta)))) {
+            data.meta = Object.assign({}, data.meta, { hideExternalGifUrl: true });
+        }
+    }
+}
 
 // Tenor search was retired June 2026. Saved !tenor toggles remain GIPHY aliases;
 // API keys are provider-specific and must never be reused across providers.

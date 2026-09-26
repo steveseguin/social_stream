@@ -1756,8 +1756,10 @@ function createTestMessage() {
   if (baseCandidate.title) {
     message.title = baseCandidate.title;
   }
-  if (baseCandidate.donoValue) {
-    message.donoValue = baseCandidate.donoValue;
+  const usdValue = typeof baseCandidate.donoValue === 'number' ? baseCandidate.donoValue :
+    (typeof baseCandidate.donoValue === 'string' && baseCandidate.donoValue.trim() ? Number(baseCandidate.donoValue.replace(/,/g, '')) : NaN);
+  if (Number.isFinite(usdValue)) {
+    message.donoValue = usdValue;
   }
 
   return message;

@@ -7,6 +7,7 @@
         facebook: { title: 'Facebook Chat', feed: '#chat-feed', pane: '.panel', watch: '#chat-feed', connected: '#chat-feed[data-connected="true"]' },
         joystick: { title: 'Joystick Chat', feed: '#feed', compose: '#chat-input', composeParent: true, pane: '.card', watch: '#socket-chip', connected: '#socket-chip.good' },
         vpzone: { title: 'VPZone Chat', feed: '#feed', compose: '#chat-compose', pane: '.card', watch: '#socket-chip', connected: '#socket-chip.good' },
+        whatnot: { title: 'Whatnot Chat', feed: '#chat-feed', extra: '#socket-state', pane: '#chat-pane', watch: '#socket-state', connected: '#socket-state[data-connected="true"]' },
         velora: { title: 'Velora Chat', feed: '#chat-feed', compose: '.chat-input-footer', pane: '.chat-panel', watch: '#socket-state', connected: '#socket-state.connected', gate: '#dashboard' },
         bilibili: { title: 'Bilibili Chat', feed: '#messageContainer', compose: '#messageInput', composeParent: true, watch: '#disconnectBtn', connected: '#disconnectBtn:not([disabled])' },
         irc: { title: 'IRC Chat', feed: '#messageArea', compose: '#messageForm', watch: '#status', connected: '#status[data-connected="true"]' },

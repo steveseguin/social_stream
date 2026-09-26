@@ -2055,7 +2055,7 @@ body.light-mode .meta-value.badge {
 		let usdValue = 0;
 		if (data.hasDonation) {
 			try {
-				usdValue = convertToUSD(data.hasDonation, data.type);
+				usdValue = getDonationValueUSD(data);
 				
 				// Add value-based class if highlighting is enabled
 				if (highlightValue) {

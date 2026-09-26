@@ -74,6 +74,11 @@ endpoints directly using [references/control-api.md](references/control-api.md).
 [references/version-log.md](references/version-log.md) for minimum-version compatibility.
 Runtime capabilities are authoritative.
 
+SSApp 0.4.32 with the updated Whatnot page sources adds `platforms.whatnot`.
+Use a live show URL or its UUID (`videoId`); the default `websocket` mode captures
+public chat without loading the video. Check the platform capability before adding
+it. Seller profiles, sign-in, sending chat, and auctions are outside this mode.
+
 ## Safety
 
 - Treat `removeSource`, bulk stop/restart, `reloadApp`, and `shutdownApp` as destructive or disruptive.

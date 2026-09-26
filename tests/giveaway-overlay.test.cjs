@@ -7,6 +7,19 @@ const os=require('node:os');
 (async()=>{
  const browser=await chromium.launch({headless:true});
  try {
+  // Moving the bootstrap into a packaged script must preserve standalone controls.
+  const standalone=await browser.newPage();
+  await standalone.route(/^https?:/,route=>route.abort());
+  await standalone.goto(pathToFileURL(path.resolve('giveaway.html')).href+'?session=test');
+  await standalone.locator('#keyword-input').fill('!raffle');
+  await standalone.getByRole('button',{name:'Set Keyword',exact:true}).click();
+  assert.equal(await standalone.locator('#current-keyword').textContent(),'!RAFFLE');
+  await standalone.locator('#entrant-name').fill('Guide Demo');
+  await standalone.getByRole('button',{name:'Add',exact:true}).click();
+  assert.equal(await standalone.locator('#stats-total').textContent(),'1');
+  await standalone.locator('#spin-btn').click();
+  await standalone.waitForFunction(()=>document.getElementById('winner-display').textContent.includes('Guide Demo'));
+  await standalone.close();
   for(const presentation of ['card','reel','wheel']) {
    const page=await browser.newPage({viewport:{width:1000,height:900}});
    const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -34,7 +47,8 @@ const os=require('node:os');
   }
   // Exercise both supported websocket channel pairs with a local relay only.
   const {wsServer:WebSocketServer}=require(path.join(path.dirname(require.resolve('playwright-core/package.json')),'lib/utilsBundle.js'));
-  for(const displayFeed of [false,true]) {
+  for(const routeChoice of ['api','display','explicit-api-with-display-flag']) {
+   const displayFeed=routeChoice==='display';
    const relay=new WebSocketServer({port:0,host:'127.0.0.1'});
    await new Promise(resolve=>relay.once('listening',resolve));
    const packet={event:'giveaway_state',meta:{giveaway:{epoch:'relay',revision:1,draw:1,open:false,keyword:'!enter',count:0,entrants:[],winners:[{id:'1',name:'Morgan',platform:'twitch'}]}}};
@@ -46,7 +60,7 @@ const os=require('node:os');
    }));
    const page=await browser.newPage();
    await page.route(/^https?:/,route=>route.abort());
-   await page.goto(pathToFileURL(path.resolve('giveaway.html')).href+'?session=local-giveaway-test&managed&server='+encodeURIComponent('ws://127.0.0.1:'+relay.address().port)+(displayFeed?'&server2':''));
+   await page.goto(pathToFileURL(path.resolve('giveaway.html')).href+'?session=local-giveaway-test&managed&'+(displayFeed?'server2':'server')+'='+encodeURIComponent('ws://127.0.0.1:'+relay.address().port)+(routeChoice==='explicit-api-with-display-flag'?'&server2':''));
    await page.waitForFunction(()=>document.querySelector('.giveaway-result').textContent==='Morgan wins!');
    assert.equal(requested,true);
    await page.close();

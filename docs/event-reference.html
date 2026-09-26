@@ -72,6 +72,8 @@
                                 <li><a href="#instagram">Instagram</a></li>
                                 <li><a href="#onlinechurch">Online Church</a></li>
                                 <li><a href="#shareplay">SharePlay</a></li>
+                                <li><a href="#gosh">Gosh</a></li>
+                                <li><a href="#livacha">Livacha</a></li>
                                 <li><a href="#streamplace">Streamplace</a></li>
                                 <li><a href="#worldswave">WorldsWave</a></li>
                                 <li><a href="#flextv">FLEX TV</a></li>
@@ -273,7 +275,7 @@
                             <td>&mdash;</td>
                             <td>&mdash;</td>
                             <td>&mdash;</td>
-                            <td>Signed-in <code>/live/chat/box/</code> popout: <code>type: "rplay"</code> chat, avatars, tier badge images, and emotes. Coin tips use <code>hasDonation</code> and numeric <code>donoValue</code> (coins), without a donation event. Opt-in <code>viewer_update</code> polls use integer <code>meta</code> from RPLAY's public stream endpoint. Relayed Twitch rows are excluded.</td>
+                            <td>Signed-in <code>/live/chat/box/</code> popout: <code>type: "rplay"</code> chat, avatars, tier badge images, and emotes. Coin tips retain their amount/unit in <code>hasDonation</code> for shared USD conversion, without a donation event. Opt-in <code>viewer_update</code> polls use integer <code>meta</code> from RPLAY's public stream endpoint. Relayed Twitch rows are excluded.</td>
                         </tr>
                         <tr>
                             <td><strong>FLEX TV</strong></td>
@@ -321,7 +323,7 @@
 						</tr>
                         <tr><td><code>data.platform</code></td><td>string (optional)</td><td>Some integrations include this alongside <code>type</code>. Many source adapters omit it; use <code>type</code> for source routing.</td></tr>
                         <tr><td><code>data.id</code></td><td>string | number (optional)</td><td>Message or event identifier. Its meaning depends on the source and transport; do not assume it is always a platform-native moderation ID. Use <code>meta.messageId</code> when the adapter exposes it for delete sync.</td></tr>
-                        <tr><td><code>data.donoValue</code></td><td>number (optional)</td><td>Numeric donation value when the producer supplies one. Units vary: some adapters convert to USD, while NinjaBacker and Throne use major units of the currency in their provider metadata. Do not sum different currencies or assume every value is USD.</td></tr>
+                        <tr><td><code>data.donoValue</code></td><td>number (optional)</td><td>Source-supplied numeric USD equivalent, including estimates. A valid value (including zero) overrides currency.js conversion. Without it, consumers estimate USD from hasDonation and source context. Original amounts and units remain in hasDonation and existing provider metadata.</td></tr>
                         <tr>
                             <td><code>data.event</code></td>
                             <td>string | boolean</td>
@@ -336,6 +338,11 @@
                             <td><code>data.textonly</code></td>
                             <td>boolean</td>
                             <td>Applies only to <code>data.chatmessage</code>. <code>true</code> means render <code>chatmessage</code> as plain text; <code>false</code> means <code>chatmessage</code> may contain sanitized/renderable HTML. Other normal fields are expected to be plain text, except media fields such as <code>chatimg</code> and <code>contentimg</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><code>data.contentimg</code></td>
+                            <td>string (optional)</td>
+                            <td>Content image or supported media URL. In the extension and desktop app, the opt-in <code>allowExternalGifs</code> setting fills an empty field from the first direct HTTP(S) GIF link in the message text or an HTML link. The URL path must end in <code>.gif</code> (case-insensitive); query parameters and fragments are preserved. It requires no API key, preserves <code>chatmessage</code> and existing attachments, and respects <code>removeContentImage</code>. The optional <code>hideExternalGifUrl</code> setting adds <code>meta.hideExternalGifUrl: true</code>; the dock and featured overlay then hide the matching GIF link only after their image loads, retaining surrounding text and the original payload. Failed or timed-out images collapse their attachment container and leave the link visible. The GIF-only overlay tries direct image display if fetching image bytes fails, using the configured display time when animation timing is unavailable; failed or stalled loads advance its queue. It does not add an <code>event</code> or change the source <code>type</code>. External images are not content-filtered and may fail to load if the host blocks embedding.</td>
                         </tr>
                         <tr>
                             <td><code>data.membership</code></td>
@@ -918,7 +925,7 @@
                     <p class="source-note">Implementation: <code>sources/streamlabs.js</code> (alert-box DOM); optional socket bridge at <code>sources/websocket/streamlabs.html</code></p>
                     <ul class="requirements">
                         <li>Keep your Streamlabs alert box open in a tab or browser source so alerts render; the content script reads the alert DOM for message/image/tokens.</li>
-                        <li>Donation-style alerts set <code>hasDonation</code> (e.g., “$10 USD” or “100 bits”) and <code>donoValue</code> when numeric.</li>
+                        <li>Donation-style alerts set <code>hasDonation</code> (e.g., “$10 USD” or “100 bits”) and optional <code>donoValue</code> in USD.</li>
                         <li>Event types inferred: <code>follow</code>, <code>subscription</code>, <code>gift</code>, <code>cheer</code>, <code>donation</code>, <code>superchat</code>, <code>raid</code>, <code>redeem</code>, <code>merch</code>, <code>sponsor</code>.</li>
                         <li>For the socket bridge, paste your Streamlabs Socket API token and connect; alerts relay without the alert-box page.</li>
                     </ul>
@@ -934,7 +941,7 @@
                             <tr>
                                 <td class="donation-event"><code>donation</code></td>
                                 <td>Tips, charity, JustGiving, or generic “donated” alerts.</td>
-                                <td><code>hasDonation</code> preserves the currency text (e.g., “$36” or “$10 CAD”); <code>donoValue</code> numeric when parsable.</td>
+                                <td><code>hasDonation</code> preserves the currency text (e.g., “$36” or “$10 CAD”); <code>donoValue</code> is supplied only when a USD value is available; other labelled amounts use shared currency conversion.</td>
                             </tr>
                             <tr>
                                 <td class="donation-event"><code>cheer</code></td>
@@ -1052,14 +1059,14 @@
                         </tbody>
                     </table>
                     <p class="field-highlights"><code>membership</code> mirrors badge tooltips (subscriber tiers). Avatar caching keeps <code>chatimg</code> valid between events; if the DOM suppresses color for moderators the script clears <code>nameColor</code>. TikFinity gift rows also set <code>contentimg</code> to the gift icon when available. Native DOM and TikFinity gift streak updates include <code>meta.tiktokGiftStreakId</code>, <code>meta.tiktokGiftCount</code>, and <code>meta.tiktokGiftQuietMs</code> so overlays can coalesce repeated updates; legacy streak IDs are unique to the page instance. Gift metadata may also include <code>tiktokGiftMessageId</code> (the original TikTok message ID), <code>tiktokGiftSenderId</code>, <code>groupId</code>, <code>giftId</code>, <code>giftName</code>, <code>streakable</code>, and <code>repeatEnd</code>. Native IDs identify the same gift across capture windows; a nonzero group ID with sender and gift IDs identifies cumulative streak updates. SSApp WebSocket capture supplies the same fields after settling a streak, with <code>count</code> retained for compatibility. Its donation toggle is checked when forwarding each gift: disabling TikTok donations removes <code>hasDonation</code> and <code>donoValue</code> while retaining the gift event and metadata. TTS uses these identities to coalesce updates and suppress completed duplicates for up to ten minutes (bounded cache), and reads TikTok gifts as sender, quantity, and gift name. Older payloads fall back to their existing streak IDs and message text; no identity is inferred from gift text alone. TikTok gift speech uses the selected TTS/voice language, independently of the UI language. Announcement verbs are localized for English, Spanish, Portuguese, French, German, Italian, and Dutch; other languages use sender, quantity, and gift name without an English verb. Simplified TTS retains that neutral format. Gift names remain as supplied by the platform; this does not automatically translate gift catalogs or chat messages, or infer a stream’s language.</p>
-                    <p class="field-highlights">For these streak updates, the count and donation label are cumulative: 1, 2, 3 means three gifts, not six. Totals consumers should add only the increase over the largest amount already seen for that streak ID. Standard capture supports legacy gift classes and current image/count rows; both retain <code>event: "gift"</code> and <code>hasDonation</code>. Unknown prices remain gift counts/names, not guessed coin values. Standard/TikFinity coin estimates and SSApp native diamond estimates use their existing distinct conversions; neither represents a guaranteed cash payout.</p>
+                    <p class="field-highlights">For these streak updates, the count and donation label are cumulative: 1, 2, 3 means three gifts, not six. Totals consumers should add only the increase over the largest amount already seen for that streak ID. Standard capture supports legacy gift classes and current image/count rows; both retain <code>event: "gift"</code> and <code>hasDonation</code>. Unknown prices retain gift counts/names for display and use a USD estimate of one coin per gift. Source-supplied <code>donoValue</code> takes priority; rendered gift metadata may provide <code>coinsPerGift</code> or <code>diamondsPerGift</code> before the gift table or default is needed. Standard/TikFinity coin estimates and SSApp native diamond estimates use their existing distinct conversions; neither represents a guaranteed cash payout.</p>
                 </article>
 
                 <article class="platform-card" id="whatnot">
                     <h3>Whatnot</h3>
                     <p class="source-note">Implementation: <code>sources/whatnot.js</code></p>
                     <ul class="requirements">
-                        <li>Open the live Whatnot show page with chat visible; websocket transport now assists chat, raids, donations, and fast viewer updates, while product/giveaway snapshots still rely on DOM sections rendered in the show view.</li>
+                        <li>Open the live Whatnot show page with chat visible; the existing websocket capture supplies chat, auction/sale notifications, payment failures, raids, donations, and fast viewer updates. Product/giveaway snapshots still rely on DOM sections rendered in the show view.</li>
                         <li><em>Capture Stream Events</em> controls Whatnot system events plus auction/catalog metadata updates; joined rows also require <em>Capture "joined" stream events</em>; viewer counts still follow the viewer/hype toggles.</li>
                     </ul>
                     <table class="event-table">
@@ -1101,9 +1108,27 @@
                                 <td>When catalog sections change (products, surprise sets, upcoming giveaways), often accelerated by websocket giveaway/product lifecycle packets.</td>
                                 <td>Metadata-only snapshot with section counts and item arrays under <code>meta.products</code>, <code>meta.surpriseSets</code>, and <code>meta.upcomingGiveaways</code>.</td>
                             </tr>
+                            <tr>
+                                <td><code>auction_started</code>, <code>new_bid</code>, <code>auction_ended</code>, <code>product_sold</code></td>
+                                <td>The corresponding live websocket notification arrives. These are individual events, separate from the existing display snapshots.</td>
+                                <td><code>platform/type: "whatnot"</code>, plain-text <code>chatname</code>, <code>userid</code> when supplied, product name in <code>subtitle</code>, and a plain-text <code>chatmessage</code> with <code>textonly: true</code>. Available identifiers and auction details are under <code>meta</code>: <code>productId</code>, <code>auctionId</code>, <code>orderId</code>, <code>transactionId</code>, <code>livestreamId</code>, <code>bidId</code>, <code>bids</code>, <code>auctionEndTime</code>, and <code>status</code>. Optional <code>price</code> is in major currency units, with <code>priceText</code> and <code>currency</code> when supplied.</td>
+                            </tr>
+                            <tr>
+                                <td><code>payment_failed</code></td>
+                                <td>A live payment-failure websocket notification arrives.</td>
+                                <td>The same available buyer, product and identifier fields, with <code>meta.paymentStatus: "failed"</code>. When only <code>product.purchaserUserId</code> identifies the buyer, it fills <code>userid</code> on sale/payment events and the buyer name stays empty. No buyer is inferred from a different or previous auction.</td>
+                            </tr>
+                            <tr>
+                                <td><code>payment_succeeded</code></td>
+                                <td>A live payment-success websocket notification arrives.</td>
+                                <td><code>meta.paymentStatus: "succeeded"</code>, with the buyer, item, order ID and other allowed fields supplied by that notification. This remains a distinct payment event; it does not emit another <code>purchase</code> or donation. Missing fields stay empty or omitted, even if an earlier sale supplied them.</td>
+                            </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Auction/commerce updates are still DOM-backed snapshots; websocket packets mainly provide faster triggers and cleaner event metadata. Keep downstream rendering keyed off <code>data.event</code> + <code>data.meta</code>.</p>
+                    <p class="field-highlights">Auction/commerce display updates remain DOM-backed snapshots. To match an individual websocket event in Event Flow, use <em>Event Type (Advanced)</em>, select <em>Custom Event</em>, and enter its exact name. Labels can use <code>**{username}**\n{subtitle}</code> with selected text weight; conditions can compare <code>meta.paymentStatus</code> with <code>failed</code>. An <a href="thermal-printer-guide.html#whatnot-item-labels">importable Whatnot label example</a> is available. Existing stream-event capture settings still apply.</p>
+                    <p class="field-highlights">Additional optional fields are <code>meta.catalogProductId</code> (the packet's <code>product.productId</code>), <code>meta.parentProductId</code> (<code>product.parentId</code>), <code>meta.transactionType</code> (Whatnot's sale type, unchanged), and <code>meta.placeOrderErrorReason</code> (Whatnot's supplied order/payment error code). These product references describe the catalog or parent listing; they do not replace an order ID. Stock quantity is not treated as purchased quantity.</p>
+                    <p class="field-highlights">For payment-success automation, set an <em>Event Type (Advanced)</em> trigger to <em>Custom Event</em>: <code>payment_succeeded</code>, and filter the source to Whatnot. Existing conditions and templates can use that event's <code>userid</code>, <code>chatname</code>, <code>subtitle</code> and <code>meta.orderId</code> directly. No remembered purchase is needed when the notification contains the required details.</p>
+                    <p class="field-highlights">An auction ending or an item being marked sold does not confirm successful payment: these notifications are not emitted as paid <code>purchase</code> events and do not set donation amounts. A success event is emitted only for a received <code>payment_succeeded</code> notification; capture does not poll for payment completion or infer it from a sale. Other <code>paymentStatus</code> values are forwarded only when explicitly supplied in a captured packet. Missing identifiers are omitted; a product ID alone may cover multiple sales, so use a supplied order/auction ID to correlate notifications. Capture does not remember purchases or match payment updates; any such workflow must be explicitly configured in Event Flow. Brief duplicate packets from the two existing capture bridges are suppressed. Raw order/payment objects are not forwarded.</p>
                 </article>
 
                 <article class="platform-card" id="ebay">
@@ -1171,9 +1196,9 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="membership-event"><code>gift</code></td>
-                                <td>Gift sub events detected via chat text matching.</td>
-                                <td><code>chatmessage</code> contains the system line; basic gift detection only.</td>
+                                <td class="donation-event"><code>gift</code></td>
+                                <td>KICKs gifts detected via the sticker image and visible Kick currency amount.</td>
+                                <td><code>hasDonation</code> carries <code>N KICKs</code> (<code>1 KICK</code> for one) when the visible amount is available; <code>contentimg</code> carries the gift image. Existing message text is preserved.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>reward</code></td>
@@ -1237,8 +1262,13 @@
                             </tr>
                             <tr>
                                 <td><code>donation</code></td>
-                                <td><code>kicks.gifted</code> and support/tip events detected via event type heuristics.</td>
+                                <td>Support/tip events detected via event type heuristics; KICKs gifts use <code>gift</code> below.</td>
                                 <td><code>hasDonation</code> carries the formatted amount; <code>meta</code> contains { amount, currency, supporter, message, giftName }.</td>
+                            </tr>
+                            <tr>
+                                <td><code>gift</code></td>
+                                <td><code>kicks.gifted</code> (KICKs gifts), matching the DOM scraper.</td>
+                                <td><code>hasDonation</code> carries <code>N KICKs</code> (<code>1 KICK</code> for one); <code>contentimg</code> carries the gift image when available. Structured gift details remain under <code>meta</code>.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>raid</code></td>
@@ -1272,7 +1302,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Profile lookups leverage <code>profileCache</code>; <code>mapBadges</code> merges Kick's badge assets with cached SVG when available. When Kick reports donations in KICKs, the bridge converts them into <code>hasDonation</code> plus <code>meta.amount</code> with <code>currency</code> fallback to "KICKs". Chat payloads include <code>meta.messageId</code> when the bridge exposes a native Kick message ID so delete sync can target the correct message. Reply payloads include <code>meta.reply</code> with the parent <code>messageId</code>, <code>author</code>, and <code>text</code> when known.</p>
+                    <p class="field-highlights">Profile lookups leverage <code>profileCache</code>; <code>mapBadges</code> merges Kick's badge assets with cached SVG when available. When Kick reports donations in KICKs, the bridge converts them into <code>hasDonation</code> plus <code>meta.amount</code> with <code>currency</code> fallback to "KICKs". Chat payloads include <code>meta.messageId</code> when the bridge exposes a native Kick message ID so delete sync can target the correct message. Reply payloads include <code>meta.reply</code> with the parent <code>messageId</code>, <code>author</code>, and <code>text</code> when known. Supplied reply details remain available even when the original message is not cached; an ID-only reply without cached context can still lack a visible quote.</p>
 
                     <h4>Kick Websocket: Event Quick Reference</h4>
                     <table class="field-table">
@@ -1288,7 +1318,8 @@
                             <tr><td><code>resub</code></td><td>Subscription renewal</td></tr>
                             <tr><td><code>subscription_gift</code></td><td>Gifted subs</td></tr>
                             <tr><td><code>reward</code></td><td>Channel reward redemption or reward-style chat/system message</td></tr>
-                            <tr><td><code>donation</code></td><td>Tip/support/KICKs gift event</td></tr>
+                            <tr><td><code>donation</code></td><td>Tip/support event</td></tr>
+                            <tr><td><code>gift</code></td><td>KICKs gift event</td></tr>
                             <tr><td><code>raid</code></td><td>Compatibility-only legacy host/raid input; not a current official Kick subscription</td></tr>
                             <tr><td><code>follower_update</code></td><td>Total follower count</td></tr>
                             <tr><td><code>stream_online</code></td><td>Stream went live</td></tr>
@@ -1420,7 +1451,7 @@
                             <tr>
                                 <td><code>donation</code></td>
                                 <td>Joystick <code>StreamEvent</code> types <code>Tipped</code> / <code>TipMenu</code>.</td>
-                                <td><code>hasDonation</code> and numeric <code>donoValue</code> are populated when the token amount is available, and the matching Joystick bot row is deduplicated. <code>meta</code> uses the established Kick support-event keys: <code>eventType</code>, <code>supporter</code>, <code>amount</code>, <code>currency</code>, <code>message</code>, <code>giftName</code>, <code>giftType</code>, and <code>tier</code>.</td>
+                                <td><code>hasDonation</code> carries the token amount and unit for shared USD conversion when available, and the matching Joystick bot row is deduplicated. <code>meta</code> uses the established Kick support-event keys: <code>eventType</code>, <code>supporter</code>, <code>amount</code>, <code>currency</code>, <code>message</code>, <code>giftName</code>, <code>giftType</code>, and <code>tier</code>.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>stream_online</code> / <code>stream_offline</code></td>
@@ -1793,7 +1824,7 @@
                             <tr>
                                 <td class="donation-event"><code>donation</code></td>
                                 <td><code>SNSDiamond</code> websocket frames expose diamond activity.</td>
-                                <td>Dedicated diamond frames are treated as donation events. <code>hasDonation</code> is formatted as diamonds, <code>donoValue</code> is numeric when available, and <code>meta.amount</code>/<code>meta.currency</code> stay flat for automations.</td>
+                                <td>Dedicated diamond frames are treated as donation events. <code>hasDonation</code> is formatted as diamonds for shared USD conversion, and <code>meta.amount</code>/<code>meta.currency</code> stay flat for automations.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>liked</code> / <code>reaction</code></td>
@@ -2157,6 +2188,20 @@
                 <p>With <code>showviewercount</code> or <code>hypemode</code> enabled, <code>viewer_update</code> carries an integer <code>meta</code> from the player's <code>#nAllViewer</code>. Chat-only popouts may not expose this count. SSApp uses the full player when opening a detached popup, since current SOOP popouts depend on their opener.</p>
             </section>
 
+            <section class="section-summary" id="gosh">
+                <h2>Gosh - Channel Chat Capture</h2>
+                <p class="source-note">Implementation: <code>sources/gosh.js</code>. Open <code>https://gosh.com/USERNAME</code> with chat visible, or paste that URL into SSApp's Add other source. A chat popout is not required.</p>
+                <p>New chat rows emit <code>type</code>/<code>platform: "gosh"</code>, plain-text <code>chatname</code>, <code>nameColor</code>, and sanitized <code>chatmessage</code>. Inline images and GIFs retain safe HTTP(S) URLs. With <code>textonlymode</code>, images become alt text or <code>[image]</code> when no alt text is available. Avatars, badges, donations, and memberships remain empty when absent from the captured row.</p>
+                <p>Keep the virtualized chat scrolled to the newest messages. Existing history, rerendered rows, and authorless system notices are excluded. Render indexes stay internal and are not emitted as native message IDs. No follow, donation, viewer-count, or moderation events are inferred.</p>
+            </section>
+
+            <section class="section-summary" id="livacha">
+                <h2>Livacha - Chat Room Capture</h2>
+                <p class="source-note">Implementation: <code>sources/livacha.js</code>. Open <code>https://livacha.com/chat/ROOM</code> with chat visible, or paste the room URL into SSApp's Add other source.</p>
+                <p>New chat rows emit <code>type</code>/<code>platform: "livacha"</code>, plain-text <code>chatname</code>, <code>chatimg</code>, <code>nameColor</code>, and sanitized <code>chatmessage</code>. Relative avatar and inline image URLs become absolute HTTP(S) URLs. Paragraphs, line breaks, and lists are flattened into one chat message. With <code>textonlymode</code>, images become alt text or <code>[image]</code>.</p>
+                <p>Message IDs are used internally to avoid recapturing edits and remounted rows. Initial history and prepended older messages are skipped; timestamps and reaction menus are outside the captured body. No donation, membership, moderation, or viewer-count events are inferred.</p>
+            </section>
+
             <section class="section-summary" id="streamspace">
                 <h2>Stream.space - Experimental DOM Capture</h2>
                 <p class="source-note">Implementation: <code>sources/streamspace.js</code>. Matches only <code>https://beta.stream.space/chat-popup.php?channel=USERNAME</code> and the equivalent <code>https://stream.space</code> popup.</p>
@@ -2368,19 +2413,19 @@
 <section class="section-summary" id="shopify-purchases"><h2>Shopify paid orders</h2><p>The optional signed Shopify receiver emits <code>platform/type: "shopify"</code> and <code>event: "purchase"</code> only for <code>orders/paid</code> with <code>financial_status: "paid"</code>, a positive total, <code>test: false</code>, no cancellation, and a current signed-body update timestamp. Test, unpaid, stale, cancelled and refund notifications do not emit purchase actions. No gift intent is inferred.</p><p><code>chatname</code> is Anonymous; customer fields, private notes and order URLs are excluded. <code>chatmessage</code> is plain text with <code>textonly: true</code>; <code>subtitle</code> holds up to three public product titles. <code>meta.commerce</code> contains <code>orderTotal</code> and <code>currency</code> in the shop's currency, plus <code>quantity</code> when a complete valid count is known. Recipient and physical/digital purpose remain unset. No <code>hasDonation</code> or <code>donoValue</code> is set. <code>id</code> is a stable opaque hash scoped to store/order with a Shopify prefix; it is not a raw order identifier.</p><p>Purchases use the existing activity, multi-alerts Purchase category and Event Flow paths. Product promotion uses the existing <code>meta.monetization.commerce</code> catalog. Importing a product or setting its promotional label to Gift does not generate a purchase or gift event. <a href="shopify-setup.html">Shopify setup and delivery limits</a>.</p></section>
 <section class="section-summary" id="commerce-events"><h2>Gifts and commerce</h2>
 <p>Use <code>event: "gift"</code> for a gift, <code>giftcontribution</code> for paid support toward a gift, <code>giftfunded</code> for funding completion, and <code>purchase</code> for a product sale. These names are independent of the provider and whether an item is physical or digital. Reserve the legacy <code>giftpurchase</code> event for gifted memberships; Throne previously used that name incorrectly and now emits <code>gift</code>. Existing membership producers remain unchanged. Custom Throne event-name filters should switch to <code>gift</code>; donation filters need no change.</p>
-<p><code>hasDonation</code> remains the compatibility signal for paid support, with <code>donoValue</code> holding its known numeric value. Gifts and contributions retain those fields. Funding completion omits both to avoid counting contributions twice. Ordinary product sales omit them by default, preserving the eBay contract. Do not infer gifting intent from a store, wishlist URL, or physical item: a purchase for the buyer or another recipient remains a sale unless the source explicitly identifies creator gifting.</p>
+<p><code>hasDonation</code> remains the compatibility signal for paid support, with <code>donoValue</code> holding its supplied or estimated USD value. Gifts and contributions retain those fields. Funding completion omits both to avoid counting contributions twice. Ordinary product sales omit them by default, preserving the eBay contract. Do not infer gifting intent from a store, wishlist URL, or physical item: a purchase for the buyer or another recipient remains a sale unless the source explicitly identifies creator gifting.</p>
 <p>Optional shared <code>meta.commerce</code> fields are <code>recipient</code> (creator, buyer, other), <code>itemType</code> (physical, digital, service), <code>quantity</code> (positive item count), <code>currency</code> (ISO currency), <code>goalAmount</code> (major-unit funding target, never new income), and <code>orderTotal</code> (known major-unit paid order total; commerce, not donation income). Omit unknown details. Keep item names in <code>subtitle</code>, images in <code>contentimg</code>, and supporter text in <code>chatmessage</code>. Existing provider metadata remains available. Throne supplies recipient and currency, plus goalAmount on completion; eBay supplies quantity. Neither guesses item type or exposes private recipient information.</p>
 <p>The activity feed displays these events even without supporter text. Multi-alerts uses donation presentation for gifts and contributions, including a distinct Gift Fully Funded notification without monetary value. Purchases have a separate Purchase category, enabled by default, with <code>purchasestyle</code>, <code>purchasesound</code>, <code>purchaseaccent</code>, and <code>disablepurchases</code> URL controls. Purchase alerts do not change donation totals.</p>
 <p>Event Flow offers these event names in Event Type and Other Event triggers. Donation triggers still inspect <code>hasDonation</code>; Gift Sub triggers retain membership semantics. Compare Property accepts nested paths such as <code>meta.commerce.recipient</code>. Action templates accept <code>{meta.commerce.quantity}</code> and <code>{meta.commerce.currency}</code>, alongside existing <code>{donation}</code>, <code>{subtitle}</code>, and <code>{meta}</code>. Nested paths are case-sensitive, missing values render empty, and prototype traversal is prohibited.</p></section>
 <section class="section-summary" id="creator-commerce-webhooks"><h2>Creator commerce webhooks and promotional overlays</h2>
-<p>Ko-fi public Donation payments retain <code>hasDonation</code> and gain numeric <code>donoValue</code>. Subscription payments use <code>new_subscriber</code> or <code>resub</code>, with the tier in <code>membership</code>. Shop Order and Commission use <code>purchase</code> without donation values. Private Ko-fi events remain excluded. Form-encoded JSON is decoded once; names and messages are plain text.</p>
+<p>Ko-fi public Donation payments retain <code>hasDonation</code> and gain USD <code>donoValue</code>. Subscription payments use <code>new_subscriber</code> or <code>resub</code>, with the tier in <code>membership</code>. Shop Order and Commission use <code>purchase</code> without donation values. Private Ko-fi events remain excluded. Form-encoded JSON is decoded once; names and messages are plain text.</p>
 <p>Buy Me a Coffee <code>donation.created</code> retains monetary support; <code>extra_purchase.created</code> and <code>commission_order.created</code> become <code>purchase</code>. <code>wishlist_payment.created</code> becomes <code>giftcontribution</code> using only that payment amount; <code>meta.commerce.completed</code> records the provider's completion flag without emitting another monetary row. <code>membership.started</code> becomes <code>new_subscriber</code> with the tier in <code>membership</code>, no longer misusing <code>hasDonation</code> for a tier name. A subscription-start amount is not independently treated as a paid charge. Test, refunded, failed, and unsupported update/lifecycle events do not produce paid alerts. Hidden supporter notes are omitted.</p>
 <p>Fourthwall supports ORDER_PLACED (<code>purchase</code>), GIFT_PURCHASE (<code>gift</code>, recipient other), DONATION (normal donation row), and SUBSCRIPTION_PURCHASED (<code>new_subscriber</code>). Existing order totals retain <code>hasDonation</code> for backwards compatibility, marked <code>meta.commerce.legacyDonationValue: true</code>; this is an explicit exception to new product-sale defaults. Orders with applied gift cards emit a purchase alert without donation value: the new charge cannot be inferred reliably from the order total, and the gift purchase was already counted. Billing names and email addresses are not used for public identity. Dashboard test events and order updates do not generate paid alerts.</p>
 <p>These adapters retain the existing relay, bot actions, Event Flow and destination routing, with <code>meta.webhookId</code> deduplication. They expose public names, plain-text messages, known item names in <code>subtitle</code>, and ISO <code>meta.commerce.currency</code> alongside numeric donation values when applicable. They do not add refund accounting or new receiver authentication; use the provider's existing configured webhook route.</p>
 <p><code>meta.monetization.commerce</code> in <code>monetization_update</code> contains enabled, qr, position, display (first/cycle), seconds, and a public items array. Each item has name, url, image, optional amount (null when unknown), currency, and purpose (shop/gift/support/membership). These are host-entered promotional details, not payment evidence. Adding or editing items emits no donation or purchase event. The generic overlay uses <code>mode=commerce</code>; <code>view=both|showcase|card|alerts</code> separates promotion from activity. Optional style, scale, cardevery, cardfor and onlytype URL parameters control presentation. Existing provider modes also accept view and scheduling controls. See the <a href="monetization.html#products-support-links">setup guide</a>.</p></section>
 <section class="section-summary" id="throne-events"><h2>Throne gift events</h2>
 <p>The opt-in Monetization integration forwards signed Throne events with <code>platform</code> and <code>type</code> set to <code>throne</code>. All three use a stable delivery <code>id</code>, plain-text <code>chatname</code>, <code>chatmessage</code> with <code>textonly: true</code>, item name in <code>subtitle</code>, and optional HTTPS thumbnail in <code>contentimg</code>.</p>
-<table class="event-table"><thead><tr><th>event</th><th>Meaning</th><th>Donation amount / rank</th></tr></thead><tbody><tr><td><code>gift</code></td><td>A purchased gift</td><td><code>hasDonation</code> and major-unit <code>donoValue</code>; +1 gift rank</td></tr><tr><td><code>giftcontribution</code></td><td>A contribution towards a gift</td><td>Contribution amount only; no rank increase</td></tr><tr><td><code>giftfunded</code></td><td>A crowdfunded gift completed</td><td>No <code>hasDonation</code> or <code>donoValue</code>, avoiding double-counting previous contributions; +1 gift rank</td></tr></tbody></table>
+<table class="event-table"><thead><tr><th>event</th><th>Meaning</th><th>Donation amount / rank</th></tr></thead><tbody><tr><td><code>gift</code></td><td>A purchased gift</td><td><code>hasDonation</code> and USD <code>donoValue</code>; +1 gift rank</td></tr><tr><td><code>giftcontribution</code></td><td>A contribution towards a gift</td><td>Contribution amount only; no rank increase</td></tr><tr><td><code>giftfunded</code></td><td>A crowdfunded gift completed</td><td>No <code>hasDonation</code> or <code>donoValue</code>, avoiding double-counting previous contributions; +1 gift rank</td></tr></tbody></table>
 <p><code>meta.throne</code> contains <code>itemName</code>, <code>creator</code> (public username), <code>completed</code>, <code>currency</code> and major-unit <code>amount</code>. For <code>giftfunded</code>, amount describes the goal, not new income. Anonymous gifters remain <code>Anonymous</code>; completed community gifts use <code>Community</code>. Private payment and shipping fields are never forwarded.</p>
 <p><code>monetization_update</code> snapshots additionally contain <code>meta.monetization.throne</code>: <code>enabled</code>, <code>username</code>, <code>url</code>, <code>qr</code>, <code>position</code>, <code>rank</code>, and <code>gifts</code>. These snapshots contain no webhook URL or listening credential.</p></section>
 <section class="usage-notes" id="host-voice-preview"><h2>Host voice commands (desktop preview)</h2><p>The Event Flow <strong>When I say...</strong> trigger receives trusted local microphone commands from SSApp. Its internal action context uses <code>chatname: "Host"</code>, <code>type: "hostvoice"</code>, the recognized phrase in <code>chatmessage</code>, and <code>textonly: true</code>. This is not an incoming platform event or a new chat transport. Sending these fields through chat cannot activate a voice trigger.</p><p>Requires an updated desktop build, explicit microphone start, and enabling actions after Test mode. See the <a href="voice-control-plan.md">preview setup and validation status</a>.</p></section>

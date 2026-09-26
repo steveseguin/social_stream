@@ -11,6 +11,7 @@
 		<meta name="robots" content="noindex">
 		<script type="text/javascript" src="currency.js"></script>
 		<script type="text/javascript" src="./libs/objects.js"></script>
+		<script src="./shared/utils/contentImage.js"></script>
 
 		<style>
 			:root {
@@ -496,11 +497,11 @@
 				min-width: 0;
 			}
 			.largeContent .hl-imgContent img, .largeContent .hl-imgContent video {
-				width: 240px;
+				width: var(--large-content-size, 240px);
 				max-width: calc(100% - 4px) !important;
 				margin: 0 2px;
 				height: auto !important;
-				max-height: 240px !important;
+				max-height: var(--large-content-size, 240px) !important;
 				object-fit: contain;
 			}
 			.largeContent .hl-content {
@@ -3907,6 +3908,7 @@
 			if (urlParams.has("trivialevents")) {
 				trivialevents = true;
 			}
+			var trivialHighlightColor = normalizeColor(urlParams.get("trivialhighlightcolor"));
 
 			var filterNamesNotMessages = false;
 			if (urlParams.has("namefilter")) {
@@ -4893,6 +4895,8 @@
 
 			if (urlParams.get("custombeep")) {
 				updateAudioSource(urlParams.get("custombeep"));
+			} else if (urlParams.has("loudbeep")) {
+				updateAudioSource("./audio/tone-loud.wav");
 			}
 
 			if (urlParams.has("beepvolume")) {
@@ -5131,7 +5135,7 @@
 
 			function getColorForAmount(data) {
 				
-				let amount = data.donoValue || toUSD(data.donation || data.hasDonation, data.type);
+				let amount = getDonationValueUSD(data);
 				
 				for (const [threshold, color] of tiers) {
 					if (amount >= threshold) return color;
@@ -5175,6 +5179,9 @@
 			colorized = nameColorMode !== "none";
 
 			if (urlParams.has("largecontent")) {
+				var largeContentScale = parseFloat(urlParams.get("largecontent"));
+				largeContentScale = Number.isFinite(largeContentScale) ? Math.max(1, Math.min(5, largeContentScale)) : 1;
+				getById("output").style.setProperty("--large-content-size", (240 * largeContentScale) + "px");
 				getById("output").classList.add("largeContent");
 			}
 
@@ -5244,6 +5251,10 @@
 			
 			if (urlParams.has("autoyoutubememberchat")) {
 				autoyoutubememberchat = true;
+			}
+
+			if (!autoshow && (autoshowdonos || autoshowmembers || autoshowcontentimages)) {
+				autoShow(); // the donation/member/content-image filters imply auto-feature
 			}
 			
 			var giveVIPBadge = false;
@@ -10588,7 +10599,7 @@
 				var template = document.createElement("template");
 				template.innerHTML = chatmessage;
 				var context = template.content.firstElementChild;
-				if (context && context.tagName === "I") {
+				while (context && context.tagName === "I") {
 					context = context.firstElementChild;
 				}
 				if (!context) {
@@ -10627,15 +10638,21 @@
 				if ((!replyColorEnabled && !replyLabelColorEnabled) || DoNotShowInitialReply || !data.initial || !data.reply || !chatmessage) {
 					return chatmessage;
 				}
-				// Sources wrap the quoted context in <i><small>; leave the actual reply intact.
-				if (!data.textonly && !stripHTML && /^<i><small>/i.test(chatmessage)) {
+				// Event rows add an outer <i>; color only the source's quoted <i><small> context.
+				if (!data.textonly && !stripHTML && /^(<i>)?<i><small>/i.test(chatmessage)) {
 					if (replyColorEnabled) {
-						chatmessage = chatmessage.replace(/^<i>/i, '<i class="reply-context">');
+						chatmessage = chatmessage.replace(/^(<i>)?<i><small>/i, function (match, eventWrapper) {
+							return (eventWrapper || "") + '<i class="reply-context"><small>';
+						});
 					}
 					return colorReplyLabel(chatmessage, data);
 				}
 				if (data.textonly || stripHTML) {
-					var prefix = String(data.initial).replace(/[\r\n]+/g, "").replace(/\s+/g, " ").trim() + ":";
+					var initial = String(data.initial);
+					if (stripHTML && !data.textonly) {
+						initial = stripHtmlFunction(initial);
+					}
+					var prefix = initial.replace(/[\r\n]+/g, "").replace(/\s+/g, " ").trim() + ":";
 					if (data.textonly) {
 						prefix = escapeHtml(prefix);
 					}
@@ -12013,10 +12030,10 @@
 
 					var addImage = "";
 					if (data.contentimg) {
-						if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
-							addImage = '<div class="hl-imgContent"><video autoplay="true" muted="true" src="' + data.contentimg + '" onerror="this.style.display = \'none\';" /></video></div>';
+						if (/\.(mp4|webm)$/i.test(data.contentimg.split(/[?#]/)[0])){
+							addImage = '<div class="hl-imgContent"><video autoplay="true" muted="true" src="' + escapeAttributeValue(data.contentimg) + '" /></video></div>';
 						} else {
-							addImage = '<div class="hl-imgContent"><img src="' + data.contentimg + '" onerror="this.style.display = \'none\';" /></div>';
+							addImage = '<div class="hl-imgContent"><img alt="" src="' + escapeAttributeValue(data.contentimg) + '" /></div>';
 						}
 					} else if (attachmentsonly) {
 						data.chatmessage = "";
@@ -12455,8 +12472,8 @@
 
 					if (data.highlightColor && trivialevents) {
 						node.classList.add("special-highlight");
-						if (!bubble) {
-							node.style.backgroundColor = data.highlightColor;
+						if (!bubble || trivialHighlightColor) {
+							node.style.backgroundColor = trivialHighlightColor || data.highlightColor;
 						}
 					}
 					
@@ -12667,6 +12684,7 @@
 					if (chatmessage && hlMessage && (stripLinksForMessage || activeLinks || shortlink)) {
 						processURLs(hlMessage, { makeClickable: activeLinks, stripLinks: stripLinksForMessage, shortenURLs: shortlink });
 					} 
+					SSNContentImage.watch(node, data, contentElement || hlMessage);
 					
 					if (data.type && data.type == "twitch" && avatars && data.chatimg && data.chatname) { 
 						// Load Twitch avatar

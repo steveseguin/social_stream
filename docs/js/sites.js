@@ -1226,6 +1226,22 @@ document.addEventListener('DOMContentLoaded', function() {
 			notes: 'Captures newly rendered chat, user IDs, name colors, and inline emotes. Existing history, pinned messages, and reply previews are excluded; no viewer count is inferred from the popup.'
 		},
 		{
+			name: 'Gosh',
+			icon: 'gosh.png',
+			description: 'Live channel chat on Gosh.com.',
+			type: 'standard',
+			instructions: `<ul><li>Open https://gosh.com/USERNAME with the chat visible.</li><li>In the desktop app, use Add other source and paste the channel URL.</li><li>Keep chat scrolled to the newest messages. A separate chat popout is not required.</li></ul>`,
+			notes: 'Captures new chat messages, name colors, and inline images/GIFs. Existing history and system notices are excluded.'
+		},
+		{
+			name: 'Livacha',
+			icon: 'livacha.png',
+			description: 'Live chat rooms on Livacha.com.',
+			type: 'standard',
+			instructions: `<ul><li>Open https://livacha.com/chat/ROOM with chat visible.</li><li>In the desktop app, use Add other source and paste the chat-room URL.</li></ul>`,
+			notes: 'Captures new messages, names, avatars, name colors, and inline images/emotes. Existing history, timestamps, and reaction menus are excluded.'
+		},
+		{
 			name: 'Stream.space (experimental)',
 			icon: 'streamspace.png',
 			description: 'Live streaming platform with pop-out chat.',

@@ -614,13 +614,15 @@ body::before {
 
     // Typewriter effect for text
     function typewriterEffect(element, text, speed = 30) {
-        element.innerHTML = '';
+        element.textContent = '';
+        const textNode = document.createTextNode('');
+        element.appendChild(textNode);
         element.classList.add('typing');
         let i = 0;
         
         function type() {
             if (i < text.length) {
-                element.innerHTML += text.charAt(i);
+                textNode.appendData(text.charAt(i));
                 i++;
                 setTimeout(type, speed + Math.random() * 20); // Slight randomness
             } else {
@@ -757,7 +759,7 @@ body::before {
         
         const nameHtml = data.chatname ? `<span class="terminal-prompt">${statusIndicator}</span><span class="name">${data.chatname}</span>` : '';
         const membershipHtml = data.membership ? `<span class="membership-status">${data.membership}</span>` : '';
-        const messageTextHtml = `<span class="text">${data.chatmessage ? data.chatmessage : ''}</span>`;
+        const messageTextHtml = '<span class="text"></span>';
         const donationHtml = data.hasDonation ? `<span class="donation"> [DONATION: ${data.hasDonation}]</span>` : '';
         const timestampHtml = `<span class="timestamp">${timestamp}</span>`;
         
