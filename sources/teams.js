@@ -70,7 +70,11 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 	
 	function escapeHtml(unsafe){
 		try {
-			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
+			if (settings.textonlymode){ // Literal text stays unencoded at capture; escape only when a renderer constructs HTML.
 				return unsafe;
 			}
 			return unsafe
@@ -103,6 +107,7 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.alt){
 						resp += node.alt;
@@ -123,17 +128,7 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 		var chatimg = "";
 		try{
 			chatimg = ele.querySelector('[data-tid="message-avatar"]').querySelector("img").src;
-		} catch(e){
-			
-			if (!chatimg){
-				try {
-					chatimg = document.querySelector("profile-picture>.user-picture").src;
-				} catch(e){
-					//console.error(e);
-				}
-			}
-				
-		}
+		} catch(e){}
 		
 		
         var name = "";
@@ -141,10 +136,13 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 			name = escapeHtml(ele.querySelector(".ui-chat__message__author").innerText);
 		} 
 
-		if (!chatimg){
+		// Only headerless continuation rows can inherit a sender. A missing
+		// avatar must never replace a name already present on this message.
+		if (!name && !chatimg){
 			try {
 				var prev = ele;
 				for (var i=0; i<50;i++){
+					if (!prev || prev.querySelector('.ui-chat__message__author')){break;}
 					if (prev.querySelector('.ui-chat__message__timestamp')){
 						if (window.getComputedStyle(prev.querySelector('.ui-chat__message__timestamp')).width != "1px"){
 							break;
@@ -155,8 +153,9 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 						prev = prev.previousElementSibling;
 					}
 				}
-				chatimg = prev.querySelector('[data-tid="message-avatar"]').querySelector("img").src
 				name = escapeHtml(prev.querySelector(".ui-chat__message__author").innerText);
+				var previousAvatar = prev.querySelector('[data-tid="message-avatar"] img[src]');
+				chatimg = previousAvatar ? previousAvatar.src : "";
 				
 			} catch(e){} 
 		}
@@ -185,6 +184,7 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 		data.hasDonation = "";
 		data.membership = "";;
 		data.contentimg = "";
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "teams";
 
@@ -229,23 +229,21 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 				chatimg = ele.querySelector('[data-tid="message-avatar"] img[src], profile-picture img[src]').src;
 			}
 			
-			try {
-				var prev = ele;
-				for (var i=0; i<50;i++){
-					if (!chatimg && prev.querySelector('[data-tid="message-avatar"] img[src], profile-picture img[src]')){
-						chatimg = prev.querySelector('[data-tid="message-avatar"] img[src], profile-picture img[src]').src;
-					}
-					if (prev.querySelector('[data-tid="message-author-name"]')){ //  ts-message-list-item
-						break;
-					} else {
+			if (!name && !chatimg){
+				try {
+					var prev = ele;
+					for (var i=0; i<50;i++){
+						if (!prev || prev.querySelector('[data-tid="message-author-name"], [data-tid="threadBodyDisplayName"]')){
+							break;
+						}
 						prev = prev.previousElementSibling;
 					}
-				}
-				
-                name = escapeHtml(prev.querySelector('[data-tid="message-author-name"]').innerText);
-                nameEscaped = true;
-                
-            } catch(e){} 
+					name = escapeHtml(prev.querySelector('[data-tid="message-author-name"], [data-tid="threadBodyDisplayName"]').innerText);
+					nameEscaped = true;
+					var previousAvatar = prev.querySelector('[data-tid="message-avatar"] img[src], profile-picture img[src]');
+					chatimg = previousAvatar ? previousAvatar.src : "";
+				} catch(e){}
+			}
         }
         
         if (!nameEscaped){
@@ -285,6 +283,7 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 		data.hasDonation = "";
 		data.membership = "";;
 		data.contentimg = "";
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "teams";
 		
@@ -352,7 +351,7 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 	}
 
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 
 

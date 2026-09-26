@@ -48,6 +48,10 @@
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent+ " ");
 			} else if (node.nodeType === 1){
+				// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+				// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+				// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
@@ -121,6 +125,7 @@
 		data.hasDonation = hasDonation;
 		data.membership = "";
 		data.contentimg = contentimg;
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "kwai";
 		
@@ -139,7 +144,7 @@
 	}
 	
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	
 	

@@ -1,6 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="IRC Client - Social Stream Ninja compatible: a chat source connection page for Social Stream Ninja. Use it with the app or extension to bring chat into your session.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>IRC Client - Social Stream Ninja compatible</title>
     <style>
@@ -57,8 +61,10 @@
         .status { font-style: italic; }
     </style>
     <link rel="stylesheet" href="websocket-responsive.css">
+    <link rel="stylesheet" href="../../shared/compact-source-layout.css?v=20260916-setup">
+    <script src="../../shared/utils/compactSourceLayout.js?v=20260916-setup" defer></script>
 </head>
-<body>
+<body data-compact-source="irc">
     <div id="connectionForm">
         <h2>IRC Connection</h2>
         <select id="serverSelect">
@@ -257,6 +263,8 @@
             });
 
             client.onStatus((status, isError) => {
+                document.getElementById('status').setAttribute('data-connected',
+                    !isError && client && client.ws && client.ws.readyState === WebSocket.OPEN ? 'true' : 'false');
                 updateStatus(status, isError);
                 if (!isError) {
                     saveSettings(true);
@@ -270,6 +278,7 @@
         }
 
         function disconnect() {
+            document.getElementById('status').setAttribute('data-connected', 'false');
             if (client) {
                 client.disconnect();
                 client = null;
@@ -316,6 +325,10 @@
 					type: 'irc',
 					chatname: parsedMessage.nickname || 'System',
 					chatmessage: parsedMessage.message || message,
+					// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+					// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+					// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+					// Literal chatmessage on the wire: no app-added HTML or entity decoding; receivers must render it as text.
 					textonly: true,
 					event: parsedMessage.isEvent,
 					chatbadges: '',

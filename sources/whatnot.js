@@ -1,4 +1,7 @@
 (function () {
+	var chatOnly = /\/sources\/websocket\/whatnot(?:\.html)?\/?$/i.test(window.location.pathname)
+		&& document.body && document.body.getAttribute("data-whatnot-chat-only") === "true";
+	var chatOnlyMessageHandler = null;
 	var isExtensionOn = true;
 	var settings = {};
 	var observer = null;
@@ -14,6 +17,7 @@
 	var recentWebSocketMessageLookup = Object.create(null);
 	var recentWebSocketActivityIds = [];
 	var recentWebSocketActivityLookup = Object.create(null);
+	var recentCommercePackets = new Map();
 	var webSocketActivityWindowMs = 30000;
 	var lastWebSocketLivestreamState = "";
 	var lastWebSocketGiveawayState = "";
@@ -21,6 +25,10 @@
 
 	function escapeHtml(unsafe) {
 		try {
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
 			if (settings.textonlymode) {
 				return unsafe || "";
 			}
@@ -84,6 +92,7 @@
 			if (!element.textContent) {
 				return "";
 			}
+			// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 			return settings.textonlymode ? element.textContent : escapeHtml(element.textContent);
 		}
 
@@ -92,6 +101,7 @@
 				if (!node.textContent || !node.textContent.trim().length) {
 					return;
 				}
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				response += settings.textonlymode ? node.textContent : escapeHtml(node.textContent);
 				return;
 			}
@@ -100,6 +110,7 @@
 				return;
 			}
 
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			if (settings.textonlymode) {
 				response += getAllContentNodes(node);
 				return;
@@ -763,6 +774,7 @@
 
 	function formatWebSocketMessageText(value) {
 		var text = value == null ? "" : String(value);
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		return settings.textonlymode ? text : escapeHtml(text);
 	}
 
@@ -881,6 +893,8 @@
 		data.textColor = "";
 		data.nameColor = "";
 		data.chatmessage = formatWebSocketMessageText(messageText);
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
+		data.textonly = settings.textonlymode || false;
 		data.chatimg = user && user.profileImage && user.profileImage.url ? user.profileImage.url : "";
 		data.hasDonation = "";
 		data.membership = "";
@@ -988,6 +1002,99 @@
 		scheduleWebSocketSnapshotRefresh();
 	}
 
+	function handleWebSocketCommerceEvent(payload, wsChannel, eventType) {
+		if (!isExtensionOn || !payload || typeof payload !== "object" || Array.isArray(payload)) {
+			return;
+		}
+		// The page interceptor and desktop monitor can deliver the same packet.
+		// Only suppress a brief duplicate, not later sales of the same product.
+		var packetKey = wsChannel + "|" + eventType + "|" + JSON.stringify(payload);
+		var now = Date.now();
+		if (recentCommercePackets.has(packetKey) && now - recentCommercePackets.get(packetKey) < 1000) {
+			return;
+		}
+		recentCommercePackets.delete(packetKey);
+		recentCommercePackets.set(packetKey, now);
+		if (recentCommercePackets.size > 250) {
+			recentCommercePackets.delete(recentCommercePackets.keys().next().value);
+		}
+
+		var product = payload.product || {};
+		var bid = product.highestBid || {};
+		var user = payload.user || payload.purchaserUser || product.purchaserUser || {};
+		// Payment notifications can identify the purchaser without a user object.
+		// Use only the identity on this packet; never borrow a previous buyer.
+		var purchaserId = product.purchaserUserId;
+		if ((eventType === "product_sold" || eventType === "payment_failed" || eventType === "payment_succeeded") && !user.id && !user.username &&
+			((typeof purchaserId === "string" && purchaserId.trim()) || (typeof purchaserId === "number" && Number.isFinite(purchaserId)))) {
+			user = { id: purchaserId };
+		}
+		if (eventType === "new_bid" || eventType === "auction_ended") {
+			user = payload.highestBidder || bid.user || user;
+		} else if (eventType === "product_sold" && !user.id && !user.username) {
+			user = bid.user || user;
+		}
+		var title = typeof product.name === "string" ? product.name : "";
+		var labels = {
+			auction_started: "Auction started",
+			new_bid: "Bid placed",
+			auction_ended: "Auction ended",
+			product_sold: "Item sold",
+			payment_failed: "Payment failed",
+			payment_succeeded: "Payment succeeded"
+		};
+		var data = createWebSocketChatData(user, "");
+		data.platform = "whatnot";
+		data.event = eventType;
+		data.chatname = typeof user.username === "string" ? user.username : "";
+		data.chatmessage = labels[eventType] + (title ? ": " + title : "");
+		// Literal chatmessage on the wire: no app-added HTML or entity decoding; receivers must render it as text.
+		data.textonly = true;
+		data.subtitle = title;
+		data.meta = buildWebSocketMeta(wsChannel, eventType, payload, user);
+
+		// Keep structured details small; do not forward raw order/payment objects.
+		var paymentStatus = payload.paymentStatus || product.paymentStatus;
+		if (eventType === "payment_failed") paymentStatus = "failed";
+		if (eventType === "payment_succeeded") paymentStatus = "succeeded";
+		var details = {
+			productId: payload.productId || product.id,
+			catalogProductId: product.productId,
+			parentProductId: product.parentId,
+			auctionId: payload.auctionId || product.auctionId,
+			orderId: payload.orderId || product.orderId,
+			transactionId: payload.transactionId,
+			livestreamId: payload.livestreamId || product.livestreamId,
+			bidId: bid.id,
+			bids: product.bidCount,
+			auctionEndTime: product.auctionEndTime,
+			status: product.status,
+			transactionType: product.transactionType,
+			placeOrderErrorReason: payload.placeOrderErrorReason || product.placeOrderErrorReason,
+			paymentStatus: paymentStatus
+		};
+		Object.keys(details).forEach(function (key) {
+			var value = details[key];
+			if ((typeof value === "string" && value) || (typeof value === "number" && Number.isFinite(value))) {
+				data.meta[key] = value;
+			}
+		});
+		var price = bid.price || (typeof bid.priceCents === "number" ? bid.priceCents : product.askingPrice);
+		if (price == null && typeof product.askingPriceCents === "number") price = product.askingPriceCents;
+		if (eventType === "auction_started") {
+			price = product.auctionMinimumPrice || product.auctionMinimumCents;
+		}
+		var money = getMoneyDetails(price);
+		if (money) {
+			data.meta.price = money.amount;
+			data.meta.priceText = formatMoneyValue(price);
+			if (money.currency) data.meta.currency = money.currency;
+		}
+		// Sold/end notifications do not prove that payment succeeded.
+		pushMessage(data);
+		scheduleWebSocketSnapshotRefresh();
+	}
+
 	function handleWebSocketBoostContribution(activity, wsChannel) {
 		if (!activity || typeof activity !== "object") {
 			return;
@@ -999,7 +1106,7 @@
 		var money = getMoneyDetails(info.contributionMoney);
 		data.event = "donation";
 		data.hasDonation = formatMoneyValue(info.contributionMoney);
-		if (money) {
+		if (money && String(money.currency).toUpperCase() === "USD") {
 			data.donoValue = money.amount;
 		}
 		var meta = buildWebSocketMeta(wsChannel, activity.eventName || "COMMUNITY_BOOST_CONTRIBUTION_PURCHASED", activity, user);
@@ -1105,7 +1212,7 @@
 		data.event = "donation";
 		data.hasDonation = formatMoneyValue(tip.tipValue, tip.magnitude);
 		var money = getMoneyDetails(tip.tipValue, tip.magnitude);
-		if (money) {
+		if (money && String(money.currency).toUpperCase() === "USD") {
 			data.donoValue = money.amount;
 		}
 		data.meta = buildWebSocketMeta(wsChannel, "tip_sent", payload, user);
@@ -1166,6 +1273,14 @@
 		var payload = parsedArray[4] || {};
 
 		switch (eventType) {
+			case "auction_started":
+			case "new_bid":
+			case "auction_ended":
+			case "product_sold":
+			case "payment_failed":
+			case "payment_succeeded":
+				handleWebSocketCommerceEvent(parsedArray[4], wsChannel, eventType);
+				return;
 			case "new_msg":
 				handleWebSocketChatMessage(payload, wsChannel);
 				return;
@@ -1192,9 +1307,10 @@
 			case "product_created":
 			case "product_updated":
 			case "product_deleted":
+			case "product_pinned":
+			case "product_unpinned":
 			case "giveaway_started":
 			case "giveaway_won":
-			case "payment_failed":
 			case "user_joined":
 				handleWebSocketSnapshotPayload(payload);
 				return;
@@ -1272,6 +1388,10 @@
 	}
 
 	function pushMessage(data) {
+		if (chatOnly) {
+			if (chatOnlyMessageHandler) chatOnlyMessageHandler(data);
+			return;
+		}
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, { message: data }, function () {});
 		} catch (e) {}
@@ -1309,6 +1429,8 @@
 		data.textColor = "";
 		data.nameColor = "";
 		data.chatmessage = messageBody;
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
+		data.textonly = settings.textonlymode || false;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.membership = "";
@@ -1416,6 +1538,19 @@
 		}
 		observeChatList(listElement);
 		checkViewers(true);
+	}
+
+	// Reuse chat normalization in the lightweight source without installing the
+	// Whatnot website's DOM observers, commerce polling, or socket interception.
+	if (chatOnly) {
+		window.SSNWhatnotChat = {
+			configure: function (options) {
+				settings = options.settings || {};
+				chatOnlyMessageHandler = typeof options.onMessage === "function" ? options.onMessage : null;
+			},
+			processMessage: handleWebSocketChatMessage
+		};
+		return;
 	}
 
 		chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {

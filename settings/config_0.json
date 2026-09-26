@@ -117,6 +117,7 @@
       "allowPopups": false,
       "preload": "none",
       "enforceSigninCSP": false,
+      "googleOAuthCompatibility": true,
       "origin": "https://www.tiktok.com",
       "referrer": "https://www.tiktok.com/"
     },
@@ -201,7 +202,9 @@
         "width": 1920,
         "height": 1080
       },
-      "preload": "kasada",
+      "preload": "none",
+      "enforceSigninCSP": false,
+      "allowPopups": true,
       "monitorAntiBot": false,
       "useSystemBrowser": false,
       "useTLSProxy": false,
@@ -310,6 +313,8 @@
       "width": 1200,
       "height": 600
     },
+    "closeOnNavigateV2": true,
+    "closeOnNavigateMode": "channel",
     "wss": {
       "origin": "https://vpzone.tv",
       "referrer": "https://vpzone.tv/"
@@ -362,12 +367,52 @@
     "websocketMonitoring": true,
     "signin": {
       "url": "https://kick.com",
-      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "mockUserAgentData": {
+        "brands": [
+          {
+            "brand": "Not=A?Brand",
+            "version": "99"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "151"
+          },
+          {
+            "brand": "Chromium",
+            "version": "151"
+          }
+        ],
+        "mobile": false,
+        "platform": "Windows",
+        "fullVersionList": [
+          {
+            "brand": "Not=A?Brand",
+            "version": "99.0.0.0"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "151.0.7922.77"
+          },
+          {
+            "brand": "Chromium",
+            "version": "151.0.7922.77"
+          }
+        ],
+        "architecture": "x86",
+        "bitness": "64",
+        "model": "",
+        "platformVersion": "19.0.0",
+        "uaFullVersion": "151.0.7922.77",
+        "wow64": false,
+        "enhancedHeaders": true
+      },
       "size": {
         "width": 1920,
         "height": 1080
       },
-      "preload": "kasada",
+      "preload": "mock",
+      "enforceSigninCSP": false,
       "monitorAntiBot": false,
       "useSystemBrowser": false,
       "useTLSProxy": false,
@@ -408,7 +453,10 @@
   "discord": {
     "signin": {
       "url": "https://discord.com/login",
-      "userAgent": "Chrome"
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "mockUserAgentData": null,
+      "preload": "none",
+      "enforceSigninCSP": false
     }
   },
   "twitch": {
@@ -452,14 +500,55 @@
       "wow64": false,
       "enhancedHeaders": true
     },
+    "closeOnNavigateV2": true,
+    "closeOnNavigateMode": "channel",
     "signin": {
       "url": "https://twitch.tv",
-      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "mockUserAgentData": {
+        "brands": [
+          {
+            "brand": "Not=A?Brand",
+            "version": "99"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "151"
+          },
+          {
+            "brand": "Chromium",
+            "version": "151"
+          }
+        ],
+        "mobile": false,
+        "platform": "Windows",
+        "fullVersionList": [
+          {
+            "brand": "Not=A?Brand",
+            "version": "99.0.0.0"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "151.0.7922.77"
+          },
+          {
+            "brand": "Chromium",
+            "version": "151.0.7922.77"
+          }
+        ],
+        "architecture": "x86",
+        "bitness": "64",
+        "model": "",
+        "platformVersion": "19.0.0",
+        "uaFullVersion": "151.0.7922.77",
+        "wow64": false,
+        "enhancedHeaders": true
+      },
       "size": {
         "width": 1920,
         "height": 1080
       },
-      "preload": "kasada",
+      "preload": "mock",
       "monitorAntiBot": false,
       "useSystemBrowser": false,
       "useTLSProxy": false
@@ -525,6 +614,7 @@
       "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
       "preload": "none",
       "enforceSigninCSP": false,
+      "googleOAuthCompatibility": true,
       "allowPopups": true
     }
   },
@@ -554,6 +644,73 @@
     "size": {
       "width": 950,
       "height": 600
+    }
+  },
+  "nicovideo": {
+    "signin": {
+      "url": "https://account.nicovideo.jp/login",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "preload": "none",
+      "enforceSigninCSP": false,
+      "fillMissingOrigin": {
+        "pageOrigins": [
+          "https://account.nicovideo.jp",
+          "https://challenges.cloudflare.com"
+        ],
+        "requestOrigins": [
+          "https://api.id.nicovideo.jp",
+          "https://challenges.cloudflare.com"
+        ],
+        "methods": [
+          "POST"
+        ]
+      }
+    }
+  },
+  "vkvideo": {
+    "signin": {
+      "url": "https://live.vkvideo.ru/",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "fillMissingOrigin": {
+        "pageOrigins": [
+          "https://id.vk.ru",
+          "https://id.vk.com"
+        ],
+        "requestOrigins": [
+          "https://login.vk.ru",
+          "https://login.vk.com"
+        ],
+        "methods": [
+          "POST"
+        ],
+        "includePopups": true
+      }
+    }
+  },
+  "ebay": {
+    "websocketMonitoring": "fanout.ebay.com"
+  },
+  "whatnot": {
+    "websocketMonitoring": "whatnot.com",
+    "wss": {
+      "origin": "https://www.whatnot.com",
+      "websocketMonitoring": false
+    }
+  },
+  "piczel": {
+    "origin": "https://piczel.tv",
+    "referrer": "https://piczel.tv/"
+  },
+  "blaze": {
+    "signin": {
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "preload": "mock"
+    }
+  },
+  "owncast": {
+    "httpBasicAuth": true,
+    "signin": {
+      "useSourceUrl": true
     }
   }
 }

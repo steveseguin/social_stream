@@ -1,5 +1,20 @@
 (function() {
 
+    function isBlockedXPage() {
+        try {
+            var path = (window.location.pathname || "").toLowerCase();
+            var isPrivateInternalRoute = path.startsWith("/i/") && !path.startsWith("/i/broadcasts/");
+            return isPrivateInternalRoute ||
+                (path === "/messages") || path.startsWith("/messages/") ||
+                (path === "/notifications") || path.startsWith("/notifications/") ||
+                (path === "/bookmarks") || path.startsWith("/bookmarks/") ||
+                (path === "/settings") || path.startsWith("/settings/") ||
+                (path === "/compose") || path.startsWith("/compose/");
+        } catch (e) {
+            return true;
+        }
+    }
+
     function toDataURL(url, callback) {
         var xhr = new XMLHttpRequest();
         xhr.onload = function() {
@@ -19,6 +34,9 @@
     var isExtensionOn = false;
 
     function pushMessage(data) {
+        if (isBlockedXPage() || !isExtensionOn || !settings.xcapture || !enabledSSN) {
+            return;
+        }
         try {
             chrome.runtime.sendMessage(chrome.runtime.id, {
                 "message": data
@@ -27,7 +45,7 @@
     }
 
     var settings = {};
-    // settings.textonlymode
+    // textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
     // settings.captureevents
     chrome.runtime.sendMessage(chrome.runtime.id, {
         "getSettings": true
@@ -98,6 +116,10 @@
         function(request, sender, sendResponse) {
             try {
                 if ("getSource" == request){
+					if (isBlockedXPage()) {
+						sendResponse(false);
+						return;
+					}
 					
 					if (settings.detweet) {
 						sendResponse("twitter");
@@ -108,7 +130,7 @@
 					
 				}
 				if ("focusChat" == request) { // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					if (allowposting){
+					if (!isBlockedXPage() && isExtensionOn && settings.xcapture && enabledSSN && allowposting){
 						document.querySelector('[contenteditable="true"][tabindex="0"]').focus();
 						sendResponse(true);
 					}
@@ -146,7 +168,11 @@
 
     function escapeHtml(unsafe) {
         try {
-            if (settings.textonlymode) { // we can escape things later, as needed instead I guess.
+            // Capture contract: textonly=true means a literal chatmessage string, not HTML.
+            // Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+            // HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+            // Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
+            if (settings.textonlymode) { // Literal text stays unencoded at capture; escape only when a renderer constructs HTML.
                 return unsafe;
             }
             return unsafe
@@ -168,6 +194,7 @@
 			.replace(/&amp;gt;/g, '&gt;')
 			.replace(/&amp;#039;/g, '&#039;');
 		
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		if (settings.textonlymode) {
 			processedText = processedText
 				.replace(/&quot;/g, '"')
@@ -190,6 +217,8 @@
         return emojiRegex.test(char);
     }
 
+	// Local textonly suppresses captured element markup; settings.textonlymode also controls text escaping.
+	// This extraction option is not an HTML-safety marker or a replacement for the outbound chatmessage/textonly pair.
 	function getAllContentNodes(element, textonly = false) {
 		var resp = "";
 		
@@ -210,6 +239,7 @@
 					linkText = node.textContent || node.href;
 					resp += " " + linkText +" ";
 				} else {
+					// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 					resp += getAllContentNodes(node, textonly);
 				}
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
@@ -228,11 +258,11 @@
 				} else if (node.nodeName === "IMG") {
 					if (node.alt && isEmoji(node.alt)) {
 						resp += escapeHtml(node.alt);
-					} else if (!settings.textonlymode && !textonly) {
+					} else /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ if (!settings.textonlymode && !textonly) {
 						node.src = node.src + "";
 						resp += node.outerHTML;
 					}
-				} else if (!settings.textonlymode && !textonly) {
+				} else /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ if (!settings.textonlymode && !textonly) {
 					resp += node.outerHTML;
 				}
 			}
@@ -243,6 +273,9 @@
 
 
     function prepMessage(ele) {
+        if (isBlockedXPage() || !isExtensionOn || !settings.xcapture || !enabledSSN) {
+            return;
+        }
         if (ele == window) {
             return;
         }
@@ -409,6 +442,7 @@
         data.hasDonation = hasDonation;
         data.hasMembership = hasMembership;
         data.contentimg = contentimg;
+        // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
         data.textonly = settings.textonlymode || false;
         data.userid = userid;
 
@@ -489,7 +523,7 @@
 
     function checkButtons() {
 
-        if (!isExtensionOn || !enabledSSN || !settings.xcapture) {
+        if (isBlockedXPage() || !isExtensionOn || !enabledSSN || !settings.xcapture) {
             return;
         }
         try {
@@ -554,6 +588,7 @@
 								data.chatimg = base.querySelector("[data-testid^='UserAvatar'] img[src]").src;
 							} catch(e){}
 							
+							// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 							data.textonly = settings.textonlymode || false;
 							data.userid = base.querySelector("a[href]").href.split("/").pop();
 

@@ -1670,6 +1670,73 @@ async function fetchWithTimeout(url, optionsOrTimeout = {}, timeoutOrHeaders = 8
 // Make it globally available if needed by other parts of background.js, or export if using modules
 window.fetchWithTimeout = fetchWithTimeout;
 
+let openAIRealtimeCohostCapabilityPromise = null;
+let openAIRealtimeCohostCapabilityRecord = null;
+let openAIRealtimeCohostCapabilityMustRotate = false;
+const COHOST_CAPABILITY_STORAGE_KEY = "cohostAccessCapability";
+const COHOST_CAPABILITY_LIFETIME_MS = 12 * 60 * 60 * 1000;
+function getOpenAIRealtimeCohostCapability() {
+	const now = Date.now();
+	const scope = String(streamID || "");
+	const mustRotate = openAIRealtimeCohostCapabilityMustRotate;
+	if (
+		openAIRealtimeCohostCapabilityRecord &&
+		openAIRealtimeCohostCapabilityRecord.scope === scope &&
+		openAIRealtimeCohostCapabilityRecord.expiresAt > now
+	) {
+		return Promise.resolve(openAIRealtimeCohostCapabilityRecord.value);
+	}
+	if (openAIRealtimeCohostCapabilityPromise) return openAIRealtimeCohostCapabilityPromise;
+	openAIRealtimeCohostCapabilityPromise = new Promise(resolve => {
+		const createCapability = () => {
+			if (!globalThis.crypto || typeof globalThis.crypto.getRandomValues !== "function") return "";
+			const bytes = new Uint8Array(32);
+			globalThis.crypto.getRandomValues(bytes);
+			return Array.from(bytes).map(value => value.toString(16).padStart(2, "0")).join("");
+		};
+		const finish = storedValue => {
+			const storedRecord = storedValue && typeof storedValue === "object" ? storedValue : null;
+			const existing = String(storedRecord?.value || "");
+			const existingExpiresAt = Number(storedRecord?.expiresAt || 0);
+			if (!mustRotate && /^[a-f0-9]{64}$/i.test(existing) && storedRecord.scope === scope && existingExpiresAt > Date.now()) {
+				openAIRealtimeCohostCapabilityRecord = {
+					value: existing,
+					scope,
+					expiresAt: existingExpiresAt
+				};
+				resolve(existing);
+				return;
+			}
+			const created = createCapability();
+			const createdRecord = {
+				value: created,
+				scope,
+				expiresAt: Date.now() + COHOST_CAPABILITY_LIFETIME_MS
+			};
+			openAIRealtimeCohostCapabilityRecord = createdRecord;
+			openAIRealtimeCohostCapabilityMustRotate = false;
+			if (!created || typeof chrome === "undefined" || !chrome.storage?.local?.set) {
+				resolve(created);
+				return;
+			}
+			chrome.storage.local.set({ [COHOST_CAPABILITY_STORAGE_KEY]: createdRecord }, () => resolve(created));
+		};
+		if (typeof chrome === "undefined" || !chrome.storage?.local?.get) {
+			finish("");
+			return;
+		}
+		chrome.storage.local.get([COHOST_CAPABILITY_STORAGE_KEY], item => {
+			finish(item && item[COHOST_CAPABILITY_STORAGE_KEY]);
+		});
+	})
+		.catch(() => "")
+		.finally(() => {
+			openAIRealtimeCohostCapabilityPromise = null;
+		});
+	return openAIRealtimeCohostCapabilityPromise;
+}
+
+
 let videoStatsPollTimer = null;
 let videoStatsPollInFlight = false;
 let videoStatsLastOfflineKey = "";
@@ -2771,6 +2838,10 @@ async function resetSettings(item = false) {
 
 async function exportSettings() {
 	chrome.storage.local.get(properties, async function (item) {
+		try {
+		if (chrome.runtime.lastError) {
+			throw new Error(chrome.runtime.lastError.message);
+		}
 		item.settings = settings;
 		const opts = {
 			types: [
@@ -2787,6 +2858,9 @@ async function exportSettings() {
 
 		try {
 			fileExportHandler = await window.showSaveFilePicker(opts);
+		} catch (error) {
+			if (error && error.name === "AbortError") return;
+			throw error;
 		} finally {
 			await restorePreviousTabAfterPicker(restoreTarget);
 		}
@@ -2797,6 +2871,10 @@ async function exportSettings() {
 			const writableStream = await fileExportHandler.createWritable();
 			await writableStream.write(JSON.stringify(item));
 			await writableStream.close();
+		}
+		} catch (error) {
+			console.error("[Settings] Export failed:", error);
+			messagePopup({ alert: "Failed to export settings: " + (error.message || String(error)) });
 		}
 	});
 }
@@ -2814,6 +2892,9 @@ async function importSettings(item = false) {
 
 	try {
 		importFile = await window.showOpenFilePicker();
+	} catch (error) {
+		if (error && error.name === "AbortError") return;
+		throw error;
 	} finally {
 		await restorePreviousTabAfterPicker(restoreTarget);
 	}
@@ -2837,11 +2918,16 @@ async function importSettings(item = false) {
 	}
 
 	try {
-		loadSettings(JSON.parse(importFile), true);
+		const imported = JSON.parse(importFile);
+		if (!imported || typeof imported !== "object" || Array.isArray(imported) ||
+			!imported.settings || typeof imported.settings !== "object" || Array.isArray(imported.settings)) {
+			throw new Error("Missing or invalid settings object");
+		}
+		loadSettings(imported, true);
 		messagePopup({ settingsImported: true });
 	} catch (e) {
-		console.error("[Settings] Invalid JSON in import file:", e.message);
-		messagePopup({ alert: "File does not contain a valid JSON structure" });
+		console.error("[Settings] Invalid settings import:", e.message);
+		messagePopup({ alert: "File does not contain a valid Social Stream settings backup" });
 	}
 }
 
@@ -3994,6 +4080,7 @@ function replaceEmotesWithImages(message, emotesMap, zw = false) {
 
 const emojiCharacterRegex = /[\u{1F300}-\u{1FAFF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{27BF}\u{1F3FB}-\u{1F3FF}]/gu;
 
+// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 async function buildEmoteOnlyMessage(rawMessage, textOnly = false) {
 	if (!rawMessage || typeof rawMessage !== "string") {
 		return "";
@@ -4074,6 +4161,7 @@ async function buildEmoteOnlyMessage(rawMessage, textOnly = false) {
 		return "";
 	}
 
+	// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 	if (textOnly) {
 		return kept
 			.map(entry => (entry.text || "").trim())
@@ -4353,6 +4441,7 @@ async function processIncomingMessage(message, sender = null) {
 		let reflection = false;
 
 		// checkExactDuplicateAlreadyReceived only does work if there was a message responsein the last 10 seconds.
+		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 		reflection = checkExactDuplicateAlreadyReceived(message.chatmessage, message.textonly, message.tid, message.type);
 		if (reflection && (settings.firstsourceonly || settings.hideallreplies || settings.thissourceonly)) {
 			return;
@@ -4527,12 +4616,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode() });
 		} else if (request.cmd && request.cmd === "getSettings") {
 			ensureHandleStatusCache();
+			const cohostCapability = await getOpenAIRealtimeCohostCapability();
 			let responseData;
 			try {
-				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode(), documents: documentsRAG, handleStatus: getHandleStatusSnapshot() };
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode(), documents: documentsRAG, handleStatus: getHandleStatusSnapshot(), cohostCapability };
 			} catch (e) {
 				console.warn("Error including documentsRAG:", e);
-				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode(), handleStatus: getHandleStatusSnapshot() };
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode(), handleStatus: getHandleStatusSnapshot(), cohostCapability };
 			}
 			sendResponse(responseData);
 		} else if (request.cmd && request.cmd === "testLLMProvider") {
@@ -5948,6 +6038,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			updateReplaySpeed(request.sessionId, request.speed);
 			sendResponse({ success: true, state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "sidUpdated") {
+			const previousCohostCapabilityScope = String(streamID || "") + "\n" + String(password || "");
 			if (request.streamID) {
 				streamID = request.streamID;
 
@@ -5989,6 +6080,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if ("state" in request) {
 				isExtensionOn = request.state;
 			}
+			const nextCohostCapabilityScope = String(streamID || "") + "\n" + String(password || "");
+			if (previousCohostCapabilityScope !== nextCohostCapabilityScope) {
+				openAIRealtimeCohostCapabilityRecord = null;
+				openAIRealtimeCohostCapabilityPromise = null;
+				openAIRealtimeCohostCapabilityMustRotate = true;
+			}
 			persistSession({ streamId: streamID, state: isExtensionOn });
 			if (iframe) {
 				if (iframe.src) {
@@ -6005,7 +6102,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (isSSAPP) {
 				sendResponse({ state: isExtensionOn });
 			} else {
-				sendResponse({ state: isExtensionOn, streamID: streamID, password: password });
+				sendResponse({ state: isExtensionOn, streamID: streamID, password: password, cohostCapability: await getOpenAIRealtimeCohostCapability() });
 			}
 		} else if (request.cmd && request.cmd === "uploadBadwords") {
 			localStorage.setItem("customBadwords", request.data);
@@ -6431,6 +6528,7 @@ async function sendToDestinations(message) {
 		}
 
 		if (message.chatmessage) {
+			// Relay boundary: sanitize HTML-mode chatmessage only. textonly=true is literal text, so bypass HTML parsing/filtering and preserve the flag.
 			if (!message.textonly) {
 				if (settings.bttv) {
 					if (!Globalbttv) {
@@ -6572,6 +6670,7 @@ async function sendToDestinations(message) {
 				if (!translated) {
 					return false;
 				}
+				// Relay boundary: sanitize HTML-mode chatmessage only. textonly=true is literal text, so bypass HTML parsing/filtering and preserve the flag.
 				if (message.chatmessage && !message.textonly) {
 					message.chatmessage = filterXSS(message.chatmessage);
 				}
@@ -6773,17 +6872,17 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
 						if (sessionId && replaySessions[sessionId]) {
 							if (!replaySessions[sessionId].isPaused) {
 								sendDataP2P(message);
-								replaySessions[sessionId].currentIndex = index + 1;
+								replaySessions[sessionId].currentIndex = messageIndex + 1;
 
 								// Send progress update
-								const progress = ((index + 1) / messages.length) * 100;
+								const progress = ((messageIndex + 1) / messages.length) * 100;
 								// Send to all extension pages
 								chrome.runtime
 									.sendMessage({
 										action: "replayProgress",
 										sessionId: sessionId,
 										progress: progress,
-										currentMessage: index + 1,
+										currentMessage: messageIndex + 1,
 										totalMessages: messages.length,
 										currentTimestamp: message.timestamp,
 										messageDetails: {
@@ -6796,7 +6895,7 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
 									});
 
 								// Clean up if this was the last message
-								if (index === messages.length - 1) {
+								if (messageIndex === messages.length - 1) {
 									delete replaySessions[sessionId];
 								}
 							}
@@ -6920,10 +7019,12 @@ function sendToH2R(data) {
 			if (data.timestamp) {
 				msg.timestamp = data.timestamp;
 			}
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			if (!data.textonly) {
 				data.chatmessage = unescapeHtml(data.chatmessage);
 			}
 			msg.snippet = {};
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			msg.snippet.displayMessage = sanitizeRelay(data.chatmessage, data.textonly) || "";
 			if (!msg.snippet.displayMessage) {
 				return;
@@ -7141,47 +7242,35 @@ function relayIncomingWebhook(source, payload) {
 	});
 }
 
+// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 function sanitizeRelay(text, textonly = false, alt = false) {
 	if (!text || !text.trim()) {
 		return alt || text;
 	}
 
 	// Extract all emojis from image alt attributes before stripping HTML
-	const emojiMap = new Map();
+	// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 	if (!textonly) {
-		const tempDiv = document.createElement("div");
+		const tempDiv = document.createElement("template");
 		tempDiv.innerHTML = text;
 
 		// Collect all image elements with alt text that appears to be an emoji
-		const imgElements = tempDiv.querySelectorAll("img");
-		imgElements.forEach((img, index) => {
+		const imgElements = tempDiv.content.querySelectorAll("img");
+		imgElements.forEach(img => {
 			const altText = img.getAttribute("alt");
 			if (altText && isEmoji(altText)) {
-				const placeholder = `__EMOJI_PLACEHOLDER_${index}__`;
-				emojiMap.set(placeholder, altText);
-				img.outerHTML = placeholder;
+				img.parentNode.replaceChild(document.createTextNode(altText), img);
 			}
 		});
 
-		// Get the potentially modified HTML
-		text = tempDiv.innerHTML;
-
-		// Convert to text from html
-		var textArea = document.createElement("textarea");
-		textArea.innerHTML = text;
-		text = textArea.value;
+		tempDiv.content.querySelectorAll("script,style,noscript,template").forEach(node => node.remove());
+		text = tempDiv.content.textContent || "";
 	}
 
-	// Strip HTML and other unwanted characters
-	text = text.replace(/(<([^>]+)>)/gi, "");
+	// Preserve literal text; these are the relay's existing command/cheer rules.
 	text = text.replace(/[!#@]/g, "");
 	text = text.replace(/cheer\d+/gi, " ");
 	text = text.replace(/\.(?=\S(?!$))/g, " ");
-
-	// Replace all emoji placeholders with their actual emojis
-	emojiMap.forEach((emoji, placeholder) => {
-		text = text.replace(placeholder, emoji);
-	});
 
 	if (!text.trim() && alt) {
 		return alt;
@@ -7203,24 +7292,40 @@ function isEmoji(char) {
 	return emojiRegex.test(trimmed);
 }
 
-// Helper to preserve emoji from img alt attributes before stripping HTML
-// Used by reflection filter to properly compare messages with emoji
-function preserveEmojiFromImgAlt(html) {
-	if (!html || typeof html !== "string") return html;
-	try {
-		const tempDiv = document.createElement("div");
-		tempDiv.innerHTML = html;
-		const imgElements = tempDiv.querySelectorAll("img");
-		imgElements.forEach(img => {
-			const altText = img.getAttribute("alt");
-			if (altText && isEmoji(altText)) {
-				img.outerHTML = altText;
-			}
-		});
-		return tempDiv.innerHTML;
-	} catch (e) {
-		return html;
+// Build the same reflection key for plain text and platform-rendered rich text.
+// Private-use markers let us remove whitespace inserted between an emote image
+// and adjacent punctuation without changing intentional spacing in plain text.
+// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+function normalizeMessageForTracking(msg, textonly = false) {
+	if (msg === undefined || msg === null) return "";
+
+	let normalized = String(msg);
+	const imageStartMarker = "\uE000";
+	const imageEndMarker = "\uE001";
+	const unknownImageMarker = "\uE002";
+
+	// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+	if (!textonly) {
+		try {
+			const doc = new DOMParser().parseFromString(normalized, "text/html");
+			doc.querySelectorAll("img").forEach(img => {
+				const replacement = (img.getAttribute("alt") || img.getAttribute("title") || unknownImageMarker).trim();
+				img.parentNode.replaceChild(doc.createTextNode(imageStartMarker + replacement + imageEndMarker), img);
+			});
+			normalized = doc.body.textContent || "";
+		} catch (e) {}
 	}
+
+	try {
+		normalized = normalized.normalize("NFC");
+	} catch (e) {}
+
+	return normalized
+		.replace(/[\uFE0E\uFE0F]/g, "")
+		.replace(/\uE001\s+([.,!?])/g, "\uE001$1")
+		.replace(/[\uE000\uE001]/g, "")
+		.replace(/\s+/g, " ")
+		.trim();
 }
 
 const messageStore = {};
@@ -7235,17 +7340,7 @@ function checkExactDuplicateAlreadyRelayed(msg, sanitized = true, tabid = false,
 		}
 	}
 
-	// Preserve emoji from img alt attributes before processing (fixes reflection filter for emoji)
-	msg = preserveEmojiFromImgAlt(msg);
-
-	if (!sanitized) {
-		var textArea = document.createElement("textarea");
-		textArea.innerHTML = msg;
-		msg = textArea.value.replace(/\s\s+/g, " ").trim();
-	} else {
-		msg = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
-		msg = msg.replace(/\s\s+/g, " ").trim();
-	}
+	msg = normalizeMessageForTracking(msg, sanitized);
 
 	if (save) {
 		return msg;
@@ -7282,17 +7377,7 @@ function checkExactDuplicateAlreadyReceived(msg, sanitized = true, tabid = false
 		return false;
 	}
 
-	// Preserve emoji from img alt attributes before processing (fixes reflection filter for emoji)
-	msg = preserveEmojiFromImgAlt(msg);
-
-	if (!sanitized) {
-		var textArea = document.createElement("textarea");
-		textArea.innerHTML = msg;
-		msg = textArea.value.replace(/\s\s+/g, " ").trim();
-	} else {
-		msg = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
-		msg = msg.replace(/\s\s+/g, " ").trim();
-	}
+	msg = normalizeMessageForTracking(msg, sanitized);
 
 	if (!msg || !tabid) {
 		return false;
@@ -7376,10 +7461,7 @@ function sendToS10(data, fakechat = false, relayed = false) {
 			}
 
 			let cleaned = data.chatmessage;
-			if (data.textonly) {
-				cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, ""); // keep a cleaned copy
-				cleaned = cleaned.replace(/\s\s+/g, " ");
-			} else {
+			if (!data.textonly) {
 				cleaned = decodeAndCleanHtml(cleaned);
 			}
 			if (!cleaned) {
@@ -7395,11 +7477,12 @@ function sendToS10(data, fakechat = false, relayed = false) {
 				}
 				////console.log".");
 				// checkExactDuplicateAlreadyRelayed(msg, sanitized=true, tabid=false, save=true)
+				// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 				if (checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
 					////console.log"--");
 					return;
 				}
-			} else if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
+			} else /* Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary. */ if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
 				return null;
 			}
 
@@ -7512,10 +7595,7 @@ function sendToSSC(data, fakechat = false, relayed = false) {
 			}
 
 			let cleaned = data.chatmessage;
-			if (data.textonly) {
-				cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, "");
-				cleaned = cleaned.replace(/\s\s+/g, " ");
-			} else {
+			if (!data.textonly) {
 				cleaned = decodeAndCleanHtml(cleaned);
 			}
 			if (!cleaned) {
@@ -7528,10 +7608,11 @@ function sendToSSC(data, fakechat = false, relayed = false) {
 				if (data.bot) {
 					return null;
 				}
+				// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 				if (checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
 					return;
 				}
-			} else if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
+			} else /* Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary. */ if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
 				return null;
 			}
 
@@ -7584,8 +7665,10 @@ function sendToSSC(data, fakechat = false, relayed = false) {
 			// Donations/Super Chats
 			if (data.hasDonation) {
 				payload.payload.donation = data.hasDonation;
-				if (data.donoValue) {
-					payload.payload.donationValue = data.donoValue;
+				const usdValue = typeof data.donoValue === 'number' ? data.donoValue :
+					(typeof data.donoValue === 'string' && data.donoValue.trim() ? Number(data.donoValue.replace(/,/g, '')) : NaN);
+				if (Number.isFinite(usdValue)) {
+					payload.payload.donationValue = usdValue;
 				}
 				if (data.backgroundColor) {
 					payload.payload.backgroundColor = data.backgroundColor;
@@ -8010,6 +8093,7 @@ class StreamerbotWebsocketClient {
 			if (!message) return false;
 
 			// Clean message if needed
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			if (chatData.textonly) {
 				message = message.replace(/<\/?[^>]+(>|$)/g, "");
 				message = message.replace(/\s\s+/g, " ");
@@ -8176,12 +8260,9 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
 			return null;
 		}
 
-		// Clean the message
+		// Plain-text messages may contain literal angle brackets and significant whitespace.
 		let cleaned = data.chatmessage;
-		if (data.textonly) {
-			cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, "");
-			cleaned = cleaned.replace(/\s\s+/g, " ");
-		} else if (typeof cleaned === "string") {
+		if (!data.textonly && typeof cleaned === "string") {
 			cleaned = decodeAndCleanHtml(cleaned); // Assuming decodeAndCleanHtml is defined elsewhere
 		}
 
@@ -8197,10 +8278,11 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
 			if (data.bot) {
 				return null;
 			}
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			if (typeof checkExactDuplicateAlreadyRelayed === "function" && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
 				return;
 			}
-		} else if (!fakechat && typeof checkExactDuplicateAlreadyRelayed === "function" && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
+		} else /* Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary. */ if (!fakechat && typeof checkExactDuplicateAlreadyRelayed === "function" && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
 			return null;
 		}
 
@@ -8270,6 +8352,7 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
 				hasDonation: String(payloadData.hasDonation || ""),
 				contentimg: payloadData.contentimg || "",
 				subtitle: payloadData.subtitle || "",
+				// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 				textonly: !!payloadData.textonly,
 				tid: payloadData.tid || "",
 				id: payloadData.id || ""
@@ -8518,6 +8601,7 @@ function formatDescription(data) {
 	let description = "";
 
 	if (data.chatmessage) {
+		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 		if (!data.textonly) {
 			// Convert HTML to plain text
 			description += `>>> ${decodeAndCleanHtml(data.chatmessage)}\n\n`;
@@ -12843,10 +12927,19 @@ async function processIncomingRequest(request, UUID = false) {
 				);
 			}
 		} else if (request.action === "cohostToolStatus" && UUID) {
-			const status = getCohostToolStatus();
-			sendDataP2P({ cohostToolStatus: { target: request.target || null, value: status, tools: status.tools } }, UUID);
+			const expectedCapability = await getOpenAIRealtimeCohostCapability();
+			if (!expectedCapability || String(request.capability || "") !== expectedCapability) {
+				sendDataP2P({ cohostToolStatus: { target: request.target || null, error: "Co-host access denied. Reopen the co-host link from the SSN popup." } }, UUID);
+			} else {
+				const status = getCohostToolStatus();
+				sendDataP2P({ cohostToolStatus: { target: request.target || null, value: status, tools: status.tools } }, UUID);
+			}
 		} else if (request.action === "cohostTool" && UUID) {
 			try {
+				const expectedCapability = await getOpenAIRealtimeCohostCapability();
+				if (!expectedCapability || String(request.capability || "") !== expectedCapability) {
+					throw new Error("Co-host access denied. Reopen the co-host link from the SSN popup.");
+				}
 				const result = await handleCohostToolRequest(request);
 				sendDataP2P({ cohostToolResponse: Object.assign({ target: request.target || null }, result) }, UUID);
 			} catch (error) {
@@ -13285,6 +13378,9 @@ function checkIfAllowed(sitename) {
 				return false;
 			}
 			if (sitename.startsWith("https://chat.openai.com/")) {
+				return false;
+			}
+			if (sitename.startsWith("https://chatgpt.com/")) {
 				return false;
 			}
 		} catch (e) {}
@@ -14182,22 +14278,7 @@ function handleMessageStore(tabId, msg2Save, now, relayMode, origin = "relay") {
 }
 function sanitizeMessageForTracking(msg, sanitized = true) {
 	try {
-		if (!msg) {
-			return "";
-		}
-
-		// Preserve emoji from img alt attributes before processing (fixes reflection filter for emoji)
-		msg = preserveEmojiFromImgAlt(msg);
-
-		let normalized;
-		if (!sanitized) {
-			const textArea = document.createElement("textarea");
-			textArea.innerHTML = msg;
-			normalized = textArea.value;
-		} else {
-			normalized = msg.replace(/<\/?[^>]+(>|$)/g, "");
-		}
-		return normalized.replace(/\s\s+/g, " ").trim();
+		return normalizeMessageForTracking(msg, sanitized);
 	} catch (e) {
 		errorlog(e);
 		return "";
@@ -15160,6 +15241,7 @@ class HostMessageFilter {
 
 		// Determine message content based on available fields
 		let messageContent = "";
+		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 		if (message.textonly) {
 			messageContent = message.chatmessage;
 		} else if (message.chatmessage !== undefined) {
@@ -15529,7 +15611,8 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		if (settings.normalizeText && data.chatmessage) {
-			data.chatmessage = normalizeText(data.chatmessage, data.textonly || false);
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+			data.chatmessage = normalizeText(data.chatmessage, !data.textonly);
 		}
 
 		// Check for bad words in the message (for Event Flow filtering)
@@ -15776,6 +15859,7 @@ async function applyBotActions(data, tab = false) {
 			return null;
 		} else if (settings.relayall && !data.reflection && !skipRelay && data.chatmessage && !data.event && tab && !blockChannelPointRelay) {
 			//console.log("2");
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			if (checkExactDuplicateAlreadyRelayed(data.chatmessage, data.textonly, tab.id, false)) {
 				return null;
 			}
@@ -15793,6 +15877,7 @@ async function applyBotActions(data, tab = false) {
 					relayMessage.url = tab.url;
 				}
 
+				// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 				let tmpmsg = sanitizeRelay(data.chatmessage, data.textonly).trim();
 				if (tmpmsg) {
 					if (settings.nosaid) {
@@ -15840,12 +15925,15 @@ async function applyBotActions(data, tab = false) {
 			if (!data.reflection) {
 				let commandMessage = data.chatmessage;
 
+				// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 				if (!data.textonly) {
-					var textArea = document.createElement("textarea");
-					textArea.innerHTML = commandMessage;
-					commandMessage = textArea.value;
+					// Convert HTML once in inert contents; encoded literal tags remain text.
+					var commandTemplate = document.createElement("template");
+					commandTemplate.innerHTML = commandMessage;
+					commandTemplate.content.querySelectorAll("script,style,noscript,template").forEach(node => node.remove());
+					commandMessage = commandTemplate.content.textContent || "";
 				}
-				commandMessage = commandMessage.replace(/(<([^>]+)>)/gi, "");
+				// Preserve the command prefix and existing command cleanup; plain bodies are never HTML-parsed.
 				commandMessage = commandMessage.replace(/[#@]/g, "");
 				commandMessage = commandMessage.replace(/\.(?=\S(?!$))/g, " ");
 				commandMessage = commandMessage.trim();
@@ -16454,6 +16542,7 @@ async function applyBotActions(data, tab = false) {
 
 		const emoteOnlyModeEnabled = !!(settings.emoteonlymode && (settings.emoteonlymode.setting ?? settings.emoteonlymode));
 		if (emoteOnlyModeEnabled && hadOriginalChatMessage) {
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			const emoteOnlyMessage = await buildEmoteOnlyMessage(data.chatmessage || "", Boolean(data.textonly || settings.textonlymode));
 			data.chatmessage = emoteOnlyMessage;
 			if (!data.chatmessage) {

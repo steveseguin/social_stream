@@ -47,7 +47,11 @@ function toDataURL(url, callback) {
 	
 	function escapeHtml(unsafe){
 		try {
-			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
+			if (settings.textonlymode){ // Literal text stays unencoded at capture; escape only when a renderer constructs HTML.
 				return unsafe;
 			}
 			return unsafe
@@ -80,6 +84,7 @@ function toDataURL(url, callback) {
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (!settings.textonlymode){
 					if (node && node.nodeName && (node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
@@ -108,18 +113,42 @@ function toDataURL(url, callback) {
 		try {
 		var name="";
 		var nameEle = ele.querySelector('[property="sender.name"]');
+		var bodyEle = ele.querySelector('[property="body"]');
+		var service = ele.querySelector('[property="service"]')?.getAttribute("value") || "";
+		var header = null;
+
+		// Beam removed its ChatMessage microdata in 2026. Current rows are direct
+		// children of .scroll, with a data-ts value, a header, and a body span.
+		if (!nameEle && ele.dataset?.ts && ele.parentElement?.classList.contains("scroll")){
+			// Beam CSS-module classes identify unlinked names and headers after replies.
+			// Keep a structural fallback for linked names when those classes change.
+			header = ele.querySelector(':scope > ._PXuVA') || ele.firstElementChild;
+			nameEle = header?.querySelector('._tHR7B') || Array.from(header?.querySelectorAll('a[target="_blank"][href]') || []).find(function(link){
+				return !link.querySelector('img, [aria-hidden="true"]') && link.textContent.trim();
+			}) || null;
+			// Notices/events also have data-ts; only a message header may omit a name.
+			if (!nameEle && !header?.classList.contains("_PXuVA")){return;}
+			bodyEle = Array.from(ele.children).find(function(child){
+				return child !== header && child.tagName === "SPAN";
+			}) || null;
+			try {
+				var serviceHost = new URL(nameEle?.href || "").hostname.toLowerCase().replace(/^www\./, "");
+				service = serviceHost === "beamstream.gg" || serviceHost.endsWith(".beamstream.gg") ? "" : serviceHost.split(".")[0] || "";
+			} catch(e) {}
+		}
 		
 		try {
-			name = nameEle.innerText || "";
-			name = escapeHtml(name);
+			name = nameEle ? (nameEle.textContent || "").trim() : "";
+			if (!nameEle && !header){return;}
 		} catch(e){
 			return;
 		}
 		
-		var msg = getAllContentNodes(ele.querySelector('[property="body"]')) || "";
+		var msg = getAllContentNodes(bodyEle) || "";
 		console.log("..");
 		var contentimg = "";
 		try {
+		if (!header) {
 			let images1 = getNextElement(nameEle);
 			//console.log(images1.nodeName, images1);
 			if ((images1?.nodeName == "IMG") && images1.src){
@@ -138,7 +167,7 @@ function toDataURL(url, callback) {
 					msg += getAllContentNodes(nameEle) + " ";
 				}
 			}
-			
+		}
 		}catch(e){
 		//	console.log(e);
 			return;
@@ -151,8 +180,24 @@ function toDataURL(url, callback) {
 		
 		
 		var chatimg = '';
+		var chatbadges = [];
 		try {
 			chatimg = ele.querySelector('[property="sender.avatar"][src]')?.src || "";
+			if (header){
+				chatimg = chatimg || header.querySelector('img._fzVmZ, :scope > a > img, :scope > img')?.src || "";
+				var badges = header.querySelector('._p04YN');
+				if (badges){
+					badges.querySelectorAll('img, svg').forEach(function(badge){
+						if (badge.tagName.toLowerCase() === "img"){
+							if (badge.src){chatbadges.push(badge.src);}
+						} else {
+							var svg = badge.cloneNode(true);
+							svg.setAttribute("style", "height: 1em; width: auto; vertical-align: middle; color: " + getComputedStyle(badge).color);
+							chatbadges.push({type: "svg", html: svg.outerHTML});
+						}
+					});
+				}
+			}
 			
 		} catch(e){
 			//console.log(e);
@@ -161,7 +206,7 @@ function toDataURL(url, callback) {
 		
 		var data = {};
 		data.chatname = name;
-		data.chatbadges = "";
+		data.chatbadges = chatbadges.length ? chatbadges : "";
 		data.backgroundColor = "";
 		data.textColor = "";
 		data.chatmessage = msg;
@@ -169,16 +214,16 @@ function toDataURL(url, callback) {
 		data.hasDonation = "";
 		data.membership = "";
 		data.contentimg = contentimg;
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "beamstream";
 		
 		
-		var source = ele.querySelector('[property="service"]')?.getAttribute("value") || "";
-		if (source){
+		if (service){
 			if (settings.ignorealternatives){
 				return;
 			}
-			var sourceImg = "./sources/images/"+source+".png";
+			var sourceImg = "./sources/images/"+service+".png";
 			var normalizedSourceImg = resolveSourceImageUrl(sourceImg);
 			var typeIconUrl = resolveSourceImageUrl("./sources/images/" + data.type + ".png");
 			var finalSourceImg = normalizedSourceImg;
@@ -205,9 +250,29 @@ function toDataURL(url, callback) {
 			console.error(e);
 		}
 	}
+
+	var lastViewerCount = null;
+	function parseViewerCount(value){
+		var match = (value || "").replace(/,/g, "").trim().match(/([0-9]+(?:\.[0-9]+)?)\s*([KMB])?/i);
+		if (!match){return null;}
+		var multiplier = {K: 1000, M: 1000000, B: 1000000000}[(match[2] || "").toUpperCase()] || 1;
+		return Math.round(parseFloat(match[1]) * multiplier);
+	}
+
+	function checkViewers(){
+		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode)){return;}
+		try {
+			var viewerNode = document.querySelector('[property="viewers"], [property="viewerCount"], [data-viewer-count], [aria-label*="viewer" i]');
+			if (!viewerNode){return;}
+			var count = parseViewerCount(viewerNode.getAttribute("content") || viewerNode.getAttribute("value") || viewerNode.getAttribute("data-viewer-count") || viewerNode.getAttribute("aria-label") || viewerNode.textContent);
+			if (count === null || count === lastViewerCount){return;}
+			lastViewerCount = count;
+			pushMessage({type: "beamstream", event: "viewer_update", meta: count});
+		} catch(e){}
+	}
 	
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	
 	
@@ -216,6 +281,9 @@ function toDataURL(url, callback) {
 		response = response || {};
 		if ("settings" in response){
 			settings = response.settings;
+		}
+		if ("state" in response){
+			isExtensionOn = response.state;
 		}
 	});
 
@@ -229,8 +297,17 @@ function toDataURL(url, callback) {
 					return;
 				}
 				if (typeof request === "object"){
+					var handled = false;
+					if ("state" in request){
+						isExtensionOn = request.state;
+						handled = true;
+					}
 					if ("settings" in request){
 						settings = request.settings;
+						handled = true;
+					}
+					if (handled){
+						checkViewers();
 						sendResponse(true);
 						return;
 					}
@@ -291,5 +368,7 @@ function toDataURL(url, callback) {
 			}
 		}
 	},1000);
+	setInterval(checkViewers, 30000);
+	setTimeout(checkViewers, 5000);
 
 })();

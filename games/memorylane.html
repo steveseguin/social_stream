@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Memory Lane - Social Stream Ninja</title>
     <link rel="icon" href="../favicon.ico" />
@@ -722,15 +722,18 @@
             
             if (!data || !data.chatmessage || !data.chatname) return;
 
-            const tmpName = document.createElement('div');
+            // Read the name without loading images or running their handlers.
+            const nameTemplate = document.createElement('template');
+            const tmpName = nameTemplate.content.appendChild(document.createElement('div'));
             tmpName.innerHTML = data.chatname;
             const username = tmpName.textContent || tmpName.innerText || '';
             let message = data.chatmessage;
 
             // Check if textonly is set, if not we need to extract text from HTML
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!data.textonly) {
                 // Create a temporary element to parse HTML
-                const tempDiv = document.createElement('div');
+                const tempDiv = document.createElement('template').content.appendChild(document.createElement('div'));
                 tempDiv.innerHTML = message;
                 
                 // Replace images with their alt text

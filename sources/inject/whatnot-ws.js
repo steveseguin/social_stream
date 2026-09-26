@@ -106,9 +106,15 @@
     return ws;
   };
 
+  window.WebSocket.prototype = OriginalWS.prototype;
+
   for (const prop in OriginalWS) {
     window.WebSocket[prop] = OriginalWS[prop];
   }
+  window.WebSocket.CONNECTING = OriginalWS.CONNECTING;
+  window.WebSocket.OPEN = OriginalWS.OPEN;
+  window.WebSocket.CLOSING = OriginalWS.CLOSING;
+  window.WebSocket.CLOSED = OriginalWS.CLOSED;
 
   console.log("WebSocket interception script loaded");
 })();

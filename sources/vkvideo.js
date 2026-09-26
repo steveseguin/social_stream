@@ -57,6 +57,10 @@
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent)+" ";
 			} else if (node.nodeType === 1){
+				// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+				// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+				// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
@@ -69,12 +73,55 @@
 	}
 	
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	
 	var channelName = "";
+	var messageSelector = "[class*='ChatMessage_root_']";
+
+	function getMessageElements(ele) {
+		var messages = [];
+		if (!ele) {
+			return messages;
+		}
+		if (ele.nodeType !== 1) {
+			ele = ele.parentElement;
+		}
+		if (!ele) {
+			return messages;
+		}
+
+		var closest = ele.closest ? ele.closest(messageSelector) : null;
+		if (closest) {
+			messages.push(closest);
+		}
+		if (ele.matches && ele.matches(messageSelector) && messages.indexOf(ele) === -1) {
+			messages.push(ele);
+		}
+		if (ele.querySelectorAll) {
+			ele.querySelectorAll(messageSelector).forEach(function(message) {
+				if (messages.indexOf(message) === -1) {
+					messages.push(message);
+				}
+			});
+		}
+		return messages;
+	}
 	
 	function processMessage(ele){
+		var messageElements = getMessageElements(ele);
+		if (!messageElements.length) {
+			return;
+		}
+		messageElements.forEach(function(messageElement) {
+			processMessageElement(messageElement);
+		});
+	}
+
+	function processMessageElement(ele){
+		if (ele.ssnProcessed) {
+			return;
+		}
 		
 		var chatimg = ""
 
@@ -124,6 +171,7 @@
 		if (!msg || !name){
 			return;
 		}
+		ele.ssnProcessed = true;
 		
 		
 		
@@ -138,6 +186,7 @@
 		data.hasDonation = "";
 		data.membership = "";
 		data.contentimg = "";
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "vkvideo";
 		
@@ -232,6 +281,9 @@
 	
 	
 	function onElementInserted(target) {
+		target.querySelectorAll(messageSelector).forEach(function(messageElement) {
+			messageElement.ssnProcessed = true;
+		});
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
@@ -239,9 +291,7 @@
 						try {
 							if (mutation.addedNodes[i].skip){continue;}
 
-							mutation.addedNodes[i].skip = true;
-
-							processMessage(mutation.addedNodes[i]); // maybe here
+							processMessage(mutation.addedNodes[i]);
 							
 						} catch(e){}
 					}
@@ -263,13 +313,15 @@
 	setInterval(function(){
 		try {
 			var container = document.querySelector("[class^='Chat_root']");
-			if (!container.marked){
+			if (container && !container.marked){
 				container.marked=true;
 
 				console.log("CONNECTED chat detected");
 
 				setTimeout(function(){
-					onElementInserted(container);
+					if (container && container.isConnected){
+						onElementInserted(container);
+					}
 				},2000);
 			}
 			checkViewers();

@@ -42,6 +42,10 @@ function toDataURL(url, callback) {
 
 		if (!element.childNodes || !element.childNodes.length){
 			if (element.textContent){
+				// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+				// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+				// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+				// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 				return settings.textonlymode ? element.textContent : (escapeHtml(element.textContent) || "");
 			} else {
 				return "";
@@ -52,8 +56,10 @@ function toDataURL(url, callback) {
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				resp += settings.textonlymode ? node.textContent : escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
@@ -94,7 +100,7 @@ function toDataURL(url, callback) {
 			if (closestRow && closestRow.querySelector(".title-cell-name-holder")){
 				return closestRow;
 			}
-			return ele.querySelector("[id^='ChatMessage_']");
+			return ele.querySelector("[id^='ChatMessage_'], .tmg-live-video-chat-message-item");
 		} catch(e){
 			return null;
 		}
@@ -332,6 +338,7 @@ function toDataURL(url, callback) {
 
 	function formatOutputText(value) {
 		var text = getPlainText(value);
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		return settings.textonlymode ? text : escapeHtml(text);
 	}
 
@@ -521,6 +528,7 @@ function toDataURL(url, callback) {
 			hasDonation: "",
 			membership: "",
 			contentimg: "",
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: settings.textonlymode || false,
 			type: "meetme"
 		};
@@ -571,19 +579,12 @@ function toDataURL(url, callback) {
 		return true;
 	}
 
-	function getEventTarget(eventName) {
-		if ((eventName === "liked" || eventName === "like" || eventName === "reaction") && settings.capturelikeevent === false) {
-			return "reactions";
-		}
-		return "";
-	}
-
 	function emitWsData(data, target) {
 		var base = buildBaseData();
 		for (var key in data) {
 			base[key] = data[key];
 		}
-		pushMessage(base, target || getEventTarget(base.event));
+		pushMessage(base, target);
 	}
 
 	function handleWsChatMessage(frame, className, obj) {
@@ -789,9 +790,6 @@ function toDataURL(url, callback) {
 			event: "donation",
 			meta: cleanMeta(meta)
 		};
-		if (amount) {
-			data.donoValue = amount;
-		}
 		emitWsData(data);
 	}
 
@@ -916,9 +914,11 @@ function toDataURL(url, callback) {
 	function processMessage(ele){
 		var row = getMessageRow(ele);
 		if (!row || row.ssnProcessed){return;}
-		if (!row.id || row.id.indexOf("ChatMessage_") !== 0){return;}
+		var hasChatMessageId = row.id && row.id.indexOf("ChatMessage_") === 0;
+		var isClassOnlyMessageRow = row.matches && row.matches(".tmg-live-video-chat-message-item");
+		if (!hasChatMessageId && !isClassOnlyMessageRow){return;}
 
-		var messageId = row.id.replace("ChatMessage_", "");
+		var messageId = hasChatMessageId ? row.id.replace("ChatMessage_", "") : (row.getAttribute("data-message-id") || row.getAttribute("data-id") || "");
 		var rowClassName = getClassName(row).replace(/\s+/g, " ").trim();
 		var chatimg = "";
 		var avatarAlt = "";
@@ -1041,6 +1041,7 @@ function toDataURL(url, callback) {
 		data.hasDonation = hasDonation;
 		data.membership = "";
 		data.contentimg = contentimg;
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "meetme";
 		if (eventName) {
@@ -1069,11 +1070,8 @@ function toDataURL(url, callback) {
 			amount: giftAmount || "",
 			currency: giftAmount ? "credits" : ""
 		});
-		if (giftAmount) {
-			data.donoValue = giftAmount;
-		}
 
-		pushMessage(data, getEventTarget(data.event));
+		pushMessage(data);
 	}
 
 	function pushMessage(data, target){
@@ -1088,11 +1086,10 @@ function toDataURL(url, callback) {
 	}
 
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	// settings.hideevents
 	// settings.capturejoinedevent
-	// settings.capturelikeevent
 
 
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
@@ -1144,7 +1141,7 @@ function toDataURL(url, callback) {
 						try {
 							processMessage(mutation.addedNodes[i]);
 							if (mutation.addedNodes[i].querySelectorAll) {
-								mutation.addedNodes[i].querySelectorAll("[id^='ChatMessage_']").forEach(function(row){
+								mutation.addedNodes[i].querySelectorAll("[id^='ChatMessage_'], .tmg-live-video-chat-message-item").forEach(function(row){
 									processMessage(row);
 								});
 							}

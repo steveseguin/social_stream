@@ -100,12 +100,16 @@
 									messageData.type = eventData?.provider || "streamelements";
 									messageData.nameColor = "";
 									messageData.chatbadges = [];
+									// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+									// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+									// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+									// HTML-mode chatmessage may contain formatting/emotes; keep its normal HTML sanitization boundary.
 									messageData.textonly = false;
 									
 									if (eventData.type === 'tip' || eventData.type === 'donation') {
 										messageData.event = "donation";
-										messageData.hasDonation = `$${eventData.data?.amount || 0}`;
-										messageData.donoValue = eventData.data?.amount || 0;
+										messageData.hasDonation = `${eventData.data?.amount || 0} ${eventData.data?.currency || "USD"}`;
+										if (!eventData.data?.currency || String(eventData.data.currency).toUpperCase() === "USD") messageData.donoValue = Number(eventData.data?.amount) || 0;
 										messageData.chatmessage = eventData.data?.message || "";
 										messageData.title = "TIP";
 										messageData.currency = eventData.data?.currency || "USD";
@@ -275,12 +279,13 @@
 									messageData.type = eventData?.provider || "streamelements",
 									messageData.nameColor = "";
 									messageData.chatbadges = [];
+									// HTML-mode chatmessage may contain formatting/emotes; keep its normal HTML sanitization boundary.
 									messageData.textonly = false;
 									
 									if (eventData.type === 'tip' || eventData.type === 'donation') {
 										messageData.event = "donation";
-										messageData.hasDonation = `$${eventData.data?.amount || 0}`;
-										messageData.donoValue = eventData.data?.amount || 0;
+										messageData.hasDonation = `${eventData.data?.amount || 0} ${eventData.data?.currency || "USD"}`;
+										if (!eventData.data?.currency || String(eventData.data.currency).toUpperCase() === "USD") messageData.donoValue = Number(eventData.data?.amount) || 0;
 										messageData.chatmessage = eventData.data?.message || "";
 										messageData.title = "TIP";
 										messageData.currency = eventData.data?.currency || "USD";
@@ -355,8 +360,8 @@
 									messageData.chatimg = eventData.event?.avatar || "";
 									messageData.chatmessage = `Test ${eventData.listener || 'event'}`;
 									if (eventData.listener && eventData.listener.includes('tip')) {
-										messageData.hasDonation = `$${eventData.event?.amount || 0}`;
-										messageData.donoValue = eventData.event?.amount || 0;
+										messageData.hasDonation = `${eventData.event?.amount || 0} ${eventData.event?.currency || "USD"}`;
+										if (!eventData.event?.currency || String(eventData.event.currency).toUpperCase() === "USD") messageData.donoValue = Number(eventData.event?.amount) || 0;
 										messageData.title = "TEST TIP";
 									}
 								}

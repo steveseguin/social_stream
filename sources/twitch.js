@@ -68,6 +68,10 @@
 
 	function escapeHtml(unsafe) {
 		try {
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
 			if (settings.textonlymode) {
 				return unsafe;
 			}
@@ -89,9 +93,11 @@
 		if (!html) {
 			return "";
 		}
-		const tempDiv = document.createElement("div");
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
+		if (settings.textonlymode) return String(html).trim();
+		const tempDiv = document.createElement("template");
 		tempDiv.innerHTML = html;
-		tempDiv.querySelectorAll("img").forEach(img => {
+		tempDiv.content.querySelectorAll("img").forEach(img => {
 			const altText = img.getAttribute("alt") || img.getAttribute("title") || "";
 			if (altText) {
 				const textNode = document.createTextNode(altText);
@@ -100,7 +106,7 @@
 				img.remove();
 			}
 		});
-		return (tempDiv.textContent || tempDiv.innerText || "").trim();
+		return (tempDiv.content.textContent || "").trim();
 	}
 
 	function parseHypeTrainNumber(value) {
@@ -227,9 +233,11 @@
 		if (!html) {
 			return "";
 		}
-		const tempDiv = document.createElement("div");
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
+		if (settings.textonlymode) return String(html).trim();
+		const tempDiv = document.createElement("template");
 		tempDiv.innerHTML = html;
-		tempDiv.querySelectorAll("svg").forEach(svg => svg.remove());
+		tempDiv.content.querySelectorAll("svg").forEach(svg => svg.remove());
 		return tempDiv.innerHTML.trim();
 	}
 
@@ -280,8 +288,75 @@
 		displayName: ".chat-author__display-name, .chatter-name, .seventv-chat-user-username,  [data-test-selector='extension-message-name'], .seventv-chat-user-username",
 		messageBody: ".seventv-chat-message-body, .seventv-message-context, [data-test-selector='chat-line-message-body'], [data-a-target='chat-line-message-body'], .message,  [data-a-target='chat-message-text']",
 		chatBadges: "img.chat-badge[src], img.chat-badge[srcset], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset], .ffz-badge, .user-pronoun, img.chat-badge[src]",
+		contentImage: "img[src].chat-line__message--emote-gigantified, [data-test-selector='chat-line-message-body'] img[src][class*='gifImage--'], [data-a-target='chat-line-message-body'] img[src][class*='gifImage--']",
 		messageContainer: ".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper, .room-message"
 	};
+	const TWITCH_MODERATOR_BADGE_IMAGE_IDS = new Set([
+		"3267646d-33f0-4b17-b3df-f923a41db1d0"
+	]);
+
+	function isTwitchModeratorBadgeIdentifier(value) {
+		const normalized = String(value || "").trim().toLowerCase();
+		return normalized === "moderator"
+			|| normalized === "global_mod"
+			|| normalized.startsWith("moderator/")
+			|| normalized.startsWith("global_mod/");
+	}
+
+	function isTwitchModeratorBadge(badge) {
+		if (!badge) {
+			return false;
+		}
+
+		// Twitch localizes badge labels, but the badge asset ID is shared across locales.
+		const sourceValues = [
+			badge.src,
+			badge.srcset,
+			badge.getAttribute && badge.getAttribute("data-src"),
+			badge.style && badge.style.backgroundImage
+		];
+		if (badge.classList && badge.classList.contains("ffz-badge")) {
+			try {
+				sourceValues.push(getComputedStyle(badge).backgroundImage);
+			} catch (e) {}
+		}
+		for (const sourceValue of sourceValues) {
+			const matches = String(sourceValue || "").match(/\/badges\/v1\/([^/\s,)]+)/gi) || [];
+			for (const match of matches) {
+				const idMatch = match.match(/\/badges\/v1\/([^/\s,)]+)/i);
+				if (idMatch && TWITCH_MODERATOR_BADGE_IMAGE_IDS.has(idMatch[1].toLowerCase())) {
+					return true;
+				}
+			}
+		}
+
+		const metadataNodes = [badge, badge.parentElement];
+		const metadataAttributes = [
+			"data-a-badge",
+			"data-badge",
+			"data-badge-id",
+			"data-a-badge-id",
+			"data-badge-set-id",
+			"data-set-id"
+		];
+		for (const node of metadataNodes) {
+			if (!node || !node.getAttribute) {
+				continue;
+			}
+			for (const attribute of metadataAttributes) {
+				if (isTwitchModeratorBadgeIdentifier(node.getAttribute(attribute))) {
+					return true;
+				}
+			}
+		}
+
+		// Retain the native English fallback for older or third-party badge markup.
+		const badgeText = (badge.alt || badge.getAttribute("aria-label") || badge.getAttribute("title") || "").trim().toLowerCase();
+		return badgeText === "moderator"
+			|| badgeText === "moderator badge"
+			|| badgeText === "badge moderator"
+			|| badgeText.startsWith("moderator, ");
+	}
 	const trackedTwitchMessageIds = new Map();
 	const MAX_TRACKED_TWITCH_MESSAGE_IDS = 500;
 
@@ -407,6 +482,14 @@
 		return "";
 	}
 
+	function getDeleteUsername(ele) {
+		const usernameEle = ele?.querySelector?.(".chat-author__intl-login");
+		if (!usernameEle?.innerText) {
+			return "";
+		}
+		return usernameEle.innerText.replace(/^\s*\(@?/, "").replace(/\)\s*$/, "").trim();
+	}
+
 	function isDeletedMessageNode(node) {
 		if (!node || node.nodeType !== 1) {
 			return false;
@@ -452,6 +535,7 @@
 			if (node.nodeType === 3) { // Text node
 				if (node.textContent.length === 0) return;
 				
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (settings.textonlymode){
 					result += node.textContent;
 					return;
@@ -505,6 +589,7 @@
 				if (node.nodeName === "IMG") {
 					processEmote(node);
 				} else if (node.nodeName.toLowerCase() === "svg" && node.classList.contains("seventv-chat-emote")) {
+					// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 					if (settings.textonlymode){
 						return;
 					}
@@ -512,6 +597,7 @@
 					resolvedSvg.style = "";
 					result += resolvedSvg.outerHTML;
 				} else if (node.nodeName.toLowerCase() === "svg"){
+					// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 					if (settings.textonlymode){
 						if (pendingSpace){
 							result += pendingSpace;
@@ -548,6 +634,7 @@
 		}
 
 		function processEmote(emoteNode) {
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			if (settings.textonlymode){
 				if (emoteNode.alt){
 					result += escapeHtml(emoteNode.alt);
@@ -785,6 +872,7 @@
 		data.hasDonation = "";
 		data.membership = "";
 		data.type = "twitch";
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.event = "knock";
 
@@ -1037,7 +1125,7 @@
 					}
 				}
 
-				if (!mod && loweredBadgeText === "moderator") {
+				if (!mod && isTwitchModeratorBadge(badge)) {
 					mod = true;
 				}
 				if (!vip && loweredBadgeText === "vip") {
@@ -1101,7 +1189,7 @@
 			crossChatChannelIcon = crossChatChannelIcon.src;
 		}
 
-		var contentimg = ele.querySelector("img[src].chat-line__message--emote-gigantified") || "";
+		var contentimg = ele.querySelector(SELECTORS.contentImage) || "";
 		
 		if (contentimg){
 			contentimg = contentimg.src;
@@ -1260,6 +1348,27 @@
 		} else if (!chatmessage && !hasDonation && !username && !contentimg) {
 			return;
 		}
+
+		if (settings.pluralmind && !event && chatmessage && !contentimg && !isWatchStreakNotice(ele, chatmessage) && globalThis.SSNPluralmindIntegration) {
+			var pluralmindResult = await globalThis.SSNPluralmindIntegration.resolveRenderedMessage({
+				username: username,
+				message: chatmessage,
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
+				textOnly: settings.textonlymode || false,
+				documentRef: document
+			});
+			if (pluralmindResult) {
+				displayName = escapeHtml(pluralmindResult.name);
+				chatmessage = pluralmindResult.cleanedMessage;
+				if (pluralmindResult.color) {
+					nameColor = pluralmindResult.color;
+				}
+				var pluralmindPronounBadge = globalThis.SSNPluralmindIntegration.createPronounBadge(pluralmindResult.pronouns);
+				if (pluralmindPronounBadge) {
+					chatbadges.push(pluralmindPronounBadge);
+				}
+			}
+		}
 		
 		var originalMessage = "";
 	    var ReplyMessage = "";
@@ -1315,6 +1424,7 @@
 					ReplyMessage = replyMessage;
 					originalMessage = chatmessage;
 					hasReply = true;
+					// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 					if (settings.textonlymode) {
 						var replyTextOnly = stripHtmlContent(replyMessage);
 						if (!replyTextOnly && replyTarget) {
@@ -1341,6 +1451,7 @@
 			
 			
 			if (!hasReply && !contentimg && ele.querySelector(".message-event-pill")){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (!settings.textonlymode){
 					chatmessage = "<i class='event-pill'>"+getAllContentNodes(ele.querySelector(".message-event-pill")) + "</i> " + chatmessage;
 				} else {
@@ -1373,6 +1484,7 @@
 		data.hasDonation = hasDonation;
 		data.membership = markSubscriberAsMembership ? subscriber : "";
 		data.subtitle = subtitle;
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "twitch";
 		
@@ -1422,7 +1534,7 @@
 	var BTTV = false;
 	var SEVENTV = false;
 	var FFZ = false;
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 
 	if (chrome && chrome.runtime) {
@@ -1601,6 +1713,27 @@
 		//console.log(EMOTELIST);
 	}
 
+	function getWatchStreakCount(message) {
+		var plainMessage = String(message || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+		var match = plainMessage.match(/watched\s+(\d+)\s+consecutive\s+streams?.*watch\s+streak/i)
+			|| plainMessage.match(/(\d+).*watch\s+streak/i);
+		return match ? parseInt(match[1], 10) || 0 : 0;
+	}
+
+	function isWatchStreakNotice(ele, message) {
+		var marker = "";
+		try {
+			marker = [
+				ele && ele.getAttribute("data-a-target"),
+				ele && ele.getAttribute("data-test-selector"),
+				ele && ele.className
+			].filter(Boolean).join(" ").toLowerCase();
+		} catch (e) {}
+		return marker.indexOf("watch-streak") !== -1
+			|| marker.indexOf("watch_streak") !== -1
+			|| /watch\s+streak/i.test(String(message || "").replace(/<[^>]*>/g, " "));
+	}
+
 	function processEvent(ele) {
 		
 		ele.dataset.ignore = true;
@@ -1622,6 +1755,7 @@
 		data.hasDonation = "";
 		data.membership = "";
 		data.type = "twitch";
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.event = true;
 		
@@ -1629,8 +1763,19 @@
 			return;
 		}
 		
+		var isWatchStreak = isWatchStreakNotice(ele, data.chatmessage);
+		if (isWatchStreak && !settings.showtwitchwatchstreaks) {
+			return;
+		}
+
 		// channel-points-reward-line__icon
-		if (ele.querySelector("[class*='channel-points-reward']")){
+		if (isWatchStreak) {
+			data.event = "watch_streak";
+			data.meta = {
+				streakCount: getWatchStreakCount(data.chatmessage),
+				milestoneId: ele.getAttribute("data-id") || ele.id || ""
+			};
+		} else if (ele.querySelector("[class*='channel-points-reward']")){
 			data.event = "reward";
 		} else if (data.chatmessage.includes(" gifting ") && data.chatmessage.includes(" Sub")) {
 			data.event = "giftpurchase";
@@ -1688,12 +1833,16 @@
 			if (chatname) {
 				data.chatname = chatname;
 			}
-
-			if (!data.id && !data.chatname) {
-				return;
+			if (settings.pluralmind) {
+				const username = getDeleteUsername(messageEle) || getDeleteUsername(ele);
+				if (username) {
+					data.username = username;
+					data.meta = { pluralmind: true };
+				}
 			}
-			if (!data.id) {
-				data.onlyLast = true;
+
+			if (!data.id && !data.username && !data.chatname) {
+				return;
 			}
 
 			try {

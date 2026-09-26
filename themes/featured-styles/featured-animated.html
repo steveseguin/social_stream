@@ -1,7 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+<script src="../../shared/utils/chatHtml.js"></script>
+
+<script src="../../libs/objects.js"></script>
+<script src="../../shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="../../shared/utils/chatBadges.css">
+
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Featured Message - Animated Styles</title>
     <link rel="icon" href="../../favicon.ico" />
@@ -890,17 +896,10 @@
                 }
 
                 // Badges
-                if (content.chatbadges && Array.isArray(content.chatbadges)) {
+                if (content.chatbadges) {
                     const badges = document.createElement('div');
                     badges.className = 'badges';
-                    content.chatbadges.forEach(badge => {
-                        if (typeof badge === 'string') {
-                            const img = document.createElement('img');
-                            img.className = 'badge';
-                            img.src = badge;
-                            badges.appendChild(img);
-                        }
-                    });
+                    badges.innerHTML = SocialStreamBadges.render(content.chatbadges);
                     header.appendChild(badges);
                 }
 
@@ -922,7 +921,8 @@
                     
                     // For typewriter effect, we can still use HTML
                     if (style === 'typewriter') {
-                        text.innerHTML = content.chatmessage;
+                        if (content.textonly === true) text.textContent = content.chatmessage;
+                    else text.innerHTML = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(content.chatmessage) : fallbackEscapeHtml(content.chatmessage));
                         // Add a typewriter cursor effect
                         const cursor = document.createElement('span');
                         cursor.className = 'typewriter-cursor';
@@ -936,7 +936,8 @@
                             }
                         }, 3000);
                     } else {
-                        text.innerHTML = content.chatmessage;
+                        if (content.textonly === true) text.textContent = content.chatmessage;
+                    else text.innerHTML = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(content.chatmessage) : fallbackEscapeHtml(content.chatmessage));
                     }
                     
                     contentDiv.appendChild(text);

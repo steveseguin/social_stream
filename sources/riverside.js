@@ -35,6 +35,14 @@ function toDataURL(url, callback) {
 			 .replace(/'/g, "&#039;") || "";
 	}
 
+	function formatChatMessageText(unsafe){
+		// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+		// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+		// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
+		return settings.textonlymode ? (unsafe || "") : escapeHtml(unsafe);
+	}
+
 	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
 		
@@ -42,7 +50,7 @@ function toDataURL(url, callback) {
 		
 		if (!element.childNodes || !element.childNodes.length){
 			if (element.textContent){
-				return escapeHtml(element.textContent) || "";
+				return formatChatMessageText(element.textContent) || "";
 			} else {
 				return "";
 			}
@@ -52,8 +60,9 @@ function toDataURL(url, callback) {
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent)+" ";
+				resp += formatChatMessageText(node.textContent)+" ";
 			} else if (node.nodeType === 1){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
@@ -123,6 +132,24 @@ function toDataURL(url, callback) {
 		});
 	}
 
+	function getSenderDetails(ele){
+		var parent = ele.parentElement;
+		while (parent && parent !== document.body && parent.id !== "root"){
+			var headers = parent.querySelectorAll(".chat-sender-details");
+			if (headers.length > 1){return null;}
+			if (headers.length === 1){
+				var headerBranch = headers[0];
+				while (headerBranch.parentElement !== parent){headerBranch = headerBranch.parentElement;}
+				// A header nested alongside another message belongs to that other
+				// sender's group, not to this message's content wrapper.
+				if (headerBranch.matches(".message") || headerBranch.querySelector(".message")){return null;}
+				return headers[0];
+			}
+			parent = parent.parentElement;
+		}
+		return null;
+	}
+
 	function processMessage(ele){
 		
 		// console.log(ele);
@@ -131,16 +158,7 @@ function toDataURL(url, callback) {
 			return; // manually disagbled
 		}
 		
-		var senderDetails = ele.parentNode;
-		
-		for (var i=0;i<6;i++){
-			if (senderDetails.parentNode.querySelector(".chat-sender-details")){
-				senderDetails = senderDetails.parentNode.querySelector(".chat-sender-details")
-				break;
-			} else {
-				senderDetails = senderDetails.parentNode;
-			}
-		}
+		var senderDetails = getSenderDetails(ele);
 		
 
 		var chatimg = ""
@@ -158,10 +176,6 @@ function toDataURL(url, callback) {
 		} catch(e){
 		}
 		
-		if (!name){
-			name = escapeHtml(document.title.split("|")[1].split("'")[0].trim());
-		}
-
 		var msg="";
 		try {
 			msg = getAllContentNodes(ele).trim();
@@ -183,6 +197,8 @@ function toDataURL(url, callback) {
 		data.textColor = "";
 		data.nameColor = nameColor
 		data.chatmessage = msg;
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
+		data.textonly = settings.textonlymode || false;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.membership = "";
@@ -200,7 +216,7 @@ function toDataURL(url, callback) {
 	}
 	
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	
 	

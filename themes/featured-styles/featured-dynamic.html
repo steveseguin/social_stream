@@ -1,7 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+<script src="../../shared/utils/chatHtml.js"></script>
+
+<script src="../../libs/objects.js"></script>
+<script src="../../shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="../../shared/utils/chatBadges.css">
+
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Featured Message - Dynamic Physics</title>
     <link rel="icon" href="../../favicon.ico" />
@@ -720,22 +726,10 @@
                 }
 
                 // Badges
-                if (content.chatbadges && Array.isArray(content.chatbadges)) {
+                if (content.chatbadges) {
                     const badges = document.createElement('div');
                     badges.className = 'badges';
-                    content.chatbadges.forEach(badge => {
-                        if (typeof badge === 'string') {
-                            const img = document.createElement('img');
-                            img.className = 'badge';
-                            img.src = badge;
-                            badges.appendChild(img);
-                        } else if (badge.src) {
-                            const img = document.createElement('img');
-                            img.className = 'badge';
-                            img.src = badge.src;
-                            badges.appendChild(img);
-                        }
-                    });
+                    badges.innerHTML = SocialStreamBadges.render(content.chatbadges);
                     header.appendChild(badges);
                 }
 
@@ -754,7 +748,8 @@
                 if (content.chatmessage) {
                     const text = document.createElement('div');
                     text.className = 'text';
-                    text.innerHTML = content.chatmessage;
+                    if (content.textonly === true) text.textContent = content.chatmessage;
+                    else text.innerHTML = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(content.chatmessage) : fallbackEscapeHtml(content.chatmessage));
                     contentDiv.appendChild(text);
                 }
 
@@ -766,11 +761,11 @@
                     if (content.hasDonation) {
                         const amount = content.hasDonation;
                         const title = content.title || 'Donation';
-                        donationDiv.innerHTML = `💰 ${title}: ${amount}`;
+                        donationDiv.textContent = `💰 ${title}: ${amount}`;
                     } else if (content.membership) {
                         const memberInfo = typeof content.membership === 'string' ? 
                             content.membership : 'New Member';
-                        donationDiv.innerHTML = `⭐ ${memberInfo}`;
+                        donationDiv.textContent = `⭐ ${memberInfo}`;
                     }
                     
                     contentDiv.appendChild(donationDiv);

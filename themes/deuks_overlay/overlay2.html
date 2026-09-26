@@ -1,7 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+<script src="../../libs/objects.js"></script>
+<script src="../../shared/utils/chatHtml.js"></script>
+<script src="../../shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="../../shared/utils/chatBadges.css">
+
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Overlay</title>
     <style>
@@ -163,6 +168,15 @@
 	// Use showtime=30000 to auto-hide messages after 30 seconds
 	var showtime = urlParams.has("showtime") ? parseInt(urlParams.get("showtime")) : 0;
 
+	function escapeHtml(value) {
+		return String(value == null ? '' : value)
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;');
+	}
+
 	// --- Common overlay tweaks (shared across themes) ---
 	var hideBots = urlParams.has("hidebots");
 	if (urlParams.has("chroma")) {
@@ -261,7 +275,7 @@
 			eventText = `${data.chatname} donated ${data.amount || ''}!`;
 		}
 
-		eventDiv.innerHTML = `<div>${eventText}</div>`;
+		eventDiv.innerHTML = `<div>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(eventText) : fallbackEscapeHtml(eventText))}</div>`;
 		chatContainer.appendChild(eventDiv);
 	}
 
@@ -282,12 +296,14 @@
 			return;
 		}
 
-		if (lastSender === data.chatname && lastMessageDiv) {
+		const renderedChatMessage = data.textonly ? escapeHtml(data.chatmessage || '') : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage || '') : fallbackEscapeHtml(data.chatmessage || ''));
+		if (lastSender === data.chatname && lastMessageDiv && lastMessageDiv.isConnected && !lastMessageDiv.classList.contains('fading')) {
 			// Append new message to the existing message container
 			const textDiv = document.createElement('div');
 			textDiv.classList.add('text');
-			textDiv.innerHTML = data.chatmessage || '';
+			textDiv.innerHTML = renderedChatMessage;
 			lastMessageDiv.querySelector('.message').appendChild(textDiv);
+			messageTimestamps.set(lastMessageDiv.id, Date.now());
 		} else {
 			// Create a new message container
 			const messageContainer = document.createElement('div');
@@ -308,25 +324,16 @@
 				sourceIcon = `<img src="${iconUrl}" alt="${providerName}" class="source-icon" onerror="this.remove();">`;
 			}
 
-			let chatbadges = "";
-			if (data.chatbadges) {
-				data.chatbadges.slice(0, 1).forEach(badge => {
-					if (typeof badge === "object" && badge.type === "img" && badge.src) {
-						chatbadges += `<img class='badge' src='${badge.src}' />`;
-					} else if (badge.type === "svg" && badge.html) {
-						chatbadges += `<span class='badge svg'>${badge.html}</span>`;
-					}
-				});
-			}
+			let chatbadges = SocialStreamBadges.render(data.chatbadges, { limit: 1 });
 
 			messageDiv.innerHTML = `
 				<div class="username-box">
 					${sourceIcon}
-					<span>${data.chatname}</span>
+					<span>${window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : escapeHtml(data.chatname)}</span>
 					<span class="badges">${chatbadges}</span>
 				</div>
-				<div class="text">${data.chatmessage || ''}</div>
-				${(data.donation || data.hasDonation) ? `<div class="donation">${(data.donation || data.hasDonation)}</div>` : ''}
+				<div class="text">${renderedChatMessage}</div>
+				${(data.donation || data.hasDonation) ? `<div class="donation">${escapeHtml(data.donation || data.hasDonation)}</div>` : ''}
 			`;
 
 			messageContainer.appendChild(messageDiv);

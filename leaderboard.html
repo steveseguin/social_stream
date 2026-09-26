@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
+<script src="./libs/objects.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
+
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chat Leaderboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1035,19 +1038,7 @@
                 return 0;
             }
 
-            const explicitValue = parseNumericValue(data.donoValue);
-            if (explicitValue > 0) {
-                return explicitValue;
-            }
-
-            if (typeof marker === 'number') {
-                return marker > 0 ? marker : 0;
-            }
-
-            const source = data.type ? String(data.type).toLowerCase() : '';
-            const amount = (typeof convertToUSD === 'function')
-                ? convertToUSD(marker, source)
-                : parseNumericValue(marker);
+            const amount = getDonationValueUSD(Object.assign({}, data, { hasDonation: marker }));
 
             return (!isNaN(amount) && amount > 0) ? amount : 0;
         }
@@ -1077,8 +1068,10 @@
             user.dailyGifts += giftQuantity;
             user.weeklyGifts += giftQuantity;
             
-            let giftValue = parseNumericValue(data.donoValue);
-            if (!giftValue) {
+            const rawGiftValue = data.donoValue;
+            const hasGiftValue = (typeof rawGiftValue === 'number' || (typeof rawGiftValue === 'string' && rawGiftValue.trim())) && Number.isFinite(Number(rawGiftValue));
+            let giftValue = hasGiftValue ? getDonationValueUSD(data) : 0;
+            if (!hasGiftValue) {
                 const source = (data.type || '').toLowerCase();
                 const giftType = resolveGiftType(data, normalizedEvent);
                 const baseValue = (typeof getGiftValue === 'function')
@@ -1464,6 +1457,27 @@
                 else if (this.messageCount > 20) badges.push('💬');
                 return badges;
             }
+        }
+
+        function decodeSupporterText(value) {
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = String(value === undefined || value === null ? '' : value);
+            return textarea.value;
+        }
+
+        // Escape display copies only; raw names remain the user and persistence keys.
+        function escapeLeaderboardAttribute(value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
+            });
+        }
+
+        function escapeLeaderboardName(value) {
+            return escapeLeaderboardAttribute(decodeSupporterText(value));
+        }
+
+        function renderLeaderboardName(value) {
+            return window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(value) : escapeLeaderboardName(value);
         }
 
         function getOrCreateUser(name, type) {
@@ -1976,13 +1990,13 @@
                     newItem.innerHTML = `
                         ${showRank ? `<div class="rank-number">${rank}</div>` : ''}
                         ${showAvatars && user.avatarUrl ? 
-                            `<img src="${user.avatarUrl}" alt="${user.name}" class="user-avatar" onerror="this.style.display='none'">` : 
+                            `<img src="${escapeLeaderboardAttribute(user.avatarUrl)}" alt="${escapeLeaderboardName(user.name)}" class="user-avatar" onerror="this.style.display='none'">` :
                             ''}
                         <div class="user-info">
                             <div class="user-name">
-                                ${user.name}
+                                ${renderLeaderboardName(user.name)}
                                 ${showSourceIcons ? 
-                                    `<img src="./sources/images/${user.type}.png" alt="${user.type}" class="source-icon" onerror="this.style.display='none'">` : 
+                                    `<img src="./sources/images/${escapeLeaderboardAttribute(user.type)}.png" alt="${escapeLeaderboardAttribute(user.type)}" class="source-icon" onerror="this.style.display='none'">` :
                                     ''}
                             </div>
                             ${badges.length > 0 && layout !== 'bar' ? 
@@ -2125,9 +2139,9 @@
                         
                         userItem.innerHTML = `
                             <span class="ticker-rank">#${rank}</span>
-                            <span class="ticker-name">${user.name}</span>
+                            <span class="ticker-name">${renderLeaderboardName(user.name)}</span>
                             ${showSourceIcons ? 
-                                `<img src="./sources/images/${user.type}.png" alt="${user.type}" class="ticker-source-icon" onerror="this.style.display='none'">` : 
+                                `<img src="./sources/images/${escapeLeaderboardAttribute(user.type)}.png" alt="${escapeLeaderboardAttribute(user.type)}" class="ticker-source-icon" onerror="this.style.display='none'">` :
                                 ''}
                             <span class="ticker-score">${scoreDisplay}</span>
                         `;

@@ -60,6 +60,10 @@
 
 	function escapeHtml(unsafe) {
 		try {
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
 			if (settings.textonlymode) {
 				return unsafe;
 			}
@@ -280,9 +284,7 @@
 			}
 		}
 
-		var metaGift = {
-			eventType: "jeweldonation"
-		};
+		var metaGift = {};
 		if (giftName) {
 			metaGift.giftName = giftName;
 		}
@@ -296,8 +298,7 @@
 		return {
 			chatname: authorName,
 			chatmessage: escapeHtml(plainMessage),
-			hasDonation: jewelAmount ? jewelAmount + " Jewels" : (giftName || getTranslation("youtube-gift", "YouTube Gift")),
-			donoValue: jewelAmount ? parseInt(jewelAmount, 10) / 100 : "",
+			hasDonation: jewelAmount ? jewelAmount + " Jewels" : "1 YouTube Gift",
 			giftName: giftName,
 			jewelsAmount: jewelAmount ? parseInt(jewelAmount, 10) : "",
 			giftUrl: giftUrl,
@@ -326,15 +327,17 @@
 	
 	function deleteThis(ele) {
 	  if (ele.deleted) return;
-	  ele.deleted = true;
 	  try {
 		const chatname = ele.querySelector("#author-name");
-		if (chatname) {
+		const id = parseInt(ele.dataset.mid, 10);
+		if (chatname || Number.isFinite(id)) {
 		  const data = {
-			chatname: escapeHtml(chatname.innerText),
 			type: (youtubeShorts ? "youtubeshorts" : "youtube")
 		  };
-		  ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
+		  if (chatname) data.chatname = escapeHtml(chatname.innerText);
+		  if (Number.isFinite(id)) data.id = id;
+		  if (!data.id && !data.chatname) return;
+		  ele.deleted = true;
 		  chrome.runtime.sendMessage(chrome.runtime.id, { "delete": data }, function(e) {});
 		}
 	  } catch (e) {
@@ -590,6 +593,7 @@
 		function processNode(node) {
 			if (node.nodeType === 3 && node.textContent.length > 0) {
 				// Text node
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (settings.textonlymode){
 					result += node.textContent;
 					return;
@@ -635,7 +639,7 @@
 				// Element node
 				if (node.nodeName === "IMG") {
 					processEmote(node);
-				} else if (!settings.textonlymode && node.href && (node.nodeName === "A")) {
+				} else /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ if (!settings.textonlymode && node.href && (node.nodeName === "A")) {
 					
 					if (pendingSpace){
 						result += pendingSpace;
@@ -644,6 +648,7 @@
 					pendingSpace = " <a href='"+node.href+"' target='_blank'>"+escapeHtml(node.textContent)+"</a> ";
 					
 				} else if (node.nodeName.toLowerCase() === "svg" && node.classList.contains("seventv-chat-emote")) {
+					// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 					if (settings.textonlymode){
 						return;
 					}
@@ -652,13 +657,14 @@
 					result += resolvedSvg.outerHTML;
 				} else if (node.childNodes.length) {
 					Array.from(node.childNodes).forEach(processNode);
-				} else if (!settings.textonlymode && (node.nodeName.toLowerCase() === "svg")){
+				} else /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ if (!settings.textonlymode && (node.nodeName.toLowerCase() === "svg")){
 					result += node.outerHTML;
 				}
 			}
 		}
 
 		function processEmote(emoteNode) {
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			if (settings.textonlymode){
 				if (emoteNode.alt && isEmoji(emoteNode.alt)){
 					result += escapeHtml(emoteNode.alt);
@@ -1141,6 +1147,7 @@
 			}
 		} catch (e) {}
 
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		if (!settings.textonlymode) {
 			try {
 				chatmessage = getAllContentNodes(ele.querySelector("#message, .seventv-yt-message-content"));
@@ -1313,14 +1320,42 @@
 		}
 		if (jewelDonation && jewelDonation.hasDonation) {
 			hasDonation = jewelDonation.hasDonation;
-			donoValue = jewelDonation.donoValue;
 		}
 
 
 		var giftedmemembership = ele.querySelector("#primary-text.ytd-sponsorships-live-chat-header-renderer");
 
-		if (treatAsMemberChat) {
-			if (chatmessage) {
+		if (treatAsMemberChat || eventType === "giftpurchase" || eventType === "giftredemption") {
+			if (eventType === "giftpurchase") {
+			  try {
+				var giftedBy = ele.querySelector("#primary-text");
+				if (giftedBy) {
+				  var giftCount = findSingleInteger(giftedBy.innerText) || 1;
+				  var membershipWord = giftCount === 1 ? getTranslation("membership-singular", "membership") : getTranslation("membership-plural", "memberships");
+				  chatmessage = giftedBy.innerText.trim();
+				  subtitle = giftCount + " " + membershipWord;
+				  hasMembership = "gift_giver";
+				  eventType = "giftpurchase";
+				}
+			  } catch (e) {
+				console.error("Error processing gift purchase:", e);
+			  }
+			} else if (eventType === "giftredemption") {
+			  try {
+				var messageElement = ele.querySelector("#message");
+				if (messageElement) {
+				  chatmessage = messageElement.innerText.trim();
+				  eventType = "giftredemption";
+				  var gifterElement = messageElement.querySelector(".bold.italic");
+				  if (gifterElement) {
+					subtitle = getTranslation("gifted-by", "Gifted by") + " " + gifterElement.innerText;
+				  }
+				  hasMembership = getTranslation("membership", "MEMBERSHIP");
+				}
+			  } catch (e) {
+				console.error("Error processing gift redemption:", e);
+			  }
+			} else if (chatmessage) {
 				//if (mod) {
 				//	hasMembership = chatmembership || getTranslation("moderator-chat", "MODERATOR");
 				//} else {
@@ -1342,36 +1377,7 @@
 			  hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 			  chatmessage = getAllContentNodes(giftedmemembership);
 			  eventType = "sponsorship";
-			  
-			} else if (eventType === "giftpurchase") {
-			  try {
-				var giftedBy = ele.querySelector("#primary-text");
-				if (giftedBy) {
-				  var giftCount = findSingleInteger(giftedBy.innerText) || 1;
-				  chatmessage = giftedBy.innerText.trim();
-				  hasDonation = giftCount + " " + getTranslation("gifted-memberships", "Gifted");
-				  donoValue = 5 * giftCount; // Assuming $5 per membership
-				  hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
-				  eventType = "giftpurchase";
-				}
-			  } catch (e) {
-				console.error("Error processing gift purchase:", e);
-			  }
-			} else if (eventType === "giftredemption") {
-			  try {
-				var messageElement = ele.querySelector("#message");
-				if (messageElement) {
-				  chatmessage = messageElement.innerText.trim();
-				  eventType = "giftredemption";
-				  var gifterElement = messageElement.querySelector(".bold.italic");
-				  if (gifterElement) {
-					subtitle = getTranslation("gifted-by", "Gifted by") + " " + gifterElement.innerText;
-				  }
-				  hasMembership = getTranslation("membership", "MEMBERSHIP");
-				}
-			  } catch (e) {
-				console.error("Error processing gift redemption:", e);
-			  }
+
 			} else {
 				// Consolidated handler for new members, renewals, and upgrades.
 				try {
@@ -1459,7 +1465,6 @@
 				jewelDonation = jewelDonation || getYouTubeJewelDonationDetails(ele);
 				if (jewelDonation) {
 				  hasDonation = jewelDonation.hasDonation;
-				  donoValue = jewelDonation.donoValue;
 				  if (!chatmessage) {
 					chatmessage = jewelDonation.chatmessage;
 				  }
@@ -1469,6 +1474,7 @@
 				  if (!subtitle && jewelDonation.giftName) {
 					subtitle = escapeHtml(jewelDonation.giftName);
 				  }
+				  // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				  if (chatmessage && !settings.textonlymode){
 					chatmessage += ' <svg xmlns="http://www.w3.org/2000/svg" style="fill: red;" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M19.28 3.61c-.96-.81-2.51-.81-3.47 0-.68.58-1.47 2.66-1.81 3.64-.34-.98-1.13-3.06-1.81-3.64-.96-.81-2.51-.81-3.47 0-.96.81-.96 2.13 0 2.94.62.53 2.7 1.12 3.94 1.45H5v13h14V8h-3.66c1.24-.32 3.32-.92 3.94-1.45.96-.81.96-2.13 0-2.94zM6 9h8v6H6V9zm0 11v-4h8v4H6zm12 0h-3v-4h3v4zm0-11v6h-3V9h3zM9.43 5.89c-.58-.43-.58-1.13 0-1.57.29-.21.67-.32 1.05-.32s.76.11 1.04.32c.39.29 1.02 1.57 1.48 2.68-1.48-.35-3.18-.82-3.57-1.11zm9.14 0c-.39.29-2.09.76-3.57 1.11.46-1.11 1.09-2.39 1.48-2.68.29-.21.67-.32 1.04-.32.38 0 .76.11 1.04.32.58.44.58 1.14.01 1.57z"></path></svg>';
 				  }
@@ -1483,25 +1489,11 @@
 			return 9;
 		}
 
-		if (giftedmemembership && !hasDonation) {
-			try {
-				const match = giftedmemembership.innerText.match(/\b\d+\b/);
-				hasDonation = match ? parseInt(match[0], 10) : null;
-				if (hasDonation) {
-					donoValue = 5*hasDonation;
-					if (hasDonation==1){
-						hasDonation += " " + getTranslation("gifted-membership", "Gifted");
-					} else {
-						hasDonation += " " + getTranslation("gifted-memberships", "Gifted");
-					}
-					
-				}
-			} catch (e) {
-				hasDonation = "";
-			}
-		}
-		
 		if (chatsticker) {
+			if (!eventType) {
+				eventType = "supersticker";
+			}
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			if (!settings.textonlymode) {
 				chatmessage = '<img class="supersticker" src="' + chatsticker + '">';
 			}
@@ -1574,6 +1566,7 @@
 				replyLabel = replyInfo.label;
 				originalMessage = chatmessage;
 				const replyPlainText = replyInfo.text || replyLabel;
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (settings.textonlymode) {
 					const prefix = replyLabel ? `${replyLabel}: ` : "";
 					const combined = `${prefix}${baseMessagePlain}`.trim();
@@ -1622,6 +1615,7 @@
 		if (videoId){
 			data.videoid = videoId;
 		}
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube"; 
 		if (jewelDonation && jewelDonation.giftUrl) {
@@ -1657,7 +1651,9 @@
 			}
 		}
 		
-		data.event = eventType;
+		if (eventType) {
+			data.event = eventType;
+		}
 		
 		//if (eventType){
 			//console.log(data);
@@ -1879,7 +1875,7 @@
 	  } else if (ele.tagName == "yt-live-chat-text-message-renderer".toUpperCase()) {
 		callback(ele);
 	  } else if (ele.tagName == "yt-live-chat-paid-message-renderer".toUpperCase()) {
-		callback(ele);
+		callback(ele, "superchat");
 	  } else if (ele.tagName == "yt-live-chat-membership-item-renderer".toUpperCase()) {
 		if (ele.hasAttribute("show-only-header") && ele.hasAttribute("modern")) {
 		  callback(ele, "membershiprenewal");
@@ -1887,7 +1883,7 @@
 		  callback(ele);
 		}
 	  } else if (ele.tagName == "yt-live-chat-paid-sticker-renderer".toUpperCase()) {
-		callback(ele);
+		callback(ele, "supersticker");
 	  } else if (ele.tagName == "ytd-sponsorships-live-chat-gift-redemption-announcement-renderer".toUpperCase()) {
 		callback(ele, "giftredemption");
 	  } else if (ele.tagName == "ytd-sponsorships-live-chat-gift-purchase-announcement-renderer".toUpperCase()) {
@@ -1945,6 +1941,10 @@
 	var youtubeChatObserver = null;
 	var youtubeDeletionObserver = null;
 	var youtubeChatStructureObserver = null;
+	var youtubeReactionObserver = null;
+	var youtubeReactionObserverTarget = null;
+	var youtubeGiftOverlayObserver = null;
+	var youtubeGiftOverlayObserverTarget = null;
 	var youtubeObservedItems = null;
 	var youtubeObservedItemsHost = null;
 	var youtubeChatHadMessages = false;
@@ -1970,6 +1970,41 @@
 	var youtubeStaleReloadStorageKey = "ssn_youtube_stale_reload_times";
 	var youtubeStaleReloadWindowMs = 60 * 60 * 1000;
 	var youtubeStaleReloadMaxPerWindow = 60;
+
+	function applyYouTubeChatBackgroundFix() {
+		if (typeof window.__SSAPP_TAB_ID__ === "undefined") {
+			return;
+		}
+		if (!document.head || document.getElementById("ssn-youtube-chat-background-fix")) {
+			return;
+		}
+		var style = document.createElement("style");
+		style.id = "ssn-youtube-chat-background-fix";
+		style.textContent = `
+			html,
+			body,
+			yt-live-chat-app,
+			yt-live-chat-renderer,
+			#input-panel > yt-live-chat-message-renderer,
+			yt-live-chat-goal-banner-view-model,
+			yt-live-chat-ticker-creator-goal-view-model,
+			yt-creator-goal-progress-flow-view-model,
+			yt-creator-goal-set-up-flow-view-model {
+				background-color: var(--yt-live-chat-background-color, #0f0f0f) !important;
+			}
+			yt-live-chat-text-message-renderer[author-is-owner]:not([enable-banner-update]) {
+				background-color: var(--yt-live-chat-background-color, #0f0f0f) !important;
+			}
+			yt-live-chat-text-message-renderer[author-is-owner]:not([enable-banner-update]) #menu {
+				background: linear-gradient(
+					to right,
+					transparent 0,
+					var(--yt-live-chat-background-color, #0f0f0f) 100%
+				) !important;
+			}
+		`;
+		document.head.appendChild(style);
+	}
 
 	try {
 		if (performance && performance.setResourceTimingBufferSize) {
@@ -2160,6 +2195,310 @@
 		return false;
 	}
 
+	function normalizeYouTubeEffectImageUrl(url) {
+		url = normalizeDonationText(url);
+		if (!url) {
+			return "";
+		}
+		if (url.indexOf("//") === 0) {
+			return "https:" + url;
+		}
+		return url;
+	}
+
+	function escapeYouTubeAttribute(value) {
+		return String(value || "").replace(/[&<>"']/g, function (character) {
+			return {
+				"&": "&amp;",
+				"<": "&lt;",
+				">": "&gt;",
+				'"': "&quot;",
+				"'": "&#039;"
+			}[character];
+		});
+	}
+
+	function sendYouTubeTargetedMessage(data, target) {
+		if (!youtubeSettingsLoaded || !isExtensionOn || !data || !target) {
+			return;
+		}
+		try {
+			chrome.runtime.sendMessage(
+				chrome.runtime.id,
+				{
+					message: data,
+					target: target
+				},
+				function () {}
+			);
+		} catch (e) {}
+	}
+
+	function getYouTubeGiftAssetKey(url) {
+		url = normalizeYouTubeEffectImageUrl(url);
+		if (!url) {
+			return "";
+		}
+		try {
+			var path = url.split("?")[0].split("=")[0];
+			var filename = path.split("/").pop() || "";
+			return filename.replace(/\.(?:png|jpe?g|gif|webp)$/i, "").toLowerCase();
+		} catch (e) {}
+		return "";
+	}
+
+	function getYouTubeRecentGiftDetails(authorName) {
+		var giftNodes = [];
+		var normalizedAuthor = normalizeDonationText(authorName).replace(/^@/, "").toLowerCase();
+		try {
+			giftNodes = document.querySelectorAll("yt-live-chat-item-list-renderer #items > yt-gift-message-view-model");
+		} catch (e) {
+			return null;
+		}
+		for (var i = giftNodes.length - 1; i >= 0; i--) {
+			var giftNode = giftNodes[i];
+			var nodeAuthor = getYouTubeGiftElementText(giftNode, "#author-name-v2, #author-name").replace(/^@/, "");
+			if (normalizedAuthor && nodeAuthor.toLowerCase() !== normalizedAuthor) {
+				continue;
+			}
+			var message = getYouTubeGiftElementText(giftNode, "#message-v2, #message");
+			var giftName = normalizeDonationText(message.replace(/^sent\s+/i, ""));
+			var image = null;
+			try {
+				image = giftNode.querySelector("#gift-image img[src]");
+			} catch (e) {}
+			return {
+				giftName: giftName,
+				giftUrl: image ? normalizeYouTubeEffectImageUrl(image.getAttribute("src") || image.src || "") : ""
+			};
+		}
+		return null;
+	}
+
+	function getYouTubeGiftAttribution(manager, animationUrl) {
+		var attributions = [];
+		var animationKey = getYouTubeGiftAssetKey(animationUrl);
+		try {
+			attributions = manager.querySelectorAll("ytls-gift-attribution-item-view-model");
+		} catch (e) {
+			return null;
+		}
+		if (!attributions.length) {
+			return null;
+		}
+		var selected = attributions[attributions.length - 1];
+		if (animationKey) {
+			for (var i = attributions.length - 1; i >= 0; i--) {
+				var candidateImage = attributions[i].querySelector(".ytlsGiftAttributionItemViewModelGiftImage[src]");
+				if (candidateImage && getYouTubeGiftAssetKey(candidateImage.getAttribute("src") || candidateImage.src || "") === animationKey) {
+					selected = attributions[i];
+					break;
+				}
+			}
+		}
+
+		var authorNode = selected.querySelector(".ytlsGiftAttributionItemViewModelAuthorName");
+		var avatarNode = selected.querySelector(".ytlsGiftAttributionItemViewModelAvatar img[src], avatar-view-model img[src]");
+		var giftImageNode = selected.querySelector(".ytlsGiftAttributionItemViewModelGiftImage[src]");
+		return {
+			authorName: normalizeDonationText(authorNode ? authorNode.innerText || authorNode.textContent || "" : "").replace(/^@/, ""),
+			avatarUrl: avatarNode ? normalizeYouTubeEffectImageUrl(avatarNode.getAttribute("src") || avatarNode.src || "") : "",
+			giftUrl: giftImageNode ? normalizeYouTubeEffectImageUrl(giftImageNode.getAttribute("src") || giftImageNode.src || "") : "",
+			description: normalizeDonationText(giftImageNode ? giftImageNode.getAttribute("alt") || "" : "")
+		};
+	}
+
+	function emitYouTubeGiftOverlay(overlayNode) {
+		if (!overlayNode || overlayNode.youtubeSocialStreamHandled) {
+			return;
+		}
+
+		var animationImage = null;
+		try {
+			animationImage = overlayNode.querySelector("img[src]");
+		} catch (e) {}
+		if (!animationImage) {
+			return;
+		}
+		var animationUrl = normalizeYouTubeEffectImageUrl(animationImage.getAttribute("src") || animationImage.src || "");
+		if (!animationUrl) {
+			return;
+		}
+		overlayNode.youtubeSocialStreamHandled = true;
+
+		var manager = null;
+		try {
+			manager = overlayNode.closest("ytls-widget-overlay-manager");
+		} catch (e) {}
+		var attribution = manager ? getYouTubeGiftAttribution(manager, animationUrl) : null;
+		var recentGift = getYouTubeRecentGiftDetails(attribution ? attribution.authorName : "");
+		var giftName = recentGift && recentGift.giftName ? recentGift.giftName : "";
+		var giftUrl = recentGift && recentGift.giftUrl ? recentGift.giftUrl : (attribution ? attribution.giftUrl : "");
+		var animationDescription = normalizeDonationText(animationImage.getAttribute("alt") || "");
+		var overlayWidget = null;
+		try {
+			overlayWidget = overlayNode.closest("ytls-interactivity-widget");
+		} catch (e) {}
+
+		var youtubeGiftMeta = {
+			animationUrl: animationUrl,
+			source: "dom_overlay"
+		};
+		if (giftName) {
+			youtubeGiftMeta.giftName = giftName;
+		}
+		if (giftUrl) {
+			youtubeGiftMeta.giftUrl = giftUrl;
+		}
+		if (animationDescription || (attribution && attribution.description)) {
+			youtubeGiftMeta.animationDescription = animationDescription || attribution.description;
+		}
+		if (overlayWidget && overlayWidget.id) {
+			youtubeGiftMeta.overlayId = overlayWidget.id;
+		}
+
+		sendYouTubeTargetedMessage({
+			chatname: attribution ? attribution.authorName : "",
+			chatmessage: "",
+			chatimg: attribution ? attribution.avatarUrl : "",
+			contentimg: animationUrl,
+			hasDonation: "1 YouTube Gift",
+			subtitle: giftName,
+			// HTML-mode chatmessage may contain formatting/emotes; keep its normal HTML sanitization boundary.
+			textonly: false,
+			type: youtubeShorts ? "youtubeshorts" : "youtube",
+			event: "jeweldonation",
+			meta: {
+				youtubeGift: youtubeGiftMeta
+			}
+		}, "gif");
+	}
+
+	function emitYouTubeReactionImage(imageNode) {
+		if (!imageNode) {
+			return;
+		}
+		var sourceAttribute = imageNode.getAttribute("src");
+		var imageUrl = normalizeYouTubeEffectImageUrl(sourceAttribute === null ? (imageNode.src || "") : sourceAttribute);
+		if (!imageUrl) {
+			imageNode.youtubeSocialStreamHandledUrl = "";
+			return;
+		}
+		if (imageNode.youtubeSocialStreamHandledUrl === imageUrl) {
+			return;
+		}
+		imageNode.youtubeSocialStreamHandledUrl = imageUrl;
+		var reactionType = normalizeDonationText(imageNode.getAttribute("alt") || "") || "emoji";
+		var chatmessage = reactionType;
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
+		if (!settings.textonlymode) {
+			chatmessage = '<img class="youtube-live-reaction" src="' + escapeYouTubeAttribute(imageUrl) + '" alt="' + escapeYouTubeAttribute(reactionType) + '">';
+		}
+		sendYouTubeTargetedMessage({
+			chatname: "YouTube Live",
+			chatmessage: chatmessage,
+			chatimg: "",
+			contentimg: imageUrl,
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
+			textonly: settings.textonlymode || false,
+			type: youtubeShorts ? "youtubeshorts" : "youtube",
+			event: "reaction",
+			meta: {
+				reactionType: reactionType,
+				reactionImage: imageUrl,
+				source: "youtube_live_reactions"
+			}
+		}, "reactions");
+	}
+
+	function processYouTubeEffectMutationNode(node) {
+		if (!node || node.nodeType !== 1) {
+			return;
+		}
+		try {
+			if (node.tagName === "YTLS-GIFT-OVERLAY-ITEM-VIEW-MODEL") {
+				emitYouTubeGiftOverlay(node);
+			}
+			var parentGiftOverlay = node.closest("ytls-gift-overlay-item-view-model");
+			if (parentGiftOverlay) {
+				emitYouTubeGiftOverlay(parentGiftOverlay);
+			}
+			node.querySelectorAll("ytls-gift-overlay-item-view-model").forEach(function (overlayNode) {
+				emitYouTubeGiftOverlay(overlayNode);
+			});
+		} catch (e) {}
+		try {
+			if (node.tagName === "IMG" && node.closest("yt-emoji-fountain-view-model #emoji-container")) {
+				emitYouTubeReactionImage(node);
+			}
+			node.querySelectorAll("yt-emoji-fountain-view-model #emoji-container img[src]").forEach(function (imageNode) {
+				emitYouTubeReactionImage(imageNode);
+			});
+		} catch (e) {}
+	}
+
+	function bindYouTubeSupplementalEffectObserver(target, type) {
+		if (!target) {
+			return null;
+		}
+		var selector = type === "gift" ? "ytls-gift-overlay-item-view-model" : "img[src]";
+		try {
+			target.querySelectorAll(selector).forEach(function (node) {
+				if (type === "gift" && node.querySelector("img[src]")) {
+					node.youtubeSocialStreamHandled = true;
+				} else if (type !== "gift") {
+					var sourceAttribute = node.getAttribute("src");
+					node.youtubeSocialStreamHandledUrl = normalizeYouTubeEffectImageUrl(sourceAttribute === null ? (node.src || "") : sourceAttribute);
+				}
+			});
+		} catch (e) {}
+		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		var observer = new MutationObserver(function (mutations) {
+			mutations.forEach(function (mutation) {
+				if (mutation.type === "attributes") {
+					processYouTubeEffectMutationNode(mutation.target);
+				}
+				for (var i = 0; i < mutation.addedNodes.length; i++) {
+					processYouTubeEffectMutationNode(mutation.addedNodes[i]);
+				}
+			});
+		});
+		observer.observe(target, {
+			childList: true,
+			subtree: true,
+			attributes: true,
+			attributeFilter: ["src"]
+		});
+		return observer;
+	}
+
+	function observeYouTubeSupplementalEffects() {
+		if (!youtubeSettingsLoaded || !isExtensionOn) {
+			return;
+		}
+		var reactionTarget = document.querySelector("yt-emoji-fountain-view-model #emoji-container");
+		if (reactionTarget && reactionTarget !== youtubeReactionObserverTarget) {
+			try {
+				if (youtubeReactionObserver) {
+					youtubeReactionObserver.disconnect();
+				}
+			} catch (e) {}
+			youtubeReactionObserverTarget = reactionTarget;
+			youtubeReactionObserver = bindYouTubeSupplementalEffectObserver(reactionTarget, "reaction");
+		}
+
+		var giftTarget = document.querySelector("ytls-widget-overlay-manager");
+		if (giftTarget && giftTarget !== youtubeGiftOverlayObserverTarget) {
+			try {
+				if (youtubeGiftOverlayObserver) {
+					youtubeGiftOverlayObserver.disconnect();
+				}
+			} catch (e) {}
+			youtubeGiftOverlayObserverTarget = giftTarget;
+			youtubeGiftOverlayObserver = bindYouTubeSupplementalEffectObserver(giftTarget, "gift");
+		}
+	}
+
 	function updateYouTubeResourceActivity(now) {
 		try {
 			if (!performance || !performance.getEntriesByType) {
@@ -2277,7 +2616,7 @@
 			return;
 		}
 
-		console.warn("[YouTube] Live chat DOM appears stale while network activity continues; reloading chat popout.", {
+		console.info("[YouTube] Live chat DOM appears stale while network activity continues; reloading chat popout.", {
 			secondsSinceChatActivity: Math.round((now - youtubeLastChatActivityAt) / 1000),
 			staleReloadSeconds: Math.round(staleReloadMs / 1000)
 		});
@@ -2422,6 +2761,8 @@
 	}
 
 	const checkTimer = setInterval(function () {
+	  applyYouTubeChatBackgroundFix();
+	  observeYouTubeSupplementalEffects();
 	  let ele = getYouTubeChatItemsElement();
 	  if (ele) {
 		maybeRefreshYouTubeChatObserver(ele);
@@ -2488,7 +2829,7 @@
 	  
 	  // style-scope yt-live-chat-message-renderer
 	  
-	  if (settings.autoLiveYoutube && document.querySelector("#trigger") && !marked){
+	  if (youtubeSettingsLoaded && !settings.disableAutoLiveYoutube && document.querySelector("#trigger") && !marked){
 			marked = true;
 			document.querySelector("#trigger").click()
 			document.querySelector('[slot="dropdown-content"] [tabindex="0"]').click()
@@ -2499,7 +2840,7 @@
 					document.querySelector("yt-live-chat-header-renderer").style.maxHeight = "10px";
 				}
 			},100)
-	  } else if (document.querySelector("#trigger") && !settings.autoLiveYoutube && marked){
+	  } else if (document.querySelector("#trigger") && settings.disableAutoLiveYoutube && marked){
 		  document.querySelector("yt-live-chat-header-renderer").style.maxHeight = "unset";
 		  marked = false;
 	  }

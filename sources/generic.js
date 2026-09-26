@@ -155,6 +155,10 @@
       } else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
         resp += escapeHtml(node.textContent);
       } else if (node.nodeType === 1) {
+        // Capture contract: textonly=true means a literal chatmessage string, not HTML.
+        // Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+        // HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+        // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
         if (!settings.textonlymode) {
           if ((node.nodeName == "IMG") && node.src) {
             node.src = node.src + "";
@@ -222,6 +226,18 @@
     '.ChatMessageEntry', '.YouTubeChatEntry', '.YoutubeComment',
     '[data-purpose="chat-message-container"]', '.livelike-message-content'
   ];
+
+  function markExistingMessages(root) {
+    if (!root || !root.querySelectorAll) return;
+    for (const selector of MESSAGE_SELECTORS) {
+      try {
+        root.querySelectorAll(selector).forEach(message => {
+          message.processed = true;
+          message.skip = true;
+        });
+      } catch (e) {}
+    }
+  }
 
   // Expanded username selectors
   const USERNAME_SELECTORS = [
@@ -306,6 +322,7 @@
   
   // Settings and message passing
   var settings = {
+    // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
     textonlymode: false,
     hideevents: false
   };
@@ -1145,6 +1162,7 @@
       hasDonation: "",
       membership: "",
       contentimg: "",
+      // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
       textonly: settings.textonlymode || false,
       type: "generic"
     };
@@ -1329,17 +1347,8 @@
                     if (!container.hasObserver) {
                       createObserver(container);
                       
-                      // Process existing messages
-                      for (const msgSelector of MESSAGE_SELECTORS) {
-                        try {
-                          container.querySelectorAll(msgSelector).forEach(message => {
-                            if (!message.processed && !message.skip) {
-                              setTimeout(() => processMessage(message), 50);
-                              message.skip = true;
-                            }
-                          });
-                        } catch (e) {}
-                      }
+                      // Existing rows are backlog; only capture later mutations.
+                      markExistingMessages(container);
                     }
                   });
                 }
@@ -1350,17 +1359,8 @@
             if (!element.shadowRoot.hasObserver) {
               createObserver(element.shadowRoot);
               
-              // Process existing messages in shadow root
-              for (const msgSelector of MESSAGE_SELECTORS) {
-                try {
-                  element.shadowRoot.querySelectorAll(msgSelector).forEach(message => {
-                    if (!message.processed && !message.skip) {
-                      setTimeout(() => processMessage(message), 50);
-                      message.skip = true;
-                    }
-                  });
-                } catch (e) {}
-              }
+              // Existing rows are backlog; only capture later mutations.
+              markExistingMessages(element.shadowRoot);
             }
           }
         }
@@ -1380,17 +1380,8 @@
             if (!container.hasObserver && container.isConnected) {
               createObserver(container);
               
-              // Process existing messages
-              MESSAGE_SELECTORS.forEach(msgSelector => {
-                try {
-                  container.querySelectorAll(msgSelector).forEach(message => {
-                    if (!message.processed && !message.skip) {
-                      setTimeout(() => processMessage(message), 50);
-                      message.skip = true;
-                    }
-                  });
-                } catch (e) {}
-              });
+              // Existing rows are backlog; only capture later mutations.
+              markExistingMessages(container);
             }
           });
         } catch (e) {}
@@ -1422,10 +1413,8 @@
               if (messages.length) {
                 foundMessages = true;
                 messages.forEach(message => {
-                  if (!message.processed && !message.skip) {
-                    setTimeout(() => processMessage(message), 50);
-                    message.skip = true;
-                  }
+                  message.processed = true;
+                  message.skip = true;
                 });
               }
             } catch (e) {}
@@ -2031,17 +2020,8 @@
   setTimeout(() => {
     setupMutationObservers();
     
-    // Process any existing messages
-    MESSAGE_SELECTORS.forEach(selector => {
-      try {
-        document.querySelectorAll(selector).forEach(message => {
-          if (!message.processed && !message.skip) {
-            setTimeout(() => processMessage(message), 100);
-            message.skip = true;
-          }
-        });
-      } catch (e) {}
-    });
+    // Existing rows are backlog; only capture later mutations.
+    markExistingMessages(document);
   }, 500);
   
   // Save learning data periodically

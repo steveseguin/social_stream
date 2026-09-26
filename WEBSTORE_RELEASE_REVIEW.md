@@ -511,3 +511,75 @@ in a clean Chrome profile remains recommended before Web Store upload.
 
 Release status: artifact checks are complete. A manual live VPZone capture test
 remains recommended before Web Store upload.
+
+
+### 2026-09-26 Selective 3.50.16 Update
+
+- Updated this branch from its stale 3.50.7 state using the reviewed 3.50.16
+  candidate, based on the actual installed 3.50.10 Web Store package. No beta
+  merge was performed. Beta reference: `cf23f2b37c6941573fb2536f3ddf3dd6d311d6e2`,
+  plus applicable source/security fixes in that working tree during review.
+- Copied the 810 reviewed package files to the branch root and verified each
+  against the candidate SHA-256 inventory before committing. The source
+  snapshot and local beta working tree were not altered by this branch update.
+- `WEBSTORE_PACKAGE_FILES.json` is the authoritative upload file list for this
+  version. Package exactly those paths, relative to this branch root, with
+  `manifest.json` at the ZIP root. Do not ZIP the entire checkout: this branch
+  also retains development, documentation and previously excluded assets.
+  Chrome-generated `_metadata/` files and these review notes are not upload
+  files. This is a manual packaging list; no release automation was added.
+- Fixed the server-mode switch exception: stripped Map/Wordcloud link targets
+  can lack a `.raw` URL. `handleBothParam` now skips targets without a string
+  URL, allowing server settings to save and Dock links to regenerate.
+- Updated all 216 retained source/provider JS/HTML/CSS/JSON assets to the
+  reviewed beta versions, plus required packaged helpers, source settings,
+  manifest content scripts, icons and the Twitch Watch Streak control.
+- Backported body/name/metadata/avatar/badge HTML protections, inert parsing,
+  command/relay handling, history/leaderboard/export safeguards, donation USD
+  overrides, settings/points import validation, and Event Flow property and
+  schedule protections. Preserved custom-JavaScript execution restrictions.
+- Backported AI co-host key and tool protections together: escaped Markdown
+  input; removal of persisted API keys; keys held in memory; private capability
+  generation/rotation, popup links, URL scrubbing and authorization of existing
+  co-host tool requests. Reopen the popup's co-host link after updating and
+  re-enter page-level API keys as needed. New AI runtimes were not imported.
+- Manifest API permissions, host permissions, CSP, OAuth settings and extension
+  key remain unchanged from the installed 3.50.10 package. Source match entries
+  were updated for the reviewed capture sources. No `webNavigation` added.
+- Upload exclusions remain: previously stripped adult integrations, RPLAY,
+  Velora runtime, Map/Wordcloud, StreamElements importer, Lite, local browser AI
+  runtimes, and local Kokoro/Kitten/eSpeak/Piper runtimes. Custom uploaded/URL
+  JavaScript remains disabled or absent. New dependencies are local; Socket.IO's
+  dynamic global lookup was replaced with a `globalThis` fallback.
+- Final package checks: 266 JavaScript files and 133 inline scripts parsed; no
+  remote script imports or direct eval/Function calls found; original 773-file
+  installed snapshot remained unchanged. Two pre-existing Kokoro import strings
+  remain in disabled popup code; excluded bundles were not restored. Optional
+  settings.json/badwords.txt/goodwords.txt override requests remain absent as
+  they were in the installed package.
+- Candidate validation passed:
+  - Real isolated Chromium extension: startup, all three server switches,
+    storage and regenerated URLs, fake-message button through a local relay to
+    the actual Dock, WhatsApp-shaped payload delivery, disabling/reopening,
+    co-host tool authorization and capability URL edits, popup Watch Streak
+    search; no popup/background/Dock page exceptions.
+  - 17 source/sanitizer suites; 117 text-contract checks; 66 security-boundary
+    checks; 67 final-HTML checks; 82 name-security checks and 144 comparisons.
+  - 258 body checks on 42 retained pages; name/avatar checks on 24 pages each;
+    46 badge cases; 23 inert-parser probes and 299 compatibility comparisons;
+    35 TikTok gift cases; 30 emote-wall cases.
+  - Secondary processing, command forwarding, Dock actions, multi-alerts,
+    seven games, five leaderboard layouts, real IndexedDB/name history/export,
+    co-host key/output security, all five points-import cases, schedule escaping.
+- Candidate harness adaptations were limited to unshipped surfaces, old DB
+  extraction anchors, the old Tip Jar goal/TTS wording and old Deuks viewport
+  behavior. Security/rendering assertions remained. The new beta popup-search
+  unit suite depends on absent beta helpers, so the retained search was tested
+  in the actual extension instead; the required suite passed in beta.
+- Branch files additionally passed the existing Web Store Event Flow custom-JS
+  restriction suite and XSS sanitizer suite after synchronization.
+
+Release status: GitHub source update only; no Chrome Web Store upload or website
+publication was performed. Live provider authentication, all supported sites,
+and the public relay were not exercised. Default Dock/overlay links use the
+hosted website, whose corresponding fixes require a separate site deployment.

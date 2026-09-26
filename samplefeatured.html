@@ -7,8 +7,13 @@ Development Notes:
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="./libs/objects.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
+<script src="./shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="./shared/utils/chatBadges.css">
+
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta charset="utf-8" />
+
     <title>Social Stream - Overlay</title>
     <meta name="title" content="Social Stream - Overlay" />
     <link rel="icon" href="./favicon.ico" />
@@ -467,6 +472,11 @@ Development Notes:
             const messageContent = this.buildMessageContent(data);
             document.getElementById('output').innerHTML = messageContent;
 
+            // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
+            if (data.textonly) {
+                document.getElementById('message').textContent = data.chatmessage || '';
+            }
+
             if (data.hasDonation) {
                 document.getElementById('newmessage')?.classList.add('dono');
             }
@@ -486,16 +496,17 @@ Development Notes:
             const styleOverride = this.getStyleOverride(data);
 			const donationContent = this.buildDonation(data);
 
+            // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
             return `
                 <div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="${data.type || 'none'}">
 					<div class="hl-title">
 					${avatarImg}
                     <div class="hl-name" ${styleOverride} id="nameDIV">
-                        ${data.chatname || ''}
+                        ${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname || '') : fallbackEscapeHtml(data.chatname || ''))}
                     </div>
 					${chatbadges}${donationContent}
 					</div>
-                    <div id="message" class="hl-message">${data.chatmessage || ''}</div>
+                    <div id="message" class="hl-message">${data.textonly ? '' : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage || '') : fallbackEscapeHtml(data.chatmessage || ''))}</div>
                    ${sourceType}${imgContent}
                 </div>
             `;
@@ -517,12 +528,12 @@ Development Notes:
                 './icons/announcement.png' : './sources/images/unknown.png');
 
             const backupAttr = data.backupChatimg ? 
-                `data-backup-image="${data.backupChatimg}"` : '';
+                `data-backup-image="${fallbackEscapeHtml(data.backupChatimg)}"` : '';
 
             return `
                 <div class="hl-img">
-                    <img id="img_${data.id}" 
-                         src="${imgSrc}" 
+                    <img id="img_${fallbackEscapeHtml(data.id)}"
+                         src="${fallbackEscapeHtml(imgSrc)}"
                          class="hl-profile-pic" 
                          ${backupAttr}
                          onerror="App.errorImage(this)" />
@@ -530,29 +541,15 @@ Development Notes:
         },
 
         buildChatBadges(badges) {
-            if (!badges?.length) return '';
-
-            const badgeElements = badges.map(badge => {
-                if (typeof badge === 'object') {
-                    if (badge.type === 'img' && badge.src) {
-                        return `<img class="hl-badge" src="${badge.src}" />`;
-                    } else if (badge.type === 'svg' && badge.html) {
-                        return `<span class="hl-badge">${badge.html}</span>`;
-                    }
-                } else {
-                    return `<img class="hl-badge" src="${badge}" />`;
-                }
-                return '';
-            }).join('');
-
-            return badgeElements ? `<div class="hl-badges">${badgeElements}</div>` : '';
+            const html = SocialStreamBadges.render(badges, { className: "hl-badge" });
+            return html ? "<div class=\"hl-badges\">" + html + "</div>" : "";
         },
 		
 		buildDonation(data) {
             if (!(data.hasDonation || data.donation)) return '';
 
             const donationAmount = (data.hasDonation || data.donation);
-            return `<div class="hl-donation">${donationAmount}</div>`;
+            return `<div class="hl-donation">${fallbackEscapeHtml(donationAmount)}</div>`;
         },
 
         buildSourceType(type = 'none') {
@@ -577,7 +574,7 @@ Development Notes:
                 styles.push(data.textNameColor);
             }
             
-            return styles.length ? `style="${styles.join('; ')}"` : '';
+            return styles.length ? `style="${fallbackEscapeHtml(styles.join('; '))}"` : '';
         },
 
         handleTwitchImage(data) {

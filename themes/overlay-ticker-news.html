@@ -30,7 +30,13 @@ Keep this file Chrome-80 friendly: no <script type="module">, no top-level impor
 -->
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<script src="../shared/utils/chatHtml.js"></script>
+
+<script src="../libs/objects.js"></script>
+<script src="../shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="../shared/utils/chatBadges.css">
+
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>News Ticker Chat Overlay</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap">
@@ -182,22 +188,7 @@ html, body {
     }
 
     function buildBadges(data) {
-        var badges = data.chatbadges;
-        if (!badges) { return ""; }
-        if (typeof badges === "string") {
-            return badges.indexOf("<") !== -1 ? badges : "<img class='badge' src='" + badges + "' alt='badge'>";
-        }
-        if (!Array.isArray(badges)) { badges = [badges]; }
-        var html = "";
-        badges.forEach(function (badge) {
-            if (typeof badge === "object") {
-                if (badge.type === "img" && badge.src) { html += "<img class='badge' src='" + badge.src + "' alt='badge'>"; }
-                else if (badge.type === "svg" && badge.html) { html += "<span class='badge svg'>" + badge.html + "</span>"; }
-            } else {
-                html += "<img class='badge' src='" + badge + "' alt='badge'>";
-            }
-        });
-        return html;
+        return SocialStreamBadges.render(data.chatbadges);
     }
 
     function clearAll() {
@@ -236,7 +227,8 @@ html, body {
         var nameHtml = (!hideNames && data.chatname)
             ? "<span class='name' style='color:" + nameColor + "'>" + escapeHtml(data.chatname) + "</span>" : "";
         var membershipHtml = data.membership ? "<span class='membership'>" + escapeHtml(data.membership) + "</span>" : "";
-        var msg = data.chatmessage ? (data.textonly ? escapeHtml(data.chatmessage) : data.chatmessage) : "";
+        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
+        var msg = data.chatmessage ? (data.textonly ? escapeHtml(data.chatmessage) : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage) : fallbackEscapeHtml(data.chatmessage))) : "";
         var colonHtml = (nameHtml && msg) ? "<span class='colon'>:</span>" : "";
         var textHtml = msg ? "<span class='text'>" + msg + "</span>" : "";
         var donation = data.hasDonation || data.donation || "";

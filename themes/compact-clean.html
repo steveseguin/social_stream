@@ -37,7 +37,12 @@ Keep this file Chrome-80 friendly: no <script type="module">, no top-level impor
 -->
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<script src="../shared/utils/chatHtml.js"></script>
+<script src="../libs/objects.js"></script>
+<script src="../shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="../shared/utils/chatBadges.css">
+
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Compact Clean Chat Overlay</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
@@ -545,17 +550,7 @@ body.ultra .content-img {
     }, 1000);
 
     function buildBadges(data) {
-        if (hideBadges || !data.chatbadges) { return ""; }
-        var html = "";
-        data.chatbadges.forEach(function (badge) {
-            if (typeof badge === "object") {
-                if (badge.type === "img" && badge.src) { html += "<img class='badge' src='" + badge.src + "' alt='badge'>"; }
-                else if (badge.type === "svg" && badge.html) { html += "<span class='badge svg'>" + badge.html + "</span>"; }
-            } else {
-                html += "<img class='badge' src='" + badge + "' alt='badge'>";
-            }
-        });
-        return html;
+        return hideBadges ? "" : SocialStreamBadges.render(data.chatbadges);
     }
 
     function addMessageToOverlay(data) {
@@ -581,7 +576,7 @@ body.ultra .content-img {
         if (accent) { messageDiv.style.borderLeftColor = accent; }
 
         var avatarHtml = (!hideAvatar && data.chatimg)
-            ? "<span class='avatar' style=\"background-image:url('" + data.chatimg + "')\"></span>" : "";
+            ? "<span class='avatar' style=\"background-image:url('" + escapeCssUrlAttribute(data.chatimg) + "')\"></span>" : "";
         var iconHtml = (!hideIcon && data.type)
             ? "<img class='source-icon' src='https://socialstream.ninja/sources/images/" + data.type + ".png' alt='" + data.type + "' onerror=\"this.style.display='none'\">" : "";
         var badgesHtml = buildBadges(data);
@@ -589,7 +584,7 @@ body.ultra .content-img {
         var nameHtml = data.chatname
             ? "<span class='name'" + (accent ? " style='color:" + accent + "'" : "") + ">" + escapeHtml(data.chatname) + "</span>" : "";
         var membershipHtml = data.membership ? "<div class='membership'>" + escapeHtml(data.membership) + "</div>" : "";
-        var msg = data.chatmessage ? (data.textonly ? escapeHtml(data.chatmessage) : data.chatmessage) : "";
+        var msg = data.chatmessage ? (data.textonly ? escapeHtml(data.chatmessage) : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage) : fallbackEscapeHtml(data.chatmessage))) : "";
         var textHtml = msg ? "<div class='text" + (data.event ? " event-text" : "") + "'>" + msg + "</div>" : "";
         var donation = data.hasDonation || data.donation || "";
         var donationHtml = donation ? "<div class='donation'>" + escapeHtml(donation) + "</div>" : "";

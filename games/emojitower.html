@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emoji Tower - Social Stream Ninja</title>
     <link rel="icon" href="../favicon.ico" />
@@ -366,7 +366,7 @@
     }
 
     function stripHtml(html) {
-        const tmp = document.createElement('div');
+        const tmp = document.createElement('template').content.appendChild(document.createElement('div'));
         tmp.innerHTML = html;
         return tmp.textContent || tmp.innerText || '';
     }

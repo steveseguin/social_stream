@@ -6,6 +6,9 @@ const DEFAULT_RECONNECT = {
 };
 
 function defaultSanitize(value) {
+  // Provider chatmessage uses the configured HTML formatter; rawMessage remains literal text.
+  // No textonly flag means legacy HTML mode. Plain-capture adapters must select rawMessage,
+  // not decode formatted HTML or assume this fallback validates HTML in every environment.
   if (value === null || value === undefined) {
     return '';
   }
@@ -22,6 +25,37 @@ function defaultAvatarUrl(username) {
     return '';
   }
   return `https://api.socialstream.ninja/twitch/large?username=${encodeURIComponent(username)}`;
+}
+
+function getTwitchGifUrl(tags, message) {
+  if (message && typeof message === 'object' && Array.isArray(message.fragments)) {
+    const gifFragment = message.fragments.find(
+      (fragment) => fragment?.type === 'gif' && typeof fragment.gif?.url === 'string' && fragment.gif.url
+    );
+    if (gifFragment) {
+      return gifFragment.gif.url;
+    }
+  }
+
+  const rawGifs = tags?.gifs || tags?.['gifs-raw'];
+  if (typeof rawGifs !== 'string' || !rawGifs) {
+    return '';
+  }
+
+  const firstEntry = rawGifs.split(/,(?=\d+-\d+\|)/)[0];
+  const firstSeparator = firstEntry.indexOf('|');
+  const secondSeparator = firstEntry.indexOf('|', firstSeparator + 1);
+  if (firstSeparator < 1 || secondSeparator < firstSeparator + 2) {
+    return '';
+  }
+  return firstEntry.slice(secondSeparator + 1);
+}
+
+function getTwitchMessageText(message) {
+  if (message && typeof message === 'object' && typeof message.text === 'string') {
+    return message.text;
+  }
+  return message ?? '';
 }
 
 const DEFAULT_FORMATTERS = {
@@ -52,6 +86,7 @@ const EVENTS = {
   STATUS: 'status',
   MESSAGE: 'message',
   NOTICE: 'notice',
+  WATCH_STREAK: 'watch_streak',
   MEMBERSHIP: 'membership',
   RAID: 'raid',
   CLEAR_CHAT: 'clear_chat',
@@ -188,6 +223,7 @@ export function createTwitchChatClient(options = {}) {
   const emitter = createEmitter();
   const state = {
     status: STATUS.IDLE,
+    joined: false,
     channel: normalizeTwitchChannel(opts.channel),
     identity: opts.identity || null,
     token: null,
@@ -197,6 +233,7 @@ export function createTwitchChatClient(options = {}) {
     lastError: null,
     manualDisconnect: false,
     destroyed: false,
+    connectionGeneration: 0,
     boundHandlers: [],
     clientFactory: typeof opts.clientFactory === 'function' ? opts.clientFactory : null
   };
@@ -256,6 +293,7 @@ export function createTwitchChatClient(options = {}) {
   }
 
   function teardownClient() {
+    state.joined = false;
     if (state.client) {
       clearClientBindings();
       try {
@@ -267,7 +305,12 @@ export function createTwitchChatClient(options = {}) {
       }
       try {
         if (typeof state.client.disconnect === 'function') {
-          state.client.disconnect();
+          const disconnectResult = state.client.disconnect();
+          if (disconnectResult && typeof disconnectResult.catch === 'function') {
+            disconnectResult.catch((err) => {
+              logDebug('Client disconnect failed', { error: err?.message || err });
+            });
+          }
         }
       } catch (err) {
         logDebug('Client disconnect failed', { error: err?.message || err });
@@ -316,15 +359,18 @@ export function createTwitchChatClient(options = {}) {
       const tokenResult = await opts.tokenProvider(connectOptions);
       if (tokenResult && typeof tokenResult === 'object') {
         return {
-          token: tokenResult.token || tokenResult.accessToken || null,
-          identity: tokenResult.identity || null
+          token: tokenResult.token || tokenResult.accessToken || state.token || null,
+          identity: tokenResult.identity || connectOptions.identity || state.identity || null
         };
       }
       if (typeof tokenResult === 'string') {
-        return { token: tokenResult, identity: null };
+        return { token: tokenResult, identity: connectOptions.identity || state.identity || null };
       }
     }
-    return { token: null, identity: connectOptions.identity || null };
+    return {
+      token: state.token || null,
+      identity: connectOptions.identity || state.identity || null
+    };
   }
 
   function bind(event, handler) {
@@ -340,7 +386,9 @@ export function createTwitchChatClient(options = {}) {
   function normalizeChatMessage(channelName, tags, message, isSelf = false, messageType = null) {
     const twitchLogin = normalizeTwitchChannel(tags?.username || tags?.login);
     const displayName = tags?.['display-name'] || twitchLogin || 'Twitch User';
-    const sanitizedMessage = formatters.sanitize(message ?? '');
+    const messageText = getTwitchMessageText(message);
+    const sanitizedMessage = formatters.sanitize(messageText);
+    const gifUrl = getTwitchGifUrl(tags, message);
     const badgeMap = extractBadgeMap(tags);
     const normalizedType = messageType || tags?.['message-type'] || null;
     const event = tags?.bits
@@ -349,26 +397,34 @@ export function createTwitchChatClient(options = {}) {
         ? 'action'
         : normalizedType || 'message';
 
-    return {
+    const payload = {
       id: resolveMessageId(channelName, tags, event),
       platform: 'twitch',
       type: 'twitch',
       chatname: displayName,
-      chatmessage: sanitizedMessage,
+      chatmessage: gifUrl ? '' : sanitizedMessage,
+      contentimg: gifUrl,
       chatimg: formatters.avatarUrl(twitchLogin || displayName),
       timestamp: Number(tags?.['tmi-sent-ts'] || formatters.now()),
       chatbadges: badgeMapToChatBadges(badgeMap),
       hasDonation: tags?.bits ? (parseInt(tags.bits) === 1 ? '1 bit' : `${tags.bits} bits`) : '',
       bits: ensureNumber(tags?.bits, 0),
+      ...(tags?.bits ? { donoValue: ensureNumber(tags.bits, 0) / 100 } : {}),
       isModerator: tags?.mod === true || tags?.mod === '1' || Boolean(badgeMap?.moderator),
       isOwner: Boolean(badgeMap?.broadcaster),
       isSubscriber: Boolean(badgeMap?.subscriber),
       userId: tags?.['user-id'] || null,
       event,
       isSelf: Boolean(isSelf),
-      rawMessage: typeof message === 'string' ? message : '',
+      rawMessage: typeof messageText === 'string' ? messageText : '',
       raw: { channel: channelName, tags }
     };
+    if (gifUrl) {
+      payload.meta = {
+        gifLabel: typeof messageText === 'string' ? messageText : ''
+      };
+    }
+    return payload;
   }
 
   function normalizeSubscription(channelName, username, methods, message, userstate, eventType) {
@@ -394,6 +450,36 @@ export function createTwitchChatClient(options = {}) {
       event: eventType || 'new_subscriber',
       months: cumulative,
       methods: methods || null,
+      raw: { channel: channelName, userstate, message }
+    };
+  }
+
+  function normalizeWatchStreak(channelName, userstate, message) {
+    const twitchLogin = normalizeTwitchChannel(userstate?.username || userstate?.login || null);
+    const displayName = userstate?.['display-name'] || twitchLogin || 'Twitch Viewer';
+    const streakCount = ensureNumber(userstate?.['msg-param-value'], 0);
+    const fallback = streakCount > 0
+      ? `${displayName} watched ${streakCount} consecutive streams and sparked a watch streak!`
+      : `${displayName} shared a watch streak!`;
+    const noticeText = userstate?.['system-msg'] || getTwitchMessageText(message) || fallback;
+
+    return {
+      id: resolveMessageId(channelName, userstate, 'watch_streak'),
+      platform: 'twitch',
+      type: 'twitch',
+      chatname: displayName,
+      username: twitchLogin || '',
+      userId: userstate?.['user-id'] || null,
+      chatmessage: formatters.sanitize(noticeText),
+      chatimg: formatters.avatarUrl(twitchLogin || displayName),
+      timestamp: Number(userstate?.['tmi-sent-ts'] || formatters.now()),
+      hasDonation: '',
+      event: 'watch_streak',
+      meta: {
+        streakCount,
+        milestoneId: userstate?.['msg-param-id'] || ''
+      },
+      rawMessage: noticeText,
       raw: { channel: channelName, userstate, message }
     };
   }
@@ -470,6 +556,7 @@ export function createTwitchChatClient(options = {}) {
       timestamp: Number(userstate?.['tmi-sent-ts'] || formatters.now()),
       hasDonation: userstate?.bits ? (parseInt(userstate.bits) === 1 ? '1 bit' : `${userstate.bits} bits`) : '',
       bits: ensureNumber(userstate?.bits, 0),
+      donoValue: ensureNumber(userstate?.bits, 0) / 100,
       event: 'cheer',
       rawMessage: typeof message === 'string' ? message : '',
       raw: { channel: channelName, userstate, message }
@@ -513,16 +600,19 @@ export function createTwitchChatClient(options = {}) {
       logDebug('Twitch socket connected', { address, port, channel: channelName });
       state.reconnectAttempts = 0;
       state.manualDisconnect = false;
-      updateStatus(STATUS.CONNECTED, { address, port, channel: channelName });
+      state.joined = false;
+      updateStatus(STATUS.CONNECTED, { address, port, channel: channelName, joined: false });
     });
 
     bind('connecting', (address, port) => {
       logDebug('Twitch client connecting', { address, port, channel: channelName });
+      state.joined = false;
       updateStatus(STATUS.CONNECTING, { address, port, channel: channelName, force: true });
     });
 
     bind('disconnected', (reason) => {
       logDebug('Twitch socket disconnected', { reason });
+      state.joined = false;
       updateStatus(STATUS.DISCONNECTED, { reason });
       teardownClient();
       if (!state.manualDisconnect) {
@@ -532,7 +622,30 @@ export function createTwitchChatClient(options = {}) {
 
     bind('reconnect', () => {
       logDebug('Twitch attempting reconnect');
+      state.joined = false;
       updateStatus(STATUS.CONNECTING, { reason: 'reconnect', force: true });
+    });
+
+    bind('join', (joinedChannel, joinedUsername, self) => {
+      if (!self || normalizeTwitchChannel(joinedChannel) !== channelName) {
+        return;
+      }
+      state.joined = true;
+      logDebug('Twitch channel joined', { channel: channelName, username: joinedUsername });
+      updateStatus(STATUS.CONNECTED, { channel: channelName, joined: true, force: true });
+    });
+
+    bind('part', (partedChannel, partedUsername, self) => {
+      if (!self || normalizeTwitchChannel(partedChannel) !== channelName) {
+        return;
+      }
+      state.joined = false;
+      logDebug('Twitch channel parted', { channel: channelName, username: partedUsername });
+      updateStatus(STATUS.DISCONNECTED, { channel: channelName, joined: false, reason: 'parted' });
+      teardownClient();
+      if (!state.manualDisconnect) {
+        scheduleReconnect();
+      }
     });
 
     const processChatEvent = (chan, tags, message, self, fallbackType = null) => {
@@ -562,6 +675,16 @@ export function createTwitchChatClient(options = {}) {
 
     bind('notice', (channel, msgid, message) => {
       emitter.emit(EVENTS.NOTICE, normalizeNotice(channel || channelName, msgid, message));
+    });
+
+    bind('usernotice', (msgid, channel, userstate, message) => {
+      if (msgid !== 'viewermilestone' || userstate?.['msg-param-category'] !== 'watch-streak') {
+        return;
+      }
+      emitter.emit(
+        EVENTS.WATCH_STREAK,
+        normalizeWatchStreak(channel || channelName, userstate, message)
+      );
     });
 
     bind('clearchat', (channel, user, duration) => {
@@ -619,7 +742,10 @@ export function createTwitchChatClient(options = {}) {
       return state.client;
     }
     clearReconnectTimer();
+    const generation = ++state.connectionGeneration;
+    const isCurrent = () => generation === state.connectionGeneration && !state.destroyed;
     state.manualDisconnect = Boolean(connectOptions.manual === true);
+    state.joined = false;
     updateStatus(STATUS.CONNECTING);
 
     const channel = normalizeTwitchChannel(connectOptions.channel || state.channel);
@@ -633,6 +759,7 @@ export function createTwitchChatClient(options = {}) {
 
     try {
       const { token, identity } = await resolveAuth(connectOptions);
+      if (!isCurrent()) return;
       state.token = token || null;
       state.identity = identity || null;
 
@@ -666,6 +793,11 @@ export function createTwitchChatClient(options = {}) {
         options: connectOptions
       });
 
+      if (!isCurrent()) {
+        disconnectStaleClient(client);
+        return;
+      }
+
       if (!client || typeof client.connect !== 'function') {
         const error = new Error('clientFactory must return a tmi.js client with connect().');
         error.code = 'INVALID_CLIENT';
@@ -676,12 +808,17 @@ export function createTwitchChatClient(options = {}) {
       state.boundHandlers = [];
       attachClientEventHandlers(channel);
       const result = await client.connect();
+      if (!isCurrent()) {
+        disconnectStaleClient(client);
+        return;
+      }
 
       state.reconnectAttempts = 0;
       state.manualDisconnect = false;
-      updateStatus(STATUS.CONNECTED, { channel, identity: state.identity });
+      updateStatus(STATUS.CONNECTED, { channel, identity: state.identity, joined: state.joined });
       return result;
     } catch (err) {
+      if (!isCurrent()) return;
       state.lastError = err;
       updateStatus(STATUS.ERROR, { error: err, force: true });
       emitter.emit(EVENTS.ERROR, err);
@@ -692,12 +829,24 @@ export function createTwitchChatClient(options = {}) {
   }
 
   function disconnect(options = {}) {
+    state.connectionGeneration++;
     state.manualDisconnect = true;
     clearReconnectTimer();
     teardownClient();
     updateStatus(options.error ? STATUS.ERROR : STATUS.DISCONNECTED, {
       error: options.error || null
     });
+  }
+
+  function disconnectStaleClient(client) {
+    if (!client || client === state.client || typeof client.disconnect !== 'function') return;
+    try {
+      Promise.resolve(client.disconnect()).catch(err => {
+        logDebug('Cancelled client disconnect failed', { error: err?.message || err });
+      });
+    } catch (err) {
+      logDebug('Cancelled client disconnect failed', { error: err?.message || err });
+    }
   }
 
   function destroy() {
@@ -726,6 +875,7 @@ export function createTwitchChatClient(options = {}) {
   function getState() {
     return {
       status: state.status,
+      joined: state.joined,
       channel: state.channel,
       identity: state.identity,
       reconnectAttempts: state.reconnectAttempts,

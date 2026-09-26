@@ -28,7 +28,11 @@ function toDataURL(url, callback) {
 	
 	function escapeHtml(unsafe){
 		try {
-			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
+			if (settings.textonlymode){ // Literal text stays unencoded at capture; escape only when a renderer constructs HTML.
 				return unsafe;
 			}
 			return unsafe
@@ -61,6 +65,7 @@ function toDataURL(url, callback) {
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
@@ -324,7 +329,6 @@ function toDataURL(url, callback) {
 
 	function extractDonationDetails(ele){
 		let donationText = "";
-		let donationValue = "";
 		try {
 			let textNodes = ele.querySelectorAll("div, span, p");
 			for (let i=0; i<textNodes.length; i++){
@@ -365,12 +369,11 @@ function toDataURL(url, callback) {
 		} catch(e){}
 
 		if (!donationText){
-			return { hasDonation: "", donoValue: "" };
+			return { hasDonation: "" };
 		}
 
 		let parsedValue = parseNumericValue(donationText);
 		if (parsedValue !== null){
-			donationValue = parsedValue;
 			if (!/[A-Za-z$]/.test(donationText)){
 				let prettyValue = Number.isInteger(parsedValue) ? parsedValue : parsedValue.toFixed(2);
 				donationText = prettyValue + " coins";
@@ -378,8 +381,7 @@ function toDataURL(url, callback) {
 		}
 
 		return {
-			hasDonation: escapeHtml(donationText.trim()),
-			donoValue: donationValue
+			hasDonation: escapeHtml(donationText.trim())
 		};
 	}
 
@@ -734,9 +736,9 @@ function toDataURL(url, callback) {
 				msgNode.childNodes.forEach(ee=>{
 					if (ee.nodeType == Node.TEXT_NODE){
 						msg += escapeHtml(ee.textContent);
-					} else if (settings.textonlymode && ee.alt && (ee.nodeName  == "IMG")){
+					} else /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ if (settings.textonlymode && ee.alt && (ee.nodeName  == "IMG")){
 						//msg += ee.alt;
-					} else if (!settings.textonlymode&& (ee.nodeName  == "IMG")){
+					} else /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ if (!settings.textonlymode&& (ee.nodeName  == "IMG")){
 						msg += "<img src='"+ee.src+"' />";
 					}  else {
 						msg += escapeHtml(ee.textContent);
@@ -818,10 +820,8 @@ function toDataURL(url, callback) {
 		data.chatimg = chatimg;
 		data.hasDonation = hasDonation;
 		data.membership = badgeData.membership || "";
-		if (donationData.donoValue !== ""){
-			data.donoValue = donationData.donoValue;
-		}
 		data.contentimg = contentimg;
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "locals";
 		if (replyMeta){
@@ -1023,7 +1023,7 @@ function toDataURL(url, callback) {
 	}
 	
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	
 	

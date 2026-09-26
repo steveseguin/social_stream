@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+    <meta charset="utf-8" />
+    <meta name="description" content="Facebook Live Page API: a chat source connection page for Social Stream Ninja. Use it with the app or extension to bring chat into your session.">
+    <meta name="robots" content="noindex">
+
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Social Stream - Facebook Live Page API</title>
-  <link rel="icon" href="https://www.facebook.com/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="../images/facebook.png" type="image/png">
   <style>
     :root {
       --fb-blue: #1877f2;
@@ -286,8 +289,10 @@
     }
   </style>
   <link rel="stylesheet" href="websocket-responsive.css">
+    <link rel="stylesheet" href="../../shared/compact-source-layout.css?v=20260916-setup">
+    <script src="../../shared/utils/compactSourceLayout.js?v=20260916-setup" defer></script>
 </head>
-<body>
+<body data-compact-source="facebook">
   <div class="page">
     <div class="content">
       <section class="panel warning-banner">
@@ -357,7 +362,7 @@
                 </div>
                 <div>
                   <label for="oauth-base">Sign-in service URL</label>
-                  <input id="oauth-base" type="text" placeholder="https://auth.socialstream.ninja/auth/facebook/pages">
+                  <input id="oauth-base" type="text" placeholder="https://sso.socialstream.ninja/auth/facebook">
                   <div class="hint">Leave this alone unless support tells you to change it.</div>
                 </div>
                 <div>
@@ -416,6 +421,8 @@
     </div>
   </div>
 
-  <script src="facebook.js"></script>
+  <!-- Page-world capture/UI. The extension also injects facebook.js in its
+       isolated world to relay ssnFacebookRelay events to the background. -->
+  <script src="facebook.js?v=20260916-setup"></script>
 </body>
 </html>

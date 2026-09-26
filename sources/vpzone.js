@@ -8,6 +8,9 @@
 	var lastViewerCount = null;
 	var sourceImg = "";
 	var sourceName = "VPZone";
+	var sourceBrandChannel = "";
+	var sourceBrandLoaded = false;
+	var sourceBrandPending = null;
 	var seenWsMessageIds = new Map();
 	var captureStartedAt = Date.now();
 	var staleHistoryWindowMs = 30000;
@@ -73,6 +76,52 @@
 		}
 	}
 
+	function refreshSourceBranding() {
+		var channel = String(currentChannelSlug || getChannelSlugFromUrl() || "").trim().toLowerCase();
+		if (!channel) {
+			sourceBrandChannel = "";
+			sourceBrandLoaded = true;
+			sourceBrandPending = null;
+			sourceName = "VPZone";
+			sourceImg = "";
+			return Promise.resolve({ sourceName: sourceName, sourceImg: sourceImg });
+		}
+		if (channel === sourceBrandChannel && sourceBrandPending) {
+			return sourceBrandPending;
+		}
+		if (channel === sourceBrandChannel && sourceBrandLoaded) {
+			return Promise.resolve({ sourceName: sourceName, sourceImg: sourceImg });
+		}
+
+		sourceBrandChannel = channel;
+		sourceBrandLoaded = false;
+		sourceName = channel;
+		sourceImg = "";
+		sourceBrandPending = fetch("/api/chat/profile-card/" + encodeURIComponent(channel), {
+			credentials: "omit",
+			cache: "force-cache",
+			headers: { Accept: "application/json" }
+		})
+			.then(function (response) { return response.ok ? response.json() : {}; })
+			.then(function (profile) {
+				if (sourceBrandChannel !== channel) return { sourceName: sourceName, sourceImg: sourceImg };
+				sourceName = profile && profile.display_name ? String(profile.display_name) : channel;
+				sourceImg = profile && profile.avatar_url ? toAbsoluteUrl(String(profile.avatar_url)) : "";
+				return { sourceName: sourceName, sourceImg: sourceImg };
+			})
+			.catch(function () {
+				return { sourceName: sourceName, sourceImg: sourceImg };
+			})
+			.then(function (branding) {
+				if (sourceBrandChannel === channel) {
+					sourceBrandLoaded = true;
+					sourceBrandPending = null;
+				}
+				return branding;
+			});
+		return sourceBrandPending;
+	}
+
 	function pruneSeenWs(now) {
 		if (!seenWsMessageIds.size) return;
 		seenWsMessageIds.forEach(function (ts, id) {
@@ -102,6 +151,34 @@
 
 	function escapeHtmlMaybe(text) {
 		return escapeHtml((text == null ? "" : String(text)));
+	}
+
+	function safeEmoteUrl(value) {
+		if (typeof value !== "string" || !value.trim()) return "";
+		try {
+			var url = new URL(value, window.location.href);
+			return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
+		} catch (e) {
+			return "";
+		}
+	}
+
+	function renderWsMessage(text, emoteMap) {
+		text = String(text == null ? "" : text);
+		// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+		// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+		// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
+		if (settings.textonlymode) return text;
+		if (!emoteMap || typeof emoteMap !== "object") {
+			return escapeHtmlMaybe(text).replace(/\n/g, "<br>");
+		}
+		return text.split(/(\s+)/).map(function (token) {
+			var emoteUrl = safeEmoteUrl(emoteMap[token]);
+			if (!emoteUrl) return escapeHtmlMaybe(token);
+			var label = token.replace(/^:|:$/g, "");
+			return '<img src="' + escapeHtmlMaybe(emoteUrl) + '" alt="' + escapeHtmlMaybe(label) + '" title="' + escapeHtmlMaybe(label) + '" class="regular-emote vpzone-emote"/>';
+		}).join("").replace(/\n/g, "<br>");
 	}
 
 	function tierBadge(tier, subMonths) {
@@ -170,13 +247,43 @@
 			return;
 		}
 
-		if (msg.type === "delete_message") return;
+		if (msg.type === "delete_message") {
+			var deletedId = msg.metadata && (msg.metadata.messageId || msg.metadata.message_id);
+			if (deletedId) {
+				try { chrome.runtime.sendMessage(chrome.runtime.id, { "delete": { type: "vpzone", id: String(deletedId) } }, function () {}); } catch (e) {}
+			}
+			return;
+		}
+		if (msg.type === "clear_chat") {
+			try { chrome.runtime.sendMessage(chrome.runtime.id, { "delete": { type: "vpzone" } }, function () {}); } catch (e) {}
+			return;
+		}
 
 		if (msg.id && seenWsMessageIds.has(msg.id)) return;
 		if (msg.id) seenWsMessageIds.set(msg.id, now);
 
 		var ts = msg.ts || "";
 		if (isStaleInitialTimestamp(ts)) return;
+
+		// Only incoming raids belong to this channel's feed — the outgoing half
+		// of the pair is for the raiding channel.
+		if (msg.type === "raid" && msg.metadata && msg.metadata.kind === "outgoing") return;
+
+		if (msg.type === "shoutout") {
+			var soCaster = (msg.metadata && msg.metadata.username) || msg.username || "";
+			var soTarget = msg.metadata && msg.metadata.target_user ? String(msg.metadata.target_user) : "";
+			if (!soCaster) return;
+			var soAvatar = avatarCache.get(String(soCaster).toLowerCase()) || "";
+			if (!soAvatar) fetchAvatar(soCaster);
+			emitWsMessage({
+				chatname: escapeHtmlMaybe(soCaster),
+				chatmessage: escapeHtmlMaybe(soTarget ? "gave a shoutout to @" + soTarget : (msg.body || "shoutout")),
+				chatimg: soAvatar,
+				event: "shoutout",
+				meta: { timestamp: ts, targetUser: soTarget }
+			});
+			return;
+		}
 
 		if (msg.type === "follow" || msg.type === "subscription" || msg.type === "raid" || msg.type === "gift" || msg.type === "clip") {
 			// Prefer metadata.username when present — gift events name the
@@ -203,6 +310,41 @@
 			// dropping them avoids "system: alice just joined" rows that
 			// social_stream can't attribute or theme correctly.
 			if (!kind && /\bjust\s+joined\b/i.test(String(msg.body || ""))) return;
+
+			// Pixels cheers are donation-bearing chat rows (Kick tip pattern):
+			// hasDonation carries the amount label, event stays blank.
+			if (kind === "pixels_cheer") {
+				var cheerAmount = parseInt(msg.metadata && msg.metadata.amount, 10);
+				var cheerName = (msg.metadata && msg.metadata.username) || msg.username || "";
+				if (!isFinite(cheerAmount) || cheerAmount <= 0 || !cheerName || cheerName === "system") return;
+				var cheerAvatar = avatarCache.get(String(cheerName).toLowerCase()) || "";
+				if (!cheerAvatar) fetchAvatar(cheerName);
+				var cheerPayload = {
+					chatname: escapeHtmlMaybe(cheerName),
+					chatmessage: escapeHtmlMaybe((msg.metadata && msg.metadata.message) || ""),
+					chatimg: cheerAvatar,
+					hasDonation: cheerAmount.toLocaleString() + " " + (cheerAmount === 1 ? "Pixel" : "Pixels"),
+					meta: { timestamp: ts, kind: kind, pixels: cheerAmount }
+				};
+				if (msg.id) cheerPayload.id = String(msg.id);
+				emitWsMessage(cheerPayload);
+				return;
+			}
+
+			// Stream lifecycle frames carry no actor — attribute them to the
+			// channel itself, using SSN's standard event names.
+			if (kind === "stream_started" || kind === "stream_ended") {
+				var channelName = (msg.metadata && msg.metadata.channel_slug) || currentChannelSlug || "";
+				if (!channelName) return;
+				emitWsMessage({
+					chatname: escapeHtmlMaybe(channelName),
+					chatmessage: escapeHtmlMaybe(msg.body || (kind === "stream_started" ? "Stream started" : "Stream ended")),
+					event: kind === "stream_started" ? "stream_online" : "stream_offline",
+					meta: { timestamp: ts, kind: kind }
+				});
+				return;
+			}
+
 			// level_up (and similar) carry the real user in metadata.username;
 			// the top-level field is hard-coded to "system" server-side.
 			var sysName = (msg.metadata && msg.metadata.username) || msg.username || "system";
@@ -215,7 +357,7 @@
 				chatname: escapeHtmlMaybe(sysName),
 				chatmessage: escapeHtmlMaybe(msg.body || ""),
 				chatimg: sysAvatar,
-				event: kind || "system",
+				event: kind === "channel_points_redeem" ? "reward" : (kind || "system"),
 				meta: { timestamp: ts, kind: kind || "" }
 			});
 			return;
@@ -238,9 +380,10 @@
 			fetchAvatar(name);
 		}
 
-		emitWsMessage({
+		var rendered = renderWsMessage(body, msg.emoteMap || msg.emote_map || (msg.metadata && (msg.metadata.emoteMap || msg.metadata.emote_map)));
+		var wsPayload = {
 			chatname: escapeHtmlMaybe(name),
-			chatmessage: escapeHtmlMaybe(body),
+			chatmessage: rendered,
 			chatimg: avatar,
 			nameColor: msg.color || "",
 			chatbadges: buildBadgesFromWs(msg),
@@ -250,7 +393,30 @@
 				channel: currentChannelSlug,
 				source: msg.metadata && msg.metadata.source ? msg.metadata.source : "vpzone"
 			}
-		});
+		};
+		// Carry the native frame id as the payload id (Twitch ws-page pattern) so
+		// platform-side delete_message frames can target the dock row by data-mid;
+		// without it the row gets the internal counter id and deletes never match.
+		if (msg.id) wsPayload.id = String(msg.id);
+		// Reply threading — the frame denormalizes the target into
+		// metadata.reply_to {message_id, username, excerpt}; render it the
+		// same way Kick reply rows render (initial label + quoted prefix).
+		var replyTo = msg.metadata && msg.metadata.reply_to && typeof msg.metadata.reply_to === "object" ? msg.metadata.reply_to : null;
+		if (replyTo && !settings.excludeReplyingTo) {
+			var replyAuthor = String(replyTo.username || "");
+			var replyText = String(replyTo.excerpt || "");
+			var replyLabel = replyAuthor && replyText ? replyAuthor + ": " + replyText : (replyAuthor || replyText);
+			if (replyLabel) {
+				wsPayload.initial = replyLabel;
+				wsPayload.reply = rendered;
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
+				wsPayload.chatmessage = settings.textonlymode
+					? replyLabel + ": " + rendered
+					: "<i><small>" + escapeHtml(replyLabel) + ":&nbsp;</small></i> " + rendered;
+				wsPayload.meta.reply = { messageId: replyTo.message_id ? String(replyTo.message_id) : "", author: replyAuthor, text: replyText };
+			}
+		}
+		emitWsMessage(wsPayload);
 	}
 
 	function handleWindowMessage(event) {
@@ -265,14 +431,24 @@
 		if (!isExtensionOn) {
 			return;
 		}
-		try {
-			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function () {});
-		} catch (e) {}
+		function send() {
+			if (!isExtensionOn) return;
+			if (data && data.type === "vpzone") {
+				data.sourceName = sourceName;
+				data.sourceImg = sourceImg;
+			}
+			try {
+				chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function () {});
+			} catch (e) {}
+		}
+		refreshSourceBranding();
+		send();
 	}
 
 	function escapeHtml(unsafe) {
 		try {
 			unsafe = unsafe || "";
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
 			if (settings.textonlymode) {
 				return unsafe;
 			}
@@ -370,6 +546,7 @@
 			if (element.nodeType === 3) {
 				return escapeHtml(element.textContent || "");
 			}
+			// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 			if (!settings.textonlymode && element.nodeType === 1) {
 				return cloneNodeHtml(element);
 			}
@@ -388,6 +565,7 @@
 				return;
 			}
 
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			if (settings.textonlymode) {
 				response += getAllContentNodes(node);
 				return;
@@ -529,6 +707,7 @@
 			hasDonation: "",
 			membership: "",
 			contentimg: "",
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: settings.textonlymode || false,
 			type: "vpzone",
 			sourceName: sourceName,
@@ -639,7 +818,7 @@
 	}
 
 	function parseRow(row) {
-		if (!row || row.nodeType !== 1 || !row.isConnected || row.parentElement !== observedList) {
+		if (!row || row.nodeType !== 1 || !row.isConnected || !observedList || !observedList.contains(row)) {
 			return null;
 		}
 		if (row.matches && row.matches('[data-chat-message="true"]')) {
@@ -717,7 +896,7 @@
 	}
 
 	function queueRow(row) {
-		if (!row || row.nodeType !== 1 || row.parentElement !== observedList) {
+		if (!row || row.nodeType !== 1 || !observedList || !observedList.contains(row)) {
 			return;
 		}
 		if (row.dataset.ssnVpzoneSeen === "true" || row.dataset.ssnVpzoneQueued === "true") {
@@ -739,6 +918,15 @@
 
 	function findRowFromNode(node) {
 		var current = node && node.nodeType === 1 ? node : node ? node.parentElement : null;
+		if (!current || !observedList || !observedList.contains(current)) {
+			return null;
+		}
+		if (current.closest) {
+			var attributedRow = current.closest('[data-chat-message="true"]');
+			if (attributedRow && observedList.contains(attributedRow)) {
+				return attributedRow;
+			}
+		}
 		while (current && current !== observedList && current.parentElement !== observedList) {
 			current = current.parentElement;
 		}
@@ -754,6 +942,26 @@
 				row.dataset.ssnVpzoneSeen = "true";
 			}
 		});
+		Array.from(target && target.querySelectorAll ? target.querySelectorAll('[data-chat-message="true"]') : []).forEach(function (row) {
+			row.dataset.ssnVpzoneSeen = "true";
+		});
+	}
+
+	function queueRowsFromNode(node) {
+		var element = node && node.nodeType === 1 ? node : null;
+		var attributedRows = [];
+		if (element && element.matches && element.matches('[data-chat-message="true"]')) {
+			attributedRows.push(element);
+		}
+		if (element && element.querySelectorAll) {
+			attributedRows = attributedRows.concat(Array.from(element.querySelectorAll('[data-chat-message="true"]')));
+		}
+		if (attributedRows.length) {
+			attributedRows.forEach(queueRow);
+			return;
+		}
+		var row = findRowFromNode(node);
+		if (row) queueRow(row);
 	}
 
 	function disconnectObserver() {
@@ -909,10 +1117,7 @@
 		observer = new MutationObserver(function (mutations) {
 			mutations.forEach(function (mutation) {
 				Array.from(mutation.addedNodes || []).forEach(function (node) {
-					var row = findRowFromNode(node);
-					if (row) {
-						queueRow(row);
-					}
+					queueRowsFromNode(node);
 				});
 			});
 		});
@@ -964,15 +1169,10 @@
 		sendResponse(false);
 	});
 
-	try {
-		sourceImg = new URL("/favicon.ico", window.location.origin).href;
-	} catch (e) {
-		sourceImg = "";
-	}
-
 	console.log("Social Stream injected: VPZone");
 
 	currentChannelSlug = getChannelSlugFromUrl();
+	refreshSourceBranding();
 	window.addEventListener("message", handleWindowMessage);
 
 	setInterval(function () {
@@ -986,6 +1186,7 @@
 			captureStartedAt = Date.now();
 			wsCaptureActive = false;
 			currentChannelSlug = getChannelSlugFromUrl();
+			refreshSourceBranding();
 		}
 		attachObserver();
 	}, 1000);

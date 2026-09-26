@@ -9,6 +9,7 @@ let storeProfileCacheEntry;
 let mergeBadges;
 let mergeProfileDetails;
 let mapBadges;
+let getKickRoleBadge = () => null;
 let eventNameForType;
 
 // Fallback implementations when providers/kick/core.js fails to load.
@@ -21,10 +22,24 @@ function applyKickCoreFallbacks() {
         };
     }
     if (typeof normalizeImage !== 'function') {
-        normalizeImage = (value) => (value ? String(value) : '');
+        normalizeImage = (value) => {
+            if (!value) return '';
+            const url = String(value);
+            if (/^https?:\/\//i.test(url)) return url;
+            if (url.startsWith('//')) return `https:${url}`;
+            return `https://kick.com${url.startsWith('/') ? '' : '/'}${url}`;
+        };
     }
     if (typeof formatBadgesForDisplay !== 'function') {
-        formatBadgesForDisplay = (badges) => Array.isArray(badges) ? badges : [];
+        formatBadgesForDisplay = (badges) => mapBadges(badges).map((badge) => {
+            if (typeof badge !== 'string') return badge;
+            const value = badge.trim();
+            if (!value) return null;
+            if (/^https?:\/\//i.test(value) || value.startsWith('/')) {
+                return { type: 'img', src: normalizeImage(value) };
+            }
+            return { type: 'text', text: value };
+        }).filter(Boolean);
     }
     if (typeof getProfileCacheEntry !== 'function') {
         getProfileCacheEntry = () => null;
@@ -46,7 +61,34 @@ function applyKickCoreFallbacks() {
         });
     }
     if (typeof mapBadges !== 'function') {
-        mapBadges = (badges) => Array.isArray(badges) ? badges : [];
+        mapBadges = (badges) => {
+            if (!Array.isArray(badges) || !badges.length) return [];
+            return [...badges].sort((a, b) => (a?.sort_order ?? Infinity) - (b?.sort_order ?? Infinity)).map((badge) => {
+                if (!badge) return null;
+                if (typeof badge === 'string') return getKickRoleBadge(badge) || badge;
+                if (badge.selected === false || badge.active === false) return null;
+                // Accept both Kick assets and our already-normalized chatbadges shape.
+                // Do not let an empty/malformed candidate hide another usable image URL.
+                const images = [badge.src, badge.image_url, badge.image, badge.icon, badge.source, badge.url, badge.asset];
+                for (const image of images) {
+                    const candidates = image && typeof image === 'object'
+                        ? [image.url, image.src, image.light, image.dark]
+                        : [image];
+                    for (const src of candidates) {
+                        if (typeof src === 'string' && src.trim()) {
+                            return normalizeImage(src.trim());
+                        }
+                    }
+                }
+                if (badge.svg) return { type: 'svg', html: badge.svg };
+                if (badge.type === 'svg' && badge.html) return { type: 'svg', html: badge.html };
+                const roleBadge = getKickRoleBadge(badge);
+                if (roleBadge) return roleBadge;
+                if (badge.text) return { type: 'text', text: badge.text };
+                if (badge.label || badge.name) return badge.label || badge.name;
+                return null;
+            }).filter(Boolean);
+        };
     }
     if (typeof eventNameForType !== 'function') {
         eventNameForType = (type) => {
@@ -92,6 +134,12 @@ async function importWithFallback(extensionPath, relativePath) {
 }
 
 const kickCoreReady = (async () => {
+    // Load role artwork independently so the standalone core fallback also has icons.
+    try {
+        ({ getKickRoleBadge } = await importWithFallback('shared/kickBadges.js', '../../shared/kickBadges.js'));
+    } catch (error) {
+        console.warn('Kick role artwork unavailable; using supplied assets or text.', error);
+    }
     const kickModule = await importWithFallback(KICK_CORE_EXTENSION_PATH, KICK_CORE_RELATIVE_PATH);
     ({
         normalizeChannel,
@@ -151,6 +199,8 @@ const PUSHER_STALE_MIN_MS = 180000;
 const SUBSCRIPTION_RETRY_DELAY_MS = 10000;
 const CHAT_FEED_LIMIT = 100;
 const KICK_REPLY_CACHE_LIMIT = 200;
+const KICK_GIFT_DEDUPE_WINDOW_MS = 30000;
+const KICK_GIFT_DEDUPE_CACHE_LIMIT = 200;
 const ALERT_FEED_LIMIT = 100;
 const EVENT_LOG_LIMIT = 100;
 const CHAT_SCROLL_THRESHOLD_PX = 48;
@@ -181,6 +231,8 @@ const state = {
     authUser: null,
     profilePromise: null,
     chatMessageCache: new Map(),
+    recentGiftEventIds: new Map(),
+    recentGiftSignatures: new Map(),
     profileCache: new Map(),
     profileFetches: new Map(),
     eventTypesUnavailable: false,
@@ -229,7 +281,7 @@ const state = {
         type: 'user'
     },
     advancedControls: {
-        syncDeleteMessages: false,
+        syncDeleteMessages: true,
         syncBlockUsers: false,
         hideMetrics: false
     },
@@ -352,8 +404,7 @@ const KICK_VIEWER_DISCONNECT_EMIT_DEBOUNCE_MS = 1500;
 const KICK_CHAT_ECHO_TIMEOUT_MS = 10000;
 const KICK_CHAT_ECHO_STALE_MS = 60000;
 let extensionInitialized = false;
-let lastBridgeNotifyStatus = null;
-let lastAuthNotifyStatus = null;
+let lastCaptureNotifyKey = null;
 let lastSocketNotifyStatus = null;
 let socketBridgeInitialized = false;
 let kickBackgroundKeepAliveInitialized = false;
@@ -782,6 +833,10 @@ function isSettingEnabled(key) {
 }
 
 function isTextOnlyMode() {
+    // Capture contract: textonly=true means a literal chatmessage string, not HTML.
+    // Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+    // HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+    // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
     const setting = extension.settings && extension.settings.textonlymode;
     if (setting && typeof setting === 'object') {
         return setting.setting === true;
@@ -1355,19 +1410,23 @@ function extractProfileFromSource(source) {
 
     const badgeCollections = [
         source.identity?.badges,
+        source.identity?.badges_v2,
         source.badges,
+        source.badges_v2,
         source.badge_collection,
         source.badgeCollection,
         source.profile?.badges,
+        source.profile?.badges_v2,
         source.membership?.badges,
-        source.subscription?.badges
+        source.membership?.badges_v2,
+        source.subscription?.badges,
+        source.subscription?.badges_v2
     ];
-    for (const collection of badgeCollections) {
-        const normalized = mapBadges(collection);
-        if (normalized.length) {
-            profile.badges = mergeBadges(profile.badges, normalized);
-            touched = true;
-        }
+    // Combine legacy and v2 badges before normalization discards sort_order.
+    const normalizedBadges = mapBadges(badgeCollections.flatMap(collection => Array.isArray(collection) ? collection : []));
+    if (normalizedBadges.length) {
+        profile.badges = mergeBadges(profile.badges, normalizedBadges);
+        touched = true;
     }
 
     const badgeInfo = source.identity?.badge_info || source.identity?.badgeInfo || {};
@@ -1444,18 +1503,21 @@ function collectBadgesFromSources(...sources) {
         }
         const collections = [
             source.identity?.badges,
+            source.identity?.badges_v2,
             source.badges,
+            source.badges_v2,
             source.badge_collection,
             source.badgeCollection,
             source.profile?.badges,
+            source.profile?.badges_v2,
             source.membership?.badges,
-            source.subscription?.badges
+            source.membership?.badges_v2,
+            source.subscription?.badges,
+            source.subscription?.badges_v2
         ];
-        for (const collection of collections) {
-            const normalized = mapBadges(collection);
-            if (normalized.length) {
-                badges = mergeBadges(badges, normalized);
-            }
+        const normalized = mapBadges(collections.flatMap(collection => Array.isArray(collection) ? collection : []));
+        if (normalized.length) {
+            badges = mergeBadges(badges, normalized);
         }
     }
     return badges;
@@ -1595,19 +1657,43 @@ function replaceEmotesWithImages(text) {
     });
 }
 
-function replaceKickInlineEmotes(text) {
+function normalizeKickAssetType(value) {
+    const type = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    if (type === 'sticker') return 'sticker';
+    if (type === 'emote' || type === 'emoji') return 'emote';
+    return '';
+}
+
+function containsKickInlineAssetToken(value, assetType = '') {
+    if (typeof value !== 'string') {
+        return false;
+    }
+    const normalizedType = normalizeKickAssetType(assetType);
+    if (normalizedType === 'sticker') {
+        return /\[sticker:\d+:[^\]]+\]/i.test(value);
+    }
+    if (normalizedType === 'emote') {
+        return /\[emote:\d+:[^\]]+\]/i.test(value);
+    }
+    return /\[(?:emote|sticker):\d+:[^\]]+\]/i.test(value);
+}
+
+function replaceKickInlineAssets(text, options = {}) {
     if (typeof text !== 'string' || !text) {
         return text;
     }
-    if (isTextOnlyMode()) {
+    if (isTextOnlyMode() && options.forceRich !== true) {
         return text;
     }
-    return text.replace(/\[emote:(\d+):([^\]]+)\]/g, (match, id, name) => {
+    return text.replace(/\[(emote|sticker):(\d+):([^\]]+)\]/gi, (match, type, id, name) => {
         const safeId = id.replace(/[^0-9]/g, '');
         if (!safeId) return escapeHtml(match);
-        const safeName = escapeHtml(name);
+        const safeName = escapeAttribute(name);
         const url = `https://files.kick.com/emotes/${safeId}/fullsize`;
-        return `<img src="${escapeAttribute(url)}" alt="${safeName}" title="${safeName}" class="regular-emote"/>`;
+        const className = normalizeKickAssetType(type) === 'sticker'
+            ? 'regular-emote kick-sticker'
+            : 'regular-emote';
+        return `<img src="${escapeAttribute(url)}" alt="${safeName}" title="${safeName}" class="${className}"/>`;
     });
 }
 
@@ -1620,7 +1706,7 @@ function pickFirstString(candidates, fallback = '') {
     return fallback;
 }
 
-function pickKickEmoteUrl(fragment) {
+function pickKickAssetUrl(fragment, assetType = '') {
     if (!fragment || typeof fragment !== 'object') {
         return '';
     }
@@ -1650,9 +1736,17 @@ function pickKickEmoteUrl(fragment) {
                 'src',
                 'gif',
                 'webp',
+                'webm',
                 'png',
+                'full',
+                'fullsize',
+                'large',
+                'original',
                 'default',
                 'image',
+                'picture',
+                'icon',
+                'path',
                 'light',
                 'dark',
                 '1x',
@@ -1671,24 +1765,42 @@ function pickKickEmoteUrl(fragment) {
         return '';
     }
 
+    const nestedAsset = assetType === 'sticker'
+        ? fragment.sticker
+        : assetType === 'emote'
+            ? fragment.emote
+            : null;
     const candidates = [
+        nestedAsset,
         fragment.url,
         fragment.href,
         fragment.src,
+        fragment.source,
         fragment.cdn,
         fragment.gif,
+        fragment.webp,
+        fragment.webm,
         fragment.image,
         fragment.image_url,
         fragment.imageUrl,
-        fragment.asset?.url,
+        fragment.asset,
         fragment.asset_url,
+        fragment.path,
+        fragment.picture,
+        fragment.icon,
         fragment.images,
         fragment.emote?.image,
         fragment.emote?.image_url,
         fragment.emote?.imageUrl,
         fragment.emote?.images,
+        fragment.sticker?.image,
+        fragment.sticker?.image_url,
+        fragment.sticker?.imageUrl,
+        fragment.sticker?.images,
         fragment.data?.image,
-        fragment.data?.url
+        fragment.data?.url,
+        fragment.data?.sticker,
+        fragment.data?.emote
     ];
 
     for (const value of candidates) {
@@ -1700,9 +1812,23 @@ function pickKickEmoteUrl(fragment) {
     return '';
 }
 
-function pickKickEmoteId(fragment) {
+function pickKickAssetId(fragment, assetType = '') {
+    const nestedAsset = assetType === 'sticker'
+        ? fragment?.sticker
+        : assetType === 'emote'
+            ? fragment?.emote
+            : null;
     const candidates = [
+        nestedAsset?.id,
+        nestedAsset?.sticker_id,
+        nestedAsset?.stickerId,
+        nestedAsset?.emote_id,
+        nestedAsset?.emoteId,
         fragment?.id,
+        fragment?.sticker_id,
+        fragment?.stickerId,
+        fragment?.stickerID,
+        fragment?.kickStickerId,
         fragment?.emote_id,
         fragment?.emoteId,
         fragment?.emoteID,
@@ -1711,7 +1837,12 @@ function pickKickEmoteId(fragment) {
         fragment?.emote?.id,
         fragment?.emote?.emote_id,
         fragment?.emote?.emoteId,
+        fragment?.sticker?.id,
+        fragment?.sticker?.sticker_id,
+        fragment?.sticker?.stickerId,
         fragment?.data?.id,
+        fragment?.data?.sticker_id,
+        fragment?.data?.stickerId,
         fragment?.data?.emote_id,
         fragment?.data?.emoteId
     ];
@@ -1727,7 +1858,13 @@ function pickKickEmoteId(fragment) {
     return '';
 }
 
-function renderKickEmoteFragment(fragment) {
+function renderKickAssetFragment(fragment, assetTypeHint = '') {
+    const assetType = normalizeKickAssetType(assetTypeHint)
+        || normalizeKickAssetType(fragment?.type)
+        || normalizeKickAssetType(fragment?.kind)
+        || (fragment?.sticker ? 'sticker' : '')
+        || (fragment?.emote ? 'emote' : '');
+    const nestedAsset = assetType === 'sticker' ? fragment?.sticker : fragment?.emote;
     const rawName = pickFirstString(
         [
             fragment?.text,
@@ -1736,28 +1873,44 @@ function renderKickEmoteFragment(fragment) {
             fragment?.displayText,
             fragment?.alt,
             fragment?.value,
+            fragment?.label,
+            fragment?.title,
+            fragment?.slug,
+            nestedAsset?.text,
+            nestedAsset?.name,
+            nestedAsset?.code,
+            nestedAsset?.label,
+            nestedAsset?.title,
+            nestedAsset?.slug,
             fragment?.emote?.name,
-            fragment?.emote?.code
+            fragment?.emote?.code,
+            fragment?.sticker?.name,
+            fragment?.sticker?.code
         ],
         ''
     );
     const cleanName = rawName.replace(/^:+|:+$/g, '');
-    const emoteId = pickKickEmoteId(fragment);
-    const alt = escapeHtml(cleanName || rawName || (emoteId ? `kick-${emoteId}` : ''));
+    const assetId = pickKickAssetId(fragment, assetType);
+    const alt = escapeAttribute(cleanName || rawName || (assetId ? `kick-${assetId}` : ''));
     const zeroWidth = Boolean(
         fragment?.zero_width ||
         fragment?.zeroWidth ||
         fragment?.zw ||
         fragment?.metadata?.zero_width ||
-        fragment?.emote?.zero_width
+        fragment?.emote?.zero_width ||
+        fragment?.sticker?.zero_width
     );
-    let url = pickKickEmoteUrl(fragment);
-    if (!url && emoteId) {
-        url = `https://files.kick.com/emotes/${emoteId}/fullsize`;
+    let url = pickKickAssetUrl(fragment, assetType);
+    if (url && typeof normalizeImage === 'function') {
+        url = normalizeImage(url);
+    }
+    if (!url && assetId) {
+        url = `https://files.kick.com/emotes/${assetId}/fullsize`;
     }
     if (url && !isTextOnlyMode()) {
         const safeUrl = escapeAttribute(url);
-        const className = zeroWidth ? 'zero-width-emote-centered' : 'regular-emote';
+        const baseClassName = zeroWidth ? 'zero-width-emote-centered' : 'regular-emote';
+        const className = assetType === 'sticker' ? `${baseClassName} kick-sticker` : baseClassName;
         return `<img src="${safeUrl}" alt="${alt}" title="${alt}" class="${className}"/>`;
     }
     if (cleanName) {
@@ -1765,6 +1918,9 @@ function renderKickEmoteFragment(fragment) {
     }
     if (rawName) {
         return replaceEmotesWithImages(escapeHtml(rawName));
+    }
+    if (assetId) {
+        return escapeHtml(`:${assetType || 'emote'}-${assetId}:`);
     }
     return '';
 }
@@ -1774,14 +1930,18 @@ function renderKickFragmentHtml(fragment) {
         return '';
     }
     if (typeof fragment === 'string') {
-        return replaceEmotesWithImages(replaceKickInlineEmotes(escapeHtml(fragment)));
+        return replaceEmotesWithImages(replaceKickInlineAssets(escapeHtml(fragment)));
     }
     if (typeof fragment.html === 'string' && !isTextOnlyMode()) {
         return fragment.html;
     }
-    const type = typeof fragment.type === 'string' ? fragment.type.toLowerCase() : '';
-    if (type === 'emote' || type === 'emoji') {
-        return renderKickEmoteFragment(fragment);
+    const type = pickFirstString([fragment.type, fragment.kind], '').toLowerCase();
+    const assetType = normalizeKickAssetType(fragment.type)
+        || normalizeKickAssetType(fragment.kind)
+        || (fragment.sticker ? 'sticker' : '')
+        || (fragment.emote ? 'emote' : '');
+    if (assetType) {
+        return renderKickAssetFragment(fragment, assetType);
     }
     if (type === 'link' || type === 'url') {
         const url = pickFirstString([fragment.url, fragment.href, fragment.value, fragment.target], '');
@@ -1831,7 +1991,7 @@ function renderKickFragmentHtml(fragment) {
         ],
         ''
     );
-    return replaceEmotesWithImages(replaceKickInlineEmotes(escapeHtml(fallback)));
+    return replaceEmotesWithImages(replaceKickInlineAssets(escapeHtml(fallback)));
 }
 
 function collectMessageFragments(message) {
@@ -1854,16 +2014,117 @@ function collectMessageFragments(message) {
     return fragments;
 }
 
-function renderKickMessageHtml(message, fallbackText) {
-    const fragments = collectMessageFragments(message);
-    if (fragments.length) {
-        const rendered = fragments.map(renderKickFragmentHtml).join('');
-        if (rendered.trim()) {
-            return rendered;
+function hasKickStickerFragment(fragments) {
+    return (fragments || []).some(fragment => {
+        if (typeof fragment === 'string') {
+            return containsKickInlineAssetToken(fragment, 'sticker');
+        }
+        if (!fragment || typeof fragment !== 'object') {
+            return false;
+        }
+        const assetType = normalizeKickAssetType(fragment.type)
+            || normalizeKickAssetType(fragment.kind)
+            || (fragment.sticker ? 'sticker' : '')
+            || (fragment.emote ? 'emote' : '');
+        if (assetType === 'sticker') {
+            if (isTextOnlyMode()) {
+                return true;
+            }
+            return Boolean(
+                pickKickAssetId(fragment, 'sticker')
+                || pickKickAssetUrl(fragment, 'sticker')
+                || (typeof fragment.html === 'string' && fragment.html.trim())
+            );
+        }
+        return [fragment.text, fragment.content, fragment.value].some(
+            value => containsKickInlineAssetToken(value, 'sticker')
+        );
+    });
+}
+
+function findKickStickerAttachment(message, payload) {
+    const roots = [
+        message,
+        message?.metadata,
+        message?.data,
+        message?.data?.metadata,
+        payload,
+        payload?.metadata,
+        payload?.data,
+        payload?.data?.metadata,
+        payload?.payload,
+        payload?.payload?.metadata
+    ];
+    const candidates = [];
+    const seenRoots = new Set();
+
+    for (const root of roots) {
+        if (!root || typeof root !== 'object' || seenRoots.has(root)) {
+            continue;
+        }
+        seenRoots.add(root);
+        if (root.sticker) {
+            candidates.push(root.sticker);
+        }
+        if (Array.isArray(root.stickers)) {
+            candidates.push(...root.stickers);
+        }
+        if (
+            root.asset &&
+            typeof root.asset === 'object' &&
+            (
+                normalizeKickAssetType(root.asset.type) === 'sticker' ||
+                normalizeKickAssetType(root.asset.kind) === 'sticker' ||
+                root.asset.sticker
+            )
+        ) {
+            candidates.push(root.asset);
         }
     }
-    const safeFallback = escapeHtml(typeof fallbackText === 'string' ? fallbackText : '');
-    return replaceEmotesWithImages(replaceKickInlineEmotes(safeFallback));
+
+    for (const candidate of candidates) {
+        if (typeof candidate === 'string' && candidate.trim()) {
+            return { name: candidate.trim() };
+        }
+        if (!candidate || typeof candidate !== 'object') {
+            continue;
+        }
+        const name = pickFirstString(
+            [candidate.name, candidate.code, candidate.text, candidate.label, candidate.title, candidate.slug],
+            ''
+        );
+        if (pickKickAssetId(candidate, 'sticker') || pickKickAssetUrl(candidate, 'sticker') || name) {
+            return candidate;
+        }
+    }
+    return null;
+}
+
+function renderKickMessageHtml(message, fallbackText, payload = message) {
+    const fragments = collectMessageFragments(message);
+    let rendered = '';
+    if (fragments.length) {
+        rendered = fragments.map(renderKickFragmentHtml).join('');
+    }
+    if (!rendered.trim()) {
+        const safeFallback = escapeHtml(typeof fallbackText === 'string' ? fallbackText : '');
+        rendered = replaceEmotesWithImages(replaceKickInlineAssets(safeFallback));
+    }
+
+    const containsSticker = hasKickStickerFragment(fragments)
+        || containsKickInlineAssetToken(fallbackText, 'sticker')
+        || rendered.includes('kick-sticker');
+    if (!containsSticker) {
+        const sticker = findKickStickerAttachment(message, payload);
+        if (sticker) {
+            const stickerHtml = renderKickAssetFragment(sticker, 'sticker');
+            if (stickerHtml) {
+                const separator = rendered && !/\s$/.test(rendered) ? ' ' : '';
+                rendered = `${rendered}${separator}${stickerHtml}`;
+            }
+        }
+    }
+    return rendered;
 }
 
 function consumeThirdPartyPayload(request) {
@@ -2169,11 +2430,11 @@ function initElements() {
 function loadAdvancedControls() {
     try {
         const parsed = JSON.parse(localStorage.getItem(KICK_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
-        state.advancedControls.syncDeleteMessages = !!parsed.syncDeleteMessages;
+        state.advancedControls.syncDeleteMessages = parsed.syncDeleteMessages !== false;
         state.advancedControls.syncBlockUsers = !!parsed.syncBlockUsers;
         state.advancedControls.hideMetrics = !!parsed.hideMetrics;
     } catch (_) {
-        state.advancedControls.syncDeleteMessages = false;
+        state.advancedControls.syncDeleteMessages = true;
         state.advancedControls.syncBlockUsers = false;
         state.advancedControls.hideMetrics = false;
     }
@@ -2670,7 +2931,7 @@ async function connectSelectedKickChannel(options = {}) {
         log('Enter a Kick channel or sign in first.', 'warning');
         return false;
     }
-    if (!state.socket.chatroomId) {
+    if (!state.socket.chatroomId || !state.socket.channelId) {
         await resolveChannelForPusher();
     }
     connectPusherSocket();
@@ -2716,9 +2977,40 @@ function resolveAuthIdentity() {
     return null;
 }
 
+// Account authorization and chat transport are independent. A later OAuth or
+// bridge update must not overwrite a working public Pusher chat connection.
+function notifyKickCaptureStatus(payload = {}) {
+    const socketStatus = state.socket?.status || 'disconnected';
+    const bridgeStatus = state.bridge?.status || 'disconnected';
+    const pusherUp = state.socket?.pusherStatus === 'connected';
+    let status;
+    let message;
+    if (pusherUp || socketStatus === 'connected' || bridgeStatus === 'connected') {
+        status = 'connected';
+        message = pusherUp ? 'Kick chat connected via Pusher' : socketStatus === 'connected' ? 'Kick chat connected' : 'Connected to Kick bridge';
+    } else if (socketStatus === 'connecting' || bridgeStatus === 'connecting') {
+        status = 'connecting';
+        message = 'Connecting to Kick chat';
+    } else if (socketStatus === 'error') {
+        status = 'error';
+        message = payload.error || state.socket?.lastError || 'Kick chat connection failed';
+    } else {
+        status = 'disconnected';
+        message = state.channelSlug ? 'Kick chat disconnected' : 'Choose a Kick channel to start chat';
+    }
+    const key = `${status}:${message}`;
+    if (key === lastCaptureNotifyKey) return;
+    lastCaptureNotifyKey = key;
+    notifyApp({ wssStatus: { platform: WSS_PLATFORM, status, message } });
+}
+
 function updateAuthStatus() {
     if (!els.authState) return;
     const authed = state.tokens?.access_token && !isTokenExpired();
+    const waitingForRefresh = !authed
+        && !!state.tokens?.access_token
+        && !!state.tokens?.refresh_token
+        && !!state.refreshPromise;
     const identity = authed ? resolveAuthIdentity() : null;
     if (authed && identity) {
         const safeDisplay = escapeHtml(identity.displayName || identity.username || '');
@@ -2735,7 +3027,7 @@ function updateAuthStatus() {
             els.authState.innerHTML = `Signed in as <span class="status-emphasis">${safeDisplay}</span>${safeUsername ? ` <span class="status-subtle">(@${safeUsername})</span>` : ''}`;
         }
     } else {
-        els.authState.textContent = authed ? 'Signed in' : 'Not signed in';
+        els.authState.textContent = authed ? 'Signed in' : (waitingForRefresh ? 'Refreshing sign-in...' : 'OAuth not connected (optional for chat)');
     }
     els.authState.className = authed ? 'status-chip' : 'status-chip warning';
     // Hide auth-dependent status chips when not signed in
@@ -2757,17 +3049,7 @@ function updateAuthStatus() {
         const showSelector = !authed && isElectronEnvironment();
         authMethodSelector.classList.toggle('hidden', !showSelector);
     }
-    const status = authed ? 'authorized' : 'signin_required';
-    if (status !== lastAuthNotifyStatus) {
-        lastAuthNotifyStatus = status;
-        notifyApp({
-            wssStatus: {
-                platform: WSS_PLATFORM,
-                status,
-                message: authed ? 'Kick account linked' : 'Sign in with Kick to continue'
-            }
-        });
-    }
+    notifyKickCaptureStatus();
     updateKickAdminControlHint();
     notifyLiteStatus('auth');
 }
@@ -3325,7 +3607,18 @@ function resetKickViewerHeartbeatState() {
     updateKickViewerCountDisplay(null);
 }
 
+function updateCompactChatState() {
+    if (!els.socketState) return;
+    const connected = state.socket.pusherStatus === 'connected'
+        || (supportsLocalSocket() && state.socket.status === 'connected')
+        || (state.bridge.status === 'connected' && !state.bridge.chatDisabled);
+    // The compact layout also reads this across extension isolated worlds.
+    els.socketState.setAttribute('data-connected', connected ? 'true' : 'false');
+}
+
 function updateSocketState(payload = {}) {
+    updateCompactChatState();
+    notifyKickCaptureStatus(payload);
     syncKickViewerHeartbeat(true);
     if (!els.socketState) return;
     els.socketState.style.display = '';
@@ -3671,6 +3964,7 @@ function getPusherSubscriptionChannels() {
     }
     if (state.socket.channelId) {
         channels.push(`channel.${state.socket.channelId}`);
+        channels.push(`channel_${state.socket.channelId}`);
     }
     return channels;
 }
@@ -3751,7 +4045,7 @@ function looksLikeKickBanPayload(data) {
     return false;
 }
 
-function mapPusherEventToPacket(eventName, data) {
+function mapPusherEventToPacket(eventName, data, channelName = '') {
     if (eventName === 'App\\Events\\ChatMessageEvent') {
         return { type: 'chat.message.sent', body: data, source: 'socket' };
     }
@@ -3763,6 +4057,10 @@ function mapPusherEventToPacket(eventName, data) {
         return { type: 'channel.reward.redemption.updated', body: data, source: 'socket' };
     }
     if (normalizedEventName.includes('kicks') && normalizedEventName.includes('gift')) {
+        const expectedChannel = state.socket.channelId ? `channel_${state.socket.channelId}` : '';
+        if (eventName === 'KicksGifted' && expectedChannel && channelName !== expectedChannel) {
+            return null;
+        }
         return { type: 'kicks.gifted', body: data, source: 'socket' };
     }
     if (eventName === 'App\\Events\\GiftedSubscriptionsEvent' || eventName === 'App\\Events\\GiftPurchaseEvent') {
@@ -3860,7 +4158,7 @@ function handlePusherMessage(event) {
         try { data = JSON.parse(data); } catch (_) {}
     }
 
-    const packet = mapPusherEventToPacket(eventName, data);
+    const packet = mapPusherEventToPacket(eventName, data, payload.channel || '');
     if (packet) {
         handleLocalSocketEvent(packet);
     }
@@ -3929,7 +4227,7 @@ function connectPusherSocket() {
 // ── Channel lookup for Pusher chat ──────────────────────────────────
 
 async function resolveChannelForPusher() {
-    if (state.socket.chatroomId) return;
+    if (state.socket.chatroomId && state.socket.channelId) return;
     const initialSlug = state.channelSlug?.trim();
     if (!initialSlug) return;
 
@@ -3941,7 +4239,7 @@ async function resolveChannelForPusher() {
         } catch (err) {
             log(`Channel resolve for Pusher failed: ${err?.message || err}`, 'warning');
         }
-        if (state.socket.chatroomId) return;
+        if (state.socket.chatroomId && state.socket.channelId) return;
     }
 
     const requestedSlug = normalizeChannel(state.channelSlug || initialSlug);
@@ -3958,18 +4256,26 @@ async function resolveChannelForPusher() {
             }
             const data = await lookupResp.json();
             const resolvedSlug = normalizeChannel(data?.slug || lookupSlug);
+            if (data.channel_id) {
+                state.socket.channelId = String(data.channel_id);
+            }
             if (data.chatroom_id) {
                 state.socket.chatroomId = String(data.chatroom_id);
                 if (data.broadcaster_user_id && !state.channelId) {
                     state.channelId = Number(data.broadcaster_user_id);
                     state.channelName = data.slug || resolvedSlug || lookupSlug;
                 }
+                if (data.broadcaster_user_id && !state.socket.userId) {
+                    state.socket.userId = String(data.broadcaster_user_id);
+                }
                 state.lastResolvedSlug = resolvedSlug || lookupSlug;
                 if (resolvedSlug && resolvedSlug !== requestedSlug) {
                     applyResolvedKickSlug(requestedSlug, resolvedSlug, `bridge lookup @${lookupSlug}`);
                 }
                 log(`Resolved chatroom ${data.chatroom_id} for ${resolvedSlug || lookupSlug} (bridge cache, source: ${data.chatroom_source || 'unknown'}).`);
-                return;
+                if (state.socket.channelId) {
+                    return;
+                }
             }
             if (data.broadcaster_user_id && !state.channelId) {
                 state.channelId = Number(data.broadcaster_user_id);
@@ -3992,12 +4298,19 @@ async function resolveChannelForPusher() {
                 const data = await legacyResp.json();
                 const resolvedSlug = extractKickChannelSlug(data) || lookupSlug;
                 const chatroomId = data?.chatroom?.id ?? data?.chatroom_id;
+                const socketChannelId = data?.id ?? data?.channel_id ?? data?.chatroom?.channel_id;
+                if (socketChannelId) {
+                    state.socket.channelId = String(socketChannelId);
+                }
                 if (chatroomId) {
                     state.socket.chatroomId = String(chatroomId);
                     const broadcasterId = data?.user_id ?? data?.broadcaster_user_id;
                     if (broadcasterId && !state.channelId) {
                         state.channelId = Number(broadcasterId);
                         state.channelName = data?.slug || resolvedSlug || lookupSlug;
+                    }
+                    if (broadcasterId && !state.socket.userId) {
+                        state.socket.userId = String(broadcasterId);
                     }
                     state.lastResolvedSlug = resolvedSlug || lookupSlug;
                     if (resolvedSlug && resolvedSlug !== requestedSlug) {
@@ -4360,16 +4673,31 @@ async function refreshAccessToken() {
         updateAuthStatus();
         log('Access token refreshed.');
     })();
+    updateAuthStatus();
     try {
         return await state.refreshPromise;
     } finally {
         state.refreshPromise = null;
+        updateAuthStatus();
     }
 }
 
 function isTokenExpired() {
     if (!state.tokens?.expires_at) return true;
     return Date.now() >= state.tokens.expires_at;
+}
+
+async function refreshStoredKickAuthBeforeStatus() {
+    if (!state.tokens?.access_token || !state.tokens?.refresh_token || !isTokenExpired()) {
+        return false;
+    }
+    try {
+        await refreshAccessToken();
+        return true;
+    } catch (err) {
+        console.warn('Kick startup token refresh failed:', err?.message || err);
+        return false;
+    }
 }
 
 async function ensureToken() {
@@ -6007,7 +6335,8 @@ function createBridgeMeta(packet) {
         type: packet.type || null,
         messageId: packet.messageId || null,
         timestamp: packet.timestamp || null,
-        version: packet.version || null
+        version: packet.version || null,
+        source: packet.source === 'socket' ? 'socket' : 'bridge'
     };
 }
 
@@ -6182,6 +6511,7 @@ function bridgeEventMatchesCurrentChannel(packet) {
 }
 
 function updateBridgeState() {
+    updateCompactChatState();
     syncKickViewerHeartbeat(true);
     if (!els.bridgeState) return;
     if (state.bridge.status === 'connected') {
@@ -6194,25 +6524,7 @@ function updateBridgeState() {
         els.bridgeState.textContent = 'Bridge disconnected';
         els.bridgeState.className = 'status-chip danger';
     }
-    const status = state.bridge.status || 'disconnected';
-    if (status !== lastBridgeNotifyStatus) {
-        lastBridgeNotifyStatus = status;
-        let message;
-        if (status === 'connected') {
-            message = 'Connected to Kick bridge';
-        } else if (status === 'connecting') {
-            message = 'Connecting to Kick bridge';
-        } else {
-            message = 'Disconnected from Kick bridge';
-        }
-        notifyApp({
-            wssStatus: {
-                platform: WSS_PLATFORM,
-                status,
-                message
-            }
-        });
-    }
+    notifyKickCaptureStatus();
     notifyLiteStatus('bridge');
 }
 
@@ -6368,7 +6680,10 @@ async function forwardChatMessage(evt, bridgeMeta) {
             ]);
         const content = extractMessageContent(message) || extractMessageContent(payload) || '';
         const badgeCandidates = collectBadgesFromSources(...profileSources);
-        const rawBadges = (actorProfile.badges && actorProfile.badges.length) ? actorProfile.badges : badgeCandidates;
+        // Fresh identity selection/order takes precedence over cached profile badges.
+        const hasFreshBadges = profileSources.some(source => source && [source.identity, source, source.profile, source.membership, source.subscription]
+            .some(value => value && [value.badges, value.badges_v2, value.badge_collection, value.badgeCollection].some(Array.isArray)));
+        const rawBadges = hasFreshBadges ? badgeCandidates : actorProfile.badges || [];
         const badges = formatBadgesForDisplay(rawBadges);
         let chatimg =
             actorProfile.avatar ||
@@ -6422,7 +6737,7 @@ async function forwardChatMessage(evt, bridgeMeta) {
             payload.event_type ||
             'chat';
         resolvePendingKickChatEcho(resolvedId, content, rawEventType, ids);
-        const chatmessageHtml = renderKickMessageHtml(message, content);
+        const chatmessageHtml = renderKickMessageHtml(message, content, payload);
         const membership = actorProfile.membership || pickFirstString(
             [
                 sender?.membership,
@@ -6448,6 +6763,7 @@ async function forwardChatMessage(evt, bridgeMeta) {
         const donationLabel = extractChatDonationLabel(message, payload);
         const normalizedEvent = mapKickChatEventToSocialStream(rawEventType, content, donationLabel);
         const replyDetails = extractReplyDetails(message, payload);
+        // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
         const textOnlyMode = Boolean(isTextOnlyMode());
         const allowReplies = !settings.excludeReplyingTo && (chatmessageHtml || content);
         const messagePayload = {
@@ -6459,6 +6775,7 @@ async function forwardChatMessage(evt, bridgeMeta) {
             nameColor: nameColor || '',
             membership: membership || '',
             hasDonation: donationLabel,
+            // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
             textonly: textOnlyMode
         };
         if (resolvedId != null) {
@@ -6491,6 +6808,7 @@ async function forwardChatMessage(evt, bridgeMeta) {
                 messagePayload.initial = replyDetails.label;
             }
             messagePayload.reply = chatmessageHtml;
+            // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
             if (textOnlyMode) {
                 const prefix = replyDetails.label ? `${replyDetails.label}: ` : '';
                 const baseText = content || '';
@@ -7037,13 +7355,26 @@ function extractReplyDetails(message, payload) {
         return null;
     };
 
+    let replyDetails = null;
     for (const candidate of candidates) {
         const result = resolve(candidate.value, candidate.explicitId === true);
-        if (result) {
-            return result;
+        if (!result) {
+            continue;
+        }
+        if (!replyDetails) {
+            replyDetails = result;
+        } else if (!replyDetails.messageId || !result.messageId || replyDetails.messageId === result.messageId) {
+            // An ID-only cache miss must not hide quote text supplied elsewhere in the event.
+            replyDetails.messageId = replyDetails.messageId || result.messageId;
+            replyDetails.author = replyDetails.author || result.author || '';
+            replyDetails.text = replyDetails.text || result.text || '';
+            replyDetails.label = buildKickReplyLabel(replyDetails.author, replyDetails.text);
+        }
+        if (replyDetails.author && replyDetails.text) {
+            return replyDetails;
         }
     }
-    return null;
+    return replyDetails;
 }
 
 function forwardDeletedMessage(evt, bridgeMeta) {
@@ -7059,10 +7390,6 @@ function forwardDeletedMessage(evt, bridgeMeta) {
         ],
         ''
     );
-    if (!messageId) {
-        log('Delete event received without message ID.', 'warning');
-        return;
-    }
 
     const actorSources = [
         evt?.sender,
@@ -7086,10 +7413,12 @@ function forwardDeletedMessage(evt, bridgeMeta) {
         ]) ||
         '';
 
-    const payload = {
-        type: 'kick',
-        id: String(messageId)
-    };
+    if (!messageId && !chatname) {
+        log('Delete event received without message ID or user.', 'warning');
+        return;
+    }
+    const payload = { type: 'kick' };
+    if (messageId) payload.id = String(messageId);
     if (chatname) {
         payload.chatname = chatname;
     }
@@ -7824,7 +8153,114 @@ function forwardSubscription(eventType, evt, bridgeMeta) {
     log(`${prefix} ${chatmessage}`);
 }
 
+function pruneRecentKickGiftEvents(now = Date.now()) {
+    for (const [eventId, receivedAt] of state.recentGiftEventIds) {
+        if (now - receivedAt > KICK_GIFT_DEDUPE_WINDOW_MS) {
+            state.recentGiftEventIds.delete(eventId);
+        }
+    }
+    for (const [signature, entry] of state.recentGiftSignatures) {
+        entry.socket = entry.socket.filter(receivedAt => now - receivedAt <= KICK_GIFT_DEDUPE_WINDOW_MS);
+        entry.bridge = entry.bridge.filter(receivedAt => now - receivedAt <= KICK_GIFT_DEDUPE_WINDOW_MS);
+        if (!entry.socket.length && !entry.bridge.length) {
+            state.recentGiftSignatures.delete(signature);
+        }
+    }
+    while (state.recentGiftEventIds.size > KICK_GIFT_DEDUPE_CACHE_LIMIT) {
+        state.recentGiftEventIds.delete(state.recentGiftEventIds.keys().next().value);
+    }
+    while (state.recentGiftSignatures.size > KICK_GIFT_DEDUPE_CACHE_LIMIT) {
+        state.recentGiftSignatures.delete(state.recentGiftSignatures.keys().next().value);
+    }
+}
+
+function getKickGiftEventId(evt, bridgeMeta) {
+    return pickFirstString([
+        evt?.gift_transaction_id,
+        evt?.giftTransactionId,
+        evt?.transaction_id,
+        evt?.transactionId,
+        bridgeMeta?.messageId
+    ], '');
+}
+
+function buildKickGiftSignature(evt) {
+    const gift = evt?.gift || evt?.kicks || evt?.kicks_gift || {};
+    const supporter = pickFirstString([
+        evt?.sender?.username,
+        evt?.sender?.display_name,
+        evt?.supporter?.username,
+        evt?.gifter?.username,
+        evt?.user?.username,
+        evt?.username
+    ], '').toLowerCase();
+    const amount = takeNumber(gift?.amount ?? gift?.value ?? evt?.amount ?? evt?.kicks ?? evt?.kicks_total);
+    const giftName = pickFirstString([gift?.name, gift?.title, evt?.gift_name, evt?.title], '').toLowerCase();
+    const note = String(extractMessageContent(gift?.message || evt?.message || evt?.comment || evt?.note || '') || '')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .toLowerCase();
+    if (!supporter || amount == null || !giftName) {
+        return '';
+    }
+    return JSON.stringify([supporter, amount, giftName, note]);
+}
+
+function shouldSkipDuplicateKickGift(evt, bridgeMeta) {
+    const now = Date.now();
+    pruneRecentKickGiftEvents(now);
+
+    const eventId = getKickGiftEventId(evt, bridgeMeta);
+    if (eventId) {
+        const previous = state.recentGiftEventIds.get(eventId);
+        state.recentGiftEventIds.set(eventId, now);
+        if (previous && now - previous <= KICK_GIFT_DEDUPE_WINDOW_MS) {
+            return true;
+        }
+    }
+
+    const signature = buildKickGiftSignature(evt);
+    if (!signature) {
+        return false;
+    }
+    const source = bridgeMeta?.source === 'socket' ? 'socket' : 'bridge';
+    const oppositeSource = source === 'socket' ? 'bridge' : 'socket';
+    const entry = state.recentGiftSignatures.get(signature) || { socket: [], bridge: [] };
+    if (entry[oppositeSource].length) {
+        entry[oppositeSource].shift();
+        state.recentGiftSignatures.set(signature, entry);
+        return true;
+    }
+    entry[source].push(now);
+    state.recentGiftSignatures.set(signature, entry);
+    return false;
+}
+
+function getKickGiftImage(gift) {
+    const directImage = pickImage(
+        gift?.image_url,
+        gift?.imageUrl,
+        gift?.image?.url,
+        gift?.image?.src,
+        gift?.thumbnail_url,
+        gift?.thumbnailUrl
+    );
+    if (directImage) {
+        return directImage;
+    }
+    const giftIdValue = gift?.gift_id ?? gift?.giftId ?? gift?.id;
+    const giftId = giftIdValue == null ? '' : String(giftIdValue).trim().replace(/_/g, '-');
+    if (!giftId || !/^[a-z0-9-]+$/i.test(giftId)) {
+        return '';
+    }
+    return `https://files.kick.com/kicks/gifts/${encodeURIComponent(giftId)}.webp`;
+}
+
 function forwardKicksGifted(eventType, evt, bridgeMeta) {
+    if (shouldSkipDuplicateKickGift(evt, bridgeMeta)) {
+        log('[KICKS] Ignoring duplicate Gift received from both Kick transports.');
+        return;
+    }
     const gift = evt?.gift || evt?.kicks || evt?.kicks_gift || {};
     const supporterSources = [
         evt?.sender,
@@ -7846,13 +8282,22 @@ function forwardKicksGifted(eventType, evt, bridgeMeta) {
         evt?.username
     ]);
     const amount = takeNumber(gift?.amount ?? gift?.value ?? evt?.amount ?? evt?.kicks ?? evt?.kicks_total);
-    const currency = pickFirstString([evt?.currency, evt?.unit, gift?.currency, gift?.unit], 'KICKs');
+    const currency = pickFirstString(
+        [evt?.currency, evt?.unit, gift?.currency, gift?.unit],
+        amount === 1 ? 'KICK' : 'KICKs'
+    );
     const amountLabel = formatKickAmountLabel(amount, currency);
+    const giftIdValue = gift?.gift_id ?? gift?.giftId ?? gift?.id;
+    const giftId = giftIdValue == null ? '' : String(giftIdValue).trim();
     const giftName = pickFirstString([gift?.name, gift?.title, evt?.gift_name, evt?.title], '');
     const giftType = pickFirstString([gift?.type, evt?.gift_type], '');
     const tier = pickFirstString([gift?.tier, evt?.tier], '');
     const note = extractMessageContent(gift?.message || evt?.message || evt?.comment || evt?.note || '') || '';
-    const pinnedTimeSeconds = takeNumber(gift?.pinned_time_seconds ?? gift?.pinnedTimeSeconds ?? evt?.pinned_time_seconds);
+    const pinnedTimeSeconds = takeNumber(
+        gift?.pinned_time_seconds ??
+        gift?.pinnedTimeSeconds ??
+        evt?.pinned_time_seconds
+    );
     const messageSegments = [];
     if (amountLabel) {
         messageSegments.push(amountLabel);
@@ -7878,27 +8323,35 @@ function forwardKicksGifted(eventType, evt, bridgeMeta) {
             evt?.user?.profile_picture,
             evt?.user?.avatar
         );
+    const contentimg = getKickGiftImage(gift);
+    const eventId = getKickGiftEventId(evt, bridgeMeta);
     const meta = {
         eventType,
         supporter,
         amount,
         currency,
         message: note,
+        giftId,
         giftName,
         giftType,
         tier,
         pinnedTimeSeconds: pinnedTimeSeconds ?? null,
         createdAt: pickFirstString([evt?.created_at, evt?.createdAt], '')
     };
-    pushMessage({
+    const messagePayload = {
         type: 'kick',
-        event: 'donation',
+        event: 'gift',
         chatname,
         chatmessage: escapeHtml(chatmessage),
         chatimg: chatimg || '',
+        contentimg,
         hasDonation: amountLabel,
         meta
-    });
+    };
+    if (eventId) {
+        messagePayload.id = eventId;
+    }
+    pushMessage(messagePayload);
     appendAlertsFeedEntry({
         kind: 'donation',
         actor: chatname,
@@ -8625,6 +9078,26 @@ function appendChatBadges(container, badges) {
     });
 }
 
+function appendKickTextOnlyFeedContent(container, value) {
+    const text = String(value == null ? '' : value);
+    const tokens = /\[(emote|sticker):(\d+):([^\]]+)\]/gi;
+    let lastIndex = 0;
+    let match;
+    while ((match = tokens.exec(text))) {
+        container.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+        const img = document.createElement('img');
+        img.src = 'https://files.kick.com/emotes/' + match[2] + '/fullsize';
+        img.alt = match[3];
+        img.title = match[3];
+        img.className = normalizeKickAssetType(match[1]) === 'sticker'
+            ? 'regular-emote kick-sticker'
+            : 'regular-emote';
+        container.appendChild(img);
+        lastIndex = tokens.lastIndex;
+    }
+    container.appendChild(document.createTextNode(text.slice(lastIndex)));
+}
+
 function appendChatFeedMessage(message, plainText = '') {
     if (!els.chatFeed || !message) return;
     const stick = shouldStickChatFeed();
@@ -8689,17 +9162,17 @@ function appendChatFeedMessage(message, plainText = '') {
     // The local chat feed always renders rich content (emotes as images)
     // regardless of the extension's text-only mode setting.
     const chatHtml = message.chatmessage || '';
-    const richHtml = chatHtml
-        ? chatHtml.replace(/\[emote:(\d+):([^\]]+)\]/g, (m, id, n) => {
-            const safeId = id.replace(/[^0-9]/g, '');
-            if (!safeId) return m;
-            return `<img src="https://files.kick.com/emotes/${safeId}/fullsize" alt="${n}" title="${n}" class="regular-emote"/>`;
-        })
-        : '';
-    if (richHtml) {
-        body.innerHTML = richHtml;
+    if (message.textonly === true) {
+        appendKickTextOnlyFeedContent(body, chatHtml || plainTextMessage || '');
     } else {
-        body.textContent = plainTextMessage || '';
+        const richHtml = chatHtml
+            ? replaceKickInlineAssets(chatHtml, { forceRich: true })
+            : '';
+        if (richHtml) {
+            body.innerHTML = richHtml;
+        } else {
+            body.textContent = plainTextMessage || '';
+        }
     }
     details.appendChild(body);
 
@@ -8772,12 +9245,32 @@ function extractFragmentText(fragment) {
     if (typeof fragment === 'string') return fragment;
     if (typeof fragment.text === 'string') return fragment.text;
     if (typeof fragment.content === 'string') return fragment.content;
-    if (typeof fragment.name === 'string' && fragment.type === 'emote') {
-        return `:${fragment.name}:`;
-    }
     if (typeof fragment.alt === 'string') return fragment.alt;
     if (fragment.emoji) {
         return fragment.emoji.text || fragment.emoji.name || '';
+    }
+    const assetType = normalizeKickAssetType(fragment.type)
+        || normalizeKickAssetType(fragment.kind)
+        || (fragment.sticker ? 'sticker' : '')
+        || (fragment.emote ? 'emote' : '');
+    if (assetType) {
+        const nestedAsset = assetType === 'sticker' ? fragment.sticker : fragment.emote;
+        const name = pickFirstString(
+            [
+                fragment.name,
+                fragment.code,
+                fragment.value,
+                fragment.label,
+                nestedAsset?.name,
+                nestedAsset?.code,
+                nestedAsset?.text,
+                nestedAsset?.value
+            ],
+            ''
+        ).replace(/^:+|:+$/g, '');
+        if (name) {
+            return `:${name}:`;
+        }
     }
     if (fragment.url) {
         return fragment.url;
@@ -8837,6 +9330,7 @@ async function bootstrap() {
         loadConfig();
         applyDefaultConfig();
         loadTokens();
+        await refreshStoredKickAuthBeforeStatus();
         loadEventTypesCache();
         applyUrlParams();
         await loadSourceWindowConfig();
@@ -8847,7 +9341,7 @@ async function bootstrap() {
         updateSocketState();
         const handledAuthCallback = await handleAuthCallback();
         // Connect Pusher chat immediately (no auth needed)
-        if (state.channelSlug && !state.socket.chatroomId) {
+        if (state.channelSlug && (!state.socket.chatroomId || !state.socket.channelId)) {
             await resolveChannelForPusher();
         }
         connectPusherSocket();

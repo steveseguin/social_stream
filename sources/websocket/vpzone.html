@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
+    <meta name="description" content="VPZone Chat Source: a chat source connection page for Social Stream Ninja. Use it with the app or extension to bring chat into your session.">
+    <meta name="robots" content="noindex">
+
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Social Stream - VPZone Chat Source</title>
     <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48cGF0aCBkPSJNMTQgMThoMTBsOCAyNCA4LTI0aDEwTDM3IDUwSDI3TDE0IDE4eiIgZmlsbD0iIzEyYzdjMiIvPjxjaXJjbGUgY3g9IjQ4IiBjeT0iMTYiIHI9IjYiIGZpbGw9IiM3YzVjZmYiLz48L3N2Zz4=" type="image/svg+xml" />
@@ -354,6 +357,25 @@
             color: var(--muted);
         }
 
+        .runtime-alert {
+            margin-top: 12px;
+            padding: 11px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(249, 200, 108, 0.42);
+            background: rgba(249, 200, 108, 0.12);
+            color: #ffe4aa;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        #channel-editor.hidden {
+            display: none;
+        }
+
+        .runtime-alert.hidden {
+            display: none;
+        }
+
         .link {
             color: #8fe9e1;
             text-decoration: none;
@@ -387,8 +409,10 @@
         }
     </style>
     <link rel="stylesheet" href="websocket-responsive.css">
+    <link rel="stylesheet" href="../../shared/compact-source-layout.css?v=20260916-setup">
+    <script src="../../shared/utils/compactSourceLayout.js?v=20260916-setup" defer></script>
 </head>
-<body>
+<body data-compact-source="vpzone">
     <div class="wrap">
         <section class="card">
             <div class="header-row">
@@ -402,6 +426,9 @@
                     <span id="viewer-chip" class="chip">Viewers: -</span>
                     <span id="last-event-chip" class="chip">Last event: Waiting</span>
                 </div>
+            </div>
+            <div id="bad-origin-help" class="runtime-alert hidden" role="alert">
+                Recent VPZone changes require Social Stream standalone app 0.4.0 or newer for WebSocket mode. Update the app, or use standard VPZone mode instead.
             </div>
         </section>
 
@@ -433,12 +460,32 @@
             </form>
             <p class="hint">VPZone page: <a id="channel-link" class="link" href="https://vpzone.tv" target="_blank" rel="noopener">vpzone.tv</a></p>
 
+            <div id="channel-editor" class="hidden">
+                <h2>Stream Info</h2>
+                <div class="setup-grid">
+                    <div>
+                        <label for="stream-title">Stream title</label>
+                        <input id="stream-title" type="text" maxlength="140" autocomplete="off" placeholder="Stream title" />
+                    </div>
+                    <div>
+                        <label for="stream-category">Category</label>
+                        <input id="stream-category" type="text" maxlength="80" autocomplete="off" list="category-list" placeholder="Game / category" />
+                        <datalist id="category-list"></datalist>
+                    </div>
+                </div>
+                <div class="setup-actions">
+                    <button id="update-channel-btn" class="alt">Update Title / Category</button>
+                    <button id="refresh-channel-btn" class="ghost">Refresh Current</button>
+                </div>
+                <p class="hint">Updates the live stream on VPZone. Requires the <code>channel:write</code> scope on the signed-in owner account.</p>
+            </div>
+
             <details class="advanced-options">
                 <summary>Advanced</summary>
                 <div class="advanced-panel">
                     <div>
                         <label for="ws-url">Chat Server</label>
-                        <input id="ws-url" type="text" autocomplete="off" value="wss://chat.nexus-7.vpzone.tv/ws" />
+                        <input id="ws-url" type="text" autocomplete="off" value="wss://chat.vpzone.tv/ws" />
                     </div>
                     <div>
                         <label for="auth-token">Chat Token</label>
@@ -450,9 +497,22 @@
                             <span>Hide metrics</span>
                         </label>
                     </div>
+                    <div>
+                        <label class="setting-toggle">
+                            <input id="sync-delete-messages" type="checkbox" />
+                            <span>Sync dock message deletes to VPZone</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="setting-toggle">
+                            <input id="sync-block-users" type="checkbox" />
+                            <span>Sync dock user blocks to VPZone bans</span>
+                        </label>
+                    </div>
                     <div class="setup-actions" style="margin-top:0;">
                         <button id="save-config" class="ghost">Save advanced settings</button>
                     </div>
+                    <p class="hint">Moderation sync uses the <code>chat:moderate</code> scope and only works when you are signed in as the channel owner.</p>
                 </div>
             </details>
         </section>
@@ -469,6 +529,6 @@
             </section>
         </section>
     </div>
-    <script src="vpzone.js?v=20260615h"></script>
+    <script src="vpzone.js?v=20260804a"></script>
 </body>
 </html>

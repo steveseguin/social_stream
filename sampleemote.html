@@ -28,6 +28,8 @@ For all modifications, ensure the critical components above remain functional.
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="robots" content="noindex">
     <meta name="description" content="A customizable emote wall overlay template for Social Stream">
@@ -48,6 +50,8 @@ For all modifications, ensure the critical components above remain functional.
         }
         /* Add your custom styles here */
     </style>
+<script src="./libs/objects.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
 </head>
 <body id="output">
     <script>
@@ -77,7 +81,11 @@ For all modifications, ensure the critical components above remain functional.
     function processEmotes(data) {
         // Parse message content
         const tmp = document.createElement("div");
-        tmp.innerHTML = data.chatmessage;
+        if (data.textonly === true) {
+            tmp.textContent = data.chatmessage;
+        } else {
+        tmp.innerHTML = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage) : fallbackEscapeHtml(data.chatmessage));
+        }
 
         // Extract emotes, images, and SVGs
         const svgs = [...tmp.querySelectorAll("svg")];

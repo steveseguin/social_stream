@@ -11,6 +11,10 @@
 		<script type="text/javascript" src="currency.js"></script>
 		<script type="text/javascript" src="./thirdparty/xss.min.js"></script>
 		<script type="text/javascript" src="./libs/objects.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
+<script src="./shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="./shared/utils/chatBadges.css">
+
 
 		<style>
 			:root {
@@ -4796,7 +4800,7 @@
 
 			function getColorForAmount(data) {
 				
-				let amount = data.donoValue || toUSD(data.donation || data.hasDonation);
+				let amount = getDonationValueUSD(data);
 				
 				for (const [threshold, color] of tiers) {
 					if (amount >= threshold) return color;
@@ -5313,6 +5317,7 @@
 
 					msg.snippet = {};
 					//
+					// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 					if (data.textonly) {
 						msg.snippet.displayMessage = data.chatmessage;
 					} else if (!stripHTML) {
@@ -6424,7 +6429,7 @@
 						viewers[data.type] = parseInt(data.meta) || 0;
 						
 						if (showviewercount){
-							let ele = topBarElement.querySelector("[data-type='"+data.type+"']");
+							let ele = topBarElement.querySelector(dataAttributeSelector("data-type", data.type));
 							if (ele){
 								ele.innerText = viewers[data.type];
 							} else {
@@ -6457,7 +6462,7 @@
 								
 								// Then update or create elements for types in the current update
 								Object.keys(data.meta).forEach(type=>{
-									let ele = topBarElement.querySelector("[data-type='"+type+"']");
+									let ele = topBarElement.querySelector(dataAttributeSelector("data-type", type));
 									if (ele){
 										ele.innerText = data.meta[type];
 									} else {
@@ -6553,13 +6558,13 @@
 			function deleteMessages(data, deleteOnlyLast=false) {
 				let selector = "";
 				if (data.delete.id) {
-					selector = `[data-mid='${data.delete.id}']`;
+					selector = dataAttributeSelector("data-mid", data.delete.id);
 				} else if (data.delete.chatname && data.delete.type) {
-					selector = `[data-chatname='${data.delete.chatname}'][data-source-type='${data.delete.type}']`;
+					selector = dataAttributeSelector("data-chatname", data.delete.chatname) + dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.type) {
-					selector = `[data-source-type='${data.delete.type}']`;
+					selector = dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.chatname) {
-					selector = `[data-chatname='${data.delete.chatname}']`;
+					selector = dataAttributeSelector("data-chatname", data.delete.chatname);
 				}
 
 				if (deleteOnlyLast || data.delete.onlyLast) {
@@ -6610,7 +6615,7 @@
 				historyMissedLiveBuffer = [];
 				buffered.forEach(function(msg) {
 					var displayId = (msg && msg.mid) ? msg.mid : msg.id;
-					if (!displayId || !document.querySelector("[data-mid='" + displayId + "']")) {
+					if (!displayId || !document.querySelector(dataAttributeSelector("data-mid", displayId))) {
 						processData({ contents: msg }, { reloaded: true, suppressLiveSideEffects: true, skipHistoryDeferral: true });
 					}
 				});
@@ -6863,13 +6868,14 @@
 				if (roastItem) roastItem.title = peers.extension ? "" : "Requires Social Stream and Private Chat Bot enabled.";
 			}
 
-			function cohostHtmlToText(value) {
+			function cohostHtmlToText(value, isHTML = true) {
 				var text = "";
 				if (value === null || typeof value === "undefined") return "";
+				if (!isHTML || !/[<&]/.test(value)) return String(value).replace(/\s+/g, " ").trim();
 				try {
-					var div = document.createElement("div");
+					var div = document.createElement("template");
 					div.innerHTML = String(value);
-					text = div.textContent || div.innerText || "";
+					text = div.content.textContent || "";
 				} catch (e) {
 					text = String(value || "");
 				}
@@ -6878,10 +6884,11 @@
 
 			function getCohostMessageText(element) {
 				var raw = element && element.rawContents ? element.rawContents : {};
-				var text = cohostHtmlToText(raw.chatmessage || raw.message || raw.text || "");
+				// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+				var text = cohostHtmlToText(raw.chatmessage || raw.message || raw.text || "", !raw.textonly);
 				if (!text && element) {
 					var messageNode = element.querySelector(".hl-content") || element.querySelector(".hl-message");
-					text = cohostHtmlToText(messageNode ? messageNode.innerHTML : element.innerHTML);
+					text = cohostHtmlToText(messageNode ? messageNode.textContent : element.textContent, false);
 				}
 				return text;
 			}
@@ -6892,13 +6899,14 @@
 				if (!name && element) {
 					var nameNode = element.querySelector(".hl-name");
 					name = nameNode ? nameNode.textContent : "";
+					return cohostHtmlToText(name, false) || "Viewer";
 				}
 				return cohostHtmlToText(name) || "Viewer";
 			}
 
 			function sendCohostOverlaySay(text, options) {
 				var opts = options || {};
-				var value = cohostHtmlToText(text);
+				var value = cohostHtmlToText(text, false);
 				if (!value) {
 					setCohostDockStatus("no readable message", "error");
 					return false;
@@ -6930,10 +6938,10 @@
 				return true;
 			}
 
-			function buildCohostPrompt(mode, element) {
+			function buildCohostPrompt(mode, element, messageText) {
 				var raw = element && element.rawContents ? element.rawContents : {};
 				var name = getCohostMessageName(element);
-				var text = getCohostMessageText(element);
+				var text = typeof messageText === "string" ? messageText : getCohostMessageText(element);
 				var platform = raw.type || element.dataset.sourceType || "chat";
 				var task = mode === "roast"
 					? "Write one short playful PG roast back to the viewer. Keep it friendly, no hate, no threats, no sexual content, no slurs, and do not punch down."
@@ -6984,7 +6992,7 @@
 				setCohostDockStatus("AI thinking", "busy");
 				send2Extension({
 					action: "chatbot",
-					value: buildCohostPrompt(mode, element),
+					value: buildCohostPrompt(mode, element, text),
 					target: target,
 					turbo: false
 				}, null, true);
@@ -7142,13 +7150,13 @@
 								// last message sent was to clear the overlay
 								ele.classList.remove(lastMessageClass); // no overlay is now active.
 							});
-							document.querySelector("[data-mid='" + data.mid + "']").classList.add(pressedClass, lastMessageClass); // add last-message class
-							
+							document.querySelector(dataAttributeSelector("data-mid", data.mid)).classList.add(pressedClass, lastMessageClass); // add last-message class
+
 						} catch (e) {
 							setTimeout(
 								function (mid) {
 									try {
-										document.querySelector("[data-mid='" + mid + "']").classList.add(pressedClass);
+										document.querySelector(dataAttributeSelector("data-mid", mid)).classList.add(pressedClass);
 									} catch (e) {}
 								},
 								500,
@@ -7168,9 +7176,9 @@
 							data.pin.forEach(dddd => {
 								if (typeof dddd === "object") {
 									try {
-										if (dddd.id && document.querySelector("[data-mid='" + dddd.id + "']")) {
-											pinIt(document.querySelector("[data-mid='" + dddd.id + "']"));
-											applyHiddenState(document.querySelector("[data-mid='" + dddd.id + "']"));
+										if (dddd.id && document.querySelector(dataAttributeSelector("data-mid", dddd.id))) {
+											pinIt(document.querySelector(dataAttributeSelector("data-mid", dddd.id)));
+											applyHiddenState(document.querySelector(dataAttributeSelector("data-mid", dddd.id)));
 										} else {
 											let ele = processInput(dddd, force);
 											pinIt(ele);
@@ -7179,8 +7187,8 @@
 									} catch (e) {}
 								} else {
 									try {
-										pinIt(document.querySelector("[data-mid='" + dddd + "']"));
-										applyHiddenState(document.querySelector("[data-mid='" + dddd + "']"));
+										pinIt(document.querySelector(dataAttributeSelector("data-mid", dddd)));
+										applyHiddenState(document.querySelector(dataAttributeSelector("data-mid", dddd)));
 									} catch (e) {}
 								}
 							});
@@ -7193,8 +7201,8 @@
 						if (typeof data.unpin == "object") {
 							data.unpin.forEach(mid => {
 								try {
-									unpinIt(document.querySelector("[data-mid='" + mid + "']"));
-									applyHiddenState(document.querySelector("[data-mid='" + mid + "']"));
+									unpinIt(document.querySelector(dataAttributeSelector("data-mid", mid)));
+									applyHiddenState(document.querySelector(dataAttributeSelector("data-mid", mid)));
 								} catch (e) {
 									// doesn't exist or whatever.
 								}
@@ -7210,7 +7218,7 @@
 							data.queueInit.forEach(dd => {
 								try {
 									if (dd && dd.id) {
-										var ele = document.querySelector("[data-mid='" + dd.id + "']");
+										var ele = document.querySelector(dataAttributeSelector("data-mid", dd.id));
 										if (!ele) {
 											ele = processInput(dd, force);
 										}
@@ -7245,7 +7253,7 @@
 									if (mid) {
 										if (typeof mid === "object") {
 											if ("id" in mid) {
-												var ele = document.querySelector("[data-mid='" + mid.id + "']");
+												var ele = document.querySelector(dataAttributeSelector("data-mid", mid.id));
 												if (ele) {
 													sq.push(ele);
 													ele.children[0].dataset.qid = sq.length;
@@ -7262,7 +7270,7 @@
 												}
 											}
 										} else {
-											var ele = document.querySelector("[data-mid='" + mid + "']");
+											var ele = document.querySelector(dataAttributeSelector("data-mid", mid));
 											if (ele) {
 												sq.push(ele);
 												ele.children[0].dataset.qid = sq.length;
@@ -7301,7 +7309,7 @@
 					// delete by message ID; likely another dock is syncing their delete with me
 					//if ((syncDocks || force)){
 					try {
-						var ele = document.querySelector("[data-mid='" + data.deleteMessage + "']");
+						var ele = document.querySelector(dataAttributeSelector("data-mid", data.deleteMessage));
 						if (ele) {
 							ele.remove();
 						}
@@ -7445,7 +7453,7 @@
 						recentMessages.forEach(function(msg) {
 							//console.log({contents:msg});
 							var displayId = (msg && msg.mid) ? msg.mid : msg.id;
-							if (!displayId || !document.querySelector("[data-mid='"+displayId+"']")){
+							if (!displayId || !document.querySelector(dataAttributeSelector("data-mid", displayId))){
 								var normalizedMsg = (msg && msg.mid && msg.mid !== msg.id) ? Object.assign({}, msg, { id: msg.mid, dbid: msg.id }) : msg;
 								if (prependRecentHistory) {
 									prependMode = true;
@@ -7481,7 +7489,7 @@
 					}
 					histMsgs.forEach(function(msg) {
 						var displayId = (msg && msg.mid) ? msg.mid : msg.id;
-						if (!displayId || !document.querySelector("[data-mid='" + displayId + "']")) {
+						if (!displayId || !document.querySelector(dataAttributeSelector("data-mid", displayId))) {
 							var normalizedMsg = (msg && msg.mid && msg.mid !== msg.id) ? Object.assign({}, msg, { id: msg.mid, dbid: msg.id }) : msg;
 							prependMode = true;
 							processData({contents: normalizedMsg});
@@ -7532,7 +7540,9 @@
 						const para = document.createElement("p");
 						//console.log(timeSince(msg.timestamp));
 						//console.log(msg.timestamp);
-						para.innerHTML = (msg.chatmessage||msg.message) + " - <small><i>Sent: " + timeSince(msg.timestamp) + "</i></small>";
+						var body = msg.chatmessage || msg.message || "";
+						// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+						para.innerHTML = (msg.textonly ? escapeHtml(body) : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(body) : escapeHtml(body))) + " - <small><i>Sent: " + timeSince(msg.timestamp) + "</i></small>";
 						messagesList.appendChild(para);
 					});
 					modal.style.display = "block";
@@ -7552,13 +7562,13 @@
 							// Optional: Add visual feedback for timed out users
 							
 							timedOutUsers[data.timeoutUser.username+":"+data.timeoutUser.type] = Date.now() + data.timeoutUser.duration*1000;
-							
-							document.querySelectorAll("[data-chatname='" + data.timeoutUser.username + "'][data-source-type='" + data.timeoutUser.type + "']").forEach(ele => {
+
+							document.querySelectorAll(dataAttributeSelector("data-chatname", data.timeoutUser.username) + dataAttributeSelector("data-source-type", data.timeoutUser.type)).forEach(ele => {
 								ele.remove();
 							});
 							
 							if (data.timeoutUser.type=="youtube"){
-								document.querySelectorAll("[data-chatname='" + data.timeoutUser.username + "'][data-source-type='youtubeshorts']").forEach(ele => {
+								document.querySelectorAll(dataAttributeSelector("data-chatname", data.timeoutUser.username) + dataAttributeSelector("data-source-type", "youtubeshorts")).forEach(ele => {
 									ele.remove();
 								});
 							}
@@ -7592,7 +7602,7 @@
 							} else {
 								localBlockUserList[blockName] = [data.blockUser.type];
 							}
-							document.querySelectorAll("[data-chatname='" + blockName + "'][data-source-type='" + data.blockUser.type + "']").forEach(ele => {
+							document.querySelectorAll(dataAttributeSelector("data-chatname", blockName) + dataAttributeSelector("data-source-type", data.blockUser.type)).forEach(ele => {
 								ele.remove();
 							});
 
@@ -7600,7 +7610,7 @@
 								if (!localBlockUserList[blockName].includes("youtubeshorts")) {
 									localBlockUserList[blockName].push("youtubeshorts");
 								}
-								document.querySelectorAll("[data-chatname='" + blockName + "'][data-source-type='youtubeshorts']").forEach(ele => {
+								document.querySelectorAll(dataAttributeSelector("data-chatname", blockName) + dataAttributeSelector("data-source-type", "youtubeshorts")).forEach(ele => {
 									ele.remove();
 								});
 							}
@@ -7616,7 +7626,7 @@
 							} else {
 								localBlockUserList[data.blockUser.username] = ["*"];
 							}
-							document.querySelectorAll("[data-chatname='" + data.blockUser.username + "']").forEach(ele => {
+							document.querySelectorAll(dataAttributeSelector("data-chatname", data.blockUser.username)).forEach(ele => {
 								ele.remove();
 							});
 						}
@@ -7628,16 +7638,16 @@
 				} else if ("vipUser" in data) {
 					try {
 						if (data.vipUser.username && data.vipUser.type) {
-							document.querySelectorAll("[data-chatname='" + data.vipUser.username + "'][data-source-type='" + data.vipUser.type + "']").forEach(ele => {
+							document.querySelectorAll(dataAttributeSelector("data-chatname", data.vipUser.username) + dataAttributeSelector("data-source-type", data.vipUser.type)).forEach(ele => {
 								ele.classList.add("vip");
 							});
 							if (data.vipUser.type=="youtube"){
-								document.querySelectorAll("[data-chatname='" + data.vipUser.username + "'][data-source-type='youtubeshorts']").forEach(ele => {
+								document.querySelectorAll(dataAttributeSelector("data-chatname", data.vipUser.username) + dataAttributeSelector("data-source-type", "youtubeshorts")).forEach(ele => {
 									ele.classList.add("vip");
 								});
 							}
 						} else if (data.vipUser.username) {
-							document.querySelectorAll("[data-chatname='" + data.vipUser.username + "']").forEach(ele => {
+							document.querySelectorAll(dataAttributeSelector("data-chatname", data.vipUser.username)).forEach(ele => {
 								ele.classList.add("vip");
 							});
 						}
@@ -8443,9 +8453,9 @@
 			}
 
 			function createElementFromHTML(htmlString) {
-				var div = document.createElement("div");
+				var div = document.createElement("template");
 				div.innerHTML = htmlString.trim();
-				return div.firstChild;
+				return div.content.firstChild;
 			}
 
 			//	if (forceAutoscroll){
@@ -8994,7 +9004,7 @@
 						} else {
 							localBlockUserList[chatName] = [type];
 						}
-						document.querySelectorAll("[data-chatname='" + chatName + "'][data-source-type='" + type + "']").forEach(ele => {
+						document.querySelectorAll(dataAttributeSelector("data-chatname", chatName) + dataAttributeSelector("data-source-type", type)).forEach(ele => {
 							ele.remove();
 						});
 
@@ -9051,13 +9061,13 @@
 							// Optional: Add visual feedback for timed out users
 							
 							timedOutUsers[userId+":"+userType] = Date.now() + duration*1000;
-							
-							document.querySelectorAll("[data-chatname='" + userId + "'][data-source-type='" + userType + "']").forEach(ele => {
+
+							document.querySelectorAll(dataAttributeSelector("data-chatname", userId) + dataAttributeSelector("data-source-type", userType)).forEach(ele => {
 								ele.remove();
 							});
 							
 							if (userType=="youtube"){
-								document.querySelectorAll("[data-chatname='" + userId + "'][data-source-type='youtubeshorts']").forEach(ele => {
+								document.querySelectorAll(dataAttributeSelector("data-chatname", userId) + dataAttributeSelector("data-source-type", "youtubeshorts")).forEach(ele => {
 									ele.remove();
 								});
 							}
@@ -9214,7 +9224,7 @@
 				}
 
 				function applyRoleToType(typeToApply) {
-					document.querySelectorAll("[data-chatname='" + chatName + "'][data-source-type='" + typeToApply + "']").forEach(ele => {
+					document.querySelectorAll(dataAttributeSelector("data-chatname", chatName) + dataAttributeSelector("data-source-type", typeToApply)).forEach(ele => {
 						ele.classList.add(`marked-${role}`);
 						if (role === "host") {
 							ele.classList.add("host");
@@ -9571,16 +9581,16 @@
 			}
 
 			function stripHtmlFunction(html) {
-				let tmp = document.createElement("DIV");
+				let tmp = document.createElement("template");
 				tmp.innerHTML = html;
-				return tmp.textContent || tmp.innerText || "";
+				return tmp.content.textContent || "";
 			}
 
-			function isAllCapsMessage(text) {
+			function isAllCapsMessage(text, isHTML = true) {
 				if (!text) {
 					return false;
 				}
-				text = stripHtmlFunction(text).replace(/\s\s+/g, " ").trim();
+				text = (isHTML ? stripHtmlFunction(text) : text).replace(/\s\s+/g, " ").trim();
 				if (!text) {
 					return false;
 				}
@@ -9605,6 +9615,29 @@
 				} catch (e) {
 					return "";
 				}
+			}
+
+			function plainTextToHtml(value) {
+				let span = document.createElement("span");
+				span.textContent = value == null ? "" : String(value);
+				return span.innerHTML;
+			}
+
+			function escapeAttributeValue(value) {
+				return escapeHtml(String(value == null ? "" : value));
+			}
+
+			function cssAttributeValue(value) {
+				return String(value == null ? "" : value)
+					.replace(/\\/g, "\\\\")
+					.replace(/"/g, '\\"')
+					.replace(/\r/g, "\\D ")
+					.replace(/\n/g, "\\A ")
+					.replace(/\f/g, "\\C ");
+			}
+
+			function dataAttributeSelector(attributeName, value) {
+				return "[" + attributeName + '="' + cssAttributeValue(value) + '"]';
 			}
 			
 			function processURLs(element, { makeClickable = false, stripLinks = false, shortenURLs = false, maxLength = 40, replaceSubstring = "[Link]" } = {}) {
@@ -9754,7 +9787,7 @@
 			
 			
 			
-			function isEmojiOnly(str) {
+			function isEmojiOnly(str, isHTML = true) {
 				function stripEmojis(text) {
 					return text
 						.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "")
@@ -9767,7 +9800,7 @@
 				if (strippedStr.length === 0) {
 					return true; // Contains only emojis and/or spaces
 				}
-				const textContent = strippedStr.replace(/<[^>]*>/g, '');
+				const textContent = isHTML ? strippedStr.replace(/<[^>]*>/g, '') : strippedStr;
 				return textContent.length === 0;
 			}
 			
@@ -10471,6 +10504,11 @@
 						data.hasDonation = "";
 					}
 
+					// Accept legacy numeric amounts while preserving string and zero behavior.
+					if (data.hasDonation && typeof data.hasDonation === "number") {
+						data.hasDonation = Number.isFinite(data.hasDonation)
+							? String(data.hasDonation) : "";
+					}
 					if (data.hasDonation) {
 						if (stripHTML) {
 							data.hasDonation = stripHtmlFunction(data.hasDonation);
@@ -10517,16 +10555,30 @@
 
 					if (data.chatmessage) {
 						if (stripHTML) {
-							data.chatmessage = stripHtmlFunction(data.chatmessage);
+							// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
+							if (!data.textonly) {
+							// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
+							if (!data.textonly) {
+								data.chatmessage = stripHtmlFunction(data.chatmessage);
+								if (data.initial) data.initial = stripHtmlFunction(data.initial);
+								if (data.reply) data.reply = stripHtmlFunction(data.reply);
+								// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
+								data.textonly = true;
+							}
+								if (data.initial) data.initial = stripHtmlFunction(data.initial);
+								if (data.reply) data.reply = stripHtmlFunction(data.reply);
+								// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
+								data.textonly = true;
+							}
 						} else if (data.event) {
 							data.chatmessage = data.chatmessage.trim();
-							data.chatmessage = "<i>" + data.chatmessage + "</i>";
 						}
 					} else {
 						data.chatmessage = "";
 					}
 
-					if (hideAllCaps && data.chatmessage && isAllCapsMessage(data.chatmessage)) {
+					// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+					if (hideAllCaps && data.chatmessage && isAllCapsMessage(data.chatmessage, !data.textonly)) {
 						return;
 					}
 
@@ -10620,7 +10672,7 @@
 
 					var donationHTML = "";
 					if (data.hasDonation) {
-						donationHTML = "<span class='donationAmount hl-donation'>" + data.hasDonation + "</span>";
+						donationHTML = "<span class='donationAmount hl-donation'>" + plainTextToHtml(data.hasDonation) + "</span>";
 					} else {
 						data.hasDonation = "";
 					}
@@ -10640,39 +10692,51 @@
 					var chatmessage = data.chatmessage || "";
 
 					if (chatmessage) {
+						// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 						if (stylizeEmoji && !reloaded && !data.textonly) {
 							//chatmessage = chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "<span class='emoji'>$1</span>");
 							chatmessage = wrapEmojis(chatmessage);
 						}
+						// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 						if (!stripHTML && !data.textonly) {
 							// we want to reuse this, but only if HTML is allowed
 							data.chatmessage = chatmessage;
+							// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 							data.textonly = false; // we know that it contains html now
 						}
 					}
 
+					// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+					const plainChatMessage = (hideshortmessages || hideNumbers) && !data.contentimg && !data.hasDonation
+						? (data.textContent || (data.textonly ? chatmessage : stripHtmlFunction(chatmessage)) || "").trim() : "";
 					if (!chatmessage && !data.contentimg && !data.hasDonation) {
 						return;
 					} else if (hideshortmessages && !data.contentimg && !data.hasDonation) {
-						if (chatmessage.replace(/(<([^>]+)>)/ig, "").length < hideshortmessages){
+						if (plainChatMessage.length < hideshortmessages){
 							return;
 						}
 					}
 
-					const plainChatMessage = (data.textContent || data.chatmessage || "").replace(/<[^>]*>/g, "").trim();
 					if (hideNumbers && plainChatMessage && !data.contentimg && !data.hasDonation && /^\d+$/.test(plainChatMessage)) {
 						return;
 					}
 					
 					if (filterEmojiOnly && data.chatmessage && !data.hasDonation && !data.contentimg) {
-						if (isEmojiOnly(data.chatmessage)) {
+						// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+						if (isEmojiOnly(data.chatmessage, !data.textonly)) {
 							return; // Skip this message as it contains only emojis or empty HTML tags
 						}
 					}
 					
+					if (NormalizeText && chatmessage) {
+						// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+						chatmessage = normalizeText(chatmessage, !data.textonly && !stripHTML);
+					}
+
+					// textonly=true: escape only the local display copy for this HTML template; raw data.chatmessage stays literal. This is output encoding, not re-sanitization.
 					if (data.textonly) {
-						// should be legacy compatible, since textonly is new.
-						chatmessage = escapeHtml(chatmessage); // lets escape any < > ' " or other special characeters, since it would be dangerous as HTML.
+						// Missing legacy flags retain HTML mode; a true flag must preserve literal characters.
+						chatmessage = escapeHtml(chatmessage); // Encode the display copy once; keep the stored/transmitted plain body unchanged.
 					}
 
 					if (largeavatar && data.chatname && data.type && avatars) {
@@ -10684,43 +10748,48 @@
 						}
 					}
 
+					var safeDataId = escapeAttributeValue(data.id);
+					var safeDataType = escapeAttributeValue(data.type);
 					var chatImg = data.chatimg;
 					if (hideUnknownAvatar && isUnknownAvatarURL(chatImg)) {
 						chatImg = "";
 					}
 					if (!chatImg && avatars) {
 						if (fallbackImageAnnouncement && !data.chatname && data.event){
-							chatImg = '<img id="img_' + data.id + '" src="./icons/announcement.png" class="icon ' + (darkmode ? "invert" : "") + ' hl-profile-pic" onerror="errorImage(this);" />';
+							chatImg = '<img id="img_' + safeDataId + '" src="./icons/announcement.png" class="icon ' + (darkmode ? "invert" : "") + ' hl-profile-pic" onerror="errorImage(this);" />';
 						} else if (fallbackImage && !hideUnknownAvatar) {
-							chatImg = '<img id="img_' + data.id + '" src="./sources/images/unknown.png" class="icon ' + (darkmode ? "invert" : "") + ' hl-profile-pic" onerror="errorImage(this);" />';
+							chatImg = '<img id="img_' + safeDataId + '" src="./sources/images/unknown.png" class="icon ' + (darkmode ? "invert" : "") + ' hl-profile-pic" onerror="errorImage(this);" />';
 						} else {
 							chatImg = "";
 						}
 					} else if (avatars) {
 						if (data.type && data.type == "twitch" && avatars && !hideUnknownAvatar) {
-							chatImg = '<img id="img_' + data.id + '" src="./sources/images/unknown.png" class="fade-in-image ' + (darkmode ? "invert" : "") + ' icon hl-profile-pic" onerror="errorImage(this);" />';
+							chatImg = '<img id="img_' + safeDataId + '" src="./sources/images/unknown.png" class="fade-in-image ' + (darkmode ? "invert" : "") + ' icon hl-profile-pic" onerror="errorImage(this);" />';
 						} else {
-							chatImg = '<img id="img_' + data.id + '" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />';
+							chatImg = '<img id="img_' + safeDataId + '" src="' + escapeAttributeValue(chatImg) + '" class="icon hl-profile-pic" onerror="errorImage(this);" />';
 						}
 					} else {
 						chatImg = "";
 					}
 
 					if (largeavatar && showType && showsource) {
-						var sourceNameText = showSourceName ? '<span class="source-name">' + showType.charAt(0).toUpperCase() + showType.slice(1) + '</span>' : '';
-						showType = '<img src="./sources/images/' + showType + '.png" class="icon hl-source-type avatar-badge" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />' + sourceNameText;
+						var sourceNameText = showSourceName ? '<span class="source-name">' + escapeHtml(showType.charAt(0).toUpperCase() + showType.slice(1)) + '</span>' : '';
+						var safeShowType = escapeAttributeValue(showType);
+						showType = '<img src="./sources/images/' + safeShowType + '.png" class="icon hl-source-type avatar-badge" data-icon-name="' + safeShowType + '" onerror="this.style.display=\'none\'" />' + sourceNameText;
 					} else if (showType && showsource) {
-						var sourceNameText = showSourceName ? '<span class="source-name">' + showType.charAt(0).toUpperCase() + showType.slice(1) + '</span>' : '';
-						showType = '<img src="./sources/images/' + showType + '.png" class="icon hl-source-type" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />' + sourceNameText;
+						var sourceNameText = showSourceName ? '<span class="source-name">' + escapeHtml(showType.charAt(0).toUpperCase() + showType.slice(1)) + '</span>' : '';
+						var safeShowType = escapeAttributeValue(showType);
+						showType = '<img src="./sources/images/' + safeShowType + '.png" class="icon hl-source-type" data-icon-name="' + safeShowType + '" onerror="this.style.display=\'none\'" />' + sourceNameText;
 					} else {
 						showType = "";
 					}
 
 					if (data.sourceImg && customSource) {
+						var safeSourceImg = escapeAttributeValue(data.sourceImg);
 						if (largeavatar) {
-							showType += '<img src="' + data.sourceImg + '" class="icon hl-source-type  avatar-badge" onerror="this.style.display=\'none\'" />';
+							showType += '<img src="' + safeSourceImg + '" class="icon hl-source-type  avatar-badge" onerror="this.style.display=\'none\'" />';
 						} else {
-							showType += '<img src="' + data.sourceImg + '" class="icon hl-source-type" onerror="this.style.display=\'none\'" />';
+							showType += '<img src="' + safeSourceImg + '" class="icon hl-source-type" onerror="this.style.display=\'none\'" />';
 						}
 					}
 
@@ -10770,9 +10839,9 @@
 
 					var nameColor = "";
 					if (data.nameColor && colorized) {
-						nameColor = "style='color:" + data.nameColor + ";'";
+						nameColor = "style='color:" + escapeAttributeValue(data.nameColor) + ";'";
 						if (largeavatar){
-							nameColor = "style='color:" + data.nameColor + ";display: flex;'";
+							nameColor = "style='color:" + escapeAttributeValue(data.nameColor) + ";display: flex;'";
 						}
 					} else if (largeavatar){
 						nameColor = "style='display: flex;'";
@@ -10780,42 +10849,13 @@
 
 					var chatbadges = "";
 					
-					if (giveVIPBadge && vip){
-						if (!data.chatbadges){
-							data.chatbadges = [];
-						}
-						data.chatbadges.push("./icons/vip.png");
+					var displayBadges = SocialStreamBadges.toArray(data.chatbadges);
+					if (giveVIPBadge && vip) {
+						displayBadges.push("./icons/vip.png");
+						data.chatbadges = displayBadges;
 					}
 
-					if (data.chatbadges && limitbadges !== false) {
-						try {
-							data.chatbadges = data.chatbadges.slice(0, limitbadges);
-						} catch (e) {}
-					}
-
-					if (data.chatbadges && showbadges) {
-						if (typeof data.chatbadges == "string"){
-							chatbadges = data.chatbadges;
-						} else {
-							data.chatbadges.forEach(badge => {
-								if (typeof badge == "object") {
-									if (badge.type && badge.type == "img" && badge.src) {
-										if (badge.bgcolor) {
-											chatbadges += "<img class='hl-badge' style='background-color:" + badge.bgcolor + ";' src='" + badge.src + "' />";
-										} else {
-											chatbadges += "<img class='hl-badge' src='" + badge.src + "' />";
-										}
-									} else if (badge.type && badge.type == "svg" && badge.html) {
-										chatbadges += "<span class='hl-badge svg'>" + badge.html + "</span>";
-									} else if (badge.type && badge.type == "text" && badge.text) {
-										chatbadges += "<span class='hl-badge textbadge'>" + badge.text + "</span>";
-									}
-								} else {
-									chatbadges += "<img class='hl-badge' src='" + badge + "' />";
-								}
-							});
-						}
-					}
+					chatbadges = showbadges ? SocialStreamBadges.render(displayBadges, { className: "hl-badge", limit: limitbadges }) : "";
 
 					var specialMessage = false;
 
@@ -10825,6 +10865,7 @@
 							data.chatname = "VDO.Ninja";
 						} else if (custombot) {
 							var textname = data.chatname;
+							// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 							if (!data.textonly && custombot) {
 								textname = unescapeHtml(data.chatname);
 							}
@@ -10903,6 +10944,9 @@
 						chatname = truncateText(chatname, trimName);
 					}
 
+					// Legacy names may contain entities or emotes; check only the display copy.
+					chatname = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(chatname) : escapeHtml(chatname || "");
+
 					if (largeavatar) {
 						chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + (chatname || "") + '<span class="hl-badges">' + chatbadges + "</span></div>";
 					} else if (chatname) {
@@ -10943,38 +10987,41 @@
 
 					var mid = "";
 					if (data.id) {
-						mid = "data-mid='" + data.id + "'";
+						mid = 'data-mid="' + safeDataId + '"';
 					} else {
 						console.error("Messages should have an ID, else queuing/pinning won't work");
 					}
 					
+					// Final HTML-only display check for older/custom senders; do not trust URL version.
+					// textonly=true is already escaped literal text here and must bypass HTML sanitization.
+					// Check the local copy once, before trimming can create DOM; leave the stored body alone.
+					if (!data.textonly && chatmessage) {
+						chatmessage = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(chatmessage) : escapeHtml(chatmessage);
+					}
 					if (trimChat){
 						chatmessage = truncateHTMLContent(chatmessage, trimChat);
 					}
 					
-					if (NormalizeText && chatmessage){
-						chatmessage = normalizeText(data.chatmessage, data.textonly || false);
-					}
 					
 					if (largeavatar) {
-						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + timeArrived  +  "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
+						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + safeDataType + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + timeArrived  +  "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
 					} else if (twoLines) {
-						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-firstline">' + "" + "<div class='queueid'></div>" + showType + chatImg + chatname + '</div><div class="hl-message"><span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">'+ timeArrived  + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");
+						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + '<div class="hl-firstline">' + "" + "<div class='queueid'></div>" + showType + chatImg + chatname + '</div><div class="hl-message"><span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">'+ timeArrived  + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");
 					} else if (splitMode) {
-						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid' title='Order in Queue, with 1 being next up.'></div>" + "<div class='leftside " + larger + "'>"  + showType  + chatImg + chatname + "</div>" + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</div>" + addImage + donationHTML + "</div>");
+						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid' title='Order in Queue, with 1 being next up.'></div>" + "<div class='leftside " + larger + "'>"  + showType  + chatImg + chatname + "</div>" + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</div>" + addImage + donationHTML + "</div>");
 					} else if (compactmode) {
 						if (bubble){
-							var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");
+							var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");
 						} else if (horizontal){
-							var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + donationHTML + "</span>" + "</div>" + addImage + "</div>");
+							var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + donationHTML + "</span>" + "</div>" + addImage + "</div>");
 						} else {
-							var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + "</div>" + addImage + donationHTML + "</div>");
+							var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</span>" + "</div>" + addImage + donationHTML + "</div>");
 						}
 					} else if (horizontal){
 						console.log(".>");
-						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + donationHTML+ "</div>" + addImage + "</div>");
+						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + donationHTML+ "</div>" + addImage + "</div>");
 					} else {
-						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</div>" + addImage + donationHTML + "</div>");
+						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</div>" + addImage + donationHTML + "</div>");
 					}
 
 					if (filtering) {
@@ -11057,11 +11104,11 @@
 
 					if (data.hasMembership) {
 						data.membership = data.hasMembership.toString();
-						memebershipHTML = data.membership;
+						memebershipHTML = plainTextToHtml(data.membership);
 						node.dataset.member = "true";
 					} else if (data.membership) {
 						data.membership = data.membership.toString();
-						memebershipHTML = '<div class="donation membership">' + data.membership + "</div>";
+						memebershipHTML = '<div class="donation membership">' + plainTextToHtml(data.membership) + "</div>";
 						node.dataset.member = "true";
 					} else {
 						data.membership = "";
@@ -11122,7 +11169,7 @@
 					}
 					// this part is used to filter out emojis, but also calculate the character-length of a message, to know how long to show it for
 					// emojis and images are counted with char-length zero-value
-					var contentElement = node.querySelector("#content_" + data.id);
+					var contentElement = node.querySelector(dataAttributeSelector("id", "content_" + data.id));
 					var textContentLength = 0;
 					if (contentElement) {
 						textContentLength = contentElement.innerText.trim().replace(/([\u2580-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "").length || 0;
@@ -11156,6 +11203,10 @@
 					}
 
 					let hlMessage = node.querySelector(".hl-message");
+					if (data.event && !stripHTML && contentElement) {
+						// Italics are display styling in either mode; never append <i> to a textonly payload.
+						contentElement.style.fontStyle = "italic";
+					}
 
 					var svgs = node.querySelectorAll("svg");
 					svgs.forEach(svg => {
@@ -11229,9 +11280,12 @@
 								getById("img_" + data.id).src = data.chatimg;
 								getById("img_" + data.id).classList.remove("invert");
 								getById("img_" + data.id).classList.remove("fade-in-image");
-								node.querySelector("#img_" + data.id).src = data.chatimg;
-								node.querySelector("#img_" + data.id).classList.remove("invert");
-								node.querySelector("#img_" + data.id).classList.remove("fade-in-image");
+								var imageNode = node.querySelector(dataAttributeSelector("id", "img_" + data.id));
+								if (imageNode) {
+									imageNode.src = data.chatimg;
+									imageNode.classList.remove("invert");
+									imageNode.classList.remove("fade-in-image");
+								}
 							} catch (e) {}
 						}.bind(data, node);
 						twitchImage.src = data.chatimg;
@@ -12390,7 +12444,7 @@
 						if (reload) {
 							reload = JSON.parse(reload);
 							for (var i = 0; i < reload.length; i++) {
-								if (!reload[i].id || !document.querySelector("[data-mid='"+reload[i].id+"']")){
+								if (!reload[i].id || !document.querySelector(dataAttributeSelector("data-mid", reload[i].id))){
 									processData({ contents: reload[i] }, true);
 								}
 							}

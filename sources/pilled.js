@@ -35,6 +35,14 @@ function toDataURL(url, callback) {
 			 .replace(/'/g, "&#039;") || "";
 	}
 
+	function formatChatMessageText(unsafe){
+		// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+		// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+		// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
+		return settings.textonlymode ? (unsafe || "") : escapeHtml(unsafe);
+	}
+
 	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
 		
@@ -42,7 +50,7 @@ function toDataURL(url, callback) {
 		
 		if (!element.childNodes || !element.childNodes.length){
 			if (element.textContent){
-				return escapeHtml(element.textContent) || "";
+				return formatChatMessageText(element.textContent) || "";
 			} else {
 				return "";
 			}
@@ -52,8 +60,9 @@ function toDataURL(url, callback) {
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent)+" ";
+				resp += formatChatMessageText(node.textContent)+" ";
 			} else if (node.nodeType === 1){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
@@ -124,8 +133,11 @@ function toDataURL(url, callback) {
 	}
 
 	function processMessage(ele, retry=false){
-		
-		//console.log(ele);
+		// Older wrappers may also carry appnewcommentcreated around app-comment.
+		ele = ele.querySelector("app-comment") || ele;
+		if (!isChatPage() || !observedTarget || !observedTarget.contains(ele) || seenMessages.has(ele)){
+			return;
+		}
 
 		var chatimg = ""
 
@@ -142,7 +154,7 @@ function toDataURL(url, callback) {
 		
 		var name="";
 		try {
-			name = escapeHtml(ele.querySelector(".live-chat-username").textContent.trim());
+			name = ele.querySelector(".live-chat-username").textContent.trim();
 		} catch(e){
 		}
 
@@ -153,7 +165,7 @@ function toDataURL(url, callback) {
 		}
 		
 
-		if (!msg && !name && !contentimg){
+		if (!name || (!msg && !contentimg)){
 			if (!retry){
 				setTimeout(function(ele2){
 					processMessage(ele2, true); 
@@ -172,12 +184,15 @@ function toDataURL(url, callback) {
 		data.textColor = "";
 		data.nameColor = nameColor
 		data.chatmessage = msg;
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
+		data.textonly = settings.textonlymode || false;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.membership = "";
 		data.contentimg = contentimg;
 		data.type = "pilled";
 		
+		seenMessages.add(ele);
 		pushMessage(data);
 	}
 
@@ -189,7 +204,7 @@ function toDataURL(url, callback) {
 	}
 	
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	
 	
@@ -224,26 +239,36 @@ function toDataURL(url, callback) {
 
 	var lastURL =  "";
 	var observer = null;
+	var observedTarget = null;
+	var seenMessages = new WeakSet();
+	var messageSelector = "app-comment, [appnewcommentcreated]";
 	
+	function isChatPage() {
+		return window.location.hostname === "pilled.net" &&
+			/^\/(?:comment|livechat)\/[^/]+\/?$/.test(window.location.pathname);
+	}
 	
 	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
-			if (!window.location.href.startsWith("https://pilled.net/comment/")){return;}
+			if (!isChatPage()){return;}
 			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try {
-							if (mutation.addedNodes[i].skip){continue;}
-							mutation.addedNodes[i].skip = true;
-							processMessage(mutation.addedNodes[i]); 
-							
-						} catch(e){}
+				// Angular can fill in a comment after inserting its wrapper.
+				var parent = mutation.target.nodeType === 1 ? mutation.target : mutation.target.parentElement;
+				var message = parent && parent.closest(messageSelector);
+				if (message){processMessage(message);}
+				mutation.addedNodes.forEach(function(node) {
+					if (node.nodeType !== 1){return;}
+					if (node.matches(messageSelector)){
+						processMessage(node);
 					}
-				}
+					node.querySelectorAll(messageSelector).forEach(function(row) {
+						processMessage(row);
+					});
+				});
 			});
 		};
 		
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true, characterData: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -252,25 +277,24 @@ function toDataURL(url, callback) {
 	
 	console.log("social stream injected");
 
-	setInterval(function(){
+	function checkChat(){
 		try {
-			if (!window.location.href.startsWith("https://pilled.net/comment/")){return;}
-			if (document.querySelector('app-comment-tree-foxhole')){
-				if (!document.querySelector('app-comment-tree-foxhole').marked){
-					document.querySelector('app-comment-tree-foxhole').marked=true;
-
-					console.log("CONNECTED chat detected");
-					try {
-					[...document.querySelectorAll('[appnewcommentcreated]')].forEach(ele=>{
-						// processMessage(ele);
-					});
-					} catch(e){
-						//
-					}
-					onElementInserted(document.querySelector('app-comment-tree-foxhole'));
-				}
-			};
+			var target = isChatPage() ? document.querySelector('app-comment-tree-foxhole') : null;
+			if (target === observedTarget && lastURL === window.location.href){return;}
+			if (observer){observer.disconnect();}
+			observer = null;
+			observedTarget = target;
+			lastURL = window.location.href;
+			if (!target){return;}
+			// Skip existing history, including later updates to those rows.
+			target.querySelectorAll(messageSelector).forEach(function(row) {
+				seenMessages.add(row);
+			});
+			console.log("CONNECTED chat detected");
+			onElementInserted(target);
 		} catch(e){}
-	},2000);
+	}
+	checkChat();
+	setInterval(checkChat,2000);
 
 })();

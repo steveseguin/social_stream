@@ -2598,6 +2598,7 @@ function createTabsFromSettings(response) {
 
 var streamID = false;
 var lastResponse = false;
+var cohostAccessCapability = "";
 
 function getPopupVersionParam() {
   try {
@@ -2933,7 +2934,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     const currentUrl = new URL(window.location.href);
     
     // List of parameters to ignore (TTS-related and standard ones)
-    const ignoreParams = ['session', 'password', 'localserver'];
+    const ignoreParams = ['session', 'password', 'cohostauth', 'localserver'];
   const ttsRelatedParams = [
     'ttsprovider', 'lang', 'voice', 'rate', 'pitch',
     'elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency', 'elevenstability', 
@@ -2976,7 +2977,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "ticker", path: "ticker.html" },
     { id: "poll", path: "poll.html" },
     { id: "chatbot", path: "bot.html", linkPath: "chatbot.html" },
-	{ id: "cohost", path: "cohost.html" },
+	{ id: "cohost", path: "cohost.html", capability: true },
     { id: "giveaway", path: "giveaway.html" },
     { id: "credits", path: "credits.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
@@ -3004,7 +3005,8 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     
     const linkPath = page.linkPath || page.path;
     const pageDefaultParams = page.defaultParams || "";
-    const fullURL = `${baseURL}${page.path}?session=${streamID}${password}${customParams}${pageDefaultParams}${versionParam}`;
+    const capabilityFragment = page.capability && cohostAccessCapability ? `#cohostauth=${encodeURIComponent(cohostAccessCapability)}` : "";
+    const fullURL = `${baseURL}${page.path}?session=${streamID}${password}${customParams}${pageDefaultParams}${versionParam}` + capabilityFragment;
     const displayURL = `${baseURL}${linkPath}?session=${streamID}${password}${customParams}${pageDefaultParams}${versionParam}`;
     const element = document.getElementById(page.id);
     
@@ -3580,6 +3582,7 @@ function update(response, sync = true) {
     }
     
     if (response !== undefined) {
+        if (response.cohostCapability) cohostAccessCapability = response.cohostCapability;
         applyPopupBeginnerMode(getPopupBeginnerMode(response));
 
         // Load profiles if they weren't loaded during init (e.g., due to startup timing)
@@ -5035,6 +5038,9 @@ if (sourcemode){
 
 
 function updateURL(param, href) {
+    const hashIndex = href.indexOf("#");
+    const fragment = hashIndex < 0 ? "" : href.slice(hashIndex);
+    if (hashIndex >= 0) href = href.slice(0, hashIndex);
     href = href.replace("??", "?");
     var arr = href.split('?');
     var newurl;
@@ -5044,10 +5050,12 @@ function updateURL(param, href) {
         newurl = href + '?' + param;
     }
     newurl = newurl.replace("?&", "?");
-    return newurl;
+    return newurl + fragment;
 }
 
 function removeQueryParamWithValue(url, paramWithValue) {
+    const hashIndex = url.indexOf("#");
+    if (hashIndex >= 0) return removeQueryParamWithValue(url.slice(0, hashIndex), paramWithValue) + url.slice(hashIndex);
     let [baseUrl, queryString] = url.split('?');
     if (!queryString) {
         return url;
@@ -5693,7 +5701,9 @@ function handleBothParam(ele, sync) {
 
     elements.forEach(id => {
         const element = document.getElementById(id);
-        if (element) {
+        // Some Web Store-only omissions leave a hidden link without a URL.
+        // Skip that target so the switch can still save and refresh other links.
+        if (element && typeof element.raw === "string") {
             element.raw = ele.checked 
                 ? updateURL(ele.dataset.both, element.raw)
                 : removeQueryParamWithValue(element.raw, ele.dataset.both);

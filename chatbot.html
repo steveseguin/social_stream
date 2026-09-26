@@ -425,7 +425,7 @@
 				return;
 			}
 			try {
-				var tempContainer = document.createElement("div");
+				var tempContainer = document.createElement("template").content.appendChild(document.createElement("div"));
 				tempContainer.innerHTML = html;
 				tempContainer.querySelectorAll(".thinking, script, style").forEach(function(node) {
 					if (node && node.parentNode) {

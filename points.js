@@ -318,13 +318,16 @@ class PointsSystem {
     async getLeaderboard(limit = 10, type = null) {
         const db = await this.ensureDB();
         
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const tx = db.transaction(this.storeName, 'readonly');
             const store = tx.objectStore(this.storeName);
             const index = store.index('points');
             const users = [];
             
-            index.openCursor(null, 'prev').onsuccess = event => {
+            const request = index.openCursor(null, 'prev');
+            request.onerror = () => reject(request.error);
+            tx.onabort = () => reject(tx.error || new Error('Points leaderboard read aborted'));
+            request.onsuccess = event => {
                 const cursor = event.target.result;
                 if (cursor && users.length < limit) {
                     const userData = cursor.value;
@@ -402,8 +405,11 @@ class PointsSystem {
             return { success: false, message: 'Invalid JSON format', error: e.message };
         }
 
-        if (!data.users || !Array.isArray(data.users)) {
+        if (!data || !Array.isArray(data.users)) {
             return { success: false, message: 'Invalid backup format: missing users array' };
+        }
+        if (data.users.some(user => user && user.pointsReserved > 0)) {
+            return {success:false,message:'This backup contains reserved points. Use complete recovery on a fresh host, not a balance-only import.'};
         }
 
         const db = await this.ensureDB();
@@ -411,10 +417,22 @@ class PointsSystem {
         let skipped = 0;
         let errors = 0;
 
-        for (const user of data.users) {
+        for (let user of data.users) {
             try {
-                // Validate required fields
-                if (!user.username || !user.userKey) {
+                if (!user || typeof user.username !== 'string' || !user.username.trim() ||
+                    (user.type !== undefined && typeof user.type !== 'string') ||
+                    user.userKey !== this.getUserKey(user.username, user.type) || !Number.isFinite(user.points)) {
+                    skipped++;
+                    continue;
+                }
+
+                // Older backups may omit activity fields, but malformed values must not reach live scoring.
+                user = Object.assign(this.createDefaultUserData(user.username, user.type || 'default'), user);
+                user.pointsReserved = 0;
+                const invalidActivity = ['pointsSpent', 'lastEngagement', 'currentStreak', 'lastActive'].some(key =>
+                    !Number.isFinite(user[key]) || user[key] < 0);
+                if (invalidActivity || !Array.isArray(user.engagementHistory) ||
+                    user.engagementHistory.some(value => !Number.isFinite(value) || value < 0)) {
                     skipped++;
                     continue;
                 }
@@ -440,7 +458,7 @@ class PointsSystem {
                     }
                 }
             } catch (e) {
-                console.error(`Error importing user ${user.username}:`, e);
+                console.error('Error importing points user:', user && user.username, e);
                 errors++;
             }
         }
@@ -462,14 +480,17 @@ class PointsSystem {
     async getUsersWithSameName(username) {
         const db = await this.ensureDB();
         
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const tx = db.transaction(this.storeName, 'readonly');
             const store = tx.objectStore(this.storeName);
             const index = store.index('username');
             const range = IDBKeyRange.only(username);
             const results = [];
             
-            index.openCursor(range).onsuccess = event => {
+            const request = index.openCursor(range);
+            request.onerror = () => reject(request.error);
+            tx.onabort = () => reject(tx.error || new Error('Points user lookup aborted'));
+            request.onsuccess = event => {
                 const cursor = event.target.result;
                 if (cursor) {
                     results.push(cursor.value);

@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="./libs/objects.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
+
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
 	<meta content="utf-8" http-equiv="encoding" />
@@ -782,7 +785,7 @@
 	}
 
 	function formatWaitlistEntryText(entry) {
-		var baseName = (entry && entry.chatname) ? entry.chatname : "";
+		var baseName = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize((entry && entry.chatname) || "") : fallbackEscapeHtml((entry && entry.chatname) || ""));
 		if (!includeJoinMessage) {
 			return "<span class='waitlist-entry-text'>" + baseName + "</span>";
 		}
@@ -796,7 +799,7 @@
 	function formatWaitlistEntry(entry, classAdd, extraData, forceImage) {
 		var imageHtml = "";
 		if (forceImage || entry.chatimg) {
-			imageHtml = "<img onerror='hideImage(this)' src='" + (entry.chatimg || "") + "'>";
+			imageHtml = "<img onerror='hideImage(this)' src='" + fallbackEscapeHtml(entry.chatimg || "") + "'>";
 		} else {
 			imageHtml = "<div class='spacer'></div>";
 		}

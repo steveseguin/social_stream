@@ -31,15 +31,70 @@
     // Optional: expose for upstream usage
     window.ssWssNotify = __ssNotifyApp;
 
+    function hasPendingYouTubeAuthAttempt(){
+      try {
+        if (sessionStorage.getItem('youtubeOAuthState')) return true;
+      } catch(_){}
+      var storedState = '';
+      try {
+        storedState = localStorage.getItem('youtubeOAuthState') || '';
+      } catch(_){
+        return false;
+      }
+      if (!storedState) return false;
+      try {
+        var params = new URLSearchParams(location.search || '');
+        var callbackState = params.get('state') || '';
+        if (params.has('code') && callbackState && callbackState === storedState) return true;
+      } catch(_){}
+      try {
+        localStorage.removeItem('youtubeOAuthState');
+      } catch(_){}
+      return false;
+    }
+
+    function hasRefreshableYouTubeAuth(){
+      try {
+        return !!localStorage.getItem('youtubeRefreshToken');
+      } catch(_){
+        return false;
+      }
+    }
+
+    function shouldEmitYouTubeSigninRequired(){
+      try {
+        return !localStorage.getItem('youtubeOAuthToken') && !hasRefreshableYouTubeAuth() && !hasPendingYouTubeAuthAttempt();
+      } catch(_){
+        return false;
+      }
+    }
+
+    function notifyYouTubeSigninRequired(){
+      if (shouldEmitYouTubeSigninRequired()) {
+        __ssNotifyApp('signin_required','Sign in with YouTube to continue');
+      }
+    }
+
     // 1) Initial sign-in check
     function initialCheck(){
       try {
-        var hasToken = !!localStorage.getItem('youtubeOAuthToken');
-        if (!hasToken) __ssNotifyApp('signin_required','Sign in with YouTube to continue');
+        notifyYouTubeSigninRequired();
       } catch(_){}
     }
 
-    // 2) Watch for live chat connect/disconnect via global liveChatId
+    // 2) Patch showAuthButton so signin_required only fires after refresh/auth attempts are exhausted.
+    try {
+      if (typeof showAuthButton === 'function') {
+        var __ssOrigShowAuthButton = showAuthButton;
+        showAuthButton = function(){
+          var result = __ssOrigShowAuthButton.apply(this, arguments);
+          try { notifyYouTubeSigninRequired(); } catch(_){}
+          return result;
+        };
+      }
+    } catch(_){}
+
+    // 3) Watch for live chat connect/disconnect via global liveChatId
     function watchLiveChat(){
       try {
         var prev = null;
@@ -54,7 +109,7 @@
       } catch(_){}
     }
 
-    // 3) Patch fetch for YouTube Data API errors and forward as error status
+    // 4) Patch fetch for YouTube Data API errors and forward as error status
     function patchFetchErrors(){
       try {
         if (window.__ss_fetch_patched__) return; window.__ss_fetch_patched__ = true;
@@ -353,6 +408,11 @@ window.addEventListener('youtubeDelete', function(e) {
 	if (!e.detail) {
 		return;
 	}
+	extensionRelayQueue = extensionRelayQueue.filter(function(message) {
+		if (e.detail.meta && e.detail.meta.messageId) return String(message.meta && message.meta.messageId) !== String(e.detail.meta.messageId);
+		if (e.detail.userid) return message.userid !== e.detail.userid;
+		return message.chatname !== e.detail.chatname;
+	});
 	try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { delete: e.detail }, function() {
 			if (chrome.runtime.lastError) {

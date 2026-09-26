@@ -37,7 +37,12 @@ This overlay works by:
 -->
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+<script src="./libs/objects.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
+<script src="./shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="./shared/utils/chatBadges.css">
+
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Overlay</title>
     <script src="./libs/colours.js" type="text/javascript"></script>
@@ -562,20 +567,7 @@ body, html {
 		}
 		messageTimestamps.set(messageId, Date.now());
 		
-		var chatbadgesHtml = "";
-		if (data.chatbadges) {
-			data.chatbadges.forEach(badge => {
-				if (typeof badge === "object") {
-					if (badge.type === "img" && badge.src) {
-						chatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;
-					} else if (badge.type === "svg" && badge.html) {
-						chatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;
-					}
-				} else { 
-					chatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;
-				}
-			});
-		}
+		var chatbadgesHtml = SocialStreamBadges.render(data.chatbadges);
 		
 		let avatarBorderColor = "linear-gradient(45deg, #4ab8f9, #4cd137)"; // Default gradient
 		if (data.nameColor) {
@@ -598,11 +590,12 @@ body, html {
 		
 		const sourceIconHtml = data.type ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="Source" class="source-icon">` : '';
 		const avatarHtml = data.chatimg ? 
-			`<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : '';
-		const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : '';
-		const membershipHtml = data.membership ? `<div class="membership-status">${data.membership}</div>` : '';
-		const messageTextHtml = `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>`;
-		const donationHtml = data.hasDonation ? `<div class="donation">${data.hasDonation}</div>` : '';
+			`<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${escapeCssUrlAttribute(data.chatimg)}');"></div></div>` : '';
+		const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';
+		const membershipHtml = data.membership ? `<div class="membership-status">${fallbackEscapeHtml(data.membership)}</div>` : '';
+		// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
+		const messageTextHtml = `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.textonly ? '' : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage || '') : fallbackEscapeHtml(data.chatmessage || ''))}</div>`;
+		const donationHtml = data.hasDonation ? `<div class="donation">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';
 		
 		const contentImgHtml = data.contentimg ? 
 			`<div style="padding: 3px; border-radius: 12px; background: ${avatarBorderColor}; display: inline-block; margin-top: 10px;">
@@ -625,6 +618,11 @@ body, html {
 			</div>
 			${contentImgHtml}
 		`;
+
+		// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
+		if (data.textonly) {
+			messageDiv.querySelector('.text').textContent = data.chatmessage || '';
+		}
 
 		if (reversed) {
 			// In reverse mode, insert new messages at the top (after spacer if present)

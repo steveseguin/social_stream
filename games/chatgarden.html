@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Garden - Social Stream Ninja</title>
     <link rel="icon" href="../favicon.ico" />
@@ -633,7 +633,9 @@
         }
 
         function stripHtml(html) {
-            const tmp = document.createElement('div');
+            // Keep the existing div parsing context inside inert template content.
+            const template = document.createElement('template');
+            const tmp = template.content.appendChild(document.createElement('div'));
             tmp.innerHTML = html;
             return tmp.textContent || tmp.innerText || '';
         }
@@ -649,6 +651,7 @@
 
             const username = stripHtml(data.chatname);
             let message = data.chatmessage;
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!data.textonly) {
                 message = stripHtml(message);
             }

@@ -54,7 +54,11 @@ function pushMessage(data){
 	
 	function escapeHtml(unsafe){
 		try {
-			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
+			if (settings.textonlymode){ // Literal text stays unencoded at capture; escape only when a renderer constructs HTML.
 				return unsafe;
 			}
 			return unsafe
@@ -87,6 +91,7 @@ function pushMessage(data){
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
@@ -98,31 +103,61 @@ function pushMessage(data){
 		return resp;
 	}
 	
+	function getMessageAuthor(messageElement){
+		var author = { name: "", image: "" };
+		var chat = messageElement.closest("#PiczelChat");
+		var row = messageElement.closest("[data-chat-row]");
+		var messages = messageElement.parentElement;
+		var group = messages && messages.parentElement;
+		if (!chat || !group || group === chat || !chat.contains(group)){return author;}
+		if (row && !row.contains(group)){return author;}
+
+		// Piczel groups consecutive Message_* elements in one content wrapper.
+		// Its author header is a sibling of that wrapper, not an ancestor's first
+		// buttons. Never cross into another group, even when an avatar is absent.
+		for (var i = 0; i < messages.children.length; i++){
+			if (!messages.children[i].matches("[id^='Message_']")){return author;}
+		}
+		var header = messages.previousElementSibling;
+		if (!header || header.querySelector("[id^='Message_'], [data-chat-row]")){return author;}
+		var nameButton = header.querySelector(":scope > button");
+		if (!nameButton){return author;}
+		// The username is direct text; nested children hold role/status badges.
+		nameButton.childNodes.forEach(function(node){
+			if (node.nodeType === 3){author.name += node.textContent;}
+		});
+		author.name = author.name.trim();
+		if (!author.name){return author;}
+		var avatarButton = header.previousElementSibling;
+		if (avatarButton && avatarButton.tagName === "BUTTON"){
+			var image = avatarButton.querySelector("img[src]");
+			if (image){author.image = image.src;}
+		}
+		return author;
+	}
+
 	async function processMessage(content){
-		
-		
-		var buttons = content.querySelectorAll("button");
-		
-		var chatname="";
-		try{
-			chatname = escapeHtml(buttons[1].textContent);
-		} catch(e){
-			chatname = "";
-		}
-		
-		var chatimg="";
-		try{
-			chatimg = buttons[0].querySelector("img").src;
-		} catch(e){
-			chatimg = "";
-		}
+		var messageElement = null;
+		try {
+			if (content.matches && content.matches("[id^='Message_']")) {
+				messageElement = content;
+			} else {
+				messageElement = content.querySelector("[id^='Message_']");
+			}
+		} catch(e){}
+		if (!messageElement){return;}
+
+		var author = getMessageAuthor(messageElement);
+		var chatname = author.name;
+		var chatimg = author.image;
 		
 		var chatmessage="";
 		try{
+			 // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			 if (settings.textonlymode){
-				chatmessage = escapeHtml(content.querySelector("[id^='Message_']").textContent);
+				chatmessage = escapeHtml(messageElement.textContent);
 			 } else {
-				chatmessage = digInto(content.querySelector("[id^='Message_']").childNodes)
+				chatmessage = digInto(messageElement.childNodes)
 			 }
 		} catch(e){
 			return;
@@ -138,6 +173,7 @@ function pushMessage(data){
 	  data.hasDonation = "";
 	  data.membership = "";;
 	  data.contentimg = "";
+	  // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "piczel";
 	  
@@ -161,12 +197,19 @@ function pushMessage(data){
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (!mutation.addedNodes[i].children.length){continue;}
-							if (mutation.addedNodes[i].dataset.set123){continue;}
-							mutation.addedNodes[i].dataset.set123 = "true";
-							
-							callback(mutation.addedNodes[i]);
-								
+							if (mutation.addedNodes[i].nodeType !== 1){continue;}
+							var messages = [];
+							if (mutation.addedNodes[i].matches("[id^='Message_']")){
+								messages.push(mutation.addedNodes[i]);
+							}
+							mutation.addedNodes[i].querySelectorAll("[id^='Message_']").forEach(function(message){
+								messages.push(message);
+							});
+							messages.forEach(function(message){
+								if (message.dataset.set123){return;}
+								message.dataset.set123 = "true";
+								callback(message);
+							});
 						} catch(e){}
 					}
 				}
@@ -188,21 +231,17 @@ function pushMessage(data){
 			console.log("LOADED SocialStream EXTENSION");
 			
 			try{
-				document.querySelectorAll("nav button").forEach(ele=>{
-					ele.disabled = true;
-				});
+				if (location.pathname.startsWith("/chat/")){
+					document.querySelectorAll("nav button").forEach(ele=>{
+						ele.disabled = true;
+					});
+				}
 			} catch(e){}
 			
-			try { 
-				var main = document.querySelector("#PiczelChat").childNodes[0].childNodes[0].childNodes[3].childNodes[0].childNodes[0].childNodes;
-				for (var j =0;j<main.length;j++){
-					try{
-						if (!main[j].dataset.set123){
-							main[j].dataset.set123 = "true";
-							//processMessage(main[j]);
-						} 
-					} catch(e){}
-				}
+			try {
+				document.querySelectorAll("#PiczelChat [id^='Message_']").forEach(function(message){
+					message.dataset.set123 = "true";
+				});
 			} catch(e){ }
 			
 			onElementInserted("#PiczelChat", function(first){
@@ -213,7 +252,7 @@ function pushMessage(data){
 	},2000);
 
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	
 	

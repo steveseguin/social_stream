@@ -115,7 +115,11 @@ var lastMessage = {};
 	
 	function escapeHtml(unsafe){
 		try {
-			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
+			if (settings.textonlymode){ // Literal text stays unencoded at capture; escape only when a renderer constructs HTML.
 				return unsafe;
 			}
 			return unsafe
@@ -139,7 +143,7 @@ var lastMessage = {};
 	}
 	
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	
 	
@@ -230,6 +234,8 @@ var lastMessage = {};
 		data.backgroundColor = "";
 		data.textColor = "";
 		data.chatmessage = question;
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
+		data.textonly = settings.textonlymode || false;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.membership = "";;
@@ -428,6 +434,7 @@ var lastMessage = {};
 		hasDonation: "",
 		membership: "",
 		contentimg: "", // ctt
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		textonly: settings.textonlymode || false,
 		type: "zoom"
 	  };
@@ -454,11 +461,25 @@ var lastMessage = {};
 	}
 
 	// Updated getAllContentNodes to handle both old and new DOM structures
-	function getAllContentNodes(element) {
+	function getAllContentNodes(element, flattenListText) {
 	  let resp = "";
 	  
 	  if (!element) {
 		return resp;
+	  }
+
+	  // Keep lists as one chat message, with punctuation between items.
+	  if (element.nodeName === "OL" || element.nodeName === "UL") {
+		const items = [];
+		element.childNodes.forEach(node => {
+		  if (node.nodeName === "LI") {
+			const item = getAllContentNodes(node, true).trim();
+			if (item) {
+			  items.push(item);
+			}
+		  }
+		});
+		return items.length ? items.join("; ") + " " : "";
 	  }
 	  
 	  
@@ -469,10 +490,12 @@ var lastMessage = {};
 		
 		
 		if (node.childNodes.length) {
-		  resp += getAllContentNodes(node);
+		  resp += getAllContentNodes(node, flattenListText);
 		} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
-		  resp += escapeHtml(node.textContent.trim()) + " ";
+		  const text = flattenListText ? node.textContent.replace(/\s+/g, " ").trim() : node.textContent.trim();
+		  resp += escapeHtml(text) + " ";
 		} else if (node.nodeType === 1) {
+		  // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		  if (!settings.textonlymode) {
 			if ((node.nodeName == "IMG") && node.src) {
 				// Create a clean image element with only necessary attributes
@@ -497,7 +520,8 @@ var lastMessage = {};
 		  } else {
 			// In text-only mode, just use the alt text if available
 			if ((node.nodeName == "IMG") && node.alt) {
-				resp += escapeHtml(node.alt) + " ";
+				const alt = flattenListText ? node.alt.replace(/\s+/g, " ").trim() : node.alt;
+				resp += escapeHtml(alt) + " ";
 			}
 		  }
 		}
@@ -665,7 +689,8 @@ var lastMessage = {};
 				if (!data.chatmessage) return;
 				data.event = "reaction";
 				data.type = "zoom";
-				data.textonlymode = false;
+				// HTML-mode chatmessage may contain formatting/emotes; keep its normal HTML sanitization boundary.
+				data.textonly = false;
 				pushMessage(data);
 			});
 
@@ -679,7 +704,8 @@ var lastMessage = {};
 					if (!data.chatmessage) return;
 					data.event = "reaction";
 					data.type = "zoom";
-					data.textonlymode = false;
+					// HTML-mode chatmessage may contain formatting/emotes; keep its normal HTML sanitization boundary.
+					data.textonly = false;
 					pushMessage(data);
 			});
 
@@ -692,7 +718,8 @@ var lastMessage = {};
 				if (!data.chatmessage){return;}
 				data.event = "reaction";
 				data.type = "zoom";
-				data.textonlymode = false;
+				// HTML-mode chatmessage may contain formatting/emotes; keep its normal HTML sanitization boundary.
+				data.textonly = false;
 				////console.log(data);
 				pushMessage(data);
 				
@@ -708,7 +735,8 @@ var lastMessage = {};
 						if (!data.chatmessage){return;}
 						data.event = "reaction";
 						data.type = "zoom";
-						data.textonlymode = false;
+						// HTML-mode chatmessage may contain formatting/emotes; keep its normal HTML sanitization boundary.
+						data.textonly = false;
 						////console.log(data);
 						pushMessage(data);
 					});

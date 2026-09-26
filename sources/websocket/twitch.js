@@ -270,6 +270,16 @@ let tmiLoaderPromise = null;
 let chatClient = null;
 let chatClientOffHandlers = [];
 let tmiClientFactory = null;
+let sendTwitchMessageFromSsn = null;
+let chatSendInFlight = false;
+let chatSendStatusTimer = null;
+let twitchChatWriteAuthorized = false;
+let twitchChatEchoBatchSequence = 0;
+const twitchChatEchoBatches = new Map();
+const twitchChatEchoBatchById = new Map();
+const recentTwitchChatEchoIds = new Map();
+const TWITCH_CHAT_SEND_TIMEOUT_MS = Number(globalThis.__SSAPP_TWITCH_CHAT_SEND_TIMEOUT_MS__) || 15000;
+const TWITCH_CHAT_ECHO_TIMEOUT_MS = Number(globalThis.__SSAPP_TWITCH_CHAT_ECHO_TIMEOUT_MS__) || 10000;
 const twitchDisplayNameByLogin = new Map();
 const TWITCH_DELAYTWITCH_MS = 3000;
 const TWITCH_DELETE_DELAY_BUFFER_MS = 50;
@@ -287,14 +297,20 @@ const websocketProxy = {
     }
   },
   send: (rawMessage) => {
-    if (!chatClient || !rawMessage) {
+    if (!rawMessage) {
       return;
     }
     try {
       if (typeof rawMessage === 'string') {
         const colonIndex = rawMessage.indexOf(' :');
         const payload = colonIndex >= 0 ? rawMessage.slice(colonIndex + 2) : rawMessage;
-        chatClient.sendMessage(payload, channel).catch((err) => {
+        const sendPromise = sendTwitchMessageFromSsn
+          ? sendTwitchMessageFromSsn(payload)
+          : chatClient?.sendMessage(payload, channel);
+        if (!sendPromise) {
+          return;
+        }
+        Promise.resolve(sendPromise).catch((err) => {
           console.warn('Twitch chat proxy send failed', err);
         });
       }
@@ -308,6 +324,173 @@ function setWebsocketReadyState(state) {
   websocketProxy.readyState = state;
 }
 
+function isTwitchChatConnected() {
+  if (websocketProxy.readyState !== WEBSOCKET_READY_STATE.OPEN || !chatClient) {
+    return false;
+  }
+  try {
+    const state = typeof chatClient.getState === 'function' ? chatClient.getState() : null;
+    return state?.status === 'connected' && state?.joined === true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function pruneRecentTwitchChatEchoIds(now = Date.now()) {
+  for (const [messageId, receivedAt] of recentTwitchChatEchoIds) {
+    if (now - receivedAt <= 30000 && recentTwitchChatEchoIds.size <= 100) break;
+    recentTwitchChatEchoIds.delete(messageId);
+  }
+}
+
+function finishTwitchChatEchoBatch(batch, received) {
+  if (!batch || !twitchChatEchoBatches.has(batch.id)) return;
+  clearTimeout(batch.timer);
+  twitchChatEchoBatches.delete(batch.id);
+  for (const messageId of batch.messageIds) {
+    if (twitchChatEchoBatchById.get(messageId) === batch) {
+      twitchChatEchoBatchById.delete(messageId);
+    }
+  }
+  const statusElement = document.getElementById('send-status');
+  if (statusElement?.dataset.source !== batch.source) return;
+  if (received) {
+    setChatSendStatus('Sent and received from Twitch.', 'success', 3000, batch.source);
+  } else {
+    setChatSendStatus(
+      'Accepted by Twitch, but the chat echo was not received locally.',
+      'warning',
+      7000,
+      batch.source
+    );
+  }
+}
+
+function trackAcceptedTwitchChatMessages(messageIds) {
+  const uniqueMessageIds = [...new Set((messageIds || []).filter(Boolean).map(String))];
+  if (!uniqueMessageIds.length) return;
+  pruneRecentTwitchChatEchoIds();
+  const batch = {
+    id: ++twitchChatEchoBatchSequence,
+    source: `send-echo-${twitchChatEchoBatchSequence}`,
+    messageIds: uniqueMessageIds,
+    pendingIds: new Set(uniqueMessageIds.filter(messageId => !recentTwitchChatEchoIds.has(messageId))),
+    timer: null
+  };
+  if (!batch.pendingIds.size) {
+    setChatSendStatus('Sent and received from Twitch.', 'success', 3000, batch.source);
+    return;
+  }
+  twitchChatEchoBatches.set(batch.id, batch);
+  for (const messageId of batch.pendingIds) {
+    twitchChatEchoBatchById.set(messageId, batch);
+  }
+  setChatSendStatus('Accepted by Twitch; waiting for chat echo…', '', 0, batch.source);
+  batch.timer = setTimeout(() => finishTwitchChatEchoBatch(batch, false), TWITCH_CHAT_ECHO_TIMEOUT_MS);
+}
+
+function noteTwitchChatEcho(messageId) {
+  if (!messageId) return;
+  const normalizedId = String(messageId);
+  recentTwitchChatEchoIds.set(normalizedId, Date.now());
+  pruneRecentTwitchChatEchoIds();
+  const batch = twitchChatEchoBatchById.get(normalizedId);
+  if (!batch) return;
+  batch.pendingIds.delete(normalizedId);
+  twitchChatEchoBatchById.delete(normalizedId);
+  if (!batch.pendingIds.size) {
+    finishTwitchChatEchoBatch(batch, true);
+  }
+}
+
+function clearPendingTwitchChatEchoes() {
+  for (const batch of twitchChatEchoBatches.values()) {
+    clearTimeout(batch.timer);
+  }
+  twitchChatEchoBatches.clear();
+  twitchChatEchoBatchById.clear();
+  recentTwitchChatEchoIds.clear();
+}
+
+function setChatSendStatus(message, state = '', clearAfterMs = 0, source = 'send') {
+  if (chatSendStatusTimer) {
+    clearTimeout(chatSendStatusTimer);
+    chatSendStatusTimer = null;
+  }
+  const statusElement = document.getElementById('send-status');
+  if (!statusElement) return;
+  statusElement.textContent = message || '';
+  if (state) {
+    statusElement.dataset.state = state;
+  } else {
+    delete statusElement.dataset.state;
+  }
+  if (message) {
+    statusElement.dataset.source = source;
+  } else {
+    delete statusElement.dataset.source;
+  }
+  if (message && clearAfterMs > 0) {
+    chatSendStatusTimer = setTimeout(() => {
+      if (statusElement.textContent !== message || statusElement.dataset.source !== source) return;
+      statusElement.textContent = '';
+      delete statusElement.dataset.state;
+      delete statusElement.dataset.source;
+      chatSendStatusTimer = null;
+    }, clearAfterMs);
+  }
+}
+
+function updateChatComposerState() {
+  const sendButton = document.getElementById('sendmessage');
+  const inputElement = document.getElementById('input-text');
+  const connected = isTwitchChatConnected();
+  if (sendButton) {
+    sendButton.disabled = !connected || !twitchChatWriteAuthorized || chatSendInFlight;
+    sendButton.textContent = chatSendInFlight ? 'Sending…' : 'Send';
+    sendButton.setAttribute('aria-busy', chatSendInFlight ? 'true' : 'false');
+    sendButton.dataset.chatConnected = connected ? 'true' : 'false';
+    sendButton.dataset.chatAuthorized = twitchChatWriteAuthorized ? 'true' : 'false';
+  }
+  if (inputElement) {
+    inputElement.readOnly = chatSendInFlight;
+    inputElement.setAttribute('aria-busy', chatSendInFlight ? 'true' : 'false');
+  }
+}
+
+function updateChatConnectionStatus(status) {
+  updateChatComposerState();
+  if (chatSendInFlight) return;
+  const statusElement = document.getElementById('send-status');
+  switch (status) {
+    case 'connecting':
+      setChatSendStatus('Connecting to Twitch chat…', '', 0, 'connection');
+      break;
+    case 'connected':
+      if (!isTwitchChatConnected()) {
+        setChatSendStatus('Joining Twitch chat — sending unavailable.', 'warning', 0, 'connection');
+      } else if (!twitchChatWriteAuthorized) {
+        setChatSendStatus(
+          'Twitch sign-in is missing chat permission. Sign out and sign in again.',
+          'error',
+          0,
+          'connection'
+        );
+      } else if (statusElement?.dataset.source === 'connection') {
+        setChatSendStatus('', '', 0, 'connection');
+      }
+      break;
+    case 'disconnected':
+      setChatSendStatus('Reconnecting — sending unavailable.', 'warning', 0, 'connection');
+      break;
+    case 'error':
+      setChatSendStatus('Twitch chat is unavailable. Reconnecting…', 'error', 0, 'connection');
+      break;
+    default:
+      break;
+  }
+}
+
 try{
 	window.websocket = websocketProxy;
 	var isExtensionOn = true;
@@ -317,6 +500,8 @@ try{
 	var scope = [
 		'chat:read',
 		'chat:edit',
+		'user:write:chat',
+		'channel:bot',
 		'bits:read',
 		'moderator:read:followers',
 		'moderator:read:chatters',
@@ -332,6 +517,7 @@ try{
 		'channel:read:redemptions'
 	].join('+');
 	var channel = '';
+	var channelFromUrl = false;
 	var username = "SocialStreamNinja"; // Not supported at the moment
 	var BTTV = false;
 	var SEVENTV = false;
@@ -346,10 +532,30 @@ try{
 	var TWITCH_TOKEN_EXPIRY_KEY = 'twitchOAuthExpiry';
 	var TWITCH_TOKEN_SCOPE_KEY = 'twitchOAuthScope';
 	var TWITCH_TOKEN_CLIENT_ID_KEY = 'twitchOAuthClientId';
+	var TWITCH_BOT_TOKEN_KEY = 'twitchBotOAuthToken';
+	var TWITCH_BOT_REFRESH_TOKEN_KEY = 'twitchBotOAuthRefreshToken';
+	var TWITCH_BOT_TOKEN_EXPIRY_KEY = 'twitchBotOAuthExpiry';
+	var TWITCH_BOT_TOKEN_SCOPE_KEY = 'twitchBotOAuthScope';
+	var TWITCH_BOT_TOKEN_CLIENT_ID_KEY = 'twitchBotOAuthClientId';
+	var TWITCH_BOT_USER_ID_KEY = 'twitchBotUserId';
+	var TWITCH_BOT_LOGIN_KEY = 'twitchBotLogin';
+	var TWITCH_BOT_REQUIRED_SCOPES = ['user:write:chat', 'user:bot'];
+	var TWITCH_BOT_SEND_URL = TWITCH_HOSTED_AUTH_BASE_URL + '/chat/messages';
 	var TWITCH_HOSTED_AUTH_STORAGE_KEY = 'twitchUseHostedOAuth';
 	var TWITCH_TOKEN_VALIDATION_TRANSIENT_ERROR = 'transient_validation_error';
+	var TWITCH_TOKEN_REFRESH_RETRY_BASE_MS = 30000;
+	var TWITCH_TOKEN_REFRESH_RETRY_MAX_MS = 300000;
+	var TWITCH_TOKEN_REFRESH_TIMEOUT_MS = 10000;
 	var tokenRefreshTimer = null;
 	var tokenRefreshPromise = null;
+	var tokenRefreshRetryCount = 0;
+	var lastTokenRefreshFailure = null;
+	var tokenRefreshResumePending = false;
+	var botTokenRefreshTimer = null;
+	var botTokenRefreshPromise = null;
+	var lastBotSendAuthorizationError = '';
+	let currentChannelId = null;
+	let currentAuthUser = null;
 
 	function createTransientTokenValidationError(status, message) {
 		return {
@@ -436,12 +642,12 @@ try{
 		try {
 			const parsed = JSON.parse(localStorage.getItem(TWITCH_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
 			return {
-				syncDeleteMessages: !!parsed.syncDeleteMessages,
+				syncDeleteMessages: parsed.syncDeleteMessages !== false,
 				syncBlockUsers: !!parsed.syncBlockUsers
 			};
 		} catch (_) {
 			return {
-				syncDeleteMessages: false,
+				syncDeleteMessages: true,
 				syncBlockUsers: false
 			};
 		}
@@ -500,6 +706,7 @@ try{
 
 	var urlParams = new URLSearchParams(window.location.search);
 	var hashParams = new URLSearchParams(window.location.hash.slice(1));
+	channelFromUrl = !!(urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel"));
 	channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || "";
 		
 		
@@ -520,6 +727,127 @@ try{
 	function getTwitchApiClientId() {
 		return getStoredTokenClientId();
 	}
+	function getStoredBotToken() {
+		return localStorage.getItem(TWITCH_BOT_TOKEN_KEY);
+	}
+	function getStoredBotRefreshToken() {
+		return localStorage.getItem(TWITCH_BOT_REFRESH_TOKEN_KEY);
+	}
+	function getStoredBotTokenExpiry() {
+		const value = parseInt(localStorage.getItem(TWITCH_BOT_TOKEN_EXPIRY_KEY) || '', 10);
+		return Number.isFinite(value) ? value : 0;
+	}
+	function getMainBotAuthorizationStatus() {
+		const validatedScopes = Array.isArray(currentAuthUser?.scopes) ? currentAuthUser.scopes : [];
+		const storedScopes = String(localStorage.getItem(TWITCH_TOKEN_SCOPE_KEY) || '')
+			.split(/[,\s]+/)
+			.filter(Boolean);
+		const scopes = validatedScopes.length ? validatedScopes : storedScopes;
+		const mainHasChannelBotScope = scopes.length ? scopes.includes('channel:bot') : null;
+		const tokenClientId = String(currentAuthUser?.client_id || localStorage.getItem(TWITCH_TOKEN_CLIENT_ID_KEY) || '');
+		const mainUsesHostedApp = tokenClientId ? tokenClientId === hostedClientId : null;
+		const mainAccountIsBroadcaster = currentAuthUser?.user_id && currentChannelId
+			? String(currentAuthUser.user_id) === String(currentChannelId)
+			: null;
+		let mainBotAuthorizationReady = null;
+		if (mainHasChannelBotScope === true && mainUsesHostedApp === true && mainAccountIsBroadcaster === true) {
+			mainBotAuthorizationReady = true;
+		} else if (mainHasChannelBotScope === false || mainUsesHostedApp === false || mainAccountIsBroadcaster === false) {
+			mainBotAuthorizationReady = false;
+		}
+
+		return {
+			mainHasChannelBotScope,
+			mainBotAuthorizationReady,
+			mainAccountIsBroadcaster,
+			mainAccountLogin: currentAuthUser?.login || ''
+		};
+	}
+	function getStoredBotAccountStatus(extra = {}) {
+		const login = localStorage.getItem(TWITCH_BOT_LOGIN_KEY) || '';
+		const userId = localStorage.getItem(TWITCH_BOT_USER_ID_KEY) || '';
+		return {
+			connected: !!getStoredBotToken(),
+			login,
+			userId,
+			error: lastBotSendAuthorizationError || null,
+			requiresMainReauthorization: !!lastBotSendAuthorizationError,
+			...getMainBotAuthorizationStatus(),
+			...extra
+		};
+	}
+	function notifyBotAccountStatus(extra = {}) {
+		const status = getStoredBotAccountStatus(extra);
+		try {
+			if (typeof window.ssWssNotifyTwitch === 'function') {
+				window.ssWssNotifyTwitch('bot_account', status.error || '', { botAccount: status });
+			}
+		} catch (_) {}
+		return status;
+	}
+	function setStoredBotToken(token, expiresIn, refreshToken, tokenScope, tokenClientId, identity = {}) {
+		if (token) {
+			localStorage.setItem(TWITCH_BOT_TOKEN_KEY, token);
+		}
+		const expiresInSeconds = Number(expiresIn);
+		if (Number.isFinite(expiresInSeconds) && expiresInSeconds > 0) {
+			localStorage.setItem(TWITCH_BOT_TOKEN_EXPIRY_KEY, String(Date.now() + expiresInSeconds * 1000));
+		}
+		if (refreshToken) {
+			localStorage.setItem(TWITCH_BOT_REFRESH_TOKEN_KEY, refreshToken);
+		}
+		if (Array.isArray(tokenScope)) {
+			localStorage.setItem(TWITCH_BOT_TOKEN_SCOPE_KEY, tokenScope.join(' '));
+		} else if (tokenScope) {
+			localStorage.setItem(TWITCH_BOT_TOKEN_SCOPE_KEY, String(tokenScope));
+		}
+		if (tokenClientId) {
+			localStorage.setItem(TWITCH_BOT_TOKEN_CLIENT_ID_KEY, String(tokenClientId));
+		}
+		if (identity.user_id) {
+			localStorage.setItem(TWITCH_BOT_USER_ID_KEY, String(identity.user_id));
+		}
+		if (identity.login) {
+			localStorage.setItem(TWITCH_BOT_LOGIN_KEY, String(identity.login));
+		}
+		scheduleStoredBotTokenRefresh();
+	}
+	function clearStoredBotToken() {
+		if (botTokenRefreshTimer) {
+			clearTimeout(botTokenRefreshTimer);
+			botTokenRefreshTimer = null;
+		}
+		[
+			TWITCH_BOT_TOKEN_KEY,
+			TWITCH_BOT_REFRESH_TOKEN_KEY,
+			TWITCH_BOT_TOKEN_EXPIRY_KEY,
+			TWITCH_BOT_TOKEN_SCOPE_KEY,
+			TWITCH_BOT_TOKEN_CLIENT_ID_KEY,
+			TWITCH_BOT_USER_ID_KEY,
+			TWITCH_BOT_LOGIN_KEY
+		].forEach(function(key) {
+			localStorage.removeItem(key);
+		});
+	}
+	function scheduleStoredBotTokenRefresh(delayOverride = null) {
+		if (botTokenRefreshTimer) {
+			clearTimeout(botTokenRefreshTimer);
+			botTokenRefreshTimer = null;
+		}
+		if (!getStoredBotRefreshToken()) {
+			return;
+		}
+		const expiresAt = getStoredBotTokenExpiry();
+		const delay = Number.isFinite(delayOverride)
+			? Math.max(0, delayOverride)
+			: (expiresAt ? Math.max(0, expiresAt - Date.now() - 60000) : TWITCH_TOKEN_REFRESH_RETRY_BASE_MS);
+		botTokenRefreshTimer = setTimeout(function() {
+			botTokenRefreshTimer = null;
+			refreshBotAccessToken({ reason: 'scheduled' }).catch(function(error) {
+				console.warn('Scheduled Twitch bot token refresh failed:', error);
+			});
+		}, delay);
+	}
 	function setStoredToken(token, expiresIn, refreshToken, tokenScope, tokenClientId) {
 		if (token) {
 			localStorage.setItem('twitchOAuthToken', token);
@@ -531,6 +859,8 @@ try{
 		}
 		if (refreshToken) {
 			localStorage.setItem(TWITCH_REFRESH_TOKEN_KEY, refreshToken);
+			tokenRefreshRetryCount = 0;
+			lastTokenRefreshFailure = null;
 		}
 		if (Array.isArray(tokenScope)) {
 			localStorage.setItem(TWITCH_TOKEN_SCOPE_KEY, tokenScope.join(' '));
@@ -547,12 +877,18 @@ try{
 			clearTimeout(tokenRefreshTimer);
 			tokenRefreshTimer = null;
 		}
+		tokenRefreshRetryCount = 0;
+		lastTokenRefreshFailure = null;
+		tokenRefreshResumePending = false;
 		localStorage.removeItem('twitchOAuthToken');
 		localStorage.removeItem(TWITCH_REFRESH_TOKEN_KEY);
 		localStorage.removeItem(TWITCH_TOKEN_EXPIRY_KEY);
 		localStorage.removeItem(TWITCH_TOKEN_SCOPE_KEY);
 		localStorage.removeItem(TWITCH_TOKEN_CLIENT_ID_KEY);
 		localStorage.removeItem('twitchChannel');
+		twitchChatWriteAuthorized = false;
+		clearPendingTwitchChatEchoes();
+		updateChatComposerState();
 	}
 	function updateStoredTokenExpiry(expiresIn) {
 		const expiresInSeconds = Number(expiresIn);
@@ -576,10 +912,47 @@ try{
 		}
 		const delay = Math.max(0, expiresAt - Date.now() - 60000);
 		tokenRefreshTimer = setTimeout(function() {
+			tokenRefreshTimer = null;
 			refreshAccessToken({ reason: 'scheduled' }).catch(function(error) {
 				console.warn('Scheduled Twitch token refresh failed:', error);
 			});
 		}, delay);
+	}
+	function scheduleTokenRefreshRetry() {
+		if (!getStoredRefreshToken()) {
+			return;
+		}
+		if (tokenRefreshTimer) {
+			clearTimeout(tokenRefreshTimer);
+		}
+		tokenRefreshRetryCount += 1;
+		const delay = Math.min(
+			TWITCH_TOKEN_REFRESH_RETRY_MAX_MS,
+			TWITCH_TOKEN_REFRESH_RETRY_BASE_MS * (2 ** Math.min(tokenRefreshRetryCount - 1, 4))
+		);
+		console.warn(`Retrying Twitch token refresh in ${Math.round(delay / 1000)} seconds.`);
+		tokenRefreshTimer = setTimeout(function() {
+			tokenRefreshTimer = null;
+			refreshAccessToken({ reason: 'retry' })
+				.then(function(refreshedToken) {
+					if (!refreshedToken || !tokenRefreshResumePending) {
+						return;
+					}
+					tokenRefreshResumePending = false;
+					if (!isExtensionOn || isDisconnecting ||
+						websocketProxy.readyState === WEBSOCKET_READY_STATE.OPEN ||
+						websocketProxy.readyState === WEBSOCKET_READY_STATE.CONNECTING) {
+						return;
+					}
+					verifyAndUseToken(refreshedToken);
+				})
+				.catch(function(error) {
+					console.warn('Retrying Twitch token refresh failed:', error);
+				});
+		}, delay);
+	}
+	function isPermanentTokenRefreshFailure(error) {
+		return error && (error.status === 400 || error.status === 401);
 	}
 	function base64UrlToJson(value) {
 		try {
@@ -727,9 +1100,18 @@ try{
 		}
 		const refreshToken = getStoredRefreshToken();
 		if (!refreshToken) {
+			lastTokenRefreshFailure = {
+				permanent: true,
+				status: null,
+				message: 'No Twitch refresh token is available.'
+			};
 			return null;
 		}
 		tokenRefreshPromise = (async function() {
+			const controller = new AbortController();
+			const timeoutId = setTimeout(function() {
+				controller.abort();
+			}, TWITCH_TOKEN_REFRESH_TIMEOUT_MS);
 			try {
 				const response = await fetch(TWITCH_HOSTED_AUTH_BASE_URL + '/refresh', {
 					method: 'POST',
@@ -737,7 +1119,8 @@ try{
 						'Accept': 'application/json',
 						'Content-Type': 'application/json'
 					},
-					body: JSON.stringify({ refresh_token: refreshToken })
+					body: JSON.stringify({ refresh_token: refreshToken }),
+					signal: controller.signal
 				});
 				const data = await response.json().catch(function() { return {}; });
 				if (!response.ok) {
@@ -749,17 +1132,220 @@ try{
 				if (!data.access_token) {
 					throw new Error('Twitch refresh response did not include an access token.');
 				}
+				tokenRefreshRetryCount = 0;
+				lastTokenRefreshFailure = null;
 				setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshToken, data.scope, data.client_id || hostedClientId);
 				console.log('Twitch access token refreshed' + (options.reason ? ` (${options.reason})` : ''));
 				return data.access_token;
 			} catch (error) {
+				const currentRefreshToken = getStoredRefreshToken();
+				if (currentRefreshToken && currentRefreshToken !== refreshToken) {
+					console.log('Twitch token was refreshed by another source window; using the newer stored token.');
+					tokenRefreshRetryCount = 0;
+					lastTokenRefreshFailure = null;
+					scheduleStoredTokenRefresh();
+					return getStoredToken();
+				}
+				const permanent = isPermanentTokenRefreshFailure(error);
+				lastTokenRefreshFailure = {
+					permanent,
+					status: error && error.status ? error.status : null,
+					message: error && error.message ? error.message : String(error)
+				};
 				console.warn('Unable to refresh Twitch access token:', error);
+				if (!permanent) {
+					scheduleTokenRefreshRetry();
+				}
 				return null;
+			} finally {
+				clearTimeout(timeoutId);
 			}
 		})().finally(function() {
 			tokenRefreshPromise = null;
 		});
 		return tokenRefreshPromise;
+	}
+
+	async function validateTwitchBotToken(token) {
+		const response = await fetch('https://id.twitch.tv/oauth2/validate', {
+			headers: {
+				'Authorization': `OAuth ${token}`
+			}
+		});
+		const data = await response.json().catch(function() { return {}; });
+		if (!response.ok) {
+			const error = new Error(data.message || `Twitch bot token validation failed (HTTP ${response.status}).`);
+			error.status = response.status;
+			throw error;
+		}
+		if (data.client_id !== hostedClientId) {
+			const error = new Error('This Twitch bot account was authorized for a different application.');
+			error.status = 403;
+			throw error;
+		}
+		const scopes = Array.isArray(data.scopes) ? data.scopes : [];
+		const missingScopes = TWITCH_BOT_REQUIRED_SCOPES.filter(function(requiredScope) {
+			return !scopes.includes(requiredScope);
+		});
+		if (missingScopes.length) {
+			const error = new Error(`Twitch bot permission missing: ${missingScopes.join(', ')}.`);
+			error.status = 403;
+			throw error;
+		}
+		if (!data.user_id || !data.login) {
+			const error = new Error('Twitch did not identify the bot account.');
+			error.status = 403;
+			throw error;
+		}
+		if (currentAuthUser?.user_id && String(currentAuthUser.user_id) === String(data.user_id)) {
+			const error = new Error('Choose a different Twitch account. The bot account cannot be the main account.');
+			error.status = 409;
+			throw error;
+		}
+		return data;
+	}
+
+	async function refreshBotAccessToken(options = {}) {
+		if (botTokenRefreshPromise) {
+			return botTokenRefreshPromise;
+		}
+		const refreshToken = getStoredBotRefreshToken();
+		if (!refreshToken) {
+			return null;
+		}
+		botTokenRefreshPromise = (async function() {
+			const controller = new AbortController();
+			const timeoutId = setTimeout(function() {
+				controller.abort();
+			}, TWITCH_TOKEN_REFRESH_TIMEOUT_MS);
+			try {
+				const response = await fetch(TWITCH_HOSTED_AUTH_BASE_URL + '/refresh', {
+					method: 'POST',
+					headers: {
+						'Accept': 'application/json',
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ refresh_token: refreshToken }),
+					signal: controller.signal
+				});
+				const data = await response.json().catch(function() { return {}; });
+				if (!response.ok || !data.access_token) {
+					const error = new Error(data.error_description || data.error || data.message || `HTTP ${response.status}`);
+					error.status = response.status;
+					throw error;
+				}
+				const identity = await validateTwitchBotToken(data.access_token);
+				setStoredBotToken(
+					data.access_token,
+					data.expires_in,
+					data.refresh_token || refreshToken,
+					data.scope || identity.scopes,
+					data.client_id || identity.client_id,
+					identity
+				);
+				console.log('Twitch bot token refreshed' + (options.reason ? ` (${options.reason})` : ''));
+				return data.access_token;
+			} catch (error) {
+				if (error && (error.status === 400 || error.status === 401 || error.status === 403 || error.status === 409)) {
+					clearStoredBotToken();
+					notifyBotAccountStatus({ event: 'error', error: error.message || 'Bot account authorization expired.' });
+				} else {
+					scheduleStoredBotTokenRefresh(TWITCH_TOKEN_REFRESH_RETRY_BASE_MS);
+				}
+				console.warn('Unable to refresh Twitch bot token:', error);
+				return null;
+			} finally {
+				clearTimeout(timeoutId);
+			}
+		})().finally(function() {
+			botTokenRefreshPromise = null;
+		});
+		return botTokenRefreshPromise;
+	}
+
+	async function validateStoredBotAccount() {
+		let token = getStoredBotToken();
+		if (!token) {
+			return notifyBotAccountStatus({ event: 'status' });
+		}
+		try {
+			let identity;
+			try {
+				identity = await validateTwitchBotToken(token);
+			} catch (error) {
+				if ((error.status === 401 || error.status === 403) && getStoredBotRefreshToken()) {
+					token = await refreshBotAccessToken({ reason: 'validation' });
+					if (!token) {
+						return getStoredBotAccountStatus({ event: 'error', error: error.message });
+					}
+					identity = await validateTwitchBotToken(token);
+				} else {
+					throw error;
+				}
+			}
+			setStoredBotToken(
+				token,
+				identity.expires_in,
+				getStoredBotRefreshToken(),
+				identity.scopes,
+				identity.client_id,
+				identity
+			);
+			return notifyBotAccountStatus({ event: 'status' });
+		} catch (error) {
+			if (error && (error.status === 401 || error.status === 403 || error.status === 409)) {
+				clearStoredBotToken();
+			}
+			return notifyBotAccountStatus({ event: 'error', error: error?.message || 'Unable to validate the bot account.' });
+		}
+	}
+
+	async function connectTwitchBotAccount() {
+		const startOAuthFn = (window.ninjafy && typeof window.ninjafy.startTwitchOAuth === 'function')
+			? window.ninjafy.startTwitchOAuth
+			: (window.__ssapp && typeof window.__ssapp.startTwitchOAuth === 'function')
+				? window.__ssapp.startTwitchOAuth
+				: null;
+		if (!startOAuthFn) {
+			const error = 'A separate Twitch bot account can only be connected from SSApp WebSocket mode.';
+			return notifyBotAccountStatus({ event: 'error', error });
+		}
+
+		lastBotSendAuthorizationError = '';
+		notifyBotAccountStatus({ event: 'connecting', connecting: true });
+		try {
+			const state = nonce(15) + '@bot';
+			const result = await startOAuthFn({
+				clientId: hostedClientId,
+				scopes: TWITCH_BOT_REQUIRED_SCOPES,
+				state,
+				authBase: TWITCH_HOSTED_AUTH_BASE_URL,
+				authMode: 'hosted',
+				purpose: 'bot'
+			});
+			if (!result || !result.access_token) {
+				throw new Error('Twitch did not return a bot account authorization.');
+			}
+			const identity = await validateTwitchBotToken(result.access_token);
+			setStoredBotToken(
+				result.access_token,
+				result.expires_in || identity.expires_in,
+				result.refresh_token,
+				result.scope || identity.scopes,
+				result.client_id || identity.client_id,
+				identity
+			);
+			return notifyBotAccountStatus({ event: 'connected' });
+		} catch (error) {
+			console.error('Twitch bot account OAuth failed:', error);
+			return notifyBotAccountStatus({ event: 'error', error: error?.message || 'Unable to connect the bot account.' });
+		}
+	}
+
+	function disconnectTwitchBotAccount() {
+		lastBotSendAuthorizationError = '';
+		clearStoredBotToken();
+		return notifyBotAccountStatus({ event: 'disconnected' });
 	}
 	
 	let tokenExpirationHandled = false;
@@ -785,9 +1371,24 @@ try{
 			}
 			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 		}
-		if (eventSocket && eventSocket.readyState === WebSocket.OPEN) {
-			eventSocket.close();
+		chatSendInFlight = false;
+		updateChatComposerState();
+		setChatSendStatus('Authentication expired. Sign in again to send messages.', 'error', 0, 'connection');
+		clearEventSubKeepaliveTimer();
+		if (reconnectTimeout) {
+			clearTimeout(reconnectTimeout);
+			reconnectTimeout = null;
 		}
+		const eventSockets = new Set([eventSocket, eventSubPreviousSocket].filter(Boolean));
+		setEventSubSocket(null);
+		eventSubPreviousSocket = null;
+		eventSessionId = null;
+		eventSubReconnectInProgress = false;
+		eventSockets.forEach(function(socket) {
+			try {
+				socket.close();
+			} catch (_) {}
+		});
 		
 		// Update UI
 		updateHeaderInfo(null, null);
@@ -814,12 +1415,15 @@ try{
 		const authElement = document.querySelector('.auth');
 		document.querySelectorAll('.socket').forEach(ele=>ele.classList.remove('hidden'))
 		if (authElement) authElement.classList.add("hidden");
+		updateChatComposerState();
 	}
 	function initializePage() {
 		urlParams = new URLSearchParams(window.location.search);
 		hashParams = new URLSearchParams(window.location.hash.slice(1));
 		updateHostedAuthPreferenceFromUrl();
-		channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || channel;
+		const urlChannel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel");
+		channelFromUrl = !!urlChannel;
+		channel = urlChannel || localStorage.getItem("twitchChannel") || channel;
 		syncThirdPartyEmotesForChannel(true);
 		
 		// Set up event listeners
@@ -882,8 +1486,9 @@ try{
 
 		const inputText = document.querySelector('#input-text');
 		if (inputText) {
-			inputText.addEventListener('keypress', handleEnterKey);
+			inputText.addEventListener('keydown', handleEnterKey);
 		}
+		updateChatComposerState();
 
 		// Load and set up alias
 		const savedAlias = localStorage.getItem('twitchUserAlias');
@@ -899,6 +1504,12 @@ try{
 
 		// Check authentication state
 		scheduleStoredTokenRefresh();
+		scheduleStoredBotTokenRefresh();
+		setTimeout(function() {
+			validateStoredBotAccount().catch(function(error) {
+				console.warn('Unable to restore Twitch bot account:', error);
+			});
+		}, 50);
 		if (handleHostedAuthCallback()) {
 			return;
 		}
@@ -916,13 +1527,16 @@ try{
 		try {
 			const data = await validateToken(token);
 			if (isTransientTokenValidationError(data)) {
+				tokenRefreshResumePending = true;
 				keepStoredTokenAfterTransientValidationFailure('startup', data);
 				return;
 			}
 			console.log("Token validation data:", data);
 			if (data && data.login) {
+				tokenRefreshResumePending = false;
 				setStoredToken(getStoredToken() || token);
 				username = data.login;
+				if (!channel) { channel = data.login; channelFromUrl = false; }
 				localStorage.setItem("twitchChannel", channel);
 				
 				// Fetch user badges and store them
@@ -1005,6 +1619,7 @@ try{
 	}
 
 	var userDetails = {};
+	var userDetailsById = {};
 
 	async function getUserInfo(username) {
 		
@@ -1030,9 +1645,44 @@ try{
 			const data = await response.json();
 			const deets = data.data[0];
 			userDetails[username] = deets;
+			if (deets && deets.id) {
+				userDetailsById[deets.id] = deets;
+			}
 			return deets;
 		} catch (error) {
 			console.error('Error fetching user info:', error);
+			return null;
+		}
+	}
+
+	async function getUserInfoById(userId) {
+		if (!userId) {
+			return null;
+		}
+		if (userDetailsById[userId]) {
+			return userDetailsById[userId];
+		}
+		
+		const token = getStoredToken();
+		if (!token) {
+			console.error('No token available');
+			return null;
+		}
+
+		try {
+			const response = await fetchWithTimeout(`https://api.twitch.tv/helix/users?id=${encodeURIComponent(userId)}`, 5000, {'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}`});
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			const data = await response.json();
+			const deets = data.data[0];
+			userDetailsById[userId] = deets;
+			if (deets && deets.login) {
+				userDetails[deets.login] = deets;
+			}
+			return deets;
+		} catch (error) {
+			console.error('Error fetching user info by id:', error);
 			return null;
 		}
 	}
@@ -1272,31 +1922,41 @@ function ensureClientFactory() {
 			const messageId = pickSourceControlMessageId(tags && tags['target-msg-id']);
 			if (messageId) {
 				deletePayload.id = messageId;
+			} else if (settings.pluralmind && username) {
+				deletePayload.username = username;
+				deletePayload.meta = { pluralmind: true };
 			}
 			const chatname = getRememberedTwitchDisplayName(username);
 			if (chatname) {
 				deletePayload.chatname = chatname;
 			}
-			if (!deletePayload.id && !deletePayload.chatname) {
+			if (!deletePayload.id && !deletePayload.username && !deletePayload.chatname) {
 				return;
-			}
-			if (!deletePayload.id) {
-				deletePayload.onlyLast = true;
 			}
 			pushDeleteMessage(deletePayload);
 		});
 
 		client.on('ban', function(chan, username) {
 			const chatname = getRememberedTwitchDisplayName(username);
-			if (chatname) {
-				pushDeleteMessage({ type: 'twitch', chatname: chatname });
+			if (chatname || (settings.pluralmind && username)) {
+				const deletePayload = { type: 'twitch', chatname: chatname };
+				if (settings.pluralmind && username) {
+					deletePayload.username = username;
+					deletePayload.meta = { pluralmind: true };
+				}
+				pushDeleteMessage(deletePayload);
 			}
 		});
 
 		client.on('timeout', function(chan, username) {
 			const chatname = getRememberedTwitchDisplayName(username);
-			if (chatname) {
-				pushDeleteMessage({ type: 'twitch', chatname: chatname });
+			if (chatname || (settings.pluralmind && username)) {
+				const deletePayload = { type: 'twitch', chatname: chatname };
+				if (settings.pluralmind && username) {
+					deletePayload.username = username;
+					deletePayload.meta = { pluralmind: true };
+				}
+				pushDeleteMessage(deletePayload);
 			}
 		});
 	}
@@ -1318,7 +1978,8 @@ async function ensureChatClientInstance() {
 	if (!chatClient) {
 		await modulesReady;
 		chatClient = createTwitchChatClient({
-			logger: console
+			logger: console,
+			tokenProvider: async () => getStoredToken()
 		});
 		resetChatClientHandlers();
 		const add = (event, handler) => {
@@ -1330,6 +1991,11 @@ async function ensureChatClientInstance() {
 		add(TWITCH_CHAT_EVENTS.MESSAGE, (payload) => {
 			handleNormalizedChatMessage(payload).catch((err) => {
 				console.error('Twitch normalized chat handler failed', err);
+			});
+		});
+		add(TWITCH_CHAT_EVENTS.WATCH_STREAK, (payload) => {
+			handleNormalizedWatchStreak(payload).catch((err) => {
+				console.error('Twitch watch streak handler failed', err);
 			});
 		});
 		add(TWITCH_CHAT_EVENTS.MEMBERSHIP, (payload) => {
@@ -1388,6 +2054,12 @@ async function ensureChatClientInstance() {
 						if (refreshedToken) {
 							return validateToken(refreshedToken, { allowRefresh: false });
 						}
+						if (lastTokenRefreshFailure && !lastTokenRefreshFailure.permanent) {
+							return createTransientTokenValidationError(
+								lastTokenRefreshFailure.status,
+								lastTokenRefreshFailure.message
+							);
+						}
 					}
 					handleTokenExpiration();
 					return null;
@@ -1408,13 +2080,19 @@ async function ensureChatClientInstance() {
 				}
 			}
 			
+			const hasRefreshToken = !!getStoredRefreshToken();
+
 			// Update auth status indicator
 			const authStatus = document.getElementById('auth-status');
 			if (authStatus) {
 				if (data.expires_in && data.expires_in < 3600) {
-					// Token expires soon
-					authStatus.innerHTML = `⚠️ <span style="color: orange; font-size: 12px;">Expires in ${Math.floor(data.expires_in / 60)}m</span>`;
-					authStatus.title = `Authentication expires in ${Math.floor(data.expires_in / 60)} minutes`;
+					if (hasRefreshToken) {
+						authStatus.innerHTML = '<span style="color: green; font-size: 12px;">Auto-refresh enabled</span>';
+						authStatus.title = 'Authentication refreshes automatically before it expires';
+					} else {
+						authStatus.innerHTML = `⚠️ <span style="color: orange; font-size: 12px;">Expires in ${Math.floor(data.expires_in / 60)}m</span>`;
+						authStatus.title = `Authentication expires in ${Math.floor(data.expires_in / 60)} minutes`;
+					}
 				} else if (data.expires_in) {
 					// Token is valid
 					authStatus.innerHTML = `✅ <span style="color: green; font-size: 12px;">Valid</span>`;
@@ -1422,12 +2100,15 @@ async function ensureChatClientInstance() {
 				}
 			}
 			
-			// Check if token will expire soon (within 1 hour)
-			if (data.expires_in && data.expires_in < 3600) {
+			// Only prompt for re-authentication when automatic refresh is unavailable.
+			const existingExpiryWarning = document.querySelector('.token-expiry-warning');
+			if (!data.expires_in || data.expires_in >= 3600 || hasRefreshToken) {
+				existingExpiryWarning?.remove();
+			} else {
 				console.warn(`Token expires in ${Math.floor(data.expires_in / 60)} minutes`);
 				// Show warning in UI
 				const textarea = document.querySelector("#textarea");
-				if (textarea && !document.querySelector('.token-expiry-warning')) {
+				if (textarea && !existingExpiryWarning) {
 					const warning = document.createElement("div");
 					warning.className = 'token-expiry-warning';
 					warning.style.cssText = 'color: orange; font-weight: bold; padding: 5px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; margin: 5px 0;';
@@ -1457,6 +2138,7 @@ async function ensureChatClientInstance() {
 
 		const authUser = await validateToken(token);
 		if (isTransientTokenValidationError(authUser)) {
+			tokenRefreshResumePending = true;
 			keepStoredTokenAfterTransientValidationFailure('connect', authUser);
 			return;
 		}
@@ -1465,8 +2147,12 @@ async function ensureChatClientInstance() {
 			showAuthButton();
 			return;
 		}
+		tokenRefreshResumePending = false;
+		currentAuthUser = authUser;
+		twitchChatWriteAuthorized = hasTwitchScope(authUser, 'user:write:chat');
 		token = getStoredToken() || token;
 
+		if (!channel && authUser.login) { channel = authUser.login; }
 		const channelInfo = await getUserInfo(channel);
 		if (!channelInfo) {
 			console.log('Failed to get channel info');
@@ -1494,6 +2180,7 @@ async function ensureChatClientInstance() {
 			const clientFactory = ensureClientFactory();
 
 			setWebsocketReadyState(WEBSOCKET_READY_STATE.CONNECTING);
+			updateChatConnectionStatus('connecting');
 
 			await chat.connect({
 				channel,
@@ -1507,7 +2194,9 @@ async function ensureChatClientInstance() {
 				clientFactory
 			});
 
-			setWebsocketReadyState(WEBSOCKET_READY_STATE.OPEN);
+			const joined = chat.getState?.().joined === true;
+			setWebsocketReadyState(joined ? WEBSOCKET_READY_STATE.OPEN : WEBSOCKET_READY_STATE.CONNECTING);
+			updateChatConnectionStatus('connected');
 			showSocketInterface();
 			refreshChannelInformation().catch((error) => {
 				console.warn('Unable to refresh Twitch channel information', error);
@@ -1547,6 +2236,7 @@ async function ensureChatClientInstance() {
 		} catch (error) {
 			console.log('Error during connection setup:', error);
 			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
+			updateChatConnectionStatus('error');
 		}
 	}
 
@@ -1554,10 +2244,16 @@ async function ensureChatClientInstance() {
 		switch (status) {
 			case TWITCH_CHAT_STATUS.CONNECTING:
 				setWebsocketReadyState(WEBSOCKET_READY_STATE.CONNECTING);
+				updateChatConnectionStatus('connecting');
 				break;
 			case TWITCH_CHAT_STATUS.CONNECTED: {
-				setWebsocketReadyState(WEBSOCKET_READY_STATE.OPEN);
+				const joined = chatClient?.getState?.().joined === true;
+				setWebsocketReadyState(joined ? WEBSOCKET_READY_STATE.OPEN : WEBSOCKET_READY_STATE.CONNECTING);
 				isDisconnecting = false;
+				updateChatConnectionStatus('connected');
+				if (!joined) {
+					break;
+				}
 				const textarea = document.querySelector("#textarea");
 				const joinedChannel = meta.channel || channel;
 				if (textarea && joinedChannel) {
@@ -1572,12 +2268,14 @@ async function ensureChatClientInstance() {
 			}
 			case TWITCH_CHAT_STATUS.DISCONNECTED:
 				setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
+				updateChatConnectionStatus('disconnected');
 				if (!isDisconnecting) {
 					console.log('Twitch chat disconnected', meta?.reason || '');
 				}
 				break;
 			case TWITCH_CHAT_STATUS.ERROR:
 				setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
+				updateChatConnectionStatus('error');
 				if (meta?.error) {
 					console.error('Twitch chat error', meta.error);
 				}
@@ -1665,8 +2363,16 @@ async function ensureChatClientInstance() {
 		if (!payload) {
 			return;
 		}
+		noteTwitchChatEcho(payload.id);
 		const legacy = convertChatPayloadToLegacyMessage(payload);
 		await processMessage(legacy);
+	}
+
+	async function handleNormalizedWatchStreak(payload) {
+		if (!payload || !settings.showtwitchwatchstreaks || settings.hideevents) {
+			return;
+		}
+		await handleNormalizedChatMessage(payload);
 	}
 
 	async function handleNormalizedMembership(payload) {
@@ -1675,7 +2381,7 @@ async function ensureChatClientInstance() {
 		}
 
 		// Skip events that EventSub is already handling to prevent duplicates
-		if (payload.event === 'cheer' && activeSubscriptions.has('channel.cheer')) {
+		if (payload.event === 'cheer' && (activeSubscriptions.has('channel.cheer') || activeSubscriptions.has('channel.bits.use'))) {
 			return;
 		}
 		if (payload.event === 'new_subscriber' && activeSubscriptions.has('channel.subscribe')) {
@@ -1736,8 +2442,13 @@ async function ensureChatClientInstance() {
 		console.log('Twitch chat cleared', payload);
 		if (payload.user) {
 			const chatname = getRememberedTwitchDisplayName(payload.user);
-			if (chatname) {
-				pushDeleteMessage({ type: 'twitch', chatname: chatname });
+			if (chatname || settings.pluralmind) {
+				const deletePayload = { type: 'twitch', chatname: chatname };
+				if (settings.pluralmind) {
+					deletePayload.username = payload.user;
+					deletePayload.meta = { pluralmind: true };
+				}
+				pushDeleteMessage(deletePayload);
 			}
 			if (!activeSubscriptions.has('channel.ban')) {
 				pushTwitchBanMetaEvent({
@@ -1765,6 +2476,7 @@ async function ensureChatClientInstance() {
 		}
 		console.error('Twitch chat client error', error);
 		setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
+		updateChatConnectionStatus('error');
 	}
 
 	// Listen for UI moderation/ad requests from twitch.html
@@ -1869,6 +2581,9 @@ async function ensureChatClientInstance() {
 			}
 			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 		}
+		chatSendInFlight = false;
+		updateChatComposerState();
+		setChatSendStatus('', '', 0, 'connection');
 
 		updateHeaderInfo(null, null);
 		document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'))
@@ -1879,21 +2594,36 @@ async function ensureChatClientInstance() {
 	}
 
 	async function handleSendMessage(event) {
-		event.preventDefault();
+		event?.preventDefault();
 		const inputElement = document.querySelector('#input-text');
+		const sendButton = document.querySelector('#sendmessage');
 		if (inputElement) {
 			var msg = inputElement.value.trim();
 			if (msg) {
-				const sent = await sendMessage(msg);
-				if (sent) {
+				const activeElement = document.activeElement;
+				const restoreComposerFocus = activeElement === inputElement || activeElement === sendButton;
+				const result = await sendMessage(msg);
+				if (result?.ok) {
 					inputElement.value = "";
 					// Server echo will display the message via handleNormalizedChatMessage
+				} else if (typeof result?.remainingMessage === 'string') {
+					inputElement.value = result.remainingMessage;
+				}
+				if (restoreComposerFocus && (
+					document.activeElement === inputElement
+						|| document.activeElement === sendButton
+						|| document.activeElement === document.body
+				)) {
+					inputElement.focus();
 				}
 			}
 		}
 	}
 	function handleEnterKey(event) {
 		if (event.key === 'Enter') {
+			if (event.isComposing || event.keyCode === 229) return;
+			event.preventDefault();
+			if (event.repeat) return;
 			handleSendMessage(event).catch((err) => console.error('Twitch handleSendMessage failed', err));
 		}
 	}
@@ -1988,6 +2718,21 @@ async function ensureChatClientInstance() {
 				if ("state" in request) {
 					isExtensionOn = request.state;
 				}
+				if (request.type === 'TWITCH_BOT_ACCOUNT_STATUS') {
+					sendResponse(getStoredBotAccountStatus({ event: 'status' }));
+					return;
+				}
+				if (request.type === 'TWITCH_BOT_ACCOUNT_CONNECT') {
+					connectTwitchBotAccount().catch(function(error) {
+						console.error('Twitch bot account connection failed', error);
+					});
+					sendResponse({ ok: true, pending: true });
+					return;
+				}
+				if (request.type === 'TWITCH_BOT_ACCOUNT_DISCONNECT') {
+					sendResponse(disconnectTwitchBotAccount());
+					return;
+				}
 				if (request.type === 'SOURCE_CONTROL') {
 					handleSourceControlRequest(request)
 						.then((result) => sendResponse(result))
@@ -1998,8 +2743,8 @@ async function ensureChatClientInstance() {
 					return true;
 				}
 				if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
-					sendMessage(request.message)
-						.then(() => sendResponse(true))
+					sendMessage(request.message, { messageOrigin: request.messageOrigin })
+						.then((result) => sendResponse(result?.ok === true))
 						.catch((err) => {
 							console.error('Twitch extension SEND_MESSAGE failed', err);
 							sendResponse(false);
@@ -2163,28 +2908,306 @@ async function ensureChatClientInstance() {
 		window.__SSAPP_START_TWITCH_AUTH__ = startExternalTwitchAuthFlow;
 	} catch (_) {}
 
-	async function sendMessage(message) {
-		await modulesReady;
-		if (!checkAuthStatus()) {
-			return false;
+	function buildTwitchMessageTextPlan(message, maxLength) {
+		const parts = [];
+		let remaining = Array.from(String(message || ''));
+		while (remaining.length > maxLength) {
+			let splitAt = remaining.slice(0, maxLength).lastIndexOf(' ');
+			if (splitAt <= 0) {
+				splitAt = maxLength;
+			}
+			const chunk = remaining.slice(0, splitAt).join('');
+			remaining = remaining.slice(splitAt + (remaining[splitAt] === ' ' ? 1 : 0));
+			parts.push({ message: chunk, remainingText: remaining.join('') });
 		}
-		const client = await ensureChatClientInstance();
+		if (remaining.length) {
+			parts.push({ message: remaining.join(''), remainingText: '' });
+		}
+		return parts;
+	}
+
+	function buildTwitchChatSendPlan(message, maxLength = 500) {
+		const normalizedMessage = String(message || '');
+		const actionMatch = normalizedMessage.match(/^\/me(?:\s+|$)([\s\S]*)$/i);
+		if (!actionMatch || !actionMatch[1]) {
+			return buildTwitchMessageTextPlan(normalizedMessage, maxLength);
+		}
+
+		const actionPrefix = '/me ';
+		const actionBodyLimit = maxLength - Array.from(actionPrefix).length;
+		if (actionBodyLimit < 1) {
+			return buildTwitchMessageTextPlan(normalizedMessage, maxLength);
+		}
+		return buildTwitchMessageTextPlan(actionMatch[1], actionBodyLimit)
+			.map(part => ({
+				message: actionPrefix + part.message,
+				remainingText: part.remainingText ? actionPrefix + part.remainingText : ''
+			}));
+	}
+
+	function hasTwitchScope(authUser, requiredScope) {
+		return Array.isArray(authUser?.scopes) && authUser.scopes.includes(requiredScope);
+	}
+
+	async function sendTwitchMainChatChunk(message, allowTokenRetry = true) {
+		if (!isTwitchChatConnected()) {
+			throw new Error('Twitch chat is reconnecting. Message not sent.');
+		}
+		const token = getStoredToken();
+		const senderId = currentAuthUser?.user_id;
+		if (!token || !currentChannelId || !senderId) {
+			throw new Error('Twitch chat is not connected.');
+		}
+		if (!hasTwitchScope(currentAuthUser, 'user:write:chat')) {
+			throw new Error('Twitch sign-in is missing user:write:chat. Sign out and sign in again.');
+		}
+
+		const endpoint = 'https://api.twitch.tv/helix/chat/messages';
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), TWITCH_CHAT_SEND_TIMEOUT_MS);
+		let response;
 		try {
-			await client.sendMessage(message, channel);
-			return true;
+			response = await fetch(endpoint, {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${token}`,
+					'Client-ID': getTwitchApiClientId(),
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					broadcaster_id: currentChannelId,
+					sender_id: senderId,
+					message: message
+				}),
+				signal: controller.signal
+			});
+		} catch (error) {
+			const sendError = new Error(
+				controller.signal.aborted
+					? 'Twitch did not confirm the send before it timed out. Delivery is unknown; check chat before retrying.'
+					: 'The Twitch send connection failed. Delivery is unknown; check chat before retrying.'
+			);
+			sendError.code = controller.signal.aborted ? 'TWITCH_CHAT_SEND_TIMEOUT' : 'TWITCH_CHAT_SEND_NETWORK';
+			sendError.deliveryUnknown = true;
+			sendError.cause = error;
+			throw sendError;
+		} finally {
+			clearTimeout(timeoutId);
+		}
+
+		if (response.status === 401 && allowTokenRetry) {
+			const refreshedToken = await refreshAccessToken({ reason: 'chat-send' });
+			if (refreshedToken && refreshedToken !== token) {
+				return sendTwitchMainChatChunk(message, false);
+			}
+		}
+
+		const responseData = await response.json().catch(() => ({}));
+		if (!response.ok) {
+			await handleTwitchApiAuthError(response, endpoint);
+			throw new Error(responseData.message || `Twitch chat send failed (HTTP ${response.status}).`);
+		}
+
+		const result = Array.isArray(responseData.data) ? responseData.data[0] : null;
+		if (!result?.is_sent || !result.message_id) {
+			const dropMessage = result?.drop_reason?.message || 'Twitch did not accept the chat message.';
+			throw new Error(dropMessage);
+		}
+		return result.message_id;
+	}
+
+	async function sendTwitchBotChatChunk(message, allowTokenRetry = true) {
+		const token = getStoredBotToken();
+		if (!token || !currentChannelId) {
+			throw new Error('The Twitch automatic reply account is not connected.');
+		}
+
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), TWITCH_CHAT_SEND_TIMEOUT_MS);
+		let response;
+		try {
+			response = await fetch(TWITCH_BOT_SEND_URL, {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${token}`,
+					'Accept': 'application/json',
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					broadcaster_id: currentChannelId,
+					message
+				}),
+				signal: controller.signal
+			});
+		} catch (error) {
+			const sendError = new Error(
+				controller.signal.aborted
+					? 'Twitch did not confirm the bot reply before it timed out. Delivery is unknown; check chat before retrying.'
+					: 'The Twitch bot reply connection failed. Delivery is unknown; check chat before retrying.'
+			);
+			sendError.code = controller.signal.aborted ? 'TWITCH_BOT_SEND_TIMEOUT' : 'TWITCH_BOT_SEND_NETWORK';
+			sendError.deliveryUnknown = true;
+			sendError.cause = error;
+			throw sendError;
+		} finally {
+			clearTimeout(timeoutId);
+		}
+
+		if (response.status === 401 && allowTokenRetry) {
+			const refreshedToken = await refreshBotAccessToken({ reason: 'chat-send' });
+			if (refreshedToken && refreshedToken !== token) {
+				return sendTwitchBotChatChunk(message, false);
+			}
+		}
+
+		const responseData = await response.json().catch(() => ({}));
+		if (!response.ok) {
+			const botLogin = localStorage.getItem(TWITCH_BOT_LOGIN_KEY) || '';
+			const botLabel = botLogin ? `@${botLogin}` : 'the bot account';
+			const errorMessage = response.status === 403
+				? `Twitch blocked automatic replies from ${botLabel}. Reconnect this WebSocket source's main Twitch account using the channel owner, or make ${botLabel} a moderator in this channel.`
+				: responseData.message || responseData.error || `Twitch bot reply failed (HTTP ${response.status}).`;
+			if (response.status === 403 && lastBotSendAuthorizationError !== errorMessage) {
+				lastBotSendAuthorizationError = errorMessage;
+				notifyBotAccountStatus({
+					event: 'error',
+					error: errorMessage,
+					requiresMainReauthorization: true
+				});
+			}
+			throw new Error(errorMessage);
+		}
+
+		const result = Array.isArray(responseData.data) ? responseData.data[0] : null;
+		if (!result?.is_sent || !result.message_id) {
+			const dropMessage = result?.drop_reason?.message || 'Twitch did not accept the bot reply.';
+			throw new Error(dropMessage);
+		}
+		if (lastBotSendAuthorizationError) {
+			lastBotSendAuthorizationError = '';
+			notifyBotAccountStatus({ event: 'status', error: null, requiresMainReauthorization: false });
+		}
+		return result.message_id;
+	}
+
+	async function sendTwitchChatChunk(message, options = {}) {
+		if (options.useBotAccount) {
+			return sendTwitchBotChatChunk(message);
+		}
+		return sendTwitchMainChatChunk(message);
+	}
+
+	async function sendMessage(message, options = {}) {
+		await modulesReady;
+		const normalizedMessage = String(message || '');
+		const useBotAccount = options.messageOrigin === 'chatbot' && !!getStoredBotToken();
+		const unsentResult = {
+			ok: false,
+			acceptedChunks: 0,
+			totalChunks: 0,
+			remainingMessage: normalizedMessage
+		};
+		if (!checkAuthStatus()) {
+			return unsentResult;
+		}
+		if (chatSendInFlight) {
+			console.warn('Twitch chat send ignored because another send is already in progress.');
+			return unsentResult;
+		}
+		if (!isTwitchChatConnected()) {
+			const socketConnected = chatClient?.getState?.().status === 'connected';
+			const unavailableMessage = socketConnected
+				? 'Joining Twitch chat — sending unavailable.'
+				: 'Reconnecting — sending unavailable.';
+			setChatSendStatus(unavailableMessage, 'warning', 0, 'connection');
+			updateChatComposerState();
+			addEvent(unavailableMessage);
+			return unsentResult;
+		}
+		if (!useBotAccount && !twitchChatWriteAuthorized) {
+			const missingPermissionMessage = 'Twitch sign-in is missing chat permission. Sign out and sign in again.';
+			setChatSendStatus(missingPermissionMessage, 'error', 0, 'connection');
+			updateChatComposerState();
+			addEvent(missingPermissionMessage);
+			return unsentResult;
+		}
+
+		chatSendInFlight = true;
+		updateChatComposerState();
+		setChatSendStatus('Sending…', '', 0, 'send');
+		const plan = buildTwitchChatSendPlan(normalizedMessage);
+		const acceptedMessageIds = [];
+		let acceptedChunks = 0;
+		try {
+			for (let index = 0; index < plan.length; index += 1) {
+				const messageId = await sendTwitchChatChunk(plan[index].message, { useBotAccount });
+				acceptedMessageIds.push(messageId);
+				acceptedChunks += 1;
+				if (index < plan.length - 1) {
+					await new Promise(resolve => setTimeout(resolve, 350));
+				}
+			}
+			if (!plan.length) {
+				setChatSendStatus('', '', 0, 'send');
+				return unsentResult;
+			}
+			trackAcceptedTwitchChatMessages(acceptedMessageIds);
+			return {
+				ok: true,
+				acceptedChunks,
+				totalChunks: plan.length,
+				remainingMessage: '',
+				messageIds: acceptedMessageIds
+			};
 		} catch (error) {
 			console.error('Failed to send Twitch chat message', error);
-			return false;
+			const remainingMessage = acceptedChunks > 0
+				? plan[acceptedChunks - 1]?.remainingText || ''
+				: normalizedMessage;
+			const errorMessage = error?.message || 'Failed to send Twitch chat message';
+			let failureMessage = errorMessage;
+			if (acceptedChunks > 0) {
+				const acceptedSummary = `${acceptedChunks} of ${plan.length} ${plan.length === 1 ? 'part' : 'parts'} ${acceptedChunks === 1 ? 'was' : 'were'} accepted`;
+				failureMessage = error?.deliveryUnknown
+					? `${acceptedSummary}. Delivery of the next part is unknown; check Twitch before retrying the remaining draft.`
+					: `${acceptedSummary} by Twitch. Only the unsent remainder was kept. ${errorMessage}`;
+			}
+			setChatSendStatus(failureMessage, error?.deliveryUnknown || acceptedChunks > 0 ? 'warning' : 'error', 0, 'send');
+			addEvent(failureMessage);
+			return {
+				ok: false,
+				acceptedChunks,
+				totalChunks: plan.length,
+				remainingMessage,
+				messageIds: acceptedMessageIds,
+				deliveryUnknown: error?.deliveryUnknown === true
+			};
+		} finally {
+			chatSendInFlight = false;
+			updateChatComposerState();
 		}
 	}
+	sendTwitchMessageFromSsn = sendMessage;
 	function replaceEmotesWithImages(text, twitchEmotes = null, isBitMessage = false) {
 		let workingText = typeof text === 'string' ? text : '';
 		if (workingText && twitchEmotes) {
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			workingText = renderNativeEmotesWithFallback(
 				workingText,
 				twitchEmotes,
 				Boolean(settings.textonlymode)
 			);
+		} else /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ if (!settings.textonlymode) {
+			workingText = escapeHtml(workingText);
+		}
+		// Only transform text segments, never attributes in generated emote HTML.
+		function mapText(transform) {
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
+			workingText = settings.textonlymode ? transform(workingText) :
+				workingText.split(/(<[^>]+>)/g).map(part => part.startsWith('<') ? part : transform(part)).join('');
 		}
 		
 		// Handle cheermotes (bit emotes) if this is a bit message
@@ -2193,9 +3216,10 @@ async function ensureChatClientInstance() {
 			// Matches patterns like: Cheer100, 4Head100, Kappa1000, etc.
 			const cheermoteRegex = /\b(Cheer|Kappa|Kreygasm|SwiftRage|4Head|PJSalt|MrDestructoid|TriHard|NotLikeThis|FailFish|VoHiYo|PogChamp|FrankerZ|HeyGuys|DansGame|EleGiggle|BibleThump|Jebaited|SeemsGood|LUL|VoteYea|VoteNay|HotPokket|OpieOP|FutureMan|FBCatch|TBAngel|PeteZaroll|TwitchUnity|CoolStoryBob|PopCorn|KAPOW|PowerUpR|PowerUpL|DarkMode|HSCheers|PurpleStar|FBPass|FBRun|FBChallenge|RedCoat|GreenTeam|PurpleTeam|HolidayCheer|BitBoss|Streamlabs)(\d+)\b/gi;
 			
-			workingText = workingText.replace(cheermoteRegex, (match, emoteName, bitAmount) => {
+			mapText(text => text.replace(cheermoteRegex, (match, emoteName, bitAmount) => {
 				const amount = parseInt(bitAmount);
 				
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (settings.textonlymode) {
 					// In text-only mode, just show the cheermote as text with a space before the number
 					return emoteName + ' ' + amount;
@@ -2220,7 +3244,7 @@ async function ensureChatClientInstance() {
 				
 				// Return the cheermote image with the bit amount displayed after it
 				return `<img src="${cheermoteUrl}" alt="${escapeHtml(emoteName + ' ' + amount)}" title="${escapeHtml(emoteName + ' ' + amount)}" class="regular-emote"/><strong style="color: ${color}; margin-left: 2px;">${amount}</strong>`;
-			});
+			}));
 		}
 		
 		// Then handle third-party emotes (BTTV, 7TV, FFZ)
@@ -2228,19 +3252,25 @@ async function ensureChatClientInstance() {
 			return workingText;
 		}
 		
-		return workingText.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
-			const emote = EMOTELIST[emoteMatch];
+		mapText(text => text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
+			// HTML-mode text was escaped once above; dictionary keys are literal.
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
+			const emoteName = settings.textonlymode ? emoteMatch : emoteMatch.replace(/&(amp|lt|gt|quot|#0?39);/g,
+				(entity, name) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'", '#039': "'" })[name]);
+			const emote = EMOTELIST[emoteName];
 			if (emote) {
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (settings.textonlymode) {
 					// In text-only mode, just return the emote text
 					return emoteMatch;
 				}
-				const escapedMatch = escapeHtml(emoteMatch);
+				const escapedMatch = escapeHtml(emoteName);
 				const isZeroWidth = typeof emote !== "string" && emote.zw;
-				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
+				return `<img src="${escapeHtml(typeof emote === 'string' ? emote : emote.url)}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
 			}
 			return match;
-		});
+		}));
+		return workingText;
 	}
 
 	function fallbackParseTwitchEmotes(source) {
@@ -2276,10 +3306,13 @@ async function ensureChatClientInstance() {
 		return [];
 	}
 
+	// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 	function legacyRenderNativeEmotes(text, emotesSource, textOnlyMode) {
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
+		if (textOnlyMode) return text;
 		const parsed = fallbackParseTwitchEmotes(emotesSource);
 		if (!parsed.length) {
-			return text;
+			return escapeHtml(text);
 		}
 		const flattened = parsed
 			.flatMap(({ id, positions }) =>
@@ -2299,22 +3332,22 @@ async function ensureChatClientInstance() {
 			)
 			.sort((a, b) => b.start - a.start);
 		if (!flattened.length) {
-			return text;
+			return escapeHtml(text);
 		}
-		let result = text;
+		const parts = [];
+		let endIndex = text.length;
 		flattened.forEach(({ emoteId, start, end }) => {
+			if (start < 0 || end >= endIndex) return;
 			const emoteName = text.substring(start, end + 1);
-			if (textOnlyMode) {
-				result = result.substring(0, start) + emoteName + result.substring(end + 1);
-			} else {
-				const emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/2.0`;
-				const emoteImg = `<img src="${emoteUrl}" alt="${escapeHtml(emoteName)}" title="${escapeHtml(emoteName)}" class="regular-emote"/>`;
-				result = result.substring(0, start) + emoteImg + result.substring(end + 1);
-			}
+			const emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${encodeURIComponent(emoteId)}/default/dark/2.0`;
+			parts.push(escapeHtml(text.substring(end + 1, endIndex)));
+			parts.push(`<img src="${emoteUrl}" alt="${escapeHtml(emoteName)}" title="${escapeHtml(emoteName)}" class="regular-emote"/>`);
+			endIndex = start;
 		});
-		return result;
+		return escapeHtml(text.substring(0, endIndex)) + parts.reverse().join('');
 	}
 
+	// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 	function renderNativeEmotesWithFallback(text, emoteSource, textOnlyMode) {
 		if (!text || !emoteSource) {
 			return text;
@@ -2322,31 +3355,26 @@ async function ensureChatClientInstance() {
 		if (typeof renderTwitchNativeEmotes === 'function') {
 			try {
 				return renderTwitchNativeEmotes(text, emoteSource, {
+					// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 					textOnly: textOnlyMode,
 					escapeHtml,
 					imageClassName: 'regular-emote',
-					textIsSafe: false
+					// In plain mode the helper returns text, so it must not encode it.
+					// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
+					textIsSafe: textOnlyMode
 				});
 			} catch (error) {
 				console.warn('Falling back to legacy Twitch emote renderer', error);
 			}
 		}
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		return legacyRenderNativeEmotes(text, emoteSource, textOnlyMode);
 	}
 
 	function escapeHtml(unsafe) {
 		try {
-			// Unescape the text
-			var tempDiv = document.createElement('div');
-			tempDiv.innerHTML = unsafe;
-			var unescapedText = tempDiv.textContent || tempDiv.innerText || "";
-			
-			if (settings.textonlymode) {
-				return unescapedText;
-			}
-
-			// Re-escape the text
-			return unescapedText
+			// This helper is only for HTML output, including the local preview.
+			return String(unsafe == null ? "" : unsafe)
 				.replace(/&/g, "&amp;")
 				.replace(/</g, "&lt;")
 				.replace(/>/g, "&gt;")
@@ -2355,6 +3383,21 @@ async function ensureChatClientInstance() {
 		} catch (e) {
 			return "";
 		}
+	}
+
+	function getTwitchMessageText(payload, trailing) {
+		if (!payload) return trailing || ""; // Raw IRC text.
+		if (payload.rawMessage != null) return payload.rawMessage;
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
+		if (payload.textonly) return payload.chatmessage || "";
+		// Compatibility with providers that supply rendered HTML but no raw body.
+		var template = document.createElement('template');
+		template.innerHTML = payload.chatmessage || trailing || "";
+		template.content.querySelectorAll('script,style,noscript,template').forEach(node => node.remove());
+		template.content.querySelectorAll('img').forEach(node => {
+			node.parentNode.replaceChild(document.createTextNode(node.getAttribute('alt') || ''), node);
+		});
+		return template.content.textContent || "";
 	}
 	
 	let globalBadges = null;
@@ -2479,6 +3522,10 @@ async function ensureChatClientInstance() {
 			console.warn('Twitch API rejected the previous token; refreshed OAuth token and kept sign-in.');
 			return;
 		}
+		if (lastTokenRefreshFailure && !lastTokenRefreshFailure.permanent) {
+			console.warn('Twitch token refresh temporarily failed after an API auth error; keeping credentials for retry.');
+			return;
+		}
 		console.error('Twitch OAuth token failed validation after API auth error; clearing credentials.');
 		handleTokenExpiration();
 	}
@@ -2513,7 +3560,8 @@ async function ensureChatClientInstance() {
 
 	var channels = {};
 	function getTwitchAvatarImage(usernome) {
-		if (!usernome || channels[usernome]){return;}
+		if (!usernome){return "";}
+		if (channels[usernome]){return channels[usernome];}
 		fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username=" + encodeURIComponent(usernome.replace("@",""))).then(response => {
 			response.text().then(function(text) {
 				if (text.startsWith("https://")) {
@@ -2523,6 +3571,25 @@ async function ensureChatClientInstance() {
 		}).catch(error => {
 			//console.log("Couldn't get avatar image URL. API service down?");
 		});
+		return "";
+	}
+
+	async function getTwitchMessageSourceInfo(tags, fallbackChannel) {
+		const roomId = tags && tags['room-id'] ? String(tags['room-id']) : "";
+		const sourceRoomId = tags && tags['source-room-id'] ? String(tags['source-room-id']) : "";
+		let sourceInfo = null;
+
+		if (sourceRoomId && sourceRoomId !== roomId) {
+			sourceInfo = await getUserInfoById(sourceRoomId);
+		}
+		if (!sourceInfo && fallbackChannel) {
+			sourceInfo = await getUserInfo(fallbackChannel);
+		}
+
+		return {
+			name: sourceInfo?.login || sourceInfo?.display_name || fallbackChannel || "",
+			image: sourceInfo?.profile_image_url || getTwitchAvatarImage(fallbackChannel)
+		};
 	}
 
 
@@ -2534,17 +3601,23 @@ async function ensureChatClientInstance() {
 		const normalizedEventTypeLower =
 			typeof normalizedEventType === 'string' ? normalizedEventType.toLowerCase() : '';
 		const user = parsedMessage.prefix.split('!')[0];
-		const message = normalizedPayload?.rawMessage ?? parsedMessage.trailing;
+		let message = getTwitchMessageText(normalizedPayload, parsedMessage.trailing);
 		// Clean channel name from params (remove # prefix)
 		if (parsedMessage.params[0]) {
 			channel = parsedMessage.params[0].replace(/^#/, '');
 		}
 		const userInfo = await getUserInfo(user);
+		const sourceInfo = await getTwitchMessageSourceInfo(parsedMessage.tags, channel);
 		
 		// Parse subscriber info from badge tags
 		let subscriber = "";
 		let subtitle = "";
-		let mod = false;
+		let mod = normalizedPayload?.isModerator === true
+			|| normalizedPayload?.isOwner === true
+			|| parsedMessage.tags?.mod === true
+			|| parsedMessage.tags?.mod === 1
+			|| parsedMessage.tags?.mod === '1'
+			|| parsedMessage.tags?.mod === 'true';
 		const badgeList = parseBadges(parsedMessage);
 		
 		if (parsedMessage.tags) {
@@ -2621,6 +3694,25 @@ async function ensureChatClientInstance() {
 			}
 		}
 		
+		const sourceDisplayName = normalizedPayload?.chatname || (userInfo ? userInfo.display_name : user);
+		let resolvedDisplayName = sourceDisplayName;
+		let pluralmindResult = null;
+		const pluralmindEligibleEvent = !normalizedEventTypeLower || ['message', 'chat', 'action', 'bits'].includes(normalizedEventTypeLower);
+		if (settings.pluralmind && pluralmindEligibleEvent && message && !normalizedPayload?.contentimg && globalThis.SSNPluralmindIntegration) {
+			// Render native emotes against the original offsets before stripping proxy text.
+			pluralmindResult = await globalThis.SSNPluralmindIntegration.resolveRenderedMessage({
+				userId: normalizedPayload?.userId || parsedMessage.tags?.['user-id'],
+				username: user,
+				message: replaceEmotesWithImages(message, parsedMessage.tags?.emotes, !!parsedMessage.tags?.bits),
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
+				textOnly: !!settings.textonlymode
+			});
+			if (pluralmindResult) {
+				resolvedDisplayName = pluralmindResult.name;
+				message = pluralmindResult.body;
+			}
+		}
+
 		// Parse reply if enabled
 		let replyMessage = "";
 		let originalMessage = "";
@@ -2633,7 +3725,7 @@ async function ensureChatClientInstance() {
 		var span = document.createElement("div");
 		let badgeHtml = '';
 		badgeList.forEach(badgeUrl => {
-			badgeHtml += `<img class="chat-badge" src="${badgeUrl}" alt="">`;
+			badgeHtml += `<img class="chat-badge" src="${escapeHtml(badgeUrl)}" alt="">`;
 		});
 		
 		let displayMessage = escapeHtml(message);
@@ -2641,8 +3733,7 @@ async function ensureChatClientInstance() {
 			displayMessage = `<i><small>${escapeHtml(replyMessage)}:</small></i> ${displayMessage}`;
 		}
 		
-		const resolvedDisplayName = normalizedPayload?.chatname || (userInfo ? userInfo.display_name : user);
-		rememberTwitchDisplayName(user, resolvedDisplayName);
+		rememberTwitchDisplayName(user, sourceDisplayName);
 		span.innerHTML = `${badgeHtml}${escapeHtml(resolvedDisplayName)}: ${displayMessage}`;
 		document.querySelector("#textarea").appendChild(span);
 		if (document.querySelector("#textarea").childNodes.length > 10) {
@@ -2656,13 +3747,27 @@ async function ensureChatClientInstance() {
 		}
 		data.chatname = resolvedDisplayName;
 		data.username = user;
+		if (normalizedPayload?.userId) {
+			data.userid = normalizedPayload.userId;
+		}
+		data.contentimg = normalizedPayload?.contentimg || "";
+		const normalizedMeta = normalizedPayload && normalizedPayload.meta;
+		if (normalizedMeta && typeof normalizedMeta === "object" && !Array.isArray(normalizedMeta)) {
+			data.meta = Object.assign({}, normalizedMeta);
+		}
 		
 		// Convert badge URLs to badge objects
 		data.chatbadges = badgeList.map(url => ({ type: "img", src: url }));
+		if (pluralmindResult) {
+			const pluralmindPronounBadge = globalThis.SSNPluralmindIntegration.createPronounBadge(pluralmindResult.pronouns);
+			if (pluralmindPronounBadge) {
+				data.chatbadges.push(pluralmindPronounBadge);
+			}
+		}
 		
 		data.backgroundColor = "";
 		data.textColor = parsedMessage.tags?.color || "";
-		data.nameColor = parsedMessage.tags?.color || "";
+		data.nameColor = pluralmindResult?.color || parsedMessage.tags?.color || "";
 		
 		// Parse Twitch emotes from tags
 		const twitchEmotes =
@@ -2672,6 +3777,7 @@ async function ensureChatClientInstance() {
 		
 		// Check if this is a bit message
 		const isBitMessage = !!(parsedMessage.tags && parsedMessage.tags.bits);
+		const renderedMessage = pluralmindResult ? pluralmindResult.cleanedMessage : replaceEmotesWithImages(message, twitchEmotes, isBitMessage);
 		
 		// Debug logging for bit messages
 		if (isBitMessage) {
@@ -2685,13 +3791,21 @@ async function ensureChatClientInstance() {
 		if (replyMessage) {
 			data.initial = replyMessage;
 			data.reply = originalMessage;
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			if (settings.textonlymode) {
-				data.chatmessage = replyMessage + ": " + replaceEmotesWithImages(message, twitchEmotes, isBitMessage);
+				data.chatmessage = replyMessage + ": " + renderedMessage;
 			} else {
-				data.chatmessage = "<i><small>" + escapeHtml(replyMessage) + ":&nbsp;</small></i> " + replaceEmotesWithImages(message, twitchEmotes, isBitMessage);
+				data.chatmessage = "<i><small>" + escapeHtml(replyMessage) + ":&nbsp;</small></i> " + renderedMessage;
 			}
 		} else {
-			data.chatmessage = replaceEmotesWithImages(message, twitchEmotes, isBitMessage);
+			data.chatmessage = renderedMessage;
+		}
+		if (data.contentimg) {
+			data.chatmessage = "";
+			data.meta = data.meta || {};
+			if (!("gifLabel" in data.meta)) {
+				data.meta.gifLabel = message || "";
+			}
 		}
 		
 		data.membership = markSubscriberAsMembership ? subscriber : "";
@@ -2713,10 +3827,14 @@ async function ensureChatClientInstance() {
 			data.timestamp = normalizedPayload.timestamp;
 		}
 		data.hasDonation = hasDonation;
-		if (channel) {
-			data.sourceImg = getTwitchAvatarImage(channel);
-			data.sourceName = channel;
+		if (hasDonation) data.donoValue = Number(parsedMessage.tags.bits) / 100;
+		if (sourceInfo.image) {
+			data.sourceImg = sourceInfo.image;
 		}
+		if (sourceInfo.name) {
+			data.sourceName = sourceInfo.name;
+		}
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "twitch";
 		
@@ -2764,6 +3882,7 @@ async function ensureChatClientInstance() {
 		let eventData = {
 			type: "twitch",
 			event: true,
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: settings.textonlymode || false
 		};
 		
@@ -2880,10 +3999,11 @@ async function ensureChatClientInstance() {
 
 	document.getElementById('connect-button').addEventListener('click', async function() {
 		const channelInput = document.getElementById('channel-input');
-		const channelName = channelInput.value.trim().replace(/^#/, '');
+		const channelName = channelInput.value.trim().replace(/^#/, '') || username;
 		if (channelName) {
 			localStorage.setItem('twitchChannel', channelName);
 			channel = channelName;
+			channelFromUrl = false;
 			syncThirdPartyEmotesForChannel(true);
 			channelInput.value = '';
 			await connect();
@@ -2895,10 +4015,11 @@ async function ensureChatClientInstance() {
 			// Check if the pressed key is Enter (key code 13)
 			if (event.key === 'Enter' || event.keyCode === 13) {
 				const channelInput = document.getElementById('channel-input');
-				const channelName = channelInput.value.trim().replace(/^#/, '');
+				const channelName = channelInput.value.trim().replace(/^#/, '') || username;
 				if (channelName) {
 					localStorage.setItem('twitchChannel', channelName);
 					channel = channelName;
+					channelFromUrl = false;
 					syncThirdPartyEmotesForChannel(true);
 					channelInput.value = '';
 					await connect();
@@ -3013,9 +4134,15 @@ async function ensureChatClientInstance() {
 
 		var request = event.data.__ssappSendToTab;
 		if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
-			sendMessage(request.message).catch(function(err) {
+			sendMessage(request.message, { messageOrigin: request.messageOrigin }).catch(function(err) {
 				console.error('Twitch SEND_MESSAGE via postMessage failed', err);
 			});
+		} else if (request.type === 'TWITCH_BOT_ACCOUNT_CONNECT') {
+			connectTwitchBotAccount().catch(function(err) {
+				console.error('Twitch bot account connection via postMessage failed', err);
+			});
+		} else if (request.type === 'TWITCH_BOT_ACCOUNT_DISCONNECT') {
+			disconnectTwitchBotAccount();
 		}
 	});
 
@@ -3130,13 +4257,73 @@ async function ensureChatClientInstance() {
 	let eventSocket;
 	let eventSessionId;
 	let isDisconnecting = false;
-let reconnectTimeout = null;
-let currentChannelId = null;
-let activeSubscriptions = new Set();
-let eventSubRetryCount = 0;
-let MAX_RETRY_ATTEMPTS = 2;
-let hasPermissionError = [];
-let eventSubReconnectInProgress = false;
+	let reconnectTimeout = null;
+	let activeSubscriptions = new Set();
+	let eventSubRetryCount = 0;
+	let hasPermissionError = [];
+	let eventSubReconnectInProgress = false;
+	let eventSubPreviousSocket = null;
+	let eventSubKeepaliveTimer = null;
+	let eventSubKeepaliveTimeoutSeconds = 10;
+	const EVENTSUB_RECONNECT_BASE_DELAY_MS = 1000;
+	const EVENTSUB_RECONNECT_MAX_DELAY_MS = 30000;
+	const EVENTSUB_KEEPALIVE_GRACE_MS = 5000;
+	const EVENTSUB_WELCOME_TIMEOUT_MS = 15000;
+
+	function setEventSubSocket(socket) {
+		eventSocket = socket || null;
+		try {
+			window.eventSocket = eventSocket;
+		} catch (_) {}
+	}
+
+	function clearEventSubKeepaliveTimer() {
+		if (eventSubKeepaliveTimer) {
+			clearTimeout(eventSubKeepaliveTimer);
+			eventSubKeepaliveTimer = null;
+		}
+	}
+
+	function armEventSubKeepaliveWatchdog(socket) {
+		clearEventSubKeepaliveTimer();
+		const timeoutSeconds = Number(eventSubKeepaliveTimeoutSeconds);
+		if (!socket || !Number.isFinite(timeoutSeconds) || timeoutSeconds <= 0) {
+			return;
+		}
+		eventSubKeepaliveTimer = setTimeout(function() {
+			if (isDisconnecting || socket !== eventSocket) {
+				return;
+			}
+			console.warn('EventSub keepalive timed out; reconnecting.');
+			setEventSubSocket(null);
+			eventSessionId = null;
+			eventSubReconnectInProgress = false;
+			activeSubscriptions.clear();
+			try {
+				socket.close();
+			} catch (_) {}
+			scheduleEventSubReconnect('keepalive timeout');
+		}, timeoutSeconds * 1000 + EVENTSUB_KEEPALIVE_GRACE_MS);
+	}
+
+	function scheduleEventSubReconnect(reason) {
+		if (isDisconnecting || reconnectTimeout) {
+			return;
+		}
+		const delay = Math.min(
+			EVENTSUB_RECONNECT_MAX_DELAY_MS,
+			EVENTSUB_RECONNECT_BASE_DELAY_MS * (2 ** Math.min(eventSubRetryCount, 5))
+		);
+		eventSubRetryCount += 1;
+		console.log(`EventSub reconnect scheduled in ${Math.round(delay / 1000)} seconds${reason ? ` (${reason})` : ''}.`);
+		reconnectTimeout = setTimeout(function() {
+			reconnectTimeout = null;
+			connectEventSub().catch(function(error) {
+				console.error('EventSub reconnect failed:', error);
+				scheduleEventSubReconnect('connection failed');
+			});
+		}, delay);
+	}
 
 async function cleanupCurrentConnection() {
 	isDisconnecting = true;
@@ -3146,6 +4333,7 @@ async function cleanupCurrentConnection() {
 			clearTimeout(reconnectTimeout);
 			reconnectTimeout = null;
 		}
+		clearEventSubKeepaliveTimer();
 
 		// Clear intervals
 		if (getViewerCountInterval) {
@@ -3175,18 +4363,25 @@ async function cleanupCurrentConnection() {
 			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 		}
 		
-		if (eventSocket) {
-			if (eventSocket.readyState === WebSocket.OPEN || eventSocket.readyState === WebSocket.CONNECTING) {
-				eventSocket.close();
+		const socketsToClose = new Set([eventSocket, eventSubPreviousSocket].filter(Boolean));
+		socketsToClose.forEach(function(socket) {
+			if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+				try {
+					socket.close();
+				} catch (_) {}
 			}
-			eventSocket = null;
-		}
+		});
+		setEventSubSocket(null);
+		eventSubPreviousSocket = null;
+		eventSessionId = null;
+		eventSubReconnectInProgress = false;
 
 		// Reset states
 		eventSubRetryCount = 0;
 		hasPermissionError = [];
 		activeSubscriptions.clear();
 		currentChannelId = null;
+		currentAuthUser = null;
 		lastKnownViewers = null;
 		lastKnownFollowers = null;
 		lastKnownSubscribers = null;
@@ -3204,29 +4399,85 @@ async function cleanupCurrentConnection() {
 	isDisconnecting = false;
 }
 
-	function initializeEventSubSocket(url) {
+	function initializeEventSubSocket(url, options = {}) {
+		const previousSocket = options.previousSocket || null;
 		const socket = new WebSocket(url);
+		let receivedWelcome = false;
+		const welcomeTimer = setTimeout(function() {
+			if (receivedWelcome || isDisconnecting || socket !== eventSocket) {
+				return;
+			}
+			console.warn('EventSub did not send a welcome message in time.');
+			if (previousSocket && previousSocket.readyState === WebSocket.OPEN) {
+				setEventSubSocket(previousSocket);
+				eventSubPreviousSocket = null;
+				eventSubReconnectInProgress = false;
+				armEventSubKeepaliveWatchdog(previousSocket);
+				try {
+					socket.close();
+				} catch (_) {}
+				return;
+			}
+			setEventSubSocket(null);
+			eventSessionId = null;
+			eventSubReconnectInProgress = false;
+			activeSubscriptions.clear();
+			try {
+				socket.close();
+			} catch (_) {}
+			scheduleEventSubReconnect('welcome timeout');
+		}, EVENTSUB_WELCOME_TIMEOUT_MS);
 
 		socket.onopen = () => {
 			console.log('EventSub WebSocket Connected');
-			eventSubRetryCount = 0;
-			eventSubReconnectInProgress = false;
 		};
 
 		socket.onmessage = async (event) => {
 			if (isDisconnecting) return;
 
-			const message = JSON.parse(event.data);
+			let message;
+			try {
+				message = JSON.parse(event.data);
+			} catch (error) {
+				console.warn('Ignoring malformed EventSub message:', error);
+				return;
+			}
 
-			switch (message.metadata.message_type) {
-				case 'session_welcome':
+			if (socket === eventSocket && receivedWelcome) {
+				armEventSubKeepaliveWatchdog(socket);
+			}
+
+			switch (message.metadata?.message_type) {
+				case 'session_welcome': {
+					if (socket !== eventSocket) return;
+					receivedWelcome = true;
+					clearTimeout(welcomeTimer);
 					eventSessionId = message.payload.session.id;
+					const keepaliveSeconds = Number(message.payload.session.keepalive_timeout_seconds);
+					if (Number.isFinite(keepaliveSeconds) && keepaliveSeconds > 0) {
+						eventSubKeepaliveTimeoutSeconds = keepaliveSeconds;
+					}
+					armEventSubKeepaliveWatchdog(socket);
+					eventSubRetryCount = 0;
+					eventSubReconnectInProgress = false;
 					console.log('EventSub session established:', eventSessionId);
 
-					if (currentChannelId) {
-						await createEventSubSubscriptions(currentChannelId);
+					if (previousSocket) {
+						if (eventSubPreviousSocket === previousSocket) {
+							eventSubPreviousSocket = null;
+						}
+						try {
+							previousSocket.onopen = previousSocket.onmessage = previousSocket.onerror = previousSocket.onclose = null;
+							previousSocket.close();
+						} catch (_) {}
+					} else {
+						activeSubscriptions.clear();
+						if (currentChannelId) {
+							await createEventSubSubscriptions(currentChannelId);
+						}
 					}
 					break;
+				}
 
 				case 'notification':
 					handleEventSubNotification(message.payload);
@@ -3235,30 +4486,27 @@ async function cleanupCurrentConnection() {
 				case 'session_keepalive':
 					break;
 
-				case 'session_reconnect':
-					if (!isDisconnecting) {
-						const reconnectUrl = message.payload?.session?.reconnect_url;
-						if (reconnectUrl) {
-							console.log('EventSub requested reconnect. Switching sockets...');
-							activeSubscriptions.clear();
-							hasPermissionError = [];
-							eventSessionId = null;
-							eventSubReconnectInProgress = true;
-							const previousSocket = eventSocket;
-							if (previousSocket && (previousSocket.readyState === WebSocket.OPEN || previousSocket.readyState === WebSocket.CONNECTING)) {
-								try {
-									previousSocket.onopen = previousSocket.onmessage = previousSocket.onerror = previousSocket.onclose = null;
-								} catch (e) {}
-								try {
-									previousSocket.close();
-								} catch (e) {}
-							}
-							eventSocket = initializeEventSubSocket(reconnectUrl);
-						} else {
-							console.warn('EventSub provided no reconnect URL; staying on current socket.');
-						}
+				case 'session_reconnect': {
+					if (socket !== eventSocket || eventSubReconnectInProgress) return;
+					const reconnectUrl = message.payload?.session?.reconnect_url;
+					if (!reconnectUrl) {
+						console.warn('EventSub provided no reconnect URL; staying on current socket.');
+						return;
+					}
+					console.log('EventSub requested reconnect. Opening the replacement socket...');
+					eventSubReconnectInProgress = true;
+					eventSubPreviousSocket = socket;
+					clearEventSubKeepaliveTimer();
+					try {
+						setEventSubSocket(initializeEventSubSocket(reconnectUrl, { previousSocket: socket }));
+					} catch (error) {
+						console.error('Unable to open EventSub replacement socket:', error);
+						eventSubPreviousSocket = null;
+						eventSubReconnectInProgress = false;
+						armEventSubKeepaliveWatchdog(socket);
 					}
 					break;
+				}
 			}
 		};
 
@@ -3269,46 +4517,46 @@ async function cleanupCurrentConnection() {
 		};
 
 		socket.onclose = () => {
+			clearTimeout(welcomeTimer);
 			if (isDisconnecting) return;
 
-			// Ignore closes from superseded sockets created during a reconnect hand-off.
 			if (socket !== eventSocket) {
-				return;
-			}
-
-			if (eventSubReconnectInProgress) {
-				// The reconnection attempt did not succeed (new socket closed before handshake).
-				console.warn('EventSub reconnect attempt failed; falling back to fresh connection.');
-				eventSubReconnectInProgress = false;
-				if (reconnectTimeout) {
-					clearTimeout(reconnectTimeout);
-					reconnectTimeout = null;
+				if (socket === eventSubPreviousSocket) {
+					eventSubPreviousSocket = null;
 				}
-				eventSocket = null;
-				reconnectTimeout = setTimeout(connectEventSub, 5000);
 				return;
 			}
 
-			if (!hasPermissionError.length && eventSubRetryCount < MAX_RETRY_ATTEMPTS) {
-				console.log(`EventSub WebSocket Closed - Retry attempt ${eventSubRetryCount + 1} of ${MAX_RETRY_ATTEMPTS}`);
-				eventSubRetryCount++;
-				reconnectTimeout = setTimeout(connectEventSub, 5000);
-			} else if (hasPermissionError.length) {
-				console.log('EventSub connection stopped: Permission errors detected');
+			clearEventSubKeepaliveTimer();
+			if (previousSocket && previousSocket.readyState === WebSocket.OPEN) {
+				console.warn('EventSub replacement socket closed before hand-off; keeping the original socket.');
+				setEventSubSocket(previousSocket);
+				eventSubPreviousSocket = null;
+				eventSubReconnectInProgress = false;
+				armEventSubKeepaliveWatchdog(previousSocket);
+				return;
 			}
+
+			setEventSubSocket(null);
+			eventSessionId = null;
+			eventSubReconnectInProgress = false;
+			activeSubscriptions.clear();
+			scheduleEventSubReconnect('socket closed');
 		};
 
 		return socket;
 	}
 
 	async function connectEventSub() {
-		if (isDisconnecting || hasPermissionError.length) return;
+		if (isDisconnecting) return;
 
 		if (eventSocket && (eventSocket.readyState === WebSocket.OPEN || eventSocket.readyState === WebSocket.CONNECTING)) {
 			return;
 		}
 
-		eventSocket = initializeEventSubSocket('wss://eventsub.wss.twitch.tv/ws');
+		eventSessionId = null;
+		activeSubscriptions.clear();
+		setEventSubSocket(initializeEventSubSocket('wss://eventsub.wss.twitch.tv/ws'));
 	}
 
 	async function createEventSubSubscriptions(broadcasterId) {
@@ -3377,10 +4625,10 @@ async function cleanupCurrentConnection() {
 				});
 			}
 
-			// Cheering
-			if (permissions.isBroadcaster && permissions.canReadBits && !activeSubscriptions.has('channel.cheer')) {
+			// Cheers and Power-ups
+			if (permissions.isBroadcaster && permissions.canReadBits && !activeSubscriptions.has('channel.bits.use')) {
 				subscriptionTypes.push({
-					type: 'channel.cheer',
+					type: 'channel.bits.use',
 					version: '1',
 					condition: {
 						broadcaster_user_id: broadcasterId
@@ -3556,12 +4804,117 @@ async function cleanupCurrentConnection() {
 		};
 	}
 
+	function getEventSubMessageText(message) {
+		if (typeof message === 'string') {
+			return message;
+		}
+		if (message && typeof message.text === 'string') {
+			return message.text;
+		}
+		return '';
+	}
+
+	function getEventSubUserAvatarUrl(event) {
+		if (!event || event.is_anonymous === true) {
+			return '';
+		}
+		const login = event.user_login || event.user_name || '';
+		return login
+			? `https://api.socialstream.ninja/twitch/large?username=${encodeURIComponent(login)}`
+			: '';
+	}
+
+	function forwardEventSubCheer(event) {
+		pushMessage({
+			type: "twitch",
+			event: 'cheer',
+			chatname: event.user_name || 'Anonymous',
+			chatimg: getEventSubUserAvatarUrl(event),
+			userid: event.user_id,
+			bits: event.bits,
+			chatmessage: getEventSubMessageText(event.message),
+			hasDonation: formatBitAmount(event.bits),
+			donoValue: Number(event.bits) / 100,
+			meta: { userId: event.user_id, bits: event.bits },
+			title: getTranslation("cheers", "CHEERS"),
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
+			textonly: settings.textonlymode || false
+		});
+		addEvent(`Cheer: ${event.user_name || 'Anonymous'} cheered ${event.bits} bits`);
+	}
+
+	function buildPowerUpMeta(event) {
+		const powerUp = {
+			type: event.type || 'power_up'
+		};
+		let title = '';
+
+		if (event.custom_power_up) {
+			title = event.custom_power_up.title || '';
+			powerUp.title = title;
+			powerUp.rewardId = event.custom_power_up.reward_id || '';
+		} else if (event.power_up) {
+			const powerUpType = event.power_up.type || '';
+			const labels = {
+				message_effect: 'Message Effect',
+				celebration: 'On-Screen Celebration',
+				gigantify_an_emote: 'Gigantify an Emote'
+			};
+			title = labels[powerUpType] || 'Power-up';
+			powerUp.powerUpType = powerUpType;
+			if (event.power_up.emote) {
+				powerUp.emote = {
+					id: event.power_up.emote.id || '',
+					name: event.power_up.emote.name || ''
+				};
+			}
+			if (event.power_up.message_effect_id) {
+				powerUp.messageEffectId = event.power_up.message_effect_id;
+			}
+		}
+
+		const messageText = getEventSubMessageText(event.message);
+		if (messageText) {
+			powerUp.messageText = messageText;
+		}
+
+		return {
+			title: title || 'Power-up',
+			powerUp
+		};
+	}
+
+	function forwardEventSubPowerUp(event) {
+		const details = buildPowerUpMeta(event);
+		const userName = event.user_name || 'Someone';
+		const bits = parseInt(event.bits, 10) || 0;
+		pushMessage({
+			type: 'twitch',
+			event: 'powerup',
+			chatname: userName,
+			userid: event.user_id,
+			chatmessage: '',
+			meta: {
+				userId: event.user_id,
+				userLogin: event.user_login || '',
+				bits,
+				powerUp: details.powerUp
+			},
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
+			textonly: settings.textonlymode || false
+		});
+		addEvent(`Power-up: ${userName} used ${details.title} (${formatBitAmount(bits)})`);
+	}
+
 	function handleEventSubNotification(payload) {
 		const event = payload.event;
 		const subscription = payload.subscription;
 		
 		// Skip non-donation events if hideevents is enabled.
-		const isDonationEvent = subscription && subscription.type === 'channel.cheer';
+		const isDonationEvent = subscription && (
+			subscription.type === 'channel.cheer' ||
+			(subscription.type === 'channel.bits.use' && event && event.type === 'cheer')
+		);
 		if (settings.hideevents && !isDonationEvent) {
 			return;
 		}
@@ -3579,6 +4932,7 @@ async function cleanupCurrentConnection() {
 				userid: event.user_id,
 				timestamp: event.followed_at,
 				meta: { userId: event.user_id, followedAt: event.followed_at },
+				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				textonly: settings.textonlymode || false
 			});
 			if (typeof lastKnownFollowers === 'number') {
@@ -3608,6 +4962,7 @@ async function cleanupCurrentConnection() {
 				tier: event.tier,
 				isGift: event.is_gift,
 				meta: { userId: event.user_id, tier: event.tier, isGift: event.is_gift },
+				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				textonly: settings.textonlymode || false
 			});
 			if (typeof lastKnownSubscribers === 'number') {
@@ -3634,6 +4989,7 @@ async function cleanupCurrentConnection() {
 						streakMonths: event.streak_months,
 						cumulativeMonths: event.cumulative_months
 					},
+					// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 					textonly: settings.textonlymode || false
 				});
 				addEvent(`Resub: ${event.user_name} (${event.cumulative_months} months)`);
@@ -3654,6 +5010,7 @@ async function cleanupCurrentConnection() {
 					total: event.total,
 					tier: event.tier,
 					meta: { userId: event.user_id, total: event.total, tier: event.tier },
+					// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 					textonly: settings.textonlymode || false
 				});
 				// Add to recent events
@@ -3661,20 +5018,14 @@ async function cleanupCurrentConnection() {
 				break;
 
 			case 'channel.cheer':
-				pushMessage({
-					type: "twitch", 
-					event: 'cheer',
-					chatname: event.user_name || 'Anonymous',
-					userid: event.user_id,
-					bits: event.bits,
-					chatmessage: event.message,
-					hasDonation: formatBitAmount(event.bits),
-					meta: { userId: event.user_id, bits: event.bits },
-					title: getTranslation("cheers", "CHEERS"),
-					textonly: settings.textonlymode || false
-				});
-				// Add to recent events
-				addEvent(`Cheer: ${event.user_name || 'Anonymous'} cheered ${event.bits} bits`);
+				forwardEventSubCheer(event);
+				break;
+			case 'channel.bits.use':
+				if (event.type === 'cheer') {
+					forwardEventSubCheer(event);
+				} else if (event.type === 'power_up' || event.type === 'custom_power_up') {
+					forwardEventSubPowerUp(event);
+				}
 				break;
 			case 'channel.channel_points_custom_reward_redemption.add':
 				const rewardTitle = event.reward.title;
@@ -3692,23 +5043,20 @@ async function cleanupCurrentConnection() {
 					chatname: event.user_name,
 					userid: event.user_id,
 					chatmessage: rewardMessage,
-					reward: {
-						id: event.reward.id,
-						title: rewardTitle,
+					timestamp: event.redeemed_at,
+					meta: {
+						userId: event.user_id,
+						rewardId: event.reward.id,
+						rewardTitle: rewardTitle,
 						cost: rewardCost,
 						prompt: event.reward.prompt,
 						userInput: userInput,
 						backgroundColor: event.reward.background_color,
 						redemptionId: event.id,
-						status: event.status
-					},
-					timestamp: event.redeemed_at,
-					meta: {
-						userId: event.user_id,
-						rewardId: event.reward.id,
-						cost: rewardCost,
+						status: event.status,
 						alias: 'channel_points'
 					},
+					// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 					textonly: settings.textonlymode || false
 				});
 				
@@ -3730,13 +5078,20 @@ async function cleanupCurrentConnection() {
 						fromLogin: event.from_broadcaster_user_login,
 						viewers: event.viewers
 					},
+					// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 					textonly: settings.textonlymode || false
 				});
 				addEvent(`Raid: ${event.from_broadcaster_user_name} with ${event.viewers} viewers`);
 				break;
 
 			case 'channel.ban':
-				pushDeleteMessage({ type: 'twitch', chatname: event.user_name || event.user_login });
+				const deletePayload = { type: 'twitch', chatname: event.user_name || event.user_login };
+				if (settings.pluralmind) {
+					deletePayload.userid = event.user_id;
+					deletePayload.username = event.user_login;
+					deletePayload.meta = { pluralmind: true };
+				}
+				pushDeleteMessage(deletePayload);
 				pushTwitchBanMetaEvent({
 					username: event.user_login,
 					displayName: event.user_name,
@@ -4024,8 +5379,8 @@ async function cleanupCurrentConnection() {
 			});
 			const data = await res.json();
 			if (res.ok) {
-				pushMessage({ type: 'twitch', event: 'ad_schedule', meta: data?.data?.[0] || data });
 				addEvent('Ad Schedule updated');
+				pushMessage({ type: 'twitch', event: 'ad_schedule', meta: data?.data?.[0] || data });
 				return data;
 			}
 			console.error('fetchAdSchedule failed', data);
@@ -4118,6 +5473,7 @@ async function cleanupCurrentConnection() {
 			followerCount: document.getElementById('follower-count')?.parentElement,
 			chatInput: document.querySelector('.chat-input'),
 			moderationControls: document.querySelector('.moderation-controls'),
+			moderationRequirements: document.getElementById('moderation-requirements'),
 			permissionsInfo: document.getElementById('permissions-info') || createPermissionsInfo()
 		};
 
@@ -4127,13 +5483,43 @@ async function cleanupCurrentConnection() {
 				(permissions.canViewSubscribers && permissions.hasSubscriptionProgram) ? 'block' : 'none';
 		}
 
-		// Update moderation controls visibility
+		// Keep controls visible so users can see what exists, then explain missing access.
 		if (elements.moderationControls) {
-			elements.moderationControls.style.display = permissions.canModerate ? 'block' : 'none';
+			elements.moderationControls.style.display = 'block';
 		}
+		updateModerationRequirements(permissions, elements.moderationRequirements);
 
 		// Update permissions info display
 		updatePermissionsDisplay(permissions, elements.permissionsInfo);
+	}
+
+	function updateModerationRequirements(permissions, container) {
+		if (!container) {
+			return;
+		}
+		if (!permissions) {
+			container.textContent = 'Sign in and connect to a channel to use moderation, ads, and channel controls.';
+			return;
+		}
+
+		const notes = [];
+		if (!permissions.isBroadcaster && !permissions.isModerator) {
+			notes.push('Moderation actions require broadcaster or moderator access for this channel.');
+		}
+		if (!permissions.canBanUsers || !permissions.canDeleteMessages) {
+			notes.push('Ban, timeout, and delete sync actions require Twitch moderation scopes.');
+		}
+		if (!permissions.canManageAds) {
+			notes.push('Starting ads requires channel:manage:ads.');
+		}
+		if (!permissions.canReadAds) {
+			notes.push('Fetching ad schedule requires channel:read:ads.');
+		}
+		if (!permissions.canManageBroadcast) {
+			notes.push('Title/category editing requires broadcaster access and channel:manage:broadcast.');
+		}
+
+		container.textContent = notes.length ? notes.join(' ') : 'Your current sign-in has access to these channel controls.';
 	}
 
 	function createPermissionsInfo() {
@@ -4173,12 +5559,24 @@ async function cleanupCurrentConnection() {
 	function updateHeaderInfo(username, channelName) {
 		const currentUserElement = document.getElementById('current-user');
 		const currentChannelElement = document.getElementById('current-channel');
+		const channelSourceElement = document.getElementById('channel-source');
 		
 		if (currentUserElement) {
 			currentUserElement.textContent = username || 'Not signed in';
 		}
 		if (currentChannelElement) {
 			currentChannelElement.textContent = channelName || 'No channel';
+		}
+		if (channelSourceElement) {
+			let hint = '';
+			if (channelName) {
+				if (channelFromUrl) {
+					hint = '\u00b7 from link';
+				} else if (username && channelName.toLowerCase() !== username.toLowerCase()) {
+					hint = '\u00b7 viewing';
+				}
+			}
+			channelSourceElement.textContent = hint;
 		}
 	}
 } catch(e){
@@ -4193,9 +5591,13 @@ async function cleanupCurrentConnection() {
 
     var TAB_ID = (typeof window.__SSAPP_TAB_ID__ !== 'undefined') ? window.__SSAPP_TAB_ID__ : null;
 
-    function __tw_notifyApp(status, message){
+    function __tw_notifyApp(status, message, details){
       try {
-        var payload = { wssStatus: { platform: 'twitch', status: status, message: message } };
+        var statusPayload = Object.assign(
+          { platform: 'twitch', status: status, message: message },
+          details && typeof details === 'object' ? details : {}
+        );
+        var payload = { wssStatus: statusPayload };
         if (window.chrome && window.chrome.runtime && window.chrome.runtime.id) {
           window.chrome.runtime.sendMessage(window.chrome.runtime.id, payload, function(){});
         } else if (window.ninjafy && window.ninjafy.sendMessage) {
@@ -4211,21 +5613,53 @@ async function cleanupCurrentConnection() {
     // Expose for optional upstream use
     window.ssWssNotifyTwitch = __tw_notifyApp;
 
+    function __tw_hasPendingAuthAttempt(){
+      try {
+        return !!sessionStorage.getItem('twitchOAuthState');
+      } catch(_){
+        return false;
+      }
+    }
+
+    function __tw_hasRefreshableAuth(){
+      try {
+        return !!localStorage.getItem('twitchOAuthRefreshToken');
+      } catch(_){
+        return false;
+      }
+    }
+
+    function __tw_shouldEmitSigninRequired(options){
+      try {
+        var ignoreAccessToken = !!(options && options.ignoreAccessToken);
+        var hasToken = !ignoreAccessToken && !!localStorage.getItem('twitchOAuthToken');
+        return !hasToken && !__tw_hasRefreshableAuth() && !__tw_hasPendingAuthAttempt();
+      } catch(_){
+        return false;
+      }
+    }
+
+    function __tw_maybeNotifySigninRequired(message, options){
+      if (__tw_shouldEmitSigninRequired(options)) {
+        __tw_notifyApp('signin_required', message || 'Please sign in');
+      }
+    }
+
     // 1) Initial sign-in check
     function __tw_initialCheck(){
       try {
-        var hasToken = !!localStorage.getItem('twitchOAuthToken');
-        if (!hasToken) __tw_notifyApp('signin_required','Please sign in');
+        __tw_maybeNotifySigninRequired('Please sign in');
       } catch(_){ }
     }
 
-    // 2) Patch showAuthButton to emit signin_required whenever UI shows auth prompt
+    // 2) Patch showAuthButton to emit signin_required only after refresh/auth attempts are exhausted.
     try {
       if (typeof showAuthButton === 'function') {
         var __tw_origShowAuth = showAuthButton;
         showAuthButton = function(){
-          try { __tw_notifyApp('signin_required','Please sign in'); } catch(_){ }
-          return __tw_origShowAuth.apply(this, arguments);
+          var result = __tw_origShowAuth.apply(this, arguments);
+          try { __tw_maybeNotifySigninRequired('Please sign in'); } catch(_){ }
+          return result;
         };
       }
     } catch(_){ }
@@ -4286,7 +5720,7 @@ async function cleanupCurrentConnection() {
                   var isHelixOrGql = url.indexOf('api.twitch.tv') !== -1 || url.indexOf('gql.twitch.tv') !== -1;
                   var isEventSubSubscription = url.indexOf('api.twitch.tv/helix/eventsub/subscriptions') !== -1;
                   if (isOAuth && res.status === 401) {
-                    emit('signin_required', 'Twitch auth expired');
+                    __tw_maybeNotifySigninRequired('Twitch auth expired', { ignoreAccessToken: true });
                   } else if (isEventSubSubscription && (res.status === 401 || res.status === 403)) {
                     console.warn('Optional Twitch EventSub feature unavailable:', msg);
                   } else if (isHelixOrGql && (res.status === 401 || res.status === 403)) {

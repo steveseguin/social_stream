@@ -65,6 +65,10 @@
 		data.membership = "";;
 		data.contentimg = "";
 		data.type = "zoom";
+		// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+		// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+		// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+		// Literal chatmessage on the wire: no app-added HTML or entity decoding; receivers must render it as text.
 		data.textonly = true;
 		
 		data.id = Date.now() + parseInt(Math.random()*1000000);  // not required, but useful for keeping track of order or assigning message uniquiness

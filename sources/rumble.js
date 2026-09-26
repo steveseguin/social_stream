@@ -1,32 +1,54 @@
 (function () {
 	 
 	function toDataURL(url, callback) {
-	  var xhr = new XMLHttpRequest();
-	  xhr.onload = function() {
-		  
-		var blob = xhr.response;
-    
-		if (blob.size > (25 * 1024)) {
-		  callback(url); // Image size is larger than 25kb.
-		  return;
+		var completed = false;
+		function finish(value) {
+			if (completed) { return; }
+			completed = true;
+			callback(value || url);
 		}
-
-		var reader = new FileReader();
-		
-		
-		reader.onloadend = function() {
-		  callback(reader.result);
+		function fallback() {
+			finish(url);
 		}
-		reader.readAsDataURL(xhr.response);
-	  };
-	  xhr.open('GET', url);
-	  xhr.responseType = 'blob';
-	  xhr.send();
+		try {
+			var xhr = new XMLHttpRequest();
+			xhr.onload = function() {
+				var blob = xhr.response;
+				// Keep failed downloads and oversized images as URLs; never block the chat message.
+				if (xhr.status < 200 || xhr.status >= 300 || !blob || !blob.size || blob.size > (25 * 1024) ||
+					(blob.type && blob.type.indexOf("image/") !== 0)) {
+					fallback();
+					return;
+				}
+				try {
+					var reader = new FileReader();
+					reader.onload = function() { finish(reader.result); };
+					reader.onerror = fallback;
+					reader.onabort = fallback;
+					reader.readAsDataURL(blob);
+				} catch(e) {
+					fallback();
+				}
+			};
+			xhr.onerror = fallback;
+			xhr.onabort = fallback;
+			xhr.ontimeout = fallback;
+			xhr.open("GET", url);
+			xhr.responseType = "blob";
+			xhr.timeout = 5000;
+			xhr.send();
+		} catch(e) {
+			fallback();
+		}
 	}
 	
 	function escapeHtml(unsafe){
 		try {
-			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
+			if (settings.textonlymode){ // Literal text stays unencoded at capture; escape only when a renderer constructs HTML.
 				return unsafe;
 			}
 			return unsafe
@@ -60,6 +82,7 @@
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
@@ -178,6 +201,7 @@
 		data.membership = "";
 		data.contentimg = contentimg;
 		data.event = eventType;
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "rumble";
 		
@@ -188,6 +212,7 @@
 					data.sourceImg = dataUrl;
 					if (data.chatimg){
 						toDataURL(data.chatimg, function(dataUrl) {
+							data.chatimg = dataUrl;
 							pushMessage(data);
 						});
 					} else {
@@ -222,7 +247,7 @@
 	}
 	var isExtensionOn = true;
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	
 	

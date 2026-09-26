@@ -1,5 +1,10 @@
 <html lang="en" style="font-size: 10px; font-family: Roboto, Arial, sans-serif">
 	<head>
+<script src="./libs/objects.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
+<script src="./shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="./shared/utils/chatBadges.css">
+
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
 		<meta content="utf-8" http-equiv="encoding" />
@@ -959,6 +964,14 @@
 					.replace(/>/g, "&gt;")
 					.replace(/"/g, "&quot;")
 					.replace(/'/g, "&#039;");
+			}
+
+			function plainTextToHtml(value) {
+				return escapeHtml(value == null ? "" : value);
+			}
+
+			function escapeAttributeValue(value) {
+				return escapeHtml(value == null ? "" : String(value));
 			}
 
 			async function fetchWithTimeout(URL, timeout = 8000) {
@@ -2118,8 +2131,6 @@
 				traverse(element);
 			}
 			
-			const validTLDs = new Set(["a","aaa","aarp","abb","abbott","abbvie","abc","able","abogado","abudhabi","ac","academy","accenture","accountant","accountants","aco","actor","ad","ads","adult","ae","aeg","aero","aetna","af","afl","africa","ag","agakhan","agency","ai","aig","airbus","airforce","airtel","akdn","al","alibaba","alipay","allfinanz","allstate","ally","alsace","alstom","am","amazon","americanexpress","americanfamily","amex","amfam","amica","amsterdam","analytics","android","anquan","anz","ao","aol","apartments","app","apple","aq","aquarelle","ar","arab","aramco","archi","army","arpa","art","arte","as","asda","asia","associates","at","athleta","attorney","au","auction","audi","audible","audio","auspost","author","auto","autos","aw","aws","ax","axa","az","azure","b","ba","baby","baidu","banamex","band","bank","bar","barcelona","barclaycard","barclays","barefoot","bargains","baseball","basketball","bauhaus","bayern","bb","bbc","bbt","bbva","bcg","bcn","bd","be","beats","beauty","beer","bentley","berlin","best","bestbuy","bet","bf","bg","bh","bharti","bi","bible","bid","bike","bing","bingo","bio","biz","bj","black","blackfriday","blockbuster","blog","bloomberg","blue","bm","bms","bmw","bn","bnpparibas","bo","boats","boehringer","bofa","bom","bond","boo","book","booking","bosch","bostik","boston","bot","boutique","box","br","bradesco","bridgestone","broadway","broker","brother","brussels","bs","bt","build","builders","business","buy","buzz","bv","bw","by","bz","bzh","c","ca","cab","cafe","cal","call","calvinklein","cam","camera","camp","canon","capetown","capital","capitalone","car","caravan","cards","care","career","careers","cars","casa","case","cash","casino","cat","catering","catholic","cba","cbn","cbre","cc","cd","center","ceo","cern","cf","cfa","cfd","cg","ch","chanel","channel","charity","chase","chat","cheap","chintai","christmas","chrome","church","ci","cipriani","circle","cisco","citadel","citi","citic","city","ck","cl","claims","cleaning","click","clinic","clinique","clothing","cloud","club","clubmed","cm","cn","co","coach","codes","coffee","college","cologne","com","commbank","community","company","compare","computer","comsec","condos","construction","consulting","contact","contractors","cooking","cool","coop","corsica","country","coupon","coupons","courses","cpa","cr","credit","creditcard","creditunion","cricket","crown","crs","cruise","cruises","cu","cuisinella","cv","cw","cx","cy","cymru","cyou","cz","d","dabur","dad","dance","data","date","dating","datsun","day","dclk","dds","de","deal","dealer","deals","degree","delivery","dell","deloitte","delta","democrat","dental","dentist","desi","design","dev","dhl","diamonds","diet","digital","direct","directory","discount","discover","dish","diy","dj","dk","dm","dnp","do","docs","doctor","dog","domains","dot","download","drive","dtv","dubai","dunlop","dupont","durban","dvag","dvr","dz","e","earth","eat","ec","eco","edeka","edu","education","ee","eg","email","emerck","energy","engineer","engineering","enterprises","epson","equipment","er","ericsson","erni","es","esq","estate","et","eu","eurovision","eus","events","exchange","expert","exposed","express","extraspace","f","fage","fail","fairwinds","faith","family","fan","fans","farm","farmers","fashion","fast","fedex","feedback","ferrari","ferrero","fi","fidelity","fido","film","final","finance","financial","fire","firestone","firmdale","fish","fishing","fit","fitness","fj","fk","flickr","flights","flir","florist","flowers","fly","fm","fo","foo","food","football","ford","forex","forsale","forum","foundation","fox","fr","free","fresenius","frl","frogans","frontier","ftr","fujitsu","fun","fund","furniture","futbol","fyi","g","ga","gal","gallery","gallo","gallup","game","games","gap","garden","gay","gb","gbiz","gd","gdn","ge","gea","gent","genting","george","gf","gg","ggee","gh","gi","gift","gifts","gives","giving","gl","glass","gle","global","globo","gm","gmail","gmbh","gmo","gmx","gn","godaddy","gold","goldpoint","golf","goo","goodyear","goog","google","gop","got","gov","gp","gq","gr","grainger","graphics","gratis","green","gripe","grocery","group","gs","gt","gu","gucci","guge","guide","guitars","guru","gw","gy","h","hair","hamburg","hangout","haus","hbo","hdfc","hdfcbank","health","healthcare","help","helsinki","here","hermes","hiphop","hisamitsu","hitachi","hiv","hk","hkt","hm","hn","hockey","holdings","holiday","homedepot","homegoods","homes","homesense","honda","horse","hospital","host","hosting","hot","hotels","hotmail","house","how","hr","hsbc","ht","hu","hughes","hyatt","hyundai","i","ibm","icbc","ice","icu","id","ie","ieee","ifm","ikano","il","im","imamat","imdb","immo","immobilien","in","inc","industries","infiniti","info","ing","ink","institute","insurance","insure","int","international","intuit","investments","io","ipiranga","iq","ir","irish","is","ismaili","ist","istanbul","it","itau","itv","j","jaguar","java","jcb","je","jeep","jetzt","jewelry","jio","jll","jm","jmp","jnj","jo","jobs","joburg","jot","joy","jp","jpmorgan","jprs","juegos","juniper","k","kaufen","kddi","ke","kerryhotels","kerrylogistics","kerryproperties","kfh","kg","kh","ki","kia","kids","kim","kindle","kitchen","kiwi","km","kn","koeln","komatsu","kosher","kp","kpmg","kpn","kr","krd","kred","kuokgroup","kw","ky","kyoto","kz","l","la","lacaixa","lamborghini","lamer","lancaster","land","landrover","lanxess","lasalle","lat","latino","latrobe","law","lawyer","lb","lc","lds","lease","leclerc","lefrak","legal","lego","lexus","lgbt","li","lidl","life","lifeinsurance","lifestyle","lighting","like","lilly","limited","limo","lincoln","link","lipsy","live","living","lk","llc","llp","loan","loans","locker","locus","lol","london","lotte","lotto","love","lpl","lplfinancial","lr","ls","lt","ltd","ltda","lu","lundbeck","luxe","luxury","lv","ly","m","ma","madrid","maif","maison","makeup","man","management","mango","map","market","marketing","markets","marriott","marshalls","mattel","mba","mc","mckinsey","md","me","med","media","meet","melbourne","meme","memorial","men","menu","merckmsd","mg","mh","miami","microsoft","mil","mini","mint","mit","mitsubishi","mk","ml","mlb","mls","mm","mma","mn","mo","mobi","mobile","moda","moe","moi","mom","monash","money","monster","mormon","mortgage","moscow","moto","motorcycles","mov","movie","mp","mq","mr","ms","msd","mt","mtn","mtr","mu","museum","music","mv","mw","mx","my","mz","n","na","nab","nagoya","name","navy","nba","nc","ne","nec","net","netbank","netflix","network","neustar","new","news","next","nextdirect","nexus","nf","nfl","ng","ngo","nhk","ni","nico","nike","nikon","ninja","nissan","nissay","nl","no","nokia","norton","now","nowruz","nowtv","np","nr","nra","nrw","ntt","nu","nyc","nz","o","obi","observer","office","okinawa","olayan","olayangroup","ollo","om","omega","one","ong","onl","online","ooo","open","oracle","orange","org","organic","origins","osaka","otsuka","ott","ovh","p","pa","page","panasonic","paris","pars","partners","parts","party","pay","pccw","pe","pet","pf","pfizer","pg","ph","pharmacy","phd","philips","phone","photo","photography","photos","physio","pics","pictet","pictures","pid","pin","ping","pink","pioneer","pizza","pk","pl","place","play","playstation","plumbing","plus","pm","pn","pnc","pohl","poker","politie","porn","post","pr","pramerica","praxi","press","prime","pro","prod","productions","prof","progressive","promo","properties","property","protection","pru","prudential","ps","pt","pub","pw","pwc","py","q","qa","qpon","quebec","quest","r","racing","radio","re","read","realestate","realtor","realty","recipes","red","redstone","redumbrella","rehab","reise","reisen","reit","reliance","ren","rent","rentals","repair","report","republican","rest","restaurant","review","reviews","rexroth","rich","richardli","ricoh","ril","rio","rip","ro","rocks","rodeo","rogers","room","rs","rsvp","ru","rugby","ruhr","run","rw","rwe","ryukyu","s","sa","saarland","safe","safety","sakura","sale","salon","samsclub","samsung","sandvik","sandvikcoromant","sanofi","sap","sarl","sas","save","saxo","sb","sbi","sbs","sc","scb","schaeffler","schmidt","scholarships","school","schule","schwarz","science","scot","sd","se","search","seat","secure","security","seek","select","sener","services","seven","sew","sex","sexy","sfr","sg","sh","shangrila","sharp","shell","shia","shiksha","shoes","shop","shopping","shouji","show","si","silk","sina","singles","site","sj","sk","ski","skin","sky","skype","sl","sling","sm","smart","smile","sn","sncf","so","soccer","social","softbank","software","sohu","solar","solutions","song","sony","soy","spa","space","sport","spot","sr","srl","ss","st","stada","staples","star","statebank","statefarm","stc","stcgroup","stockholm","storage","store","stream","studio","study","style","su","sucks","supplies","supply","support","surf","surgery","suzuki","sv","swatch","swiss","sx","sy","sydney","systems","sz","t","tab","taipei","talk","taobao","target","tatamotors","tatar","tattoo","tax","taxi","tc","tci","td","tdk","team","tech","technology","tel","temasek","tennis","teva","tf","tg","th","thd","theater","theatre","tiaa","tickets","tienda","tips","tires","tirol","tj","tjmaxx","tjx","tk","tkmaxx","tl","tm","tmall","tn","to","today","tokyo","tools","top","toray","toshiba","total","tours","town","toyota","toys","tr","trade","trading","training","travel","travelers","travelersinsurance","trust","trv","tt","tube","tui","tunes","tushu","tv","tvs","tw","tz","u","ua","ubank","ubs","ug","uk","unicom","university","uno","uol","ups","us","uy","uz","v","va","vacations","vana","vanguard","vc","ve","vegas","ventures","verisign","vermögensberater","vermögensberatung","versicherung","vet","vg","vi","viajes","video","vig","viking","villas","vin","vip","virgin","visa","vision","viva","vivo","vlaanderen","vn","vodka","volvo","vote","voting","voto","voyage","vu","w","wales","walmart","walter","wang","wanggou","watch","watches","weather","weatherchannel","webcam","weber","website","wed","wedding","weibo","weir","wf","whoswho","wien","wiki","williamhill","win","windows","wine","winners","wme","wolterskluwer","woodside","work","works","world","wow","ws","wtc","wtf","x","xbox","xerox","xihuan","xin","xxx","xyz","y","yachts","yahoo","yamaxun","yandex","ye","yodobashi","yoga","yokohama","you","youtube","yt","yun","z","za","zappos","zara","zero","zip","zm","zone","zuerich","zw","IDNs","ελ","ευ","бг","бел","дети","ею","католик","ком","мкд","мон","москва","онлайн","орг","рус","рф","сайт","срб","укр","қаз","հայ","ישראל","קום","ابوظبي","ارامكو","الاردن","البحرين","الجزائر","السعودية","العليان","المغرب","امارات","ایران","بارت","بازار","بيتك","بھارت","تونس","سودان","سورية","شبكة","عراق","عرب","عمان","فلسطين","قطر","كاثوليك","كوم","مصر","مليسيا","موريتانيا","موقع","همراه","پاكستان","پاکستان","ڀارت","कॉम","नेट","भारत","भारतम्","भारोत","संगठन","বাংলা","ভারত","ভাৰত","ਭਾਰਤ","ભારત","ଭାରତ","இந்தியா","இலங்கை","சிங்கப்பூர்","భారత్","ಭಾರತ","ഭാരതം","ලංකා","คอม","ไทย","ລາວ","გე","みんな","アマゾン","クラウド","グーグル","コム","ストア","セール","ファッション","ポイント","世界","中信","中国","中國","中文网","亚马逊","企业","佛山","信息","健康","八卦","公司","公益","台湾","台灣","商城","商店","商标","嘉里","嘉里大酒店","在线","大拿","天主教","娱乐","家電","广东","微博","慈善","我爱你","手机","招聘","政务","政府","新加坡","新闻","时尚","書籍","机构","淡马锡","游戏","澳門","点看","移动","组织机构","网址","网店","网站","网络","联通","谷歌","购物","通販","集团","電訊盈科","飞利浦","食品","餐厅","香格里拉","香港","닷넷","닷컴","삼성","한국"]);
-			
 			function isValidTLD(tld) {
 			  return validTLDs.has(tld.toLowerCase());
 			}
@@ -2772,17 +2783,17 @@
 					var largeImage = false;
 					
 					if (!data.chatmessage && data.contentimg){
-					  if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
-						data.chatmessage = '<video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.style.display=\'none\'" /></video>';
+					  if (/\.(mp4|webm)$/i.test(data.contentimg.split(/[?#]/)[0])){
+						data.chatmessage = '<video data-content-image loop="true" autoplay="true" muted="true" id="img" src="' + escapeAttributeValue(data.contentimg) + '"  /></video>';
 					  } else {
-						data.chatmessage = '<img id="img" src="' + data.contentimg + '"  onerror="this.style.display=\'none\'" />';
+						data.chatmessage = '<img data-content-image alt="" id="img" src="' + escapeAttributeValue(data.contentimg) + '"  />';
 					  }
 					  largeImage = true;
 					} else if (data.contentimg){
-					  if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
-						addImage = '<div id="imgContent" class="hl-imgContent"><video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parentNode.style.display=\'none\'" /></video></div>';
+					  if (/\.(mp4|webm)$/i.test(data.contentimg.split(/[?#]/)[0])){
+						addImage = '<div id="imgContent" class="hl-imgContent"><video data-content-image loop="true" autoplay="true" muted="true" id="img" src="' + escapeAttributeValue(data.contentimg) + '"  /></video></div>';
 					  } else {
-						addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parentNode.style.display=\'none\'" /></div>';
+						addImage = '<div id="imgContent" class="hl-imgContent"><img data-content-image alt="" id="img" src="' + escapeAttributeValue(data.contentimg) + '"  /></div>';
 					  }
 					} else {
 					  data.contentimg = "";
@@ -2804,12 +2815,16 @@
 					  data.type = data.type.toString();
 					  showType = data.type;
 					}
+					var safeDataId = escapeAttributeValue(data.id);
+					var safeDataType = escapeAttributeValue(data.type);
 
 					var customSourceClass = "sourceOffset";
 					if (showType && showsource && avatarForMessage) {
-					  showType = '<img src="./sources/images/' + showType + '.png" class="icon sourcetype" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
+					  var safeShowType = escapeAttributeValue(showType);
+					  showType = '<img src="./sources/images/' + safeShowType + '.png" class="icon sourcetype" data-icon-name="' + safeShowType + '" onerror="this.style.display=\'none\'" />';
 					} else if (showType && showsource && !avatarForMessage) {
-					  showType = '<img src="./sources/images/' + showType + '.png" class="icon sourcetype noavatar-source" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
+					  var safeShowType = escapeAttributeValue(showType);
+					  showType = '<img src="./sources/images/' + safeShowType + '.png" class="icon sourcetype noavatar-source" data-icon-name="' + safeShowType + '" onerror="this.style.display=\'none\'" />';
 					} else {
 					  customSourceClass = "";
 					  showType = "";
@@ -2817,9 +2832,9 @@
 
 					var resolvedSourceImg = data.sourceImg ? resolveSourceImageUrl(data.sourceImg) : "";
 					if (resolvedSourceImg && customSource && avatarForMessage) {
-					  showType += '<img src="' + resolvedSourceImg + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
+					  showType += '<img src="' + escapeAttributeValue(resolvedSourceImg) + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
 					} else if (resolvedSourceImg && customSource && !avatarForMessage) {
-					  showType += '<img src="' + resolvedSourceImg + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
+					  showType += '<img src="' + escapeAttributeValue(resolvedSourceImg) + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
 					}
 
 					if (hideNames) {
@@ -2844,6 +2859,7 @@
 					  data.chatname = data.chatname.toString();
 					}
 
+
 					var memebershipHTML = "";
 					
 					// MODIFIED MEMBERSHIP/DONATION HANDLING
@@ -2854,15 +2870,15 @@
 					  data.membership = data.hasMembership.toString();
 					  
 					  if (avatarForMessage) {
-						memebershipHTML = data.membership;
+						memebershipHTML = plainTextToHtml(data.membership);
 					  } else {
 						// No avatar membership display
 							if (data.membership.length > 30){
-								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + data.membership.toUpperCase() + '</div></div>';
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							} else if (data.membership.length > 24){
-								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + data.membership.toUpperCase() + '</div></div>';
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							} else {
-								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							}
 						  }
 					} else if (data.membership) {
@@ -2875,18 +2891,18 @@
 						  if (avatarForMessage) {
 							if (data.subtitle) {
 								if (data.membership.length > 24){
-									memebershipHTML = '<div class="donation membership"><div class="donation-title verysmall">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+									memebershipHTML = '<div class="donation membership"><div class="donation-title verysmall">' + plainTextToHtml(data.membership.toUpperCase()) + "</div><div class='subtitle'>" + plainTextToHtml(data.subtitle) + "</div></div>";
 								} else if (data.membership.length > 19){
-									memebershipHTML = '<div class="donation membership"><div class="donation-title small">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+									memebershipHTML = '<div class="donation membership"><div class="donation-title small">' + plainTextToHtml(data.membership.toUpperCase()) + "</div><div class='subtitle'>" + plainTextToHtml(data.subtitle) + "</div></div>";
 								} else {
-									memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+									memebershipHTML = '<div class="donation membership"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase()) + "</div><div class='subtitle'>" + plainTextToHtml(data.subtitle) + "</div></div>";
 								}
 							} else if (data.membership.length > 30){
-								memebershipHTML = '<div class="donation membership"><div class="donation-title verysmall">' + data.membership.toUpperCase() + "</div></div>";
+								memebershipHTML = '<div class="donation membership"><div class="donation-title verysmall">' + plainTextToHtml(data.membership.toUpperCase()) + "</div></div>";
 							} else if (data.membership.length > 24){
-								memebershipHTML = '<div class="donation membership"><div class="donation-title small">' + data.membership.toUpperCase() + "</div></div>";
+								memebershipHTML = '<div class="donation membership"><div class="donation-title small">' + plainTextToHtml(data.membership.toUpperCase()) + "</div></div>";
 							} else {
-								memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div></div>";
+								memebershipHTML = '<div class="donation membership"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase()) + "</div></div>";
 							}
 						  } else {
 						// No avatar membership with possible subtitle
@@ -2894,34 +2910,39 @@
 											  data.membership.toLowerCase().includes('membership');
 							if (isSponsor) {
 							  // Special format for sponsorships to match the example image
-							  memebershipHTML = '<div class="no-avatar-donation sponsorship">' + data.membership.toUpperCase() + '</div>';
+							  memebershipHTML = '<div class="no-avatar-donation sponsorship">' + plainTextToHtml(data.membership.toUpperCase()) + '</div>';
 							} else if (data.subtitle) {
 								if (data.membership.length > 24){
-									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title verysmall">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title verysmall">' + plainTextToHtml(data.membership.toUpperCase() + ': ' + data.subtitle) + '</div></div>';
 								} else if (data.membership.length > 19){
-									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title small">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title small">' + plainTextToHtml(data.membership.toUpperCase() + ': ' + data.subtitle) + '</div></div>';
 								} else {
-									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase() + ': ' + data.subtitle) + '</div></div>';
 								}
 							} else if (data.membership.length > 30){
-								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + data.membership.toUpperCase() + '</div></div>';
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							} else if (data.membership.length > 24){
-								 memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + data.membership.toUpperCase() + '</div></div>';
+								 memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							} else {
-								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							}
 						  }
 					} else if (data.subtitle) {
 					  if (avatarForMessage) {
-						memebershipHTML = '<div class="donation membership"><div class="subtitle">' + data.subtitle + "</div></div>";
+						memebershipHTML = '<div class="donation membership"><div class="subtitle">' + plainTextToHtml(data.subtitle) + "</div></div>";
 					  } else {
-						memebershipHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + data.subtitle + '</div></div>';
+						memebershipHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + plainTextToHtml(data.subtitle) + '</div></div>';
 					  }
 					} else {
 					  data.membership = "";
 					}
 
 					var donationHTML = "";
+					// Accept legacy numeric amounts while preserving string and zero behavior.
+					if (data.hasDonation && typeof data.hasDonation === "number") {
+						data.hasDonation = Number.isFinite(data.hasDonation)
+							? String(data.hasDonation) : "";
+					}
 					if (data.hasDonation) {
 					  if (data.type === "twitch") {
 						let donationTitle = getTranslation("cheers", "CHEERS");
@@ -2930,9 +2951,9 @@
 						}
 						
 						if (avatarForMessage) {
-						  donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+						  donationHTML = '<div class="donation"><div class="donation-title">'+ plainTextToHtml(donationTitle) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + "</div></div>";
 						} else {
-						  donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + '</div></div>';
+						  donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ plainTextToHtml(donationTitle) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + '</div></div>';
 						}
 					  } else if ((data.type == "youtube") || (data.type == "youtubeshorts")) {
 						let donationTitle = getTranslation("donation", "DONATION");
@@ -2942,9 +2963,9 @@
 						
 						if (avatarForMessage) {
 						  if (memebershipHTML) {
-							donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
+							donationHTML = '<div class="donation">' + plainTextToHtml(data.hasDonation) + "</div>";
 						  } else {
-							donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+							donationHTML = '<div class="donation"><div class="donation-title">'+ plainTextToHtml(donationTitle) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + "</div></div>";
 						  }
 						} else {
 						  const isYouTubeSponsor = data.hasDonation.toLowerCase().includes('sponsor');
@@ -2952,21 +2973,21 @@
 						  if (isYouTubeSponsor) {
 							donationHTML = '<div class="no-avatar-donation sponsorship">' + 'SPONSORSHIP' + '</div>';
 						  } else if (memebershipHTML) {
-							donationHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + data.hasDonation + '</div></div>';
+							donationHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + plainTextToHtml(data.hasDonation) + '</div></div>';
 						  } else {
-							donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ donationTitle + ': ' + data.hasDonation + '</div></div>';
+							donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ plainTextToHtml(donationTitle + ': ' + data.hasDonation) + '</div></div>';
 						  }
 						}
 					  } else if (data.title) {
 						if (avatarForMessage) {
-						  donationHTML = '<div class="donation"><div class="donation-title">'+ data.title +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+						  donationHTML = '<div class="donation"><div class="donation-title">'+ plainTextToHtml(data.title) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + "</div></div>";
 						} else {
-						  donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ data.title +'</div><div class="subtitle">' + data.hasDonation + '</div></div>';
+						  donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ plainTextToHtml(data.title) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + '</div></div>';
 						}
 					  } else if (avatarForMessage) {
-						donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
+						donationHTML = '<div class="donation">' + plainTextToHtml(data.hasDonation) + "</div>";
 					  } else {
-						donationHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + data.hasDonation + '</div></div>';
+						donationHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + plainTextToHtml(data.hasDonation) + '</div></div>';
 					  }
 					} else {
 					  data.hasDonation = "";
@@ -2999,7 +3020,7 @@
 					  }
 					}
 					if (styleOverride) {
-					  styleOverride = ' style="' + styleOverride + '"';
+					  styleOverride = ' style="' + escapeAttributeValue(styleOverride) + '"';
 					}
 
 					var styleOverrideName = "";
@@ -3014,13 +3035,14 @@
 					}
 
 					if (styleOverrideName) {
-					  styleOverrideName = 'style="' + styleOverrideName + '"';
+					  styleOverrideName = 'style="' + escapeAttributeValue(styleOverrideName) + '"';
 					}
 
 					var avatarImg = "";
+					var safeAvatarUsername = escapeAttributeValue(data.username || data.chatname || "");
 					if (avatarForMessage) {
 					  if (data.backupChatimg) {
-						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + data.chatimg + '" class="hl-profile-pic" data-backup-image="' + data.backupChatimg + '" data-username="' + (data.username || data.chatname || '') + '" onload="handleAvatarLoad(this);" onerror="errorImage(this);"></div>';
+						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + safeDataId + '" src="' + escapeAttributeValue(data.chatimg) + '" class="hl-profile-pic" data-backup-image="' + escapeAttributeValue(data.backupChatimg) + '" data-username="' + safeAvatarUsername + '" onload="handleAvatarLoad(this);" onerror="errorImage(this);"></div>';
 					  } else {
 						let chatimg = "";
 						if (!data.chatimg){
@@ -3032,24 +3054,11 @@
 						} else {
 						  chatimg = data.chatimg
 						}
-						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + chatimg + '" class="hl-profile-pic" data-username="' + (data.username || data.chatname || '') + '" onload="handleAvatarLoad(this);" onerror="errorImage(this);"></div>';
+						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + safeDataId + '" src="' + escapeAttributeValue(chatimg) + '" class="hl-profile-pic" data-username="' + safeAvatarUsername + '" onload="handleAvatarLoad(this);" onerror="errorImage(this);"></div>';
 					  }
 					} 
 
-					var chatbadges = "";
-					if (data.chatbadges && showbadges) {
-					  data.chatbadges.forEach(badge => {
-						if (typeof badge == "object") {
-						  if (badge.type && badge.type == "img" && badge.src) {
-							chatbadges += "<img class='hl-badge' src='" + badge.src + "' />";
-						  } else if (badge.type && badge.type == "svg" && badge.html) {
-							chatbadges += "<span class='hl-badge'>" + badge.html + "</span>";
-						  }
-						} else {
-						  chatbadges += "<img class='hl-badge' src='" + badge + "' />";
-						}
-					  });
-					}
+					var chatbadges = showbadges ? SocialStreamBadges.render(data.chatbadges, { className: "hl-badge" }) : "";
 
 					if (chatbadges) {
 					  chatbadges = '<div class="hl-badges" >' + chatbadges + "</div>";
@@ -3057,6 +3066,12 @@
 
 					var renderChatMessageAsText = !!(data.textonly && !largeImage);
 					var renderedChatMessage = renderChatMessageAsText ? "" : (data.chatmessage || "");
+					if (!renderChatMessageAsText && !largeImage && renderedChatMessage) {
+						renderedChatMessage = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(renderedChatMessage) : plainTextToHtml(renderedChatMessage);
+					}
+
+					// Legacy names may contain entities or emotes; textonly applies only to the body.
+					var renderedChatName = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : escapeHtml(data.chatname);
 
 					// ADD NO-AVATAR CLASS TO CONTAINER
 					var noAvatarClass = avatarForMessage ? "" : " no-avatar";
@@ -3083,7 +3098,7 @@
 					  }
 					  
 					  // Put name and badges in the name div
-					  nameDiv.innerHTML = data.chatname + chatbadges;
+					  nameDiv.innerHTML = renderedChatName + chatbadges;
 					  messageContainer.appendChild(nameDiv);
 
 					  const messageDiv = document.createElement('div');
@@ -3096,7 +3111,7 @@
 					  if (renderChatMessageAsText) {
 						messageDiv.textContent = data.chatmessage || "";
 					  } else {
-						messageDiv.innerHTML = data.chatmessage;
+						messageDiv.innerHTML = renderedChatMessage;
 					  }
 					  messageContainer.appendChild(messageDiv);
 
@@ -3150,8 +3165,8 @@
 					  }
 					} else {
 					  // Original non-stacking behavior with no-avatar class added
-					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat' + noAvatarClass + '" id="newmessage" data-source-type="' + data.type + '">' +
-						'<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" +
+					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat' + noAvatarClass + '" id="newmessage" data-source-type="' + safeDataType + '">' +
+						'<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + renderedChatName + chatbadges + "</div>" +
 						'<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" +
 						avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
 					  if (renderChatMessageAsText && document.getElementById("message")) {
@@ -3282,7 +3297,7 @@
 
 					  if (data.hasDonation && TTS.readDonos) {
 						var donoText = document.createElement("div");
-						donoText.innerHTML = data.hasDonation;
+						donoText.textContent = data.hasDonation;
 						donoText = donoText.innerText.trim();
 						donoText = donoText.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
 						donoText = donoText.replaceAll("_", " ");

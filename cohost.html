@@ -4,9 +4,9 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Co-host /w Vision & Voice - Social Stream Ninja</title>
-		<meta name="description" content="Experience real-time multimodal AI co-host conversations with live audio, video, and chat across modern AI providers." />
+		<meta name="description" content="Experience real-time multimodal AI co-host conversations with live audio, video, and chat across modern AI providers.">
 		<meta name="keywords" content="multimodal AI, realtime AI, AI co-host, Gemini Live, OpenAI Realtime, xAI Realtime" />
-		<meta name="robots" content="index, follow" />
+		<meta name="robots" content="noindex, follow">
 		<meta property="og:title" content="Social Stream Ninja AI Co-host" />
 		<meta property="og:description" content="Live multimodal AI conversations with Gemini, OpenAI, and xAI" />
 		<meta property="og:type" content="website" />
@@ -1406,6 +1406,23 @@
 		<script type="text/javascript" src="tts.js"></script>
 		<script>
 			const cohostOverlayParams = new URLSearchParams(location.search);
+			const cohostFragmentParams = new URLSearchParams(location.hash ? location.hash.slice(1) : "");
+			let cohostBridgeCapability = "";
+			try {
+				cohostBridgeCapability = cohostFragmentParams.get("cohostauth") || cohostOverlayParams.get("cohostauth") || sessionStorage.getItem("cohostAccessCapability") || "";
+				if (cohostBridgeCapability) sessionStorage.setItem("cohostAccessCapability", cohostBridgeCapability);
+			} catch (_error) {
+				cohostBridgeCapability = cohostFragmentParams.get("cohostauth") || cohostOverlayParams.get("cohostauth") || "";
+			}
+			if (cohostFragmentParams.has("cohostauth") || cohostOverlayParams.has("cohostauth")) {
+				cohostFragmentParams.delete("cohostauth");
+				cohostOverlayParams.delete("cohostauth");
+				try {
+					const scrubbedQuery = cohostOverlayParams.toString();
+					const scrubbedFragment = cohostFragmentParams.toString();
+					history.replaceState(null, document.title, location.pathname + (scrubbedQuery ? "?" + scrubbedQuery : "") + (scrubbedFragment ? "#" + scrubbedFragment : ""));
+				} catch (_error) {}
+			}
 			let cohostOverlayLastSent = 0;
 			let cohostOverlaySendTimer = null;
 			let cohostOverlayPendingPayload = null;
@@ -3803,7 +3820,8 @@
 							try {
 								postConfiguredLLMBridgePayload({
 									action: "cohostToolStatus",
-									target
+									target,
+									capability: cohostBridgeCapability
 								});
 							} catch (error) {
 								clearTimeout(timeoutId);
@@ -3837,7 +3855,8 @@
 									tool,
 									command,
 									value,
-									target
+									target,
+									capability: cohostBridgeCapability
 								});
 							} catch (error) {
 								clearTimeout(timeoutId);
@@ -6422,7 +6441,13 @@
 					this.pauseThreshold = 300;
 				}
 				formatMarkdown(text) {
-					let formatted = text
+					const escaped = String(text || "")
+						.replace(/&/g, "&amp;")
+						.replace(/</g, "&lt;")
+						.replace(/>/g, "&gt;")
+						.replace(/"/g, "&quot;")
+						.replace(/'/g, "&#39;");
+					let formatted = escaped
 						.replace(/\*\*\*(.*?)\*\*\*/g, "<strong><em>$1</em></strong>")
 						.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
 						.replace(/\*(.*?)\*/g, "<em>$1</em>")
@@ -6430,10 +6455,10 @@
 					const lines = formatted.split("\n");
 					const formattedLines = lines.map(line => {
 						if (line.trim().startsWith("*") && line.trim()[1] === " ") {
-							return `<li>${line.trim().substring(2)}</li>`;
+							return `&#8226; ${line.trim().substring(2)}`;
 						}
 						if (/^\d+\./.test(line.trim())) {
-							return `<li>${line.trim()}</li>`;
+							return line.trim();
 						}
 						return line;
 					});
@@ -6577,7 +6602,10 @@
 			const responsesDiv = document.getElementById("responses");
 			let publisher = null;
 			const apiKeyInput = document.getElementById("apiKey");
-			apiKeyInput.value = localStorage.getItem("apiKey") || "";
+			const apiKeyMemory = Object.create(null);
+			["apiKey", "apiKey_gemini", "apiKey_chatgpt", "apiKey_xai", "apiKey_customopenai"].forEach(key => localStorage.removeItem(key));
+			sessionStorage.removeItem("apiKey");
+			apiKeyInput.value = "";
 			const modelOverrideInput = document.getElementById("modelOverride");
 			const customEndpointInput = document.getElementById("customEndpoint");
 			const customEndpointContainer = document.getElementById("customEndpointContainer");
@@ -7016,19 +7044,8 @@
 				if (startButton.textContent !== "Starting...") {
 					startButton.disabled = false;
 				}
-				if (requiresApiKey || acceptsOptionalApiKey) {
-					if (apiKey) {
-						localStorage.setItem(`apiKey_${selectedProvider}`, apiKey);
-						localStorage.setItem("apiKey", apiKey);
-					} else {
-						localStorage.removeItem(`apiKey_${selectedProvider}`);
-						if (selectedProvider === "customopenai") {
-							localStorage.removeItem("apiKey");
-						}
-					}
-				} else {
-					localStorage.removeItem(`apiKey_${selectedProvider}`);
-				}
+				if (requiresApiKey || acceptsOptionalApiKey) apiKeyMemory[selectedProvider] = apiKey;
+				else delete apiKeyMemory[selectedProvider];
 				return apiKey;
 			}
 			startButton.addEventListener("click", async () => {
@@ -7100,11 +7117,6 @@
 					startButton.disabled = true;
 					stream = await getStream();
 					preview.srcObject = stream;
-					if (requiresApiKey || (acceptsOptionalApiKey && apiKey)) {
-						sessionStorage.setItem("apiKey", apiKey);
-					} else {
-						sessionStorage.removeItem("apiKey");
-					}
 					publisher = createPublisherForProvider(currentProvider, stream, apiKey);
 					await publisher.start();
 					startButton.textContent = "Stop Stream";
@@ -8140,7 +8152,7 @@
 				const isCustomOpenAIProvider = providerName === "customopenai";
 				const isConfiguredLLMProvider = providerName === "configuredllm";
 				if (restoreKey) {
-					apiKeyInput.value = requiresApiKey || acceptsOptionalApiKey ? localStorage.getItem(`apiKey_${providerName}`) || "" : "";
+					apiKeyInput.value = requiresApiKey || acceptsOptionalApiKey ? apiKeyMemory[providerName] || "" : "";
 					modelOverrideInput.value = getStoredModelOverride(providerName);
 					if (isCustomOpenAIProvider && customEndpointInput) {
 						customEndpointInput.value = getStoredCustomEndpoint(providerName) || CUSTOM_OPENAI_DEFAULT_ENDPOINT;
@@ -8374,18 +8386,7 @@
 							selectionElem.innerHTML = `
 				<div class="desktop-capturer-selection__scroller">
 				  <ul class="desktop-capturer-selection__list">
-					${sources
-						.map(
-							({ id, name, thumbnail, display_id, appIcon }) => `
-					  <li class="desktop-capturer-selection__item">
-						<button class="desktop-capturer-click desktop-capturer-selection__btn" data-id="${id}" title="${name}">
-						  <img class="desktop-capturer-selection__thumbnail" src="${thumbnail.toDataURL()}" />
-						  <span class="desktop-capturer-selection__name">${name}</span>
-						</button>
-					  </li>
-					`
-						)
-						.join("")}
+					
 					<div id="alsoCaptureAudioParent1" style="text-align: center;margin: auto 5px;font-size: 120%;"><i class="las la-music" style="font-size:40px;"></i><br />Include Desktop Audio<br /><input id="alsoCaptureAudio" style="width:20px;height:20px;margin-top: 10px;" type="checkbox" checked></div>
 					<div id="alsoCaptureAudioParent2" style="text-align: center;margin: auto 5px;font-size: 120%;display:none;"><i class="las la-music" style="font-size:40px;"></i><br />Audio capture not <br />supported on macOS</div>
 					<button id="captureDesktopAudio" class="desktop-capturer-click" style="margin: 10px;"><i class="las la-music" style="font-size:40px;"></i><br />Capture ONLY<br />Desktop Audio</button>
@@ -8393,6 +8394,29 @@
 				  </ul>
 				</div>
 			  `;
+							const sourceRows = document.createDocumentFragment();
+							sources.forEach(({ id, name, thumbnail }) => {
+								const item = document.createElement("li");
+								item.className = "desktop-capturer-selection__item";
+								const button = document.createElement("button");
+								button.className = "desktop-capturer-click desktop-capturer-selection__btn";
+								button.dataset.id = id;
+								// Window titles can come from untrusted webpages; keep them literal in both contexts.
+								button.title = name;
+								const image = document.createElement("img");
+								image.className = "desktop-capturer-selection__thumbnail";
+								image.src = thumbnail.toDataURL();
+								image.alt = "";
+								const label = document.createElement("span");
+								label.className = "desktop-capturer-selection__name";
+								label.textContent = name;
+								button.appendChild(image);
+								button.appendChild(label);
+								item.appendChild(button);
+								sourceRows.appendChild(item);
+							});
+							const sourceList = selectionElem.querySelector(".desktop-capturer-selection__list");
+							sourceList.insertBefore(sourceRows, sourceList.firstChild);
 							document.body.appendChild(selectionElem);
 							const isMac = navigator.platform.toLowerCase().includes("mac");
 							if (isMac) {

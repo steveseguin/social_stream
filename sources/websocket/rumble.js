@@ -212,6 +212,13 @@
         relay({ message: data });
     }
 
+    function pushLiveStats(data) {
+        if (!state.isExtensionOn || !data || typeof data !== 'object') {
+            return;
+        }
+        relay({ liveStats: data });
+    }
+
     function pushStatus(status, message, meta) {
         const payload = {
             platform: 'rumble',
@@ -251,7 +258,7 @@
             return '';
         }
         try {
-            const div = document.createElement('div');
+            const div = document.createElement('template').content.appendChild(document.createElement('div'));
             div.innerHTML = String(value);
             return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim();
         } catch (error) {
@@ -544,6 +551,10 @@
         let rendered = false;
         let match;
 
+        // Capture contract: textonly=true means a literal chatmessage string, not HTML.
+        // Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+        // HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+        // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
         if (!plainText || (state.settings && state.settings.textonlymode)) {
             return {
                 plainText: plainText,
@@ -773,6 +784,7 @@
             hasDonation: '',
             membership: '',
             contentimg: '',
+            // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
             textonly: !!(state.settings && state.settings.textonlymode),
             type: 'rumble',
             sourceName: SOURCE_NAME,
@@ -1638,6 +1650,17 @@
         const recentGiftedSubs = snapshot && snapshot.gifted_subs ? combineLatestAndRecent(snapshot.gifted_subs.latest_gifted_sub, snapshot.gifted_subs.recent_gifted_subs, buildGiftKey) : [];
         const entries = [];
         let results;
+
+        const liveStats = {
+            type: 'rumble',
+            viewers: viewers != null ? viewers : 0,
+            followers: sourceFollowers,
+            subscribers: sourceSubscribers,
+            likes: stream ? coerceInteger(stream.likes) : 0,
+            title: stream && stream.title ? String(stream.title) : '',
+            isLive: !!(stream && stream.is_live)
+        };
+        pushLiveStats(liveStats);
 
         updateHeaderChips(snapshot, stream);
         maybeEmitStreamState(stream);

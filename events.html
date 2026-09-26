@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moderator Dashboard</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
@@ -608,6 +608,8 @@ body.light-mode .meta-value.badge {
 }
 
 </style>
+<script src="./libs/objects.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
 </head>
 <body>
 <div id="topbar"></div>
@@ -1764,6 +1766,8 @@ body.light-mode .meta-value.badge {
 		const normalizedEvent = normalizeEventKey(data.event);
 		let name = data.chatname || data.sourceName || `${capitalizeSource(data.type)} Alerts`;
 		let message = data.chatmessage || '';
+		// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
+		let messageIsHTML = !!message && !data.textonly;
 		let eventTypeText = '';
 		let eventTypeClass = data.hasDonation ? 'event-donation' : 'event-other';
 		let eventSpecificText = '';
@@ -1780,6 +1784,7 @@ body.light-mode .meta-value.badge {
 		}
 
 		if (STATUS_EVENT_TYPES.has(normalizedEvent)) {
+			messageIsHTML = false;
 			eventTypeText = getEventTypeText('status');
 			eventTypeClass = 'event-status';
 			eventSpecificText = getStatusEventLabel(normalizedEvent);
@@ -1801,6 +1806,7 @@ body.light-mode .meta-value.badge {
 			name = data.sourceName || `${capitalizeSource(data.type)} Stats`;
 			forceShow = true;
 		} else if (STREAM_EVENT_TYPES.has(normalizedEvent)) {
+			messageIsHTML = false;
 			eventTypeText = getEventTypeText('stream');
 			if (normalizedEvent === 'stream_online') {
 				eventSpecificText = getTranslation('events-online', 'Online');
@@ -1843,6 +1849,13 @@ body.light-mode .meta-value.badge {
 			forceShow = true;
 		}
 
+        const commerceLabels = { gift: 'sent a gift', giftcontribution: 'contributed to a gift', giftfunded: 'fully funded a gift', purchase: 'purchased an item' };
+        if (Object.prototype.hasOwnProperty.call(commerceLabels, normalizedEvent)) {
+            eventSpecificText = { gift: 'Gift', giftcontribution: 'Gift Contribution', giftfunded: 'Gift Fully Funded', purchase: 'Purchase' }[normalizedEvent];
+            if (!message) message = name + ' ' + commerceLabels[normalizedEvent] + (data.subtitle ? ': ' + data.subtitle : '');
+            forceShow = true;
+        }
+
 		if (!message && normalizedEvent === 'new_follower') {
 			const followVerb = data.type === 'youtube' || data.type === 'youtubeshorts'
 				? getTranslation('alert-just-subscribed', 'just subscribed')
@@ -1858,6 +1871,7 @@ body.light-mode .meta-value.badge {
 		return {
 			name,
 			message,
+			messageIsHTML,
 			eventTypeText,
 			eventTypeClass,
 			eventSpecificText,
@@ -1947,7 +1961,7 @@ body.light-mode .meta-value.badge {
 		let usdValue = 0;
 		if (data.hasDonation) {
 			try {
-				usdValue = convertToUSD(data.hasDonation, data.type);
+				usdValue = getDonationValueUSD(data);
 				
 				// Add value-based class if highlighting is enabled
 				if (highlightValue) {
@@ -1967,21 +1981,80 @@ body.light-mode .meta-value.badge {
 			} catch(e){console.error(e);}
 		}
 		
-		messageDiv.innerHTML = `
-			<div class="message-header">
-				<div class="message-meta">
-					${eventSpecificText ? `<div class="event-specific ${eventTypeClass || ''}">${eventSpecificText}</div>` : ''}
-					${eventTypeText ? `<div class="event-type">${eventTypeText}</div>` : ''}
-					<div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${displayName}</div>
-					${data.sourceicon ? `<img src="${data.sourceicon}" alt="${data.type}" class="source-icon">` : ''}
-				</div>
-			</div>
-			
-			<div class="text">${display.message || ''}</div>
-			${data.hasDonation ? `<div class="donation">💰 ${data.hasDonation}</div>` : ''}
-			${usdValue > 0 ? `<div class="usd-value">$${usdValue.toFixed(2)} USD</div>` : ''}
-			${hideTimestamps ? '' : `<div class="timestamp">${timeString}</div>`}
-		`;
+		messageDiv.textContent = '';
+
+		const header = document.createElement('div');
+		header.className = 'message-header';
+		const meta = document.createElement('div');
+		meta.className = 'message-meta';
+
+		if (eventSpecificText) {
+			const eventSpecific = document.createElement('div');
+			eventSpecific.className = 'event-specific';
+			if (eventTypeClass) {
+				eventSpecific.classList.add(eventTypeClass);
+			}
+			eventSpecific.textContent = eventSpecificText;
+			meta.appendChild(eventSpecific);
+		}
+
+		if (eventTypeText) {
+			const eventType = document.createElement('div');
+			eventType.className = 'event-type';
+			eventType.textContent = eventTypeText;
+			meta.appendChild(eventType);
+		}
+
+		const nameNode = document.createElement('div');
+		nameNode.className = 'name';
+		if (data.nameColor) {
+			nameNode.style.textShadow = '0 0 3px ' + data.nameColor;
+		}
+		nameNode.textContent = displayName;
+		meta.appendChild(nameNode);
+
+		if (data.sourceicon) {
+			const sourceIcon = document.createElement('img');
+			sourceIcon.src = data.sourceicon;
+			sourceIcon.alt = data.type || '';
+			sourceIcon.className = 'source-icon';
+			meta.appendChild(sourceIcon);
+		}
+
+		header.appendChild(meta);
+		messageDiv.appendChild(header);
+
+		const textNode = document.createElement('div');
+		textNode.className = 'text';
+		if (!display.messageIsHTML) {
+			// textonly chat and generated summaries stay literal; tag/entity-looking text is not markup.
+			textNode.textContent = display.message || '';
+		} else {
+			// Check the display copy because direct senders can bypass relay sanitization.
+			textNode.innerHTML = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(display.message || '') : fallbackEscapeHtml(display.message || ''));
+		}
+		messageDiv.appendChild(textNode);
+
+		if (data.hasDonation) {
+			const donationNode = document.createElement('div');
+			donationNode.className = 'donation';
+			donationNode.textContent = '\uD83D\uDCB0 ' + data.hasDonation;
+			messageDiv.appendChild(donationNode);
+		}
+
+		if (usdValue > 0) {
+			const usdNode = document.createElement('div');
+			usdNode.className = 'usd-value';
+			usdNode.textContent = '$' + usdValue.toFixed(2) + ' USD';
+			messageDiv.appendChild(usdNode);
+		}
+
+		if (!hideTimestamps) {
+			const timestampNode = document.createElement('div');
+			timestampNode.className = 'timestamp';
+			timestampNode.textContent = timeString;
+			messageDiv.appendChild(timestampNode);
+		}
 
 		const metaDetailsNode = hideMetaPanels ? null : createMetaDetailsNode(data);
 		if (metaDetailsNode) {

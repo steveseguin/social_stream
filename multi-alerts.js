@@ -1234,9 +1234,15 @@ function buildTitle(category, eventKey) {
   return getCategoryLabel(category) || getTranslation('alert-title-new-alert', 'New Alert');
 }
 
-function buildBodyText(category, payload, viewerCount) {
+function buildBodyText(category, payload, viewerCount, format = {}) {
   const eventKey = pickEventKey(payload);
   const rawMessage = normalizeText(payload.chatmessage);
+  format.isHTML = false;
+  function chatBody() {
+    // Only an HTML-mode chatmessage sets isHTML; plain chat and generated labels stay literal strings for textContent, without HTML filtering.
+    format.isHTML = !payload.textonly;
+    return rawMessage;
+  }
   const subtitle = pickSubtitle(payload);
 
   if (category === ALERT_CATEGORIES.AUCTION) {
@@ -1255,14 +1261,14 @@ function buildBodyText(category, payload, viewerCount) {
     return getTranslation('alert-hype-rolling', 'The hype train is rolling!');
   }
   if (category === ALERT_CATEGORIES.RAID && viewerCount) {
-    return rawMessage || formatTranslation('alert-welcome-raid-from', 'Welcome the raid from {name}.', {
+    return rawMessage ? chatBody() : formatTranslation('alert-welcome-raid-from', 'Welcome the raid from {name}.', {
       name: pickActorName(payload)
     });
   }
   if (category === ALERT_CATEGORIES.DONATION) {
     if (isGiftEventKey(eventKey)) {
       if (rawMessage) {
-        return rawMessage;
+        return chatBody();
       }
       const recipient = pickGiftRecipient(payload);
       if (recipient) {
@@ -1270,14 +1276,14 @@ function buildBodyText(category, payload, viewerCount) {
       }
       return getTranslation('alert-gift-landed', 'A gift just landed.');
     }
-    return rawMessage || getTranslation('alert-thanks-support', 'Thank you for the support!');
+    return rawMessage ? chatBody() : getTranslation('alert-thanks-support', 'Thank you for the support!');
   }
   if (category === ALERT_CATEGORIES.BITS) {
-    return rawMessage || getTranslation('alert-hype-meter', 'The hype meter just moved.');
+    return rawMessage ? chatBody() : getTranslation('alert-hype-meter', 'The hype meter just moved.');
   }
   if (category === ALERT_CATEGORIES.SUBSCRIPTION) {
     if (rawMessage) {
-      return rawMessage;
+      return chatBody();
     }
     if (subtitle) {
       return subtitle;
@@ -1288,9 +1294,9 @@ function buildBodyText(category, payload, viewerCount) {
     return getTranslation('alert-new-supporter', 'A new supporter joined the stream.');
   }
   if (category === ALERT_CATEGORIES.FOLLOW) {
-    return subtitle || rawMessage || getTranslation('alert-thanks-community', 'Thanks for joining the community.');
+    return subtitle || (rawMessage ? chatBody() : getTranslation('alert-thanks-community', 'Thanks for joining the community.'));
   }
-  return rawMessage || subtitle;
+  return rawMessage ? chatBody() : subtitle;
 }
 
 function buildAlertViewModel(payload = {}) {
@@ -1329,7 +1335,8 @@ function buildAlertViewModel(payload = {}) {
     return null;
   }
   const headline = buildHeadline(category, eventKey, actor, amount, viewerCount, payload);
-  const bodyText = buildBodyText(category, payload, viewerCount);
+  const bodyFormat = {};
+  const bodyText = buildBodyText(category, payload, viewerCount, bodyFormat);
 
   return {
     category,
@@ -1343,6 +1350,7 @@ function buildAlertViewModel(payload = {}) {
     cashValue,
     subtitle,
     bodyText,
+    bodyIsHTML: bodyFormat.isHTML,
     headlineLead: headline.lead,
     headlineTail: headline.tail,
     avatar: normalizeText(payload.chatimg),
@@ -1411,7 +1419,6 @@ function createMockAlertPayload(category, overrides = {}) {
         ...common,
         event: 'donation',
         hasDonation: '$10.00',
-        donoValue: 10,
         chatmessage: 'Keep up the great work!',
         contentimg: createMediaPreviewDataUri('HYPE', accent)
       };
@@ -1512,27 +1519,10 @@ function getMinimumDonationValue() {
 }
 
 function pickCashValue(payload = {}, amountLabel = '', sourceKey = '') {
-  const labelValue = parseCashValue(amountLabel, sourceKey);
-  if (labelValue > 0) {
-    return labelValue;
-  }
-
-  const numericCandidates = [
-    payload.donoValue,
-    payload.donationValue,
-    payload.meta?.donoValue,
-    payload.meta?.donationValue,
-    payload.meta?.amount
-  ];
-
-  for (const candidate of numericCandidates) {
-    const numberValue = Number(candidate);
-    if (Number.isFinite(numberValue) && numberValue > 0) {
-      return numberValue;
-    }
-  }
-
-  return 0;
+  return Math.max(0, getDonationValueUSD(Object.assign({}, payload, {
+    hasDonation: amountLabel || payload.hasDonation,
+    type: sourceKey || payload.type
+  })));
 }
 
 function isValueAlertCategory(category) {
@@ -2069,7 +2059,13 @@ function renderAlert(model) {
   if (shouldRenderBodyText(model)) {
     const message = document.createElement('div');
     message.className = 'alert-message';
-    message.innerHTML = model.bodyText;
+    if (model.bodyIsHTML && window.SocialStreamChatHTML) {
+      // Only the HTML-mode chat body reaches this branch; retain its upstream-checked formatting.
+      message.innerHTML = SocialStreamChatHTML.sanitize(model.bodyText);
+    } else {
+      // textonly chat and generated metadata labels are literal strings, never HTML to re-sanitize.
+      message.textContent = model.bodyText;
+    }
     copy.appendChild(message);
   }
 

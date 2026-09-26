@@ -5,9 +5,11 @@ const PAGE_SIZE = 100;
 const MAX_PAGES = 5;
 const MAX_ITEMS = PAGE_SIZE * MAX_PAGES;
 const FILTER_DEBOUNCE_MS = 300;
+const DEFAULT_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
 let db;
 let messages = [];
+let unlimitedDBEnabled = false;
 let isLoading = false;
 let newestTimestamp = null;
 let oldestTimestamp = null;
@@ -16,6 +18,35 @@ let reachedOldest = false;
 const loadedMessageIds = new Set();
 const knownTypes = new Set();
 let filterDebounceHandle = null;
+const historyUrlParams = new URLSearchParams(window.location.search);
+const snapshotMode = historyUrlParams.get('ssappSnapshot') === '1';
+let snapshotMessages = null;
+let resolveSnapshot;
+let rejectSnapshot;
+const snapshotReady = new Promise((resolve, reject) => {
+    resolveSnapshot = resolve;
+    rejectSnapshot = reject;
+});
+
+if (snapshotMode) {
+    const snapshotTimeout = setTimeout(() => rejectSnapshot(new Error('Timed out waiting for saved message history.')), 15000);
+    window.addEventListener('message', event => {
+        if (event.source !== window.parent || !event.data || event.data.type !== 'ssapp-chat-history-snapshot') return;
+        const snapshot = event.data.snapshot || {};
+        snapshotMessages = Array.isArray(snapshot.messages) ? snapshot.messages : [];
+        unlimitedDBEnabled = snapshot.unlimitedDB === true;
+        snapshotMessages.sort(compareMessagesNewestFirst);
+        window.__ssappHistorySnapshotState = {
+            active: true,
+            count: snapshotMessages.length,
+            version: snapshot.version || null,
+            stores: Array.isArray(snapshot.stores) ? snapshot.stores : []
+        };
+        clearTimeout(snapshotTimeout);
+        resolveSnapshot(window.__ssappHistorySnapshotState);
+    });
+    window.parent.postMessage({ type: 'ssapp-chat-history-ready' }, '*');
+}
 
 const searchInput = document.getElementById('search-input');
 const messagesContainer = document.getElementById('messages-container');
@@ -33,6 +64,7 @@ const messageDateTo = document.getElementById('message-date-to');
 const donationFilter = document.getElementById('donation-filter');
 const membershipFilter = document.getElementById('membership-filter');
 const clearFiltersButton = document.getElementById('clear-filters');
+const clearHistoryButton = document.getElementById('clear-history');
 
 const filters = {
     search: '',
@@ -107,6 +139,28 @@ function initDatabase() {
     });
 }
 
+
+
+
+
+function escapeHtml(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function formatTsvField(value) {
+    const normalized = String(value || '').replace(/\t/g, ' ').replace(/\r?\n/g, ' ');
+    return /^\s*[=+\-@]/.test(normalized) ? `'${normalized}` : normalized;
+}
+
+function safePlainText(value) {
+    return escapeHtml(value);
+}
+
 function debounceFilters() {
     if (filterDebounceHandle) {
         clearTimeout(filterDebounceHandle);
@@ -119,7 +173,8 @@ function debounceFilters() {
 
 function parseDateInput(value, endOfDay = false) {
     if (!value) return null;
-    const parsed = new Date(value);
+    // Date inputs represent a local calendar day, not UTC midnight.
+    const parsed = new Date(`${value}T00:00:00`);
     if (Number.isNaN(parsed.getTime())) {
         return null;
     }
@@ -174,7 +229,7 @@ function buildCursorConfig(direction) {
         }
         return {
             cursorDirection: 'prev',
-            range: createRange(dateLower, upper, { excludeUpper: true })
+            range: createRange(dateLower, upper)
         };
     }
 
@@ -192,39 +247,113 @@ function buildCursorConfig(direction) {
         }
         return {
             cursorDirection: 'next',
-            range: createRange(lower, dateUpper, { excludeLower: true })
+            range: createRange(lower, dateUpper)
         };
     }
 
     return { cursorDirection: null, range: null };
 }
 
+function isHistorySettingEnabled(value) {
+    return value === true || !!(value && typeof value === 'object' && value.setting === true);
+}
+
+function isHistoryMessageExpired(message, now = Date.now()) {
+    if (!message || unlimitedDBEnabled) return false;
+
+    if (message.expiresAt !== undefined && message.expiresAt !== null && message.expiresAt !== '') {
+        const explicitExpiration = Number(message.expiresAt);
+        if (Number.isFinite(explicitExpiration)) return explicitExpiration <= now;
+    }
+
+    const timestamp = Number(message.timestamp);
+    return Number.isFinite(timestamp) && timestamp + DEFAULT_RETENTION_MS <= now;
+}
+
+function loadUnlimitedDBSetting() {
+    if (snapshotMode) return snapshotReady.then(() => unlimitedDBEnabled);
+
+    return new Promise(resolve => {
+        let settled = false;
+        let timeout = null;
+        const finish = value => {
+            if (settled) return;
+            settled = true;
+            if (timeout !== null) clearTimeout(timeout);
+            unlimitedDBEnabled = value;
+            resolve(value);
+        };
+        timeout = setTimeout(() => finish(false), 5000);
+
+        const readFromRuntime = () => {
+            if (typeof chrome === 'undefined' || !chrome.runtime || typeof chrome.runtime.sendMessage !== 'function') {
+                finish(false);
+                return;
+            }
+
+            try {
+                chrome.runtime.sendMessage({ cmd: 'getSettings' }, response => {
+                    if (chrome.runtime.lastError || !response || !response.settings) {
+                        finish(false);
+                        return;
+                    }
+                    finish(isHistorySettingEnabled(response.settings.unlimitedDB));
+                });
+            } catch (error) {
+                finish(false);
+            }
+        };
+
+        if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local || typeof chrome.storage.local.get !== 'function') {
+            readFromRuntime();
+            return;
+        }
+
+        try {
+            chrome.storage.local.get(['settings'], result => {
+                if (chrome.runtime && chrome.runtime.lastError) {
+                    readFromRuntime();
+                    return;
+                }
+                if (!result || typeof result !== 'object') {
+                    readFromRuntime();
+                    return;
+                }
+                finish(isHistorySettingEnabled(result.settings && result.settings.unlimitedDB));
+            });
+        } catch (error) {
+            readFromRuntime();
+        }
+    });
+}
+
 function messageMatchesFilters(message, activeFilters = filters) {
     if (!message) return false;
+    if (isHistoryMessageExpired(message)) return false;
 
     if (activeFilters.search) {
         const term = activeFilters.search;
-        const matchesGlobal = (message.chatname || '').toLowerCase().includes(term) ||
-            (message.userid || '').toLowerCase().includes(term) ||
-            (message.type || '').toLowerCase().includes(term) ||
-            (message.chatmessage || '').toLowerCase().includes(term);
+        const matchesGlobal = String(message.chatname == null ? '' : message.chatname).toLowerCase().includes(term) ||
+            String(message.userid == null ? '' : message.userid).toLowerCase().includes(term) ||
+            String(message.type == null ? '' : message.type).toLowerCase().includes(term) ||
+            String(message.chatmessage == null ? '' : message.chatmessage).toLowerCase().includes(term);
         if (!matchesGlobal) return false;
     }
 
     if (activeFilters.username) {
-        if (!(message.chatname || '').toLowerCase().includes(activeFilters.username)) {
+        if (!String(message.chatname == null ? '' : message.chatname).toLowerCase().includes(activeFilters.username)) {
             return false;
         }
     }
 
     if (activeFilters.keyword) {
-        if (!(message.chatmessage || '').toLowerCase().includes(activeFilters.keyword)) {
+        if (!String(message.chatmessage == null ? '' : message.chatmessage).toLowerCase().includes(activeFilters.keyword)) {
             return false;
         }
     }
 
     if (activeFilters.type) {
-        if ((message.type || '').toLowerCase() !== activeFilters.type) {
+        if (String(message.type == null ? '' : message.type).toLowerCase() !== activeFilters.type) {
             return false;
         }
     }
@@ -251,7 +380,44 @@ function messageMatchesFilters(message, activeFilters = filters) {
     return true;
 }
 
+function compareMessagesNewestFirst(a, b) {
+    const timestampDifference = (Number(b && b.timestamp) || 0) - (Number(a && a.timestamp) || 0);
+    if (timestampDifference) return timestampDifference;
+    return (Number(b && b.id) || 0) - (Number(a && a.id) || 0);
+}
+
+function findSnapshotMessageIndex(matching, anchor) {
+    if (!anchor) return -1;
+    const directIndex = matching.indexOf(anchor);
+    if (directIndex !== -1) return directIndex;
+    if (anchor.id == null) return -1;
+    return matching.findIndex(message => message && message.id === anchor.id);
+}
+
+function fetchSnapshotMessages(direction = 'initial') {
+    const snapshot = snapshotMessages || [];
+    const initial = direction === 'initial' || !messages.length;
+    const step = !initial && direction === 'up' ? -1 : 1;
+    let index = 0;
+    if (!initial) {
+        if (direction !== 'up' && direction !== 'down') return [];
+        const anchor = step === -1 ? messages[0] : messages[messages.length - 1];
+        index = findSnapshotMessageIndex(snapshot, anchor);
+        if (index === -1) return [];
+        index += step;
+    }
+
+    // The snapshot is already sorted. Scan only as far as this page needs,
+    // instead of filtering and allocating a copy of the entire archive.
+    const results = [];
+    for (; index >= 0 && index < snapshot.length && results.length < PAGE_SIZE; index += step) {
+        if (messageMatchesFilters(snapshot[index])) results.push(snapshot[index]);
+    }
+    return step === -1 ? results.reverse() : results;
+}
+
 function fetchMessages(direction = 'initial') {
+	if (snapshotMode) return Promise.resolve(fetchSnapshotMessages(direction));
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([STORE_NAME], 'readonly');
         const store = transaction.objectStore(STORE_NAME);
@@ -263,22 +429,27 @@ function fetchMessages(direction = 'initial') {
             return;
         }
 
+        // Timestamp indexes are not unique; keep the boundary timestamp and skip
+        // only rows on the already displayed side of the (timestamp, id) pair.
+        const anchor = direction === 'down' ? messages[messages.length - 1] : direction === 'up' ? messages[0] : null;
         const results = [];
         const request = index.openCursor(range, cursorDirection);
         request.onsuccess = event => {
             const cursor = event.target.result;
             if (!cursor) {
-                resolve(results.sort((a, b) => b.timestamp - a.timestamp));
+                resolve(results.sort(compareMessagesNewestFirst));
                 return;
             }
 
             const value = cursor.value;
-            if (messageMatchesFilters(value)) {
+            const comparison = anchor ? compareMessagesNewestFirst(value, anchor) : 0;
+            const pastAnchor = !anchor || (direction === 'down' ? comparison > 0 : comparison < 0);
+            if (pastAnchor && messageMatchesFilters(value)) {
                 results.push(value);
             }
 
             if (results.length >= PAGE_SIZE) {
-                resolve(results.sort((a, b) => b.timestamp - a.timestamp));
+                resolve(results.sort(compareMessagesNewestFirst));
                 return;
             }
 
@@ -293,7 +464,7 @@ function updateTypeOptions(newMessages) {
     let optionsAdded = false;
 
     newMessages.forEach(message => {
-        const type = (message.type || '').toLowerCase();
+        const type = String(message.type == null ? '' : message.type).toLowerCase();
         if (!type) return;
         if (knownTypes.has(type)) return;
         knownTypes.add(type);
@@ -345,7 +516,7 @@ function mergeMessages(newMessages, direction) {
 
     if (!fresh.length) return;
 
-    fresh.sort((a, b) => b.timestamp - a.timestamp);
+    fresh.sort(compareMessagesNewestFirst);
 
     if (direction === 'up') {
         messages = [...fresh, ...messages];
@@ -366,20 +537,23 @@ function renderMessages() {
         return;
     }
 
-    const html = messages.map(message => `
+    // Stored relay HTML comes from the background.js path where non-text-only chat fields are sanitized
+    // before persistence. Text-only messages are deliberately stored raw (see background.js), so their
+    // chatmessage must be escaped here — matching how the live overlays (featured/dock) render text-only.
+    const html = messages.map(/* History preserves the body format: escape literal text once for this HTML export/template; retain already-sanitized HTML-mode markup. */ message => `
         <div class="message-wrapper" id="message-${message.id}">
             <div class="message">
-                <img src="${message.chatimg || 'https://socialstream.ninja/sources/images/unknown.png'}" alt="Avatar" class="avatar" data-error-hide="message">
+                <img src="${escapeHtml(message.chatimg || 'https://socialstream.ninja/sources/images/unknown.png')}" alt="Avatar" class="avatar" data-error-hide="message">
                 <div class="message-content">
                     <div class="message-header">
-                        <span class="user-name">${message.chatname || 'Anonymous'}</span>
+                        <span class="user-name">${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(message.chatname || 'Anonymous') : fallbackEscapeHtml(message.chatname || 'Anonymous'))}</span>
                         ${message.type ? `<img src="https://socialstream.ninja/sources/images/${message.type}.png" alt="${message.type}" class="type-image" data-error-hide="self">` : ''}
                         <span class="timestamp">${formatTimestamp(message.timestamp)}</span>
                     </div>
-                    <p class="message-text">${message.chatmessage || ''}</p>
+                    <p class="message-text">${message.textonly ? escapeHtml(message.chatmessage || '') : (message.chatmessage || '')}</p>
                     ${message.contentimg ? `<img src="${message.contentimg}" alt="Content" class="content-image" data-error-hide="self">` : ''}
-                    ${message.hasDonation ? `<p class="donation">Donation: ${message.hasDonation}</p>` : ''}
-                    ${(message.membership || message.hasMembership) ? `<p class="membership">Membership: ${message.membership || message.hasMembership}</p>` : ''}
+                    ${message.hasDonation ? `<p class="donation">Donation: ${safePlainText(message.hasDonation)}</p>` : ''}
+                    ${(message.membership || message.hasMembership) ? `<p class="membership">Membership: ${safePlainText(message.membership || message.hasMembership)}</p>` : ''}
                 </div>
             </div>
         </div>
@@ -400,7 +574,7 @@ function ensureContentFillsContainer() {
 }
 
 async function resetAndLoadMessages() {
-    if (!db) return;
+    if (!db && !snapshotMode) return;
     isLoading = true;
     messagesContainer.scrollTop = 0;
 
@@ -429,8 +603,12 @@ async function loadMoreMessages(direction) {
     if (direction === 'up' && reachedNewest) return;
 
     isLoading = true;
-    const previousScrollHeight = messagesContainer.scrollHeight;
-    const previousScrollTop = messagesContainer.scrollTop;
+    // Preserve the visible row even when the 500-row limit removes rows
+    // from the opposite end. Total scroll height alone cannot track that.
+    const containerTop = messagesContainer.getBoundingClientRect().top;
+    const scrollAnchor = Array.from(messagesContainer.querySelectorAll('.message-wrapper'))
+        .find(row => row.getBoundingClientRect().bottom > containerTop);
+    const anchorTop = scrollAnchor ? scrollAnchor.getBoundingClientRect().top : 0;
 
     try {
         const newMessages = await fetchMessages(direction);
@@ -446,9 +624,11 @@ async function loadMoreMessages(direction) {
         mergeMessages(newMessages, direction);
         renderMessages();
 
-        if (direction === 'up') {
-            const newScrollHeight = messagesContainer.scrollHeight;
-            messagesContainer.scrollTop = newScrollHeight - (previousScrollHeight - previousScrollTop);
+        if (scrollAnchor) {
+            const currentAnchor = document.getElementById(scrollAnchor.id);
+            if (currentAnchor) {
+                messagesContainer.scrollTop += currentAnchor.getBoundingClientRect().top - anchorTop;
+            }
         }
 
         if (direction === 'down') {
@@ -464,7 +644,7 @@ async function loadMoreMessages(direction) {
 function handleImageError(event) {
     const img = event.target;
     img.style.display = 'none';
-    if (img.classList.contains('avatar')) {
+    if (img.classList.contains('avatar') && img.src !== 'https://socialstream.ninja/sources/images/unknown.png') {
         img.src = 'https://socialstream.ninja/sources/images/unknown.png';
         img.style.display = 'block';
     }
@@ -499,8 +679,7 @@ function getDateRangeFromTimeframe(timeframe) {
 
     switch (timeframe) {
         case 'day':
-            startDate.setDate(now.getDate() - 1);
-            break;
+            return { startTimestamp: now.getTime() - 24 * 60 * 60 * 1000, endTimestamp: now.getTime() };
         case 'week':
             startDate.setDate(now.getDate() - 7);
             break;
@@ -526,6 +705,9 @@ function getDateRangeFromTimeframe(timeframe) {
 }
 
 function loadAllMessagesMatchingFilters(activeFilters) {
+	if (snapshotMode) {
+		return Promise.resolve((snapshotMessages || []).filter(message => messageMatchesFilters(message, activeFilters)));
+	}
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([STORE_NAME], 'readonly');
         const store = transaction.objectStore(STORE_NAME);
@@ -575,9 +757,18 @@ function exportMessages(format) {
                     break;
                 case 'tsv':
                     content = 'ID\tTimestamp\tUsername\tUserID\tType\tMessage\tDonation\n' +
-                        sorted.map(m => `${m.id}\t${m.timestamp}\t${m.chatname}\t${m.userid || ''}\t${m.type}\t${m.chatmessage}\t${m.hasDonation || ''}`).join('\n');
+                        sorted.map(m => [
+                            formatTsvField(m.id),
+                            formatTsvField(m.timestamp),
+                            formatTsvField(m.chatname),
+                            formatTsvField(m.userid),
+                            formatTsvField(m.type),
+                            formatTsvField(m.chatmessage),
+                            formatTsvField(m.hasDonation)
+                        ].join('\t')).join('\n');
                     break;
                 case 'html':
+                    // History preserves the body format: escape literal text once for this HTML export/template; retain already-sanitized HTML-mode markup.
                     content = `
                         <html>
                         <head>
@@ -593,10 +784,10 @@ function exportMessages(format) {
                             <p>Total messages: ${sorted.length}</p>
                             ${sorted.map(m => `
                                 <div class="message">
-                                    <span class="username">${m.chatname}</span>
+                                    <span class="username">${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(m.chatname) : fallbackEscapeHtml(m.chatname))}</span>
                                     <span class="timestamp">${new Date(m.timestamp).toLocaleString()}</span>
-                                    <p>${m.chatmessage}</p>
-                                    ${m.hasDonation ? `<p>Donation: ${m.hasDonation}</p>` : ''}
+                                    <p>${m.textonly ? escapeHtml(m.chatmessage || '') : (m.chatmessage || '')}</p>
+                                    ${m.hasDonation ? `<p>Donation: ${escapeHtml(m.hasDonation)}</p>` : ''}
                                 </div>
                             `).join('')}
                         </body>
@@ -626,8 +817,10 @@ function setDefaultExportDates() {
     const lastMonth = new Date(today);
     lastMonth.setMonth(today.getMonth() - 1);
 
-    dateFilterFrom.valueAsDate = lastMonth;
-    dateFilterTo.valueAsDate = today;
+    // valueAsDate uses UTC and can select tomorrow late in the local evening.
+    const localDateValue = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    dateFilterFrom.value = localDateValue(lastMonth);
+    dateFilterTo.value = localDateValue(today);
 }
 
 function clearFilters() {
@@ -650,6 +843,76 @@ function clearFilters() {
     membershipFilter.checked = false;
 
     debounceFilters();
+}
+
+function clearHistoryDirectly() {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).clear();
+        tx.oncomplete = () => resolve({ ok: true });
+        tx.onerror = () => reject(tx.error || new Error('Failed to clear saved message history'));
+        tx.onabort = () => reject(tx.error || new Error('Saved message history clear was aborted'));
+    });
+}
+
+function requestHistoryClear() {
+    if (snapshotMode) {
+        return new Promise((resolve, reject) => {
+            const requestId = `clear-history-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+            const timeout = setTimeout(() => {
+                window.removeEventListener('message', handleClearResult);
+                reject(new Error('Timed out while deleting saved message history.'));
+            }, 5000);
+            const handleClearResult = event => {
+                if (event.source !== window.parent || !event.data || event.data.type !== 'ssapp-chat-history-clear-result' || event.data.requestId !== requestId) return;
+                clearTimeout(timeout);
+                window.removeEventListener('message', handleClearResult);
+                if (!event.data.ok) {
+                    reject(new Error('The desktop app could not relay the history deletion.'));
+                    return;
+                }
+                snapshotMessages = [];
+                if (window.__ssappHistorySnapshotState) window.__ssappHistorySnapshotState.count = 0;
+                resolve({ ok: true });
+            };
+            window.addEventListener('message', handleClearResult);
+            window.parent.postMessage({ type: 'ssapp-chat-history-clear', requestId }, '*');
+        });
+    }
+    if (typeof chrome === 'undefined' || !chrome.runtime || typeof chrome.runtime.sendMessage !== 'function') {
+        return clearHistoryDirectly();
+    }
+    return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({ type: 'toBackground', data: { action: 'clearHistory', value: { confirm: true } } }, response => {
+            const runtimeError = chrome.runtime.lastError;
+            if (runtimeError) {
+                reject(new Error(runtimeError.message));
+                return;
+            }
+            resolve(response || { ok: false, error: 'No response from the extension.' });
+        });
+    });
+}
+
+async function clearSavedHistory() {
+    if (!window.confirm('Permanently delete all saved message history? This also resets first-time chatter and last-activity history.')) {
+        return;
+    }
+    clearHistoryButton.disabled = true;
+    clearHistoryButton.textContent = 'Deleting...';
+    try {
+        const result = await requestHistoryClear();
+        if (!result || result.ok !== true) {
+            throw new Error(result && result.error ? result.error : 'Failed to clear saved message history.');
+        }
+        await resetAndLoadMessages();
+        clearHistoryButton.textContent = 'History Deleted';
+    } catch (error) {
+        window.alert(error && error.message ? error.message : 'Failed to clear saved message history.');
+        clearHistoryButton.textContent = 'Delete All History';
+    } finally {
+        clearHistoryButton.disabled = false;
+    }
 }
 
 // Event listeners for filters
@@ -694,6 +957,7 @@ membershipFilter.addEventListener('change', () => {
 });
 
 clearFiltersButton.addEventListener('click', clearFilters);
+if (clearHistoryButton) clearHistoryButton.addEventListener('click', clearSavedHistory);
 
 messagesContainer.addEventListener('scroll', () => {
     const { scrollTop, scrollHeight, clientHeight } = messagesContainer;
@@ -718,8 +982,15 @@ exportTimeframe.addEventListener('change', function () {
     dateFilterContainer.style.display = this.value === 'custom' ? 'inline-block' : 'none';
 });
 
-initDatabase()
-    .then(result => {
+const databaseReady = snapshotMode
+    ? snapshotReady.then(() => {
+        updateTypeOptions(snapshotMessages || []);
+        return null;
+    })
+    : initDatabase();
+
+Promise.all([databaseReady, loadUnlimitedDBSetting()])
+    .then(([result]) => {
         db = result;
         setDefaultExportDates();
         return resetAndLoadMessages();

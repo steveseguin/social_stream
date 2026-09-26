@@ -1292,8 +1292,8 @@ class EventFlowSystem {
         // Simple HTML stripping function that preserves emoji alt text
         if (!html || typeof html !== 'string') return html;
         
-        // Create a temporary element to use browser's HTML parsing
-        const tmp = document.createElement('div');
+        // Parse in inert template content so extraction cannot execute image handlers.
+        const tmp = document.createElement('template').content.appendChild(document.createElement('div'));
         tmp.innerHTML = html;
         
         // Replace img tags with their alt text (especially for emojis)
@@ -1305,6 +1305,17 @@ class EventFlowSystem {
         // Get text content and clean up extra whitespace
         const text = tmp.textContent || tmp.innerText || '';
         return text.replace(/\s\s+/g, ' ').trim();
+    }
+
+    getMessageProperty(message, path) {
+        const parts = String(path || '').split('.');
+        let value = message;
+        for (const part of parts) {
+            if (!part || ['__proto__', 'prototype', 'constructor'].includes(part) ||
+                !value || typeof value !== 'object' || !Object.prototype.hasOwnProperty.call(value, part)) return undefined;
+            value = value[part];
+        }
+        return value;
     }
 
     normalizeEventType(eventType) {
@@ -1378,6 +1389,7 @@ class EventFlowSystem {
         let messageText = message && message.chatmessage;
         if (message && messageText && typeof messageText === 'string') {
             // If textonly flag is set, the message is already plain text
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!message.textonly) {
                 // Check if we've already cleaned this message (cache the result)
                 if (!message.textContent) {
@@ -1559,8 +1571,7 @@ class EventFlowSystem {
                 let amountMatch = true;
                 if (config.minAmount > 0 && message.hasDonation) {
                     // Try to parse donation amount from hasDonation string
-                    const amountStr = String(message.hasDonation).replace(/[^0-9.]/g, '');
-                    const amount = parseFloat(amountStr) || 0;
+                    const amount = typeof getDonationValueUSD === 'function' ? getDonationValueUSD(message) : (Number(message.donoValue) || 0);
                     amountMatch = amount >= config.minAmount;
                 }
 
@@ -1656,7 +1667,7 @@ class EventFlowSystem {
                 const rawCompareValue = config.value;
 
                 // Get the property value from the message
-                let msgValue = message[prop];
+                let msgValue = this.getMessageProperty(message, prop);
 
                 // Handle special cases for message length and word count
                 if (prop === 'messageLength' && message.chatmessage) {
@@ -2299,8 +2310,8 @@ class EventFlowSystem {
 			}
 		}
 
-		return text.replace(/\{(\w+)\}/gi, (match, key) => {
-			const val = messageData[key.toLowerCase()];
+		return text.replace(/\{(\w+(?:\.\w+)*)\}/gi, (match, key) => {
+			const val = key.indexOf('.') !== -1 ? this.getMessageProperty(message, key) : messageData[key.toLowerCase()];
 			if (val === undefined || val === null) return '';
 			if (typeof val === 'object') {
 				try {
@@ -2313,7 +2324,7 @@ class EventFlowSystem {
 		});
 	}
 
-	sanitizeSendMessage(text, textonly = false, alt = false, mode = 'safe') {
+	sanitizeSendMessage/* Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary. */ (text, textonly = false, alt = false, mode = 'safe') {
 		if (!text || !text.trim()) {
 			return alt || text;
 		}
@@ -2322,6 +2333,7 @@ class EventFlowSystem {
 		// Only use it in 'safe' mode since it applies full sanitization
 		if (typeof this.sanitizeRelay === 'function' && mode === 'safe') {
 			try {
+				// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 				const cleaned = this.sanitizeRelay(text, textonly, alt);
 				if (cleaned || !alt) {
 					return cleaned;
@@ -2334,6 +2346,7 @@ class EventFlowSystem {
 
 		// Fallback: minimal sanitizer that mirrors the background behavior (including emoji alt preservation)
 		const emojiMap = new Map();
+		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 		if (!textonly) {
 			const tempDiv = document.createElement('div');
 			tempDiv.innerHTML = text;
@@ -2499,7 +2512,7 @@ class EventFlowSystem {
                     this.reflectionSeen.set(basis, now);
                     // Not blocked
                 } else {
-                    // Within window and seen already → block
+                    // Within window and seen already â†’ block
                     result.blocked = true;
                 }
                 break;
@@ -3289,7 +3302,7 @@ class EventFlowSystem {
                     // Get current track and format announcement
                     this.sendMessageToBackground({
                         spotifyAction: 'nowPlaying',
-                        format: config.format || '🎵 Now playing: {song} by {artist}',
+                        format: config.format || 'ðŸŽµ Now playing: {song} by {artist}',
                         sendToDock: config.sendToDock !== false
                     });
                 }

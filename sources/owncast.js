@@ -26,7 +26,11 @@ function toDataURL(url, callback) {
 	}
 	function escapeHtml(unsafe) {
 		try {
-			if (settings.textonlymode) { // we can escape things later, as needed instead I guess.
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
+			if (settings.textonlymode) { // Literal text stays unencoded at capture; escape only when a renderer constructs HTML.
 				return unsafe;
 			}
 			return unsafe
@@ -56,6 +60,7 @@ function toDataURL(url, callback) {
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
@@ -90,12 +95,28 @@ function toDataURL(url, callback) {
 				"[class^='ChatUserMessage_userName__']",
 				"[class^='ChatUserMessage_repeatUser__'] [class^='ChatUserMessage_userName__']",
 				"[class^='ChatUserMessage_user__'] > :not([class^='ChatUserMessage_userBadges'])"
-			]);
+			]) || getChatUserMessagePart(ele, "userName");
 			if (chatnameNode){
 				chatname = escapeHtml((chatnameNode.textContent || "").trim());
 			}
 		} catch(e){}
 		return chatname;
+	}
+
+	function getChatUserMessagePart(root, part) {
+		// Owncast 0.3 uses Turbopack: ChatUserMessage-module-scss-module__HASH__part.
+		// Match individual class tokens so extra classes and changing hashes are harmless.
+		var nodes = root.querySelectorAll("[class*='ChatUserMessage-module']");
+		var suffix = "__" + part;
+		for (var i = 0; i < nodes.length; i++) {
+			for (var j = 0; j < nodes[i].classList.length; j++) {
+				var token = nodes[i].classList[j];
+				if (token.indexOf("ChatUserMessage-module") === 0 && token.slice(-suffix.length) === suffix) {
+					return nodes[i];
+				}
+			}
+		}
+		return null;
 	}
 
 	function getChatMessage(ele) {
@@ -105,7 +126,7 @@ function toDataURL(url, callback) {
 				"[class^='ChatUserMessage_message__']",
 				".ChatUserMessage_message__JJiP9",
 				".message-text"
-			]);
+			]) || getChatUserMessagePart(ele, "message");
 			if (messageNode){
 				chatmessage = getAllContentNodes(messageNode);
 			}
@@ -178,7 +199,9 @@ function toDataURL(url, callback) {
 	  
 	  var chatbadges = [];
 	  
-	  ele.querySelectorAll("[class^='ChatUserMessage_userBadges'] svg, [class^='ChatUserMessage_userBadges'] img").forEach(badge=>{
+	  var badgeContainer = ele.querySelector("[class^='ChatUserMessage_userBadges']") || getChatUserMessagePart(ele, "userBadges");
+	  var badges = badgeContainer ? badgeContainer.querySelectorAll("svg, img") : [];
+	  badges.forEach(badge=>{
 		try {
 			if (badge && badge.nodeName == "IMG"){
 				var tmp = {};
@@ -201,6 +224,7 @@ function toDataURL(url, callback) {
 	  data.chatimg = ""; // Doesn't seem to be an avatar image for owncast
 	  data.hasDonation = hasDonation;
 	  data.membership = '';
+	  // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "owncast";
 	  
@@ -230,7 +254,7 @@ function toDataURL(url, callback) {
 	);
 
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	
 	

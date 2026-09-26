@@ -19,7 +19,11 @@ async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlut
 
 	function escapeHtml(unsafe){
 		try {
-			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
+			if (settings.textonlymode){ // Literal text stays unencoded at capture; escape only when a renderer constructs HTML.
 				return unsafe;
 			}
 			return unsafe
@@ -42,12 +46,14 @@ async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlut
 			} else if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (settings.textonlymode){
 					resp += escapeHtml(node.textContent.trim())+" ";
 				} else {
 					resp += escapeHtml(node.textContent.trim())+" ";
 				}
 			} else if (node.nodeType === 1){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (settings.textonlymode){
 				//	if ("alt" in node){
 				//		resp += node.alt.trim()+" ";
@@ -117,6 +123,7 @@ async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlut
 	  data.chatimg = chatimg;
 	  data.hasDonation = hasDonation;
 	  data.membership = "";
+	  // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "rooter";
 	  
@@ -153,7 +160,7 @@ async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlut
 	);
 	
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	
 	
