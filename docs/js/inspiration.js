@@ -1,5 +1,11 @@
 (function () {
     'use strict';
+    function siteText(label, values) {
+        if (window.SSNSiteTranslate) return window.SSNSiteTranslate(label, values);
+        return label.replace(/\{(\d+)\}/g, function (match, index) { return values && index < values.length ? values[index] : match; });
+    }
+    function sourceURL(value) { return window.SSNSiteSourceURL ? window.SSNSiteSourceURL(value) : new URL(value, location.href).href; }
+
     var search = document.getElementById('idea-search');
     var category = document.getElementById('idea-category');
     function filter() {
@@ -12,7 +18,7 @@
             });
             section.hidden = visible === 0; count += visible;
         });
-        document.getElementById('idea-count').textContent = count ? count + (count === 1 ? ' idea' : ' ideas') + ' to make your own.' : 'No matching ideas. Try another word or choose all directions.';
+        document.getElementById('idea-count').textContent = count ? siteText(count === 1 ? '{0} idea to make your own.' : '{0} ideas to make your own.', [count]) : 'No matching ideas. Try another word or choose all directions.';
     }
     search.addEventListener('input', filter); category.addEventListener('change', filter);
     document.querySelectorAll('[data-direction]').forEach(function (link) {

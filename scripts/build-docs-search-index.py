@@ -95,7 +95,7 @@ VOID_HTML_TAGS = {
 }
 
 EXCLUDED_DIRECTORIES = {"_templates", "issues", "md", "skills"}
-TOKEN_PATTERN = re.compile(r"[a-z0-9]{2,}")
+TOKEN_PATTERN = re.compile(r"[^\W_]{2,}", re.UNICODE)
 SPACE_PATTERN = re.compile(r"\s+")
 
 
@@ -172,8 +172,8 @@ def clean_text(value):
 def normalize_text(value):
     value = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", str(value or ""))
     value = unicodedata.normalize("NFKD", html.unescape(value))
-    value = value.encode("ascii", "ignore").decode("ascii").lower()
-    return SPACE_PATTERN.sub(" ", re.sub(r"[^a-z0-9]+", " ", value)).strip()
+    value = "".join(character for character in value if not unicodedata.combining(character)).lower()
+    return SPACE_PATTERN.sub(" ", re.sub(r"[\W_]+", " ", value, flags=re.UNICODE)).strip()
 
 
 def token_variants(value):

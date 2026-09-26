@@ -728,7 +728,9 @@
             
             if (!data || !data.chatmessage || !data.chatname) return;
 
-            const tmpName = document.createElement('div');
+            // Read the name without loading images or running their handlers.
+            const nameTemplate = document.createElement('template');
+            const tmpName = nameTemplate.content.appendChild(document.createElement('div'));
             tmpName.innerHTML = data.chatname;
             const username = tmpName.textContent || tmpName.innerText || '';
             let message = data.chatmessage;

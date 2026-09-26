@@ -814,6 +814,10 @@
     const DEFAULT_FILE = "agents/common-guides.md";
     const SITEMAP_FILE = "agents/SITEMAP.md";
     const SEARCH_INDEX_FILE = "search-index.json";
+    function siteText(label, values) {
+      if (window.SSNSiteTranslate) return window.SSNSiteTranslate(label, values);
+      return label.replace(/\{(\d+)\}/g, (match, index) => values && index < values.length ? values[index] : match);
+    }
     const state = {
       currentFile: DEFAULT_FILE,
       currentMarkdown: "",
@@ -953,6 +957,9 @@
           <a class="landing-card" href="?file=agents/common-guides.md"><strong>Advanced Support Library</strong><span>Detailed Markdown notes for support work, maintainers, and AI agents.</span></a>
         </div>
       `;
+      if (window.SSNSitePageURL) elements.content.querySelectorAll('a[href]').forEach(link => {
+        link.href = window.SSNSitePageURL(link.getAttribute('href'));
+      });
     }
 
     function updateUrl(path) {
@@ -1101,6 +1108,13 @@
     }
 
     async function loadDoc(path, push) {
+      if (window.SSNSiteLanguage) {
+        const english = new URL(window.SSNSiteSourceURL('index.html'));
+        english.searchParams.set('file', stripHash(path || DEFAULT_FILE));
+        english.hash = getHash(path);
+        window.location.replace(english.href);
+        return;
+      }
       const normalized = normalizeDocPath(path || DEFAULT_FILE);
       if (/^https?:/i.test(normalized)) {
         window.open(normalized, "_blank", "noopener");
@@ -1163,6 +1177,22 @@
     }
 
     async function loadSitemap() {
+      if (window.SSNSiteLanguage) {
+        // The localized sidebar lists the public guides in its own search index.
+        elements.sidebarContent.textContent = '';
+        if (!state.searchIndex) return;
+        const list = document.createElement('ul');
+        state.searchIndex.documents.forEach(entry => {
+          const item = document.createElement('li');
+          const link = document.createElement('a');
+          link.href = entry.path;
+          link.textContent = entry.title;
+          item.appendChild(link);
+          list.appendChild(item);
+        });
+        elements.sidebarContent.appendChild(list);
+        return;
+      }
       try {
         const response = await fetch(SITEMAP_FILE, { cache: "no-cache" });
         if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
@@ -1213,7 +1243,7 @@
       return normalized
         .toLowerCase()
         .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]+/g, " ")
+        .replace(/[^\p{L}\p{N}]+/gu, " ")
         .trim()
         .replace(/\s+/g, " ");
     }
@@ -1346,8 +1376,8 @@
       setSearchMode(true);
 
       elements.searchStatus.textContent = results.length > visibleResults.length
-        ? `Top ${visibleResults.length} of ${results.length} results`
-        : `${results.length} result${results.length === 1 ? "" : "s"}`;
+        ? siteText('Top {0} of {1} results', [visibleResults.length, results.length])
+        : siteText(results.length === 1 ? '{0} result' : '{0} results', [results.length]);
 
       if (!visibleResults.length) {
         const empty = document.createElement("div");
@@ -1517,7 +1547,7 @@
 
     document.addEventListener("DOMContentLoaded", async () => {
       updateThemeButton();
-      loadSearchIndex();
+      await loadSearchIndex();
       await loadSitemap();
       if (hasRequestedFile()) {
         loadDoc(fileFromLocation() + window.location.hash, false);

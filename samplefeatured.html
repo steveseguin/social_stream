@@ -10,6 +10,7 @@ Development Notes:
     <meta charset="utf-8" />
     <meta name="description" content="Overlay. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
 <script src="./libs/objects.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
 <script src="./shared/utils/chatBadges.js"></script>
 <link rel="stylesheet" href="./shared/utils/chatBadges.css">
   <script type="text/javascript" src="./js/local-server-url.js"></script>
@@ -513,7 +514,7 @@ Development Notes:
 					<div class="hl-title">
 					${avatarImg}
                     <div class="hl-name" ${styleOverride} id="nameDIV">
-                        ${data.chatname || ''}
+                        ${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname || '') : fallbackEscapeHtml(data.chatname || ''))}
                     </div>
 					${chatbadges}${donationContent}
 					</div>
@@ -539,12 +540,12 @@ Development Notes:
                 './icons/announcement.png' : './sources/images/unknown.png');
 
             const backupAttr = data.backupChatimg ? 
-                `data-backup-image="${data.backupChatimg}"` : '';
+                `data-backup-image="${fallbackEscapeHtml(data.backupChatimg)}"` : '';
 
             return `
                 <div class="hl-img">
-                    <img id="img_${data.id}" 
-                         src="${imgSrc}" 
+                    <img id="img_${fallbackEscapeHtml(data.id)}"
+                         src="${fallbackEscapeHtml(imgSrc)}"
                          class="hl-profile-pic" 
                          ${backupAttr}
                          onerror="App.errorImage(this)" />

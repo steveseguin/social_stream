@@ -683,7 +683,7 @@ body.ultra .content-img {
         if (accent) { messageDiv.style.borderLeftColor = accent; }
 
         var avatarHtml = (!hideAvatar && data.chatimg)
-            ? "<span class='avatar' style=\"background-image:url('" + data.chatimg + "')\"></span>" : "";
+            ? "<span class='avatar' style=\"background-image:url('" + escapeCssUrlAttribute(data.chatimg) + "')\"></span>" : "";
         var iconHtml = (!hideIcon && data.type)
             ? "<img class='source-icon' src='https://socialstream.ninja/sources/images/" + data.type + ".png' alt='" + data.type + "' onerror=\"this.style.display='none'\">" : "";
         var badgesHtml = buildBadges(data);

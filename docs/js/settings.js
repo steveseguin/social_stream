@@ -1,7 +1,12 @@
+    function siteText(label, values) {
+        if (window.SSNSiteTranslate) return window.SSNSiteTranslate(label, values);
+        return label.replace(/\{(\d+)\}/g, function (match, index) { return values && index < values.length ? values[index] : match; });
+    }
+    function sourceURL(value) { return window.SSNSiteSourceURL ? window.SSNSiteSourceURL(value) : new URL(value, location.href).href; }
 import SETTINGS_DEFINITIONS, { SETTINGS_CATEGORY_INFO } from '../../shared/config/settingsDefinitions.js';
 import URL_PARAMETER_GROUPS from '../../shared/config/urlParameters.js';
 
-const POPUP_SOURCE = '../popup.html';
+const POPUP_SOURCE = sourceURL('../popup.html');
 const TYPE_GUESS = {
   setting: 'boolean',
   optionsetting: 'select',
@@ -421,7 +426,8 @@ function filterParameterRecords() {
     if (parameterState.target !== 'all' && parameterState.section !== 'all' && record.sectionSlug !== parameterState.section) {
       return false;
     }
-    if (query && !record.searchText.includes(query)) {
+    const localizedSearch = [record.displayName, record.description, record.targetTitle, record.sectionTitle].map(value => siteText(value)).join(' ').toLowerCase();
+    if (query && !(record.searchText + ' ' + localizedSearch).includes(query)) {
       return false;
     }
     return true;
@@ -552,7 +558,7 @@ function renderParameters(records) {
 
     const meta = document.createElement('span');
     meta.className = 'settings-section-meta';
-    meta.textContent = `${group.items.length} parameter${group.items.length === 1 ? '' : 's'}`;
+    meta.textContent = siteText(group.items.length === 1 ? '{0} parameter' : '{0} parameters', [group.items.length]);
 
     header.appendChild(title);
     header.appendChild(meta);
@@ -668,23 +674,23 @@ function updateParameterContext(visibleCount) {
 
   const labelParts = [];
   if (target) {
-    labelParts.push(target.title);
+    labelParts.push(siteText(target.title));
   }
   if (section) {
-    labelParts.push(section.title);
+    labelParts.push(siteText(section.title));
   }
-  const label = labelParts.length ? labelParts.join(' → ') : 'all overlays';
+  const label = labelParts.length ? labelParts.join(' → ') : siteText('all overlays');
 
   const denominator =
     count !== baseCount && baseCount > 0
-      ? `${count} of ${baseCount} parameter${baseCount === 1 ? '' : 's'}`
-      : `${count} parameter${count === 1 ? '' : 's'}`;
+      ? siteText('{0} of {1} parameters', [count, baseCount])
+      : siteText(count === 1 ? '{0} parameter' : '{0} parameters', [count]);
 
-  let text = `Showing ${denominator} for ${label}.`;
+  let text = siteText('Showing {0} for {1}.', [denominator, label]);
 
   const extraContext = section?.description || target?.description || '';
   if (extraContext) {
-    text += ` ${extraContext}`;
+    text += ' ' + siteText(extraContext);
   }
 
   domRefs.panelContext.textContent = text;
@@ -884,7 +890,7 @@ function render(records) {
 
     const meta = document.createElement('span');
     meta.className = 'settings-section-meta';
-    meta.textContent = `${group.items.length} setting${group.items.length === 1 ? '' : 's'}`;
+    meta.textContent = siteText(group.items.length === 1 ? '{0} setting' : '{0} settings', [group.items.length]);
 
     header.appendChild(title);
     header.appendChild(meta);
@@ -920,6 +926,7 @@ function filterRecords(records) {
       ...(record.titles || [])
     ]
       .filter(Boolean)
+      .map(value => value + ' ' + siteText(value))
       .join(' ')
       .toLowerCase();
     return haystack.includes(q);

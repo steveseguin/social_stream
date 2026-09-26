@@ -733,6 +733,7 @@
             }
 
             function applyWelcomeLanguage(value) {
+                if (document.documentElement.hasAttribute('data-site-language')) return;
                 var lang = normalizeWelcomeLanguage(value);
                 var content = translations[lang] || translations["en-us"];
                 document.documentElement.lang = lang;

@@ -42,6 +42,7 @@ speed until they leave through the top, like a film credit roll.
     <meta name="robots" content="noindex">
     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
 <script src="../libs/objects.js"></script>
+<script src="../shared/utils/chatHtml.js"></script>
 <script src="../shared/utils/chatBadges.js"></script>
 <link rel="stylesheet" href="../shared/utils/chatBadges.css">
 <script type="text/javascript" src="../js/local-server-url.js"></script>
@@ -702,8 +703,8 @@ body, html {
 
         const sourceIconHtml = (!hideSource && data.type) ? `<img src="https://socialstream.ninja/sources/images/${escapeAttributeValue(data.type)}.png" alt="Source" class="source-icon">` : '';
         const avatarHtml = (!hideAvatars && data.chatimg) ?
-            `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${cssAttributeValue(data.chatimg)}');"></div></div>` : '';
-        const nameHtml = (!hideNames && data.chatname) ? `<div class="name" ${data.nameColor ? `style="color: ${escapeAttributeValue(data.nameColor)}"` : ''}>${data.chatname}</div>` : '';
+            `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${escapeCssUrlAttribute(data.chatimg)}');"></div></div>` : '';
+        const nameHtml = (!hideNames && data.chatname) ? `<div class="name" ${data.nameColor ? `style="color: ${escapeAttributeValue(data.nameColor)}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div>` : '';
         const membershipHtml = data.membership ? `<div class="membership-status">${escapeHtml(data.membership)}</div>` : '';
         const messageTextHtml = data.chatmessage ? `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${renderedChatMessage}</div>` : '';
         const donationHtml = data.hasDonation ? `<div class="donation">${escapeHtml(data.hasDonation)}</div>` : '';
