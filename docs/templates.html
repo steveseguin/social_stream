@@ -637,11 +637,11 @@ Design: [describe colors, mood, typography, placement and motion]. Canvas: [widt
             const content = document.getElementById('css-modal-content').textContent;
             navigator.clipboard.writeText(content)
                 .then(() => {
-                    alert('CSS copied to clipboard!');
+                    alert(window.SSNSiteTranslate ? window.SSNSiteTranslate('CSS copied to clipboard!') : 'CSS copied to clipboard!');
                 })
                 .catch(err => {
                     console.error('Could not copy text: ', err);
-                    alert('Failed to copy. Try selecting and copying manually.');
+                    alert(window.SSNSiteTranslate ? window.SSNSiteTranslate('Failed to copy. Try selecting and copying manually.') : 'Failed to copy. Try selecting and copying manually.');
                 });
         }
 		

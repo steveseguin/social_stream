@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="../../libs/objects.js"></script>
+<script src="../../shared/utils/chatHtml.js"></script>
     <meta charset="UTF-8">
     <meta name="description" content="Moderator Dashboard: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
     <meta name="robots" content="noindex">
@@ -394,7 +396,7 @@ img.ssn-content-image {
                 <div class="message-meta">
                     ${eventTypeText ? `<div class="event-type ${eventTypeClass}">${eventTypeText}</div>` : ''}
                     ${eventSpecificText ? `<div class="event-specific">${eventSpecificText}</div>` : ''}
-                    <div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${data.chatname || 'Anonymous'}</div>
+                    <div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname || 'Anonymous') : fallbackEscapeHtml(data.chatname || 'Anonymous'))}</div>
                     ${data.sourceicon ? `<img src="${data.sourceicon}" alt="${data.type}" class="source-icon">` : ''}
                 </div>
             </div>

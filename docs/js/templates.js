@@ -1,5 +1,11 @@
 (function () {
     'use strict';
+    function siteText(label, values) {
+        if (window.SSNSiteTranslate) return window.SSNSiteTranslate(label, values);
+        return label.replace(/\{(\d+)\}/g, function (match, index) { return values && index < values.length ? values[index] : match; });
+    }
+    function sourceURL(value) { return window.SSNSiteSourceURL ? window.SSNSiteSourceURL(value) : new URL(value, location.href).href; }
+
     var search = document.getElementById('template-search-input');
     var filters = document.querySelectorAll('.filter-tag');
     var cards = document.querySelectorAll('.template-card');
@@ -20,7 +26,7 @@
             });
             category.hidden = !visible;
         });
-        document.getElementById('template-results').textContent = count ? count + ' templates shown' : 'No matches. Try another search or choose All Templates.';
+        document.getElementById('template-results').textContent = count ? siteText('{0} templates shown', [count]) : 'No matches. Try another search or choose All Templates.';
     }
     filters.forEach(function (button) {
         button.addEventListener('click', function () {

@@ -310,7 +310,7 @@ img.ssn-content-image {
 		const renderedChatMessage = data.textonly ? escapeHtml(data.chatmessage || '') : (data.chatmessage || '');
 
 		messageDiv.innerHTML = `
-			${data.chatimg ? `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : ''}
+			${data.chatimg ? `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${escapeCssUrlAttribute(data.chatimg)}');"></div></div>` : ''}
 			<div class="username-box">
 				<span>${escapeHtml(data.chatname)}</span>
 				<span class="badges">${chatbadges}</span>

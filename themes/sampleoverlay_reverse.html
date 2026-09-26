@@ -42,6 +42,7 @@ This overlay works by:
     <meta name="robots" content="noindex">
     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
 <script src="../libs/objects.js"></script>
+<script src="../shared/utils/chatHtml.js"></script>
 <script src="../shared/utils/chatBadges.js"></script>
 <link rel="stylesheet" href="../shared/utils/chatBadges.css">
   <script type="text/javascript" src="../js/local-server-url.js"></script>
@@ -553,8 +554,8 @@ body, html {
 		
 		const sourceIconHtml = data.type ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="Source" class="source-icon">` : '';
 		const avatarHtml = data.chatimg ? 
-			`<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : '';
-		const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : '';
+			`<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${escapeCssUrlAttribute(data.chatimg)}');"></div></div>` : '';
+		const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';
 		const membershipHtml = data.membership ? `<div class="membership-status">${fallbackEscapeHtml(data.membership)}</div>` : '';
 		// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 		const messageTextHtml = `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.textonly ? '' : (data.chatmessage || '')}</div>`;

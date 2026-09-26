@@ -63,6 +63,15 @@ function fallbackEscapeHtml(value) {
 	});
 }
 
+// A CSS string inside a quoted HTML attribute needs both kinds of escaping.
+// Use this only for display copies, never for stored avatar URLs.
+function escapeCssUrlAttribute(value) {
+	var cssValue = String(value == null ? "" : value).replace(/[\\"'\r\n\f]/g, function (character) {
+		return "\\" + character.charCodeAt(0).toString(16) + " ";
+	});
+	return fallbackEscapeHtml(cssValue);
+}
+
 function removeHtmlTagsFromPlainText(value) {
 	return String(value || "")
 		.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")

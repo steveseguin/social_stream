@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="./libs/objects.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
     <meta name="description" content="Wait List. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
     <meta name="robots" content="noindex">
@@ -825,7 +827,7 @@
 	}
 
 	function formatWaitlistEntryText(entry) {
-		var baseName = (entry && entry.chatname) ? entry.chatname : "";
+		var baseName = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize((entry && entry.chatname) || "") : fallbackEscapeHtml((entry && entry.chatname) || ""));
 		if (!includeJoinMessage) {
 			return "<span class='waitlist-entry-text'>" + baseName + "</span>";
 		}
@@ -839,7 +841,7 @@
 	function formatWaitlistEntry(entry, classAdd, extraData, forceImage) {
 		var imageHtml = "";
 		if (forceImage || entry.chatimg) {
-			imageHtml = "<img onerror='hideImage(this)' src='" + (entry.chatimg || "") + "'>";
+			imageHtml = "<img onerror='hideImage(this)' src='" + fallbackEscapeHtml(entry.chatimg || "") + "'>";
 		} else {
 			imageHtml = "<div class='spacer'></div>";
 		}

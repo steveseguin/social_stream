@@ -3,6 +3,7 @@
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
     <meta name="description" content="Bot Overlay &amp; TTS. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
 <script src="./libs/objects.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
 <script src="./shared/utils/chatBadges.js"></script>
 <link rel="stylesheet" href="./shared/utils/chatBadges.css">
 <script src="shared/overlay-control-transport.js"></script>
@@ -2424,7 +2425,7 @@ function processData(data) {
 					var avatarImg = "";
 					if (avatar) {
 					  if (data.backupChatimg) {
-						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + data.chatimg + '" class="hl-profile-pic" data-backup-image="' + data.backupChatimg + '"onerror="errorImage(this);"></div>';
+						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + fallbackEscapeHtml(data.id) + '" src="' + fallbackEscapeHtml(data.chatimg) + '" class="hl-profile-pic" data-backup-image="' + fallbackEscapeHtml(data.backupChatimg) + '"onerror="errorImage(this);"></div>';
 					  } else {
 						let chatimg = "";
 						if (!data.chatimg) {
@@ -2436,7 +2437,7 @@ function processData(data) {
 						} else {
 						  chatimg = data.chatimg;
 						}
-						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + chatimg + '" class="hl-profile-pic" onerror="errorImage(this);"></div>';
+						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + fallbackEscapeHtml(data.id) + '" src="' + fallbackEscapeHtml(chatimg) + '" class="hl-profile-pic" onerror="errorImage(this);"></div>';
 					  }
 					} 
 
@@ -2458,7 +2459,7 @@ function processData(data) {
 						document.getElementById("newmessage").id = "";
 					  } catch (e) {}
 
-					  document.getElementById("output").innerHTML += '<div class="hl-c-cont highlight-chat stacked" id="newmessage" data-source-type="' + data.type + '">' + '<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" + '<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
+					  document.getElementById("output").innerHTML += '<div class="hl-c-cont highlight-chat stacked" id="newmessage" data-source-type="' + data.type + '">' + '<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname)) + chatbadges + "</div>" + '<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
 
 					  if (data.hasDonation || memebershipHTML) {
 						document.getElementById("newmessage").classList.add("dono");
@@ -2466,7 +2467,7 @@ function processData(data) {
 						document.getElementById("newmessage").classList.remove("dono");
 					  }
 					} else {
-					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="' + data.type + '">' + '<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" + '<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
+					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="' + data.type + '">' + '<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname)) + chatbadges + "</div>" + '<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
 
 					  if (data.hasDonation || memebershipHTML) {
 						document.getElementById("newmessage").classList.add("dono");

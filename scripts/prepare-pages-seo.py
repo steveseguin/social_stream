@@ -17,6 +17,7 @@ from xml.sax.saxutils import escape as xml_escape
 
 ORIGIN = "https://socialstream.ninja"
 BRAND = "Social Stream Ninja"
+LANGUAGE_LOCALES = {"es": "es_ES", "pt-br": "pt_BR", "ru": "ru_RU", "fr": "fr_FR", "de": "de_DE"}
 PUBLIC_ROOT_PAGES = {
     "index.html", "landing.html", "beta.html", "fonts.html", "privacy.html",
     "TOS.html", "streamelements-importer.html", "streamerbot.html",
@@ -159,6 +160,9 @@ def prepare_page(root, path):
     body_tail = source[head.head_end:]
     changes, additions = [], []
     public = is_public(logical)
+    language = logical.parts[0] if logical.parts[0] in LANGUAGE_LOCALES and head.meta("ssn-site-translation") else None
+    if language:
+        public = is_public(Path(*logical.parts[1:]))
     existing_robots = ",".join(str(t[3].get("content") or "") for t in head.meta("robots"))
     indexable = public and not beta and not re.search(r"\b(noindex|none)\b", existing_robots, re.I)
 
@@ -191,6 +195,8 @@ def prepare_page(root, path):
     elif not head.meta("robots"):
         meta("robots", "index, follow, max-image-preview:large")
     canonical = canonical_url(logical)
+    if language and head.links("canonical"):
+        canonical = head.links("canonical")[0][3]["href"]
     replace_tags(head.links("canonical"), '<link rel="canonical" href="' + html.escape(canonical, quote=True) + '">' if public else "")
 
     icons = head.links("icon")
@@ -212,10 +218,10 @@ def prepare_page(root, path):
 
     if public:
         for key, value in {
-            "og:type": "website", "og:site_name": BRAND, "og:locale": "en_US",
+            "og:type": "website", "og:site_name": BRAND, "og:locale": LANGUAGE_LOCALES.get(language, "en_US"),
             "og:url": canonical, "og:title": title, "og:description": description,
             "og:image": ORIGIN + "/media/logo.png", "og:image:width": "1024",
-            "og:image:height": "1024", "og:image:alt": "Social Stream Ninja logo",
+            "og:image:height": "1024", "og:image:alt": head.meta("og:image:alt")[0][3]["content"] if language and head.meta("og:image:alt") else "Social Stream Ninja logo",
         }.items():
             meta(key, value, "property")
         # The existing brand image is square, so use a matching summary card.
@@ -223,7 +229,7 @@ def prepare_page(root, path):
             "twitter:card": "summary", "twitter:url": canonical,
             "twitter:title": title, "twitter:description": description,
             "twitter:image": ORIGIN + "/media/logo.png",
-            "twitter:image:alt": "Social Stream Ninja logo",
+            "twitter:image:alt": head.meta("twitter:image:alt")[0][3]["content"] if language and head.meta("twitter:image:alt") else "Social Stream Ninja logo",
         }.items():
             meta(key, value)
     if head.html_tag and not head.html_tag[2].get("lang"):

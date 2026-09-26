@@ -5,6 +5,7 @@
     var translated = document.documentElement.hasAttribute('data-site-language');
     var translations;
     function t(label) {
+        if (window.SSNSiteLanguage) return window.SSNSiteTranslate(label);
         if (!translations) {
             var config = document.getElementById('ssn-site-language');
             if (config) {
@@ -13,7 +14,7 @@
         }
         return translations && Object.prototype.hasOwnProperty.call(translations, label) ? translations[label] : label;
     }
-    window.SSNSiteTranslate = t;
+    if (!window.SSNSiteTranslate) window.SSNSiteTranslate = t;
     var navigation = [
         ['Home', 'index.html'], ['Features', 'docs/features.html'],
         ['Inspiration', 'docs/inspiration.html', 'inspiration'],
@@ -41,6 +42,7 @@
         var navigationElement = document.getElementById('ssn-site-nav');
         // Generated translations already contain localized navigation and URLs.
         if (navigationElement && !translated) {
+            var languagePicker = navigationElement.querySelector('[data-site-language-picker]');
             navigationElement.textContent = '';
             navigation.forEach(function (item) {
                 var link = document.createElement('a');
@@ -51,9 +53,10 @@
                     (item[1] === 'index.html' && location.pathname === siteRoot.pathname)) link.setAttribute('aria-current', 'page');
                 navigationElement.appendChild(link);
             });
+            if (languagePicker) navigationElement.appendChild(languagePicker);
         }
         var alternate = document.querySelector('meta[name="ssn-language-alternate"]');
-        if (navigationElement && alternate) {
+        if (navigationElement && alternate && !document.querySelector('[data-site-language-picker]')) {
             var languageLink = document.createElement('a');
             languageLink.href = new URL(alternate.content, location.href).href;
             languageLink.className = 'site-language-link';

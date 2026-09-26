@@ -325,7 +325,7 @@ img.ssn-content-image { display: inline-block; width: 3em; height: 1.3em; margin
         if (donation) { bullet.className += " donation-bullet"; }
 
         var avatarHtml = (!hideAvatars && data.chatimg)
-            ? "<span class='avatar' style=\"background-image:url('" + data.chatimg + "')\"></span>" : "";
+            ? "<span class='avatar' style=\"background-image:url('" + escapeCssUrlAttribute(data.chatimg) + "')\"></span>" : "";
         var iconHtml = data.type
             ? "<img class='source-icon' src='https://socialstream.ninja/sources/images/" + data.type + ".png' alt='' onerror=\"this.style.display='none'\">" : "";
         var badgesHtml = buildBadges(data);

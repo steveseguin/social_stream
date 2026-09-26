@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex">
     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
 <script src="../libs/objects.js"></script>
+<script src="../shared/utils/chatHtml.js"></script>
 <script src="../shared/utils/chatBadges.js"></script>
 <link rel="stylesheet" href="../shared/utils/chatBadges.css">
   <script type="text/javascript" src="../js/local-server-url.js"></script>
@@ -557,7 +558,7 @@ body::after {
         const sourceIconHtml = data.type ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="source" class="source-icon">` : '';
         const avatarHtml = data.chatimg ? `
             <div class="avatar-ring">
-                <div class="avatar" style="background-image: url('${data.chatimg}');"></div>
+                <div class="avatar" style="background-image: url('${escapeCssUrlAttribute(data.chatimg)}');"></div>
             </div>` : `
             <div class="avatar-ring">
                 <div class="avatar" style="background-image: url('https://socialstream.ninja/unknown.png');"></div>
@@ -573,7 +574,7 @@ body::after {
             </div>` : '';
 
         const badgesHtml = buildBadges(data.chatbadges);
-        const nameHtml = data.chatname ? `<span class="name"${data.nameColor ? ` style="color: ${data.nameColor};"` : ''}>${data.chatname}</span>` : '';
+        const nameHtml = data.chatname ? `<span class="name"${data.nameColor ? ` style="color: ${data.nameColor};"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</span>` : '';
 
         messageDiv.innerHTML = `
             <div class="message-inner">

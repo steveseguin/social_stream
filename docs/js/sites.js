@@ -1,3 +1,8 @@
+    function siteText(label, values) {
+        if (window.SSNSiteTranslate) return window.SSNSiteTranslate(label, values);
+        return label.replace(/\{(\d+)\}/g, function (match, index) { return values && index < values.length ? values[index] : match; });
+    }
+    function sourceURL(value) { return window.SSNSiteSourceURL ? window.SSNSiteSourceURL(value) : new URL(value, location.href).href; }
 document.addEventListener('DOMContentLoaded', function() {
     const sitesData = [
         {
@@ -1798,10 +1803,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Site content
             siteItem.innerHTML += `
-                <img src="../sources/images/${site.icon}" alt="${site.name}" onerror="this.src='../sources/images/generic.png';" class="site-icon">
+                <img src="${sourceURL('../sources/images/' + site.icon)}" alt="${site.name}" class="site-icon">
                 <h3>${site.name}</h3>
             `;
             
+            siteItem.querySelector('img').onerror = function () { this.onerror = null; this.src = sourceURL('../sources/images/generic.png'); };
             // Event listener for opening modal
             siteItem.addEventListener('click', () => openSiteModal(site));
             
@@ -1820,7 +1826,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const filteredSites = sitesData.filter(site => 
             site.name.toLowerCase().includes(searchValue) || 
-            site.description.toLowerCase().includes(searchValue)
+            (site.description + ' ' + siteText(site.description)).toLowerCase().includes(searchValue)
         );
         
         populateSites(filteredSites);
@@ -1830,8 +1836,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function openSiteModal(site) {
         // Set modal content
         const modalIcon = document.getElementById('modalIcon');
-        modalIcon.onerror = function() { this.onerror = null; this.src = '../sources/images/generic.png'; };
-        modalIcon.src = `../sources/images/${site.icon}`;
+        modalIcon.onerror = function() { this.onerror = null; this.src = sourceURL('../sources/images/generic.png'); };
+        modalIcon.src = sourceURL('../sources/images/' + site.icon);
         document.getElementById('modalTitle').textContent = site.name;
         document.getElementById('modalDescription').textContent = site.description;
         document.getElementById('modalInstructions').innerHTML = site.instructions;

@@ -116,3 +116,21 @@ Additional passing coverage:
 Plain metadata stays plain on the wire. Updated receivers use text nodes or output escaping instead of repeatedly decoding and stripping labels. Deploy the updated receiver pages and shared assets before distributing the updated background: old/custom receivers that insert plain metadata as HTML need the same correction. This is not a claim that an updated background repairs old receiver code.
 
 The existing sanitizer corpus and overlay text-only suite remain complementary checks. Test harnesses do not modify production files during execution.
+
+## Name and avatar display sweep
+
+The name/avatar sweep fixes confirmed sinks in 37 receiver pages. Displayed HTML names use the existing `SocialStreamChatHTML` policy; avatar attributes are escaped for their HTML context, including a separate CSS-string escape for background-image URLs. Seven game pages now parse names inside inert template content. Payload names, database records, donor aggregation, and avatar lookup inputs are not rewritten.
+
+Browser regressions reproduce execution in isolated copies with the display checks disabled, then verify the shipped pages. Run:
+
+```text
+node tests/overlay-name-security.test.cjs
+node tests/avatar-attribute-security.test.cjs
+node tests/leaderboard-name-security.test.cjs
+node tests/game-name-security.test.cjs
+node tests/name-storage-security.test.cjs
+```
+
+The checks cover name entities, joined emoji and flags, supported name formatting/emotes, missing sanitizer fallback, avatar URLs, asynchronous Twitch avatar lookup, all five leaderboard layouts, repeated player/donor updates, persistence/reload, the original IndexedDB username index, and JSON versus HTML exports. The existing text-only overlay, Supporter Showcase, and Tip Jar goal suites also pass.
+
+Compatibility limits: unsafe or unsupported name HTML is filtered at display time. Inert game parsing retains the div context and tested player keys; raw custom `<noscript>` markup is parsed with scripting disabled, so its extracted text can differ from the old live-div parser. Ordinary names and encoded literal markup do not use that path. These tests run in Chromium with isolated storage and offline transports, not live OBS sessions.
