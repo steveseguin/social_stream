@@ -28,6 +28,8 @@ For all modifications, ensure the critical components above remain functional.
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="robots" content="noindex">
     <meta name="description" content="A customizable emote wall overlay template for Social Stream">
@@ -77,6 +79,7 @@ For all modifications, ensure the critical components above remain functional.
     function processEmotes(data) {
         // Parse message content
         const tmp = document.createElement("div");
+        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
         if (data.textonly === true) {
             tmp.textContent = data.chatmessage;
         } else {

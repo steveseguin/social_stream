@@ -32,7 +32,11 @@ async function toDataURL(url) {
 	
 	function escapeHtml(unsafe){
 		try {
-			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
+			if (settings.textonlymode){ // Literal text stays unencoded at capture; escape only when a renderer constructs HTML.
 				return unsafe;
 			}
 			return unsafe
@@ -63,6 +67,7 @@ async function toDataURL(url) {
 		  const node = element.childNodes[i];
 		  
 		  // Check if the node is an element and if it's visible
+		  // Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 		  if (!settings.textonlymode && (node.nodeType === 1)) {
 			const style = window.getComputedStyle(node);
 			if (style.display === 'none') {
@@ -75,6 +80,7 @@ async function toDataURL(url) {
 		  } else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
 			resp += escapeHtml(node.textContent);
 		  } else if (node.nodeType === 1) {
+			// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 			if (!settings.textonlymode) {
 			  if ((node.nodeName == "IMG") && node.src) {
 				node.src = await toDataURL(node.src);
@@ -120,6 +126,7 @@ async function toDataURL(url) {
 		data.hasDonation = "";
 		data.membership = "";;
 		data.contentimg = contentimg;
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "bilibili";
 		
@@ -142,7 +149,7 @@ async function toDataURL(url) {
 	}
 	
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	
 	

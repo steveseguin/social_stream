@@ -21,6 +21,10 @@
 
 	function escapeHtml(unsafe) {
 		try {
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
 			if (settings.textonlymode) {
 				return unsafe || "";
 			}
@@ -58,6 +62,7 @@
 			} else if (node.nodeType === 3 && node.textContent && node.textContent.trim().length) {
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1) {
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (settings.textonlymode) {
 					if (node.nodeName === "IMG" && node.alt) {
 						resp += escapeHtml(node.alt);
@@ -351,6 +356,7 @@
 			hasDonation: hasDonation,
 			membership: "",
 			contentimg: "",
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: settings.textonlymode || false,
 			type: "cime"
 		};

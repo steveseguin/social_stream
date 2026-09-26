@@ -1339,11 +1339,17 @@ function buildTitle(category, eventKey) {
   return getCategoryLabel(category) || getTranslation('alert-title-new-alert', 'New Alert');
 }
 
-function buildBodyText(category, payload, viewerCount) {
+function buildBodyText(category, payload, viewerCount, format = {}) {
   const eventKey = pickEventKey(payload);
   const rawMessage = normalizeText(payload.chatmessage);
+  format.isHTML = false;
+  function chatBody() {
+    // Only an HTML-mode chatmessage sets isHTML; plain chat and generated labels stay literal strings for textContent, without HTML filtering.
+    format.isHTML = !payload.textonly;
+    return rawMessage;
+  }
   const subtitle = pickSubtitle(payload);
-  if (eventKey === 'giftfunded' || eventKey === 'giftcontribution' || eventKey === 'purchase') return rawMessage || subtitle;
+  if (eventKey === 'giftfunded' || eventKey === 'giftcontribution' || eventKey === 'purchase') return rawMessage ? chatBody() : subtitle;
 
   if (category === ALERT_CATEGORIES.AUCTION) {
     const itemTitle = normalizeText(payload.meta?.title);
@@ -1361,14 +1367,14 @@ function buildBodyText(category, payload, viewerCount) {
     return getTranslation('alert-hype-rolling', 'The hype train is rolling!');
   }
   if (category === ALERT_CATEGORIES.RAID && viewerCount) {
-    return rawMessage || formatTranslation('alert-welcome-raid-from', 'Welcome the raid from {name}.', {
+    return rawMessage ? chatBody() : formatTranslation('alert-welcome-raid-from', 'Welcome the raid from {name}.', {
       name: pickActorName(payload)
     });
   }
   if (category === ALERT_CATEGORIES.DONATION) {
     if (isGiftEventKey(eventKey)) {
       if (rawMessage) {
-        return rawMessage;
+        return chatBody();
       }
       const recipient = pickGiftRecipient(payload);
       if (recipient) {
@@ -1376,14 +1382,14 @@ function buildBodyText(category, payload, viewerCount) {
       }
       return getTranslation('alert-gift-landed', 'A gift just landed.');
     }
-    return rawMessage || getTranslation('alert-thanks-support', 'Thank you for the support!');
+    return rawMessage ? chatBody() : getTranslation('alert-thanks-support', 'Thank you for the support!');
   }
   if (category === ALERT_CATEGORIES.BITS) {
-    return rawMessage || getTranslation('alert-hype-meter', 'The hype meter just moved.');
+    return rawMessage ? chatBody() : getTranslation('alert-hype-meter', 'The hype meter just moved.');
   }
   if (category === ALERT_CATEGORIES.SUBSCRIPTION) {
     if (rawMessage) {
-      return rawMessage;
+      return chatBody();
     }
     if (subtitle) {
       return subtitle;
@@ -1394,9 +1400,9 @@ function buildBodyText(category, payload, viewerCount) {
     return getTranslation('alert-new-supporter', 'A new supporter joined the stream.');
   }
   if (category === ALERT_CATEGORIES.FOLLOW) {
-    return subtitle || rawMessage || getTranslation('alert-thanks-community', 'Thanks for joining the community.');
+    return subtitle || (rawMessage ? chatBody() : getTranslation('alert-thanks-community', 'Thanks for joining the community.'));
   }
-  return rawMessage || subtitle;
+  return rawMessage ? chatBody() : subtitle;
 }
 
 function buildAlertViewModel(payload = {}) {
@@ -1435,7 +1441,8 @@ function buildAlertViewModel(payload = {}) {
     return null;
   }
   const headline = buildHeadline(category, eventKey, actor, amount, viewerCount, payload);
-  const bodyText = buildBodyText(category, payload, viewerCount);
+  const bodyFormat = {};
+  const bodyText = buildBodyText(category, payload, viewerCount, bodyFormat);
   const effect = matchAlertEffect(category, payload, amount, sourceKey);
   if (effect && effect.media) mediaUrl = effect.media;
 
@@ -1452,6 +1459,7 @@ function buildAlertViewModel(payload = {}) {
     effectSound: effect ? effect.sound : '',
     subtitle,
     bodyText,
+    bodyIsHTML: bodyFormat.isHTML,
     headlineLead: headline.lead,
     headlineTail: headline.tail,
     avatar: normalizeText(payload.chatimg),
@@ -2298,7 +2306,13 @@ function renderAlert(model) {
   if (!settings.hideMessage && shouldRenderBodyText(model)) {
     const message = document.createElement('div');
     message.className = 'alert-message';
-    message.innerHTML = model.bodyText;
+    if (model.bodyIsHTML) {
+      // Only the HTML-mode chat body reaches this branch; retain its upstream-checked formatting.
+      message.innerHTML = model.bodyText;
+    } else {
+      // textonly chat and generated metadata labels are literal strings, never HTML to re-sanitize.
+      message.textContent = model.bodyText;
+    }
     copy.appendChild(message);
   }
 

@@ -29,7 +29,7 @@ export function facebookComment(entry, videoId, pageId) {
     platform: 'facebook', type: 'facebook', chatname: from.name || 'Facebook User',
     chatmessage: String(body),
     chatimg: from.id ? `https://graph.facebook.com/${encodeURIComponent(from.id)}/picture?type=normal` : '',
-    contentimg, chatbadges: '', backgroundColor: '', textColor: '', hasDonation: '', membership: '', textonly: true,
+    contentimg, chatbadges: '', backgroundColor: '', textColor: '', hasDonation: '', membership: '', /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly: true,
     meta: { messageId: entry.id || '', permalink: entry.permalink_url || '', videoId: videoId || '', pageId: pageId || '' }
   };
   if (from.id) payload.userid = String(from.id);

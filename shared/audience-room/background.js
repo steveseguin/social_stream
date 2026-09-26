@@ -35,7 +35,7 @@
 		onChat: function (row) {
 			if (typeof isExtensionOn !== "undefined" && !isExtensionOn) return;
 			// Display path only: bypass bots, Event Flow, points, webhooks, and platform replies.
-			sendDataP2P(sanitizeRelayPayloadFields({ id: row.id, chatname: escapeHtml(row.name), chatmessage: row.text, chatimg: "", type: "socialstreamchat", platform: "ninjachatter", textonly: true, meta: { ninjachatter: { origin: "audience", provider: row.provider, room: connector.config.room } } }));
+			sendDataP2P(sanitizeRelayPayloadFields({ id: row.id, chatname: escapeHtml(row.name), chatmessage: row.text, chatimg: "", type: "socialstreamchat", platform: "ninjachatter", /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly: true, meta: { ninjachatter: { origin: "audience", provider: row.provider, room: connector.config.room } } }));
 		},
 		onCheer: testCheer
 	});

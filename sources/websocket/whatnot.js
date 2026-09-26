@@ -144,6 +144,10 @@
 		name.className = "chatname";
 		// The shared parser escapes HTML unless text-only mode is enabled.
 		function plainText(value) {
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			if (data.textonly) return String(value || "");
 			const text = document.createElement("div");
 			text.innerHTML = String(value || "");

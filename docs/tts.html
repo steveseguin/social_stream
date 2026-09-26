@@ -2,6 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/docs/tts.html">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://socialstream.ninja/docs/tts.html">
+    <meta property="og:title" content="Social Stream Ninja - TTS Voice Guide">
+    <meta property="og:description" content="Configure Social Stream Ninja text-to-speech providers, voices, URL parameters, browser support, OBS audio capture, and troubleshooting.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/docs/tts.html">
+    <meta name="twitter:title" content="Social Stream Ninja - TTS Voice Guide">
+    <meta name="twitter:description" content="Configure Social Stream Ninja text-to-speech providers, voices, URL parameters, browser support, OBS audio capture, and troubleshooting.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Social Stream Ninja - TTS Voice Guide</title>
     <meta name="description" content="Configure Social Stream Ninja text-to-speech providers, voices, URL parameters, browser support, OBS audio capture, and troubleshooting.">
@@ -20,7 +40,7 @@
             --code-bg: #263238;
             --code-text: #ECEFF1;
         }
-        
+
         [data-theme="dark"] {
             --primary-color: #64B5F6;
             --secondary-color: #42A5F5;
@@ -55,13 +75,13 @@
             background-color: var(--bg-color);
             transition: background-color 0.3s, color 0.3s;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         header {
             background-color: var(--primary-color);
             color: white;
@@ -69,7 +89,7 @@
             text-align: center;
             position: relative;
         }
-        
+
         .theme-toggle {
             position: absolute;
             top: 20px;
@@ -85,28 +105,28 @@
             gap: 8px;
             font-size: 14px;
         }
-        
+
         .theme-toggle:hover {
             background: rgba(255, 255, 255, 0.1);
         }
-        
+
         h1 {
             margin: 0;
             font-size: 2.5em;
         }
-        
+
         h2 {
             color: var(--primary-color);
             border-bottom: 2px solid var(--primary-color);
             padding-bottom: 10px;
             margin-top: 40px;
         }
-        
+
         h3 {
             color: var(--secondary-color);
             margin-top: 30px;
         }
-        
+
         .card {
             background: var(--card-bg);
             border-radius: 8px;
@@ -114,31 +134,31 @@
             margin: 20px 0;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
+
         .warning {
             background-color: #FFF3E0;
             border-left: 4px solid var(--accent-color);
             padding: 15px;
             margin: 20px 0;
         }
-        
+
         [data-theme="dark"] .warning {
             background-color: #5D4037;
             color: #FFCC80;
         }
-        
+
         .info {
             background-color: #E3F2FD;
             border-left: 4px solid var(--primary-color);
             padding: 15px;
             margin: 20px 0;
         }
-        
+
         [data-theme="dark"] .info {
             background-color: #1565C0;
             color: #BBDEFB;
         }
-        
+
         .code {
             background-color: var(--code-bg);
             color: var(--code-text);
@@ -154,80 +174,80 @@
             overflow-wrap: anywhere;
             word-break: break-word;
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
         }
-        
+
         th, td {
             border: 1px solid var(--border-color);
             padding: 12px;
             text-align: left;
         }
-        
+
         th {
             background-color: var(--primary-color);
             color: white;
         }
-        
+
         tr:nth-child(even) {
             background-color: #F9F9F9;
         }
-        
+
         [data-theme="dark"] tr:nth-child(even) {
             background-color: #2A2A2A;
         }
-        
+
         .browser-support {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin: 20px 0;
         }
-        
+
         .browser-card {
             text-align: center;
             padding: 20px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
         }
-        
+
         .supported {
             color: #4CAF50;
         }
-        
+
         .partial {
             color: var(--accent-color);
         }
-        
+
         .not-supported {
             color: #F44336;
         }
-        
+
         ul {
             padding-left: 20px;
         }
-        
+
         li {
             margin: 10px 0;
         }
-        
+
         a {
             color: var(--primary-color);
             text-decoration: none;
         }
-        
+
         a:hover {
             text-decoration: underline;
         }
-        
+
         .tts-test {
             text-align: center;
             margin: 30px 0;
         }
-        
+
         button {
             background-color: var(--primary-color);
             color: white;
@@ -237,16 +257,16 @@
             cursor: pointer;
             font-size: 16px;
         }
-        
+
         button:hover {
             background-color: var(--secondary-color);
         }
-        
+
         .parameter-table td:first-child {
             font-family: monospace;
             background-color: #F5F5F5;
         }
-        
+
         [data-theme="dark"] .parameter-table td:first-child {
             background-color: #2A2A2A;
         }
@@ -266,16 +286,16 @@
             border-radius: 8px;
             margin: 20px 0;
         }
-        
+
         nav ul {
             list-style: none;
             padding: 0;
         }
-        
+
         nav li {
             margin: 5px 0;
         }
-        
+
         footer {
             text-align: center;
             margin-top: 40px;

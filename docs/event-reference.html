@@ -1,6 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://socialstream.ninja/docs/event-reference.html">
+    <meta property="og:title" content="Event Reference - Social Stream Ninja">
+    <meta property="og:description" content="Canonical reference for Social Stream Ninja event payloads across YouTube, Twitch, TikTok, Kick, Facebook, and Rumble.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/docs/event-reference.html">
+    <meta name="twitter:title" content="Event Reference - Social Stream Ninja">
+    <meta name="twitter:description" content="Canonical reference for Social Stream Ninja event payloads across YouTube, Twitch, TikTok, Kick, Facebook, and Rumble.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
     <script>
         // Apply dark mode immediately to prevent flash
         (function() {
@@ -12,14 +30,14 @@
             }
         })();
     </script>
-    <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Reference - Social Stream Ninja</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/event-reference.css">
     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
     <meta name="description" content="Canonical reference for Social Stream Ninja event payloads across YouTube, Twitch, TikTok, Kick, Facebook, and Rumble.">
-    <link rel="canonical" href="https://socialstream.ninja/docs/event-reference">
+    <link rel="canonical" href="https://socialstream.ninja/docs/event-reference.html">
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
 </head>
@@ -324,6 +342,7 @@
                         <tr><td><code>data.platform</code></td><td>string (optional)</td><td>Some integrations include this alongside <code>type</code>. Many source adapters omit it; use <code>type</code> for source routing.</td></tr>
                         <tr><td><code>data.id</code></td><td>string | number (optional)</td><td>Message or event identifier. Its meaning depends on the source and transport; do not assume it is always a platform-native moderation ID. Use <code>meta.messageId</code> when the adapter exposes it for delete sync.</td></tr>
                         <tr><td><code>data.donoValue</code></td><td>number (optional)</td><td>Source-supplied numeric USD equivalent, including estimates. A valid value (including zero) overrides currency.js conversion. Without it, consumers estimate USD from hasDonation and source context. Original amounts and units remain in hasDonation and existing provider metadata.</td></tr>
+                        <tr><td><code>data.chatbadges</code></td><td>array | string (optional)</td><td>Badge image URLs or badge objects (<code>type: "img"</code> with <code>src</code>, <code>type: "svg"</code> with <code>html</code>, or <code>type: "text"</code> with <code>text</code>). The relay retains a text badge's literal label in optional <code>rawText</code> and produces escaped <code>text</code> for older overlays. On later relay passes, regenerate <code>text</code> from <code>rawText</code>; do not escape <code>text</code> again. Current renderers display <code>rawText</code> literally when present and retain legacy encoded-text handling otherwise. This is a representation field, not permission to render HTML. Older sources can send a single HTML string instead of an array. Badge-rendering overlays accept both formats and sanitize badge HTML and URLs locally, including when the sender is an older extension. Invalid badges must not prevent the chat or membership message from displaying.</td></tr>
                         <tr>
                             <td><code>data.event</code></td>
                             <td>string | boolean</td>
@@ -337,7 +356,7 @@
                         <tr>
                             <td><code>data.textonly</code></td>
                             <td>boolean</td>
-                            <td>Applies only to <code>data.chatmessage</code>. <code>true</code> means render <code>chatmessage</code> as plain text; <code>false</code> means <code>chatmessage</code> may contain sanitized/renderable HTML. Other normal fields are expected to be plain text, except media fields such as <code>chatimg</code> and <code>contentimg</code>.</td>
+                            <td>Applies only to <code>data.chatmessage</code>. <code>true</code> means render <code>chatmessage</code> as plain text, preserving literal tags and entity-looking text; do not decode, HTML-sanitize, or add formatting tags to that body. Apply event styling to the displayed element. <code>false</code> means <code>chatmessage</code> may contain sanitized/renderable HTML; older messages without the flag retain that HTML behavior. Other normal fields are plain text, except media fields such as <code>chatimg</code> and <code>contentimg</code>. Display plain fields with <code>textContent</code>, or escape them once when constructing an HTML template; do not strip or repeatedly decode their contents.</td>
                         </tr>
                         <tr>
                             <td><code>data.contentimg</code></td>

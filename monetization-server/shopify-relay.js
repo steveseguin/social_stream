@@ -20,7 +20,7 @@ export function paidOrder(data, shop, now = Date.now()) {
  const lines = Array.isArray(data.line_items) ? data.line_items.slice(0, 250) : [];
  const quantity = data.line_items?.length <= 250 && lines.every(line => line && Number.isSafeInteger(line.quantity) && line.quantity > 0 && line.quantity < 100000) ? lines.reduce((sum, line) => sum + line.quantity, 0) : 0;
  const titles = lines.filter(line => line && line.product_id && typeof line.title === 'string').map(line => line.title.trim().slice(0, 100)).filter(Boolean).slice(0, 3);
- return { id: hash(shop + ':' + order), event: 'purchase', platform: 'shopify', type: 'shopify', chatname: 'Anonymous', chatmessage: 'A store purchase was paid.', textonly: true, chatimg: '', subtitle: titles.join(', ').slice(0, 180), meta: { commerce: { ...(quantity ? { quantity } : {}), currency, orderTotal: Number(amount) } } };
+ return { id: hash(shop + ':' + order), event: 'purchase', platform: 'shopify', type: 'shopify', chatname: 'Anonymous', chatmessage: 'A store purchase was paid.', /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly: true, chatimg: '', subtitle: titles.join(', ').slice(0, 180), meta: { commerce: { ...(quantity ? { quantity } : {}), currency, orderTotal: Number(amount) } } };
 }
 
 export default async function shopifyRelay(app, { db, masterKey, now = Date.now } = {}) {

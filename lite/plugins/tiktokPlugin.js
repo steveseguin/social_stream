@@ -568,6 +568,7 @@ export class TikTokPlugin extends BasePlugin {
       timestamp: Date.now(),
       event: action || 'follow',
       raw: payload,
+      // textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
       textonly: true
     };
 
@@ -597,6 +598,7 @@ export class TikTokPlugin extends BasePlugin {
       timestamp: Date.now(),
       event: 'like',
       raw: payload,
+      // textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
       textonly: true
     };
 

@@ -113,7 +113,7 @@
 	}
 	
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	
 	
@@ -133,6 +133,10 @@
 	var historyChannelPending = {};
 
 	function isTextOnlyMode(){
+		// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+		// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+		// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		var setting = settings.textonlymode;
 		if (setting && typeof setting === "object"){
 			return setting.setting === true;
@@ -419,6 +423,7 @@
 		var contentKey;
 		var data;
 		var renderedMessage;
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		var textOnly = isTextOnlyMode();
 		if (!msg || !msg.name || !msg.text){
 			return;
@@ -436,9 +441,11 @@
 		data.chatbadges = msg.badges;
 		data.nameColor = msg.color || "";
 		renderedMessage = renderVeloraMessageHtml(msg.text);
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		data.chatmessage = textOnly ? msg.text : renderedMessage.html;
 		data.chatimg = msg.avatar || "";
 		data.membership = msg.isSubscriber ? (msg.subscriberMonths ? msg.subscriberMonths + " month subscriber" : "Subscriber") : "";
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = textOnly;
 		if (msg.card){
 			data.contentimg = getObjectValue(msg.card, ["imageUrl", "thumbnailUrl", "image", "thumbnail"]) || "";
@@ -735,6 +742,7 @@
 		data.hasDonation = donation;
 		data.membership = "";
 		data.contentimg = "";
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = isTextOnlyMode();
 		data.type = "velora";
 		
@@ -752,6 +760,7 @@
 			hasDonation: "",
 			membership: "",
 			contentimg: "",
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: isTextOnlyMode(),
 			type: "velora"
 		};

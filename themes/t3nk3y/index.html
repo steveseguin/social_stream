@@ -1,9 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Chat Overlay: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+<script src="../../libs/objects.js"></script>
+<script src="../../shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="../../shared/utils/chatBadges.css">
 <script type="text/javascript" src="../../js/local-server-url.js"></script>
 <script type="text/javascript" src="../../js/transport-dedupe.js"></script>
-    <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Overlay</title>
 <style>
@@ -346,28 +353,13 @@ img.ssn-content-image {
         if (data.mid) messageDiv.id = data.mid;
         data.sourceicon = `https://socialstream.ninja/sources/images/${data.type}.png`;
 
-        let chatbadges = "";
-        if (data.chatbadges) {
-            console.log(data.chatbadges);
-            data.chatbadges.slice(0, 5).forEach(badge => {
-                if (typeof badge === "object") {
-                    if (badge.type === "img" && badge.src) {
-                        chatbadges += `<img class='badge' src='${badge.src}' />`;
-                    } else if (badge.type === "svg" && badge.html) {
-                        chatbadges += `<span class='badge svg'>${badge.html}</span>`;
-                    } else if (badge.type === "text" && badge.text) {
-                        chatbadges += `<span class='badge textbadge'>${badge.text}</span>`;
-                    }
-                } else {
-                    chatbadges += `<img class='badge' src='${badge}' />`;
-                }
-            });
-        }
+        let chatbadges = SocialStreamBadges.render(data.chatbadges, { limit: 5 });
 		
 		let valid = data.chatname || data.chatmessage || data.donation || data.hasDonation || data.contentimg || '';
 		if (!valid){return;}
 
         // Construct the HTML for each message
+        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
         messageDiv.innerHTML = `
             <div class="username-box" style="background: linear-gradient(90deg, ${chroma(data.nameColor || "#555").desaturate(1).alpha(0.9)}, ${chroma(data.nameColor || "#555").desaturate(2).alpha(0.9)});">
                 ${data.chatimg ? `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : ''}
@@ -375,9 +367,15 @@ img.ssn-content-image {
                 <div class="badges">${chatbadges}</div>
             </div>
 			<div class="message" style="background: linear-gradient(90deg, ${chroma(data.nameColor || "#555").desaturate(4).darken(1).alpha(0.8)}, ${chroma(data.nameColor || "#555").desaturate(3).darken(1).alpha(0.8)})">
-				<div class="text">${data.chatmessage || ''}${(data.donation||data.hasDonation) ? `<div class="donation">${(data.donation||data.hasDonation||"")}</div>` : ''}
+				<div class="text">${data.textonly ? '' : (data.chatmessage || '')}${(data.donation||data.hasDonation) ? `<div class="donation">${fallbackEscapeHtml(data.donation||data.hasDonation||"")}</div>` : ''}
 			</div>
         `;
+
+        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+        if (data.textonly) {
+		var messageText = messageDiv.querySelector('.text');
+		messageText.insertBefore(document.createTextNode(data.chatmessage || ''), messageText.firstChild);
+        }
 
         appendContentImage(messageDiv.querySelector('.message'), data);
         messageContainer.appendChild(messageDiv);

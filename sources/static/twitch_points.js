@@ -187,6 +187,10 @@
 	data.chatmessage = ""
 	data.event = "ad_break";
 	data.chatimg = "./sources/images/twitch.png";
+	// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+	// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+	// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+	// Literal chatmessage on the wire: no app-added HTML or entity decoding; receivers must render it as text.
 	data.textonly = true;
 	data.type = "twitch";
 	

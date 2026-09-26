@@ -651,7 +651,11 @@
 	
 	function escapeHtml(unsafe){
 		try {
-			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
+			if (settings.textonlymode){ // Literal text stays unencoded at capture; escape only when a renderer constructs HTML.
 				return unsafe;
 			}
 			return unsafe
@@ -802,6 +806,7 @@
 			}
 		}
 		
+		// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 		if (settings.textonlymode) {
 			element.childNodes.forEach(node=>{
 				if (isKickIgnoredContentNode(node) || getKickRenderedContentNode(node) !== node) {
@@ -1037,6 +1042,7 @@
 		if (rendered && rendered.tagName === "SEVENTV-CONTAINER" && original &&
 			(original.hidden || original.style.display === "none") &&
 			((rendered.textContent || "").trim() || rendered.querySelector("img[src], svg"))) {
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			return settings.textonlymode ? original : rendered;
 		}
 		// Keep the native content until 7TV has populated its replacement.
@@ -1530,6 +1536,7 @@
 				if (reply){
 					replyMessage = reply;
 					originalMessage = chatmessage;
+					// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 					if (settings.textonlymode) {
 						chatmessage = reply + ": " + chatmessage;
 					} else {
@@ -1598,6 +1605,7 @@
 	  data.chatimg = chatimg;
 	  data.hasDonation = hasDonation;
 	  data.membership = "";
+	  // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "kick";
 	  
@@ -1883,6 +1891,7 @@
 		  if (reply){
 				replyMessage = reply;
 				originalMessage = chatmessage;
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (settings.textonlymode) {
 					chatmessage = reply + ": " + chatmessage;
 				} else {
@@ -1935,6 +1944,7 @@
 	  if (mod){
 		  data.mod = true;
 	  }
+	  // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "kick";
 	  
@@ -2024,6 +2034,7 @@
 					settings = request.settings;
 					mergeEmotes();
 					kickDebugLog("settings updated", {
+						// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 						textonlymode: Boolean(settings.textonlymode),
 						delaykick: Boolean(settings.delaykick),
 						customkickstate: Boolean(settings.customkickstate),
@@ -2080,6 +2091,7 @@
 			if ("settings" in response){
 				settings = response.settings;
 				kickDebugLog("settings loaded", {
+					// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 					textonlymode: Boolean(settings.textonlymode),
 					delaykick: Boolean(settings.delaykick),
 					customkickstate: Boolean(settings.customkickstate),

@@ -551,6 +551,10 @@
         let rendered = false;
         let match;
 
+        // Capture contract: textonly=true means a literal chatmessage string, not HTML.
+        // Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+        // HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+        // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
         if (!plainText || (state.settings && state.settings.textonlymode)) {
             return {
                 plainText: plainText,
@@ -780,6 +784,7 @@
             hasDonation: '',
             membership: '',
             contentimg: '',
+            // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
             textonly: !!(state.settings && state.settings.textonlymode),
             type: 'rumble',
             sourceName: SOURCE_NAME,

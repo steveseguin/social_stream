@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="../../js/local-server-url.js"></script>
     <meta charset="UTF-8">
+    <meta name="description" content="Featured Message - Gaming Themed: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
+    <meta name="robots" content="noindex">
+<script src="../../libs/objects.js"></script>
+<script src="../../shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="../../shared/utils/chatBadges.css">
+<script src="../../js/local-server-url.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Featured Message - Gaming Themed</title>
     <link rel="icon" href="../../favicon.ico" />
     <link rel="preload" href="../../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Bebas+Neue&family=Russo+One&display=swap');
-        
+
         @font-face {
             font-family: NotoColorEmojiLimited;
             unicode-range: U+1F1E6-1F1FF;
@@ -623,19 +629,19 @@
             #container {
                 width: 95%;
             }
-            
+
             .message {
                 padding: 16px;
             }
-            
+
             .text {
                 font-size: 16px;
             }
-            
+
             .username {
                 font-size: 20px;
             }
-            
+
             .avatar {
                 width: 56px;
                 height: 56px;
@@ -651,12 +657,12 @@
             .donation-info::before {
                 animation: none !important;
             }
-            
+
             .message-wrapper.show {
                 opacity: 1;
                 transition: opacity 0.3s ease;
             }
-            
+
             .message-wrapper.hide {
                 opacity: 0;
             }
@@ -854,22 +860,10 @@
                 }
 
                 // Badges
-                if (content.chatbadges && Array.isArray(content.chatbadges)) {
+                if (content.chatbadges) {
                     const badges = document.createElement('div');
                     badges.className = 'badges';
-                    content.chatbadges.forEach(badge => {
-                        if (typeof badge === 'string') {
-                            const img = document.createElement('img');
-                            img.className = 'badge';
-                            img.src = badge;
-                            badges.appendChild(img);
-                        } else if (badge.src) {
-                            const img = document.createElement('img');
-                            img.className = 'badge';
-                            img.src = badge.src;
-                            badges.appendChild(img);
-                        }
-                    });
+                    badges.innerHTML = SocialStreamBadges.render(content.chatbadges);
                     header.appendChild(badges);
                 }
 
@@ -888,6 +882,7 @@
                 if (content.chatmessage) {
                     const text = document.createElement('div');
                     text.className = 'text';
+                    // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
                     if (content.textonly === true) text.textContent = content.chatmessage;
                     else text.innerHTML = content.chatmessage;
                     contentDiv.appendChild(text);
@@ -901,11 +896,11 @@
                     if (content.hasDonation) {
                         const amount = content.hasDonation;
                         const title = content.title || 'LOOT';
-                        donationDiv.innerHTML = `${title}: ${amount}`;
+                        donationDiv.textContent = `${title}: ${amount}`;
                     } else if (content.membership) {
                         const memberInfo = typeof content.membership === 'string' ? 
                             content.membership : 'JOINED PARTY';
-                        donationDiv.innerHTML = memberInfo;
+                        donationDiv.textContent = memberInfo;
                     }
                     
                     contentDiv.appendChild(donationDiv);

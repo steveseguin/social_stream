@@ -5101,6 +5101,7 @@ function replaceEmotesWithImages(message, emotesMap, zw = false) {
 
 const emojiCharacterRegex = /[\u{1F300}-\u{1FAFF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{27BF}\u{1F3FB}-\u{1F3FF}]/gu;
 
+// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 async function buildEmoteOnlyMessage(rawMessage, textOnly = false) {
 	if (!rawMessage || typeof rawMessage !== "string") {
 		return "";
@@ -5181,6 +5182,7 @@ async function buildEmoteOnlyMessage(rawMessage, textOnly = false) {
 		return "";
 	}
 
+	// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 	if (textOnly) {
 		return kept
 			.map(entry => (entry.text || "").trim())
@@ -5574,6 +5576,8 @@ function routeIndividualLikeEvent(message, alreadyRouted) {
 }
 
 async function processIncomingMessage(message, sender = null) {
+	// Carry chatmessage and textonly together through processing: true is a literal string,
+	// false/missing may be HTML. Ingestion does not itself prove HTML has been sanitized.
  if (message && message.type === "socialstreamchat" && window.ncAudience && window.ncAudience.ownsRoom(message.meta && message.meta.ninjachatter && message.meta.ninjachatter.room)) return; // Paired connector owns audience return.
 	var individualLikeRouting = { routed: false, stop: false };
 	try {
@@ -5603,6 +5607,7 @@ async function processIncomingMessage(message, sender = null) {
 		let reflection = false;
 
 		// checkExactDuplicateAlreadyReceived only does work if there was a message responsein the last 10 seconds.
+		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 		reflection = checkExactDuplicateAlreadyReceived(message.chatmessage, message.textonly, message.tid, message.type);
 		if (reflection && (settings.firstsourceonly || settings.hideallreplies || settings.thissourceonly)) {
 			return;
@@ -6077,6 +6082,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (["teams", "discord", "slack", "openai", "chime", "meet", "telegram", "whatsapp", "instagram", "xcapture"].includes(request.setting)) {
 				pushSettingChange();
 			}
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			if (request.setting == "textonlymode") {
 				pushSettingChange();
 			}
@@ -7985,6 +7991,7 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 		}
 
 		if (message.chatmessage) {
+			// Relay boundary: sanitize HTML-mode chatmessage only. textonly=true is literal text, so bypass HTML parsing/filtering and preserve the flag.
 			if (!message.textonly) {
 				if (settings.bttv) {
 					if (!Globalbttv) {
@@ -8115,6 +8122,7 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 				if (!translated) {
 					return false;
 				}
+				// Relay boundary: sanitize HTML-mode chatmessage only. textonly=true is literal text, so bypass HTML parsing/filtering and preserve the flag.
 				if (message.chatmessage && !message.textonly) {
 					message.chatmessage = filterXSS(message.chatmessage);
 				}
@@ -8473,10 +8481,12 @@ function sendToH2R(data) {
 			if (data.timestamp) {
 				msg.timestamp = data.timestamp;
 			}
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			if (!data.textonly) {
 				data.chatmessage = unescapeHtml(data.chatmessage);
 			}
 			msg.snippet = {};
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			msg.snippet.displayMessage = sanitizeRelay(data.chatmessage, data.textonly) || "";
 			if (!msg.snippet.displayMessage) {
 				return;
@@ -8694,47 +8704,35 @@ function relayIncomingWebhook(source, payload) {
 	});
 }
 
+// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 function sanitizeRelay(text, textonly = false, alt = false) {
 	if (!text || !text.trim()) {
 		return alt || text;
 	}
 
 	// Extract all emojis from image alt attributes before stripping HTML
-	const emojiMap = new Map();
+	// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 	if (!textonly) {
-		const tempDiv = document.createElement("div");
+		const tempDiv = document.createElement("template");
 		tempDiv.innerHTML = text;
 
 		// Collect all image elements with alt text that appears to be an emoji
-		const imgElements = tempDiv.querySelectorAll("img");
-		imgElements.forEach((img, index) => {
+		const imgElements = tempDiv.content.querySelectorAll("img");
+		imgElements.forEach(img => {
 			const altText = img.getAttribute("alt");
 			if (altText && isEmoji(altText)) {
-				const placeholder = `__EMOJI_PLACEHOLDER_${index}__`;
-				emojiMap.set(placeholder, altText);
-				img.outerHTML = placeholder;
+				img.parentNode.replaceChild(document.createTextNode(altText), img);
 			}
 		});
 
-		// Get the potentially modified HTML
-		text = tempDiv.innerHTML;
-
-		// Convert to text from html
-		var textArea = document.createElement("textarea");
-		textArea.innerHTML = text;
-		text = textArea.value;
+		tempDiv.content.querySelectorAll("script,style,noscript,template").forEach(node => node.remove());
+		text = tempDiv.content.textContent || "";
 	}
 
-	// Strip HTML and other unwanted characters
-	text = text.replace(/(<([^>]+)>)/gi, "");
+	// Preserve literal text; these are the relay's existing command/cheer rules.
 	text = text.replace(/[!#@]/g, "");
 	text = text.replace(/cheer\d+/gi, " ");
 	text = text.replace(/\.(?=\S(?!$))/g, " ");
-
-	// Replace all emoji placeholders with their actual emojis
-	emojiMap.forEach((emoji, placeholder) => {
-		text = text.replace(placeholder, emoji);
-	});
 
 	if (!text.trim() && alt) {
 		return alt;
@@ -8759,6 +8757,7 @@ function isEmoji(char) {
 // Build the same reflection key for plain text and platform-rendered rich text.
 // Private-use markers let us remove whitespace inserted between an emote image
 // and adjacent punctuation without changing intentional spacing in plain text.
+// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 function normalizeMessageForTracking(msg, textonly = false) {
 	if (msg === undefined || msg === null) return "";
 
@@ -8767,6 +8766,7 @@ function normalizeMessageForTracking(msg, textonly = false) {
 	const imageEndMarker = "\uE001";
 	const unknownImageMarker = "\uE002";
 
+	// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 	if (!textonly) {
 		try {
 			const doc = new DOMParser().parseFromString(normalized, "text/html");
@@ -8923,6 +8923,7 @@ function sendToS10(data, fakechat = false, relayed = false) {
 			}
 
 			let cleaned = data.chatmessage;
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			if (!data.textonly) {
 				cleaned = decodeAndCleanHtml(cleaned);
 			}
@@ -8939,11 +8940,12 @@ function sendToS10(data, fakechat = false, relayed = false) {
 				}
 				////console.log".");
 				// checkExactDuplicateAlreadyRelayed(msg, sanitized=true, tabid=false, save=true)
+				// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 				if (checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
 					////console.log"--");
 					return;
 				}
-			} else if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
+			} else /* Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary. */ if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
 				return null;
 			}
 
@@ -9058,6 +9060,7 @@ function sendToSSC(data, fakechat = false, relayed = false) {
 			}
 
 			let cleaned = data.chatmessage;
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			if (!data.textonly) {
 				cleaned = decodeAndCleanHtml(cleaned);
 			}
@@ -9071,10 +9074,11 @@ function sendToSSC(data, fakechat = false, relayed = false) {
 				if (data.bot) {
 					return null;
 				}
+				// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 				if (checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
 					return;
 				}
-			} else if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
+			} else /* Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary. */ if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
 				return null;
 			}
 
@@ -9562,6 +9566,7 @@ class StreamerbotWebsocketClient {
 			if (!message) return false;
 
 			// Clean message if needed
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			if (chatData.textonly) {
 				message = message.replace(/<\/?[^>]+(>|$)/g, "");
 				message = message.replace(/\s\s+/g, " ");
@@ -9730,6 +9735,7 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
 
 		// Plain-text messages may contain literal angle brackets and significant whitespace.
 		let cleaned = data.chatmessage;
+		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 		if (!data.textonly && typeof cleaned === "string") {
 			cleaned = decodeAndCleanHtml(cleaned); // Assuming decodeAndCleanHtml is defined elsewhere
 		}
@@ -9746,10 +9752,11 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
 			if (data.bot) {
 				return null;
 			}
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			if (typeof checkExactDuplicateAlreadyRelayed === "function" && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
 				return;
 			}
-		} else if (!fakechat && typeof checkExactDuplicateAlreadyRelayed === "function" && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
+		} else /* Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary. */ if (!fakechat && typeof checkExactDuplicateAlreadyRelayed === "function" && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
 			return null;
 		}
 
@@ -9819,6 +9826,7 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
 				hasDonation: String(payloadData.hasDonation || ""),
 				contentimg: payloadData.contentimg || "",
 				subtitle: payloadData.subtitle || "",
+				// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 				textonly: !!payloadData.textonly,
 				tid: payloadData.tid || "",
 				id: payloadData.id || ""
@@ -10080,6 +10088,7 @@ function formatDescription(data) {
 	let description = "";
 
 	if (data.chatmessage) {
+		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 		if (!data.textonly) {
 			// Convert HTML to plain text
 			description += `>>> ${decodeAndCleanHtml(data.chatmessage)}\n\n`;
@@ -12887,6 +12896,8 @@ function sendDataToStreamDeckPeersP2P(data) {
 }
 
 function sendDataP2P(data, UUID = false) {
+	// Transport preserves chatmessage/textonly; JSON/RTC serialization is not HTML sanitization.
+	// Literal bodies stay literal; callers supply checked HTML for HTML-mode messages.
 	// function to send data to the DOCk via the VDO.Ninja API
 	data = getOverlayDisplayPayload(data);
 	// Stream Deck can explicitly remain on P2P while a Dock uses the hosted
@@ -13466,6 +13477,8 @@ async function trySendTargetP2P(data, target) {
 }
 
 async function sendTargetP2P(data, target, options) {
+	// Targeted delivery also preserves the body format; it is not a blanket HTML sanitizer.
+	// textonly=true must reach receivers as literal text, including tag/entity-looking characters.
 	data = getOverlayDisplayPayload(data);
 	data = prepareOverlayControl(data, target);
 	options = options || {};
@@ -13581,6 +13594,7 @@ async function handleGiveawayAction(action, value, actor) {
 }
 async function processGiveawayEntry(message) {
     if (!giveawayHost || !message || !message.chatmessage || message.event || message.bot || message.private || message.history || message.replay || message.reflection || message.reload || message.meta && message.meta.economyTest) return;
+    // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
     if (message && message.textonly === false && typeof message.chatmessage === "string") message = Object.assign({}, message, { chatmessage: decodeAndCleanHtml(message.chatmessage) });
     try {
         var host = await getGiveawayHost(), rounds = Array.from(giveawayRouting.values());
@@ -14090,6 +14104,7 @@ async function handleCohostToolRequest(request) {
 		if (!sourceMessage) {
 			return { tool, command, success: false, message: "A recent chat message is required." };
 		}
+		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 		const allowedKeys = ["id", "mid", "chatname", "chatmessage", "chatimg", "chatbadges", "type", "platform", "nameColor", "backgroundColor", "textColor", "hasDonation", "donoValue", "membership", "subtitle", "contentimg", "event", "textonly", "meta"];
 		const featuredMessage = {};
 		allowedKeys.forEach(function (key) {
@@ -14100,6 +14115,7 @@ async function handleCohostToolRequest(request) {
 		}
 		featuredMessage.chatname = featuredMessage.chatname.slice(0, 80);
 		featuredMessage.chatmessage = featuredMessage.chatmessage.slice(0, 500);
+		// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
 		featuredMessage.textonly = true;
 		if (JSON.stringify(featuredMessage).length > 24000) {
 			return { tool, command, success: false, message: "The selected chat message is too large to feature." };
@@ -15319,7 +15335,7 @@ async function processIncomingRequest(request, UUID = false) {
 			// setupSocketDock still requires server3, and disablehost is checked above.
 			const value = request.value;
 			if (!isExtensionOn || !value || value.type !== "bot" || typeof value.chatname !== "string" || typeof value.chatmessage !== "string" || value.chatmessage.length > 2000) return;
-			return sendToDestinations({type: "bot", chatname: value.chatname.slice(0, 200), chatmessage: value.chatmessage, textonly: true});
+			return sendToDestinations({type: "bot", chatname: value.chatname.slice(0, 200), chatmessage: value.chatmessage, /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly: true});
 		} else if (request.action === "openChat") {
 			openchat(request.value || null);
 		} else if (request.action === "askBot" && typeof request.value === "string" && request.value.trim()) {
@@ -15331,6 +15347,7 @@ async function processIncomingRequest(request, UUID = false) {
 					tid: "BOT",
 					host: true,
 					mod: true,
+					// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
 					textonly: true,
 					privateBotPrompt: true
 				});
@@ -18066,6 +18083,7 @@ class HostMessageFilter {
 
 		// Determine message content based on available fields
 		let messageContent = "";
+		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 		if (message.textonly) {
 			messageContent = message.chatmessage;
 		} else if (message.chatmessage !== undefined) {
@@ -18364,7 +18382,8 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		if (settings.normalizeText && data.chatmessage) {
-			data.chatmessage = normalizeText(data.chatmessage, data.textonly || false);
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+			data.chatmessage = normalizeText(data.chatmessage, !data.textonly);
 		}
 
 		// Check for bad words in the message (for Event Flow filtering)
@@ -18611,6 +18630,7 @@ async function applyBotActions(data, tab = false) {
 			return null;
 		} else if (settings.relayall && !data.reflection && !skipRelay && data.chatmessage && !data.event && tab && !blockChannelPointRelay) {
 			//console.log("2");
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			if (checkExactDuplicateAlreadyRelayed(data.chatmessage, data.textonly, tab.id, false)) {
 				return null;
 			}
@@ -18628,6 +18648,7 @@ async function applyBotActions(data, tab = false) {
 					relayMessage.url = tab.url;
 				}
 
+				// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 				let tmpmsg = sanitizeRelay(data.chatmessage, data.textonly).trim();
 				if (tmpmsg) {
 					if (settings.nosaid) {
@@ -18675,12 +18696,15 @@ async function applyBotActions(data, tab = false) {
 			if (!data.reflection) {
 				let commandMessage = data.chatmessage;
 
+				// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 				if (!data.textonly) {
-					var textArea = document.createElement("textarea");
-					textArea.innerHTML = commandMessage;
-					commandMessage = textArea.value;
+					// Convert HTML once in inert contents; encoded literal tags remain text.
+					var commandTemplate = document.createElement("template");
+					commandTemplate.innerHTML = commandMessage;
+					commandTemplate.content.querySelectorAll("script,style,noscript,template").forEach(node => node.remove());
+					commandMessage = commandTemplate.content.textContent || "";
 				}
-				commandMessage = commandMessage.replace(/(<([^>]+)>)/gi, "");
+				// Preserve the command prefix and existing command cleanup; plain bodies are never HTML-parsed.
 				commandMessage = commandMessage.replace(/[#@]/g, "");
 				commandMessage = commandMessage.replace(/\.(?=\S(?!$))/g, " ");
 				commandMessage = commandMessage.trim();
@@ -19053,6 +19077,7 @@ async function applyBotActions(data, tab = false) {
 
 		const emoteOnlyModeEnabled = !!(settings.emoteonlymode && (settings.emoteonlymode.setting ?? settings.emoteonlymode));
 		if (emoteOnlyModeEnabled && hadOriginalChatMessage) {
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			const emoteOnlyMessage = await buildEmoteOnlyMessage(data.chatmessage || "", Boolean(data.textonly || settings.textonlymode));
 			data.chatmessage = emoteOnlyMessage;
 			if (!data.chatmessage) {
@@ -20374,6 +20399,7 @@ function findExternalGifInText(text) {
 function applyExternalGifToMessage(data, gifSettings) {
     if (!gifSettings.allowExternalGifs || gifSettings.removeContentImage || data.contentimg || typeof data.chatmessage !== "string") return;
     let url = "";
+    // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
     if (data.textonly) {
         url = findExternalGifInText(data.chatmessage);
     } else {

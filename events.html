@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta charset="UTF-8">
+    <meta name="description" content="Events Dashboard. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Events Dashboard</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
@@ -1823,6 +1827,8 @@ body.light-mode .meta-value.badge {
 		const normalizedEvent = normalizeEventKey(data.event);
 		let name = data.chatname || data.sourceName || `${capitalizeSource(data.type)} Alerts`;
 		let message = data.chatmessage || '';
+		// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+		let messageIsHTML = !!message && !data.textonly;
 		let eventTypeText = '';
 		let eventTypeClass = data.hasDonation ? 'event-donation' : 'event-other';
 		let eventSpecificText = '';
@@ -1839,6 +1845,7 @@ body.light-mode .meta-value.badge {
 		}
 
 		if (STATUS_EVENT_TYPES.has(normalizedEvent)) {
+			messageIsHTML = false;
 			eventTypeText = getEventTypeText('status');
 			eventTypeClass = 'event-status';
 			eventSpecificText = getStatusEventLabel(normalizedEvent);
@@ -1860,6 +1867,7 @@ body.light-mode .meta-value.badge {
 			name = data.sourceName || `${capitalizeSource(data.type)} Stats`;
 			forceShow = true;
 		} else if (STREAM_EVENT_TYPES.has(normalizedEvent)) {
+			messageIsHTML = false;
 			eventTypeText = getEventTypeText('stream');
 			if (normalizedEvent === 'stream_online') {
 				eventSpecificText = getTranslation('events-online', 'Online');
@@ -1924,6 +1932,7 @@ body.light-mode .meta-value.badge {
 		return {
 			name,
 			message,
+			messageIsHTML,
 			eventTypeText,
 			eventTypeClass,
 			eventSpecificText,
@@ -2120,10 +2129,11 @@ body.light-mode .meta-value.badge {
 
 		const textNode = document.createElement('div');
 		textNode.className = 'text';
-		if (data.textonly === true) {
+		if (!display.messageIsHTML) {
+			// textonly chat and generated summaries stay literal; tag/entity-looking text is not markup.
 			textNode.textContent = display.message || '';
 		} else {
-			// Renderable HTML mode is sanitized upstream in background.js.
+			// HTML-mode chat is expected to be sanitized upstream; this flag describes format, not trust.
 			textNode.innerHTML = display.message || '';
 		}
 		messageDiv.appendChild(textNode);

@@ -683,6 +683,8 @@ export function createYouTubeLiveChat(options = {}) {
   }
 
   function emitChat(chat) {
+    // Provider records are mapped by the capture/Lite adapters into chatmessage + textonly.
+    // Adapters choose literal strings (true) or checked HTML (false); this emitter does not sanitize chat HTML.
     emitter.emit(EVENTS.CHAT, chat);
   }
 

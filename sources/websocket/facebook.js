@@ -115,6 +115,10 @@ const state = {
   errorCount: 0,
   seenIds: new Set(),
   seenQueue: [],
+  // Capture contract: textonly=true means a literal chatmessage string, not HTML.
+  // Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+  // HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+  // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
   textOnly: false,
   viewerValue: null,
   videoTitle: '',
@@ -944,6 +948,7 @@ function applySettings(settings) {
   const viewerTrackingBefore = isViewerTrackingEnabled();
   extension.settingsLoaded = true;
   extension.settings = settings && typeof settings === 'object' ? settings : {};
+  // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
   state.textOnly = Boolean(settings && settings.textonlymode);
   state.viewerCount = isViewerTrackingEnabled(extension.settings);
   if (!state.pageId && settings && settings.facebook_username && settings.facebook_username.textsetting) {
@@ -1134,6 +1139,7 @@ async function pollViewerCount() {
             textColor: '',
             hasDonation: '',
             membership: '',
+            // Literal chatmessage on the wire: no app-added HTML or entity decoding; receivers must render it as text.
             textonly: true
           }
         });
@@ -1169,6 +1175,7 @@ function createMessagePayload(entry) {
   const image = entry.attachment && entry.attachment.media && entry.attachment.media.image;
   const contentimg = image && typeof image.src === 'string' && /^https?:\/\//i.test(image.src) ? image.src : '';
   const body = messageText || (entry.attachment && !contentimg ? '[Attachment]' : '');
+  // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
   const cleanMessage = state.textOnly ? String(body) : escapeHtml(body);
   const createdAt = entry.created_time ? Date.parse(entry.created_time) : NaN;
   const chatimg = from.id ? `https://graph.facebook.com/${encodeURIComponent(from.id)}/picture?type=normal` : '';
@@ -1190,6 +1197,7 @@ function createMessagePayload(entry) {
     textColor: '',
     hasDonation: '',
     membership: '',
+    // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
     textonly: state.textOnly,
     meta
   };
@@ -1217,6 +1225,7 @@ function renderMessage(payload) {
   header.appendChild(time);
   const text = document.createElement('div');
   text.className = 'chat-text';
+  // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
   if (payload.textonly) text.textContent = payload.chatmessage || '';
   else text.innerHTML = payload.chatmessage || '';
   if (payload.contentimg) {

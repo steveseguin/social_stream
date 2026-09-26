@@ -68,7 +68,7 @@
             if (!debit.success) return { success: false, message: 'Not enough points for ' + reward.name + ' (' + reward.cost + ' points).' };
             spent = true;
             delivered = await options.send({ platform: message.type, type: message.type, event: 'sticker',
-                chatname: message.chatname, chatmessage: '', textonly: true, contentimg: reward.url || 'media/stickers/' + reward.image,
+                chatname: message.chatname, chatmessage: '', /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly: true, contentimg: reward.url || 'media/stickers/' + reward.image,
                 meta: { sticker: { id: reward.id, pack: reward.pack, name: reward.name, cost: reward.cost,
                     duration: reward.duration, motion: reward.motion, redemptionId: redemptionId, expiresAt: Date.now() + 20000 } } });
             if (!delivered) throw new Error('Sticker display was not confirmed');

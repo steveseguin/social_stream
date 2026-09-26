@@ -6,6 +6,9 @@
     }
 
     var BUTTON_ID = "copy-markdown";
+    function label(value) {
+        return window.SSNSiteTranslate ? window.SSNSiteTranslate(value) : value;
+    }
     var EXTRA_SELECTOR = "[data-copy-markdown-extra]";
     var IGNORE_SELECTOR = [
         "script",
@@ -492,14 +495,14 @@
 
     function copyDocumentMarkdown(button) {
         var markdown = buildDocumentMarkdown();
-        var originalLabel = "Copy Markdown";
+        var originalLabel = label("Copy Markdown");
         button.disabled = true;
-        setButtonStatus(button, "Copying…", "working");
+        setButtonStatus(button, label("Copying…"), "working");
 
         return writeClipboard(markdown).then(function () {
-            setButtonStatus(button, "Markdown copied", "success");
+            setButtonStatus(button, label("Markdown copied"), "success");
         }).catch(function () {
-            setButtonStatus(button, "Copy failed", "error");
+            setButtonStatus(button, label("Copy failed"), "error");
         }).then(function () {
             window.setTimeout(function () {
                 button.disabled = false;
@@ -524,7 +527,7 @@
             ".ssn-copy-markdown-button:disabled{cursor:wait;opacity:.82;transform:none}",
             ".ssn-copy-markdown-button[data-copy-state=success]{border-color:var(--success-color,#16a34a)}",
             ".ssn-copy-markdown-button[data-copy-state=error]{border-color:var(--error-color,#dc2626)}",
-            ".dark-mode .ssn-copy-markdown-button,body.dark-mode .ssn-copy-markdown-button{background:var(--background-card,#1b1e27);color:var(--text-primary,#e9edf5)}",
+            ".dark-mode .ssn-copy-markdown-button,body.dark-mode .ssn-copy-markdown-button{background:var(--site-surface,var(--background-card,#1b1e27));color:var(--site-text,var(--text-primary,#e9edf5))}",
             ".toolbar-buttons .ssn-copy-markdown-button{box-shadow:none}",
             "@media(max-width:700px){.ssn-copy-markdown-floating{right:.75rem;bottom:.75rem}.ssn-copy-markdown-button{padding:9px 11px;font-size:13px}}"
         ].join("");
@@ -542,9 +545,9 @@
         button.id = BUTTON_ID;
         button.className = "ssn-copy-markdown-button";
         button.type = "button";
-        button.textContent = "Copy Markdown";
-        button.title = "Copy comprehensive Markdown for an AI assistant";
-        button.setAttribute("aria-label", "Copy this documentation page as Markdown for an AI assistant");
+        button.textContent = label("Copy Markdown");
+        button.title = label("Copy comprehensive Markdown for an AI assistant");
+        button.setAttribute("aria-label", label("Copy this documentation page as Markdown for an AI assistant"));
         button.addEventListener("click", function () {
             copyDocumentMarkdown(button);
         });

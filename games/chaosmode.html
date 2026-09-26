@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
+    <meta name="description" content="Chaos Mode: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chaos Mode - Social Stream Ninja</title>
-    <link rel="icon" href="./favicon.ico" />
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
     <link rel="preload" href="../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
     <style>
         /* Hide scrollbars */
@@ -23,7 +26,7 @@
             unicode-range: U+1F1E6-1F1FF;
             src: url(../thirdparty/NotoColorEmoji.ttf);
         }
-        
+
         body {
             margin: 0;
             padding: 0;
@@ -32,60 +35,60 @@
             font-family: 'NotoColorEmojiLimited', 'Arial', sans-serif;
             color: white;
         }
-        
+
         body.chroma {
             background: #00ff00;
         }
-        
+
         body.darkmode {
             background: #000000;
         }
-        
+
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
-        
+
         .chaos-element {
             position: absolute;
             pointer-events: none;
             z-index: 10;
         }
-        
+
         .chaos-text {
             font-size: 24px;
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
             animation: chaos-fly 3s linear forwards;
         }
-        
+
         .chaos-emoji {
             font-size: 48px;
             font-family: 'NotoColorEmojiLimited', 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
             animation: chaos-spin 2s ease-out forwards;
         }
-        
+
         .chaos-explosion {
             width: 100px;
             height: 100px;
             border-radius: 50%;
             animation: chaos-explode 1s ease-out forwards;
         }
-        
+
         .chaos-wave {
             width: 20px;
             height: 20px;
             border-radius: 50%;
             animation: chaos-wave 2s ease-out forwards;
         }
-        
+
         .chaos-glitch {
             font-size: 36px;
             font-weight: bold;
             animation: chaos-glitch 0.5s ease-in-out infinite;
         }
-        
+
         @keyframes chaos-fly {
             0% {
                 transform: translateX(-100px) rotate(0deg) scale(1);
@@ -96,7 +99,7 @@
                 opacity: 0;
             }
         }
-        
+
         @keyframes chaos-spin {
             0% {
                 transform: scale(0) rotate(0deg);
@@ -111,7 +114,7 @@
                 opacity: 0;
             }
         }
-        
+
         @keyframes chaos-explode {
             0% {
                 transform: scale(0);
@@ -129,7 +132,7 @@
                 background: radial-gradient(circle, #ffff00, #00ff00, #0099ff);
             }
         }
-        
+
         @keyframes chaos-wave {
             0% {
                 transform: scale(1);
@@ -142,7 +145,7 @@
                 border: 1px solid #ff00ff;
             }
         }
-        
+
         @keyframes chaos-glitch {
             0% { transform: translateX(0); color: #ff0000; }
             25% { transform: translateX(-5px); color: #00ff00; }
@@ -150,7 +153,7 @@
             75% { transform: translateX(-3px); color: #ffff00; }
             100% { transform: translateX(0); color: #ff00ff; }
         }
-        
+
         #chaos-meter {
             position: absolute;
             top: 20px;
@@ -164,7 +167,7 @@
             overflow: hidden;
             z-index: 100;
         }
-        
+
         #chaos-fill {
             height: 100%;
             width: 0%;
@@ -172,12 +175,12 @@
             transition: width 0.3s ease;
             animation: chaos-pulse 1s ease-in-out infinite;
         }
-        
+
         @keyframes chaos-pulse {
             0%, 100% { filter: brightness(1); }
             50% { filter: brightness(1.5); }
         }
-        
+
         #chaos-level {
             position: absolute;
             top: 50px;
@@ -189,7 +192,7 @@
             z-index: 100;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
-        
+
         #stats {
             position: absolute;
             top: 20px;
@@ -201,12 +204,12 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
         }
-        
+
         .stat-line {
             margin: 5px 0;
             font-size: 16px;
         }
-        
+
         #message-feed {
             position: absolute;
             bottom: 20px;
@@ -220,7 +223,7 @@
             z-index: 100;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
+
         .message-item {
             margin: 5px 0;
             padding: 5px;
@@ -228,7 +231,7 @@
             font-size: 14px;
             animation: message-glow 0.5s ease-out;
         }
-        
+
         @keyframes message-glow {
             0% {
                 background: rgba(255, 255, 255, 0.3);
@@ -239,7 +242,7 @@
                 transform: scale(1);
             }
         }
-        
+
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -252,22 +255,22 @@
             font-size: 16px;
             z-index: 100;
         }
-        
+
         #instructions strong {
             color: #ff00ff;
             font-size: 18px;
         }
-        
+
         .screen-shake {
             animation: screen-shake 0.5s ease-in-out;
         }
-        
+
         @keyframes screen-shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-10px); }
             75% { transform: translateX(10px); }
         }
-        
+
         .rainbow-background {
             position: absolute;
             top: 0;
@@ -281,13 +284,13 @@
             transition: opacity 0.3s ease;
             z-index: 1;
         }
-        
+
         @keyframes rainbow-move {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-        
+
         .chaos-portal {
             position: absolute;
             width: 200px;
@@ -298,7 +301,7 @@
             z-index: 5;
             pointer-events: none;
         }
-        
+
         @keyframes portal-spin {
             0% { transform: rotate(0deg) scale(0); }
             50% { transform: rotate(180deg) scale(1); }
@@ -622,6 +625,7 @@
             let messageText = data.chatmessage;
             
             // If textonly is not set, extract text from HTML
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!data.textonly) {
                 const tmp = document.createElement('div');
                 tmp.innerHTML = data.chatmessage;

@@ -168,7 +168,7 @@ async function run() {
         await rendered(page);
         await page.waitForFunction(() => window.__spoken.length > 0);
         await assertSafe(page);
-        assert.ok((await page.evaluate(() => window.__spoken.join(' '))).includes('BOUNDARY_MARKER'), 'Text-only speech must not be discarded');
+        assert.ok((await page.evaluate(() => window.__spoken.join(' '))).includes('BOUNDARY MARKER'), 'Text-only speech must not be discarded');
       }));
     }
 

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://socialstream.ninja/docs/streamelements-chat-guide.html">
+    <meta property="og:title" content="StreamElements Chat Skins in Social Stream Ninja">
+    <meta property="og:description" content="Use a StreamElements or Streamlabs custom chat skin with Social Stream Ninja: find widget files, import your theme, preview chat, and add the downloaded HTML to OBS.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/docs/streamelements-chat-guide.html">
+    <meta name="twitter:title" content="StreamElements Chat Skins in Social Stream Ninja">
+    <meta name="twitter:description" content="Use a StreamElements or Streamlabs custom chat skin with Social Stream Ninja: find widget files, import your theme, preview chat, and add the downloaded HTML to OBS.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamElements Chat Skins in Social Stream Ninja</title>
+    <meta name="description" content="Use a StreamElements or Streamlabs custom chat skin with Social Stream Ninja: find widget files, import your theme, preview chat, and add the downloaded HTML to OBS.">
+    <link rel="canonical" href="https://socialstream.ninja/docs/streamelements-chat-guide.html">
+    <link rel="icon" href="../icons/favicon.ico">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="stylesheet" href="css/site-shell.css">
+    <script src="js/site-shell.js"></script>
+</head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="guides.html">Guides</a><a href="overlay-gallery.html">Overlay Gallery</a><a href="support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme">◐</button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">☰</span></button></div></div></header>
+    <section class="page-hero">
+        <div class="container">
+            <h1>Use your StreamElements chat skin</h1>
+            <p>Import a custom chat widget, preview it with Social Stream Ninja, and download a file for OBS.</p>
+            <a class="btn btn-primary" href="../streamelements-importer.html">Open chat importer</a>
+        </div>
+    </section>
+    <main class="guide-section">
+        <div class="container">
+            <section class="guide-card" aria-labelledby="supported">
+                <h2 id="supported">What works?</h2>
+                <p>The importer is for <strong>custom chat widgets</strong> made for StreamElements or Streamlabs, including the chat component of a theme pack. You need the widget's source files. It does not import an entire StreamElements account or a theme from an overlay URL.</p>
+                <p>Use either the <strong>SSN Windows desktop app or Chrome extension</strong> to capture chat. The imported skin displays that chat in OBS. Compatibility depends on the widget; account features such as goals, loyalty, stores and alerts may need manual conversion.</p>
+            </section>
+            <section class="guide-card" aria-labelledby="files">
+                <h2 id="files">1. Get the widget files</h2>
+                <p>Start with the original ZIP or folder from the designer. Look for HTML, CSS and JavaScript, plus any fields/data JSON, images and fonts. Choose one chat widget when a pack includes several designs.</p>
+                <p><strong>Only have an install link?</strong> Ask the designer for the chat widget source, or use the code available in your StreamElements custom widget editor. A screenshot, video or Browser Source URL cannot be converted on its own.</p>
+                <details>
+                    <summary>My widget code is in the StreamElements editor</summary>
+                    <p>Open the custom widget's code editor. Save each available part as a separate plain-text file: <code>html.txt</code>, <code>css.txt</code>, <code>js.txt</code>, <code>fields.txt</code> and <code>data.txt</code>. Copy the contents without adding formatting or changing the JSON. If no data file is available, the importer uses the defaults in fields.</p>
+                    <p>Choose all of these files together using <strong>Choose Files</strong>. Include any local artwork or fonts; <strong>Choose Folder</strong> preserves folder paths. See the <a href="https://docs.streamelements.com/overlays/widget-structure" target="_blank" rel="noopener">StreamElements code editor reference</a> for the code and field structure.</p>
+                </details>
+                <p>Import only code you trust: widget JavaScript runs in the preview and downloaded overlay.</p>
+            </section>
+            <section class="guide-card" aria-labelledby="import">
+                <h2 id="import">2. Open the importer</h2>
+                <p>In the SSN menu, look below <strong>Pre-styled chat overlays</strong> for <strong>Import StreamElements / Streamlabs chat skin</strong>. This fills in your current session. You can also search the menu for <strong>StreamElements</strong> or <a href="../streamelements-importer.html">open the importer directly</a>.</p>
+                <p>Use <strong>Choose ZIP</strong>, <strong>Choose Files</strong> or <strong>Choose Folder</strong>. A demo preview loads after the files are processed. Check any import warnings; use <strong>Advanced file selection</strong> if the wrong source files were detected.</p>
+                <figure class="guide-figure">
+                    <img class="guide-image" src="images/guides/streamelements-importer-setup.png" width="1280" height="1000" loading="lazy" alt="Chat importer showing the three setup steps beside sample chat messages, with Demo Preview, Live Preview and Download OBS HTML controls.">
+                    <figcaption>The importer with a sample widget and a placeholder session ID. Your imported chat skin will have its own design.</figcaption>
+                </figure>
+            </section>
+            <section class="guide-card" aria-labelledby="connect">
+                <h2 id="connect">3. Connect and preview</h2>
+                <ol class="guide-steps">
+                    <li>Keep SSN running and confirm a real message appears in its chat dock.</li>
+                    <li>Check the importer's <strong>SSN Session ID / Stream ID</strong>. If empty, copy it from <strong>Session Options</strong> in SSN. This is not your Twitch or YouTube username.</li>
+                    <li>Enter the optional session password if you use one.</li>
+                    <li>Use <strong>Demo Preview</strong> for sample messages, then <strong>Live Preview</strong> and send a new chat message to your stream.</li>
+                    <li>If <strong>Message history</strong> appears, adjust timed removal or the maximum number of messages.</li>
+                </ol>
+                <p>Demo Preview works without a session and uses sample messages only. Live Preview needs chat arriving from SSN; an empty preview does not by itself mean the connection failed.</p>
+            </section>
+            <section class="guide-card" aria-labelledby="obs">
+                <h2 id="obs">4. Download and add to OBS</h2>
+                <ol class="guide-steps">
+                    <li>Click <strong>Download OBS HTML</strong> and save it somewhere permanent.</li>
+                    <li>In OBS, add a <strong>Browser Source</strong>, enable <strong>Local file</strong>, and browse to that HTML file.</li>
+                    <li>Set the width and height for your chat area, then send another message to check it.</li>
+                </ol>
+                <p>Your session is already embedded; <strong>no URL editing is needed in OBS</strong>. Use the downloaded file as the Browser Source. Keep SSN and your chat capture sources running; you can close the importer and StreamElements.</p>
+                <p>The exported file contains your session ID and optional password. Keep it private. To change the session, password or widget settings later, import the original files again and download a replacement, then refresh the OBS source.</p>
+            </section>
+            <section class="guide-card" aria-labelledby="troubleshooting">
+                <h2 id="troubleshooting">If something does not work</h2>
+                <ul class="guide-list">
+                    <li><strong>No widget code found:</strong> use the original source files. Images, fields/data alone and previously converted SSN files are not widget source.</li>
+                    <li><strong>Demo is blank or looks wrong:</strong> check HTML/CSS/JS under Advanced file selection. Supply the matching fields and data files and all assets.</li>
+                    <li><strong>Demo works, Live Preview is blank:</strong> send a new message, check the SSN dock, and match the session ID and password.</li>
+                    <li><strong>Live works, OBS is blank:</strong> check the selected local HTML file, Browser Source dimensions and visibility, then refresh its cache.</li>
+                    <li><strong>Missing fonts or artwork:</strong> inspect the export summary. Remote resources that could not be embedded still need an accessible URL and internet access.</li>
+                    <li><strong>Messages vanish:</strong> adjust Message history if the widget exposes it. Some widgets control removal in their own JavaScript.</li>
+                    <li><strong>Account APIs or plugins fail:</strong> some widgets need code changes. Use the importer's conversion prompt or <a href="support.html">ask for help</a> with the original widget files and a screenshot of the problem, without sharing your session credentials.</li>
+                </ul>
+                <p>Other options: <a href="overlay-gallery.html">built-in chat skins</a>, <a href="overlay-customization-guide.html">custom CSS</a>, or <a href="obs-troubleshooting.html">OBS troubleshooting</a>.</p>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

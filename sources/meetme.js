@@ -42,6 +42,10 @@ function toDataURL(url, callback) {
 
 		if (!element.childNodes || !element.childNodes.length){
 			if (element.textContent){
+				// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+				// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+				// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+				// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 				return settings.textonlymode ? element.textContent : (escapeHtml(element.textContent) || "");
 			} else {
 				return "";
@@ -52,8 +56,10 @@ function toDataURL(url, callback) {
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				resp += settings.textonlymode ? node.textContent : escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
@@ -332,6 +338,7 @@ function toDataURL(url, callback) {
 
 	function formatOutputText(value) {
 		var text = getPlainText(value);
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		return settings.textonlymode ? text : escapeHtml(text);
 	}
 
@@ -521,6 +528,7 @@ function toDataURL(url, callback) {
 			hasDonation: "",
 			membership: "",
 			contentimg: "",
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: settings.textonlymode || false,
 			type: "meetme"
 		};
@@ -1033,6 +1041,7 @@ function toDataURL(url, callback) {
 		data.hasDonation = hasDonation;
 		data.membership = "";
 		data.contentimg = contentimg;
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "meetme";
 		if (eventName) {
@@ -1077,7 +1086,7 @@ function toDataURL(url, callback) {
 	}
 
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	// settings.hideevents
 	// settings.capturejoinedevent

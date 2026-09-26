@@ -223,6 +223,7 @@ function buildImageTag({ url, alt, className, includeTitle, attributes }) {
 
 export function renderTwitchNativeEmotes(text, emotes, options = {}) {
   const {
+    // textOnly selects text/emote rendering; textIsSafe separately controls output escaping. Literal chat callers must not HTML-encode plain output.
     textOnly = false,
     escapeHtml = defaultEscape,
     buildEmoteUrl = (id) =>
@@ -268,6 +269,7 @@ export function renderTwitchNativeEmotes(text, emotes, options = {}) {
       cursor = boundedEnd + 1;
       return;
     }
+    // textOnly selects text/emote rendering; textIsSafe separately controls output escaping. Literal chat callers must not HTML-encode plain output.
     if (textOnly) {
       result += textIsSafe ? token : escapeHtml(token);
     } else {

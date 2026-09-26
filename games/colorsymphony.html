@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
+    <meta name="description" content="Color Symphony: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Color Symphony - Social Stream Ninja</title>
-    <link rel="icon" href="./favicon.ico" />
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
     <style>
         /* Hide scrollbars */
         ::-webkit-scrollbar {
@@ -25,21 +28,21 @@
             font-family: 'Arial', sans-serif;
             color: white;
         }
-        
+
         body.chroma {
             background: #00ff00;
         }
-        
+
         body.darkmode {
             background: #000000;
         }
-        
+
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
-        
+
         #symphony-stage {
             position: absolute;
             top: 50%;
@@ -53,7 +56,7 @@
             background: rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
         }
-        
+
         .color-wave {
             position: absolute;
             width: 100%;
@@ -62,7 +65,7 @@
             animation: wave-flow 3s ease-out forwards;
             box-shadow: 0 0 10px currentColor;
         }
-        
+
         @keyframes wave-flow {
             0% {
                 transform: translateX(-100%);
@@ -79,7 +82,7 @@
                 width: 50px;
             }
         }
-        
+
         .color-burst {
             position: absolute;
             width: 20px;
@@ -87,7 +90,7 @@
             border-radius: 50%;
             animation: color-burst 2s ease-out forwards;
         }
-        
+
         @keyframes color-burst {
             0% {
                 transform: scale(0);
@@ -102,14 +105,14 @@
                 opacity: 0;
             }
         }
-        
+
         .color-ripple {
             position: absolute;
             border: 3px solid;
             border-radius: 50%;
             animation: ripple-expand 2.5s ease-out forwards;
         }
-        
+
         @keyframes ripple-expand {
             0% {
                 width: 20px;
@@ -122,7 +125,7 @@
                 opacity: 0;
             }
         }
-        
+
         .color-note {
             position: absolute;
             width: 30px;
@@ -131,14 +134,14 @@
             animation: note-float 4s ease-in-out infinite;
             box-shadow: 0 0 20px currentColor;
         }
-        
+
         @keyframes note-float {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
             25% { transform: translateY(-20px) rotate(90deg); }
             50% { transform: translateY(-10px) rotate(180deg); }
             75% { transform: translateY(-30px) rotate(270deg); }
         }
-        
+
         #color-palette {
             position: absolute;
             top: 20px;
@@ -150,7 +153,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
         }
-        
+
         .palette-color {
             display: inline-block;
             width: 30px;
@@ -160,24 +163,24 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
             animation: palette-pulse 2s ease-in-out infinite;
         }
-        
+
         .palette-active {
             border-color: #fff !important;
             box-shadow: 0 0 15px currentColor !important;
             animation: palette-active 0.5s ease-out !important;
         }
-        
+
         @keyframes palette-active {
             0% { transform: scale(1); }
             50% { transform: scale(1.3); }
             100% { transform: scale(1); }
         }
-        
+
         @keyframes palette-pulse {
             0%, 100% { opacity: 0.8; }
             50% { opacity: 1; }
         }
-        
+
         #symphony-stats {
             position: absolute;
             top: 20px;
@@ -189,12 +192,12 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
         }
-        
+
         .stat-line {
             margin: 5px 0;
             font-size: 16px;
         }
-        
+
         #harmony-meter {
             position: absolute;
             bottom: 80px;
@@ -208,7 +211,7 @@
             overflow: hidden;
             z-index: 100;
         }
-        
+
         #harmony-fill {
             height: 100%;
             width: 0%;
@@ -216,12 +219,12 @@
             transition: width 0.5s ease;
             animation: harmony-flow 3s linear infinite;
         }
-        
+
         @keyframes harmony-flow {
             0% { background-position: 0% 50%; }
             100% { background-position: 200% 50%; }
         }
-        
+
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -234,12 +237,12 @@
             font-size: 16px;
             z-index: 100;
         }
-        
+
         #instructions strong {
             color: #ff69b4;
             font-size: 18px;
         }
-        
+
         .composer-name {
             position: absolute;
             font-size: 18px;
@@ -250,7 +253,7 @@
             z-index: 50;
             pointer-events: none;
         }
-        
+
         @keyframes composer-fade {
             0% {
                 opacity: 0;
@@ -269,7 +272,7 @@
                 transform: translateY(-30px);
             }
         }
-        
+
         .harmony-explosion {
             position: absolute;
             top: 50%;
@@ -283,7 +286,7 @@
             pointer-events: none;
             animation: harmony-burst 2s ease-out forwards;
         }
-        
+
         @keyframes harmony-burst {
             0% { 
                 opacity: 0; 
@@ -588,6 +591,7 @@
 
             const username = stripHtml(data.chatname);
             let message = data.chatmessage;
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!data.textonly) {
                 message = stripHtml(message);
             }

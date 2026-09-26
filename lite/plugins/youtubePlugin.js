@@ -1,7 +1,7 @@
 
 import { BasePlugin } from './basePlugin.js';
 import { storage } from '../utils/storage.js';
-import { randomSessionId, safeHtml, htmlToText } from '../utils/helpers.js';
+import { randomSessionId, safeHtml, htmlToText, getChatPreviewText } from '../utils/helpers.js';
 
 
 const TOKEN_KEY = 'youtube.token';
@@ -1853,9 +1853,11 @@ export class YoutubePlugin extends BasePlugin {
     const { silent = true, note = null } = options;
 
     if (typeof message.previewText !== 'string' || !message.previewText.length) {
-      message.previewText = htmlToText(message.chatmessage || '');
+      // textonly=true carries literal chatmessage text: do not HTML-parse/encode it or add emotes. HTML mode uses the provider/adapter safety boundary; Lite bypasses background.js.
+      message.previewText = message.textonly ? String(message.chatmessage || '') : htmlToText(message.chatmessage || '');
     }
 
+    // textonly=true carries literal chatmessage text: do not HTML-parse/encode it or add emotes. HTML mode uses the provider/adapter safety boundary; Lite bypasses background.js.
     if (this.emotes && message.chatmessage && !message.textonly) {
       try {
         message.chatmessage = await this.emotes.render(message.chatmessage, this.buildEmoteContext());
@@ -1946,8 +1948,7 @@ export class YoutubePlugin extends BasePlugin {
     }
 
     const name = chat.chatname || 'YouTube user';
-    const baseText = (chat.previewText ?? chat.chatmessage ?? '').toString();
-    const trimmed = htmlToText(baseText)
+    const trimmed = getChatPreviewText(chat)
       .replace(/\s+/g, ' ')
       .trim();
 

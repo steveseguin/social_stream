@@ -528,6 +528,10 @@ function escapeHtml(str) {
 }
 
 function isTextOnlyMode() {
+    // Capture contract: textonly=true means a literal chatmessage string, not HTML.
+    // Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+    // HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+    // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
     const setting = state.settings && state.settings.textonlymode;
     if (setting && typeof setting === 'object') {
         return setting.setting === true;
@@ -2010,6 +2014,7 @@ function handleChatMessage(data) {
 
     const name = displayName || username || '';
     const text = message || '';
+    // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
     const textOnlyMode = isTextOnlyMode();
     const renderedMessage = renderVeloraMessageHtml(text);
 
@@ -2021,6 +2026,7 @@ function handleChatMessage(data) {
     addChatFeedMessage(name, renderedMessage.html, badges, isMod, isVip, isSubscriber, color);
 
     let contentImg = '';
+    // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
     let msgText = textOnlyMode ? text : renderedMessage.html;
 
     if (card) {
@@ -2028,6 +2034,7 @@ function handleChatMessage(data) {
             contentImg = card.imageUrl || card.thumbnailUrl;
         }
         if (card.name && !msgText) {
+            // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
             msgText = textOnlyMode ? `[${card.name}]` : escapeHtml(`[${card.name}]`);
         }
     }
@@ -2045,6 +2052,7 @@ function handleChatMessage(data) {
         hasDonation: '',
         membership: isSubscriber ? (subscriberMonths ? `${subscriberMonths} month subscriber` : 'Subscriber') : '',
         contentimg: contentImg,
+        // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
         textonly: textOnlyMode,
         type: 'velora',
         meta: {
@@ -2067,6 +2075,7 @@ function userDisplayName(user) {
 
 function handleFollow(data) {
     if (!data) return;
+    // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
     const textOnlyMode = isTextOnlyMode();
     const name = userDisplayName(data.follower) || userDisplayName(data.user) || data.displayName || data.username || 'Someone';
     addAlert(`${escapeHtml(name)} followed!`, 'follow');
@@ -2082,6 +2091,7 @@ function handleFollow(data) {
         hasDonation: '',
         membership: '',
         contentimg: '',
+        // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
         textonly: textOnlyMode,
         type: 'velora',
         event: 'follow'
@@ -2090,6 +2100,7 @@ function handleFollow(data) {
 
 function handleSubscribe(data) {
     if (!data) return;
+    // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
     const textOnlyMode = isTextOnlyMode();
     const name = userDisplayName(data.subscriber) || userDisplayName(data.user) || data.displayName || data.username || 'Someone';
     const monthsValue = data.months || data.subscriberMonths || data.subscriber_months || '';
@@ -2107,6 +2118,7 @@ function handleSubscribe(data) {
         hasDonation: '',
         membership: `Subscriber${months}`,
         contentimg: '',
+        // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
         textonly: textOnlyMode,
         type: 'velora',
         event: 'subscribe'
@@ -2115,6 +2127,7 @@ function handleSubscribe(data) {
 
 function handleGiftSub(data) {
     if (!data) return;
+    // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
     const textOnlyMode = isTextOnlyMode();
     const gifterName = userDisplayName(data.gifter) || userDisplayName(data.user) || data.gifterDisplayName || data.gifterUsername || data.displayName || data.username || 'Anonymous';
     const count = data.quantity || data.count || 1;
@@ -2132,6 +2145,7 @@ function handleGiftSub(data) {
         hasDonation: '',
         membership: '',
         contentimg: '',
+        // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
         textonly: textOnlyMode,
         type: 'velora',
         event: 'subscription_gift'
@@ -2140,6 +2154,7 @@ function handleGiftSub(data) {
 
 function handleVolts(data) {
     if (!data) return;
+    // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
     const textOnlyMode = isTextOnlyMode();
     const name = userDisplayName(data.sender) || userDisplayName(data.from) || userDisplayName(data.user) || data.displayName || data.username || 'Someone';
     const amount = data.amount || data.volts || data.amountVolts || data.quantity || data.value || '';
@@ -2152,11 +2167,13 @@ function handleVolts(data) {
         backgroundColor: '',
         textColor: '',
         nameColor: '',
+        // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
         chatmessage: data.message ? (textOnlyMode ? String(data.message) : escapeHtml(data.message)) : '',
         chatimg: '',
         hasDonation: amountLabel,
         membership: '',
         contentimg: '',
+        // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
         textonly: textOnlyMode,
         type: 'velora',
         event: 'volts'
@@ -2165,6 +2182,7 @@ function handleVolts(data) {
 
 function handleRaid(data) {
     if (!data) return;
+    // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
     const textOnlyMode = isTextOnlyMode();
     const name = userDisplayName(data.from) || userDisplayName(data.raider) || data.fromDisplayName || data.fromUsername || data.displayName || data.username || 'Someone';
     const viewers = data.viewerCount ?? data.viewers ?? data.viewer_count ?? '';
@@ -2182,6 +2200,7 @@ function handleRaid(data) {
         hasDonation: '',
         membership: '',
         contentimg: '',
+        // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
         textonly: textOnlyMode,
         type: 'velora',
         event: 'raid'
@@ -2190,6 +2209,7 @@ function handleRaid(data) {
 
 function handleChannelPoints(data) {
     if (!data) return;
+    // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
     const textOnlyMode = isTextOnlyMode();
     const name = userDisplayName(data.redeemer) || userDisplayName(data.user) || data.displayName || data.username || 'Someone';
     const reward = data.rewardTitle || data.rewardName || data.itemName || data.reward?.title || data.reward?.name || data.item?.title || data.item?.name || 'channel point reward';
@@ -2202,11 +2222,13 @@ function handleChannelPoints(data) {
         backgroundColor: '',
         textColor: '',
         nameColor: '',
+        // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
         chatmessage: message ? (textOnlyMode ? String(message) : escapeHtml(message)) : (textOnlyMode ? String(reward) : escapeHtml(reward)),
         chatimg: '',
         hasDonation: '',
         membership: '',
         contentimg: '',
+        // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
         textonly: textOnlyMode,
         type: 'velora',
         event: 'channel_points',
