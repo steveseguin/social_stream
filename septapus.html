@@ -2,6 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="description" content="Chat Overlay - Septapus CSS Compatible. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+<script src="./libs/objects.js"></script>
+<script src="./shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="./shared/utils/chatBadges.css">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Overlay - Septapus CSS Compatible</title>
 	<meta name="title" content="Social Stream - Septapus compatible overlay" />
@@ -9,7 +15,7 @@
 	<link href="https://fonts.googleapis.com/css2?family=Changa+One:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css2?family=Changa+One:ital@0;1&family=Imprima&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <style>
-	
+
 	yt-live-chat-renderer {
 		height: 100%;
 		display: block;
@@ -345,8 +351,8 @@
 		padding: 2px 4px;
 		border-radius: 3px;
 	}
-	
-	
+
+
 	</style>
 </head>
 <yt-live-chat-renderer>
@@ -564,7 +570,7 @@
 			  tickerItem.innerHTML = `
 				<div id="content">
 				  <span id="fake-avatar"></span>
-				  <span>${data.hasDonation}</span>
+				  <span>${fallbackEscapeHtml(data.hasDonation)}</span>
 				</div>`;
 			  
 			  // Add transition for smooth fade out
@@ -595,16 +601,17 @@
 			const color = amount >= 100 ? 'rgba(208,0,0,1)' : 'rgba(0,184,212,1)';
 			const contentColor = amount >= 100 ? 'rgba(230,33,23,1)' : 'rgba(0,229,255,1)';
 			
+			// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 			messageElement.innerHTML = `
 			  <div id="header" style="background-color: ${color};">
 				<div id="author-photo" ${data.chatimg ? `style="background-image: url('${data.chatimg}')"` : ''}></div>
 				<div id="header-content">
 				  <div id="author-name" ${data.nameColor ? `style="color: ${data.nameColor}"` : ''}>${data.chatname}</div>
-				  <div id="purchase-amount">${data.hasDonation}</div>
+				  <div id="purchase-amount">${fallbackEscapeHtml(data.hasDonation)}</div>
 				</div>
 			  </div>
 			  <div id="content" style="background-color: ${contentColor};">
-				<div id="message" dir="auto">${data.chatmessage || ''}</div>
+				<div id="message" dir="auto">${data.textonly ? '' : (data.chatmessage || '')}</div>
 			  </div>`;
 		  } else if (data.membership) {
 			messageElement = document.createElement('yt-live-chat-legacy-paid-message-renderer');
@@ -625,26 +632,22 @@
 			
 			if (authorType) messageElement.setAttribute('author-type', authorType);
 			
+			// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 			messageElement.innerHTML = `
 			  <div id="author-photo" ${data.chatimg ? `style="background-image: url('${data.chatimg}')"` : ''}></div>
 			  <div id="content">
 				<span id="timestamp">12:00</span>
 				${authorType ? `<span id="author-badges"><yt-live-chat-author-badge-renderer type="${authorType}"></yt-live-chat-author-badge-renderer></span>` : ''}
-				${data.chatbadges ? data.chatbadges.map(badge => {
-				  if (typeof badge === "object") {
-					if (badge.type === "img" && badge.src) {
-					  return `<img class='badge' src='${badge.src}' />`;
-					} else if (badge.type === "svg" && badge.html) {
-					  return `<span class='badge svg'>${badge.html}</span>`;
-					}
-				  } else {
-					return `<img class='badge' src='${badge}' />`;
-				  }
-				  return '';
-				}).join('') : ''}
+				${SocialStreamBadges.render(data.chatbadges)}
 				<span id="author-name" ${authorType ? `type="${authorType}"` : ''} ${data.nameColor ? `style="color: ${data.nameColor}"` : ''}>${data.chatname}</span>
-				<span id="message" ${data.textColor ? `style="color: ${data.textColor}"` : ''}>${data.chatmessage || ''}</span>
+				<span id="message" ${data.textColor ? `style="color: ${data.textColor}"` : ''}>${data.textonly ? '' : (data.chatmessage || '')}</span>
 			  </div>`;
+		  }
+
+		  // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+		  if (data.textonly) {
+			var messageText = messageElement.querySelector('#message');
+			if (messageText) messageText.textContent = data.chatmessage || '';
 		  }
 
 		  if (data.mid) {

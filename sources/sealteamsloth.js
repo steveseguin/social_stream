@@ -60,14 +60,20 @@
 		for (var i = 0; i < element.childNodes.length; i++) {
 			var node = element.childNodes[i];
 			if (node.nodeType === 3) {
+				// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+				// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+				// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				response += settings.textonlymode ? node.textContent : escapeHtml(node.textContent);
 			} else if (node.nodeType === 1 && node.nodeName === "IMG") {
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (settings.textonlymode) {
 					response += node.getAttribute("alt") || node.getAttribute("title") || "";
 				} else if (node.src) {
 					response += '<img class="chat-emote" src="' + escapeHtml(node.src) + '" alt="' + escapeHtml(node.getAttribute("alt") || "") + '" title="' + escapeHtml(node.getAttribute("title") || "") + '">';
 				}
 			} else if (node.nodeType === 1 && node.nodeName === "BR") {
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				response += settings.textonlymode ? "\n" : "<br>";
 			} else if (node.nodeType === 1) {
 				response += getMessageContent(node);
@@ -139,6 +145,7 @@
 			hasDonation: "",
 			membership: "",
 			contentimg: "",
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: settings.textonlymode || false,
 			type: "sealteamsloth"
 		};

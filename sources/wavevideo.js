@@ -20,6 +20,10 @@
 
   function formatChatMessage(value) {
     value = value || "";
+    // Capture contract: textonly=true means a literal chatmessage string, not HTML.
+    // Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+    // HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+    // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
     return settings.textonlymode ? value : escapeHtml(value);
   }
 
@@ -71,6 +75,7 @@
         chatmessage: formatChatMessage(messageText),
         sourceImg: socialIconUrl,
 		// chatIconUrl: socialIconUrl,
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		textonly: settings.textonlymode || false,
         type: getTypeFromAlt(socialIconAlt), // Determine the type of stream from the alt.
       };

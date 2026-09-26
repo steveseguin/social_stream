@@ -215,6 +215,8 @@ class MessageStoreDB {
     }
 
     createMessageRecord(message, preserveTimestamp, additionalFields = null) {
+        // Store chatmessage and textonly without reinterpretation: true is literal text;
+        // false/missing retains HTML mode. History rendering, not storage, chooses text vs HTML.
         const now = Date.now();
         const cloned = {...message};
 

@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en" style="font-size: 10px; font-family: Roboto, Arial, sans-serif">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta name="description" content="YouTube: a chat source connection page for Social Stream Ninja. Use it with the app or extension to bring chat into your session.">
+    <meta name="robots" content="noindex">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <meta content="utf-8" http-equiv="encoding" />
     <title>Social Stream - YouTube</title>
-    <link rel="icon" href="https://www.youtube.com/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="../images/youtube.png" type="image/png">
     <link rel="stylesheet" type="text/css" href="youtube.css" /> 
     <link rel="stylesheet" href="websocket-responsive.css">
     <link rel="stylesheet" href="../../shared/compact-source-layout.css?v=20260916-review">
@@ -2354,6 +2357,10 @@ function enableBackgroundKeepAlive() {
 			membership: "",
 			type: getYouTubeSourceType(),
 			event: "new_follower",
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: settings.textonlymode || false,
 			meta: {
 				source: "youtube.myRecentSubscribers",
@@ -2391,6 +2398,7 @@ function enableBackgroundKeepAlive() {
 			membership: "",
 			type: getYouTubeSourceType(),
 			event: "new_follower",
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: settings.textonlymode || false,
 			meta: {
 				source: "youtube.myRecentSubscribers",
@@ -2933,6 +2941,7 @@ function enableBackgroundKeepAlive() {
 	
 	function escapeHtml(unsafe) {
 		try {
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
 			if (settings.textonlymode || false) {
 				return unsafe;
 			}
@@ -3161,6 +3170,7 @@ function enableBackgroundKeepAlive() {
 			const emojiInfo = channelShortcutMap.get(match) || shortcutMap.get(match);
 			if (!emojiInfo) return match;
 			
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			if (settings.textonlymode || false) {
 				if (emojiInfo.isCustom) return '';
 				return emojiInfo.id;
@@ -3170,6 +3180,7 @@ function enableBackgroundKeepAlive() {
 			}
 		});
 	  
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		if (!settings.textonlymode || false) {
 		// Helper function to convert emoji sequences to their combined URLs
 			function processEmojiSequence(text) {
@@ -3234,6 +3245,7 @@ function enableBackgroundKeepAlive() {
 				if (!emojiInfo || !emojiInfo.url) {
 					return match;
 				}
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (settings.textonlymode || false) {
 					if (emojiInfo.isCustom) return '';
 					return emojiInfo.id || '';
@@ -6613,7 +6625,9 @@ function enableBackgroundKeepAlive() {
 				console.warn('Message data missing message property:', messageData);
 			}
 				const messageText = messageData.message || '';
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				const textOnlyMode = Boolean(settings.textonlymode);
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				const messageWithEmojis = (!textOnlyMode && richMessage && richMessage.html) ? replaceChannelEmojiShortcutsInEscapedHtml(richMessage.html) : replaceEmojis(messageText);
 				let basePlainText = (richMessage && richMessage.plainText)
 					? richMessage.plainText
@@ -6637,8 +6651,10 @@ function enableBackgroundKeepAlive() {
 				}
 
 				const replyContext = repliesAreExcluded() ? null : resolveReplyContext(messageData);
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				let finalChatMessage = textOnlyMode ? basePlainText : messageWithEmojis;
 				if (replyContext) {
+					// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 					if (textOnlyMode) {
 						const prefix = replyContext.label ? `${replyContext.label}: ` : '';
 						const combinedText = `${prefix}${basePlainText || ''}`.trim();
@@ -6658,6 +6674,7 @@ function enableBackgroundKeepAlive() {
 						const badgeHtml = renderChatBadgesForPage(chatbadges);
 						
 						span.innerHTML = `${badgeHtml}<strong>${safeAuthorName}</strong>: `;
+						// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 						if (textOnlyMode) {
 							span.appendChild(document.createTextNode(finalChatMessage));
 						} else {
@@ -6703,10 +6720,12 @@ function enableBackgroundKeepAlive() {
 						membership: membershipStatus,
 						mod: messageData.isChatModerator || false,
 						type: youtubeShorts ? "youtubeshorts" : "youtube",
+						// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 						textonly: textOnlyMode // Pass the setting to the extension
 					};
 					if (replyContext) {
 						outgoingMessage.initial = replyContext.label;
+						// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 						outgoingMessage.reply = textOnlyMode ? basePlainText : messageWithEmojis;
 					}
 					if (messageData.meta && typeof messageData.meta === 'object') {
@@ -6774,6 +6793,7 @@ function enableBackgroundKeepAlive() {
 				membership: "",
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "superchat",
+				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				textonly: settings.textonlymode || false
 			}, superChatData)));
 		} catch (e) {
@@ -6831,6 +6851,7 @@ function enableBackgroundKeepAlive() {
 				userid: giftData.authorChannelId,
 				backgroundColor: "",
 				textColor: "#111",
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: giftData.profileImageUrl || "",
 				hasDonation: donationText,
@@ -6838,6 +6859,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: giftLabel,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "jeweldonation",
+				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				textonly: settings.textonlymode || false,
 				meta: { youtubeGift: metaGift }
 			};
@@ -6970,6 +6992,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: resolvedLevel,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: eventName,
+				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				textonly: settings.textonlymode || false,
 				meta: membershipMeta
 			}));
@@ -7013,6 +7036,7 @@ function enableBackgroundKeepAlive() {
 				nameColor: !settings.nosubcolor ? "#107516" : "",
 				backgroundColor: "",
 				textColor: "",
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: giftData.profileImageUrl || "",
 				hasDonation: "",
@@ -7020,6 +7044,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: giftData.memberLevelName,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "giftredemption",
+				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				textonly: settings.textonlymode || false
 			}, giftData)));
 		} catch (e) {
@@ -7068,6 +7093,7 @@ function enableBackgroundKeepAlive() {
 				nameColor: "",
 				backgroundColor: "",
 				textColor: "",
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: giftData.profileImageUrl || "",
 				hasDonation: "",
@@ -7075,6 +7101,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: levelDescriptor,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "giftpurchase",
+				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				textonly: settings.textonlymode || false
 			}, giftData)));
 		} catch (e) {
@@ -7117,6 +7144,7 @@ function enableBackgroundKeepAlive() {
 				nameColor: !settings.nosubcolor ? "#107516" : "",
 				backgroundColor: "",
 				textColor: "",
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: sponsorData.profileImageUrl || "",
 				hasDonation: "",
@@ -7124,6 +7152,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: sponsorData.memberLevelName,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "sponsorship",
+				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				textonly: settings.textonlymode || false
 			}));
 		} catch (e) {
@@ -7184,6 +7213,7 @@ function enableBackgroundKeepAlive() {
 				nameColor: !settings.nosubcolor ? "#107516" : "",
 				backgroundColor: "",
 				textColor: "",
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: milestoneData.profileImageUrl || "",
 				hasDonation: "",
@@ -7191,6 +7221,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: levelDescriptor,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "membermilestone",
+				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				textonly: settings.textonlymode || false
 			}));
 		} catch (e) {
@@ -7246,12 +7277,14 @@ function enableBackgroundKeepAlive() {
 				userid: stickerData.authorChannelId,
 				backgroundColor: "",
 				textColor: "#111",
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				chatmessage: settings.textonlymode ? stickerMessage : escapeHtml(stickerMessage), // Just the message, no emoji prefix
 				chatimg: stickerData.profileImageUrl || "",
 				hasDonation: stickerData.amount,
 				membership: "",
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "supersticker",
+				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				textonly: settings.textonlymode || false
 			}, stickerData)));
 		} catch (e) {

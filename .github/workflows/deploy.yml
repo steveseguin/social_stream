@@ -57,6 +57,17 @@ jobs:
             if grep -q 'shared/utils/contentImage.js' "$checkout/dock.html" "$checkout/featured.html"; then
               test -f "$checkout/shared/utils/contentImage.js"
             fi
+            # Badge rendering and its packaged sanitizer must accompany overlays.
+            if grep -q 'shared/utils/chatBadges.js' "$checkout/dock.html"; then
+              test -f "$checkout/shared/utils/chatBadges.js"
+              test -f "$checkout/shared/utils/chatBadges.css"
+              test -f "$checkout/libs/objects.js"
+            fi
+            # Final chat HTML checks use the same packaged sanitizer on both overlays.
+            if grep -q 'shared/utils/chatHtml.js' "$checkout/dock.html" "$checkout/featured.html"; then
+              test -f "$checkout/shared/utils/chatHtml.js"
+              test -f "$checkout/libs/objects.js"
+            fi
             # Alert sounds and their shared picker must ship together on the site.
             if [ -f "$checkout/shared/alerts/sound-library.js" ]; then
               test -f "$checkout/shared/alerts/sound-library.css"
@@ -124,6 +135,7 @@ jobs:
           python3 beta-content/scripts/build-public-shop.py --source beta-content --output gh-pages-content
           seo_script="${GITHUB_REF_NAME}-content/scripts/prepare-pages-seo.py"
           python3 "$seo_script" --root gh-pages-content
+          python3 "$seo_script" --root gh-pages-content --check
           touch gh-pages-content/.nojekyll
           echo "Removing files larger than 25MB from deployment payload"
           find gh-pages-content -type f -size +25M -print -delete || true

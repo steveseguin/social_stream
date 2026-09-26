@@ -1,6 +1,6 @@
 import { BasePlugin } from './basePlugin.js';
 import { storage } from '../utils/storage.js';
-import { randomSessionId, safeHtml, htmlToText } from '../utils/helpers.js';
+import { randomSessionId, safeHtml, htmlToText, getChatPreviewText } from '../utils/helpers.js';
 import { loadScriptSequential } from '../../shared/utils/scriptLoader.js';
 import { renderTwitchNativeEmotes } from '../../shared/utils/twitchEmotes.js';
 import {
@@ -586,10 +586,12 @@ export class TwitchPlugin extends BasePlugin {
     if (typeof rawMessage === 'string' && rawMessage.length) {
       payload.previewText = rawMessage;
     } else if (typeof payload.previewText !== 'string' || !payload.previewText.length) {
-      payload.previewText = htmlToText(payload.chatmessage || '');
+      // textonly=true carries literal chatmessage text: do not HTML-parse/encode it or add emotes. HTML mode uses the provider/adapter safety boundary; Lite bypasses background.js.
+      payload.previewText = payload.textonly ? String(payload.chatmessage || '') : htmlToText(payload.chatmessage || '');
     }
 
     const context = this.buildEmoteContext(channel, overrides);
+    // textonly=true carries literal chatmessage text: do not HTML-parse/encode it or add emotes. HTML mode uses the provider/adapter safety boundary; Lite bypasses background.js.
     const textOnly = Boolean(payload.textonly);
     const twitchEmotes = payload?.raw?.tags?.emotes || null;
     const nativeEmoteSource =
@@ -611,9 +613,11 @@ export class TwitchPlugin extends BasePlugin {
       }
     }
 
+    // textonly=true carries literal chatmessage text: do not HTML-parse/encode it or add emotes. HTML mode uses the provider/adapter safety boundary; Lite bypasses background.js.
     if (!textOnly && twitchEmotes && nativeEmoteSource && typeof renderTwitchNativeEmotes === 'function') {
       try {
         const renderedNativeMessage = renderTwitchNativeEmotes(nativeEmoteSource, twitchEmotes, {
+          // textonly=true carries literal chatmessage text: do not HTML-parse/encode it or add emotes. HTML mode uses the provider/adapter safety boundary; Lite bypasses background.js.
           textOnly,
           escapeHtml: safeHtml,
           imageClassName: 'native-emote',
@@ -629,9 +633,11 @@ export class TwitchPlugin extends BasePlugin {
         this.debugLog('Failed to render native Twitch emotes', { error: err?.message || err });
       }
     } else if (!payload.chatmessage && rawMessage) {
-      payload.chatmessage = safeHtml(rawMessage);
+      // Match the payload format: keep plain fallback text literal; encode only HTML-mode output.
+      payload.chatmessage = textOnly ? String(rawMessage) : safeHtml(rawMessage);
     }
 
+    // textonly=true carries literal chatmessage text: do not HTML-parse/encode it or add emotes. HTML mode uses the provider/adapter safety boundary; Lite bypasses background.js.
     if (this.emotes && payload.chatmessage && !textOnly) {
       try {
         payload.chatmessage = await this.emotes.render(payload.chatmessage, context);
@@ -719,8 +725,7 @@ export class TwitchPlugin extends BasePlugin {
     }
 
     const name = chat.chatname || 'Twitch user';
-    const baseText = (chat.previewText ?? chat.chatmessage ?? '').toString();
-    const trimmed = htmlToText(baseText)
+    const trimmed = getChatPreviewText(chat)
       .replace(/\s+/g, ' ')
       .trim();
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 // Validates the human-facing demo, including safe controls, not just a sink helper.
-// A reproduction expectation is deliberate here; the security-boundaries suite
-// separately asserts desired safe behavior and stays red until production fixes.
+// All formerly vulnerable configurations must now stay safe in both capture modes.
 const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
 const { createDemoServer } = require('./serve-chat-security-demo.cjs');
@@ -29,16 +28,16 @@ const { createDemoServer } = require('./serve-chat-security-demo.cjs');
       assert.ok(result.source.sourceHTML.includes('&lt;img'), label + ': source DOM must contain escaped literal text');
       assert.equal(result.relay.sanitizerCalls, result.textonly ? 0 : 1, label + ': actual body sanitizer calls');
       assert.equal(result.receiver.rendered, true, label);
-      const reproduces = result.textonly && /tts|normalize/.test(result.target);
-      assert.equal(result.receiver.hits > 0, reproduces, label);
+      assert.equal(result.receiver.hits, 0, label + ': receiver must not execute viewer text');
+      assert.ok(!result.receiver.parses.some(parse => parse.rawProbe), label + ': literal probe must not be parsed as HTML');
       if (result.target.includes('tts')) {
         assert.ok(result.receiver.spoken.length, label + ': real TTS processing must complete');
-        if (reproduces) assert.ok(result.receiver.parses.some(parse => parse.rawProbe && /tts\.js/.test(parse.stack)), label + ': raw parsing must originate in TTS');
+        assert.ok(result.receiver.spoken.join(' ').includes('SSN LOCAL PROBE'), label + ': speech must retain the message');
       }
-      console.log('PASS ' + label + ': ' + (reproduces ? 'downstream execution reproduced' : 'safe control'));
+      console.log('PASS ' + label + ': rendered safely');
     }
     if (process.env.SSN_DEMO_SCREENSHOT) await page.screenshot({ path: process.env.SSN_DEMO_SCREENSHOT, fullPage: true });
-    console.log('PASS: visible demo validates 3 reproductions and 5 safe controls.');
+    console.log('PASS: all 8 source-to-receiver comparisons render safely.');
   } finally {
     if (browser) await browser.close();
     await new Promise(resolve => server.close(resolve));

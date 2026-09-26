@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta charset="UTF-8">
+    <meta name="description" content="Spam Power. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spam Power - Social Stream Ninja</title>
     <link rel="icon" href="./favicon.ico" />
@@ -15,15 +18,15 @@
             font-family: 'Arial', sans-serif;
             color: white;
         }
-        
+
         body.chroma {
             background: #00ff00;
         }
-        
+
         body.darkmode {
             background: #000000;
         }
-        
+
         #game-container {
             position: relative;
             width: 100vw;
@@ -33,7 +36,7 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         #power-core {
             position: relative;
             width: 300px;
@@ -51,20 +54,20 @@
             transition: all 0.3s ease;
             animation: pulse 2s ease-in-out infinite;
         }
-        
+
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
-        
+
         #power-level {
             font-size: 72px;
             font-weight: bold;
             text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
             z-index: 10;
         }
-        
+
         #progress-ring {
             position: absolute;
             width: 320px;
@@ -73,29 +76,29 @@
             left: 50%;
             transform: translate(-50%, -50%);
         }
-        
+
         #progress-ring svg {
             transform: rotate(-90deg);
 			overflow:visible;
         }
-        
+
         #progress-ring circle {
             fill: none;
             stroke-width: 20;
             stroke-linecap: round;
         }
-        
+
         #progress-bg {
             stroke: rgba(255, 255, 255, 0.1);
         }
-        
+
         #progress-fill {
             stroke: #00ff88;
             stroke-dasharray: 1005;
             stroke-dashoffset: 1005;
             transition: stroke-dashoffset 0.5s ease;
         }
-        
+
         .power-particle {
             position: absolute;
             width: 4px;
@@ -105,7 +108,7 @@
             pointer-events: none;
             animation: float-up 2s ease-out forwards;
         }
-        
+
         @keyframes float-up {
             0% {
                 opacity: 1;
@@ -116,7 +119,7 @@
                 transform: translate(var(--dx), -200px) scale(0);
             }
         }
-        
+
         #stats {
             position: absolute;
             top: 20px;
@@ -127,12 +130,12 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
+
         .stat-line {
             margin: 5px 0;
             font-size: 16px;
         }
-        
+
         #goal-display {
             position: absolute;
             top: 20px;
@@ -144,14 +147,14 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
         }
-        
+
         #goal-text {
             font-size: 24px;
             font-weight: bold;
             color: #00ff88;
             margin-bottom: 5px;
         }
-        
+
         #multiplier {
             position: absolute;
             bottom: 100px;
@@ -164,7 +167,7 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-        
+
         #win-animation {
             position: absolute;
             top: 50%;
@@ -178,7 +181,7 @@
             pointer-events: none;
             animation: win-burst 2s ease-out;
         }
-        
+
         @keyframes win-burst {
             0% { 
                 opacity: 0; 
@@ -193,7 +196,7 @@
                 transform: translate(-50%, -50%) scale(1.5);
             }
         }
-        
+
         .message-burst {
             position: absolute;
             padding: 8px 15px;
@@ -204,7 +207,7 @@
             pointer-events: none;
             animation: burst-fade 1s ease-out forwards;
         }
-        
+
         @keyframes burst-fade {
             0% {
                 opacity: 1;
@@ -228,7 +231,7 @@
             text-align: center;
             font-size: 16px;
         }
-        
+
         #instructions strong {
             color: #00ff88;
             font-size: 18px;

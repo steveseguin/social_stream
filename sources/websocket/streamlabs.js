@@ -316,6 +316,10 @@
         event: type,
         chatname: sanitizeString(name) || 'Someone',
         chatmessage: msg,
+        // Capture contract: textonly=true means a literal chatmessage string, not HTML.
+        // Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+        // HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+        // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
         textonly: settings.textonlymode || false,
         chatimg:
           entry.image ||

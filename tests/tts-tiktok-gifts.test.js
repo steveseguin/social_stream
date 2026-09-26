@@ -89,7 +89,8 @@ const { chromium } = require('playwright');
   const captureSource = fs.readFileSync(path.join(__dirname, '../sources/tiktok.js'), 'utf8');
   const trackerSource = captureSource.slice(captureSource.indexOf('var trackedTikTokGiftStreaks ='), captureSource.indexOf('function sendMetaEvent'));
   const transitions = await page.evaluate(trackerSource => {
-   var mark = Function('normalizeTikTokNameKey', trackerSource + ';return markTikTokGiftUpdate;')(value => value.toLowerCase());
+   // The extracted capture functions also read the source's settings closure.
+   var mark = Function('normalizeTikTokNameKey', 'settings', trackerSource + ';return markTikTokGiftUpdate;')(value => value.toLowerCase(), {});
    var row = document.querySelector('[data-index]');
    var native = row.firstElementChild.__reactFiberFixture.return.memoizedProps.message;
    function payload(){return {type:'tiktok',event:'gift',chatname:'John',hasDonation:'1 coin',chatmessage:'sent Rose <img src="https://p16-webcast.tiktokcdn.com/img/eba3a9bb85c33e017f3648eaf88d7189.png"> x1'};}

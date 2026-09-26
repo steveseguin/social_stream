@@ -37,14 +37,21 @@ speed until they leave through the top, like a film credit roll.
 -->
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Movie Credits Chat Overlay: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+<script src="../libs/objects.js"></script>
+<script src="../shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="../shared/utils/chatBadges.css">
 <script type="text/javascript" src="../js/local-server-url.js"></script>
 <script type="text/javascript" src="../js/transport-dedupe.js"></script>
-    <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Credits Chat Overlay</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap">
     <!-- Links to Social Stream Ninja resources -->
-    <link rel="canonical" href="https://socialstream.ninja/">
+
     <meta name="generator" content="Social Stream Ninja - https://github.com/steveseguin/social_stream">
 <style>
 body, html {
@@ -685,25 +692,12 @@ body, html {
         }
         messageTimestamps.set(messageId, Date.now());
 
-        var chatbadgesHtml = "";
-        if (!hideBadges && data.chatbadges) {
-            data.chatbadges.forEach(badge => {
-                if (typeof badge === "object") {
-                    if (badge.type === "img" && badge.src) {
-                        chatbadgesHtml += `<img class='badge' src='${escapeAttributeValue(badge.src)}' alt='badge'>`;
-                    } else if (badge.type === "svg" && badge.html) {
-                        // Trusted SVG badge markup, sanitized upstream (matches dock.html / featured.html).
-                        chatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;
-                    }
-                } else {
-                    chatbadgesHtml += `<img class='badge' src='${escapeAttributeValue(badge)}' alt='badge'>`;
-                }
-            });
-        }
+        var chatbadgesHtml = !hideBadges ? SocialStreamBadges.render(data.chatbadges) : "";
 
         // Text-only chatmessage is deliberately left un-escaped upstream (see background.js), so it must be
         // rendered as literal text here; HTML mode keeps the sanitized markup (emotes, etc.). chatname is
         // filterXSS'd upstream, matching the trusted-upstream contract used by dock.html / featured.html.
+        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
         const renderedChatMessage = data.textonly ? escapeHtml(data.chatmessage) : data.chatmessage;
 
         const sourceIconHtml = (!hideSource && data.type) ? `<img src="https://socialstream.ninja/sources/images/${escapeAttributeValue(data.type)}.png" alt="Source" class="source-icon">` : '';

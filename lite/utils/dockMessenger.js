@@ -159,6 +159,9 @@ export class DockMessenger {
   }
 
   post(entry) {
+    // Lite bypasses background.js: preserve the adapter's chatmessage/textonly pair here.
+    // true means literal text for textContent; HTML-mode content needs its adapter boundary,
+    // not repeated decoding/filtering in this transport. postMessage does not sanitize HTML.
     try {
       const kind = entry.kind || 'overlay';
       const message = entry.payload;

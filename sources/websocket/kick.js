@@ -833,6 +833,10 @@ function isSettingEnabled(key) {
 }
 
 function isTextOnlyMode() {
+    // Capture contract: textonly=true means a literal chatmessage string, not HTML.
+    // Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+    // HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+    // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
     const setting = extension.settings && extension.settings.textonlymode;
     if (setting && typeof setting === 'object') {
         return setting.setting === true;
@@ -6759,6 +6763,7 @@ async function forwardChatMessage(evt, bridgeMeta) {
         const donationLabel = extractChatDonationLabel(message, payload);
         const normalizedEvent = mapKickChatEventToSocialStream(rawEventType, content, donationLabel);
         const replyDetails = extractReplyDetails(message, payload);
+        // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
         const textOnlyMode = Boolean(isTextOnlyMode());
         const allowReplies = !settings.excludeReplyingTo && (chatmessageHtml || content);
         const messagePayload = {
@@ -6770,6 +6775,7 @@ async function forwardChatMessage(evt, bridgeMeta) {
             nameColor: nameColor || '',
             membership: membership || '',
             hasDonation: donationLabel,
+            // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
             textonly: textOnlyMode
         };
         if (resolvedId != null) {
@@ -6802,6 +6808,7 @@ async function forwardChatMessage(evt, bridgeMeta) {
                 messagePayload.initial = replyDetails.label;
             }
             messagePayload.reply = chatmessageHtml;
+            // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
             if (textOnlyMode) {
                 const prefix = replyDetails.label ? `${replyDetails.label}: ` : '';
                 const baseText = content || '';

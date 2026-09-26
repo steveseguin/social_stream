@@ -15,6 +15,10 @@
         function escapeHtml(unsafe) {
             try {
                 unsafe = unsafe || "";
+                // Capture contract: textonly=true means a literal chatmessage string, not HTML.
+                // Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+                // HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+                // Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
                 if (settings.textonlymode) {
                     return unsafe;
                 }
@@ -38,12 +42,13 @@
                     resp += escapeHtml(node.textContent);
                 } else if (node.nodeType === 1) {
                     if (node.nodeName === "IMG" && node.src) {
+                        // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
                         if (settings.textonlymode) {
                             resp += escapeHtml(node.alt || "");
                         } else {
                             resp += `<img src="${node.src}">`;
                         }
-                    } else if (!settings.textonlymode) {
+                    } else /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ if (!settings.textonlymode) {
                         resp += node.outerHTML;
                     }
                 }
@@ -69,6 +74,7 @@
                     data.chatmessage = ele.textContent.trim();
                     data.event = "joined";
                     data.type = "cherrytv";
+                    // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
                     data.textonly = settings.textonlymode || false;
                     sendData(data);
                     return;
@@ -112,6 +118,7 @@
                 data.chatmessage = chatMessage;
                 data.type = "cherrytv";
                 data.chatimg = chatImg;
+                // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
                 data.textonly = settings.textonlymode || false;
 
                 sendData(data);

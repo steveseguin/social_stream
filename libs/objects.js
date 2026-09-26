@@ -374,7 +374,10 @@ function sanitizeRelayBadge(badge) {
 	}
 	if ((type === "text" || type === "badge") && badge.text) {
 		output.type = "text";
-		output.text = fallbackEscapeHtml(badge.text);
+		// Keep the escaped field for older overlays, and retain its literal source
+		// so another relay pass never escapes an already escaped label.
+		output.rawText = typeof badge.rawText === "string" ? badge.rawText : String(badge.text);
+		output.text = fallbackEscapeHtml(output.rawText);
 		if (badge.bgcolor) {
 			var textBg = sanitizeRelayCssColor(badge.bgcolor);
 			if (textBg) output.bgcolor = textBg;
@@ -404,6 +407,8 @@ function sanitizeRelayBadges(value) {
 }
 
 function sanitizeRelayPayloadFields(message) {
+	// This checks non-body fields. textonly applies only to chatmessage, never badges/styles/URLs.
+	// Literal chatmessage strings do not need HTML sanitization; HTML bodies have their relay boundary.
 	if (!message || typeof message !== "object") return message;
 
 	if (message.chatimg) message.chatimg = sanitizeRelayUrl(message.chatimg, true);
@@ -419,13 +424,8 @@ function sanitizeRelayPayloadFields(message) {
 	if (message.textNameColor) message.textNameColor = sanitizeRelayCssDeclaration(message.textNameColor, "color");
 	if (message.chatbadges) message.chatbadges = sanitizeRelayBadges(message.chatbadges);
 
-	var plainTextFields = ["hasDonation", "donation", "membership", "hasMembership", "subtitle", "title"];
-	for (var i = 0; i < plainTextFields.length; i++) {
-		var field = plainTextFields[i];
-		if (typeof message[field] === "string") {
-			message[field] = stripHtmlToPlainText(message[field]);
-		}
-	}
+	// Donation/membership/title/subtitle fields are already plain text.
+	// Renderers encode them at HTML output; decoding here changes literal entities.
 
 	return message;
 }
@@ -1293,7 +1293,7 @@ function normalizeText(input, isHTML = false) {
   };
 
   // Process plain text directly
-  if (!isHTML) {
+  if (!isHTML || !/[<&]/.test(input)) {
     return normalizeContent(input);
   }
   
@@ -1303,21 +1303,21 @@ function normalizeText(input, isHTML = false) {
   
   if (isBrowser) {
     // DOM parsing approach (browser only)
-    const tempDiv = document.createElement('div');
+    const tempDiv = document.createElement('template');
     tempDiv.innerHTML = input;
 
     // Recursive function to process nodes
     function processNode(node) {
       if (node.nodeType === Node.TEXT_NODE) {
         node.nodeValue = normalizeContent(node.nodeValue);
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
+      } else if (node.nodeType === Node.ELEMENT_NODE || node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
         for (const childNode of node.childNodes) {
           processNode(childNode);
         }
       }
     }
 
-    processNode(tempDiv);
+    processNode(tempDiv.content);
     return tempDiv.innerHTML;
   } else {
     // Non-browser environment fallback using regex-based approach

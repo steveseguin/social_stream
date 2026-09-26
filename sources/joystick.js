@@ -28,6 +28,10 @@
 
 	function escapeHtml(value) {
 		value = value == null ? "" : String(value);
+		// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+		// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+		// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+		// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
 		if (settings.textonlymode) return value;
 		return value
 			.replace(/&/g, "&amp;")
@@ -59,6 +63,7 @@
 
 	function renderText(value) {
 		var text = value == null ? "" : String(value);
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		if (settings.textonlymode) return stripHtml(text);
 		return escapeHtml(stripHtml(text)).replace(/\n/g, "<br>");
 	}
@@ -81,11 +86,13 @@
 			}
 			if (node.nodeType !== 1) return;
 			if (node.tagName === "BR") {
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				response += settings.textonlymode ? "\n" : "<br>";
 				return;
 			}
 			if (node.tagName === "IMG") {
 				var alt = node.getAttribute("alt") || "";
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (settings.textonlymode) {
 					response += alt;
 				} else {
@@ -131,6 +138,7 @@
 			hasDonation: "",
 			membership: "",
 			contentimg: "",
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: !!settings.textonlymode,
 			type: "joystick"
 		};

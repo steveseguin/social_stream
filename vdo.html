@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="description" content="Remote Camera Link Generator. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remote Camera Link Generator</title>
     <script src="./thirdparty/qrcode.min.js"></script>
@@ -11,7 +15,7 @@
             margin: 0;
             padding: 0;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #2B2E38;
@@ -23,7 +27,7 @@
             display: flex;
             flex-direction: column;
         }
-        
+
         .app-header {
             background-color: #1E2029;
             padding: 10px 20px;
@@ -32,12 +36,12 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .app-header h1 {
             margin: 0;
             font-size: 24px;
         }
-        
+
         .main-content {
             flex: 1;
             padding: 20px;
@@ -49,7 +53,7 @@
             margin: 0 auto;
             width: 100%;
         }
-        
+
         .links-section {
             grid-column: 1 / -1;
             background-color: #3A3D48;
@@ -57,7 +61,7 @@
             padding: 20px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        
+
         .links-header {
             display: flex;
             justify-content: space-between;
@@ -88,7 +92,7 @@
             align-items: center;
             text-align: center;
         }
-        
+
         .instructions-panel h3, .qr-code-panel h3 {
             margin-bottom: 15px;
             color: #e9c46a; 
@@ -128,30 +132,30 @@
             color: #e9c46a;
         }
         /* End: Modified and New CSS */
-        
+
         #qrcode {
             background-color: white;
             padding: 15px;
             border-radius: 8px;
             margin: 0 auto 15px auto; /* Center and add bottom margin */
         }
-        
+
         .link-box {
             position: relative;
             margin-bottom: 15px;
         }
-        
+
         .link-box:last-child {
             margin-bottom: 0;
         }
-        
+
         .link-box label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
             color: #e9c46a;
         }
-        
+
         .link-box input {
             width: 100%;
             padding: 10px;
@@ -161,7 +165,7 @@
             color: #fff;
             font-family: monospace;
         }
-        
+
         .copy-btn {
             position: absolute;
             right: 8px;
@@ -174,11 +178,11 @@
             cursor: pointer;
             font-size: 12px;
         }
-        
+
         .copy-btn:hover {
             background-color: #268579;
         }
-        
+
         .reset-btn {
             background-color: #e76f51;
             color: white;
@@ -188,11 +192,11 @@
             cursor: pointer;
             font-size: 14px;
         }
-        
+
         .reset-btn:hover {
             background-color: #e05c3e;
         }
-        
+
         .links-section > p { /* Target direct children paragraphs in links-section */
              margin-bottom: 10px;
         }
@@ -204,7 +208,7 @@
             margin-top: 5px;
             margin-bottom: 15px; /* Add some space before the first link box */
         }
-        
+
         @media (max-width: 992px) { /* Adjusted breakpoint for better layout shift */
             .qr-section {
                 grid-template-columns: 1fr; /* Stack instructions and QR code panel */
@@ -216,13 +220,13 @@
                 padding: 10px;
                  grid-template-columns: 1fr; /* Ensure it's still 1fr for smaller screens */
             }
-            
+
             .links-header {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 10px;
             }
-            
+
             .reset-btn {
                 align-self: flex-end;
             }

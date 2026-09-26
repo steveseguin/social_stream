@@ -58,6 +58,11 @@
 
 			loadSavedSession();
 			updateSessionWarning();
+			Array.prototype.forEach.call(document.querySelectorAll("[data-file-input]"), function (button) {
+				button.addEventListener("click", function () {
+					document.getElementById(button.getAttribute("data-file-input")).click();
+				});
+			});
 
 			zipInput.addEventListener("change", function () {
 				if (zipInput.files && zipInput.files[0]) {
@@ -133,6 +138,22 @@
 					if (event.target === exportModal) hideExportModal();
 				});
 			}
+			document.addEventListener("keydown", function (event) {
+				if (!exportModal || !exportModal.classList.contains("open")) return;
+				if (event.key === "Escape") hideExportModal();
+				if (event.key === "Tab") {
+					var buttons = exportModal.querySelectorAll("button:not(:disabled)");
+					var first = buttons[0];
+					var last = buttons[buttons.length - 1];
+					if (event.shiftKey && document.activeElement === first) {
+						event.preventDefault();
+						last.focus();
+					} else if (!event.shiftKey && document.activeElement === last) {
+						event.preventDefault();
+						first.focus();
+					}
+				}
+			});
 
 			sessionInput.addEventListener("input", function () {
 				saveSession();
@@ -165,12 +186,24 @@
 					previewMode: ""
 				};
 				previewFrame.removeAttribute("srcdoc");
+				zipInput.value = "";
+				fileInput.value = "";
+				folderInput.value = "";
+				document.getElementById("previewModeLabel").textContent = "Widget preview";
 				emptyPreview.style.display = "";
 				statusBox.textContent = "Waiting for overlay files.";
 				fileList.innerHTML = "";
+				document.getElementById("importDetails").textContent = "";
 				if (messageSettings) messageSettings.hidden = true;
 				populateFileSelectors(null);
 				refreshButtons();
+			}
+
+			function beginImport() {
+				resetState();
+				state.processing = true;
+				refreshButtons();
+				return state;
 			}
 
 			function setStatus(lines) {
@@ -184,6 +217,8 @@
 				previewBtn.disabled = !hasBuild || state.processing;
 				if (livePreviewBtn) livePreviewBtn.disabled = !hasBuild || state.processing || !(sessionInput.value || "").trim();
 				exportBtn.disabled = !hasBuild || state.processing || !(sessionInput.value || "").trim();
+				statusBox.setAttribute("aria-busy", state.processing ? "true" : "false");
+				if (applyFileSelectionBtn) applyFileSelectionBtn.disabled = !state.files.length || state.processing;
 			}
 
 			function getPageParam(names) {
@@ -301,6 +336,7 @@
 
 			function hideExportModal() {
 				if (exportModal) exportModal.classList.remove("open");
+				exportBtn.focus();
 			}
 
 			function downloadReadme() {
@@ -375,8 +411,11 @@
 			}
 
 			function loadZip(file) {
+				var importState = beginImport();
 				if (!window.JSZip) {
 					setStatus(["Zip support is not available. Missing thirdparty/jszip.min.js."]);
+					state.processing = false;
+					refreshButtons();
 					return;
 				}
 				setStatus(["Reading zip: " + file.name]);
@@ -388,8 +427,12 @@
 					});
 					return Promise.all(jobs);
 				}).then(function (items) {
+					if (state !== importState) return;
 					processImportedItems(items, file.name);
 				}).catch(function (error) {
+					if (state !== importState) return;
+					state.processing = false;
+					refreshButtons();
 					setStatus(["Could not read zip.", String(error && error.message || error)]);
 				});
 			}
@@ -413,10 +456,15 @@
 			function loadFiles(fileListObject) {
 				var files = Array.prototype.slice.call(fileListObject || []);
 				if (!files.length) return;
+				var importState = beginImport();
 				setStatus(["Reading " + files.length + " file(s)."]);
 				Promise.all(files.map(readBrowserFile)).then(function (items) {
+					if (state !== importState) return;
 					processImportedItems(items, files[0].webkitRelativePath || files[0].name || "overlay");
 				}).catch(function (error) {
+					if (state !== importState) return;
+					state.processing = false;
+					refreshButtons();
 					setStatus(["Could not read files.", String(error && error.message || error)]);
 				});
 			}
@@ -465,6 +513,12 @@
 
 				var detected = detectWidgetParts(state.files, state.manualParts);
 				state.detected = detected;
+				populateFileSelectors(detected);
+				if (![detected.htmlText, detected.cssText, detected.jsText].some(function (text) { return String(text || "").trim(); })) {
+					updateFileList(detected, ["No widget code found. Choose the original HTML, CSS or JavaScript files, or a ZIP containing them. Screenshots, overlay links and previously converted files cannot be imported."]);
+					refreshButtons();
+					return;
+				}
 				var fields = parseJSONSafe(detected.fieldsText || "{}");
 				var data = parseJSONSafe(detected.dataText || "{}");
 				state.fieldData = mergeFieldDefaults(fields, data);
@@ -473,14 +527,26 @@
 				state.css = normalizeProtocolRelative(replaceAssets(resolveTemplate(detected.cssText || "", state.fieldData)));
 				state.js = normalizeProtocolRelative(replaceScriptAssets(resolveTemplate(detected.jsText || "", state.fieldData)));
 				state.warnings = analyzeUnsupportedFeatures(state.html, state.css, state.js);
+				[detected.fieldsFile, detected.dataFile].forEach(function (path) {
+					if (!path) return;
+					try {
+						var value = JSON.parse(String(state.textByPath[path] || "").replace(/^\uFEFF/, ""));
+						if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Expected an object");
+					} catch (error) {
+						state.warnings.push("Invalid settings JSON in " + path + ". Check this file if colors or settings look wrong.");
+					}
+				});
 
 				state.processing = true;
 				populateFileSelectors(detected);
 				updateFileList(detected, ["Checking remote asset URLs."]);
 				refreshButtons();
-				inlineRemoteCssImports().then(function () {
-					return inlineRemoteAssets();
+				var importState = state;
+				inlineRemoteCssImports(importState).then(function () {
+					if (state !== importState) return;
+					return inlineRemoteAssets(importState);
 				}).then(function (stats) {
+					if (state !== importState) return;
 					state.remoteAssetsEmbedded = stats.embedded;
 					state.remoteAssetsFailed = stats.failed;
 					state.processing = false;
@@ -490,6 +556,7 @@
 					refreshButtons();
 					renderPreview();
 				}).catch(function (error) {
+					if (state !== importState) return;
 					state.remoteAssetsFailed += 1;
 					state.processing = false;
 					updateFileList(detected, [
@@ -682,7 +749,7 @@
 			}
 
 			function applyFileSelection() {
-				if (!state.files.length) return;
+				if (!state.files.length || state.processing) return;
 				var manualParts = {
 					html: htmlPartSelect ? htmlPartSelect.value : "",
 					css: cssPartSelect ? cssPartSelect.value : "",
@@ -690,7 +757,10 @@
 					fields: fieldsPartSelect ? fieldsPartSelect.value : "",
 					data: dataPartSelect ? dataPartSelect.value : ""
 				};
-				processImportedItems(state.files, state.sourceName, manualParts);
+				var files = state.files;
+				var sourceName = state.sourceName;
+				beginImport();
+				processImportedItems(files, sourceName, manualParts);
 			}
 
 			function analyzeUnsupportedFeatures(html, css, js) {
@@ -748,7 +818,11 @@
 						lines.push("- " + warning);
 					});
 				}
-				setStatus(lines);
+				document.getElementById("importDetails").textContent = lines.join("\n");
+				var summary = (extraLines || ["Widget files loaded."]).slice();
+				if (state.remoteAssetsFailed) summary.push("Remote assets left as URLs: " + state.remoteAssetsFailed + ". Check fonts and artwork in the preview.");
+				if (state.warnings.length) summary = summary.concat(state.warnings);
+				setStatus(summary);
 
 				fileList.innerHTML = "";
 				state.files.forEach(function (item) {
@@ -945,18 +1019,20 @@
 				}
 			}
 
-			function inlineRemoteAssets() {
-				var urls = collectRemoteAssetUrls(state.html + "\n" + state.css);
+			function inlineRemoteAssets(importState) {
+				var urls = collectRemoteAssetUrls(importState.html + "\n" + importState.css);
 				var maxRemoteAssets = 40;
 				var stats = { embedded: 0, failed: 0 };
 				if (!urls.length) return Promise.resolve(stats);
+				stats.failed = Math.max(0, urls.length - maxRemoteAssets);
 				urls = urls.slice(0, maxRemoteAssets);
 				return urls.reduce(function (chain, url) {
 					return chain.then(function () {
+						if (state !== importState) return;
 						return fetchRemoteAssetAsDataUrl(url).then(function (dataUrl) {
 							if (dataUrl) {
-								state.html = replaceAllText(state.html, url, dataUrl);
-								state.css = replaceAllText(state.css, url, dataUrl);
+								importState.html = replaceAllText(importState.html, url, dataUrl);
+								importState.css = replaceAllText(importState.css, url, dataUrl);
 								stats.embedded += 1;
 							} else {
 								stats.failed += 1;
@@ -970,15 +1046,16 @@
 				});
 			}
 
-			function inlineRemoteCssImports() {
-				var imports = collectRemoteCssImports(state.css);
+			function inlineRemoteCssImports(importState) {
+				var imports = collectRemoteCssImports(importState.css);
 				if (!imports.length) return Promise.resolve();
 				return imports.reduce(function (chain, item) {
 					return chain.then(function () {
+						if (state !== importState) return;
 						return fetchRemoteText(item.url).then(function (cssText) {
 							if (!cssText) return;
 							cssText = rewriteCssRelativeUrls(cssText, item.url);
-							state.css = state.css.split(item.full).join(cssText);
+							importState.css = importState.css.split(item.full).join(cssText);
 						}).catch(function () {});
 					});
 				}, Promise.resolve());
@@ -1002,9 +1079,28 @@
 
 			function fetchRemoteText(url) {
 				if (!window.fetch) return Promise.resolve("");
-				return fetch(url, { mode: "cors", credentials: "omit" }).then(function (response) {
+				return fetchRemoteResource(url, function (response) {
 					if (!response || !response.ok) return "";
 					return response.text();
+				});
+			}
+
+			function fetchRemoteResource(url, readResponse) {
+				return new Promise(function (resolve, reject) {
+					var controller = window.AbortController ? new AbortController() : null;
+					var timer = setTimeout(function () {
+						if (controller) controller.abort();
+						reject(new Error("Remote asset timed out"));
+					}, 8000);
+					var options = { mode: "cors", credentials: "omit" };
+					if (controller) options.signal = controller.signal;
+					Promise.resolve().then(function () { return fetch(url, options); }).then(readResponse).then(function (value) {
+						clearTimeout(timer);
+						resolve(value);
+					}, function (error) {
+						clearTimeout(timer);
+						reject(error);
+					});
 				});
 			}
 
@@ -1053,7 +1149,7 @@
 
 			function fetchRemoteAssetAsDataUrl(url) {
 				if (!window.fetch || !window.FileReader) return Promise.resolve("");
-				return fetch(url, { mode: "cors", credentials: "omit" }).then(function (response) {
+				return fetchRemoteResource(url, function (response) {
 					if (!response || !response.ok) return "";
 					var type = response.headers && response.headers.get ? response.headers.get("content-type") : "";
 					if (type && !/^(image|font|audio|video)\//i.test(type) && !/svg/i.test(type)) return "";
@@ -1081,26 +1177,29 @@
 			}
 
 			function renderPreview() {
-				if (!(state.html || state.css || state.js)) return;
+				if (state.processing || !(state.html || state.css || state.js)) return;
 				state.previewMode = "demo";
+				document.getElementById("previewModeLabel").textContent = "Demo preview · sample messages";
 				previewFrame.srcdoc = buildExportHTML({ preview: true });
 				emptyPreview.style.display = "none";
 			}
 
 			function renderLivePreview() {
-				if (!(state.html || state.css || state.js)) return;
+				if (state.processing || !(state.html || state.css || state.js)) return;
 				if (!(sessionInput.value || "").trim()) {
 					updateSessionWarning();
 					sessionInput.focus();
 					return;
 				}
 				state.previewMode = "live";
+				document.getElementById("previewModeLabel").textContent = "Live preview · SSN chat";
 				previewFrame.srcdoc = buildExportHTML({ preview: false });
 				emptyPreview.style.display = "none";
 				updateFileList(state.detected, ["Live preview is listening for SSN session: " + (sessionInput.value || "").trim()]);
 			}
 
 			function exportOverlay() {
+				if (state.processing || !(state.html || state.css || state.js)) return;
 				if (!(sessionInput.value || "").trim()) {
 					updateSessionWarning();
 					sessionInput.focus();
@@ -1128,11 +1227,11 @@
 				var connectionParams = new URLSearchParams(location.search);
 				var config = {
 					fieldData: state.fieldData || {},
-					session: (sessionInput.value || "").trim(),
-					password: (passwordInput.value || "").trim(),
+					session: options && options.preview ? "" : (sessionInput.value || "").trim(),
+					password: options && options.preview ? "" : (passwordInput.value || "").trim(),
 					preview: !!(options && options.preview),
 					sourceName: state.sourceName || "imported-overlay",
-					hasWidgetScript: !!String(state.js || "").trim()
+					hasWidgetScript: !!String(state.js || "").trim() || /<script\b/i.test(state.html)
 				};
 				if (connectionParams.has("localserver")) {
 					config.localRelayURL = connectionParams.get("server") || connectionParams.get("server2") || SocialStreamLocalServer.getWebSocketUrl(connectionParams);
@@ -1256,10 +1355,11 @@
 						function start() {
 							whenReady(function () {
 								dispatchWidgetLoad();
-								setupIframeBridge();
-								setupSocketBridge();
 								if (config.preview || urlParams.has("demo")) {
 									sendDemoMessages();
+								} else {
+									setupIframeBridge();
+									setupSocketBridge();
 								}
 							});
 						}
@@ -1562,6 +1662,8 @@
 						}
 
 						function hasRenderableChatPayload(payload) {
+							// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+							if (payload.textonly === true && String(payload.chatmessage || "").trim()) return true;
 							if (hasRenderableText(payload.chatmessage) || hasRenderableText(payload.message)) return true;
 							if (payload.contentimg || payload.hasDonation || payload.donation || payload.membership || payload.subtitle) return true;
 							return false;
@@ -1585,6 +1687,8 @@
 							}).join(" ");
 							var userStyle = payload.nameColor ? ' style="color:' + escapeAttr(payload.nameColor) + '"' : "";
 							var messageHTML = String(payload.chatmessage || payload.message || "");
+							// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+							if (payload.textonly === true) messageHTML = escapeHTML(messageHTML);
 							if (payload.contentimg) {
 								messageHTML += '<div class="attachment"><img src="' + escapeAttr(payload.contentimg) + '" alt=""></div>';
 							}
@@ -1685,6 +1789,8 @@
 							var displayName = String(payload.chatname || payload.name || "Viewer");
 							var msgId = String(payload.mid || payload.id || payload.messageId || payload.message_id || (payload.meta && (payload.meta.messageId || payload.meta.message_id)) || ("ssn-" + Date.now() + "-" + Math.floor(Math.random() * 100000)));
 							var textHTML = String(payload.chatmessage || payload.message || "");
+							// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+							if (payload.textonly === true) textHTML = escapeHTML(textHTML);
 							var messageParts = extractMessageParts(textHTML);
 							var plainText = messageParts.text;
 							var role = getRole(payload);
@@ -2193,7 +2299,7 @@
 			}
 
 			function parseJSONSafe(text) {
-				text = String(text || "").trim();
+				text = String(text || "").replace(/^\uFEFF/, "").trim();
 				if (!text) return {};
 				try {
 					return JSON.parse(text);

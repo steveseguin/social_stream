@@ -2,22 +2,20 @@ const assert = require("assert");
 const fs = require("fs");
 const path = require("path");
 const { chromium } = require("playwright");
+const { createStaticServer, closeServer } = require("../tests/background-overlay-compat-matrix.test.cjs");
+const { configureContext } = require("../tests/helpers/chat-security-harness.cjs");
 
 const root = path.resolve(__dirname, "..");
+let server;
 
 async function loadInlinePage(browser, relativePath) {
-  const page = await browser.newPage();
-  await page.route("**/*", route => route.abort());
-  await page.setContent(fs.readFileSync(path.join(root, relativePath), "utf8"), { waitUntil: "domcontentloaded" });
-  return page;
+  return loadSessionPage(browser, relativePath);
 }
 
 async function loadSessionPage(browser, relativePath) {
   const page = await browser.newPage();
-  const pageUrl = "http://127.0.0.1/overlay-test?session=LOCAL_TEST_ONLY";
-  await page.route("**/*", route => route.request().url() === pageUrl
-    ? route.fulfill({ contentType: "text/html", body: fs.readFileSync(path.join(root, relativePath), "utf8") })
-    : route.abort());
+  const pageUrl = server.baseUrl + "/" + relativePath + "?session=LOCAL_TEST_ONLY";
+  await configureContext(page.context(), server.baseUrl);
   await page.goto(pageUrl, { waitUntil: "domcontentloaded" });
   return page;
 }
@@ -33,6 +31,7 @@ async function renderMessage(page, relativePath, payload) {
 }
 
 (async () => {
+  server = await createStaticServer();
   const browser = await chromium.launch({ headless: true });
   try {
     for (const relativePath of ["sampleoverlay.html", "samplefeatured.html", "themes/overlay-typewriter.html"]) {
@@ -156,6 +155,7 @@ async function renderMessage(page, relativePath, payload) {
     }
   } finally {
     await browser.close();
+    await closeServer(server.server);
   }
 
   console.log("PASS overlay text-only and sender-group regressions");

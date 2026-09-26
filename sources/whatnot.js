@@ -25,6 +25,10 @@
 
 	function escapeHtml(unsafe) {
 		try {
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
 			if (settings.textonlymode) {
 				return unsafe || "";
 			}
@@ -88,6 +92,7 @@
 			if (!element.textContent) {
 				return "";
 			}
+			// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 			return settings.textonlymode ? element.textContent : escapeHtml(element.textContent);
 		}
 
@@ -96,6 +101,7 @@
 				if (!node.textContent || !node.textContent.trim().length) {
 					return;
 				}
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				response += settings.textonlymode ? node.textContent : escapeHtml(node.textContent);
 				return;
 			}
@@ -104,6 +110,7 @@
 				return;
 			}
 
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			if (settings.textonlymode) {
 				response += getAllContentNodes(node);
 				return;
@@ -767,6 +774,7 @@
 
 	function formatWebSocketMessageText(value) {
 		var text = value == null ? "" : String(value);
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		return settings.textonlymode ? text : escapeHtml(text);
 	}
 
@@ -885,6 +893,7 @@
 		data.textColor = "";
 		data.nameColor = "";
 		data.chatmessage = formatWebSocketMessageText(messageText);
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.chatimg = user && user.profileImage && user.profileImage.url ? user.profileImage.url : "";
 		data.hasDonation = "";
@@ -1039,6 +1048,7 @@
 		data.event = eventType;
 		data.chatname = typeof user.username === "string" ? user.username : "";
 		data.chatmessage = labels[eventType] + (title ? ": " + title : "");
+		// Literal chatmessage on the wire: no app-added HTML or entity decoding; receivers must render it as text.
 		data.textonly = true;
 		data.subtitle = title;
 		data.meta = buildWebSocketMeta(wsChannel, eventType, payload, user);
@@ -1419,6 +1429,7 @@
 		data.textColor = "";
 		data.nameColor = "";
 		data.chatmessage = messageBody;
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.chatimg = chatimg;
 		data.hasDonation = "";

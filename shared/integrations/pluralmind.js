@@ -152,6 +152,7 @@
 
 	async function resolveRenderedMessage(options) {
 		options = options || {};
+		// textOnly means the source message is literal text: resolve it without an HTML parse. HTML mode preserves the source markup around substituted text.
 		if (options.textOnly) {
 			return resolveMessage(options);
 		}

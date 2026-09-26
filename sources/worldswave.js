@@ -75,6 +75,10 @@
 		}
 
 		if (node.nodeType === 3) {
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 			return settings.textonlymode ? node.textContent || "" : escapeHtml(node.textContent || "");
 		}
 
@@ -83,11 +87,13 @@
 		}
 
 		if (node.nodeName === "BR") {
+			// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 			return settings.textonlymode ? "\n" : "<br>";
 		}
 
 		if (node.nodeName === "IMG") {
 			var alt = node.getAttribute("alt") || "";
+			// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 			if (settings.textonlymode) {
 				return alt;
 			}
@@ -102,6 +108,7 @@
 			output += getAllContentNodes(node.childNodes[i]);
 		}
 
+		// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 		if (!settings.textonlymode && node.nodeName === "A") {
 			var href = safeResourceUrl(node.href || node.getAttribute("href"));
 			if (href) {
@@ -268,6 +275,7 @@
 		data.hasDonation = row.getAttribute("data-ww-donation") || "";
 		data.membership = row.getAttribute("data-ww-membership") || "";
 		data.contentimg = contentImage;
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "worldswave";
 

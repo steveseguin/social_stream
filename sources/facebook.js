@@ -89,7 +89,11 @@
 	
 	function escapeHtml(unsafe){
 		try {
-			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
+			if (settings.textonlymode){ // Literal text stays unencoded at capture; escape only when a renderer constructs HTML.
 				return unsafe;
 			}
 			return unsafe
@@ -109,6 +113,8 @@
 		return emojiRegex.test(char);
 	}
 	
+	// Local textonly suppresses captured element markup; settings.textonlymode also controls text escaping.
+	// A helper override is not the outbound flag: only a literal chatmessage may be sent with data.textonly=true.
 	function getAllContentNodes(element, textonly=false) { // takes an element.
 		var resp = "";
 		
@@ -129,11 +135,13 @@
 		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				resp += getAllContentNodes(node, textonly)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				node.skip = true; // facebook specific need
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (!settings.textonlymode && !textonly){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
@@ -662,6 +670,7 @@
 
 
 		if (!msg){
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			if (!settings.textonlymode){
 				try {
 					msgElement = ele.querySelector("ul > li").parentNode.parentNode;
@@ -701,6 +710,7 @@
 				replyMessage = getAllContentNodes(ele.previousSibling.querySelector("div>div>span>span"), true);
 				if (replyMessage) {
 					originalMessage = msg;
+					// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 					if (settings.textonlymode) {
 						msg = replyMessage + ": " + msg;
 					} else {
@@ -749,6 +759,7 @@
 		}
 		data.membership = "";;
 		data.contentimg = contentimg;
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		if (highlightedMessage) {
 			data.highlightColor = "#fff387";
@@ -809,7 +820,7 @@
 	}
 	
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}

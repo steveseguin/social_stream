@@ -65,7 +65,7 @@ async function installRelay(page) {
   };
 }
 
-async function captureTwitch(context, textonly, messages) {
+async function captureTwitch(context, textonly, messages, options = {}) {
   const page = await context.newPage();
   try {
     await page.setContent('<div class="chat-room__content"><div id="messages"><div id="backlog" class="chat-line__message"></div></div></div>');
@@ -91,14 +91,30 @@ async function captureTwitch(context, textonly, messages) {
     await page.addScriptTag({ content: read('sources/twitch.js') });
     await page.waitForFunction(() => document.getElementById('backlog').dataset.ignore === 'true', null, { timeout: 6000 });
     for (const [index, message] of messages.entries()) {
-      await page.evaluate(message => {
+      await page.evaluate(({ message, options }) => {
         const row = document.createElement('div');
         row.className = 'chat-line__message';
         row.innerHTML = '<span class="chat-author__display-name">AuditViewer</span><span data-test-selector="chat-line-message-body"></span>';
         row.querySelector('[data-test-selector]').textContent = message;
+        if (options.replyText) {
+          const reply = document.createElement('span');
+          reply.className = 'seventv-reply-message-part';
+          reply.textContent = options.replyText;
+          row.appendChild(reply);
+        }
+        if (options.eventPill) {
+          const pill = document.createElement('span');
+          pill.className = 'message-event-pill';
+          pill.textContent = options.eventPill;
+          row.appendChild(pill);
+        }
         document.getElementById('messages').appendChild(row);
-      }, message);
+      }, { message, options });
       await page.waitForFunction(count => window.__captured.length === count, index + 1, { timeout: 6000 });
+    }
+    if (options.assertSafe) {
+      await page.waitForTimeout(100);
+      assert.equal(await page.evaluate(() => window.__securityExecuted), false, 'Source parsed plain viewer text as executable HTML');
     }
     return await page.evaluate(() => window.__captured);
   } finally {

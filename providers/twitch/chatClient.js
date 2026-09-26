@@ -6,6 +6,9 @@ const DEFAULT_RECONNECT = {
 };
 
 function defaultSanitize(value) {
+  // Provider chatmessage uses the configured HTML formatter; rawMessage remains literal text.
+  // No textonly flag means legacy HTML mode. Plain-capture adapters must select rawMessage,
+  // not decode formatted HTML or assume this fallback validates HTML in every environment.
   if (value === null || value === undefined) {
     return '';
   }

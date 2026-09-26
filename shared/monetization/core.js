@@ -58,7 +58,7 @@
 		if (!payload || payload.testMode === true || payload.live_mode === false || payload.isTest === true) return null;
 		var d = provider === 'kofi' ? payload : payload.data;
 		if (!d || typeof d !== 'object') return null;
-		var row = { platform: provider, type: provider, id: provider + ':' + String(deliveryId || d.id || Date.now()), chatname: 'Anonymous', chatmessage: '', textonly: true, chatimg: '', subtitle: '', meta: {} };
+		var row = { platform: provider, type: provider, id: provider + ':' + String(deliveryId || d.id || Date.now()), chatname: 'Anonymous', chatmessage: '', /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly: true, chatimg: '', subtitle: '', meta: {} };
 		var amount, currency, paid = false, kind = '', items = [];
 		if (provider === 'kofi') {
 			if (d.is_public !== true || ['Donation', 'Subscription', 'Shop Order', 'Commission'].indexOf(d.type) === -1) return null;
@@ -224,7 +224,7 @@
 			message = str(data.message, 500),
 			identity = data.tipId || data.id || [data.timestamp, data.amount, currency, name, message].join('|');
 		if (!data.tipId && !data.id && !Number.isFinite(data.timestamp)) return null;
-		var row = { platform: 'ninjabacker', type: 'ninjabacker', id: 'ninjabacker:' + str(String(identity), 800), chatname: name, chatmessage: message, textonly: true, hasDonation: money(data.amount, currency), chatimg: '', meta: { ninjabacker: { currency: currency, amount: data.amount } } };
+		var row = { platform: 'ninjabacker', type: 'ninjabacker', id: 'ninjabacker:' + str(String(identity), 800), chatname: name, chatmessage: message, /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly: true, hasDonation: money(data.amount, currency), chatimg: '', meta: { ninjabacker: { currency: currency, amount: data.amount } } };
 		setDonationValue(row, data.amount, currency);
 		return row;
 	}
@@ -246,7 +246,7 @@
 		var amount = minor / Math.pow(10, digits),
 			itemName = str(d.item_name, 180),
 			name = kind === 'giftfunded' ? 'Community' : str(d.gifter_username, 60) || 'Anonymous';
-		var row = { platform: 'throne', type: 'throne', event: kind, id: 'throne:' + event.event_id, chatname: name, chatmessage: str(d.message, 500), textonly: true, chatimg: '', contentimg: imageURL(d.item_thumbnail_url), subtitle: itemName, meta: { commerce: { recipient: 'creator', currency: d.currency }, throne: { itemName: itemName, creator: str(d.creator_username, 50).toLowerCase(), completed: kind !== 'giftcontribution', currency: d.currency, amount: amount } } };
+		var row = { platform: 'throne', type: 'throne', event: kind, id: 'throne:' + event.event_id, chatname: name, chatmessage: str(d.message, 500), /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly: true, chatimg: '', contentimg: imageURL(d.item_thumbnail_url), subtitle: itemName, meta: { commerce: { recipient: 'creator', currency: d.currency }, throne: { itemName: itemName, creator: str(d.creator_username, 50).toLowerCase(), completed: kind !== 'giftcontribution', currency: d.currency, amount: amount } } };
 		if (kind === 'giftfunded') row.meta.commerce.goalAmount = amount;
 		// Contributions have already entered the donation flow when a crowdfund completes.
 		if (kind !== 'giftfunded') {

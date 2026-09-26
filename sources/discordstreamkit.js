@@ -17,24 +17,31 @@
 		return escapeHtml(value).replace(/`/g, "&#096;");
 	}
 
+	// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+	// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+	// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+	// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 	function getContent(node, textOnly) {
 		if (!node) return "";
-		if (node.nodeType === 3) return textOnly ? String(node.textContent || "") : escapeHtml(node.textContent || "");
+		if (node.nodeType === 3) /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ return textOnly ? String(node.textContent || "") : escapeHtml(node.textContent || "");
 		if (node.nodeType !== 1) return "";
 
 		var tagName = String(node.tagName || "").toLowerCase();
 		if (tagName === "img") {
 			var alt = String(node.getAttribute("alt") || "");
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			if (textOnly) return alt;
 			if (!node.src) return escapeHtml(alt);
 			return '<img src="' + escapeAttribute(node.src) + '" alt="' + escapeAttribute(alt) + '" class="zero-width-emote">';
 		}
-		if (tagName === "br") return textOnly ? "\n" : "<br>";
+		if (tagName === "br") /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ return textOnly ? "\n" : "<br>";
 
 		var content = "";
 		for (var index = 0; index < node.childNodes.length; index += 1) {
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			content += getContent(node.childNodes[index], textOnly);
 		}
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		if (textOnly) return content;
 
 		var allowedTags = {
@@ -66,6 +73,7 @@
 		var username = queryClassPrefix(row, "username");
 		var message = queryClassPrefix(row, "messageText");
 		var chatname = username ? String(username.textContent || "").trim() : "";
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		var chatmessage = getContent(message, !!settings.textonlymode).trim();
 		if (!chatname && !chatmessage) return;
 
@@ -80,6 +88,7 @@
 			hasDonation: "",
 			membership: "",
 			contentimg: "",
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: !!settings.textonlymode,
 			type: "discord",
 		});

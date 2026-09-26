@@ -100,6 +100,10 @@
 									messageData.type = eventData?.provider || "streamelements";
 									messageData.nameColor = "";
 									messageData.chatbadges = [];
+									// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+									// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+									// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+									// HTML-mode chatmessage may contain formatting/emotes; keep its normal HTML sanitization boundary.
 									messageData.textonly = false;
 									
 									if (eventData.type === 'tip' || eventData.type === 'donation') {
@@ -275,6 +279,7 @@
 									messageData.type = eventData?.provider || "streamelements",
 									messageData.nameColor = "";
 									messageData.chatbadges = [];
+									// HTML-mode chatmessage may contain formatting/emotes; keep its normal HTML sanitization boundary.
 									messageData.textonly = false;
 									
 									if (eventData.type === 'tip' || eventData.type === 'donation') {
