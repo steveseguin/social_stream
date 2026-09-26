@@ -111,6 +111,7 @@ window.customUserFunction = function(data) {
         /product123/gi, 
         "<span style='color:#ff0000;font-weight:bold;'>Product123™</span>"
       );
+	  // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 	  data.textonly = false;
     }
   }

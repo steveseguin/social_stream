@@ -1,7 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<meta charset="utf-8">
+    <meta charset="utf-8">
+    <meta name="description" content="Create Test Message. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="robots" content="noindex">
 	<title>Create Test Message</title>
@@ -266,6 +269,7 @@
 				chatimg: document.getElementById("chatimg").value || "https://socialstream.ninja/media/user1.jpg",
 				hasDonation: document.getElementById("hasDonation").value || "",
 				membership: document.getElementById("membership").value || "",
+				// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 				textonly: document.getElementById("textonly").checked,
 				type: document.getElementById("type").value || "twitch"
 			};

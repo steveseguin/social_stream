@@ -1,8 +1,10 @@
 <html lang="en">
 	<head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta name="description" content="Dashboard. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
   <script type="text/javascript" src="./js/local-server-url.js"></script>
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
-		<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+
 		<meta content="utf-8" http-equiv="encoding" />
 		<title>Social Stream - Dashboard</title>
 		<meta name="title" content="Social Stream - Dashboard" />
@@ -11,6 +13,9 @@
 		<meta name="robots" content="noindex">
 		<script type="text/javascript" src="currency.js"></script>
 		<script type="text/javascript" src="./libs/objects.js"></script>
+<script src="./shared/utils/chatBadges.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
+<link rel="stylesheet" href="./shared/utils/chatBadges.css">
 		<script src="./shared/utils/contentImage.js"></script>
 
 		<style>
@@ -66,7 +71,7 @@
 				--member-bgcolor-odd: #65fdff33;
 				--member-bgcolor-bubble: #0f1620d1;
 				--member-bgcolor-bubble-odd: #060c16d1;
-				
+
 				--firstime-bgcolor: #976b6b4f;
 
 				--special-bgcolor: #0f2bfd33;
@@ -82,12 +87,12 @@
 
 				--scrollbar-visible: inherit;
 				--padding-rows: 3px;
-				
+
 				--text-stroke-width: 0px;
 				--text-stroke-color: #000;
 				--text-shadow: -2px -2px #000000, -2px -1px #000000, -2px 0px #000000, -2px 1px #000000, -2px 2px #000000, -1px -2px #000000, -1px -1px #000000, -1px 0px #000000, -1px 1px #000000, -1px 2px #000000, 0px -2px #000000, 0px -1px #000000, 0px 0px #000000, 0px 1px #000000, 0px 2px #000000, 1px -2px #000000, 1px -1px #000000, 1px 0px #000000, 1px 1px #000000, 1px 2px #000000, 2px -2px #000000, 2px -1px #000000, 2px 0px #000000, 2px 1px #000000, 2px 2px #000000;
 				--text-glow: 0 0 #0000;
-				
+
 			}
 			.closeBtn {
 				position: absolute;
@@ -110,7 +115,7 @@
 			.closeBtn:active {
 				background-color: #7a7a7a;
 			}
-			
+
 			#TipRightClick {
 				text-shadow: 0 0 black;
 				cursor: help;
@@ -122,7 +127,7 @@
 				top: 7px;
 				position: relative;
 			}
-			
+
 			.volume-container {
 				  position: relative;
 				  display: inline-block;
@@ -141,7 +146,7 @@
 			.volume-container:hover .volume-slider {
 			  display: block;
 			}
-			
+
 			.blurred {
 				filter: blur(var(--blur-amount));
 			}
@@ -217,7 +222,7 @@
 					opacity: 0;
 				}
 			}
-			
+
 			.modal {
 				display: none; /* Hidden by default */
 				position: fixed; /* Stay in place */
@@ -252,7 +257,7 @@
 				cursor: pointer;
 			}
 
-			
+
 			#obsControlModal {
 			  position: fixed;
 			  z-index: 1000;
@@ -304,7 +309,7 @@
 			  cursor: pointer;
 			  transition: background-color 0.3s;
 			}
-			
+
 			.horizontal .bubble {
 				vertical-align: top;
 			}
@@ -337,7 +342,7 @@
 			#obsControlModal .close-btn:hover {
 			  background-color: #c9302c;
 			}
-			
+
 			.viewerIcons {
 				background-position: left;
 				background-repeat: no-repeat;
@@ -362,7 +367,7 @@
 			  .modal .modal-content {
 				padding: 20px;
 			  }
-			  
+
 			 .modal  button {
 				padding: 8px 12px;
 				font-size: 14px;
@@ -439,17 +444,17 @@
 				animation: none !important;
 			}
 
-			
+
 			@media only screen and (min-width: 700.001px) { 
 				#output  {
 					margin-bottom: calc(46px / var(--scale-output));
 				}
 			}
-			
+
 			.event-pill {
 				padding-right: 5px;
 			}
-			
+
 			.hl-profile-pic {
 				border: var(--profile-pic-border);
 				min-width: 24px;
@@ -490,7 +495,7 @@
 				max-height: var(--content-images) !important;
 				height: var(--content-images) !important;
 			}
-			
+
 
 			.largeContent .hl-imgContent {
 				max-width: 100%;
@@ -638,14 +643,14 @@
 				color: var(--font-color);
 				margin: 0 0;
 				background-color: var(--background-color);
-				
+
 				text-shadow: var(--text-shadow), var(--text-glow);
 				-webkit-text-stroke: var(--text-stroke-width) var(--text-stroke-color);
 				text-stroke: var(--text-stroke-width) var(--text-stroke-color);
 				overflow-x: hidden;
 				scrollbar-color: #666 #201c29;
 			}
-			
+
 			input[type="checkbox"] {
 				padding: 0;
 				margin: 0 5px 0 0;
@@ -713,22 +718,22 @@
 				display: flex;
 				margin-top: 4px;
 			}
-			
+
 			.notcompactmode .twoLines .hl-firstline {
 				margin-top: 10px;
 				margin-bottom: 2px;
 			}
-			
+
 			.twoLines .compactmode  {
 				align-items: flex-start;
 				flex-direction: column;
 			}
-			
+
 			#context-menu {
 			  transform-origin: bottom left;
 			  transform: scale(var(--menu-scale, 1));
 			}
-			
+
 			.allowfat .hl-message{
 				max-width: 400px;
 				word-break: keep-all;
@@ -737,7 +742,7 @@
 				overflow:visible;
 				white-space: normal;
 			}
-				
+
 
 			.twoLines.alignright .hl-firstline {
 				display: flex;
@@ -745,7 +750,7 @@
 				margin-left: auto;
 				flex-direction: row;
 			}
-			
+
 			.twoLines.alignright .hl-firstline {
 				justify-content: flex-end;
 			}
@@ -780,7 +785,7 @@
 				font-weight: var(--message-font-weight);
 				font-size: var(--comment-font-size);
 			}
-			
+
 			.hl-name {
 				 overflow-wrap: normal;
 			}
@@ -794,7 +799,7 @@
 				max-width: 24px;
 				max-height: 24px;
 			}
-			
+
 			.hl-message img+img, .hl-message img+svg, .hl-message svg+img, .hl-message svg+svg {
 				margin: auto 0px;
 			}
@@ -802,7 +807,7 @@
 			.hl-message .hl-content img, .hl-message .hl-content video {
 				max-width: 38px;
 			}
-			
+
 			.hl-message img.chat-line__message--emote-gigantified,
 			.hl-message svg.chat-line__message--emote-gigantified {
 				position: relative;
@@ -827,13 +832,13 @@
 			.notcompactmode .hl-content svg {
 				max-width: 80px;
 			}
-			
+
 			.notcompactmode .hl-message img.chat-line__message--emote-gigantified,
 			.notcompactmode .hl-message svg.chat-line__message--emote-gigantified {
 				height: 56px;
 				max-height: 56px;
 			}
-			
+
 			.notcompactmode .hl-content img.chat-line__message--emote-gigantified,
 			.notcompactmode .hl-content svg.chat-line__message--emote-gigantified {
 				max-width: 112px;
@@ -875,11 +880,11 @@
 			.highlight {
 				background-color: yellow !important;
 			}
-			
+
 			svg.regular-emote, img.regular-emote {
 				margin: auto 0;
 			}
-			
+
 			.marked-host {
 				border-left: 3px solid #ff4444 !important;
 			}
@@ -928,7 +933,7 @@
 				object-fit: contain;
 				vertical-align: bottom;
 			}
-			
+
 			#sceneButtons button.active {
 				border:3px solid blue;
 			}
@@ -1022,35 +1027,35 @@
 				display: inline-flex;
 				width: -webkit-fill-available;
 			}
-			
+
 			.largeavatar.horizontal .bubble.hl-rightside .hl-message {
 				display: block;
 			}
-			
+
 			.hl-rightside .hl-message .donationAmount {
 				margin: auto;
 			}
-			
+
 			.alignright .hl-rightside.bubble .hl-message, .alignright .hl-rightside.bubble .hl-righttopline{
 				margin-left: auto;
 			}
-			
+
 			.alignright .hl-rightside.bubble .hl-righttopline .time-arrived{
 				margin: 9.5px 2px auto 1px;
 			}
-			
+
 			.alignright .highlight-chat.larger-emojis.compactmode .hl-message.bubble .hl-content {
 				    margin: auto;
 			}
-			
+
 			.hl-rightside.bubble .hl-message {
 				margin: 4px 7px 7px 7px;
 			}
-			
+
 			.bubble span.hl-content:empty {
 				display:none;
 			}
-			
+
 			.hl-message.bubble span.hl-donation {
 				margin: auto 0
 			}
@@ -1080,7 +1085,7 @@
 			body.namebubble.twoLines.alignright .hl-firstline .hl-name {
 				margin: auto 0 auto 6px;
 			}
-			
+
 
 			.bot > .hl-message {
 				padding: 5px 0 5px 5px;
@@ -1118,15 +1123,15 @@
 			#output.alignbottom > .highlight-chat {
 				flex-shrink: 0;
 			}
-			
-			
+
+
 			.highlight-chat.expand {
 				animation: expand 2s;
 				overflow: visible;
 				word-break: break-all;
 				line-break: anywhere;
 			}
-			
+
 			@keyframes slideLeft { 
 				from {
 					transform: translateX(150%);
@@ -1135,17 +1140,17 @@
 					transform: translateX(0px);
 				}
 			}
-			
+
 			.horizontal .highlight-chat {
 				vertical-align:top;
 				animation: expand 4s, slideLeft 1s ease-in-out forwards;
 				vertical-align: bottom;
 			}
-			
+
 			.horizontal .highlight-chat.fadein {
 				animation: expand 4s, slideLeft 1s ease-in-out forwards, fadein 2s;
 			}
-			
+
 			.horizontal .highlight-chat.fadeout {
 				animation:  expand 4s, slideLeft 1s ease-in-out forwards, fadeout 2s;
 			}
@@ -1163,7 +1168,7 @@
 				padding-top: 3px;
 				background-color: #0000;
 			}
-			
+
 			.horizontal:not(.alignbottom) .highlight-chat.compactmode {
 				vertical-align: top;
 				display:inline-flex;
@@ -1172,12 +1177,12 @@
 			.horizontal .compactmode.time-arrived {
 				margin: auto 0;
 			}
-			
+
 			.horizontal .compactmode.source-name {
 				margin: auto 0;
 				margin-left: 4px;
 			}
-			
+
 
 			.horizontal .highlight-chat.larger-emojis:not(.compactmode) {
 				line-height: 30px; 
@@ -1227,7 +1232,7 @@
 				max-height: 24px;
 				vertical-align: top;
 			}
-			
+
 			.hl-badge.svg {
 				object-fit: contain;
 				display: inline-block;
@@ -1246,7 +1251,7 @@
 			.notcompactmode .larger-emojis > .time-arrived {
 				margin: 12px 2px auto 1px;
 			}
-			
+
 			.notcompactmode .larger-emojis > .source-name {
 				margin: 12px 2px auto 1px;
 			}
@@ -1254,11 +1259,11 @@
 			.notcompactmode .larger-emojis .icon {
 				margin: 5px 2px auto 1px;
 			} 
-			
+
 			.notcompactmode .larger-emojis > img.icon {
 				margin: 3px 2px auto 1px;
 			} 
-			
+
 			.notcompactmode .larger-emojis .leftside.larger-emojis .icon{
 				margin: 0px 2px auto 1px;
 				vertical-align: top;
@@ -1325,19 +1330,19 @@
 			.notcompactmode div:not(.expand) > .time-arrived {
 				margin: 9.5px 2px auto 1px;
 			}
-			
+
 			.notcompactmode div:not(.expand) > .source-name {
 				margin: 9.5px 2px auto 1px;
 			}
-			
+
 			.notcompactmode .hl-righttopline > div.time-arrived {
 				margin: auto 2px auto 1px;
 			}
-			
+
 			.notcompactmode .hl-righttopline > div.source-name {
 				margin: auto 2px auto 1px;
 			}
-			
+
 			.hl-name:first-child {
 				margin-left: 0;
 			}
@@ -1487,11 +1492,11 @@
 			.member {
 				background-color: var(--member-bgcolor);
 			}
-			
+
 			.odd.member:not(.expand) {
 				background-color: var(--member-bgcolor-odd);
 			}
-			
+
 			.highlight-chat.member {
 				background-color: var(--member-bgcolor);
 			}
@@ -1507,11 +1512,11 @@
 			.dono-highlight {
 				background-color: var(--donation-bgcolor);
 			}
-			
+
 			.odd.dono-highlight:not(.expand) {
 				background-color: var(--donation-bgcolor-odd);
 			}
-			
+
 			.bubble.dono-highlight {
 				background-color: var(--donation-bgcolor-bubble);
 				box-shadow: inset 0 0 2px #ffff00a1;
@@ -1578,7 +1583,7 @@
 				margin: auto 0;
 				margin: auto min(2%, 31px) auto auto
 			}
-			
+
 			.horizontal .donationAmount {
 				vertical-align: middle;
 				margin: auto 0;
@@ -1717,7 +1722,7 @@
 			.popInModal > .imgButton {
 				margin-top: 2px;
 			}
-			
+
 			@media only screen and (min-width: 700.001px) { 
 				#chatInput_parent {
 					top: unset;
@@ -1727,7 +1732,7 @@
 					max-width: 700px;
 				}
 			}
-			
+
 			@media only screen and (max-width: 700px) {
 				#chatInput_parent {
 					position: fixed;
@@ -1738,12 +1743,12 @@
 					border-radius: 0;
 					margin:5px 0px;
 				}
-				
+
 				#chatInputCloseButton {
 					display:none!important;
 				}
 			}
-			
+
 			.modalTextInput {
 				height: 20px;
 				font-size: 18px;
@@ -1804,7 +1809,7 @@
 			#chatInput:focus {
 				width: 250px;
 			}
-			
+
 			#chatInput_parent:not(.compactchat) {
 				margin: 2.5px max( calc((100% - 700px) / 2 - 20px) , 0px);
 			}
@@ -2263,9 +2268,9 @@
 				contain: paint;
 				backface-visibility: hidden;
 			}
-			
 
-			
+
+
 			@keyframes fadein {
 				0% {
 					opacity: 0;
@@ -2538,7 +2543,7 @@
 			.alignright .compactmode {
 				margin-left: auto;
 			}
-			
+
 			.horizontal .hl-message {
 				min-height: 24px;
 			}
@@ -2560,15 +2565,15 @@
 			.alignright .horizontal .hl-donation {
 				padding-right: 11px;
 			}
-			
+
 			.alignright .horizontal {
 				direction: ltr; 
 			}
-			
+
 			.horizontal .hl-leftside:empty{
 				 display: none;
 			}
-			
+
 			.horizontal .hl-content {
 				align-content: center;
 			}
@@ -2580,11 +2585,11 @@
 				margin-left: auto;
 				display: flex;
 			}
-			
+
 			.alignright .horizontal .compactmode div.hl-message {
 				display: inline-block
 			}
-			
+
 			.alignright .compactmode .bubble.hl-message {
 				flex-direction: row;
 				overflow:hidden;
@@ -2592,37 +2597,37 @@
 				margin-left: auto;
 				display: flex;
 			}
-			
+
 			.alignright .hl-message.hl-content.bubble {
 				margin-left: auto;
 				display: flex;
 			}
-			
+
 			.alignright .compactmode.horizontal .hl-message {
 				display: inline-block;
 			}
-			
+
 			.alignright .hl-message .time-arrived {
 				margin:auto 4px;
 			}
-			
+
 			.alignright .highlight-chat .hl-firstline {
 				overflow:hidden;
 				text-overflow: ellipsis;
 				margin-left: auto;
 			}
-			
+
 			#currentScene {
 				background-color:#0000;
 				border:3px solid white;
 				padding:2px 5px;
 				cursor: pointer;
 			}
-			
+
 			#currentScene:empty {
 				display: none;
 			}
-			
+
 		.emote-container {
 		  display: inline-grid;
 		  grid-template-columns: 1fr;
@@ -2679,7 +2684,7 @@
 			width: 100%;
 			pointer-events: none;
 		}
-		
+
 		.output-container {
 			mask-image: linear-gradient(to top,
 				black 80%,
@@ -2707,7 +2712,7 @@
 		.OBS .output-container {
 			overflow: hidden;
 		}
-		
+
 		.output-container #output:not(.alignbottom) {
 			height: 100%; /* This might not be wortwhile */
 		}
@@ -2718,7 +2723,7 @@
 		.OBS .output-container #output::-webkit-scrollbar {
 			 display: none; /* Chrome, Safari, Opera */
 		}
-		
+
 		.context-menu__submenu {
 			display: none;
 			position: absolute;
@@ -5753,6 +5758,7 @@
 
 					msg.snippet = {};
 					//
+					// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 					if (data.textonly) {
 						msg.snippet.displayMessage = data.chatmessage;
 					} else if (!stripHTML) {
@@ -7470,13 +7476,14 @@
 				if (roastItem) roastItem.title = peers.extension ? "" : "Requires Social Stream and Private Chat Bot enabled.";
 			}
 
-			function cohostHtmlToText(value) {
+			function cohostHtmlToText(value, isHTML = true) {
 				var text = "";
 				if (value === null || typeof value === "undefined") return "";
+				if (!isHTML || !/[<&]/.test(value)) return String(value).replace(/\s+/g, " ").trim();
 				try {
-					var div = document.createElement("div");
+					var div = document.createElement("template");
 					div.innerHTML = String(value);
-					text = div.textContent || div.innerText || "";
+					text = div.content.textContent || "";
 				} catch (e) {
 					text = String(value || "");
 				}
@@ -7485,10 +7492,11 @@
 
 			function getCohostMessageText(element) {
 				var raw = element && element.rawContents ? element.rawContents : {};
-				var text = cohostHtmlToText(raw.chatmessage || raw.message || raw.text || "");
+				// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+				var text = cohostHtmlToText(raw.chatmessage || raw.message || raw.text || "", !raw.textonly);
 				if (!text && element) {
 					var messageNode = element.querySelector(".hl-content") || element.querySelector(".hl-message");
-					text = cohostHtmlToText(messageNode ? messageNode.innerHTML : element.innerHTML);
+					text = cohostHtmlToText(messageNode ? messageNode.textContent : element.textContent, false);
 				}
 				return text;
 			}
@@ -7499,13 +7507,14 @@
 				if (!name && element) {
 					var nameNode = element.querySelector(".hl-name");
 					name = nameNode ? nameNode.textContent : "";
+					return cohostHtmlToText(name, false) || "Viewer";
 				}
 				return cohostHtmlToText(name) || "Viewer";
 			}
 
 			function sendCohostOverlaySay(text, options) {
 				var opts = options || {};
-				var value = cohostHtmlToText(text);
+				var value = cohostHtmlToText(text, false);
 				if (!value) {
 					setCohostDockStatus("no readable message", "error");
 					return false;
@@ -7537,10 +7546,10 @@
 				return true;
 			}
 
-			function buildCohostPrompt(mode, element) {
+			function buildCohostPrompt(mode, element, messageText) {
 				var raw = element && element.rawContents ? element.rawContents : {};
 				var name = getCohostMessageName(element);
-				var text = getCohostMessageText(element);
+				var text = typeof messageText === "string" ? messageText : getCohostMessageText(element);
 				var platform = raw.type || element.dataset.sourceType || "chat";
 				var task = mode === "roast"
 					? "Write one short playful PG roast back to the viewer. Keep it friendly, no hate, no threats, no sexual content, no slurs, and do not punch down."
@@ -7591,7 +7600,7 @@
 				setCohostDockStatus("AI thinking", "busy");
 				send2Extension({
 					action: "chatbot",
-					value: buildCohostPrompt(mode, element),
+					value: buildCohostPrompt(mode, element, text),
 					target: target,
 					turbo: false
 				}, null, true);
@@ -8390,7 +8399,9 @@
 						const para = document.createElement("p");
 						//console.log(timeSince(msg.timestamp));
 						//console.log(msg.timestamp);
-						para.innerHTML = (msg.chatmessage||msg.message) + " - <small><i>Sent: " + timeSince(msg.timestamp) + "</i></small>";
+						var body = msg.chatmessage || msg.message || "";
+						// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+						para.innerHTML = (msg.textonly ? escapeHtml(body) : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(body) : escapeHtml(body))) + " - <small><i>Sent: " + timeSince(msg.timestamp) + "</i></small>";
 						messagesList.appendChild(para);
 					});
 					modal.style.display = "block";
@@ -10510,14 +10521,7 @@
 				}
 			}
 
-			function removeHtmlTagsFromPlainTextField(value) {
-				return String(value || "")
-					.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
-					.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
-					.replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, "")
-					.replace(/<template\b[^>]*>[\s\S]*?<\/template>/gi, "")
-					.replace(/<[^>]*>/g, "");
-			}
+			
 
 			function stripHtmlFunction(html) {
 				html = String(html == null ? "" : html);
@@ -10528,32 +10532,24 @@
 							doc.body.querySelectorAll("script,style,noscript,template").forEach(function (node) {
 								node.remove();
 							});
-							return removeHtmlTagsFromPlainTextField(doc.body.textContent || "");
+							return doc.body.textContent || "";
 						}
 					}
 				} catch (e) {}
-				let tmp = document.createElement("DIV");
+				let tmp = document.createElement("template");
 				tmp.innerHTML = html;
-				return removeHtmlTagsFromPlainTextField(tmp.textContent || tmp.innerText || "");
+				return tmp.content.textContent || "";
 			}
 
 			function isExactBlockedMessage(data, blockedMessages) {
 				if (!data || !blockedMessages || !blockedMessages.length) return false;
 				var messageText = data.textContent || data.chatmessage || "";
-				messageText = stripHtmlFunction(messageText).trim().toLowerCase();
+				// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+				messageText = (data.textContent || data.textonly ? messageText : stripHtmlFunction(messageText)).trim().toLowerCase();
 				return blockedMessages.indexOf(messageText) !== -1;
 			}
 
-			function sanitizePlainTextAlertFields(data) {
-				if (!data) {
-					return;
-				}
-				["hasDonation", "donation", "membership", "hasMembership", "subtitle", "title"].forEach(function (field) {
-					if (typeof data[field] === "string") {
-						data[field] = stripHtmlFunction(data[field]);
-					}
-				});
-			}
+			
 
 			function plainTextToHtml(value) {
 				let span = document.createElement("span");
@@ -10561,11 +10557,11 @@
 				return span.innerHTML;
 			}
 
-			function isAllCapsMessage(text) {
+			function isAllCapsMessage(text, isHTML = true) {
 				if (!text) {
 					return false;
 				}
-				text = stripHtmlFunction(text).replace(/\s\s+/g, " ").trim();
+				text = (isHTML ? stripHtmlFunction(text) : text).replace(/\s\s+/g, " ").trim();
 				if (!text) {
 					return false;
 				}
@@ -10635,10 +10631,14 @@
 			}
 
 			function colorReplyContext(chatmessage, data) {
+				// This parameter is the local display string: plain bodies have already been escaped once.
+				// Reply wrappers/colors may decorate that display, but must not enter literal data.chatmessage.
+				// Existing <i> markup in HTML-mode messages is valid and may be retained.
 				if ((!replyColorEnabled && !replyLabelColorEnabled) || DoNotShowInitialReply || !data.initial || !data.reply || !chatmessage) {
 					return chatmessage;
 				}
-				// Event rows add an outer <i>; color only the source's quoted <i><small> context.
+				// Color the source's quoted context; tolerate wrappers from older event rows.
+				// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 				if (!data.textonly && !stripHTML && /^(<i>)?<i><small>/i.test(chatmessage)) {
 					if (replyColorEnabled) {
 						chatmessage = chatmessage.replace(/^(<i>)?<i><small>/i, function (match, eventWrapper) {
@@ -10647,12 +10647,15 @@
 					}
 					return colorReplyLabel(chatmessage, data);
 				}
+				// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 				if (data.textonly || stripHTML) {
 					var initial = String(data.initial);
+					// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 					if (stripHTML && !data.textonly) {
 						initial = stripHtmlFunction(initial);
 					}
 					var prefix = initial.replace(/[\r\n]+/g, "").replace(/\s+/g, " ").trim() + ":";
+					// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 					if (data.textonly) {
 						prefix = escapeHtml(prefix);
 					}
@@ -11148,13 +11151,13 @@
 
 				return makeStatic;
 			}
-			function isEmojiOnly(str) {
+			function isEmojiOnly(str, isHTML = true) {
 				let strippedStr = stripEmojisFromText(str);
 				strippedStr = strippedStr.replace(/\s+/g, '');
 				if (strippedStr.length === 0) {
 					return true; // Contains only emojis and/or spaces
 				}
-				const textContent = strippedStr.replace(/<[^>]*>/g, '');
+				const textContent = isHTML ? strippedStr.replace(/<[^>]*>/g, '') : strippedStr;
 				return textContent.length === 0;
 			}
 			
@@ -11884,7 +11887,6 @@
 					}
 					var safeDataId = escapeAttributeValue(data.id);
 					var safeDataType = escapeAttributeValue(data.type);
-					sanitizePlainTextAlertFields(data);
 					if (stripDonationData){
 						data.hasDonation = "";
 					}
@@ -11942,16 +11944,23 @@
 
 					if (data.chatmessage) {
 						if (stripHTML) {
-							data.chatmessage = stripHtmlFunction(data.chatmessage);
+							// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
+							if (!data.textonly) {
+								data.chatmessage = stripHtmlFunction(data.chatmessage);
+								if (data.initial) data.initial = stripHtmlFunction(data.initial);
+								if (data.reply) data.reply = stripHtmlFunction(data.reply);
+								// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
+								data.textonly = true;
+							}
 						} else if (data.event) {
 							data.chatmessage = data.chatmessage.trim();
-							data.chatmessage = "<i>" + data.chatmessage + "</i>";
 						}
 					} else {
 						data.chatmessage = "";
 					}
 
-					if (hideAllCaps && data.chatmessage && isAllCapsMessage(data.chatmessage)) {
+					// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+					if (hideAllCaps && data.chatmessage && isAllCapsMessage(data.chatmessage, !data.textonly)) {
 						return;
 					}
 
@@ -12064,39 +12073,51 @@
 					var chatmessage = data.chatmessage || "";
 
 					if (chatmessage) {
+						// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 						if (stylizeEmoji && !reloaded && !data.textonly) {
 							//chatmessage = chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "<span class='emoji'>$1</span>");
 							chatmessage = wrapEmojis(chatmessage);
 						}
+						// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 						if (!stripHTML && !data.textonly) {
 							// we want to reuse this, but only if HTML is allowed
 							data.chatmessage = chatmessage;
+							// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 							data.textonly = false; // we know that it contains html now
 						}
 					}
 
+					// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+					const plainChatMessage = (hideshortmessages || hideNumbers) && !data.contentimg && !data.hasDonation
+						? (data.textContent || (data.textonly ? chatmessage : stripHtmlFunction(chatmessage)) || "").trim() : "";
 					if (!chatmessage && !data.contentimg && !data.hasDonation) {
 						return;
 					} else if (hideshortmessages && !data.contentimg && !data.hasDonation) {
-						if (chatmessage.replace(/(<([^>]+)>)/ig, "").length < hideshortmessages){
+						if (plainChatMessage.length < hideshortmessages){
 							return;
 						}
 					}
 
-					const plainChatMessage = (data.textContent || data.chatmessage || "").replace(/<[^>]*>/g, "").trim();
 					if (hideNumbers && plainChatMessage && !data.contentimg && !data.hasDonation && /^\d+$/.test(plainChatMessage)) {
 						return;
 					}
 					
 					if (filterEmojiOnly && data.chatmessage && !data.hasDonation && !data.contentimg) {
-						if (isEmojiOnly(data.chatmessage)) {
+						// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+						if (isEmojiOnly(data.chatmessage, !data.textonly)) {
 							return; // Skip this message as it contains only emojis or empty HTML tags
 						}
 					}
 					
+					if (NormalizeText && chatmessage) {
+						// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+						chatmessage = normalizeText(chatmessage, !data.textonly && !stripHTML);
+					}
+
+					// textonly=true: escape only the local display copy for this HTML template; raw data.chatmessage stays literal. This is output encoding, not re-sanitization.
 					if (data.textonly) {
-						// should be legacy compatible, since textonly is new.
-						chatmessage = escapeHtml(chatmessage); // lets escape any < > ' " or other special characeters, since it would be dangerous as HTML.
+						// Missing legacy flags retain HTML mode; a true flag must preserve literal characters.
+						chatmessage = escapeHtml(chatmessage); // Encode the display copy once; keep the stored/transmitted plain body unchanged.
 					}
 
 					if (largeavatar && data.chatname && data.type && avatars) {
@@ -12205,9 +12226,9 @@
 					var nameColor = "";
 					var dockNameColor = getDockNameColor(data);
 					if (dockNameColor) {
-						nameColor = "style='color:" + dockNameColor + ";'";
+						nameColor = "style='color:" + escapeAttributeValue(dockNameColor) + ";'";
 						if (largeavatar){
-							nameColor = "style='color:" + dockNameColor + ";display: flex;'";
+							nameColor = "style='color:" + escapeAttributeValue(dockNameColor) + ";display: flex;'";
 						}
 					} else if (largeavatar){
 						nameColor = "style='display: flex;'";
@@ -12228,42 +12249,12 @@
 						}
 					}
 					
-					if (giveVIPBadge && vip){
-						if (!data.chatbadges){
-							data.chatbadges = [];
-						}
-						data.chatbadges.push("./icons/vip.png");
+					var displayBadges = SocialStreamBadges.toArray(data.chatbadges);
+					if (giveVIPBadge && vip) {
+						displayBadges.push("./icons/vip.png");
+						data.chatbadges = displayBadges;
 					}
-
-					if (data.chatbadges && limitbadges !== false) {
-						try {
-							data.chatbadges = data.chatbadges.slice(0, limitbadges);
-						} catch (e) {}
-					}
-
-					if (data.chatbadges && showbadges) {
-						if (typeof data.chatbadges == "string"){
-							chatbadges = data.chatbadges;
-						} else {
-							data.chatbadges.forEach(badge => {
-								if (typeof badge == "object") {
-									if (badge.type && badge.type == "img" && badge.src) {
-										if (badge.bgcolor) {
-											chatbadges += "<img class='hl-badge' style='background-color:" + badge.bgcolor + ";' src='" + badge.src + "' />";
-										} else {
-											chatbadges += "<img class='hl-badge' src='" + badge.src + "' />";
-										}
-									} else if (badge.type && badge.type == "svg" && badge.html) {
-										chatbadges += "<span class='hl-badge svg'>" + badge.html + "</span>";
-									} else if ((badge.type == "text" || badge.type == "badge") && badge.text) {
-										chatbadges += "<span class='hl-badge textbadge'>" + badge.text + "</span>";
-									}
-								} else {
-									chatbadges += "<img class='hl-badge' src='" + badge + "' />";
-								}
-							});
-						}
-					}
+					chatbadges = showbadges ? SocialStreamBadges.render(displayBadges, { className: "hl-badge", limit: limitbadges }) : "";
 
 					var specialMessage = false;
 
@@ -12273,6 +12264,7 @@
 							data.chatname = "VDO.Ninja";
 						} else if (custombot) {
 							var textname = data.chatname;
+							// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 							if (!data.textonly && custombot) {
 								textname = unescapeHtml(data.chatname);
 							}
@@ -12397,17 +12389,20 @@
 						console.error("Messages should have an ID, else queuing/pinning won't work");
 					}
 					
+					// Final HTML-only display check for older/custom senders; do not trust URL version.
+					// textonly=true is already escaped literal text here and must bypass HTML sanitization.
+					// Check the local copy once, before trimming can create DOM; leave the stored body alone.
+					if (!data.textonly && chatmessage) {
+						chatmessage = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(chatmessage) : escapeHtml(chatmessage);
+					}
 					if (trimChat){
 						chatmessage = truncateHTMLContent(chatmessage, trimChat);
 					}
 					
-					if (NormalizeText && chatmessage){
-						chatmessage = normalizeText(data.chatmessage, data.textonly || false);
-					}
 					
 					chatmessage = colorReplyContext(chatmessage, data);
 
-					// Trusted relay HTML: chatname/chatmessage are sanitized upstream in background.js before rendering here.
+					// Chat HTML was checked above; generated row controls and reply decoration stay separate.
 					if (largeavatar) {
 						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + safeDataType + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + channelSourceName + timeArrived  +  "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
 					} else if (twoLines) {
@@ -12619,6 +12614,10 @@
 					}
 
 					let hlMessage = node.querySelector(".hl-message");
+					if (data.event && !stripHTML && contentElement) {
+						// Italics are display styling in either mode; never append <i> to a textonly payload.
+						contentElement.style.fontStyle = "italic";
+					}
 
 					var svgs = node.querySelectorAll("svg");
 					svgs.forEach(svg => {

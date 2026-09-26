@@ -1,5 +1,7 @@
 # Building Custom Overlays for Social Stream Ninja
 
+Already have a StreamElements or Streamlabs custom chat skin? Follow the [chat widget import guide](streamelements-chat-guide.html) to preview it and download an OBS HTML file.
+
 ## 1\. Introduction
 
 Transport migration: `server`, `server2` and `server3` are page-specific routes, not interchangeable switches. For maintained direct-chat consumers, `server2` receives captured chat on channel 4; Featured selections normally use channel 2. `localserver` changes the endpoint and does not grant host publishing/control permissions. Explicit route URLs take precedence over the local default. See the [current transport status](transport-migration-status.md) before claiming server-only support for a custom overlay.

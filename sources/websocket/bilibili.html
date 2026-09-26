@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="description" content="Bilibili Live Chat WebSocket Client: a chat source connection page for Social Stream Ninja. Use it with the app or extension to bring chat into your session.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bilibili Live Chat WebSocket Client</title>
     <script src="../../thirdparty/pako.min.js"></script>
@@ -14,31 +18,31 @@
             margin: 0 auto;
             background-color: white;
         }
-        
+
         .container {
             display: flex;
             gap: 20px;
         }
-        
+
         .left-panel {
             flex: 1;
             display: flex;
             flex-direction: column;
         }
-        
+
         .right-panel {
             flex: 1;
             display: flex;
             flex-direction: column;
         }
-        
+
         .config-panel {
             border: 1px solid #ccc;
             padding: 15px;
             border-radius: 5px;
             margin-bottom: 20px;
         }
-        
+
         .message-panel {
             border: 1px solid #ccc;
             padding: 15px;
@@ -47,7 +51,7 @@
             height: 400px;
             overflow-y: auto;
         }
-        
+
         .system-panel {
             border: 1px solid #ccc;
             padding: 15px;
@@ -55,7 +59,7 @@
             height: 200px;
             overflow-y: auto;
         }
-        
+
         .info-panel {
             border: 1px solid #ccc;
             padding: 15px;
@@ -64,20 +68,20 @@
             height: 200px;
             overflow-y: auto;
         }
-        
+
         h3 {
             margin-top: 0;
         }
-        
+
         .input-group {
             margin-bottom: 10px;
         }
-        
+
         .input-group label {
             display: block;
             margin-bottom: 5px;
         }
-        
+
         .input-group input, .input-group textarea {
             width: 100%;
             padding: 8px;
@@ -90,7 +94,7 @@
             margin: 0 6px 0 0;
             vertical-align: middle;
         }
-        
+
         button {
             padding: 8px 15px;
             background-color: #4CAF50;
@@ -99,63 +103,63 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        
+
         button:hover {
             background-color: #45a049;
         }
-        
+
         button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
-        
+
         .message {
             margin-bottom: 10px;
             padding: 8px;
             border-radius: 5px;
             background-color: #f9f9f9;
         }
-        
+
         .message-header {
             display: flex;
             align-items: center;
             margin-bottom: 5px;
         }
-        
+
         .avatar {
             width: 32px;
             height: 32px;
             border-radius: 50%;
             margin-right: 10px;
         }
-        
+
         .username {
             font-weight: bold;
             color: #2196F3;
         }
-        
+
         .message-time {
             margin-left: auto;
             color: #777;
             font-size: 0.85em;
         }
-        
+
         .message-content {
             color: #333;
         }
-        
+
         .gift-message {
             background-color: #FFF8E1;
         }
-        
+
         .entry-message {
             background-color: #E8F5E9;
         }
-        
+
         .super-chat {
             background-color: #FFEBEE;
         }
-        
+
         pre {
             background-color: #f5f5f5;
             padding: 10px;
@@ -163,43 +167,43 @@
             overflow-x: auto;
             font-size: 12px;
         }
-        
+
         .system-log {
             margin-bottom: 5px;
             font-family: monospace;
             font-size: 12px;
         }
-        
+
         .error {
             color: #f44336;
         }
-        
+
         .warning {
             color: #ff9800;
         }
-        
+
         .info {
             color: #2196F3;
         }
-        
+
         .room-info {
             display: flex;
             align-items: center;
             margin-bottom: 10px;
         }
-        
+
         .room-avatar {
             width: 48px;
             height: 48px;
             border-radius: 50%;
             margin-right: 15px;
         }
-        
+
         .room-title {
             font-weight: bold;
             font-size: 1.2em;
         }
-        
+
         .stats {
             display: flex;
             gap: 15px;
@@ -209,12 +213,12 @@
         body.hide-metrics .stats {
             display: none !important;
         }
-        
+
         .stat-item {
             display: flex;
             align-items: center;
         }
-        
+
         .stat-item i {
             margin-right: 5px;
         }
@@ -721,6 +725,10 @@
                         chatname: username,
                         chatmessage: text,
                         chatimg: avatarUrl,
+                        // Capture contract: textonly=true means a literal chatmessage string, not HTML.
+                        // Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+                        // HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+                        // Literal chatmessage on the wire: no app-added HTML or entity decoding; receivers must render it as text.
                         textonly: true,
                         chatbadges: [],
                         userid: userId.toString(),
@@ -799,6 +807,7 @@
                         chatname: gift.username,
                         chatmessage: `${gift.action} ${gift.num} × ${gift.giftName}`,
                         chatimg: gift.avatar,
+                        // Literal chatmessage on the wire: no app-added HTML or entity decoding; receivers must render it as text.
                         textonly: true,
                         hasDonation: `${gift.num} × ${gift.giftName}`,
                         event: "gift",
@@ -885,6 +894,7 @@
                         chatname: superChat.username,
                         chatmessage: superChat.message,
                         chatimg: superChat.avatar,
+                        // Literal chatmessage on the wire: no app-added HTML or entity decoding; receivers must render it as text.
                         textonly: true,
                         hasDonation: `¥${superChat.price}`,
                         event: "superchat",
@@ -940,6 +950,7 @@
                         type: "bilibili",
                         chatname: userInfo.uname || userInfo.username,
                         chatmessage: `has entered the room`,
+                        // Literal chatmessage on the wire: no app-added HTML or entity decoding; receivers must render it as text.
                         textonly: true,
                         event: "user_enter",
                         userid: (userInfo.uid || userInfo.userId).toString(),
@@ -977,6 +988,7 @@
                             type: "bilibili",
                             event: "follower_update",
                             meta: followerCount,
+                            // Literal chatmessage on the wire: no app-added HTML or entity decoding; receivers must render it as text.
                             textonly: true
                         };
                         
@@ -1000,6 +1012,7 @@
                         type: "bilibili",
                         event: "stream_status",
                         meta: status === "LIVE" ? "live" : "offline",
+                        // Literal chatmessage on the wire: no app-added HTML or entity decoding; receivers must render it as text.
                         textonly: true,
                         chatname: "System",
                         chatmessage: status === "LIVE" ? "Stream is now LIVE" : "Stream is now OFFLINE"

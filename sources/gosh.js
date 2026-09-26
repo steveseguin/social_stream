@@ -41,18 +41,23 @@
 		} catch (e) { return ""; }
 	}
 
+	// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+	// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+	// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+	// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 	function content(node, textonly) {
-		if (node.nodeType === 3) return textonly ? node.textContent : escapeHtml(node.textContent);
+		if (node.nodeType === 3) /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ return textonly ? node.textContent : escapeHtml(node.textContent);
 		if (node.nodeType !== 1 || /^(SCRIPT|STYLE|IFRAME|OBJECT|SVG|BUTTON)$/.test(node.nodeName)) return "";
 		if (node.nodeName === "BR") return " ";
 		if (node.nodeName === "IMG") {
 			var src = imageUrl(node.getAttribute("src"));
 			var alt = node.getAttribute("alt") || "";
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			if (textonly) return alt || (src ? "[image]" : "");
 			return src ? '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt) + '">' : escapeHtml(alt);
 		}
 		var result = "";
-		for (var i = 0; i < node.childNodes.length; i++) result += content(node.childNodes[i], textonly);
+		for (var i = 0; i < node.childNodes.length; i++) /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ result += content(node.childNodes[i], textonly);
 		if (node.nodeName === "LI") return result.trim() + "; ";
 		if (/^(DIV|P|UL|OL)$/.test(node.nodeName)) return result + " ";
 		return result;
@@ -83,7 +88,9 @@
 	function emit(row) {
 		// Follows and other system notices have no chat author; do not invent a sender.
 		if (!row.name) return;
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		var textonly = !!settings.textonlymode;
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		var message = textonly ? content(row.body, true).replace(/\s+/g, " ").trim() : row.html;
 		if (!message) return;
 		sendToApp({ message: {
@@ -91,6 +98,7 @@
 			nameColor: window.getComputedStyle(row.nameNode).color || "",
 			chatimg: "", chatbadges: "", backgroundColor: "", textColor: "",
 			contentimg: "", hasDonation: "", membership: "",
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: textonly, platform: "gosh", type: "gosh"
 		} });
 	}

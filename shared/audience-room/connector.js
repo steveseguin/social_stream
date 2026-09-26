@@ -241,6 +241,7 @@
 	};
 	Connector.prototype.publish = async function (message) {
 		if (this.state !== "connected" || this.inflight >= 4 || !message || message.private || message.suppressRelay || message.event || message.bot || message.type === "socialstreamchat" || !this.config.sources.includes(message.type) || !message.chatmessage) return;
+		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 		var text = message.textonly ? String(message.chatmessage) : this.options.cleanText(message.chatmessage);
 		if (!text.trim() || new TextEncoder().encode(text).length > 2048) return;
 		var gen = this.generation;

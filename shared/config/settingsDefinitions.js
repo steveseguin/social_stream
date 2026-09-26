@@ -1639,6 +1639,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "giphy_tenor_support",
     description: "Deprecated Tenor API key; retained for saved-settings compatibility. Set giphyKey instead."
   },
+  // Chat body representation only: true is literal text without added HTML; false permits sanitized HTML. This is not a trust flag for other fields.
   "textonlymode": {
     type: "boolean",
     category: "other_filters",

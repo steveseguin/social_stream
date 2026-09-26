@@ -8775,6 +8775,7 @@ function attachReactionTestButton() {
                 chatmessage: '<span class="reaction-heart">👍</span>',
                 chatimg: '',
                 contentimg: '',
+                // Chat body representation only: true is literal text without added HTML; false permits sanitized HTML. This is not a trust flag for other fields.
                 textonly: false,
                 platform: 'youtube',
                 type: 'youtube',

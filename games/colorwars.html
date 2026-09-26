@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
+    <meta name="description" content="Color Wars: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Color Wars - Social Stream Ninja</title>
     <link rel="icon" href="../favicon.ico" />
@@ -25,13 +28,13 @@
             font-family: 'Arial', sans-serif;
             color: white;
         }
-        
+
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
-        
+
         #canvas {
             position: absolute;
             top: 0;
@@ -39,7 +42,7 @@
             width: 100%;
             height: 100%;
         }
-        
+
         #team-scores {
             position: absolute;
             top: 20px;
@@ -54,20 +57,20 @@
             font-size: 24px;
             font-weight: bold;
         }
-        
+
         .team-score {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
+
         .team-indicator {
             width: 30px;
             height: 30px;
             border-radius: 50%;
             box-shadow: 0 0 10px currentColor;
         }
-        
+
         #leaderboard {
             position: absolute;
             top: 20px;
@@ -78,13 +81,13 @@
             backdrop-filter: blur(10px);
             min-width: 250px;
         }
-        
+
         #leaderboard h3 {
             margin-top: 0;
             color: #FFD700;
             text-align: center;
         }
-        
+
         .player-entry {
             display: flex;
             justify-content: space-between;
@@ -95,12 +98,12 @@
             border-radius: 8px;
             transition: all 0.3s ease;
         }
-        
+
         .player-entry:hover {
             background: rgba(255,255,255,0.2);
             transform: translateX(5px);
         }
-        
+
         .player-color {
             width: 20px;
             height: 20px;
@@ -108,7 +111,7 @@
             margin-right: 10px;
             box-shadow: 0 0 5px currentColor;
         }
-        
+
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -120,24 +123,24 @@
             text-align: center;
             font-size: 16px;
         }
-        
+
         #instructions strong {
             color: #FFD700;
             font-size: 18px;
         }
-        
+
         .paint-splash {
             position: absolute;
             border-radius: 50%;
             pointer-events: none;
             animation: splash 0.5s ease-out forwards;
         }
-        
+
         @keyframes splash {
             0% { transform: scale(0); opacity: 1; }
             100% { transform: scale(1); opacity: 0.8; }
         }
-        
+
         .power-up {
             position: absolute;
             width: 40px;
@@ -151,12 +154,12 @@
             border: 2px solid white;
             animation: powerUpPulse 1s ease-in-out infinite;
         }
-        
+
         @keyframes powerUpPulse {
             0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(255,255,255,0.5); }
             50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(255,255,255,0.8); }
         }
-        
+
         #round-timer {
             position: absolute;
             top: 100px;
@@ -166,7 +169,7 @@
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
-        
+
         #winner-overlay {
             position: absolute;
             top: 0;
@@ -179,14 +182,14 @@
             justify-content: center;
             flex-direction: column;
         }
-        
+
         #winner-text {
             font-size: 72px;
             font-weight: bold;
             text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
             margin-bottom: 20px;
         }
-        
+
         .particle {
             position: absolute;
             width: 4px;
@@ -623,6 +626,7 @@
         if (!data.chatmessage || !data.chatname) return;
 
         let rawMessage = data.chatmessage;
+        // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
         if (!data.textonly) {
             rawMessage = stripHtml(rawMessage);
         }

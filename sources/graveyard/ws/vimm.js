@@ -22,6 +22,10 @@ function escapeHtml(unsafe) {
 		tempDiv.innerHTML = unsafe;
 		var unescapedText = tempDiv.textContent || tempDiv.innerText || "";
 		
+		// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+		// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+		// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+		// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
 		if (settings.textonlymode) {
 			return unescapedText;
 		}
@@ -57,6 +61,7 @@ function getAllContentNodes(element) { // takes an element.
 		} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 			resp += escapeHtml(node.textContent);
 		} else if (node.nodeType === 1){
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			if (!settings.textonlymode){
 				if ((node.nodeName == "IMG") && node.src){
 					node.src.startsWith('http') || (node.src = node.src + "");
@@ -77,6 +82,7 @@ function processMessage(input){
 	msg = escapeHtml(msg);
 	if (!msg.length){return;}
 	
+	// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 	if (!settings.textonlymode){
 		msg = msg.replace(/:([a-zA-Z0-9]+):/g, '<img src="https://www.vimm.tv/media/emotes/$1.png">');
 	}
@@ -94,6 +100,7 @@ function processMessage(input){
 	data.hasDonation = "";
 	data.membership = "";;
 	data.contentimg = "";
+	// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 	data.textonly = settings.textonlymode || false;
 	data.type = "vimm";
 	

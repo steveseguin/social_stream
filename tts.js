@@ -1962,9 +1962,13 @@ TTS.speechMeta = function(data, allow = false) {
         var msgPlain = "";
         var sourceMessage = data.chatmessage || data.textContent || "";
 
-        if (sourceMessage) {
-            var tempContainer = document.createElement("div");
-            tempContainer.innerHTML = sourceMessage;
+        // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+        if (sourceMessage && (data.textonly || !data.chatmessage || !/[<&]/.test(sourceMessage))) {
+            msgPlain = String(sourceMessage);
+        } else if (sourceMessage) {
+            var template = document.createElement("template");
+            template.innerHTML = sourceMessage;
+            var tempContainer = template.content;
 
             // Drop embedded media so TTS never reads their attributes or data URLs
             tempContainer.querySelectorAll("img, video, audio, source, picture, canvas, svg, iframe, object, embed, lottie-player").forEach(function(node) {
@@ -2079,9 +2083,7 @@ TTS.speechMeta = function(data, allow = false) {
         }
 
         if (data.hasDonation) {
-            var donoText = document.createElement("div");
-            donoText.innerHTML = data.hasDonation;
-            donoText = donoText.textContent || donoText.innerText || "";
+            var donoText = String(data.hasDonation);
             donoText = sanitizeSpeechText(donoText.toLowerCase());
 
             if (chatname) {

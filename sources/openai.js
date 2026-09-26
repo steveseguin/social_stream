@@ -28,6 +28,10 @@
 		if (!element) {
 			return "";
 		}
+		// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+		// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+		// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+		// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 		if (settings.textonlymode) {
 			return String(element.textContent || "").trim();
 		}
@@ -196,6 +200,7 @@
 			hasDonation: "",
 			membership: "",
 			contentimg: "",
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: !!settings.textonlymode,
 			type: "openai"
 		};

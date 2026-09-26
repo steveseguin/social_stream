@@ -52,6 +52,10 @@
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent)+" ";
 			} else if (node.nodeType === 1){
+				// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+				// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+				// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						var image = node.cloneNode(false);
@@ -67,7 +71,7 @@
 	}
 	
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	
 	var chatStates = new Map();
@@ -92,6 +96,7 @@
 		}
 
 		var text = message.querySelector('[data-tag="chat-message-text-content"]');
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		var msg = text ? (settings.textonlymode ? text.textContent : getAllContentNodes(text)).trim() : "";
 		var postedImage = message.querySelector('picture img[src][alt="User posted image"]');
 		if (!msg && !postedImage) return; // Retry rows whose content has not hydrated yet.
@@ -118,6 +123,7 @@
 			hasDonation: "",
 			membership: "",
 			contentimg: postedImage ? postedImage.src : "",
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: settings.textonlymode || false,
 			type: "patreon"
 		});

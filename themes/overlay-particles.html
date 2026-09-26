@@ -10,14 +10,21 @@ This overlay creates a particle-based floating message system with:
 -->
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Particle System Chat Overlay: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+<script src="../libs/objects.js"></script>
+<script src="../shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="../shared/utils/chatBadges.css">
 <script type="text/javascript" src="../js/local-server-url.js"></script>
 <script type="text/javascript" src="../js/transport-dedupe.js"></script>
-    <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Particle System Chat Overlay</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <script src="https://socialstream.ninja/libs/colours.js" type="text/javascript"></script>
-    <link rel="canonical" href="https://socialstream.ninja/">
+
     <meta name="generator" content="Social Stream Ninja - https://github.com/steveseguin/social_stream">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -704,20 +711,7 @@ body {
         messageDiv.id = messageId;
         messageTimestamps.set(messageId, Date.now());
         
-        var chatbadgesHtml = "";
-        if (data.chatbadges) {
-            data.chatbadges.forEach(badge => {
-                if (typeof badge === "object") {
-                    if (badge.type === "img" && badge.src) {
-                        chatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;
-                    } else if (badge.type === "svg" && badge.html) {
-                        chatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;
-                    }
-                } else { 
-                    chatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;
-                }
-            });
-        }
+        var chatbadgesHtml = SocialStreamBadges.render(data.chatbadges);
         
         let avatarBorderColor = "linear-gradient(135deg, #4a90e2, #50e3c2)";
         if (data.nameColor) {
@@ -742,11 +736,12 @@ body {
         const avatarHtml = data.chatimg ? 
             `<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : '';
         const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="color: ${data.nameColor}; text-shadow: 0 2px 10px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : '';
-        const membershipHtml = data.membership ? `<div class="membership-status">${data.membership}</div>` : '';
+        const membershipHtml = data.membership ? `<div class="membership-status">${fallbackEscapeHtml(data.membership)}</div>` : '';
+        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
         const messageTextHtml = data.textonly ? 
             `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage.replace(/</g, '&lt;').replace(/>/g, '&gt;') : ''}</div>` :
             `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>`;
-        const donationHtml = data.hasDonation ? `<div class="donation">${data.hasDonation}</div>` : '';
+        const donationHtml = data.hasDonation ? `<div class="donation">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';
         
         const contentImgHtml = data.contentimg ? 
             `<div style="padding: 3px; border-radius: 15px; background: ${avatarBorderColor}; display: inline-block; margin-top: 12px;">

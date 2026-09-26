@@ -1,8 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Chat Overlay: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+<script src="../../libs/objects.js"></script>
+<script src="../../shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="../../shared/utils/chatBadges.css">
   <script type="text/javascript" src="../../js/local-server-url.js"></script>
-		<meta charset="UTF-8" />
+
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Chat Overlay</title>
 		<style>
@@ -191,7 +198,7 @@ img.ssn-content-image {
     margin-top: 6px;
 }
 </style>
-	</head>
+</head>
 
 	<body>
 		<div id="chat-container"></div>
@@ -399,18 +406,7 @@ img.ssn-content-image {
 					sourceIcon = `<img src="https://socialstream.ninja/sources/images/kick.png" alt="Kick" class="source-icon">`;
 				}
 
-				let chatbadges = "";
-				if (data.chatbadges) {
-					data.chatbadges.forEach(badge => {
-						if (typeof badge === "string") {
-							chatbadges += `<img class='badge' src='${escapeHtml(badge)}' />`;
-						} else if (badge && typeof badge === "object" && badge.type === "img" && badge.src) {
-							chatbadges += `<img class='badge' src='${escapeHtml(badge.src)}' />`;
-						} else if (badge && badge.type === "svg" && badge.html) {
-							chatbadges += `<span class='badge svg'>${badge.html}</span>`;
-						}
-					});
-				}
+				let chatbadges = SocialStreamBadges.render(data.chatbadges);
 
 				let nameStyle = "";
 				if (data.nameColor) {
@@ -439,6 +435,7 @@ img.ssn-content-image {
 						textStyle = `style="color:${data.textColor}"`;
 					}
 
+					// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
 					const renderedChatMessage = data.textonly ? escapeHtml(data.chatmessage || '') : (data.chatmessage || '');
 					messageDiv.innerHTML = `
 				<div class="text" ${textStyle}>${renderedChatMessage}</div>

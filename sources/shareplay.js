@@ -73,6 +73,10 @@
 
 	function escapeHtml(unsafe) {
 		try {
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
 			if (settings.textonlymode) {
 				return unsafe;
 			}
@@ -139,6 +143,7 @@
 		}
 
 		if (!element.childNodes || !element.childNodes.length) {
+			// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 			if (element.nodeType === 1 && element.nodeName === "IMG" && settings.textonlymode) {
 				return escapeHtml(element.alt || "") || "";
 			}
@@ -158,6 +163,7 @@
 			} else if (node.nodeType === 3 && node.textContent && node.textContent.trim().length > 0) {
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1) {
+				// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 				if (!settings.textonlymode) {
 					if (node.nodeName === "IMG" && node.src) {
 						node.src = node.src + "";
@@ -516,6 +522,7 @@
 			hasDonation: "",
 			membership: "",
 			contentimg: "",
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: settings.textonlymode || false,
 			type: "shareplay"
 		};
@@ -528,6 +535,7 @@
 				reply: replyContext
 			};
 			if (replyPrefix) {
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (settings.textonlymode) {
 					data.chatmessage = replyPrefix + ": " + data.chatmessage;
 				} else {
@@ -695,6 +703,7 @@
 			hasDonation: "",
 			membership: "",
 			contentimg: contentimg,
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: settings.textonlymode || false,
 			type: "shareplay",
 			event: "shoutout",
@@ -759,6 +768,7 @@
 			hasDonation: "",
 			membership: "",
 			contentimg: contentimg,
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: settings.textonlymode || false,
 			type: "shareplay",
 			event: "raid",

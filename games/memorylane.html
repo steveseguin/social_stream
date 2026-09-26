@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
+    <meta name="description" content="Memory Lane: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Memory Lane - Social Stream Ninja</title>
     <link rel="icon" href="../favicon.ico" />
@@ -25,21 +28,21 @@
             font-family: 'Arial', sans-serif;
             color: white;
         }
-        
+
         body.chroma {
             background: #00ff00;
         }
-        
+
         body.darkmode {
             background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
         }
-        
+
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
-        
+
         #memory-timeline {
             position: absolute;
             top: 50%;
@@ -49,7 +52,7 @@
             height: 80%;
             perspective: 1000px;
         }
-        
+
         .memory-photo {
             position: absolute;
             width: 220px;
@@ -63,12 +66,12 @@
             animation: photo-float 8s ease-in-out infinite;
             z-index: 1;
         }
-        
+
         .memory-photo:hover {
             transform: scale(1.1) rotateY(5deg);
             z-index: 10;
         }
-        
+
         @keyframes photo-float {
             0%, 100% { 
                 transform: translateY(0px) rotate(0deg);
@@ -83,7 +86,7 @@
                 transform: translateY(-15px) rotate(1deg);
             }
         }
-        
+
         .photo-polaroid {
             width: 100%;
             height: 100%;
@@ -92,7 +95,7 @@
             display: flex;
             flex-direction: column;
         }
-        
+
         .photo-image {
             flex: 1;
             background: linear-gradient(45deg, #ffeaa7, #fab1a0, #fd79a8, #e17055);
@@ -107,7 +110,7 @@
             position: relative;
             padding-top: 15px;
         }
-        
+
         .photo-text {
             position: absolute;
             bottom: 5px;
@@ -124,7 +127,7 @@
             overflow-y: auto;
             word-wrap: break-word;
         }
-        
+
         .photo-caption {
             margin-top: 10px;
             font-size: 14px;
@@ -134,7 +137,7 @@
             height: 20px;
             overflow: hidden;
         }
-        
+
         .memory-sparkle {
             position: absolute;
             font-size: 16px;
@@ -142,7 +145,7 @@
             animation: sparkle-twinkle 2s ease-in-out infinite;
             pointer-events: none;
         }
-        
+
         @keyframes sparkle-twinkle {
             0%, 100% { 
                 opacity: 0;
@@ -153,7 +156,7 @@
                 transform: scale(1) rotate(180deg);
             }
         }
-        
+
         .nostalgic-effect {
             position: absolute;
             top: 0;
@@ -167,7 +170,7 @@
             pointer-events: none;
             z-index: 5;
         }
-        
+
         #memory-stats {
             position: absolute;
             top: 20px;
@@ -179,12 +182,12 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 1000;
         }
-        
+
         .stat-line {
             margin: 5px 0;
             font-size: 16px;
         }
-        
+
         #memory-album {
             position: absolute;
             top: 20px;
@@ -199,7 +202,7 @@
             z-index: 1000;
             overflow-y: auto;
         }
-        
+
         .album-memory {
             display: flex;
             align-items: center;
@@ -210,29 +213,29 @@
             font-size: 14px;
             transition: all 0.3s ease;
         }
-        
+
         .album-memory:hover {
             background: rgba(255, 255, 255, 0.2);
             transform: translateX(5px);
         }
-        
+
         .album-emoji {
             font-size: 20px;
             margin-right: 10px;
         }
-        
+
         .album-text {
             flex: 1;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        
+
         .album-author {
             font-size: 12px;
             opacity: 0.7;
             margin-top: 2px;
         }
-        
+
         #mood-detector {
             position: absolute;
             bottom: 20px;
@@ -245,18 +248,18 @@
             z-index: 1000;
             text-align: center;
         }
-        
+
         .mood-indicator {
             font-size: 48px;
             margin: 10px 0;
             animation: mood-pulse 2s ease-in-out infinite;
         }
-        
+
         @keyframes mood-pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.1); }
         }
-        
+
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -269,12 +272,12 @@
             font-size: 16px;
             z-index: 1000;
         }
-        
+
         #instructions strong {
             color: #fab1a0;
             font-size: 18px;
         }
-        
+
         .memory-trail {
             position: absolute;
             width: 4px;
@@ -284,7 +287,7 @@
             pointer-events: none;
             animation: trail-fade 3s ease-out forwards;
         }
-        
+
         @keyframes trail-fade {
             0% {
                 opacity: 1;
@@ -295,7 +298,7 @@
                 transform: scale(0.3) translateY(-50px);
             }
         }
-        
+
         .vintage-filter {
             position: absolute;
             top: 0;
@@ -313,11 +316,11 @@
             pointer-events: none;
             z-index: 15;
         }
-        
+
         .photo-developing {
             animation: develop-photo 2s ease-out forwards;
         }
-        
+
         @keyframes develop-photo {
             0% {
                 opacity: 0;
@@ -731,6 +734,7 @@
             let message = data.chatmessage;
 
             // Check if textonly is set, if not we need to extract text from HTML
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!data.textonly) {
                 // Create a temporary element to parse HTML
                 const tempDiv = document.createElement('div');

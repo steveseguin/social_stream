@@ -2,8 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="description" content="Connect Streamer.bot to Social Stream Ninja to work with live chat events, actions and stream automation. Follow the integration setup instructions.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/streamerbot.html">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://socialstream.ninja/streamerbot.html">
+    <meta property="og:title" content="Streamer.bot Integration - Social Stream Ninja">
+    <meta property="og:description" content="Connect Streamer.bot to Social Stream Ninja to work with live chat events, actions and stream automation. Follow the integration setup instructions.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/streamerbot.html">
+    <meta name="twitter:title" content="Streamer.bot Integration - Social Stream Ninja">
+    <meta name="twitter:description" content="Connect Streamer.bot to Social Stream Ninja to work with live chat events, actions and stream automation. Follow the integration setup instructions.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SocialStream.Ninja Integration with Streamer.bot</title>
+    <title>Streamer.bot Integration - Social Stream Ninja</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -32,7 +53,7 @@
         a:hover {
             text-decoration: underline;
         }
-       
+
         code {
             font-family: 'Courier New', monospace;
         }
@@ -84,7 +105,7 @@
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
-	    
+
 	pre {
 	        background-color: #f8f8f8;
 	        border: 1px solid #ddd;
@@ -95,7 +116,7 @@
 	        margin-top: 35px;
 	        white-space: pre; 
 	    }
-	    
+
 	    .copy-button {
 	        position: absolute;
 	        top: -32px;
@@ -110,11 +131,11 @@
 	        transition: background-color 0.2s;
 	        z-index: 10;  /* Ensure button is above other elements */
 	    }
-		
+
 	.copy-button:hover {
 		background-color: #2980b9;
 	}
-	
+
 	.copy-button.copied {
 		background-color: #27ae60;
 	}
@@ -421,6 +442,7 @@ public class CPHInline
              <td>CPH.TryGetArg&lt;string&gt;("chatbadges", out string chatbadges)</td>
           </tr>
           <tr>
+             <!-- Carry this format flag with chatmessage: true is literal text, false/missing may be HTML; it is not a sanitizer certificate. -->
              <td>textonly</td>
              <td>Boolean</td>
              <td>If true, HTML has been stripped from the message.</td>

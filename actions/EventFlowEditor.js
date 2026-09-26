@@ -4382,7 +4382,7 @@ class EventFlowEditor {
 					{ value: 'lowKarma', label: 'Low Karma (<0.3)', group: 'Interaction', tooltip: 'Requires Add karma enabled in global settings' },
 					// Metadata
 					{ value: 'userid', label: 'User ID', group: 'Metadata' },
-					{ value: 'textonly', label: 'Text Only', group: 'Metadata' },
+					{ /* Chat body representation only: true is literal text without added HTML; false permits sanitized HTML. This is not a trust flag for other fields. */ value: 'textonly', label: 'Text Only', group: 'Metadata' },
 					{ value: 'chatbadges', label: 'Has Badges', group: 'Metadata' }
 				];
 				
@@ -4836,7 +4836,7 @@ class EventFlowEditor {
                     { value: 'admin', label: 'Is Admin', type: 'boolean' },
                     { value: 'question', label: 'Is Question', type: 'boolean' },
                     { value: 'private', label: 'Is Private / DM', type: 'boolean' },
-                    { value: 'textonly', label: 'Text-only Message', type: 'boolean' }
+                    { /* Chat body representation only: true is literal text without added HTML; false permits sanitized HTML. This is not a trust flag for other fields. */ value: 'textonly', label: 'Text-only Message', type: 'boolean' }
                 ];
                 
                 const selectedProp = commonProperties.find(p => p.value === node.config.property);
