@@ -75,12 +75,24 @@ jobs:
             --exclude='/.claude/' \
             --exclude='/.codex/' \
             --exclude='/.codex-tmp/' \
+            --exclude='/.codex-tmp-*.diff' \
+            --exclude='/.playwright-mcp/' \
+            --exclude='/.npm-cache/' \
             --exclude='/.github/' \
             --exclude='/.githooks/' \
             --exclude='/node_modules/' \
             --exclude='/scripts/' \
             --exclude='/tests/' \
             --exclude='/tmp/' \
+            --exclude='/tmp-*' \
+            --exclude='/tmp_*' \
+            --exclude='/.tmp_*' \
+            --exclude='/artifacts/' \
+            --exclude='/playwright-report/' \
+            --exclude='/test-results/' \
+            --exclude='/%SystemDrive%/' \
+            --exclude='/face-preview.png' \
+            --exclude='*.log' \
             main-content/ gh-pages-content/
           rsync -av \
             --exclude='/.git/' \
@@ -88,12 +100,24 @@ jobs:
             --exclude='/.claude/' \
             --exclude='/.codex/' \
             --exclude='/.codex-tmp/' \
+            --exclude='/.codex-tmp-*.diff' \
+            --exclude='/.playwright-mcp/' \
+            --exclude='/.npm-cache/' \
             --exclude='/.github/' \
             --exclude='/.githooks/' \
             --exclude='/node_modules/' \
             --exclude='/scripts/' \
             --exclude='/tests/' \
             --exclude='/tmp/' \
+            --exclude='/tmp-*' \
+            --exclude='/tmp_*' \
+            --exclude='/.tmp_*' \
+            --exclude='/artifacts/' \
+            --exclude='/playwright-report/' \
+            --exclude='/test-results/' \
+            --exclude='/%SystemDrive%/' \
+            --exclude='/face-preview.png' \
+            --exclude='*.log' \
             beta-content/ gh-pages-content/beta/
           # Public viewer URLs are stable even while creator controls ship on beta.
           # Keep the viewer's versioned dependencies separate from stable app assets.

@@ -116,8 +116,15 @@ tests/cohost-customopenai*.playwright.js
 # Generated benchmark/stress outputs
 artifacts/
 tests/artifacts/
+.playwright-mcp/
+playwright-report/
+test-results/
 tmp/
-debug.log
+/tmp-*
+/tmp_*
+*.log
+/face-preview.png
+/tests/voice-recordings-results.json
 docs/md/
 .tmp_*
 .codex-tmp/
@@ -187,7 +194,6 @@ tests/fixtures/*
 !tests/build-voice-corpus.py
 !tests/voice-recordings-ssapp.e2e.cjs
 !tests/voice-capture.test.cjs
-!tests/voice-recordings-results.json
 !tests/voice-thread-benchmark.cjs
 !tests/voice-windows-benchmark.ps1
 !tests/voice-native-benchmark.cjs
