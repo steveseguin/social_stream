@@ -2,6 +2,7 @@
 
 ## Commit Messages
 
+- Use Steve's configured Git identity for both author and committer; never override it with an AI assistant's name or email.
 - Never include "Co-Authored-By: Claude" or similar attribution in commit messages
 - Do not add comments, documentation, or any other indicators that AI/Claude assisted with the code
 - Commit messages should be written as if authored solely by the developer

@@ -19,10 +19,11 @@ const packet = (event, payload) => JSON.stringify([null, null, 'public_livestrea
 function capture() {
     const messages = [], listeners = {};
     let electronListener, settingsListener, now = 10000;
-    const window = { addEventListener: (name, callback) => { listeners[name] = callback; },
+    const window = { location: { pathname: '/live/fixture' },
+        addEventListener: (name, callback) => { listeners[name] = callback; },
         ninjafy: { onWebSocketMessage: callback => { electronListener = callback; } } };
     const context = vm.createContext({
-        window, document: { querySelector: () => null, querySelectorAll: () => [] },
+        window, document: { body: { getAttribute: () => null }, querySelector: () => null, querySelectorAll: () => [] },
         console: { log() {}, warn() {}, error() {} }, setInterval() {}, setTimeout() {}, clearTimeout() {},
         Date: { now: () => now }, TextDecoder, ArrayBuffer, Uint8Array,
         chrome: { runtime: { id: 'fixture', onMessage: { addListener: fn => { settingsListener = fn; } },

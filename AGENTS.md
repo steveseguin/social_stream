@@ -168,6 +168,7 @@ Sample payloads based on the fake test data in [background.js](./background.js):
 
 - VERY IMPORTANT: Never use `git restore`, `git revert`, or any revert/restore operation unless Steve explicitly asks for that exact action.
 - VERY IMPORTANT: Always work from and target the `beta` branch in this repository. Never work from, commit to, push to, or target `main`.
+- VERY IMPORTANT: Use Steve's configured Git identity for commits. Never set an AI assistant as author or committer, and never add AI co-author trailers or attribution to commit messages.
 
 ## Git Push Contract
 

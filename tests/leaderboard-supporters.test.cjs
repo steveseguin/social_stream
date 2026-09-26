@@ -239,10 +239,49 @@ async function testAutomaticRotation(baseUrl, browser) {
 	}
 }
 
+async function testGiftValuation(baseUrl, browser) {
+	const context = await makeContext(browser, { width: 1000, height: 700 });
+	try {
+		const harness = await openPage(context, baseUrl + "/leaderboard.html?session=gift-values&rankby=gifts&showvalue&persistdata");
+		const cases = [
+			{ name: "Kick amount", data: { type: "kick", hasDonation: "100 KICKs" }, usd: 0.15, count: 1 },
+			{ name: "Gift total", data: { type: "kick", hasDonation: "100 KICKs", giftCount: 2 }, usd: 0.15, count: 2 },
+			{ name: "USD override", data: { type: "kick", hasDonation: "100 KICKs", donoValue: 7.25, giftCount: 2 }, usd: 7.25, count: 2 },
+			{ name: "Zero override", data: { type: "kick", hasDonation: "100 KICKs", donoValue: 0 }, usd: 0, count: 1 },
+			{ name: "String zero override", data: { type: "kick", hasDonation: "100 KICKs", donoValue: "0" }, usd: 0, count: 1 },
+			{ name: "Invalid override", data: { type: "kick", hasDonation: "100 KICKs", donoValue: "invalid" }, usd: 0.15, count: 1 },
+			{ name: "TikTok unknown gifts", data: { type: "tiktok", hasDonation: "3 Mystery Gifts", giftCount: 3 }, usd: 0.03, count: 3 },
+			{ name: "Default subscriptions", data: { type: "kick", event: "subscription_gift", total: 2 }, usd: 7.5, count: 2 },
+			{ name: "Tier subscriptions", data: { type: "twitch", event: "subscription_gift", tier: "2000", total: 2 }, usd: 19.98, count: 2 }
+		];
+		const users = await harness.page.evaluate(cases => {
+			cases.forEach((entry, index) => window.processData(Object.assign({
+				id: "gift-value-" + index, chatname: entry.name, event: "gift"
+			}, entry.data)));
+			return JSON.parse(localStorage.getItem("leaderboard_gift-values_gifts")).users;
+		}, cases);
+		for (const entry of cases) {
+			const user = users.find(user => user.name === entry.name);
+			assert(user, entry.name + " was recorded");
+			for (const field of ["giftValue", "dailyGiftValue", "weeklyGiftValue"]) {
+				assert.strictEqual(user[field], entry.usd, entry.name + " " + field);
+			}
+			for (const field of ["giftCount", "giftsGiven", "dailyGifts", "weeklyGifts"]) {
+				assert.strictEqual(user[field], entry.count, entry.name + " " + field);
+			}
+		}
+		assert.deepStrictEqual(harness.errors, [], "Gift valuation browser errors: " + harness.errors.join("; "));
+	} finally {
+		await context.close();
+	}
+}
+
 async function main() {
 	const { server, baseUrl } = await startServer();
 	const browser = await chromium.launch({ headless: true });
 	try {
+		await testGiftValuation(baseUrl, browser);
+		console.log("PASS gift values use labeled amounts and USD overrides before subscription defaults");
 		await testExistingLayoutIsolation(baseUrl, browser);
 		console.log("PASS existing leaderboard layouts remain isolated from Supporter Showcase");
 		await testSupporterShowcase(baseUrl, browser);
