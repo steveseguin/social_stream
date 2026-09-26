@@ -44,6 +44,10 @@
 			return element.textContent ? escapeHtml(element.textContent) : "";
 		}
 		if (element.nodeType === 1){
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 			if (settings.textonlymode){
 				return element.textContent ? escapeHtml(element.textContent) : "";
 			}
@@ -69,6 +73,7 @@
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent)+" ";
 			} else if (node.nodeType === 1){
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
@@ -81,7 +86,7 @@
 	}
 
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 
 
@@ -421,6 +426,7 @@
 			replyDetails = getReplyDetails(messageRoot, authorNode);
 			if (replyDetails && replyDetails.label){
 				originalMessage = msg;
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (settings.textonlymode){
 					msg = replyDetails.text + ": " + msg;
 				} else {
@@ -441,6 +447,7 @@
 		data.hasDonation = "";
 		data.membership = "";
 		data.contentimg = "";
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "streamplace";
 		if (replyDetails && replyDetails.label){

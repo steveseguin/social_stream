@@ -91,6 +91,7 @@
             if (message && message.content) message = message.content;
             if (!message || typeof message.chatmessage !== 'string' || message.chatmessage.length > 2000) return;
             var copy = Object.assign({}, message);
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!copy.textonly) {
                 var template = document.createElement('template'); template.innerHTML = copy.chatmessage;
                 copy.chatmessage = template.content.textContent || '';
@@ -118,7 +119,7 @@
         var counter = 0;
         setInterval(function () {
             counter++;
-            receive({ type: 'demo', chatname: ['Juniper', 'CosmicCat', 'River', 'Milo', 'Nova'][counter % 5], textonly: true, id: counter,
+            receive({ type: 'demo', chatname: ['Juniper', 'CosmicCat', 'River', 'Milo', 'Nova'][counter % 5], /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly: true, id: counter,
                 chatmessage: typeof game.previewCommand === 'function' ? game.previewCommand(counter) : mode === 'signal' ? '!code ' + (counter % 7 === 0 ? game.secret : Array.from({ length: 4 }, function () { return 1 + Math.floor(Math.random() * 6); }).join('')) : '!vote ' + (1 + counter % 3) });
         }, 2000);
         return; // Demo never opens a session or sends messages.

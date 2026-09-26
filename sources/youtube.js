@@ -60,6 +60,10 @@
 
 	function escapeHtml(unsafe) {
 		try {
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
 			if (settings.textonlymode) {
 				return unsafe;
 			}
@@ -589,6 +593,7 @@
 		function processNode(node) {
 			if (node.nodeType === 3 && node.textContent.length > 0) {
 				// Text node
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (settings.textonlymode){
 					result += node.textContent;
 					return;
@@ -634,7 +639,7 @@
 				// Element node
 				if (node.nodeName === "IMG") {
 					processEmote(node);
-				} else if (!settings.textonlymode && node.href && (node.nodeName === "A")) {
+				} else /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ if (!settings.textonlymode && node.href && (node.nodeName === "A")) {
 					
 					if (pendingSpace){
 						result += pendingSpace;
@@ -643,6 +648,7 @@
 					pendingSpace = " <a href='"+node.href+"' target='_blank'>"+escapeHtml(node.textContent)+"</a> ";
 					
 				} else if (node.nodeName.toLowerCase() === "svg" && node.classList.contains("seventv-chat-emote")) {
+					// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 					if (settings.textonlymode){
 						return;
 					}
@@ -651,13 +657,14 @@
 					result += resolvedSvg.outerHTML;
 				} else if (node.childNodes.length) {
 					Array.from(node.childNodes).forEach(processNode);
-				} else if (!settings.textonlymode && (node.nodeName.toLowerCase() === "svg")){
+				} else /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ if (!settings.textonlymode && (node.nodeName.toLowerCase() === "svg")){
 					result += node.outerHTML;
 				}
 			}
 		}
 
 		function processEmote(emoteNode) {
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			if (settings.textonlymode){
 				if (emoteNode.alt && isEmoji(emoteNode.alt)){
 					result += escapeHtml(emoteNode.alt);
@@ -1140,6 +1147,7 @@
 			}
 		} catch (e) {}
 
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		if (!settings.textonlymode) {
 			try {
 				chatmessage = getAllContentNodes(ele.querySelector("#message, .seventv-yt-message-content"));
@@ -1466,6 +1474,7 @@
 				  if (!subtitle && jewelDonation.giftName) {
 					subtitle = escapeHtml(jewelDonation.giftName);
 				  }
+				  // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				  if (chatmessage && !settings.textonlymode){
 					chatmessage += ' <svg xmlns="http://www.w3.org/2000/svg" style="fill: red;" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M19.28 3.61c-.96-.81-2.51-.81-3.47 0-.68.58-1.47 2.66-1.81 3.64-.34-.98-1.13-3.06-1.81-3.64-.96-.81-2.51-.81-3.47 0-.96.81-.96 2.13 0 2.94.62.53 2.7 1.12 3.94 1.45H5v13h14V8h-3.66c1.24-.32 3.32-.92 3.94-1.45.96-.81.96-2.13 0-2.94zM6 9h8v6H6V9zm0 11v-4h8v4H6zm12 0h-3v-4h3v4zm0-11v6h-3V9h3zM9.43 5.89c-.58-.43-.58-1.13 0-1.57.29-.21.67-.32 1.05-.32s.76.11 1.04.32c.39.29 1.02 1.57 1.48 2.68-1.48-.35-3.18-.82-3.57-1.11zm9.14 0c-.39.29-2.09.76-3.57 1.11.46-1.11 1.09-2.39 1.48-2.68.29-.21.67-.32 1.04-.32.38 0 .76.11 1.04.32.58.44.58 1.14.01 1.57z"></path></svg>';
 				  }
@@ -1484,6 +1493,7 @@
 			if (!eventType) {
 				eventType = "supersticker";
 			}
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			if (!settings.textonlymode) {
 				chatmessage = '<img class="supersticker" src="' + chatsticker + '">';
 			}
@@ -1556,6 +1566,7 @@
 				replyLabel = replyInfo.label;
 				originalMessage = chatmessage;
 				const replyPlainText = replyInfo.text || replyLabel;
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (settings.textonlymode) {
 					const prefix = replyLabel ? `${replyLabel}: ` : "";
 					const combined = `${prefix}${baseMessagePlain}`.trim();
@@ -1604,6 +1615,7 @@
 		if (videoId){
 			data.videoid = videoId;
 		}
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube"; 
 		if (jewelDonation && jewelDonation.giftUrl) {
@@ -2352,6 +2364,7 @@
 			contentimg: animationUrl,
 			hasDonation: "1 YouTube Gift",
 			subtitle: giftName,
+			// HTML-mode chatmessage may contain formatting/emotes; keep its normal HTML sanitization boundary.
 			textonly: false,
 			type: youtubeShorts ? "youtubeshorts" : "youtube",
 			event: "jeweldonation",
@@ -2377,6 +2390,7 @@
 		imageNode.youtubeSocialStreamHandledUrl = imageUrl;
 		var reactionType = normalizeDonationText(imageNode.getAttribute("alt") || "") || "emoji";
 		var chatmessage = reactionType;
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		if (!settings.textonlymode) {
 			chatmessage = '<img class="youtube-live-reaction" src="' + escapeYouTubeAttribute(imageUrl) + '" alt="' + escapeYouTubeAttribute(reactionType) + '">';
 		}
@@ -2385,6 +2399,7 @@
 			chatmessage: chatmessage,
 			chatimg: "",
 			contentimg: imageUrl,
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: settings.textonlymode || false,
 			type: youtubeShorts ? "youtubeshorts" : "youtube",
 			event: "reaction",

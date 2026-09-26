@@ -65,7 +65,7 @@
     }
 
     var settings = {};
-    // settings.textonlymode
+    // textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
     // settings.captureevents
     chrome.runtime.sendMessage(chrome.runtime.id, {
         "getSettings": true

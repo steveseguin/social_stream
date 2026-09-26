@@ -103,8 +103,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
 
                 // Close mobile nav if open
-                nav.classList.remove('active');
-                mobileNavToggle.classList.remove('active');
+                var menu = document.querySelector('.site-menu[aria-expanded="true"]');
+                if (menu) menu.click();
             }
         });
     });

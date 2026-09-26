@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
+    <meta name="description" content="Pet Racing: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pet Racing - Social Stream Ninja</title>
     <link rel="icon" href="../favicon.ico" />
@@ -25,7 +28,7 @@
             font-style: normal;
             font-display: swap;
         }
-        
+
         body {
             margin: 0;
             padding: 0;
@@ -33,13 +36,13 @@
             overflow: hidden;
             font-family: 'Arial', 'NotoColorEmoji', sans-serif;
         }
-        
+
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
-        
+
         #race-track {
             position: absolute;
             top: 50%;
@@ -55,7 +58,7 @@
             border-bottom: 5px solid #1e272e;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
-        
+
         .pet {
             position: absolute;
             width: 60px;
@@ -64,12 +67,12 @@
             filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
             animation: bounce 0.5s ease-in-out infinite alternate;
         }
-        
+
         @keyframes bounce {
             0% { transform: translateY(0); }
             100% { transform: translateY(-5px); }
         }
-        
+
         .pet-label {
             position: absolute;
             bottom: -25px;
@@ -84,7 +87,7 @@
             font-weight: bold;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
+
         .finish-line {
             position: absolute;
             right: 50px;
@@ -100,7 +103,7 @@
             );
             border: 2px solid #FFD700;
         }
-        
+
         #ui-overlay {
             position: absolute;
             top: 20px;
@@ -112,13 +115,13 @@
             border-radius: 15px;
             backdrop-filter: blur(10px);
         }
-        
+
         #race-status {
             font-size: 36px;
             font-weight: bold;
             margin-bottom: 10px;
         }
-        
+
         #betting-board {
             position: absolute;
             top: 20px;
@@ -131,14 +134,14 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
+
         #betting-board h3 {
             margin-top: 0;
             color: #FFD700;
             text-align: center;
             font-size: 20px;
         }
-        
+
         .bet-entry {
             display: flex;
             justify-content: space-between;
@@ -149,12 +152,12 @@
             border-radius: 8px;
             transition: all 0.3s ease;
         }
-        
+
         .bet-entry:hover {
             background: rgba(255, 255, 255, 0.2);
             transform: translateX(5px);
         }
-        
+
         #winner-announcement {
             position: absolute;
             top: 50%;
@@ -172,13 +175,13 @@
             border-radius: 20px;
             border: 3px solid #FFD700;
         }
-        
+
         @keyframes pulse {
             0% { transform: translate(-50%, -50%) scale(1); }
             50% { transform: translate(-50%, -50%) scale(1.1); }
             100% { transform: translate(-50%, -50%) scale(1); }
         }
-        
+
         .boost-effect {
             position: absolute;
             width: 40px;
@@ -189,7 +192,7 @@
             pointer-events: none;
             box-shadow: 0 0 20px rgba(255, 255, 0, 0.8);
         }
-        
+
         @keyframes boost {
             0% { 
                 transform: scale(0.5) translateX(0);
@@ -200,7 +203,7 @@
                 opacity: 0;
             }
         }
-        
+
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -213,12 +216,12 @@
             text-align: center;
             font-size: 16px;
         }
-        
+
         #instructions strong {
             color: #FFD700;
             font-size: 18px;
         }
-        
+
         .floating-points {
             position: absolute;
             font-size: 32px;
@@ -228,7 +231,7 @@
             animation: floatUp 2s ease-out forwards;
             pointer-events: none;
         }
-        
+
         @keyframes floatUp {
             0% {
                 transform: translateY(0);
@@ -633,6 +636,7 @@
         if (typeof data.chatmessage !== 'string' || typeof data.chatname !== 'string' || !data.chatmessage || !data.chatname) return;
 
         let rawMessage = data.chatmessage;
+        // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
         if (!data.textonly) {
             rawMessage = stripHtml(rawMessage);
         }

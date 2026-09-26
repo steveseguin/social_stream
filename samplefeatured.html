@@ -7,9 +7,14 @@ Development Notes:
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="utf-8" />
+    <meta name="description" content="Overlay. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+<script src="./libs/objects.js"></script>
+<script src="./shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="./shared/utils/chatBadges.css">
   <script type="text/javascript" src="./js/local-server-url.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta charset="utf-8" />
+
     <title>Social Stream - Overlay</title>
     <meta name="title" content="Social Stream - Overlay" />
     <link rel="icon" href="./favicon.ico" />
@@ -201,7 +206,7 @@ Development Notes:
 			.highlight-chat {
 				animation: none;
 			}
-			
+
 			.fade {
 				transition: none;
 			}
@@ -478,6 +483,7 @@ Development Notes:
             const messageContent = this.buildMessageContent(data);
             document.getElementById('output').innerHTML = messageContent;
 
+            // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
             if (data.textonly) {
                 document.getElementById('message').textContent = data.chatmessage || '';
             }
@@ -501,6 +507,7 @@ Development Notes:
             const styleOverride = this.getStyleOverride(data);
 			const donationContent = this.buildDonation(data);
 
+            // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
             return `
                 <div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="${data.type || 'none'}">
 					<div class="hl-title">
@@ -545,29 +552,15 @@ Development Notes:
         },
 
         buildChatBadges(badges) {
-            if (!badges?.length) return '';
-
-            const badgeElements = badges.map(badge => {
-                if (typeof badge === 'object') {
-                    if (badge.type === 'img' && badge.src) {
-                        return `<img class="hl-badge" src="${badge.src}" />`;
-                    } else if (badge.type === 'svg' && badge.html) {
-                        return `<span class="hl-badge">${badge.html}</span>`;
-                    }
-                } else {
-                    return `<img class="hl-badge" src="${badge}" />`;
-                }
-                return '';
-            }).join('');
-
-            return badgeElements ? `<div class="hl-badges">${badgeElements}</div>` : '';
+            const html = SocialStreamBadges.render(badges, { className: "hl-badge" });
+            return html ? "<div class=\"hl-badges\">" + html + "</div>" : "";
         },
 		
 		buildDonation(data) {
             if (!(data.hasDonation || data.donation)) return '';
 
             const donationAmount = (data.hasDonation || data.donation);
-            return `<div class="hl-donation">${donationAmount}</div>`;
+            return `<div class="hl-donation">${fallbackEscapeHtml(donationAmount)}</div>`;
         },
 
         buildSourceType(type = 'none') {
@@ -592,7 +585,7 @@ Development Notes:
                 styles.push(data.textNameColor);
             }
             
-            return styles.length ? `style="${styles.join('; ')}"` : '';
+            return styles.length ? `style="${fallbackEscapeHtml(styles.join('; '))}"` : '';
         },
 
         handleTwitchImage(data) {

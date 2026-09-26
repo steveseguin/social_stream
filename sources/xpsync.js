@@ -46,13 +46,19 @@
 
 		if (!element){return resp;}
 		if (element.nodeType === 3){
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 			return settings.textonlymode ? (element.textContent || "") : escapeHtml(element.textContent || "");
 		}
 		if (element.nodeType !== 1){return resp;}
 		if (element.nodeName === "BR"){
+			// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 			return settings.textonlymode ? "\n" : "<br>";
 		}
 		if (element.nodeName === "IMG"){
+			// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 			if (settings.textonlymode){
 				return element.getAttribute("alt") || element.getAttribute("title") || "";
 			}
@@ -72,7 +78,7 @@
 	}
 
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 
 	function parseViewerCount(value){
@@ -290,6 +296,7 @@
 					replyLabel = (replyColon > 0 ? replyText.substring(0, replyColon) : replyText).trim();
 					if (replyLabel){
 						originalMessage = msg;
+						// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 						if (settings.textonlymode){
 							msg = replyLabel + ": " + msg;
 						} else {
@@ -323,6 +330,7 @@
 		if (isModerator){data.mod = true;}
 		if (isBot){data.bot = true;}
 		data.contentimg = "";
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "xpsync";
 		if (standardRow){data.id = ele.id.substring(5);}

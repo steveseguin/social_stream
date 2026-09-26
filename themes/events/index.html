@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script type="text/javascript" src="../../js/local-server-url.js"></script>
     <meta charset="UTF-8">
+    <meta name="description" content="Moderator Dashboard: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+  <script type="text/javascript" src="../../js/local-server-url.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moderator Dashboard</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
@@ -211,6 +215,12 @@ img.ssn-content-image {
 </div>
 <script src="../../currency.js"></script>
 <script>
+    function escapePlainMetadata(value) {
+        return String(value == null ? "" : value).replace(/[&<>"']/g, function (character) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character];
+        });
+    }
+
     var urlParams = new URLSearchParams(window.location.search);
     var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
     // Transport migration guard: only pages with full server parity may skip the legacy bridge.
@@ -378,6 +388,7 @@ img.ssn-content-image {
             }
         }
         
+        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
         messageDiv.innerHTML = `
             <div class="message-header">
                 <div class="message-meta">
@@ -388,11 +399,17 @@ img.ssn-content-image {
                 </div>
             </div>
             
-            <div class="text">${data.chatmessage || ''}</div>
-            ${data.hasDonation ? `<div class="donation">💰 ${data.hasDonation}</div>` : ''}
+            <div class="text">${data.textonly ? '' : (data.chatmessage || '')}</div>
+            ${data.hasDonation ? `<div class="donation">💰 ${escapePlainMetadata(data.hasDonation)}</div>` : ''}
             ${usdValue > 0 ? `<div class="usd-value">$${usdValue.toFixed(2)} USD</div>` : ''}
             <div class="timestamp">${timeString}</div>
         `;
+
+        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+        if (data.textonly) {
+		var messageText = messageDiv.querySelector('.text');
+		if (messageText) messageText.textContent = data.chatmessage || '';
+        }
         
         appendContentImage(messageDiv, data);
         chatContainer.prepend(messageDiv);

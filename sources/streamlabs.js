@@ -5,7 +5,7 @@
   let activeObserver = null;
   let streamlabsExclusiveOnly = false;
   let settingsLoaded = !window?.chrome?.runtime?.id;
-  let settings = { textonlymode: false };
+  let settings = { /* Capture contract: textonly=true means a literal chatmessage string, not HTML. Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal. HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage. */ /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ textonlymode: false };
 
   // If we're on the outer alert-box page that just embeds the real widget iframe,
   // let the iframe context handle the capture to avoid double sends.
@@ -19,14 +19,15 @@
   function applySettings(incoming) {
     try {
       streamlabsExclusiveOnly = !!incoming?.streamlabsExclusive?.setting;
-      const nextSettings = Object.assign({ textonlymode: false }, incoming || {});
+      const nextSettings = Object.assign({ /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ textonlymode: false }, incoming || {});
+      // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
       nextSettings.textonlymode =
         !!incoming?.textonlymode?.setting || !!incoming?.textonlymode || false;
       settings = nextSettings;
       settingsLoaded = true;
     } catch (error) {
       streamlabsExclusiveOnly = false;
-      settings = { textonlymode: false };
+      settings = { /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ textonlymode: false };
       settingsLoaded = true;
     }
   }
@@ -105,6 +106,7 @@
     const { messageTemplate, userMessage, imageSrc, tokens, messageText } = snapshot || {};
     if (!messageTemplate && !userMessage && !imageSrc && !messageText) return null;
 
+    // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
     const textOnlyActive = settings.textonlymode || !settingsLoaded;
     const chatmessage = sanitizeText(
       userMessage || messageText || messageTemplate || 'Alert',
@@ -132,6 +134,7 @@
       chatname: nameToken || 'Streamlabs Alert',
       chatmessage,
       contentimg: imageSrc || '',
+      // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
       textonly: textOnlyActive
     };
     if (Object.keys(meta).length) {
@@ -148,6 +151,7 @@
 
   function snapshotFromDocument(doc) {
     if (!doc) return null;
+    // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
     const textOnlyActive = settings.textonlymode || !settingsLoaded;
     const messageEl = doc.querySelector('#alert-message');
     const userMessageEl = doc.querySelector('#alert-user-message');

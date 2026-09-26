@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
+    <meta name="description" content="Word Storm: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Word Storm - Social Stream Ninja</title>
     <link rel="icon" href="../favicon.ico" />
@@ -25,21 +28,21 @@
             font-family: 'Arial', sans-serif;
             color: white;
         }
-        
+
         body.chroma {
             background: #00ff00;
         }
-        
+
         body.darkmode {
             background: #000000;
         }
-        
+
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
-        
+
         #word-cloud {
             position: absolute;
             top: 50%;
@@ -49,7 +52,7 @@
             height: 70%;
             perspective: 1000px;
         }
-        
+
         .word-bubble {
             position: absolute;
             padding: 8px 16px;
@@ -63,30 +66,30 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(5px);
         }
-        
+
         .word-bubble:hover {
             transform: scale(1.1);
             z-index: 10;
         }
-        
+
         .word-size-1 { font-size: 16px; }
         .word-size-2 { font-size: 20px; }
         .word-size-3 { font-size: 24px; }
         .word-size-4 { font-size: 32px; }
         .word-size-5 { font-size: 40px; }
         .word-size-6 { font-size: 48px; }
-        
+
         @keyframes float {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
             25% { transform: translateY(-10px) rotate(1deg); }
             50% { transform: translateY(-5px) rotate(-1deg); }
             75% { transform: translateY(-15px) rotate(1deg); }
         }
-        
+
         .word-new {
             animation: word-spawn 0.8s ease-out;
         }
-        
+
         @keyframes word-spawn {
             0% {
                 opacity: 0;
@@ -101,17 +104,17 @@
                 transform: scale(1) rotate(0deg);
             }
         }
-        
+
         .word-popular {
             animation: word-pulse 2s ease-in-out infinite;
             box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
         }
-        
+
         @keyframes word-pulse {
             0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
             50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.9); }
         }
-        
+
         #stats {
             position: absolute;
             top: 20px;
@@ -123,12 +126,12 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
         }
-        
+
         .stat-line {
             margin: 5px 0;
             font-size: 16px;
         }
-        
+
         #trending {
             position: absolute;
             top: 20px;
@@ -141,7 +144,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
         }
-        
+
         .trending-word {
             display: flex;
             justify-content: space-between;
@@ -152,13 +155,13 @@
             border-radius: 15px;
             font-size: 14px;
         }
-        
+
         .trending-rank {
             font-weight: bold;
             color: #ffd700;
             margin-right: 10px;
         }
-        
+
         #word-storm-center {
             position: absolute;
             top: 50%;
@@ -172,7 +175,7 @@
             pointer-events: none;
             animation: storm-pulse 3s ease-in-out infinite;
         }
-        
+
         @keyframes storm-pulse {
             0%, 100% { 
                 transform: translate(-50%, -50%) scale(1);
@@ -183,7 +186,7 @@
                 text-shadow: 0 0 50px rgba(255, 215, 0, 1);
             }
         }
-        
+
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -196,12 +199,12 @@
             font-size: 16px;
             z-index: 100;
         }
-        
+
         #instructions strong {
             color: #ffd700;
             font-size: 18px;
         }
-        
+
         .connection-line {
             position: absolute;
             height: 2px;
@@ -210,13 +213,13 @@
             z-index: 5;
             pointer-events: none;
         }
-        
+
         @keyframes connection-fade {
             0% { opacity: 0; }
             50% { opacity: 1; }
             100% { opacity: 0; }
         }
-        
+
         .word-combo {
             position: absolute;
             top: 50%;
@@ -230,7 +233,7 @@
             pointer-events: none;
             animation: combo-explosion 2s ease-out forwards;
         }
-        
+
         @keyframes combo-explosion {
             0% { 
                 opacity: 0; 
@@ -637,6 +640,7 @@
             if (!data || !data.chatmessage || !data.chatname) return;
 
             let text = data.chatmessage;
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!data.textonly) {
                 text = stripHtml(text);
             }

@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Actions Overlay. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
 <script src="shared/overlay-control-transport.js"></script>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
-    <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
     <title>Actions Overlay - Social Stream Ninja</title>
@@ -35,7 +39,7 @@
             align-items: center;
             z-index: 9999;
         }
-		
+
 		#status-message {
 			color: rgba(204, 204, 204, 0.5); /* Make semi-transparent */
 			font-size: 18px;
@@ -74,6 +78,34 @@
 			border-color: rgba(255, 152, 0, 0.55);
 		}
 
+        #audio-unlock-prompt {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10030;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #f5f8ff;
+            background: rgba(11, 18, 32, 0.95);
+        }
+
+        #audio-unlock-prompt button {
+            margin-left: 8px;
+            padding: 8px 12px;
+            border: 1px solid #f5f8ff;
+            border-radius: 4px;
+            color: #f5f8ff;
+            background: #263449;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        #audio-unlock-prompt button:focus {
+            outline: 3px solid #ffffff;
+            outline-offset: 3px;
+        }
+
 		.fullscreen-media-container {
 			position: fixed;
 			top: 0;
@@ -101,7 +133,7 @@
 			max-height: 95%;
 			border: none;
 		}
-		
+
 		/* Modal styles */
 		.modal {
 			display: none;
@@ -115,7 +147,7 @@
 			justify-content: center;
 			align-items: center;
 		}
-		
+
 		.modal-content {
 			background-color: #fefefe;
 			padding: 30px;
@@ -126,13 +158,13 @@
 			text-align: center;
 			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 		}
-		
+
 		.modal-content h2 {
 			margin-top: 0;
 			margin-bottom: 20px;
 			color: #333;
 		}
-		
+
 		.modal-content input[type="text"] {
 			width: 100%;
 			padding: 10px;
@@ -142,7 +174,7 @@
 			font-size: 16px;
 			box-sizing: border-box;
 		}
-		
+
 		.modal-content button {
 			background-color: #4CAF50;
 			color: white;
@@ -154,19 +186,19 @@
 			font-size: 16px;
 			transition: background-color 0.3s;
 		}
-		
+
 		.modal-content button:hover {
 			background-color: #45a049;
 		}
-		
+
 		.modal-content button.cancel {
 			background-color: #f44336;
 		}
-		
+
 		.modal-content button.cancel:hover {
 			background-color: #da190b;
 		}
-		
+
 		.modal-content p {
 			color: #666;
 			margin: 10px 0;
@@ -270,6 +302,9 @@
 <body>
     <div id="status-message"></div>
     <div id="obs-status-badge" aria-live="polite"></div>
+    <div id="audio-unlock-prompt" role="status" hidden>
+        Audio blocked.<button type="button">Enable audio</button>
+    </div>
     <div id="fullscreen-media-container" class="fullscreen-media-container"></div>
 
     <!-- Multi-layer overlay system -->
@@ -404,34 +439,9 @@
             lastError: null,
             state: 'idle'
         };
-        var audioContext = null;
-        function ensureAudioContext() {
-            if (!audioContext && (window.AudioContext || window.webkitAudioContext)) {
-                var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-                audioContext = new AudioContextCtor();
-            }
-            return audioContext;
-        }
-        async function resumeAudioContext() {
-            var ctx = ensureAudioContext();
-            if (!ctx) {
-                return null;
-            }
-            if (ctx.state === 'suspended') {
-                await ctx.resume();
-            }
-            return ctx;
-        }
-        function attachAudioUnlockListeners() {
-            var handler = function() {
-                resumeAudioContext().catch(function(error) {
-                    console.error('Failed to resume AudioContext:', error);
-                });
-            };
-            ['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'].forEach(function(eventName) {
-                document.addEventListener(eventName, handler, { once: true });
-            });
-        }
+        var audioUnlockPrompt = document.getElementById('audio-unlock-prompt');
+        var blockedAudio = null;
+        var audioPlaybackSequence = 0;
 
         // Multi-layer overlay system references
         var overlayLayers = {
@@ -2139,15 +2149,51 @@
 			}
 		}
 
+        async function startAudioPlayback(audio, sequence) {
+            try {
+                // HTML audio does not use an AudioContext. Waiting for a suspended
+                // context here can prevent play() from reporting an autoplay block.
+                await audio.play();
+                if (sequence === audioPlaybackSequence) {
+                    blockedAudio = null;
+                    audioUnlockPrompt.hidden = true;
+                }
+                console.log("Playing audio:", audio.src);
+            } catch (error) {
+                if (error && error.name === 'NotAllowedError') {
+                    if (sequence === audioPlaybackSequence) {
+                        // Keep only the latest clip, so unlocking cannot play a backlog.
+                        blockedAudio = { audio: audio, sequence: sequence };
+                        audioUnlockPrompt.hidden = false;
+                        console.warn('Audio blocked. Click the Flow Actions page to enable sound.');
+                    }
+                } else {
+                    console.error("Error playing audio:", error);
+                    if (sequence === audioPlaybackSequence) {
+                        blockedAudio = null;
+                        audioUnlockPrompt.hidden = true;
+                    }
+                }
+            }
+        }
+
+        function retryBlockedAudio() {
+            if (!blockedAudio) return;
+            var pending = blockedAudio;
+            blockedAudio = null;
+            // Call play() directly within the click gesture, including keyboard clicks.
+            startAudioPlayback(pending.audio, pending.sequence);
+        }
+
         // Function to play audio
         async function playAudio(audioUrl, volume) {
+            var sequence = ++audioPlaybackSequence;
+            blockedAudio = null;
+            audioUnlockPrompt.hidden = true;
             try {
-                await resumeAudioContext();
-
                 const audio = new Audio(audioUrl);
                 audio.volume = volume !== undefined ? parseFloat(volume) : globalVolume;
-                await audio.play();
-                console.log("Playing audio:", audioUrl);
+                await startAudioPlayback(audio, sequence);
             } catch (e) {
                 console.error("Error playing audio:", e);
             }
@@ -2186,8 +2232,8 @@
 			}
 		});
         
-        // Handle audio context for browsers that require user interaction
-        attachAudioUnlockListeners();
+        // Retry blocked HTML audio when this page receives a user interaction.
+        document.addEventListener('click', retryBlockedAudio);
 		
 		function testAction(actionData) {
 			processInput(actionData);

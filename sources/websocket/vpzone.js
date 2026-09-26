@@ -1149,6 +1149,10 @@
 
 	function renderMessage(text, emoteMap) {
 		text = String(text == null ? "" : text);
+		// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+		// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+		// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		if (state.settings && state.settings.textonlymode) return text;
 		if (!emoteMap || typeof emoteMap !== "object") return esc(text).replace(/\n/g, "<br>");
 		return text.split(/(\s+)/).map(function (token) {
@@ -1160,7 +1164,7 @@
 	}
 
 	function basePayload() {
-		return { chatbadges: [], backgroundColor: "", textColor: "", chatimg: "", hasDonation: "", membership: "", contentimg: "", textonly: !!(state.settings && state.settings.textonlymode), type: "vpzone", sourceName: state.sourceName, sourceImg: state.sourceImg };
+		return { chatbadges: [], backgroundColor: "", textColor: "", chatimg: "", hasDonation: "", membership: "", contentimg: "", /* Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path. */ textonly: !!(state.settings && state.settings.textonlymode), type: "vpzone", sourceName: state.sourceName, sourceImg: state.sourceImg };
 	}
 
 	// VPZONE chat frames don't carry an avatar URL — fetch from the public
@@ -1356,6 +1360,7 @@
 			if (replyLabel) {
 				data.initial = replyLabel;
 				data.reply = data.chatmessage;
+				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				if (state.settings && state.settings.textonlymode) data.chatmessage = replyLabel + ": " + data.chatmessage;
 				else data.chatmessage = "<i><small>" + esc(replyLabel) + ":&nbsp;</small></i> " + data.chatmessage;
 				data.meta.reply = { messageId: replyTo.message_id ? String(replyTo.message_id) : "", author: replyAuthor, text: replyText };
@@ -1418,6 +1423,7 @@
 
 	function appendFeed(data) {
 		var avatar = data.chatimg ? '<img class="avatar" src="' + esc(data.chatimg) + '" alt="" />' : '<span class="avatar placeholder"></span>';
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		var body = data.textonly ? esc(String(data.chatmessage || "")).replace(/\n/g, "<br>") : String(data.chatmessage || "");
 		var label = data.event ? '<span class="event-pill">' + esc(data.chatmessage || data.event) + "</span>" : '<span class="feed-message">' + body + "</span>";
 		addLine(els.feed, "feed-entry", '<div class="feed-top">' + avatar + '<div style="min-width:0;flex:1 1 auto;"><div class="feed-meta">' + esc(data.timestamp ? new Date(data.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString()) + "</div><div><span class=\"feed-name\">" + esc(stripHtml(data.chatname || "")) + "</span></div><div class=\"feed-message\">" + label + "</div></div></div>");

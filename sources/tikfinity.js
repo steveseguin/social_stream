@@ -22,6 +22,10 @@
 
 	function escapeHtml(unsafe) {
 		try {
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
 			if (settings.textonlymode) {
 				return unsafe || "";
 			}
@@ -50,6 +54,7 @@
 		}
 		for (var i = 0; i < element.childNodes.length; i++) {
 			var node = element.childNodes[i];
+			// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 			if (!settings.textonlymode && node.nodeType === 1) {
 				try {
 					var style = window.getComputedStyle(node);
@@ -65,6 +70,7 @@
 					resp += escapeHtml(node.textContent);
 				}
 			} else if (node.nodeType === 1) {
+				// Capture contract: plain mode reads literal text, with no added HTML; only HTML mode may include source/emote markup.
 				if (settings.textonlymode) {
 					if (node.alt) {
 						resp += escapeHtml(node.alt);
@@ -399,6 +405,7 @@
 
 	function formatChatMessageFromPayload(comment, emotes) {
 		comment = comment || "";
+		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 		if (settings.textonlymode) {
 			return escapeHtml(comment);
 		}
@@ -465,6 +472,7 @@
 			hasDonation: "",
 			membership: "",
 			contentimg: "",
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: settings.textonlymode || false,
 			type: "tiktok"
 		};

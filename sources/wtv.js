@@ -41,13 +41,18 @@
 
 	function messageContent(node) {
 		if (node.nodeType === 3) {
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			return settings.textonlymode ? node.textContent : escapeHtml(node.textContent);
 		}
 		if (node.nodeType !== 1 || /^(SCRIPT|STYLE|IFRAME|OBJECT|SVG|BUTTON)$/.test(node.nodeName)) return "";
-		if (node.nodeName === "BR") return settings.textonlymode ? "\n" : "<br>";
+		if (node.nodeName === "BR") /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ return settings.textonlymode ? "\n" : "<br>";
 		if (node.nodeName === "IMG") {
 			var alt = node.getAttribute("alt") || "";
 			var src = resourceUrl(node.getAttribute("src"));
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			if (settings.textonlymode) return alt;
 			return src ? '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt) + '">' : escapeHtml(alt);
 		}
@@ -91,6 +96,7 @@
 				chatimg: "", chatbadges: "", backgroundColor: "", textColor: "",
 				nameColor: window.getComputedStyle(nameElement).color || "",
 				contentimg: "", hasDonation: "", membership: "",
+				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				textonly: !!settings.textonlymode, platform: "wtv", type: "wtv"
 			} });
 		}

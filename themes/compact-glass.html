@@ -37,14 +37,21 @@ Keep this file Chrome-80 friendly: no <script type="module">, no top-level impor
 -->
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Compact Glass Chat Overlay: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+<script src="../libs/objects.js"></script>
+<script src="../shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="../shared/utils/chatBadges.css">
 <script type="text/javascript" src="../js/local-server-url.js"></script>
 <script type="text/javascript" src="../js/transport-dedupe.js"></script>
-<meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Compact Glass Chat Overlay</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="https://socialstream.ninja/libs/colours.js" type="text/javascript"></script>
-<link rel="canonical" href="https://socialstream.ninja/">
+
 <meta name="generator" content="Social Stream Ninja - https://github.com/steveseguin/social_stream">
 <style>
 html, body {
@@ -594,17 +601,7 @@ body.ultra .content-img {
     }, 1000);
 
     function buildBadges(data) {
-        if (hideBadges || !data.chatbadges) { return ""; }
-        var html = "";
-        data.chatbadges.forEach(function (badge) {
-            if (typeof badge === "object") {
-                if (badge.type === "img" && badge.src) { html += "<img class='badge' src='" + badge.src + "' alt='badge'>"; }
-                else if (badge.type === "svg" && badge.html) { html += "<span class='badge svg'>" + badge.html + "</span>"; }
-            } else {
-                html += "<img class='badge' src='" + badge + "' alt='badge'>";
-            }
-        });
-        return html;
+        return hideBadges ? "" : SocialStreamBadges.render(data.chatbadges);
     }
 
     // Cross-transport dedupe: in server mode the same feed message can arrive over both
@@ -684,6 +681,7 @@ body.ultra .content-img {
             ? "<img class='source-icon' src='https://socialstream.ninja/sources/images/" + data.type + ".png' alt='" + data.type + "' onerror=\"this.style.display='none'\">" : "";
         var badgesHtml = buildBadges(data);
         var membershipHtml = data.membership ? "<span class='membership'>" + escapeHtml(data.membership) + "</span>" : "";
+        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
         var msg = data.chatmessage ? (data.textonly ? escapeHtml(data.chatmessage) : data.chatmessage) : "";
         var textHtml = msg ? "<span class='text" + (data.event ? " event-text" : "") + "'>" + msg + "</span>" : "";
         var donation = data.hasDonation || data.donation || "";

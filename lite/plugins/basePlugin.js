@@ -1,4 +1,4 @@
-import { formatTime, safeHtml, htmlToText } from '../utils/helpers.js';
+import { formatTime, safeHtml, getChatPreviewText } from '../utils/helpers.js';
 
 const MESSAGE_COUNTER_BASE = Math.floor(Math.random() * 90000);
 let globalMessageCounter = MESSAGE_COUNTER_BASE;
@@ -322,8 +322,7 @@ export class BasePlugin {
       });
       this.messenger.send(payload);
       if (!silent) {
-        const previewSource = (payload?.previewText ?? payload?.chatmessage ?? '').toString();
-        const normalized = htmlToText(previewSource).replace(/\s+/g, ' ').trim();
+        const normalized = getChatPreviewText(payload).replace(/\s+/g, ' ').trim();
         const summary = {
           id: payload?.id || null,
           preview: normalized.slice(0, 80)

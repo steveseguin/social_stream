@@ -62,7 +62,7 @@
         var result = await service.process(message);
         if (result && result.message) {
             sendDataP2P({ type: 'bot', platform: 'socialstream', chatname: 'Sticker rewards',
-                chatmessage: message.chatname + ': ' + result.message, textonly: true, bot: true, private: true });
+                chatmessage: message.chatname + ': ' + result.message, /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly: true, bot: true, private: true });
             var now = Date.now(), key = message.type + ':' + message.chatname;
             replies.forEach(function (until, id) { if (until <= now) replies.delete(id); });
             if (SSNStickers.config(settings.stickerRewards).reply && message.tid && !replies.has(key)) {

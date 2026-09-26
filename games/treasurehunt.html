@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
+    <meta name="description" content="Treasure Hunt: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Treasure Hunt - Social Stream Ninja</title>
     <link rel="icon" href="../favicon.ico" />
@@ -25,7 +28,7 @@
             font-style: normal;
             font-display: swap;
         }
-        
+
         body {
             margin: 0;
             padding: 0;
@@ -34,13 +37,13 @@
             font-family: 'Arial', 'NotoColorEmoji', sans-serif;
             color: white;
         }
-        
+
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
-        
+
         #map {
             position: absolute;
             top: 50%;
@@ -58,7 +61,7 @@
             padding: 10px;
             border-radius: 10px;
         }
-        
+
         .grid-cell {
             background: rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.1);
@@ -70,31 +73,31 @@
             transition: all 0.3s ease;
             position: relative;
         }
-        
+
         .grid-cell:hover {
             background: rgba(255,255,255,0.1);
         }
-        
+
         .revealed {
             background: rgba(255,255,255,0.2);
             animation: reveal 0.5s ease-out;
         }
-        
+
         @keyframes reveal {
             0% { transform: scale(0); }
             50% { transform: scale(1.2); }
             100% { transform: scale(1); }
         }
-        
+
         .treasure {
             animation: shimmer 2s ease-in-out infinite;
         }
-        
+
         @keyframes shimmer {
             0%, 100% { filter: brightness(1); }
             50% { filter: brightness(1.5); }
         }
-        
+
         .dig-animation {
             position: absolute;
             width: 100%;
@@ -103,13 +106,13 @@
             animation: dig 0.5s ease-out forwards;
             pointer-events: none;
         }
-        
+
         @keyframes dig {
             0% { transform: scale(1.5); opacity: 0; }
             50% { opacity: 1; }
             100% { transform: scale(0); opacity: 0; }
         }
-        
+
         #scoreboard {
             position: absolute;
             top: 20px;
@@ -120,13 +123,13 @@
             backdrop-filter: blur(10px);
             min-width: 250px;
         }
-        
+
         #scoreboard h3 {
             margin-top: 0;
             color: #FFD700;
             text-align: center;
         }
-        
+
         .score-entry {
             display: flex;
             justify-content: space-between;
@@ -136,7 +139,7 @@
             background: rgba(255,255,255,0.1);
             border-radius: 8px;
         }
-        
+
         #hint-display {
             position: absolute;
             top: 20px;
@@ -149,12 +152,12 @@
             text-align: center;
             backdrop-filter: blur(10px);
         }
-        
+
         #hint-display .hint-icon {
             font-size: 36px;
             margin-bottom: 10px;
         }
-        
+
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -166,12 +169,12 @@
             text-align: center;
             font-size: 16px;
         }
-        
+
         #instructions strong {
             color: #FFD700;
             font-size: 18px;
         }
-        
+
         .compass {
             position: absolute;
             top: 150px;
@@ -186,7 +189,7 @@
             justify-content: center;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-        
+
         .compass-needle {
             width: 60px;
             height: 4px;
@@ -195,13 +198,13 @@
             transition: transform 0.5s ease;
             transform-origin: center;
         }
-        
+
         .treasure-found {
             position: absolute;
             font-size: 72px;
             animation: treasureFound 2s ease-out forwards;
         }
-        
+
         @keyframes treasureFound {
             0% { 
                 transform: translate(-50%, -50%) scale(0) rotate(0deg);
@@ -215,7 +218,7 @@
                 opacity: 0;
             }
         }
-        
+
         .clue-marker {
             position: absolute;
             width: 20px;
@@ -225,12 +228,12 @@
             animation: pulse 1s ease-in-out infinite;
             transform: translate(-50%, -50%);
         }
-        
+
         @keyframes pulse {
             0%, 100% { transform: translate(-50%, -50%) scale(1); }
             50% { transform: translate(-50%, -50%) scale(1.3); }
         }
-        
+
         #round-info {
             position: absolute;
             bottom: 100px;
@@ -617,6 +620,7 @@
         if (!data || !data.chatmessage || !data.chatname) return;
 
         let rawMessage = data.chatmessage;
+        // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
         if (!data.textonly) {
             rawMessage = stripHtml(rawMessage);
         }
