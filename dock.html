@@ -12349,6 +12349,9 @@
 						chatname = truncateText(chatname, trimName);
 					}
 
+					// Legacy names may contain entities or emotes; check only the display copy.
+					chatname = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(chatname) : escapeHtml(chatname || "");
+
 					if (largeavatar) {
 						chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + (chatname || "") + '<span class="hl-badges">' + chatbadges + "</span></div>";
 					} else if (chatname) {

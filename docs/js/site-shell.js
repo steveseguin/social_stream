@@ -2,6 +2,18 @@
     'use strict';
     // One navigation definition for the homepage, documentation, and galleries.
     var siteRoot = new URL('../../', document.currentScript.src);
+    var translated = document.documentElement.hasAttribute('data-site-language');
+    var translations;
+    function t(label) {
+        if (!translations) {
+            var config = document.getElementById('ssn-site-language');
+            if (config) {
+                try { translations = JSON.parse(config.textContent); } catch (_) { translations = {}; }
+            }
+        }
+        return translations && Object.prototype.hasOwnProperty.call(translations, label) ? translations[label] : label;
+    }
+    window.SSNSiteTranslate = t;
     var navigation = [
         ['Home', 'index.html'], ['Features', 'docs/features.html'],
         ['Inspiration', 'docs/inspiration.html', 'inspiration'],
@@ -18,16 +30,17 @@
         if (document.body) document.body.classList.toggle('dark-mode', dark);
         if (save) { try { localStorage.setItem('darkMode', String(dark)); } catch (_) {} }
         document.querySelectorAll('.site-theme').forEach(function (button) {
-            button.setAttribute('aria-label', 'Switch to ' + (dark ? 'light' : 'dark') + ' theme');
+            button.setAttribute('aria-label', t(dark ? 'Switch to light theme' : 'Switch to dark theme'));
         });
         var readerTheme = document.getElementById('themeToggle');
-        if (readerTheme) { readerTheme.textContent = dark ? 'Light mode' : 'Dark mode'; readerTheme.setAttribute('aria-pressed', String(dark)); }
+        if (readerTheme) { readerTheme.textContent = t(dark ? 'Light mode' : 'Dark mode'); readerTheme.setAttribute('aria-pressed', String(dark)); }
     }
     var saved = preference(); apply(saved === null ? media.matches : saved === 'true', false);
     window.SSNSiteTheme = { apply: apply };
     document.addEventListener('DOMContentLoaded', function () {
         var navigationElement = document.getElementById('ssn-site-nav');
-        if (navigationElement) {
+        // Generated translations already contain localized navigation and URLs.
+        if (navigationElement && !translated) {
             navigationElement.textContent = '';
             navigation.forEach(function (item) {
                 var link = document.createElement('a');
@@ -39,11 +52,32 @@
                 navigationElement.appendChild(link);
             });
         }
+        var alternate = document.querySelector('meta[name="ssn-language-alternate"]');
+        if (navigationElement && alternate) {
+            var languageLink = document.createElement('a');
+            languageLink.href = new URL(alternate.content, location.href).href;
+            languageLink.className = 'site-language-link';
+            languageLink.lang = alternate.getAttribute('data-lang');
+            languageLink.hreflang = languageLink.lang;
+            languageLink.textContent = alternate.getAttribute('data-label');
+            navigationElement.appendChild(languageLink);
+        }
+        document.querySelectorAll('.site-language-link').forEach(function (languageLink) {
+            var languageUrl = new URL(languageLink.href, location.href);
+            function updateLanguageUrl() {
+                languageUrl.search = location.search;
+                languageUrl.hash = location.hash;
+                languageLink.href = languageUrl.href;
+            }
+            updateLanguageUrl();
+            // Download tabs change the hash without firing hashchange.
+            languageLink.addEventListener('click', updateLanguageUrl);
+        });
         apply(document.documentElement.classList.contains('dark-mode'), false);
         var toggle = document.querySelector('.site-menu'), nav = document.getElementById('ssn-site-nav');
         function open(value) {
             nav.classList.toggle('is-open', value); toggle.setAttribute('aria-expanded', String(value));
-            toggle.setAttribute('aria-label', value ? 'Close navigation menu' : 'Open navigation menu');
+            toggle.setAttribute('aria-label', t(value ? 'Close navigation menu' : 'Open navigation menu'));
             toggle.querySelector('span').textContent = value ? '\u2715' : '\u2630';
         }
         if (toggle && nav) {

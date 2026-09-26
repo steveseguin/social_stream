@@ -54,9 +54,9 @@
     }
 
     function sanitize(html) {
-        // Call only for HTML-mode chatmessage, on the local display copy.
-        // textonly=true is literal text: use textContent or one template escape
-        // at the caller, never this HTML parser, even for typed <i> or entities.
+        // Use local display copies of HTML-mode bodies or legacy names with
+        // entities/emotes. textonly applies only to chatmessage: those bodies
+        // use textContent or one template escape, never this HTML parser.
         var value = String(html == null ? "" : html);
         if (!value) return "";
         try {

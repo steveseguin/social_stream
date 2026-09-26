@@ -3225,6 +3225,9 @@
 						renderedChatMessage = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(renderedChatMessage) : plainTextToHtml(renderedChatMessage);
 					}
 
+					// Legacy names may contain entities or emotes; textonly applies only to the body.
+					var renderedChatName = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : escapeHtml(data.chatname);
+
 					// ADD NO-AVATAR CLASS TO CONTAINER
 					var noAvatarClass = avatarForMessage ? "" : " no-avatar";
 					var activeNameDiv = null;
@@ -3252,7 +3255,7 @@
 					  }
 					  
 					  // Put name and badges in the name div
-					  nameDiv.innerHTML = data.chatname + chatbadges + channelSourceName;
+					  nameDiv.innerHTML = renderedChatName + chatbadges + channelSourceName;
 					  messageContainer.appendChild(nameDiv);
 
 					  const messageDiv = document.createElement('div');
@@ -3325,7 +3328,7 @@
 					} else {
 					  // Original non-stacking behavior with no-avatar class added
 					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat' + noAvatarClass + '" id="newmessage" data-source-type="' + safeDataType + '">' +
-						'<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + channelSourceName + "</div>" +
+						'<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + renderedChatName + chatbadges + channelSourceName + "</div>" +
 						'<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" +
 						avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
 					  activeNameDiv = document.getElementById("nameDIV");
