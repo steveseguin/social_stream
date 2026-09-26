@@ -27,6 +27,7 @@ node tests/chat-security-boundaries.test.cjs --group=security
 node tests/chat-text-contract.test.cjs
 node tests/chat-command-forwarding.test.cjs
 node tests/chat-final-html-check.test.cjs
+node tests/chat-name-display-security.test.cjs
 node tests/overlay-badges.test.cjs
 node tests/lite-chat-previews.test.cjs
 node tests/chat-secondary-processing.test.cjs
@@ -57,6 +58,8 @@ The [event contract](../docs/event-reference.html) says `textonly` applies only 
 **Plain bodies are not HTML-sanitized.** Use text nodes or one HTML-template escape for `textonly=true`, and keep raw-text previews separate from HTML-to-text conversion. After profiling and approval, Dock and Featured now check HTML-mode body display copies once at rendering, including Dock user history. These surfaces can receive older/custom senders, and a link's `v` parameter does not establish which sender checked a particular message. Featured checks only after its existing stale-render cancellation. The relay's policy and stored/wire bodies are unchanged by this final check.
 
 The display policy reuses the packaged HTML/SVG/URL checks and CSS parser, retaining ordinary formatting, reply italics/colors, emote wrappers and positioning, image dimensions, links, and inline SVG presentation. Page-generated media and controls remain separate. If the helper is unavailable, HTML is displayed as literal text instead of being inserted unchecked.
+
+Dock and Featured also check the displayed name, independently of the body's `textonly` flag. This closes direct-sender name injection while preserving legacy entity-encoded names and permitted name formatting/emotes. Unsupported custom name HTML is stripped by the same policy. Dock's stored name and identity fields are unchanged. `chat-name-display-security.test.cjs` exercises direct iframe delivery, both Featured layouts, Dock name layouts, missing-helper fallback, and isolated positive controls that disable only the new name check.
 
 ## Reproduced failures
 

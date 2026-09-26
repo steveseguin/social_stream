@@ -38,10 +38,10 @@ const variants = [
         // Even a claimed new URL version must not bypass the body check.
         await page.goto(server.baseUrl + '/' + file + '?session=FINAL_CHECK_OFFLINE&v=99.0.0' + query);
         await page.evaluate(() => {
-          window.__bodyChecks = [];
+          window.__displayChecks = [];
           if (window.SocialStreamChatHTML) {
             const original = SocialStreamChatHTML.sanitize;
-            SocialStreamChatHTML.sanitize = html => { __bodyChecks.push(html); return original(html); };
+            SocialStreamChatHTML.sanitize = html => { __displayChecks.push(html); return original(html); };
           }
         });
         await action(page);
@@ -54,10 +54,14 @@ const variants = [
       await deliver(page, payload);
       await page.waitForFunction(() => document.querySelector('.hl-content, .hl-message')?.textContent.includes('CHECK_MARKER'));
       await page.waitForTimeout(100);
-      return page.evaluate(() => {
+      return page.evaluate(name => {
         const element = document.querySelector('.hl-content, .hl-message');
-        return { text: element.textContent, html: element.innerHTML, hit: window.__securityExecuted, checks: __bodyChecks.length };
-      });
+        // These fixtures use distinct names and bodies. Count them separately
+        // so a name check cannot hide accidental parsing of a text-only body.
+        const nameChecks = __displayChecks.filter(input => input === name).length;
+        if (nameChecks !== (window.SocialStreamChatHTML ? 1 : 0)) throw Error('Expected one name display check');
+        return { text: element.textContent, html: element.innerHTML, hit: window.__securityExecuted, checks: __displayChecks.length - nameChecks };
+      }, payload.chatname);
     }
     for (const [file, query] of variants) {
       await check(file + query + ': direct legacy HTML injection is inert', () => withPage(file, query, async page => {
@@ -111,7 +115,7 @@ const variants = [
           await page.waitForFunction(() => document.getElementById('messagesList')?.textContent.includes('CHECK_MARKER'));
           await page.waitForTimeout(100);
           assert.equal(await page.evaluate(() => __securityExecuted), false);
-          assert.equal(await page.evaluate(() => __bodyChecks.length), mode ? 0 : 1);
+          assert.equal(await page.evaluate(() => __displayChecks.length), mode ? 0 : 1);
           if (mode) assert.ok((await page.locator('#messagesList').textContent()).includes(literal));
           else assert.equal(await page.locator('#messagesList i').first().evaluate(el => el.style.color), 'red');
         }));
@@ -131,7 +135,7 @@ const variants = [
           processData({ contents: { id: 90100, type: 'twitch', chatname: 'LastViewer', chatbadges: [], textonly: false, chatmessage: '<b>CHECK_MARKER final</b>' } });
         }, { rich, probe });
         await page.waitForFunction(() => document.getElementById('message')?.textContent === 'CHECK_MARKER final');
-        assert.equal(await page.evaluate(() => __bodyChecks.length), 1);
+        assert.deepEqual(await page.evaluate(() => __displayChecks), ['<b>CHECK_MARKER final</b>', 'LastViewer']);
         assert.equal(await page.evaluate(() => __securityExecuted), false);
       }));
       for (const mode of [true, false]) for (const extension of ['png', 'mp4']) {
@@ -139,7 +143,7 @@ const variants = [
           await deliver(page, { id: ++id, type: 'youtube', chatname: 'Attachment', chatbadges: [], textonly: mode, chatmessage: '', contentimg: '/fixture.' + extension });
           await page.waitForSelector('#message [data-content-image]', { state: 'attached' });
           assert.equal(await page.locator('#message [data-content-image]').evaluate(el => el.localName), extension === 'mp4' ? 'video' : 'img');
-          assert.equal(await page.evaluate(() => __bodyChecks.length), 0, 'Generated attachment is not chat HTML');
+          assert.deepEqual(await page.evaluate(() => __displayChecks), ['Attachment'], 'Only the name is checked; generated attachment is not chat HTML');
         }));
       }
       await check('Sanitizer: safe formatting is stable; relay policy remains unchanged', () => withPage('featured.html', '', async page => {

@@ -136,6 +136,13 @@ jobs:
           seo_script="${GITHUB_REF_NAME}-content/scripts/prepare-pages-seo.py"
           python3 "$seo_script" --root gh-pages-content
           python3 "$seo_script" --root gh-pages-content --check
+          # Generate only the beta Spanish pilot; stable English stays in place.
+          # Run after SEO because these preview pages own their noindex metadata.
+          translation_script="beta-content/scripts/build-site-translations.py"
+          if [ -f "$translation_script" ]; then
+            python3 "$translation_script" --root gh-pages-content/beta
+            python3 "$translation_script" --root gh-pages-content/beta --check
+          fi
           touch gh-pages-content/.nojekyll
           echo "Removing files larger than 25MB from deployment payload"
           find gh-pages-content -type f -size +25M -print -delete || true

@@ -9078,6 +9078,26 @@ function appendChatBadges(container, badges) {
     });
 }
 
+function appendKickTextOnlyFeedContent(container, value) {
+    const text = String(value == null ? '' : value);
+    const tokens = /\[(emote|sticker):(\d+):([^\]]+)\]/gi;
+    let lastIndex = 0;
+    let match;
+    while ((match = tokens.exec(text))) {
+        container.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+        const img = document.createElement('img');
+        img.src = 'https://files.kick.com/emotes/' + match[2] + '/fullsize';
+        img.alt = match[3];
+        img.title = match[3];
+        img.className = normalizeKickAssetType(match[1]) === 'sticker'
+            ? 'regular-emote kick-sticker'
+            : 'regular-emote';
+        container.appendChild(img);
+        lastIndex = tokens.lastIndex;
+    }
+    container.appendChild(document.createTextNode(text.slice(lastIndex)));
+}
+
 function appendChatFeedMessage(message, plainText = '') {
     if (!els.chatFeed || !message) return;
     const stick = shouldStickChatFeed();
@@ -9142,13 +9162,17 @@ function appendChatFeedMessage(message, plainText = '') {
     // The local chat feed always renders rich content (emotes as images)
     // regardless of the extension's text-only mode setting.
     const chatHtml = message.chatmessage || '';
-    const richHtml = chatHtml
-        ? replaceKickInlineAssets(chatHtml, { forceRich: true })
-        : '';
-    if (richHtml) {
-        body.innerHTML = richHtml;
+    if (message.textonly === true) {
+        appendKickTextOnlyFeedContent(body, chatHtml || plainTextMessage || '');
     } else {
-        body.textContent = plainTextMessage || '';
+        const richHtml = chatHtml
+            ? replaceKickInlineAssets(chatHtml, { forceRich: true })
+            : '';
+        if (richHtml) {
+            body.innerHTML = richHtml;
+        } else {
+            body.textContent = plainTextMessage || '';
+        }
     }
     details.appendChild(body);
 

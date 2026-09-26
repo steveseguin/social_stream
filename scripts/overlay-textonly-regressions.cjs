@@ -3,7 +3,8 @@ const fs = require("fs");
 const path = require("path");
 const { chromium } = require("playwright");
 const { createStaticServer, closeServer } = require("../tests/background-overlay-compat-matrix.test.cjs");
-const { configureContext } = require("../tests/helpers/chat-security-harness.cjs");
+const { configureContext, installRelay, deliver } = require("../tests/helpers/chat-security-harness.cjs");
+const { testEmoteWall } = require("../tests/emote-wall-security.test.cjs");
 
 const root = path.resolve(__dirname, "..");
 let server;
@@ -34,6 +35,7 @@ async function renderMessage(page, relativePath, payload) {
   server = await createStaticServer();
   const browser = await chromium.launch({ headless: true });
   try {
+    await testEmoteWall(browser, server.baseUrl);
     for (const relativePath of ["sampleoverlay.html", "samplefeatured.html", "themes/overlay-typewriter.html"]) {
       const page = await loadSessionPage(browser, relativePath);
       await page.evaluate(() => {
@@ -78,6 +80,7 @@ async function renderMessage(page, relativePath, payload) {
         addMessageToOverlay({
           chatname: '<img id="name-payload" src=x onerror="window.__textonlyExecuted=true">',
           chatmessage: '<img id="message-payload" src=x onerror="window.__textonlyExecuted=true">',
+          chatimg: 'data:image/png;base64,broken',
           chatbadges: [],
           textonly: true,
           type: "irc"
@@ -88,6 +91,42 @@ async function renderMessage(page, relativePath, payload) {
       assert.strictEqual(await page.locator("#name-payload").count(), 0, relativePath);
       assert.strictEqual(await page.locator("#message-payload").count(), 0, relativePath);
       assert.ok((await page.locator(".text").last().textContent()).includes('<img id="message-payload"'), relativePath);
+      if (relativePath === "themes/huan-kiara/index.html") {
+        const relayPage = await browser.newPage();
+        try {
+          const relay = await installRelay(relayPage);
+          const pixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=';
+          let id = 612000;
+          await page.evaluate(() => {
+            window.alert = () => { window.__textonlyExecuted = true; };
+          });
+          for (const textonly of [true, false, undefined]) {
+            for (const chatname of ['" onload="alert(1)" x="', '" onerror="alert(1)" x="', 'Alice "Ace"', 'A &amp; B', '👩🏽‍💻 🇺🇸']) {
+              for (const chatimg of [pixel, 'data:image/png;base64,broken']) {
+                await page.evaluate(() => { window.__textonlyExecuted = false; });
+                const message = { id: ++id, type: 'discord', chatname, chatimg, chatmessage: 'AVATAR_CHECK_' + id, chatbadges: [] };
+                if (textonly !== undefined) message.textonly = textonly;
+                const { payload } = await relay(message);
+                await deliver(page, payload);
+                await page.waitForFunction(marker => Array.from(document.querySelectorAll('.message .text')).some(el => el.textContent === marker), message.chatmessage);
+                const avatar = page.locator('.avatar').last();
+                await avatar.evaluate(img => img.complete ? undefined : new Promise(resolve => {
+                  img.addEventListener('load', resolve, { once: true });
+                  img.addEventListener('error', resolve, { once: true });
+                }));
+                assert.strictEqual(await page.evaluate(() => window.__textonlyExecuted), false, 'Avatar name must not execute');
+                assert.strictEqual(await avatar.getAttribute('alt'), payload.chatname + "'s avatar");
+                assert.strictEqual(await avatar.getAttribute('src'), payload.chatimg);
+                assert.strictEqual(await avatar.evaluate(img => img.naturalWidth > 0), chatimg === pixel);
+                assert.deepStrictEqual(await avatar.evaluate(img => Array.from(img.attributes).filter(attr => /^on/i.test(attr.name)).map(attr => attr.name)), []);
+                assert.strictEqual(await page.locator('.username').last().textContent(), payload.chatname);
+              }
+            }
+          }
+        } finally {
+          await relayPage.close();
+        }
+      }
       await page.close();
     }
 

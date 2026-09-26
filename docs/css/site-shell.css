@@ -39,3 +39,15 @@ body.site-editorial { background:var(--site-bg); color:var(--site-text); --paper
 @media(max-width:360px) { .site-header .site-bar { padding:0 8px; gap:6px; }.site-header .site-brand { font-size:14px; gap:6px; } }
 @media(prefers-reduced-motion:reduce) { .site-page { scroll-behavior:auto; } }
 .site-theme svg { display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round; }
+.site-header .site-nav .site-language-link { color:var(--site-accent); }
+.site-language-notice { margin-top:76px; padding:12px 0; background:var(--site-surface); color:var(--site-text); border-bottom:1px solid var(--site-line); font:14px/1.6 var(--site-font); }
+.site-language-notice .container { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 8px; }
+.site-language-notice span { flex:1 1 420px; }
+.site-language-notice a { color:var(--site-accent); text-decoration:underline; }
+.site-language-notice a:focus { outline:2px solid var(--site-accent); outline-offset:3px; }
+/* Let longer translations use two rows inside the existing desktop header. */
+@media(min-width:1051px) {
+    [data-site-language] .site-header .site-nav { flex-wrap:wrap; gap:0 12px; }
+    [data-site-language] .site-header .site-nav a { padding:4px 0; }
+    [data-site-language] .site-header .site-nav .site-priority-inspiration,[data-site-language] .site-header .site-nav .site-priority-gallery,[data-site-language] .site-header .site-nav .site-priority-hire { display:block; }
+}

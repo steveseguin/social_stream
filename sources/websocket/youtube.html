@@ -2580,9 +2580,10 @@ function enableBackgroundKeepAlive() {
 		if (!value) {
 			return '';
 		}
-		const temp = document.createElement('div');
+		// Template contents stay inert; detached divs can still run image handlers.
+		const temp = document.createElement('template');
 		temp.innerHTML = value;
-		return (temp.textContent || temp.innerText || '').trim();
+		return (temp.content.textContent || '').trim();
 	}
 
 	function truncatePreviewText(text, maxLength) {

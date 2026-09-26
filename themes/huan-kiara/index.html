@@ -414,7 +414,7 @@ img.ssn-content-image {
 				}
 
 				usernameBox.innerHTML = `
-            ${data.chatimg ? `<img src="${data.chatimg}" class="avatar" alt="${data.chatname}'s avatar">` : ""}
+            ${data.chatimg ? `<img src="${data.chatimg}" class="avatar" alt="${escapeHtml(data.chatname)}'s avatar">` : ""}
             ${sourceIcon}
             <span class="username">${escapeHtml(data.chatname)}</span>
             <span class="badges">${chatbadges}</span>
