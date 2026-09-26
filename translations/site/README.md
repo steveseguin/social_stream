@@ -36,7 +36,9 @@ English URLs, including query strings and section anchors. Language switches
 preserve the current query and section.
 
 The Pages workflow builds the pilot inside the assembled **beta** tree, after
-the existing SEO pass. Its deployed addresses will be:
+the existing SEO pass, and explicitly stages the generated `beta/es/` folder so
+the copied checkout `.gitignore` cannot exclude it from publication. Its deployed
+addresses will be:
 
 - `/beta/es/`
 - `/beta/es/docs/download.html`
