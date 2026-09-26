@@ -1,0 +1,22 @@
+body[data-game="kitchen"] {background:#241d25;--accent:#ffd3a1;--panel:#382d36;--muted:#c2b4bc;}
+body[data-game="relay"] {background:#0d2030;--accent:#ffe4a3;--panel:#183348;--muted:#a4bfce;}
+body[data-game="shield"] {background:#171c32;--accent:#b6dcff;--panel:#252e4b;--muted:#b2bfd8;}
+.crew-board {border:1px solid #ffffff22;border-radius:24px;background:var(--panel);overflow:hidden;}
+.crew-heading {display:flex;justify-content:space-between;align-items:center;gap:16px;padding:24px 28px;}
+.crew-heading h2 {font-size:28px;letter-spacing:-.035em;margin:4px 0 0;}.crew-heading strong {color:var(--accent);white-space:nowrap;font-size:18px;}
+#teamplay-stage {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:8px 28px 28px;}
+.supply-card,.shield-lane {text-align:center;border:1px solid #ffffff20;border-radius:18px;background:#0002;padding:24px 12px;display:flex;flex-direction:column;align-items:center;gap:12px;}
+.supply-icon {font-size:72px;line-height:1.6;filter:drop-shadow(0 8px 0 #0002);}.supply-card code,.shield-lane code {font-size:16px;color:var(--accent);white-space:nowrap;}.supply-card b,.shield-lane b {font-size:13px;color:var(--muted);}.supply-card.complete {border-color:#a6e1a1;background:#a6e1a10b;}.supply-card.complete b {color:#a6e1a1;}
+.feast {grid-column:1/-1;font-size:clamp(38px,8vw,90px);text-align:center;padding:40px 0;}
+.crew-lower {display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:22px 28px;border-top:1px solid #ffffff15;}.crew-lower p {font-size:14px;color:var(--muted);}.crew-lower h3 {font-size:14px;margin:0 0 10px;color:var(--accent);}
+.crew-history {display:flex;flex-direction:column;gap:6px;}.crew-contribution {display:flex;justify-content:space-between;gap:12px;font-size:12px;}.crew-contribution b {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%;}.crew-contribution span {color:var(--muted);text-align:right;}
+body[data-game="relay"] #teamplay-stage {grid-template-columns:repeat(10,minmax(0,1fr));gap:15px;padding:35px 28px;background:radial-gradient(ellipse,#40647833,transparent);}
+.relay-light {aspect-ratio:1;min-height:48px;border:1px solid #638ba44d;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#8aa8bc;background:#0c2235;font-size:13px;transition:background .3s,box-shadow .3s;}
+.relay-light.lit {background:#ffe4a3;color:#4b3820;border-color:#ffe4a3;box-shadow:0 0 24px #ffd78355;}
+.relay-landscape {height:90px;margin:0 28px;text-align:center;}.relay-landscape svg {width:100%;height:100%;max-width:650px;}
+.crew-ship {display:flex;align-items:center;justify-content:center;gap:22px;margin:-12px 0 18px;}.crew-ship svg {width:90px;height:45px;}.crew-ship span {font-size:17px;letter-spacing:4px;color:#b6dcff;}
+#relay-holder,#wave-note {font-size:14px;overflow-wrap:anywhere;}.wave-status {display:flex;justify-content:space-between;gap:16px;padding:0 28px 18px;color:var(--muted);font-size:12px;}
+.meteor-field {height:130px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:5px;}.meteor {font-size:42px;line-height:1.1;}.lane-red {--lane:#ffada8;}.lane-blue {--lane:#a1d7ff;}.lane-gold {--lane:#ffe09b;}.shield-lane {color:var(--lane);border-bottom:4px solid var(--lane);}.shield-lane code {color:var(--lane);}.shield-lane.covered {background:#ffffff0b;}
+body[data-game="kitchen"].chroma,body[data-game="relay"].chroma,body[data-game="shield"].chroma {background:#00ff00;}
+body[data-game="kitchen"].transparent,body[data-game="relay"].transparent,body[data-game="shield"].transparent {background:transparent;}
+@media(max-width:700px){.crew-heading{padding:20px;align-items:flex-start;}.crew-heading h2{font-size:23px;}.crew-heading strong{font-size:14px;}.crew-lower{grid-template-columns:1fr;padding:20px;}#teamplay-stage{gap:8px;padding:0 16px 20px;}.supply-card,.shield-lane{padding:16px 4px;gap:8px;}.supply-icon{font-size:44px;}.supply-card code,.shield-lane code{font-size:12px;white-space:normal;overflow-wrap:anywhere;}.supply-card b,.shield-lane b{font-size:11px;}body[data-game="relay"] #teamplay-stage{grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding:24px 20px;}.relay-landscape{height:50px;}.meteor{font-size:30px;}.meteor-field{height:95px;}.wave-status{padding:0 20px 16px;}}

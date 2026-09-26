@@ -1,0 +1,56 @@
+/* Supplement existing guide cards; scoped to the operating walkthroughs. */
+.workflow-guide .workflow-toc {
+    position: static;
+    transform: none;
+    width: auto;
+    height: auto;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    z-index: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .8rem 1.8rem;
+    margin: 0 auto 2rem;
+    max-width: var(--doc-width);
+}
+.workflow-guide .guide-card { scroll-margin-top: 10rem; }
+.workflow-guide .workflow-diagram {
+    display: flex;
+    gap: 2.4rem;
+    padding: 0;
+    margin: 2rem 0;
+    list-style: none;
+}
+.workflow-guide .workflow-diagram li {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    padding: 1.6rem 1.2rem;
+    margin: 0;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    text-align: center;
+}
+.workflow-guide .workflow-diagram li::before { display: none; }
+.workflow-guide .workflow-diagram li:not(:last-child)::after {
+    content: '\2192';
+    position: absolute;
+    right: -2.2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-primary);
+}
+.workflow-guide .workflow-diagram strong,
+.workflow-guide .workflow-diagram span { display: block; }
+.workflow-guide .workflow-diagram span { margin-top: .5rem; font-size: 1.4rem; }
+.workflow-guide .guide-image { display: block; width: 100%; max-width: 90rem; height: auto; margin: auto; }
+.workflow-guide pre { max-width: 100%; overflow-x: auto; }
+.workflow-guide a:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 3px; }
+@media (max-width: 640px) {
+    .workflow-guide .workflow-diagram { flex-direction: column; }
+    .workflow-guide .workflow-diagram li:not(:last-child)::after {
+        content: '\2193'; top: auto; right: 50%; bottom: -2.5rem; transform: translateX(50%);
+    }
+}

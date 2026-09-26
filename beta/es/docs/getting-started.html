@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es" data-site-root="../../" data-site-language="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="es_ES">
+
+    <meta property="og:title" content="Primeros pasos - Social Stream Ninja">
+    <meta property="og:description" content="Guía para principiantes: instala SSN, captura el chat de eBay Live u otra plataforma, abre tu panel, activa la lectura de texto a voz gratuita y escúchala en OBS. Con capturas reales de la aplicación.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logotipo de Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+
+    <meta name="twitter:title" content="Primeros pasos - Social Stream Ninja">
+    <meta name="twitter:description" content="Guía para principiantes: instala SSN, captura el chat de eBay Live u otra plataforma, abre tu panel, activa la lectura de texto a voz gratuita y escúchala en OBS. Con capturas reales de la aplicación.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logotipo de Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Primeros pasos - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <style>
+        .start-paths { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1.2rem 0; }
+        .start-paths button { font: inherit; font-weight: 600; padding: 1rem 1.6rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--card-bg, transparent); color: var(--text-primary); cursor: pointer; }
+        .start-paths button[aria-pressed="true"] { background: #6837ce; color: white; border-color: #6837ce; }
+        .start-paths button:focus-visible, summary:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+        [data-start-path][hidden] { display: none; }
+        .guide-card [id] { scroll-margin-top: 10rem; }
+        .guide-image-medium { max-width: 76rem; }
+        .start-small { max-width: 52rem; margin: 0 auto; }
+        .start-status { max-width: 32rem; margin: 0 auto; }
+        .start-check { border-left: 3px solid #43a47a; padding-left: 1.2rem; }
+        .start-extra { margin-top: 1.4rem; }
+        .start-extra summary { cursor: pointer; font-weight: 600; padding: .6rem 0; }
+    </style>
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Guía para principiantes: instala SSN, captura el chat de eBay Live u otra plataforma, abre tu panel, activa la lectura de texto a voz gratuita y escúchala en OBS. Con capturas reales de la aplicación.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<meta name="ssn-language-alternate" content="../../docs/getting-started.html" data-label="English" data-lang="en">
+
+<meta name="ssn-translation-pilot" content="es">
+<script id="ssn-site-language" type="application/json">{"Switch to light theme": "Cambiar al tema claro", "Switch to dark theme": "Cambiar al tema oscuro", "Light mode": "Modo claro", "Dark mode": "Modo oscuro", "Open navigation menu": "Abrir el menú de navegación", "Close navigation menu": "Cerrar el menú de navegación", "Copy Markdown": "Copiar Markdown", "Copying…": "Copiando…", "Markdown copied": "Markdown copiado", "Copy failed": "No se pudo copiar", "Copy comprehensive Markdown for an AI assistant": "Copiar el contenido completo en Markdown para un asistente de IA", "Copy this documentation page as Markdown for an AI assistant": "Copiar esta página de documentación en Markdown para un asistente de IA"}</script>
+</head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Navegación principal"><a href="../index.html">Inicio</a><a href="../../docs/features.html">Funciones</a><a href="../../docs/inspiration.html" class="site-priority-inspiration">Inspiración</a><a href="download.html">Descargar</a><a href="../../docs/guides.html">Guías</a><a href="../../docs/commands.html">Comandos y API</a><a href="../../docs/supported-sites.html">Sitios compatibles</a><a href="../../docs/overlay-gallery.html" class="site-priority-gallery">Galería de superposiciones</a><a href="../../docs/services.html" class="site-priority-hire">Contratar</a><a href="../../docs/support.html">Ayuda</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Cambiar de tema"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Abrir el menú de navegación" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+<aside class="site-language-notice" data-copy-markdown-ignore aria-label="Idioma"><div class="container"><span>Versión piloto en español: inicio, descargas y primeros pasos. Las demás páginas y las capturas de pantalla están en inglés.</span> <a href="getting-started.html">Primeros pasos</a> · <a class="site-language-link" href="../../docs/getting-started.html" lang="en" hreflang="en">English</a></div></aside>
+
+
+    <section class="page-hero"><div class="container"><h1>Tu primer chat en SSN</h1><p>Conecta tu chat. Míralo en un solo lugar. Después, añádele voz.</p></div></section>
+    <main class="guide-section"><div class="container">
+        <div class="guide-card">
+            <p><strong>Fuente</strong> = el chat que capturas. <strong>Panel de chat (Dock)</strong> = la ventana de SSN que muestra esos mensajes. <strong>OBS</strong> = donde los añades a tu transmisión.</p>
+            <p>Elige una forma de usar SSN. No necesitas las dos.</p>
+            <div class="start-paths" aria-label="Elige cómo usar SSN">
+                <button type="button" data-choose-path="app" aria-pressed="true">Aplicación de escritorio</button>
+                <button type="button" data-choose-path="extension" aria-pressed="false">Extensión del navegador</button>
+            </div>
+            <noscript><p>A continuación se muestran los pasos para la aplicación de escritorio. <a href="../../docs/guides.html#extension-getting-started">Instrucciones de la extensión del navegador</a>.</p></noscript>
+        </div>
+        <div class="guide-card">
+            <h2 id="install">1. Abre SSN y actívalo</h2>
+            <div data-start-path="app">
+                <p><a href="download.html#standalone">Descarga la aplicación de escritorio</a> para tu equipo, instálala y abre <strong>Social Stream Ninja</strong>.</p>
+                <p>Ve a <strong>Fuentes y ajustes (Sources and Settings)</strong>. Si el panel derecho indica <strong>Servicio desactivado (Service Disabled)</strong>, haz clic una vez. Debería indicar <strong>Servicio activo (Service Active)</strong>.</p>
+            </div>
+            <div data-start-path="extension" hidden>
+                <p>Instala <a href="https://chromewebstore.google.com/detail/social-stream-ninja/cppibjhfemifednoimlblfcmjgfhfjeg">Social Stream Ninja desde Chrome Web Store</a> en Chrome o Edge.</p>
+                <p>Haz clic en <strong>Extensiones</strong> (el botón con forma de pieza de rompecabezas) del navegador y, después, en <strong>Social Stream Ninja</strong>. Fíjala para encontrarla fácilmente la próxima vez.</p>
+                <p>Si el menú indica <strong>Extensión desactivada (Extension Disabled)</strong>, haz clic una vez. Debería indicar <strong>Extensión activa (Extension active)</strong>.</p>
+            </div>
+<figure class="guide-figure"><a href="../../docs/images/guides/beginner-service-active.png"><img src="../../docs/images/guides/beginner-service-active.png" alt="Control real de servicio activo de SSN, encendido" class="guide-image start-small" loading="lazy"></a><figcaption>Se muestra la aplicación de escritorio. En la extensión, este control se llama «Extension active» (extensión activa).</figcaption></figure>
+            <details class="start-extra"><summary>¿No se abre la aplicación de escritorio?</summary><p><a href="../../docs/desktop-app-wont-open.html">Sigue las instrucciones para abrirla en Windows, macOS o Linux.</a> Instalar SSN no conecta un chat automáticamente.</p></details>
+        </div>
+        <div class="guide-card">
+            <h2 id="source">2. Añade el chat que quieres leer</h2>
+            <div data-start-path="app">
+                <p>En <strong>Fuentes y ajustes (Sources and Settings)</strong>, elige tu plataforma con los botones de la izquierda. Desplázate por la lista si hace falta.</p>
+                <p><strong>Ejemplo con eBay Live:</strong> haz clic en <strong>eBay Live</strong>, pega el enlace a tu evento en directo y haz clic en <strong>Continuar (Continue)</strong>.</p>
+<figure class="guide-figure"><a href="../../docs/images/guides/beginner-ebay-source.png"><img src="../../docs/images/guides/beginner-ebay-source.png" alt="Diálogo real para añadir eBay Live: campo del enlace del evento o vendedor y botón Continuar" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>Usa el enlace de tu evento de eBay, no el de un anuncio de producto individual.</figcaption></figure>
+                <p>Tu nueva fuente aparece en <strong>Fuentes añadidas (Added Sources)</strong>. Haz clic en <strong>Activar fuente (Activate source)</strong>. Si el sitio te pide iniciar sesión, usa <strong>Iniciar sesión (Sign-in)</strong> y vuelve a activar la fuente.</p>
+<figure class="guide-figure"><a href="../../docs/images/guides/beginner-activate-source.png"><img src="../../docs/images/guides/beginner-activate-source.png" alt="Fuente real de eBay Live añadida, con los botones para activar la fuente e iniciar sesión" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>Se muestra un evento de ejemplo. Usa tu propio evento en directo y deja abierta su página de captura.</figcaption></figure>
+                <details class="start-extra"><summary>¿Dónde están esos controles?</summary><figure class="guide-figure"><a href="../../docs/images/guides/beginner-app-sources.png"><img src="../../docs/images/guides/beginner-app-sources.png" alt="Aplicación de escritorio real: botones de plataformas a la izquierda, fuente añadida en el centro y ajustes de SSN a la derecha" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>Fuentes a la izquierda; ajustes de SSN y enlace del panel de chat a la derecha.</figcaption></figure></details>
+            </div>
+            <div data-start-path="extension" hidden>
+                <p>En el <strong>mismo navegador donde instalaste la extensión</strong>, abre la página del chat de la transmisión. Inicia sesión en la plataforma si hace falta y deja esa pestaña abierta.</p>
+                <p><strong>Ejemplo con eBay Live:</strong> abre tu evento en directo en eBay y comprueba que el chat sea visible. Un anuncio de producto o la tienda de un vendedor no es el chat en vivo.</p>
+                <p>Con este método no añades una fila de fuente en SSN: la extensión captura las páginas de chat compatibles que abras.</p>
+            </div>
+            <p class="start-check"><strong>Comprueba:</strong> debes ver mensajes nuevos en la página de chat de la plataforma original.</p>
+            <details class="start-extra"><summary>¿Usas otra plataforma?</summary><p>Usa el enlace del chat en vivo o del chat en ventana independiente de esa plataforma. <a href="../../docs/platform-setup-picker.html">Busca las instrucciones de configuración de tu plataforma.</a></p></details>
+        </div>
+        <div class="guide-card">
+            <h2 id="dock">3. Abre tu panel de chat de SSN</h2>
+            <p>Vuelve a los ajustes de SSN <span data-start-path="app">a la derecha de la aplicación</span><span data-start-path="extension" hidden>haciendo clic en el icono de su extensión del navegador</span>. Busca <strong>Superposición principal de chat y panel de control (Main chat overlay &amp; control dock)</strong>.</p>
+            <p><strong>Haz clic en el enlace largo que hay debajo de ese encabezado.</strong> Se abrirá tu panel de chat. Usa <strong>copiar enlace (copy link)</strong> cuando necesites pegarlo en otro lugar.</p>
+<figure class="guide-figure"><a href="../../docs/images/guides/beginner-open-dock.png"><img src="../../docs/images/guides/beginner-open-dock.png" alt="Encabezado real de la superposición principal de chat y el panel de control, con el enlace generado y el botón para copiarlo" class="guide-image start-small" loading="lazy"></a><figcaption>Usa el enlace de tus propios ajustes. GUIDE_DEMO en esta captura es solo un ejemplo.</figcaption></figure>
+            <p>Pide a alguien que envíe un mensaje nuevo al chat o envíalo tú desde la plataforma original. Debería aparecer en el panel de SSN.</p>
+<figure class="guide-figure"><a href="../../docs/images/guides/beginner-dock-chat.png"><img src="../../docs/images/guides/beginner-dock-chat.png" alt="Panel real de SSN con tres mensajes de ejemplo del chat de eBay" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>Mensajes de ejemplo en el panel real. Tu propio chat debería aparecer aquí.</figcaption></figure>
+            <p class="start-check"><strong>¿Aparece el chat aquí? Ya tienes conexión.</strong> Haz que esto funcione antes de cambiar los ajustes de texto a voz o de OBS.</p>
+            <details class="start-extra"><summary>Mi panel de chat está vacío</summary><p>Comprueba que SSN esté activo, que la fuente esté funcionando y que su chat sea visible. Envía un mensaje <em>nuevo</em> ; es posible que los mensajes antiguos no se vuelvan a mostrar. Abre el enlace del panel desde esta misma aplicación o extensión de SSN, no desde una captura ni desde otra sesión.</p><p>Si hace falta, usa <strong>Generar un mensaje de prueba (Trigger a fake test message)</strong> en los ajustes de SSN. Si aparece, pero el chat real no, revisa la fuente. Si no aparece ninguno, comprueba el enlace del panel y la conexión.</p></details>
+        </div>
+        <div class="guide-card">
+            <h2 id="tts">4. Opcional: lee el chat en voz alta</h2>
+            <p><strong>Sí: la función de texto a voz puede leer el chat entrante automáticamente, mensaje por mensaje.</strong> eBay no necesita su propia función de texto a voz. SSN ya debe estar recibiendo el texto.</p>
+            <p>Vuelve a los ajustes de SSN y, debajo del enlace principal de tu panel, despliega <strong>Mensaje — Texto a voz (Message — Text to Speech)</strong>. Activa <strong>Activar texto a voz en el panel (Enable TTS in dock)</strong>:</p>
+<figure class="guide-figure"><a href="../../docs/images/guides/tts-enable-dock-popup.png"><img src="../../docs/images/guides/tts-enable-dock-popup.png" alt="Sección real de texto a voz del menú, con la lectura de mensajes entrantes activada" class="guide-image start-small" loading="lazy"></a><figcaption>El interruptor azul activa la lectura de los mensajes entrantes.</figcaption></figure>
+            <p>Desplázate hacia abajo en esa sección. Elige <strong>Piper TTS</strong> en <strong>Proveedor de texto a voz (TTS Service Provider)</strong> y selecciona una voz. No necesitas una clave de API ni una cuenta de pago.</p>
+<figure class="guide-figure"><a href="../../docs/images/guides/tts-select-provider-popup.png"><img src="../../docs/images/guides/tts-select-provider-popup.png" alt="Selectores reales del proveedor Piper TTS y de voz" class="guide-image start-small" loading="lazy"></a><figcaption>Espera a que termine la primera descarga de la voz.</figcaption></figure>
+            <p><strong>Copia otra vez el enlace principal de tu panel de chat.</strong> El enlace actualizado incluye texto a voz. Un enlace que hayas copiado antes no incorpora los nuevos ajustes.</p>
+            <details class="start-extra"><summary>Solo quiero escucharlo en mi equipo</summary><p>Abre el enlace actualizado del panel y envía un mensaje nuevo al chat. Haz clic dentro de la página si el navegador bloquea el audio. Puedes terminar aquí si no necesitas OBS.</p></details>
+        </div>
+        <div class="guide-card">
+            <h2 id="obs">5. Añade tu panel de chat a OBS</h2>
+            <ol class="guide-steps">
+                <li>En tu escena de OBS, busca <strong>Fuentes (Sources)</strong>. Haz clic en <strong>+</strong> → <strong>Navegador (Browser)</strong>. Ponle el nombre <strong>SSN Chat</strong> y haz clic en <strong>Aceptar (OK)</strong>.</li>
+                <li>Sustituye la <strong>URL</strong> predeterminada por el enlace del panel que acabas de copiar. Deja <strong>Archivo local (Local file)</strong> sin marcar.</li>
+                <li>Para usar texto a voz, marca <strong>Controlar audio vía OBS (Control audio via OBS)</strong>. Haz clic en <strong>Aceptar (OK)</strong>.</li>
+            </ol>
+<figure class="guide-figure"><a href="../../docs/images/guides/obs-browser-source-properties.png"><img src="../../docs/images/guides/obs-browser-source-properties.png" alt="Propiedades reales de una fuente de navegador de OBS: URL, ancho, alto y control del audio mediante OBS" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>Diálogo predeterminado de OBS: sustituye la URL por la tuya y marca «Controlar audio vía OBS» (Control audio via OBS).</figcaption></figure>
+            <p>Arrastra el cuadro de chat en la vista previa de OBS para moverlo. Arrastra una esquina para cambiar su tamaño. Si ya añadiste esta fuente, abre sus <strong>Propiedades (Properties)</strong> y sustituye la URL anterior.</p>
+            <details class="start-extra"><summary>Quiero la voz sin mostrar el chat</summary><p>Mantén activada la fuente de navegador, pero colócala detrás de una fuente opaca de cámara o juego, o muévela fuera del lienzo. No desactives su icono del ojo ni la descargues mientras necesites su audio.</p></details>
+            <details class="start-extra"><summary>¿Y un panel de navegador personalizado de OBS?</summary><p>Es un panel de control para ti. Es distinto de la <strong>Fuente de navegador (Browser Source)</strong> de la escena mencionada arriba. Empieza con esa fuente para capturar el audio de texto a voz. <a href="../../docs/obs-quick-start.html">Más información sobre paneles y superposiciones.</a></p></details>
+        </div>
+        <div class="guide-card">
+            <h2 id="audio">6. Comprueba el sonido antes de transmitir</h2>
+            <ol class="guide-steps">
+                <li>Envía otro mensaje al chat. Comprueba si se mueve el medidor de <strong>SSN Chat</strong> en el <strong>Mezclador de audio (Audio Mixer)</strong>.</li>
+                <li>Para escucharlo tú también, abre <strong>Editar → Propiedades de audio avanzadas (Edit → Advanced Audio Properties)</strong>. Configura esa fuente en <strong>Monitorización y salida (Monitor and Output)</strong>.</li>
+                <li>Haz una grabación corta en OBS y reprodúcela. Deberías oír el mensaje una sola vez.</li>
+            </ol>
+            <p class="start-check"><strong>Chat visible + voz en la grabación = todo listo.</strong> Tu transmisión debe usar el audio de OBS para que los espectadores lo oigan; SSN no añade sonido automáticamente a una transmisión independiente desde el teléfono.</p>
+            <details class="start-extra"><summary>¿No se oye o se oye dos veces?</summary><p><strong>Si el medidor no se mueve:</strong> comprueba la URL nueva, el interruptor de texto a voz, la descarga de la voz y «Controlar audio vía OBS». En OBS, empieza con Piper en lugar de las voces del sistema.</p><p><strong>Si el medidor se mueve, pero la grabación no tiene sonido:</strong> comprueba que no esté silenciado y revisa la asignación de pistas de grabación.</p><p><strong>Si lo oyes dos veces:</strong> cierra el panel o navegador adicional que esté hablando, o desactiva su texto a voz. Evita grabar a la vez la fuente de OBS y una segunda copia del sonido de monitorización.</p></details>
+            <p><a href="../../docs/tts-setup-guide.html">Comparar voces y solucionar problemas de texto a voz</a> · <a href="https://obsproject.com/kb/browser-source">Ayuda sobre fuentes de OBS</a> · <a href="https://obsproject.com/kb/audio-mixer-guide">Ayuda de audio de OBS</a></p>
+        </div>
+        <div class="guide-card"><details class="start-extra"><summary>La próxima vez que transmitas</summary><p>Abre SSN, activa tu fuente (o abre la pestaña del chat) y abre OBS. Si eBay genera un enlace de evento nuevo para la siguiente transmisión, actualiza la fuente con ese evento. Sigue usando el enlace del panel de la misma sesión de SSN.</p></details><details class="start-extra"><summary>Más opciones avanzadas</summary><p><a href="../../docs/tts-setup-guide.html#voice-chooser">Otros proveedores de voz</a> · <a href="../../docs/local-tts.html">Ejecutar tu propio servidor de texto a voz</a> · <a href="../../docs/guides.html">Todas las guías</a></p></details></div>
+    </div></main>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licencia GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+        function choosePath(path) {
+            document.querySelectorAll("[data-start-path]").forEach(function(node) { node.hidden = node.getAttribute("data-start-path") !== path; });
+            document.querySelectorAll("[data-choose-path]").forEach(function(button) { button.setAttribute("aria-pressed", String(button.getAttribute("data-choose-path") === path)); });
+        }
+        document.querySelectorAll("[data-choose-path]").forEach(function(button) { button.addEventListener("click", function() { choosePath(button.getAttribute("data-choose-path")); }); });
+    </script>
+</body>
+</html>

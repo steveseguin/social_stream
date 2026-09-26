@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Giveaway Wheel. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giveaway Wheel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --panel: rgba(255, 255, 255, 0.1);
+            --panel-border: rgba(255, 255, 255, 0.2);
+            --text: #ffffff;
+            --muted: rgba(255, 255, 255, 0.65);
+            --accent: #fbbf24;
+            --accent-text: #1f2937;
+            --btn-grad: linear-gradient(90deg, #3b82f6, #2563eb);
+            --spin-grad: linear-gradient(90deg, #ef4444, #ec4899);
+            --spin-text: #ffffff;
+            --danger: #dc2626;
+        }
+
+        body[data-theme="midnight"] {
+            --bg: linear-gradient(160deg, #020617, #1e293b);
+            --panel: rgba(148, 163, 184, 0.08);
+            --panel-border: rgba(148, 163, 184, 0.25);
+            --accent: #38bdf8;
+            --accent-text: #082f49;
+            --btn-grad: linear-gradient(90deg, #1d4ed8, #4338ca);
+            --spin-grad: linear-gradient(90deg, #0ea5e9, #6366f1);
+        }
+
+        body[data-theme="neon"] {
+            --bg: radial-gradient(circle at 30% 20%, #1b1b2f, #0a0a0f);
+            --panel: rgba(255, 255, 255, 0.06);
+            --panel-border: rgba(0, 245, 212, 0.25);
+            --accent: #00f5d4;
+            --accent-text: #042f2e;
+            --btn-grad: linear-gradient(90deg, #00bbf9, #9b5de5);
+            --spin-grad: linear-gradient(90deg, #f15bb5, #9b5de5);
+        }
+
+        body[data-theme="sunset"] {
+            --bg: linear-gradient(160deg, #7c2d12, #f83600 55%, #fe8c00);
+            --panel: rgba(255, 247, 237, 0.12);
+            --panel-border: rgba(255, 247, 237, 0.3);
+            --accent: #ffd452;
+            --accent-text: #431407;
+            --btn-grad: linear-gradient(90deg, #ea580c, #dc2626);
+            --spin-grad: linear-gradient(90deg, #b91c1c, #f97316);
+        }
+
+        body[data-theme="casino"] {
+            --bg: radial-gradient(circle at 50% 30%, #14532d, #052e16);
+            --panel: rgba(212, 175, 55, 0.08);
+            --panel-border: rgba(212, 175, 55, 0.35);
+            --accent: #d4af37;
+            --accent-text: #1c1917;
+            --btn-grad: linear-gradient(90deg, #15803d, #166534);
+            --spin-grad: linear-gradient(90deg, #b91c1c, #7f1d1d);
+        }
+
+        body[data-theme="mono"] {
+            --bg: #171717;
+            --panel: rgba(255, 255, 255, 0.06);
+            --panel-border: rgba(255, 255, 255, 0.18);
+            --accent: #fafafa;
+            --accent-text: #111111;
+            --btn-grad: linear-gradient(90deg, #404040, #262626);
+            --spin-grad: linear-gradient(90deg, #fafafa, #d4d4d4);
+            --spin-text: #111111;
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        .page {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 24px 20px 48px;
+        }
+
+        header.topbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        header.topbar h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .theme-picker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(8px);
+        }
+
+        .card + .card {
+            margin-top: 20px;
+        }
+
+        .card h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .wheel-box {
+            position: relative;
+            width: 100%;
+            max-width: 460px;
+            margin: 0 auto;
+            aspect-ratio: 1 / 1;
+        }
+
+        #wheel-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #wheel-empty {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--muted);
+            font-size: 1.15rem;
+            border: 2px dashed var(--panel-border);
+            border-radius: 50%;
+        }
+
+        #winner-display {
+            display: none;
+            margin: 16px auto 0;
+            max-width: 460px;
+            background: var(--accent);
+            color: var(--accent-text);
+            padding: 16px 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 800;
+            animation: winnerPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes winnerPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            60% { transform: scale(1.06); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .spin-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 22px;
+            margin-top: 14px;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
+        .stats-row b {
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+        }
+
+        button {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #ffffff;
+            background: var(--btn-grad);
+            cursor: pointer;
+        }
+
+        button:hover {
+            filter: brightness(1.12);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        button.spin {
+            font-size: 1.15rem;
+            padding: 14px 30px;
+            border-radius: 14px;
+            background: var(--spin-grad);
+            color: var(--spin-text);
+        }
+
+        button.danger {
+            background: var(--danger);
+        }
+
+        button.ghost {
+            background: transparent;
+            border: 1px solid var(--panel-border);
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        input[type="text"], select {
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background: #ffffff;
+            color: #111827;
+            font-size: 0.95rem;
+            min-width: 0;
+        }
+
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .field-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .field-row input[type="text"] {
+            flex: 1 1 160px;
+        }
+
+        .keyword-current {
+            text-align: center;
+            font-size: 1.05rem;
+            margin-bottom: 12px;
+            color: var(--muted);
+        }
+
+        .keyword-current .pill {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--accent-text);
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 8px;
+            margin-left: 6px;
+        }
+
+        .option-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 14px;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
+        .option-row label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .option-row select {
+            padding: 4px 8px;
+            font-size: 0.85rem;
+        }
+
+        .actions-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        #entrants-summary {
+            display: none;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            color: var(--muted);
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        #entrants-container, #winners-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .entrant-row, .winner-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--panel-border);
+            background: var(--panel);
+            margin-bottom: 6px;
+        }
+
+        .entrant-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .entrant-name, .winner-name {
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .entrant-platform, .winner-platform {
+            flex: none;
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: var(--accent);
+            color: var(--accent-text);
+        }
+
+        .winner-time {
+            flex: none;
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        .entrant-remove {
+            flex: none;
+            padding: 5px 10px;
+            font-size: 0.75rem;
+            background: var(--danger);
+            opacity: 0;
+        }
+
+        .entrant-row:hover .entrant-remove {
+            opacity: 1;
+        }
+
+        .count-badge {
+            color: var(--accent);
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            z-index: 1000;
+            pointer-events: none;
+            will-change: transform, opacity;
+        }
+
+        /* OBS mode: wheel only, transparent page chrome */
+        body.obs-mode {
+            background: transparent;
+        }
+
+        body.obs-mode header.topbar,
+        body.obs-mode .col-right,
+        body.obs-mode .spin-row,
+        body.obs-mode .stats-row {
+            display: none;
+        }
+
+        body.obs-mode .card {
+            background: transparent;
+            border: none;
+            backdrop-filter: none;
+        }
+    </style>
+</head>
+<body data-theme="classic">
+    <div class="page">
+        <header class="topbar">
+            <h1>🎯 Giveaway Wheel</h1>
+            <div class="theme-picker">
+                <span>Theme</span>
+                <select id="theme-select" onchange="setTheme(this.value)">
+                    <option value="classic">Classic</option>
+                    <option value="midnight">Midnight</option>
+                    <option value="neon">Neon</option>
+                    <option value="sunset">Sunset</option>
+                    <option value="casino">Casino</option>
+                    <option value="mono">Mono</option>
+                </select>
+            </div>
+        </header>
+
+        <div class="layout">
+            <div class="col-left">
+                <div class="card">
+                    <div class="wheel-box" id="wheel-box">
+                        <canvas id="wheel-canvas" width="400" height="400"></canvas>
+                        <div id="wheel-empty">Add participants to spin!</div>
+                    </div>
+                    <div id="winner-display"></div>
+                    <div class="spin-row">
+                        <button class="spin" id="spin-btn" onclick="spinWheel()">🎯 Spin the Wheel!</button>
+                        <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:var(--muted)">
+                            Duration
+                            <select id="spin-duration" onchange="saveSettings()">
+                                <option value="4000">4s</option>
+                                <option value="6000">6s</option>
+                                <option value="8000">8s</option>
+                                <option value="10000">10s</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="stats-row">
+                        <span>Entries: <b id="stats-total">0</b></span>
+                        <span>Rate: <b id="stats-rate">0</b>/min</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-right">
+                <div class="card">
+                    <h3>🔑 Entry Keyword</h3>
+                    <div class="keyword-current">Viewers type this in chat to enter:<span class="pill" id="current-keyword">ENTER</span></div>
+                    <div class="field-row">
+                        <input type="text" id="keyword-input" placeholder="Enter new keyword...">
+                        <button onclick="setKeyword()">Set Keyword</button>
+                    </div>
+                    <div class="option-row">
+                        <label><input type="checkbox" id="exact-match" onchange="saveSettings()"> Exact message match</label>
+                        <label><input type="checkbox" id="remove-winner" onchange="saveSettings()"> Remove winner after spin</label>
+                    </div>
+                    <div class="actions-row">
+                        <button onclick="openOBSWidget()">📺 Open OBS Widget</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>➕ Add Participant</h3>
+                    <div class="field-row">
+                        <input type="text" id="entrant-name" placeholder="Participant name">
+                        <select id="platform-select">
+                            <option value="twitch">Twitch</option>
+                            <option value="youtube">YouTube</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="discord">Discord</option>
+                            <option value="kick">Kick</option>
+                        </select>
+                        <button onclick="addEntrant()">Add</button>
+                    </div>
+                    <div class="actions-row">
+                        <button class="ghost" onclick="addTestData()">Add Test Data</button>
+                        <button class="danger" onclick="clearEntrants()">🗑️ Clear All Entries</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Participants (<span class="count-badge" id="entrant-count">0</span>)</h3>
+                    <div id="entrants-summary"></div>
+                    <div id="entrants-container"></div>
+                </div>
+
+                <div class="card">
+                    <h3>🏆 Recent Winners</h3>
+                    <div id="winners-container"></div>
+                    <div class="actions-row">
+                        <button class="ghost" onclick="clearWinners()">Clear History</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="shared/giveaway/managed.css">
+    <script src="shared/giveaway/managed.js"></script>
+    <script src="shared/giveaway/page.js"></script>
+</body>
+</html>

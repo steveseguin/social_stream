@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://socialstream.ninja/docs/giveaway-guide.html">
+    <meta property="og:title" content="Your first giveaway - Social Stream Ninja">
+    <meta property="og:description" content="A beginner&#x27;s walkthrough of the Giveaway Tool: collect chat entries, draw a winner, show the result in OBS, and understand each control.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/docs/giveaway-guide.html">
+    <meta name="twitter:title" content="Your first giveaway - Social Stream Ninja">
+    <meta name="twitter:description" content="A beginner&#x27;s walkthrough of the Giveaway Tool: collect chat entries, draw a winner, show the result in OBS, and understand each control.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your first giveaway - Social Stream Ninja</title>
+    <meta name="description" content="A beginner&#x27;s walkthrough of the Giveaway Tool: collect chat entries, draw a winner, show the result in OBS, and understand each control.">
+    <link rel="canonical" href="https://socialstream.ninja/docs/giveaway-guide.html">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="stylesheet" href="css/workflow-guides.css">
+    <link rel="stylesheet" href="css/site-shell.css">
+    <script src="js/site-shell.js"></script>
+</head>
+<body class="workflow-guide">
+<header class="site-header">
+    <div class="site-bar">
+        <a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
+        <nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation">
+            <a href="../index.html">Home</a>
+            <a href="features.html">Features</a>
+            <a href="download.html">Download</a>
+            <a href="guides.html">Guides</a>
+            <a href="support.html">Support</a>
+        </nav>
+        <div class="site-actions">
+            <button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button>
+            <button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button>
+        </div>
+    </div>
+</header>
+<section class="page-hero">
+    <div class="container">
+        <h1>Your first giveaway</h1>
+        <p>Viewers type <code>!enter</code> in chat. You collect entries in SSN, then click <strong>Draw winner</strong>.</p>
+    </div>
+</section>
+<main class="guide-section">
+<div class="container">
+    <nav class="workflow-toc" aria-label="On this page">
+        <a href="#find">Find the controls</a>
+        <a href="#first-draw">Run a giveaway</a>
+        <a href="#obs">Show it in OBS</a>
+        <a href="#settings">What the settings mean</a>
+        <a href="#buttons">What the buttons do</a>
+        <a href="#help">Troubleshooting</a>
+    </nav>
+
+    <section class="guide-card" id="find">
+        <h2>1. Find the Giveaway Tool</h2>
+        <p>If you can already see <strong>Giveaway Tool</strong>, <strong>Entry setup</strong>, and <strong>Run giveaway</strong>, you are in the right place. There is no extra giveaway popup to find.</p>
+        <p>Otherwise, open SSN's main settings menu. With the browser extension, click your browser's extensions/puzzle-piece icon, then <strong>Social Stream Ninja</strong>. In the desktop app, use the SSN settings menu that contains your overlay links. Search for <strong>giveaway</strong> and expand <strong>Giveaway Options</strong>. If you see the beginner welcome screen, choose <strong>Switch to full mode</strong>.</p>
+        <ol class="workflow-diagram" aria-label="How a giveaway works">
+            <li><strong>Viewers enter</strong><span>In your normal captured chat</span></li>
+            <li><strong>You run the draw</strong><span>In the SSN settings menu</span></li>
+            <li><strong>OBS shows the result</strong><span>Using the copied display link</span></li>
+        </ol>
+        <p>The link beginning <code>https://socialstream.ninja/giveaway.html?session=...</code> opens the audience display. With <code>&amp;managed</code> in that link, you control the giveaway from SSN; the display does not have entry or draw buttons.</p>
+    </section>
+
+    <section class="guide-card" id="first-draw">
+        <h2>2. Run a simple free giveaway</h2>
+        <p>Before starting, keep SSN enabled and your chat sources connected. Check that ordinary viewer messages appear in your SSN chat dock.</p>
+        <ol class="guide-steps">
+            <li><strong>Keep the basic settings.</strong> Leave <strong>Giveaway ID</strong> as <code>default</code> (blank also means default), <strong>Entry keyword</strong> as <code>!enter</code>, and <strong>Match messages</strong> as <strong>Exact message</strong>. Leave <strong>Only members can enter</strong> and <strong>Allow repeat winners</strong> off.</li>
+            <li><strong>Check Tickets and point prizes.</strong> For a normal free draw, use <strong>Round type: Giveaway</strong>, <strong>Points per ticket: 0</strong>, <strong>Point prize per winner: 0</strong>, and <strong>Number of prizes: 1</strong>. You do not need the Loyalty Points System for this.</li>
+            <li><strong>Click Open entries.</strong> Tell viewers: “Type <code>!enter</code> in chat to join the giveaway.” They enter in the chat you are capturing, such as YouTube or Twitch. They do not need the giveaway link.</li>
+            <li><strong>Check the entries.</strong> Click <strong>Refresh status</strong> to update the count in the menu, or <strong>Manage giveaways and history</strong> to inspect names. Repeating <code>!enter</code> does not give the same viewer extra free entries.</li>
+            <li><strong>Click Close entries, then Draw winner.</strong> SSN randomly selects an eligible entry. The menu reports the winner, and connected displays show the same result. Drawing also closes entries automatically.</li>
+            <li><strong>For another giveaway, click New round, then Open entries.</strong> The new round starts with an empty entry list; viewers must enter again. Previous results remain in history.</li>
+        </ol>
+        <figure class="guide-figure">
+            <a href="images/giveaway-entry-setup.png"><img class="guide-image" src="images/giveaway-entry-setup.png" width="704" height="419" alt="Giveaway entry setup with !enter, Exact message, and both membership and repeat-winner switches off." loading="lazy"></a>
+            <figcaption>Start with the free-entry defaults. These screenshots use an isolated demo; no live giveaway or viewer account is shown. Click an image to enlarge it.</figcaption>
+        </figure>
+        <div class="guide-note"><strong>“Entries open - 0 eligible entries” is not an error.</strong> The giveaway is accepting entries, but the last status check found none. Have a viewer send <code>!enter</code> after entries open, then click <strong>Refresh status</strong>. The popup count does not update automatically as chat arrives.</div>
+        <p>The status may also show a ticket count. Each free entry counts as one ticket; with the ticket price set to zero, no points are charged.</p>
+        <p>SSN selects the winner. If your prize is a gift, game key, or other item, you arrange delivery yourself. A <strong>Point prize</strong> specifically awards SSN loyalty points.</p>
+    </section>
+
+    <section class="guide-card" id="obs">
+        <h2>3. Show the giveaway in OBS</h2>
+        <ol class="guide-steps">
+            <li>Under <strong>Presentation</strong>, choose a <strong>Giveaway display</strong>: <strong>Winner card</strong> shows the result directly; <strong>Name reel</strong> cycles names before the reveal; <strong>Community wheel</strong> reveals the result with a spinning wheel.</li>
+            <li>Choose a <strong>Style</strong>, an optional <strong>Display title</strong>, and <strong>Transparent (OBS)</strong> for the background. <strong>Themed panel</strong> adds a background panel.</li>
+            <li>Click <strong>Preview display</strong> to check the appearance. This uses sample names; it does not open entries, add real viewers, or run your actual draw.</li>
+            <li>Click <strong>[copy link]</strong> beside <strong>Giveaway Tool</strong>. In OBS, add a <strong>Browser Source</strong> and paste that link into its URL field. Start with a width of <strong>1280</strong> and height of <strong>720</strong>.</li>
+            <li>Keep SSN running and use its <strong>Open entries</strong>, <strong>Close entries</strong>, and <strong>Draw winner</strong> buttons. No OBS “Interact” step is needed for this managed display.</li>
+        </ol>
+        <figure class="guide-figure">
+            <a href="images/giveaway-run-and-display.png"><img class="guide-image" src="images/giveaway-run-and-display.png" width="704" height="525" alt="Run giveaway buttons, a refreshed count of three entries, and Presentation controls including Winner card, Midnight, and Transparent (OBS)." loading="lazy"></a>
+            <figcaption>Run the giveaway with the buttons at the top. Presentation controls change what the audience sees.</figcaption>
+        </figure>
+        <figure class="guide-figure">
+            <a href="images/giveaway-wheel-result.png"><img class="guide-image" src="images/giveaway-wheel-result.png" width="1280" height="720" alt="Example audience display with entries closed, a demo winner announced, and the community wheel below." loading="lazy"></a>
+            <figcaption>A demo result using Community wheel and Themed panel. All three display choices show the host's chosen winner; the animation does not choose a separate winner.</figcaption>
+        </figure>
+        <p><strong>Copy the link again after changing presentation settings</strong> and replace the URL in OBS. Use the normal copied link, not the preview URL. Keep the session and any password from your own SSN menu, so the display connects to your giveaway.</p>
+        <p><strong>[edit link]</strong> loads an existing overlay URL into the menu's link settings. You do not need it for a first giveaway. <strong>[?]</strong> opens the short help text.</p>
+    </section>
+
+    <section class="guide-card" id="settings">
+        <h2>What the entry settings mean</h2>
+        <table class="guide-table guide-table-stack">
+            <thead><tr><th scope="col">Setting</th><th scope="col">Meaning</th></tr></thead>
+            <tbody>
+                <tr><td data-label="Setting"><span>Giveaway ID</span></td><td data-label="Meaning"><span>Names the giveaway being controlled. Use <code>default</code> for one giveaway. It is separate from your session ID. Multiple giveaways need distinct IDs and matching display links.</span></td></tr>
+                <tr><td data-label="Setting"><span>Entry keyword</span></td><td data-label="Meaning"><span>What viewers type, such as <code>!enter</code> or <code>!raffle</code>. Tell viewers the keyword you actually configured.</span></td></tr>
+                <tr><td data-label="Setting"><span>Exact message</span></td><td data-label="Meaning"><span>The whole message must be <code>!enter</code>, ignoring capitalization and surrounding spaces. <code>!enter please</code> does not match.</span></td></tr>
+                <tr><td data-label="Setting"><span>Keyword anywhere (separate word)</span></td><td data-label="Meaning"><span>Allows a message such as <code>I'd like to join !enter please</code>. The keyword must be separated by spaces; <code>!enter!</code> is not the same keyword.</span></td></tr>
+                <tr><td data-label="Setting"><span>Only members can enter</span></td><td data-label="Meaning"><span>Requires membership information in the captured message. Leave off for an open giveaway; it does not mean “anyone watching” or “any follower.” Support depends on the chat source.</span></td></tr>
+                <tr><td data-label="Setting"><span>Allow repeat winners</span></td><td data-label="Meaning"><span>Allows the same viewer to win more than one prize within the current round. With it off, a winner is removed from that round's eligible pool. A new round allows previous winners to enter again.</span></td></tr>
+                <tr><td data-label="Setting"><span>Tickets and point prizes</span></td><td data-label="Meaning"><span>Optional SSN loyalty-point settings and other game types. Leave costs and point prizes at zero for a free giveaway. These are separate from Twitch channel points.</span></td></tr>
+                <tr><td data-label="Setting"><span>Number of prizes</span></td><td data-label="Meaning"><span>How many results the round allows. Set this before opening entries. For multiple giveaway winners, click <strong>Draw winner</strong> once per prize; do not create a new round between those draws.</span></td></tr>
+            </tbody>
+        </table>
+        <p>Set entry rules before people join. Once entries exist, changing menu fields does not change the active round's rules. To change them, cancel the round, create a new round, configure it, and open entries again. The manager shows the rules actually saved for the round.</p>
+        <p>Free entries are tracked by the identity supplied by each chat source. The same person entering on two platforms is not automatically recognized as one person.</p>
+    </section>
+
+    <section class="guide-card" id="buttons">
+        <h2>What the buttons do</h2>
+        <table class="guide-table guide-table-stack">
+            <thead><tr><th scope="col">Button</th><th scope="col">Use it to</th></tr></thead>
+            <tbody>
+                <tr><td data-label="Button"><span>Open entries</span></td><td data-label="Use it to"><span>Accept entries, or reopen a paused round before any winner is drawn. Reopening keeps existing entries and must use the same locked rules.</span></td></tr>
+                <tr><td data-label="Button"><span>Close entries</span></td><td data-label="Use it to"><span>Stop new entries while keeping the current pool.</span></td></tr>
+                <tr><td data-label="Button"><span>Draw winner</span></td><td data-label="Use it to"><span>Close entries and select one winner. There must be at least one eligible entry. With one prize configured, the round is then complete.</span></td></tr>
+                <tr><td data-label="Button"><span>Cancel and refund</span></td><td data-label="Use it to"><span>Cancel before drawing. Any reserved ticket points are returned. It cannot undo an already drawn result.</span></td></tr>
+                <tr><td data-label="Button"><span>New round</span></td><td data-label="Use it to"><span>Start over with an empty pool and keep prior history. Entries start closed. Paid rounds with reserved points must be cancelled/refunded first.</span></td></tr>
+                <tr><td data-label="Button"><span>Refresh status</span></td><td data-label="Use it to"><span>Read the current count and latest result without changing the giveaway.</span></td></tr>
+                <tr><td data-label="Button"><span>Manage giveaways and history</span></td><td data-label="Use it to"><span>Inspect participants and saved rules, remove an entry before drawing, review results, or export history/backups.</span></td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="guide-card" id="help">
+        <h2>If something does not work</h2>
+        <ul class="guide-list">
+            <li><strong>Still zero entries?</strong> Click <strong>Refresh status</strong>. Check that the viewer's message appears in SSN, entries were open when it arrived, the keyword matches, and members-only is off. For a free keyword draw, the ticket price must be zero. Give simultaneous free giveaways different keywords.</li>
+            <li><strong>Test messages do not enter?</strong> Bot, private, historical, replayed, and economy-test-marked messages are excluded. Use <strong>Preview display</strong> for a visual check; to rehearse real entry capture, send the keyword through a connected chat after opening entries.</li>
+            <li><strong>The display only says “Waiting for giveaway”?</strong> Keep the SSN host running, use the copied link from the same session, and click <strong>Refresh status</strong>. Check that the menu and display use the same Giveaway ID. A preview URL only shows sample data.</li>
+            <li><strong>No buttons on the giveaway page?</strong> That is expected for the managed audience display. Return to <strong>Giveaway Options</strong> in SSN.</li>
+            <li><strong>The round is complete or rules are locked?</strong> Use <strong>New round</strong> after a completed draw. To abandon an undrawn round, use <strong>Cancel and refund</strong> first, then <strong>New round</strong>.</li>
+            <li><strong>Restarted SSN?</strong> Saved rounds remain in that local browser/app profile; open rounds close for review. Use the same session, refresh the status, and review before reopening. Changing sessions selects a separate set of giveaways.</li>
+        </ul>
+        <p>Ready for paid tickets, point prizes, multiple giveaways, Stream Deck, or Event Flow? Continue with <a href="giveaway-points-guide.html">Giveaways, tickets and point prizes</a>.</p>
+    </section>
+</div>
+</main>
+<footer><div class="container"><div class="footer-bottom"><p>Social Stream Ninja &middot; <a href="guides.html">Browse all guides</a></p></div></div></footer>
+</body>
+</html>
