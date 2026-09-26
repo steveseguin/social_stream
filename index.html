@@ -1,12 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Social Stream Ninja",
+      "alternateName": "SSN",
+      "url": "https://socialstream.ninja/"
+    }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
     <script>
         // Apply dark mode immediately to prevent flash
         (function() {
             const savedTheme = localStorage.getItem('darkMode');
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            
+
             if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
                 document.documentElement.classList.add('dark-mode');
             }
@@ -14,31 +31,31 @@
     </script>
     <script>
         if (window.location.search.includes('session=') || window.location.search.includes('id=') || window.location.search.includes('s=')) {
-            window.location.href = 'featured.html' + window.location.search;
+            window.location.href = (document.documentElement.getAttribute('data-site-root') || './') + 'featured.html' + window.location.search;
         }
     </script>
-    <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Social Stream Ninja | One Live Chat for Every Platform</title>
-    <meta name="description" content="Bring live chat from YouTube, Twitch, TikTok, Facebook, Kick, and 100+ sources into one dashboard with OBS overlays, TTS, automation, and optional AI cohosts. Free and open source.">
+    <meta name="description" content="Combine YouTube, Twitch, TikTok, Kick and more in one live chat dashboard. Free OBS overlays, text-to-speech, automation and AI tools for streamers.">
     <meta name="keywords" content="social stream, live chat, OBS overlay, AI cohost, chat bot, text to speech, chat relay, multi-platform chat, content creators, live streaming tools, youtube chat, twitch chat, facebook live">
     <meta name="author" content="Social Stream Ninja">
-    <link rel="canonical" href="https://socialstream.ninja" />
-    
+    <link rel="canonical" href="https://socialstream.ninja/">
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://socialstream.ninja">
+    <meta property="og:url" content="https://socialstream.ninja/">
     <meta property="og:title" content="Social Stream Ninja | One Live Chat for Every Platform">
-    <meta property="og:description" content="Combine 100+ live-chat sources with OBS overlays, TTS, automation, and optional AI cohosts. Free and open source.">
+    <meta property="og:description" content="Combine YouTube, Twitch, TikTok, Kick and more in one live chat dashboard. Free OBS overlays, text-to-speech, automation and AI tools for streamers.">
     <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
-    
+
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://socialstream.ninja">
-    <meta property="twitter:title" content="Social Stream Ninja | One Live Chat for Every Platform">
-    <meta property="twitter:description" content="Combine 100+ live-chat sources with OBS overlays, TTS, automation, and optional AI cohosts.">
-    <meta property="twitter:image" content="https://socialstream.ninja/media/logo.png">
-    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/">
+    <meta name="twitter:title" content="Social Stream Ninja | One Live Chat for Every Platform">
+    <meta name="twitter:description" content="Combine YouTube, Twitch, TikTok, Kick and more in one live chat dashboard. Free OBS overlays, text-to-speech, automation and AI tools for streamers.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+
     <link rel="icon" href="./icons/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="docs/css/styles.css">
 	<style>
@@ -127,6 +144,7 @@
 	</style>
 <link rel="stylesheet" href="docs/css/site-shell.css">
 <script src="docs/js/site-shell.js"></script>
+<meta name="ssn-language-alternate" content="es/index.html" data-label="Español" data-lang="es">
 </head>
 <body>
     <header class="site-header"><div class="site-bar"><a class="site-brand" href="index.html"><img src="icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="index.html" aria-current="page">Home</a><a href="docs/features.html">Features</a><a href="docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="docs/download.html">Download</a><a href="docs/guides.html">Guides</a><a href="docs/commands.html">Commands &amp; API</a><a href="docs/supported-sites.html">Supported Sites</a><a href="docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="docs/services.html" class="site-priority-hire">Hire</a><a href="docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>

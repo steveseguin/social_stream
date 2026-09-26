@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
+    <meta name="description" content="Phrase Guessing Game: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phrase Guessing Game - Social Stream Ninja</title>
     <link rel="icon" href="../favicon.ico" />
@@ -499,6 +502,7 @@ You can't handle the truth</textarea>
                         chatmessage: message,
                         type: 'bot',
                         timestamp: Date.now(),
+                        // textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
                         textonly: true
                     };
                     socketserver.send(JSON.stringify({
@@ -757,6 +761,7 @@ You can't handle the truth</textarea>
             if (!gameState.isActive || gameState.winner) return;
 
             let messageText = data.chatmessage;
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!data.textonly) {
                 messageText = stripHtml(messageText);
             }

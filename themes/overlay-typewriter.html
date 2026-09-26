@@ -10,14 +10,18 @@ This overlay creates a retro terminal/typewriter experience with:
 -->
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Typewriter Terminal Chat Overlay: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
 <script type="text/javascript" src="../js/local-server-url.js"></script>
 <script type="text/javascript" src="../js/transport-dedupe.js"></script>
-    <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Typewriter Terminal Chat Overlay</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600;700&display=swap">
     <script src="https://socialstream.ninja/libs/colours.js" type="text/javascript"></script>
-    <link rel="canonical" href="https://socialstream.ninja/">
+
     <meta name="generator" content="Social Stream Ninja - https://github.com/steveseguin/social_stream">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600;700&display=swap');
@@ -454,6 +458,12 @@ body::before {
 </div>
 
 <script>
+    function escapePlainMetadata(value) {
+        return String(value == null ? "" : value).replace(/[&<>"']/g, function (character) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character];
+        });
+    }
+
     var urlParams = new URLSearchParams(window.location.search);
     var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
     // Transport migration guard: only pages with full server parity may skip the legacy bridge.
@@ -758,9 +768,9 @@ body::before {
         }
         
         const nameHtml = data.chatname ? `<span class="terminal-prompt">${statusIndicator}</span><span class="name">${data.chatname}</span>` : '';
-        const membershipHtml = data.membership ? `<span class="membership-status">${data.membership}</span>` : '';
+        const membershipHtml = data.membership ? `<span class="membership-status">${escapePlainMetadata(data.membership)}</span>` : '';
         const messageTextHtml = '<span class="text"></span>';
-        const donationHtml = data.hasDonation ? `<span class="donation"> [DONATION: ${data.hasDonation}]</span>` : '';
+        const donationHtml = data.hasDonation ? `<span class="donation"> [DONATION: ${escapePlainMetadata(data.hasDonation)}]</span>` : '';
         const timestampHtml = `<span class="timestamp">${timestamp}</span>`;
         
         const contentImgHtml = data.contentimg ? 
@@ -787,6 +797,7 @@ body::before {
         // Apply typewriter effect to the text or set HTML directly
         const textElement = messageDiv.querySelector('.text');
         if (textElement && data.chatmessage) {
+            // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
             if (data.textonly) {
                 typewriterEffect(textElement, data.chatmessage, TYPE_SPEED);
             } else {

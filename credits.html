@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Stream Credits. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
 <script src="shared/overlay-control-transport.js"></script>
 <script src="js/local-server-url.js"></script>
-    <meta charset="UTF-8" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stream Credits</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -12,7 +16,7 @@
 	<link href="https://fonts.googleapis.com/css2?family=News+Cycle:wght@400;700&display=swap" rel="stylesheet" />
 
 	<script type="text/javascript" src="currency.js"></script>
-	
+
     <style>
         body {
             margin: 0;
@@ -33,18 +37,18 @@
             0% { background-position: 0 0; }
             100% { background-position: 798px -798px; }
         }
-		
+
 
 		/* Star Wars style (default) */
 		@keyframes translateText {
 			0% {
 				transform: rotateX(20deg) scale(1.0, 1.0) translateY(66vh);
 			}
-			
+
 			10% {
 				transform: rotateX(25deg) scale(0.965, .95) translateY(-315.6vh);
 			}
-			
+
 			100% {
 				transform: rotateX(30deg) scale(0.65, 0.5) translateY(-3750vh);
 			}
@@ -58,15 +62,15 @@
 				transform: translateY(var(--start-offset, 100vh));
 				opacity: 0;
 			}
-			
+
 			5% {
 				opacity: 1;
 			}
-			
+
 			95% {
 				opacity: 1;
 			}
-			
+
 			100% {
 				/* Use dynamic end offset; fallback keeps old behavior */
 				transform: translateY(calc(-1 * var(--end-offset, 300vh)));
@@ -81,15 +85,15 @@
 				transform: translateY(var(--start-offset, 50vh));
 				opacity: 0;
 			}
-			
+
 			5% {
 				opacity: 1;
 			}
-			
+
 			95% {
 				opacity: 1;
 			}
-			
+
 			100% {
 				/* Use dynamic end offset; fallback keeps old behavior */
 				transform: translateY(calc(-1 * var(--end-offset, 300vh)));
@@ -125,7 +129,7 @@
 			overflow: hidden;
 			display: none;
 		}
-       
+
 	    #app.starwars {
 			perspective: 400px;
 			perspective-origin: center 100%;
@@ -140,7 +144,7 @@
 			text-shadow: 0 0 16px rgba(255, 235, 59, 0.6), 0 0 3px rgba(59, 190, 255, 0.8), 0 0 10px rgba(255, 255, 255, 0.3);
 			line-height: 1.6;
 		}
-		
+
 		.category-header.starwars {
 			transform: scaleY(1.8); /* Makes the text 30% taller without affecting width */
 			transform-origin: center; /* Centers the scaling effect */
@@ -197,7 +201,7 @@
             background: linear-gradient(0deg, rgba(0, 0, 0, 0),  rgba(0, 0, 0, .1), rgba(0, 0, 0, .3), rgba(0, 0, 0, .8));
             z-index: 10;
         }
-		
+
 		.text-container {
 			position: relative;
 			width: 100%;
@@ -350,7 +354,7 @@
         .stars {
             animation: starMove 120s linear infinite;
         }
-		
+
 		.fadeout {
 			opacity: 0;
 			transition: opacity 2s ease-out;
@@ -403,7 +407,7 @@
 			position: relative;
 			z-index: 1;
 		}
-		
+
 		.footer-text.starwars {
 			font-family: 'News Gothic MT', 'News Gothic', sans-serif;
 			font-weight: 700;
@@ -485,13 +489,13 @@
 				/* Use dynamic start offset; fallback keeps old behavior */
 				transform: translateY(var(--start-offset, 100vh));
 			}
-			
+
 			100% {
 				/* Use dynamic end offset; fallback keeps old behavior */
 				transform: translateY(calc(-1 * var(--end-offset, 300vh)));
 			}
 		}
-		
+
 
 
         /* Avatar styles */
@@ -506,7 +510,7 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
         }
-		
+
 		.source-type-img {
 			width: 1.4em;
 			height: 1.4em;
@@ -530,8 +534,8 @@
             display: inline-block;
             vertical-align: middle;
         }
-		
-		
+
+
 		/* Style-specific text styles */
 		/* Style-specific text styles */
 		.text.standard, .category-header.standard {

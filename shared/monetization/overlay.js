@@ -88,6 +88,8 @@
     }
     function messageText(data) {
         var value = typeof data.chatmessage === 'string' ? data.chatmessage.slice(0, 8000) : '';
+        // This consumer converts only explicit HTML mode (false); true and absent flags use literal text here.
+        // Do not decode/filter plain chatmessage strings, including typed tags or entity-looking text.
         if (data.textonly === false && value) {
             var template = document.createElement('template'); template.innerHTML = value;
             template.content.querySelectorAll('script, style').forEach(function (node) { node.remove(); });

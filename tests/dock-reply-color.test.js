@@ -79,7 +79,8 @@ const answer = 'The new answer <b>stays readable</b>';
 			}
 			assert.equal(await content.locator("b").count(), scenario.textonly || scenario.htmlStripped ? 0 : (scenario.quotedHtml ? 2 : 1), "Plain text must stay escaped; HTML formatting must survive");
 			if (!scenario.textonly && !scenario.htmlStripped) {
-				const answerSelector = "#content_reply-color-test" + (scenario.event ? " > i" : "") + " > b";
+				// Event italics are applied to the displayed body, not a payload wrapper.
+				const answerSelector = "#content_reply-color-test > b";
 				assert.equal(await color(answerSelector), await color("#content_reply-color-test"), "The new answer must retain its normal color");
 			}
 			if (scenario.stripped) assert.equal(await content.textContent(), "The new answer stays readable");

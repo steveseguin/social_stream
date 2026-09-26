@@ -1,4 +1,4 @@
-export { safeHtml, htmlToText } from '../../shared/utils/html.js';
+export { safeHtml, htmlToText, getChatPreviewText } from '../../shared/utils/html.js';
 
 export function randomSessionId() {
   if (window.crypto && window.crypto.randomUUID) {

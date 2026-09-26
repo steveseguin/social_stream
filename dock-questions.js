@@ -15,6 +15,7 @@
     window.SSNQuestionTracker = {
         add: function (node, data) {
             var text = String(data.chatmessage || '');
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!data.textonly) { var template = document.createElement('template'); template.innerHTML = text; text = template.content.textContent || ''; }
             if ((!data.question && text.indexOf('?') < 0) || data.event || data.bot || data.private || node.querySelector('.ssn-question-actions')) return;
             var pending = document.querySelectorAll('.ssn-question-pending');

@@ -41,15 +41,20 @@
 	}
 	function content(node) {
 		if (node.nodeType === 3) {
+			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			return settings.textonlymode ? node.textContent : escapeHtml(node.textContent);
 		}
 		if (node.nodeType !== 1 || /^(SCRIPT|STYLE|IFRAME|OBJECT|BUTTON)$/.test(node.tagName)) { return ""; }
 		if (node.tagName === "IMG") {
 			var alt = node.getAttribute("alt") || "";
 			var src = imageUrl(node);
+			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			return settings.textonlymode ? alt : (src ? '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt) + '">' : escapeHtml(alt));
 		}
-		if (node.tagName === "BR") { return settings.textonlymode ? "\n" : "<br>"; }
+		if (node.tagName === "BR") { /* textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode. */ return settings.textonlymode ? "\n" : "<br>"; }
 		var text = "";
 		for (var i = 0; i < node.childNodes.length; i++) { text += content(node.childNodes[i]); }
 		return text;
@@ -77,6 +82,7 @@
 			chatbadges: badges, nameColor: name.style.color || "",
 			backgroundColor: "", textColor: "", contentimg: "",
 			hasDonation: donation ? donation.textContent.trim() : "", membership: "",
+			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 			textonly: !!settings.textonlymode, type: "rplay"
 		};
 		sendToApp({ message: data });

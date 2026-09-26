@@ -2201,6 +2201,7 @@ function isSafePhrase(data) {
 	
 	let cleanedText = data.chatmessage;
             
+    // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
     if (!data.textonly) {
         cleanedText = decodeAndCleanHtml(cleanedText);
     }
@@ -2283,6 +2284,7 @@ function buildCensorContextEntry(data, cleanedText) {
         message,
         chatmessage: message,
         timestamp: Date.now(),
+        // textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
         textonly: true
     };
 }
@@ -2752,9 +2754,11 @@ function collectAITranslateSegmentsFromNode(node, segments) {
 
 function prepareMessageForAITranslation(data) {
     const rawMessage = String(data?.chatmessage || "");
+    // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
     const textonly = !!data?.textonly;
     const segments = [];
 
+    // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
     if (textonly || typeof DOMParser === "undefined") {
         appendAITranslateTextSegment(segments, rawMessage);
     } else {
@@ -2792,7 +2796,7 @@ function prepareMessageForAITranslation(data) {
         });
     });
 
-    return { segments, parts, textonly };
+    return { segments, parts, /* Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary. */ textonly };
 }
 
 function getAITranslateCacheKey(targetLanguage, text) {
@@ -2829,7 +2833,9 @@ function setCachedAITranslation(targetLanguage, text, translatedText) {
     }
 }
 
+// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 function stripAITranslateHtmlToText(value, textonly) {
+    // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
     if (textonly) {
         return String(value || "").replace(/\s+/g, " ").trim();
     }
@@ -2851,6 +2857,7 @@ async function getAITranslateContextLines(limit = 10) {
             })
             .slice(0, limit)
             .map(function (message) {
+                // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
                 const plainText = message.textonly
                     ? String(message.chatmessage || "")
                     : stripAITranslateHtmlToText(message.chatmessage || "", false);
@@ -3025,6 +3032,7 @@ function rebuildAITranslatedMessage(prepared, translations) {
         }
         const translatedText = translations[translationIndex] || part.text;
         translationIndex += 1;
+        // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
         const safeText = prepared.textonly ? translatedText : escapeAITranslatedHtml(translatedText);
         return part.leading + safeText + part.trailing;
     }).join("");
@@ -3131,6 +3139,7 @@ async function translateMessageWithLLM(data, options = {}) {
         if (translatedMessage && translatedMessage !== originalMessage) {
             data.chatmessage = translatedMessage;
             if (hadTextContent) {
+                // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
                 data.textContent = stripAITranslateHtmlToText(translatedMessage, prepared.textonly);
             }
             const meta = ensureAITranslateMeta(data);
@@ -3177,6 +3186,7 @@ async function runOutgoingTranslationAttempt(item) {
 
         const outgoingData = {
             chatmessage: item.originalResponse,
+            // textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
             textonly: true,
             meta: {}
         };
@@ -3525,6 +3535,7 @@ async function processSummary(data){
 		
 		sendTargetP2P({
 			chatmessage: summary,
+			// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
 			textonly: true,
 			chatname: botname,
 			chatimg: "./icons/bot.png",
@@ -3614,6 +3625,7 @@ async function processMessageWithOllama(data, idx=null) {
 
     // Clean message text
     let cleanedText = data.chatmessage;
+    // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
     if (!data.textonly) {
       cleanedText = decodeAndCleanHtml(cleanedText);
     }
@@ -3686,6 +3698,7 @@ async function processMessageWithOllama(data, idx=null) {
 	  // Send to overlay if enabled
 	  sendTargetP2P({
 		chatmessage: response,
+		// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
 		textonly: true,
         chatname: botname,
         chatimg: "./icons/bot.png",
@@ -5544,6 +5557,7 @@ const ChatContextManager = { // summary and chat context
                 message: message,
                 chatmessage: message,
                 timestamp: Date.now(),
+                // textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
                 textonly: true
             };
         } else if (message && typeof message === 'object') {
@@ -5694,6 +5708,7 @@ const ChatContextManager = { // summary and chat context
 	},
 
     sanitizeMessage(msg, heavy = false) {
+        // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
         const message = msg.textonly ? (msg.chatmessage || msg.message) : this.stripHTML((msg.chatmessage || msg.message), heavy);
         return message ? message.trim() : '';
     },

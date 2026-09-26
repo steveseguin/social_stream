@@ -10,9 +10,9 @@ function encodeHtmlFallback(text) {
   return String(text ?? '').replace(/[&<>"']/g, (char) => FALLBACK_ENTITIES[char] || char);
 }
 
-function createScratchElement() {
+function createScratchElement(tagName = 'div') {
   if (typeof document !== 'undefined' && document?.createElement) {
-    return document.createElement('div');
+    return document.createElement(tagName);
   }
   return null;
 }
@@ -27,7 +27,8 @@ export function safeHtml(value) {
 }
 
 export function htmlToText(html) {
-  const scratch = createScratchElement();
+  // Template contents stay inert: even a detached div can run image handlers.
+  const scratch = createScratchElement('template');
   if (!scratch) {
     if (html == null) {
       return '';
@@ -35,5 +36,18 @@ export function htmlToText(html) {
     return String(html).replace(/<[^>]*>/g, '');
   }
   scratch.innerHTML = html ?? '';
-  return scratch.textContent || '';
+  return scratch.content.textContent || '';
+}
+
+export function getChatPreviewText(message) {
+  if (!message) {
+    return '';
+  }
+  // A supplied preview is already plain text, including literal tags/entities.
+  if (message.previewText != null) {
+    return String(message.previewText);
+  }
+  const body = String(message.chatmessage ?? '');
+  // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+  return message.textonly ? body : htmlToText(body);
 }

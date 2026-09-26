@@ -112,6 +112,10 @@ function toDataURL(url, callback) {
 		data.hasDonation = "";
 		data.membership = "";
 		data.contentimg = "";
+		// Capture contract: textonly=true means a literal chatmessage string, not HTML.
+		// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
+		// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
+		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "livestorm";
 		
@@ -126,7 +130,7 @@ function toDataURL(url, callback) {
 	}
 	
 	var settings = {};
-	// settings.textonlymode
+	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
 	
 	

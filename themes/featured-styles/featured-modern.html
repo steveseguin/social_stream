@@ -1,8 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="../../js/local-server-url.js"></script>
     <meta charset="UTF-8">
+    <meta name="description" content="Featured Message - Modern Styles: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
+    <meta name="robots" content="noindex">
+<script src="../../libs/objects.js"></script>
+<script src="../../shared/utils/chatBadges.js"></script>
+<link rel="stylesheet" href="../../shared/utils/chatBadges.css">
+<script src="../../js/local-server-url.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Featured Message - Modern Styles</title>
     <link rel="icon" href="../../favicon.ico" />
@@ -231,7 +237,7 @@
             line-height: 1.4;
             word-wrap: break-word;
         }
-        
+
         /* Inline images/SVGs in chat messages */
         .text img,
         .text svg {
@@ -244,7 +250,7 @@
             margin: 0 2px;
             display: inline-block;
         }
-        
+
         /* Emote-specific sizing */
         .text img.emote,
         .text svg.emote,
@@ -427,7 +433,7 @@
         .donation-info:empty {
             display: none;
         }
-        
+
         /* Ensure show state persists */
         .message-wrapper.show {
             opacity: 1 !important;
@@ -446,16 +452,16 @@
             .message {
                 padding: 16px;
             }
-            
+
             .avatar {
                 width: 48px;
                 height: 48px;
             }
-            
+
             .username {
                 font-size: 16px;
             }
-            
+
             .text {
                 font-size: 18px;
             }
@@ -642,22 +648,10 @@
                 }
 
                 // Badges
-                if (content.chatbadges && Array.isArray(content.chatbadges)) {
+                if (content.chatbadges) {
                     const badges = document.createElement('div');
                     badges.className = 'badges';
-                    content.chatbadges.forEach(badge => {
-                        if (typeof badge === 'string') {
-                            const img = document.createElement('img');
-                            img.className = 'badge';
-                            img.src = badge;
-                            badges.appendChild(img);
-                        } else if (badge.src) {
-                            const img = document.createElement('img');
-                            img.className = 'badge';
-                            img.src = badge.src;
-                            badges.appendChild(img);
-                        }
-                    });
+                    badges.innerHTML = SocialStreamBadges.render(content.chatbadges);
                     header.appendChild(badges);
                 }
 
@@ -667,6 +661,7 @@
                 if (content.chatmessage) {
                     const text = document.createElement('div');
                     text.className = 'text';
+                    // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
                     if (content.textonly === true) text.textContent = content.chatmessage;
                     else text.innerHTML = content.chatmessage;
                     if (content.textColor) {

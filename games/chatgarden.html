@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
+    <meta name="description" content="Chat Garden: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Garden - Social Stream Ninja</title>
-    <link rel="icon" href="./favicon.ico" />
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
     <link rel="preload" href="../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin>
     <style>
         /* Hide scrollbars */
@@ -25,7 +28,7 @@
             font-style: normal;
             font-display: swap;
         }
-        
+
         body {
             margin: 0;
             padding: 0;
@@ -34,21 +37,21 @@
             font-family: 'Arial', 'NotoColorEmoji', sans-serif;
             color: white;
         }
-        
+
         body.chroma {
             background: #00ff00;
         }
-        
+
         body.darkmode {
             background: linear-gradient(to bottom, #2c3e50 0%, #34495e 30%, #1a252f 100%);
         }
-        
+
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
-        
+
         #garden-ground {
             position: absolute;
             bottom: 0;
@@ -57,7 +60,7 @@
             background: linear-gradient(to bottom, #8FBC8F 0%, #228B22 100%);
             border-top: 3px solid #654321;
         }
-        
+
         .plant {
             position: absolute;
             bottom: 0;
@@ -65,31 +68,31 @@
             cursor: pointer;
             transition: transform 0.3s ease;
         }
-        
+
         .plant:hover {
             transform: scale(1.1);
         }
-        
+
         .plant-flower {
             font-size: 48px;
             animation: flower-bloom 1.5s ease-out forwards;
         }
-        
+
         .plant-tree {
             font-size: 64px;
             animation: tree-grow 2.5s ease-out forwards;
         }
-        
+
         .plant-bush {
             font-size: 36px;
             animation: bush-spread 2s ease-out forwards;
         }
-        
+
         .plant-grass {
             font-size: 24px;
             animation: grass-wave 3s ease-in-out infinite;
         }
-        
+
         @keyframes plant-grow {
             0% {
                 transform: scale(0) translateY(50px);
@@ -100,13 +103,13 @@
                 opacity: 1;
             }
         }
-        
+
         @keyframes flower-bloom {
             0% { transform: scale(0) rotate(0deg); }
             50% { transform: scale(1.2) rotate(180deg); }
             100% { transform: scale(1) rotate(360deg); }
         }
-        
+
         @keyframes tree-grow {
             0% { 
                 transform: scale(0.1) translateY(100px);
@@ -117,17 +120,17 @@
                 filter: blur(0px);
             }
         }
-        
+
         @keyframes bush-spread {
             0% { transform: scaleX(0.1) scaleY(0.5); }
             100% { transform: scaleX(1) scaleY(1); }
         }
-        
+
         @keyframes grass-wave {
             0%, 100% { transform: rotate(-2deg); }
             50% { transform: rotate(2deg); }
         }
-        
+
         .plant-label {
             position: absolute;
             bottom: -30px;
@@ -143,11 +146,11 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-        
+
         .plant:hover .plant-label {
             opacity: 1;
         }
-        
+
         .sparkle {
             position: absolute;
             font-size: 20px;
@@ -156,7 +159,7 @@
             pointer-events: none;
             z-index: 100;
         }
-        
+
         @keyframes sparkle-float {
             0% {
                 opacity: 1;
@@ -167,7 +170,7 @@
                 transform: translateY(-100px) rotate(360deg);
             }
         }
-        
+
         .butterfly {
             position: absolute;
             font-size: 32px;
@@ -175,7 +178,7 @@
             z-index: 50;
             pointer-events: none;
         }
-        
+
         @keyframes butterfly-flight {
             0% {
                 left: -100px;
@@ -203,7 +206,7 @@
                 transform: rotate(0deg);
             }
         }
-        
+
         #garden-stats {
             position: absolute;
             top: 20px;
@@ -215,12 +218,12 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
         }
-        
+
         .stat-line {
             margin: 5px 0;
             font-size: 16px;
         }
-        
+
         #growth-meter {
             position: absolute;
             top: 20px;
@@ -233,7 +236,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
         }
-        
+
         .growth-bar {
             width: 100%;
             height: 15px;
@@ -242,7 +245,7 @@
             margin: 8px 0;
             overflow: hidden;
         }
-        
+
         .growth-fill {
             height: 100%;
             background: linear-gradient(90deg, #90EE90, #228B22);
@@ -250,7 +253,7 @@
             transition: width 0.5s ease;
             width: 0%;
         }
-        
+
         #weather-system {
             position: absolute;
             top: 0;
@@ -260,7 +263,7 @@
             pointer-events: none;
             z-index: 20;
         }
-        
+
         .rain-drop {
             position: absolute;
             width: 2px;
@@ -268,7 +271,7 @@
             background: linear-gradient(to bottom, transparent, #87CEEB);
             animation: rain-fall 1s linear infinite;
         }
-        
+
         @keyframes rain-fall {
             0% {
                 top: -20px;
@@ -279,7 +282,7 @@
                 opacity: 0;
             }
         }
-        
+
         .sun-ray {
             position: absolute;
             top: 10%;
@@ -288,7 +291,7 @@
             color: #FFD700;
             animation: sun-shine 3s ease-in-out infinite;
         }
-        
+
         @keyframes sun-shine {
             0%, 100% { 
                 transform: scale(1) rotate(0deg);
@@ -299,7 +302,7 @@
                 text-shadow: 0 0 40px #FFD700;
             }
         }
-        
+
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -312,12 +315,12 @@
             font-size: 16px;
             z-index: 100;
         }
-        
+
         #instructions strong {
             color: #90EE90;
             font-size: 18px;
         }
-        
+
         .seasonal-effect {
             position: absolute;
             top: 0;
@@ -329,12 +332,12 @@
             opacity: 0;
             transition: opacity 1s ease;
         }
-        
+
         .spring-petals {
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="%23FFC0CB"/></svg>') repeat;
             animation: petals-drift 10s linear infinite;
         }
-        
+
         @keyframes petals-drift {
             0% { background-position: 0 -100%; }
             100% { background-position: 0 100%; }
@@ -650,6 +653,7 @@
 
             const username = stripHtml(data.chatname);
             let message = data.chatmessage;
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!data.textonly) {
                 message = stripHtml(message);
             }

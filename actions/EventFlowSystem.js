@@ -1788,7 +1788,7 @@ class EventFlowSystem {
         const trigger = flow.nodes.find(n => n.id === payload.nodeId && n.type === 'trigger' && n.triggerType === 'voicePhrase');
         const normalizeVoice = value => String(value || '').normalize('NFKC').toLocaleLowerCase().replace(/[.,!?;:]/g, '').replace(/\s+/g, ' ').trim();
         if (!trigger || normalizeVoice(trigger.config.phrase) !== normalizeVoice(payload.text)) return;
-        const message = {chatname:'Host', chatmessage:payload.text, type:'hostvoice', textonly:true};
+        const message = {chatname:'Host', chatmessage:payload.text, type:'hostvoice', /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly:true};
         if (!this.voiceMessages) this.voiceMessages = new WeakMap();
         this.voiceMessages.set(message, payload);
         try { await this.evaluateFlow(flow, message); } finally { this.voiceMessages.delete(message); }
@@ -1814,7 +1814,7 @@ class EventFlowSystem {
     createWorkflowMessage(trigger, data) {
         const message = {
             type: 'api', event: 'workflow_trigger', chatname: 'Stream Deck / API',
-            chatmessage: '', textonly: true,
+            chatmessage: '', /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly: true,
             meta: { workflow: { trigger, data: JSON.parse(JSON.stringify(data || {})) } }
         };
         if (!this.workflowMessages) this.workflowMessages = new WeakMap();
@@ -2328,6 +2328,7 @@ class EventFlowSystem {
         let messageText = message && message.chatmessage;
         if (message && messageText && typeof messageText === 'string') {
             // If textonly flag is set, the message is already plain text
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!message.textonly) {
                 // Check if we've already cleaned this message (cache the result)
                 if (!message.textContent) {
@@ -3359,7 +3360,7 @@ class EventFlowSystem {
 		});
 	}
 
-	sanitizeSendMessage(text, textonly = false, alt = false, mode = 'safe') {
+	sanitizeSendMessage/* Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary. */ (text, textonly = false, alt = false, mode = 'safe') {
 		if (!text || !text.trim()) {
 			return alt || text;
 		}
@@ -3368,6 +3369,7 @@ class EventFlowSystem {
 		// Only use it in 'safe' mode since it applies full sanitization
 		if (typeof this.sanitizeRelay === 'function' && mode === 'safe') {
 			try {
+				// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 				const cleaned = this.sanitizeRelay(text, textonly, alt);
 				if (cleaned || !alt) {
 					return cleaned;
@@ -3380,6 +3382,7 @@ class EventFlowSystem {
 
 		// Fallback: minimal sanitizer that mirrors the background behavior (including emoji alt preservation)
 		const emojiMap = new Map();
+		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 		if (!textonly) {
 			const tempDiv = document.createElement('div');
 			tempDiv.innerHTML = text;

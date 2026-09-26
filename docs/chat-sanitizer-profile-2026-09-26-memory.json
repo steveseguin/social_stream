@@ -1,0 +1,182 @@
+{
+  "timestamp": "2026-09-26T15:42:37.317Z",
+  "hardware": {
+    "cpu": "12th Gen Intel(R) Core(TM) i5-1235U",
+    "logicalCPUs": 12,
+    "ramGiB": 31.71099090576172
+  },
+  "configuration": {
+    "duration": 2,
+    "rounds": 1,
+    "rate": 500,
+    "headless": true,
+    "viewport": "1280x720",
+    "dockRows": 200,
+    "network": "local static assets and data-URI images only",
+    "fixtureBytes": {
+      "ordinary": 100,
+      "rich": 526,
+      "heavy": 3140,
+      "svg": 1926
+    }
+  },
+  "micro": [
+    {
+      "name": "plain_bypass",
+      "samples": [
+        0.0000015824412320887434,
+        0.000001464486209421528,
+        0.000001416939033836504
+      ],
+      "checksum": 3758173400,
+      "chars": 31,
+      "stable": true,
+      "medianMs": 0.000001464486209421528,
+      "p95BatchMeanMs": 0.0000015824412320887434
+    },
+    {
+      "name": "ordinary",
+      "samples": [
+        0.0002872187649593107,
+        0.0002570694087403599,
+        0.0002553191489361702
+      ],
+      "checksum": 67780000,
+      "chars": 100,
+      "stable": true,
+      "medianMs": 0.0002570694087403599,
+      "p95BatchMeanMs": 0.0002872187649593107
+    },
+    {
+      "name": "rich",
+      "samples": [
+        0.01044827586168359,
+        0.010578947368551764,
+        0.010203389830382194
+      ],
+      "checksum": 9415400,
+      "chars": 526,
+      "stable": true,
+      "medianMs": 0.01044827586168359,
+      "p95BatchMeanMs": 0.010578947368551764
+    },
+    {
+      "name": "heavy",
+      "samples": [
+        0.050833333333333335,
+        0.051000000002483524,
+        0.05183333333271245
+      ],
+      "checksum": 12874000,
+      "chars": 3140,
+      "stable": true,
+      "medianMs": 0.051000000002483524,
+      "p95BatchMeanMs": 0.05183333333271245
+    },
+    {
+      "name": "svg",
+      "samples": [
+        0.0723333333308498,
+        0.06944444444444445,
+        0.0726666666691502
+      ],
+      "checksum": 6291200,
+      "chars": 1966,
+      "stable": true,
+      "medianMs": 0.0723333333308498,
+      "p95BatchMeanMs": 0.0726666666691502
+    },
+    {
+      "name": "long_text_16k",
+      "samples": [
+        0.0242,
+        0.024040000000596046,
+        0.023499999999140316
+      ],
+      "checksum": 137700000,
+      "chars": 17000,
+      "stable": true,
+      "medianMs": 0.024040000000596046,
+      "p95BatchMeanMs": 0.0242
+    }
+  ],
+  "runs": [
+    {
+      "round": 0,
+      "surface": "dock.html",
+      "workload": "emote_heavy",
+      "guard": false,
+      "count": 1000,
+      "elapsedMs": 2773.400000002235,
+      "deliveryMs": 2772.300000000745,
+      "actualRate": 360.71132272832347,
+      "filterCalls": 0,
+      "filterMs": 0,
+      "syncMs": 1711.2999999970198,
+      "mainThreadBusyPct": 98.4868392585923,
+      "browserCPUCorePct": 284.5273671303685,
+      "browserMachinePct": 23.710613927530705,
+      "cpuSeconds": {
+        "browser": 0.0029369999999999674,
+        "renderer": 7.697384,
+        "GPU": 0.17361400000000002,
+        "network.mojom.NetworkService": 0.00006699999999999762,
+        "audio.mojom.AudioService": 0.017079999999999998
+      },
+      "scriptSeconds": 0.038310000000000004,
+      "layoutSeconds": 0.553496,
+      "recalcSeconds": 0.264471,
+      "heapStartMiB": 3.0841407775878906,
+      "heapEndMiB": 4.6439208984375,
+      "lagP95Ms": 732.6000000014901,
+      "lagMaxMs": 763,
+      "batchP95Ms": 23.699999999254942,
+      "frameP95Ms": 33.40000000000009,
+      "longTasks": 0,
+      "domNodes": 5583,
+      "heapAfterGCMiB": 3.283679962158203
+    },
+    {
+      "round": 0,
+      "surface": "dock.html",
+      "workload": "emote_heavy",
+      "guard": true,
+      "count": 1000,
+      "elapsedMs": 2831.400000002235,
+      "deliveryMs": 2830.400000002235,
+      "actualRate": 353.3069530805576,
+      "filterCalls": 1000,
+      "filterMs": 97.90000000968575,
+      "syncMs": 1850.3999999985099,
+      "mainThreadBusyPct": 99.3052553506315,
+      "browserCPUCorePct": 283.804513667926,
+      "browserMachinePct": 23.650376138993835,
+      "cpuSeconds": {
+        "browser": 0.0028960000000000097,
+        "renderer": 7.836196999999999,
+        "GPU": 0.17952200000000001,
+        "network.mojom.NetworkService": 0.0000750000000000195,
+        "audio.mojom.AudioService": 0.016950999999999994
+      },
+      "scriptSeconds": 0.035946,
+      "layoutSeconds": 0.566698,
+      "recalcSeconds": 0.272064,
+      "heapStartMiB": 3.3516693115234375,
+      "heapEndMiB": 4.794734954833984,
+      "lagP95Ms": 783,
+      "lagMaxMs": 818.4000000022352,
+      "batchP95Ms": 25.900000002235174,
+      "frameP95Ms": 33.40000000000009,
+      "longTasks": 0,
+      "domNodes": 5583,
+      "heapAfterGCMiB": 3.427928924560547
+    }
+  ],
+  "policy": {
+    "inlineStyleBefore": "<i style=\"color:red\">reply</i>",
+    "inlineStyleAfter": "<i>reply</i>",
+    "unsafeAfter": "<img src=\"https://example.invalid/x\">",
+    "note": "Policy examples, not authorization to deploy this guard."
+  },
+  "browser": "153.0.8010.12"
+}

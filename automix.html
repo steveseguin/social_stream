@@ -1,8 +1,12 @@
 <html lang="en">
 <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta name="description" content="Auto Mixer. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
 	<title>Auto Mixer</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+
 	<style>
 	body {
 		padding: 0;
@@ -13,7 +17,7 @@
 		transition: background-color 0.5s ease;
 		display: none;
 	}
-	
+
 	body.setup {
 		display: flex;
 		flex-direction: column;
@@ -21,7 +25,7 @@
 		justify-content: center;
 		min-height: 100vh;
 	}
-	
+
 	body.started {
 		background-color: transparent !important;
 		display: block;
@@ -29,7 +33,7 @@
 		overflow: hidden;
 		position: relative;
 	}
-	
+
 	.container {
 		max-width: 800px;
 		width: 90%;
@@ -38,23 +42,23 @@
 		background-color: rgba(40, 40, 50, 0.8);
 		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 	}
-	
+
 	h1 {
 		text-align: center;
 		margin-bottom: 25px;
 		color: #4fd1ff;
 	}
-	
+
 	.input-group {
 		margin-bottom: 15px;
 	}
-	
+
 	.input-group label {
 		display: block;
 		margin-bottom: 5px;
 		font-weight: 500;
 	}
-	
+
 	input {
 		width: 100%;
 		padding: 12px;
@@ -68,17 +72,17 @@
 		box-sizing: border-box;
 		transition: background-color 0.3s;
 	}
-	
+
 	input:focus {
 		background-color: rgba(255, 255, 255, 0.2);
 	}
-	
+
 	.button-group {
 		display: flex;
 		gap: 10px;
 		margin-top: 25px;
 	}
-	
+
 	button {
 		flex: 1;
 		padding: 12px;
@@ -89,25 +93,25 @@
 		font-size: 16px;
 		transition: all 0.2s;
 	}
-	
+
 	#startButton {
 		background-color: #4fd1ff;
 		color: #222;
 	}
-	
+
 	#startButton:hover {
 		background-color: #7ae0ff;
 	}
-	
+
 	#getLinkButton {
 		background-color: rgba(255, 255, 255, 0.2);
 		color: white;
 	}
-	
+
 	#getLinkButton:hover {
 		background-color: rgba(255, 255, 255, 0.3);
 	}
-	
+
 	#linkOut {
 		display: block;
 		margin-top: 15px;
@@ -118,14 +122,14 @@
 		color: #4fd1ff;
 		text-decoration: none;
 	}
-	
+
 	.info {
 		font-size: 14px;
 		margin-top: 10px;
 		color: rgba(255, 255, 255, 0.7);
 		text-align: center;
 	}
-	
+
 	iframe {
 		border: 0;
 		margin: 0;
@@ -133,7 +137,7 @@
 		display: block;
 		position: absolute;
 	}
-	
+
 	.vdo-frame {
 		height: 100%;
 		width: 100%;
@@ -141,7 +145,7 @@
 		top: 0;
 		z-index: 1;
 	}
-	
+
 	.chat-frame {
 		height: 0%;  /* Initially hidden, will be updated via message or layout */
 		width: 100%;
@@ -149,23 +153,23 @@
 		bottom: 0;
 		z-index: 2;
 	}
-	
+
 	/* Split screen layouts */
 	.split-vertical .vdo-frame {
 		height: 70%;
 		width: 100%;
 	}
-	
+
 	.split-vertical .chat-frame {
 		height: 30%;
 		top: 70%;
 	}
-	
+
 	.split-horizontal .vdo-frame {
 		height: 100%;
 		width: 70%;
 	}
-	
+
 	.split-horizontal .chat-frame {
 		height: 100%;
 		width: 30%;

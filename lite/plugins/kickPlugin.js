@@ -1290,9 +1290,11 @@ export class KickPlugin extends BasePlugin {
     const { silent = false, note = null } = options;
 
     if (typeof message.previewText !== 'string' || !message.previewText.length) {
-      message.previewText = htmlToText(message.chatmessage || '');
+      // textonly=true carries literal chatmessage text: do not HTML-parse/encode it or add emotes. HTML mode uses the provider/adapter safety boundary; Lite bypasses background.js.
+      message.previewText = message.textonly ? String(message.chatmessage || '') : htmlToText(message.chatmessage || '');
     }
 
+    // textonly=true carries literal chatmessage text: do not HTML-parse/encode it or add emotes. HTML mode uses the provider/adapter safety boundary; Lite bypasses background.js.
     if (this.emotes && message.chatmessage && !message.textonly) {
       try {
         message.chatmessage = await this.emotes.render(message.chatmessage, this.buildEmoteContext());

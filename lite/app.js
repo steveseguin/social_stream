@@ -1692,6 +1692,7 @@ function createTestMessage() {
     chatimg: baseCandidate.chatimg || '',
     timestamp: now,
     event,
+    // textonly=true carries literal chatmessage text: do not HTML-parse/encode it or add emotes. HTML mode uses the provider/adapter safety boundary; Lite bypasses background.js.
     textonly: Boolean(baseCandidate.textonly),
     raw: rawData
   };

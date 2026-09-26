@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Tip Jar Overlay. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
 <script src="shared/overlay-control-transport.js"></script>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
-    <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tip Jar Overlay - Social Stream Ninja</title>
     <link rel="icon" href="./favicon.ico" />
@@ -11,7 +14,7 @@
     <!-- Matter.js Library -->
     <script type="text/javascript" src="./thirdparty/matter.min.js"></script>
     <script type="text/javascript" src="currency.js"></script>
-    
+
     <style>
     * {
         margin: 0; 
@@ -41,7 +44,7 @@
         height: 100%;
         display: none;
     }
-    
+
     .style-container.active {
         display: block;
     }
@@ -1558,8 +1561,9 @@
             tipItem.className = 'tip-item';
             tipItem.innerHTML = `
                 <span class="tip-name">${name}</span>
-                <span class="tip-amount">${donationLabel}</span>
+                <span class="tip-amount"></span>
             `;
+            tipItem.querySelector('.tip-amount').textContent = donationLabel;
             
             const container = document.getElementById('recent-tips');
             container.insertBefore(tipItem, container.firstChild);
@@ -2727,9 +2731,10 @@ function processData(data) {
                     item.style.cssText = 'margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;';
                     item.innerHTML = `
                         <div><strong>${donation.donator}</strong></div>
-                        <div>${detail}</div>
+                        <div class="tip-detail"></div>
                         <div style="font-size: 12px; color: #aaa;">${date}</div>
                     `;
+                    item.querySelector('.tip-detail').textContent = detail;
                     historyList.appendChild(item);
                 });
 
@@ -2739,7 +2744,7 @@ function processData(data) {
                     : (countMode ? (d.countValue || 1) : (d.unitValue !== undefined ? d.unitValue : d.usdValue || 0))), 0);
                 const totalDiv = document.createElement('div');
                 totalDiv.style.cssText = 'margin-top: 20px; padding-top: 20px; border-top: 1px solid #666; font-size: 18px; font-weight: bold;';
-                totalDiv.innerHTML = hypeMode || nativeUnitMode || countMode ? `Total: ${formatGoalValue(total)}` : `Total: $${total.toFixed(2)} USD`;
+                totalDiv.textContent = hypeMode || nativeUnitMode || countMode ? `Total: ${formatGoalValue(total)}` : `Total: $${total.toFixed(2)} USD`;
                 historyList.appendChild(totalDiv);
             }
             
@@ -2833,14 +2838,17 @@ function processData(data) {
                             <span style="font-size: 24px; margin-right: 15px;">${medal}</span>
                             <div>
                                 <div style="font-size: 18px; font-weight: bold; color: #4CAF50;">${donator}</div>
-                                <div style="font-size: 14px; color: #aaa;">${subLine}</div>
+                                <div class="tip-count" style="font-size: 14px; color: #aaa;"></div>
                             </div>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-size: 20px; font-weight: bold; color: #FFD700;">${scoreLabel}</div>
-                            <div style="font-size: 12px; color: #ccc;">${currencyBreakdown}</div>
+                            <div class="tip-score" style="font-size: 20px; font-weight: bold; color: #FFD700;"></div>
+                            <div class="tip-currencies" style="font-size: 12px; color: #ccc;"></div>
                         </div>
                     `;
+                    item.querySelector('.tip-count').textContent = subLine;
+                    item.querySelector('.tip-score').textContent = scoreLabel;
+                    item.querySelector('.tip-currencies').textContent = currencyBreakdown;
                     
                     if (index === 0) {
                         item.style.background = 'linear-gradient(135deg, rgba(255,215,0,0.2) 0%, rgba(255,215,0,0.1) 100%)';

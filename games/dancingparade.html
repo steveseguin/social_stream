@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="../js/local-server-url.js"></script>
     <meta charset="UTF-8">
+    <meta name="description" content="Dancing Parade: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dancing Parade - Social Stream Ninja</title>
     <link rel="icon" href="../favicon.ico" />
@@ -24,7 +27,7 @@
             overflow: hidden;
             font-family: 'Arial', sans-serif;
         }
-        
+
         #parade-container {
             position: fixed;
             bottom: 0;
@@ -33,7 +36,7 @@
             height: 200px;
             background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
         }
-        
+
         #parade-track {
             position: absolute;
             bottom: 20px;
@@ -47,7 +50,7 @@
                 rgba(255,255,255,0.1) 55%,
                 transparent 100%);
         }
-        
+
         .dancer {
             position: absolute;
             bottom: 30px;
@@ -56,23 +59,23 @@
             animation: walk 1s ease-in-out infinite;
             filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
         }
-        
+
         @keyframes walk {
             0%, 100% { transform: translateY(0) rotate(-5deg); }
             50% { transform: translateY(-10px) rotate(5deg); }
         }
-        
+
         .dancing {
             animation: dance 0.5s ease-in-out infinite;
         }
-        
+
         @keyframes dance {
             0%, 100% { transform: translateY(0) rotate(-15deg) scale(1); }
             25% { transform: translateY(-20px) rotate(15deg) scale(1.1); }
             50% { transform: translateY(0) rotate(-15deg) scale(1); }
             75% { transform: translateY(-20px) rotate(15deg) scale(1.1); }
         }
-        
+
         .username-label {
             position: absolute;
             bottom: -25px;
@@ -88,7 +91,7 @@
             border: 1px solid rgba(255,255,255,0.3);
             text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
         }
-        
+
         .sparkle {
             position: absolute;
             color: #FFD700;
@@ -96,7 +99,7 @@
             animation: sparkle 1s ease-out forwards;
             pointer-events: none;
         }
-        
+
         @keyframes sparkle {
             0% { 
                 transform: translateY(0) scale(0);
@@ -107,7 +110,7 @@
                 opacity: 0;
             }
         }
-        
+
         #music-note-display {
             position: absolute;
             top: 10px;
@@ -115,12 +118,12 @@
             font-size: 24px;
             animation: musicPulse 1s ease-in-out infinite;
         }
-        
+
         @keyframes musicPulse {
             0%, 100% { transform: scale(1); opacity: 0.7; }
             50% { transform: scale(1.2); opacity: 1; }
         }
-        
+
         #parade-info {
             position: absolute;
             top: 10px;
@@ -132,7 +135,7 @@
             font-size: 16px;
             backdrop-filter: blur(10px);
         }
-        
+
         .confetti {
             position: absolute;
             width: 10px;
@@ -141,7 +144,7 @@
             top: -10px;
             animation: confettiFall 3s linear infinite;
         }
-        
+
         @keyframes confettiFall {
             0% { 
                 transform: translateY(0) rotate(0deg);
@@ -152,7 +155,7 @@
                 opacity: 0;
             }
         }
-        
+
         .rainbow-trail {
             position: absolute;
             height: 3px;
@@ -168,7 +171,7 @@
             pointer-events: none;
             opacity: 0.8;
         }
-        
+
         #conga-line-bonus {
             position: absolute;
             top: 50%;
@@ -181,13 +184,13 @@
             display: none;
             animation: bonusFlash 2s ease-out forwards;
         }
-        
+
         @keyframes bonusFlash {
             0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
             50% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
             100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
         }
-        
+
         .dance-battle-zone {
             position: absolute;
             bottom: 0;
@@ -479,6 +482,7 @@
         if (!data.chatmessage || !data.chatname) return;
 
         let rawMessage = data.chatmessage;
+        // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
         if (!data.textonly) {
             rawMessage = stripHtml(rawMessage);
         }
