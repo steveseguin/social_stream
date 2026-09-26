@@ -6,6 +6,15 @@ const os = require('node:os');
 const path = require('node:path');
 const { amendAndPush } = require('./safe-commit-push.cjs');
 
+test('assistant names are rejected before any Git operation', async () => {
+  for (const message of [
+    'Fix parsing\n\nCo-Authored-By: Claude <noreply@anthropic.com>',
+    'Update CLAUDE.md contribution guidance'
+  ]) {
+    await assert.rejects(amendAndPush(message, 'not-a-sha', 'beta'), /Assistant names are not allowed/);
+  }
+});
+
 test('amend preserves the tree and an explicit lease rejects stale work even after fetch', async () => {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'enhancer-lease-test-'));
   const remote = path.join(temp, 'remote.git');
