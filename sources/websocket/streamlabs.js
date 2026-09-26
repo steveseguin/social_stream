@@ -329,7 +329,7 @@
       };
 
       if (numericAmount !== null && donation) {
-        normalized.donoValue = numericAmount;
+        normalized.donoValue = convertToUSD(donation, platformTag || type);
       }
       events.push(normalized);
     });

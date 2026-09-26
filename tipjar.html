@@ -2304,6 +2304,7 @@
                     points: 0,
                     label: '',
                     rawDonation: donationRaw,
+                    donoValue: getDonationValueUSD(data),
                     raw: String(donationRaw)
                 };
             }
@@ -2403,7 +2404,10 @@
                 return;
             }
 
-            const tipValue = donationUsesNativeUnits && unitInfo ? unitInfo.amount : convertToUSD(rawDonation, source);
+            const tipValue = donationUsesNativeUnits && unitInfo ? unitInfo.amount : getDonationValueUSD(Object.assign({}, contribution, {
+                hasDonation: rawDonation,
+                type: source
+            }));
 
             if (!countMode && (isNaN(tipValue) || tipValue <= 0)) {
                 console.warn('Ignoring invalid donation value:', rawDonation);

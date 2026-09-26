@@ -1524,7 +1524,6 @@ function createMockAlertPayload(category, overrides = {}) {
         ...common,
         event: 'donation',
         hasDonation: '$10.00',
-        donoValue: 10,
         chatmessage: 'Keep up the great work!',
         contentimg: createMediaPreviewDataUri('HYPE', accent)
       };
@@ -1625,27 +1624,10 @@ function getMinimumDonationValue() {
 }
 
 function pickCashValue(payload = {}, amountLabel = '', sourceKey = '') {
-  const labelValue = parseCashValue(amountLabel, sourceKey);
-  if (labelValue > 0) {
-    return labelValue;
-  }
-
-  const numericCandidates = [
-    payload.donoValue,
-    payload.donationValue,
-    payload.meta?.donoValue,
-    payload.meta?.donationValue,
-    payload.meta?.amount
-  ];
-
-  for (const candidate of numericCandidates) {
-    const numberValue = Number(candidate);
-    if (Number.isFinite(numberValue) && numberValue > 0) {
-      return numberValue;
-    }
-  }
-
-  return 0;
+  return Math.max(0, getDonationValueUSD(Object.assign({}, payload, {
+    hasDonation: amountLabel || payload.hasDonation,
+    type: sourceKey || payload.type
+  })));
 }
 
 function isValueAlertCategory(category) {
@@ -1678,13 +1660,7 @@ function readAlertEffects() {
 }
 
 function matchAlertEffect(category, payload, amount, sourceKey) {
-  // Prefer a labelled amount: bare donoValue units differ across providers.
-  const labelledAmount = normalizeText(amount);
-  let value = labelledAmount && !/^[\d\s.,+-]+$/.test(labelledAmount) ? parseCashValue(labelledAmount, sourceKey) : 0;
-  const meta = payload.meta || {};
-  if (meta.currency && Number(meta.amount) > 0 && Number.isFinite(Number(meta.amount))) {
-    value = parseCashValue(String(meta.amount) + ' ' + meta.currency, sourceKey);
-  }
+  const value = pickCashValue(payload, amount, sourceKey);
   const cents = Math.round(value * 100);
   return settings.alertEffects.find(effect => {
     if (effect.category !== category) return false;

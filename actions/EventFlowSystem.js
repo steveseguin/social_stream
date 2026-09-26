@@ -127,9 +127,16 @@ class EventFlowSystem {
 
     getDonationNumericValue(message) {
         if (!message) return null;
+        if (typeof getDonationValueUSD === 'function' &&
+            (message.donoValue !== undefined || message.hasDonation || message.donation || message.donationAmount)) {
+            return getDonationValueUSD(message);
+        }
 
-        const explicitValue = this.parseDonationNumericValue(message.donoValue);
-        if (explicitValue !== null) return explicitValue;
+        const raw = message.donoValue;
+        if (typeof raw === 'number' || (typeof raw === 'string' && raw.trim())) {
+            const explicitValue = Number(typeof raw === 'string' ? raw.replace(/,/g, '') : raw);
+            if (Number.isFinite(explicitValue)) return explicitValue;
+        }
 
         const legacyValue = this.parseDonationLabelValue(message.donationAmount, message.type);
         if (legacyValue !== null) return legacyValue;

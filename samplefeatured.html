@@ -478,6 +478,10 @@ Development Notes:
             const messageContent = this.buildMessageContent(data);
             document.getElementById('output').innerHTML = messageContent;
 
+            if (data.textonly) {
+                document.getElementById('message').textContent = data.chatmessage || '';
+            }
+
             if (data.hasDonation) {
                 document.getElementById('newmessage')?.classList.add('dono');
             }
@@ -506,7 +510,7 @@ Development Notes:
                     </div>
 					${chatbadges}${donationContent}
 					</div>
-                    <div id="message" class="hl-message">${data.chatmessage || ''}</div>
+                    <div id="message" class="hl-message">${data.textonly ? '' : (data.chatmessage || '')}</div>
                    ${sourceType}${imgContent}
                 </div>
             `;

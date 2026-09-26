@@ -164,7 +164,7 @@ async function testWebSocketCapture(browser) {
 	const donation = captured.find((item) => item.event === "donation");
 	assert.strictEqual(donation.chatname, "bob");
 	assert.strictEqual(donation.hasDonation, "250 tokens");
-	assert.strictEqual(donation.donoValue, 250);
+	assert.strictEqual(donation.donoValue, undefined, "raw tokens must use labelled conversion, not a USD override");
 	assert.deepStrictEqual(donation.meta, {
 		eventType: "Tipped",
 		supporter: "bob",

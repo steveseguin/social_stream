@@ -27,6 +27,12 @@ const answer = 'The new answer <b>stays readable</b>';
 			{ query: "", colored: false },
 			{ query: "replycolor", colored: true, color: "rgb(168, 179, 207)" },
 			{ query: "replycolor=%23ffcc00", colored: true, color: "rgb(255, 204, 0)" },
+			{ query: "replycolor=%23ffcc00", colored: true, color: "rgb(255, 204, 0)", type: "twitch" },
+			{ query: "replycolor=%23ffcc00", colored: true, color: "rgb(255, 204, 0)", type: "youtube" },
+			{ query: "replycolor=%23ffcc00&replylabelcolor", colored: true, color: "rgb(255, 204, 0)", labelColor: "rgb(255, 255, 255)", type: "twitch", event: "action" },
+			{ query: "replycolor=%23ffcc00", colored: true, color: "rgb(255, 204, 0)", type: "twitch", event: "bits" },
+			{ query: "replylabelcolor", colored: false, labelColor: "rgb(255, 255, 255)", type: "twitch", event: "action" },
+			{ query: "", colored: false, type: "twitch", event: "action" },
 			{ query: "replycolor=00ccff&bubble&twolines", colored: true, color: "rgb(0, 204, 255)" },
 			{ query: "replycolor=%23ffcc00&stripreplyto", colored: false, stripped: true },
 			{ query: "replycolor=%23ffcc00&striphtml", colored: true, color: "rgb(255, 204, 0)", htmlStripped: true },
@@ -38,6 +44,10 @@ const answer = 'The new answer <b>stays readable</b>';
 			{ query: "replylabelcolor&stripreplyto", colored: false, stripped: true },
 			{ query: "replycolor=%23ffcc00&replylabelcolor&striphtml", colored: true, color: "rgb(255, 204, 0)", labelColor: "rgb(255, 255, 255)", htmlStripped: true },
 			{ query: "replycolor=%23ffcc00&replylabelcolor", colored: true, color: "rgb(255, 204, 0)", labelColor: "rgb(255, 255, 255)", quotedHtml: 'Replying to <b style="color:red">Alex</b>: original question' },
+			{ query: "replycolor=%23ffcc00&replylabelcolor&striphtml", colored: true, color: "rgb(255, 204, 0)", labelColor: "rgb(255, 255, 255)", htmlStripped: true, initialHtml: 'Replying to <b>Alex</b>: original question', quotedHtml: 'Replying to <b>Alex</b>: original question', type: "twitch" },
+			{ query: "replycolor=%23ffcc00&striphtml", colored: true, color: "rgb(255, 204, 0)", htmlStripped: true, quoted: "Fish & chips", initialHtml: "Fish &amp; chips", quotedHtml: "Fish &amp; chips", type: "kick" },
+			{ query: "replycolor=%23ffcc00&striphtml", colored: true, color: "rgb(255, 204, 0)", htmlStripped: true, type: "twitch", event: "action" },
+			{ query: "replycolor=%23ffcc00&stripreplyto", colored: false, stripped: true, type: "twitch", event: "action" },
 			{ query: "replycolor=%23ffcc00&replylabelcolor", colored: true, color: "rgb(255, 204, 0)", labelColor: "rgb(255, 255, 255)", quoted: "Alex: original question", label: "Alex:", meta: { reply: { author: "Alex", text: "original question" } } },
 			{ query: "replycolor=%23ffcc00&replylabelcolor", colored: true, color: "rgb(255, 204, 0)", quoted: "Question: is this a label?", type: "twitch" }
 		]) {
@@ -48,7 +58,7 @@ const answer = 'The new answer <b>stays readable</b>';
 			const quoteHtml = '<i><small>' + (scenario.quotedHtml || quote) + ':&nbsp;</small></i> ' + answer;
 			const message = {
 				id: "reply-color-test", type: scenario.type || "kick", chatname: "LocalTest",
-				initial: quote, reply: answer, meta: scenario.meta,
+				initial: scenario.initialHtml || quote, reply: answer, meta: scenario.meta, event: scenario.event,
 				chatmessage: scenario.textonly ? quote + ": " + answer : quoteHtml,
 				textonly: !!scenario.textonly
 			};
@@ -65,11 +75,12 @@ const answer = 'The new answer <b>stays readable</b>';
 			if (scenario.labelColor) {
 				assert.equal(await content.locator(".reply-label").textContent(), scenario.label || "Replying to Alex:");
 				assert.equal(await color("#content_reply-color-test .reply-label"), scenario.labelColor);
-				if (scenario.quotedHtml) assert.equal(await color("#content_reply-color-test .reply-label b"), scenario.labelColor);
+				if (scenario.quotedHtml && !scenario.htmlStripped) assert.equal(await color("#content_reply-color-test .reply-label b"), scenario.labelColor);
 			}
 			assert.equal(await content.locator("b").count(), scenario.textonly || scenario.htmlStripped ? 0 : (scenario.quotedHtml ? 2 : 1), "Plain text must stay escaped; HTML formatting must survive");
 			if (!scenario.textonly && !scenario.htmlStripped) {
-				assert.equal(await color("#content_reply-color-test > b"), await color("#content_reply-color-test"), "The new answer must retain its normal color");
+				const answerSelector = "#content_reply-color-test" + (scenario.event ? " > i" : "") + " > b";
+				assert.equal(await color(answerSelector), await color("#content_reply-color-test"), "The new answer must retain its normal color");
 			}
 			if (scenario.stripped) assert.equal(await content.textContent(), "The new answer stays readable");
 

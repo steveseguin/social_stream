@@ -20,6 +20,8 @@
 					groupId: String(p.group_id || ''),
 					giftId: String(p.gift_id || ''),
 					giftName: String(p.gift && p.gift.name || ''),
+					coinsPerGift: Number(p.gift && (p.gift.coins || p.gift.coin_count)) || undefined,
+					diamondsPerGift: Number(p.gift && (p.gift.diamond_count || p.gift.diamondCount)) || undefined,
 					tiktokGiftSenderId: String(p.user && (p.user.id || p.user.id_str) || ''),
 					tiktokGiftCount: Number(p.repeat_count) || 1,
 					streakable: !!(p.gift && p.gift.type === 1),

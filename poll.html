@@ -799,8 +799,8 @@ function isDuplicatePollDelivery(data, source) {
     return transportDeliveryDedupe(data, source || "direct");
 }
 
-function queueVote(vote, name, source, userId, hasDonation = null) {
-    messageQueue.push({vote, name, source, userId, hasDonation});
+function queueVote(vote, name, source, userId, hasDonation = null, donoValue = undefined) {
+    messageQueue.push({vote, name, source, userId, hasDonation, donoValue});
     debugLog('Queued vote message', { vote, name, source, userId, hasDonation });
     if (!processingQueue) {
         processingQueue = true;
@@ -813,8 +813,8 @@ function processVoteQueue() {
     const timeLimit = 20; // Process for max 20ms to avoid UI freezing
 
     while (messageQueue.length > 0 && (Date.now() - startTime < timeLimit)) {
-        const {vote, name, source, userId, hasDonation} = messageQueue.shift();
-        processVoteSingle(vote, name, source, userId, hasDonation);
+        const {vote, name, source, userId, hasDonation, donoValue} = messageQueue.shift();
+        processVoteSingle(vote, name, source, userId, hasDonation, donoValue);
     }
     
     if (messageQueue.length > 0) {
@@ -826,7 +826,7 @@ function processVoteQueue() {
     }
 }
 
-function processVoteSingle(vote, name, source, userId, hasDonation = null) {
+function processVoteSingle(vote, name, source, userId, hasDonation = null, donoValue = undefined) {
     if (settings.pollClosed) {
         logVoteIgnored('poll closed', { name, source, userId, vote });
         return;
@@ -855,7 +855,7 @@ function processVoteSingle(vote, name, source, userId, hasDonation = null) {
     let voteWeight = 1;
     let donationAmount = 0;
     if (settings.pollDonationWeighted && hasDonation) {
-        donationAmount = (typeof convertToUSD === 'function') ? convertToUSD(hasDonation, source) : 0;
+        donationAmount = getDonationValueUSD({ hasDonation, type: source, donoValue });
         if (donationAmount > 0) {
             voteWeight = Math.round(donationAmount); // $5 = 5 bonus votes
             if (voteWeight < 1) voteWeight = 1; // Minimum 1 vote
@@ -1175,7 +1175,7 @@ function processData(data, source) {
         }
     } else if (shouldProcessPollMessage(data)) {
         if (isDuplicatePollDelivery(data, source)) return;
-        queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data), data.hasDonation || data.donation);
+        queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data), data.hasDonation || data.donation, getDonationValueUSD(data));
     } else if (data.chatmessage) {
         debugLog('Poll message ignored: event payload', { chatmessage: data.chatmessage, event: data.event, type: data.type });
     } else if (data.cmd) {
@@ -1247,7 +1247,7 @@ function processInput(data, source) {
     } else if (shouldProcessPollMessage(data)) {
         if (isDuplicatePollDelivery(data, source)) return false;
         debugLog('Chat message received for poll', { chatmessage: data.chatmessage, chatname: data.chatname, source: data.type, hasDonation: data.hasDonation });
-        queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data), data.hasDonation || data.donation);
+        queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data), data.hasDonation || data.donation, getDonationValueUSD(data));
         return true;
     } else if (data.chatmessage) {
         debugLog('Poll message ignored: event payload', { chatmessage: data.chatmessage, event: data.event, type: data.type });

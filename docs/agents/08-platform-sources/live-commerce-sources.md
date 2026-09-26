@@ -107,14 +107,16 @@ Inspected WebSocket event handling includes:
 | `raid_selected`, `has_been_raided`, `raid_started` | Raid payload with `event: "raid"` and raid count metadata where available. |
 | `user_loyalty_tier_level_up` | Member-style payload with `event: "member"` and loyalty tier. |
 | `livestream_view_count_updated` | Viewer count update. |
-| `livestream_update`, `giveaway_entry_count_updated`, `product_created`, `product_updated`, `product_deleted`, `giveaway_started`, `giveaway_won`, `payment_failed`, `user_joined`, `phx_reply` | Refreshes or parses snapshots for products, giveaways, livestream state, and latest activity events where supported. |
+| `auction_started`, `new_bid`, `auction_ended`, `product_sold` | Individual events with available buyer/item fields and identifiers in `meta`; a sale or auction ending does not establish successful payment. |
+| `payment_failed`, `payment_succeeded` | Distinct payment notifications with `meta.paymentStatus: "failed"` or `"succeeded"`, plus details supplied in that notification. No purchase history or automatic order matching. |
+| `livestream_update`, `giveaway_entry_count_updated`, `product_created`, `product_updated`, `product_deleted`, `product_pinned`, `product_unpinned`, `giveaway_started`, `giveaway_won`, `user_joined`, `phx_reply` | Refreshes or parses snapshots for products, giveaways, livestream state, and latest activity events where supported. |
 
 Whatnot support boundaries:
 
 - WebSocket activity suppresses duplicate DOM chat/viewer processing for a short window, so DOM and WebSocket paths are intentionally coordinated.
 - The source has richer event handling than Amazon and most DOM-only commerce sources.
 - Do not promise full Whatnot moderation or send-back. The inspected source has `focusChat`, not a source-level send handler.
-- In the standalone app, `whatnot.js` can also register `window.ninjafy.onWebSocketMessage`; app parity still needs live Electron validation.
+- In the standalone app, `whatnot.js` also uses `window.ninjafy.onWebSocketMessage`. Local packet tests exercise capture through the running app into Event Flow; actual sale/payment delivery still needs live validation. Payment-success support follows Whatnot's web-client event handler, not an assumption that every sale sends that notification.
 
 ## Send-Back Boundary
 

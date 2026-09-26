@@ -7348,13 +7348,26 @@ function extractReplyDetails(message, payload) {
         return null;
     };
 
+    let replyDetails = null;
     for (const candidate of candidates) {
         const result = resolve(candidate.value, candidate.explicitId === true);
-        if (result) {
-            return result;
+        if (!result) {
+            continue;
+        }
+        if (!replyDetails) {
+            replyDetails = result;
+        } else if (!replyDetails.messageId || !result.messageId || replyDetails.messageId === result.messageId) {
+            // An ID-only cache miss must not hide quote text supplied elsewhere in the event.
+            replyDetails.messageId = replyDetails.messageId || result.messageId;
+            replyDetails.author = replyDetails.author || result.author || '';
+            replyDetails.text = replyDetails.text || result.text || '';
+            replyDetails.label = buildKickReplyLabel(replyDetails.author, replyDetails.text);
+        }
+        if (replyDetails.author && replyDetails.text) {
+            return replyDetails;
         }
     }
-    return null;
+    return replyDetails;
 }
 
 function forwardDeletedMessage(evt, bridgeMeta) {
@@ -8320,6 +8333,7 @@ function forwardKicksGifted(eventType, evt, bridgeMeta) {
     };
     const messagePayload = {
         type: 'kick',
+        event: 'gift',
         chatname,
         chatmessage: escapeHtml(chatmessage),
         chatimg: chatimg || '',

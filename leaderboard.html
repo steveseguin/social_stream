@@ -1608,19 +1608,7 @@
                 return 0;
             }
 
-            const explicitValue = parseNumericValue(data.donoValue);
-            if (explicitValue > 0) {
-                return explicitValue;
-            }
-
-            if (typeof marker === 'number') {
-                return marker > 0 ? marker : 0;
-            }
-
-            const source = data.type ? String(data.type).toLowerCase() : '';
-            const amount = (typeof convertToUSD === 'function')
-                ? convertToUSD(marker, source)
-                : parseNumericValue(marker);
+            const amount = getDonationValueUSD(Object.assign({}, data, { hasDonation: marker }));
 
             return (!isNaN(amount) && amount > 0) ? amount : 0;
         }
@@ -1650,8 +1638,10 @@
             user.dailyGifts += giftQuantity;
             user.weeklyGifts += giftQuantity;
             
-            let giftValue = parseNumericValue(data.donoValue);
-            if (!giftValue) {
+            const rawGiftValue = data.donoValue;
+            const hasGiftValue = (typeof rawGiftValue === 'number' || (typeof rawGiftValue === 'string' && rawGiftValue.trim())) && Number.isFinite(Number(rawGiftValue));
+            let giftValue = getDonationValueUSD(data);
+            if (!hasGiftValue && giftValue <= 0) {
                 const source = (data.type || '').toLowerCase();
                 const giftType = resolveGiftType(data, normalizedEvent);
                 const baseValue = (typeof getGiftValue === 'function')

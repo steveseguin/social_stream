@@ -389,7 +389,7 @@ try {
 
                 // Donation fields
                 hasDonation: payload.donation || "",
-                donoValue: payload.donationValue || "",
+                donoValue: payload.donationValue ?? "",
                 backgroundColor: payload.backgroundColor || "",
                 textColor: payload.textColor || "",
 

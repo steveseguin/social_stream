@@ -74,6 +74,9 @@
         if (urlParams.has('stretch')) document.body.classList.add('stretch');
         let mediaQueue = [];
         let isPlaying = false;
+        let mediaGeneration = 0;
+        let mediaLoadTimer = null;
+        let cleanupMedia = null;
         
 		var audioContext = null;
 		function ensureAudioContext() {
@@ -299,6 +302,7 @@
 		}
 
 		async function probeMediaElement(url, preferredType) {
+			const generation = mediaGeneration;
 			const probeOrder = [];
 			if (preferredType && !['embed', 'svg'].includes(preferredType)) {
 				probeOrder.push(preferredType);
@@ -310,6 +314,7 @@
 			});
 
 			for (const mediaType of probeOrder) {
+				if (generation !== mediaGeneration) return '';
 				const result = await probeSingleMediaType(url, mediaType);
 				if (result) {
 					return result;
@@ -320,6 +325,7 @@
 		}
 
         async function detectMediaType(url) {
+			const generation = mediaGeneration;
 			const extensionType = getMediaTypeFromExtension(url);
 			if (extensionType && extensionType !== 'embed') {
 				renderDetectedMedia(url, extensionType);
@@ -346,12 +352,14 @@
 				}
 			}
 
+			if (generation !== mediaGeneration) return;
 			if (headerType && headerType !== 'embed') {
 				renderDetectedMedia(url, headerType);
 				return;
 			}
 
 			const probedType = await probeMediaElement(url, headerType || extensionType);
+			if (generation !== mediaGeneration) return;
 			if (probedType) {
 				renderDetectedMedia(url, probedType);
 				return;
@@ -361,12 +369,30 @@
         }
 
         function playNextMedia() {
+			mediaGeneration++;
+			clearTimeout(mediaLoadTimer);
+			if (cleanupMedia) {
+				const cleanup = cleanupMedia;
+				cleanupMedia = null;
+				cleanup();
+			}
+			mediaContainer.style.opacity = '0';
+			mediaContent.onload = mediaContent.onerror = null;
+			mediaContent.removeAttribute('src');
+			mediaContent.style.display = '';
+			mediaContent.style.visibility = 'hidden';
+			mediaContainer.innerHTML = '';
+			mediaContainer.appendChild(mediaContent);
 			if (mediaQueue.length === 0) {
 				isPlaying = false;
 				return;
 			}
 
 			isPlaying = true;
+			const generation = mediaGeneration;
+			mediaLoadTimer = setTimeout(() => {
+				if (generation === mediaGeneration) playNextMedia();
+			}, 10000);
 			let mediaUrl = mediaQueue.shift();
 			
 			
@@ -378,7 +404,7 @@
 			if (isEmbeddedContent(mediaUrl)) {
 				displayEmbeddedContent(mediaUrl);
 			} else {
-				const urlPath = mediaUrl.split('?')[0].split('&')[0];
+				const urlPath = mediaUrl.split('#')[0].split('?')[0].split('&')[0];
 				const fileExtension = urlPath.split('.').pop().toLowerCase();
 
 				if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
@@ -461,103 +487,120 @@
 		}
 
         function displayVideo(url) {
+            const generation = mediaGeneration;
             const video = document.createElement('video');
-            video.src = url;
+            let started = false, finished = false, displayTimer;
+            const current = () => generation === mediaGeneration;
             video.muted = urlParams.has('muted');
+            cleanupMedia = () => {
+                clearTimeout(displayTimer);
+                video.oncanplay = video.onerror = video.onended = null;
+                video.pause();
+                video.removeAttribute('src');
+                video.load();
+            };
+            function finish() {
+                if (!current() || finished) return;
+                finished = true;
+                fadeOut(playNextMedia);
+            }
             video.oncanplay = async () => {
+                if (!current() || started) return;
+                started = true;
                 mediaContent.replaceWith(video);
-				fadeIn();
-				try {
-					if (!video.muted) {
-						await resumeAudioContext();
-					}
-					await video.play();
-				} catch(e) {
-					console.warn('Video playback blocked:', e);
-					playNextMedia();
-					return;
-				}
-                
-                const videoDuration = video.duration * 1000; 
-                const displayTime = Math.max(videoDuration, minDisplayTime);
-                setTimeout(() => {
-                    if (videoDuration < minDisplayTime) {
-                        video.loop = true;
-                        setTimeout(() => {
-                            video.loop = false;
-                            video.onended = () => {
-                                fadeOut(() => {
-                                    video.replaceWith(mediaContent);
-                                    playNextMedia();
-                                });
-                            };
-                        }, minDisplayTime - videoDuration);
-                    } else {
-                        video.onended = () => {
-                            fadeOut(() => {
-                                video.replaceWith(mediaContent);
-                                playNextMedia();
-                            });
-                        };
-                    }
-                }, 0);
+                const duration = Number.isFinite(video.duration) ? video.duration * 1000 : minDisplayTime;
+                video.loop = duration > 0 && duration < minDisplayTime;
+                try {
+                    if (!video.muted) await resumeAudioContext();
+                    if (!current()) return;
+                    await video.play();
+                    if (!current() || finished) { video.pause(); return; }
+                } catch (_) {
+                    if (current()) playNextMedia();
+                    return;
+                }
+                fadeIn();
+                // An ended event may never arrive if playback stalls.
+                displayTimer = setTimeout(finish, Math.max(duration, minDisplayTime));
             };
-            video.onerror = () => {
-                console.error('Failed to load video:', url);
-                playNextMedia();
-            };
+            video.onended = finish;
+            video.onerror = () => { if (current()) playNextMedia(); };
+            video.src = url;
         }
 
         function playAudio(url) {
-            const audio = new Audio(url);
+            const generation = mediaGeneration;
+            const audio = new Audio();
+            let started = false, finished = false, displayTimer;
+            const current = () => generation === mediaGeneration;
             audio.muted = urlParams.has('muted');
+            cleanupMedia = () => {
+                clearTimeout(displayTimer);
+                audio.oncanplay = audio.onended = audio.onerror = null;
+                audio.pause();
+                audio.removeAttribute('src');
+                audio.load();
+            };
+            function finish() {
+                if (!current() || finished) return;
+                finished = true;
+                fadeOut(playNextMedia);
+            }
             audio.oncanplay = async () => {
+                if (!current() || started) return;
+                started = true;
+                try {
+                    await resumeAudioContext();
+                    if (!current()) return;
+                    await audio.play();
+                    if (!current() || finished) { audio.pause(); return; }
+                } catch (_) {
+                    if (current()) playNextMedia();
+                    return;
+                }
+                mediaContent.style.display = 'none';
                 fadeIn();
-				try {
-					await resumeAudioContext();
-					await audio.play();
-				} catch(e) {
-					console.warn('Audio playback blocked:', e);
-					playNextMedia();
-				}
+                const duration = Number.isFinite(audio.duration) ? audio.duration * 1000 : minDisplayTime;
+                displayTimer = setTimeout(finish, Math.max(duration, minDisplayTime) + 1000);
             };
-            audio.onended = () => {
-                fadeOut(() => playNextMedia());
-            };
-            audio.onerror = () => {
-                console.error('Failed to load audio:', url);
-                playNextMedia();
-            };
+            audio.onended = finish;
+            audio.onerror = () => { if (current()) playNextMedia(); };
+            audio.src = url;
         }
 
         function displaySVG(url) {
+            const generation = mediaGeneration;
             const img = document.createElement('img');
-            img.src = url;
+            let displayTimer;
+            cleanupMedia = () => {
+                clearTimeout(displayTimer);
+                img.onload = img.onerror = null;
+                img.removeAttribute('src');
+            };
             img.onload = () => {
+                if (generation !== mediaGeneration) return;
                 mediaContainer.innerHTML = '';
                 mediaContainer.appendChild(img);
                 fadeIn();
-                setTimeout(() => {
-                    fadeOut(() => {
-                        mediaContainer.innerHTML = '';
-                        mediaContainer.appendChild(mediaContent);
-                        playNextMedia();
-                    });
+                displayTimer = setTimeout(() => {
+                    if (generation === mediaGeneration) fadeOut(playNextMedia);
                 }, 5000);
             };
-            img.onerror = () => {
-                console.error('Failed to load SVG:', url);
-                playNextMedia();
-            };
+            img.onerror = () => { if (generation === mediaGeneration) playNextMedia(); };
+            img.src = url;
         }
 
         function fadeIn() {
+            clearTimeout(mediaLoadTimer);
             mediaContainer.style.opacity = '1';
         }
 
         function fadeOut(callback) {
+            const generation = mediaGeneration;
             mediaContainer.style.opacity = '0';
-            setTimeout(callback, fadeoutTime); // 200
+            setTimeout(() => {
+                if (generation === mediaGeneration) callback();
+            }, fadeoutTime);
         }
 
         const iframe = document.createElement("iframe");
@@ -685,67 +728,89 @@
         }
 
         function displayImage(url) {
-            fetch(url)
-                .then(response => response.blob())
-                .then(blob => {
-                    const objectURL = URL.createObjectURL(blob);
-                    const cleanUrl = url.toLowerCase().split('?')[0];
-                    const isGif = blob.type === 'image/gif' || cleanUrl.endsWith('.gif');
-                    const isWebp = blob.type === 'image/webp' || cleanUrl.endsWith('.webp');
-                    mediaContent.onload = () => {
-                        fadeIn();
-                        if (isGif) {
-                            const reader = new FileReader();
-                            reader.onload = (e) => {
-                                const arr = new Uint8Array(e.target.result);
-                                const gifDuration = getGifDuration(arr);
-                                const displayTime = Math.max(gifDuration || minDisplayTime, minDisplayTime);
-                                setTimeout(() => {
-                                    fadeOut(() => {
-                                        URL.revokeObjectURL(objectURL);
-                                        playNextMedia();
-                                    });
-                                }, displayTime);
-                            };
-                            reader.onerror = () => {
-                                setTimeout(() => {
-                                    fadeOut(() => {
-                                        URL.revokeObjectURL(objectURL);
-                                        playNextMedia();
-                                    });
-                                }, minDisplayTime);
-                            };
-                            reader.readAsArrayBuffer(blob);
-                        } else if (isWebp) {
-                            analyzeAnimatedImage(blob, (duration) => {
-                                const displayTime = Math.max(duration, minDisplayTime);
-                                setTimeout(() => {
-                                    fadeOut(() => {
-                                        URL.revokeObjectURL(objectURL);
-                                        playNextMedia();
-                                    });
-                                }, displayTime);
-                            });
-                        } else {
-                            setTimeout(() => {
-                                fadeOut(() => {
-                                    URL.revokeObjectURL(objectURL);
-                                    playNextMedia();
-                                });
-                            }, minDisplayTime);
-                        }
+            const generation = mediaGeneration;
+            const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+            let objectURL = '', reader = null, direct = false, shown = false;
+            let fetchTimer, analysisTimer, displayTimer;
+            const current = () => generation === mediaGeneration;
+
+            cleanupMedia = () => {
+                clearTimeout(fetchTimer);
+                clearTimeout(analysisTimer);
+                clearTimeout(displayTimer);
+                if (controller) controller.abort();
+                if (reader) {
+                    reader.onload = reader.onerror = null;
+                    if (reader.readyState === 1) reader.abort();
+                }
+                mediaContent.onload = mediaContent.onerror = null;
+                if (objectURL) URL.revokeObjectURL(objectURL);
+            };
+
+            function show(duration) {
+                if (!current() || shown) return;
+                shown = true;
+                clearTimeout(analysisTimer);
+                mediaContent.style.visibility = '';
+                fadeIn();
+                displayTimer = setTimeout(() => {
+                    if (current()) fadeOut(playNextMedia);
+                }, Math.max(Number.isFinite(duration) ? duration : minDisplayTime, minDisplayTime));
+            }
+
+            function load(source, blob) {
+                if (!current()) return;
+                mediaContent.onload = () => {
+                    if (!current()) return;
+                    const cleanUrl = url.toLowerCase().split('#')[0].split('?')[0];
+                    const isGif = blob && (blob.type === 'image/gif' || cleanUrl.endsWith('.gif'));
+                    const isWebp = blob && (blob.type === 'image/webp' || cleanUrl.endsWith('.webp'));
+                    if (!isGif && !isWebp) { show(minDisplayTime); return; }
+                    // Duration analysis must not hold a successfully loaded image indefinitely.
+                    analysisTimer = setTimeout(() => show(minDisplayTime), mediaProbeTimeout);
+                    reader = new FileReader();
+                    reader.onload = e => {
+                        if (!current()) return;
+                        try {
+                            const bytes = new Uint8Array(e.target.result);
+                            show(isGif ? getGifDuration(bytes) : getWebPDuration(bytes));
+                        } catch (_) { show(minDisplayTime); }
                     };
-                    mediaContent.onerror = () => {
-                        console.error('Failed to display image:', url);
-                        URL.revokeObjectURL(objectURL);
-                        playNextMedia();
-                    };
-                    mediaContent.src = objectURL;
+                    reader.onerror = () => show(minDisplayTime);
+                    reader.readAsArrayBuffer(blob);
+                };
+                mediaContent.onerror = () => {
+                    if (!current()) return;
+                    if (blob) loadDirect();
+                    else playNextMedia();
+                };
+                mediaContent.src = source;
+            }
+
+            function loadDirect() {
+                if (!current() || direct || shown) return;
+                direct = true;
+                clearTimeout(fetchTimer);
+                if (controller) controller.abort();
+                if (objectURL) { URL.revokeObjectURL(objectURL); objectURL = ''; }
+                // Ordinary image display does not require permission to read cross-origin bytes.
+                // Do not set crossorigin: use the configured duration when bytes are unavailable.
+                load(url, null);
+            }
+
+            fetchTimer = setTimeout(loadDirect, mediaProbeTimeout);
+            fetch(url, { signal: controller ? controller.signal : undefined })
+                .then(response => {
+                    if (!response.ok) throw new Error('Image request failed');
+                    return response.blob();
                 })
-                .catch(error => {
-                    console.error('Failed to load image:', url, error);
-                    playNextMedia();
-                });
+                .then(blob => {
+                    if (!current() || direct) return;
+                    clearTimeout(fetchTimer);
+                    objectURL = URL.createObjectURL(blob);
+                    load(objectURL, blob);
+                })
+                .catch(loadDirect);
         }
     </script>
 </body>

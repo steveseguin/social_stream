@@ -127,6 +127,24 @@ function toDataURL(url, callback) {
 		});
 	}
 
+	function getSenderDetails(ele){
+		var parent = ele.parentElement;
+		while (parent && parent !== document.body && parent.id !== "root"){
+			var headers = parent.querySelectorAll(".chat-sender-details");
+			if (headers.length > 1){return null;}
+			if (headers.length === 1){
+				var headerBranch = headers[0];
+				while (headerBranch.parentElement !== parent){headerBranch = headerBranch.parentElement;}
+				// A header nested alongside another message belongs to that other
+				// sender's group, not to this message's content wrapper.
+				if (headerBranch.matches(".message") || headerBranch.querySelector(".message")){return null;}
+				return headers[0];
+			}
+			parent = parent.parentElement;
+		}
+		return null;
+	}
+
 	function processMessage(ele){
 		
 		// console.log(ele);
@@ -135,16 +153,7 @@ function toDataURL(url, callback) {
 			return; // manually disagbled
 		}
 		
-		var senderDetails = ele.parentNode;
-		
-		for (var i=0;i<6;i++){
-			if (senderDetails.parentNode.querySelector(".chat-sender-details")){
-				senderDetails = senderDetails.parentNode.querySelector(".chat-sender-details")
-				break;
-			} else {
-				senderDetails = senderDetails.parentNode;
-			}
-		}
+		var senderDetails = getSenderDetails(ele);
 		
 
 		var chatimg = ""
@@ -162,10 +171,6 @@ function toDataURL(url, callback) {
 		} catch(e){
 		}
 		
-		if (!name){
-			name = escapeHtml(document.title.split("|")[1].split("'")[0].trim());
-		}
-
 		var msg="";
 		try {
 			msg = getAllContentNodes(ele).trim();

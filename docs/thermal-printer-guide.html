@@ -119,6 +119,19 @@
 			</div>
 
 			<div class="guide-card">
+				<h2 id="whatnot-item-labels">Whatnot Item Labels</h2>
+				<p><a href="../actions/examples/whatnot-item-labels.json" download>Download the Whatnot example flow</a>. It prints the buyer in bold, the item name, and an order ID when supplied. A payment-failure notification prints a separate <strong>PAYMENT FAILED</strong> label with the details available on that notification.</p>
+				<ol class="guide-steps">
+					<li>In the standalone app, configure <strong>Printer Control</strong> for your printer and paper size, and run its alignment test.</li>
+					<li>Open the <strong>Event Flow Editor</strong>, choose <strong>Import</strong>, and select the downloaded JSON file.</li>
+					<li>Select <strong>Whatnot: Item Labels + Payment Warnings</strong>. Review both print actions; they inherit the global printer and label length.</li>
+					<li>Enable the flow and save it. Keep your Whatnot source open with stream-event capture enabled.</li>
+				</ol>
+				<p>The example imports disabled. It uses <strong>Event Type (Advanced) &rarr; Custom Event</strong> for <code>product_sold</code> and <code>payment_failed</code>, with a Whatnot source filter. Bids and auction-ending notifications do not print labels.</p>
+				<div class="guide-note"><p>A sale label does not confirm payment. This example prints each notification as it arrives; it does not wait for payment, revise an earlier label, or assign buyer numbers. Missing fields print blank. A failure notification without buyer, item, or order details cannot identify the earlier label. See the <a href="event-reference.html#whatnot">Whatnot event fields</a>.</p></div>
+			</div>
+
+			<div class="guide-card">
 				<h2>Fixed-Length Labels Without Surprises</h2>
 				<p><strong>3 × 1-inch labels (including a Munbyn BT320 setup):</strong> use 76.2 mm width and 25.4 mm fixed length when the 1-inch side is the feed direction. Match that stock and orientation in Windows Printing Preferences. Start with 12–14 pt text and test a long buyer and item name.</p>
 				<p>The alignment test's side borders mark the safe width after the selected printable-area setting and safe margins. The box height follows the test text; it does not outline the full label or touch the physical paper edges.</p>

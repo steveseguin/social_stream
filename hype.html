@@ -661,6 +661,10 @@ function loadTranslationFromUrl() {
 }
 
 function getHypeTitleText() {
+    var customTitle = (urlParams.get("title") || "").trim();
+    if (customTitle) {
+        return customTitle;
+    }
     if (showViewers && showChatters) {
         return getTranslation("hype-title-chatters-and-viewers", "Active chatters and viewers in the last 5-minutes");
     }

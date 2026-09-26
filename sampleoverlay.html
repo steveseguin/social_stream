@@ -687,7 +687,7 @@ body, html {
 			`<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : '';
 		const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : '';
 		const membershipHtml = data.membership ? `<div class="membership-status">${data.membership}</div>` : '';
-		const messageTextHtml = `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>`;
+		const messageTextHtml = `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.textonly ? '' : (data.chatmessage || '')}</div>`;
 		const donationHtml = data.hasDonation ? `<div class="donation">${data.hasDonation}</div>` : '';
 		
 		const contentImgHtml = data.contentimg ? 
@@ -711,6 +711,10 @@ body, html {
 			</div>
 			${contentImgHtml}
 		`;
+
+		if (data.textonly) {
+			messageDiv.querySelector('.text').textContent = data.chatmessage || '';
+		}
 
 		if (reversed) {
 			// In reverse mode, insert new messages at the top (after spacer if present)

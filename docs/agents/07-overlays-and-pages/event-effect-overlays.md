@@ -102,6 +102,7 @@ Important behavior:
 - It also handles payloads where `event` is `viewer_updates` and viewer counts are in `meta`.
 - It can combine YouTube and YouTube Shorts, or combine all sources globally.
 - It can show viewers only, chatters only, or both.
+- `title` overrides the title with plain text; blank values keep the default translated wording for the selected count mode. `hidetitle`, Minimal, and Dock Style still hide custom titles.
 
 URL parameters observed:
 
@@ -109,7 +110,7 @@ URL parameters observed:
 - Server/channel: `server`, `server2`, `localserver`, `out`, `outchan`, `in`, `inchan`.
 - Display timing/scale: `showtime`, `fontsize`, `scale`, `speed`.
 - Fonts/style: `font`, `googlefont`, `css`, `base64css`, `b64css`, `cssbase64`, `cssb64`, `js`, `style`.
-- Alignment/title: `align`, `alignright`, `hidetitle`.
+- Alignment/title: `align`, `alignright`, `title`, `hidetitle`.
 - Background/theme: `opacity`, `chroma`, `darkmode`, `lightmode`, `transparent`, `pagebg`, `pagebackground`, `dockbg`, `nooutline`.
 - Count modes: `viewersonly`, `chattersonly`, `combineyoutube`, `combineall`.
 - Top bar background: `viewerbarbg`, `viewerbarbackground`, `topbarbg`.

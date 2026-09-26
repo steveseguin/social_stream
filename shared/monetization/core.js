@@ -1,5 +1,16 @@
 (function (root) {
 	'use strict';
+	var currencyHelper = null;
+	if (typeof window === 'undefined' && typeof module !== 'undefined' && module.exports && typeof require === 'function') {
+		// The standalone public-shop server may ship this module without currency.js.
+		try { currencyHelper = require('../../currency.js'); } catch (_) {}
+	}
+	function setDonationValue(row, amount, currency) {
+		var converter = root.convertToUSD || (currencyHelper && currencyHelper.convertToUSD);
+		if (currency === 'USD') row.donoValue = amount;
+		else if (converter) row.donoValue = converter(String(amount) + ' ' + currency, row.type);
+		// Without the helper, the original labelled amount remains convertible by consumers.
+	}
 	var markets = { 'amazon.com': 'USD', 'amazon.ca': 'CAD', 'amazon.co.uk': 'GBP', 'amazon.de': 'EUR', 'amazon.fr': 'EUR', 'amazon.it': 'EUR', 'amazon.es': 'EUR', 'amazon.co.jp': 'JPY', 'amazon.com.au': 'AUD', 'amazon.in': 'INR', 'amazon.com.mx': 'MXN', 'amazon.com.br': 'BRL', 'amazon.nl': 'EUR', 'amazon.se': 'SEK', 'amazon.pl': 'PLN', 'amazon.sg': 'SGD' };
 	function str(v, n) {
 		return typeof v === 'string' ? v.trim().slice(0, n) : '';
@@ -89,7 +100,7 @@
 		var value = typeof amount === 'number' || (typeof amount === 'string' && /^\d+(?:\.\d+)?$/.test(amount.trim())) ? Number(amount) : NaN, code = typeof currency === 'string' && /^[A-Za-z]{3}$/.test(currency) ? currency.toUpperCase() : '';
 		if (amount != null && amount !== '' && Number.isFinite(value) && value > 0 && value < 10000000 && /^[A-Z]{3}$/.test(code)) {
 			row.meta.commerce = row.meta.commerce || {}; row.meta.commerce.currency = code;
-			if (paid) { row.hasDonation = money(value, code); row.donoValue = value; }
+			if (paid) { row.hasDonation = money(value, code); setDonationValue(row, value, code); }
 		} else if (paid) return null;
 		if (!row.chatmessage && !row.hasDonation) row.chatmessage = row.subtitle || (kind === 'purchase' ? 'Product purchased' : 'Membership started');
 		return row;
@@ -213,7 +224,9 @@
 			message = str(data.message, 500),
 			identity = data.tipId || data.id || [data.timestamp, data.amount, currency, name, message].join('|');
 		if (!data.tipId && !data.id && !Number.isFinite(data.timestamp)) return null;
-		return { platform: 'ninjabacker', type: 'ninjabacker', id: 'ninjabacker:' + str(String(identity), 800), chatname: name, chatmessage: message, textonly: true, hasDonation: money(data.amount, currency), donoValue: data.amount, chatimg: '', meta: { ninjabacker: { currency: currency, amount: data.amount } } };
+		var row = { platform: 'ninjabacker', type: 'ninjabacker', id: 'ninjabacker:' + str(String(identity), 800), chatname: name, chatmessage: message, textonly: true, hasDonation: money(data.amount, currency), chatimg: '', meta: { ninjabacker: { currency: currency, amount: data.amount } } };
+		setDonationValue(row, data.amount, currency);
+		return row;
 	}
 	function throne(event) {
 		if (!event || event.contract_version !== '1' || typeof event.event_id !== 'string' || !/^[\w-]{1,128}$/.test(event.event_id)) return null;
@@ -238,7 +251,7 @@
 		// Contributions have already entered the donation flow when a crowdfund completes.
 		if (kind !== 'giftfunded') {
 			row.hasDonation = money(amount, d.currency);
-			row.donoValue = amount;
+			setDonationValue(row, amount, d.currency);
 		}
 		return row;
 	}

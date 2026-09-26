@@ -2,6 +2,7 @@
 	<head>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
   <script type="text/javascript" src="./js/transport-dedupe.js"></script>
+  <script src="./shared/utils/contentImage.js"></script>
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
 		<meta content="utf-8" http-equiv="encoding" />
@@ -2961,17 +2962,17 @@
 					var largeImage = false;
 					
 					if (!data.chatmessage && data.contentimg){
-					  if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
-						data.chatmessage = '<video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.style.display=\'none\'" /></video>';
+					  if (/\.(mp4|webm)$/i.test(data.contentimg.split(/[?#]/)[0])){
+						data.chatmessage = '<video data-content-image loop="true" autoplay="true" muted="true" id="img" src="' + escapeAttributeValue(data.contentimg) + '"  /></video>';
 					  } else {
-						data.chatmessage = '<img id="img" src="' + data.contentimg + '"  onerror="this.style.display=\'none\'" />';
+						data.chatmessage = '<img data-content-image alt="" id="img" src="' + escapeAttributeValue(data.contentimg) + '"  />';
 					  }
 					  largeImage = true;
 					} else if (data.contentimg){
-					  if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
-						addImage = '<div id="imgContent" class="hl-imgContent"><video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parentNode.style.display=\'none\'" /></video></div>';
+					  if (/\.(mp4|webm)$/i.test(data.contentimg.split(/[?#]/)[0])){
+						addImage = '<div id="imgContent" class="hl-imgContent"><video data-content-image loop="true" autoplay="true" muted="true" id="img" src="' + escapeAttributeValue(data.contentimg) + '"  /></video></div>';
 					  } else {
-						addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parentNode.style.display=\'none\'" /></div>';
+						addImage = '<div id="imgContent" class="hl-imgContent"><img data-content-image alt="" id="img" src="' + escapeAttributeValue(data.contentimg) + '"  /></div>';
 					  }
 					} else {
 					  data.contentimg = "";
@@ -3387,6 +3388,7 @@
 					var fontsize = "";
 					var limitchar = parseInt(window.innerWidth / 6.5);
 
+					if (activeMessageDiv) SSNContentImage.watch(activeMessageDiv.closest(".hl-c-cont"), data, activeMessageDiv);
 					if (largeImage && activeMessageDiv){
 					  activeMessageDiv.classList.add("largeImage");
 					} else if (fontfit && activeMessageDiv) {
