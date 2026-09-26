@@ -3089,6 +3089,11 @@
 					}
 
 					var donationHTML = "";
+					// Accept legacy numeric amounts while preserving string and zero behavior.
+					if (data.hasDonation && typeof data.hasDonation === "number") {
+						data.hasDonation = Number.isFinite(data.hasDonation)
+							? String(data.hasDonation) : "";
+					}
 					if (data.hasDonation) {
 					  if (data.type === "twitch") {
 						let donationTitle = getTranslation("cheers", "CHEERS");
