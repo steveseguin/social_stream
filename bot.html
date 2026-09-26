@@ -2298,8 +2298,12 @@
 					}
 
 					var renderChatMessageAsText = !!(data.textonly && !largeImage);
-					// Trusted relay HTML: chatname/chatmessage are sanitized upstream in background.js before rendering here.
+					// Plain bodies use textContent; generated attachments stay separate from chat HTML.
 					var renderedChatMessage = renderChatMessageAsText ? "" : data.chatmessage;
+					if (!renderChatMessageAsText && !largeImage) {
+					  // Check the display copy so direct senders cannot bypass HTML sanitization.
+					  renderedChatMessage = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(renderedChatMessage) : fallbackEscapeHtml(renderedChatMessage);
+					}
 
 					if (stacking) {
 					  try {

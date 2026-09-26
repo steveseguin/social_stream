@@ -583,3 +583,37 @@ Release status: GitHub source update only; no Chrome Web Store upload or website
 publication was performed. Live provider authentication, all supported sites,
 and the public relay were not exercised. Default Dock/overlay links use the
 hosted website, whose corresponding fixes require a separate site deployment.
+
+
+### 2026-09-26 Focused 3.50.17 Follow-up
+
+- Applied the three validated follow-up fixes to the reviewed 3.50.16 package:
+  - Restore legacy boolean server/server2/server3 settings into the popup's
+    data-both controls, so generated Dock URLs retain the enabled flags.
+  - Acknowledge saveSetting only after storage completes, report saved/error,
+    and keep asynchronous runtime replies open with a synchronous listener.
+  - Check rich bot chat HTML at display time using the packaged shared helper;
+    plain-text and generated attachment paths keep their existing behavior.
+- Bumped manifest and manual package inventory to 3.50.17. The upload list still
+  contains exactly 810 files. Each branch package file was verified byte for
+  byte against the updated candidate SHA-256 inventory.
+- Added tests/webstore-settings-compat.test.cjs outside the upload list. It
+  verifies legacy true/false flags, delayed success/error acknowledgements,
+  and the runtime listener's asynchronous reply contract.
+- Validation passed on the applied package:
+  - Actual isolated extension: legacy settings restore, two-switch and
+    three-switch server delivery, generated URLs and persisted controls,
+    fake and WhatsApp-shaped messages reaching Dock, co-host authorization,
+    and Watch Streak search; no popup/background/Dock page exceptions.
+  - Six benign bot display cases covering plain/rich/default modes, normal
+    and stacked output, shared sanitizer invocation and no page exceptions.
+  - New settings compatibility regression and all 26 Web Store custom-JS
+    restriction assertions.
+  - 266 JS files and 133 inline scripts parsed; no new executable-code,
+    dependency, permission or provider-exclusion findings. Existing disabled
+    Kokoro references remain documented in the 3.50.16 notes.
+  - Repository popup-search suite; the candidate's older search is covered
+    by the actual extension test, as documented above.
+- No broader beta feature merge was made. The prior source updates and Web
+  Store exclusions remain in place. No Web Store upload or site deployment
+  was performed; hosted receiver fixes still require website deployment.

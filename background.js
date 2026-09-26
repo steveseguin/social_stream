@@ -4556,7 +4556,7 @@ async function processIncomingMessage(message, sender = null) {
 	return message;
 }
 
-chrome.runtime.onMessage.addListener(async function (request, sender, sendResponseReal) {
+async function handleRuntimeMessage(request, sender, sendResponseReal) {
 	var response = {};
 	var alreadySet = false;
 
@@ -4740,8 +4740,14 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 
 			chrome.storage.local.set({
 				settings: settings
+			}, function () {
+				const storageError = chrome.runtime.lastError;
+				sendResponse({
+					state: isExtensionOn,
+					saved: !storageError,
+					error: storageError ? storageError.message : undefined
+				});
 			});
-			chrome.runtime.lastError;
 
 			// If SDK setting changed, reinitialize transport if extension is ON
 			try {
@@ -4751,8 +4757,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} catch (e) {
 				console.warn(e);
 			}
-
-			sendResponse({ state: isExtensionOn });
 
 			if (request.setting === "beepreturning" && request.value && !isSSAPP && !returningBeepHintShown) {
 				messagePopup({
@@ -6398,6 +6402,11 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		console.warn(e);
 	}
 	return true; // Keep message channel open for async responses
+}
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponseReal) {
+	handleRuntimeMessage(request, sender, sendResponseReal).catch(error => console.warn(error));
+	return true; // Keep message channel open for async responses on Chrome 80+
 });
 
 const randomDigits = () => {

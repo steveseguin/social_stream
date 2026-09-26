@@ -3821,7 +3821,7 @@ function processParam(key, paramNum, settingObj, sync) {
 // Handle legacy settings format
 function processLegacySetting(key, value, sync) {
     // Process simple settings
-    var ele = document.querySelector(`input[data-setting='${key}']`);
+    var ele = document.querySelector(`input[data-setting='${key}'], input[data-both='${key}']`);
     if (!ele) {
         ele = document.querySelector(`input[data-param1='${key}'], input[data-param2='${key}']`);
     }
