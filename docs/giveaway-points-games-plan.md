@@ -25,7 +25,7 @@ These are source findings, not claims that every runtime path has been manually 
 | Chat commands | [pointsactions.js](../pointsactions.js) processes point commands through a message-store hook. | Entry feedback and earning order cannot be designed in isolation from chat persistence and processing. |
 | Stickers | [rewards.js](../shared/stickers/rewards.js) spends SSN points and compensates for failed/unconfirmed delivery; [background.js](../shared/stickers/background.js) uses the shared points instance. | Reuse the wallet; preserve current refund behavior while introducing durable operation records. |
 | Games | Reviewed engine families calculate local state in page instances; several use local random choices and human-readable result strings. | An overlay result is not sufficient evidence for a wallet credit. |
-| Stream Deck | Host giveaway commands exist in [streamdeck-remote-control.js](../js/streamdeck-remote-control.js). Native plugin presets are absent from its [registry](../ssn-streamdeck/plugin/src/api/command-registry.ts). | API support does not establish native plugin parity. Update and verify the plugin separately. |
+| Stream Deck | Host giveaway commands exist in [streamdeck-remote-control.js](../js/streamdeck-remote-control.js). Native plugin presets are absent from the local plugin checkout's registry (`ssn-streamdeck/plugin/src/api/command-registry.ts`). | API support does not establish native plugin parity. Update and verify the plugin separately. |
 
 ### Message ordering matters
 
@@ -156,7 +156,7 @@ Event Flow test/dry-run mode must use a separate simulation economy. Fake partic
 
 Use one versioned command/result contract across popup, P2P, WebSocket, and native Stream Deck. Preserve existing giveaway action names as default-round aliases. New operations return operation ID, round ID, revision, committed status, and a stable error code. Late callbacks cannot overwrite a newer selection. Retried draw buttons must not select another winner.
 
-Native Stream Deck work includes registry entries, property inspector groups, capability gating, round selection, query-result summaries, generated profiles, translations, and command icons. Reuse the existing trophy/gift/control icon family and icon generator. Add registry/inspector parity checks; the two lists currently require coordinated updates. Verify the built plugin, not just the host command table. Relevant files: [registry](../ssn-streamdeck/plugin/src/api/command-registry.ts), [inspector](../ssn-streamdeck/plugin/ui/action-settings.html), [query results](../ssn-streamdeck/plugin/src/api/query-result.ts), [icon generator](../ssn-streamdeck/plugin/scripts/generate-command-icons.mjs), [package scripts](../ssn-streamdeck/plugin/package.json).
+Native Stream Deck work includes registry entries, property inspector groups, capability gating, round selection, query-result summaries, generated profiles, translations, and command icons. Reuse the existing trophy/gift/control icon family and icon generator. Add registry/inspector parity checks; the two lists currently require coordinated updates. Verify the built plugin, not just the host command table. Relevant files in the separate local `ssn-streamdeck/plugin/` checkout: registry (`src/api/command-registry.ts`), inspector (`ui/action-settings.html`), query results (`src/api/query-result.ts`), icon generator (`scripts/generate-command-icons.mjs`), and package scripts (`package.json`).
 
 ## 7. Popup, controller, OBS, and bloat
 
