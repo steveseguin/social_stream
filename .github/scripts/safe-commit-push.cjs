@@ -6,6 +6,7 @@ const path = require('node:path');
 const exec = promisify(execFile);
 
 async function amendAndPush(message, expectedSha, branch, { cwd = process.cwd(), log = console.log } = {}) {
+  if (/\bclaude\b/i.test(message)) throw new Error('Assistant names are not allowed in commit messages');
   const git = async (...args) => (await exec('git', args, { cwd })).stdout.trim();
   if (!/^[a-f0-9]{40,64}$/.test(expectedSha)) throw new Error('Invalid original commit SHA');
   await git('check-ref-format', `refs/heads/${branch}`);
