@@ -24,14 +24,16 @@ If you need more context on how Electron wiring differs from the extension boots
 - Event payload vocabulary and field expectations are documented in `docs/event-reference.html`. Update that page whenever a source adds, renames, or re-shapes an event so downstream surfaces stay in sync.
 
 ## Communication
-- VERY IMPORTANT: Be terse.
-- VERY IMPORTANT: Do not add extra details unless Steve explicitly asks for them.
-- VERY IMPORTANT: State the answer or fix in one sentence first.
-- VERY IMPORTANT: Do not explain reasoning unless Steve asks.
-- Answer the exact question directly first.
-- Be terse.
-- Answer only what was asked unless extra context is needed to prevent a mistake.
-- Call out oversights or red-flag concerns when they matter.
+- VERY IMPORTANT: Be terse and direct. Answer the exact question or state the fix in one sentence first.
+- Answer only what Steve asked. Add context only when needed to prevent a concrete mistake; explain reasoning only when asked.
+- Use plain, everyday language. Include technical details only when needed to understand the issue or make a decision.
+- When asked to explain a proposed change, use short, specific descriptions of the issue, proposed fix, and behavior concern.
+- Validate a proposed fix and its behavior concerns before recommending it when local verification is possible. Report observed results; explicitly identify anything still unverified instead of presenting assumptions as findings.
+- Behavior changes mean actual differences. Never list unchanged functionality (for example, "messages should continue working") as a change or concern.
+- Separate intended behavior changes from concrete compatibility risks. Do not invent speculative risks to fill a section; if asked and none are identified, say so briefly.
+- Omit reassurance, analogies, repeated summaries, and testing checklists unless requested or necessary to explain a concrete risk.
+- When Steve asks to work through issues one at a time, discuss only the current issue.
+- Call out material oversights or red flags directly.
 
 ## Message Contracts
 
@@ -145,15 +147,6 @@ Sample payloads based on the fake test data in [background.js](./background.js):
 - YouTube capture now targets three modes: scraping (DOM), Data API polling, and Data API streaming. Treat the streaming initiative as additive—do **not** regress the existing polling or scraping paths.
 - All `sources/websocket/**/*.html|js` assets load inside both the Chrome extension and the Electron app. Any new page (e.g., a streaming client) must accept configuration via URL parameters (`?channel=...`, `?videoId=...`) just like the legacy polling pages.
 - Lite plugins (`lite/plugins/**`) are standalone web-only integrations. They never ship inside the extension or Electron bundle, but they should still share core logic via `shared/` when practical.
-
-## Communication
-
-- VERY IMPORTANT: Be terse in responses to Steve.
-- Do not add extra detail beyond the direct answer unless needed to prevent a mistake.
-- VERY IMPORTANT: State the answer or fix in one sentence first.
-- VERY IMPORTANT: Do not explain reasoning unless Steve asks.
-- When replying to Steve, prefer plain, everyday language over jargon.
-- Keep explanations direct and practical; explain technical terms briefly when they matter.
 
 ## Accessibility, UI, UX, and Integrations
 

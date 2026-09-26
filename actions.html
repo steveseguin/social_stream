@@ -78,6 +78,34 @@
 			border-color: rgba(255, 152, 0, 0.55);
 		}
 
+        #audio-unlock-prompt {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10030;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #f5f8ff;
+            background: rgba(11, 18, 32, 0.95);
+        }
+
+        #audio-unlock-prompt button {
+            margin-left: 8px;
+            padding: 8px 12px;
+            border: 1px solid #f5f8ff;
+            border-radius: 4px;
+            color: #f5f8ff;
+            background: #263449;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        #audio-unlock-prompt button:focus {
+            outline: 3px solid #ffffff;
+            outline-offset: 3px;
+        }
+
 		.fullscreen-media-container {
 			position: fixed;
 			top: 0;
@@ -274,6 +302,9 @@
 <body>
     <div id="status-message"></div>
     <div id="obs-status-badge" aria-live="polite"></div>
+    <div id="audio-unlock-prompt" role="status" hidden>
+        Audio blocked.<button type="button">Enable audio</button>
+    </div>
     <div id="fullscreen-media-container" class="fullscreen-media-container"></div>
 
     <!-- Multi-layer overlay system -->
@@ -408,34 +439,9 @@
             lastError: null,
             state: 'idle'
         };
-        var audioContext = null;
-        function ensureAudioContext() {
-            if (!audioContext && (window.AudioContext || window.webkitAudioContext)) {
-                var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-                audioContext = new AudioContextCtor();
-            }
-            return audioContext;
-        }
-        async function resumeAudioContext() {
-            var ctx = ensureAudioContext();
-            if (!ctx) {
-                return null;
-            }
-            if (ctx.state === 'suspended') {
-                await ctx.resume();
-            }
-            return ctx;
-        }
-        function attachAudioUnlockListeners() {
-            var handler = function() {
-                resumeAudioContext().catch(function(error) {
-                    console.error('Failed to resume AudioContext:', error);
-                });
-            };
-            ['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'].forEach(function(eventName) {
-                document.addEventListener(eventName, handler, { once: true });
-            });
-        }
+        var audioUnlockPrompt = document.getElementById('audio-unlock-prompt');
+        var blockedAudio = null;
+        var audioPlaybackSequence = 0;
 
         // Multi-layer overlay system references
         var overlayLayers = {
@@ -2143,15 +2149,51 @@
 			}
 		}
 
+        async function startAudioPlayback(audio, sequence) {
+            try {
+                // HTML audio does not use an AudioContext. Waiting for a suspended
+                // context here can prevent play() from reporting an autoplay block.
+                await audio.play();
+                if (sequence === audioPlaybackSequence) {
+                    blockedAudio = null;
+                    audioUnlockPrompt.hidden = true;
+                }
+                console.log("Playing audio:", audio.src);
+            } catch (error) {
+                if (error && error.name === 'NotAllowedError') {
+                    if (sequence === audioPlaybackSequence) {
+                        // Keep only the latest clip, so unlocking cannot play a backlog.
+                        blockedAudio = { audio: audio, sequence: sequence };
+                        audioUnlockPrompt.hidden = false;
+                        console.warn('Audio blocked. Click the Flow Actions page to enable sound.');
+                    }
+                } else {
+                    console.error("Error playing audio:", error);
+                    if (sequence === audioPlaybackSequence) {
+                        blockedAudio = null;
+                        audioUnlockPrompt.hidden = true;
+                    }
+                }
+            }
+        }
+
+        function retryBlockedAudio() {
+            if (!blockedAudio) return;
+            var pending = blockedAudio;
+            blockedAudio = null;
+            // Call play() directly within the click gesture, including keyboard clicks.
+            startAudioPlayback(pending.audio, pending.sequence);
+        }
+
         // Function to play audio
         async function playAudio(audioUrl, volume) {
+            var sequence = ++audioPlaybackSequence;
+            blockedAudio = null;
+            audioUnlockPrompt.hidden = true;
             try {
-                await resumeAudioContext();
-
                 const audio = new Audio(audioUrl);
                 audio.volume = volume !== undefined ? parseFloat(volume) : globalVolume;
-                await audio.play();
-                console.log("Playing audio:", audioUrl);
+                await startAudioPlayback(audio, sequence);
             } catch (e) {
                 console.error("Error playing audio:", e);
             }
@@ -2190,8 +2232,8 @@
 			}
 		});
         
-        // Handle audio context for browsers that require user interaction
-        attachAudioUnlockListeners();
+        // Retry blocked HTML audio when this page receives a user interaction.
+        document.addEventListener('click', retryBlockedAudio);
 		
 		function testAction(actionData) {
 			processInput(actionData);
