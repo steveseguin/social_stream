@@ -708,3 +708,25 @@ assets at hosted URLs; they do not certify the currently deployed website.
 Default extension links use the website, so the matching website receiver fix
 must also be deployed for those links. No Web Store upload or website deployment
 was performed. Live provider traffic and macOS were not retested in this update.
+
+### 2026-09-27 YouTube Live Chat Setting, 3.50.20
+
+Reviewed beta a3547113. Its new runtime changes primarily support AI Event
+Overlays, a feature outside the current store package. The settings comparison
+identified an incomplete earlier YouTube backport: the packaged capture script
+reads disableAutoLiveYoutube, while the popup and notification hook still used
+autoLiveYoutube.
+
+- Ported beta's Do not auto-select Live Chat switch, tooltip, settings definition,
+  background notification hook and 13 applicable packaged translation entries.
+- Updated the package version and SHA-256/upload inventories to 3.50.20.
+
+Verification: a clean unpacked Chromium extension passed seven focused checks
+using a local YouTube DOM fixture and native manifest injection: default automatic
+selection, popup search, saving and live-tab updates, persistence, new-popout
+opt-out, re-enabling automatic selection, and legacy setting compatibility.
+No popup, background or source-page exceptions occurred. The repository popup
+search suite and edited JavaScript syntax checks passed. All translation JSON
+parsed, and all 811 upload files matched the candidate inventory. Manifest bytes
+differ only in the version value, including identical YouTube injection ordering.
+Live YouTube traffic, Web Store upload and website deployment were not tested.

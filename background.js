@@ -4876,7 +4876,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (request.setting == "twichadannounce") {
 				pushSettingChange();
 			}
-			if (request.setting == "autoLiveYoutube") {
+			if (request.setting == "disableAutoLiveYoutube") {
 				pushSettingChange();
 			}
 			if (request.setting == "relaytargets") {
