@@ -44,17 +44,24 @@ const server = http.createServer((req, res) => {
         for (const prefix of ['', '/beta']) {
             for (const [file, heading] of pages) {
                 await page.goto(origin + prefix + '/es/' + file);
-                await page.waitForFunction(() => window.SSNCopyMarkdown && document.querySelector('#copy-markdown'));
+                const hasDocumentCopy = file === 'docs/getting-started.html';
+                if (hasDocumentCopy) await page.waitForFunction(() => window.SSNCopyMarkdown && document.querySelector('#copy-markdown'));
                 assert.equal(await page.locator('html').getAttribute('lang'), 'es');
                 assert.equal(await page.locator('h1').textContent(), heading);
                 assert.equal(await page.locator('#ssn-site-nav a').first().textContent(), 'Inicio');
                 assert.equal(await page.locator('#ssn-site-nav a').first().getAttribute('href'), file === 'index.html' ? 'index.html' : '../index.html');
-                assert.equal(await page.locator('#copy-markdown').textContent(), 'Copiar Markdown');
-                await page.locator('#copy-markdown').click();
-                await page.waitForFunction(() => document.querySelector('#copy-markdown').getAttribute('data-copy-state') === 'success');
-                assert.equal(await page.locator('#copy-markdown').textContent(), 'Markdown copiado');
-                const copied = await page.evaluate(() => navigator.clipboard.readText());
-                assert.ok(copied.includes(heading));
+                if (hasDocumentCopy) {
+                    assert.equal(await page.locator('#copy-markdown').textContent(), '');
+                    assert.equal(await page.locator('#copy-markdown').getAttribute('title'), 'Copiar este documento en Markdown al portapapeles');
+                    await page.locator('#copy-markdown').click();
+                    await page.waitForFunction(() => document.querySelector('#copy-markdown').getAttribute('data-copy-state') === 'success');
+                    assert.equal(await page.locator('#copy-markdown').getAttribute('aria-label'), 'Markdown copiado');
+                    assert.equal(await page.locator('#copy-markdown .ssn-copy-markdown-check').isVisible(), true);
+                    const copied = await page.evaluate(() => navigator.clipboard.readText());
+                    assert.ok(copied.includes(heading));
+                } else {
+                    assert.equal(await page.locator('#copy-markdown').count(), 0);
+                }
                 assert.equal(await page.locator('#ssn-site-nav .site-language-link').getAttribute('href'), origin + prefix + '/' + file);
                 const themeBefore = await page.locator('html').getAttribute('class');
                 await page.locator('.site-theme').click();
@@ -88,7 +95,8 @@ const server = http.createServer((req, res) => {
                         await page.evaluate(value => window.SSNSiteTheme.apply(value, true), dark);
                         // Color transitions take 200ms; inspect the settled theme.
                         await page.waitForTimeout(250);
-                        const contrast = await page.locator('#copy-markdown').evaluate(button => {
+                        if (hasDocumentCopy) {
+                          const contrast = await page.locator('#copy-markdown').evaluate(button => {
                             function luminance(rgb) {
                                 const values = rgb.match(/[\d.]+/g).slice(0, 3).map(Number).map(value => {
                                     value /= 255;
@@ -97,10 +105,13 @@ const server = http.createServer((req, res) => {
                                 return values[0] * 0.2126 + values[1] * 0.7152 + values[2] * 0.0722;
                             }
                             const css = getComputedStyle(button);
-                            const values = [luminance(css.color), luminance(css.backgroundColor)].sort((a, b) => a - b);
+                            let surface = button;
+                            while (surface.parentElement && getComputedStyle(surface).backgroundColor === 'rgba(0, 0, 0, 0)') surface = surface.parentElement;
+                            const values = [luminance(css.color), luminance(getComputedStyle(surface).backgroundColor)].sort((a, b) => a - b);
                             return (values[1] + 0.05) / (values[0] + 0.05);
                         });
-                        assert.ok(contrast >= 4.5, file + ' copy button contrast: ' + contrast);
+                          assert.ok(contrast >= 3, file + ' clipboard icon contrast: ' + contrast);
+                        }
                         await page.screenshot({ path: path.join(output, file.replace(/[/.]/g, '-') + (dark ? '-dark' : '-light') + '.png') });
                     }
                     await page.setViewportSize({ width: 390, height: 844 });

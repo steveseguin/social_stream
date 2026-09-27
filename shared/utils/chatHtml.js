@@ -1,7 +1,7 @@
 // Classic-script final display check. Load libs/objects.js first.
 // This policy is separate from relay sanitization: retain supported presentation
 // from older/custom senders without changing the capture or wire format.
-(function (root) {
+(function installChatHTML(root) {
     "use strict";
     var displayFilter = null;
 
@@ -11,6 +11,9 @@
         var xss = root.ssnXSSLibrary;
         if (!base || !xss) return null;
         var options = Object.assign({}, base.options);
+        // The base filter already expanded this option into an onIgnoreTag hook.
+        // Let the new filter install it again without conflicting options.
+        if (options.stripIgnoreTag) delete options.onIgnoreTag;
         var whiteList = {};
         Object.keys(base.options.whiteList).forEach(function (tag) {
             whiteList[tag] = base.options.whiteList[tag].slice();
@@ -69,5 +72,15 @@
         });
     }
 
+    // Serialize the current policy and its packaged dependencies for local-file
+    // overlays. No fetch, eval, or separate files are needed by the export.
+    function getRuntimeSource() {
+        return "(function () {\nvar root = " + root.getSSNXSSRuntimeSource() + ";\n(" +
+            String(installChatHTML) + ")(root);\nwindow.SocialStreamChatHTML = root.SocialStreamChatHTML;\n})();";
+    }
+
     root.SocialStreamChatHTML = { sanitize: sanitize };
+    if (typeof root.getSSNXSSRuntimeSource === "function") {
+        root.SocialStreamChatHTML.getRuntimeSource = getRuntimeSource;
+    }
 })(window);

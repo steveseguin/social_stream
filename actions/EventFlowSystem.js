@@ -2040,6 +2040,7 @@ class EventFlowSystem {
         let overallResult = { modified: false, message: baseMessage, blocked: false }; 
         const nodeMap = new Map(flow.nodes.map(node => [node.id, node]));
         const executedActions = new Set(); // Track which actions have been executed
+        const pointRedemptions = new Map(); // Charges belonging to this event's direct AI rewards.
 
         // Process actions in topological order (following connections)
         const executeActionChain = async (actionId) => {
@@ -2060,7 +2061,7 @@ class EventFlowSystem {
             
             // Execute this action
             executedActions.add(actionId);
-            const actionResult = await this.executeAction(node, overallResult.message, flow, execution);
+            const actionResult = await this.executeAction(node, overallResult.message, flow, execution, pointRedemptions);
             if (!canContinue()) return;
             
             if (actionResult) {
@@ -2103,7 +2104,7 @@ class EventFlowSystem {
                                 if (!asyncNode || asyncNode.type !== 'action') return;
 
                                 asyncExecutedActions.add(asyncActionId);
-                                const asyncResult = await this.executeAction(asyncNode, asyncMessage, flow, execution);
+                                const asyncResult = await this.executeAction(asyncNode, asyncMessage, flow, execution, pointRedemptions);
                                 if (!canContinue()) return;
 
                                 // Handle action results - mirror synchronous behavior
@@ -2213,8 +2214,8 @@ class EventFlowSystem {
         // Simple HTML stripping function that preserves emoji alt text
         if (!html || typeof html !== 'string') return html;
         
-        // Create a temporary element to use browser's HTML parsing
-        const tmp = document.createElement('div');
+        // Parse in inert template content so extraction cannot execute image handlers.
+        const tmp = document.createElement('template').content.appendChild(document.createElement('div'));
         tmp.innerHTML = html;
         
         // Replace img tags with their alt text (especially for emojis)
@@ -3487,7 +3488,7 @@ class EventFlowSystem {
         });
     }
 
-    async executeAction(actionNode, message, flow = null, execution = null) {
+    async executeAction(actionNode, message, flow = null, execution = null, pointRedemptions = null) {
         const { actionType, config } = actionNode;
         //console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);
         let result = { modified: false, message, blocked: false };
@@ -3626,6 +3627,53 @@ class EventFlowSystem {
                 };
                 result.modified = true;
                 break;
+
+            case 'showAiEventOverlay': {
+                const profile = String(config.profile || 'default');
+                const charge = pointRedemptions && pointRedemptions.get(actionNode.id);
+                if (charge) {
+                    pointRedemptions.delete(actionNode.id);
+                    let delivered = false;
+                    try {
+                        if (!window.SSNAiEventBackground) throw new Error('Paid AI overlay rewards must run on the SSN host.');
+                        await window.SSNAiEventBackground.trigger({ profile, variation: config.variation, message, prepare: true, expiresAt: charge.expiresAt });
+                        delivered = true;
+                        if (charge.operationId && !(await charge.system.pointRedemption(charge.name, charge.type, charge.amount, charge.operationId, 'complete')).success) throw new Error('AI overlay point settlement was not confirmed.');
+                    } catch (error) {
+                        if (!delivered) {
+                            const refunded = await charge.system.refundPoints(charge.name, charge.type, charge.amount, charge.operationId);
+                            if (!refunded.success) throw new Error('AI overlay failed, but its point refund could not be confirmed.');
+                            if (typeof window.requestPointsLeaderboardBroadcast === 'function') window.requestPointsLeaderboardBroadcast('ai-overlay-refund', { immediate: true });
+                            throw new Error(error.message + ' The reward points were returned.');
+                        }
+                        throw error;
+                    }
+                    break;
+                }
+                if (window.SSNAiEventBackground) {
+                    await window.SSNAiEventBackground.trigger({ profile, variation: config.variation, message });
+                    break;
+                }
+                if (!this.sendTargetP2P && typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                    await new Promise((resolve, reject) => {
+                        chrome.runtime.sendMessage({ cmd: 'aiEventFlow', action: 'show', profile, variation: config.variation, message }, response => {
+                            if (chrome.runtime.lastError || !response || response.error) reject(new Error(response && response.error || 'SSN is unavailable.'));
+                            else resolve(response.value);
+                        });
+                    });
+                    break;
+                }
+                const meta = message && message.meta && typeof message.meta === 'object' && !Array.isArray(message.meta)
+                    ? { ...message.meta } : (message && message.meta !== undefined ? { value: message.meta } : {});
+                meta.aiEventOverlay = { profile };
+                if (config.variation) meta.aiEventOverlay.variation = String(config.variation);
+                if (this.sendTargetP2P) {
+                    if (await this.sendTargetP2P({ ...(message || {}), meta }, 'aievent-' + profile, { retry: false }) === false) throw new Error('AI overlay is not connected.');
+                } else {
+                    throw new Error('Open the local Event Flow editor in SSN.');
+                }
+                break;
+            }
 
             case 'featureMessage': {
                 const currentMeta = (message && typeof message.meta === 'object' && message.meta !== null && !Array.isArray(message.meta))
@@ -4059,18 +4107,21 @@ class EventFlowSystem {
 					const system = this.pointsSystem;
                     if (!system || !Number.isFinite(config.amount) || config.amount <= 0) throw new Error('Points system or amount is unavailable.');
                     if (system && config.amount > 0) {
-						const spendResult = await system.spendPoints( // Capture the result
-							message.chatname,
-							message.type,
-							config.amount
-						);
+						const next = flow && pointRedemptions ? flow.connections.filter(connection => connection.from === actionNode.id) : [];
+						const reward = next.length === 1 && flow.connections.filter(connection => connection.to === next[0].to).length === 1 && flow.nodes.find(node => node.id === next[0].to && node.actionType === 'showAiEventOverlay');
+						const charge = reward ? { system, name: message.chatname, type: message.type, amount: config.amount, expiresAt: Date.now() + 240000,
+							operationId: Number.isSafeInteger(config.amount) ? 'ai-flow-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2) : undefined } : null;
+						const spendArgs = [message.chatname, message.type, config.amount];
+						if (charge && charge.operationId) spendArgs.push(charge.operationId, 240000);
+						const spendResult = await system.spendPoints.apply(system, spendArgs);
 
 						if (!spendResult.success) {
 							result.blocked = true; // This will stop subsequent actions in this flow path.
 							result.message = { ...message, pointsSpendError: spendResult.message };
 							result.modified = true;
-						} else if (typeof window !== 'undefined' && typeof window.requestPointsLeaderboardBroadcast === 'function') {
-							window.requestPointsLeaderboardBroadcast('action-spend', { immediate: true });
+						} else {
+							if (charge) pointRedemptions.set(reward.id, charge);
+							if (typeof window !== 'undefined' && typeof window.requestPointsLeaderboardBroadcast === 'function') window.requestPointsLeaderboardBroadcast('action-spend', { immediate: true });
 						}
 					}
 				} catch (e) {

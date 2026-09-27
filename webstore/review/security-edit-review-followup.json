@@ -1,0 +1,464 @@
+[
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\tlet ele = topBarElement.querySelector(\"[data-type='\"+data.type+\"']\");\n",
+    "after": "\t\t\t\t\t\t\tlet ele = topBarElement.querySelector(dataAttributeSelector(\"data-type\", data.type));\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\t\t\tlet ele = topBarElement.querySelector(\"[data-type='\"+type+\"']\");\n",
+    "after": "\t\t\t\t\t\t\t\t\tlet ele = topBarElement.querySelector(dataAttributeSelector(\"data-type\", type));\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\tselector = `[data-mid='${data.delete.id}']`;\n",
+    "after": "\t\t\t\t\tselector = dataAttributeSelector(\"data-mid\", data.delete.id);\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\tselector = `[data-chatname='${data.delete.chatname}'][data-source-type='${data.delete.type}']`;\n",
+    "after": "\t\t\t\t\tselector = dataAttributeSelector(\"data-chatname\", data.delete.chatname) + dataAttributeSelector(\"data-source-type\", data.delete.type);\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\tselector = `[data-source-type='${data.delete.type}']`;\n",
+    "after": "\t\t\t\t\tselector = dataAttributeSelector(\"data-source-type\", data.delete.type);\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\tselector = `[data-chatname='${data.delete.chatname}']`;\n",
+    "after": "\t\t\t\t\tselector = dataAttributeSelector(\"data-chatname\", data.delete.chatname);\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\tif (!displayId || !document.querySelector(\"[data-mid='\" + displayId + \"']\")) {\n",
+    "after": "\t\t\t\t\tif (!displayId || !document.querySelector(dataAttributeSelector(\"data-mid\", displayId))) {\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\t\tdocument.querySelector(\"[data-mid='\" + data.mid + \"']\").classList.add(pressedClass, lastMessageClass); // add last-message class\n\t\t\t\t\t\t\t\n",
+    "after": "\t\t\t\t\t\t\tdocument.querySelector(dataAttributeSelector(\"data-mid\", data.mid)).classList.add(pressedClass, lastMessageClass); // add last-message class\n\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\t\t\t\t\tdocument.querySelector(\"[data-mid='\" + mid + \"']\").classList.add(pressedClass);\n",
+    "after": "\t\t\t\t\t\t\t\t\t\tdocument.querySelector(dataAttributeSelector(\"data-mid\", mid)).classList.add(pressedClass);\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\t\t\t\tif (dddd.id && document.querySelector(\"[data-mid='\" + dddd.id + \"']\")) {\n\t\t\t\t\t\t\t\t\t\t\tpinIt(document.querySelector(\"[data-mid='\" + dddd.id + \"']\"));\n\t\t\t\t\t\t\t\t\t\t\tapplyHiddenState(document.querySelector(\"[data-mid='\" + dddd.id + \"']\"));\n",
+    "after": "\t\t\t\t\t\t\t\t\t\tif (dddd.id && document.querySelector(dataAttributeSelector(\"data-mid\", dddd.id))) {\n\t\t\t\t\t\t\t\t\t\t\tpinIt(document.querySelector(dataAttributeSelector(\"data-mid\", dddd.id)));\n\t\t\t\t\t\t\t\t\t\t\tapplyHiddenState(document.querySelector(dataAttributeSelector(\"data-mid\", dddd.id)));\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\t\t\t\tpinIt(document.querySelector(\"[data-mid='\" + dddd + \"']\"));\n\t\t\t\t\t\t\t\t\t\tapplyHiddenState(document.querySelector(\"[data-mid='\" + dddd + \"']\"));\n",
+    "after": "\t\t\t\t\t\t\t\t\t\tpinIt(document.querySelector(dataAttributeSelector(\"data-mid\", dddd)));\n\t\t\t\t\t\t\t\t\t\tapplyHiddenState(document.querySelector(dataAttributeSelector(\"data-mid\", dddd)));\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\t\t\tunpinIt(document.querySelector(\"[data-mid='\" + mid + \"']\"));\n\t\t\t\t\t\t\t\t\tapplyHiddenState(document.querySelector(\"[data-mid='\" + mid + \"']\"));\n",
+    "after": "\t\t\t\t\t\t\t\t\tunpinIt(document.querySelector(dataAttributeSelector(\"data-mid\", mid)));\n\t\t\t\t\t\t\t\t\tapplyHiddenState(document.querySelector(dataAttributeSelector(\"data-mid\", mid)));\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\t\t\t\tvar ele = document.querySelector(\"[data-mid='\" + dd.id + \"']\");\n",
+    "after": "\t\t\t\t\t\t\t\t\t\tvar ele = document.querySelector(dataAttributeSelector(\"data-mid\", dd.id));\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\t\t\t\t\t\tvar ele = document.querySelector(\"[data-mid='\" + mid.id + \"']\");\n",
+    "after": "\t\t\t\t\t\t\t\t\t\t\t\tvar ele = document.querySelector(dataAttributeSelector(\"data-mid\", mid.id));\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\t\t\t\t\tvar ele = document.querySelector(\"[data-mid='\" + mid + \"']\");\n",
+    "after": "\t\t\t\t\t\t\t\t\t\t\tvar ele = document.querySelector(dataAttributeSelector(\"data-mid\", mid));\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\tvar ele = document.querySelector(\"[data-mid='\" + data.deleteMessage + \"']\");\n",
+    "after": "\t\t\t\t\t\tvar ele = document.querySelector(dataAttributeSelector(\"data-mid\", data.deleteMessage));\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\tif (!displayId || !document.querySelector(\"[data-mid='\"+displayId+\"']\")){\n",
+    "after": "\t\t\t\t\t\t\tif (!displayId || !document.querySelector(dataAttributeSelector(\"data-mid\", displayId))){\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\tif (!displayId || !document.querySelector(\"[data-mid='\" + displayId + \"']\")) {\n",
+    "after": "\t\t\t\t\t\tif (!displayId || !document.querySelector(dataAttributeSelector(\"data-mid\", displayId))) {\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\t\t\n\t\t\t\t\t\t\tdocument.querySelectorAll(\"[data-chatname='\" + data.timeoutUser.username + \"'][data-source-type='\" + data.timeoutUser.type + \"']\").forEach(ele => {\n",
+    "after": "\n\t\t\t\t\t\t\tdocument.querySelectorAll(dataAttributeSelector(\"data-chatname\", data.timeoutUser.username) + dataAttributeSelector(\"data-source-type\", data.timeoutUser.type)).forEach(ele => {\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\t\t\tdocument.querySelectorAll(\"[data-chatname='\" + data.timeoutUser.username + \"'][data-source-type='youtubeshorts']\").forEach(ele => {\n",
+    "after": "\t\t\t\t\t\t\t\tdocument.querySelectorAll(dataAttributeSelector(\"data-chatname\", data.timeoutUser.username) + dataAttributeSelector(\"data-source-type\", \"youtubeshorts\")).forEach(ele => {\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\tdocument.querySelectorAll(\"[data-chatname='\" + blockName + \"'][data-source-type='\" + data.blockUser.type + \"']\").forEach(ele => {\n",
+    "after": "\t\t\t\t\t\t\tdocument.querySelectorAll(dataAttributeSelector(\"data-chatname\", blockName) + dataAttributeSelector(\"data-source-type\", data.blockUser.type)).forEach(ele => {\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\t\tdocument.querySelectorAll(\"[data-chatname='\" + blockName + \"'][data-source-type='youtubeshorts']\").forEach(ele => {\n",
+    "after": "\t\t\t\t\t\t\t\tdocument.querySelectorAll(dataAttributeSelector(\"data-chatname\", blockName) + dataAttributeSelector(\"data-source-type\", \"youtubeshorts\")).forEach(ele => {\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\tdocument.querySelectorAll(\"[data-chatname='\" + data.blockUser.username + \"']\").forEach(ele => {\n",
+    "after": "\t\t\t\t\t\t\tdocument.querySelectorAll(dataAttributeSelector(\"data-chatname\", data.blockUser.username)).forEach(ele => {\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\tdocument.querySelectorAll(\"[data-chatname='\" + data.vipUser.username + \"'][data-source-type='\" + data.vipUser.type + \"']\").forEach(ele => {\n",
+    "after": "\t\t\t\t\t\t\tdocument.querySelectorAll(dataAttributeSelector(\"data-chatname\", data.vipUser.username) + dataAttributeSelector(\"data-source-type\", data.vipUser.type)).forEach(ele => {\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\t\tdocument.querySelectorAll(\"[data-chatname='\" + data.vipUser.username + \"'][data-source-type='youtubeshorts']\").forEach(ele => {\n",
+    "after": "\t\t\t\t\t\t\t\tdocument.querySelectorAll(dataAttributeSelector(\"data-chatname\", data.vipUser.username) + dataAttributeSelector(\"data-source-type\", \"youtubeshorts\")).forEach(ele => {\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\tdocument.querySelectorAll(\"[data-chatname='\" + data.vipUser.username + \"']\").forEach(ele => {\n",
+    "after": "\t\t\t\t\t\t\tdocument.querySelectorAll(dataAttributeSelector(\"data-chatname\", data.vipUser.username)).forEach(ele => {\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\tdocument.querySelectorAll(\"[data-chatname='\" + chatName + \"'][data-source-type='\" + type + \"']\").forEach(ele => {\n",
+    "after": "\t\t\t\t\t\tdocument.querySelectorAll(dataAttributeSelector(\"data-chatname\", chatName) + dataAttributeSelector(\"data-source-type\", type)).forEach(ele => {\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\t\t\n\t\t\t\t\t\t\tdocument.querySelectorAll(\"[data-chatname='\" + userId + \"'][data-source-type='\" + userType + \"']\").forEach(ele => {\n",
+    "after": "\n\t\t\t\t\t\t\tdocument.querySelectorAll(dataAttributeSelector(\"data-chatname\", userId) + dataAttributeSelector(\"data-source-type\", userType)).forEach(ele => {\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\t\t\tdocument.querySelectorAll(\"[data-chatname='\" + userId + \"'][data-source-type='youtubeshorts']\").forEach(ele => {\n",
+    "after": "\t\t\t\t\t\t\t\tdocument.querySelectorAll(dataAttributeSelector(\"data-chatname\", userId) + dataAttributeSelector(\"data-source-type\", \"youtubeshorts\")).forEach(ele => {\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\tdocument.querySelectorAll(\"[data-chatname='\" + chatName + \"'][data-source-type='\" + typeToApply + \"']\").forEach(ele => {\n",
+    "after": "\t\t\t\t\tdocument.querySelectorAll(dataAttributeSelector(\"data-chatname\", chatName) + dataAttributeSelector(\"data-source-type\", typeToApply)).forEach(ele => {\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "",
+    "after": "\t\t\t}\n\n\t\t\tfunction escapeAttributeValue(value) {\n\t\t\t\treturn escapeHtml(String(value == null ? \"\" : value));\n\t\t\t}\n\n\t\t\tfunction cssAttributeValue(value) {\n\t\t\t\treturn String(value == null ? \"\" : value)\n\t\t\t\t\t.replace(/\\\\/g, \"\\\\\\\\\")\n\t\t\t\t\t.replace(/\"/g, '\\\\\"')\n\t\t\t\t\t.replace(/\\r/g, \"\\\\D \")\n\t\t\t\t\t.replace(/\\n/g, \"\\\\A \")\n\t\t\t\t\t.replace(/\\f/g, \"\\\\C \");\n\t\t\t}\n\n\t\t\tfunction dataAttributeSelector(attributeName, value) {\n\t\t\t\treturn \"[\" + attributeName + '=\"' + cssAttributeValue(value) + '\"]';\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "review",
+    "before": "",
+    "after": "\t\t\t\t\tvar safeDataId = escapeAttributeValue(data.id);\n\t\t\t\t\tvar safeDataType = escapeAttributeValue(data.type);\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\tchatImg = '<img id=\"img_' + data.id + '\" src=\"./icons/announcement.png\" class=\"icon ' + (darkmode ? \"invert\" : \"\") + ' hl-profile-pic\" onerror=\"errorImage(this);\" />';\n",
+    "after": "\t\t\t\t\t\t\tchatImg = '<img id=\"img_' + safeDataId + '\" src=\"./icons/announcement.png\" class=\"icon ' + (darkmode ? \"invert\" : \"\") + ' hl-profile-pic\" onerror=\"errorImage(this);\" />';\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\tchatImg = '<img id=\"img_' + data.id + '\" src=\"./sources/images/unknown.png\" class=\"icon ' + (darkmode ? \"invert\" : \"\") + ' hl-profile-pic\" onerror=\"errorImage(this);\" />';\n",
+    "after": "\t\t\t\t\t\t\tchatImg = '<img id=\"img_' + safeDataId + '\" src=\"./sources/images/unknown.png\" class=\"icon ' + (darkmode ? \"invert\" : \"\") + ' hl-profile-pic\" onerror=\"errorImage(this);\" />';\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\tchatImg = '<img id=\"img_' + data.id + '\" src=\"./sources/images/unknown.png\" class=\"fade-in-image ' + (darkmode ? \"invert\" : \"\") + ' icon hl-profile-pic\" onerror=\"errorImage(this);\" />';\n",
+    "after": "\t\t\t\t\t\t\tchatImg = '<img id=\"img_' + safeDataId + '\" src=\"./sources/images/unknown.png\" class=\"fade-in-image ' + (darkmode ? \"invert\" : \"\") + ' icon hl-profile-pic\" onerror=\"errorImage(this);\" />';\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\tchatImg = '<img id=\"img_' + data.id + '\" src=\"' + chatImg + '\" class=\"icon hl-profile-pic\" onerror=\"errorImage(this);\" />';\n",
+    "after": "\t\t\t\t\t\t\tchatImg = '<img id=\"img_' + safeDataId + '\" src=\"' + escapeAttributeValue(chatImg) + '\" class=\"icon hl-profile-pic\" onerror=\"errorImage(this);\" />';\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\tvar sourceNameText = showSourceName ? '<span class=\"source-name\">' + showType.charAt(0).toUpperCase() + showType.slice(1) + '</span>' : '';\n\t\t\t\t\t\tshowType = '<img src=\"./sources/images/' + showType + '.png\" class=\"icon hl-source-type avatar-badge\" data-icon-name=\"' + showType + '\" onerror=\"this.style.display=\\'none\\'\" />' + sourceNameText;\n",
+    "after": "\t\t\t\t\t\tvar sourceNameText = showSourceName ? '<span class=\"source-name\">' + escapeHtml(showType.charAt(0).toUpperCase() + showType.slice(1)) + '</span>' : '';\n\t\t\t\t\t\tvar safeShowType = escapeAttributeValue(showType);\n\t\t\t\t\t\tshowType = '<img src=\"./sources/images/' + safeShowType + '.png\" class=\"icon hl-source-type avatar-badge\" data-icon-name=\"' + safeShowType + '\" onerror=\"this.style.display=\\'none\\'\" />' + sourceNameText;\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\tvar sourceNameText = showSourceName ? '<span class=\"source-name\">' + showType.charAt(0).toUpperCase() + showType.slice(1) + '</span>' : '';\n\t\t\t\t\t\tshowType = '<img src=\"./sources/images/' + showType + '.png\" class=\"icon hl-source-type\" data-icon-name=\"' + showType + '\" onerror=\"this.style.display=\\'none\\'\" />' + sourceNameText;\n",
+    "after": "\t\t\t\t\t\tvar sourceNameText = showSourceName ? '<span class=\"source-name\">' + escapeHtml(showType.charAt(0).toUpperCase() + showType.slice(1)) + '</span>' : '';\n\t\t\t\t\t\tvar safeShowType = escapeAttributeValue(showType);\n\t\t\t\t\t\tshowType = '<img src=\"./sources/images/' + safeShowType + '.png\" class=\"icon hl-source-type\" data-icon-name=\"' + safeShowType + '\" onerror=\"this.style.display=\\'none\\'\" />' + sourceNameText;\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "",
+    "after": "\t\t\t\t\t\tvar safeSourceImg = escapeAttributeValue(data.sourceImg);\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\tshowType += '<img src=\"' + data.sourceImg + '\" class=\"icon hl-source-type  avatar-badge\" onerror=\"this.style.display=\\'none\\'\" />';\n",
+    "after": "\t\t\t\t\t\t\tshowType += '<img src=\"' + safeSourceImg + '\" class=\"icon hl-source-type  avatar-badge\" onerror=\"this.style.display=\\'none\\'\" />';\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\tshowType += '<img src=\"' + data.sourceImg + '\" class=\"icon hl-source-type\" onerror=\"this.style.display=\\'none\\'\" />';\n",
+    "after": "\t\t\t\t\t\t\tshowType += '<img src=\"' + safeSourceImg + '\" class=\"icon hl-source-type\" onerror=\"this.style.display=\\'none\\'\" />';\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\tmid = \"data-mid='\" + data.id + \"'\";\n",
+    "after": "\t\t\t\t\t\tmid = 'data-mid=\"' + safeDataId + '\"';\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\tvar node = createElementFromHTML('<div id=\"msg_' + data.id + '\" ' + mid + ' data-menu=\"context-menu\" class=\"highlight-chat' + expand + '\" data-source-type=\"' + data.type + '\">' + '<div class=\"hl-leftside\">' + chatImg + showType + \"</div>\" + '<div class=\"hl-rightside' + larger + '\">' + '<div class=\"hl-righttopline\">' + chatname + timeArrived  +  \"<div class='queueid'></div>\" + \"</div>\" + '<div class=\"hl-message\">' + '<span class=\"hl-content\" dir=\"' + textDirection + '\" id=\"content_' + data.id + '\">' + chatmessage + \"</span>\" + addImage + donationHTML + \"</div>\" + \"</div></div>\");\n",
+    "after": "\t\t\t\t\t\tvar node = createElementFromHTML('<div id=\"msg_' + safeDataId + '\" ' + mid + ' data-menu=\"context-menu\" class=\"highlight-chat' + expand + '\" data-source-type=\"' + safeDataType + '\">' + '<div class=\"hl-leftside\">' + chatImg + showType + \"</div>\" + '<div class=\"hl-rightside' + larger + '\">' + '<div class=\"hl-righttopline\">' + chatname + timeArrived  +  \"<div class='queueid'></div>\" + \"</div>\" + '<div class=\"hl-message\">' + '<span class=\"hl-content\" dir=\"' + textDirection + '\" id=\"content_' + safeDataId + '\">' + chatmessage + \"</span>\" + addImage + donationHTML + \"</div>\" + \"</div></div>\");\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\tvar node = createElementFromHTML('<div id=\"msg_' + data.id + '\" ' + mid + ' data-menu=\"context-menu\" class=\"highlight-chat' + larger + expand + '\" data-source-type=\"' + data.type + '\">' + '<div class=\"hl-firstline\">' + \"\" + \"<div class='queueid'></div>\" + showType + chatImg + chatname + '</div><div class=\"hl-message\"><span class=\"hl-content\" dir=\"' + textDirection + '\" id=\"content_' + data.id + '\">'+ timeArrived  + chatmessage + \"</span>\" + addImage + donationHTML + \"</div></div>\");\n",
+    "after": "\t\t\t\t\t\tvar node = createElementFromHTML('<div id=\"msg_' + safeDataId + '\" ' + mid + ' data-menu=\"context-menu\" class=\"highlight-chat' + larger + expand + '\" data-source-type=\"' + safeDataType + '\">' + '<div class=\"hl-firstline\">' + \"\" + \"<div class='queueid'></div>\" + showType + chatImg + chatname + '</div><div class=\"hl-message\"><span class=\"hl-content\" dir=\"' + textDirection + '\" id=\"content_' + safeDataId + '\">'+ timeArrived  + chatmessage + \"</span>\" + addImage + donationHTML + \"</div></div>\");\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\tvar node = createElementFromHTML('<div id=\"msg_' + data.id + '\" ' + mid + ' data-menu=\"context-menu\" class=\"highlight-chat' + larger + expand + '\" data-source-type=\"' + data.type + '\">' + \"<div class='queueid' title='Order in Queue, with 1 being next up.'></div>\" + \"<div class='leftside \" + larger + \"'>\"  + showType  + chatImg + chatname + \"</div>\" + '<div class=\"hl-message hl-content\" dir=\"' + textDirection + '\" id=\"content_' + data.id + '\">' + chatmessage + \"</div>\" + addImage + donationHTML + \"</div>\");\n",
+    "after": "\t\t\t\t\t\tvar node = createElementFromHTML('<div id=\"msg_' + safeDataId + '\" ' + mid + ' data-menu=\"context-menu\" class=\"highlight-chat' + larger + expand + '\" data-source-type=\"' + safeDataType + '\">' + \"<div class='queueid' title='Order in Queue, with 1 being next up.'></div>\" + \"<div class='leftside \" + larger + \"'>\"  + showType  + chatImg + chatname + \"</div>\" + '<div class=\"hl-message hl-content\" dir=\"' + textDirection + '\" id=\"content_' + safeDataId + '\">' + chatmessage + \"</div>\" + addImage + donationHTML + \"</div>\");\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\t\tvar node = createElementFromHTML('<div id=\"msg_' + data.id + '\" ' + mid + ' data-menu=\"context-menu\" class=\"highlight-chat' + larger + expand + '\" data-source-type=\"' + data.type + '\">' + \"<div class='queueid'></div>\" + '<div class=\"hl-message\">' + showType + chatImg + timeArrived + chatname + '<span class=\"hl-content\" dir=\"' + textDirection + '\" id=\"content_' + data.id + '\">' + chatmessage + \"</span>\" + addImage + donationHTML + \"</div></div>\");\n",
+    "after": "\t\t\t\t\t\t\tvar node = createElementFromHTML('<div id=\"msg_' + safeDataId + '\" ' + mid + ' data-menu=\"context-menu\" class=\"highlight-chat' + larger + expand + '\" data-source-type=\"' + safeDataType + '\">' + \"<div class='queueid'></div>\" + '<div class=\"hl-message\">' + showType + chatImg + timeArrived + chatname + '<span class=\"hl-content\" dir=\"' + textDirection + '\" id=\"content_' + safeDataId + '\">' + chatmessage + \"</span>\" + addImage + donationHTML + \"</div></div>\");\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\t\tvar node = createElementFromHTML('<div id=\"msg_' + data.id + '\" ' + mid + ' data-menu=\"context-menu\" class=\"highlight-chat' + larger + expand + '\" data-source-type=\"' + data.type + '\">' + \"<div class='queueid'></div>\" + '<div class=\"hl-message\">' + showType + chatImg + timeArrived + chatname + '<span class=\"hl-content\" dir=\"' + textDirection + '\" id=\"content_' + data.id + '\">' + chatmessage + donationHTML + \"</span>\" + \"</div>\" + addImage + \"</div>\");\n",
+    "after": "\t\t\t\t\t\t\tvar node = createElementFromHTML('<div id=\"msg_' + safeDataId + '\" ' + mid + ' data-menu=\"context-menu\" class=\"highlight-chat' + larger + expand + '\" data-source-type=\"' + safeDataType + '\">' + \"<div class='queueid'></div>\" + '<div class=\"hl-message\">' + showType + chatImg + timeArrived + chatname + '<span class=\"hl-content\" dir=\"' + textDirection + '\" id=\"content_' + safeDataId + '\">' + chatmessage + donationHTML + \"</span>\" + \"</div>\" + addImage + \"</div>\");\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\t\tvar node = createElementFromHTML('<div id=\"msg_' + data.id + '\" ' + mid + ' data-menu=\"context-menu\" class=\"highlight-chat' + larger + expand + '\" data-source-type=\"' + data.type + '\">' + \"<div class='queueid'></div>\" + '<div class=\"hl-message\">' + showType + chatImg + timeArrived + chatname + '<span class=\"hl-content\" dir=\"' + textDirection + '\" id=\"content_' + data.id + '\">' + chatmessage + \"</span>\" + \"</div>\" + addImage + donationHTML + \"</div>\");\n",
+    "after": "\t\t\t\t\t\t\tvar node = createElementFromHTML('<div id=\"msg_' + safeDataId + '\" ' + mid + ' data-menu=\"context-menu\" class=\"highlight-chat' + larger + expand + '\" data-source-type=\"' + safeDataType + '\">' + \"<div class='queueid'></div>\" + '<div class=\"hl-message\">' + showType + chatImg + timeArrived + chatname + '<span class=\"hl-content\" dir=\"' + textDirection + '\" id=\"content_' + safeDataId + '\">' + chatmessage + \"</span>\" + \"</div>\" + addImage + donationHTML + \"</div>\");\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\tvar node = createElementFromHTML('<div id=\"msg_' + data.id + '\" ' + mid + ' data-menu=\"context-menu\" class=\"highlight-chat' + larger + expand + '\" data-source-type=\"' + data.type + '\">' + \"<div class='queueid'></div>\" + showType + chatImg + timeArrived + chatname + '<div class=\"hl-message hl-content\" dir=\"' + textDirection + '\" id=\"content_' + data.id + '\">' + chatmessage + donationHTML+ \"</div>\" + addImage + \"</div>\");\n",
+    "after": "\t\t\t\t\t\tvar node = createElementFromHTML('<div id=\"msg_' + safeDataId + '\" ' + mid + ' data-menu=\"context-menu\" class=\"highlight-chat' + larger + expand + '\" data-source-type=\"' + safeDataType + '\">' + \"<div class='queueid'></div>\" + showType + chatImg + timeArrived + chatname + '<div class=\"hl-message hl-content\" dir=\"' + textDirection + '\" id=\"content_' + safeDataId + '\">' + chatmessage + donationHTML+ \"</div>\" + addImage + \"</div>\");\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\tvar node = createElementFromHTML('<div id=\"msg_' + data.id + '\" ' + mid + ' data-menu=\"context-menu\" class=\"highlight-chat' + larger + expand + '\" data-source-type=\"' + data.type + '\">' + \"<div class='queueid'></div>\" + showType + chatImg + timeArrived + chatname + '<div class=\"hl-message hl-content\" dir=\"' + textDirection + '\" id=\"content_' + data.id + '\">' + chatmessage + \"</div>\" + addImage + donationHTML + \"</div>\");\n",
+    "after": "\t\t\t\t\t\tvar node = createElementFromHTML('<div id=\"msg_' + safeDataId + '\" ' + mid + ' data-menu=\"context-menu\" class=\"highlight-chat' + larger + expand + '\" data-source-type=\"' + safeDataType + '\">' + \"<div class='queueid'></div>\" + showType + chatImg + timeArrived + chatname + '<div class=\"hl-message hl-content\" dir=\"' + textDirection + '\" id=\"content_' + safeDataId + '\">' + chatmessage + \"</div>\" + addImage + donationHTML + \"</div>\");\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\tvar contentElement = node.querySelector(\"#content_\" + data.id);\n",
+    "after": "\t\t\t\t\tvar contentElement = node.querySelector(dataAttributeSelector(\"id\", \"content_\" + data.id));\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\t\tnode.querySelector(\"#img_\" + data.id).src = data.chatimg;\n\t\t\t\t\t\t\t\tnode.querySelector(\"#img_\" + data.id).classList.remove(\"invert\");\n\t\t\t\t\t\t\t\tnode.querySelector(\"#img_\" + data.id).classList.remove(\"fade-in-image\");\n",
+    "after": "\t\t\t\t\t\t\t\tvar imageNode = node.querySelector(dataAttributeSelector(\"id\", \"img_\" + data.id));\n\t\t\t\t\t\t\t\tif (imageNode) {\n\t\t\t\t\t\t\t\t\timageNode.src = data.chatimg;\n\t\t\t\t\t\t\t\t\timageNode.classList.remove(\"invert\");\n\t\t\t\t\t\t\t\t\timageNode.classList.remove(\"fade-in-image\");\n\t\t\t\t\t\t\t\t}\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\t\t\tif (!reload[i].id || !document.querySelector(\"[data-mid='\"+reload[i].id+\"']\")){\n",
+    "after": "\t\t\t\t\t\t\t\tif (!reload[i].id || !document.querySelector(dataAttributeSelector(\"data-mid\", reload[i].id))){\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "featured.html",
+    "status": "applied",
+    "before": "",
+    "after": "\t\t\t}\n\n\t\t\tfunction escapeAttributeValue(value) {\n\t\t\t\treturn escapeHtml(value == null ? \"\" : String(value));\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "featured.html",
+    "status": "already",
+    "before": "",
+    "after": "\t\t\t\t\tvar safeDataId = escapeAttributeValue(data.id);\n\t\t\t\t\tvar safeDataType = escapeAttributeValue(data.type);\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "featured.html",
+    "status": "already",
+    "before": "\t\t\t\t\t  showType = '<img src=\"./sources/images/' + showType + '.png\" class=\"icon sourcetype\" data-icon-name=\"' + showType + '\" onerror=\"this.style.display=\\'none\\'\" />';\n",
+    "after": "\t\t\t\t\t  var safeShowType = escapeAttributeValue(showType);\n\t\t\t\t\t  showType = '<img src=\"./sources/images/' + safeShowType + '.png\" class=\"icon sourcetype\" data-icon-name=\"' + safeShowType + '\" onerror=\"this.style.display=\\'none\\'\" />';\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "featured.html",
+    "status": "already",
+    "before": "\t\t\t\t\t  showType = '<img src=\"./sources/images/' + showType + '.png\" class=\"icon sourcetype noavatar-source\" data-icon-name=\"' + showType + '\" onerror=\"this.style.display=\\'none\\'\" />';\n",
+    "after": "\t\t\t\t\t  var safeShowType = escapeAttributeValue(showType);\n\t\t\t\t\t  showType = '<img src=\"./sources/images/' + safeShowType + '.png\" class=\"icon sourcetype noavatar-source\" data-icon-name=\"' + safeShowType + '\" onerror=\"this.style.display=\\'none\\'\" />';\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "featured.html",
+    "status": "already",
+    "before": "\t\t\t\t\t  showType += '<img src=\"' + resolvedSourceImg + '\" class=\"icon sourcetype ' + customSourceClass + '\"  onerror=\"this.style.display=\\'none\\'\" />';\n",
+    "after": "\t\t\t\t\t  showType += '<img src=\"' + escapeAttributeValue(resolvedSourceImg) + '\" class=\"icon sourcetype ' + customSourceClass + '\"  onerror=\"this.style.display=\\'none\\'\" />';\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "featured.html",
+    "status": "already",
+    "before": "\t\t\t\t\t  showType += '<img src=\"' + resolvedSourceImg + '\" class=\"icon sourcetype ' + customSourceClass + ' noavatar-source\" onerror=\"this.style.display=\\'none\\'\" />';\n",
+    "after": "\t\t\t\t\t  showType += '<img src=\"' + escapeAttributeValue(resolvedSourceImg) + '\" class=\"icon sourcetype ' + customSourceClass + ' noavatar-source\" onerror=\"this.style.display=\\'none\\'\" />';\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "featured.html",
+    "status": "already",
+    "before": "",
+    "after": "\t\t\t\t\tvar safeAvatarUsername = escapeAttributeValue(data.username || data.chatname || \"\");\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "featured.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\tavatarImg = '<div class=\"hl-img\" ' + styleOverrideName + '><img id=\"img_' + data.id + '\" src=\"' + data.chatimg + '\" class=\"hl-profile-pic\" data-backup-image=\"' + data.backupChatimg + '\" data-username=\"' + (data.username || data.chatname || '') + '\" onload=\"handleAvatarLoad(this);\" onerror=\"errorImage(this);\"></div>';\n",
+    "after": "\t\t\t\t\t\tavatarImg = '<div class=\"hl-img\" ' + styleOverrideName + '><img id=\"img_' + safeDataId + '\" src=\"' + escapeAttributeValue(data.chatimg) + '\" class=\"hl-profile-pic\" data-backup-image=\"' + escapeAttributeValue(data.backupChatimg) + '\" data-username=\"' + safeAvatarUsername + '\" onload=\"handleAvatarLoad(this);\" onerror=\"errorImage(this);\"></div>';\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "featured.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\tavatarImg = '<div class=\"hl-img\" ' + styleOverrideName + '><img id=\"img_' + data.id + '\" src=\"' + chatimg + '\" class=\"hl-profile-pic\" data-username=\"' + (data.username || data.chatname || '') + '\" onload=\"handleAvatarLoad(this);\" onerror=\"errorImage(this);\"></div>';\n",
+    "after": "\t\t\t\t\t\tavatarImg = '<div class=\"hl-img\" ' + styleOverrideName + '><img id=\"img_' + safeDataId + '\" src=\"' + escapeAttributeValue(chatimg) + '\" class=\"hl-profile-pic\" data-username=\"' + safeAvatarUsername + '\" onload=\"handleAvatarLoad(this);\" onerror=\"errorImage(this);\"></div>';\n"
+  },
+  {
+    "commit": "ad9ce316",
+    "file": "featured.html",
+    "status": "already",
+    "before": "\t\t\t\t\t  document.getElementById(\"output\").innerHTML = '<div class=\"hl-c-cont highlight-chat' + noAvatarClass + '\" id=\"newmessage\" data-source-type=\"' + data.type + '\">' +\n",
+    "after": "\t\t\t\t\t  document.getElementById(\"output\").innerHTML = '<div class=\"hl-c-cont highlight-chat' + noAvatarClass + '\" id=\"newmessage\" data-source-type=\"' + safeDataType + '\">' +\n"
+  },
+  {
+    "commit": "130b0051",
+    "file": "featured.html",
+    "status": "applied",
+    "before": "",
+    "after": "\t\t\t\t\t// Legacy names may contain entities or emotes; textonly applies only to the body.\n\t\t\t\t\tvar renderedChatName = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : escapeHtml(data.chatname);\n\n"
+  },
+  {
+    "commit": "130b0051",
+    "file": "featured.html",
+    "status": "review",
+    "before": "\t\t\t\t\t  nameDiv.innerHTML = data.chatname + chatbadges + channelSourceName;\n",
+    "after": "\t\t\t\t\t  nameDiv.innerHTML = renderedChatName + chatbadges + channelSourceName;\n"
+  },
+  {
+    "commit": "130b0051",
+    "file": "featured.html",
+    "status": "review",
+    "before": "\t\t\t\t\t\t'<div class=\"hl-name\" ' + styleOverrideName + ' id=\"nameDIV\">' + data.chatname + chatbadges + channelSourceName + \"</div>\" +\n",
+    "after": "\t\t\t\t\t\t'<div class=\"hl-name\" ' + styleOverrideName + ' id=\"nameDIV\">' + renderedChatName + chatbadges + channelSourceName + \"</div>\" +\n"
+  }
+]

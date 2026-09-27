@@ -10,6 +10,8 @@ This overlay creates a retro terminal/typewriter experience with:
 -->
 <html lang="en">
 <head>
+<script src="../libs/objects.js"></script>
+<script src="../shared/utils/chatHtml.js"></script>
     <meta charset="UTF-8">
     <meta name="description" content="Typewriter Terminal Chat Overlay: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
     <meta name="robots" content="noindex">
@@ -767,7 +769,7 @@ body::before {
             statusIndicator = '<span class="status-away"></span>';
         }
         
-        const nameHtml = data.chatname ? `<span class="terminal-prompt">${statusIndicator}</span><span class="name">${data.chatname}</span>` : '';
+        const nameHtml = data.chatname ? `<span class="terminal-prompt">${statusIndicator}</span><span class="name">${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</span>` : '';
         const membershipHtml = data.membership ? `<span class="membership-status">${escapePlainMetadata(data.membership)}</span>` : '';
         const messageTextHtml = '<span class="text"></span>';
         const donationHtml = data.hasDonation ? `<span class="donation"> [DONATION: ${escapePlainMetadata(data.hasDonation)}]</span>` : '';
@@ -797,12 +799,12 @@ body::before {
         // Apply typewriter effect to the text or set HTML directly
         const textElement = messageDiv.querySelector('.text');
         if (textElement && data.chatmessage) {
-            // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+            // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
             if (data.textonly) {
                 typewriterEffect(textElement, data.chatmessage, TYPE_SPEED);
             } else {
-                // For HTML content, set it directly without typewriter effect
-                textElement.innerHTML = data.chatmessage;
+                // Check HTML before displaying it without the typewriter effect
+                textElement.innerHTML = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage) : fallbackEscapeHtml(data.chatmessage));
             }
         }
         

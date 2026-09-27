@@ -1,0 +1,2515 @@
+[
+  {
+    "commit": "d17363e2",
+    "file": "actions.html",
+    "status": "already",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "aioverlay.html",
+    "status": "applied",
+    "before": "<html>\n",
+    "after": "<html lang=\"en\">\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "aioverlay.html",
+    "status": "applied",
+    "before": "\t<meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "background.html",
+    "status": "applied",
+    "before": "<html>\n",
+    "after": "<html lang=\"en\">\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "background.js",
+    "status": "already",
+    "before": "\tconst emojiMap = new Map();\n",
+    "after": "\t// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "background.js",
+    "status": "applied",
+    "before": "\t\tconst tempDiv = document.createElement(\"div\");\n",
+    "after": "\t\tconst tempDiv = document.createElement(\"template\");\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "background.js",
+    "status": "already",
+    "before": "\t\tconst imgElements = tempDiv.querySelectorAll(\"img\");\n\t\timgElements.forEach((img, index) => {\n",
+    "after": "\t\tconst imgElements = tempDiv.content.querySelectorAll(\"img\");\n\t\timgElements.forEach(img => {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "background.js",
+    "status": "already",
+    "before": "\t\t\t\tconst placeholder = `__EMOJI_PLACEHOLDER_${index}__`;\n\t\t\t\temojiMap.set(placeholder, altText);\n\t\t\t\timg.outerHTML = placeholder;\n",
+    "after": "\t\t\t\timg.parentNode.replaceChild(document.createTextNode(altText), img);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "background.js",
+    "status": "already",
+    "before": "\t\t// Get the potentially modified HTML\n\t\ttext = tempDiv.innerHTML;\n\n\t\t// Convert to text from html\n\t\tvar textArea = document.createElement(\"textarea\");\n\t\ttextArea.innerHTML = text;\n\t\ttext = textArea.value;\n",
+    "after": "\t\ttempDiv.content.querySelectorAll(\"script,style,noscript,template\").forEach(node => node.remove());\n\t\ttext = tempDiv.content.textContent || \"\";\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "background.js",
+    "status": "already",
+    "before": "\t// Strip HTML and other unwanted characters\n\ttext = text.replace(/(<([^>]+)>)/gi, \"\");\n",
+    "after": "\t// Preserve literal text; these are the relay's existing command/cheer rules.\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "background.js",
+    "status": "review",
+    "before": "\n\t// Replace all emoji placeholders with their actual emojis\n\temojiMap.forEach((emoji, placeholder) => {\n\t\ttext = text.replace(placeholder, emoji);\n\t});\n",
+    "after": ""
+  },
+  {
+    "commit": "d17363e2",
+    "file": "background.js",
+    "status": "already",
+    "before": "\t\t\tdata.chatmessage = normalizeText(data.chatmessage, data.textonly || false);\n",
+    "after": "\t\t\t// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.\n\t\t\tdata.chatmessage = normalizeText(data.chatmessage, !data.textonly);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "background.js",
+    "status": "already",
+    "before": "\t\t\t\t\tvar textArea = document.createElement(\"textarea\");\n\t\t\t\t\ttextArea.innerHTML = commandMessage;\n\t\t\t\t\tcommandMessage = textArea.value;\n",
+    "after": "\t\t\t\t\t// Convert HTML once in inert contents; encoded literal tags remain text.\n\t\t\t\t\tvar commandTemplate = document.createElement(\"template\");\n\t\t\t\t\tcommandTemplate.innerHTML = commandMessage;\n\t\t\t\t\tcommandTemplate.content.querySelectorAll(\"script,style,noscript,template\").forEach(node => node.remove());\n\t\t\t\t\tcommandMessage = commandTemplate.content.textContent || \"\";\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "background.js",
+    "status": "already",
+    "before": "\t\t\t\tcommandMessage = commandMessage.replace(/(<([^>]+)>)/gi, \"\");\n",
+    "after": "\t\t\t\t// Preserve the command prefix and existing command cleanup; plain bodies are never HTML-parsed.\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "battle.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "bot.html",
+    "status": "already",
+    "before": "\t\t\tfunction sanitizePlainTextAlertFields(data) {\n\t\t\t\tif (!data) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\t[\"hasDonation\", \"donation\", \"membership\", \"hasMembership\", \"subtitle\", \"title\"].forEach(function (field) {\n\t\t\t\t\tif (typeof data[field] === \"string\") {\n\t\t\t\t\t\tdata[field] = stripHtmlFunction(data[field]);\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t}\n",
+    "after": "\t\t\t\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "bot.html",
+    "status": "applied",
+    "before": "\n\t\t\tconst validTLDs = new Set([\"a\",\"aaa\",\"aarp\",\"abb\",\"abbott\",\"abbvie\",\"abc\",\"able\",\"abogado\",\"abudhabi\",\"ac\",\"academy\",\"accenture\",\"accountant\",\"accountants\",\"aco\",\"actor\",\"ad\",\"ads\",\"adult\",\"ae\",\"aeg\",\"aero\",\"aetna\",\"af\",\"afl\",\"africa\",\"ag\",\"agakhan\",\"agency\",\"ai\",\"aig\",\"airbus\",\"airforce\",\"airtel\",\"akdn\",\"al\",\"alibaba\",\"alipay\",\"allfinanz\",\"allstate\",\"ally\",\"alsace\",\"alstom\",\"am\",\"amazon\",\"americanexpress\",\"americanfamily\",\"amex\",\"amfam\",\"amica\",\"amsterdam\",\"analytics\",\"android\",\"anquan\",\"anz\",\"ao\",\"aol\",\"apartments\",\"app\",\"apple\",\"aq\",\"aquarelle\",\"ar\",\"arab\",\"aramco\",\"archi\",\"army\",\"arpa\",\"art\",\"arte\",\"as\",\"asda\",\"asia\",\"associates\",\"at\",\"athleta\",\"attorney\",\"au\",\"auction\",\"audi\",\"audible\",\"audio\",\"auspost\",\"author\",\"auto\",\"autos\",\"aw\",\"aws\",\"ax\",\"axa\",\"az\",\"azure\",\"b\",\"ba\",\"baby\",\"baidu\",\"banamex\",\"band\",\"bank\",\"bar\",\"barcelona\",\"barclaycard\",\"barclays\",\"barefoot\",\"bargains\",\"baseball\",\"basketball\",\"bauhaus\",\"bayern\",\"bb\",\"bbc\",\"bbt\",\"bbva\",\"bcg\",\"bcn\",\"bd\",\"be\",\"beats\",\"beauty\",\"beer\",\"bentley\",\"berlin\",\"best\",\"bestbuy\",\"bet\",\"bf\",\"bg\",\"bh\",\"bharti\",\"bi\",\"bible\",\"bid\",\"bike\",\"bing\",\"bingo\",\"bio\",\"biz\",\"bj\",\"black\",\"blackfriday\",\"blockbuster\",\"blog\",\"bloomberg\",\"blue\",\"bm\",\"bms\",\"bmw\",\"bn\",\"bnpparibas\",\"bo\",\"boats\",\"boehringer\",\"bofa\",\"bom\",\"bond\",\"boo\",\"book\",\"booking\",\"bosch\",\"bostik\",\"boston\",\"bot\",\"boutique\",\"box\",\"br\",\"bradesco\",\"bridgestone\",\"broadway\",\"broker\",\"brother\",\"brussels\",\"bs\",\"bt\",\"build\",\"builders\",\"business\",\"buy\",\"buzz\",\"bv\",\"bw\",\"by\",\"bz\",\"bzh\",\"c\",\"ca\",\"cab\",\"cafe\",\"cal\",\"call\",\"calvinklein\",\"cam\",\"camera\",\"camp\",\"canon\",\"capetown\",\"capital\",\"capitalone\",\"car\",\"caravan\",\"cards\",\"care\",\"career\",\"careers\",\"cars\",\"casa\",\"case\",\"cash\",\"casino\",\"cat\",\"catering\",\"catholic\",\"cba\",\"cbn\",\"cbre\",\"cc\",\"cd\",\"center\",\"ceo\",\"cern\",\"cf\",\"cfa\",\"cfd\",\"cg\",\"ch\",\"chanel\",\"channel\",\"charity\",\"chase\",\"chat\",\"cheap\",\"chintai\",\"christmas\",\"chrome\",\"church\",\"ci\",\"cipriani\",\"circle\",\"cisco\",\"citadel\",\"citi\",\"citic\",\"city\",\"ck\",\"cl\",\"claims\",\"cleaning\",\"click\",\"clinic\",\"clinique\",\"clothing\",\"cloud\",\"club\",\"clubmed\",\"cm\",\"cn\",\"co\",\"coach\",\"codes\",\"coffee\",\"college\",\"cologne\",\"com\",\"commbank\",\"community\",\"company\",\"compare\",\"computer\",\"comsec\",\"condos\",\"construction\",\"consulting\",\"contact\",\"contractors\",\"cooking\",\"cool\",\"coop\",\"corsica\",\"country\",\"coupon\",\"coupons\",\"courses\",\"cpa\",\"cr\",\"credit\",\"creditcard\",\"creditunion\",\"cricket\",\"crown\",\"crs\",\"cruise\",\"cruises\",\"cu\",\"cuisinella\",\"cv\",\"cw\",\"cx\",\"cy\",\"cymru\",\"cyou\",\"cz\",\"d\",\"dabur\",\"dad\",\"dance\",\"data\",\"date\",\"dating\",\"datsun\",\"day\",\"dclk\",\"dds\",\"de\",\"deal\",\"dealer\",\"deals\",\"degree\",\"delivery\",\"dell\",\"deloitte\",\"delta\",\"democrat\",\"dental\",\"dentist\",\"desi\",\"design\",\"dev\",\"dhl\",\"diamonds\",\"diet\",\"digital\",\"direct\",\"directory\",\"discount\",\"discover\",\"dish\",\"diy\",\"dj\",\"dk\",\"dm\",\"dnp\",\"do\",\"docs\",\"doctor\",\"dog\",\"domains\",\"dot\",\"download\",\"drive\",\"dtv\",\"dubai\",\"dunlop\",\"dupont\",\"durban\",\"dvag\",\"dvr\",\"dz\",\"e\",\"earth\",\"eat\",\"ec\",\"eco\",\"edeka\",\"edu\",\"education\",\"ee\",\"eg\",\"email\",\"emerck\",\"energy\",\"engineer\",\"engineering\",\"enterprises\",\"epson\",\"equipment\",\"er\",\"ericsson\",\"erni\",\"es\",\"esq\",\"estate\",\"et\",\"eu\",\"eurovision\",\"eus\",\"events\",\"exchange\",\"expert\",\"exposed\",\"express\",\"extraspace\",\"f\",\"fage\",\"fail\",\"fairwinds\",\"faith\",\"family\",\"fan\",\"fans\",\"farm\",\"farmers\",\"fashion\",\"fast\",\"fedex\",\"feedback\",\"ferrari\",\"ferrero\",\"fi\",\"fidelity\",\"fido\",\"film\",\"final\",\"finance\",\"financial\",\"fire\",\"firestone\",\"firmdale\",\"fish\",\"fishing\",\"fit\",\"fitness\",\"fj\",\"fk\",\"flickr\",\"flights\",\"flir\",\"florist\",\"flowers\",\"fly\",\"fm\",\"fo\",\"foo\",\"food\",\"football\",\"ford\",\"forex\",\"forsale\",\"forum\",\"foundation\",\"fox\",\"fr\",\"free\",\"fresenius\",\"frl\",\"frogans\",\"frontier\",\"ftr\",\"fujitsu\",\"fun\",\"fund\",\"furniture\",\"futbol\",\"fyi\",\"g\",\"ga\",\"gal\",\"gallery\",\"gallo\",\"gallup\",\"game\",\"games\",\"gap\",\"garden\",\"gay\",\"gb\",\"gbiz\",\"gd\",\"gdn\",\"ge\",\"gea\",\"gent\",\"genting\",\"george\",\"gf\",\"gg\",\"ggee\",\"gh\",\"gi\",\"gift\",\"gifts\",\"gives\",\"giving\",\"gl\",\"glass\",\"gle\",\"global\",\"globo\",\"gm\",\"gmail\",\"gmbh\",\"gmo\",\"gmx\",\"gn\",\"godaddy\",\"gold\",\"goldpoint\",\"golf\",\"goo\",\"goodyear\",\"goog\",\"google\",\"gop\",\"got\",\"gov\",\"gp\",\"gq\",\"gr\",\"grainger\",\"graphics\",\"gratis\",\"green\",\"gripe\",\"grocery\",\"group\",\"gs\",\"gt\",\"gu\",\"gucci\",\"guge\",\"guide\",\"guitars\",\"guru\",\"gw\",\"gy\",\"h\",\"hair\",\"hamburg\",\"hangout\",\"haus\",\"hbo\",\"hdfc\",\"hdfcbank\",\"health\",\"healthcare\",\"help\",\"helsinki\",\"here\",\"hermes\",\"hiphop\",\"hisamitsu\",\"hitachi\",\"hiv\",\"hk\",\"hkt\",\"hm\",\"hn\",\"hockey\",\"holdings\",\"holiday\",\"homedepot\",\"homegoods\",\"homes\",\"homesense\",\"honda\",\"horse\",\"hospital\",\"host\",\"hosting\",\"hot\",\"hotels\",\"hotmail\",\"house\",\"how\",\"hr\",\"hsbc\",\"ht\",\"hu\",\"hughes\",\"hyatt\",\"hyundai\",\"i\",\"ibm\",\"icbc\",\"ice\",\"icu\",\"id\",\"ie\",\"ieee\",\"ifm\",\"ikano\",\"il\",\"im\",\"imamat\",\"imdb\",\"immo\",\"immobilien\",\"in\",\"inc\",\"industries\",\"infiniti\",\"info\",\"ing\",\"ink\",\"institute\",\"insurance\",\"insure\",\"int\",\"international\",\"intuit\",\"investments\",\"io\",\"ipiranga\",\"iq\",\"ir\",\"irish\",\"is\",\"ismaili\",\"ist\",\"istanbul\",\"it\",\"itau\",\"itv\",\"j\",\"jaguar\",\"java\",\"jcb\",\"je\",\"jeep\",\"jetzt\",\"jewelry\",\"jio\",\"jll\",\"jm\",\"jmp\",\"jnj\",\"jo\",\"jobs\",\"joburg\",\"jot\",\"joy\",\"jp\",\"jpmorgan\",\"jprs\",\"juegos\",\"juniper\",\"k\",\"kaufen\",\"kddi\",\"ke\",\"kerryhotels\",\"kerrylogistics\",\"kerryproperties\",\"kfh\",\"kg\",\"kh\",\"ki\",\"kia\",\"kids\",\"kim\",\"kindle\",\"kitchen\",\"kiwi\",\"km\",\"kn\",\"koeln\",\"komatsu\",\"kosher\",\"kp\",\"kpmg\",\"kpn\",\"kr\",\"krd\",\"kred\",\"kuokgroup\",\"kw\",\"ky\",\"kyoto\",\"kz\",\"l\",\"la\",\"lacaixa\",\"lamborghini\",\"lamer\",\"lancaster\",\"land\",\"landrover\",\"lanxess\",\"lasalle\",\"lat\",\"latino\",\"latrobe\",\"law\",\"lawyer\",\"lb\",\"lc\",\"lds\",\"lease\",\"leclerc\",\"lefrak\",\"legal\",\"lego\",\"lexus\",\"lgbt\",\"li\",\"lidl\",\"life\",\"lifeinsurance\",\"lifestyle\",\"lighting\",\"like\",\"lilly\",\"limited\",\"limo\",\"lincoln\",\"link\",\"lipsy\",\"live\",\"living\",\"lk\",\"llc\",\"llp\",\"loan\",\"loans\",\"locker\",\"locus\",\"lol\",\"london\",\"lotte\",\"lotto\",\"love\",\"lpl\",\"lplfinancial\",\"lr\",\"ls\",\"lt\",\"ltd\",\"ltda\",\"lu\",\"lundbeck\",\"luxe\",\"luxury\",\"lv\",\"ly\",\"m\",\"ma\",\"madrid\",\"maif\",\"maison\",\"makeup\",\"man\",\"management\",\"mango\",\"map\",\"market\",\"marketing\",\"markets\",\"marriott\",\"marshalls\",\"mattel\",\"mba\",\"mc\",\"mckinsey\",\"md\",\"me\",\"med\",\"media\",\"meet\",\"melbourne\",\"meme\",\"memorial\",\"men\",\"menu\",\"merckmsd\",\"mg\",\"mh\",\"miami\",\"microsoft\",\"mil\",\"mini\",\"mint\",\"mit\",\"mitsubishi\",\"mk\",\"ml\",\"mlb\",\"mls\",\"mm\",\"mma\",\"mn\",\"mo\",\"mobi\",\"mobile\",\"moda\",\"moe\",\"moi\",\"mom\",\"monash\",\"money\",\"monster\",\"mormon\",\"mortgage\",\"moscow\",\"moto\",\"motorcycles\",\"mov\",\"movie\",\"mp\",\"mq\",\"mr\",\"ms\",\"msd\",\"mt\",\"mtn\",\"mtr\",\"mu\",\"museum\",\"music\",\"mv\",\"mw\",\"mx\",\"my\",\"mz\",\"n\",\"na\",\"nab\",\"nagoya\",\"name\",\"navy\",\"nba\",\"nc\",\"ne\",\"nec\",\"net\",\"netbank\",\"netflix\",\"network\",\"neustar\",\"new\",\"news\",\"next\",\"nextdirect\",\"nexus\",\"nf\",\"nfl\",\"ng\",\"ngo\",\"nhk\",\"ni\",\"nico\",\"nike\",\"nikon\",\"ninja\",\"nissan\",\"nissay\",\"nl\",\"no\",\"nokia\",\"norton\",\"now\",\"nowruz\",\"nowtv\",\"np\",\"nr\",\"nra\",\"nrw\",\"ntt\",\"nu\",\"nyc\",\"nz\",\"o\",\"obi\",\"observer\",\"office\",\"okinawa\",\"olayan\",\"olayangroup\",\"ollo\",\"om\",\"omega\",\"one\",\"ong\",\"onl\",\"online\",\"ooo\",\"open\",\"oracle\",\"orange\",\"org\",\"organic\",\"origins\",\"osaka\",\"otsuka\",\"ott\",\"ovh\",\"p\",\"pa\",\"page\",\"panasonic\",\"paris\",\"pars\",\"partners\",\"parts\",\"party\",\"pay\",\"pccw\",\"pe\",\"pet\",\"pf\",\"pfizer\",\"pg\",\"ph\",\"pharmacy\",\"phd\",\"philips\",\"phone\",\"photo\",\"photography\",\"photos\",\"physio\",\"pics\",\"pictet\",\"pictures\",\"pid\",\"pin\",\"ping\",\"pink\",\"pioneer\",\"pizza\",\"pk\",\"pl\",\"place\",\"play\",\"playstation\",\"plumbing\",\"plus\",\"pm\",\"pn\",\"pnc\",\"pohl\",\"poker\",\"politie\",\"porn\",\"post\",\"pr\",\"pramerica\",\"praxi\",\"press\",\"prime\",\"pro\",\"prod\",\"productions\",\"prof\",\"progressive\",\"promo\",\"properties\",\"property\",\"protection\",\"pru\",\"prudential\",\"ps\",\"pt\",\"pub\",\"pw\",\"pwc\",\"py\",\"q\",\"qa\",\"qpon\",\"quebec\",\"quest\",\"r\",\"racing\",\"radio\",\"re\",\"read\",\"realestate\",\"realtor\",\"realty\",\"recipes\",\"red\",\"redstone\",\"redumbrella\",\"rehab\",\"reise\",\"reisen\",\"reit\",\"reliance\",\"ren\",\"rent\",\"rentals\",\"repair\",\"report\",\"republican\",\"rest\",\"restaurant\",\"review\",\"reviews\",\"rexroth\",\"rich\",\"richardli\",\"ricoh\",\"ril\",\"rio\",\"rip\",\"ro\",\"rocks\",\"rodeo\",\"rogers\",\"room\",\"rs\",\"rsvp\",\"ru\",\"rugby\",\"ruhr\",\"run\",\"rw\",\"rwe\",\"ryukyu\",\"s\",\"sa\",\"saarland\",\"safe\",\"safety\",\"sakura\",\"sale\",\"salon\",\"samsclub\",\"samsung\",\"sandvik\",\"sandvikcoromant\",\"sanofi\",\"sap\",\"sarl\",\"sas\",\"save\",\"saxo\",\"sb\",\"sbi\",\"sbs\",\"sc\",\"scb\",\"schaeffler\",\"schmidt\",\"scholarships\",\"school\",\"schule\",\"schwarz\",\"science\",\"scot\",\"sd\",\"se\",\"search\",\"seat\",\"secure\",\"security\",\"seek\",\"select\",\"sener\",\"services\",\"seven\",\"sew\",\"sex\",\"sexy\",\"sfr\",\"sg\",\"sh\",\"shangrila\",\"sharp\",\"shell\",\"shia\",\"shiksha\",\"shoes\",\"shop\",\"shopping\",\"shouji\",\"show\",\"si\",\"silk\",\"sina\",\"singles\",\"site\",\"sj\",\"sk\",\"ski\",\"skin\",\"sky\",\"skype\",\"sl\",\"sling\",\"sm\",\"smart\",\"smile\",\"sn\",\"sncf\",\"so\",\"soccer\",\"social\",\"softbank\",\"software\",\"sohu\",\"solar\",\"solutions\",\"song\",\"sony\",\"soy\",\"spa\",\"space\",\"sport\",\"spot\",\"sr\",\"srl\",\"ss\",\"st\",\"stada\",\"staples\",\"star\",\"statebank\",\"statefarm\",\"stc\",\"stcgroup\",\"stockholm\",\"storage\",\"store\",\"stream\",\"studio\",\"study\",\"style\",\"su\",\"sucks\",\"supplies\",\"supply\",\"support\",\"surf\",\"surgery\",\"suzuki\",\"sv\",\"swatch\",\"swiss\",\"sx\",\"sy\",\"sydney\",\"systems\",\"sz\",\"t\",\"tab\",\"taipei\",\"talk\",\"taobao\",\"target\",\"tatamotors\",\"tatar\",\"tattoo\",\"tax\",\"taxi\",\"tc\",\"tci\",\"td\",\"tdk\",\"team\",\"tech\",\"technology\",\"tel\",\"temasek\",\"tennis\",\"teva\",\"tf\",\"tg\",\"th\",\"thd\",\"theater\",\"theatre\",\"tiaa\",\"tickets\",\"tienda\",\"tips\",\"tires\",\"tirol\",\"tj\",\"tjmaxx\",\"tjx\",\"tk\",\"tkmaxx\",\"tl\",\"tm\",\"tmall\",\"tn\",\"to\",\"today\",\"tokyo\",\"tools\",\"top\",\"toray\",\"toshiba\",\"total\",\"tours\",\"town\",\"toyota\",\"toys\",\"tr\",\"trade\",\"trading\",\"training\",\"travel\",\"travelers\",\"travelersinsurance\",\"trust\",\"trv\",\"tt\",\"tube\",\"tui\",\"tunes\",\"tushu\",\"tv\",\"tvs\",\"tw\",\"tz\",\"u\",\"ua\",\"ubank\",\"ubs\",\"ug\",\"uk\",\"unicom\",\"university\",\"uno\",\"uol\",\"ups\",\"us\",\"uy\",\"uz\",\"v\",\"va\",\"vacations\",\"vana\",\"vanguard\",\"vc\",\"ve\",\"vegas\",\"ventures\",\"verisign\",\"verm\u00f6gensberater\",\"verm\u00f6gensberatung\",\"versicherung\",\"vet\",\"vg\",\"vi\",\"viajes\",\"video\",\"vig\",\"viking\",\"villas\",\"vin\",\"vip\",\"virgin\",\"visa\",\"vision\",\"viva\",\"vivo\",\"vlaanderen\",\"vn\",\"vodka\",\"volvo\",\"vote\",\"voting\",\"voto\",\"voyage\",\"vu\",\"w\",\"wales\",\"walmart\",\"walter\",\"wang\",\"wanggou\",\"watch\",\"watches\",\"weather\",\"weatherchannel\",\"webcam\",\"weber\",\"website\",\"wed\",\"wedding\",\"weibo\",\"weir\",\"wf\",\"whoswho\",\"wien\",\"wiki\",\"williamhill\",\"win\",\"windows\",\"wine\",\"winners\",\"wme\",\"wolterskluwer\",\"woodside\",\"work\",\"works\",\"world\",\"wow\",\"ws\",\"wtc\",\"wtf\",\"x\",\"xbox\",\"xerox\",\"xihuan\",\"xin\",\"xxx\",\"xyz\",\"y\",\"yachts\",\"yahoo\",\"yamaxun\",\"yandex\",\"ye\",\"yodobashi\",\"yoga\",\"yokohama\",\"you\",\"youtube\",\"yt\",\"yun\",\"z\",\"za\",\"zappos\",\"zara\",\"zero\",\"zip\",\"zm\",\"zone\",\"zuerich\",\"zw\",\"IDNs\",\"\u03b5\u03bb\",\"\u03b5\u03c5\",\"\u0431\u0433\",\"\u0431\u0435\u043b\",\"\u0434\u0435\u0442\u0438\",\"\u0435\u044e\",\"\u043a\u0430\u0442\u043e\u043b\u0438\u043a\",\"\u043a\u043e\u043c\",\"\u043c\u043a\u0434\",\"\u043c\u043e\u043d\",\"\u043c\u043e\u0441\u043a\u0432\u0430\",\"\u043e\u043d\u043b\u0430\u0439\u043d\",\"\u043e\u0440\u0433\",\"\u0440\u0443\u0441\",\"\u0440\u0444\",\"\u0441\u0430\u0439\u0442\",\"\u0441\u0440\u0431\",\"\u0443\u043a\u0440\",\"\u049b\u0430\u0437\",\"\u0570\u0561\u0575\",\"\u05d9\u05e9\u05e8\u05d0\u05dc\",\"\u05e7\u05d5\u05dd\",\"\u0627\u0628\u0648\u0638\u0628\u064a\",\"\u0627\u0631\u0627\u0645\u0643\u0648\",\"\u0627\u0644\u0627\u0631\u062f\u0646\",\"\u0627\u0644\u0628\u062d\u0631\u064a\u0646\",\"\u0627\u0644\u062c\u0632\u0627\u0626\u0631\",\"\u0627\u0644\u0633\u0639\u0648\u062f\u064a\u0629\",\"\u0627\u0644\u0639\u0644\u064a\u0627\u0646\",\"\u0627\u0644\u0645\u063a\u0631\u0628\",\"\u0627\u0645\u0627\u0631\u0627\u062a\",\"\u0627\u06cc\u0631\u0627\u0646\",\"\u0628\u0627\u0631\u062a\",\"\u0628\u0627\u0632\u0627\u0631\",\"\u0628\u064a\u062a\u0643\",\"\u0628\u06be\u0627\u0631\u062a\",\"\u062a\u0648\u0646\u0633\",\"\u0633\u0648\u062f\u0627\u0646\",\"\u0633\u0648\u0631\u064a\u0629\",\"\u0634\u0628\u0643\u0629\",\"\u0639\u0631\u0627\u0642\",\"\u0639\u0631\u0628\",\"\u0639\u0645\u0627\u0646\",\"\u0641\u0644\u0633\u0637\u064a\u0646\",\"\u0642\u0637\u0631\",\"\u0643\u0627\u062b\u0648\u0644\u064a\u0643\",\"\u0643\u0648\u0645\",\"\u0645\u0635\u0631\",\"\u0645\u0644\u064a\u0633\u064a\u0627\",\"\u0645\u0648\u0631\u064a\u062a\u0627\u0646\u064a\u0627\",\"\u0645\u0648\u0642\u0639\",\"\u0647\u0645\u0631\u0627\u0647\",\"\u067e\u0627\u0643\u0633\u062a\u0627\u0646\",\"\u067e\u0627\u06a9\u0633\u062a\u0627\u0646\",\"\u0680\u0627\u0631\u062a\",\"\u0915\u0949\u092e\",\"\u0928\u0947\u091f\",\"\u092d\u093e\u0930\u0924\",\"\u092d\u093e\u0930\u0924\u092e\u094d\",\"\u092d\u093e\u0930\u094b\u0924\",\"\u0938\u0902\u0917\u0920\u0928\",\"\u09ac\u09be\u0982\u09b2\u09be\",\"\u09ad\u09be\u09b0\u09a4\",\"\u09ad\u09be\u09f0\u09a4\",\"\u0a2d\u0a3e\u0a30\u0a24\",\"\u0aad\u0abe\u0ab0\u0aa4\",\"\u0b2d\u0b3e\u0b30\u0b24\",\"\u0b87\u0ba8\u0bcd\u0ba4\u0bbf\u0baf\u0bbe\",\"\u0b87\u0bb2\u0b99\u0bcd\u0b95\u0bc8\",\"\u0b9a\u0bbf\u0b99\u0bcd\u0b95\u0baa\u0bcd\u0baa\u0bc2\u0bb0\u0bcd\",\"\u0c2d\u0c3e\u0c30\u0c24\u0c4d\",\"\u0cad\u0cbe\u0cb0\u0ca4\",\"\u0d2d\u0d3e\u0d30\u0d24\u0d02\",\"\u0dbd\u0d82\u0d9a\u0dcf\",\"\u0e04\u0e2d\u0e21\",\"\u0e44\u0e17\u0e22\",\"\u0ea5\u0eb2\u0ea7\",\"\u10d2\u10d4\",\"\u307f\u3093\u306a\",\"\u30a2\u30de\u30be\u30f3\",\"\u30af\u30e9\u30a6\u30c9\",\"\u30b0\u30fc\u30b0\u30eb\",\"\u30b3\u30e0\",\"\u30b9\u30c8\u30a2\",\"\u30bb\u30fc\u30eb\",\"\u30d5\u30a1\u30c3\u30b7\u30e7\u30f3\",\"\u30dd\u30a4\u30f3\u30c8\",\"\u4e16\u754c\",\"\u4e2d\u4fe1\",\"\u4e2d\u56fd\",\"\u4e2d\u570b\",\"\u4e2d\u6587\u7f51\",\"\u4e9a\u9a6c\u900a\",\"\u4f01\u4e1a\",\"\u4f5b\u5c71\",\"\u4fe1\u606f\",\"\u5065\u5eb7\",\"\u516b\u5366\",\"\u516c\u53f8\",\"\u516c\u76ca\",\"\u53f0\u6e7e\",\"\u53f0\u7063\",\"\u5546\u57ce\",\"\u5546\u5e97\",\"\u5546\u6807\",\"\u5609\u91cc\",\"\u5609\u91cc\u5927\u9152\u5e97\",\"\u5728\u7ebf\",\"\u5927\u62ff\",\"\u5929\u4e3b\u6559\",\"\u5a31\u4e50\",\"\u5bb6\u96fb\",\"\u5e7f\u4e1c\",\"\u5fae\u535a\",\"\u6148\u5584\",\"\u6211\u7231\u4f60\",\"\u624b\u673a\",\"\u62db\u8058\",\"\u653f\u52a1\",\"\u653f\u5e9c\",\"\u65b0\u52a0\u5761\",\"\u65b0\u95fb\",\"\u65f6\u5c1a\",\"\u66f8\u7c4d\",\"\u673a\u6784\",\"\u6de1\u9a6c\u9521\",\"\u6e38\u620f\",\"\u6fb3\u9580\",\"\u70b9\u770b\",\"\u79fb\u52a8\",\"\u7ec4\u7ec7\u673a\u6784\",\"\u7f51\u5740\",\"\u7f51\u5e97\",\"\u7f51\u7ad9\",\"\u7f51\u7edc\",\"\u8054\u901a\",\"\u8c37\u6b4c\",\"\u8d2d\u7269\",\"\u901a\u8ca9\",\"\u96c6\u56e2\",\"\u96fb\u8a0a\u76c8\u79d1\",\"\u98de\u5229\u6d66\",\"\u98df\u54c1\",\"\u9910\u5385\",\"\u9999\u683c\u91cc\u62c9\",\"\u9999\u6e2f\",\"\ub2f7\ub137\",\"\ub2f7\ucef4\",\"\uc0bc\uc131\",\"\ud55c\uad6d\"]);\n",
+    "after": ""
+  },
+  {
+    "commit": "d17363e2",
+    "file": "bot.html",
+    "status": "review",
+    "before": "\t\t\t\t\tsanitizePlainTextAlertFields(data);\n",
+    "after": ""
+  },
+  {
+    "commit": "d17363e2",
+    "file": "bot.html",
+    "status": "already",
+    "before": "\t\t\t\t\t  styleOverride = ' style=\"' + styleOverride + '\"';\n",
+    "after": "\t\t\t\t\t  styleOverride = ' style=\"' + fallbackEscapeHtml(styleOverride) + '\"';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "bot.html",
+    "status": "already",
+    "before": "\t\t\t\t\t  styleOverrideName = 'style=\"' + styleOverrideName + '\"';\n",
+    "after": "\t\t\t\t\t  styleOverrideName = 'style=\"' + fallbackEscapeHtml(styleOverrideName) + '\"';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "bot.html",
+    "status": "applied",
+    "before": "\t\t\t\t\tvar chatbadges = \"\";\n\t\t\t\t\tif (data.chatbadges && showbadges) {\n\t\t\t\t\t  data.chatbadges.forEach(badge => {\n\t\t\t\t\t\tif (typeof badge == \"object\") {\n\t\t\t\t\t\t  if (badge.type && badge.type == \"img\" && badge.src) {\n\t\t\t\t\t\t\tchatbadges += \"<img class='hl-badge' src='\" + badge.src + \"' />\";\n\t\t\t\t\t\t  } else if (badge.type && badge.type == \"svg\" && badge.html) {\n\t\t\t\t\t\t\tchatbadges += \"<span class='hl-badge'>\" + badge.html + \"</span>\";\n\t\t\t\t\t\t  }\n\t\t\t\t\t\t} else {\n\t\t\t\t\t\t  chatbadges += \"<img class='hl-badge' src='\" + badge + \"' />\";\n\t\t\t\t\t\t}\n\t\t\t\t\t  });\n\t\t\t\t\t}\n",
+    "after": "\t\t\t\t\tvar chatbadges = showbadges ? SocialStreamBadges.render(data.chatbadges, { className: \"hl-badge\" }) : \"\";\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "chathistory.js",
+    "status": "review",
+    "before": "function removeHtmlTagsFromPlainText(value) {\n    return String(value || '')\n        .replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi, '')\n        .replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi, '')\n        .replace(/<noscript\\b[^>]*>[\\s\\S]*?<\\/noscript>/gi, '')\n        .replace(/<template\\b[^>]*>[\\s\\S]*?<\\/template>/gi, '')\n        .replace(/<[^>]*>/g, '');\n}\n",
+    "after": ""
+  },
+  {
+    "commit": "d17363e2",
+    "file": "chathistory.js",
+    "status": "review",
+    "before": "function stripHtmlToPlainText(value) {\n    const text = String(value == null ? '' : value);\n    try {\n        if (typeof DOMParser !== 'undefined') {\n            const doc = new DOMParser().parseFromString(text, 'text/html');\n            if (doc && doc.body) {\n                doc.body.querySelectorAll('script,style,noscript,template').forEach(node => node.remove());\n                return removeHtmlTagsFromPlainText(doc.body.textContent || '');\n            }\n        }\n    } catch (e) {}\n    return removeHtmlTagsFromPlainText(text);\n}\n",
+    "after": "\n\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "chathistory.js",
+    "status": "review",
+    "before": "    return escapeHtml(stripHtmlToPlainText(value));\n",
+    "after": "    return escapeHtml(value);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "chathistory.js",
+    "status": "already",
+    "before": "                                    <p>${m.chatmessage}</p>\n                                    ${m.hasDonation ? `<p>Donation: ${m.hasDonation}</p>` : ''}\n",
+    "after": "                                    <p>${m.textonly ? escapeHtml(m.chatmessage || '') : (m.chatmessage || '')}</p>\n                                    ${m.hasDonation ? `<p>Donation: ${escapeHtml(m.hasDonation)}</p>` : ''}\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "cohost-overlay.html",
+    "status": "applied",
+    "before": "\t<meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "cohost.html",
+    "status": "already",
+    "before": "\t\t<meta name=\"robots\" content=\"index, follow\" />\n",
+    "after": "\t\t<meta name=\"robots\" content=\"noindex, follow\">\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "cohost.html",
+    "status": "review",
+    "before": "\t\t\t\t\t${sources\n\t\t\t\t\t\t.map(\n\t\t\t\t\t\t\t({ id, name, thumbnail, display_id, appIcon }) => `\n\t\t\t\t\t  <li class=\"desktop-capturer-selection__item\">\n\t\t\t\t\t\t<button class=\"desktop-capturer-click desktop-capturer-selection__btn\" data-id=\"${id}\" title=\"${name}\">\n\t\t\t\t\t\t  <img class=\"desktop-capturer-selection__thumbnail\" src=\"${thumbnail.toDataURL()}\" alt=\"\" />\n\t\t\t\t\t\t  <span class=\"desktop-capturer-selection__name\">${name}</span>\n\t\t\t\t\t\t</button>\n\t\t\t\t\t  </li>\n\t\t\t\t\t`\n\t\t\t\t\t\t)\n\t\t\t\t\t\t.join(\"\")}\n",
+    "after": ""
+  },
+  {
+    "commit": "d17363e2",
+    "file": "cohost.html",
+    "status": "applied",
+    "before": "",
+    "after": "\t\t\t\t\t\t\tconst sourceRows = document.createDocumentFragment();\n\t\t\t\t\t\t\tsources.forEach(({ id, name, thumbnail }) => {\n\t\t\t\t\t\t\t\tconst item = document.createElement(\"li\");\n\t\t\t\t\t\t\t\titem.className = \"desktop-capturer-selection__item\";\n\t\t\t\t\t\t\t\tconst button = document.createElement(\"button\");\n\t\t\t\t\t\t\t\tbutton.className = \"desktop-capturer-click desktop-capturer-selection__btn\";\n\t\t\t\t\t\t\t\tbutton.dataset.id = id;\n\t\t\t\t\t\t\t\t// Window titles can come from untrusted webpages; keep them literal in both contexts.\n\t\t\t\t\t\t\t\tbutton.title = name;\n\t\t\t\t\t\t\t\tconst image = document.createElement(\"img\");\n\t\t\t\t\t\t\t\timage.className = \"desktop-capturer-selection__thumbnail\";\n\t\t\t\t\t\t\t\timage.src = thumbnail.toDataURL();\n\t\t\t\t\t\t\t\timage.alt = \"\";\n\t\t\t\t\t\t\t\tconst label = document.createElement(\"span\");\n\t\t\t\t\t\t\t\tlabel.className = \"desktop-capturer-selection__name\";\n\t\t\t\t\t\t\t\tlabel.textContent = name;\n\t\t\t\t\t\t\t\tbutton.appendChild(image);\n\t\t\t\t\t\t\t\tbutton.appendChild(label);\n\t\t\t\t\t\t\t\titem.appendChild(button);\n\t\t\t\t\t\t\t\tsourceRows.appendChild(item);\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\tconst sourceList = selectionElem.querySelector(\".desktop-capturer-selection__list\");\n\t\t\t\t\t\t\tsourceList.insertBefore(sourceRows, sourceList.firstChild);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "confetti.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "credits.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\" />\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"./shared/utils/chatBadges.js\"></script>\n<script src=\"./shared/utils/chatHtml.js\"></script>\n<link rel=\"stylesheet\" href=\"./shared/utils/chatBadges.css\">\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\tfunction cohostHtmlToText(value) {\n",
+    "after": "\t\t\tfunction cohostHtmlToText(value, isHTML = true) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "",
+    "after": "\t\t\t\tif (!isHTML || !/[<&]/.test(value)) return String(value).replace(/\\s+/g, \" \").trim();\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\tvar div = document.createElement(\"div\");\n",
+    "after": "\t\t\t\t\tvar div = document.createElement(\"template\");\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\ttext = div.textContent || div.innerText || \"\";\n",
+    "after": "\t\t\t\t\ttext = div.content.textContent || \"\";\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\tvar text = cohostHtmlToText(raw.chatmessage || raw.message || raw.text || \"\");\n",
+    "after": "\t\t\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\t\t\tvar text = cohostHtmlToText(raw.chatmessage || raw.message || raw.text || \"\", !raw.textonly);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\ttext = cohostHtmlToText(messageNode ? messageNode.innerHTML : element.innerHTML);\n",
+    "after": "\t\t\t\t\ttext = cohostHtmlToText(messageNode ? messageNode.textContent : element.textContent, false);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "",
+    "after": "\t\t\t\t\treturn cohostHtmlToText(name, false) || \"Viewer\";\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\tvar value = cohostHtmlToText(text);\n",
+    "after": "\t\t\t\tvar value = cohostHtmlToText(text, false);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\tfunction buildCohostPrompt(mode, element) {\n",
+    "after": "\t\t\tfunction buildCohostPrompt(mode, element, messageText) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\tvar text = getCohostMessageText(element);\n",
+    "after": "\t\t\t\tvar text = typeof messageText === \"string\" ? messageText : getCohostMessageText(element);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\tvalue: buildCohostPrompt(mode, element),\n",
+    "after": "\t\t\t\t\tvalue: buildCohostPrompt(mode, element, text),\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\tpara.innerHTML = (msg.chatmessage||msg.message) + \" - <small><i>Sent: \" + timeSince(msg.timestamp) + \"</i></small>\";\n",
+    "after": "\t\t\t\t\t\tvar body = msg.chatmessage || msg.message || \"\";\n\t\t\t\t\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\t\t\t\t\tpara.innerHTML = (msg.textonly ? escapeHtml(body) : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(body) : escapeHtml(body))) + \" - <small><i>Sent: \" + timeSince(msg.timestamp) + \"</i></small>\";\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\tfunction removeHtmlTagsFromPlainTextField(value) {\n\t\t\t\treturn String(value || \"\")\n\t\t\t\t\t.replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi, \"\")\n\t\t\t\t\t.replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi, \"\")\n\t\t\t\t\t.replace(/<noscript\\b[^>]*>[\\s\\S]*?<\\/noscript>/gi, \"\")\n\t\t\t\t\t.replace(/<template\\b[^>]*>[\\s\\S]*?<\\/template>/gi, \"\")\n\t\t\t\t\t.replace(/<[^>]*>/g, \"\");\n\t\t\t}\n",
+    "after": "\t\t\t\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "review",
+    "before": "\t\t\t\t\t\t\treturn removeHtmlTagsFromPlainTextField(doc.body.textContent || \"\");\n",
+    "after": "\t\t\t\t\t\t\treturn doc.body.textContent || \"\";\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\tlet tmp = document.createElement(\"DIV\");\n",
+    "after": "\t\t\t\tlet tmp = document.createElement(\"template\");\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "review",
+    "before": "\t\t\t\treturn removeHtmlTagsFromPlainTextField(tmp.textContent || tmp.innerText || \"\");\n",
+    "after": "\t\t\t\treturn tmp.content.textContent || \"\";\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "review",
+    "before": "\t\t\t\tmessageText = stripHtmlFunction(messageText).trim().toLowerCase();\n",
+    "after": "\t\t\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\t\t\tmessageText = (data.textContent || data.textonly ? messageText : stripHtmlFunction(messageText)).trim().toLowerCase();\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\tfunction sanitizePlainTextAlertFields(data) {\n\t\t\t\tif (!data) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\t[\"hasDonation\", \"donation\", \"membership\", \"hasMembership\", \"subtitle\", \"title\"].forEach(function (field) {\n\t\t\t\t\tif (typeof data[field] === \"string\") {\n\t\t\t\t\t\tdata[field] = stripHtmlFunction(data[field]);\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t}\n",
+    "after": "\t\t\t\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\tfunction isAllCapsMessage(text) {\n",
+    "after": "\t\t\tfunction isAllCapsMessage(text, isHTML = true) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\ttext = stripHtmlFunction(text).replace(/\\s\\s+/g, \" \").trim();\n",
+    "after": "\t\t\t\ttext = (isHTML ? stripHtmlFunction(text) : text).replace(/\\s\\s+/g, \" \").trim();\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\tfunction isEmojiOnly(str) {\n",
+    "after": "\t\t\tfunction isEmojiOnly(str, isHTML = true) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\tconst textContent = strippedStr.replace(/<[^>]*>/g, '');\n",
+    "after": "\t\t\t\tconst textContent = isHTML ? strippedStr.replace(/<[^>]*>/g, '') : strippedStr;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "review",
+    "before": "\t\t\t\t\tsanitizePlainTextAlertFields(data);\n",
+    "after": ""
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\t\tdata.chatmessage = stripHtmlFunction(data.chatmessage);\n",
+    "after": "\t\t\t\t\t\t\t// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.\n\t\t\t\t\t\t\tif (!data.textonly) {\n\t\t\t\t\t\t\t\tdata.chatmessage = stripHtmlFunction(data.chatmessage);\n\t\t\t\t\t\t\t\tif (data.initial) data.initial = stripHtmlFunction(data.initial);\n\t\t\t\t\t\t\t\tif (data.reply) data.reply = stripHtmlFunction(data.reply);\n\t\t\t\t\t\t\t\t// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.\n\t\t\t\t\t\t\t\tdata.textonly = true;\n\t\t\t\t\t\t\t}\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "review",
+    "before": "\t\t\t\t\t\t\tdata.chatmessage = \"<i>\" + data.chatmessage + \"</i>\";\n",
+    "after": ""
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\tif (hideAllCaps && data.chatmessage && isAllCapsMessage(data.chatmessage)) {\n",
+    "after": "\t\t\t\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\t\t\t\tif (hideAllCaps && data.chatmessage && isAllCapsMessage(data.chatmessage, !data.textonly)) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "",
+    "after": "\t\t\t\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\t\t\t\tconst plainChatMessage = (hideshortmessages || hideNumbers) && !data.contentimg && !data.hasDonation\n\t\t\t\t\t\t? (data.textContent || (data.textonly ? chatmessage : stripHtmlFunction(chatmessage)) || \"\").trim() : \"\";\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\tif (chatmessage.replace(/(<([^>]+)>)/ig, \"\").length < hideshortmessages){\n",
+    "after": "\t\t\t\t\t\tif (plainChatMessage.length < hideshortmessages){\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "review",
+    "before": "\t\t\t\t\tconst plainChatMessage = (data.textContent || data.chatmessage || \"\").replace(/<[^>]*>/g, \"\").trim();\n",
+    "after": ""
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\tif (isEmojiOnly(data.chatmessage)) {\n",
+    "after": "\t\t\t\t\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\t\t\t\t\tif (isEmojiOnly(data.chatmessage, !data.textonly)) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "",
+    "after": "\t\t\t\t\tif (NormalizeText && chatmessage) {\n\t\t\t\t\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\t\t\t\t\tchatmessage = normalizeText(chatmessage, !data.textonly && !stripHTML);\n\t\t\t\t\t}\n\n\t\t\t\t\t// textonly=true: escape only the local display copy for this HTML template; raw data.chatmessage stays literal. This is output encoding, not re-sanitization.\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "review",
+    "before": "\t\t\t\t\t\tnameColor = \"style='color:\" + dockNameColor + \";'\";\n",
+    "after": "\t\t\t\t\t\tnameColor = \"style='color:\" + escapeAttributeValue(dockNameColor) + \";'\";\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "review",
+    "before": "\t\t\t\t\t\t\tnameColor = \"style='color:\" + dockNameColor + \";display: flex;'\";\n",
+    "after": "\t\t\t\t\t\t\tnameColor = \"style='color:\" + escapeAttributeValue(dockNameColor) + \";display: flex;'\";\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\tif (giveVIPBadge && vip){\n\t\t\t\t\t\tif (!data.chatbadges){\n\t\t\t\t\t\t\tdata.chatbadges = [];\n\t\t\t\t\t\t}\n\t\t\t\t\t\tdata.chatbadges.push(\"./icons/vip.png\");\n",
+    "after": "\t\t\t\t\tvar displayBadges = SocialStreamBadges.toArray(data.chatbadges);\n\t\t\t\t\tif (giveVIPBadge && vip) {\n\t\t\t\t\t\tdisplayBadges.push(\"./icons/vip.png\");\n\t\t\t\t\t\tdata.chatbadges = displayBadges;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "review",
+    "before": "\n\t\t\t\t\tif (data.chatbadges && limitbadges !== false) {\n\t\t\t\t\t\ttry {\n\t\t\t\t\t\t\tdata.chatbadges = data.chatbadges.slice(0, limitbadges);\n\t\t\t\t\t\t} catch (e) {}\n\t\t\t\t\t}\n\n\t\t\t\t\tif (data.chatbadges && showbadges) {\n\t\t\t\t\t\tif (typeof data.chatbadges == \"string\"){\n\t\t\t\t\t\t\tchatbadges = data.chatbadges;\n\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\tdata.chatbadges.forEach(badge => {\n\t\t\t\t\t\t\t\tif (typeof badge == \"object\") {\n\t\t\t\t\t\t\t\t\tif (badge.type && badge.type == \"img\" && badge.src) {\n\t\t\t\t\t\t\t\t\t\tif (badge.bgcolor) {\n\t\t\t\t\t\t\t\t\t\t\tchatbadges += \"<img class='hl-badge' style='background-color:\" + badge.bgcolor + \";' src='\" + badge.src + \"' />\";\n\t\t\t\t\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\t\t\t\t\tchatbadges += \"<img class='hl-badge' src='\" + badge.src + \"' />\";\n\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t} else if (badge.type && badge.type == \"svg\" && badge.html) {\n\t\t\t\t\t\t\t\t\t\tchatbadges += \"<span class='hl-badge svg'>\" + badge.html + \"</span>\";\n\t\t\t\t\t\t\t\t\t} else if ((badge.type == \"text\" || badge.type == \"badge\") && badge.text) {\n\t\t\t\t\t\t\t\t\t\tchatbadges += \"<span class='hl-badge textbadge'>\" + badge.text + \"</span>\";\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\t\t\tchatbadges += \"<img class='hl-badge' src='\" + badge + \"' />\";\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n",
+    "after": "\t\t\t\t\tchatbadges = showbadges ? SocialStreamBadges.render(displayBadges, { className: \"hl-badge\", limit: limitbadges }) : \"\";\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "",
+    "after": "\t\t\t\t\t// Final HTML-only display check for older/custom senders; do not trust URL version.\n\t\t\t\t\t// textonly=true is already escaped literal text here and must bypass HTML sanitization.\n\t\t\t\t\t// Check the local copy once, before trimming can create DOM; leave the stored body alone.\n\t\t\t\t\tif (!data.textonly && chatmessage) {\n\t\t\t\t\t\tchatmessage = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(chatmessage) : escapeHtml(chatmessage);\n\t\t\t\t\t}\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "applied",
+    "before": "\t\t\t\t\tif (NormalizeText && chatmessage){\n\t\t\t\t\t\tchatmessage = normalizeText(data.chatmessage, data.textonly || false);\n\t\t\t\t\t}\n",
+    "after": ""
+  },
+  {
+    "commit": "d17363e2",
+    "file": "dock.html",
+    "status": "already",
+    "before": "",
+    "after": "\t\t\t\t\tif (data.event && !stripHTML && contentElement) {\n\t\t\t\t\t\t// Italics are display styling in either mode; never append <i> to a textonly payload.\n\t\t\t\t\t\tcontentElement.style.fontStyle = \"italic\";\n\t\t\t\t\t}\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "events.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "events.html",
+    "status": "already",
+    "before": "",
+    "after": "\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\tlet messageIsHTML = !!message && !data.textonly;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "events.html",
+    "status": "already",
+    "before": "",
+    "after": "\t\t\tmessageIsHTML = false;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "events.html",
+    "status": "already",
+    "before": "",
+    "after": "\t\t\tmessageIsHTML = false;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "events.html",
+    "status": "already",
+    "before": "",
+    "after": "\t\t\tmessageIsHTML,\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "events.html",
+    "status": "review",
+    "before": "\t\tif (data.textonly === true) {\n",
+    "after": "\t\tif (!display.messageIsHTML) {\n\t\t\t// textonly chat and generated summaries stay literal; tag/entity-looking text is not markup.\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "featured.html",
+    "status": "already",
+    "before": "\t\t\tfunction removeHtmlTagsFromPlainTextField(value) {\n\t\t\t\treturn String(value || \"\")\n\t\t\t\t\t.replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi, \"\")\n\t\t\t\t\t.replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi, \"\")\n\t\t\t\t\t.replace(/<noscript\\b[^>]*>[\\s\\S]*?<\\/noscript>/gi, \"\")\n\t\t\t\t\t.replace(/<template\\b[^>]*>[\\s\\S]*?<\\/template>/gi, \"\")\n\t\t\t\t\t.replace(/<[^>]*>/g, \"\");\n\t\t\t}\n",
+    "after": "\t\t\t\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "featured.html",
+    "status": "already",
+    "before": "\t\t\tfunction plainTextField(value) {\n\t\t\t\tif (typeof value !== \"string\") {\n\t\t\t\t\treturn value;\n\t\t\t\t}\n\t\t\t\tif (typeof stripHtmlToPlainText === \"function\") {\n\t\t\t\t\treturn stripHtmlToPlainText(value);\n\t\t\t\t}\n\t\t\t\ttry {\n\t\t\t\t\tif (typeof DOMParser !== \"undefined\") {\n\t\t\t\t\t\tvar doc = new DOMParser().parseFromString(value, \"text/html\");\n\t\t\t\t\t\tif (doc && doc.body) {\n\t\t\t\t\t\t\tvar blocked = doc.body.querySelectorAll(\"script,style,noscript,template\");\n\t\t\t\t\t\t\tfor (var i = 0; i < blocked.length; i++) {\n\t\t\t\t\t\t\t\tblocked[i].remove();\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\treturn removeHtmlTagsFromPlainTextField(doc.body.textContent || \"\");\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t} catch (e) {}\n\t\t\t\treturn removeHtmlTagsFromPlainTextField(value);\n\t\t\t}\n",
+    "after": "\t\t\t\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "featured.html",
+    "status": "already",
+    "before": "\t\t\tfunction sanitizePlainTextAlertFields(data) {\n\t\t\t\tif (!data) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\t[\"hasDonation\", \"donation\", \"membership\", \"hasMembership\", \"subtitle\", \"title\"].forEach(function (field) {\n\t\t\t\t\tif (typeof data[field] === \"string\") {\n\t\t\t\t\t\tdata[field] = plainTextField(data[field]);\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t}\n",
+    "after": "\t\t\t\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "featured.html",
+    "status": "review",
+    "before": "\t\t\tconst validTLDs = new Set([\"a\",\"aaa\",\"aarp\",\"abb\",\"abbott\",\"abbvie\",\"abc\",\"able\",\"abogado\",\"abudhabi\",\"ac\",\"academy\",\"accenture\",\"accountant\",\"accountants\",\"aco\",\"actor\",\"ad\",\"ads\",\"adult\",\"ae\",\"aeg\",\"aero\",\"aetna\",\"af\",\"afl\",\"africa\",\"ag\",\"agakhan\",\"agency\",\"ai\",\"aig\",\"airbus\",\"airforce\",\"airtel\",\"akdn\",\"al\",\"alibaba\",\"alipay\",\"allfinanz\",\"allstate\",\"ally\",\"alsace\",\"alstom\",\"am\",\"amazon\",\"americanexpress\",\"americanfamily\",\"amex\",\"amfam\",\"amica\",\"amsterdam\",\"analytics\",\"android\",\"anquan\",\"anz\",\"ao\",\"aol\",\"apartments\",\"app\",\"apple\",\"aq\",\"aquarelle\",\"ar\",\"arab\",\"aramco\",\"archi\",\"army\",\"arpa\",\"art\",\"arte\",\"as\",\"asda\",\"asia\",\"associates\",\"at\",\"athleta\",\"attorney\",\"au\",\"auction\",\"audi\",\"audible\",\"audio\",\"auspost\",\"author\",\"auto\",\"autos\",\"aw\",\"aws\",\"ax\",\"axa\",\"az\",\"azure\",\"b\",\"ba\",\"baby\",\"baidu\",\"banamex\",\"band\",\"bank\",\"bar\",\"barcelona\",\"barclaycard\",\"barclays\",\"barefoot\",\"bargains\",\"baseball\",\"basketball\",\"bauhaus\",\"bayern\",\"bb\",\"bbc\",\"bbt\",\"bbva\",\"bcg\",\"bcn\",\"bd\",\"be\",\"beats\",\"beauty\",\"beer\",\"bentley\",\"berlin\",\"best\",\"bestbuy\",\"bet\",\"bf\",\"bg\",\"bh\",\"bharti\",\"bi\",\"bible\",\"bid\",\"bike\",\"bing\",\"bingo\",\"bio\",\"biz\",\"bj\",\"black\",\"blackfriday\",\"blockbuster\",\"blog\",\"bloomberg\",\"blue\",\"bm\",\"bms\",\"bmw\",\"bn\",\"bnpparibas\",\"bo\",\"boats\",\"boehringer\",\"bofa\",\"bom\",\"bond\",\"boo\",\"book\",\"booking\",\"bosch\",\"bostik\",\"boston\",\"bot\",\"boutique\",\"box\",\"br\",\"bradesco\",\"bridgestone\",\"broadway\",\"broker\",\"brother\",\"brussels\",\"bs\",\"bt\",\"build\",\"builders\",\"business\",\"buy\",\"buzz\",\"bv\",\"bw\",\"by\",\"bz\",\"bzh\",\"c\",\"ca\",\"cab\",\"cafe\",\"cal\",\"call\",\"calvinklein\",\"cam\",\"camera\",\"camp\",\"canon\",\"capetown\",\"capital\",\"capitalone\",\"car\",\"caravan\",\"cards\",\"care\",\"career\",\"careers\",\"cars\",\"casa\",\"case\",\"cash\",\"casino\",\"cat\",\"catering\",\"catholic\",\"cba\",\"cbn\",\"cbre\",\"cc\",\"cd\",\"center\",\"ceo\",\"cern\",\"cf\",\"cfa\",\"cfd\",\"cg\",\"ch\",\"chanel\",\"channel\",\"charity\",\"chase\",\"chat\",\"cheap\",\"chintai\",\"christmas\",\"chrome\",\"church\",\"ci\",\"cipriani\",\"circle\",\"cisco\",\"citadel\",\"citi\",\"citic\",\"city\",\"ck\",\"cl\",\"claims\",\"cleaning\",\"click\",\"clinic\",\"clinique\",\"clothing\",\"cloud\",\"club\",\"clubmed\",\"cm\",\"cn\",\"co\",\"coach\",\"codes\",\"coffee\",\"college\",\"cologne\",\"com\",\"commbank\",\"community\",\"company\",\"compare\",\"computer\",\"comsec\",\"condos\",\"construction\",\"consulting\",\"contact\",\"contractors\",\"cooking\",\"cool\",\"coop\",\"corsica\",\"country\",\"coupon\",\"coupons\",\"courses\",\"cpa\",\"cr\",\"credit\",\"creditcard\",\"creditunion\",\"cricket\",\"crown\",\"crs\",\"cruise\",\"cruises\",\"cu\",\"cuisinella\",\"cv\",\"cw\",\"cx\",\"cy\",\"cymru\",\"cyou\",\"cz\",\"d\",\"dabur\",\"dad\",\"dance\",\"data\",\"date\",\"dating\",\"datsun\",\"day\",\"dclk\",\"dds\",\"de\",\"deal\",\"dealer\",\"deals\",\"degree\",\"delivery\",\"dell\",\"deloitte\",\"delta\",\"democrat\",\"dental\",\"dentist\",\"desi\",\"design\",\"dev\",\"dhl\",\"diamonds\",\"diet\",\"digital\",\"direct\",\"directory\",\"discount\",\"discover\",\"dish\",\"diy\",\"dj\",\"dk\",\"dm\",\"dnp\",\"do\",\"docs\",\"doctor\",\"dog\",\"domains\",\"dot\",\"download\",\"drive\",\"dtv\",\"dubai\",\"dunlop\",\"dupont\",\"durban\",\"dvag\",\"dvr\",\"dz\",\"e\",\"earth\",\"eat\",\"ec\",\"eco\",\"edeka\",\"edu\",\"education\",\"ee\",\"eg\",\"email\",\"emerck\",\"energy\",\"engineer\",\"engineering\",\"enterprises\",\"epson\",\"equipment\",\"er\",\"ericsson\",\"erni\",\"es\",\"esq\",\"estate\",\"et\",\"eu\",\"eurovision\",\"eus\",\"events\",\"exchange\",\"expert\",\"exposed\",\"express\",\"extraspace\",\"f\",\"fage\",\"fail\",\"fairwinds\",\"faith\",\"family\",\"fan\",\"fans\",\"farm\",\"farmers\",\"fashion\",\"fast\",\"fedex\",\"feedback\",\"ferrari\",\"ferrero\",\"fi\",\"fidelity\",\"fido\",\"film\",\"final\",\"finance\",\"financial\",\"fire\",\"firestone\",\"firmdale\",\"fish\",\"fishing\",\"fit\",\"fitness\",\"fj\",\"fk\",\"flickr\",\"flights\",\"flir\",\"florist\",\"flowers\",\"fly\",\"fm\",\"fo\",\"foo\",\"food\",\"football\",\"ford\",\"forex\",\"forsale\",\"forum\",\"foundation\",\"fox\",\"fr\",\"free\",\"fresenius\",\"frl\",\"frogans\",\"frontier\",\"ftr\",\"fujitsu\",\"fun\",\"fund\",\"furniture\",\"futbol\",\"fyi\",\"g\",\"ga\",\"gal\",\"gallery\",\"gallo\",\"gallup\",\"game\",\"games\",\"gap\",\"garden\",\"gay\",\"gb\",\"gbiz\",\"gd\",\"gdn\",\"ge\",\"gea\",\"gent\",\"genting\",\"george\",\"gf\",\"gg\",\"ggee\",\"gh\",\"gi\",\"gift\",\"gifts\",\"gives\",\"giving\",\"gl\",\"glass\",\"gle\",\"global\",\"globo\",\"gm\",\"gmail\",\"gmbh\",\"gmo\",\"gmx\",\"gn\",\"godaddy\",\"gold\",\"goldpoint\",\"golf\",\"goo\",\"goodyear\",\"goog\",\"google\",\"gop\",\"got\",\"gov\",\"gp\",\"gq\",\"gr\",\"grainger\",\"graphics\",\"gratis\",\"green\",\"gripe\",\"grocery\",\"group\",\"gs\",\"gt\",\"gu\",\"gucci\",\"guge\",\"guide\",\"guitars\",\"guru\",\"gw\",\"gy\",\"h\",\"hair\",\"hamburg\",\"hangout\",\"haus\",\"hbo\",\"hdfc\",\"hdfcbank\",\"health\",\"healthcare\",\"help\",\"helsinki\",\"here\",\"hermes\",\"hiphop\",\"hisamitsu\",\"hitachi\",\"hiv\",\"hk\",\"hkt\",\"hm\",\"hn\",\"hockey\",\"holdings\",\"holiday\",\"homedepot\",\"homegoods\",\"homes\",\"homesense\",\"honda\",\"horse\",\"hospital\",\"host\",\"hosting\",\"hot\",\"hotels\",\"hotmail\",\"house\",\"how\",\"hr\",\"hsbc\",\"ht\",\"hu\",\"hughes\",\"hyatt\",\"hyundai\",\"i\",\"ibm\",\"icbc\",\"ice\",\"icu\",\"id\",\"ie\",\"ieee\",\"ifm\",\"ikano\",\"il\",\"im\",\"imamat\",\"imdb\",\"immo\",\"immobilien\",\"in\",\"inc\",\"industries\",\"infiniti\",\"info\",\"ing\",\"ink\",\"institute\",\"insurance\",\"insure\",\"int\",\"international\",\"intuit\",\"investments\",\"io\",\"ipiranga\",\"iq\",\"ir\",\"irish\",\"is\",\"ismaili\",\"ist\",\"istanbul\",\"it\",\"itau\",\"itv\",\"j\",\"jaguar\",\"java\",\"jcb\",\"je\",\"jeep\",\"jetzt\",\"jewelry\",\"jio\",\"jll\",\"jm\",\"jmp\",\"jnj\",\"jo\",\"jobs\",\"joburg\",\"jot\",\"joy\",\"jp\",\"jpmorgan\",\"jprs\",\"juegos\",\"juniper\",\"k\",\"kaufen\",\"kddi\",\"ke\",\"kerryhotels\",\"kerrylogistics\",\"kerryproperties\",\"kfh\",\"kg\",\"kh\",\"ki\",\"kia\",\"kids\",\"kim\",\"kindle\",\"kitchen\",\"kiwi\",\"km\",\"kn\",\"koeln\",\"komatsu\",\"kosher\",\"kp\",\"kpmg\",\"kpn\",\"kr\",\"krd\",\"kred\",\"kuokgroup\",\"kw\",\"ky\",\"kyoto\",\"kz\",\"l\",\"la\",\"lacaixa\",\"lamborghini\",\"lamer\",\"lancaster\",\"land\",\"landrover\",\"lanxess\",\"lasalle\",\"lat\",\"latino\",\"latrobe\",\"law\",\"lawyer\",\"lb\",\"lc\",\"lds\",\"lease\",\"leclerc\",\"lefrak\",\"legal\",\"lego\",\"lexus\",\"lgbt\",\"li\",\"lidl\",\"life\",\"lifeinsurance\",\"lifestyle\",\"lighting\",\"like\",\"lilly\",\"limited\",\"limo\",\"lincoln\",\"link\",\"lipsy\",\"live\",\"living\",\"lk\",\"llc\",\"llp\",\"loan\",\"loans\",\"locker\",\"locus\",\"lol\",\"london\",\"lotte\",\"lotto\",\"love\",\"lpl\",\"lplfinancial\",\"lr\",\"ls\",\"lt\",\"ltd\",\"ltda\",\"lu\",\"lundbeck\",\"luxe\",\"luxury\",\"lv\",\"ly\",\"m\",\"ma\",\"madrid\",\"maif\",\"maison\",\"makeup\",\"man\",\"management\",\"mango\",\"map\",\"market\",\"marketing\",\"markets\",\"marriott\",\"marshalls\",\"mattel\",\"mba\",\"mc\",\"mckinsey\",\"md\",\"me\",\"med\",\"media\",\"meet\",\"melbourne\",\"meme\",\"memorial\",\"men\",\"menu\",\"merckmsd\",\"mg\",\"mh\",\"miami\",\"microsoft\",\"mil\",\"mini\",\"mint\",\"mit\",\"mitsubishi\",\"mk\",\"ml\",\"mlb\",\"mls\",\"mm\",\"mma\",\"mn\",\"mo\",\"mobi\",\"mobile\",\"moda\",\"moe\",\"moi\",\"mom\",\"monash\",\"money\",\"monster\",\"mormon\",\"mortgage\",\"moscow\",\"moto\",\"motorcycles\",\"mov\",\"movie\",\"mp\",\"mq\",\"mr\",\"ms\",\"msd\",\"mt\",\"mtn\",\"mtr\",\"mu\",\"museum\",\"music\",\"mv\",\"mw\",\"mx\",\"my\",\"mz\",\"n\",\"na\",\"nab\",\"nagoya\",\"name\",\"navy\",\"nba\",\"nc\",\"ne\",\"nec\",\"net\",\"netbank\",\"netflix\",\"network\",\"neustar\",\"new\",\"news\",\"next\",\"nextdirect\",\"nexus\",\"nf\",\"nfl\",\"ng\",\"ngo\",\"nhk\",\"ni\",\"nico\",\"nike\",\"nikon\",\"ninja\",\"nissan\",\"nissay\",\"nl\",\"no\",\"nokia\",\"norton\",\"now\",\"nowruz\",\"nowtv\",\"np\",\"nr\",\"nra\",\"nrw\",\"ntt\",\"nu\",\"nyc\",\"nz\",\"o\",\"obi\",\"observer\",\"office\",\"okinawa\",\"olayan\",\"olayangroup\",\"ollo\",\"om\",\"omega\",\"one\",\"ong\",\"onl\",\"online\",\"ooo\",\"open\",\"oracle\",\"orange\",\"org\",\"organic\",\"origins\",\"osaka\",\"otsuka\",\"ott\",\"ovh\",\"p\",\"pa\",\"page\",\"panasonic\",\"paris\",\"pars\",\"partners\",\"parts\",\"party\",\"pay\",\"pccw\",\"pe\",\"pet\",\"pf\",\"pfizer\",\"pg\",\"ph\",\"pharmacy\",\"phd\",\"philips\",\"phone\",\"photo\",\"photography\",\"photos\",\"physio\",\"pics\",\"pictet\",\"pictures\",\"pid\",\"pin\",\"ping\",\"pink\",\"pioneer\",\"pizza\",\"pk\",\"pl\",\"place\",\"play\",\"playstation\",\"plumbing\",\"plus\",\"pm\",\"pn\",\"pnc\",\"pohl\",\"poker\",\"politie\",\"porn\",\"post\",\"pr\",\"pramerica\",\"praxi\",\"press\",\"prime\",\"pro\",\"prod\",\"productions\",\"prof\",\"progressive\",\"promo\",\"properties\",\"property\",\"protection\",\"pru\",\"prudential\",\"ps\",\"pt\",\"pub\",\"pw\",\"pwc\",\"py\",\"q\",\"qa\",\"qpon\",\"quebec\",\"quest\",\"r\",\"racing\",\"radio\",\"re\",\"read\",\"realestate\",\"realtor\",\"realty\",\"recipes\",\"red\",\"redstone\",\"redumbrella\",\"rehab\",\"reise\",\"reisen\",\"reit\",\"reliance\",\"ren\",\"rent\",\"rentals\",\"repair\",\"report\",\"republican\",\"rest\",\"restaurant\",\"review\",\"reviews\",\"rexroth\",\"rich\",\"richardli\",\"ricoh\",\"ril\",\"rio\",\"rip\",\"ro\",\"rocks\",\"rodeo\",\"rogers\",\"room\",\"rs\",\"rsvp\",\"ru\",\"rugby\",\"ruhr\",\"run\",\"rw\",\"rwe\",\"ryukyu\",\"s\",\"sa\",\"saarland\",\"safe\",\"safety\",\"sakura\",\"sale\",\"salon\",\"samsclub\",\"samsung\",\"sandvik\",\"sandvikcoromant\",\"sanofi\",\"sap\",\"sarl\",\"sas\",\"save\",\"saxo\",\"sb\",\"sbi\",\"sbs\",\"sc\",\"scb\",\"schaeffler\",\"schmidt\",\"scholarships\",\"school\",\"schule\",\"schwarz\",\"science\",\"scot\",\"sd\",\"se\",\"search\",\"seat\",\"secure\",\"security\",\"seek\",\"select\",\"sener\",\"services\",\"seven\",\"sew\",\"sex\",\"sexy\",\"sfr\",\"sg\",\"sh\",\"shangrila\",\"sharp\",\"shell\",\"shia\",\"shiksha\",\"shoes\",\"shop\",\"shopping\",\"shouji\",\"show\",\"si\",\"silk\",\"sina\",\"singles\",\"site\",\"sj\",\"sk\",\"ski\",\"skin\",\"sky\",\"skype\",\"sl\",\"sling\",\"sm\",\"smart\",\"smile\",\"sn\",\"sncf\",\"so\",\"soccer\",\"social\",\"softbank\",\"software\",\"sohu\",\"solar\",\"solutions\",\"song\",\"sony\",\"soy\",\"spa\",\"space\",\"sport\",\"spot\",\"sr\",\"srl\",\"ss\",\"st\",\"stada\",\"staples\",\"star\",\"statebank\",\"statefarm\",\"stc\",\"stcgroup\",\"stockholm\",\"storage\",\"store\",\"stream\",\"studio\",\"study\",\"style\",\"su\",\"sucks\",\"supplies\",\"supply\",\"support\",\"surf\",\"surgery\",\"suzuki\",\"sv\",\"swatch\",\"swiss\",\"sx\",\"sy\",\"sydney\",\"systems\",\"sz\",\"t\",\"tab\",\"taipei\",\"talk\",\"taobao\",\"target\",\"tatamotors\",\"tatar\",\"tattoo\",\"tax\",\"taxi\",\"tc\",\"tci\",\"td\",\"tdk\",\"team\",\"tech\",\"technology\",\"tel\",\"temasek\",\"tennis\",\"teva\",\"tf\",\"tg\",\"th\",\"thd\",\"theater\",\"theatre\",\"tiaa\",\"tickets\",\"tienda\",\"tips\",\"tires\",\"tirol\",\"tj\",\"tjmaxx\",\"tjx\",\"tk\",\"tkmaxx\",\"tl\",\"tm\",\"tmall\",\"tn\",\"to\",\"today\",\"tokyo\",\"tools\",\"top\",\"toray\",\"toshiba\",\"total\",\"tours\",\"town\",\"toyota\",\"toys\",\"tr\",\"trade\",\"trading\",\"training\",\"travel\",\"travelers\",\"travelersinsurance\",\"trust\",\"trv\",\"tt\",\"tube\",\"tui\",\"tunes\",\"tushu\",\"tv\",\"tvs\",\"tw\",\"tz\",\"u\",\"ua\",\"ubank\",\"ubs\",\"ug\",\"uk\",\"unicom\",\"university\",\"uno\",\"uol\",\"ups\",\"us\",\"uy\",\"uz\",\"v\",\"va\",\"vacations\",\"vana\",\"vanguard\",\"vc\",\"ve\",\"vegas\",\"ventures\",\"verisign\",\"verm\u00f6gensberater\",\"verm\u00f6gensberatung\",\"versicherung\",\"vet\",\"vg\",\"vi\",\"viajes\",\"video\",\"vig\",\"viking\",\"villas\",\"vin\",\"vip\",\"virgin\",\"visa\",\"vision\",\"viva\",\"vivo\",\"vlaanderen\",\"vn\",\"vodka\",\"volvo\",\"vote\",\"voting\",\"voto\",\"voyage\",\"vu\",\"w\",\"wales\",\"walmart\",\"walter\",\"wang\",\"wanggou\",\"watch\",\"watches\",\"weather\",\"weatherchannel\",\"webcam\",\"weber\",\"website\",\"wed\",\"wedding\",\"weibo\",\"weir\",\"wf\",\"whoswho\",\"wien\",\"wiki\",\"williamhill\",\"win\",\"windows\",\"wine\",\"winners\",\"wme\",\"wolterskluwer\",\"woodside\",\"work\",\"works\",\"world\",\"wow\",\"ws\",\"wtc\",\"wtf\",\"x\",\"xbox\",\"xerox\",\"xihuan\",\"xin\",\"xxx\",\"xyz\",\"y\",\"yachts\",\"yahoo\",\"yamaxun\",\"yandex\",\"ye\",\"yodobashi\",\"yoga\",\"yokohama\",\"you\",\"youtube\",\"yt\",\"yun\",\"z\",\"za\",\"zappos\",\"zara\",\"zero\",\"zip\",\"zm\",\"zone\",\"zuerich\",\"zw\",\"IDNs\",\"\u03b5\u03bb\",\"\u03b5\u03c5\",\"\u0431\u0433\",\"\u0431\u0435\u043b\",\"\u0434\u0435\u0442\u0438\",\"\u0435\u044e\",\"\u043a\u0430\u0442\u043e\u043b\u0438\u043a\",\"\u043a\u043e\u043c\",\"\u043c\u043a\u0434\",\"\u043c\u043e\u043d\",\"\u043c\u043e\u0441\u043a\u0432\u0430\",\"\u043e\u043d\u043b\u0430\u0439\u043d\",\"\u043e\u0440\u0433\",\"\u0440\u0443\u0441\",\"\u0440\u0444\",\"\u0441\u0430\u0439\u0442\",\"\u0441\u0440\u0431\",\"\u0443\u043a\u0440\",\"\u049b\u0430\u0437\",\"\u0570\u0561\u0575\",\"\u05d9\u05e9\u05e8\u05d0\u05dc\",\"\u05e7\u05d5\u05dd\",\"\u0627\u0628\u0648\u0638\u0628\u064a\",\"\u0627\u0631\u0627\u0645\u0643\u0648\",\"\u0627\u0644\u0627\u0631\u062f\u0646\",\"\u0627\u0644\u0628\u062d\u0631\u064a\u0646\",\"\u0627\u0644\u062c\u0632\u0627\u0626\u0631\",\"\u0627\u0644\u0633\u0639\u0648\u062f\u064a\u0629\",\"\u0627\u0644\u0639\u0644\u064a\u0627\u0646\",\"\u0627\u0644\u0645\u063a\u0631\u0628\",\"\u0627\u0645\u0627\u0631\u0627\u062a\",\"\u0627\u06cc\u0631\u0627\u0646\",\"\u0628\u0627\u0631\u062a\",\"\u0628\u0627\u0632\u0627\u0631\",\"\u0628\u064a\u062a\u0643\",\"\u0628\u06be\u0627\u0631\u062a\",\"\u062a\u0648\u0646\u0633\",\"\u0633\u0648\u062f\u0627\u0646\",\"\u0633\u0648\u0631\u064a\u0629\",\"\u0634\u0628\u0643\u0629\",\"\u0639\u0631\u0627\u0642\",\"\u0639\u0631\u0628\",\"\u0639\u0645\u0627\u0646\",\"\u0641\u0644\u0633\u0637\u064a\u0646\",\"\u0642\u0637\u0631\",\"\u0643\u0627\u062b\u0648\u0644\u064a\u0643\",\"\u0643\u0648\u0645\",\"\u0645\u0635\u0631\",\"\u0645\u0644\u064a\u0633\u064a\u0627\",\"\u0645\u0648\u0631\u064a\u062a\u0627\u0646\u064a\u0627\",\"\u0645\u0648\u0642\u0639\",\"\u0647\u0645\u0631\u0627\u0647\",\"\u067e\u0627\u0643\u0633\u062a\u0627\u0646\",\"\u067e\u0627\u06a9\u0633\u062a\u0627\u0646\",\"\u0680\u0627\u0631\u062a\",\"\u0915\u0949\u092e\",\"\u0928\u0947\u091f\",\"\u092d\u093e\u0930\u0924\",\"\u092d\u093e\u0930\u0924\u092e\u094d\",\"\u092d\u093e\u0930\u094b\u0924\",\"\u0938\u0902\u0917\u0920\u0928\",\"\u09ac\u09be\u0982\u09b2\u09be\",\"\u09ad\u09be\u09b0\u09a4\",\"\u09ad\u09be\u09f0\u09a4\",\"\u0a2d\u0a3e\u0a30\u0a24\",\"\u0aad\u0abe\u0ab0\u0aa4\",\"\u0b2d\u0b3e\u0b30\u0b24\",\"\u0b87\u0ba8\u0bcd\u0ba4\u0bbf\u0baf\u0bbe\",\"\u0b87\u0bb2\u0b99\u0bcd\u0b95\u0bc8\",\"\u0b9a\u0bbf\u0b99\u0bcd\u0b95\u0baa\u0bcd\u0baa\u0bc2\u0bb0\u0bcd\",\"\u0c2d\u0c3e\u0c30\u0c24\u0c4d\",\"\u0cad\u0cbe\u0cb0\u0ca4\",\"\u0d2d\u0d3e\u0d30\u0d24\u0d02\",\"\u0dbd\u0d82\u0d9a\u0dcf\",\"\u0e04\u0e2d\u0e21\",\"\u0e44\u0e17\u0e22\",\"\u0ea5\u0eb2\u0ea7\",\"\u10d2\u10d4\",\"\u307f\u3093\u306a\",\"\u30a2\u30de\u30be\u30f3\",\"\u30af\u30e9\u30a6\u30c9\",\"\u30b0\u30fc\u30b0\u30eb\",\"\u30b3\u30e0\",\"\u30b9\u30c8\u30a2\",\"\u30bb\u30fc\u30eb\",\"\u30d5\u30a1\u30c3\u30b7\u30e7\u30f3\",\"\u30dd\u30a4\u30f3\u30c8\",\"\u4e16\u754c\",\"\u4e2d\u4fe1\",\"\u4e2d\u56fd\",\"\u4e2d\u570b\",\"\u4e2d\u6587\u7f51\",\"\u4e9a\u9a6c\u900a\",\"\u4f01\u4e1a\",\"\u4f5b\u5c71\",\"\u4fe1\u606f\",\"\u5065\u5eb7\",\"\u516b\u5366\",\"\u516c\u53f8\",\"\u516c\u76ca\",\"\u53f0\u6e7e\",\"\u53f0\u7063\",\"\u5546\u57ce\",\"\u5546\u5e97\",\"\u5546\u6807\",\"\u5609\u91cc\",\"\u5609\u91cc\u5927\u9152\u5e97\",\"\u5728\u7ebf\",\"\u5927\u62ff\",\"\u5929\u4e3b\u6559\",\"\u5a31\u4e50\",\"\u5bb6\u96fb\",\"\u5e7f\u4e1c\",\"\u5fae\u535a\",\"\u6148\u5584\",\"\u6211\u7231\u4f60\",\"\u624b\u673a\",\"\u62db\u8058\",\"\u653f\u52a1\",\"\u653f\u5e9c\",\"\u65b0\u52a0\u5761\",\"\u65b0\u95fb\",\"\u65f6\u5c1a\",\"\u66f8\u7c4d\",\"\u673a\u6784\",\"\u6de1\u9a6c\u9521\",\"\u6e38\u620f\",\"\u6fb3\u9580\",\"\u70b9\u770b\",\"\u79fb\u52a8\",\"\u7ec4\u7ec7\u673a\u6784\",\"\u7f51\u5740\",\"\u7f51\u5e97\",\"\u7f51\u7ad9\",\"\u7f51\u7edc\",\"\u8054\u901a\",\"\u8c37\u6b4c\",\"\u8d2d\u7269\",\"\u901a\u8ca9\",\"\u96c6\u56e2\",\"\u96fb\u8a0a\u76c8\u79d1\",\"\u98de\u5229\u6d66\",\"\u98df\u54c1\",\"\u9910\u5385\",\"\u9999\u683c\u91cc\u62c9\",\"\u9999\u6e2f\",\"\ub2f7\ub137\",\"\ub2f7\ucef4\",\"\uc0bc\uc131\",\"\ud55c\uad6d\"]);\n\t\t\t\n",
+    "after": ""
+  },
+  {
+    "commit": "d17363e2",
+    "file": "featured.html",
+    "status": "review",
+    "before": "\t\t\t\t\tsanitizePlainTextAlertFields(data);\n",
+    "after": ""
+  },
+  {
+    "commit": "d17363e2",
+    "file": "featured.html",
+    "status": "already",
+    "before": "\t\t\t\t\t  styleOverride = ' style=\"' + styleOverride + '\"';\n",
+    "after": "\t\t\t\t\t  styleOverride = ' style=\"' + escapeAttributeValue(styleOverride) + '\"';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "featured.html",
+    "status": "already",
+    "before": "\t\t\t\t\t  styleOverrideName = 'style=\"' + styleOverrideName + '\"';\n",
+    "after": "\t\t\t\t\t  styleOverrideName = 'style=\"' + escapeAttributeValue(styleOverrideName) + '\"';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "featured.html",
+    "status": "applied",
+    "before": "\t\t\t\t\tvar chatbadges = \"\";\n\t\t\t\t\tif (data.chatbadges && showbadges) {\n\t\t\t\t\t  data.chatbadges.forEach(badge => {\n\t\t\t\t\t\tif (typeof badge == \"object\") {\n\t\t\t\t\t\t  if (badge.type && badge.type == \"img\" && badge.src) {\n\t\t\t\t\t\t\tchatbadges += \"<img class='hl-badge' src='\" + badge.src + \"' />\";\n\t\t\t\t\t\t  } else if (badge.type && badge.type == \"svg\" && badge.html) {\n\t\t\t\t\t\t\tchatbadges += \"<span class='hl-badge'>\" + badge.html + \"</span>\";\n\t\t\t\t\t\t  }\n\t\t\t\t\t\t} else {\n\t\t\t\t\t\t  chatbadges += \"<img class='hl-badge' src='\" + badge + \"' />\";\n\t\t\t\t\t\t}\n\t\t\t\t\t  });\n\t\t\t\t\t}\n",
+    "after": "\t\t\t\t\tvar chatbadges = showbadges ? SocialStreamBadges.render(data.chatbadges, { className: \"hl-badge\" }) : \"\";\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "featured.html",
+    "status": "applied",
+    "before": "",
+    "after": "\t\t\t\t\tif (!renderChatMessageAsText && !largeImage && renderedChatMessage) {\n\t\t\t\t\t\trenderedChatMessage = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(renderedChatMessage) : plainTextToHtml(renderedChatMessage);\n\t\t\t\t\t}\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "featured.html",
+    "status": "applied",
+    "before": "\t\t\t\t\t\tmessageDiv.innerHTML = data.chatmessage;\n",
+    "after": "\t\t\t\t\t\tmessageDiv.innerHTML = renderedChatMessage;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/chaosmode.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/chaosmode.html",
+    "status": "review",
+    "before": "    <link rel=\"icon\" href=\"./favicon.ico\" />\n",
+    "after": "    <link rel=\"icon\" href=\"../icons/favicon.ico\" type=\"image/x-icon\">\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/chatgarden.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/chatgarden.html",
+    "status": "review",
+    "before": "    <link rel=\"icon\" href=\"./favicon.ico\" />\n",
+    "after": "    <link rel=\"icon\" href=\"../icons/favicon.ico\" type=\"image/x-icon\">\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/chatwars.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/chatwars.html",
+    "status": "review",
+    "before": "    <link rel=\"icon\" href=\"./favicon.ico\" />\n",
+    "after": "    <link rel=\"icon\" href=\"../icons/favicon.ico\" type=\"image/x-icon\">\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/chickenroyale.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/colorsymphony.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/colorsymphony.html",
+    "status": "review",
+    "before": "    <link rel=\"icon\" href=\"./favicon.ico\" />\n",
+    "after": "    <link rel=\"icon\" href=\"../icons/favicon.ico\" type=\"image/x-icon\">\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/colorwars.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/dancingparade.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/emojirain.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/emojitower.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/memorylane.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/petrace.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/phraseguess.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/pixelbattle.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/rhythmpulse.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/treasurehunt.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/wordchain.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "games/wordstorm.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "gif.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "giveaway-obs-entries.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "giveaway.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "leaderboard.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\" />\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "meta.html",
+    "status": "already",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "minecraft.html",
+    "status": "applied",
+    "before": "  <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "multi-alerts.html",
+    "status": "applied",
+    "before": "  <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "multi-alerts.js",
+    "status": "applied",
+    "before": "function buildBodyText(category, payload, viewerCount) {\n",
+    "after": "function buildBodyText(category, payload, viewerCount, format = {}) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "multi-alerts.js",
+    "status": "applied",
+    "before": "",
+    "after": "  format.isHTML = false;\n  function chatBody() {\n    // Only an HTML-mode chatmessage sets isHTML; plain chat and generated labels stay literal strings for textContent, without HTML filtering.\n    format.isHTML = !payload.textonly;\n    return rawMessage;\n  }\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "multi-alerts.js",
+    "status": "review",
+    "before": "  if (eventKey === 'giftfunded' || eventKey === 'giftcontribution' || eventKey === 'purchase') return rawMessage || subtitle;\n",
+    "after": "  if (eventKey === 'giftfunded' || eventKey === 'giftcontribution' || eventKey === 'purchase') return rawMessage ? chatBody() : subtitle;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "multi-alerts.js",
+    "status": "already",
+    "before": "    return rawMessage || formatTranslation('alert-welcome-raid-from', 'Welcome the raid from {name}.', {\n",
+    "after": "    return rawMessage ? chatBody() : formatTranslation('alert-welcome-raid-from', 'Welcome the raid from {name}.', {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "multi-alerts.js",
+    "status": "applied",
+    "before": "        return rawMessage;\n",
+    "after": "        return chatBody();\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "multi-alerts.js",
+    "status": "already",
+    "before": "    return rawMessage || getTranslation('alert-thanks-support', 'Thank you for the support!');\n",
+    "after": "    return rawMessage ? chatBody() : getTranslation('alert-thanks-support', 'Thank you for the support!');\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "multi-alerts.js",
+    "status": "already",
+    "before": "    return rawMessage || getTranslation('alert-hype-meter', 'The hype meter just moved.');\n",
+    "after": "    return rawMessage ? chatBody() : getTranslation('alert-hype-meter', 'The hype meter just moved.');\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "multi-alerts.js",
+    "status": "already",
+    "before": "      return rawMessage;\n",
+    "after": "      return chatBody();\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "multi-alerts.js",
+    "status": "already",
+    "before": "    return subtitle || rawMessage || getTranslation('alert-thanks-community', 'Thanks for joining the community.');\n",
+    "after": "    return subtitle || (rawMessage ? chatBody() : getTranslation('alert-thanks-community', 'Thanks for joining the community.'));\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "multi-alerts.js",
+    "status": "already",
+    "before": "  return rawMessage || subtitle;\n",
+    "after": "  return rawMessage ? chatBody() : subtitle;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "multi-alerts.js",
+    "status": "applied",
+    "before": "  const bodyText = buildBodyText(category, payload, viewerCount);\n",
+    "after": "  const bodyFormat = {};\n  const bodyText = buildBodyText(category, payload, viewerCount, bodyFormat);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "multi-alerts.js",
+    "status": "applied",
+    "before": "",
+    "after": "    bodyIsHTML: bodyFormat.isHTML,\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "multi-alerts.js",
+    "status": "applied",
+    "before": "    message.innerHTML = model.bodyText;\n",
+    "after": "    if (model.bodyIsHTML) {\n      // Only the HTML-mode chat body reaches this branch; retain its upstream-checked formatting.\n      message.innerHTML = model.bodyText;\n    } else {\n      // textonly chat and generated metadata labels are literal strings, never HTML to re-sanitize.\n      message.textContent = model.bodyText;\n    }\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "poll.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "reactions.html",
+    "status": "applied",
+    "before": "\t<meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "sampleapi.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "sampleemote.html",
+    "status": "already",
+    "before": "",
+    "after": "    <link rel=\"icon\" href=\"icons/favicon.ico\" type=\"image/x-icon\">\n\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "samplefeatured.html",
+    "status": "applied",
+    "before": "    <meta charset=\"utf-8\" />\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "samplefeatured.html",
+    "status": "already",
+    "before": "            if (!badges?.length) return '';\n\n            const badgeElements = badges.map(badge => {\n                if (typeof badge === 'object') {\n                    if (badge.type === 'img' && badge.src) {\n                        return `<img class=\"hl-badge\" src=\"${badge.src}\" />`;\n                    } else if (badge.type === 'svg' && badge.html) {\n                        return `<span class=\"hl-badge\">${badge.html}</span>`;\n                    }\n                } else {\n                    return `<img class=\"hl-badge\" src=\"${badge}\" />`;\n                }\n                return '';\n            }).join('');\n\n            return badgeElements ? `<div class=\"hl-badges\">${badgeElements}</div>` : '';\n",
+    "after": "            const html = SocialStreamBadges.render(badges, { className: \"hl-badge\" });\n            return html ? \"<div class=\\\"hl-badges\\\">\" + html + \"</div>\" : \"\";\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "samplefeatured.html",
+    "status": "already",
+    "before": "            return `<div class=\"hl-donation\">${donationAmount}</div>`;\n",
+    "after": "            return `<div class=\"hl-donation\">${fallbackEscapeHtml(donationAmount)}</div>`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "samplefeatured.html",
+    "status": "already",
+    "before": "            return styles.length ? `style=\"${styles.join('; ')}\"` : '';\n",
+    "after": "            return styles.length ? `style=\"${fallbackEscapeHtml(styles.join('; '))}\"` : '';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "sampleoverlay.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "sampleoverlay.html",
+    "status": "already",
+    "before": "\t\tvar chatbadgesHtml = \"\";\n\t\tif (data.chatbadges) {\n\t\t\tdata.chatbadges.forEach(badge => {\n\t\t\t\tif (typeof badge === \"object\") {\n\t\t\t\t\tif (badge.type === \"img\" && badge.src) {\n\t\t\t\t\t\tchatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;\n\t\t\t\t\t} else if (badge.type === \"svg\" && badge.html) {\n\t\t\t\t\t\tchatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;\n\t\t\t\t\t}\n\t\t\t\t} else { \n\t\t\t\t\tchatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;\n\t\t\t\t}\n\t\t\t});\n\t\t}\n",
+    "after": "\t\tvar chatbadgesHtml = SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "sampleoverlay.html",
+    "status": "already",
+    "before": "\t\tconst membershipHtml = data.membership ? `<div class=\"membership-status\">${data.membership}</div>` : '';\n",
+    "after": "\t\tconst membershipHtml = data.membership ? `<div class=\"membership-status\">${fallbackEscapeHtml(data.membership)}</div>` : '';\n\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "sampleoverlay.html",
+    "status": "already",
+    "before": "\t\tconst donationHtml = data.hasDonation ? `<div class=\"donation\">${data.hasDonation}</div>` : '';\n",
+    "after": "\t\tconst donationHtml = data.hasDonation ? `<div class=\"donation\">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "scoreboard.html",
+    "status": "applied",
+    "before": "\t<meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "shop_the_stream.html",
+    "status": "applied",
+    "before": "<html>\n",
+    "after": "<html lang=\"en\">\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "simple_api_client.html",
+    "status": "applied",
+    "before": "<html>\n",
+    "after": "<html lang=\"en\">\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "spotify-overlay.html",
+    "status": "applied",
+    "before": "\t<meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/LuckyLootTube/luckyloottube.html",
+    "status": "applied",
+    "before": "<meta charset=\"UTF-8\" />\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/Windows3.1/index.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/Windows3.1/index.html",
+    "status": "already",
+    "before": "\t\tvar chatbadges = \"\";\n\t\tif (data.chatbadges) {\n\t\t\tdata.chatbadges.forEach(badge => {\n\t\t\t\tif (typeof badge === \"object\") {\n\t\t\t\t\tif (badge.type === \"img\" && badge.src) {\n\t\t\t\t\t\tchatbadges += `<img class='badge' src='${badge.src}' />`;\n\t\t\t\t\t} else if (badge.type === \"svg\" && badge.html) {\n\t\t\t\t\t\tchatbadges += `<span class='badge svg'>${badge.html}</span>`;\n\t\t\t\t\t}\n\t\t\t\t} else {\n\t\t\t\t\tchatbadges += `<img class='badge' src='${badge}' />`;\n\t\t\t\t}\n\t\t\t});\n\t\t}\n",
+    "after": "\t\tvar chatbadges = SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/Windows3.1/index.html",
+    "status": "already",
+    "before": "\t\t\t${data.membership ? `<div class=\"membership-status\">${data.membership}</div>` : ''}\n",
+    "after": "\t\t\t${data.membership ? `<div class=\"membership-status\">${fallbackEscapeHtml(data.membership)}</div>` : ''}\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/Windows3.1/index.html",
+    "status": "already",
+    "before": "\t\t\t<div class=\"text\">${data.chatmessage ? data.chatmessage : ''}</div>\n\t\t\t${data.hasDonation ? `<div class=\"donation\">${data.hasDonation}</div>` : ''}\n",
+    "after": "\t\t\t<div class=\"text\">${data.textonly ? '' : (data.chatmessage || '')}</div>\n\t\t\t${data.hasDonation ? `<div class=\"donation\">${fallbackEscapeHtml(data.hasDonation)}</div>` : ''}\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/Windows3.1/index.html",
+    "status": "already",
+    "before": "",
+    "after": "\n\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\tif (data.textonly) {\n\t\t\tvar messageText = messageDiv.querySelector('.text');\n\t\t\tif (messageText) messageText.textContent = data.chatmessage || '';\n\t\t}\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/compact-classic.html",
+    "status": "applied",
+    "before": "<meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/compact-classic.html",
+    "status": "applied",
+    "before": "        if (hideBadges || !data.chatbadges) { return \"\"; }\n        var html = \"\";\n        data.chatbadges.forEach(function (badge) {\n            if (typeof badge === \"object\") {\n                if (badge.type === \"img\" && badge.src) { html += \"<img class='badge' src='\" + badge.src + \"' alt='badge'>\"; }\n                else if (badge.type === \"svg\" && badge.html) { html += \"<span class='badge svg'>\" + badge.html + \"</span>\"; }\n            } else {\n                html += \"<img class='badge' src='\" + badge + \"' alt='badge'>\";\n            }\n        });\n        return html;\n",
+    "after": "        return hideBadges ? \"\" : SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/compact-clean.html",
+    "status": "applied",
+    "before": "<meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/compact-clean.html",
+    "status": "applied",
+    "before": "        if (hideBadges || !data.chatbadges) { return \"\"; }\n        var html = \"\";\n        data.chatbadges.forEach(function (badge) {\n            if (typeof badge === \"object\") {\n                if (badge.type === \"img\" && badge.src) { html += \"<img class='badge' src='\" + badge.src + \"' alt='badge'>\"; }\n                else if (badge.type === \"svg\" && badge.html) { html += \"<span class='badge svg'>\" + badge.html + \"</span>\"; }\n            } else {\n                html += \"<img class='badge' src='\" + badge + \"' alt='badge'>\";\n            }\n        });\n        return html;\n",
+    "after": "        return hideBadges ? \"\" : SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/compact-glass.html",
+    "status": "applied",
+    "before": "<meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/compact-glass.html",
+    "status": "applied",
+    "before": "        if (hideBadges || !data.chatbadges) { return \"\"; }\n        var html = \"\";\n        data.chatbadges.forEach(function (badge) {\n            if (typeof badge === \"object\") {\n                if (badge.type === \"img\" && badge.src) { html += \"<img class='badge' src='\" + badge.src + \"' alt='badge'>\"; }\n                else if (badge.type === \"svg\" && badge.html) { html += \"<span class='badge svg'>\" + badge.html + \"</span>\"; }\n            } else {\n                html += \"<img class='badge' src='\" + badge + \"' alt='badge'>\";\n            }\n        });\n        return html;\n",
+    "after": "        return hideBadges ? \"\" : SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/deuks_overlay/overlay1.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/deuks_overlay/overlay1.html",
+    "status": "applied",
+    "before": "\t\tlet chatbadges = \"\";\n\t\tif (data.chatbadges) {\n\t\t\tdata.chatbadges.slice(0, 2).forEach(badge => {\n\t\t\t\tif (typeof badge === \"object\") {\n\t\t\t\t\tif (badge.type === \"img\" && badge.src) {\n\t\t\t\t\t\tchatbadges += `<img class='badge' src='${badge.src}' />`;\n\t\t\t\t\t} else if (badge.type === \"svg\" && badge.html) {\n\t\t\t\t\t\tchatbadges += `<span class='badge svg'>${badge.html}</span>`;\n\t\t\t\t\t}\n\t\t\t\t} else {\n\t\t\t\t\tchatbadges += `<img class='badge' src='${badge}' />`;\n\t\t\t\t}\n\t\t\t});\n\t\t}\n",
+    "after": "\t\tlet chatbadges = SocialStreamBadges.render(data.chatbadges, { limit: 2 });\n\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/deuks_overlay/overlay2.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/deuks_overlay/overlay2.html",
+    "status": "already",
+    "before": "\t\t\tlet chatbadges = \"\";\n\t\t\tif (data.chatbadges) {\n\t\t\t\tdata.chatbadges.slice(0, 1).forEach(badge => {\n\t\t\t\t\tif (typeof badge === \"object\" && badge.type === \"img\" && badge.src) {\n\t\t\t\t\t\tchatbadges += `<img class='badge' src='${badge.src}' />`;\n\t\t\t\t\t} else if (badge.type === \"svg\" && badge.html) {\n\t\t\t\t\t\tchatbadges += `<span class='badge svg'>${badge.html}</span>`;\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t}\n",
+    "after": "\t\t\tlet chatbadges = SocialStreamBadges.render(data.chatbadges, { limit: 1 });\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/events/index.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/events/index.html",
+    "status": "applied",
+    "before": "",
+    "after": "    function escapePlainMetadata(value) {\n        return String(value == null ? \"\" : value).replace(/[&<>\"']/g, function (character) {\n            return { \"&\": \"&amp;\", \"<\": \"&lt;\", \">\": \"&gt;\", '\"': \"&quot;\", \"'\": \"&#39;\" }[character];\n        });\n    }\n\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/events/index.html",
+    "status": "applied",
+    "before": "            <div class=\"text\">${data.chatmessage || ''}</div>\n            ${data.hasDonation ? `<div class=\"donation\">\ud83d\udcb0 ${data.hasDonation}</div>` : ''}\n",
+    "after": "            <div class=\"text\">${data.textonly ? '' : (data.chatmessage || '')}</div>\n            ${data.hasDonation ? `<div class=\"donation\">\ud83d\udcb0 ${escapePlainMetadata(data.hasDonation)}</div>` : ''}\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/events/index.html",
+    "status": "applied",
+    "before": "",
+    "after": "\n        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n        if (data.textonly) {\n\t\tvar messageText = messageDiv.querySelector('.text');\n\t\tif (messageText) messageText.textContent = data.chatmessage || '';\n        }\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-3d.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-3d.html",
+    "status": "applied",
+    "before": "            if (content.chatbadges && Array.isArray(content.chatbadges)) {\n",
+    "after": "            if (content.chatbadges) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-3d.html",
+    "status": "applied",
+    "before": "                content.chatbadges.forEach(badge => {\n                    if (typeof badge === 'string') {\n                        const img = document.createElement('img');\n                        img.className = 'badge';\n                        img.src = badge;\n                        badges.appendChild(img);\n                    }\n                });\n",
+    "after": "                badges.innerHTML = SocialStreamBadges.render(content.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-animated.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-animated.html",
+    "status": "already",
+    "before": "                if (content.chatbadges && Array.isArray(content.chatbadges)) {\n",
+    "after": "                if (content.chatbadges) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-animated.html",
+    "status": "already",
+    "before": "                    content.chatbadges.forEach(badge => {\n                        if (typeof badge === 'string') {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge;\n                            badges.appendChild(img);\n                        }\n                    });\n",
+    "after": "                    badges.innerHTML = SocialStreamBadges.render(content.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-cyberpunk.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-cyberpunk.html",
+    "status": "already",
+    "before": "                if (content.chatbadges && Array.isArray(content.chatbadges)) {\n",
+    "after": "                if (content.chatbadges) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-cyberpunk.html",
+    "status": "already",
+    "before": "                    content.chatbadges.forEach(badge => {\n                        if (typeof badge === 'string') {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge;\n                            badges.appendChild(img);\n                        } else if (badge.src) {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge.src;\n                            badges.appendChild(img);\n                        }\n                    });\n",
+    "after": "                    badges.innerHTML = SocialStreamBadges.render(content.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-cyberpunk.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = `\u26a1 ${title}: ${amount}`;\n",
+    "after": "                        donationDiv.textContent = `\u26a1 ${title}: ${amount}`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-cyberpunk.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = `\ud83d\udd0c ${memberInfo}`;\n",
+    "after": "                        donationDiv.textContent = `\ud83d\udd0c ${memberInfo}`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-dynamic.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-dynamic.html",
+    "status": "already",
+    "before": "                if (content.chatbadges && Array.isArray(content.chatbadges)) {\n",
+    "after": "                if (content.chatbadges) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-dynamic.html",
+    "status": "already",
+    "before": "                    content.chatbadges.forEach(badge => {\n                        if (typeof badge === 'string') {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge;\n                            badges.appendChild(img);\n                        } else if (badge.src) {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge.src;\n                            badges.appendChild(img);\n                        }\n                    });\n",
+    "after": "                    badges.innerHTML = SocialStreamBadges.render(content.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-dynamic.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = `\ud83d\udcb0 ${title}: ${amount}`;\n",
+    "after": "                        donationDiv.textContent = `\ud83d\udcb0 ${title}: ${amount}`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-dynamic.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = `\u2b50 ${memberInfo}`;\n",
+    "after": "                        donationDiv.textContent = `\u2b50 ${memberInfo}`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-elegant.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-elegant.html",
+    "status": "already",
+    "before": "                if (content.chatbadges && Array.isArray(content.chatbadges)) {\n",
+    "after": "                if (content.chatbadges) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-elegant.html",
+    "status": "already",
+    "before": "                    content.chatbadges.forEach(badge => {\n                        if (typeof badge === 'string') {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge;\n                            badges.appendChild(img);\n                        } else if (badge.src) {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge.src;\n                            badges.appendChild(img);\n                        }\n                    });\n",
+    "after": "                    badges.innerHTML = SocialStreamBadges.render(content.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-elegant.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = `${title}: ${amount}`;\n",
+    "after": "                        donationDiv.textContent = `${title}: ${amount}`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-elegant.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = memberInfo;\n",
+    "after": "                        donationDiv.textContent = memberInfo;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-gaming.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-gaming.html",
+    "status": "already",
+    "before": "                if (content.chatbadges && Array.isArray(content.chatbadges)) {\n",
+    "after": "                if (content.chatbadges) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-gaming.html",
+    "status": "already",
+    "before": "                    content.chatbadges.forEach(badge => {\n                        if (typeof badge === 'string') {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge;\n                            badges.appendChild(img);\n                        } else if (badge.src) {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge.src;\n                            badges.appendChild(img);\n                        }\n                    });\n",
+    "after": "                    badges.innerHTML = SocialStreamBadges.render(content.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-gaming.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = `${title}: ${amount}`;\n",
+    "after": "                        donationDiv.textContent = `${title}: ${amount}`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-gaming.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = memberInfo;\n",
+    "after": "                        donationDiv.textContent = memberInfo;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-glass.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-glass.html",
+    "status": "already",
+    "before": "                if (content.chatbadges && Array.isArray(content.chatbadges)) {\n",
+    "after": "                if (content.chatbadges) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-glass.html",
+    "status": "already",
+    "before": "                    content.chatbadges.forEach(badge => {\n                        if (typeof badge === 'string') {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge;\n                            badges.appendChild(img);\n                        } else if (badge.src) {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge.src;\n                            badges.appendChild(img);\n                        }\n                    });\n",
+    "after": "                    badges.innerHTML = SocialStreamBadges.render(content.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-glass.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = `\ud83d\udcb0 ${title}: ${amount}`;\n",
+    "after": "                        donationDiv.textContent = `\ud83d\udcb0 ${title}: ${amount}`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-glass.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = `\u2b50 ${memberInfo}`;\n",
+    "after": "                        donationDiv.textContent = `\u2b50 ${memberInfo}`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-gradient.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-gradient.html",
+    "status": "already",
+    "before": "                if (content.chatbadges && Array.isArray(content.chatbadges)) {\n",
+    "after": "                if (content.chatbadges) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-gradient.html",
+    "status": "already",
+    "before": "                    content.chatbadges.forEach(badge => {\n                        if (typeof badge === 'string') {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge;\n                            badges.appendChild(img);\n                        } else if (badge.src) {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge.src;\n                            badges.appendChild(img);\n                        }\n                    });\n",
+    "after": "                    badges.innerHTML = SocialStreamBadges.render(content.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-gradient.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = `\ud83d\udcb0 ${title}: ${amount}`;\n",
+    "after": "                        donationDiv.textContent = `\ud83d\udcb0 ${title}: ${amount}`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-gradient.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = `\u2b50 ${memberInfo}`;\n",
+    "after": "                        donationDiv.textContent = `\u2b50 ${memberInfo}`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-modern.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-modern.html",
+    "status": "already",
+    "before": "                if (content.chatbadges && Array.isArray(content.chatbadges)) {\n",
+    "after": "                if (content.chatbadges) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-modern.html",
+    "status": "already",
+    "before": "                    content.chatbadges.forEach(badge => {\n                        if (typeof badge === 'string') {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge;\n                            badges.appendChild(img);\n                        } else if (badge.src) {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge.src;\n                            badges.appendChild(img);\n                        }\n                    });\n",
+    "after": "                    badges.innerHTML = SocialStreamBadges.render(content.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-neon.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-neon.html",
+    "status": "already",
+    "before": "                if (content.chatbadges && Array.isArray(content.chatbadges)) {\n",
+    "after": "                if (content.chatbadges) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-neon.html",
+    "status": "already",
+    "before": "                    content.chatbadges.forEach(badge => {\n                        if (typeof badge === 'string') {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge;\n                            badges.appendChild(img);\n                        } else if (badge.src) {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge.src;\n                            badges.appendChild(img);\n                        }\n                    });\n",
+    "after": "                    badges.innerHTML = SocialStreamBadges.render(content.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-neon.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = `\u26a1 ${title}: ${amount}`;\n",
+    "after": "                        donationDiv.textContent = `\u26a1 ${title}: ${amount}`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-neon.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = `\u2728 ${memberInfo}`;\n",
+    "after": "                        donationDiv.textContent = `\u2728 ${memberInfo}`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-particles.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-particles.html",
+    "status": "already",
+    "before": "                if (content.chatbadges && Array.isArray(content.chatbadges)) {\n",
+    "after": "                if (content.chatbadges) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-particles.html",
+    "status": "already",
+    "before": "                    content.chatbadges.forEach(badge => {\n                        if (typeof badge === 'string') {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge;\n                            badges.appendChild(img);\n                        }\n                    });\n",
+    "after": "                    badges.innerHTML = SocialStreamBadges.render(content.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-retro.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-retro.html",
+    "status": "already",
+    "before": "                if (content.chatbadges && Array.isArray(content.chatbadges)) {\n",
+    "after": "                if (content.chatbadges) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-retro.html",
+    "status": "already",
+    "before": "                    content.chatbadges.forEach(badge => {\n                        if (typeof badge === 'string') {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge;\n                            badges.appendChild(img);\n                        } else if (badge.src) {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge.src;\n                            badges.appendChild(img);\n                        }\n                    });\n",
+    "after": "                    badges.innerHTML = SocialStreamBadges.render(content.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-retro.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = `\ud83d\udcb0 ${title}: ${amount}`;\n",
+    "after": "                        donationDiv.textContent = `\ud83d\udcb0 ${title}: ${amount}`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-retro.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = `\u2b50 ${memberInfo}`;\n",
+    "after": "                        donationDiv.textContent = `\u2b50 ${memberInfo}`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-slide.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-slide.html",
+    "status": "already",
+    "before": "                if (content.chatbadges && Array.isArray(content.chatbadges)) {\n",
+    "after": "                if (content.chatbadges) {\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-slide.html",
+    "status": "already",
+    "before": "                    content.chatbadges.forEach(badge => {\n                        if (typeof badge === 'string') {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge;\n                            badges.appendChild(img);\n                        } else if (badge.src) {\n                            const img = document.createElement('img');\n                            img.className = 'badge';\n                            img.src = badge.src;\n                            badges.appendChild(img);\n                        }\n                    });\n",
+    "after": "                    badges.innerHTML = SocialStreamBadges.render(content.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-slide.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = `\ud83d\udcb0 ${title}: ${amount}`;\n",
+    "after": "                        donationDiv.textContent = `\ud83d\udcb0 ${title}: ${amount}`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/featured-styles/featured-slide.html",
+    "status": "already",
+    "before": "                        donationDiv.innerHTML = `\u2b50 ${memberInfo}`;\n",
+    "after": "                        donationDiv.textContent = `\u2b50 ${memberInfo}`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/horizontal.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/horizontal.html",
+    "status": "already",
+    "before": "        var chatbadgesHtml = \"\";\n        if (!hideBadges && data.chatbadges) {\n            data.chatbadges.forEach(badge => {\n                if (typeof badge === \"object\") {\n                    if (badge.type === \"img\" && badge.src) {\n                        chatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;\n                    } else if (badge.type === \"svg\" && badge.html) {\n                        chatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;\n                    }\n                } else { \n                    chatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;\n                }\n            });\n        }\n",
+    "after": "        var chatbadgesHtml = !hideBadges ? SocialStreamBadges.render(data.chatbadges) : \"\";\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/horizontal.html",
+    "status": "already",
+    "before": "        const membershipHtml = (!textOnly && data.membership) ? `<span class=\"membership-status\">${data.membership}</span>` : '';\n        const messageTextHtml = data.chatmessage ? `<span class=\"text\" ${data.event ? 'style=\"font-style: italic;\"' : ''}>${data.chatmessage}</span>` : '';\n        const donationHtml = (!textOnly && data.hasDonation) ? `<span class=\"donation\">${data.hasDonation}</span>` : '';\n",
+    "after": "        // Display-only textOnly URL option: hides extra decoration; data.textonly independently defines the chatmessage string format.\n        const membershipHtml = (!textOnly && data.membership) ? `<span class=\"membership-status\">${fallbackEscapeHtml(data.membership)}</span>` : '';\n        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n        const messageTextHtml = data.chatmessage ? `<span class=\"text\" ${data.event ? 'style=\"font-style: italic;\"' : ''}>${data.textonly ? '' : data.chatmessage}</span>` : '';\n        // Display-only textOnly URL option: hides extra decoration; data.textonly independently defines the chatmessage string format.\n        const donationHtml = (!textOnly && data.hasDonation) ? `<span class=\"donation\">${fallbackEscapeHtml(data.hasDonation)}</span>` : '';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/horizontal.html",
+    "status": "applied",
+    "before": "",
+    "after": "\n        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n        if (data.textonly) {\n\t\tvar messageText = messageDiv.querySelector('.text');\n\t\tif (messageText) messageText.textContent = data.chatmessage || '';\n        }\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/huan-kiara/index.html",
+    "status": "applied",
+    "before": "\t\t<meta charset=\"UTF-8\" />\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/huan-kiara/index.html",
+    "status": "review",
+    "before": "\t\t\t\tlet chatbadges = \"\";\n\t\t\t\tif (data.chatbadges) {\n\t\t\t\t\tdata.chatbadges.forEach(badge => {\n\t\t\t\t\t\tif (typeof badge === \"string\") {\n\t\t\t\t\t\t\tchatbadges += `<img class='badge' src='${escapeHtml(badge)}' />`;\n\t\t\t\t\t\t} else if (badge && typeof badge === \"object\" && badge.type === \"img\" && badge.src) {\n\t\t\t\t\t\t\tchatbadges += `<img class='badge' src='${escapeHtml(badge.src)}' />`;\n\t\t\t\t\t\t} else if (badge && badge.type === \"svg\" && badge.html) {\n\t\t\t\t\t\t\tchatbadges += `<span class='badge svg'>${badge.html}</span>`;\n\t\t\t\t\t\t}\n\t\t\t\t\t});\n\t\t\t\t}\n",
+    "after": "\t\t\t\tlet chatbadges = SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/notimeoutmessages.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/notimeoutmessages.html",
+    "status": "already",
+    "before": "\t\tvar chatbadgesHtml = \"\";\n\t\tif (data.chatbadges) {\n\t\t\tdata.chatbadges.forEach(badge => {\n\t\t\t\tif (typeof badge === \"object\") {\n\t\t\t\t\tif (badge.type === \"img\" && badge.src) {\n\t\t\t\t\t\tchatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;\n\t\t\t\t\t} else if (badge.type === \"svg\" && badge.html) {\n\t\t\t\t\t\tchatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;\n\t\t\t\t\t}\n\t\t\t\t} else { \n\t\t\t\t\tchatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;\n\t\t\t\t}\n\t\t\t});\n\t\t}\n",
+    "after": "\t\tvar chatbadgesHtml = SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/notimeoutmessages.html",
+    "status": "already",
+    "before": "\t\tconst membershipHtml = data.membership ? `<div class=\"membership-status\">${data.membership}</div>` : '';\n\t\tconst messageTextHtml = `<div class=\"text\" ${data.event ? 'style=\"font-style: italic;\"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>`;\n\t\tconst donationHtml = data.hasDonation ? `<div class=\"donation\">${data.hasDonation}</div>` : '';\n",
+    "after": "\t\tconst membershipHtml = data.membership ? `<div class=\"membership-status\">${fallbackEscapeHtml(data.membership)}</div>` : '';\n\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\tconst messageTextHtml = `<div class=\"text\" ${data.event ? 'style=\"font-style: italic;\"' : ''}>${data.textonly ? '' : (data.chatmessage || '')}</div>`;\n\t\tconst donationHtml = data.hasDonation ? `<div class=\"donation\">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/notimeoutmessages.html",
+    "status": "already",
+    "before": "",
+    "after": "\n\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\tif (data.textonly) {\n\t\t\tvar messageText = messageDiv.querySelector('.text');\n\t\t\tif (messageText) messageText.textContent = data.chatmessage || '';\n\t\t}\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-bubbles.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-bubbles.html",
+    "status": "already",
+    "before": "        var chatbadgesHtml = \"\";\n        if (data.chatbadges) {\n            data.chatbadges.forEach(badge => {\n                if (typeof badge === \"object\") {\n                    if (badge.type === \"img\" && badge.src) {\n                        chatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;\n                    } else if (badge.type === \"svg\" && badge.html) {\n                        chatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;\n                    }\n                } else { \n                    chatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;\n                }\n            });\n        }\n",
+    "after": "        var chatbadgesHtml = SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-bubbles.html",
+    "status": "already",
+    "before": "        const membershipHtml = data.membership ? `<div class=\"membership-status\">${data.membership}</div>` : '';\n",
+    "after": "        const membershipHtml = data.membership ? `<div class=\"membership-status\">${fallbackEscapeHtml(data.membership)}</div>` : '';\n        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-bubbles.html",
+    "status": "already",
+    "before": "        const donationHtml = data.hasDonation ? `<div class=\"donation\">${data.hasDonation}</div>` : '';\n",
+    "after": "        const donationHtml = data.hasDonation ? `<div class=\"donation\">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-cards.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-cards.html",
+    "status": "already",
+    "before": "        var chatbadgesHtml = \"\";\n        if (data.chatbadges) {\n            data.chatbadges.forEach(badge => {\n                if (typeof badge === \"object\") {\n                    if (badge.type === \"img\" && badge.src) {\n                        chatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;\n                    } else if (badge.type === \"svg\" && badge.html) {\n                        chatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;\n                    }\n                } else { \n                    chatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;\n                }\n            });\n        }\n",
+    "after": "        var chatbadgesHtml = SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-cards.html",
+    "status": "already",
+    "before": "        const membershipHtml = data.membership ? `<div class=\"membership-status\">${data.membership}</div>` : '';\n",
+    "after": "        const membershipHtml = data.membership ? `<div class=\"membership-status\">${fallbackEscapeHtml(data.membership)}</div>` : '';\n        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-cards.html",
+    "status": "already",
+    "before": "        const donationHtml = data.hasDonation ? `<div class=\"donation\">${data.hasDonation}</div>` : '';\n",
+    "after": "        const donationHtml = data.hasDonation ? `<div class=\"donation\">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-comic-classic.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-comic-classic.html",
+    "status": "already",
+    "before": "\t\tvar chatbadgesHtml = \"\";\n\t\tif (data.chatbadges) {\n\t\t\tdata.chatbadges.forEach(badge => {\n\t\t\t\tif (typeof badge === \"object\") {\n\t\t\t\t\tif (badge.type === \"img\" && badge.src) {\n\t\t\t\t\t\tchatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;\n\t\t\t\t\t} else if (badge.type === \"svg\" && badge.html) {\n\t\t\t\t\t\tchatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;\n\t\t\t\t\t}\n\t\t\t\t} else { \n\t\t\t\t\tchatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;\n\t\t\t\t}\n\t\t\t});\n\t\t}\n",
+    "after": "\t\tvar chatbadgesHtml = SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-comic-classic.html",
+    "status": "already",
+    "before": "\t\tconst membershipHtml = data.membership ? `<div class=\"membership-status\">${data.membership}</div>` : '';\n\t\tconst messageTextHtml = `<div class=\"text\" ${data.event ? 'style=\"font-style: italic;\"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>`;\n\t\tconst donationHtml = data.hasDonation ? `<div class=\"donation\">${data.hasDonation}</div>` : '';\n",
+    "after": "\t\tconst membershipHtml = data.membership ? `<div class=\"membership-status\">${fallbackEscapeHtml(data.membership)}</div>` : '';\n\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\tconst messageTextHtml = `<div class=\"text\" ${data.event ? 'style=\"font-style: italic;\"' : ''}>${data.textonly ? '' : (data.chatmessage || '')}</div>`;\n\t\tconst donationHtml = data.hasDonation ? `<div class=\"donation\">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-comic-classic.html",
+    "status": "already",
+    "before": "",
+    "after": "\n\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\tif (data.textonly) {\n\t\t\tvar messageText = messageDiv.querySelector('.text');\n\t\t\tif (messageText) messageText.textContent = data.chatmessage || '';\n\t\t}\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-comic-pop.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-comic-pop.html",
+    "status": "already",
+    "before": "\t\tvar chatbadgesHtml = \"\";\n\t\tif (data.chatbadges) {\n\t\t\tdata.chatbadges.forEach(badge => {\n\t\t\t\tif (typeof badge === \"object\") {\n\t\t\t\t\tif (badge.type === \"img\" && badge.src) {\n\t\t\t\t\t\tchatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;\n\t\t\t\t\t} else if (badge.type === \"svg\" && badge.html) {\n\t\t\t\t\t\tchatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;\n\t\t\t\t\t}\n\t\t\t\t} else { \n\t\t\t\t\tchatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;\n\t\t\t\t}\n\t\t\t});\n\t\t}\n",
+    "after": "\t\tvar chatbadgesHtml = SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-comic-pop.html",
+    "status": "already",
+    "before": "\t\tconst membershipHtml = data.membership ? `<div class=\"membership-status\">${data.membership}</div>` : '';\n\t\tconst messageTextHtml = `<div class=\"text\" ${data.event ? 'style=\"font-style: italic;\"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>`;\n\t\tconst donationHtml = data.hasDonation ? `<div class=\"donation\">${data.hasDonation}</div>` : '';\n",
+    "after": "\t\tconst membershipHtml = data.membership ? `<div class=\"membership-status\">${fallbackEscapeHtml(data.membership)}</div>` : '';\n\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\tconst messageTextHtml = `<div class=\"text\" ${data.event ? 'style=\"font-style: italic;\"' : ''}>${data.textonly ? '' : (data.chatmessage || '')}</div>`;\n\t\tconst donationHtml = data.hasDonation ? `<div class=\"donation\">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-comic-pop.html",
+    "status": "already",
+    "before": "",
+    "after": "\n\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\tif (data.textonly) {\n\t\t\tvar messageText = messageDiv.querySelector('.text');\n\t\t\tif (messageText) messageText.textContent = data.chatmessage || '';\n\t\t}\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-danmaku.html",
+    "status": "applied",
+    "before": "<meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-danmaku.html",
+    "status": "already",
+    "before": "        var badges = data.chatbadges;\n        if (!badges) { return \"\"; }\n        if (typeof badges === \"string\") {\n            return badges.indexOf(\"<\") !== -1 ? badges : \"<img class='badge' src='\" + badges + \"' alt='badge'>\";\n        }\n        if (!Array.isArray(badges)) { badges = [badges]; }\n        var html = \"\";\n        badges.forEach(function (badge) {\n            if (typeof badge === \"object\") {\n                if (badge.type === \"img\" && badge.src) { html += \"<img class='badge' src='\" + badge.src + \"' alt='badge'>\"; }\n                else if (badge.type === \"svg\" && badge.html) { html += \"<span class='badge svg'>\" + badge.html + \"</span>\"; }\n            } else {\n                html += \"<img class='badge' src='\" + badge + \"' alt='badge'>\";\n            }\n        });\n        return html;\n",
+    "after": "        return SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-neon-cyberpunk.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-neon-cyberpunk.html",
+    "status": "already",
+    "before": "        var chatbadgesHtml = \"\";\n        if (data.chatbadges) {\n            data.chatbadges.forEach(badge => {\n                if (typeof badge === \"object\") {\n                    if (badge.type === \"img\" && badge.src) {\n                        chatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;\n                    } else if (badge.type === \"svg\" && badge.html) {\n                        chatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;\n                    }\n                } else { \n                    chatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;\n                }\n            });\n        }\n",
+    "after": "        var chatbadgesHtml = SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-neon-cyberpunk.html",
+    "status": "already",
+    "before": "        const membershipHtml = data.membership ? `<div class=\"membership-status\">${data.membership}</div>` : '';\n",
+    "after": "        const membershipHtml = data.membership ? `<div class=\"membership-status\">${fallbackEscapeHtml(data.membership)}</div>` : '';\n        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-neon-cyberpunk.html",
+    "status": "already",
+    "before": "        const donationHtml = data.hasDonation ? `<div class=\"donation\">${data.hasDonation}</div>` : '';\n",
+    "after": "        const donationHtml = data.hasDonation ? `<div class=\"donation\">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-particles.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-particles.html",
+    "status": "already",
+    "before": "        var chatbadgesHtml = \"\";\n        if (data.chatbadges) {\n            data.chatbadges.forEach(badge => {\n                if (typeof badge === \"object\") {\n                    if (badge.type === \"img\" && badge.src) {\n                        chatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;\n                    } else if (badge.type === \"svg\" && badge.html) {\n                        chatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;\n                    }\n                } else { \n                    chatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;\n                }\n            });\n        }\n",
+    "after": "        var chatbadgesHtml = SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-particles.html",
+    "status": "already",
+    "before": "        const membershipHtml = data.membership ? `<div class=\"membership-status\">${data.membership}</div>` : '';\n",
+    "after": "        const membershipHtml = data.membership ? `<div class=\"membership-status\">${fallbackEscapeHtml(data.membership)}</div>` : '';\n        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-particles.html",
+    "status": "already",
+    "before": "        const donationHtml = data.hasDonation ? `<div class=\"donation\">${data.hasDonation}</div>` : '';\n",
+    "after": "        const donationHtml = data.hasDonation ? `<div class=\"donation\">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-ticker-news.html",
+    "status": "applied",
+    "before": "<meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-ticker-news.html",
+    "status": "already",
+    "before": "        var badges = data.chatbadges;\n        if (!badges) { return \"\"; }\n        if (typeof badges === \"string\") {\n            return badges.indexOf(\"<\") !== -1 ? badges : \"<img class='badge' src='\" + badges + \"' alt='badge'>\";\n        }\n        if (!Array.isArray(badges)) { badges = [badges]; }\n        var html = \"\";\n        badges.forEach(function (badge) {\n            if (typeof badge === \"object\") {\n                if (badge.type === \"img\" && badge.src) { html += \"<img class='badge' src='\" + badge.src + \"' alt='badge'>\"; }\n                else if (badge.type === \"svg\" && badge.html) { html += \"<span class='badge svg'>\" + badge.html + \"</span>\"; }\n            } else {\n                html += \"<img class='badge' src='\" + badge + \"' alt='badge'>\";\n            }\n        });\n        return html;\n",
+    "after": "        return SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-typewriter.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-typewriter.html",
+    "status": "applied",
+    "before": "",
+    "after": "    function escapePlainMetadata(value) {\n        return String(value == null ? \"\" : value).replace(/[&<>\"']/g, function (character) {\n            return { \"&\": \"&amp;\", \"<\": \"&lt;\", \">\": \"&gt;\", '\"': \"&quot;\", \"'\": \"&#39;\" }[character];\n        });\n    }\n\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-typewriter.html",
+    "status": "already",
+    "before": "        const membershipHtml = data.membership ? `<span class=\"membership-status\">${data.membership}</span>` : '';\n",
+    "after": "        const membershipHtml = data.membership ? `<span class=\"membership-status\">${escapePlainMetadata(data.membership)}</span>` : '';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-typewriter.html",
+    "status": "already",
+    "before": "        const donationHtml = data.hasDonation ? `<span class=\"donation\"> [DONATION: ${data.hasDonation}]</span>` : '';\n",
+    "after": "        const donationHtml = data.hasDonation ? `<span class=\"donation\"> [DONATION: ${escapePlainMetadata(data.hasDonation)}]</span>` : '';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-xacception.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-xacception.html",
+    "status": "already",
+    "before": "\t\tvar chatbadgesHtml = \"\";\n\t\tif (data.chatbadges) {\n\t\t\tdata.chatbadges.forEach(badge => {\n\t\t\t\tif (typeof badge === \"object\") {\n\t\t\t\t\tif (badge.type === \"img\" && badge.src) {\n\t\t\t\t\t\tchatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;\n\t\t\t\t\t} else if (badge.type === \"svg\" && badge.html) {\n\t\t\t\t\t\tchatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;\n\t\t\t\t\t}\n\t\t\t\t} else { \n\t\t\t\t\tchatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;\n\t\t\t\t}\n\t\t\t});\n\t\t}\n",
+    "after": "\t\tvar chatbadgesHtml = SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-xacception.html",
+    "status": "already",
+    "before": "\t\tconst membershipHtml = data.membership ? `<div class=\"membership-status\">${data.membership}</div>` : '';\n",
+    "after": "\t\tconst membershipHtml = data.membership ? `<div class=\"membership-status\">${fallbackEscapeHtml(data.membership)}</div>` : '';\n\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/overlay-xacception.html",
+    "status": "already",
+    "before": "\t\tconst donationHtml = data.hasDonation ? `<div class=\"donation\">${data.hasDonation}</div>` : '';\n",
+    "after": "\t\tconst donationHtml = data.hasDonation ? `<div class=\"donation\">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/pretty.html",
+    "status": "review",
+    "before": "\t<link rel=\"icon\" href=\"./favicon.ico\" />\n",
+    "after": "\t<link rel=\"icon\" href=\"../icons/favicon.ico\" type=\"image/x-icon\">\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/rainbowpuke/index.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/rainbowpuke/index.html",
+    "status": "applied",
+    "before": "\t\tvar chatbadges = \"\";\n\t\tif (data.chatbadges) {\n\t\t\tdata.chatbadges.forEach(badge => {\n\t\t\t\tif (typeof badge === \"object\") {\n\t\t\t\t\tif (badge.type === \"img\" && badge.src) {\n\t\t\t\t\t\tchatbadges += `<img class='badge' src='${badge.src}' />`;\n\t\t\t\t\t} else if (badge.type === \"svg\" && badge.html) {\n\t\t\t\t\t\tchatbadges += `<span class='badge svg'>${badge.html}</span>`;\n\t\t\t\t\t}\n\t\t\t\t} else {\n\t\t\t\t\tchatbadges += `<img class='badge' src='${badge}' />`;\n\t\t\t\t}\n\t\t\t});\n\t\t}\n",
+    "after": "\t\tvar chatbadges = SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/rainbowpuke/index.html",
+    "status": "applied",
+    "before": "\t\t\t${data.membership ? `<div class=\"membership-status\">${data.membership}</div>` : ''}\n\t\t\t<div class=\"text\" ${data.event ? 'style=\"font-style: italic;\"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>\n\t\t\t${data.hasDonation ? `<div class=\"donation\">${data.hasDonation}</div>` : ''}\n",
+    "after": "\t\t\t${data.membership ? `<div class=\"membership-status\">${fallbackEscapeHtml(data.membership)}</div>` : ''}\n\t\t\t<div class=\"text\" ${data.event ? 'style=\"font-style: italic;\"' : ''}>${data.textonly ? '' : (data.chatmessage || '')}</div>\n\t\t\t${data.hasDonation ? `<div class=\"donation\">${fallbackEscapeHtml(data.hasDonation)}</div>` : ''}\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/rainbowpuke/index.html",
+    "status": "applied",
+    "before": "",
+    "after": "\n\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\tif (data.textonly) {\n\t\t\tvar messageText = messageDiv.querySelector('.text');\n\t\t\tif (messageText) messageText.textContent = data.chatmessage || '';\n\t\t}\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/sampleoverlay_reverse.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/sampleoverlay_reverse.html",
+    "status": "already",
+    "before": "\t\tvar chatbadgesHtml = \"\";\n\t\tif (data.chatbadges) {\n\t\t\tdata.chatbadges.forEach(badge => {\n\t\t\t\tif (typeof badge === \"object\") {\n\t\t\t\t\tif (badge.type === \"img\" && badge.src) {\n\t\t\t\t\t\tchatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;\n\t\t\t\t\t} else if (badge.type === \"svg\" && badge.html) {\n\t\t\t\t\t\tchatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;\n\t\t\t\t\t}\n\t\t\t\t} else { \n\t\t\t\t\tchatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;\n\t\t\t\t}\n\t\t\t});\n\t\t}\n",
+    "after": "\t\tvar chatbadgesHtml = SocialStreamBadges.render(data.chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/sampleoverlay_reverse.html",
+    "status": "already",
+    "before": "\t\tconst membershipHtml = data.membership ? `<div class=\"membership-status\">${data.membership}</div>` : '';\n\t\tconst messageTextHtml = `<div class=\"text\" ${data.event ? 'style=\"font-style: italic;\"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>`;\n\t\tconst donationHtml = data.hasDonation ? `<div class=\"donation\">${data.hasDonation}</div>` : '';\n",
+    "after": "\t\tconst membershipHtml = data.membership ? `<div class=\"membership-status\">${fallbackEscapeHtml(data.membership)}</div>` : '';\n\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\tconst messageTextHtml = `<div class=\"text\" ${data.event ? 'style=\"font-style: italic;\"' : ''}>${data.textonly ? '' : (data.chatmessage || '')}</div>`;\n\t\tconst donationHtml = data.hasDonation ? `<div class=\"donation\">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/sampleoverlay_reverse.html",
+    "status": "already",
+    "before": "",
+    "after": "\n\t\t// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n\t\tif (data.textonly) {\n\t\t\tvar messageText = messageDiv.querySelector('.text');\n\t\t\tif (messageText) messageText.textContent = data.chatmessage || '';\n\t\t}\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/spiritoverlay.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/spiritoverlay.html",
+    "status": "already",
+    "before": "        if (!chatbadges) return '';\n        return chatbadges.map((badge) => {\n            if (typeof badge === 'object') {\n                if (badge.type === 'img' && badge.src) {\n                    return `<img class=\"badge\" src=\"${badge.src}\" alt=\"badge\">`;\n                }\n                if (badge.type === 'svg' && badge.html) {\n                    return `<span class=\"badge svg\">${badge.html}</span>`;\n                }\n                return '';\n            }\n            return `<img class=\"badge\" src=\"${badge}\" alt=\"badge\">`;\n        }).join('');\n",
+    "after": "        return SocialStreamBadges.render(chatbadges);\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/spiritoverlay.html",
+    "status": "already",
+    "before": "        const membershipHtml = data.membership ? `<div class=\"membership-status\">${data.membership}</div>` : '';\n        const donationHtml = data.hasDonation ? `<div class=\"donation\">${data.hasDonation}</div>` : '';\n        const messageTextHtml = data.chatmessage ? `<div class=\"text\"${data.event ? ' style=\"font-style: italic;\"' : ''}>${data.chatmessage}</div>` : '';\n",
+    "after": "        const membershipHtml = data.membership ? `<div class=\"membership-status\">${fallbackEscapeHtml(data.membership)}</div>` : '';\n        const donationHtml = data.hasDonation ? `<div class=\"donation\">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';\n        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n        const messageTextHtml = data.chatmessage ? `<div class=\"text\"${data.event ? ' style=\"font-style: italic;\"' : ''}>${data.textonly ? '' : data.chatmessage}</div>` : '';\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/spiritoverlay.html",
+    "status": "already",
+    "before": "",
+    "after": "\n        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n        if (data.textonly) {\n\t\tvar messageText = messageDiv.querySelector('.text');\n\t\tif (messageText) messageText.textContent = data.chatmessage || '';\n        }\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/t3nk3y/index.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/t3nk3y/index.html",
+    "status": "applied",
+    "before": "        let chatbadges = \"\";\n        if (data.chatbadges) {\n            console.log(data.chatbadges);\n            data.chatbadges.slice(0, 5).forEach(badge => {\n                if (typeof badge === \"object\") {\n                    if (badge.type === \"img\" && badge.src) {\n                        chatbadges += `<img class='badge' src='${badge.src}' />`;\n                    } else if (badge.type === \"svg\" && badge.html) {\n                        chatbadges += `<span class='badge svg'>${badge.html}</span>`;\n                    } else if (badge.type === \"text\" && badge.text) {\n                        chatbadges += `<span class='badge textbadge'>${badge.text}</span>`;\n                    }\n                } else {\n                    chatbadges += `<img class='badge' src='${badge}' />`;\n                }\n            });\n        }\n",
+    "after": "        let chatbadges = SocialStreamBadges.render(data.chatbadges, { limit: 5 });\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/t3nk3y/index.html",
+    "status": "applied",
+    "before": "\t\t\t\t<div class=\"text\">${data.chatmessage || ''}${(data.donation||data.hasDonation) ? `<div class=\"donation\">${(data.donation||data.hasDonation||\"\")}</div>` : ''}\n",
+    "after": "\t\t\t\t<div class=\"text\">${data.textonly ? '' : (data.chatmessage || '')}${(data.donation||data.hasDonation) ? `<div class=\"donation\">${fallbackEscapeHtml(data.donation||data.hasDonation||\"\")}</div>` : ''}\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "themes/t3nk3y/index.html",
+    "status": "applied",
+    "before": "",
+    "after": "\n        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.\n        if (data.textonly) {\n\t\tvar messageText = messageDiv.querySelector('.text');\n\t\tmessageText.insertBefore(document.createTextNode(data.chatmessage || ''), messageText.firstChild);\n        }\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "ticker.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "tipjar.html",
+    "status": "applied",
+    "before": "    <meta charset=\"UTF-8\">\n",
+    "after": "\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "tipjar.html",
+    "status": "already",
+    "before": "                <span class=\"tip-amount\">${donationLabel}</span>\n",
+    "after": "                <span class=\"tip-amount\"></span>\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "tipjar.html",
+    "status": "already",
+    "before": "",
+    "after": "            tipItem.querySelector('.tip-amount').textContent = donationLabel;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "tipjar.html",
+    "status": "already",
+    "before": "                        <div>${detail}</div>\n",
+    "after": "                        <div class=\"tip-detail\"></div>\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "tipjar.html",
+    "status": "already",
+    "before": "",
+    "after": "                    item.querySelector('.tip-detail').textContent = detail;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "tipjar.html",
+    "status": "review",
+    "before": "                totalDiv.innerHTML = hypeMode || nativeUnitMode || countMode ? `Total: ${formatGoalValue(total)}` : `Total: $${total.toFixed(2)} USD`;\n",
+    "after": "                totalDiv.textContent = hypeMode || nativeUnitMode || countMode ? `Total: ${formatGoalValue(total)}` : `Total: $${total.toFixed(2)} USD`;\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "tipjar.html",
+    "status": "already",
+    "before": "                                <div style=\"font-size: 14px; color: #aaa;\">${subLine}</div>\n",
+    "after": "                                <div class=\"tip-count\" style=\"font-size: 14px; color: #aaa;\"></div>\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "tipjar.html",
+    "status": "already",
+    "before": "                            <div style=\"font-size: 20px; font-weight: bold; color: #FFD700;\">${scoreLabel}</div>\n                            <div style=\"font-size: 12px; color: #ccc;\">${currencyBreakdown}</div>\n",
+    "after": "                            <div class=\"tip-score\" style=\"font-size: 20px; font-weight: bold; color: #FFD700;\"></div>\n                            <div class=\"tip-currencies\" style=\"font-size: 12px; color: #ccc;\"></div>\n"
+  },
+  {
+    "commit": "d17363e2",
+    "file": "tipjar.html",
+    "status": "already",
+    "before": "",
+    "after": "                    item.querySelector('.tip-count').textContent = subLine;\n                    item.querySelector('.tip-score').textContent = scoreLabel;\n                    item.querySelector('.tip-currencies').textContent = currencyBreakdown;\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "bot.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"./shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "bot.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\tavatarImg = '<div class=\"hl-img\" ' + styleOverrideName + '><img id=\"img_' + data.id + '\" src=\"' + data.chatimg + '\" class=\"hl-profile-pic\" data-backup-image=\"' + data.backupChatimg + '\"onerror=\"errorImage(this);\"></div>';\n",
+    "after": "\t\t\t\t\t\tavatarImg = '<div class=\"hl-img\" ' + styleOverrideName + '><img id=\"img_' + fallbackEscapeHtml(data.id) + '\" src=\"' + fallbackEscapeHtml(data.chatimg) + '\" class=\"hl-profile-pic\" data-backup-image=\"' + fallbackEscapeHtml(data.backupChatimg) + '\"onerror=\"errorImage(this);\"></div>';\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "bot.html",
+    "status": "already",
+    "before": "\t\t\t\t\t\tavatarImg = '<div class=\"hl-img\" ' + styleOverrideName + '><img id=\"img_' + data.id + '\" src=\"' + chatimg + '\" class=\"hl-profile-pic\" onerror=\"errorImage(this);\"></div>';\n",
+    "after": "\t\t\t\t\t\tavatarImg = '<div class=\"hl-img\" ' + styleOverrideName + '><img id=\"img_' + fallbackEscapeHtml(data.id) + '\" src=\"' + fallbackEscapeHtml(chatimg) + '\" class=\"hl-profile-pic\" onerror=\"errorImage(this);\"></div>';\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "bot.html",
+    "status": "already",
+    "before": "\t\t\t\t\t  document.getElementById(\"output\").innerHTML += '<div class=\"hl-c-cont highlight-chat stacked\" id=\"newmessage\" data-source-type=\"' + data.type + '\">' + '<div class=\"hl-name\" ' + styleOverrideName + ' id=\"nameDIV\">' + data.chatname + chatbadges + \"</div>\" + '<div id=\"message\" ' + styleOverride + ' class=\"hl-message\" dir=\"' + textDirection + '\" >' + renderedChatMessage + \"</div>\" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + \"</div>\";\n",
+    "after": "\t\t\t\t\t  document.getElementById(\"output\").innerHTML += '<div class=\"hl-c-cont highlight-chat stacked\" id=\"newmessage\" data-source-type=\"' + data.type + '\">' + '<div class=\"hl-name\" ' + styleOverrideName + ' id=\"nameDIV\">' + (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname)) + chatbadges + \"</div>\" + '<div id=\"message\" ' + styleOverride + ' class=\"hl-message\" dir=\"' + textDirection + '\" >' + renderedChatMessage + \"</div>\" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + \"</div>\";\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "bot.html",
+    "status": "already",
+    "before": "\t\t\t\t\t  document.getElementById(\"output\").innerHTML = '<div class=\"hl-c-cont highlight-chat\" id=\"newmessage\" data-source-type=\"' + data.type + '\">' + '<div class=\"hl-name\" ' + styleOverrideName + ' id=\"nameDIV\">' + data.chatname + chatbadges + \"</div>\" + '<div id=\"message\" ' + styleOverride + ' class=\"hl-message\" dir=\"' + textDirection + '\" >' + renderedChatMessage + \"</div>\" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + \"</div>\";\n",
+    "after": "\t\t\t\t\t  document.getElementById(\"output\").innerHTML = '<div class=\"hl-c-cont highlight-chat\" id=\"newmessage\" data-source-type=\"' + data.type + '\">' + '<div class=\"hl-name\" ' + styleOverrideName + ' id=\"nameDIV\">' + (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname)) + chatbadges + \"</div>\" + '<div id=\"message\" ' + styleOverride + ' class=\"hl-message\" dir=\"' + textDirection + '\" >' + renderedChatMessage + \"</div>\" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + \"</div>\";\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "chathistory.js",
+    "status": "applied",
+    "before": "                <img src=\"${message.chatimg || 'https://socialstream.ninja/sources/images/unknown.png'}\" alt=\"Avatar\" class=\"avatar\" data-error-hide=\"message\">\n",
+    "after": "                <img src=\"${escapeHtml(message.chatimg || 'https://socialstream.ninja/sources/images/unknown.png')}\" alt=\"Avatar\" class=\"avatar\" data-error-hide=\"message\">\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "chathistory.js",
+    "status": "applied",
+    "before": "                        <span class=\"user-name\">${message.chatname || 'Anonymous'}</span>\n",
+    "after": "                        <span class=\"user-name\">${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(message.chatname || 'Anonymous') : fallbackEscapeHtml(message.chatname || 'Anonymous'))}</span>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "chathistory.js",
+    "status": "already",
+    "before": "                                    <span class=\"username\">${m.chatname}</span>\n",
+    "after": "                                    <span class=\"username\">${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(m.chatname) : fallbackEscapeHtml(m.chatname))}</span>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "leaderboard.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"libs/objects.js\"></script>\n<script src=\"shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "leaderboard.html",
+    "status": "review",
+    "before": "",
+    "after": "        // Escape display copies only; raw names remain the user and persistence keys.\n        function escapeLeaderboardAttribute(value) {\n            return String(value == null ? '' : value).replace(/[&<>\"']/g, function (character) {\n                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[character];\n            });\n        }\n\n        function escapeLeaderboardName(value) {\n            return escapeLeaderboardAttribute(decodeSupporterText(value));\n        }\n\n        function renderLeaderboardName(value) {\n            return window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(value) : escapeLeaderboardName(value);\n        }\n\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "leaderboard.html",
+    "status": "already",
+    "before": "                            `<img src=\"${user.avatarUrl}\" alt=\"${user.name}\" class=\"user-avatar\" onerror=\"this.style.display='none'\">` : \n",
+    "after": "                            `<img src=\"${escapeLeaderboardAttribute(user.avatarUrl)}\" alt=\"${escapeLeaderboardName(user.name)}\" class=\"user-avatar\" onerror=\"this.style.display='none'\">` :\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "leaderboard.html",
+    "status": "already",
+    "before": "                                ${user.name}\n",
+    "after": "                                ${renderLeaderboardName(user.name)}\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "leaderboard.html",
+    "status": "already",
+    "before": "                                    `<img src=\"./sources/images/${user.type}.png\" alt=\"${user.type}\" class=\"source-icon\" onerror=\"this.style.display='none'\">` : \n",
+    "after": "                                    `<img src=\"./sources/images/${escapeLeaderboardAttribute(user.type)}.png\" alt=\"${escapeLeaderboardAttribute(user.type)}\" class=\"source-icon\" onerror=\"this.style.display='none'\">` :\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "leaderboard.html",
+    "status": "already",
+    "before": "                            <span class=\"ticker-name\">${user.name}</span>\n",
+    "after": "                            <span class=\"ticker-name\">${renderLeaderboardName(user.name)}</span>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "leaderboard.html",
+    "status": "already",
+    "before": "                                `<img src=\"./sources/images/${user.type}.png\" alt=\"${user.type}\" class=\"ticker-source-icon\" onerror=\"this.style.display='none'\">` : \n",
+    "after": "                                `<img src=\"./sources/images/${escapeLeaderboardAttribute(user.type)}.png\" alt=\"${escapeLeaderboardAttribute(user.type)}\" class=\"ticker-source-icon\" onerror=\"this.style.display='none'\">` :\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "samplefeatured.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"./shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "samplefeatured.html",
+    "status": "already",
+    "before": "                        ${data.chatname || ''}\n",
+    "after": "                        ${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname || '') : fallbackEscapeHtml(data.chatname || ''))}\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "samplefeatured.html",
+    "status": "already",
+    "before": "                `data-backup-image=\"${data.backupChatimg}\"` : '';\n",
+    "after": "                `data-backup-image=\"${fallbackEscapeHtml(data.backupChatimg)}\"` : '';\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "samplefeatured.html",
+    "status": "already",
+    "before": "                    <img id=\"img_${data.id}\" \n                         src=\"${imgSrc}\" \n",
+    "after": "                    <img id=\"img_${fallbackEscapeHtml(data.id)}\"\n                         src=\"${fallbackEscapeHtml(imgSrc)}\"\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "sampleoverlay.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"./shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "sampleoverlay.html",
+    "status": "already",
+    "before": "\t\t\t`<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${data.chatimg}');\"></div></div>` : '';\n\t\tconst nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${data.chatname}</div></div>` : '';\n",
+    "after": "\t\t\t`<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${escapeCssUrlAttribute(data.chatimg)}');\"></div></div>` : '';\n\t\tconst nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/Windows3.1/index.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/Windows3.1/index.html",
+    "status": "already",
+    "before": "\t\t\t<div class=\"name\">${data.chatname ? data.chatname : 'Chat Message'} ${chatbadges}</div>\n\t\t\t${data.chatimg ? `<div class=\"avatar\" style=\"background-image: url('${data.chatimg}');\"></div>` : ''}\n",
+    "after": "\t\t\t<div class=\"name\">${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname || 'Chat Message') : fallbackEscapeHtml(data.chatname || 'Chat Message'))} ${chatbadges}</div>\n\t\t\t${data.chatimg ? `<div class=\"avatar\" style=\"background-image: url('${escapeCssUrlAttribute(data.chatimg)}');\"></div>` : ''}\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/deuks_overlay/overlay1.html",
+    "status": "applied",
+    "before": "\t\t\t${data.chatimg ? `<div class=\"avatar-wrapper\"><div class=\"avatar\" style=\"background-image: url('${data.chatimg}');\"></div></div>` : ''}\n",
+    "after": "\t\t\t${data.chatimg ? `<div class=\"avatar-wrapper\"><div class=\"avatar\" style=\"background-image: url('${escapeCssUrlAttribute(data.chatimg)}');\"></div></div>` : ''}\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/deuks_overlay/overlay2.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/deuks_overlay/overlay2.html",
+    "status": "already",
+    "before": "\t\teventDiv.innerHTML = `<div>${eventText}</div>`;\n",
+    "after": "\t\teventDiv.innerHTML = `<div>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(eventText) : fallbackEscapeHtml(eventText))}</div>`;\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/events/index.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../../libs/objects.js\"></script>\n<script src=\"../../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/events/index.html",
+    "status": "already",
+    "before": "                    <div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${data.chatname || 'Anonymous'}</div>\n",
+    "after": "                    <div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname || 'Anonymous') : fallbackEscapeHtml(data.chatname || 'Anonymous'))}</div>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/horizontal.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/horizontal.html",
+    "status": "already",
+    "before": "            `<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${data.chatimg}');\"></div></div>` : '';\n        const nameHtml = (!hideNames && data.chatname) ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${data.chatname}</div></div>` : '';\n",
+    "after": "            `<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${escapeCssUrlAttribute(data.chatimg)}');\"></div></div>` : '';\n        const nameHtml = (!hideNames && data.chatname) ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/huan-kiara/index.html",
+    "status": "review",
+    "before": "            ${data.chatimg ? `<img src=\"${data.chatimg}\" class=\"avatar\" alt=\"${escapeHtml(data.chatname)}'s avatar\">` : \"\"}\n",
+    "after": "            ${data.chatimg ? `<img src=\"${escapeHtml(data.chatimg)}\" class=\"avatar\" alt=\"${escapeHtml(data.chatname)}'s avatar\">` : \"\"}\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/notimeoutmessages.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/notimeoutmessages.html",
+    "status": "already",
+    "before": "\t\t\t`<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${data.chatimg}');\"></div></div>` : '';\n\t\tconst nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${data.chatname}</div></div>` : '';\n",
+    "after": "\t\t\t`<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${escapeCssUrlAttribute(data.chatimg)}');\"></div></div>` : '';\n\t\tconst nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/overlay-bubbles.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/overlay-bubbles.html",
+    "status": "already",
+    "before": "            `<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${data.chatimg}');\"></div></div>` : '';\n        const nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"color: ${data.nameColor}; text-shadow: 0 1px 2px ${data.nameColor}\"` : ''}>${data.chatname}</div></div>` : '';\n",
+    "after": "            `<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${escapeCssUrlAttribute(data.chatimg)}');\"></div></div>` : '';\n        const nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"color: ${data.nameColor}; text-shadow: 0 1px 2px ${data.nameColor}\"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/overlay-cards.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/overlay-cards.html",
+    "status": "already",
+    "before": "            `<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${data.chatimg}');\"></div></div>` : '';\n        const nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"color: ${data.nameColor}; text-shadow: 0 1px 2px ${data.nameColor}\"` : ''}>${data.chatname}</div></div>` : '';\n",
+    "after": "            `<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${escapeCssUrlAttribute(data.chatimg)}');\"></div></div>` : '';\n        const nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"color: ${data.nameColor}; text-shadow: 0 1px 2px ${data.nameColor}\"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/overlay-comic-classic.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/overlay-comic-classic.html",
+    "status": "already",
+    "before": "\t\t\t`<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${data.chatimg}');\"></div></div>` : '';\n\t\tconst nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${data.chatname}</div></div>` : '';\n",
+    "after": "\t\t\t`<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${escapeCssUrlAttribute(data.chatimg)}');\"></div></div>` : '';\n\t\tconst nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/overlay-comic-pop.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/overlay-comic-pop.html",
+    "status": "already",
+    "before": "\t\t\t`<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${data.chatimg}');\"></div></div>` : '';\n\t\tconst nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${data.chatname}</div></div>` : '';\n",
+    "after": "\t\t\t`<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${escapeCssUrlAttribute(data.chatimg)}');\"></div></div>` : '';\n\t\tconst nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/overlay-neon-cyberpunk.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/overlay-neon-cyberpunk.html",
+    "status": "already",
+    "before": "            `<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${data.chatimg}');\"></div></div>` : '';\n        const nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"color: ${data.nameColor}; text-shadow: 0 0 10px ${data.nameColor}\"` : ''}>${data.chatname}</div></div>` : '';\n",
+    "after": "            `<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${escapeCssUrlAttribute(data.chatimg)}');\"></div></div>` : '';\n        const nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"color: ${data.nameColor}; text-shadow: 0 0 10px ${data.nameColor}\"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/overlay-particles.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/overlay-particles.html",
+    "status": "already",
+    "before": "            `<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${data.chatimg}');\"></div></div>` : '';\n        const nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"color: ${data.nameColor}; text-shadow: 0 2px 10px ${data.nameColor}\"` : ''}>${data.chatname}</div></div>` : '';\n",
+    "after": "            `<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${escapeCssUrlAttribute(data.chatimg)}');\"></div></div>` : '';\n        const nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"color: ${data.nameColor}; text-shadow: 0 2px 10px ${data.nameColor}\"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/overlay-typewriter.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../libs/objects.js\"></script>\n<script src=\"../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/overlay-typewriter.html",
+    "status": "already",
+    "before": "        const nameHtml = data.chatname ? `<span class=\"terminal-prompt\">${statusIndicator}</span><span class=\"name\">${data.chatname}</span>` : '';\n",
+    "after": "        const nameHtml = data.chatname ? `<span class=\"terminal-prompt\">${statusIndicator}</span><span class=\"name\">${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</span>` : '';\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/overlay-xacception.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/overlay-xacception.html",
+    "status": "already",
+    "before": "\t\t\t`<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${data.chatimg}');\"></div></div>` : '';\n\t\tconst nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${data.chatname}</div></div>` : '';\n",
+    "after": "\t\t\t`<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${escapeCssUrlAttribute(data.chatimg)}');\"></div></div>` : '';\n\t\tconst nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/rainbowpuke/index.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/rainbowpuke/index.html",
+    "status": "applied",
+    "before": "\t\t\t${data.chatimg ? `<div class=\"avatar-wrapper\"><div class=\"avatar\" style=\"background-image: url('${data.chatimg}');\"></div></div>` : ''}\n\t\t\t${data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${data.chatname}</div></div>` : ''}\n",
+    "after": "\t\t\t${data.chatimg ? `<div class=\"avatar-wrapper\"><div class=\"avatar\" style=\"background-image: url('${escapeCssUrlAttribute(data.chatimg)}');\"></div></div>` : ''}\n\t\t\t${data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : ''}\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/sampleoverlay_reverse.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/sampleoverlay_reverse.html",
+    "status": "already",
+    "before": "\t\t\t`<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${data.chatimg}');\"></div></div>` : '';\n\t\tconst nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${data.chatname}</div></div>` : '';\n",
+    "after": "\t\t\t`<div class=\"avatar-wrapper\" style=\"background: ${avatarBorderColor}\"><div class=\"avatar\" style=\"background-image: url('${escapeCssUrlAttribute(data.chatimg)}');\"></div></div>` : '';\n\t\tconst nameHtml = data.chatname ? `<div class=\"name-bg\"><div class=\"name\" ${data.nameColor ? `style=\"text-shadow: 0 0 3px ${data.nameColor}\"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/spiritoverlay.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/spiritoverlay.html",
+    "status": "already",
+    "before": "                <div class=\"avatar\" style=\"background-image: url('${data.chatimg}');\"></div>\n",
+    "after": "                <div class=\"avatar\" style=\"background-image: url('${escapeCssUrlAttribute(data.chatimg)}');\"></div>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/spiritoverlay.html",
+    "status": "already",
+    "before": "        const nameHtml = data.chatname ? `<span class=\"name\"${data.nameColor ? ` style=\"color: ${data.nameColor};\"` : ''}>${data.chatname}</span>` : '';\n",
+    "after": "        const nameHtml = data.chatname ? `<span class=\"name\"${data.nameColor ? ` style=\"color: ${data.nameColor};\"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</span>` : '';\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/t3nk3y/index.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"../../shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "themes/t3nk3y/index.html",
+    "status": "applied",
+    "before": "                ${data.chatimg ? `<div class=\"avatar-wrapper\"><div class=\"avatar\" style=\"background-image: url('${data.chatimg}');\"></div></div>` : ''}\n                <span>${data.chatname}</span>\n",
+    "after": "                ${data.chatimg ? `<div class=\"avatar-wrapper\"><div class=\"avatar\" style=\"background-image: url('${escapeCssUrlAttribute(data.chatimg)}');\"></div></div>` : ''}\n                <span>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</span>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "tipjar.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"./libs/objects.js\"></script>\n<script src=\"./shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "tipjar.html",
+    "status": "already",
+    "before": "                <span class=\"tip-name\">${name}</span>\n",
+    "after": "                <span class=\"tip-name\">${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(name) : fallbackEscapeHtml(name))}</span>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "tipjar.html",
+    "status": "applied",
+    "before": "                        <div><strong>${donation.donator}</strong></div>\n",
+    "after": "                        <div><strong>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(donation.donator) : fallbackEscapeHtml(donation.donator))}</strong></div>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "tipjar.html",
+    "status": "already",
+    "before": "                                <div style=\"font-size: 18px; font-weight: bold; color: #4CAF50;\">${donator}</div>\n",
+    "after": "                                <div style=\"font-size: 18px; font-weight: bold; color: #4CAF50;\">${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(donator) : fallbackEscapeHtml(donator))}</div>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "waitlist.html",
+    "status": "review",
+    "before": "",
+    "after": "<script src=\"./libs/objects.js\"></script>\n<script src=\"./shared/utils/chatHtml.js\"></script>\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "waitlist.html",
+    "status": "already",
+    "before": "\t\tvar baseName = (entry && entry.chatname) ? entry.chatname : \"\";\n",
+    "after": "\t\tvar baseName = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize((entry && entry.chatname) || \"\") : fallbackEscapeHtml((entry && entry.chatname) || \"\"));\n"
+  },
+  {
+    "commit": "cf23f2b3",
+    "file": "waitlist.html",
+    "status": "already",
+    "before": "\t\t\timageHtml = \"<img onerror='hideImage(this)' src='\" + (entry.chatimg || \"\") + \"'>\";\n",
+    "after": "\t\t\timageHtml = \"<img onerror='hideImage(this)' src='\" + fallbackEscapeHtml(entry.chatimg || \"\") + \"'>\";\n"
+  }
+]

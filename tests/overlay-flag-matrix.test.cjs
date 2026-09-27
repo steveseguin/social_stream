@@ -53,7 +53,7 @@ function expected(entry,p){
  }
  if(entry.family==='featured-core'){
   const key=p.has('server')?'server':p.has('server2')?'server2':p.has('server3')?'server3':null;
-  return key?{input:key==='server'?2:key==='server2'?4:1,output:3,url:custom(key)||'wss://io.socialstream.ninja'}:null;
+  return key?{input:2,output:3,url:custom(key)||'wss://io.socialstream.ninja'}:null;
  }
  if(entry.family==='sample-core')return p.has('server')||p.has('server2')?{input:4,output:3,url:p.get('server')||p.get('server2')||(p.has('localserver')?'ws://127.0.0.1:4567':'wss://io.socialstream.ninja')}:null;
  if(entry.family==='chicken'){
@@ -72,8 +72,8 @@ function expected(entry,p){
   return key?{input:7,output:key==='server'?1:3,url:custom(key)||(key==='server'?'wss://io.socialstream.ninja/api':'wss://io.socialstream.ninja/extension')}:null;
  }
  const key=p.has('server')?'server':p.has('server2')?'server2':p.has('server3')?'server3':null;
- if(!key || key==='server3')return null;
- return {input:entry.family==='featured'?(key==='server'?2:4):(key==='server'?1:4),output:3,url:custom(key)||(key==='server'?(entry.family==='featured'?'wss://io.socialstream.ninja':'wss://io.socialstream.ninja/api'):'wss://io.socialstream.ninja/extension')};
+ if(!key || (key==='server3' && entry.family!=='featured'))return null;
+ return {input:entry.family==='featured'?2:(key==='server'?1:4),output:3,url:custom(key)||(entry.family==='featured'?'wss://io.socialstream.ninja':key==='server'?'wss://io.socialstream.ninja/api':'wss://io.socialstream.ninja/extension')};
 }
 const report={output,cases:[],failures:[]};
 async function runCase(context,base,entry,mode,index){

@@ -2,6 +2,7 @@
 
 (function() {
     'use strict';
+    function sourceURL(value) { return window.SSNSiteSourceURL ? window.SSNSiteSourceURL(value) : value; }
 
     // Discord webhook for form submissions (public - submissions go to private channel for review)
     const WEBHOOK_URL = 'https://freelance.vdo.workers.dev';
@@ -10,7 +11,7 @@
     const GIST_ID = '3642a19e9ed4b16571906cdb2e216a45';
     const GIST_URL = GIST_ID
         ? `https://gist.githubusercontent.com/steveseguin/${GIST_ID}/raw/services.json`
-        : 'data/services.json'; // Fallback to local file
+        : sourceURL('data/services.json'); // Fallback to local file
 
     // DOM Elements
     let servicesGrid;
@@ -136,14 +137,14 @@
                 <div class="service-card-header">
                     ${avatarHtml}
                     <div>
-                        <h3>${escapeHtml(service.name)}</h3>
-                        <div class="service-discord"><img src="../icons/discord.svg" alt="Discord" class="discord-icon"> ${escapeHtml(service.discord || '')}</div>
+                        <h3 translate="no">${escapeHtml(service.name)}</h3>
+                        <div class="service-discord" translate="no"><img src="${sourceURL('../icons/discord.svg')}" alt="Discord" class="discord-icon"> ${escapeHtml(service.discord || '')}</div>
                     </div>
                 </div>
                 <div class="service-card-body">
                     <div class="service-platforms">${platformBadges}</div>
                     <div class="service-types">${typeTags}</div>
-                    <p class="service-description">${escapeHtml(service.description || '')}</p>
+                    <p class="service-description" translate="no">${escapeHtml(service.description || '')}</p>
                     ${portfolio ? `<div class="service-portfolio">${portfolio}</div>` : ''}
                 </div>
                 <div class="service-card-footer">
@@ -177,8 +178,9 @@
     // Create a click-to-reveal link (prevents SEO crawling of external links)
     function createRevealLink(label, url, icon) {
         const encodedUrl = btoa(url); // Base64 encode to hide from crawlers
-        return `<span class="reveal-link" data-url="${encodedUrl}" title="Click to reveal ${label}">
-            <img src="${icon}" alt="${label}" style="width: 1.8rem; height: 1.8rem; opacity: 0.8;">
+        const displayLabel = window.SSNSiteTranslate ? window.SSNSiteTranslate(label) : label;
+        return `<span class="reveal-link" data-url="${encodedUrl}" title="Click to reveal ${displayLabel}">
+            <img src="${sourceURL(icon)}" alt="${displayLabel}" style="width: 1.8rem; height: 1.8rem; opacity: 0.8;">
         </span>`;
     }
 

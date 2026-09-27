@@ -208,6 +208,11 @@
 			var copyButton = document.getElementById("copySession");
 
 			function translate(key, fallback, values) {
+				if (window.SSNSiteTranslate && window.SSNSiteLanguage) {
+					return window.SSNSiteTranslate(fallback).replace(/\{(\w+)\}/g, function (match, name) {
+						return values && Object.prototype.hasOwnProperty.call(values, name) ? values[name] : match;
+					});
+				}
 				if (window.SSNPageI18n && typeof window.SSNPageI18n.t === "function") {
 					return window.SSNPageI18n.t(key, fallback, values);
 				}
@@ -245,7 +250,7 @@
 				var dot = document.getElementById("connectionDot");
 				if (sessionId) {
 					dot.className = "dot ready";
-					text("connectionText", translate("ssapp-detected-copy-id", "SSApp detected — copy this ID into the Stream Deck plugin."));
+					text("connectionText", translate("ssapp-detected-copy-id", "SSApp detected. Copy this ID into the Stream Deck plugin."));
 				} else {
 					dot.className = "dot";
 					text("connectionText", translate("ssapp-creating-session", "SSApp is creating your session. Keep this page open for a moment."));

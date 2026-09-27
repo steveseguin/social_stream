@@ -1674,7 +1674,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 				'bedrock'
 			);
 			
-			if (typeof ipcRenderer !== 'undefined') {
+			if (typeof ipcRenderer !== 'undefined' && !options.strictEndpoint) {
 				const response = await fetchNode(bedrockEndpoint, signedHeaders, 'POST', requestBody);
 				
 				if (response.status !== 200) {
@@ -1711,6 +1711,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 					method: 'POST',
 					headers: signedHeaders,
 					body: JSON.stringify(requestBody),
+					redirect: options.strictEndpoint ? 'error' : 'follow',
+					credentials: options.strictEndpoint ? 'omit' : 'same-origin',
 					signal: abortController?.signal
 				});
 				
@@ -1836,7 +1838,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			}
 
 		try {
-			if (typeof ipcRenderer !== 'undefined') {
+			if (typeof ipcRenderer !== 'undefined' && !options.strictEndpoint) {
 				if (callback) {
 					return new Promise((resolve, reject) => {
 						const channelId = `streaming-nodepost-${Date.now()}`;
@@ -1914,6 +1916,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						method: 'POST',
 						headers,
 						body: JSON.stringify(message),
+						redirect: options.strictEndpoint ? 'error' : 'follow',
+						credentials: options.strictEndpoint ? 'omit' : 'same-origin',
 						signal: abortController?.signal
 					});
 
@@ -1962,6 +1966,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						method: 'POST',
 						headers,
 						body: JSON.stringify(message),
+						redirect: options.strictEndpoint ? 'error' : 'follow',
+						credentials: options.strictEndpoint ? 'omit' : 'same-origin',
 						signal: abortController?.signal
 					});
 
@@ -2003,7 +2009,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		};
 
 		if (provider === "opencode" && isOpenCodeZenAutoModel(message.model)) {
-			return requestOpenCodeZenWithFallback(llmSettings, makeOpenAICompatibleRequest, openCodeAllowGo);
+			return requestOpenCodeZenWithFallback(options.strictEndpoint ? { ...llmSettings, opencodeApiKey: { textsetting: '' } } : llmSettings, makeOpenAICompatibleRequest, openCodeAllowGo);
 		}
 
 		return makeOpenAICompatibleRequest(message.model);
@@ -2028,7 +2034,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 
             let response;
 			let responseComplete;
-            if (typeof ipcRenderer !== 'undefined') {  // ollama still
+            if (typeof ipcRenderer !== 'undefined' && !options.strictEndpoint) {  // ollama still
                 // Your existing Electron implementation
                 if (isStreaming) {
                     response = await new Promise((resolve, reject) => {
@@ -2123,6 +2129,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(message),
+                    redirect: options.strictEndpoint ? 'error' : 'follow',
+                    credentials: options.strictEndpoint ? 'omit' : 'same-origin',
                     signal: abortController ? abortController.signal : undefined,
                 });
 

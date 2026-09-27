@@ -3,6 +3,7 @@
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
     <meta name="description" content="Bot Overlay &amp; TTS. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
 <script src="./libs/objects.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
 <script src="./shared/utils/chatBadges.js"></script>
 <link rel="stylesheet" href="./shared/utils/chatBadges.css">
 <script src="shared/overlay-control-transport.js"></script>
@@ -1146,6 +1147,15 @@
 				return span.innerHTML;
 			}
 
+			function escapeContentImageUrl(value) {
+				// Only for quoted attachment URL attributes. Preserve the single entity
+				// decode these templates already perform, including legacy &amp; URLs.
+				// Entity-decoded quotes remain attribute data; literal delimiters must be escaped.
+				return String(value == null ? "" : value).replace(/[<>"']/g, function (character) {
+					return { "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character];
+				});
+			}
+
 			function upscaleImages(data) {
 				// for third party APIs
 				let chatimg = "";
@@ -2254,16 +2264,16 @@ function processData(data) {
 					
 					if (!data.chatmessage && data.contentimg) {
 					  if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')) {
-						data.chatmessage = '<video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></video>';
+						data.chatmessage = '<video loop="true" autoplay="true" muted="true" id="img" src="' + escapeContentImageUrl(data.contentimg) + '"  onerror="this.parent.style.display=\'none\'" /></video>';
 					  } else {
-						data.chatmessage = '<img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" />';
+						data.chatmessage = '<img id="img" src="' + escapeContentImageUrl(data.contentimg) + '"  onerror="this.parent.style.display=\'none\'" />';
 					  }
 					  largeImage = true;
 					} else if (data.contentimg) {
 					  if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')) {
-						addImage = '<div id="imgContent" class="hl-imgContent"><video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></video></div>';
+						addImage = '<div id="imgContent" class="hl-imgContent"><video loop="true" autoplay="true" muted="true" id="img" src="' + escapeContentImageUrl(data.contentimg) + '"  onerror="this.parent.style.display=\'none\'" /></video></div>';
 					  } else {
-						addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></div>';
+						addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + escapeContentImageUrl(data.contentimg) + '"  onerror="this.parent.style.display=\'none\'" /></div>';
 					  }
 					} else {
 					  data.contentimg = "";
@@ -2424,7 +2434,7 @@ function processData(data) {
 					var avatarImg = "";
 					if (avatar) {
 					  if (data.backupChatimg) {
-						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + data.chatimg + '" class="hl-profile-pic" data-backup-image="' + data.backupChatimg + '"onerror="errorImage(this);"></div>';
+						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + fallbackEscapeHtml(data.id) + '" src="' + fallbackEscapeHtml(data.chatimg) + '" class="hl-profile-pic" data-backup-image="' + fallbackEscapeHtml(data.backupChatimg) + '"onerror="errorImage(this);"></div>';
 					  } else {
 						let chatimg = "";
 						if (!data.chatimg) {
@@ -2436,7 +2446,7 @@ function processData(data) {
 						} else {
 						  chatimg = data.chatimg;
 						}
-						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + chatimg + '" class="hl-profile-pic" onerror="errorImage(this);"></div>';
+						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + fallbackEscapeHtml(data.id) + '" src="' + fallbackEscapeHtml(chatimg) + '" class="hl-profile-pic" onerror="errorImage(this);"></div>';
 					  }
 					} 
 
@@ -2446,10 +2456,13 @@ function processData(data) {
 					  chatbadges = '<div class="hl-badges" >' + chatbadges + "</div>";
 					}
 
-					// textonly=true: literal chatmessage goes to textContent, not an HTML sanitizer. HTML mode keeps upstream-sanitized markup; largeImage is separate generated media.
+					// Plain bodies use textContent; generated attachments stay separate from chat HTML.
 					var renderChatMessageAsText = !!(data.textonly && !largeImage);
-					// HTML-mode chatmessage is expected to have passed upstream sanitization; literal textonly bodies intentionally bypass it. The flag alone is not proof of sender safety.
 					var renderedChatMessage = renderChatMessageAsText ? "" : data.chatmessage;
+					if (!renderChatMessageAsText && !largeImage) {
+					  // Check the display copy so direct senders cannot bypass HTML sanitization.
+					  renderedChatMessage = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(renderedChatMessage) : fallbackEscapeHtml(renderedChatMessage);
+					}
 
 					if (stacking) {
 					  try {
@@ -2458,7 +2471,7 @@ function processData(data) {
 						document.getElementById("newmessage").id = "";
 					  } catch (e) {}
 
-					  document.getElementById("output").innerHTML += '<div class="hl-c-cont highlight-chat stacked" id="newmessage" data-source-type="' + data.type + '">' + '<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" + '<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
+					  document.getElementById("output").innerHTML += '<div class="hl-c-cont highlight-chat stacked" id="newmessage" data-source-type="' + data.type + '">' + '<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname)) + chatbadges + "</div>" + '<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
 
 					  if (data.hasDonation || memebershipHTML) {
 						document.getElementById("newmessage").classList.add("dono");
@@ -2466,7 +2479,7 @@ function processData(data) {
 						document.getElementById("newmessage").classList.remove("dono");
 					  }
 					} else {
-					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="' + data.type + '">' + '<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" + '<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
+					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="' + data.type + '">' + '<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname)) + chatbadges + "</div>" + '<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
 
 					  if (data.hasDonation || memebershipHTML) {
 						document.getElementById("newmessage").classList.add("dono");

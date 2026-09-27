@@ -110,6 +110,7 @@
         table { width: 100%; border-collapse: collapse; margin: 20px 0; background: #111827; }
         th, td { padding: 12px 14px; border: 1px solid #293244; text-align: left; vertical-align: top; }
         th { color: #ddd6fe; background: #172033; }
+        table:focus { outline: 2px solid #c4b5fd; outline-offset: 2px; }
         .flow {
             padding: 16px 18px;
             margin: 14px 0;
@@ -127,7 +128,7 @@
         @media (max-width: 760px) {
             header, main, footer { padding-left: 18px; padding-right: 18px; }
             .two-col { grid-template-columns: 1fr; }
-            table { font-size: 0.9rem; }
+            table { font-size: 0.9rem; display: block; max-width: 100%; overflow-x: auto; }
         }
     </style>
 </head>
@@ -136,7 +137,7 @@
         <div class="shell">
             <div class="eyebrow">Event Flow shared state</div>
             <h1>User Memory</h1>
-            <p>Remember unique participants, check them on later messages, draw a random winner, and reset exactly the list you intended—without turning a platform role into permanent global state.</p>
+            <p>Remember unique participants, check them on later messages, draw a random winner, and reset exactly the list you intended without turning a platform role into permanent global state.</p>
             <nav>
                 <a href="#model">How it works</a>
                 <a href="#setup">Set it up</a>
@@ -151,7 +152,7 @@
         <section id="model">
             <h2>One named memory, many tools</h2>
             <div class="lead">
-                A <strong>User Memory</strong> state node owns one isolated set of people. Every Remember, Forget, Check, Draw, or Clear node selects that state node. Create another User Memory node when you need a separate list—for example, one for “liked the stream” and another for “entered the giveaway.”
+                A <strong>User Memory</strong> state node owns one isolated set of people. Every Remember, Forget, Check, Draw, or Clear node selects that state node. Create another User Memory node when you need a separate list, for example, one for “liked the stream” and another for “entered the giveaway.”
             </div>
             <div class="wire-key">
                 <span class="wire">Solid teal: this event runs next</span>
@@ -176,7 +177,7 @@
             <div class="two-col">
                 <div>
                     <h3>Available operations</h3>
-                    <table>
+                    <table tabindex="0">
                         <thead><tr><th>Node</th><th>What it does</th></tr></thead>
                         <tbody>
                             <tr><td><strong>Remember User</strong></td><td>Adds the current event’s user once. Repeated participation increases that user’s participation count without adding duplicate draw entries.</td></tr>
@@ -243,14 +244,14 @@ Moderator + Message Starts With !resetdraw → AND → Clear All Users ···→
                 <figcaption>Every reset option belongs to this one named memory. Other User Memory nodes are not touched.</figcaption>
             </figure>
             <div class="callout warning">
-                <strong>“Clear all” is scoped:</strong> it means all users inside the selected memory—not all Event Flow state, not every draw, and not every memory in Social Stream Ninja.
+                <strong>“Clear all” is scoped:</strong> it means all users inside the selected memory, not all Event Flow state, not every draw, and not every memory in Social Stream Ninja.
             </div>
         </section>
 
         <section id="outputs">
             <h2>Use draw and participation outputs</h2>
             <p>Memory actions add fields to the message so downstream Show Text, Send Message, webhook, or custom actions can use them.</p>
-            <table>
+            <table tabindex="0">
                 <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
                 <tbody>
                     <tr><td><code>userMemoryName</code></td><td>The selected memory’s name.</td></tr>
@@ -272,7 +273,7 @@ Moderator + Message Starts With !resetdraw → AND → Clear All Users ···→
 
         <section>
             <h2>Troubleshooting</h2>
-            <table>
+            <table tabindex="0">
                 <tbody>
                     <tr><th>The dashed line is missing</th><td>Select the operation and choose a User Memory target, or drag its purple side diamond to the memory hub.</td></tr>
                     <tr><th>The same person appears twice</th><td>Check whether the events came from different platforms. Platform + user ID intentionally creates separate identities.</td></tr>

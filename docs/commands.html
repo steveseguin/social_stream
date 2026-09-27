@@ -184,8 +184,8 @@
 				<div class="command-note">
 					<p><strong>Required Settings (Global settings → Mechanics):</strong></p>
 					<ul style="text-align:left; margin: 10px 0;">
-						<li><strong>🎮 Remote Control (StreamDeck/Bitfocus):</strong> Enable <em>"Enable remote API control of extension"</em> (Toggle 1) — Connect to <strong>channel 1</strong></li>
-						<li><strong>📡 Chat Listener (Python/Node apps):</strong> Enable Toggle 1 + <em>"Send chat messages to API server"</em> (Toggle 3) — Connect to <strong>channel 4</strong></li>
+						<li><strong>🎮 Remote Control (StreamDeck/Bitfocus):</strong> Enable <em>"Enable remote API control of extension"</em> (Toggle 1). Connect to <strong>channel 1</strong></li>
+						<li><strong>📡 Chat Listener (Python/Node apps):</strong> Enable Toggle 1 + <em>"Send chat messages to API server"</em> (Toggle 3). Connect to <strong>channel 4</strong></li>
 					</ul>
 					<p>See the <a href="../api.md">full API documentation</a> for detailed setup guides and code samples.</p>
 				</div>
@@ -334,7 +334,7 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 							</tr>
 							<tr>
 								<td><code>drawmode</code></td>
-								<td>Turns draw mode on/off, or toggles it when <code>value</code> is <code>toggle</code></td>
+								<td>Turns draw mode on/off, or toggles it when <code>value</code> equals <code>toggle</code></td>
 								<td><code>https://io.socialstream.ninja/SESSIONID/drawmode/null/toggle</code></td>
 							</tr>
 							<tr>
@@ -1076,7 +1076,7 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
                 <div class="custom-js-method">
                     <h4>Using custom.js</h4>
                     <ol class="command-steps">
-                        <li>Rename <code>custom_sample.js</code> to <code>custom.js</code></li>
+                        <li>Rename <code>custom_sample.js</code> to the filename <code>custom.js</code></li>
                         <li>Edit the file to add your custom functionality</li>
                         <li>Open the dock.html file locally for the custom.js to be loaded</li>
                     </ol>
@@ -1138,7 +1138,7 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
 		<div class="container">
 			<h2>Timer API</h2>
 			<div class="command-card">
-				<h3>Control <code>timer.html</code> Remotely</h3>
+				<h3>Remote control for <code>timer.html</code></h3>
 				<p>The timer page is intentionally narrow in scope: one timer, optional operator controls, warning states, overtime, and a few visual styles.</p>
 				<p>Useful actions include <code>starttimer</code>, <code>pausetimer</code>, <code>resettimer</code>, <code>timeradd</code>, <code>timersubtract</code>, and <code>settimer</code>.</p>
 				<div class="code-block">
@@ -1166,6 +1166,7 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
 	
 
 
+<section class="container"><h2>Managed giveaway commands</h2><p><code>startgiveaway</code>, <code>closegiveaway</code>, <code>drawgiveaway</code>, <code>resetgiveaway</code>, and <code>getgiveawaystate</code> operate the dedicated giveaway pool using the same API/Stream Deck controls. Draw closes entries automatically. New round preserves earlier winner history and rejects unpaid reservations. Cancel and refund returns outstanding ticket payments. Paid tickets, Number Hunt, Coin Flip Pot and Event Flow use the same host service. <a href="giveaway-points-guide.html">Setup, presentations, command values and recovery</a>.</p></section>
     <section class="get-started">
         <div class="container">
             <h2>Ready to Take Your Stream to the Next Level?</h2>
@@ -1230,7 +1231,7 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
         </div>
     </footer>
 
-    <script src="js/main.js"></script>
+    <script data-copy-markdown src="js/main.js"></script>
     <script>
         // Set current year in footer
 		document.getElementById('current-year').textContent = new Date().getFullYear();
@@ -1343,5 +1344,5 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
 			});
 		});
     </script>
-<section class="container"><h2>Managed giveaway commands</h2><p><code>startgiveaway</code>, <code>closegiveaway</code>, <code>drawgiveaway</code>, <code>resetgiveaway</code>, and <code>getgiveawaystate</code> operate the dedicated giveaway pool using the same API/Stream Deck controls. Draw closes entries automatically. New round preserves earlier winner history and rejects unpaid reservations. Cancel and refund returns outstanding ticket payments. Paid tickets, Number Hunt, Coin Flip Pot and Event Flow use the same host service. <a href="giveaway-points-guide.html">Setup, presentations, command values and recovery</a>.</p></section></body>
+</body>
 </html>

@@ -919,6 +919,7 @@ if (typeof chrome.runtime == "undefined") {
 	ipcRenderer.on("fromPopup", (event, ...args) => {
 		//log("FROM POP UP (redirected)", args[0]);
 		var sender = {};
+		sender.aiEventLocalPopup = true;
 		sender.tab = {};
 		sender.tab.id = null;
 		const request = args[0];
@@ -4077,6 +4078,7 @@ var intervalMessages = {};
 
 function updateExtensionState(sync = true) {
 	log("updateExtensionState", isExtensionOn);
+	if (window.SSNAiEventBackground) window.SSNAiEventBackground.syncRelay();
 
 	document.title = "Keep Open - Social Stream Ninja";
 
@@ -5790,7 +5792,18 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		const senderTabId = hasSenderTabId ? senderTab.id : null;
 		const senderTabUrl = senderTab && typeof senderTab.url === "string" ? senderTab.url : "";
 
-		if (request.cmd === "monetization") {
+		if (request.cmd === "aiEvent") {
+            try {
+                sendResponse({ value: await window.SSNAiEventBackground.handleSettings(request, sender) });
+            } catch (error) {
+                sendResponse({ error: error.message || 'AI overlay settings are unavailable.' });
+            }
+            return response;
+        } else if (request.cmd === "aiEventFlow") {
+            try { sendResponse({ value: await window.SSNAiEventBackground.handleFlow(request, sender) }); }
+            catch (error) { sendResponse({ error: error.message || 'AI overlay is unavailable.' }); }
+            return response;
+        } else if (request.cmd === "monetization") {
             sendResponse(window.handleMonetizationRequest ? await window.handleMonetizationRequest(request, sender) : {error:"Monetization is loading."});
             return response;
         } else if (request.action === "clearHistory") {
@@ -7945,9 +7958,7 @@ function buildViewerCountsFromMetaStore() {
 
 function publishViewerCountsFromMetaStore() {
 	var counts = buildViewerCountsFromMetaStore();
-	if (settings.hypemode) {
-		updateViewerCount({ event: "viewer_updates", meta: counts }); // updateViewerCount already calls combineHypeData and sends
-	}
+	updateViewerCount({ event: "viewer_updates", meta: counts });
 
 	var viewerUpdateEvent = { event: "viewer_updates", meta: counts };
 	sendDataP2P(viewerUpdateEvent);
@@ -10242,6 +10253,7 @@ var conConDock = 0;
 var reconnectionTimeoutDock = null;
 
 function setupSocketDock() {
+	if (window.SSNAiEventBackground) window.SSNAiEventBackground.syncRelay();
 	if (!settings.server2 && !settings.server3) {
 		return;
 	} else if (!isExtensionOn) {
@@ -13385,8 +13397,15 @@ function prepareOverlayControl(data, target) {
 	return packet;
 }
 function handleOverlayControlRequest(data, socket, replyChannel, allowSnapshot) {
-	if (!data || (!data.ssnControlRequest && !data.ssnControlAck)) return false;
+	if (!data || (!data.ssnControlRequest && !data.ssnControlAck && data.action !== "requestViewerCount")) return false;
 	if (!isExtensionOn || settings.disablehost) return true;
+	if (data.action === "requestViewerCount") {
+		if (allowSnapshot || settings.server3) {
+			refreshTemporaryViewerCount(data.value && data.value.ttl);
+			updateViewerCount({ event: "viewer_updates", meta: buildViewerCountsFromMetaStore() });
+		}
+		return true;
+	}
 	if (data.ssnControlAck) {
 		var pending = overlayControlPending.get(data.ssnControlAck.id);
 		if (pending && pending.session === streamID && pending.target === data.ssnControlAck.target) pending.resolve(true);
@@ -13399,6 +13418,7 @@ function handleOverlayControlRequest(data, socket, replyChannel, allowSnapshot) 
 
 	} else if (request.target === "hype") {
 		packet = prepareOverlayControl({ hype: combineHypeData() }, "hype");
+		packet.ssnControl.viewerCountActive = !!(settings.showviewercount || settings.hypemode || isTemporaryViewerCountActive());
 	} else if (request.target === "map") {
         packet = prepareOverlayControl({ settings: settings }, "map");
     } else if (request.target === "timer" && timerStateInitialized) {
@@ -15295,7 +15315,9 @@ async function processIncomingRequest(request, UUID = false) {
 		return true;
 	}
 	if (request && request.action === "requestViewerCount") {
+		if (!isExtensionOn || settings.disablehost) return;
 		refreshTemporaryViewerCount(request.value && request.value.ttl);
+		updateViewerCount({ event: "viewer_updates", meta: buildViewerCountsFromMetaStore() });
 		return;
 	}
 	if (request && request.action === "eventFlowEvent" && request.value) {
@@ -15599,6 +15621,14 @@ async function processIncomingRequest(request, UUID = false) {
 		} else if (request.action === "gettimerstate") {
 			if (UUID) {
 				initializeTimer(UUID);
+			}
+		} else if (["getAiEventProfiles", "saveAiEventProfile", "generateAiEvent", "aiEventDelivered"].includes(request.action) && UUID) {
+			try {
+				if (!window.SSNAiEventBackground) throw new Error("AI Event Overlay is still loading. Try again.");
+				const value = await window.SSNAiEventBackground.handle(request);
+				sendDataP2PChunked({ aiEventResponse: { target: request.target, value } }, UUID);
+			} catch (error) {
+				sendDataP2P({ aiEventResponse: { target: request.target, error: error.message || "AI overlay request failed." } }, UUID);
 			}
 		} else if (request.action === "saveAiPromptOverlays" && request.value) {
 			const saveResult = await saveAiPromptOverlays(request.value);

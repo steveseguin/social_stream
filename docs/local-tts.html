@@ -29,10 +29,10 @@
     <script defer src="js/copy-markdown.js"></script>
     <style>
         :root {
-            --primary-color: #2196F3;
+            --primary-color: #1565C0;
             --secondary-color: #1976D2;
-            --accent-color: #FF9800;
-            --success-color: #4CAF50;
+            --accent-color: #996000;
+            --success-color: #267A2B;
             --text-color: #212121;
             --text-light: #757575;
             --bg-color: #FFFFFF;
@@ -67,6 +67,15 @@
         [data-theme="dark"] .screen-map,
         [data-theme="dark"] .fake-field {
             color: var(--text-color);
+        }
+
+        [data-theme="dark"] th,
+        [data-theme="dark"] .badge,
+        [data-theme="dark"] .plain-step b,
+        [data-theme="dark"] .step-number,
+        [data-theme="dark"] .screen-map-title,
+        [data-theme="dark"] .fake-button {
+            color: #10283B;
         }
 
         body {
@@ -466,9 +475,9 @@
                 <li><a href="#which-computer">The localhost / 127.0.0.1 Rule</a></li>
                 <li><a href="#where-to-click">Where to Click in SSN</a></li>
                 <li><a href="#flow">Self-Hosted Flow</a></li>
-                <li><a href="#builtin">Path 1 — Built-in TTS (Zero Setup)</a></li>
+                <li><a href="#builtin">Path 1: Built-in TTS (Zero Setup)</a></li>
                 <li><a href="#desktop-app">Browser and Desktop App Notes</a></li>
-                <li><a href="#server">Path 2 — Self-Hosted TTS Server</a></li>
+                <li><a href="#server">Path 2: Self-Hosted TTS Server</a></li>
                 <li><a href="#voice-cloning">How Voice Cloning Works</a></li>
                 <li><a href="#hardware">Computer Requirements</a></li>
                 <li><a href="#kokoro-fastapi">Kokoro-FastAPI Setup</a></li>
@@ -491,8 +500,8 @@
             <p>There are two approaches:</p>
             <div class="path-grid">
                 <div class="path-card recommended">
-                    <h3>Path 1 — Built-in TTS <span class="badge green">No Setup</span></h3>
-                    <p>Several high-quality AI voices are <strong>built directly into Social Stream Ninja</strong>. They run in your browser using WebAssembly or ONNX — no server, no Docker, no install.</p>
+                    <h3>Path 1: Built-in TTS <span class="badge green">No Setup</span></h3>
+                    <p>Several high-quality AI voices are <strong>built directly into Social Stream Ninja</strong>. They run in your browser using WebAssembly or ONNX, with no server, Docker, or installation required.</p>
                     <ul>
                         <li>Kokoro 82M (best quality)</li>
                         <li>Piper Neural TTS</li>
@@ -502,7 +511,7 @@
                     <p><strong>Just add a URL parameter and go.</strong></p>
                 </div>
                 <div class="path-card">
-                    <h3>Path 2 — Self-Hosted Server <span class="badge orange">Docker Required</span></h3>
+                    <h3>Path 2: Self-Hosted Server <span class="badge orange">Docker Required</span></h3>
                     <p>Run a local TTS server on your machine and point Social Stream Ninja at it. Gives you more voice options, voice cloning, and server-side control.</p>
                     <ul>
                         <li>Kokoro-FastAPI</li>
@@ -631,7 +640,7 @@
         </div>
 
         <!-- PATH 1: BUILT-IN -->
-        <h2 id="builtin">Path 1 — Built-in TTS (Zero Setup)</h2>
+        <h2 id="builtin">Path 1: Built-in TTS (Zero Setup)</h2>
         <div class="card">
             <p>These engines are bundled inside Social Stream Ninja and require no installation. They run in the browser using WebAssembly (WASM) or ONNX Runtime.</p>
 
@@ -678,15 +687,19 @@
             <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=kokoro</div>
 
             <h3>Kokoro TTS Options</h3>
-            <p>SSN currently lists 28 English Kokoro voices. Specify one with <code>&amp;voicekokoro=</code>:</p>
+            <p>SSN currently lists 28 English, three Spanish, and three Brazilian Portuguese Kokoro voices. Specify one with <code>&amp;voicekokoro=</code>:</p>
             <div class="code">English female: af_bella, af_sarah, af_nicole, af_sky
 English male:   am_adam, am_michael
 British female: bf_emma, bf_isabella
 British male:   bm_george, bm_lewis</div>
             <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=kokoro&voicekokoro=af_bella&kokorospeed=1.1</div>
             <div class="warning">
-                <strong>Language note:</strong> Built-in Kokoro voices are English voices. Changing <code>&amp;speech=</code> or <code>&amp;language=</code> to <code>pt-BR</code> or <code>es-ES</code> does not make Kokoro speak Portuguese or Spanish. For those languages, use Piper, eSpeak, a cloud provider, or a local TTS server with a matching model.
+                <strong>Language note:</strong> Select a Kokoro voice that matches the language you want. Changing only the language parameter does not change the selected voice.
             </div>
+            <p>Spanish example:</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=es-ES&ttsprovider=kokoro&voicekokoro=ef_dora</div>
+            <p>Portuguese example:</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=pt-BR&ttsprovider=kokoro&voicekokoro=pf_dora</div>
 
             <h3>Piper TTS Options</h3>
             <p>Specify a voice model with <code>&amp;pipervoice=</code>:</p>
@@ -710,7 +723,7 @@ British male:   bm_george, bm_lewis</div>
             </div>
 
             <div class="info">
-                <strong>OBS capture:</strong> All built-in TTS providers play audio directly through the browser. In OBS, add your dock.html as a Browser Source and enable <strong>"Control audio via OBS"</strong> — no virtual cables needed. See the <a href="#obs">OBS section</a> below.
+                <strong>OBS capture:</strong> All built-in TTS providers play audio directly through the browser. In OBS, add your dock.html as a Browser Source and enable <strong>"Control audio via OBS"</strong>. No virtual cables are needed. See the <a href="#obs">OBS section</a> below.
             </div>
         </div>
 
@@ -748,9 +761,9 @@ British male:   bm_george, bm_lewis</div>
         </div>
 
         <!-- PATH 2: SELF-HOSTED SERVER -->
-        <h2 id="server">Path 2 — Self-Hosted TTS Server</h2>
+        <h2 id="server">Path 2: Self-Hosted TTS Server</h2>
         <div class="card">
-            <p>If you want more voice options, voice cloning, or a dedicated server you can reuse across tools, you can run a local TTS server. Social Stream Ninja connects to it using its built-in <strong>OpenAI-compatible TTS endpoint</strong> support — no API key needed for local servers.</p>
+            <p>If you want more voice options, voice cloning, or a dedicated server you can reuse across tools, you can run a local TTS server. Social Stream Ninja connects to it using its built-in <strong>OpenAI-compatible TTS endpoint</strong> support. Local servers do not need an API key.</p>
 
             <div class="warning">
                 <strong>Requirements:</strong> <a href="https://www.docker.com/products/docker-desktop/" target="_blank">Docker Desktop</a> must be installed and running. Docker is free for personal use.
@@ -862,7 +875,7 @@ British male:   bm_george, bm_lewis</div>
             </div>
 
             <div class="warning">
-                <strong>XTTS-v2 is non-commercial by default.</strong> The <a href="https://huggingface.co/coqui/XTTS-v2/blob/main/LICENSE.txt" target="_blank">Coqui Public Model License</a> allows only non-commercial use of the model and its outputs. A monetized stream may not qualify, so verify the license or obtain separate permission before using XTTS-v2 commercially.
+                <strong>XTTS-v2 is non-commercial by default.</strong> <a href="https://huggingface.co/coqui/XTTS-v2/blob/main/LICENSE.txt" target="_blank">Coqui Public Model License</a> allows only non-commercial use of the model and its outputs. A monetized stream may not qualify, so verify the license or obtain separate permission before using XTTS-v2 commercially.
             </div>
 
             <p>For 6 GB VRAM or less, target small zero-shot cloning models and OpenAI-compatible servers first. Bigger models can still work through the same SSN endpoint if the user hosts them elsewhere.</p>
@@ -1068,7 +1081,7 @@ British male:   bm_george, bm_lewis</div>
             <h4>CPU (works on any computer):</h4>
             <div class="code">docker run -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2</div>
 
-            <h4>GPU (NVIDIA only — faster synthesis):</h4>
+            <h4>GPU (NVIDIA only, faster synthesis):</h4>
             <div class="code">docker run --gpus all -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-gpu:v0.2.0post4</div>
 
             <div class="info">
@@ -1076,7 +1089,7 @@ British male:   bm_george, bm_lewis</div>
             </div>
 
             <h3>Verify It's Running</h3>
-            <p>Open your browser and go to <strong>http://localhost:8880/web/</strong> — you should see a web UI where you can test voices.</p>
+            <p>Open your browser and go to <strong>http://localhost:8880/web/</strong>. You should see a web UI where you can test voices.</p>
 
             <h3>Available Voices</h3>
             <p>67+ voices available. A few highlights:</p>
@@ -1238,7 +1251,7 @@ npm run local-tts-bridge -- --mode f5</div>
         <!-- CONNECTING TO SSN -->
         <h2 id="connect">Connecting to Social Stream Ninja</h2>
         <div class="card">
-            <p>All self-hosted servers above use the same connection method — Social Stream's built-in <strong>OpenAI TTS endpoint</strong> support with a custom local URL.</p>
+            <p>All self-hosted servers above use the same connection method: Social Stream's built-in <strong>OpenAI TTS endpoint</strong> support with a custom local URL.</p>
 
             <h3>URL Parameters</h3>
             <table>
@@ -1307,7 +1320,7 @@ npm run local-tts-bridge -- --mode f5</div>
                 <tr>
                     <td><code>simpletts</code></td>
                     <td><code>&simpletts</code></td>
-                    <td>Skip "says" — reads message only</td>
+                    <td>Skip "says": reads message only</td>
                 </tr>
                 <tr>
                     <td><code>simpletts2</code></td>
@@ -1354,20 +1367,20 @@ npm run local-tts-bridge -- --mode f5</div>
         <div class="card">
             <p>How you capture TTS audio in OBS depends on how you're running Social Stream Ninja.</p>
 
-            <h3>Method 1 — OBS Browser Source <span class="badge green">Recommended</span></h3>
+            <h3>Method 1: OBS Browser Source <span class="badge green">Recommended</span></h3>
             <p>This is the simplest method and works for <strong>all TTS providers</strong> (built-in and self-hosted server).</p>
 
             <div class="step"><span class="step-number">1</span><div class="step-content">In OBS, add a new <strong>Browser Source</strong></div></div>
             <div class="step"><span class="step-number">2</span><div class="step-content">Set the URL to your <code>dock.html</code> URL with TTS parameters</div></div>
             <div class="step"><span class="step-number">3</span><div class="step-content">Check <strong>"Control audio via OBS"</strong> in the browser source settings</div></div>
-            <div class="step"><span class="step-number">4</span><div class="step-content">Click <strong>OK</strong> — TTS audio will now appear as an OBS audio source you can adjust or route</div></div>
+            <div class="step"><span class="step-number">4</span><div class="step-content">Click <strong>OK</strong>. TTS audio will now appear as an OBS audio source you can adjust or route</div></div>
             <div class="step"><span class="step-number">5</span><div class="step-content">Click the browser source once in the preview to allow browser audio autoplay</div></div>
 
             <div class="info">
                 <strong>Why this works:</strong> Built-in TTS and self-hosted server TTS both play audio through the browser's audio context (not OS speech synthesis). OBS can capture browser audio directly when "Control audio via OBS" is checked.
             </div>
 
-            <h3>Method 2 — SSN Desktop App + Desktop Audio</h3>
+            <h3>Method 2: SSN Desktop App + Desktop Audio</h3>
             <p>If you're using the Social Stream Ninja standalone desktop app (not an OBS browser source):</p>
 
             <div class="step"><span class="step-number">1</span><div class="step-content">TTS audio plays through your system speakers/headphones from the app</div></div>
@@ -1570,7 +1583,7 @@ npm run local-tts-bridge -- --mode f5</div>
         </div>
 
         <footer>
-            <p>Social Stream Ninja — Local AI TTS Guide &nbsp;|&nbsp; <a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub</a> &nbsp;|&nbsp; <a href="tts.html">TTS Voice Guide</a> &nbsp;|&nbsp; <a href="guides.html">All Guides</a></p>
+            <p>Social Stream Ninja: Local AI TTS Guide &nbsp;|&nbsp; <a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub</a> &nbsp;|&nbsp; <a href="tts.html">TTS Voice Guide</a> &nbsp;|&nbsp; <a href="guides.html">All Guides</a></p>
         </footer>
     </div>
 

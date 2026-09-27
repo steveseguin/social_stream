@@ -83,9 +83,11 @@
 		var params = getSearchParams(searchParams);
 		if (!params || !session) return false;
 		var parameter = params.has("server") ? "server" : params.has("server2") ? "server2" : params.has("server3") ? "server3" : null;
-		if (!parameter || parameter === "server3") return false;
-		var endpoint = getRelayUrl(params, parameter, parameter === "server" ? (featured ? "wss://io.socialstream.ninja" : "wss://io.socialstream.ninja/api") : "wss://io.socialstream.ninja/extension");
-		var channel = parameter === "server" ? (featured ? 2 : 1) : 4;
+		if (!parameter || (parameter === "server3" && !featured)) return false;
+		// Featured receives Dock selections even when an older link only carries
+		// server2/server3. Chat/auto-show receivers keep their captured-chat feed.
+		var endpoint = getRelayUrl(params, parameter, featured ? "wss://io.socialstream.ninja" : parameter === "server" ? "wss://io.socialstream.ninja/api" : "wss://io.socialstream.ninja/extension");
+		var channel = featured ? 2 : parameter === "server" ? 1 : 4;
 		var socket, retry, closed = false;
 		function connect() {
 			if (closed) return;

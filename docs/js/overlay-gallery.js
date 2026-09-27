@@ -1,5 +1,11 @@
 (function () {
   'use strict';
+    function siteText(label, values) {
+        if (window.SSNSiteTranslate) return window.SSNSiteTranslate(label, values);
+        return label.replace(/\{(\d+)\}/g, function (match, index) { return values && index < values.length ? values[index] : match; });
+    }
+    function sourceURL(value) { return window.SSNSiteSourceURL ? window.SSNSiteSourceURL(value) : new URL(value, location.href).href; }
+
   var cards = Array.prototype.slice.call(document.querySelectorAll('.gallery-card'));
   var filters = Array.prototype.slice.call(document.querySelectorAll('[data-category]'));
   var search = document.getElementById('gallery-search');
@@ -26,7 +32,7 @@
     collections[key][card.dataset.kind] = card;
   });
   function overlayURL(card, still) {
-    var url = new URL('../' + card.dataset.path, window.location.href);
+    var url = new URL(sourceURL('../' + card.dataset.path));
     url.searchParams.set('session', session.value.trim());
     if (password.value) url.searchParams.set('password', password.value);
     if (still) url.searchParams.set('staticart', '');
@@ -77,7 +83,7 @@
         row.dataset.kind = kind;
         var image = document.createElement('img');
         image.src = group[kind].querySelector('.gallery-preview img').src;
-        image.alt = label + ' preview';
+        image.alt = siteText('{0} preview', [siteText(label)]);
         var field = document.createElement('label');
         field.textContent = label;
         var input = document.createElement('input');
@@ -89,11 +95,11 @@
         actions.className = 'gallery-set-actions';
         var copy = document.createElement('button');
         copy.type = 'button'; copy.textContent = 'Copy link';
-        copy.setAttribute('aria-label', 'Copy ' + label.toLowerCase() + ' link');
+        copy.setAttribute('aria-label', siteText('Copy {0} link', [siteText(label)]));
         copy.addEventListener('click', function () { copySetLink(input); });
         var open = document.createElement('a');
         open.textContent = 'Open'; open.target = '_blank'; open.rel = 'noopener';
-        open.setAttribute('aria-label', 'Open ' + label.toLowerCase() + ' overlay');
+        open.setAttribute('aria-label', siteText('Open {0} overlay', [siteText(label)]));
         actions.appendChild(copy); actions.appendChild(open);
         row.appendChild(image); row.appendChild(field); row.appendChild(actions);
         setLinks.appendChild(row);
@@ -122,11 +128,11 @@
     var terms = search.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
     var visible = 0;
     cards.forEach(function (card) {
-      var match = (category === 'all' || card.dataset.kind === category) && terms.every(function (term) { return card.dataset.search.indexOf(term) !== -1; });
+      var match = (category === 'all' || card.dataset.kind === category) && terms.every(function (term) { return (card.dataset.search + ' ' + card.textContent.toLowerCase()).indexOf(term) !== -1; });
       card.hidden = !match;
       if (match) visible++;
     });
-    count.textContent = visible + ' of ' + cards.length + ' overlays';
+    count.textContent = siteText('{0} of {1} overlays', [visible, cards.length]);
     document.getElementById('gallery-empty').hidden = visible !== 0;
     filters.forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.category === category)); });
   }
@@ -136,7 +142,7 @@
     cards.forEach(function (card) {
       var link = card.querySelector('.gallery-open');
       if (!session.value.trim()) { link.href = '#gallery-setup'; return; }
-      var url = new URL('../' + card.dataset.path, window.location.href);
+      var url = new URL(sourceURL('../' + card.dataset.path));
       url.searchParams.set('session', session.value.trim());
       if (password.value) url.searchParams.set('password', password.value);
       link.href = url.href;
@@ -166,8 +172,8 @@
       lastFocus = link;
       var image = document.getElementById('gallery-full-image');
       image.src = link.href;
-      image.alt = link.dataset.title + ' overlay showing sample messages';
-      document.getElementById('gallery-lightbox-title').textContent = link.dataset.title;
+      image.alt = siteText('{0} overlay showing sample messages', [siteText(link.dataset.title)]);
+      document.getElementById('gallery-lightbox-title').textContent = siteText(link.dataset.title);
       dialog.hidden = false;
       document.body.style.overflow = 'hidden';
       close.focus();

@@ -1,0 +1,13 @@
+diff a/webstore/candidate/tipjar.html b/webstore/candidate/tipjar.html	(rejected hunks)
+@@ -2403,7 +2404,10 @@
+                 return;
+             }
+ 
+-            const tipValue = donationUsesNativeUnits && unitInfo ? unitInfo.amount : convertToUSD(rawDonation, source);
++            const tipValue = donationUsesNativeUnits && unitInfo ? unitInfo.amount : getDonationValueUSD(Object.assign({}, contribution, {
++                hasDonation: rawDonation,
++                type: source
++            }));
+ 
+             if (!countMode && (isNaN(tipValue) || tipValue <= 0)) {
+                 console.warn('Ignoring invalid donation value:', rawDonation);

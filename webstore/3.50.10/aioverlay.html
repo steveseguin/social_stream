@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>AI Overlay</title>
+	<style>
+		html, body {
+			margin: 0;
+			width: 100%;
+			height: 100%;
+			background: transparent;
+		}
+		#overlayFrame {
+			position: fixed;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			border: 0;
+			background: transparent;
+		}
+	</style>
+</head>
+<body>
+	<script src="./shared/aiPrompt/overlayStore.js"></script>
+	<script>
+	(function () {
+		var OverlayStore = window.SSNAiPromptOverlayStore;
+		var params = new URLSearchParams(location.search);
+		var requestedOverlay = params.get("overlay") || "";
+		var roomID = params.get("session") || "";
+		var password = params.get("password") || "false";
+		var requestTarget = Math.floor(Math.random() * 999999999);
+		var loaded = false;
+		var bridgeFrame = null;
+		var overlayFrame = null;
+		var overlayReady = false;
+		var pendingPayloads = [];
+		var bridgeResponseChunks = {};
+		var overlayRequestTimer = null;
+		var overlayRequestStartedAt = 0;
+		var overlayResponseReceived = false;
+		var recentMetaPayloads = {};
+		var sockets = [];
+		var hasServerMode = params.has("server") || params.has("server2") || params.has("server3");
+
+		function showMissingOverlayError() {
+			console.error("[AI Overlay] No saved AI overlay found for overlay=" + (requestedOverlay || "active") + ". Open aiprompt.html, save the overlay, then reload this page.");
+		}
+
+		function flushPendingPayloads() {
+			if (!overlayReady || !overlayFrame || !overlayFrame.contentWindow) return;
+			while (pendingPayloads.length) {
+				overlayFrame.contentWindow.postMessage({ dataReceived: { overlayNinja: pendingPayloads.shift() } }, "*");
+			}
+		}
+
+		function forwardToOverlay(payload) {
+			if (!payload) return;
+			payload = normalizeForwardPayload(payload);
+			if (!shouldForwardPayload(payload)) return;
+			if (!overlayReady || !overlayFrame || !overlayFrame.contentWindow) {
+				pendingPayloads.push(payload);
+				if (pendingPayloads.length > 100) pendingPayloads.shift();
+				return;
+			}
+			overlayFrame.contentWindow.postMessage({ dataReceived: { overlayNinja: payload } }, "*");
+		}
+
+		function escapeHtml(value) {
+			return String(value == null ? "" : value)
+				.replace(/&/g, "&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+				.replace(/"/g, "&quot;")
+				.replace(/'/g, "&#039;");
+		}
+
+		function normalizeForwardPayload(payload) {
+			if (!payload || typeof payload !== "object" || payload.textonly !== true || !Object.prototype.hasOwnProperty.call(payload, "chatmessage")) {
+				return payload;
+			}
+			var normalized = Object.assign({}, payload);
+			normalized.chatmessage = escapeHtml(normalized.chatmessage);
+			normalized.textonly = false;
+			return normalized;
+		}
+
+		function shouldForwardPayload(payload) {
+			if (!payload || typeof payload !== "object" || !Object.prototype.hasOwnProperty.call(payload, "meta")) return true;
+			var key = "";
+			try {
+				key = JSON.stringify(payload);
+			} catch (e) {
+				return true;
+			}
+			var now = Date.now();
+			if (recentMetaPayloads[key] && now - recentMetaPayloads[key] < 500) return false;
+			recentMetaPayloads[key] = now;
+			for (var existing in recentMetaPayloads) {
+				if (now - recentMetaPayloads[existing] > 2000) delete recentMetaPayloads[existing];
+			}
+			return true;
+		}
+
+		function loadHtml(html) {
+			if (loaded || !html) return;
+			loaded = true;
+			overlayFrame = document.createElement("iframe");
+			overlayFrame.id = "overlayFrame";
+			overlayFrame.allow = "midi;microphone;";
+			overlayFrame.src = "about:blank";
+			document.body.appendChild(overlayFrame);
+			setTimeout(function () {
+				var doc = overlayFrame.contentDocument;
+				if (!doc) {
+					console.error("[AI Overlay] Failed to create overlay iframe document.");
+					return;
+				}
+				doc.open();
+				doc.write(html);
+				doc.close();
+				overlayReady = true;
+				setTimeout(flushPendingPayloads, 0);
+			}, 0);
+		}
+
+		function loadFromPackage(pack) {
+			var overlay = OverlayStore.selectOverlay(pack, requestedOverlay);
+			if (overlay && overlay.html) {
+				loadHtml(overlay.html);
+				return true;
+			}
+			return false;
+		}
+
+		function loadFromLocalState() {
+			try {
+				return loadFromPackage(OverlayStore.localStateToPackage(localStorage));
+			} catch (e) {
+				console.error("[AI Overlay] Failed to load local overlay state:", e);
+				return false;
+			}
+		}
+
+		function createBridgeFrame(label) {
+			var frame = document.createElement("iframe");
+			frame.id = "bridgeFrame";
+			frame.dataset.bridgeLabel = label;
+			frame.onload = function () {
+				startOverlayRequestRetries();
+			};
+			frame.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(password) +
+				"&salt=vdo.ninja&notmobile&solo&label=" + encodeURIComponent(label) + "&view=" + encodeURIComponent(roomID) +
+				"&novideo&noaudio&cleanoutput&room=" + encodeURIComponent(roomID);
+			frame.style.cssText = "width:0;height:0;position:fixed;left:-100px;top:-100px;";
+			document.body.appendChild(frame);
+			return frame;
+		}
+
+		function requestExtensionOverlays() {
+			if (!roomID) return false;
+			bridgeFrame = createBridgeFrame("aioverlay");
+			return true;
+		}
+
+		function processIncomingData(raw) {
+			if (!raw || typeof raw !== "object") return;
+			if (raw.dataReceived && raw.dataReceived.overlayNinja) {
+				forwardToOverlay(raw.dataReceived.overlayNinja);
+				return;
+			}
+			if (raw.overlayNinja) {
+				forwardToOverlay(raw.overlayNinja);
+				return;
+			}
+			forwardToOverlay(raw);
+		}
+
+		function connectSocket(serverURL, socketRoomID, outChannel, inChannel) {
+			if (!serverURL || !socketRoomID) return;
+			var connection = {
+				socket: null,
+				attempts: 1,
+				timer: null,
+				closed: false
+			};
+			sockets.push(connection);
+
+			function scheduleReconnect() {
+				if (connection.closed) return;
+				var delay = Math.min(12000, 200 * connection.attempts);
+				if (connection.timer) clearTimeout(connection.timer);
+				connection.timer = setTimeout(function () {
+					connection.attempts += 1;
+					connectNow();
+				}, delay);
+			}
+
+			function connectNow() {
+				if (connection.closed) return;
+				try {
+					connection.socket = new WebSocket(serverURL);
+				} catch (e) {
+					scheduleReconnect();
+					return;
+				}
+
+				connection.socket.onopen = function () {
+					connection.attempts = 1;
+					try {
+						connection.socket.send(JSON.stringify({
+							join: socketRoomID,
+							out: outChannel,
+							in: inChannel
+						}));
+					} catch (e) {}
+				};
+
+				connection.socket.onmessage = function (event) {
+					if (!event || !event.data) return;
+					try {
+						var parsed = JSON.parse(event.data);
+						processIncomingData(parsed);
+						if (parsed && parsed.get) {
+							connection.socket.send(JSON.stringify({
+								callback: {
+									get: parsed.get,
+									result: true
+								}
+							}));
+						}
+					} catch (e) {}
+				};
+
+				connection.socket.onerror = function () {
+					try {
+						connection.socket.close();
+					} catch (e) {}
+				};
+
+				connection.socket.onclose = function () {
+					scheduleReconnect();
+				};
+			}
+
+			connectNow();
+		}
+
+		function connectServerModes() {
+			var socketRoomID = (roomID || "").split(",")[0];
+			if (!socketRoomID) return;
+			if (params.has("server")) {
+				var apiServerURL = params.get("server") || (params.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api");
+				connectSocket(apiServerURL, socketRoomID, 2, 1);
+			}
+			if (params.has("server2") || params.has("server3")) {
+				var extensionServerURL = params.has("server2")
+					? (params.get("server2") || "wss://io.socialstream.ninja/extension")
+					: (params.get("server3") || "wss://io.socialstream.ninja/extension");
+				connectSocket(extensionServerURL, socketRoomID, 3, 4);
+			}
+		}
+
+		function postOverlayRequest() {
+			if (!bridgeFrame || !bridgeFrame.contentWindow || loaded || overlayResponseReceived) return;
+			bridgeFrame.contentWindow.postMessage({
+				sendData: { overlayNinja: { action: "getAiPromptOverlays", target: requestTarget } },
+				type: "rpcs"
+			}, "*");
+		}
+
+		function startOverlayRequestRetries() {
+			if (overlayRequestTimer || loaded || overlayResponseReceived) return;
+			overlayRequestStartedAt = Date.now();
+			postOverlayRequest();
+			overlayRequestTimer = setInterval(function () {
+				if (loaded || overlayResponseReceived || Date.now() - overlayRequestStartedAt > 9500) {
+					stopOverlayRequestRetries();
+					return;
+				}
+				postOverlayRequest();
+			}, 1000);
+		}
+
+		function stopOverlayRequestRetries() {
+			if (!overlayRequestTimer) return;
+			clearInterval(overlayRequestTimer);
+			overlayRequestTimer = null;
+		}
+
+		function resolveBridgeChunk(payload) {
+			if (!payload || payload.action !== "ssnBridgeChunk") return payload;
+			var chunkId = String(payload.chunkId || "");
+			var index = parseInt(payload.index, 10);
+			var total = parseInt(payload.total, 10);
+			if (!chunkId || !isFinite(index) || !isFinite(total) || index < 0 || total < 1 || index >= total) return null;
+			var entry = bridgeResponseChunks[chunkId];
+			if (!entry || entry.total !== total) {
+				entry = { total: total, parts: [], received: 0 };
+				bridgeResponseChunks[chunkId] = entry;
+			}
+			if (typeof entry.parts[index] === "undefined") entry.received++;
+			entry.parts[index] = String(payload.value || "");
+			if (entry.received < entry.total) return null;
+			delete bridgeResponseChunks[chunkId];
+			try {
+				return JSON.parse(entry.parts.join(""));
+			} catch (e) {
+				console.error("[AI Overlay] Failed to parse chunked bridge response:", e);
+				return null;
+			}
+		}
+
+		function isBridgeSource(source) {
+			return !!(bridgeFrame && source === bridgeFrame.contentWindow);
+		}
+
+		window.addEventListener("message", function (event) {
+			if (bridgeFrame && !isBridgeSource(event.source)) return;
+			var message = event.data || {};
+			if (message.action && !loaded && !overlayResponseReceived) postOverlayRequest();
+			var payload = resolveBridgeChunk(message.dataReceived && message.dataReceived.overlayNinja);
+			var response = payload && payload.aiPromptOverlays;
+			if (response && response.target === requestTarget) {
+				overlayResponseReceived = true;
+				stopOverlayRequestRetries();
+				if (!loaded && !loadFromPackage(response.value || response) && !loadFromLocalState()) {
+					showMissingOverlayError();
+				}
+				return;
+			}
+			if (hasServerMode && isBridgeSource(event.source)) return;
+			forwardToOverlay(payload);
+		});
+
+		window.addEventListener("beforeunload", function () {
+			for (var i = 0; i < sockets.length; i++) {
+				var connection = sockets[i];
+				if (connection.timer) clearTimeout(connection.timer);
+				connection.closed = true;
+				if (connection.socket) {
+					try {
+						connection.socket.onclose = null;
+						connection.socket.close();
+					} catch (e) {}
+				}
+			}
+		});
+
+		var loadedLocal = loadFromLocalState();
+		connectServerModes();
+		if (requestExtensionOverlays()) {
+			setTimeout(function () {
+				if (!loaded) console.warn("[AI Overlay] Waiting for saved AI overlays from the extension...");
+			}, 1500);
+			setTimeout(function () {
+				if (!loaded && !loadFromLocalState()) {
+					stopOverlayRequestRetries();
+					showMissingOverlayError();
+				}
+			}, 10000);
+		} else if (!loadedLocal) {
+			showMissingOverlayError();
+		}
+	}());
+	</script>
+</body>
+</html>

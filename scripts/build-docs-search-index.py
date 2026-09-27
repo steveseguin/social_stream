@@ -95,7 +95,8 @@ VOID_HTML_TAGS = {
 }
 
 EXCLUDED_DIRECTORIES = {"_templates", "issues", "md", "skills"}
-TOKEN_PATTERN = re.compile(r"[a-z0-9]{2,}")
+TOKEN_PATTERN = re.compile(r"[^\W_]{2,}", re.UNICODE)
+CJK_PATTERN = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+")
 SPACE_PATTERN = re.compile(r"\s+")
 
 
@@ -172,12 +173,14 @@ def clean_text(value):
 def normalize_text(value):
     value = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", str(value or ""))
     value = unicodedata.normalize("NFKD", html.unescape(value))
-    value = value.encode("ascii", "ignore").decode("ascii").lower()
-    return SPACE_PATTERN.sub(" ", re.sub(r"[^a-z0-9]+", " ", value)).strip()
+    # Fold Latin accents without splitting Japanese voiced kana into separate words.
+    value = unicodedata.normalize("NFC", re.sub(r"[\u0300-\u036f]", "", value)).lower()
+    return SPACE_PATTERN.sub(" ", re.sub(r"[\W_]+", " ", value, flags=re.UNICODE)).strip()
 
 
 def token_variants(value):
-    for token in TOKEN_PATTERN.findall(normalize_text(value)):
+    value = normalize_text(value)
+    for token in TOKEN_PATTERN.findall(value):
         if token in STOP_WORDS:
             continue
         yield token
@@ -185,6 +188,14 @@ def token_variants(value):
             yield token[:-3] + "y"
         elif len(token) > 4 and token.endswith("s") and not token.endswith(("ss", "us")):
             yield token[:-1]
+    # Chinese and Japanese commonly omit spaces. Adjacent characters let short
+    # queries find words inside sentences without a remote tokenizer or new API.
+    for run in CJK_PATTERN.findall(value):
+        for character in run:
+            yield character
+        if len(run) >= 2:
+            for index in range(len(run) - 1):
+                yield run[index:index + 2]
 
 
 def trim_title(value):

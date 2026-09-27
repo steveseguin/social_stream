@@ -2496,10 +2496,10 @@
 				setupSocket(pseudodock ? 2 : false);
 			} else if (urlParams.has("server2")) {
 				serverURL = urlParams.get("server2") || serverURL;
-				setupSocket(1);
+				setupSocket(pseudodock ? 1 : false);
 			} else if (urlParams.has("server3")) {
 				serverURL = urlParams.get("server3") || serverURL;
-				setupSocket(2);
+				setupSocket(pseudodock ? 2 : false);
 			}
 
 			var onlyshowdonos = false;
