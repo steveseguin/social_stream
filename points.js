@@ -347,9 +347,9 @@ class PointsSystem {
         });
     }
     
-    async spendPoints(username, type = 'default', amount, operationId) {
+    async spendPoints(username, type = 'default', amount, operationId, holdMs = 45000) {
         if (!Number.isFinite(amount) || amount <= 0) return { success: false, message: "Amount must be a positive number" };
-        if (operationId) return this.pointRedemption(username,type,amount,operationId,'reserve');
+        if (operationId) return this.pointRedemption(username,type,amount,operationId,'reserve',holdMs);
 
         const userKey = this.getUserKey(username, type);
 
@@ -388,8 +388,9 @@ class PointsSystem {
         });
     }
 
-    async pointRedemption(username,type,amount,operationId,action) {
+    async pointRedemption(username,type,amount,operationId,action,holdMs=45000) {
         if(!Number.isSafeInteger(amount) || amount<=0 || !['reserve','refund','complete'].includes(action))throw new Error('Invalid redemption operation.');
+        if(action==='reserve' && (!Number.isFinite(holdMs) || holdMs<=0))throw new Error('Invalid redemption timeout.');
         const db=await this.ensureDB(), key=this.getUserKey(username,type), id='redemption:'+operationId;
         if(typeof operationId!=='string' || operationId.length>600)throw new Error('Invalid redemption ID.');
         return new Promise((resolve,reject)=>{
@@ -402,7 +403,7 @@ class PointsSystem {
                     if(prior){result={success:false,duplicate:true,message:'This redemption was already processed.'};return;}
                     if(user.points-user.pointsSpent<amount){result={success:false,available:user.points-user.pointsSpent,message:'Not enough points'};return;}
                     user.pointsSpent+=amount;user.pointsReserved=(user.pointsReserved||0)+amount;
-                    records.put({id:id,version:1,userKey:key,username:username,type:type,amount:amount,status:'pending',expiresAt:Date.now()+45000});
+                    records.put({id:id,version:1,userKey:key,username:username,type:type,amount:amount,status:'pending',expiresAt:Date.now()+holdMs});
                 }else{
                     if(!prior)throw new Error('Redemption receipt missing.');
                     if(prior.status!=='pending'){result={success:prior.status===(action==='refund'?'refunded':'completed'),duplicate:true};return;}

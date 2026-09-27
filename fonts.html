@@ -14,7 +14,7 @@
     <meta name="twitter:image:alt" content="Social Stream Ninja logo">
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Installed Font Detector — Preview installed fonts and generate ?font links</title>
+    <title>Installed Font Detector: Preview installed fonts and generate ?font links</title>
     <meta name="description" content="Detect installed fonts in your browser, preview live samples, and copy URL parameter links (?font=) compatible with VDO.Ninja, SocialStream.Ninja, and Caption.Ninja.">
     <link rel="canonical" href="https://socialstream.ninja/fonts.html">
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
@@ -24,13 +24,13 @@
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Installed Font Detector — Preview installed fonts and generate ?font links">
+    <meta property="og:title" content="Installed Font Detector: Preview installed fonts and generate ?font links">
     <meta property="og:description" content="Detect installed fonts in your browser, preview live samples, and copy URL parameter links (?font=) compatible with VDO.Ninja, SocialStream.Ninja, and Caption.Ninja.">
     <meta property="og:locale" content="en_US">
 
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Installed Font Detector — Preview installed fonts and generate ?font links">
+    <meta name="twitter:title" content="Installed Font Detector: Preview installed fonts and generate ?font links">
     <meta name="twitter:description" content="Detect installed fonts in your browser, preview live samples, and copy URL parameter links (?font=) compatible with VDO.Ninja, SocialStream.Ninja, and Caption.Ninja.">
 
     <!-- Structured data -->
@@ -427,7 +427,7 @@
           if (item.stretch) sample.style.fontStretch = item.stretch;
         }
         const faceSuffix = isFace ? ` (${[item.style||'normal', item.weight||'400'].filter(Boolean).join(', ')})` : '';
-        sample.textContent = `${name}${faceSuffix} — The quick brown fox jumps over the lazy dog 0123456789`;
+        sample.textContent = `${name}${faceSuffix}: The quick brown fox jumps over the lazy dog 0123456789`;
         row.appendChild(sample);
 
         const meta = document.createElement('div');
@@ -435,7 +435,7 @@
 
         const fontname = document.createElement('div');
         fontname.className = 'fontname';
-        fontname.textContent = name + (isFace && item.fullName ? ` — ${item.fullName}` : '');
+        fontname.textContent = name + (isFace && item.fullName ? `: ${item.fullName}` : '');
 
         const link = document.createElement('div');
         link.className = 'link';

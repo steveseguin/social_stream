@@ -1,5 +1,6 @@
 <html lang="en" style="font-size: 10px; font-family: Roboto, Arial, sans-serif">
 	<head>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
 <script src="./libs/objects.js"></script>
 <script src="./shared/utils/chatHtml.js"></script>
 <script src="./shared/utils/chatBadges.js"></script>
@@ -2252,7 +2253,7 @@
 			
 			var conCon = 1;
 			var socketserver = false;
-			var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+			var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja";
 			var reconnectionTimeout = null;
 
 			function setupSocket(allin = false) {
@@ -2284,8 +2285,8 @@
 				socketserver.onopen = function () {
 					conCon = 1;
 					if (allin == 1) {
-						socketserver.send(JSON.stringify({ join: roomID, out: 3 }));
-						console.log("output channel: 3, input channel: default");
+						socketserver.send(JSON.stringify({ join: roomID, out: 3, in: 4 }));
+						console.log("output channel: 3, input channel: 4");
 					} else if (allin == 2) {
 						socketserver.send(JSON.stringify({ join: roomID, out: 3, in: 1 }));
 						console.log("output channel: 3, input channel: 1");
@@ -2355,13 +2356,13 @@
 			}
 			if (urlParams.has("server")) {
 				serverURL = urlParams.get("server") || serverURL;
-				setupSocket();
+				setupSocket(pseudodock ? 2 : false);
 			} else if (urlParams.has("server2")) {
 				serverURL = urlParams.get("server2") || serverURL;
-				setupSocket(1);
+				setupSocket(pseudodock ? 1 : false);
 			} else if (urlParams.has("server3")) {
 				serverURL = urlParams.get("server3") || serverURL;
-				setupSocket(2);
+				setupSocket(pseudodock ? 2 : false);
 			}
 
 			var onlyshowdonos = false;

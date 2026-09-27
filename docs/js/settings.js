@@ -510,7 +510,7 @@ function createParameterCard(record) {
   const metaItems = [
     createMetaItem('Overlay', record.targetTitle),
     createMetaItem('Category', record.sectionTitle),
-    createMetaItem('Accepts', record.values || '—')
+    createMetaItem('Accepts', record.values || '-')
   ];
 
   if (record.aliases.length > 1) {

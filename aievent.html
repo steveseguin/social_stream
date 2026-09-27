@@ -13,58 +13,66 @@
 </head>
 <body>
 <main>
-    <header><p class="eyebrow">SOCIAL STREAM NINJA</p><h1>AI Event Overlay</h1><p>Turn a message or stream event into its own on-screen moment.</p></header>
+    <header><div><h1>Design your overlay</h1><p>Custom layouts, filled with live events.</p></div><a href="https://socialstream.ninja/beta/docs/index.html?file=ai-event-overlay.md" target="_blank" rel="noopener">Setup guide</a></header>
+    <p id="status" role="status" aria-live="polite">Connecting to SSN…</p>
+    <button type="button" id="reconnect" hidden>Reconnect</button>
     <div class="layout">
     <section class="popup-settings-panel panel" aria-labelledby="setup-heading">
-        <h2 id="setup-heading">Create your overlay</h2>
-        <p>Uses your LLM provider in SSN’s <strong>Chat Bots and AI services</strong>. Enable the private chat bot option there.</p>
-        <p><a href="docs/ai-event-overlay.md" target="_blank" rel="noopener">Setup, endpoints and loyalty points guide</a></p>
-        <label for="saved">Saved configurations</label>
-        <select id="saved"><option value="">New configuration</option></select>
-        <form id="settings-form">
+        <h2 id="setup-heading">Overlay settings</h2>
+        <label for="saved">Saved overlays</label>
+        <select id="saved"><option value="">New overlay</option></select>
+        <form id="settings-form" novalidate>
             <fieldset id="fields" disabled>
-            <div class="pair"><div><label for="name">Name</label><input id="name" required></div><div><label for="id">Configuration ID</label><input id="id" pattern="[a-zA-Z0-9_-]+" required aria-describedby="id-help"></div></div>
-            <small id="id-help">Use this ID in Event Flow and the overlay URL. Change it to save another configuration.</small>
+            <div class="pair"><div><label for="name">Name</label><input id="name" required></div><div><label for="id">Overlay ID</label><input id="id" pattern="[a-zA-Z0-9_-]+" required></div></div>
             <label for="mode">Trigger from</label><select id="mode"><option value="featured">Featured messages</option><option value="all">All messages</option><option value="flow">Event Flow</option></select>
-            <label for="prompt">What should the AI do?</label><textarea id="prompt" rows="5" required></textarea>
-            <div class="pair"><div><label for="style">Appearance</label><select id="style"><option value="glass">Glass</option><option value="neon">Neon</option><option value="storybook">Storybook</option><option value="minimal">Minimal</option></select></div><div><label for="duration">Display time (seconds)</label><input id="duration" type="number" min="1" step="1" required></div></div>
-            <div class="popup-toggle-row"><label class="switch"><input id="autoStyle" type="checkbox" aria-labelledby="autoStyle-label"><span class="slider round"></span></label><label id="autoStyle-label" for="autoStyle">Let the AI choose an appearance per event</label></div>
-            <details class="popup-subsection"><summary>Optional model override</summary><label for="model">Model name</label><input id="model" placeholder="Use SSN’s configured model"><small>The provider and API key come from SSN’s LLM settings.</small></details>
+            <small id="mode-help" hidden>Generates once per message. AI usage charges may apply.</small>
+            <label for="prompt">Design prompt</label><textarea id="prompt" rows="4" required></textarea>
+            <small>Viewer names and messages fill the layout after generation.</small>
+            <label for="duration">Display time (seconds)</label><input id="duration" type="number" min="1" step="1" required>
+            <details id="design-options" class="popup-subsection"><summary>Design options</summary>
+            <label for="variations">Approved variations</label><textarea id="variations" rows="3" placeholder="One phrase per line: winter, fireworks…"></textarea>
+            <label for="style">Style hint</label><select id="style"><option value="glass">Glass</option><option value="neon">Neon</option><option value="storybook">Storybook</option><option value="minimal">Minimal</option></select>
+            <div class="popup-toggle-row"><label class="switch"><input id="autoStyle" type="checkbox" aria-labelledby="autoStyle-label"><span class="slider round"></span></label><label id="autoStyle-label" for="autoStyle">Vary the layout within my design instructions</label></div>
+            <label for="model">Model override</label><input id="model" placeholder="Use SSN’s configured model"></details>
             <details class="popup-subsection"><summary>Optional generated image</summary>
                 <div class="popup-toggle-row"><label class="switch"><input id="imageEnabled" type="checkbox" aria-labelledby="image-label"><span class="slider round"></span></label><label id="image-label" for="imageEnabled">Generate an image for each event</label></div>
                 <label for="imageEndpoint">Image endpoint URL</label><input id="imageEndpoint" type="url" placeholder="https://your-service.example/images/generations">
                 <label for="imageKey">API key (optional)</label><input id="imageKey" type="password" autocomplete="off">
+                <label><input id="imageClearKey" type="checkbox"> Remove saved image key</label>
                 <label for="imageModel">Image model (optional)</label><input id="imageModel">
                 <label for="imagePrompt">Image direction</label><textarea id="imagePrompt" rows="2"></textarea>
             </details>
             <details class="popup-subsection"><summary>Optional speech</summary>
-                <div class="popup-toggle-row"><label class="switch"><input id="ttsEnabled" type="checkbox" aria-labelledby="tts-label"><span class="slider round"></span></label><label id="tts-label" for="ttsEnabled">Read the generated text aloud</label></div>
+                <div class="popup-toggle-row"><label class="switch"><input id="ttsEnabled" type="checkbox" aria-labelledby="tts-label"><span class="slider round"></span></label><label id="tts-label" for="ttsEnabled">Read the viewer message aloud</label></div>
                 <label for="ttsEndpoint">TTS endpoint URL</label><input id="ttsEndpoint" type="url" placeholder="https://your-service.example/audio/speech">
                 <label for="ttsKey">API key (optional)</label><input id="ttsKey" type="password" autocomplete="off">
+                <label><input id="ttsClearKey" type="checkbox"> Remove saved speech key</label>
                 <div class="pair"><div><label for="ttsModel">Speech model (optional)</label><input id="ttsModel"></div><div><label for="ttsVoice">Voice (optional)</label><input id="ttsVoice"></div></div>
             </details>
-            <div class="buttons"><button type="submit" id="save">Save configuration</button></div>
+            <div class="buttons"><button type="submit" id="save">Save overlay</button></div>
             </fieldset>
         </form>
-        <p id="status" role="status" aria-live="polite">Connecting to SSN…</p>
-        <button type="button" id="reconnect" hidden>Reconnect</button>
     </section>
     <section class="panel preview-panel" aria-labelledby="preview-heading">
-        <h2 id="preview-heading">Preview your moment</h2>
+        <h2 id="preview-heading">Preview</h2>
         <div id="preview" aria-live="polite"><p class="preview-placeholder">Your generated overlay appears here.</p></div>
         <div class="popup-settings-panel">
+            <details id="preview-data"><summary>Sample event</summary>
             <label for="test-name">Viewer name</label><input id="test-name" value="Jess">
             <label for="test-message">Message or action</label><textarea id="test-message" rows="2">I defeated the final boss!</textarea>
             <label for="test-donation">Donation (optional)</label><input id="test-donation" placeholder="$5.00">
-            <div class="buttons"><button id="test" class="tts-test-button" type="button" disabled>▶ Save and test</button></div>
-            <small>Testing calls your selected services. Events play one at a time; generation happens before each display.</small>
-            <div class="popup-subsection"><h2>Add to OBS</h2><label for="overlay-url">Browser Source URL</label><input id="overlay-url" readonly><div class="buttons"><button id="copy" type="button" disabled>Copy overlay URL</button><a id="open" target="_blank" rel="noopener" hidden>Open overlay</a></div><small>Save first. Reload the OBS source after changing a configuration.</small></div>
+            </details>
+            <div id="test-variation-row" hidden><label for="test-variation">Variation</label><select id="test-variation"><option value="">No variation</option></select></div>
+            <div class="buttons"><button id="test" class="tts-test-button" type="button" disabled>▶ Save and preview</button></div>
+            <small>Uses your configured AI service. Usage charges may apply.</small>
+            <p id="preview-status" role="status" aria-live="polite"></p>
+            <div class="popup-subsection"><h2>Add to OBS</h2><label for="overlay-url">Browser Source URL</label><input id="overlay-url" readonly><div class="buttons"><button id="copy" type="button" disabled>Copy overlay URL</button><a id="open" target="_blank" rel="noopener" hidden>Open overlay</a></div><small>Reload the OBS source after changing its trigger.</small></div>
         </div>
     </section>
     </div>
 </main>
 <script src="shared/aiEventOverlay/core.js"></script>
-<script src="shared/aiEventOverlay/client.js"></script>
+<script src="shared/aiEventOverlay/render.js"></script>
 <script src="shared/aiEventOverlay/setup.js"></script>
 </body>
 </html>

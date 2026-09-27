@@ -705,16 +705,17 @@ if (typeof(chrome.runtime)=='undefined'){
 				const callbackId = ++callbackIdCounter;
 				const isGetSettingsRequest = !!(data && data.cmd === "getSettings");
 				const isLLMProviderTestRequest = !!(data && data.cmd === "testLLMProvider");
-				const timeoutMs = isLLMProviderTestRequest ? 60000 : (isGetSettingsRequest ? 3000 : 500);
+				const isAiEventRequest = !!(data && data.cmd === "aiEvent");
+				const timeoutMs = isAiEventRequest ? 195000 : isLLMProviderTestRequest ? 60000 : (isGetSettingsRequest ? 3000 : 500);
 				
 				// Create promise with timeout
 				const promise = new Promise((resolve) => {
 					// Store callback with timeout
 					const timeoutId = setTimeout(() => {
 						pendingCallbacks.delete(callbackId);
-						if (isLLMProviderTestRequest) {
+						if (isLLMProviderTestRequest || isAiEventRequest) {
 							// The provider may still be working. Never resubmit a timed-out test.
-							resolve({ success: false, error: 'Connection test timed out.' });
+							resolve({ success: false, error: isAiEventRequest ? 'AI overlay request timed out.' : 'Connection test timed out.' });
 							return;
 						}
 						if (isGetSettingsRequest) {

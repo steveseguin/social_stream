@@ -11014,9 +11014,13 @@ input:checked + .slider:before {
                     <label class="collapsible-label" for="wrapper-chatbot-ai-event-options"><span>✨ AI Event Overlay</span></label>
                     <div class="collapsible-text"><div class="options"><div class="options_group streaming_chat ai-tool-card">
                         <h2 style="margin:0;">✨ AI Event Overlay</h2>
-                        <div class="link ai-tool-link"><div id="aievent" data-raw="" class="single_message"><a target="_blank" id="aieventlink" href="https://beta.socialstream.ninja/aievent.html">https://beta.socialstream.ninja/aievent.html</a></div></div>
-                        <p class="ai-tool-copy">Generate a presentation for each featured message, chat message, or Event Flow action. Optional images and speech.</p>
-                        <p class="ai-tool-note">Requires the configured LLM provider and private chat bot option.</p>
+                        <div id="aievent" data-raw="" hidden></div>
+                        <button type="button" id="ai-event-settings-open" aria-expanded="false" aria-controls="ai-event-settings-panel">Open overlay settings</button>
+                        <p class="ai-tool-copy">Custom layouts for featured messages and Event Flow. <a href="https://socialstream.ninja/beta/docs/index.html?file=ai-event-overlay.md" target="_blank" rel="noopener">Setup guide</a></p>
+                        <dialog id="ai-event-settings-panel" aria-labelledby="ai-event-dialog-title">
+                            <div class="ai-event-dialog-header"><h2 id="ai-event-dialog-title">AI Event Overlay</h2><button type="button" id="ai-event-settings-close">Close</button></div>
+                            <iframe id="ai-event-settings-frame" title="AI Event Overlay settings"></iframe>
+                        </dialog>
                     </div></div></div>
                 </div>
             </div>
@@ -16504,6 +16508,8 @@ input:checked + .slider:before {
 <script src="shared/monetization/popup.js"></script>
 <script src="shared/giveaway/popup.js"></script>
 <script src="shared/audience-room/popup.js"></script>
+<script src="shared/aiEventOverlay/popup.js"></script>
+<link rel="stylesheet" href="shared/aiEventOverlay/popup.css">
         <script type="text/javascript" src="spotify-auth-helper.js"></script>
     </body>
 </html>

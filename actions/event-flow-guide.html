@@ -318,7 +318,7 @@
                     </div>
                 </div>
                 <h3 id="every-flow-needs-a-trigger">Every flow starts with a trigger</h3>
-                <p>Action nodes (green) never run on their own — they only fire when a trigger node (blue) above them evaluates <code>true</code>. A flow built only from actions chained together looks valid but is permanently idle, because nothing ever starts the chain. Node names describe what the node <em>does</em>, not when it happens: <em>Feature Message</em> features a message when the flow reaches it — it does not fire when you feature a message elsewhere.</p>
+                <p>Action nodes (green) never run on their own. They only fire when a trigger node (blue) above them evaluates <code>true</code>. A flow built only from actions chained together looks valid but is permanently idle, because nothing ever starts the chain. Node names describe what the node <em>does</em>, not when it happens: <em>Feature Message</em> features a message when the flow reaches it. It does not fire when you feature a message elsewhere.</p>
                 <div class="two-col">
                     <figure class="screenshot">
                         <img src="img/flow-missing-trigger.png" alt="Two action nodes chained together with no trigger node">
@@ -341,7 +341,7 @@
                 <p>Nodes such as <em>Play Audio Clip</em>, <em>Display Media Overlay</em>, and the OBS controls need a rendering surface. That surface is the Flow Actions overlay page served from <a href="../actions.html" target="_blank" rel="noopener">actions.html</a>. Keep it running in your broadcasting software (OBS/Streamer.bot browser docks/etc.) so Event Flow actions have somewhere to appear.</p>
                 <figure class="screenshot">
                     <img src="img/flow-audio-overlay.png" alt="Any Message trigger connected to a Play Audio Clip action">
-                    <figcaption>This flow is complete and fires on every message — but the sound plays on the Flow Actions overlay page, <em>not in the editor.</em> The editor's Preview button plays locally; live playback needs the overlay open. If the browser blocks autoplay, click <strong>Enable audio</strong> on the Flow Actions page to retry the latest blocked clip. Clicking elsewhere on that page also enables playback. An OBS Browser Source normally allows autoplay.</figcaption>
+                    <figcaption>This flow is complete and fires on every message, but the sound plays on the Flow Actions overlay page, <em>not in the editor.</em> The editor's Preview button plays locally; live playback needs the overlay open. If the browser blocks autoplay, click <strong>Enable audio</strong> on the Flow Actions page to retry the latest blocked clip. Clicking elsewhere on that page also enables playback. An OBS Browser Source normally allows autoplay.</figcaption>
                 </figure>
                 <div class="panel">
                     <strong>How to open it (from the popup/dash):</strong>
@@ -403,7 +403,7 @@
                 </div>
                 <h3>Input Expectations</h3>
                 <ul>
-                    <li><strong>Event Sources</strong> (Twitch Message, Timers, Manual Trigger, etc.) ignore upstream input—they generate their own payload and always emit <code>true</code> unless the node itself errors.</li>
+                    <li><strong>Event Sources</strong> (Twitch Message, Timers, Manual Trigger, etc.) ignore upstream input. They generate their own payload and always emit <code>true</code> unless the node itself errors.</li>
                     <li><strong>Transform &amp; Logic Nodes</strong> read the payload and may rewrite fields, set state, or flip the gate signal to <code>false</code>.</li>
                     <li><strong>Action Nodes</strong> fire only when the gate remains <code>true</code>. They can still output an updated payload if you want to keep chaining actions.</li>
                 </ul>
@@ -568,8 +568,8 @@ Trigger ──────────────────▲
                     <tbody>
                         <tr><td><code>{username}</code></td><td><code>{chatname}</code></td><td>Display name of the user</td><td>CoolViewer123</td></tr>
                         <tr><td><code>{message}</code></td><td><code>{chatmessage}</code></td><td>Chat message text</td><td>Hello everyone!</td></tr>
-                        <tr><td><code>{source}</code></td><td>—</td><td>Platform name (capitalized)</td><td>Twitch, YouTube</td></tr>
-                        <tr><td><code>{type}</code></td><td>—</td><td>Platform name (raw)</td><td>twitch, youtube</td></tr>
+                        <tr><td><code>{source}</code></td><td>-</td><td>Platform name (capitalized)</td><td>Twitch, YouTube</td></tr>
+                        <tr><td><code>{type}</code></td><td>-</td><td>Platform name (raw)</td><td>twitch, youtube</td></tr>
                         <tr><td><code>{donation}</code></td><td><code>{hasDonation}</code></td><td>Donation/tip display label</td><td>$5.00, 500 bits</td></tr>
                     </tbody>
                 </table>
@@ -647,11 +647,11 @@ Trigger ──────────────────▲
                     <li>Running the <strong>SSApp desktop app?</strong> Unlock <a href="#custom-js"><strong>Custom JavaScript nodes</strong></a> for arbitrary logic that no built-in node covers.</li>
                     <li>Check the <a href="../docs/event-reference.html"><strong>Event Reference</strong></a> for detailed payload documentation across all platforms.</li>
                 </ul>
-                <p>This guide is intentionally standalone—copy it locally, adapt it for your team, and keep experimenting inside the editor.</p>
+                <p>This guide is intentionally standalone. Copy it locally, adapt it for your team, and keep experimenting inside the editor.</p>
             </section>
 
             <!-- ═══════════════════════════════════════════════════════════
-                 SECTION 9 — CUSTOM JAVASCRIPT
+                 SECTION 9: CUSTOM JAVASCRIPT
                  Direct link anchors:
                    #custom-js              → section root
                    #custom-js-trigger      → Custom Code trigger node
@@ -674,12 +674,12 @@ Trigger ──────────────────▲
                 </div>
 
                 <figure class="screenshot">
-                    <img src="img/editor-overview.png" alt="Event Flow Editor — empty state">
+                    <img src="img/editor-overview.png" alt="Event Flow Editor: empty state">
                     <figcaption>The Event Flow Editor. The left panel lists all available nodes; the dotted canvas is where you build flows; the right panel shows properties for the selected node.</figcaption>
                 </figure>
 
                 <!-- ─── Trigger ─── -->
-                <h3 id="custom-js-trigger">Custom Code — Trigger node</h3>
+                <h3 id="custom-js-trigger">Custom Code: Trigger node</h3>
                 <p>Drag <strong>Custom Code</strong> from the <em>Advanced</em> group in the <strong>Triggers</strong> panel onto the canvas. It acts as a gate: the flow continues only when your code returns <code>true</code>.</p>
 
                 <div class="two-col">
@@ -695,12 +695,12 @@ Trigger ──────────────────▲
 
                 <div class="panel">
                     <strong>Signature:</strong> your code runs as <code>function(message) { ... }</code><br>
-                    <strong>Must return:</strong> a boolean — <code>true</code> to let the flow continue, <code>false</code> to stop it.<br>
+                    <strong>Must return:</strong> a boolean: <code>true</code> to let the flow continue, <code>false</code> to stop it.<br>
                     <strong>Available:</strong> the object <code>message</code> (see <a href="#custom-js-message-api">message API</a> below), plus <code>convertCurrency(value, targetCurrency, source)</code> and <code>convertToUSD(value, source)</code>.
                 </div>
 
                 <!-- ─── Action ─── -->
-                <h3 id="custom-js-action">Execute Custom Code — Action node</h3>
+                <h3 id="custom-js-action">Execute Custom Code: Action node</h3>
                 <p>Drag <strong>Execute Custom Code</strong> from the <em>Integrations</em> group in the <strong>Actions</strong> panel. It can mutate the message, block it, or attach metadata that downstream nodes can read.</p>
 
                 <div class="two-col">
@@ -716,7 +716,7 @@ Trigger ──────────────────▲
 
                 <div class="panel">
                     <strong>Signature:</strong> your code runs as <code>function(message, result) { ... }</code><br>
-                    <strong>Should return:</strong> an object or Promise merged into <code>result</code> — see <a href="#custom-js-result-api">result API</a>.<br>
+                    <strong>Should return:</strong> an object or Promise merged into <code>result</code>; see <a href="#custom-js-result-api">result API</a>.<br>
                     <strong>Available:</strong> <code>message</code> (the event payload), <code>result</code> (current flow result state), <code>printThermal(html, options)</code>, plus <code>convertCurrency(value, targetCurrency, source)</code> and <code>convertToUSD(value, source)</code>.
                 </div>
 
@@ -784,7 +784,7 @@ Trigger ──────────────────▲
                 <h3 id="custom-js-examples">Snippet examples</h3>
                 <p>Copy any of these into the JavaScript Code textarea of the matching node type.</p>
 
-                <h4 class="snippet-heading">Trigger snippets — return <code>true</code> to continue the flow</h4>
+                <h4 class="snippet-heading">Trigger snippets: return <code>true</code> to continue the flow</h4>
 
                 <div class="snippet-block">
                     <div class="snippet-label">Keyword match (case-insensitive)</div>
@@ -834,7 +834,7 @@ return eurValue &gt;= 10 &amp;&amp; eurValue &lt; 25;</div>
                 </div>
 
                 <div class="snippet-block">
-                    <div class="snippet-label">Multi-condition — VIP + keyword</div>
+                    <div class="snippet-label">Multi-condition: VIP + keyword</div>
                     <div class="snippet-desc">Combine role check and message content in a single expression that no built-in trigger covers.</div>
                     <div class="code-js">const isPrivileged = !!(message.subscriber || message.vip || message.mod);
 const isCommand    = /^!feature\b/i.test(message.chatmessage || '');
@@ -847,7 +847,7 @@ return isPrivileged && isCommand;</div>
                     <div class="code-js">return (message.chatmessage || '').replace(/<[^>]+>/g, '').trim().length >= 20;</div>
                 </div>
 
-                <h4 class="snippet-heading" style="margin-top:36px;">Action snippets — return <code>{ modified, message }</code></h4>
+                <h4 class="snippet-heading" style="margin-top:36px;">Action snippets: return <code>{ modified, message }</code></h4>
 
                 <div class="snippet-block">
                     <div class="snippet-label">Append a badge or tag to the message</div>
@@ -858,7 +858,7 @@ return { modified: true, message };</div>
 
                 <div class="snippet-block">
                     <div class="snippet-label">Block message conditionally</div>
-                    <div class="snippet-desc">Inspect the content and silently drop the message if a rule matches — useful for spam patterns the keyword filter can't express.</div>
+                    <div class="snippet-desc">Inspect the content and silently drop the message if a rule matches. This is useful for spam patterns the keyword filter can't express.</div>
                     <div class="code-js">const text = (message.chatmessage || '').toLowerCase();
 const spamPatterns = ['buy followers', 'free nitro', 'click here'];
 
@@ -915,7 +915,7 @@ return { modified: true, message };</div>
                 </div>
 
                 <!-- ─── Complete worked example ─── -->
-                <h3 id="custom-js-example-flow">Complete example — VIP feature request bot</h3>
+                <h3 id="custom-js-example-flow">Complete example: VIP feature request bot</h3>
                 <p>This flow listens for <code>!feature &lt;text&gt;</code> from subscribers, VIPs, or mods, reformats it as a feature request, and relays it to a second destination (e.g. Discord).</p>
 
                 <div class="diagram">
@@ -927,27 +927,27 @@ return { modified: true, message };</div>
 │    !feature          │     │     from {name}: {text}" │     │                  │
 └──────────────────────┘     └──────────────────────────┘     └──────────────────┘</div>
 
-                <p><strong>Step 1 — Custom Code trigger</strong> (paste into the trigger's JavaScript Code field):</p>
+                <p><strong>Step 1: Custom Code trigger</strong> (paste into the trigger's JavaScript Code field):</p>
                 <div class="code-js">// Only let VIPs, subscribers, and mods through, and only for !feature commands
 const isPrivileged = !!(message.subscriber || message.vip || message.mod);
 const isCommand    = /^!feature\b/i.test((message.chatmessage || '').trim());
 return isPrivileged && isCommand;</div>
 
-                <p><strong>Step 2 — Execute Custom Code action</strong> (paste into the action's JavaScript Code field):</p>
+                <p><strong>Step 2: Execute Custom Code action</strong> (paste into the action's JavaScript Code field):</p>
                 <div class="code-js">// Strip the "!feature" command word and format a clean announcement
 const featureText = (message.chatmessage || '')
     .replace(/^!feature\s*/i, '')
     .trim();
 
 if (!featureText) {
-    // No text after the command — block rather than relay an empty request
+    // No text after the command: block rather than relay an empty request
     return { blocked: true, message };
 }
 
 message.chatmessage = `📋 Feature request from ${message.chatname}: ${featureText}`;
 return { modified: true, message };</div>
 
-                <p><strong>Step 3 — Relay Chat action</strong>: add a standard Relay Chat node after the action and configure it to point at your Discord (or other) destination. No custom code needed here — the reformatted <code>message.chatmessage</code> flows through automatically.</p>
+                <p><strong>Step 3: Relay Chat action</strong>: add a standard Relay Chat node after the action and configure it to point at your Discord (or other) destination. No custom code is needed here. The reformatted <code>message.chatmessage</code> flows through automatically.</p>
 
                 <div class="callout tip">
                     <strong>Testing the flow.</strong> Click this button: <strong>Test Flow</strong> (top-right of the editor) to send a synthetic message through the pipeline without needing a live stream. Set the chatname to a subscriber, add a message like <code>!feature dark mode support</code>, and confirm the Relay Chat destination receives the reformatted string.
@@ -961,11 +961,11 @@ return { modified: true, message };</div>
                 <!-- ─── Security note ─── -->
                 <h3 id="custom-js-security">Security considerations</h3>
                 <div class="callout warn">
-                    <strong>Custom code runs with renderer-process privileges.</strong> Inside the SSApp, code in Custom JS nodes has full access to the <code>window</code> object and any APIs the preload script exposes (e.g. <code>window.ninjafy</code>). Treat imported flow files like executable code — only import flows from sources you trust.
+                    <strong>Custom code runs with renderer-process privileges.</strong> Inside the SSApp, code in Custom JS nodes has full access to the <code>window</code> object and any APIs the preload script exposes (e.g. <code>window.ninjafy</code>). Treat imported flow files like executable code. Only import flows from sources you trust.
                 </div>
                 <ul>
                     <li><strong>No network sandbox.</strong> Action code can call <code>fetch()</code>. If you're accepting shared flows from others, audit the JS before activating them.</li>
-                    <li><strong>Errors are caught.</strong> A runtime error in your code returns <code>false</code> (trigger) or a no-op (action) and logs to the DevTools console — the flow doesn't crash.</li>
+                    <li><strong>Errors are caught.</strong> A runtime error in your code returns <code>false</code> (trigger) or a no-op (action) and logs to the DevTools console. The flow doesn't crash.</li>
                     <li><strong>Syntax errors too.</strong> An error of type <code>SyntaxError</code> at compile time is caught the same way. Check DevTools (F12) if a node appears to do nothing.</li>
                 </ul>
             </section>
