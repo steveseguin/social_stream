@@ -97,6 +97,27 @@ test('actual LLM adapter generates templates from saved instructions and approve
     await assert.rejects(s.handle(input), /Enable SSN/);
 });
 
+test('local browser cancellation cannot turn partial HTML into a completed overlay', async () => {
+    const s = service();
+    let controller;
+    s.context.AbortController = class extends AbortController {
+        constructor() { super(); controller = this; }
+    };
+    s.context.settings.aiProvider = { optionsetting: 'localqwen' };
+    s.context.isLocalBrowserProvider = () => true;
+    s.context.getLocalBrowserProviderSettings = () => ({ modelId: 'local-fixture', remoteHost: '', supportsVision: false });
+    s.context.enqueueLocalBrowserLLMTask = task => task();
+    s.context.disposeLocalBrowserLLMClient = async () => {};
+    s.context.ensureLocalBrowserLLMClient = () => ({ generate: async () => {
+        vm.runInContext('localBrowserActiveRequestState.buffer = "<style>article{color:purple}</style><article>Incomplete";', s.context);
+        controller.abort();
+        throw Object.assign(new Error('Local generation cancelled'), { name: 'AbortError' });
+    } });
+    const p = await s.settings({ action: 'saveAiEventProfile', value: { id: 'local-timeout' } });
+    await assert.rejects(s.settings({ action: 'generateAiEvent', profile: p.id }), /Overlay generation timed out/);
+    assert.equal(s.calls.length, 0);
+});
+
 test('optional media sends keys only to its configured inference endpoint and returns bytes', async () => {
     const s = service();
     const p = await s.settings({ action: 'saveAiEventProfile', value: { id: 'media', imageEnabled: true, imageEndpoint: 'https://fixture.test/image', imageKey: 'image-fixture', imageModel: 'painter', ttsEnabled: true, ttsEndpoint: 'https://fixture.test/speech', ttsKey: 'speech-fixture', ttsVoice: 'narrator' } });

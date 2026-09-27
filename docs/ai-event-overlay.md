@@ -20,6 +20,8 @@ Example: “Create an animated fantasy adventurer card. Put the viewer name in a
 
 SSN sends your saved design instructions to the configured LLM, which returns an HTML/CSS template. Use a model that can generate HTML and CSS. A model override is optional; the provider and key come from SSN's existing LLM settings. Viewer names, messages, donations and metadata are filled into the finished template locally, without becoming part of the design prompt.
 
+**Design generation has a 90-second timeout.** If the AI takes longer, SSN skips that presentation and reports a timeout. Try a faster model or a simpler design. This limit applies to previews and live events.
+
 Templates use empty elements such as `<span data-field="chatname"></span>` or `<p data-field="chatmessage"></p>`. Available text fields are `chatname`, `chatmessage`, `hasDonation`, `donoValue`, `membership`, `subtitle`, `type`, `platform`, `event`, and scalar `meta.FIELD` values. An optional generated image uses `<img data-field="image" alt="">`. HTML chat messages become plain text. CSS animation is supported; generated JavaScript and external resources are blocked in an isolated frame.
 
 **Approved variations** lets you save optional phrases, one per line, such as `winter` or `fireworks`. Event Flow can select an exact saved phrase. Unlisted phrases are rejected before inference; a short viewer message is not treated as a safe instruction merely because it is short. **Vary the layout within my design instructions** asks the model to vary its design while using the same saved instructions.
@@ -36,7 +38,9 @@ Connect a trigger to the action, save the flow, then use **Test Flow**. This sen
 
 For donations or platform rewards, connect the desired trigger to this action. For a loyalty reward, connect a command trigger, such as `!intro`, to **Spend Points**, then directly to **Show AI Event Overlay**. Give the spending step only that one outgoing connection, and the AI action only that one incoming connection, so the charge clearly belongs to this reward.
 
-SSN reserves the points, generates a fresh design, and settles the charge after the overlay acknowledges the presentation. Insufficient points stop the reward. Layout generation failure or unconfirmed delivery returns that reward's charge. Generation and queued delivery have up to four minutes; expired presentations are skipped. Pending whole-point reservations also recover through the existing points ledger after a host restart. Acknowledgment confirms receipt by the overlay, not whether OBS is showing that source.
+SSN reserves the points, generates a fresh design, and settles the charge after the overlay acknowledges the presentation. Insufficient points stop the reward. Layout generation failure or unconfirmed delivery returns that reward's charge.
+
+**Paid rewards have a four-minute total deadline**, starting when the points are charged. This covers generation, optional media and waiting behind earlier events for the overlay to accept the presentation. The 90-second design generation limit still applies within that four-minute window. Hitting either limit refunds this reward's points; expired presentations are skipped. Pending whole-point reservations also recover through the existing points ledger after a host restart. Acknowledgment confirms receipt by the overlay, not whether OBS is showing that source.
 
 This automatic refund applies to the direct two-step reward above. A spending step shared by multiple effects, or separated from the AI action by other steps, retains its existing behavior.
 
@@ -62,7 +66,9 @@ Enable speech and enter the full TTS endpoint URL, with optional model, voice an
 
 The endpoint must return audio bytes with an `audio/*` content type or a JSON `url` (also accepted inside `data[0]`). A supplied key uses Bearer authorization. Omitted model and voice fields are left to the endpoint. Providers with other request formats need an adapter. Audio starts with the presentation and stops when its display time expires. Browser tabs may require interaction before allowing sound; OBS audio must be enabled for the source.
 
-Media requests run in SSN. Saved API keys are write-only: a blank key field keeps the saved key, and **Remove saved key** clears it. Changing an endpoint requires entering or removing its key. Keys are sent only with inference requests to the configured service; those requests reject redirects. SSN downloads returned media URLs without provider credentials and sends the media bytes to the display.
+Media requests run in SSN after the layout is generated. Each image or speech request has its own 90-second timeout, including downloading returned media. A media timeout still allows the layout to display.
+
+Saved API keys are write-only: a blank key field keeps the saved key, and **Remove saved key** clears it. Changing an endpoint requires entering or removing its key. Keys are sent only with inference requests to the configured service; those requests reject redirects. SSN downloads returned media URLs without provider credentials and sends the media bytes to the display.
 
 ## Connections
 

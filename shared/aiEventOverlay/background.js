@@ -70,7 +70,7 @@
             if (controller.signal.aborted) throw new Error('Overlay generation timed out. Try a faster model or a simpler design.');
             throw new Error('Overlay generation failed. Check the configured AI service in SSN.');
         } finally { clearTimeout(timer); }
-        if (response && response.aborted) throw new Error('Overlay generation timed out. Try a faster model or a simpler design.');
+        if (controller.signal.aborted || response && response.aborted) throw new Error('Overlay generation timed out. Try a faster model or a simpler design.');
         if (response && typeof response === 'object') response = response.response || response.value || '';
         var result = core.presentation(response, p);
         result.warnings = [];
