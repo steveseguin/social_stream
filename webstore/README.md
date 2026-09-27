@@ -1,6 +1,6 @@
 # Chrome Web Store package review
 
-[`candidate/`](candidate/) is the patched **3.50.17** review candidate. It starts from the installed Web Store package and selectively incorporates current beta source updates and security fixes while retaining its Web Store exclusions.
+[`candidate/`](candidate/) is the patched **3.50.18** review candidate. It starts from the installed Web Store package and selectively incorporates current beta source updates and security fixes while retaining its Web Store exclusions.
 
 See [`UPDATE_REVIEW.md`](UPDATE_REVIEW.md) for the server-mode diagnosis, backport scope, preserved restrictions, validation, and remaining deployment limits. [`candidate.sha256.json`](candidate.sha256.json) records every candidate file. Load `candidate/` as an unpacked extension for review; do not load the parent `webstore/` folder.
 

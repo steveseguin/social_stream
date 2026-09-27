@@ -485,6 +485,7 @@
       display: flex;
       gap: 8px;
       flex-shrink: 0;
+      margin-left: auto;
     }
 
     .content {
@@ -791,6 +792,7 @@
         <div class="toolbar-buttons">
           <button id="copyLink" type="button">Copy Link</button>
           <a class="button" id="rawLink" href="#" target="_blank" rel="noopener">Raw</a>
+          <span id="copyMarkdownActions" data-copy-markdown-actions hidden></span>
         </div>
       </div>
       <article class="content" id="content">
@@ -834,6 +836,7 @@
       currentPath: document.getElementById("currentPath"),
       rawLink: document.getElementById("rawLink"),
       copyLink: document.getElementById("copyLink"),
+      copyMarkdownActions: document.getElementById("copyMarkdownActions"),
       search: document.getElementById("search"),
       searchStatus: document.getElementById("searchStatus"),
       searchResults: document.getElementById("searchResults"),
@@ -934,6 +937,7 @@
       elements.currentPath.className = "toolbar-path";
       elements.currentPath.textContent = "Docs home";
       elements.rawLink.style.display = "none";
+      elements.copyMarkdownActions.hidden = true;
       elements.content.innerHTML = `
         <div class="landing-intro">
           <h1>Social Stream Ninja Docs</h1>
@@ -1125,6 +1129,7 @@
       state.currentFile = cleanPath;
       state.currentMarkdown = "";
       elements.content.className = "content loading";
+      elements.copyMarkdownActions.hidden = true;
       elements.content.textContent = "Loading documentation...";
       elements.currentPath.className = "toolbar-path is-path";
       elements.currentPath.textContent = cleanPath;
@@ -1139,6 +1144,7 @@
         state.currentMarkdown = markdown;
         elements.content.innerHTML = renderMarkdown(markdown);
         elements.content.className = "content";
+        elements.copyMarkdownActions.hidden = false;
         addHeadingLinks();
         rewriteContentLinks();
         if (hash) {

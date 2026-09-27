@@ -1136,6 +1136,15 @@
 					.replace(/<[^>]*>/g, "");
 			}
 			
+			function escapeContentImageUrl(value) {
+				// Only for quoted attachment URL attributes. Preserve the single entity
+				// decode these templates already perform, including legacy &amp; URLs.
+				// Entity-decoded quotes remain attribute data; literal delimiters must be escaped.
+				return String(value == null ? "" : value).replace(/[<>"']/g, function (character) {
+					return { "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character];
+				});
+			}
+
 			function upscaleImages(data) {
 				// for third party APIs
 				let chatimg = "";
@@ -2105,16 +2114,16 @@
 					
 					if (!data.chatmessage && data.contentimg) {
 					  if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')) {
-						data.chatmessage = '<video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></video>';
+						data.chatmessage = '<video loop="true" autoplay="true" muted="true" id="img" src="' + escapeContentImageUrl(data.contentimg) + '"  onerror="this.parent.style.display=\'none\'" /></video>';
 					  } else {
-						data.chatmessage = '<img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" />';
+						data.chatmessage = '<img id="img" src="' + escapeContentImageUrl(data.contentimg) + '"  onerror="this.parent.style.display=\'none\'" />';
 					  }
 					  largeImage = true;
 					} else if (data.contentimg) {
 					  if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')) {
-						addImage = '<div id="imgContent" class="hl-imgContent"><video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></video></div>';
+						addImage = '<div id="imgContent" class="hl-imgContent"><video loop="true" autoplay="true" muted="true" id="img" src="' + escapeContentImageUrl(data.contentimg) + '"  onerror="this.parent.style.display=\'none\'" /></video></div>';
 					  } else {
-						addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></div>';
+						addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + escapeContentImageUrl(data.contentimg) + '"  onerror="this.parent.style.display=\'none\'" /></div>';
 					  }
 					} else {
 					  data.contentimg = "";

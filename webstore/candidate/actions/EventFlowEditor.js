@@ -1586,7 +1586,7 @@ class EventFlowEditor {
             }
 
             // Import the flow
-            const savedFlow = await this.eventFlowSystem.saveFlow(cleanFlow);
+            const savedFlow = await this.eventFlowSystem.importFlow(cleanFlow);
 
             // Return the saved flow if requested, otherwise return success boolean
             if (returnFlow) {
@@ -1607,21 +1607,7 @@ class EventFlowEditor {
             // Deep copy the template to avoid modifying the original
             const flowData = JSON.parse(JSON.stringify(template));
 
-            // Generate unique node IDs for this instance
-            const idMap = {};
-            flowData.nodes = flowData.nodes.map(node => {
-                const newId = `node_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
-                idMap[node.id] = newId;
-                return { ...node, id: newId };
-            });
-
-            // Update connection references with new IDs
-            flowData.connections = flowData.connections.map(conn => ({
-                from: idMap[conn.from] || conn.from,
-                to: idMap[conn.to] || conn.to
-            }));
-
-            // Import using existing method - get the saved flow back
+            // The importer assigns fresh IDs and remaps both wires and state-node targets.
             const savedFlow = await this.importSingleFlow(flowData, true);
             if (savedFlow && savedFlow.id) {
                 await this.loadFlowList();
@@ -5138,7 +5124,7 @@ class EventFlowEditor {
 				</div>
 				<div class="property-group">
 					<label class="property-label">Velocity (0-127)</label>
-					<input type="number" class="property-input" id="prop-velocity" value="${node.config.velocity || 127}" min="0" max="127">
+					<input type="number" class="property-input" id="prop-velocity" value="${node.config.velocity ?? 127}" min="0" max="127">
 				</div>
 				<div class="property-group">
 					<label class="property-label">Duration (ms)</label>
@@ -5351,6 +5337,8 @@ class EventFlowEditor {
                     }
                 } else if (e.target.type === 'number') {
                     nodeData.config[propId] = parseFloat(e.target.value) || 0;
+                } else if (nodeData.triggerType === 'timeOfDay' && propId === 'times') {
+                    nodeData.config.times = e.target.value.split(',').map(time => time.trim()).filter(Boolean);
                 } else {
                     nodeData.config[propId] = e.target.value;
                 }

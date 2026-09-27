@@ -1,4 +1,6 @@
-# Web Store 3.50.17 candidate
+# Web Store 3.50.18 candidate
+
+Version **3.50.18** adds the selective Event Flow, rendering, Twitch reconnect, saved-overlay and audio fixes detailed in [`FOLLOWUP_REVIEW.md`](FOLLOWUP_REVIEW.md). The 3.50.17 notes below describe the previous release.
 
 The candidate fixes the server-switch exception, updates the retained capture sources and providers, and backports applicable security fixes from beta. The package is synchronized to the GitHub `chrome-web-store` branch; it has not been uploaded to the Chrome Web Store.
 

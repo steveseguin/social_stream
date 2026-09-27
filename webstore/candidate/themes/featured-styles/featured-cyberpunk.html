@@ -799,11 +799,8 @@
                 if (content.chatname) {
                     const name = document.createElement('span');
                     name.className = 'username';
-                    name.innerHTML = content.chatname;
-                    // Decode HTML entities for data-text attribute
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = content.chatname;
-                    const decodedName = tempDiv.textContent || tempDiv.innerText || '';
+                    name.textContent = content.chatname;
+                    const decodedName = String(content.chatname);
                     name.setAttribute('data-text', decodedName);
                     header.appendChild(name);
                 }

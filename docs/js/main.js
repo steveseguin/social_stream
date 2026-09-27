@@ -1,10 +1,10 @@
-// Load the shared documentation-to-Markdown exporter on every standard docs page.
+// Documentation pages opt in to the shared Markdown exporter.
 (function () {
-    if (document.querySelector('script[data-ssn-copy-markdown]')) {
+    var mainScript = document.currentScript;
+    if (!mainScript || !mainScript.hasAttribute('data-copy-markdown') || document.querySelector('script[data-ssn-copy-markdown]')) {
         return;
     }
     var copyMarkdownScript = document.createElement('script');
-    var mainScript = document.currentScript;
     copyMarkdownScript.src = mainScript && mainScript.src
         ? new URL('copy-markdown.js', mainScript.src).href
         : 'js/copy-markdown.js';

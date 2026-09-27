@@ -1,3 +1,7 @@
+# Follow-up patches
+
+Current candidate: **3.50.18**. The latest selective backports and verification are recorded below.
+
 # Follow-up patches applied in 3.50.17
 
 Compared Web Store commit `b681e410` with beta `cf23f2b3` and the applicable current beta working-tree edits. The three reviewed fixes are now applied to the candidate and pushed to GitHub `chrome-web-store` as version 3.50.17, commit `aca003af`. The original proposal is [`review/followup-proposed.patch`](review/followup-proposed.patch). Findings below describe the pre-patch comparison; they are resolved in 3.50.17.
@@ -37,3 +41,50 @@ node webstore/review/followup-bot-compat.test.cjs
 The regular checks now use the updated 3.50.17 candidate, an isolated Chrome profile and a local relay. They do not depend on the temporary proposed-patch copy. The optional `--proposed` switch remains available for that historical copy. The branch also includes `tests/webstore-settings-compat.test.cjs` to guard legacy flag loading, successful/failed storage acknowledgements, and the synchronous runtime reply-channel contract.
 
 Final 3.50.17 verification: legacy true/false settings, two-switch and three-switch relay delivery, save acknowledgements, six bot-display cases, all 26 Web Store custom-JavaScript restriction assertions, syntax/package audit, and the repository popup-search checks passed. All 810 selected branch package files match the updated candidate SHA-256 inventory.
+
+
+### 2026-09-27 Selective 3.50.18 Backports
+
+- Escaped bot attachment URLs at all four image/video insertion points.
+- Rendered names as literal text in 12 featured themes, including the effect
+  labels in Cyberpunk and Retro. Corrected entity handling for plain chat text
+  in Bubbles, Cards, Neon Cyberpunk, Particles and Xacception.
+- Fixed Event Flow import/duplicate node IDs and remapped connection/state
+  references through the editor and template import paths; corrected daily
+  scheduling, legacy schedule strings, null timer payload handling, boolean
+  event names, raid/cheer minimums, throttle state initialization and fractional
+  windows, zero send/relay timeouts, and MIDI note velocity/channel options.
+- Fixed numeric active-page selection in saved AI overlays.
+- Updated both packaged Twitch TMI variants to respect disabled auto-reconnect.
+- Ported Flow Actions HTML audio playback and the keyboard-accessible retry
+  button for blocked playback.
+- Version and inventory updated to 3.50.18, using selected fixes present in beta
+  a5dbd18a. The manifest diff is only its version string; all content-script
+  entries, matching rules and injection order are byte-for-byte preserved.
+
+Validation on the package:
+
+- 16 applicable targeted Event Flow/saved-overlay regression cases passed.
+  Two assertions were adapted in memory to the existing Web Store behavior:
+  the donation-event trigger requires a named paid event, and custom JavaScript
+  remains disabled. Beta-only Pin Message UI and the unshipped hourly OBS
+  template were excluded. These were test applicability differences, not
+  reasons to add those features. The shipped chat-relay template was separately
+  imported twice, validating independent IDs and connected wires.
+- 22 benign browser attachment cases passed: image/video, media-only/body,
+  plain/rich bodies, ordinary and quoted/entity URL characters, stacked output,
+  speech/file output and relay/iframe equivalence.
+- 45 browser checks passed for the five plain-text themes, including rich
+  formatting comparisons. All 12 modified featured themes passed literal-name
+  and rich-body display checks; Cyberpunk/Retro effect labels were also checked.
+- Flow Actions audio unit checks and a browser keyboard retry passed. Both TMI
+  variants passed reconnect-enabled and reconnect-disabled checks.
+- All 26 existing Web Store custom-JavaScript restriction assertions passed.
+  Package audit parsed 266 scripts and 133 inline scripts with no syntax,
+  remote-executable or new dependency findings. The two pre-existing disabled
+  Kokoro import references remain the only reported missing dependencies.
+- All 810 listed package files match the refreshed candidate SHA-256 inventory.
+
+Verification used local fixtures and mocked services. Live provider sessions,
+public relay behavior, Chrome Web Store approval and hosted website deployment
+were not tested. Receiver changes reach hosted URLs only after site deployment.
