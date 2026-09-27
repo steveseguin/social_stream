@@ -617,3 +617,50 @@ hosted website, whose corresponding fixes require a separate site deployment.
 - No broader beta feature merge was made. The prior source updates and Web
   Store exclusions remain in place. No Web Store upload or site deployment
   was performed; hosted receiver fixes still require website deployment.
+
+
+### 2026-09-27 Selective 3.50.18 Backports
+
+- Escaped bot attachment URLs at all four image/video insertion points.
+- Rendered names as literal text in 12 featured themes, including the effect
+  labels in Cyberpunk and Retro. Corrected entity handling for plain chat text
+  in Bubbles, Cards, Neon Cyberpunk, Particles and Xacception.
+- Fixed Event Flow import/duplicate node IDs and remapped connection/state
+  references through the editor and template import paths; corrected daily
+  scheduling, legacy schedule strings, null timer payload handling, boolean
+  event names, raid/cheer minimums, throttle state initialization and fractional
+  windows, zero send/relay timeouts, and MIDI note velocity/channel options.
+- Fixed numeric active-page selection in saved AI overlays.
+- Updated both packaged Twitch TMI variants to respect disabled auto-reconnect.
+- Ported Flow Actions HTML audio playback and the keyboard-accessible retry
+  button for blocked playback.
+- Version and inventory updated to 3.50.18, using selected fixes present in beta
+  a5dbd18a. The manifest diff is only its version string; all content-script
+  entries, matching rules and injection order are byte-for-byte preserved.
+
+Validation on the package:
+
+- 16 applicable targeted Event Flow/saved-overlay regression cases passed.
+  Two assertions were adapted in memory to the existing Web Store behavior:
+  the donation-event trigger requires a named paid event, and custom JavaScript
+  remains disabled. Beta-only Pin Message UI and the unshipped hourly OBS
+  template were excluded. These were test applicability differences, not
+  reasons to add those features. The shipped chat-relay template was separately
+  imported twice, validating independent IDs and connected wires.
+- 22 benign browser attachment cases passed: image/video, media-only/body,
+  plain/rich bodies, ordinary and quoted/entity URL characters, stacked output,
+  speech/file output and relay/iframe equivalence.
+- 45 browser checks passed for the five plain-text themes, including rich
+  formatting comparisons. All 12 modified featured themes passed literal-name
+  and rich-body display checks; Cyberpunk/Retro effect labels were also checked.
+- Flow Actions audio unit checks and a browser keyboard retry passed. Both TMI
+  variants passed reconnect-enabled and reconnect-disabled checks.
+- All 26 existing Web Store custom-JavaScript restriction assertions passed.
+  Package audit parsed 266 scripts and 133 inline scripts with no syntax,
+  remote-executable or new dependency findings. The two pre-existing disabled
+  Kokoro import references remain the only reported missing dependencies.
+- All 810 listed package files match the refreshed candidate SHA-256 inventory.
+
+Verification used local fixtures and mocked services. Live provider sessions,
+public relay behavior, Chrome Web Store approval and hosted website deployment
+were not tested. Receiver changes reach hosted URLs only after site deployment.
