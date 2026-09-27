@@ -2213,8 +2213,8 @@ class EventFlowSystem {
         // Simple HTML stripping function that preserves emoji alt text
         if (!html || typeof html !== 'string') return html;
         
-        // Create a temporary element to use browser's HTML parsing
-        const tmp = document.createElement('div');
+        // Parse in inert template content so extraction cannot execute image handlers.
+        const tmp = document.createElement('template').content.appendChild(document.createElement('div'));
         tmp.innerHTML = html;
         
         // Replace img tags with their alt text (especially for emojis)

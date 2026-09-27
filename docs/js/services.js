@@ -178,8 +178,9 @@
     // Create a click-to-reveal link (prevents SEO crawling of external links)
     function createRevealLink(label, url, icon) {
         const encodedUrl = btoa(url); // Base64 encode to hide from crawlers
-        return `<span class="reveal-link" data-url="${encodedUrl}" title="Click to reveal ${label}">
-            <img src="${sourceURL(icon)}" alt="${label}" style="width: 1.8rem; height: 1.8rem; opacity: 0.8;">
+        const displayLabel = window.SSNSiteTranslate ? window.SSNSiteTranslate(label) : label;
+        return `<span class="reveal-link" data-url="${encodedUrl}" title="Click to reveal ${displayLabel}">
+            <img src="${sourceURL(icon)}" alt="${displayLabel}" style="width: 1.8rem; height: 1.8rem; opacity: 0.8;">
         </span>`;
     }
 

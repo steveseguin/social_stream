@@ -412,8 +412,8 @@ img.ssn-content-image {
 			return;
 		}
 
-		// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
-		const renderedChatMessage = data.textonly ? escapeHtml(data.chatmessage || '') : (data.chatmessage || '');
+		// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
+		const renderedChatMessage = data.textonly ? escapeHtml(data.chatmessage || '') : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage || '') : fallbackEscapeHtml(data.chatmessage || ''));
 		if (lastSender === data.chatname && lastMessageDiv && lastMessageDiv.isConnected && !lastMessageDiv.classList.contains('fading')) {
 			// Append new message to the existing message container
 			const textDiv = document.createElement('div');

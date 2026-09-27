@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="robots" content="noindex">
+	<title>Create Test Message</title>
+	<style>
+		body {
+			background: #15181d;
+			color: #e7ebf0;
+			font-family: Arial, sans-serif;
+			margin: 0;
+			padding: 24px;
+		}
+
+		.container {
+			max-width: 920px;
+			margin: 0 auto;
+		}
+
+		h1 {
+			margin: 0 0 18px;
+			font-size: 26px;
+		}
+
+		.grid {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 14px;
+		}
+
+		.form-group {
+			margin-bottom: 14px;
+		}
+
+		label {
+			display: block;
+			font-weight: bold;
+			margin-bottom: 6px;
+		}
+
+		input[type="text"],
+		select,
+		textarea {
+			width: 100%;
+			box-sizing: border-box;
+			padding: 10px;
+			border: 1px solid #3b4655;
+			border-radius: 5px;
+			background: #202630;
+			color: #f3f6fa;
+			font: inherit;
+		}
+
+		textarea {
+			min-height: 270px;
+			font-family: Consolas, Monaco, monospace;
+			font-size: 13px;
+			line-height: 1.45;
+			resize: vertical;
+		}
+
+		button {
+			padding: 10px 16px;
+			margin: 0 8px 8px 0;
+			background-color: #2979d8;
+			color: #fff;
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+			font-weight: bold;
+		}
+
+		button.secondary {
+			background: #3e4a5c;
+		}
+
+		.note {
+			color: #aeb9c8;
+			font-size: 13px;
+			margin-top: 6px;
+		}
+
+		.note.important {
+			background: #2c2112;
+			border: 1px solid #7c5a24;
+			border-radius: 5px;
+			color: #ffdca3;
+			padding: 10px;
+		}
+
+		.status {
+			min-height: 22px;
+			margin-top: 8px;
+			font-weight: bold;
+		}
+
+		.status.error {
+			color: #ff7b7b;
+		}
+
+		.status.success {
+			color: #6ee68c;
+		}
+
+		@media (max-width: 720px) {
+			.grid {
+				grid-template-columns: 1fr;
+			}
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>Create Test Message</h1>
+		<form id="dataForm">
+			<div class="grid">
+				<div class="form-group">
+					<label for="session">Session ID</label>
+					<input type="text" id="session" name="session" autocomplete="off" placeholder="Your Social Stream session ID">
+				</div>
+				<div class="form-group">
+					<label for="delivery">Send Via</label>
+					<select id="delivery" name="delivery">
+						<option value="extension">Extension API ingest (requires extension API toggle)</option>
+						<option value="direct1">Direct to channel 1 (&amp;server dock)</option>
+						<option value="direct4">Direct to channel 4 (&amp;server2 / events)</option>
+					</select>
+				</div>
+			</div>
+			<div class="note important">
+				Extension API ingest requires the extension popup setting <b>Enable remote API control of extension</b> to be ON, using the same Session ID. This is not the dock <b>&amp;server</b> URL mode.
+			</div>
+			<div class="note">Use Extension API ingest for normal dock/overlay testing. Direct modes only work with matching dock/server URL modes. Hype Train metadata renders on events.html, not as a normal chat message.</div>
+
+			<div class="form-group">
+				<label for="preset">Preset</label>
+				<select id="preset" name="preset">
+					<option value="chat">Chat Message</option>
+					<option value="donation">Donation / Cheer</option>
+					<option value="new_subscriber">New Subscriber</option>
+					<option value="subscription_gift">Gifted Subs</option>
+					<option value="raid">Raid</option>
+					<option value="reward">Channel Points Reward</option>
+					<option value="viewer_update">Viewer Count Update</option>
+					<option value="firsttime">First-time Chatter</option>
+					<option value="hype_train_begin">Hype Train Begin</option>
+					<option value="hype_train_progress">Hype Train Progress</option>
+					<option value="hype_train_end">Hype Train End</option>
+					<option value="treasure_train_progress">Treasure Train Progress</option>
+				</select>
+			</div>
+
+			<div class="grid">
+				<div class="form-group">
+					<label for="chatname">Chat Name</label>
+					<input type="text" id="chatname" name="chatname">
+				</div>
+				<div class="form-group">
+					<label for="type">Type</label>
+					<select id="type" name="type">
+						<option value="twitch">Twitch</option>
+						<option value="youtube">YouTube</option>
+						<option value="kick">Kick</option>
+						<option value="tiktok">TikTok</option>
+						<option value="discord">Discord</option>
+						<option value="facebook">Facebook</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="chatmessage">Chat Message</label>
+					<input type="text" id="chatmessage" name="chatmessage">
+				</div>
+				<div class="form-group">
+					<label for="chatimg">Chat Image URL</label>
+					<input type="text" id="chatimg" name="chatimg">
+				</div>
+				<div class="form-group">
+					<label for="nameColor">Name Color</label>
+					<input type="text" id="nameColor" name="nameColor">
+				</div>
+				<div class="form-group">
+					<label for="chatbadges">Chat Badges (comma-separated URLs)</label>
+					<input type="text" id="chatbadges" name="chatbadges">
+				</div>
+				<div class="form-group">
+					<label for="hasDonation">Has Donation</label>
+					<input type="text" id="hasDonation" name="hasDonation">
+				</div>
+				<div class="form-group">
+					<label for="membership">Membership</label>
+					<input type="text" id="membership" name="membership">
+				</div>
+				<div class="form-group">
+					<label for="backgroundColor">Background Color</label>
+					<input type="text" id="backgroundColor" name="backgroundColor">
+				</div>
+				<div class="form-group">
+					<label for="textColor">Text Color</label>
+					<input type="text" id="textColor" name="textColor">
+				</div>
+			</div>
+
+			<div class="form-group">
+				<label>
+					<input type="checkbox" id="textonly" name="textonly">
+					Text Only Mode
+				</label>
+			</div>
+
+			<div class="form-group">
+				<label for="payload">Payload JSON</label>
+				<textarea id="payload" spellcheck="false"></textarea>
+				<div class="note">Presets update this JSON. Edit it directly for custom event payloads.</div>
+			</div>
+
+			<button type="button" onclick="applyPreset()">Load Preset</button>
+			<button type="button" class="secondary" onclick="updatePayloadFromFields()">Update JSON from Fields</button>
+			<button type="button" onclick="submitData()">Submit</button>
+			<div id="status" class="status"></div>
+		</form>
+	</div>
+
+	<script>
+		var urlParams = new URLSearchParams(window.location.search);
+
+		function getInitialSession() {
+			var session = urlParams.get("session") || urlParams.get("id") || urlParams.get("apiid") || "";
+			if (!session) {
+				try {
+					session = localStorage.getItem("ssnTestMessageSession") || "";
+				} catch (e) {}
+			}
+			return session;
+		}
+
+		function addMinutes(date, minutes) {
+			return new Date(date.getTime() + minutes * 60000).toISOString();
+		}
+
+		function setStatus(text, type) {
+			var status = document.getElementById("status");
+			status.className = "status " + (type || "");
+			status.textContent = text || "";
+		}
+
+		function splitBadges(value) {
+			if (!value) return "";
+			var badges = value.split(",").map(function(item) {
+				return item.trim();
+			}).filter(Boolean);
+			return badges.length ? badges : "";
+		}
+
+		function basePayload() {
+			return {
+				chatname: document.getElementById("chatname").value || "Jess",
+				nameColor: document.getElementById("nameColor").value || "",
+				chatbadges: splitBadges(document.getElementById("chatbadges").value),
+				backgroundColor: document.getElementById("backgroundColor").value || "",
+				textColor: document.getElementById("textColor").value || "",
+				chatmessage: document.getElementById("chatmessage").value || "Looking good! This is a test message.",
+				chatimg: document.getElementById("chatimg").value || "https://socialstream.ninja/media/user1.jpg",
+				hasDonation: document.getElementById("hasDonation").value || "",
+				membership: document.getElementById("membership").value || "",
+				textonly: document.getElementById("textonly").checked,
+				type: document.getElementById("type").value || "twitch"
+			};
+		}
+
+		function cleanPayload(payload) {
+			Object.keys(payload).forEach(function(key) {
+				if (payload[key] === "" || payload[key] === false || payload[key] === null) {
+					delete payload[key];
+				}
+			});
+			return payload;
+		}
+
+		function hypeTrainPayload(phase, trainType) {
+			var now = new Date();
+			var progress = phase === "begin" ? 120 : phase === "end" ? 500 : 360;
+			var level = phase === "end" ? 2 : 1;
+			return {
+				type: "twitch",
+				event: "hype_train",
+				meta: {
+					phase: phase,
+					id: "test-train-1",
+					broadcasterUserId: "123456",
+					broadcasterUserLogin: "testchannel",
+					broadcasterUserName: "TestChannel",
+					total: progress,
+					progress: progress,
+					goal: 500,
+					level: level,
+					topContributions: [
+						{ userId: "101", userLogin: "ava", userName: "Ava", type: "bits", total: 250 },
+						{ userId: "102", userLogin: "jess", userName: "Jess", type: "subscription", total: 100 }
+					],
+					lastContribution: { userId: "101", userLogin: "ava", userName: "Ava", type: "bits", total: 100 },
+					sharedTrainParticipants: [],
+					startedAt: now.toISOString(),
+					expiresAt: addMinutes(now, 2),
+					endedAt: phase === "end" ? now.toISOString() : "",
+					cooldownEndsAt: phase === "end" ? addMinutes(now, 60) : "",
+					isSharedTrain: false,
+					trainType: trainType || "regular",
+					eventSubType: "channel.hype_train." + (phase === "begin" ? "begin" : phase === "end" ? "end" : "progress")
+				}
+			};
+		}
+
+		function buildPresetPayload(preset) {
+			var payload = basePayload();
+
+			if (preset === "donation") {
+				payload.event = "cheer";
+				payload.chatmessage = payload.chatmessage || "Great stream!";
+				payload.hasDonation = payload.hasDonation || "500 bits";
+				payload.bits = 500;
+				payload.title = "CHEERS";
+				payload.meta = { bits: 500 };
+			} else if (preset === "new_subscriber") {
+				payload.event = "new_subscriber";
+				payload.chatmessage = (payload.chatname || "Jess") + " has subscribed";
+				payload.membership = payload.membership || "Subscriber";
+				payload.tier = "1000";
+				payload.meta = { userId: "101", tier: "1000", isGift: false };
+			} else if (preset === "subscription_gift") {
+				payload.event = "subscription_gift";
+				payload.chatmessage = (payload.chatname || "Jess") + " has gifted 5 tier 1000 subs!";
+				payload.membership = payload.membership || "Subscriber";
+				payload.total = 5;
+				payload.tier = "1000";
+				payload.meta = { userId: "101", total: 5, tier: "1000" };
+			} else if (preset === "raid") {
+				payload.event = "raid";
+				payload.chatmessage = "Raiding with 42 viewers!";
+				payload.meta = { fromId: "101", fromLogin: "raider", viewers: 42 };
+			} else if (preset === "reward") {
+				payload.event = "reward";
+				payload.chatmessage = (payload.chatname || "Jess") + " redeemed Highlight My Message (1000 points)";
+				payload.reward = {
+					id: "reward-1",
+					title: "Highlight My Message",
+					cost: 1000,
+					prompt: "Say something",
+					userInput: "This is a test reward",
+					backgroundColor: "#9146ff",
+					redemptionId: "redemption-1",
+					status: "fulfilled"
+				};
+				payload.meta = { userId: "101", rewardId: "reward-1", cost: 1000, alias: "channel_points" };
+			} else if (preset === "viewer_update") {
+				return { type: payload.type || "twitch", event: "viewer_update", meta: 123 };
+			} else if (preset === "firsttime") {
+				payload.firsttime = true;
+				payload.chatbadges = [{ type: "svg", html: '<svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg"><path d="M20.8 3.2C13.7 3.4 7.6 6.7 5.2 11.7c-1.3 2.7-1.1 5.2.5 6.8 1.6 1.6 4.2 1.7 6.8.5 5-2.4 8.3-8.5 8.6-15.6 0-.1-.1-.2-.3-.2Z" fill="#4caf50"/></svg>' }];
+			} else if (preset === "hype_train_begin") {
+				return hypeTrainPayload("begin", "regular");
+			} else if (preset === "hype_train_progress") {
+				return hypeTrainPayload("progress", "regular");
+			} else if (preset === "hype_train_end") {
+				return hypeTrainPayload("end", "regular");
+			} else if (preset === "treasure_train_progress") {
+				return hypeTrainPayload("progress", "treasure");
+			}
+
+			return cleanPayload(payload);
+		}
+
+		function writePayload(payload) {
+			document.getElementById("payload").value = JSON.stringify(payload, null, 2);
+		}
+
+		function applyPreset() {
+			var preset = document.getElementById("preset").value;
+			writePayload(buildPresetPayload(preset));
+			setStatus("", "");
+		}
+
+		function updatePayloadFromFields() {
+			writePayload(buildPresetPayload(document.getElementById("preset").value));
+			setStatus("", "");
+		}
+
+		function sendWithGetFallback(sessionID, userData) {
+			var encodedValue = encodeURIComponent(JSON.stringify(userData));
+			var getUrl = "https://io.socialstream.ninja/" + encodeURIComponent(sessionID) + "/extContent/null/" + encodedValue + "?channel=1";
+			var img = new Image();
+			img.onload = function() {
+				setStatus("Data submitted via GET fallback.", "success");
+			};
+			img.onerror = function() {
+				setStatus("Data may have submitted via GET fallback.", "success");
+			};
+			img.src = getUrl;
+		}
+
+		function sendViaExtensionApi(sessionID, userData) {
+			var body = {
+				action: "extContent",
+				apiid: sessionID,
+				value: JSON.stringify(userData)
+			};
+			var xhr = new XMLHttpRequest();
+			xhr.open("POST", "https://io.socialstream.ninja/" + encodeURIComponent(sessionID) + "?channel=1", true);
+			xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+			xhr.onreadystatechange = function() {
+				if (xhr.readyState !== 4) return;
+				if (xhr.status >= 200 && xhr.status < 300) {
+					var responseText = xhr.responseText || "";
+					if (/failed|timeout/i.test(responseText)) {
+						setStatus("API returned: " + responseText, "error");
+					} else {
+						setStatus("Data submitted to session " + sessionID + ".", "success");
+					}
+				} else {
+					sendWithGetFallback(sessionID, userData);
+				}
+			};
+			xhr.onerror = function() {
+				sendWithGetFallback(sessionID, userData);
+			};
+			xhr.send(JSON.stringify(body));
+		}
+
+		function sendDirectWebSocket(sessionID, userData, channel) {
+			var socket = new WebSocket("wss://io.socialstream.ninja:443");
+			var completed = false;
+			var timeout = setTimeout(function() {
+				if (completed) return;
+				completed = true;
+				try {
+					socket.close();
+				} catch (e) {}
+				setStatus("WebSocket timed out before sending.", "error");
+			}, 5000);
+
+			socket.onopen = function() {
+				socket.send(JSON.stringify({ join: sessionID, out: channel, in: 1 }));
+				setTimeout(function() {
+					if (completed) return;
+					socket.send(JSON.stringify(userData));
+					completed = true;
+					clearTimeout(timeout);
+					setStatus("Data sent to channel " + channel + " for session " + sessionID + ".", "success");
+					setTimeout(function() {
+						try {
+							socket.close();
+						} catch (e) {}
+					}, 250);
+				}, 150);
+			};
+			socket.onerror = function() {
+				if (completed) return;
+				completed = true;
+				clearTimeout(timeout);
+				setStatus("WebSocket failed to connect.", "error");
+			};
+		}
+
+		function submitData() {
+			var sessionID = document.getElementById("session").value.trim();
+			if (!sessionID) {
+				setStatus("Enter a session ID first.", "error");
+				return;
+			}
+			try {
+				localStorage.setItem("ssnTestMessageSession", sessionID);
+			} catch (e) {}
+
+			var payloadText = document.getElementById("payload").value;
+			var userData;
+			try {
+				userData = JSON.parse(payloadText);
+			} catch (error) {
+				setStatus("Invalid JSON: " + error.message, "error");
+				return;
+			}
+
+			var delivery = document.getElementById("delivery").value;
+			if (delivery === "direct1") {
+				sendDirectWebSocket(sessionID, userData, 1);
+			} else if (delivery === "direct4") {
+				sendDirectWebSocket(sessionID, userData, 4);
+			} else {
+				sendViaExtensionApi(sessionID, userData);
+			}
+		}
+
+		document.getElementById("session").value = getInitialSession();
+		if (urlParams.get("delivery") === "direct1" || urlParams.get("delivery") === "direct4" || urlParams.get("delivery") === "extension") {
+			document.getElementById("delivery").value = urlParams.get("delivery");
+		}
+		document.getElementById("preset").onchange = applyPreset;
+		applyPreset();
+	</script>
+</body>
+</html>

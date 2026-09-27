@@ -739,7 +739,7 @@ function getPlainVoteText(value) {
     if (typeof value !== 'string') return '';
     let text = value;
     if (/<[a-z][\s\S]*>/i.test(text)) {
-        const div = document.createElement('div');
+        const div = document.createElement('template').content.appendChild(document.createElement('div'));
         div.innerHTML = text;
         text = div.textContent || div.innerText || '';
     }

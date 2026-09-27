@@ -799,12 +799,12 @@ body::before {
         // Apply typewriter effect to the text or set HTML directly
         const textElement = messageDiv.querySelector('.text');
         if (textElement && data.chatmessage) {
-            // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+            // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
             if (data.textonly) {
                 typewriterEffect(textElement, data.chatmessage, TYPE_SPEED);
             } else {
-                // For HTML content, set it directly without typewriter effect
-                textElement.innerHTML = data.chatmessage;
+                // Check HTML before displaying it without the typewriter effect
+                textElement.innerHTML = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage) : fallbackEscapeHtml(data.chatmessage));
             }
         }
         

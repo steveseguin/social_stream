@@ -739,7 +739,7 @@
             // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!data.textonly) {
                 // Create a temporary element to parse HTML
-                const tempDiv = document.createElement('div');
+                const tempDiv = document.createElement('template').content.appendChild(document.createElement('div'));
                 tempDiv.innerHTML = message;
                 
                 // Replace images with their alt text

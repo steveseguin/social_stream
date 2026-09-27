@@ -25,7 +25,7 @@ PUBLIC_ROOT_PAGES = {
 PUBLIC_GUIDE_FOLDERS = {"docs", "lite", "streamdeck"}
 SKIP_DIRECTORIES = {
     "node_modules", "thirdparty", "vendor", "tests", "scripts", "tmp",
-    "artifacts", "test-results", "playwright-report", "public-shop-assets",
+    "artifacts", "test-results", "playwright-report", "public-shop-assets", "webstore",
 }
 ALIASES = {"landing.html": "index.html"}
 OVERRIDES = json.loads(Path(__file__).with_name("seo-pages.json").read_text(encoding="utf-8"))

@@ -2306,11 +2306,11 @@ function renderAlert(model) {
   if (!settings.hideMessage && shouldRenderBodyText(model)) {
     const message = document.createElement('div');
     message.className = 'alert-message';
-    if (model.bodyIsHTML) {
-      // Only the HTML-mode chat body reaches this branch; retain its upstream-checked formatting.
-      message.innerHTML = model.bodyText;
+    if (model.bodyIsHTML && window.SocialStreamChatHTML) {
+      // Check the display copy: direct senders may bypass relay sanitization.
+      message.innerHTML = SocialStreamChatHTML.sanitize(model.bodyText);
     } else {
-      // textonly chat and generated metadata labels are literal strings, never HTML to re-sanitize.
+      // Plain bodies stay literal; a missing helper also falls back to text.
       message.textContent = model.bodyText;
     }
     copy.appendChild(message);

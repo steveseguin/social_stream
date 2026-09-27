@@ -1,0 +1,30 @@
+diff a/webstore/candidate/poll.html b/webstore/candidate/poll.html	(rejected hunks)
+@@ -799,8 +799,8 @@ function isDuplicatePollDelivery(data, source) {
+     return transportDeliveryDedupe(data, source || "direct");
+ }
+ 
+-function queueVote(vote, name, source, userId, hasDonation = null) {
+-    messageQueue.push({vote, name, source, userId, hasDonation});
++function queueVote(vote, name, source, userId, hasDonation = null, donoValue = undefined) {
++    messageQueue.push({vote, name, source, userId, hasDonation, donoValue});
+     debugLog('Queued vote message', { vote, name, source, userId, hasDonation });
+     if (!processingQueue) {
+         processingQueue = true;
+@@ -1175,7 +1175,7 @@ function processData(data, source) {
+         }
+     } else if (shouldProcessPollMessage(data)) {
+         if (isDuplicatePollDelivery(data, source)) return;
+-        queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data), data.hasDonation || data.donation);
++        queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data), data.hasDonation || data.donation, getDonationValueUSD(data));
+     } else if (data.chatmessage) {
+         debugLog('Poll message ignored: event payload', { chatmessage: data.chatmessage, event: data.event, type: data.type });
+     } else if (data.cmd) {
+@@ -1247,7 +1247,7 @@ function processInput(data, source) {
+     } else if (shouldProcessPollMessage(data)) {
+         if (isDuplicatePollDelivery(data, source)) return false;
+         debugLog('Chat message received for poll', { chatmessage: data.chatmessage, chatname: data.chatname, source: data.type, hasDonation: data.hasDonation });
+-        queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data), data.hasDonation || data.donation);
++        queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data), data.hasDonation || data.donation, getDonationValueUSD(data));
+         return true;
+     } else if (data.chatmessage) {
+         debugLog('Poll message ignored: event payload', { chatmessage: data.chatmessage, event: data.event, type: data.type });

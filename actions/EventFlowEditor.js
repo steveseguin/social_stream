@@ -7283,7 +7283,8 @@ class EventFlowEditor {
                 try {
                     await localMediaApi.start();
                     const result = await localMediaApi.getMediaUrl(nodeData.config.localAssetId);
-                    if (result && result.url) window.open(result.url, '_blank');
+                    // Media previews can contain active SVG content; keep them separate from the editor's app bridge.
+                    if (result && result.url) window.open(result.url, '_blank', 'noopener');
                 } catch (error) {
                     this.showNotification(`Unable to preview local media: ${error && error.message ? error.message : error}`, 'error');
                 }

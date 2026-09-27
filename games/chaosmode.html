@@ -627,7 +627,7 @@
             // If textonly is not set, extract text from HTML
             // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!data.textonly) {
-                const tmp = document.createElement('div');
+                const tmp = document.createElement('template').content.appendChild(document.createElement('div'));
                 tmp.innerHTML = data.chatmessage;
                 messageText = tmp.textContent || tmp.innerText || '';
             }

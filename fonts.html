@@ -233,6 +233,17 @@
         margin-top: 14px;
       }
 
+      @media (max-width: 700px) {
+        .controls {
+          grid-template-columns: minmax(0, 1fr) auto;
+        }
+        .controls input[type="text"], .controls button {
+          grid-column: 1 / -1;
+          box-sizing: border-box;
+          max-width: 100%;
+        }
+      }
+
       @media (min-width: 900px) {
         .results {
           grid-template-columns: 1fr 1fr;
@@ -307,6 +318,7 @@
     </div>
 
     <script>
+      function siteText(value) { return window.SSNSiteTranslate ? window.SSNSiteTranslate(value) : value; }
       // Respect the provided code for applying a font from URL params
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get("font")) {
@@ -407,6 +419,7 @@
 
         const sample = document.createElement('div');
         sample.className = 'sample';
+        sample.setAttribute('translate', 'no');
         sample.style.fontFamily = `"${name}", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`;
         if (isFace) {
           if (item.weight) sample.style.fontWeight = String(item.weight);
@@ -440,7 +453,7 @@
             copyBtn.textContent = 'Copied!';
             setTimeout(() => (copyBtn.textContent = 'Copy param'), 1200);
           } catch {
-            window.prompt('Copy param:', param);
+            window.prompt(siteText('Copy param:'), param);
           }
         });
 
@@ -474,7 +487,7 @@
       // Optional: Use Local Fonts API if supported + permitted
       async function tryLocalFontsAPI() {
         if (!('queryLocalFonts' in window)) {
-          alert('Local Fonts API not supported in this browser. Use recent Chromium on HTTPS/localhost.');
+          alert(siteText('Local Fonts API not supported in this browser. Use recent Chromium on HTTPS/localhost.'));
           return [];
         }
         try {
@@ -495,7 +508,7 @@
           return Array.from(families).sort((a,b)=>a.localeCompare(b));
         } catch (err) {
           console.warn('Local Fonts API error:', err);
-          alert('Could not access local fonts. The browser may require HTTPS/localhost and user approval.');
+          alert(siteText('Could not access local fonts. The browser may require HTTPS/localhost and user approval.'));
           return [];
         }
       }

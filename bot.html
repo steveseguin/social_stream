@@ -1147,6 +1147,15 @@
 				return span.innerHTML;
 			}
 
+			function escapeContentImageUrl(value) {
+				// Only for quoted attachment URL attributes. Preserve the single entity
+				// decode these templates already perform, including legacy &amp; URLs.
+				// Entity-decoded quotes remain attribute data; literal delimiters must be escaped.
+				return String(value == null ? "" : value).replace(/[<>"']/g, function (character) {
+					return { "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character];
+				});
+			}
+
 			function upscaleImages(data) {
 				// for third party APIs
 				let chatimg = "";
@@ -2255,16 +2264,16 @@ function processData(data) {
 					
 					if (!data.chatmessage && data.contentimg) {
 					  if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')) {
-						data.chatmessage = '<video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></video>';
+						data.chatmessage = '<video loop="true" autoplay="true" muted="true" id="img" src="' + escapeContentImageUrl(data.contentimg) + '"  onerror="this.parent.style.display=\'none\'" /></video>';
 					  } else {
-						data.chatmessage = '<img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" />';
+						data.chatmessage = '<img id="img" src="' + escapeContentImageUrl(data.contentimg) + '"  onerror="this.parent.style.display=\'none\'" />';
 					  }
 					  largeImage = true;
 					} else if (data.contentimg) {
 					  if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')) {
-						addImage = '<div id="imgContent" class="hl-imgContent"><video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></video></div>';
+						addImage = '<div id="imgContent" class="hl-imgContent"><video loop="true" autoplay="true" muted="true" id="img" src="' + escapeContentImageUrl(data.contentimg) + '"  onerror="this.parent.style.display=\'none\'" /></video></div>';
 					  } else {
-						addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></div>';
+						addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + escapeContentImageUrl(data.contentimg) + '"  onerror="this.parent.style.display=\'none\'" /></div>';
 					  }
 					} else {
 					  data.contentimg = "";
@@ -2447,10 +2456,13 @@ function processData(data) {
 					  chatbadges = '<div class="hl-badges" >' + chatbadges + "</div>";
 					}
 
-					// textonly=true: literal chatmessage goes to textContent, not an HTML sanitizer. HTML mode keeps upstream-sanitized markup; largeImage is separate generated media.
+					// Plain bodies use textContent; generated attachments stay separate from chat HTML.
 					var renderChatMessageAsText = !!(data.textonly && !largeImage);
-					// HTML-mode chatmessage is expected to have passed upstream sanitization; literal textonly bodies intentionally bypass it. The flag alone is not proof of sender safety.
 					var renderedChatMessage = renderChatMessageAsText ? "" : data.chatmessage;
+					if (!renderChatMessageAsText && !largeImage) {
+					  // Check the display copy so direct senders cannot bypass HTML sanitization.
+					  renderedChatMessage = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(renderedChatMessage) : fallbackEscapeHtml(renderedChatMessage);
+					}
 
 					if (stacking) {
 					  try {
