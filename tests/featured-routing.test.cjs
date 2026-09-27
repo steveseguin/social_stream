@@ -33,6 +33,7 @@ const popupFunctions = extract(popup, ['getQueryParamTokenFromUrl', 'getServerPa
     'syncSupportedServerParamsForTarget', 'updateURL', 'removeQueryParamWithValue', 'cleanURL',
     'enableServerFallbackForDockLinks', 'getServerFallbackInputState', 'setServerFallbackInputState', 'undoServerFallbackForDockLinks']);
 const sender = extract(dock, ['sendDataP2P']);
+const dockTransport = dock.slice(dock.indexOf('var conCon = 1;'), dock.indexOf('var conConExtension = 1;'));
 const transport = featured.slice(featured.indexOf('var conCon = 1;'), featured.indexOf('var onlyshowdonos = false;'));
 
 function links(query = '', auto = false) {
@@ -76,13 +77,33 @@ function receiver(url) {
         sockets.filter(s => s.join.in === channel).forEach(s => s.receive({ data: JSON.stringify(payload) }));
     } };
 }
-function select(url, payload, receive) {
-    const enabled = new URL(url).searchParams.has('server');
+function dockSender(url, receive) {
+    const params = new URL(url).searchParams, sockets = [], commands = [], timers = [];
     const c = vm.createContext({ blockMessageSelecting: false, blockMessageSelecting2: false, blockMessageSelecting3: false,
-        singlefeaturedwriter: false, iframes: [], console, lastMessageClass: 'selected',
-        document: { querySelectorAll: () => [] }, socketserver: enabled ? { send: raw => receive.deliver(2, JSON.parse(raw)) } : false });
-    vm.runInContext(sender, c);
-    c.sendDataP2P(payload);
+        singlefeaturedwriter: false, syncDocks: false, iframes: [], console: { log() {}, error() {} }, lastMessageClass: 'selected',
+        urlParams: params, roomID: 'fixture', featuredMode: params.has('featuredmode'), thisLabel: '', URLSearchParams,
+        setTimeout(callback) { timers.push(callback); return timers.length; }, clearTimeout() {},
+        processInput(data) { commands.push(data); return true; },
+        document: { querySelectorAll: () => [] },
+        WebSocket: function(url) {
+            this.url = url; this.readyState = 1;
+            this.send = raw => {
+                const packet = JSON.parse(raw);
+                if (packet && packet.join) this.join = packet;
+                else if (!(packet && packet.callback)) receive.deliver(this.join.out, packet);
+            };
+            this.close = () => { this.readyState = 3; };
+            this.addEventListener = (event, callback) => { this.receive = callback; };
+            sockets.push(this);
+        } });
+    c.window = c;
+    vm.runInContext(fs.readFileSync(path.join(root, 'js/local-server-url.js'), 'utf8'), c);
+    vm.runInContext(dockTransport + '\n' + sender, c);
+    sockets.forEach(socket => socket.onopen());
+    return { c, sockets, commands, timers };
+}
+function select(url, payload, receive) {
+    dockSender(url, receive).c.sendDataP2P(payload);
 }
 
 for (let flags = 0; flags < 8; flags++) {
@@ -129,7 +150,9 @@ test('Server Fallback creates a working manual pair and Undo restores the switch
 test('manual/auto changes, disable, custom endpoints and unrelated targets', () => {
     const { c, inputs, elements } = links('server2=ws%3A%2F%2Fcustom.invalid%2Frelay&localserver');
     assert.equal(receiver(elements.overlay.raw).sockets[0].url, 'ws://custom.invalid/relay');
-    assert.equal(new URL(elements.dock.raw).searchParams.get('server'), 'ws://custom.invalid/relay');
+    assert.equal(new URL(elements.dock.raw).searchParams.has('server'), false);
+    const publisher = dockSender(elements.dock.raw, receiver(elements.overlay.raw));
+    assert.equal(publisher.sockets[0].url, 'ws://custom.invalid/relay');
     elements.overlay.raw += '&autoshow'; c.refreshLinks();
     assert.equal(receiver(elements.overlay.raw).sockets[0].join.in, 4);
     elements.overlay.raw = elements.overlay.raw.replace('&autoshow', ''); c.refreshLinks();
@@ -164,4 +187,47 @@ test('Fallback and Undo preserve every previous switch combination', () => {
             for (const [i, key] of ['server', 'server2', 'server3'].entries()) assert.equal(inputs[key].checked, !!(flags & (1 << i)));
         }
     }
+});
+
+test('old extension URLs deliver selections and clear without enabling Dock API commands', () => {
+    for (const query of ['server2', 'server3', 'server2&server3', 'server2&server3&localserver&localserverport=4567']) {
+        const r = receiver('https://socialstream.ninja/featured.html?session=fixture&' + query);
+        const publisher = dockSender('https://socialstream.ninja/dock.html?session=fixture&' + query, r);
+        assert.equal(publisher.c.socketserver, false, 'existing API connection stays disabled');
+        assert.equal(publisher.sockets.length, 1);
+        assert.equal(publisher.sockets[0].receive, undefined, 'selection publisher cannot dispatch incoming commands');
+        assert.equal(publisher.sockets[0].onmessage, undefined);
+        r.deliver(4, { chatmessage: 'unselected capture' });
+        assert.equal(r.messages.length, 0);
+        publisher.c.sendDataP2P({ chatmessage: 'old extension selection' });
+        publisher.c.sendDataP2P(false);
+        assert.equal(r.messages[0].contents.chatmessage, 'old extension selection');
+        assert.equal(r.messages[1].contents, false);
+    }
+});
+
+test('explicit API links retain commands, including Featured-mode Dock input', () => {
+    for (const query of ['server', 'server&server2&server3', 'server&featuredmode']) {
+        const publisher = dockSender('https://socialstream.ninja/dock.html?session=fixture&' + query, { deliver() {} });
+        assert.equal(publisher.c.socketserverFeatured, false);
+        assert.equal(publisher.sockets.length, 1);
+        assert.equal(publisher.sockets[0].join.in, query.includes('featuredmode') ? 2 : 1);
+        publisher.sockets[0].receive({ data: JSON.stringify({ action: 'getQueueSize' }) });
+        assert.equal(publisher.commands.length, 1);
+    }
+});
+
+test('selection publisher reconnects and does not prevent P2P sends while disconnected', () => {
+    const r = receiver('https://socialstream.ninja/featured.html?session=fixture&server2&server3');
+    const publisher = dockSender('https://socialstream.ninja/dock.html?session=fixture&server2&server3', r);
+    const p2p = [];
+    publisher.c.iframes.push({connectedPeers:{peer:'overlay'},contentWindow:{postMessage:message=>p2p.push(message)}});
+    publisher.sockets[0].readyState = 3;
+    publisher.sockets[0].onclose();
+    publisher.c.sendDataP2P({chatmessage:'P2P while reconnecting'});
+    assert.equal(p2p.length, 1);
+    publisher.timers[0]();
+    publisher.sockets[1].onopen();
+    publisher.c.sendDataP2P({chatmessage:'reconnected'});
+    assert.equal(r.messages[0].contents.chatmessage, 'reconnected');
 });

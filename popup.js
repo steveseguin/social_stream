@@ -3670,18 +3670,10 @@ function syncSupportedServerParamsForTarget(targetId, targetElement, sourceEleme
       targetElement.raw = updateURL(getServerParamToken(paramName, sourceElement, sourceTokens), targetElement.raw);
     }
   });
-  // Captured chat (server2) is not the Dock's selected-message feed (server).
-  // Generate a matching selection route without enabling API routes on other pages.
-  if (targetId === "dock" || targetId === "overlay") {
-    const autoShow = targetId === "overlay" && new URL(targetElement.raw, baseURL).searchParams.has("autoshow");
-    if (autoShow && isBothParamChecked("server2")) {
-      // Explicit auto-show must keep consuming captured chat, even if server is checked.
-      targetElement.raw = removeQueryParamWithValue(targetElement.raw, "server");
-    } else if (!autoShow && !isBothParamChecked("server") && (isBothParamChecked("server2") || isBothParamChecked("server3"))) {
-      const relayParam = isBothParamChecked("server2") ? "server2" : "server3";
-      const selectionParam = getServerParamToken(relayParam, sourceElement, sourceTokens).replace(/^server[23]/, "server");
-      targetElement.raw = updateURL(selectionParam, targetElement.raw);
-    }
+  // Explicit auto-show keeps consuming captured chat, even if server is checked.
+  // Manual selections are carried by Dock/Featured without adding an API opt-in.
+  if (targetId === "overlay" && isBothParamChecked("server2") && new URL(targetElement.raw, baseURL).searchParams.has("autoshow")) {
+    targetElement.raw = removeQueryParamWithValue(targetElement.raw, "server");
   }
 	// Flow Actions has an independent command channel. An explicitly enabled
 	// API receiver can carry actions even when chat forwarding is disabled.

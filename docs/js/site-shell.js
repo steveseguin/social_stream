@@ -69,6 +69,9 @@
             languageLink.textContent = alternate.getAttribute('data-label');
             navigationElement.appendChild(languageLink);
         }
+        var actions = document.querySelector('.site-header .site-actions');
+        var picker = document.querySelector('.site-header [data-site-language-picker]');
+        if (actions && picker) actions.insertBefore(picker, actions.querySelector('.site-theme'));
         document.querySelectorAll('.site-language-link').forEach(function (languageLink) {
             var languageUrl = new URL(languageLink.href, location.href);
             function updateLanguageUrl() {
@@ -114,7 +117,7 @@
             toggle.addEventListener('click', function () { open(toggle.getAttribute('aria-expanded') !== 'true'); });
             nav.addEventListener('click', function (event) { if (event.target.closest('a')) open(false); });
             document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && nav.classList.contains('is-open')) { open(false); toggle.focus(); } });
-            document.addEventListener('click', function (event) { if (!event.target.closest('.site-header')) open(false); });
+            document.addEventListener('click', function (event) { if (!event.target.closest('.site-header') || event.target.closest('[data-site-language-picker]')) open(false); });
             window.addEventListener('resize', fitNavigation);
             fitNavigation();
             if (document.fonts) document.fonts.ready.then(fitNavigation);

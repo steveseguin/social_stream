@@ -22,12 +22,22 @@ async function checkHeader(page) {
     const header = page.locator('.site-header');
     if (!await header.count()) return;
     const nav = page.locator('#ssn-site-nav');
+    const picker = header.locator('.site-actions > [data-site-language-picker]');
+    assert.equal(await picker.count(), 1, 'Language picker is outside the collapsible navigation');
+    assert.equal(await picker.evaluate(el => el.nextElementSibling.classList.contains('site-theme')), true, 'Language precedes theme');
     const optional = ['services.html', 'commands.html', 'overlay-gallery.html', 'inspiration.html'];
     for (const width of [1600, 1440, 1280, 1180, 1100, 1051, 1050, 768, 390, 320, 1600]) {
         await page.setViewportSize({width, height:1000});
         // Resize events can arrive after the viewport command completes.
         await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
         const menu = page.locator('.site-menu');
+        assert.equal(await picker.isVisible(), true, 'Language remains visible at ' + width);
+        const controls = await header.locator('.site-brand, .site-actions > :visible').evaluateAll(elements => elements.map(el => {
+            const r = el.getBoundingClientRect();
+            return {left:r.left,right:r.right,center:r.top + r.height / 2};
+        }).sort((a,b) => a.left - b.left));
+        assert.ok(controls.every(item => item.left >= 0 && item.right <= width && Math.abs(item.center - controls[0].center) < 1), 'Header controls fit and align at ' + width);
+        for (let i=1;i<controls.length;i++) assert.ok(controls[i].left - controls[i-1].right >= 5, 'Header controls do not overlap');
         if (await menu.isVisible()) {
             await menu.click();
             assert.equal(await nav.isVisible(), true);
@@ -36,6 +46,9 @@ async function checkHeader(page) {
             if (await active.count()) assert.equal(await active.evaluate(el => getComputedStyle(el).borderBottomWidth), '0px', 'No full-width active underline');
             await page.keyboard.press('Escape');
             assert.equal(await menu.getAttribute('aria-expanded'), 'false');
+            await menu.click();
+            await picker.locator('summary').click();
+            assert.equal(await menu.getAttribute('aria-expanded'), 'false', 'Language menu closes navigation');
         } else {
             const layout = await nav.evaluate(el => {
                 const box = el.getBoundingClientRect();
@@ -50,6 +63,12 @@ async function checkHeader(page) {
             const hidden = await Promise.all(optional.map(file => nav.locator(':scope > a[href$="' + file + '"]').evaluate(el => el.hidden)));
             for (let i=1;i<hidden.length;i++) if (hidden[i]) assert.equal(hidden[i-1],true,'Hide less important links first');
         }
+        if (await picker.getAttribute('open') === null) await picker.locator('summary').click();
+        const dropdown = await picker.locator('.site-language-options').boundingBox();
+        assert.ok(dropdown && dropdown.x >= 0 && dropdown.x + dropdown.width <= width && dropdown.y + dropdown.height <= 1000, 'Language dropdown fits at ' + width);
+        await page.keyboard.press('Escape');
+        assert.equal(await picker.getAttribute('open'), null);
+        assert.equal(await picker.locator('summary').evaluate(el => el === document.activeElement), true, 'Escape returns focus to language control');
     }
     for (let mode=0;mode<2;mode++) {
         const style = selector => page.locator(selector).evaluate(el => {
@@ -81,7 +100,7 @@ async function checkHeader(page) {
             assert.equal(await page.locator('html').getAttribute('lang'), language,relative);
             if (language === 'ar') assert.equal(await page.locator('html').getAttribute('dir'), 'rtl', relative);
             assert.equal(await page.locator('[data-site-language-picker]').count(),1,relative);
-            if (relative === 'docs/services.html' || relative === 'docs/guides.html') await checkHeader(page);
+            if (['index.html', 'docs/ai-modes-guide.html', 'docs/services.html', 'docs/guides.html'].includes(relative)) await checkHeader(page);
             const picker = page.locator('[data-site-language-picker]');
             if (await picker.isVisible()) {
                 await picker.locator('summary').click();

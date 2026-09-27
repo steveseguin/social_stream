@@ -5421,6 +5421,43 @@
 				setupSocket();
 			}
 
+			// Older extension links carry server2/server3 without the Dock API flag.
+			// Publish selections on their own socket so those links do not opt in to
+			// incoming API commands or change Dock-to-Dock synchronization.
+			var socketserverFeatured = false;
+			var featuredReconnectTimeout = null;
+			var featuredReconnectCount = 1;
+			var featuredServerParam = urlParams.has("server2") ? "server2" : "server3";
+			var featuredServerURL = SocialStreamLocalServer.getRelayUrl(urlParams, featuredServerParam, "wss://io.socialstream.ninja/api");
+			function setupFeaturedSocket() {
+				if (featuredReconnectTimeout) {
+					clearTimeout(featuredReconnectTimeout);
+					featuredReconnectTimeout = null;
+				}
+				if (socketserverFeatured) {
+					socketserverFeatured.onclose = null;
+					socketserverFeatured.close();
+				}
+				socketserverFeatured = new WebSocket(featuredServerURL);
+				socketserverFeatured.onopen = function () {
+					featuredReconnectCount = 1;
+					socketserverFeatured.send(JSON.stringify({ join: roomID.split(",")[0], out: 2, in: 2 }));
+				};
+				socketserverFeatured.onclose = function () {
+					featuredReconnectTimeout = setTimeout(function () {
+						featuredReconnectCount += 1;
+						setupFeaturedSocket();
+					}, 100 * featuredReconnectCount);
+				};
+				socketserverFeatured.onerror = function () {
+					socketserverFeatured.close();
+				};
+				// This socket deliberately has no incoming-message handler.
+			}
+			if (!urlParams.has("server") && (urlParams.has("server2") || urlParams.has("server3"))) {
+				setupFeaturedSocket();
+			}
+
 			//
 
 			var conConExtension = 1;
@@ -13165,12 +13202,13 @@
 					});
 				}
 				try {
-					if (socketserver) {
+					var selectionSocket = socketserver || (socketserverFeatured && socketserverFeatured.readyState === 1 ? socketserverFeatured : false);
+					if (selectionSocket) {
 						// send a copy to the remote API
 						if (data.out){
 							delete data.out;
 						}
-						socketserver.send(JSON.stringify(data));
+						selectionSocket.send(JSON.stringify(data));
 					}
 					iframes.forEach(iframe => {
 						var msg = {};
