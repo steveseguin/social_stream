@@ -329,7 +329,8 @@ class EventFlowSystem {
         const config = node.config || {};
         
         // Initialize state if it doesn't exist
-        if (!this.nodeStates.has(nodeId)) {
+        const stateStore = stateType === 'THROTTLE' ? this.throttleStates : this.nodeStates;
+        if (!stateStore.has(nodeId)) {
             this.initializeStateNode(nodeId, stateType, config);
         }
         
@@ -618,9 +619,11 @@ class EventFlowSystem {
         const state = this.throttleStates.get(nodeId);
         const now = Date.now();
         
-        // Remove timestamps older than 1 second
+        // Fractional rates need a longer window (0.1/sec = one every 10 seconds).
+        const windowMs = config.messagesPerSecond > 0 && config.messagesPerSecond < 1
+            ? 1000 / config.messagesPerSecond : 1000;
         state.messageTimestamps = state.messageTimestamps.filter(
-            timestamp => now - timestamp < 1000
+            timestamp => now - timestamp < windowMs
         );
         
         if (state.messageTimestamps.length < config.messagesPerSecond) {
@@ -720,15 +723,53 @@ class EventFlowSystem {
         });
     }
     
+    cloneFlowWithFreshNodeIds(flow) {
+        const newFlow = JSON.parse(JSON.stringify(flow));
+        const idMap = new Map();
+        const usedNodeIds = new Set();
+
+        for (const existingFlow of this.flows || []) {
+            for (const node of existingFlow.nodes || []) {
+                if (node && node.id) usedNodeIds.add(node.id);
+            }
+        }
+
+        (newFlow.nodes || []).forEach((node, index) => {
+            if (!node || !node.id) return;
+
+            const oldId = node.id;
+            let attempt = 0;
+            let newId;
+            do {
+                newId = `node_${Date.now()}_${Math.floor(Math.random() * 1000000)}_${index}_${attempt++}`;
+            } while (usedNodeIds.has(newId));
+
+            idMap.set(oldId, newId);
+            usedNodeIds.add(newId);
+            node.id = newId;
+        });
+
+        newFlow.connections = (newFlow.connections || []).map(connection => ({
+            ...connection,
+            from: idMap.get(connection.from) || connection.from,
+            to: idMap.get(connection.to) || connection.to
+        }));
+
+        (newFlow.nodes || []).forEach(node => {
+            if (!node || !node.config || !node.config.targetNodeId) return;
+            node.config.targetNodeId = idMap.get(node.config.targetNodeId) || node.config.targetNodeId;
+        });
+
+        newFlow.id = null;
+        return newFlow;
+    }
+
     async duplicateFlow(flowId) {
         const flow = await this.getFlowById(flowId);
         if (!flow) return null;
-        
-        const newFlow = {
-            ...flow,
-            id: null,
-            name: `${flow.name} (Copy)`,
-        };
+
+        const newFlow = this.cloneFlowWithFreshNodeIds(flow);
+        newFlow.name = `${flow.name} (Copy)`;
         
         return this.saveFlow(newFlow);
     }
@@ -742,8 +783,9 @@ class EventFlowSystem {
     
     async importFlow(flowData) {
         try {
-            const flow = typeof flowData === 'string' ? JSON.parse(flowData) : flowData;
-            flow.id = null; // Force new ID on import
+            const flow = this.cloneFlowWithFreshNodeIds(
+                typeof flowData === 'string' ? JSON.parse(flowData) : flowData
+            );
             
             return this.saveFlow(flow);
         } catch (e) {
@@ -1319,7 +1361,7 @@ class EventFlowSystem {
     }
 
     normalizeEventType(eventType) {
-        const normalized = (eventType || '').toLowerCase().trim();
+        const normalized = typeof eventType === 'string' ? eventType.toLowerCase().trim() : '';
         // Backward compatibility alias: legacy Twitch ad event spelling.
         if (normalized === 'adbreak') {
             return 'ad_break';
@@ -1377,6 +1419,15 @@ class EventFlowSystem {
     
     async evaluateTrigger(triggerNode, message) {
         const { triggerType, config } = triggerNode;
+        // Boolean activity markers are valid payloads, but are not named events.
+        const messageEvent = message && typeof message.event === 'string' ? message.event.toLowerCase() : '';
+        // Scheduler ticks have no chat payload. Do not match message filters or
+        // advance message counters; preserve explicitly message-free triggers.
+        if (message == null && triggerType !== 'timeInterval' && triggerType !== 'timeOfDay'
+            && triggerType !== 'customJs'
+            && !(triggerType === 'randomChance' && config && config.requireMessage === false)) {
+            return false;
+        }
         // console.log(`[EvaluateTrigger] Node: ${triggerNode.id}, Type: ${triggerType}, Config: ${JSON.stringify(config)}, Message: ${message.chatmessage}`);
         let match = false;
 		
@@ -1537,33 +1588,33 @@ class EventFlowSystem {
 
             // === NEW DEDICATED EVENT TRIGGERS ===
             case 'eventNewFollower': {
-                const eventMatch = (message.event || '').toLowerCase() === 'new_follower';
+                const eventMatch = messageEvent === 'new_follower';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
                 return eventMatch && sourceMatch;
             }
 
             case 'eventNewSubscriber': {
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 const eventMatch = event === 'new_subscriber' || event === 'sponsorship';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
                 return eventMatch && sourceMatch;
             }
 
             case 'eventResub': {
-                const eventMatch = (message.event || '').toLowerCase() === 'resub';
+                const eventMatch = messageEvent === 'resub';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
                 return eventMatch && sourceMatch;
             }
 
             case 'eventGiftSub': {
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 const eventMatch = event === 'subscription_gift' || event === 'giftpurchase';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
                 return eventMatch && sourceMatch;
             }
 
             case 'eventDonation': {
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 const eventMatch = event === 'donation' || event === 'cheer' || event === 'supersticker';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
 
@@ -1579,26 +1630,28 @@ class EventFlowSystem {
             }
 
             case 'eventRaid': {
-                const eventMatch = (message.event || '').toLowerCase() === 'raid';
+                const eventMatch = messageEvent === 'raid';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
 
                 // Check minimum viewers if specified
                 let viewerMatch = true;
-                if (config.minViewers > 0 && message.meta?.viewers) {
-                    viewerMatch = message.meta.viewers >= config.minViewers;
+                if (config.minViewers > 0) {
+                    const viewers = Number(message.meta?.viewers ?? message.viewers);
+                    viewerMatch = Number.isFinite(viewers) && viewers >= config.minViewers;
                 }
 
                 return eventMatch && sourceMatch && viewerMatch;
             }
 
             case 'eventCheer': {
-                const eventMatch = (message.event || '').toLowerCase() === 'cheer';
+                const eventMatch = messageEvent === 'cheer';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
 
                 // Check minimum bits if specified
                 let bitsMatch = true;
-                if (config.minBits > 0 && message.bits) {
-                    bitsMatch = message.bits >= config.minBits;
+                if (config.minBits > 0) {
+                    const bits = Number(message.meta?.bits ?? message.bits);
+                    bitsMatch = Number.isFinite(bits) && bits >= config.minBits;
                 }
 
                 return eventMatch && sourceMatch && bitsMatch;
@@ -1626,38 +1679,38 @@ class EventFlowSystem {
 
             case 'obsStreamStarted': {
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 return event === 'stream_started';
             }
 
             case 'obsStreamStopped': {
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 return event === 'stream_stopped';
             }
 
             case 'obsRecordingStarted': {
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 return event === 'recording_started' || event === 'obs_recording_started';
             }
 
             case 'obsRecordingStopped': {
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 return event === 'recording_stopped' || event === 'obs_recording_stopped';
             }
 
             case 'obsSceneChanged': {
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 return event === 'scene_changed' || event === 'obs_scene_changed';
             }
 
             case 'obsReplaybufferSaved': {
                 // Matches OBS obs-browser's official replay-buffer event casing.
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
-                const event = (message.event || '').toLowerCase();
+                const event = messageEvent;
                 return event === 'replay_buffer_saved' || event === 'obs_replay_buffer_saved';
             }
 
@@ -1741,7 +1794,9 @@ class EventFlowSystem {
                 
             case 'timeOfDay':
                 // Trigger at specific times of day
-                if (!config.times || !Array.isArray(config.times)) return false;
+                // Older editor versions saved this comma-separated field as a string.
+                const configuredTimes = Array.isArray(config.times) ? config.times
+                    : typeof config.times === 'string' ? config.times.split(',') : [];
                 
                 const currentTime = new Date();
                 const currentHour = currentTime.getHours();
@@ -1749,20 +1804,21 @@ class EventFlowSystem {
                 const currentTimeString = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
                 
                 // Check if current time matches any configured time
-                match = config.times.some(time => {
+                match = configuredTimes.some(time => {
                     if (typeof time === 'string' && time.includes(':')) {
-                        return time === currentTimeString;
+                        return time.trim() === currentTimeString;
                     }
                     return false;
                 });
                 
                 // Prevent triggering multiple times in the same minute
                 const todNodeState = `timeOfDay_${triggerNode.id}_lastTriggered`;
+                const currentMinuteId = Math.floor(currentTime.getTime() / 60000);
                 if (match) {
-                    if (this[todNodeState] === currentTimeString) {
+                    if (this[todNodeState] === currentMinuteId) {
                         return false; // Already triggered this minute
                     }
-                    this[todNodeState] = currentTimeString;
+                    this[todNodeState] = currentMinuteId;
                 }
                 return match;
                 
@@ -2704,7 +2760,7 @@ class EventFlowSystem {
                     //console.log('[SEND MESSAGE - Action] Mode: Send to platform:', config.destination);
                 }
                 
-                const timeout = config.timeout || 1000;
+                const timeout = config.timeout ?? 1000;
                 
                 //console.log('[SEND MESSAGE - Action] Calling sendMessageToTabs with:');
                 //console.log('  - message:', sendMsg);
@@ -2782,7 +2838,7 @@ class EventFlowSystem {
                 
                 //console.log('[RELAY DEBUG - Action] Relay message prepared:', relayMessage);
                 
-                const timeout = config.timeout || 1000;
+                const timeout = config.timeout ?? 1000;
                 
                 //console.log('[RELAY DEBUG - Action] Calling sendMessageToTabs with:');
                 //console.log('  - message:', relayMessage);
@@ -3405,13 +3461,14 @@ class EventFlowSystem {
                 
                 const noteOutput = this.getMIDIOutputDevice(config.deviceId);
                 if (noteOutput) {
-                    const velocity = config.velocity || 127;
+                    const velocity = config.velocity ?? 127;
                     const duration = config.duration || 100;
                     const channel = config.channel || 1;
                     
                     try {
-                        noteOutput.playNote(config.note, channel, {
-                            velocity: velocity / 127,
+                        noteOutput.playNote(config.note, {
+                            channels: channel,
+                            attack: velocity / 127,
                             duration: duration
                         });
                         console.log(`[MIDI] Sent note ${config.note} to device ${config.deviceId}`);
