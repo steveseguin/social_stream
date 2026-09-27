@@ -446,6 +446,7 @@ class EventFlowEditor {
                 name: '🎨 Media & Effects',
                 expanded: true,
                 actions: [
+                    { id: 'showAiEventOverlay', name: '✨ Show AI Event Overlay' },
                     { id: 'playTenorGiphy', name: '🖼️ Display Media Overlay' },
                     { id: 'showAvatar', name: '👤 Show Avatar' },
                     { id: 'commerceControl', name: '\uD83D\uDECD Products & Support' },
@@ -2311,6 +2312,7 @@ class EventFlowEditor {
                     if (srcMode === 'none') return `Reflections: ${pol}`;
                     return `Reflections: ${pol} (${srcMode}: ${srcList || '—'})`;
                 }
+                case 'showAiEventOverlay': return `AI overlay: ${node.config.profile || 'default'}`;
                 case 'addPoints': return `Add: ${node.config.amount || 100} points`;
                 case 'spendPoints': return `Spend: ${node.config.amount || 100} points`;
                 case 'giveawayControl': return `Giveaway: ${node.config.giveawayId || 'default'}`;
@@ -3278,6 +3280,8 @@ class EventFlowEditor {
 					node.config = { removeType: 'removeCommand' }; break;
                 case 'setProperty':
 					node.config = { property: 'nameColor', value: '#FF0000' }; break;
+                case 'showAiEventOverlay':
+                    node.config = { profile: 'default' }; break;
                 case 'featureMessage':
                     node.config = {}; break;
                 case 'pinMessage':
@@ -5166,6 +5170,9 @@ class EventFlowEditor {
 			case 'addPoints':
 				html += `<div class="property-group"><label class="property-label">Amount to Add</label><input type="number" class="property-input" id="prop-amount" value="${node.config.amount || 100}" min="0"></div>`;
 				break;
+			case 'showAiEventOverlay':
+                html += `<div class="property-group"><label class="property-label" for="prop-profile">Saved configuration ID</label><input class="property-input" id="prop-profile" value="${this.escapeHtml(node.config.profile || 'default')}" placeholder="default"></div><p class="property-help">Create a configuration under Chat Bots and AI services → AI Event Overlay. Set its trigger to Event Flow and add its overlay URL to OBS. Connect Spend Points before this action for a loyalty reward.</p>`;
+                break;
 			case 'spendPoints':
 				html += `<div class="property-group"><label class="property-label">Amount to Spend</label><input type="number" class="property-input" id="prop-amount" value="${node.config.amount || 100}" min="0"></div>`;
 				break;
