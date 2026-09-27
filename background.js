@@ -7945,9 +7945,7 @@ function buildViewerCountsFromMetaStore() {
 
 function publishViewerCountsFromMetaStore() {
 	var counts = buildViewerCountsFromMetaStore();
-	if (settings.hypemode) {
-		updateViewerCount({ event: "viewer_updates", meta: counts }); // updateViewerCount already calls combineHypeData and sends
-	}
+	updateViewerCount({ event: "viewer_updates", meta: counts });
 
 	var viewerUpdateEvent = { event: "viewer_updates", meta: counts };
 	sendDataP2P(viewerUpdateEvent);
@@ -13385,8 +13383,15 @@ function prepareOverlayControl(data, target) {
 	return packet;
 }
 function handleOverlayControlRequest(data, socket, replyChannel, allowSnapshot) {
-	if (!data || (!data.ssnControlRequest && !data.ssnControlAck)) return false;
+	if (!data || (!data.ssnControlRequest && !data.ssnControlAck && data.action !== "requestViewerCount")) return false;
 	if (!isExtensionOn || settings.disablehost) return true;
+	if (data.action === "requestViewerCount") {
+		if (allowSnapshot || settings.server3) {
+			refreshTemporaryViewerCount(data.value && data.value.ttl);
+			updateViewerCount({ event: "viewer_updates", meta: buildViewerCountsFromMetaStore() });
+		}
+		return true;
+	}
 	if (data.ssnControlAck) {
 		var pending = overlayControlPending.get(data.ssnControlAck.id);
 		if (pending && pending.session === streamID && pending.target === data.ssnControlAck.target) pending.resolve(true);
@@ -13399,6 +13404,7 @@ function handleOverlayControlRequest(data, socket, replyChannel, allowSnapshot) 
 
 	} else if (request.target === "hype") {
 		packet = prepareOverlayControl({ hype: combineHypeData() }, "hype");
+		packet.ssnControl.viewerCountActive = !!(settings.showviewercount || settings.hypemode || isTemporaryViewerCountActive());
 	} else if (request.target === "map") {
         packet = prepareOverlayControl({ settings: settings }, "map");
     } else if (request.target === "timer" && timerStateInitialized) {
@@ -15295,7 +15301,9 @@ async function processIncomingRequest(request, UUID = false) {
 		return true;
 	}
 	if (request && request.action === "requestViewerCount") {
+		if (!isExtensionOn || settings.disablehost) return;
 		refreshTemporaryViewerCount(request.value && request.value.ttl);
+		updateViewerCount({ event: "viewer_updates", meta: buildViewerCountsFromMetaStore() });
 		return;
 	}
 	if (request && request.action === "eventFlowEvent" && request.value) {

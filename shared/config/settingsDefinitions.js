@@ -911,8 +911,8 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   },
   "hypemode": {
     type: "boolean",
-    category: "must_enable_the_trigger_to_use",
-    description: "Enable to the hype meter's processing"
+    category: "viewer_count_and_chat_activity_overlay",
+    description: "Track active chatters"
   },
   "identifyQuestions": {
     type: "boolean",

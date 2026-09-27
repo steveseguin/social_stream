@@ -911,7 +911,7 @@ function getEditableGeneratedLinkConfig(targetId) {
 		eventsdashboard: ["events.html", "Events Dashboard"],
 		reactions: ["reactions.html", "Reactions"],
 		emoteswall: ["emotes.html", "Emote Wall"],
-		hypemeter: ["hype.html", "Hype Meter"],
+		hypemeter: ["hype.html", "Viewer Count & Chat Activity"],
 		meta: ["meta.html", "Meta Bar"],
 		tipjar: ["tipjar.html", "Tip Jar"],
 		waitlist: ["waitlist.html", "Waitlist"],

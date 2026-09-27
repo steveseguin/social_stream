@@ -65,7 +65,17 @@
         if (mode === 'flow') {
             return payload.meta && payload.meta.aiEventOverlay && payload.meta.aiEventOverlay.profile === id ? payload : null;
         }
-        if (mode === 'featured') return payload.contents && typeof payload.contents === 'object' ? payload.contents : null;
+        // The featured feed is selected by the transport. Dock sends the message
+        // directly; API callers may wrap it in contents/content or action:value.
+        if (mode === 'featured') {
+            if (payload.contents) payload = payload.contents;
+            else if (payload.content) payload = payload.content;
+            else if (payload.action === 'content' && payload.value) {
+                try { payload = JSON.parse(payload.value); } catch (_) { return null; }
+                if (payload && payload.contents) payload = payload.contents;
+            }
+            if (!payload || typeof payload !== 'object') return null;
+        }
         if (payload.contents || payload.action || payload.actionType) return null;
         return payload.chatname || payload.chatmessage || payload.hasDonation || payload.membership || payload.contentimg ? payload : null;
     }

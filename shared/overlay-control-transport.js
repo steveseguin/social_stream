@@ -20,7 +20,7 @@
     }
     // A separate subscription prevents settings/commands reaching ordinary chat
     // consumers. It uses the selected relay and existing receiver permissions.
-    function connect(params, session, target, receive) {
+    function connect(params, session, target, receive, options) {
         if (!session) return;
         var parameter = params.get('server') ? 'server' : params.has('server2') ? 'server2' : params.has('server') ? 'server' : params.has('server3') ? 'server3' : null;
         if (!parameter) return;
@@ -29,11 +29,13 @@
         var requestChannel = parameter === 'server' ? 1 : 3;
         var client = 'overlay-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
         var socket, retry, refresh, stopped = false;
+        var viewerCountRequestedAt = 0;
         function open() {
             if (stopped) return;
             try { socket = new WebSocket(endpoint); }
             catch (error) { console.warn('[Overlay control] Invalid relay address', error); return; }
             socket.onopen = function () {
+                viewerCountRequestedAt = 0;
                 socket.send(JSON.stringify({ join: session.split(',')[0], out: requestChannel, in: 7 }));
                 // Only read current state. Never replay a start/reset on reconnect.
                 function request() {
@@ -48,6 +50,12 @@
                 try {
                     var data = JSON.parse(event.data), control = data && data.ssnControl;
                     if (!control || control.target !== target || (control.client && control.client !== client)) return;
+                    // A restarted host can lose collection while this relay connection stays open.
+                    if (target === 'hype' && options && options.viewerCounts &&
+                        (control.viewerCountActive === false || !viewerCountRequestedAt || Date.now() - viewerCountRequestedAt >= 60 * 60 * 1000)) {
+                        socket.send(JSON.stringify({ action: 'requestViewerCount', value: { ttl: 70 * 60 * 1000 } }));
+                        viewerCountRequestedAt = Date.now();
+                    }
                     receive(data);
                     acknowledge(socket, data, target);
                 } catch (error) { console.warn('[Overlay control] Message failed', error); }
