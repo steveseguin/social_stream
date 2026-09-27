@@ -18,8 +18,10 @@ from urllib.parse import parse_qs, quote, urlsplit, urlunsplit
 
 PAGES = ("index.html", "docs/download.html", "docs/getting-started.html")
 LANGUAGE = "es"
-LANGUAGES = {"es": "Español", "pt-br": "Português (Brasil)", "ru": "Русский", "fr": "Français", "de": "Deutsch"}
-LOCALES = {"es": "es_ES", "pt-br": "pt_BR", "ru": "ru_RU", "fr": "fr_FR", "de": "de_DE"}
+LANGUAGES = {"es": "Español", "pt-br": "Português (Brasil)", "ru": "Русский", "fr": "Français", "de": "Deutsch",
+             "ja": "日本語", "zh-cn": "简体中文", "zh-tw": "繁體中文", "it": "Italiano", "pl": "Polski"}
+LOCALES = {"es": "es_ES", "pt-br": "pt_BR", "ru": "ru_RU", "fr": "fr_FR", "de": "de_DE",
+           "ja": "ja_JP", "zh-cn": "zh_CN", "zh-tw": "zh_TW", "it": "it_IT", "pl": "pl_PL"}
 ORIGIN = "https://socialstream.ninja"
 LANGUAGE_BLOCK = re.compile(r"<!-- ssn-languages:start -->[\s\S]*?<!-- ssn-languages:end -->")
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}

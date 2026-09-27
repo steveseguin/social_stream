@@ -1240,9 +1240,10 @@
     function normalizeSearchText(value) {
       let normalized = String(value || "");
       if (normalized.normalize) normalized = normalized.normalize("NFKD");
+      normalized = normalized.replace(/[\u0300-\u036f]/g, "");
+      if (normalized.normalize) normalized = normalized.normalize("NFC");
       return normalized
         .toLowerCase()
-        .replace(/[\u0300-\u036f]/g, "")
         .replace(/[^\p{L}\p{N}]+/gu, " ")
         .trim()
         .replace(/\s+/g, " ");
@@ -1250,8 +1251,15 @@
 
     function searchTokens(value) {
       const seen = {};
-      return normalizeSearchText(value).split(" ").filter(token => {
-        if (token.length < 2 || seen[token]) return false;
+      const normalized = normalizeSearchText(value);
+      const tokens = normalized.split(" ");
+      const runs = normalized.match(/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+/g) || [];
+      runs.forEach(run => {
+        if (run.length < 3) tokens.push(run);
+        else for (let index = 0; index < run.length - 1; index += 1) tokens.push(run.slice(index, index + 2));
+      });
+      return tokens.filter(token => {
+        if (!token || (token.length < 2 && !/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(token)) || seen[token]) return false;
         seen[token] = true;
         return true;
       });
@@ -1444,7 +1452,7 @@
         return;
       }
 
-      if (normalizeSearchText(term).length < 2) {
+      if (!searchTokens(term).length) {
         renderSearchResults(term, []);
         elements.searchStatus.textContent = "Type at least two characters.";
         return;
