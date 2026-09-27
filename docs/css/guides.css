@@ -121,13 +121,13 @@
 .guide-directory h2 {
     padding-bottom: 0.4rem;
     margin-bottom: 0;
-    text-align: left;
+    text-align: start;
 }
 
 .guide-directory .section-subtitle {
     margin-top: 0;
     margin-bottom: 0;
-    text-align: left;
+    text-align: start;
     font-size: 1.55rem;
 }
 
@@ -587,7 +587,7 @@ pre {
 .guide-card h3,
 .guide-card h4,
 .guide-card h5 {
-    text-align: left;
+    text-align: start;
 }
 
 .guide-card h2 {
@@ -657,7 +657,7 @@ pre {
 .guide-table th,
 .guide-table td {
     padding: 1rem 1.2rem;
-    text-align: left;
+    text-align: start;
     border: 0;
     border-bottom: 1px solid var(--border-color);
     vertical-align: top;
@@ -724,15 +724,14 @@ pre {
     }
 
     .guide-table-stack td {
-        display: grid;
-        grid-template-columns: minmax(8rem, 35%) 1fr;
-        gap: 0.8rem;
         border: 0;
         border-bottom: 1px solid var(--border-color);
     }
 
     .guide-table-stack td::before {
         content: attr(data-label);
+        display: block;
+        margin-bottom: 0.4rem;
         font-weight: 600;
         color: var(--text-secondary);
     }
@@ -905,7 +904,7 @@ pre {
     }
 
     .guide-tree-group summary small {
-        text-align: left;
+        text-align: start;
     }
 
     .guide-tree-group ul {

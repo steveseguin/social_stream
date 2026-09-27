@@ -35,6 +35,7 @@ Messages scroll from right to left in a single row with smooth infinite scrollin
     <meta name="robots" content="noindex">
     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
 <script src="../libs/objects.js"></script>
+<script src="../shared/utils/chatHtml.js"></script>
 <script src="../shared/utils/chatBadges.js"></script>
 <link rel="stylesheet" href="../shared/utils/chatBadges.css">
 <script type="text/javascript" src="../js/local-server-url.js"></script>
@@ -509,12 +510,12 @@ img.ssn-content-image { display: inline-block; width: 64px; height: 28px; margin
         
         const sourceIconHtml = (!hideSource && data.type) ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="Source" class="source-icon">` : '';
         const avatarHtml = (!hideAvatars && data.chatimg) ? 
-            `<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : '';
-        const nameHtml = (!hideNames && data.chatname) ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : '';
+            `<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${escapeCssUrlAttribute(data.chatimg)}');"></div></div>` : '';
+        const nameHtml = (!hideNames && data.chatname) ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';
         // Display-only textOnly URL option: hides extra decoration; data.textonly independently defines the chatmessage string format.
         const membershipHtml = (!textOnly && data.membership) ? `<span class="membership-status">${fallbackEscapeHtml(data.membership)}</span>` : '';
-        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
-        const messageTextHtml = data.chatmessage ? `<span class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.textonly ? '' : data.chatmessage}</span>` : '';
+        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
+        const messageTextHtml = data.chatmessage ? `<span class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.textonly ? '' : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage) : fallbackEscapeHtml(data.chatmessage))}</span>` : '';
         // Display-only textOnly URL option: hides extra decoration; data.textonly independently defines the chatmessage string format.
         const donationHtml = (!textOnly && data.hasDonation) ? `<span class="donation">${fallbackEscapeHtml(data.hasDonation)}</span>` : '';
 
@@ -537,7 +538,7 @@ img.ssn-content-image { display: inline-block; width: 64px; height: 28px; margin
             </div>
         `;
 
-        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
         if (data.textonly) {
 		var messageText = messageDiv.querySelector('.text');
 		if (messageText) messageText.textContent = data.chatmessage || '';

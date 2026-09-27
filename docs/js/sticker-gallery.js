@@ -1,12 +1,18 @@
 (function () {
     'use strict';
+    function siteText(label, values) {
+        if (window.SSNSiteTranslate) return window.SSNSiteTranslate(label, values);
+        return label.replace(/\{(\d+)\}/g, function (match, index) { return values && index < values.length ? values[index] : match; });
+    }
+    function sourceURL(value) { return window.SSNSiteSourceURL ? window.SSNSiteSourceURL(value) : new URL(value, location.href).href; }
+
     var dialog = document.getElementById('sticker-preview');
     var frame = document.getElementById('preview-frame');
     var current;
     var copyTimer;
     function showCopyStatus(text, copied) {
         clearTimeout(copyTimer);
-        document.getElementById('copy-status').textContent = (copied ? 'Copied: ' : 'Copy this command: ') + text;
+        document.getElementById('copy-status').textContent = siteText(copied ? 'Copied: {0}' : 'Copy this command: {0}', [text]);
         if (copied) copyTimer = setTimeout(function () { document.getElementById('copy-status').textContent = ''; }, 4000);
     }
     document.querySelectorAll('[data-variation]').forEach(function (select) {
@@ -18,7 +24,7 @@
             card.querySelector('code').textContent = '!sticker ' + reward.id;
             card.querySelector('[data-copy]').dataset.copy = '!sticker ' + reward.id;
             var link = card.querySelector('[data-preview]');
-            link.dataset.preview = reward.id; link.href = '../stickers.html?demo=' + reward.id;
+            link.dataset.preview = reward.id; link.href = sourceURL('../stickers.html?demo=' + reward.id);
         });
     });
     document.querySelectorAll('[data-preview]').forEach(function (link) {

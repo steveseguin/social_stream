@@ -1,0 +1,58 @@
+diff a/webstore/candidate/cohost.html b/webstore/candidate/cohost.html	(rejected hunks)
+@@ -4802,6 +4802,7 @@
+ 					chatname: String(message.name || "Viewer").slice(0, 80),
+ 					chatmessage: String(message.text || "").slice(0, COHOST_LIVE_CHAT_MESSAGE_MAX_CHARS),
+ 					type: String(message.platform || "chat").slice(0, 80),
++					// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
+ 					textonly: true,
+ 					meta: { cohostChatId: message.cohostId }
+ 				};
+@@ -11896,18 +11897,6 @@
+ 				<div class="desktop-capturer-selection__scroller">
+ 				  <h2 id="desktopCaptureTitle" class="visually-hidden">Choose a screen or window to share</h2>
+ 				  <ul class="desktop-capturer-selection__list">
+-					${sources
+-						.map(
+-							({ id, name, thumbnail, display_id, appIcon }) => `
+-					  <li class="desktop-capturer-selection__item">
+-						<button class="desktop-capturer-click desktop-capturer-selection__btn" data-id="${id}" title="${name}">
+-						  <img class="desktop-capturer-selection__thumbnail" src="${thumbnail.toDataURL()}" alt="" />
+-						  <span class="desktop-capturer-selection__name">${name}</span>
+-						</button>
+-					  </li>
+-					`
+-						)
+-						.join("")}
+ 					<li class="desktop-capturer-selection__item" id="alsoCaptureAudioParent1"><label style="text-align: center;margin: auto 5px;font-size: 120%;"><i class="las la-music" style="font-size:40px;" aria-hidden="true"></i><br />Include Desktop Audio<br /><input id="alsoCaptureAudio" style="width:20px;height:20px;margin-top: 10px;" type="checkbox" checked /></label></li>
+ 					<li class="desktop-capturer-selection__item" id="alsoCaptureAudioParent2" style="text-align: center;margin: auto 5px;font-size: 120%;display:none;"><span><i class="las la-music" style="font-size:40px;" aria-hidden="true"></i><br />Audio capture not <br />supported on macOS</span></li>
+ 					<li class="desktop-capturer-selection__item"><button id="captureDesktopAudio" class="desktop-capturer-click" style="margin: 10px;"><i class="las la-music" style="font-size:40px;" aria-hidden="true"></i><br />Capture ONLY<br />Desktop Audio</button></li>
+@@ -11915,6 +11904,29 @@
+ 				  </ul>
+ 				</div>
+ 			  `;
++							const sourceRows = document.createDocumentFragment();
++							sources.forEach(({ id, name, thumbnail }) => {
++								const item = document.createElement("li");
++								item.className = "desktop-capturer-selection__item";
++								const button = document.createElement("button");
++								button.className = "desktop-capturer-click desktop-capturer-selection__btn";
++								button.dataset.id = id;
++								// Window titles can come from untrusted webpages; keep them literal in both contexts.
++								button.title = name;
++								const image = document.createElement("img");
++								image.className = "desktop-capturer-selection__thumbnail";
++								image.src = thumbnail.toDataURL();
++								image.alt = "";
++								const label = document.createElement("span");
++								label.className = "desktop-capturer-selection__name";
++								label.textContent = name;
++								button.appendChild(image);
++								button.appendChild(label);
++								item.appendChild(button);
++								sourceRows.appendChild(item);
++							});
++							const sourceList = selectionElem.querySelector(".desktop-capturer-selection__list");
++							sourceList.insertBefore(sourceRows, sourceList.firstChild);
+ 							document.body.appendChild(selectionElem);
+ 							const closeScreenPicker = function () {
+ 								selectionElem.removeEventListener("keydown", handleScreenPickerKeydown);

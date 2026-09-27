@@ -627,13 +627,15 @@
             // If textonly is not set, extract text from HTML
             // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!data.textonly) {
-                const tmp = document.createElement('div');
+                const tmp = document.createElement('template').content.appendChild(document.createElement('div'));
                 tmp.innerHTML = data.chatmessage;
                 messageText = tmp.textContent || tmp.innerText || '';
             }
             
             const message = messageText.toLowerCase().trim();
-            const tmpName = document.createElement('div');
+            // Read the name without loading images or running their handlers.
+            const nameTemplate = document.createElement('template');
+            const tmpName = nameTemplate.content.appendChild(document.createElement('div'));
             tmpName.innerHTML = data.chatname;
             const username = tmpName.textContent || tmpName.innerText || '';
 

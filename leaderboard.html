@@ -6,6 +6,8 @@
     <meta name="robots" content="noindex">
     <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
 <script src="js/local-server-url.js"></script>
+<script src="libs/objects.js"></script>
+<script src="shared/utils/chatHtml.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chat Leaderboard</title>
@@ -2105,6 +2107,21 @@
             return textarea.value;
         }
 
+        // Escape display copies only; raw names remain the user and persistence keys.
+        function escapeLeaderboardAttribute(value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
+            });
+        }
+
+        function escapeLeaderboardName(value) {
+            return escapeLeaderboardAttribute(decodeSupporterText(value));
+        }
+
+        function renderLeaderboardName(value) {
+            return window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(value) : escapeLeaderboardName(value);
+        }
+
         function createSupporterAvatar(name, avatarUrl) {
             function createFallback() {
                 const fallback = document.createElement('div');
@@ -3137,13 +3154,13 @@
                     newItem.innerHTML = `
                         ${showRank ? `<div class="rank-number">${rank}</div>` : ''}
                         ${showAvatars && user.avatarUrl ? 
-                            `<img src="${user.avatarUrl}" alt="${user.name}" class="user-avatar" onerror="this.style.display='none'">` : 
+                            `<img src="${escapeLeaderboardAttribute(user.avatarUrl)}" alt="${escapeLeaderboardName(user.name)}" class="user-avatar" onerror="this.style.display='none'">` :
                             ''}
                         <div class="user-info">
                             <div class="user-name">
-                                ${user.name}
+                                ${renderLeaderboardName(user.name)}
                                 ${showSourceIcons ? 
-                                    `<img src="./sources/images/${user.type}.png" alt="${user.type}" class="source-icon" onerror="this.style.display='none'">` : 
+                                    `<img src="./sources/images/${escapeLeaderboardAttribute(user.type)}.png" alt="${escapeLeaderboardAttribute(user.type)}" class="source-icon" onerror="this.style.display='none'">` :
                                     ''}
                             </div>
                             ${badges.length > 0 && layout !== 'bar' ? 
@@ -3286,9 +3303,9 @@
                         
                         userItem.innerHTML = `
                             <span class="ticker-rank">#${rank}</span>
-                            <span class="ticker-name">${user.name}</span>
+                            <span class="ticker-name">${renderLeaderboardName(user.name)}</span>
                             ${showSourceIcons ? 
-                                `<img src="./sources/images/${user.type}.png" alt="${user.type}" class="ticker-source-icon" onerror="this.style.display='none'">` : 
+                                `<img src="./sources/images/${escapeLeaderboardAttribute(user.type)}.png" alt="${escapeLeaderboardAttribute(user.type)}" class="ticker-source-icon" onerror="this.style.display='none'">` :
                                 ''}
                             <span class="ticker-score">${scoreDisplay}</span>
                         `;

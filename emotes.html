@@ -170,6 +170,8 @@
 		}
 
 	</style>
+<script src="./libs/objects.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
 </head>
 <body class="electronDraggable" id="output">
 	<script>
@@ -809,7 +811,7 @@
 		if (data.textonly === true) {
 			tmp.textContent = data.chatmessage;
 		} else {
-			tmp.innerHTML = data.chatmessage;
+			tmp.innerHTML = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage) : fallbackEscapeHtml(data.chatmessage));
 		}
 		
 

@@ -1,0 +1,22 @@
+diff a/webstore/candidate/games/emojirain.html b/webstore/candidate/games/emojirain.html	(rejected hunks)
+@@ -1,8 +1,11 @@
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+-<script src="../js/local-server-url.js"></script>
+     <meta charset="UTF-8">
++    <meta name="description" content="Emoji Rain: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
++    <meta name="robots" content="noindex">
++<script src="../js/local-server-url.js"></script>
++
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Emoji Rain - Social Stream Ninja</title>
+     <link rel="icon" href="../favicon.ico" />
+@@ -395,6 +398,7 @@
+             let text = data.chatmessage;
+             
+             // If textonly is not set, we need to extract text from HTML
++            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+             if (!data.textonly) {
+                 text = new DOMParser().parseFromString(String(data.chatmessage), 'text/html').body.textContent || '';
+             }

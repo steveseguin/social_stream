@@ -1,0 +1,16 @@
+diff a/webstore/candidate/multi-alerts.js b/webstore/candidate/multi-alerts.js	(rejected hunks)
+@@ -1678,13 +1660,7 @@ function readAlertEffects() {
+ }
+ 
+ function matchAlertEffect(category, payload, amount, sourceKey) {
+-  // Prefer a labelled amount: bare donoValue units differ across providers.
+-  const labelledAmount = normalizeText(amount);
+-  let value = labelledAmount && !/^[\d\s.,+-]+$/.test(labelledAmount) ? parseCashValue(labelledAmount, sourceKey) : 0;
+-  const meta = payload.meta || {};
+-  if (meta.currency && Number(meta.amount) > 0 && Number.isFinite(Number(meta.amount))) {
+-    value = parseCashValue(String(meta.amount) + ' ' + meta.currency, sourceKey);
+-  }
++  const value = pickCashValue(payload, amount, sourceKey);
+   const cents = Math.round(value * 100);
+   return settings.alertEffects.find(effect => {
+     if (effect.category !== category) return false;

@@ -291,7 +291,7 @@
 	function getLiveCommentFingerprintText(value){
 		var text = String(value || "");
 		try {
-			var container = document.createElement("div");
+			var container = document.createElement("template").content.appendChild(document.createElement("div"));
 			container.innerHTML = text;
 			var images = container.querySelectorAll("img");
 			for (var i = 0; i < images.length; i++){

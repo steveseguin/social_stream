@@ -485,6 +485,7 @@
       display: flex;
       gap: 8px;
       flex-shrink: 0;
+      margin-left: auto;
     }
 
     .content {
@@ -791,6 +792,7 @@
         <div class="toolbar-buttons">
           <button id="copyLink" type="button">Copy Link</button>
           <a class="button" id="rawLink" href="#" target="_blank" rel="noopener">Raw</a>
+          <span id="copyMarkdownActions" data-copy-markdown-actions hidden></span>
         </div>
       </div>
       <article class="content" id="content">
@@ -814,6 +816,10 @@
     const DEFAULT_FILE = "agents/common-guides.md";
     const SITEMAP_FILE = "agents/SITEMAP.md";
     const SEARCH_INDEX_FILE = "search-index.json";
+    function siteText(label, values) {
+      if (window.SSNSiteTranslate) return window.SSNSiteTranslate(label, values);
+      return label.replace(/\{(\d+)\}/g, (match, index) => values && index < values.length ? values[index] : match);
+    }
     const state = {
       currentFile: DEFAULT_FILE,
       currentMarkdown: "",
@@ -830,6 +836,7 @@
       currentPath: document.getElementById("currentPath"),
       rawLink: document.getElementById("rawLink"),
       copyLink: document.getElementById("copyLink"),
+      copyMarkdownActions: document.getElementById("copyMarkdownActions"),
       search: document.getElementById("search"),
       searchStatus: document.getElementById("searchStatus"),
       searchResults: document.getElementById("searchResults"),
@@ -930,6 +937,7 @@
       elements.currentPath.className = "toolbar-path";
       elements.currentPath.textContent = "Docs home";
       elements.rawLink.style.display = "none";
+      elements.copyMarkdownActions.hidden = true;
       elements.content.innerHTML = `
         <div class="landing-intro">
           <h1>Social Stream Ninja Docs</h1>
@@ -953,6 +961,9 @@
           <a class="landing-card" href="?file=agents/common-guides.md"><strong>Advanced Support Library</strong><span>Detailed Markdown notes for support work, maintainers, and AI agents.</span></a>
         </div>
       `;
+      if (window.SSNSitePageURL) elements.content.querySelectorAll('a[href]').forEach(link => {
+        link.href = window.SSNSitePageURL(link.getAttribute('href'));
+      });
     }
 
     function updateUrl(path) {
@@ -1101,6 +1112,13 @@
     }
 
     async function loadDoc(path, push) {
+      if (window.SSNSiteLanguage) {
+        const english = new URL(window.SSNSiteSourceURL('index.html'));
+        english.searchParams.set('file', stripHash(path || DEFAULT_FILE));
+        english.hash = getHash(path);
+        window.location.replace(english.href);
+        return;
+      }
       const normalized = normalizeDocPath(path || DEFAULT_FILE);
       if (/^https?:/i.test(normalized)) {
         window.open(normalized, "_blank", "noopener");
@@ -1111,6 +1129,7 @@
       state.currentFile = cleanPath;
       state.currentMarkdown = "";
       elements.content.className = "content loading";
+      elements.copyMarkdownActions.hidden = true;
       elements.content.textContent = "Loading documentation...";
       elements.currentPath.className = "toolbar-path is-path";
       elements.currentPath.textContent = cleanPath;
@@ -1125,6 +1144,7 @@
         state.currentMarkdown = markdown;
         elements.content.innerHTML = renderMarkdown(markdown);
         elements.content.className = "content";
+        elements.copyMarkdownActions.hidden = false;
         addHeadingLinks();
         rewriteContentLinks();
         if (hash) {
@@ -1158,11 +1178,27 @@
           node = next;
         }
         const description = trailing.join("").replace(/^[\s–—-]+/, "").trim();
-        if (description) link.title = `${link.textContent.trim()} — ${description}`;
+        if (description) link.title = `${link.textContent.trim()}: ${description}`;
       });
     }
 
     async function loadSitemap() {
+      if (window.SSNSiteLanguage) {
+        // The localized sidebar lists the public guides in its own search index.
+        elements.sidebarContent.textContent = '';
+        if (!state.searchIndex) return;
+        const list = document.createElement('ul');
+        state.searchIndex.documents.forEach(entry => {
+          const item = document.createElement('li');
+          const link = document.createElement('a');
+          link.href = entry.path;
+          link.textContent = entry.title;
+          item.appendChild(link);
+          list.appendChild(item);
+        });
+        elements.sidebarContent.appendChild(list);
+        return;
+      }
       try {
         const response = await fetch(SITEMAP_FILE, { cache: "no-cache" });
         if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
@@ -1210,18 +1246,26 @@
     function normalizeSearchText(value) {
       let normalized = String(value || "");
       if (normalized.normalize) normalized = normalized.normalize("NFKD");
+      normalized = normalized.replace(/[\u0300-\u036f]/g, "");
+      if (normalized.normalize) normalized = normalized.normalize("NFC");
       return normalized
         .toLowerCase()
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]+/g, " ")
+        .replace(/[^\p{L}\p{N}]+/gu, " ")
         .trim()
         .replace(/\s+/g, " ");
     }
 
     function searchTokens(value) {
       const seen = {};
-      return normalizeSearchText(value).split(" ").filter(token => {
-        if (token.length < 2 || seen[token]) return false;
+      const normalized = normalizeSearchText(value);
+      const tokens = normalized.split(" ");
+      const runs = normalized.match(/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+/g) || [];
+      runs.forEach(run => {
+        if (run.length < 3) tokens.push(run);
+        else for (let index = 0; index < run.length - 1; index += 1) tokens.push(run.slice(index, index + 2));
+      });
+      return tokens.filter(token => {
+        if (!token || (token.length < 2 && !/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(token)) || seen[token]) return false;
         seen[token] = true;
         return true;
       });
@@ -1237,13 +1281,14 @@
     function relatedSearchTerms(token) {
       const related = [];
       const terms = state.searchIndex.terms;
+      const thaiToken = /[\u0e00-\u0e7f]/.test(token);
       if (terms[token]) related.push({ term: token, factor: 1 });
-      if (token.length < 3) return related;
+      if (token.length < 3 && !thaiToken) return related;
 
       for (const term of state.searchTerms) {
         if (term === token) continue;
         let factor = 0;
-        if (term.startsWith(token)) {
+        if (term.startsWith(token) || (thaiToken && term.includes(token))) {
           factor = 0.65;
         } else if (token.length >= 6 && term.length >= 6) {
           const shared = commonPrefixLength(token, term);
@@ -1325,7 +1370,7 @@
           bestMatches = matches;
         }
       });
-      if (bestHeading && document.description) return `${bestHeading} — ${document.description}`;
+      if (bestHeading && document.description) return `${bestHeading}: ${document.description}`;
       return bestHeading || document.description || "";
     }
 
@@ -1346,8 +1391,8 @@
       setSearchMode(true);
 
       elements.searchStatus.textContent = results.length > visibleResults.length
-        ? `Top ${visibleResults.length} of ${results.length} results`
-        : `${results.length} result${results.length === 1 ? "" : "s"}`;
+        ? siteText('Top {0} of {1} results', [visibleResults.length, results.length])
+        : siteText(results.length === 1 ? '{0} result' : '{0} results', [results.length]);
 
       if (!visibleResults.length) {
         const empty = document.createElement("div");
@@ -1376,7 +1421,7 @@
         title.className = "search-result-title";
         title.textContent = documentEntry.title;
         meta.className = "search-result-meta";
-        meta.textContent = `${documentEntry.kind} · ${documentEntry.path}`;
+        meta.textContent = `${siteText(documentEntry.kind)} · ${documentEntry.path}`;
         description.className = "search-result-description";
         description.textContent = searchResultDescription(documentEntry, tokens);
 
@@ -1414,7 +1459,7 @@
         return;
       }
 
-      if (normalizeSearchText(term).length < 2) {
+      if (!searchTokens(term).length) {
         renderSearchResults(term, []);
         elements.searchStatus.textContent = "Type at least two characters.";
         return;
@@ -1517,7 +1562,7 @@
 
     document.addEventListener("DOMContentLoaded", async () => {
       updateThemeButton();
-      loadSearchIndex();
+      await loadSearchIndex();
       await loadSitemap();
       if (hasRequestedFile()) {
         loadDoc(fileFromLocation() + window.location.hash, false);

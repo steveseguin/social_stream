@@ -29,9 +29,10 @@
     <script defer src="js/copy-markdown.js"></script>
     <style>
         :root {
-            --primary-color: #2196F3;
+            --primary-color: #1565C0;
+            --on-primary: #FFFFFF;
             --secondary-color: #1976D2;
-            --accent-color: #FF9800;
+            --accent-color: #996000;
             --text-color: #212121;
             --text-light: #757575;
             --bg-color: #FFFFFF;
@@ -43,6 +44,7 @@
 
         [data-theme="dark"] {
             --primary-color: #64B5F6;
+            --on-primary: #10283B;
             --secondary-color: #42A5F5;
             --accent-color: #FFB74D;
             --text-color: #E0E0E0;
@@ -84,7 +86,7 @@
 
         header {
             background-color: var(--primary-color);
-            color: white;
+            color: var(--on-primary);
             padding: 40px 0;
             text-align: center;
             position: relative;
@@ -95,8 +97,8 @@
             top: 20px;
             right: 20px;
             background: transparent;
-            border: 2px solid white;
-            color: white;
+            border: 2px solid currentColor;
+            color: var(--on-primary);
             cursor: pointer;
             padding: 8px 16px;
             border-radius: 20px;
@@ -159,6 +161,11 @@
             color: #BBDEFB;
         }
 
+        .info a {
+            color: inherit;
+            text-decoration: underline;
+        }
+
         .code {
             background-color: var(--code-bg);
             color: var(--code-text);
@@ -189,7 +196,7 @@
 
         th {
             background-color: var(--primary-color);
-            color: white;
+            color: var(--on-primary);
         }
 
         tr:nth-child(even) {
@@ -215,7 +222,11 @@
         }
 
         .supported {
-            color: #4CAF50;
+            color: #267A2B;
+        }
+
+        [data-theme="dark"] .supported {
+            color: #81C784;
         }
 
         .partial {
@@ -250,7 +261,7 @@
 
         button {
             background-color: var(--primary-color);
-            color: white;
+            color: var(--on-primary);
             border: none;
             padding: 10px 20px;
             border-radius: 4px;
@@ -369,7 +380,7 @@
             
             <h3>Local / Free TTS Options (No API Key Required)</h3>
             <div class="info">
-                <strong>Want fully local AI TTS?</strong> Several high-quality AI voices are built directly into Social Stream Ninja and run in your browser — no API key, no cloud, no extra install. See the <a href="local-tts.html"><strong>Local AI TTS Guide</strong></a> for setup instructions and self-hosted server options.
+                <strong>Want fully local AI TTS?</strong> Several high-quality AI voices are built directly into Social Stream Ninja and run in your browser without an API key, cloud service, or extra installation. See the <a href="local-tts.html"><strong>Local AI TTS Guide</strong></a> for setup instructions and self-hosted server options.
             </div>
             <table>
                 <tr>
@@ -573,7 +584,7 @@
             </ol>
             
             <h3>Windows 10</h3>
-            <p>Follow <a href="https://support.microsoft.com/en-US/Windows/Hardware/Input-Devices/manage-the-language-and-keyboard-input-layout-settings-in-windows" target="_blank">Microsoft's official guide</a> for installing language packs.</p>
+            <p>Follow the instructions in <a href="https://support.microsoft.com/en-US/Windows/Hardware/Input-Devices/manage-the-language-and-keyboard-input-layout-settings-in-windows" target="_blank">Microsoft's official guide</a> for installing language packs.</p>
             
             <div class="info">
                 <strong>Tip:</strong> Some third-party voices may not appear in browsers due to compatibility issues. Firefox often shows more system voices than Chromium-based browsers.
@@ -655,7 +666,7 @@
             <h3>Kokoro TTS (Free, Built-in)</h3>
             <ul>
                 <li>Enable with <code>?ttsprovider=kokoro</code></li>
-                <li>Runs in browser via WebGPU/WASM — no server needed</li>
+                <li>Runs in browser via WebGPU/WASM without a server</li>
                 <li>Works directly with OBS browser source</li>
                 <li>Voice selection: <code>&voicekokoro=af_bella</code></li>
                 <li>Speed control: <code>&kokorospeed=1.2</code></li>

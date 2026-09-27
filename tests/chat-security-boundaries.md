@@ -116,3 +116,87 @@ Additional passing coverage:
 Plain metadata stays plain on the wire. Updated receivers use text nodes or output escaping instead of repeatedly decoding and stripping labels. Deploy the updated receiver pages and shared assets before distributing the updated background: old/custom receivers that insert plain metadata as HTML need the same correction. This is not a claim that an updated background repairs old receiver code.
 
 The existing sanitizer corpus and overlay text-only suite remain complementary checks. Test harnesses do not modify production files during execution.
+
+## Name and avatar display sweep
+
+The name/avatar sweep fixes confirmed sinks in 37 receiver pages. Displayed HTML names use the existing `SocialStreamChatHTML` policy; avatar attributes are escaped for their HTML context, including a separate CSS-string escape for background-image URLs. Seven game pages now parse names inside inert template content. Payload names, database records, donor aggregation, and avatar lookup inputs are not rewritten.
+
+Browser regressions reproduce execution in isolated copies with the display checks disabled, then verify the shipped pages. Run:
+
+```text
+node tests/overlay-name-security.test.cjs
+node tests/avatar-attribute-security.test.cjs
+node tests/leaderboard-name-security.test.cjs
+node tests/game-name-security.test.cjs
+node tests/name-storage-security.test.cjs
+```
+
+The checks cover name entities, joined emoji and flags, supported name formatting/emotes, missing sanitizer fallback, avatar URLs, asynchronous Twitch avatar lookup, all five leaderboard layouts, repeated player/donor updates, persistence/reload, the original IndexedDB username index, and JSON versus HTML exports. The existing text-only overlay, Supporter Showcase, and Tip Jar goal suites also pass.
+
+Compatibility limits: unsafe or unsupported name HTML is filtered at display time. Inert game parsing retains the div context and tested player keys; raw custom `<noscript>` markup is parsed with scripting disabled, so its extracted text can differ from the old live-div parser. Ordinary names and encoded literal markup do not use that path. These tests run in Chromium with isolated storage and offline transports, not live OBS sessions.
+
+## Inert text-extraction sweep
+
+The Joystick capture helper and 26 additional extraction sites in 21 files now allocate their scratch div inside template contents before assigning `innerHTML`. This retains the div parsing context, including table handling, while preventing handlers from executing during extraction. The additional sites cover nine games, Event Flow, polls, Lite speech, chatbot speech, Instagram fingerprints, Streamplace, Rumble/VPZone/Whatnot feed conversion, the StreamElements shim, and TikTok gift/text parsing. Parsed elements are never moved into the displayed document.
+
+```text
+node tests/joystick-parser-security.test.cjs
+node tests/inert-text-parsers.test.cjs
+node tests/joystick-source.test.js
+node tests/streamelements-importer-shim.test.js
+node tests/game-name-security.test.cjs
+```
+
+The Joystick browser regression runs the actual capture script in an isolated world. It reproduces execution through the WebSocket receiver in both text modes and through DOM fallback fingerprinting in text-only mode, then verifies the fix. A page policy that blocks attribute handlers also blocks the original probe. The live joystick.tv page returned a Cloudflare challenge during review, so live-site exploitability remains unverified.
+
+The additional helper tests require an executing positive control at each of the 26 sites and no execution after the fix. They compare 338 extraction results, including flags, joined emoji, entities, whitespace, emote alt text, table markup, and gift parsing. These are helper-level reproductions, not claims that every caller accepts attacker input under its live host's policy; Lite's dormant Facebook speech path is included as preventive hardening. The separate Joystick WebSocket client's tag-stripping helper did not execute the tested corpus and was left unchanged.
+
+An additional 35 comparisons cover TikTok gift prices and streak identities, including source-row alt text, relative image URLs, native message/group IDs, coin values, and diamond values. Template contents use an `about:blank` base URL, so the gift-image comparison explicitly resolves against the page to preserve the existing source-row lookup. Joystick adds 34 message/name compatibility comparisons. Existing Joystick capture, StreamElements shim, and seven game identity regressions pass as well. The changes do not rewrite stored names or cache structures.
+
+As with the earlier game-name fix, raw `<noscript><b>Viewer</b></noscript>` now extracts `Viewer` instead of `<b>Viewer</b>` (escaped in Joystick HTML mode). This is the observed compatibility exception; ordinary text, encoded literal tags, flags, and joined emoji match the prior outputs in the tested cases.
+
+## Multi-alerts direct HTML bodies
+
+Multi-alerts now checks HTML-mode alert bodies with the same packaged display sanitizer used by Dock and Featured. Direct senders with session access can bypass relay sanitization; the previous renderer executed the local image-handler probe through both iframe and WebSocket delivery, with `textonly` false or absent. Only the display copy is checked. Plain bodies and generated metadata labels use `textContent`; a missing helper or sanitizer dependency also falls back to literal text.
+
+Run `node tests/multi-alerts-html-security.test.cjs`. Its 11 browser cases cover executing positive controls, the production receivers, permitted formatting and stacked emotes, flags and joined emoji, literal text-only bodies, auction metadata, both missing dependencies, and removal of unsupported custom HTML. The compatibility change is that unsupported custom HTML no longer renders as supplied. These checks run offline with test sessions and never modify production files.
+
+## Overlay HTML-body display sweep
+
+The same display check now covers 46 rendering expressions in 44 additional pages: Sample Overlay, Sample Featured, Septapus, Events, both emote walls, all 13 featured styles, and 25 other chat themes. `tests/overlay-body-security.test.cjs` contains the complete receiver list. Existing packaged dependencies are loaded before the renderers; no new shared utility or remote script is introduced. The check applies to the HTML display expression, not the payload, stored names, grouping keys, or generated attachment HTML.
+
+```text
+node tests/overlay-body-security.test.cjs
+node scripts/overlay-textonly-regressions.cjs
+node tests/chat-final-html-check.test.cjs
+```
+
+All 264 new browser cases pass. Every page receives direct iframe input in HTML and legacy modes, requires an executing positive control with only its body check disabled, and verifies the fixed receiver. Comparisons cover formatted text, image/SVG emotes, stacking styles, flags and joined emoji, existing text-only output, and a blocked helper-script request. The emote-wall/text-only suite and all 67 shared-sanitizer/Dock/Featured checks also pass. WebSocket delivery uses the same renderers; this sweep's new receiver tests use iframe delivery, while Multi-alerts separately tests both transports.
+
+The emote-wall suite exposed a redundant sanitizer option inherited from the already-initialized base filter. Removing the redundant hook before constructing the display filter eliminates the setup warning; 32 before/after sanitizer outputs matched exactly, and the existing display corpus passes. The historical emote-wall positive control now disables both body protections only in its served copy.
+
+Unsupported custom HTML is filtered at display time. A missing display helper falls back to escaped text. Source adapters, generated StreamElements exports, and archived Web Store copies are outside this receiver list. Bot is covered separately below.
+
+## Literal text in five chat themes
+
+Bubbles, Cards, Neon Cyberpunk, Particles, and Xacception now use the existing text-escaping helper for their text-only display expression. Previously they escaped angle brackets but decoded entities: a viewer typing `&#128512;` saw an emoji instead of those literal characters. The correction escapes ampersands as well, without rewriting the payload or its identity fields.
+
+Run `node tests/theme-plain-text.test.cjs`. All 50 browser checks pass, covering literal entities, quotes, typed markup, country flags (including the England tag sequence), joined emoji with skin tones, and HTML/legacy rendering. Each page has an isolated historical control that reproduces the old decoding behavior. This corrects the separate text-only issue recorded during the HTML-body sweep.
+
+## Bot HTML bodies
+
+Bot now checks HTML-mode body display copies with the existing packaged sanitizer in both its default and stacked layouts. Plain bodies still use `textContent`; image/video attachments generated from `contentimg` are handled separately. The change does not replace the original body supplied to speech preparation or JSON file output. Unsupported custom body HTML, such as `<marquee>`, loses its formatting; a missing display helper falls back to literal text.
+
+Run `node tests/bot-body-security.test.cjs`. The browser checks exercise real iframe and WebSocket receivers, require execution in an isolated historical control, and compare the actual fixed page against that control for supported formatting, emote positioning, flags, joined emoji, literal text, repeated stacked/replacement messages, and loaded image/video attachments with and without a body. Speech preparation and JSON serialization run their production functions with audio/file I/O mocked. Attachment URL construction is covered separately below. These checks use local fixtures, not live OBS sessions or speech services.
+
+## Bot attachment URLs
+
+All four Bot image/video templates now escape literal attribute delimiters in the displayed `contentimg` URL. The local helper deliberately preserves the single HTML-entity decode these existing quoted attributes performed, including `&amp;` URLs from legacy senders. Entity-decoded quotes remain attribute data rather than ending the quoted value. This avoids the encoded-URL compatibility problem found in the initial full-escaping candidate. Do not reuse this compatibility helper for plain text or unquoted attributes; other fields retain their existing escaping policy.
+
+Run `node tests/bot-attachment-compat.test.cjs`. It compares ordinary media with an isolated historical copy and checks quotes/angle brackets as URL data, named/numeric/nested entities, relative and data URLs, both layouts, all three text-only flag states, repeated stacking, image/video loading and playback attributes, iframe/WebSocket delivery, message formatting and joined emoji, speech preparation, and original values in saved JSON. The page receives only benign local fixtures; audio and file I/O are mocked. The fix changes display construction without rewriting `contentimg`, names, or saved payloads.
+
+## StreamElements importer HTML bodies
+
+New previews and downloaded overlays embed the existing display sanitizer and its packaged dependencies. The fallback renderer and the `renderedText` supplied to widgets check HTML-mode bodies before rendering or extracting emotes. Text-only bodies remain literal, and the original payload stays intact. Unsupported custom message HTML is removed. Existing downloaded overlays must be re-exported to receive this fix.
+
+Run `node tests/streamelements-importer-display.test.cjs` and `node tests/streamelements-importer-shim.test.js`. The display suite checks fallback and widget rendering in previews and offline local-file exports: 16 rendering checks cover supported formatting, stacked image/SVG emotes, joined emoji, flags, unsupported tags/attributes, and literal fallback. Eight additional checks cover either missing sanitizer dependency. Exports require no external sanitizer scripts. These tests use benign local fixtures, not live OBS sessions.

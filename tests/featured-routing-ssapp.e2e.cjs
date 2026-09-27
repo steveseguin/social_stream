@@ -49,7 +49,7 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
             }
         });
         const generated = await popup.evaluate(() => ({ dock: document.getElementById('docklink').href, overlay: document.getElementById('overlaylink').href }));
-        for (const url of Object.values(generated)) assert(new URL(url).searchParams.has('server'), 'generated selection route: ' + url);
+        for (const url of Object.values(generated)) assert(!new URL(url).searchParams.has('server'), 'selection delivery must not add an API opt-in: ' + url);
         async function newPage() {
             const pending = app.waitForEvent('window');
             await app.evaluate(({ BrowserWindow }) => new BrowserWindow({ show: false, width: 1000, height: 720,
@@ -72,11 +72,11 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
             return local.href;
         }
         await dockPage.goto(localUrl(generated.dock));
-        await dockPage.waitForFunction(() => socketserver && socketserver.readyState === 1 && socketserverExtension && socketserverExtension.readyState === 1);
+        await dockPage.waitForFunction(() => socketserverFeatured && socketserverFeatured.readyState === 1 && socketserverExtension && socketserverExtension.readyState === 1);
         for (const preset of ['', 'themes/featured-styles/featured-modern.html']) {
             await popup.evaluate(preset => applyFeaturedOverlayPreset(preset), preset);
             const url = await popup.evaluate(() => document.getElementById('overlaylink').href);
-            assert(new URL(url).searchParams.has('server'));
+            assert(!new URL(url).searchParams.has('server'));
             await featuredPage.goto(localUrl(url));
             await delay(500);
             const id = preset ? 102 : 101;
@@ -104,7 +104,7 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
             await popup.evaluate(() => {
                 const input = document.querySelector('input[data-param2="autoshow"]'); input.checked = false; updateSettings(input, true);
             });
-            assert(new URL(await popup.evaluate(() => document.getElementById('overlaylink').href)).searchParams.has('server'));
+            assert(!new URL(await popup.evaluate(() => document.getElementById('overlaylink').href)).searchParams.has('server'));
             console.log('PASS explicit auto-show and return to manual: ' + (preset || 'classic'));
         }
         console.log('PASS SSApp generated links and local relay. Isolated profile: ' + output);

@@ -53,7 +53,9 @@
 	function stripHtml(value) {
 		value = value == null ? "" : String(value);
 		try {
-			var div = document.createElement("div");
+			// Parse in an inert document; even a detached live div can run image handlers.
+			var template = document.createElement("template");
+			var div = template.content.appendChild(document.createElement("div"));
 			div.innerHTML = value.replace(/<br\s*\/?>/gi, "\n");
 			return (div.textContent || "").replace(/\u00a0/g, " ").trim();
 		} catch (error) {

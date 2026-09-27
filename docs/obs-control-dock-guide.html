@@ -79,7 +79,7 @@
 						<tr><td data-label="Setting">Dock sends its commands to Extension via server</td><td data-label="For this control dock">Not required</td><td data-label="Purpose">Used when the Streaming Chat Dock itself must send commands back through the server.</td></tr>
 					</tbody>
 				</table>
-				<div class="guide-note"><strong>No <code>&amp;server</code> is needed on the control-dock or Credits URLs.</strong> The control dock already opens its own WebSocket control connection. OBS's <strong>WebSocket Server Settings</strong> are unrelated and can remain off.</div>
+				<div class="guide-note"><strong><code>&amp;server</code> is not required on the control-dock or Credits URLs.</strong> The control dock already opens its own WebSocket control connection. OBS's <strong>WebSocket Server Settings</strong> are unrelated and can remain off.</div>
 				<p>If you intentionally use direct API transport for <code>dock.html</code>, use the generated Dock link after enabling its server setting, or add <code>&amp;server</code> to that Dock URL. This is optional and does not change how Credits commands work.</p>
 			</div>
 
@@ -156,7 +156,7 @@ https://io.socialstream.ninja/SESSION_ID/creditsReset</code></pre>
 	</main>
 
 	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
-	<script src="js/main.js"></script>
+	<script data-copy-markdown src="js/main.js"></script>
 	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

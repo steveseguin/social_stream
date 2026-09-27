@@ -1335,7 +1335,7 @@ function toPlainText(value) {
   if (!value) {
     return '';
   }
-  const div = document.createElement('div');
+  const div = document.createElement('template').content.appendChild(document.createElement('div'));
   div.innerHTML = value;
   return div.textContent || div.innerText || '';
 }

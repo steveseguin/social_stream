@@ -36,7 +36,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to Social Stream Ninja</title>
     <meta name="description" content="Get started with the Social Stream Ninja desktop app, add chat sources, learn its key features, and find support.">
-    <script defer src="js/copy-markdown.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -46,8 +45,9 @@
             padding: 0; /* Remove body padding if this is the full page */
             line-height: 1.6;
             display: flex;
-            justify-content: center;
-            align-items: flex-start; /* Align to top */
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
             min-height: 100vh;
         }
         .container {
@@ -56,7 +56,9 @@
             padding: 25px 35px;
             margin: 30px; /* Add margin around the container */
             max-width: 900px;
+            min-width: 0;
             width: 90%;
+            overflow-wrap: break-word;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             box-sizing: border-box;
         }
@@ -733,6 +735,7 @@
             }
 
             function applyWelcomeLanguage(value) {
+                if (document.documentElement.hasAttribute('data-site-language')) return;
                 var lang = normalizeWelcomeLanguage(value);
                 var content = translations[lang] || translations["en-us"];
                 document.documentElement.lang = lang;

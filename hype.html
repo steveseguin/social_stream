@@ -1,15 +1,15 @@
 <html lang="en">
 <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
-    <meta name="description" content="Hype Meter. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="description" content="Viewer Count &amp; Chat Activity. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
     <meta name="robots" content="noindex">
 <script src="shared/overlay-control-transport.js"></script>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 
 	<meta content="utf-8" http-equiv="encoding" />
-	<title>Social Stream - Hype Meter</title>
-	<meta name="title" content="Social Stream - Hype Meter" />
+	<title>Social Stream - Viewer Count &amp; Chat Activity</title>
+	<meta name="title" content="Social Stream - Viewer Count &amp; Chat Activity" />
 	<link rel="icon" href="./favicon.ico" />
 	<style>
 :root {
@@ -1478,7 +1478,19 @@ function fadeOutNode(node) {
         node.remove();
     }, 1000, node);
 }
-SSNOverlayControl.connect(urlParams, roomID, "hype", processInput);
+SSNOverlayControl.connect(urlParams, roomID, "hype", processInput, { viewerCounts: showViewers });
+
+var viewerCountPeers = {};
+function requestViewerCountProcessing(uid) {
+    if (!showViewers || !iframe) return;
+    var peers = uid ? [uid] : Object.keys(viewerCountPeers);
+    peers.forEach(function (peer) {
+        iframe.contentWindow.postMessage({
+            sendData: { overlayNinja: { action: "requestViewerCount", value: { ttl: 70 * 60 * 1000 } } },
+            type: "rpcs", UUID: peer
+        }, "*");
+    });
+}
 
 if (!useServerOnlyTransport()) {
     iframe = document.createElement("iframe");
@@ -1496,12 +1508,24 @@ if (!useServerOnlyTransport()) {
     iframe.setAttribute("aria-hidden", "true");
     iframe.setAttribute("tabindex", "-1");
     document.body.appendChild(iframe);
+    if (showViewers) {
+        setInterval(function () { requestViewerCountProcessing(); }, 60 * 60 * 1000);
+    }
     var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
     var eventer = window[eventMethod];
     var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
     eventer(messageEvent, function(e) {
         if (e.source != iframe.contentWindow) {
             return;
+        }
+        if (e.data && e.data.UUID && e.data.value &&
+            (e.data.action === "push-connection-info" || e.data.action === "view-connection-info")) {
+            if (e.data.value.label === "SocialStream") {
+                viewerCountPeers[e.data.UUID] = true;
+                requestViewerCountProcessing(e.data.UUID);
+            } else if ("label" in e.data.value) {
+                delete viewerCountPeers[e.data.UUID];
+            }
         }
         if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
             if ("overlayNinja" in e.data.dataReceived) {

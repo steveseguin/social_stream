@@ -6,6 +6,7 @@
     }
 
     var BUTTON_ID = "copy-markdown";
+    var COPY_LABEL = "Copy this document as Markdown to the clipboard";
     function label(value) {
         return window.SSNSiteTranslate ? window.SSNSiteTranslate(value) : value;
     }
@@ -488,14 +489,16 @@
         return fallbackCopy(markdown);
     }
 
-    function setButtonStatus(button, label, stateName) {
-        button.textContent = label;
+    function setButtonStatus(button, statusLabel, stateName) {
+        button.title = statusLabel;
+        button.setAttribute("aria-label", statusLabel);
         button.setAttribute("data-copy-state", stateName || "");
+        button.querySelector(".ssn-copy-markdown-status").textContent = stateName ? statusLabel : "";
     }
 
     function copyDocumentMarkdown(button) {
         var markdown = buildDocumentMarkdown();
-        var originalLabel = label("Copy Markdown");
+        var originalLabel = label(COPY_LABEL);
         button.disabled = true;
         setButtonStatus(button, label("Copying…"), "working");
 
@@ -519,17 +522,24 @@
         var style = document.createElement("style");
         style.id = "ssn-copy-markdown-styles";
         style.textContent = [
-            ".ssn-copy-markdown-wrap{display:flex;justify-content:center;margin-top:1.8rem}",
-            ".ssn-copy-markdown-floating{position:fixed;right:1rem;bottom:1rem;z-index:10000}",
-            ".ssn-copy-markdown-button{appearance:none;border:1px solid var(--border-color,rgba(127,127,127,.45));border-radius:8px;background:var(--background-card,#fff);color:var(--text-primary,#1f2937);font:600 14px/1.2 system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;padding:10px 14px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.12);transition:background-color .2s,border-color .2s,transform .2s}",
-            ".ssn-copy-markdown-button:hover{border-color:var(--primary-color,#7c3aed);transform:translateY(-1px)}",
-            ".ssn-copy-markdown-button:focus-visible{outline:2px solid var(--primary-color,#7c3aed);outline-offset:2px}",
-            ".ssn-copy-markdown-button:disabled{cursor:wait;opacity:.82;transform:none}",
+            ".ssn-copy-markdown-wrap{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:8px}",
+            ".ssn-copy-markdown-hero{position:relative}",
+            ".ssn-copy-markdown-hero>.ssn-copy-markdown-wrap{position:absolute;top:-44px;right:20px;margin:0}",
+            "header .ssn-copy-markdown-wrap{position:absolute;top:20px;right:20px;margin:0}",
+            "header .ssn-copy-markdown-wrap .theme-toggle{position:static;margin:0}",
+            ".ssn-copy-markdown-button{box-sizing:border-box;appearance:none;display:inline-flex;align-items:center;justify-content:center;flex:0 0 36px;width:36px;height:36px;min-width:36px;padding:8px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--text-secondary,var(--text-color,#576177));cursor:pointer}",
+            ".ssn-copy-markdown-button:hover{background:rgba(127,127,127,.12);border-color:var(--border-color,currentColor)}",
+            ".ssn-copy-markdown-button:focus{outline:2px solid var(--primary-color,#7c3aed);outline-offset:2px}",
+            ".ssn-copy-markdown-button:disabled{cursor:wait;opacity:.82}",
+            ".ssn-copy-markdown-button svg{display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}",
+            ".ssn-copy-markdown-check,.ssn-copy-markdown-error{display:none}",
+            ".ssn-copy-markdown-button[data-copy-state=success] .ssn-copy-markdown-clipboard,.ssn-copy-markdown-button[data-copy-state=error] .ssn-copy-markdown-clipboard{display:none}",
+            ".ssn-copy-markdown-button[data-copy-state=success] .ssn-copy-markdown-check,.ssn-copy-markdown-button[data-copy-state=error] .ssn-copy-markdown-error{display:block}",
             ".ssn-copy-markdown-button[data-copy-state=success]{border-color:var(--success-color,#16a34a)}",
             ".ssn-copy-markdown-button[data-copy-state=error]{border-color:var(--error-color,#dc2626)}",
-            ".dark-mode .ssn-copy-markdown-button,body.dark-mode .ssn-copy-markdown-button{background:var(--site-surface,var(--background-card,#1b1e27));color:var(--site-text,var(--text-primary,#e9edf5))}",
-            ".toolbar-buttons .ssn-copy-markdown-button{box-shadow:none}",
-            "@media(max-width:700px){.ssn-copy-markdown-floating{right:.75rem;bottom:.75rem}.ssn-copy-markdown-button{padding:9px 11px;font-size:13px}}"
+            ".dark-mode .ssn-copy-markdown-button{color:var(--site-muted,var(--text-color,#b1bbce))}",
+            "header .ssn-copy-markdown-wrap .ssn-copy-markdown-button{color:inherit}",
+            ".ssn-copy-markdown-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}"
         ].join("");
         document.head.appendChild(style);
     }
@@ -545,27 +555,33 @@
         button.id = BUTTON_ID;
         button.className = "ssn-copy-markdown-button";
         button.type = "button";
-        button.textContent = label("Copy Markdown");
-        button.title = label("Copy comprehensive Markdown for an AI assistant");
-        button.setAttribute("aria-label", label("Copy this documentation page as Markdown for an AI assistant"));
+        button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g class="ssn-copy-markdown-clipboard"><rect x="8" y="3" width="8" height="4" rx="1"></rect><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M8 11h8M8 14h8M8 17h5"></path></g><path class="ssn-copy-markdown-check" d="m5 12 4 4L19 6"></path><path class="ssn-copy-markdown-error" d="m6 6 12 12M18 6 6 18"></path></svg><span class="ssn-copy-markdown-status" role="status" aria-live="polite"></span>';
+        setButtonStatus(button, label(COPY_LABEL), "");
         button.addEventListener("click", function () {
             copyDocumentMarkdown(button);
         });
 
-        var actionHost = document.querySelector("[data-copy-markdown-actions], .toolbar-buttons");
+        var actionHost = document.querySelector("[data-copy-markdown-actions]") || document.querySelector(".toolbar-buttons");
         var heroContainer = document.querySelector(".page-hero .container");
+        var themeToggle = document.querySelector("header .theme-toggle");
         var wrapper = document.createElement("div");
+        wrapper.className = "ssn-copy-markdown-wrap";
+        wrapper.setAttribute("data-copy-markdown-ignore", "");
 
         if (actionHost) {
             actionHost.appendChild(button);
         } else if (heroContainer) {
-            wrapper.className = "ssn-copy-markdown-wrap";
+            heroContainer.classList.add("ssn-copy-markdown-hero");
             wrapper.appendChild(button);
             heroContainer.appendChild(wrapper);
-        } else {
-            wrapper.className = "ssn-copy-markdown-floating";
+        } else if (themeToggle) {
+            themeToggle.parentNode.insertBefore(wrapper, themeToggle);
+            wrapper.appendChild(themeToggle);
             wrapper.appendChild(button);
-            document.body.appendChild(wrapper);
+        } else {
+            var contentHost = document.querySelector("main, .container") || document.body;
+            wrapper.appendChild(button);
+            contentHost.insertBefore(wrapper, contentHost.firstChild);
         }
     }
 

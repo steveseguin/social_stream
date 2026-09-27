@@ -705,16 +705,17 @@ if (typeof(chrome.runtime)=='undefined'){
 				const callbackId = ++callbackIdCounter;
 				const isGetSettingsRequest = !!(data && data.cmd === "getSettings");
 				const isLLMProviderTestRequest = !!(data && data.cmd === "testLLMProvider");
-				const timeoutMs = isLLMProviderTestRequest ? 60000 : (isGetSettingsRequest ? 3000 : 500);
+				const isAiEventRequest = !!(data && data.cmd === "aiEvent");
+				const timeoutMs = isAiEventRequest ? 195000 : isLLMProviderTestRequest ? 60000 : (isGetSettingsRequest ? 3000 : 500);
 				
 				// Create promise with timeout
 				const promise = new Promise((resolve) => {
 					// Store callback with timeout
 					const timeoutId = setTimeout(() => {
 						pendingCallbacks.delete(callbackId);
-						if (isLLMProviderTestRequest) {
+						if (isLLMProviderTestRequest || isAiEventRequest) {
 							// The provider may still be working. Never resubmit a timed-out test.
-							resolve({ success: false, error: 'Connection test timed out.' });
+							resolve({ success: false, error: isAiEventRequest ? 'AI overlay request timed out.' : 'Connection test timed out.' });
 							return;
 						}
 						if (isGetSettingsRequest) {
@@ -911,7 +912,7 @@ function getEditableGeneratedLinkConfig(targetId) {
 		eventsdashboard: ["events.html", "Events Dashboard"],
 		reactions: ["reactions.html", "Reactions"],
 		emoteswall: ["emotes.html", "Emote Wall"],
-		hypemeter: ["hype.html", "Hype Meter"],
+		hypemeter: ["hype.html", "Viewer Count & Chat Activity"],
 		meta: ["meta.html", "Meta Bar"],
 		tipjar: ["tipjar.html", "Tip Jar"],
 		waitlist: ["waitlist.html", "Waitlist"],
@@ -3502,6 +3503,7 @@ const SERVER_PARAM_SUPPORT_BY_TARGET = {
   spotify: FULL_SERVER_LINK_SUPPORT,
   map: FULL_SERVER_LINK_SUPPORT,
   aiprompt: { server: true, server2: true, server3: false },
+  aievent: FULL_SERVER_LINK_SUPPORT,
   hypemeter: { server: true, server2: true, server3: false },
   ticker: { server: true, server2: true, server3: false },
   tipjar: { server: true, server2: true, server3: false },
@@ -3669,18 +3671,10 @@ function syncSupportedServerParamsForTarget(targetId, targetElement, sourceEleme
       targetElement.raw = updateURL(getServerParamToken(paramName, sourceElement, sourceTokens), targetElement.raw);
     }
   });
-  // Captured chat (server2) is not the Dock's selected-message feed (server).
-  // Generate a matching selection route without enabling API routes on other pages.
-  if (targetId === "dock" || targetId === "overlay") {
-    const autoShow = targetId === "overlay" && new URL(targetElement.raw, baseURL).searchParams.has("autoshow");
-    if (autoShow && isBothParamChecked("server2")) {
-      // Explicit auto-show must keep consuming captured chat, even if server is checked.
-      targetElement.raw = removeQueryParamWithValue(targetElement.raw, "server");
-    } else if (!autoShow && !isBothParamChecked("server") && (isBothParamChecked("server2") || isBothParamChecked("server3"))) {
-      const relayParam = isBothParamChecked("server2") ? "server2" : "server3";
-      const selectionParam = getServerParamToken(relayParam, sourceElement, sourceTokens).replace(/^server[23]/, "server");
-      targetElement.raw = updateURL(selectionParam, targetElement.raw);
-    }
+  // Explicit auto-show keeps consuming captured chat, even if server is checked.
+  // Manual selections are carried by Dock/Featured without adding an API opt-in.
+  if (targetId === "overlay" && isBothParamChecked("server2") && new URL(targetElement.raw, baseURL).searchParams.has("autoshow")) {
+    targetElement.raw = removeQueryParamWithValue(targetElement.raw, "server");
   }
 	// Flow Actions has an independent command channel. An explicitly enabled
 	// API receiver can carry actions even when chat forwarding is disabled.
@@ -3972,6 +3966,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "credits", path: "credits.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
     { id: "aiprompt", path: "aiprompt.html" },
+    { id: "aievent", path: "aievent.html" },
     { id: "aioverlay", path: "cohost-overlay.html" },
     { id: "eventsdashboard", path: "events.html" },
 	{ id: "reactions", path: "reactions.html" },
@@ -4746,7 +4741,7 @@ function update(response, sync = true) {
                 // A more robust way is if refreshLinks stores the raw URLs on the elements or returns them.
                 // For now, let's assume link elements have an href that needs cleaning.
                 const linkIdsToClean = [
-                    'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 'aipromptlink', 'aioverlaylink',
+                    'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 'aipromptlink', 'aieventlink', 'aioverlaylink',
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'hypetrainlink', 'metalink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
                     'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
@@ -6540,6 +6535,7 @@ function getTargetMap() {
 		'reactions': 27,
         'hypetrain': 29,
         'aiprompt': 31,
+        'aievent': 32,
     };
 }
 
@@ -8912,6 +8908,7 @@ function refreshLinks(){
       'creditslink': 'credits',
       'privatechatbotlink': 'privatechatbot',
       'aipromptlink': 'aiprompt',
+      'aieventlink': 'aievent',
       'eventsdashboardlink': 'eventsdashboard',
       'reactionslink': 'reactions',
       'custom-gif-commandslink': 'custom-gif-commands',

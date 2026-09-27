@@ -150,8 +150,8 @@
             font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            background: rgba(49,46,129,0.12);
-            color: #312e81;
+            background: rgba(255,255,255,0.14);
+            color: #fff;
             padding: 4px 10px;
             border-radius: 999px;
         }
@@ -262,8 +262,9 @@
             header, .content { padding: 35px 20px; }
             h1 { font-size: 2rem; }
             .diagram { font-size: 0.85rem; }
-            .var-table { font-size: 0.85rem; }
+            .var-table { font-size: 0.85rem; display: block; max-width: 100%; overflow-x: auto; }
             .var-table th, .var-table td { padding: 8px 10px; }
+            .panel code { overflow-wrap: anywhere; }
             .two-col { grid-template-columns: 1fr; }
             .code-js { font-size: 0.8rem; }
         }
@@ -317,7 +318,7 @@
                     </div>
                 </div>
                 <h3 id="every-flow-needs-a-trigger">Every flow starts with a trigger</h3>
-                <p>Action nodes (green) never run on their own — they only fire when a trigger node (blue) above them evaluates <code>true</code>. A flow built only from actions chained together looks valid but is permanently idle, because nothing ever starts the chain. Node names describe what the node <em>does</em>, not when it happens: <em>Feature Message</em> features a message when the flow reaches it — it does not fire when you feature a message elsewhere.</p>
+                <p>Action nodes (green) never run on their own. They only fire when a trigger node (blue) above them evaluates <code>true</code>. A flow built only from actions chained together looks valid but is permanently idle, because nothing ever starts the chain. Node names describe what the node <em>does</em>, not when it happens: <em>Feature Message</em> features a message when the flow reaches it. It does not fire when you feature a message elsewhere.</p>
                 <div class="two-col">
                     <figure class="screenshot">
                         <img src="img/flow-missing-trigger.png" alt="Two action nodes chained together with no trigger node">
@@ -340,7 +341,7 @@
                 <p>Nodes such as <em>Play Audio Clip</em>, <em>Display Media Overlay</em>, and the OBS controls need a rendering surface. That surface is the Flow Actions overlay page served from <a href="../actions.html" target="_blank" rel="noopener">actions.html</a>. Keep it running in your broadcasting software (OBS/Streamer.bot browser docks/etc.) so Event Flow actions have somewhere to appear.</p>
                 <figure class="screenshot">
                     <img src="img/flow-audio-overlay.png" alt="Any Message trigger connected to a Play Audio Clip action">
-                    <figcaption>This flow is complete and fires on every message — but the sound plays on the Flow Actions overlay page, <em>not</em> in the editor. The editor's Preview button plays locally; live playback needs the overlay open. If the browser blocks autoplay, click <strong>Enable audio</strong> on the Flow Actions page to retry the latest blocked clip. Clicking elsewhere on that page also enables playback. An OBS Browser Source normally allows autoplay.</figcaption>
+                    <figcaption>This flow is complete and fires on every message, but the sound plays on the Flow Actions overlay page, <em>not in the editor.</em> The editor's Preview button plays locally; live playback needs the overlay open. If the browser blocks autoplay, click <strong>Enable audio</strong> on the Flow Actions page to retry the latest blocked clip. Clicking elsewhere on that page also enables playback. An OBS Browser Source normally allows autoplay.</figcaption>
                 </figure>
                 <div class="panel">
                     <strong>How to open it (from the popup/dash):</strong>
@@ -371,7 +372,7 @@
                         <li><strong>Browser Source API:</strong> available only when <code>actions.html</code> is running inside OBS Browser Source with <em>Advanced Access Level</em>. Scene switching works here, and recording / streaming / replay buffer actions can fall back to it.</li>
                         <li><strong>OBS WebSocket:</strong> recommended for consistent control. Social Stream Ninja Flow Actions use the OBS WebSocket v5 API from OBS 28+ and expect the modern request set on port <code>4455</code>.</li>
                         <li><strong>Password:</strong> optional. Only append <code>&amp;obspw=...</code> to the Flow Actions URL if your OBS server is configured to require authentication.</li>
-                        <li><strong>Overlay diagnostics:</strong> append <code>&amp;obsdebug=1</code> to <code>actions.html</code> if you want a small live OBS connection badge on the overlay while troubleshooting.</li>
+                        <li><strong>Overlay diagnostics:</strong> append <code>&amp;obsdebug=1</code> to the URL for <code>actions.html</code> if you want a small live OBS connection badge on the overlay while troubleshooting.</li>
                         <li><strong>Set Text Source:</strong> updates OBS Text (GDI+) and Text (FreeType 2) inputs directly and supports Event Flow template variables such as <code>{counterValue}</code> and <code>{counterTarget}</code>.</li>
                         <li><strong>Old 4.x installs:</strong> if you are still using obs-websocket 4.x / port <code>4444</code>, source / filter / mute / text actions will not work until OBS / obs-websocket is upgraded.</li>
                     </ul>
@@ -402,7 +403,7 @@
                 </div>
                 <h3>Input Expectations</h3>
                 <ul>
-                    <li><strong>Event Sources</strong> (Twitch Message, Timers, Manual Trigger, etc.) ignore upstream input—they generate their own payload and always emit <code>true</code> unless the node itself errors.</li>
+                    <li><strong>Event Sources</strong> (Twitch Message, Timers, Manual Trigger, etc.) ignore upstream input. They generate their own payload and always emit <code>true</code> unless the node itself errors.</li>
                     <li><strong>Transform &amp; Logic Nodes</strong> read the payload and may rewrite fields, set state, or flip the gate signal to <code>false</code>.</li>
                     <li><strong>Action Nodes</strong> fire only when the gate remains <code>true</code>. They can still output an updated payload if you want to keep chaining actions.</li>
                 </ul>
@@ -435,7 +436,7 @@
                             <li><strong>Default behavior:</strong> If nothing is connected to the NOT input it evaluates to <code>false</code>, so the output is <code>true</code>.</li>
                         </ul>
                         <div class="panel">
-                            <strong>Example:</strong> Place NOT after "Contains Keyword" to trigger an alert when a viewer does <em>not</em> use the keyword.
+                            <strong>Example:</strong> Place NOT after "Contains Keyword" to trigger an alert when a viewer <em>does not use the keyword.</em>
                         </div>
                     </div>
                     <div class="card">
@@ -449,7 +450,7 @@
                     <div class="card">
                         <h4>OR</h4>
                         <ul>
-                            <li>Outputs <code>true</code> if <strong>any</strong> connected input is true.</li>
+                            <li>Emits <code>true</code> if <strong>any</strong> connected input is true.</li>
                             <li>Great for multi-platform triggers: feed Twitch + YouTube message nodes into a single OR, then unify the downstream action.</li>
                         </ul>
                     </div>
@@ -473,19 +474,19 @@ Twitch Message ──▶ Regex Match "^!" ─┐
                                    │
                                    └─true──▶ Do nothing
                 </div>
-                <p>Here the Regex node emits <code>true</code> when the line <strong>is</strong> a command. We route the <code>false</code> socket to our reply, so regular chatters get an acknowledgement while commands simply pass through.</p>
+                <p>Here the Regex node emits <code>true</code> when the message is a command. We route the <code>false</code> socket to our reply, so regular chatters get an acknowledgement while commands simply pass through.</p>
                 <h3>B. Require Multiple Checks with AND</h3>
                 <div class="diagram">
 YouTube Message ──▶ Contains "!queue" ─▶ AND ─▶ Relay to Discord
 Gifted Membership ─▶ User Role = Member ──▲
                 </div>
-                <p>The AND node ensures only members using the right keyword relay to Discord. Both branches send their boolean result to the AND node; the payload from the <em>first</em> branch continues downstream.</p>
+                <p>The AND node ensures only members using the right keyword relay to Discord. Both branches send their boolean result to the AND node; the payload from the <em>first branch</em> continues downstream.</p>
                 <h3>C. NOT Node to Block Repeat Alerts</h3>
                 <div class="diagram">
 Event Payload ─▶ State Check (isAlertMuted)
                  └─false─▶ NOT ─▶ Play Celebration
                 </div>
-                <p><code>State Check</code> outputs <code>true</code> when the alert is muted. By inverting that result, the NOT node makes sure we only play the celebration when the flag is <code>false</code>.</p>
+                <p><code>State Check</code> outputs a value of <code>true</code> when the alert is muted. By inverting that result, the NOT node makes sure we only play the celebration when the flag is <code>false</code>.</p>
                 <h3>D. Randomly Play One of Two Sounds</h3>
                 <figure class="screenshot">
                     <img src="img/flow-random-two-sounds.png" alt="Flow using a RANDOM gate, NOT gate, and AND gate to play one of two audio clips at random">
@@ -497,7 +498,7 @@ Trigger ──▶ RANDOM (50%) ──▶ Play Sound A
               └──▶ NOT ──▶ AND ──▶ Play Sound B
 Trigger ──────────────────▲
                 </div>
-                <p><strong>The AND gate is not optional.</strong> A bare NOT would output <code>true</code> whenever the RANDOM gate sits idle, so sound B would play on every chat message that <em>doesn't</em> match your trigger. Feeding the trigger into the AND as a second input restricts sound B to matching messages only. The same pattern works for any either/or pair of actions, not just audio.</p>
+                <p><strong>The AND gate is not optional.</strong> A bare NOT would output <code>true</code> whenever the RANDOM gate sits idle, so sound B would play on every chat message that <em>doesn't match your trigger.</em> Feeding the trigger into the AND as a second input restricts sound B to matching messages only. The same pattern works for any either/or pair of actions, not just audio.</p>
             </section>
 
             <section>
@@ -505,7 +506,7 @@ Trigger ──────────────────▲
                 <p>Relaying chat between surfaces is powerful but can echo infinitely if you listen to your own output. Follow these safeguards:</p>
                 <div class="callout tip">
                     <strong>YouTube Shorts destination note:</strong><br>
-                    Incoming triggers and outgoing Relay Chat destinations both distinguish <code>youtube</code> from <code>youtubeshorts</code>. Use two relay actions when a message should reach both variants. See <a href="../docs/source-types-guide.html#youtube-shorts-event-flow">YouTube Shorts and Event Flow</a>.
+                    Incoming triggers and outgoing Relay Chat destinations both distinguish between <code>youtube</code> and <code>youtubeshorts</code>. Use two relay actions when a message should reach both variants. See <a href="../docs/source-types-guide.html#youtube-shorts-event-flow">YouTube Shorts and Event Flow</a>.
                 </div>
                 <div class="callout.danger">
                     <strong>Relay Chat skips recognized reflections automatically.</strong><br>
@@ -522,7 +523,7 @@ Trigger ──────────────────▲
                 <h2>5. Inputs, Outputs, and Practical Questions</h2>
                 <div class="grid">
                     <div class="card">
-                        <h4>What comes <em>into</em> a node?</h4>
+                        <h4>What comes into a node?</h4>
                         <ul>
                             <li>The full message payload.</li>
                             <li>The gate bit (<code>true</code>/<code>false</code>).</li>
@@ -567,8 +568,8 @@ Trigger ──────────────────▲
                     <tbody>
                         <tr><td><code>{username}</code></td><td><code>{chatname}</code></td><td>Display name of the user</td><td>CoolViewer123</td></tr>
                         <tr><td><code>{message}</code></td><td><code>{chatmessage}</code></td><td>Chat message text</td><td>Hello everyone!</td></tr>
-                        <tr><td><code>{source}</code></td><td>—</td><td>Platform name (capitalized)</td><td>Twitch, YouTube</td></tr>
-                        <tr><td><code>{type}</code></td><td>—</td><td>Platform name (raw)</td><td>twitch, youtube</td></tr>
+                        <tr><td><code>{source}</code></td><td>-</td><td>Platform name (capitalized)</td><td>Twitch, YouTube</td></tr>
+                        <tr><td><code>{type}</code></td><td>-</td><td>Platform name (raw)</td><td>twitch, youtube</td></tr>
                         <tr><td><code>{donation}</code></td><td><code>{hasDonation}</code></td><td>Donation/tip display label</td><td>$5.00, 500 bits</td></tr>
                     </tbody>
                 </table>
@@ -646,11 +647,11 @@ Trigger ──────────────────▲
                     <li>Running the <strong>SSApp desktop app?</strong> Unlock <a href="#custom-js"><strong>Custom JavaScript nodes</strong></a> for arbitrary logic that no built-in node covers.</li>
                     <li>Check the <a href="../docs/event-reference.html"><strong>Event Reference</strong></a> for detailed payload documentation across all platforms.</li>
                 </ul>
-                <p>This guide is intentionally standalone—copy it locally, adapt it for your team, and keep experimenting inside the editor.</p>
+                <p>This guide is intentionally standalone. Copy it locally, adapt it for your team, and keep experimenting inside the editor.</p>
             </section>
 
             <!-- ═══════════════════════════════════════════════════════════
-                 SECTION 9 — CUSTOM JAVASCRIPT
+                 SECTION 9: CUSTOM JAVASCRIPT
                  Direct link anchors:
                    #custom-js              → section root
                    #custom-js-trigger      → Custom Code trigger node
@@ -673,12 +674,12 @@ Trigger ──────────────────▲
                 </div>
 
                 <figure class="screenshot">
-                    <img src="img/editor-overview.png" alt="Event Flow Editor — empty state">
+                    <img src="img/editor-overview.png" alt="Event Flow Editor: empty state">
                     <figcaption>The Event Flow Editor. The left panel lists all available nodes; the dotted canvas is where you build flows; the right panel shows properties for the selected node.</figcaption>
                 </figure>
 
                 <!-- ─── Trigger ─── -->
-                <h3 id="custom-js-trigger">Custom Code — Trigger node</h3>
+                <h3 id="custom-js-trigger">Custom Code: Trigger node</h3>
                 <p>Drag <strong>Custom Code</strong> from the <em>Advanced</em> group in the <strong>Triggers</strong> panel onto the canvas. It acts as a gate: the flow continues only when your code returns <code>true</code>.</p>
 
                 <div class="two-col">
@@ -694,12 +695,12 @@ Trigger ──────────────────▲
 
                 <div class="panel">
                     <strong>Signature:</strong> your code runs as <code>function(message) { ... }</code><br>
-                    <strong>Must return:</strong> a boolean — <code>true</code> to let the flow continue, <code>false</code> to stop it.<br>
-                    <strong>Available:</strong> the <code>message</code> object (see <a href="#custom-js-message-api">message API</a> below), plus <code>convertCurrency(value, targetCurrency, source)</code> and <code>convertToUSD(value, source)</code>.
+                    <strong>Must return:</strong> a boolean: <code>true</code> to let the flow continue, <code>false</code> to stop it.<br>
+                    <strong>Available:</strong> the object <code>message</code> (see <a href="#custom-js-message-api">message API</a> below), plus <code>convertCurrency(value, targetCurrency, source)</code> and <code>convertToUSD(value, source)</code>.
                 </div>
 
                 <!-- ─── Action ─── -->
-                <h3 id="custom-js-action">Execute Custom Code — Action node</h3>
+                <h3 id="custom-js-action">Execute Custom Code: Action node</h3>
                 <p>Drag <strong>Execute Custom Code</strong> from the <em>Integrations</em> group in the <strong>Actions</strong> panel. It can mutate the message, block it, or attach metadata that downstream nodes can read.</p>
 
                 <div class="two-col">
@@ -715,7 +716,7 @@ Trigger ──────────────────▲
 
                 <div class="panel">
                     <strong>Signature:</strong> your code runs as <code>function(message, result) { ... }</code><br>
-                    <strong>Should return:</strong> an object or Promise merged into <code>result</code> — see <a href="#custom-js-result-api">result API</a>.<br>
+                    <strong>Should return:</strong> an object or Promise merged into <code>result</code>; see <a href="#custom-js-result-api">result API</a>.<br>
                     <strong>Available:</strong> <code>message</code> (the event payload), <code>result</code> (current flow result state), <code>printThermal(html, options)</code>, plus <code>convertCurrency(value, targetCurrency, source)</code> and <code>convertToUSD(value, source)</code>.
                 </div>
 
@@ -730,12 +731,12 @@ Trigger ──────────────────▲
                 </figure>
 
                 <!-- ─── message API ─── -->
-                <h3 id="custom-js-message-api">The <code>message</code> object</h3>
+                <h3 id="custom-js-message-api">The object <code>message</code></h3>
                 <p>Both nodes receive the full event payload as <code>message</code>. The fields below are always available; platform-specific events may include additional ones.</p>
 
                 <table class="var-table">
                     <thead>
-                        <tr><th>Field</th><th>Type</th><th>Description</th><th>Example</th></tr>
+                        <tr><th>Field</th><th>Data type</th><th>Description</th><th>Example</th></tr>
                     </thead>
                     <tbody>
                         <tr><td><code>message.chatmessage</code></td><td>string</td><td>The chat message text (may contain HTML)</td><td><code>"Hello stream!"</code></td></tr>
@@ -765,7 +766,7 @@ Trigger ──────────────────▲
 
                 <table class="var-table">
                     <thead>
-                        <tr><th>Return field</th><th>Type</th><th>Effect</th></tr>
+                        <tr><th>Return field</th><th>Data type</th><th>Effect</th></tr>
                     </thead>
                     <tbody>
                         <tr><td><code>modified</code></td><td>boolean</td><td>Set <code>true</code> if you changed <code>message</code> fields. Tells downstream nodes the payload has been edited.</td></tr>
@@ -783,7 +784,7 @@ Trigger ──────────────────▲
                 <h3 id="custom-js-examples">Snippet examples</h3>
                 <p>Copy any of these into the JavaScript Code textarea of the matching node type.</p>
 
-                <h4 class="snippet-heading">Trigger snippets — return <code>true</code> to continue the flow</h4>
+                <h4 class="snippet-heading">Trigger snippets: return <code>true</code> to continue the flow</h4>
 
                 <div class="snippet-block">
                     <div class="snippet-label">Keyword match (case-insensitive)</div>
@@ -833,7 +834,7 @@ return eurValue &gt;= 10 &amp;&amp; eurValue &lt; 25;</div>
                 </div>
 
                 <div class="snippet-block">
-                    <div class="snippet-label">Multi-condition — VIP + keyword</div>
+                    <div class="snippet-label">Multi-condition: VIP + keyword</div>
                     <div class="snippet-desc">Combine role check and message content in a single expression that no built-in trigger covers.</div>
                     <div class="code-js">const isPrivileged = !!(message.subscriber || message.vip || message.mod);
 const isCommand    = /^!feature\b/i.test(message.chatmessage || '');
@@ -846,7 +847,7 @@ return isPrivileged && isCommand;</div>
                     <div class="code-js">return (message.chatmessage || '').replace(/<[^>]+>/g, '').trim().length >= 20;</div>
                 </div>
 
-                <h4 class="snippet-heading" style="margin-top:36px;">Action snippets — return <code>{ modified, message }</code></h4>
+                <h4 class="snippet-heading" style="margin-top:36px;">Action snippets: return <code>{ modified, message }</code></h4>
 
                 <div class="snippet-block">
                     <div class="snippet-label">Append a badge or tag to the message</div>
@@ -857,7 +858,7 @@ return { modified: true, message };</div>
 
                 <div class="snippet-block">
                     <div class="snippet-label">Block message conditionally</div>
-                    <div class="snippet-desc">Inspect the content and silently drop the message if a rule matches — useful for spam patterns the keyword filter can't express.</div>
+                    <div class="snippet-desc">Inspect the content and silently drop the message if a rule matches. This is useful for spam patterns the keyword filter can't express.</div>
                     <div class="code-js">const text = (message.chatmessage || '').toLowerCase();
 const spamPatterns = ['buy followers', 'free nitro', 'click here'];
 
@@ -914,7 +915,7 @@ return { modified: true, message };</div>
                 </div>
 
                 <!-- ─── Complete worked example ─── -->
-                <h3 id="custom-js-example-flow">Complete example — VIP feature request bot</h3>
+                <h3 id="custom-js-example-flow">Complete example: VIP feature request bot</h3>
                 <p>This flow listens for <code>!feature &lt;text&gt;</code> from subscribers, VIPs, or mods, reformats it as a feature request, and relays it to a second destination (e.g. Discord).</p>
 
                 <div class="diagram">
@@ -926,30 +927,30 @@ return { modified: true, message };</div>
 │    !feature          │     │     from {name}: {text}" │     │                  │
 └──────────────────────┘     └──────────────────────────┘     └──────────────────┘</div>
 
-                <p><strong>Step 1 — Custom Code trigger</strong> (paste into the trigger's JavaScript Code field):</p>
+                <p><strong>Step 1: Custom Code trigger</strong> (paste into the trigger's JavaScript Code field):</p>
                 <div class="code-js">// Only let VIPs, subscribers, and mods through, and only for !feature commands
 const isPrivileged = !!(message.subscriber || message.vip || message.mod);
 const isCommand    = /^!feature\b/i.test((message.chatmessage || '').trim());
 return isPrivileged && isCommand;</div>
 
-                <p><strong>Step 2 — Execute Custom Code action</strong> (paste into the action's JavaScript Code field):</p>
+                <p><strong>Step 2: Execute Custom Code action</strong> (paste into the action's JavaScript Code field):</p>
                 <div class="code-js">// Strip the "!feature" command word and format a clean announcement
 const featureText = (message.chatmessage || '')
     .replace(/^!feature\s*/i, '')
     .trim();
 
 if (!featureText) {
-    // No text after the command — block rather than relay an empty request
+    // No text after the command: block rather than relay an empty request
     return { blocked: true, message };
 }
 
 message.chatmessage = `📋 Feature request from ${message.chatname}: ${featureText}`;
 return { modified: true, message };</div>
 
-                <p><strong>Step 3 — Relay Chat action</strong>: add a standard Relay Chat node after the action and configure it to point at your Discord (or other) destination. No custom code needed here — the reformatted <code>message.chatmessage</code> flows through automatically.</p>
+                <p><strong>Step 3: Relay Chat action</strong>: add a standard Relay Chat node after the action and configure it to point at your Discord (or other) destination. No custom code is needed here. The reformatted <code>message.chatmessage</code> flows through automatically.</p>
 
                 <div class="callout tip">
-                    <strong>Testing the flow.</strong> Use the <strong>Test Flow</strong> button (top-right of the editor) to send a synthetic message through the pipeline without needing a live stream. Set the chatname to a subscriber, add a message like <code>!feature dark mode support</code>, and confirm the Relay Chat destination receives the reformatted string.
+                    <strong>Testing the flow.</strong> Click this button: <strong>Test Flow</strong> (top-right of the editor) to send a synthetic message through the pipeline without needing a live stream. Set the chatname to a subscriber, add a message like <code>!feature dark mode support</code>, and confirm the Relay Chat destination receives the reformatted string.
                 </div>
 
                 <figure class="screenshot">
@@ -960,12 +961,12 @@ return { modified: true, message };</div>
                 <!-- ─── Security note ─── -->
                 <h3 id="custom-js-security">Security considerations</h3>
                 <div class="callout warn">
-                    <strong>Custom code runs with renderer-process privileges.</strong> Inside the SSApp, code in Custom JS nodes has full access to the <code>window</code> object and any APIs the preload script exposes (e.g. <code>window.ninjafy</code>). Treat imported flow files like executable code — only import flows from sources you trust.
+                    <strong>Custom code runs with renderer-process privileges.</strong> Inside the SSApp, code in Custom JS nodes has full access to the <code>window</code> object and any APIs the preload script exposes (e.g. <code>window.ninjafy</code>). Treat imported flow files like executable code. Only import flows from sources you trust.
                 </div>
                 <ul>
                     <li><strong>No network sandbox.</strong> Action code can call <code>fetch()</code>. If you're accepting shared flows from others, audit the JS before activating them.</li>
-                    <li><strong>Errors are caught.</strong> A runtime error in your code returns <code>false</code> (trigger) or a no-op (action) and logs to the DevTools console — the flow doesn't crash.</li>
-                    <li><strong>Syntax errors too.</strong> A <code>SyntaxError</code> at compile time is caught the same way. Check DevTools (F12) if a node appears to do nothing.</li>
+                    <li><strong>Errors are caught.</strong> A runtime error in your code returns <code>false</code> (trigger) or a no-op (action) and logs to the DevTools console. The flow doesn't crash.</li>
+                    <li><strong>Syntax errors too.</strong> An error of type <code>SyntaxError</code> at compile time is caught the same way. Check DevTools (F12) if a node appears to do nothing.</li>
                 </ul>
             </section>
         </div>

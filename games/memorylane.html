@@ -728,7 +728,9 @@
             
             if (!data || !data.chatmessage || !data.chatname) return;
 
-            const tmpName = document.createElement('div');
+            // Read the name without loading images or running their handlers.
+            const nameTemplate = document.createElement('template');
+            const tmpName = nameTemplate.content.appendChild(document.createElement('div'));
             tmpName.innerHTML = data.chatname;
             const username = tmpName.textContent || tmpName.innerText || '';
             let message = data.chatmessage;
@@ -737,7 +739,7 @@
             // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!data.textonly) {
                 // Create a temporary element to parse HTML
-                const tempDiv = document.createElement('div');
+                const tempDiv = document.createElement('template').content.appendChild(document.createElement('div'));
                 tempDiv.innerHTML = message;
                 
                 // Replace images with their alt text
