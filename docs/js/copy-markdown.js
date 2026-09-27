@@ -555,7 +555,7 @@
         button.id = BUTTON_ID;
         button.className = "ssn-copy-markdown-button";
         button.type = "button";
-        button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g class="ssn-copy-markdown-clipboard"><rect x="8" y="3" width="8" height="4" rx="1"></rect><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path></g><path class="ssn-copy-markdown-check" d="m5 12 4 4L19 6"></path><path class="ssn-copy-markdown-error" d="m6 6 12 12M18 6 6 18"></path></svg><span class="ssn-copy-markdown-status" role="status" aria-live="polite"></span>';
+        button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g class="ssn-copy-markdown-clipboard"><rect x="8" y="3" width="8" height="4" rx="1"></rect><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M8 11h8M8 14h8M8 17h5"></path></g><path class="ssn-copy-markdown-check" d="m5 12 4 4L19 6"></path><path class="ssn-copy-markdown-error" d="m6 6 12 12M18 6 6 18"></path></svg><span class="ssn-copy-markdown-status" role="status" aria-live="polite"></span>';
         setButtonStatus(button, label(COPY_LABEL), "");
         button.addEventListener("click", function () {
             copyDocumentMarkdown(button);
