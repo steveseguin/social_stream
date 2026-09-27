@@ -84,11 +84,36 @@
             toggle.querySelector('span').textContent = value ? '\u2715' : '\u2630';
         }
         if (toggle && nav) {
+            var header = nav.closest('.site-header');
+            var priorities = ['services.html', 'commands.html', 'overlay-gallery.html', 'inspiration.html'].map(function (file) {
+                return nav.querySelector(':scope > a[href$="' + file + '"]');
+            }).filter(function (link) { return link; });
+            function fitNavigation() {
+                header.classList.remove('site-nav-compact');
+                priorities.forEach(function (link) { link.hidden = false; });
+                if (window.innerWidth <= 1050) return;
+                function crowded() {
+                    var items = Array.from(nav.children).filter(function (item) { return !item.hidden; });
+                    var gap = parseFloat(getComputedStyle(nav).columnGap) || 0;
+                    var needed = items.reduce(function (width, item) { return width + item.getBoundingClientRect().width; }, 0);
+                    // Leave breathing room beyond the normal spacing between links.
+                    return needed + gap * (items.length - 1) + 32 > nav.clientWidth;
+                }
+                priorities.forEach(function (link) { if (crowded()) link.hidden = true; });
+                if (crowded()) {
+                    header.classList.add('site-nav-compact');
+                    priorities.forEach(function (link) { link.hidden = false; });
+                } else {
+                    open(false);
+                }
+            }
             toggle.addEventListener('click', function () { open(toggle.getAttribute('aria-expanded') !== 'true'); });
             nav.addEventListener('click', function (event) { if (event.target.closest('a')) open(false); });
             document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && nav.classList.contains('is-open')) { open(false); toggle.focus(); } });
             document.addEventListener('click', function (event) { if (!event.target.closest('.site-header')) open(false); });
-            window.addEventListener('resize', function () { if (window.innerWidth > 1050) open(false); });
+            window.addEventListener('resize', fitNavigation);
+            fitNavigation();
+            if (document.fonts) document.fonts.ready.then(fitNavigation);
         }
         document.querySelectorAll('.site-theme').forEach(function (button) { button.onclick = function () { apply(!document.documentElement.classList.contains('dark-mode'), true); }; });
         var year = document.getElementById('current-year'); if (year) year.textContent = new Date().getFullYear();
