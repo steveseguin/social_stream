@@ -60,7 +60,7 @@ test('legacy Featured relay receives selections and clear on hosted/custom route
         const c = relayContext(), received = [];
         assert.equal(c.SocialStreamLocalServer.connectLocalRelay(new URLSearchParams(query), 'fixture', value => received.push(value), true), true);
         const socket = c.sockets[0]; socket.onopen();
-        assert.equal(socket.sent[0].in, query === 'server2' ? 4 : 2);
+        assert.equal(socket.sent[0].in, 2);
         if (query.includes('fixture.invalid')) assert.equal(socket.url, 'ws://fixture.invalid');
         socket.onmessage({ data: JSON.stringify({ target: 'another-label', contents: { chatmessage: 'excluded' } }) });
         socket.onmessage({ data: JSON.stringify({ contents: { chatmessage: 'selected' } }) });
@@ -315,7 +315,7 @@ test('Featured selections and clears reach the modern theme from the Events publ
     assert.equal(shown.length,1);assert.equal(shown[0].chatmessage,'Selected');assert.equal(hidden.length,1);
 });
 
-test('modern autoshow consumes dock chat, while command-only Featured keeps its iframe', () => {
+test('modern autoshow consumes dock chat and old server3 links receive manual selections', () => {
     for(const query of ['server&autoshow','server2&autoshow','server3','server3&autoshow']) {
         const c=relayContext(),shown=[],frames=[];
         Object.assign(c,{urlParams:new URLSearchParams(query),roomID:'fixture',password:'false',pseudodock:query.includes('autoshow'),
@@ -323,11 +323,17 @@ test('modern autoshow consumes dock chat, while command-only Featured keeps its 
             document:{createElement:()=>({style:{}}),body:{appendChild:el=>frames.push(el)}}});
         vm.runInContext(functions('themes/featured-styles/featured-modern.html',['createIframe','processData']),c);
         c.createIframe();
-        if(query.startsWith('server3')) {
+        if(query === 'server3&autoshow') {
             assert.equal(c.sockets.length,0);assert.equal(frames.length,1);
             assert(frames[0].src.includes('label='+ (c.pseudodock?'dock':'overlay')));continue;
         }
         const socket=c.sockets[0];socket.onopen();assert.equal(frames.length,0);
+        if(query === 'server3') {
+            assert.equal(socket.sent[0].in,2);
+            socket.onmessage({data:JSON.stringify({target:'overlay',contents:{chatmessage:'Selected'}})});
+            assert.equal(shown.length,1);assert.equal(shown[0].chatmessage,'Selected');
+            continue;
+        }
         assert.equal(socket.sent[0].in,query.startsWith('server2')?4:1);
         assert.equal(socket.url,'wss://io.socialstream.ninja/'+(query.startsWith('server2')?'extension':'api'));
         socket.onmessage({data:JSON.stringify({target:'dock',chatname:'Fixture',chatmessage:'Raw chat'})});
@@ -337,16 +343,17 @@ test('modern autoshow consumes dock chat, while command-only Featured keeps its 
     }
 });
 
-test('legacy relay preserves explicit addresses and ignores server3 without a feed', () => {
+test('legacy relay preserves explicit addresses and supports server3 for selected Featured messages only', () => {
     for(const featured of [true,false])for(const query of ['server3','server3&localserver','server3=ws%3A%2F%2Fcustom.invalid']) {
         const c=relayContext();
-        assert.equal(c.SocialStreamLocalServer.connectLocalRelay(new URLSearchParams(query),'fixture',()=>{},featured),false);
-        assert.equal(c.sockets.length,0);
+        assert.equal(c.SocialStreamLocalServer.connectLocalRelay(new URLSearchParams(query),'fixture',()=>{},featured),featured);
+        assert.equal(c.sockets.length,featured ? 1 : 0);
+        if (featured) { c.sockets[0].onopen(); assert.equal(c.sockets[0].sent[0].in,2); }
     }
     for(const query of ['server&localserver&localserverport=4567','server=ws%3A%2F%2Fcustom.invalid&localserver','server2&server3']) {
         const c=relayContext();
         assert(c.SocialStreamLocalServer.connectLocalRelay(new URLSearchParams(query),'fixture',()=>{},true));
-        assert.equal(c.sockets[0].url,query.includes('custom')?'ws://custom.invalid':query.includes('localserver')?'ws://127.0.0.1:4567':'wss://io.socialstream.ninja/extension');
+        assert.equal(c.sockets[0].url,query.includes('custom')?'ws://custom.invalid':query.includes('localserver')?'ws://127.0.0.1:4567':'wss://io.socialstream.ninja');
     }
 });
 

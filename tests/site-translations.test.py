@@ -167,6 +167,17 @@ class ExpandedTests(unittest.TestCase):
         self.assertEqual(source.count('data-site-language-picker'),1)
         self.assertEqual(BUILD.relative_url('index.html?file=agents/test.md#example','docs/guide.html','es/docs/guide.html',True,self.pages), '../../docs/index.html?file=agents/test.md#example')
 
+    def test_language_menu_precedes_theme_control_outside_navigation(self):
+        source = (self.root / 'docs/guide.html').read_text(encoding='utf-8').replace('</nav>',
+            '</nav><div class="site-actions"><button class="site-theme"></button></div>')
+        for language in ('en', 'ru'):
+            page = ('ru/' if language == 'ru' else '') + 'docs/guide.html'
+            output = BUILD.language_links(source, 'docs/guide.html', page, ['es', 'ru'], language)
+            self.assertLess(output.index('</nav>'), output.index('data-site-language-picker'))
+            self.assertLess(output.index('class="site-actions"'), output.index('data-site-language-picker'))
+            self.assertLess(output.index('data-site-language-picker'), output.index('class="site-theme"'))
+            self.assertEqual(output, BUILD.language_links(output, 'docs/guide.html', page, ['es', 'ru'], language))
+
     def test_search_keeps_cyrillic_and_matches_accented_words(self):
         self.build()
         self.build('ru')

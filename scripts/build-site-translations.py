@@ -208,14 +208,17 @@ def language_links(source, source_page, current_page, languages, language="en", 
         alternates.append('<link rel="alternate" hreflang="' + code + '" href="' + absolute + '">')
         if code == "en":
             alternates.append('<link rel="alternate" hreflang="x-default" href="' + absolute + '">')
-    summary = '<summary><span aria-hidden="true">🌐 </span><span lang="' + language + '">' + labels[language] + '</span></summary>'
+    summary = '<summary title="' + labels[language] + '"><span aria-hidden="true">🌐 </span><span lang="' + language + '">' + labels[language] + '</span></summary>'
     menu = '<details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore>' + summary + '<div class="site-language-options">' + ''.join(links) + '</div></details>'
     asset = lambda path: posixpath.relpath(path, posixpath.dirname(current_page) or ".")
     head = '\n<link rel="stylesheet" href="' + asset("docs/css/site-language.css") + '">\n'
     head += '<script src="' + asset("docs/js/site-language-links.js") + '" defer></script>\n'
     head += '\n'.join(alternates) + '\n'
     navigation = next((end for _, end, tag, attrs in document.tags if tag == "nav" and attrs.get("id") == "ssn-site-nav"), None)
-    if navigation is not None:
+    actions = next((end for _, end, _, attrs in document.tags if "site-actions" in attrs.get("class", "").split()), None)
+    if actions is not None:
+        position = actions
+    elif navigation is not None:
         position = source.index('</nav>', navigation)
     elif document.header_end is not None:
         header_start = next(start for start, _, tag, _ in document.tags if tag == "header")
