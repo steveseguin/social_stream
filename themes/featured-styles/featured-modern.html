@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="../../js/local-server-url.js"></script>
 <script src="../../shared/utils/chatHtml.js"></script>
 
 <script src="../../libs/objects.js"></script>
@@ -491,6 +492,7 @@
 
         // Create VDO.Ninja iframe for receiving messages
         function createIframe() {
+            if (SocialStreamLocalServer.connectLocalRelay(urlParams, roomID, processData, !pseudodock)) return;
 			var iframe = document.createElement("iframe");
 
 			if (pseudodock) {

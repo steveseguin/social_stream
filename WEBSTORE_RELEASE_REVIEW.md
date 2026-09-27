@@ -664,3 +664,47 @@ Validation on the package:
 Verification used local fixtures and mocked services. Live provider sessions,
 public relay behavior, Chrome Web Store approval and hosted website deployment
 were not tested. Receiver changes reach hosted URLs only after site deployment.
+
+
+### 2026-09-27 Featured Relay Fix, 3.50.19
+
+- Reviewed beta 19ac439b and selectively backported the Featured routing fix.
+  Dock now publishes selected messages and clear updates using a separate
+  connection for existing server2/server3 links. This connection has no incoming
+  command handler. The explicit Dock API connection is still controlled by server.
+- Classic Featured and all 13 packaged Featured presets receive manual selections
+  from the selection channel. Classic/Modern explicit auto-show consumes captured
+  chat. Popup link refresh adapts beta's behavior to the older Web Store popup,
+  including preset changes and returning from auto-show to manual selection.
+- Bundled beta's js/local-server-url.js dependency locally and added it to the
+  upload inventory, bringing the package to 811 files. It is loaded by extension
+  pages and hosted overlays, not injected content scripts, so no web-accessible
+  resource or permission entry is required.
+- Added tests/webstore-featured-routing.test.cjs outside the upload inventory.
+  It reuses beta's transport contracts for saved URLs, API opt-in and reconnects.
+- Updated the package to 3.50.19. Manifest bytes differ only in the version value;
+  content-script entries and YouTube injection order match 3.50.18 exactly.
+
+Validation:
+
+- Beta's 39 Featured routing unit cases passed before backporting.
+- The adapted package passed 35 focused saved-link/transport regression cases
+  and 39 browser routing/rendering checks across all 13 Featured presets.
+- A clean unpacked Chromium extension passed 21 checks using native YouTube and
+  Twitch fixture capture, packaged Dock/Featured receivers, and public transports:
+  P2P; server2/server3 with P2P blocked; and explicitly enabled server/server2/server3.
+  Selection, raw-chat exclusion, clear, fake messages, persistence, no duplicate
+  fixture rows, receiver reload and Classic/Modern auto-show passed.
+- In the server2/server3 case, there were zero P2P peers, the extension remote API
+  setting was off, Dock's API socket was absent, and CDP inspection confirmed the
+  new publishing socket had no incoming message handler.
+- Popup search checks passed. Package audit parsed 267 JavaScript files and 133
+  inline scripts with no syntax, remote executable, or new dependency findings.
+  The two existing disabled Kokoro references remain documented above.
+- All 811 upload files were verified against the candidate SHA-256 inventory.
+
+Scope: source/package update only. The current receiver tests served packaged
+assets at hosted URLs; they do not certify the currently deployed website.
+Default extension links use the website, so the matching website receiver fix
+must also be deployed for those links. No Web Store upload or website deployment
+was performed. Live provider traffic and macOS were not retested in this update.
