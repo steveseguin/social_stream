@@ -3627,6 +3627,17 @@ class EventFlowSystem {
                 result.modified = true;
                 break;
 
+            case 'showAiEventOverlay': {
+                const profile = String(config.profile || 'default');
+                const meta = message && message.meta && typeof message.meta === 'object' && !Array.isArray(message.meta)
+                    ? { ...message.meta } : (message && message.meta !== undefined ? { value: message.meta } : {});
+                meta.aiEventOverlay = { profile };
+                if (this.sendTargetP2P) {
+                    await this.sendTargetP2P({ ...(message || {}), meta }, 'aievent-' + profile, { retry: false });
+                }
+                break;
+            }
+
             case 'featureMessage': {
                 const currentMeta = (message && typeof message.meta === 'object' && message.meta !== null && !Array.isArray(message.meta))
                     ? { ...message.meta }

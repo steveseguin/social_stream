@@ -64,6 +64,8 @@ async function loadScriptsInOrder() {
         './shared/audience-room/background.js',
         './db.js?v=2',
         './ai.js?v=2',
+        './shared/aiEventOverlay/core.js',
+        './shared/aiEventOverlay/background.js',
         './points.js?v=1',
         './shared/giveaway/service.js',
         './pointsactions.js?v=1',

@@ -46,6 +46,12 @@ jobs:
                   shutil.make_archive(str(skills / 'control-social-stream'), 'zip', skills, 'control-social-stream')
           PY
           for checkout in main-content beta-content; do
+            if [ -f "$checkout/aievent.html" ]; then
+              test -f "$checkout/aievent-overlay.html"
+              for asset in core.js client.js setup.js display.js setup.css overlay.css; do
+                test -f "$checkout/shared/aiEventOverlay/$asset"
+              done
+            fi
             if [ -f "$checkout/commerce-board.html" ]; then
               test -f "$checkout/shared/monetization/boards.js"
               test -f "$checkout/shared/monetization/board-overlay.js"

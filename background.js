@@ -15600,6 +15600,14 @@ async function processIncomingRequest(request, UUID = false) {
 			if (UUID) {
 				initializeTimer(UUID);
 			}
+		} else if (["getAiEventProfiles", "saveAiEventProfile", "generateAiEvent"].includes(request.action) && UUID) {
+			try {
+				if (!window.SSNAiEventBackground) throw new Error("AI Event Overlay is still loading. Try again.");
+				const value = await window.SSNAiEventBackground.handle(request);
+				sendDataP2PChunked({ aiEventResponse: { target: request.target, value } }, UUID);
+			} catch (error) {
+				sendDataP2P({ aiEventResponse: { target: request.target, error: error.message || "AI overlay request failed." } }, UUID);
+			}
 		} else if (request.action === "saveAiPromptOverlays" && request.value) {
 			const saveResult = await saveAiPromptOverlays(request.value);
 			if (UUID && request.target) {

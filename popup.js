@@ -3502,6 +3502,7 @@ const SERVER_PARAM_SUPPORT_BY_TARGET = {
   spotify: FULL_SERVER_LINK_SUPPORT,
   map: FULL_SERVER_LINK_SUPPORT,
   aiprompt: { server: true, server2: true, server3: false },
+  aievent: FULL_SERVER_LINK_SUPPORT,
   hypemeter: { server: true, server2: true, server3: false },
   ticker: { server: true, server2: true, server3: false },
   tipjar: { server: true, server2: true, server3: false },
@@ -3972,6 +3973,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "credits", path: "credits.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
     { id: "aiprompt", path: "aiprompt.html" },
+    { id: "aievent", path: "aievent.html" },
     { id: "aioverlay", path: "cohost-overlay.html" },
     { id: "eventsdashboard", path: "events.html" },
 	{ id: "reactions", path: "reactions.html" },
@@ -4746,7 +4748,7 @@ function update(response, sync = true) {
                 // A more robust way is if refreshLinks stores the raw URLs on the elements or returns them.
                 // For now, let's assume link elements have an href that needs cleaning.
                 const linkIdsToClean = [
-                    'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 'aipromptlink', 'aioverlaylink',
+                    'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 'aipromptlink', 'aieventlink', 'aioverlaylink',
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'hypetrainlink', 'metalink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
                     'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
@@ -6540,6 +6542,7 @@ function getTargetMap() {
 		'reactions': 27,
         'hypetrain': 29,
         'aiprompt': 31,
+        'aievent': 32,
     };
 }
 
@@ -8912,6 +8915,7 @@ function refreshLinks(){
       'creditslink': 'credits',
       'privatechatbotlink': 'privatechatbot',
       'aipromptlink': 'aiprompt',
+      'aieventlink': 'aievent',
       'eventsdashboardlink': 'eventsdashboard',
       'reactionslink': 'reactions',
       'custom-gif-commandslink': 'custom-gif-commands',
