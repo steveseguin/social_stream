@@ -94,11 +94,6 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "chat_bot",
     description: "By default the bot is told not if it doesn't see value in doing so. You can disable that instruction here though"
   },
-  "autoLiveYoutube": {
-    type: "boolean",
-    category: "miscellaneous_options_for_sites",
-    description: "Deprecated. YouTube Live Chat is now selected automatically unless disableAutoLiveYoutube is enabled."
-  },
   "disableAutoLiveYoutube": {
     type: "boolean",
     category: "miscellaneous_options_for_sites",

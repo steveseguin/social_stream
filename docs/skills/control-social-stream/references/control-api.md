@@ -58,6 +58,11 @@ Supported settings actions:
 - `getSettings`
 - `updateSettings`
 
+In the updated SSApp 0.4.32 development checkout, `platforms.youtube` and
+`platforms.youtubeshorts` advertise `defaultConnectionMode: "websocket"`.
+`addSource` uses that default when `connectionMode` is omitted. Read the running
+capability; a released minimum containing this change has not been assigned.
+
 From SSApp 0.4.32, `platforms.whatnot` accepts a Whatnot live show `url` or UUID in
 `videoId`. It defaults to `connectionMode: "websocket"`; `classic` remains available
 for website capture. WebSocket capture requires the updated Social Stream Whatnot

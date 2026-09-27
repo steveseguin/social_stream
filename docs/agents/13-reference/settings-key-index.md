@@ -393,9 +393,9 @@ Category key: `miscellaneous_options_for_sites`. Settings: 11.
 
 | Key | Type | Short Description |
 | --- | --- | --- |
-| `autoLiveYoutube` | boolean | Instead of Top Chat, auto-select Live Chat; Youtube Live chat pop out. |
 | `collecttwitchpoints` | boolean | If enabled, it will work even if the extension itself is set to inactive |
 | `detweet` | boolean | If enabled, it will work even if the extension itself is set to inactive |
+| `disableAutoLiveYoutube` | boolean | Disable automatic Live Chat selection in the YouTube popout; Live Chat is selected by default. |
 | `disableYoutubeAutoScroll` | boolean | Turn off the YouTube Popout chat auto-scroll keeper. |
 | `flipYoutube` | boolean | Flip Youtube watch page layout |
 | `hidePaidPromotion` | boolean | Hide |

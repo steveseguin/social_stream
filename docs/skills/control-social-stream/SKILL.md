@@ -74,6 +74,10 @@ endpoints directly using [references/control-api.md](references/control-api.md).
 [references/version-log.md](references/version-log.md) for minimum-version compatibility.
 Runtime capabilities are authoritative.
 
+New YouTube and YouTube Shorts sources default to `websocket` in the updated SSApp
+0.4.32 development checkout. Check `platforms[target].defaultConnectionMode`; see
+the unreleased entry in `references/version-log.md` for version compatibility.
+
 SSApp 0.4.32 with the updated Whatnot page sources adds `platforms.whatnot`.
 Use a live show URL or its UUID (`videoId`); the default `websocket` mode captures
 public chat without loading the video. Check the platform capability before adding

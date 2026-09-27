@@ -51,6 +51,11 @@ jobs:
               for asset in core.js client.js setup.js display.js setup.css overlay.css; do
                 test -f "$checkout/shared/aiEventOverlay/$asset"
               done
+              for asset in render.js relay.js; do
+                if grep -q "shared/aiEventOverlay/$asset" "$checkout/aievent-overlay.html"; then
+                  test -f "$checkout/shared/aiEventOverlay/$asset"
+                fi
+              done
             fi
             if [ -f "$checkout/commerce-board.html" ]; then
               test -f "$checkout/shared/monetization/boards.js"

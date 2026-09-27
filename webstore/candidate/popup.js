@@ -7179,10 +7179,42 @@ function endPopupLinkRefreshBatch() {
 	}
 }
 
+function getQueryParamTokenFromUrl(url, paramName) {
+  if (!url || typeof url !== "string" || url.indexOf("?") === -1) return "";
+  const query = url.split("?")[1].split("#")[0];
+  const parts = query.split("&");
+  for (let i = 0; i < parts.length; i += 1) {
+    const part = parts[i];
+    if (!part) continue;
+    const key = part.split("=")[0];
+    if (key === paramName || decodeURIComponent(key) === paramName) {
+      return part;
+    }
+  }
+  return "";
+}
+
 function refreshLinks(){
   if (popupLinkRefreshBatchDepth > 0) {
     popupLinkRefreshPending = true;
     return;
+  }
+
+  // Refresh Featured transport flags after preset and auto-show changes.
+  // Match beta's routing while leaving the Dock API switch explicitly opt-in.
+  const selectionSource = document.getElementById("dock");
+  const featuredTarget = document.getElementById("overlay");
+  if (selectionSource && featuredTarget && typeof featuredTarget.raw === "string") {
+    const autoShow = new URL(featuredTarget.raw, baseURL).searchParams.has("autoshow");
+    ["server", "server2", "server3"].forEach(function(paramName) {
+      const input = document.getElementById(paramName);
+      const token = getQueryParamTokenFromUrl(selectionSource.raw, paramName) ||
+        getQueryParamTokenFromUrl(featuredTarget.raw, paramName) || paramName;
+      featuredTarget.raw = removeQueryParamWithValue(featuredTarget.raw, paramName);
+      if (input && input.checked && !(paramName === "server" && autoShow && document.getElementById("server2").checked)) {
+        featuredTarget.raw = updateURL(token, featuredTarget.raw);
+      }
+    });
   }
 
   let hideLinks = false;

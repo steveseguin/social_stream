@@ -21,6 +21,18 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.1.0 | 0.4.2 | Versioned responses, request and operation IDs, SSE status events, token-file and stored credentials, visible-app controls, expanded source/settings discovery, and version-aware MCP tools |
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
+## Unreleased YouTube default mode
+
+Minimum supported build: the SSApp development checkout based on 0.4.32 containing
+the YouTube default-mode change; no released minimum has been assigned. Check
+`platforms.youtube.defaultConnectionMode` and
+`platforms.youtubeshorts.defaultConnectionMode` rather than the app version alone.
+API/MCP responses continue to expose the running SSApp version.
+
+New YouTube and YouTube Shorts sources and channel groups default to `websocket`,
+including `addSource` requests that omit `connectionMode`. Explicit modes and saved
+sources/groups retain their existing selection.
+
 ## Unreleased hosted and local overlay-control correction
 
 Minimum verified runtime: SSApp 0.4.28 with the updated Social Stream beta page sources containing `shared/overlay-control-transport.js`. No released minimum containing all changes has been assigned. Remote page revisions can change independently of the app version; do not assume a published 0.4.28 build contains this update. Existing API/MCP responses still expose the running SSApp version.
@@ -52,6 +64,11 @@ The unreleased voice preview also cancels queued Start/Arm operations after Stop
 Windows x64 voice commands in this unreleased preview use a pinned local whisper.cpp runtime downloaded on first Start. Stop also cancels runtime preparation/inference. Cohost and the Local AI API remain unchanged; feature-detect ninjafy.voiceControl as above.
 
 ## Skill revisions
+
+### 2026-09-27
+
+- Documented the YouTube/Shorts WebSocket default and capability detection for the
+  updated 0.4.32 development checkout; see the unreleased compatibility entry above.
 
 ### 2026-09-24
 

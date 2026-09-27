@@ -1149,6 +1149,9 @@ class EventFlowEditor {
                 rootPath: 'docs/event-reference.html',
                 actionsPath: '../docs/event-reference.html'
             },
+            'ai-event-overlay': {
+                url: 'https://socialstream.ninja/beta/docs/index.html?file=ai-event-overlay.md'
+            },
             'event-reference-cross-platform': {
                 extensionPath: 'docs/event-reference.html',
                 rootPath: 'docs/event-reference.html',
@@ -1159,6 +1162,7 @@ class EventFlowEditor {
 
         const guide = guideMap[guideKey];
         if (!guide) return '';
+        if (guide.url) return guide.url;
 
         if (this.isExtensionRuntimeAvailable()) {
             const extensionUrl = chrome.runtime.getURL(guide.extensionPath);
@@ -2292,6 +2296,7 @@ class EventFlowEditor {
                     const shortValue = value.length > 15 ? value.substring(0, 15) + '...' : value;
                     return `${prop} = ${shortValue}`;
                 }
+                case 'showAiEventOverlay': return `${node.config.profile || 'Choose an overlay'}${node.config.variation ? ': ' + node.config.variation : ''}`;
                 case 'featureMessage': return 'Feature in dock/overlay';
                 case 'pinMessage': {
                     const modeMap = { pin: 'Pin', unpin: 'Unpin', nextPinned: 'Show next pinned' };
@@ -5171,7 +5176,7 @@ class EventFlowEditor {
 				html += `<div class="property-group"><label class="property-label">Amount to Add</label><input type="number" class="property-input" id="prop-amount" value="${node.config.amount || 100}" min="0"></div>`;
 				break;
 			case 'showAiEventOverlay':
-                html += `<div class="property-group"><label class="property-label" for="prop-profile">Saved configuration ID</label><input class="property-input" id="prop-profile" value="${this.escapeHtml(node.config.profile || 'default')}" placeholder="default"></div><p class="property-help">Create a configuration under Chat Bots and AI services → AI Event Overlay. Set its trigger to Event Flow and add its overlay URL to OBS. Connect Spend Points before this action for a loyalty reward.</p>`;
+                html += `<div class="property-group"><label class="property-label" for="prop-profile">Saved overlay</label><input class="property-input" id="prop-profile" value="${this.escapeHtml(node.config.profile || 'default')}" placeholder="Overlay ID"></div><div class="property-group"><label class="property-label" for="prop-variation">Variation (optional)</label><input class="property-input" id="prop-variation" value="${this.escapeHtml(node.config.variation || '')}" placeholder="Approved phrase"></div><p id="ai-event-flow-status" class="property-help" role="status">Loading saved overlays…</p><p class="property-help"><a href="${this.escapeHtml(this.resolveGuideTarget('ai-event-overlay'))}" target="_blank" rel="noopener">AI overlay setup and rewards guide</a></p>`;
                 break;
 			case 'spendPoints':
 				html += `<div class="property-group"><label class="property-label">Amount to Spend</label><input type="number" class="property-input" id="prop-amount" value="${node.config.amount || 100}" min="0"></div>`;
@@ -6480,7 +6485,50 @@ class EventFlowEditor {
 			if (codeInput) codeInput.value = this.getCustomCode(node);
 		}
 		this.addPropertiesEventListeners(node.id); // Pass node.id to correctly re-attach listeners
+		if (node.actionType === 'showAiEventOverlay') this.loadAiEventChoices(node);
 	}
+
+    async loadAiEventChoices(node) {
+        const status = document.getElementById('ai-event-flow-status');
+        try {
+            let choices;
+            if (window.SSNAiEventBackground) choices = await window.SSNAiEventBackground.choices();
+            else if (this.isExtensionRuntimeAvailable()) {
+                choices = await new Promise((resolve, reject) => {
+                    chrome.runtime.sendMessage({ cmd: 'aiEventFlow', action: 'list' }, response => {
+                        if (chrome.runtime.lastError || !response || response.error) reject(new Error('Open SSN to load saved overlays.'));
+                        else resolve(response.value);
+                    });
+                });
+            } else throw new Error('Open the local SSN editor to choose saved overlays.');
+            if (status !== document.getElementById('ai-event-flow-status')) return;
+            if (!choices.length) { status.textContent = 'Create an overlay in SSN’s AI Event Overlay settings first.'; return; }
+            const profile = document.createElement('select');
+            profile.id = 'prop-profile'; profile.className = 'property-input';
+            const option = (select, value, label) => { const item = document.createElement('option'); item.value = value; item.textContent = label; select.appendChild(item); };
+            option(profile, '', 'Choose an overlay');
+            choices.forEach(p => option(profile, p.id, p.name + (p.mode === 'flow' ? '' : ' (change trigger to Event Flow)')));
+            if (node.config.profile && !choices.some(p => p.id === node.config.profile)) option(profile, node.config.profile, node.config.profile + ' (not found)');
+            profile.value = node.config.profile || '';
+            document.getElementById('prop-profile').replaceWith(profile);
+            const variation = document.createElement('select');
+            variation.id = 'prop-variation'; variation.className = 'property-input';
+            document.getElementById('prop-variation').replaceWith(variation);
+            const update = () => {
+                const saved = choices.find(p => p.id === profile.value);
+                variation.textContent = ''; option(variation, '', 'No variation');
+                if (saved) saved.variations.forEach(value => option(variation, value, value));
+                if (node.config.variation && (!saved || saved.variations.indexOf(node.config.variation) < 0)) option(variation, node.config.variation, node.config.variation + ' (not approved)');
+                variation.value = node.config.variation || '';
+                status.textContent = !saved ? 'Choose a saved overlay.' : saved.mode !== 'flow' ? 'Change its trigger to Event Flow in overlay settings.' : node.config.variation && saved.variations.indexOf(node.config.variation) < 0 ? 'Choose an approved variation.' : 'Keep this overlay’s Browser Source open in OBS.';
+            };
+            profile.addEventListener('change', () => { node.config.profile = profile.value; node.config.variation = ''; update(); this.markUnsavedChanges(true); this.renderNodeOnCanvas(node.id); });
+            variation.addEventListener('change', () => { node.config.variation = variation.value; update(); this.markUnsavedChanges(true); this.renderNodeOnCanvas(node.id); });
+            update();
+        } catch (error) {
+            if (status === document.getElementById('ai-event-flow-status')) status.textContent = error.message;
+        }
+    }
 
     addPropertiesEventListeners(nodeId) {
         const nodeData = this.currentFlow.nodes.find(n => n.id === nodeId);
