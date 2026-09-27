@@ -91,6 +91,8 @@ test('actual LLM adapter generates templates from saved instructions and approve
     assert.equal(s.calls.length, before);
     s.setAnswer(new Error('provider-fixture-details'));
     await assert.rejects(s.handle(input), error => /generation failed/.test(error.message) && !error.message.includes('provider-fixture-details'));
+    s.setAnswer(Object.assign(new Error('fixture timeout'), { name: 'AbortError' }));
+    await assert.rejects(s.handle(input), /Overlay generation timed out/);
     s.context.settings.allowChatBot = false;
     await assert.rejects(s.handle(input), /Enable SSN/);
 });
