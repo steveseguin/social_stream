@@ -8,6 +8,11 @@ body > .site-language-picker .site-language-options { right: auto; left: 0; }
 .site-language-picker .site-language-options a:hover, .site-language-picker a[aria-current] { background: #8882; text-decoration: underline; }
 html.dark-mode .site-language-picker { color: var(--site-text, var(--text, #eee)); }
 html.dark-mode .site-language-picker summary, html.dark-mode .site-language-options { background: var(--site-surface, var(--panel, #222)); }
+html[dir="rtl"] .site-header .site-actions { margin-left: 0; margin-right: auto; }
+html[dir="rtl"] .site-language-picker .site-language-options { right: auto; left: 0; }
+html[dir="rtl"] body > .site-language-picker .site-language-options { left: auto; right: 0; }
+html[dir="rtl"] pre, html[dir="rtl"] code, html[dir="rtl"] .code, html[dir="rtl"] .code-js, html[dir="rtl"] .url-example { direction: ltr; unicode-bidi: isolate; text-align: left; }
+html[dir="rtl"] input[type="url"], html[dir="rtl"] input[type="email"] { direction: ltr; text-align: left; }
 .site-header .site-nav .site-language-picker .site-language-options a { padding: 7px 10px; }
 @media (max-width: 1050px) {
     .site-header .site-language-picker .site-language-options { position: static; max-height: none; }

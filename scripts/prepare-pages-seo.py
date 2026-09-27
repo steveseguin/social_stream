@@ -18,7 +18,8 @@ from xml.sax.saxutils import escape as xml_escape
 ORIGIN = "https://socialstream.ninja"
 BRAND = "Social Stream Ninja"
 LANGUAGE_LOCALES = {"es": "es_ES", "pt-br": "pt_BR", "ru": "ru_RU", "fr": "fr_FR", "de": "de_DE",
-                    "ja": "ja_JP", "zh-cn": "zh_CN", "zh-tw": "zh_TW", "it": "it_IT", "pl": "pl_PL"}
+                    "ja": "ja_JP", "zh-cn": "zh_CN", "zh-tw": "zh_TW", "it": "it_IT", "pl": "pl_PL",
+                    "ko": "ko_KR", "uk": "uk_UA", "ar": "ar_AR", "tr": "tr_TR", "cs": "cs_CZ", "th": "th_TH"}
 PUBLIC_ROOT_PAGES = {
     "index.html", "landing.html", "beta.html", "fonts.html", "privacy.html",
     "TOS.html", "streamelements-importer.html", "streamerbot.html",

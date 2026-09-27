@@ -1275,13 +1275,14 @@
     function relatedSearchTerms(token) {
       const related = [];
       const terms = state.searchIndex.terms;
+      const thaiToken = /[\u0e00-\u0e7f]/.test(token);
       if (terms[token]) related.push({ term: token, factor: 1 });
-      if (token.length < 3) return related;
+      if (token.length < 3 && !thaiToken) return related;
 
       for (const term of state.searchTerms) {
         if (term === token) continue;
         let factor = 0;
-        if (term.startsWith(token)) {
+        if (term.startsWith(token) || (thaiToken && term.includes(token))) {
           factor = 0.65;
         } else if (token.length >= 6 && term.length >= 6) {
           const shared = commonPrefixLength(token, term);
