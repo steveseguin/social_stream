@@ -82,7 +82,11 @@ test('routing distinguishes featured, all-message and targeted flow input', () =
     const s = service();
     const message = { chatname: 'Jess', chatmessage: 'Hello', textonly: true, meta: { extra: 1 } };
     assert.equal(s.core.eventMessage({ contents: message }, 'featured', 'x'), message);
-    assert.equal(s.core.eventMessage(message, 'featured', 'x'), null);
+    assert.equal(s.core.eventMessage(message, 'featured', 'x'), message, 'Dock sends selected messages directly');
+    assert.equal(s.core.eventMessage({ content: message }, 'featured', 'x'), message);
+    assert.equal(s.core.eventMessage({ action: 'content', value: JSON.stringify(message) }, 'featured', 'x').chatmessage, 'Hello');
+    assert.equal(s.core.eventMessage(false, 'featured', 'x'), null);
+    assert.equal(s.core.eventMessage({ action: 'content', value: '' }, 'featured', 'x'), null);
     assert.equal(s.core.eventMessage(message, 'all', 'x'), message);
     assert.equal(s.core.eventMessage({ contents: message }, 'all', 'x'), null);
     assert.equal(s.core.eventMessage({ event: 'viewer_updates', meta: { youtube: 8 } }, 'all', 'x'), null);

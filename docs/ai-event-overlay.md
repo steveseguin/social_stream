@@ -52,4 +52,4 @@ Media requests run in SSN. Endpoint keys stay in the saved configuration and are
 
 ## Connections
 
-Featured mode receives featured `contents` messages; all-message mode receives the captured feed. Event Flow sends to the configuration's dedicated label. The `server`, `server2`, and `server3` URL options select the appropriate feed socket when present; private configuration and generation requests still require the VDO.Ninja bridge to SSN. The display supports `onlytype`, `hidetype`, `scale`, `css`, and `b64css`.
+Featured mode listens to the Dock's selected-message feed, including direct messages and API content wrappers; all-message mode receives the captured feed. Event Flow sends to the configuration's dedicated label. The `server`, `server2`, and `server3` URL options select the appropriate feed socket when present; private configuration and generation requests still require the VDO.Ninja bridge to SSN. The display supports `onlytype`, `hidetype`, `scale`, `css`, and `b64css`.
