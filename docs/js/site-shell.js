@@ -4,15 +4,19 @@
     var siteRoot = new URL('../../', document.currentScript.src);
     var translated = document.documentElement.hasAttribute('data-site-language');
     var translations;
-    function t(label) {
-        if (window.SSNSiteLanguage) return window.SSNSiteTranslate(label);
+    function t(label, values) {
+        if (window.SSNSiteLanguage) return window.SSNSiteTranslate(label, values);
         if (!translations) {
             var config = document.getElementById('ssn-site-language');
             if (config) {
                 try { translations = JSON.parse(config.textContent); } catch (_) { translations = {}; }
             }
         }
-        return translations && Object.prototype.hasOwnProperty.call(translations, label) ? translations[label] : label;
+        var result = translations && Object.prototype.hasOwnProperty.call(translations, label) ? translations[label] : label;
+        if (values) result = result.replace(/\{(\d+)\}/g, function (match, index) {
+            return index < values.length ? String(values[index]) : match;
+        });
+        return result;
     }
     if (!window.SSNSiteTranslate) window.SSNSiteTranslate = t;
     var navigation = [

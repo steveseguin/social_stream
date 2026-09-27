@@ -157,6 +157,7 @@ async function checkHeader(page) {
                 assert.ok((await page.locator('#parameter-target-context').textContent()).includes(countText));
             }
             if (relative === 'docs/overlay-gallery.html') {
+                assert.doesNotMatch(await page.locator('#gallery-count').textContent(), /\{\d+\}/, 'Translated gallery count uses numbers');
                 if (!(await page.locator('#gallery-setup').getAttribute('open'))) await page.locator('#gallery-setup > summary').click();
                 await page.locator('#gallery-session').fill('translation-test');
                 const targets = await page.locator('.gallery-open').evaluateAll(links => links.map(link => ({path:link.pathname,session:new URL(link.href).searchParams.get('session')})));
@@ -167,6 +168,18 @@ async function checkHeader(page) {
             }
             console.log('Checked ' + relative);
         }
+        await page.goto(origin + '/beta/docs/overlay-gallery.html');
+        const totalOverlays = await page.locator('.gallery-card').count();
+        assert.equal(await page.locator('#gallery-count').textContent(), totalOverlays + ' of ' + totalOverlays + ' overlays');
+        await page.locator('#gallery-search').fill('no-such-overlay-count-check');
+        assert.equal(await page.locator('#gallery-count').textContent(), '0 of ' + totalOverlays + ' overlays');
+        await page.goto(origin + '/beta/docs/templates.html');
+        const totalTemplates = await page.locator('.template-card:visible').count();
+        assert.equal(await page.locator('#template-results').textContent(), totalTemplates + ' templates shown');
+        await page.locator('#template-search-input').fill(await page.locator('.template-card h3').first().textContent());
+        const filteredTemplates = await page.locator('.template-card:visible').count();
+        assert.ok(filteredTemplates > 0 && filteredTemplates < totalTemplates);
+        assert.equal(await page.locator('#template-results').textContent(), filteredTemplates + ' templates shown');
         assert.deepEqual(errors,[],'JavaScript errors');
         assert.deepEqual(failed,[],'Missing local resources');
         fs.mkdirSync(path.join(root,'.codex-tmp/site-translations'),{recursive:true});
