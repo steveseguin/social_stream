@@ -65,7 +65,8 @@ function htmlFiles(directory) {
                 if (language === 'es') assert.equal(await page.locator('#game-count').textContent(),'1 juego o interacción con el chat');
             }
             if (relative === 'docs/index.html') {
-                const searchTerms = {es:'superposición', 'pt-br':'sobreposição', ru:'оверлей', fr:'superposition', de:'Über'};
+                const searchTerms = {es:'superposición', 'pt-br':'sobreposição', ru:'оверлей', fr:'superposition', de:'Über',
+                    ja:'チャット', 'zh-cn':'聊天', 'zh-tw':'聊天', it:'impostazioni', pl:'ustawienia'};
                 await page.locator('#search').fill(searchTerms[language]);
                 await page.waitForFunction(() => document.querySelectorAll('#searchResults a').length > 0);
                 const targets = await page.locator('#searchResults a').evaluateAll(links => links.map(link => link.pathname));
@@ -75,6 +76,14 @@ function htmlFiles(directory) {
                 assert.deepEqual(metadata, targets.map(target => guideLabel + ' · ' + target.slice(('/beta/' + language + '/docs/').length)), 'Translated search-result labels: ' + language);
                 const advanced = page.locator('#content a[href*="?file="]');
                 assert.ok((await advanced.getAttribute('href')).includes('/beta/docs/index.html?file='));
+                const additionalQueries = language === 'ja' ? ['音', 'ブラ'] : /^zh-/.test(language) ? ['聊'] : [];
+                for (const query of additionalQueries) {
+                    await page.locator('#search').fill('');
+                    await page.waitForFunction(() => document.getElementById('searchResults').hidden);
+                    await page.locator('#search').fill(query);
+                    await page.waitForFunction(() => !document.getElementById('searchResults').hidden && document.querySelectorAll('#searchResults a').length > 0);
+                    assert.ok(await page.locator('#searchResults a').count(), 'CJK search: ' + query);
+                }
             }
             if (relative === 'docs/supported-sites.html') {
                 await page.locator('.site-item').first().click();

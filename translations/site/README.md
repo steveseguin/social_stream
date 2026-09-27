@@ -6,7 +6,9 @@ public HTML guides in `docs/`, and the linked legal, font, actions, Lite and
 Stream Deck guide pages (97 pages at the time of this expansion).
 
 Supported catalogs are Spanish (`es`), Brazilian Portuguese (`pt-br`), Russian
-(`ru`), French (`fr`) and German (`de`). `publish.json` selects the complete
+(`ru`), French (`fr`), German (`de`), Japanese (`ja`), Simplified Chinese
+(`zh-cn`), Traditional Chinese (`zh-tw`), Italian (`it`) and Polish (`pl`).
+`publish.json` selects the complete
 editions to publish. A configured language must translate every required string;
 missing translations fail the build. Partial catalogs can be saved without
 adding their language to that list.
@@ -64,7 +66,10 @@ out of the sitemap. The workflow explicitly stages generated language folders
 so copied ignore rules cannot omit them.
 
 Each generated documentation library has its own translated search index.
-Search retains Unicode letters, including Cyrillic, and folds Latin accents.
+Search retains Unicode letters, including Cyrillic and Japanese voiced kana,
+and folds Latin accents. Chinese and Japanese text is indexed as individual
+characters and adjacent character pairs, so searches also work within text
+without spaces. A single Chinese or Japanese character can be searched.
 The legacy three-page Spanish pilot command and tests remain available for
 compatibility; expanded builds replace its notice with the language menu.
 

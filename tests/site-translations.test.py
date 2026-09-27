@@ -192,6 +192,20 @@ class ExpandedTests(unittest.TestCase):
                     self.assertEqual(urljoin(current, app_href),
                         'https://socialstream.ninja' + prefix + '/actions/?session=example#top')
 
+    def test_search_finds_cjk_words_inside_sentences_and_preserves_voiced_kana(self):
+        catalog = self.root / 'translations/site/ja.json'
+        catalog.write_text(json.dumps({'ui': {}, 'strings': {
+            'Live chat': '配信チャットで音声を設定',
+            'Setup': 'ブラウザーでOBS设置と語音設定を確認',
+            'Link': 'リンク'
+        }}, ensure_ascii=False), encoding='utf-8')
+        self.build('ja')
+        index = json.loads((self.root / 'ja/docs/search-index.json').read_text(encoding='utf-8'))
+        for term in ('チャ', 'ャッ', 'ット', '音声', '音', '設定', '设置', '語音', 'ブラ'):
+            self.assertIn(term, index['terms'])
+            self.assertEqual(index['terms'][term][0][0], 0)
+        self.assertNotIn('フラ', index['terms'])
+
     def test_dynamic_copy_and_placeholders_are_required(self):
         path = self.root / 'translations/site/runtime/docs--guide.html.json'
         path.parent.mkdir(parents=True)
