@@ -37,6 +37,7 @@ function htmlFiles(directory) {
             await page.goto(origin + '/beta/' + language + '/' + relative);
             await page.waitForLoadState('networkidle');
             assert.equal(await page.locator('html').getAttribute('lang'), language,relative);
+            if (language === 'ar') assert.equal(await page.locator('html').getAttribute('dir'), 'rtl', relative);
             assert.equal(await page.locator('[data-site-language-picker]').count(),1,relative);
             const picker = page.locator('[data-site-language-picker]');
             if (await picker.isVisible()) {
@@ -66,7 +67,8 @@ function htmlFiles(directory) {
             }
             if (relative === 'docs/index.html') {
                 const searchTerms = {es:'superposición', 'pt-br':'sobreposição', ru:'оверлей', fr:'superposition', de:'Über',
-                    ja:'チャット', 'zh-cn':'聊天', 'zh-tw':'聊天', it:'impostazioni', pl:'ustawienia'};
+                    ja:'チャット', 'zh-cn':'聊天', 'zh-tw':'聊天', it:'impostazioni', pl:'ustawienia',
+                    ko:'채팅', uk:'чат', ar:'الدردشة', tr:'sohbet', cs:'nastavení', th:'ข้อความ'};
                 await page.locator('#search').fill(searchTerms[language]);
                 await page.waitForFunction(() => document.querySelectorAll('#searchResults a').length > 0);
                 const targets = await page.locator('#searchResults a').evaluateAll(links => links.map(link => link.pathname));
@@ -76,13 +78,13 @@ function htmlFiles(directory) {
                 assert.deepEqual(metadata, targets.map(target => guideLabel + ' · ' + target.slice(('/beta/' + language + '/docs/').length)), 'Translated search-result labels: ' + language);
                 const advanced = page.locator('#content a[href*="?file="]');
                 assert.ok((await advanced.getAttribute('href')).includes('/beta/docs/index.html?file='));
-                const additionalQueries = language === 'ja' ? ['音', 'ブラ'] : /^zh-/.test(language) ? ['聊'] : [];
+                const additionalQueries = language === 'ja' ? ['音', 'ブラ'] : /^zh-/.test(language) ? ['聊'] : language === 'th' ? ['ขยาย', 'โอเพนซอร์ส'] : [];
                 for (const query of additionalQueries) {
                     await page.locator('#search').fill('');
                     await page.waitForFunction(() => document.getElementById('searchResults').hidden);
                     await page.locator('#search').fill(query);
                     await page.waitForFunction(() => !document.getElementById('searchResults').hidden && document.querySelectorAll('#searchResults a').length > 0);
-                    assert.ok(await page.locator('#searchResults a').count(), 'CJK search: ' + query);
+                    assert.ok(await page.locator('#searchResults a').count(), 'Localized search: ' + query);
                 }
             }
             if (relative === 'docs/supported-sites.html') {

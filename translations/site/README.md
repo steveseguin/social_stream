@@ -7,7 +7,9 @@ Stream Deck guide pages (97 pages at the time of this expansion).
 
 Supported catalogs are Spanish (`es`), Brazilian Portuguese (`pt-br`), Russian
 (`ru`), French (`fr`), German (`de`), Japanese (`ja`), Simplified Chinese
-(`zh-cn`), Traditional Chinese (`zh-tw`), Italian (`it`) and Polish (`pl`).
+(`zh-cn`), Traditional Chinese (`zh-tw`), Italian (`it`), Polish (`pl`), Korean
+(`ko`), Ukrainian (`uk`), Arabic (`ar`), Turkish (`tr`), Czech (`cs`) and Thai
+(`th`). Arabic pages use right-to-left layout with left-to-right code examples.
 `publish.json` selects the complete
 editions to publish. A configured language must translate every required string;
 missing translations fail the build. Partial catalogs can be saved without
@@ -70,6 +72,7 @@ Search retains Unicode letters, including Cyrillic and Japanese voiced kana,
 and folds Latin accents. Chinese and Japanese text is indexed as individual
 characters and adjacent character pairs, so searches also work within text
 without spaces. A single Chinese or Japanese character can be searched.
+Thai searches also match text within words written without spaces.
 The legacy three-page Spanish pilot command and tests remain available for
 compatibility; expanded builds replace its notice with the language menu.
 

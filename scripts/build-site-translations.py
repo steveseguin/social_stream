@@ -19,9 +19,11 @@ from urllib.parse import parse_qs, quote, urlsplit, urlunsplit
 PAGES = ("index.html", "docs/download.html", "docs/getting-started.html")
 LANGUAGE = "es"
 LANGUAGES = {"es": "Español", "pt-br": "Português (Brasil)", "ru": "Русский", "fr": "Français", "de": "Deutsch",
-             "ja": "日本語", "zh-cn": "简体中文", "zh-tw": "繁體中文", "it": "Italiano", "pl": "Polski"}
+             "ja": "日本語", "zh-cn": "简体中文", "zh-tw": "繁體中文", "it": "Italiano", "pl": "Polski",
+             "ko": "한국어", "uk": "Українська", "ar": "العربية", "tr": "Türkçe", "cs": "Čeština", "th": "ไทย"}
 LOCALES = {"es": "es_ES", "pt-br": "pt_BR", "ru": "ru_RU", "fr": "fr_FR", "de": "de_DE",
-           "ja": "ja_JP", "zh-cn": "zh_CN", "zh-tw": "zh_TW", "it": "it_IT", "pl": "pl_PL"}
+           "ja": "ja_JP", "zh-cn": "zh_CN", "zh-tw": "zh_TW", "it": "it_IT", "pl": "pl_PL",
+           "ko": "ko_KR", "uk": "uk_UA", "ar": "ar_AR", "tr": "tr_TR", "cs": "cs_CZ", "th": "th_TH"}
 ORIGIN = "https://socialstream.ninja"
 LANGUAGE_BLOCK = re.compile(r"<!-- ssn-languages:start -->[\s\S]*?<!-- ssn-languages:end -->")
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
@@ -310,6 +312,8 @@ def render(source_page, document, catalog, language=LANGUAGE, pages=PAGES, expan
         if tag == "html":
             root = posixpath.relpath(".", posixpath.dirname(localized_page)) + "/"
             updated = updated[:-1] + ' data-site-root="' + root + '" data-site-language="' + language + '">'
+            if language == "ar":
+                updated = updated[:-1] + ' dir="rtl">'
         if updated != raw:
             changes.append((start, end, updated))
     # The pilot has no production canonical/hreflang targets until publication.

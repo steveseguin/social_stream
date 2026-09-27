@@ -174,7 +174,7 @@ jobs:
           git config user.email "actions@github.com"
           git add .
           # Copied checkout ignore files exclude generated language directories.
-          for language in es pt-br ru fr de ja zh-cn zh-tw it pl; do
+          for language in es pt-br ru fr de ja zh-cn zh-tw it pl ko uk ar tr cs th; do
             if [ -d "$language" ]; then git add --force -- "$language"; fi
             if [ -d "beta/$language" ]; then git add --force -- "beta/$language"; fi
           done
