@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minecraft Alert Overlay</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap">
+  <style>
+    @font-face {
+      font-family: 'MinecraftFallback';
+      src: local('Silkscreen'), local('Press Start 2P'), local('Courier New');
+    }
+
+    :root {
+      --overlay-scale: 1;
+      --media-scale: 1;
+      --headline-scale: 1;
+      --detail-scale: 1;
+      --alert-accent: #5dbd3a;
+      --alert-accent-rgb: 93, 189, 58;
+      --text-main: #ffffff;
+      --text-muted: #b8b8b8;
+      --text-shadow-color: #3f3f3f;
+      --progress-duration: 8000ms;
+
+      /* Minecraft palette */
+      --mc-dirt: #8b6b3e;
+      --mc-dirt-dark: #6b4f2e;
+      --mc-grass: #5d8c3e;
+      --mc-grass-bright: #7cba4f;
+      --mc-stone: #7f7f7f;
+      --mc-stone-dark: #535353;
+      --mc-diamond: #2cb9a8;
+      --mc-diamond-bright: #5ce8d6;
+      --mc-gold: #dda520;
+      --mc-gold-bright: #fcdb4d;
+      --mc-redstone: #d44040;
+      --mc-redstone-bright: #ff5c5c;
+      --mc-emerald: #17d659;
+      --mc-emerald-bright: #41f07b;
+      --mc-obsidian: #1b0e2e;
+      --mc-obsidian-mid: #2d1a4a;
+      --mc-xp-green: #7efc20;
+      --mc-border-dark: #1d1108;
+      --mc-border-light: #c6a96a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: transparent;
+      color: var(--text-main);
+      font-family: 'Silkscreen', 'Press Start 2P', 'Courier New', monospace;
+    }
+
+    body {
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-start;
+      padding: 36px;
+    }
+
+    body[data-align="center"] {
+      justify-content: center;
+    }
+
+    body[data-align="right"] {
+      justify-content: flex-end;
+    }
+
+    body.embedded-mode {
+      padding: 14px;
+      align-items: center;
+    }
+
+    #alert-stage {
+      width: min(920px, 100%);
+      transform: scale(var(--overlay-scale));
+      transform-origin: bottom left;
+      pointer-events: none;
+    }
+
+    body[data-align="center"] #alert-stage {
+      transform-origin: center bottom;
+    }
+
+    body[data-align="right"] #alert-stage {
+      transform-origin: bottom right;
+    }
+
+    /* ── Status chip ── */
+    .status-chip {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border: 4px solid var(--mc-stone-dark);
+      border-top-color: var(--mc-stone);
+      border-left-color: var(--mc-stone);
+      background: rgba(0, 0, 0, 0.72);
+      color: #aaa;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-shadow: 2px 2px 0px #000;
+      image-rendering: pixelated;
+    }
+
+    .embedded-mode .status-chip {
+      opacity: 0.78;
+    }
+
+    body.show-status .status-chip {
+      display: inline-flex;
+    }
+
+    #alert-stage.has-alert + .status-chip {
+      display: none !important;
+    }
+
+    /* ── Alert card ── */
+    .alert-card {
+      width: min(820px, 100%);
+      position: relative;
+      padding-top: 10px;
+      padding-bottom: 8px;
+      animation: mcSlideIn 300ms steps(6) forwards;
+      pointer-events: none;
+    }
+
+    .alert-card.is-hiding {
+      animation: mcSlideOut 260ms steps(5) forwards;
+    }
+
+    .alert-card.compact {
+      width: min(680px, 100%);
+      padding-top: 8px;
+    }
+
+    /* Remove the default glow pseudo-element */
+    .alert-card::before {
+      display: none;
+    }
+
+    /* ── Header row ── */
+    .alert-header {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 0 6px;
+      margin-bottom: -14px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .alert-header-spacer {
+      flex: 1 1 auto;
+    }
+
+    /* ── Title badge — the category label ── */
+    .alert-title {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 5px 16px;
+      border: 3px solid;
+      border-color: var(--mc-border-light) var(--mc-border-dark) var(--mc-border-dark) var(--mc-border-light);
+      background: var(--mc-grass);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.6);
+      image-rendering: pixelated;
+    }
+
+    .compact .alert-title {
+      min-height: 30px;
+      padding: 4px 12px;
+      font-size: 11px;
+    }
+
+    /* ── Source badge ── */
+    .source-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 4px 14px;
+      border: 3px solid;
+      border-color: #888 #333 #333 #888;
+      background: var(--mc-stone-dark);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-shadow: 2px 2px 0px #000;
+      image-rendering: pixelated;
+    }
+
+    .compact .source-badge {
+      min-height: 30px;
+      padding: 4px 12px;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .source-badge img {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    .compact .source-badge img {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ── Shell — the main alert body ── */
+    .alert-shell {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 14px;
+      align-items: center;
+      min-height: 102px;
+      padding: 24px 18px 18px 18px;
+      /* Minecraft inventory/dialog box style border */
+      border: 4px solid;
+      border-color: var(--mc-border-light) var(--mc-border-dark) var(--mc-border-dark) var(--mc-border-light);
+      background:
+        repeating-linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0.03) 0px,
+          rgba(0, 0, 0, 0.03) 2px,
+          transparent 2px,
+          transparent 4px
+        ),
+        linear-gradient(135deg, rgba(60, 40, 20, 0.95), rgba(75, 55, 30, 0.92));
+      box-shadow:
+        inset 0 0 0 2px rgba(0, 0, 0, 0.35),
+        0 6px 0 rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+      image-rendering: pixelated;
+    }
+
+    /* Replace the left accent stripe with a Minecraft-style block strip */
+    .alert-shell::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 6px;
+      background: repeating-linear-gradient(
+        180deg,
+        var(--alert-accent) 0px,
+        var(--alert-accent) 6px,
+        rgba(0, 0, 0, 0.3) 6px,
+        rgba(0, 0, 0, 0.3) 8px
+      );
+      image-rendering: pixelated;
+    }
+
+    /* Top edge highlight */
+    .alert-shell::after {
+      content: "";
+      position: absolute;
+      left: 6px;
+      right: 0;
+      top: 0;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04));
+      pointer-events: none;
+    }
+
+    .alert-shell.has-avatar {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .alert-shell.has-media {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .alert-shell.has-avatar.has-media {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    .compact .alert-shell {
+      gap: 12px;
+      min-height: 86px;
+      padding: 20px 16px 15px 16px;
+    }
+
+    /* ── Avatar — square Minecraft-style head ── */
+    .alert-avatar {
+      width: 64px;
+      height: 64px;
+      border: 3px solid;
+      border-color: #888 #333 #333 #888;
+      overflow: hidden;
+      background: var(--mc-stone-dark);
+      position: relative;
+      z-index: 1;
+      /* No border-radius — square like a Minecraft head */
+    }
+
+    .compact .alert-avatar {
+      width: 52px;
+      height: 52px;
+    }
+
+    .alert-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    /* ── Copy region ── */
+    .alert-copy {
+      min-width: 0;
+      display: grid;
+      gap: 5px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Headline ── */
+    .alert-headline {
+      font-size: clamp(calc(18px * var(--headline-scale)), calc(2.8vw * var(--headline-scale)), calc(32px * var(--headline-scale)));
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-shadow:
+        2px 2px 0px rgba(0, 0, 0, 0.7),
+        4px 4px 0px rgba(0, 0, 0, 0.25);
+    }
+
+    .compact .alert-headline {
+      font-size: clamp(calc(15px * var(--headline-scale)), calc(2.2vw * var(--headline-scale)), calc(26px * var(--headline-scale)));
+    }
+
+    .alert-actor {
+      color: var(--alert-accent);
+      text-shadow:
+        2px 2px 0px rgba(0, 0, 0, 0.7),
+        4px 4px 0px rgba(0, 0, 0, 0.2);
+    }
+
+    .alert-tail {
+      color: #e0e0e0;
+    }
+
+    /* ── Subtitle ── */
+    .alert-subtitle {
+      font-size: calc(10px * var(--detail-scale));
+      line-height: 1.4;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--alert-accent);
+      opacity: 0.95;
+      max-width: 62ch;
+      text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ── Message body ── */
+    .alert-message {
+      font-size: calc(12px * var(--detail-scale));
+      line-height: 1.45;
+      color: var(--text-muted);
+      max-width: 54ch;
+      text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
+    }
+
+    .alert-message img {
+      max-width: 100%;
+      max-height: 2.4em;
+      vertical-align: middle;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    .compact .alert-subtitle {
+      font-size: calc(9px * var(--detail-scale));
+    }
+
+    .compact .alert-message {
+      font-size: calc(11px * var(--detail-scale));
+    }
+
+    /* ── Meta pills ── */
+    .alert-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .alert-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: calc(26px * var(--detail-scale));
+      padding: 2px calc(10px * var(--detail-scale));
+      border: 2px solid;
+      border-color: #777 #333 #333 #777;
+      background: rgba(0, 0, 0, 0.4);
+      color: #ddd;
+      font-size: calc(10px * var(--detail-scale));
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      text-shadow: 1px 1px 0px #000;
+    }
+
+    .compact .alert-pill {
+      min-height: calc(22px * var(--detail-scale));
+      padding: 1px calc(8px * var(--detail-scale));
+    }
+
+    .alert-amount {
+      color: #fff;
+      background: rgba(var(--alert-accent-rgb), 0.35);
+      border-color: rgba(var(--alert-accent-rgb), 0.7) rgba(0, 0, 0, 0.4) rgba(0, 0, 0, 0.4) rgba(var(--alert-accent-rgb), 0.7);
+    }
+
+    /* ── Media thumbnail ── */
+    .alert-media {
+      width: calc(150px * var(--media-scale));
+      height: calc(90px * var(--media-scale));
+      overflow: hidden;
+      border: 3px solid;
+      border-color: #888 #333 #333 #888;
+      background: var(--mc-stone-dark);
+      justify-self: end;
+      position: relative;
+      z-index: 1;
+    }
+
+    .alert-media::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 20px;
+      background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.5));
+      pointer-events: none;
+    }
+
+    .compact .alert-media {
+      width: calc(120px * var(--media-scale));
+      height: calc(72px * var(--media-scale));
+    }
+
+    .alert-media img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+      object-position: center;
+      image-rendering: pixelated;
+    }
+
+    .alert-media video {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    /* ── Progress bar — XP bar style ── */
+    .alert-progress {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 4px;
+      height: 6px;
+      overflow: hidden;
+      border: 2px solid;
+      border-color: #222 #555 #555 #222;
+      background: #0a0a0a;
+    }
+
+    .alert-progress::after {
+      content: "";
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--mc-xp-green) 0px,
+        var(--mc-xp-green) 4px,
+        rgba(0, 0, 0, 0.2) 4px,
+        rgba(0, 0, 0, 0.2) 6px
+      );
+      transform-origin: left center;
+      animation: progressShrink var(--progress-duration) linear forwards;
+    }
+
+    /* ════════════════════════════════════════════
+       Per-category Minecraft block themes
+       ════════════════════════════════════════════ */
+
+    /* ── FOLLOW — Grass Block ── */
+    .category-follow .alert-title {
+      background: var(--mc-grass);
+      border-color: var(--mc-grass-bright) var(--mc-grass) var(--mc-grass) var(--mc-grass-bright);
+    }
+
+    .category-follow .alert-shell {
+      background:
+        repeating-linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0.04) 0px,
+          rgba(0, 0, 0, 0.04) 2px,
+          transparent 2px,
+          transparent 4px
+        ),
+        linear-gradient(180deg, var(--mc-grass) 0%, var(--mc-grass) 18%, var(--mc-dirt) 18%, var(--mc-dirt-dark) 100%);
+      border-color: var(--mc-grass-bright) var(--mc-dirt-dark) var(--mc-dirt-dark) var(--mc-grass-bright);
+    }
+
+    .category-follow .alert-shell::before {
+      background: repeating-linear-gradient(
+        180deg,
+        var(--mc-grass-bright) 0px,
+        var(--mc-grass-bright) 6px,
+        var(--mc-dirt) 6px,
+        var(--mc-dirt) 8px
+      );
+    }
+
+    /* ── SUBSCRIPTION — Diamond Block ── */
+    .category-subscription .alert-title {
+      background: var(--mc-diamond);
+      border-color: var(--mc-diamond-bright) #1a7a6e #1a7a6e var(--mc-diamond-bright);
+    }
+
+    .category-subscription .alert-shell {
+      background:
+        repeating-linear-gradient(
+          45deg,
+          rgba(255, 255, 255, 0.04) 0px,
+          rgba(255, 255, 255, 0.04) 4px,
+          transparent 4px,
+          transparent 8px
+        ),
+        linear-gradient(135deg, #1a6b62, #1e8a7e, #1a6b62);
+      border-color: var(--mc-diamond-bright) #145a52 #145a52 var(--mc-diamond-bright);
+    }
+
+    .category-subscription .alert-shell::before {
+      background: repeating-linear-gradient(
+        180deg,
+        var(--mc-diamond-bright) 0px,
+        var(--mc-diamond-bright) 6px,
+        #145a52 6px,
+        #145a52 8px
+      );
+    }
+
+    .category-subscription .alert-progress::after {
+      background: repeating-linear-gradient(
+        90deg,
+        var(--mc-diamond-bright) 0px,
+        var(--mc-diamond-bright) 4px,
+        rgba(0, 0, 0, 0.25) 4px,
+        rgba(0, 0, 0, 0.25) 6px
+      );
+    }
+
+    /* ── DONATION — Gold Block ── */
+    .category-donation .alert-title {
+      background: var(--mc-gold);
+      border-color: var(--mc-gold-bright) #9a7014 #9a7014 var(--mc-gold-bright);
+    }
+
+    .category-donation .alert-shell {
+      background:
+        repeating-linear-gradient(
+          0deg,
+          rgba(255, 255, 255, 0.03) 0px,
+          rgba(255, 255, 255, 0.03) 2px,
+          transparent 2px,
+          transparent 4px
+        ),
+        linear-gradient(135deg, #8a6a14, #a87e1e, #8a6a14);
+      border-color: var(--mc-gold-bright) #6a4e0c #6a4e0c var(--mc-gold-bright);
+    }
+
+    .category-donation .alert-shell::before {
+      background: repeating-linear-gradient(
+        180deg,
+        var(--mc-gold-bright) 0px,
+        var(--mc-gold-bright) 6px,
+        #6a4e0c 6px,
+        #6a4e0c 8px
+      );
+    }
+
+    .category-donation .alert-progress::after {
+      background: repeating-linear-gradient(
+        90deg,
+        var(--mc-gold-bright) 0px,
+        var(--mc-gold-bright) 4px,
+        rgba(0, 0, 0, 0.25) 4px,
+        rgba(0, 0, 0, 0.25) 6px
+      );
+    }
+
+    /* ── BITS — Redstone Block ── */
+    .category-bits .alert-title {
+      background: var(--mc-redstone);
+      border-color: var(--mc-redstone-bright) #8a2020 #8a2020 var(--mc-redstone-bright);
+    }
+
+    .category-bits .alert-shell {
+      background:
+        repeating-linear-gradient(
+          90deg,
+          rgba(255, 60, 60, 0.05) 0px,
+          rgba(255, 60, 60, 0.05) 4px,
+          transparent 4px,
+          transparent 8px
+        ),
+        linear-gradient(135deg, #6a2020, #8a3030, #6a2020);
+      border-color: var(--mc-redstone-bright) #4a1414 #4a1414 var(--mc-redstone-bright);
+    }
+
+    .category-bits .alert-shell::before {
+      background: repeating-linear-gradient(
+        180deg,
+        var(--mc-redstone-bright) 0px,
+        var(--mc-redstone-bright) 6px,
+        #4a1414 6px,
+        #4a1414 8px
+      );
+    }
+
+    .category-bits .alert-progress::after {
+      background: repeating-linear-gradient(
+        90deg,
+        var(--mc-redstone-bright) 0px,
+        var(--mc-redstone-bright) 4px,
+        rgba(0, 0, 0, 0.25) 4px,
+        rgba(0, 0, 0, 0.25) 6px
+      );
+    }
+
+    /* Redstone pulse glow */
+    .category-bits .alert-shell {
+      animation: redstonePulse 1.5s steps(3) infinite;
+    }
+
+    @keyframes redstonePulse {
+      0%, 100% { box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.35), 0 6px 0 rgba(0, 0, 0, 0.4); }
+      50% { box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.35), 0 6px 0 rgba(0, 0, 0, 0.4), 0 0 12px rgba(255, 60, 60, 0.3); }
+    }
+
+    /* ── RAID — Obsidian / Nether Portal ── */
+    .category-raid .alert-title {
+      background: var(--mc-obsidian-mid);
+      border-color: #6a3fa0 var(--mc-obsidian) var(--mc-obsidian) #6a3fa0;
+      color: #d4a0ff;
+    }
+
+    .category-raid .alert-shell {
+      background:
+        repeating-linear-gradient(
+          0deg,
+          rgba(100, 40, 180, 0.06) 0px,
+          rgba(100, 40, 180, 0.06) 4px,
+          transparent 4px,
+          transparent 8px
+        ),
+        linear-gradient(135deg, var(--mc-obsidian), var(--mc-obsidian-mid), var(--mc-obsidian));
+      border-color: #6a3fa0 #0e0718 #0e0718 #6a3fa0;
+    }
+
+    .category-raid .alert-shell::before {
+      background: repeating-linear-gradient(
+        180deg,
+        #a855f7 0px,
+        #a855f7 6px,
+        #3b1466 6px,
+        #3b1466 8px
+      );
+      /* Nether portal shimmer */
+      animation: portalShimmer 2s steps(4) infinite;
+    }
+
+    @keyframes portalShimmer {
+      0%, 100% { opacity: 1; }
+      25% { opacity: 0.7; }
+      50% { opacity: 1; }
+      75% { opacity: 0.8; }
+    }
+
+    .category-raid .alert-progress::after {
+      background: repeating-linear-gradient(
+        90deg,
+        #a855f7 0px,
+        #a855f7 4px,
+        rgba(0, 0, 0, 0.3) 4px,
+        rgba(0, 0, 0, 0.3) 6px
+      );
+    }
+
+    .category-raid .alert-actor {
+      color: #d4a0ff;
+    }
+
+    /* ════════════════════════════════════════════
+       Default theme overrides (no theme- classes needed)
+       ════════════════════════════════════════════ */
+
+    /* Override any theme-* class styles from multi-alerts.js to be no-ops */
+    .theme-classic .alert-shell,
+    .theme-twitch .alert-shell,
+    .theme-minimal .alert-shell {
+      border-radius: 0;
+    }
+
+    .theme-classic .alert-shell::before,
+    .theme-twitch .alert-shell::before,
+    .theme-minimal .alert-shell::before {
+      width: 6px;
+    }
+
+    .theme-classic .alert-title,
+    .theme-twitch .alert-title,
+    .theme-minimal .alert-title {
+      border-radius: 0;
+    }
+
+    /* Force no border-radius anywhere — Minecraft is blocky */
+    .alert-card,
+    .alert-shell,
+    .alert-title,
+    .source-badge,
+    .alert-avatar,
+    .alert-pill,
+    .alert-amount,
+    .alert-media,
+    .alert-progress,
+    .status-chip {
+      border-radius: 0 !important;
+    }
+
+    /* ── Animations ── */
+    @keyframes mcSlideIn {
+      0% {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+      33% {
+        opacity: 0.5;
+        transform: translateY(16px);
+      }
+      66% {
+        opacity: 0.85;
+        transform: translateY(6px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes mcSlideOut {
+      0% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      50% {
+        opacity: 0.5;
+        transform: translateY(10px);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+    }
+
+    @keyframes progressShrink {
+      from {
+        transform: scaleX(1);
+      }
+      to {
+        transform: scaleX(0);
+      }
+    }
+
+    /* ── Mobile responsive ── */
+    @media (max-width: 720px) {
+      body {
+        padding: 18px;
+      }
+
+      .alert-header {
+        flex-wrap: wrap;
+        margin-bottom: -10px;
+      }
+
+      .alert-header-spacer {
+        display: none;
+      }
+
+      .alert-shell,
+      .alert-shell.has-avatar,
+      .alert-shell.has-media,
+      .alert-shell.has-avatar.has-media {
+        grid-template-columns: 1fr;
+        align-items: flex-start;
+      }
+
+      .alert-avatar {
+        width: 48px;
+        height: 48px;
+      }
+
+      .alert-media,
+      .compact .alert-media {
+        width: min(100%, calc(200px * var(--media-scale)));
+        height: calc(112px * var(--media-scale));
+        justify-self: start;
+      }
+
+      .compact .alert-shell {
+        min-height: 0;
+      }
+    }
+  </style>
+</head>
+<body data-align="left">
+  <div id="alert-stage" aria-live="polite" aria-atomic="true"></div>
+  <div id="alert-status" class="status-chip">Waiting for alerts</div>
+  <audio id="custom-alert-audio" preload="auto"></audio>
+  <script type="text/javascript" src="tts.js"></script>
+  <script type="text/javascript" src="./libs/colours.js"></script>
+  <script type="text/javascript" src="./multi-alerts.js"></script>
+</body>
+</html>

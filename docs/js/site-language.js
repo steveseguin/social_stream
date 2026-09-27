@@ -53,7 +53,7 @@
     };
     // Only saved, authored website text is translated. Never change code,
     // editable content, form values or marked user submissions.
-    var skip = 'script,style,code,pre,svg,textarea,[contenteditable],[translate="no"],[data-site-language-picker]';
+    var skip = 'script,style,code,pre,svg,textarea,.code,.code-js,.url-example,[contenteditable],[translate="no"],[data-site-language-picker]';
     var seen = new WeakMap();
     function textNode(node) {
         if (!node.parentElement || node.parentElement.closest(skip)) return;

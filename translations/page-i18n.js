@@ -1,5 +1,7 @@
 (function (global) {
 	"use strict";
+	// Published website editions own their saved text and document language.
+	if (document.documentElement.hasAttribute("data-site-language")) return;
 
 	var scriptUrl = document.currentScript && document.currentScript.src
 		? document.currentScript.src

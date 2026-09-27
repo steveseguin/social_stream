@@ -37,8 +37,8 @@ async function testEmoteWall(browser, baseUrl) {
     await configureContext(context, baseUrl);
     const relay = await installRelay(await context.newPage());
     const source = fs.readFileSync(path.join(root, 'emotes.html'), 'utf8');
-    // Isolated positive control: restore only the vulnerable conversion in a served copy.
-    const guard = /if \(data\.textonly === true\) \{\s*tmp\.textContent = data\.chatmessage;\s*\} else \{\s*tmp\.innerHTML = data\.chatmessage;\s*\}/;
+    // Historical positive control: disable both body checks in a served copy.
+    const guard = /if \(data\.textonly === true\) \{\s*tmp\.textContent = data\.chatmessage;\s*\} else \{\s*tmp\.innerHTML = \(window\.SocialStreamChatHTML \? SocialStreamChatHTML\.sanitize\(data\.chatmessage\) : fallbackEscapeHtml\(data\.chatmessage\)\);\s*\}/;
     assert.ok(guard.test(source), 'Locate the production text-only guard');
     const unsafe = source.replace(guard, 'tmp.innerHTML = data.chatmessage;');
     const pageErrors = [];

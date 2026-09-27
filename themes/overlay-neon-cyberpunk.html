@@ -676,10 +676,10 @@ body.intensegfx .message { animation: glitch-effect 0.18s ease-in-out; }
             `<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${escapeCssUrlAttribute(data.chatimg)}');"></div></div>` : '';
         const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="color: ${data.nameColor}; text-shadow: 0 0 10px ${data.nameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';
         const membershipHtml = data.membership ? `<div class="membership-status">${fallbackEscapeHtml(data.membership)}</div>` : '';
-        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
         const messageTextHtml = data.textonly ? 
-            `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage.replace(/</g, '&lt;').replace(/>/g, '&gt;') : ''}<span class="cursor"></span></div>` :
-            `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage : ''}<span class="cursor"></span></div>`;
+            `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? fallbackEscapeHtml(data.chatmessage) : ''}<span class="cursor"></span></div>` :
+            `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage) : fallbackEscapeHtml(data.chatmessage)) : ''}<span class="cursor"></span></div>`;
         const donationHtml = data.hasDonation ? `<div class="donation">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';
         
         const contentImgHtml = data.contentimg ? 

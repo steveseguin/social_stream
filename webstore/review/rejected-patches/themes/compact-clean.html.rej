@@ -1,0 +1,20 @@
+diff a/webstore/candidate/themes/compact-clean.html b/webstore/candidate/themes/compact-clean.html	(rejected hunks)
+@@ -43,6 +43,7 @@ Keep this file Chrome-80 friendly: no <script type="module">, no top-level impor
+     <meta name="robots" content="noindex">
+     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+ <script src="../libs/objects.js"></script>
++<script src="../shared/utils/chatHtml.js"></script>
+ <script src="../shared/utils/chatBadges.js"></script>
+ <link rel="stylesheet" href="../shared/utils/chatBadges.css">
+ <script type="text/javascript" src="../js/local-server-url.js"></script>
+@@ -691,8 +692,8 @@ body.ultra .content-img {
+         var nameHtml = data.chatname
+             ? "<span class='name'" + (accent ? " style='color:" + accent + "'" : "") + ">" + escapeHtml(data.chatname) + "</span>" : "";
+         var membershipHtml = (!stripMemberships && data.membership) ? "<div class='membership'>" + escapeHtml(data.membership) + "</div>" : "";
+-        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+-        var msg = data.chatmessage ? (data.textonly ? escapeHtml(data.chatmessage) : data.chatmessage) : "";
++        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
++        var msg = data.chatmessage ? (data.textonly ? escapeHtml(data.chatmessage) : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage) : fallbackEscapeHtml(data.chatmessage))) : "";
+         var textHtml = msg ? "<div class='text" + (data.event ? " event-text" : "") + "'>" + msg + "</div>" : "";
+         var donation = data.hasDonation || data.donation || "";
+         var donationHtml = donation ? "<div class='donation'>" + escapeHtml(donation) + "</div>" : "";

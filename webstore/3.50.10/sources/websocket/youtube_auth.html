@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>YouTube Sign-In</title>
+	<style>
+		:root {
+			color-scheme: dark;
+			font-family: Arial, Helvetica, sans-serif;
+			background: #101214;
+			color: #f3f4f6;
+		}
+		body {
+			margin: 0;
+			min-height: 100vh;
+			display: grid;
+			place-items: center;
+			background: #101214;
+		}
+		main {
+			width: min(420px, calc(100vw - 32px));
+			border: 1px solid #30363d;
+			border-radius: 8px;
+			padding: 20px;
+			background: #171a1f;
+		}
+		h1 {
+			font-size: 20px;
+			line-height: 1.25;
+			margin: 0 0 8px;
+		}
+		p {
+			color: #c7d0d9;
+			font-size: 14px;
+			line-height: 1.45;
+			margin: 0 0 16px;
+		}
+		.actions {
+			display: flex;
+			gap: 8px;
+			flex-wrap: wrap;
+			margin-top: 16px;
+		}
+		button {
+			border: 0;
+			border-radius: 6px;
+			padding: 9px 12px;
+			background: #2563eb;
+			color: white;
+			font: inherit;
+			cursor: pointer;
+		}
+		button.secondary {
+			background: #374151;
+		}
+		#youtube-auth-status {
+			min-height: 20px;
+			font-size: 13px;
+			color: #d1d5db;
+		}
+		#youtube-auth-status[data-status="error"] {
+			color: #fca5a5;
+		}
+		#youtube-auth-status[data-status="signed-in"] {
+			color: #86efac;
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<h1>YouTube Sign-In</h1>
+		<p>This page stores the YouTube websocket sign-in session used by Social Stream.</p>
+		<div id="youtube-auth-status" aria-live="polite"></div>
+		<div class="actions">
+			<button id="youtube-auth-signin" type="button">Sign in with YouTube</button>
+			<button id="youtube-auth-signout" class="secondary" type="button">Sign out</button>
+		</div>
+	</main>
+	<script src="youtube_auth.js"></script>
+</body>
+</html>

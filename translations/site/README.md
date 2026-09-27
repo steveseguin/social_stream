@@ -1,75 +1,100 @@
-# Spanish website pilot
+# Website translations
 
-English HTML is the source. `es.json` holds saved Spanish translations for the
-homepage, download page and getting-started guide. `ui` supplies the dynamic
-theme, menu and Copy Markdown labels; `strings` translates visible HTML text,
-page metadata and accessibility labels. Product names and code examples retain
-their original spelling. English UI names accompany Spanish instructions where
-needed to match the original screenshots.
+English HTML remains the source. The builder creates separate language folders
+without relocating the site or its applications. It covers the homepage, all
+public HTML guides in `docs/`, and the linked legal, font, actions, Lite and
+Stream Deck guide pages (97 pages at the time of this expansion).
 
-These are AI-authored translations; native-speaker review remains outstanding.
-The screenshots themselves are still English. The pilot notice explains that
-other website pages remain English, including documentation search.
+Supported catalogs are Spanish (`es`), Brazilian Portuguese (`pt-br`), Russian
+(`ru`), French (`fr`) and German (`de`). `publish.json` selects the complete
+editions to publish. A configured language must translate every required string;
+missing translations fail the build. Partial catalogs can be saved without
+adding their language to that list.
+
+Translations are authored by Codex and same-model parallel agents, stored in
+this repository, and served as static files. No online translation service runs
+during builds or visits. Native-speaker review remains outstanding.
 
 ## Build and preview
 
-Run from the checkout:
-
 ```sh
-python scripts/build-site-translations.py
-python scripts/build-site-translations.py --check
+python scripts/build-site-translations.py --language es --all-pages
+python scripts/build-site-translations.py --language es --all-pages --check
 python tests/site-translations.test.py
-node tests/site-translations.browser.cjs --serve
+python tests/pages-seo.test.py
+node tests/site-translations-expanded.browser.cjs
 ```
 
-The browser check needs a local Playwright installation. Set `PLAYWRIGHT_MODULE`
-to its package path if it is not on Node's normal module path. It uses local
-Chromium, blocks external requests and intercepts session redirects rather than
-connecting to an actual chat session. `--serve` leaves the preview running at the
-localhost URL printed after the checks. Stop it with Ctrl+C. Screenshots go to
-`.codex-tmp/site-translations/`.
+The browser check needs Playwright and Chromium. Set `PLAYWRIGHT_MODULE` to the
+installed package path if necessary. `SITE_LANGUAGE` selects the language
+(default `es`); `SITE_PAGES` optionally limits the check to comma-separated
+source paths. It serves the checkout locally under `/beta/`, blocks external
+requests, checks local resources and narrow layouts, and exercises translated
+search, galleries, settings, and language controls.
 
-Generated HTML lives in `es/` and is ignored by Git. CSS, scripts and images stay
-in their existing folders; generated URLs account for the extra language folder.
-Links to translated pages stay Spanish. All other destinations retain their
-English URLs, including query strings and section anchors. Language switches
-preserve the current query and section.
+To preview a partially translated language, specify complete pages:
 
-The Pages workflow builds the pilot inside the assembled **beta** tree, after
-the existing SEO pass, and explicitly stages the generated `beta/es/` folder so
-the copied checkout `.gitignore` cannot exclude it from publication. Its deployed
-addresses will be:
+```sh
+python scripts/build-site-translations.py --language ru --pages index.html docs/download.html docs/getting-started.html
+```
 
-- `/beta/es/`
-- `/beta/es/docs/download.html`
-- `/beta/es/docs/getting-started.html`
+Generated language folders are ignored by Git. Scripts, images and executable
+app pages use their original locations. Guide links stay in the chosen language;
+app links, technical code examples and the Markdown reference library retain
+their original targets. Language switching preserves the query and fragment.
+Screenshots, text inside images, user-submitted service descriptions, and the
+applications themselves are outside the website-text translation scope.
 
-The existing production root is not relocated. Pilot pages carry `noindex` and
-are excluded from the sitemap; production canonical and alternate-language SEO
-links are deferred until an actual public translation rollout. The pilot's
-metadata also survives a subsequent run of the existing SEO script.
+## Deployment
+
+Run this against an assembled deployment tree, not the source checkout, because
+it also adds language menus to English pages:
+
+```sh
+python scripts/build-site-translations.py --root PATH_TO_BETA_TREE --published --base-path /beta
+python scripts/build-site-translations.py --root PATH_TO_BETA_TREE --published --base-path /beta --check
+```
+
+The Pages workflow reads each checkout's own `publish.json`. Beta editions live
+at `/beta/es/`, `/beta/fr/`, and so on, with `noindex`. Production gets editions
+only when its source branch contains the catalogs and publication configuration.
+For a production tree, use `--base-path "" --public`. Public editions receive
+self-canonical URLs, reciprocal `hreflang` links, and sitemap entries; beta stays
+out of the sitemap. The workflow explicitly stages generated language folders
+so copied ignore rules cannot omit them.
+
+Each generated documentation library has its own translated search index.
+Search retains Unicode letters, including Cyrillic, and folds Latin accents.
+The legacy three-page Spanish pilot command and tests remain available for
+compatibility; expanded builds replace its notice with the language menu.
 
 ## Updating translations
 
+`LANGUAGE.json` and `LANGUAGE-pages/*.json` are merged into one catalog. `strings`
+maps whitespace-normalized English text to translations; `ui` covers common
+dynamic controls. Conflicting translations for the same key fail the build.
+Use the surrounding source paragraph when translating fragments split by links
+or emphasis. Preserve brands, URLs, code, command names and `{placeholders}`.
+
 ```sh
-python scripts/build-site-translations.py --extract
+python scripts/build-site-translations.py --language es --all-pages --extract
 ```
 
-This prints current English text with its saved Spanish translation. `null`
-means translation is missing. English text is whitespace-normalized and used as
-the key; an English edit therefore requires translating only the new text.
-Existing corrections remain in the catalog. Builds fail before writing any
-pages if a required static translation is missing, including in Pages CI.
-Always translate fragments in their surrounding paragraph, since inline links
-and emphasis divide some sentences into several strings.
+This prints current required strings and saved translations; `null` means
+missing. Changes to English text require new catalog entries. Placeholder
+changes also fail the build.
 
-New JavaScript-generated labels need an explicit `SSNSiteTranslate` lookup and
-an entry in `ui`; arbitrary JavaScript is never rewritten as natural language.
-This pilot covers the three named pages only. Other pages, data-driven galleries,
-localized search and further languages need a separate expansion of the scope.
+`runtime/*.json` explicitly lists authored JavaScript-generated text and the
+source files it depends on. The browser helper uses only these saved strings;
+it does not translate arbitrary user content or rewrite JavaScript. Dynamic
+counts use placeholders, and executable destination URLs resolve against the
+original page. Source hashes detect changes to reviewed scripts and the popup
+settings source. After reviewing a source change, update runtime keys and all
+published catalogs, then record the reviewed sources:
 
-Before a stable rollout, generate the selected languages in the stable tree too,
-replace the pilot notice, add self-canonical URLs and reciprocal `hreflang`,
-extend the sitemap/SEO rules, and verify each translated page and language link.
-Do not promote the English pilot language links to stable without publishing
-their translated targets alongside them.
+```sh
+python scripts/build-site-translations.py --record-runtime-sources
+```
+
+Recording hashes acknowledges the review; it does not extract or translate new
+text. Rebuild and validate the affected pages afterward.

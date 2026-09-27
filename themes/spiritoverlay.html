@@ -566,8 +566,8 @@ body::after {
 
         const membershipHtml = data.membership ? `<div class="membership-status">${fallbackEscapeHtml(data.membership)}</div>` : '';
         const donationHtml = data.hasDonation ? `<div class="donation">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';
-        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
-        const messageTextHtml = data.chatmessage ? `<div class="text"${data.event ? ' style="font-style: italic;"' : ''}>${data.textonly ? '' : data.chatmessage}</div>` : '';
+        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
+        const messageTextHtml = data.chatmessage ? `<div class="text"${data.event ? ' style="font-style: italic;"' : ''}>${data.textonly ? '' : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage) : fallbackEscapeHtml(data.chatmessage))}</div>` : '';
         const contentImageHtml = data.contentimg ? `
             <div class="content-image-wrapper">
                 <img src="${data.contentimg}" alt="content" class="large-image" onerror="this.closest('.content-image-wrapper').style.display='none';">
@@ -593,7 +593,7 @@ body::after {
             ${contentImageHtml}
         `;
 
-        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+        // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
         if (data.textonly) {
 		var messageText = messageDiv.querySelector('.text');
 		if (messageText) messageText.textContent = data.chatmessage || '';

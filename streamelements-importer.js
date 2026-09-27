@@ -1260,6 +1260,9 @@
 					bodyMarkup,
 					"<script>window.SSN_SE_COMPAT_CONFIG=" + safeJSON(config) + ";<\/script>",
 					"<script>",
+					safeScriptText(getDisplayRuntimeSource()),
+					"<\/script>",
+					"<script>",
 					safeScriptText(getCompatRuntimeSource()),
 					"<\/script>",
 					htmlScripts,
@@ -1270,6 +1273,11 @@
 					"</body>",
 					"</html>"
 				].join("\n");
+			}
+
+			function getDisplayRuntimeSource() {
+				var helper = window.SocialStreamChatHTML;
+				return helper && typeof helper.getRuntimeSource === "function" ? helper.getRuntimeSource() : "";
 			}
 
 			function getExportInstructionsComment(config) {
@@ -1687,8 +1695,7 @@
 							}).join(" ");
 							var userStyle = payload.nameColor ? ' style="color:' + escapeAttr(payload.nameColor) + '"' : "";
 							var messageHTML = String(payload.chatmessage || payload.message || "");
-							// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
-							if (payload.textonly === true) messageHTML = escapeHTML(messageHTML);
+							messageHTML = renderMessageHTML(messageHTML, payload.textonly);
 							if (payload.contentimg) {
 								messageHTML += '<div class="attachment"><img src="' + escapeAttr(payload.contentimg) + '" alt=""></div>';
 							}
@@ -1785,12 +1792,16 @@
 							renderedRowsByMessageId = {};
 						}
 
+						function renderMessageHTML(value, textonly) {
+							if (textonly === true) return escapeHTML(value);
+							return window.SocialStreamChatHTML ? window.SocialStreamChatHTML.sanitize(value) : escapeHTML(value);
+						}
+
 						function mapSSNToSEMessage(payload) {
 							var displayName = String(payload.chatname || payload.name || "Viewer");
 							var msgId = String(payload.mid || payload.id || payload.messageId || payload.message_id || (payload.meta && (payload.meta.messageId || payload.meta.message_id)) || ("ssn-" + Date.now() + "-" + Math.floor(Math.random() * 100000)));
 							var textHTML = String(payload.chatmessage || payload.message || "");
-							// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
-							if (payload.textonly === true) textHTML = escapeHTML(textHTML);
+							textHTML = renderMessageHTML(textHTML, payload.textonly);
 							var messageParts = extractMessageParts(textHTML);
 							var plainText = messageParts.text;
 							var role = getRole(payload);
@@ -1827,7 +1838,7 @@
 						}
 
 						function extractMessageParts(html) {
-							var container = document.createElement("div");
+							var container = document.createElement("template").content.appendChild(document.createElement("div"));
 							container.innerHTML = String(html || "");
 							var emotes = [];
 							Array.prototype.slice.call(container.querySelectorAll("img")).forEach(function (image, index) {
@@ -1945,7 +1956,7 @@
 						}
 
 						function stripHTML(html) {
-							var div = document.createElement("div");
+							var div = document.createElement("template").content.appendChild(document.createElement("div"));
 							div.innerHTML = String(html || "");
 							return (div.textContent || div.innerText || "").trim();
 						}

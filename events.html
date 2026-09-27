@@ -616,6 +616,8 @@ body.light-mode .meta-value.badge {
 }
 
 </style>
+<script src="./libs/objects.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
 </head>
 <body>
 <div id="topbar"></div>
@@ -1827,7 +1829,7 @@ body.light-mode .meta-value.badge {
 		const normalizedEvent = normalizeEventKey(data.event);
 		let name = data.chatname || data.sourceName || `${capitalizeSource(data.type)} Alerts`;
 		let message = data.chatmessage || '';
-		// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+		// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
 		let messageIsHTML = !!message && !data.textonly;
 		let eventTypeText = '';
 		let eventTypeClass = data.hasDonation ? 'event-donation' : 'event-other';
@@ -2133,8 +2135,8 @@ body.light-mode .meta-value.badge {
 			// textonly chat and generated summaries stay literal; tag/entity-looking text is not markup.
 			textNode.textContent = display.message || '';
 		} else {
-			// HTML-mode chat is expected to be sanitized upstream; this flag describes format, not trust.
-			textNode.innerHTML = display.message || '';
+			// Check the display copy because direct senders can bypass relay sanitization.
+			textNode.innerHTML = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(display.message || '') : fallbackEscapeHtml(display.message || ''));
 		}
 		messageDiv.appendChild(textNode);
 

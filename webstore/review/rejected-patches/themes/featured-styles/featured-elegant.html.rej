@@ -1,0 +1,21 @@
+diff a/webstore/candidate/themes/featured-styles/featured-elegant.html b/webstore/candidate/themes/featured-styles/featured-elegant.html	(rejected hunks)
+@@ -5,6 +5,7 @@
+     <meta name="description" content="Featured Message - Elegant &amp; Sophisticated: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
+     <meta name="robots" content="noindex">
+ <script src="../../libs/objects.js"></script>
++<script src="../../shared/utils/chatHtml.js"></script>
+ <script src="../../shared/utils/chatBadges.js"></script>
+ <link rel="stylesheet" href="../../shared/utils/chatBadges.css">
+ <script src="../../js/local-server-url.js"></script>
+@@ -753,9 +754,9 @@
+                 if (content.chatmessage) {
+                     const text = document.createElement('div');
+                     text.className = 'text';
+-                    // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
++                    // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
+                     if (content.textonly === true) text.textContent = content.chatmessage;
+-                    else text.innerHTML = content.chatmessage;
++                    else text.innerHTML = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(content.chatmessage) : fallbackEscapeHtml(content.chatmessage));
+                     contentDiv.appendChild(text);
+                 }
+ 

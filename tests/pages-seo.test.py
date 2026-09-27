@@ -111,8 +111,23 @@ class MetadataTests(unittest.TestCase):
     def test_fragments_and_vendor_files_are_not_modified(self):
         path = self.write("fragment.html", '<div><script>var head="<head>";</script></div>')
         self.assertEqual(SEO.prepare_page(self.root, path), (path.read_text(), None))
-        for name in ["tests/example.html", "thirdparty/example.html", "lite/vendor/example.html", ".cache/example.html", "scripts/fixtures/example.html"]:
+        for name in ["tests/example.html", "thirdparty/example.html", "lite/vendor/example.html", ".cache/example.html", "scripts/fixtures/example.html", "webstore/3.50.10/example.html"]:
             self.assertFalse(SEO.eligible(Path(name)))
+
+    def test_published_translations_keep_language_metadata_and_beta_exclusion(self):
+        markup = '<meta name="ssn-site-translation" content="ru"><title>Настройка чата</title><meta name="description" content="Руководство по настройке чата."><meta property="og:image:alt" content="Логотип Social Stream Ninja"><meta name="twitter:image:alt" content="Логотип Social Stream Ninja">'
+        self.page('ru/docs/getting-started.html', markup)
+        self.page('beta/ru/docs/getting-started.html', markup)
+        SEO.prepare(self.root)
+        translated = SEO.PageHead((self.root / 'ru/docs/getting-started.html').read_text(encoding='utf-8'))
+        self.assertEqual(translated.title[4], 'Настройка чата')
+        self.assertEqual(translated.meta('og:locale')[0][3]['content'], 'ru_RU')
+        self.assertEqual(translated.meta('description')[0][3]['content'], 'Руководство по настройке чата.')
+        self.assertEqual(translated.meta('og:image:alt')[0][3]['content'], 'Логотип Social Stream Ninja')
+        sitemap = (self.root / 'sitemap.xml').read_text(encoding='utf-8')
+        self.assertIn('https://socialstream.ninja/ru/docs/getting-started.html', sitemap)
+        self.assertNotIn('/beta/', sitemap)
+        self.assertEqual(SEO.prepare(self.root,check=True)[0], [])
 
 
 class RepositoryTests(unittest.TestCase):
