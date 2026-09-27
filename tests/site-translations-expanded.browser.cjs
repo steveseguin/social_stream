@@ -18,6 +18,48 @@ const server = http.createServer((req, res) => {
 function htmlFiles(directory) {
     return fs.readdirSync(directory, {withFileTypes:true}).flatMap(entry => entry.isDirectory() ? htmlFiles(path.join(directory,entry.name)) : entry.name.endsWith('.html') ? [path.join(directory,entry.name)] : []);
 }
+async function checkHeader(page) {
+    const header = page.locator('.site-header');
+    if (!await header.count()) return;
+    const nav = page.locator('#ssn-site-nav');
+    const optional = ['services.html', 'commands.html', 'overlay-gallery.html', 'inspiration.html'];
+    for (const width of [1600, 1440, 1280, 1180, 1100, 1051, 1050, 768, 390, 320, 1600]) {
+        await page.setViewportSize({width, height:1000});
+        // Resize events can arrive after the viewport command completes.
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        const menu = page.locator('.site-menu');
+        if (await menu.isVisible()) {
+            await menu.click();
+            assert.equal(await nav.isVisible(), true);
+            for (const file of optional) assert.equal(await nav.locator(':scope > a[href$="' + file + '"]').isVisible(), true, file + ' in expanded menu at ' + width);
+            const active = nav.locator(':scope > a[aria-current="page"]');
+            if (await active.count()) assert.equal(await active.evaluate(el => getComputedStyle(el).borderBottomWidth), '0px', 'No full-width active underline');
+            await page.keyboard.press('Escape');
+            assert.equal(await menu.getAttribute('aria-expanded'), 'false');
+        } else {
+            const layout = await nav.evaluate(el => {
+                const box = el.getBoundingClientRect();
+                return {left:box.left,right:box.right,items:Array.from(el.children).filter(item => !item.hidden).map(item => {
+                    const r = item.getBoundingClientRect();
+                    return {left:r.left,right:r.right,center:r.top + r.height / 2};
+                }).sort((a,b) => a.left - b.left)};
+            });
+            assert.ok(layout.items.every(item => Math.abs(item.center - layout.items[0].center) < 1), 'Header stays on one row: ' + width);
+            assert.ok(layout.items.every(item => item.left >= layout.left - 1 && item.right <= layout.right + 1), 'Header fits: ' + width);
+            for (let i=1;i<layout.items.length;i++) assert.ok(layout.items[i].left - layout.items[i-1].right >= 19, 'Comfortable navigation spacing');
+            const hidden = await Promise.all(optional.map(file => nav.locator(':scope > a[href$="' + file + '"]').evaluate(el => el.hidden)));
+            for (let i=1;i<hidden.length;i++) if (hidden[i]) assert.equal(hidden[i-1],true,'Hide less important links first');
+        }
+    }
+    for (let mode=0;mode<2;mode++) {
+        const style = selector => page.locator(selector).evaluate(el => {
+            const s=getComputedStyle(el);
+            return {height:el.getBoundingClientRect().height,border:s.border,borderRadius:s.borderRadius,background:s.backgroundColor,color:s.color};
+        });
+        assert.deepEqual(await style('.site-language-picker summary'),await style('.site-theme'),'Matching theme and language controls');
+        await page.locator('.site-theme').click();
+    }
+}
 (async function () {
     await new Promise(resolve => server.listen(0,'127.0.0.1',resolve));
     const origin = 'http://127.0.0.1:' + server.address().port;
@@ -39,6 +81,7 @@ function htmlFiles(directory) {
             assert.equal(await page.locator('html').getAttribute('lang'), language,relative);
             if (language === 'ar') assert.equal(await page.locator('html').getAttribute('dir'), 'rtl', relative);
             assert.equal(await page.locator('[data-site-language-picker]').count(),1,relative);
+            if (relative === 'docs/services.html' || relative === 'docs/guides.html') await checkHeader(page);
             const picker = page.locator('[data-site-language-picker]');
             if (await picker.isVisible()) {
                 await picker.locator('summary').click();
