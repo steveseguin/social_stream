@@ -2777,7 +2777,12 @@
 	  observeYouTubeSupplementalEffects();
 	  let ele = getYouTubeChatItemsElement();
 	  if (ele) {
-		notifyYouTubeCaptureStatus("connected");
+		// Older error rows can remain in the chat history after messages resume.
+		if (window.ninjafy && ele.lastElementChild && ele.lastElementChild.tagName === "YT-LIVE-CHAT-SERVER-ERROR-MESSAGE") {
+			notifyYouTubeCaptureStatus("error", "YouTube reports a chat connection error. Reveal the capture page or use Reload to reconnect.");
+		} else {
+			notifyYouTubeCaptureStatus("connected");
+		}
 		maybeRefreshYouTubeChatObserver(ele);
 		scheduleYouTubeChatAutoScroll(ele);
 		maybeReloadStaleYouTubeChat(ele);
