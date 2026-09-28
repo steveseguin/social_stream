@@ -59,7 +59,7 @@ Supported settings actions:
 - `updateSettings`
 
 In the updated SSApp 0.4.32 development checkout, `platforms.youtube` and
-`platforms.youtubeshorts` advertise `defaultConnectionMode: "websocket"`.
+`platforms.youtubeshorts` advertise `defaultConnectionMode: "classic"` (Standard).
 `addSource` uses that default when `connectionMode` is omitted. Read the running
 capability; a released minimum containing this change has not been assigned.
 

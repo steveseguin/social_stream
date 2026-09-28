@@ -29,7 +29,7 @@ the YouTube default-mode change; no released minimum has been assigned. Check
 `platforms.youtubeshorts.defaultConnectionMode` rather than the app version alone.
 API/MCP responses continue to expose the running SSApp version.
 
-New YouTube and YouTube Shorts sources and channel groups default to `websocket`,
+New YouTube and YouTube Shorts sources and channel groups default to `classic` (Standard),
 including `addSource` requests that omit `connectionMode`. Explicit modes and saved
 sources/groups retain their existing selection.
 
@@ -67,8 +67,9 @@ Windows x64 voice commands in this unreleased preview use a pinned local whisper
 
 ### 2026-09-27
 
-- Documented the YouTube/Shorts WebSocket default and capability detection for the
-  updated 0.4.32 development checkout; see the unreleased compatibility entry above.
+- Restored the YouTube/Shorts Standard (`classic`) default for the updated 0.4.32
+  development checkout to reduce shared API quota demand. This supersedes the
+  earlier development WebSocket default; see the unreleased compatibility entry above.
 
 ### 2026-09-24
 
