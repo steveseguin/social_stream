@@ -74,7 +74,7 @@ endpoints directly using [references/control-api.md](references/control-api.md).
 [references/version-log.md](references/version-log.md) for minimum-version compatibility.
 Runtime capabilities are authoritative.
 
-New YouTube and YouTube Shorts sources default to `websocket` in the updated SSApp
+New YouTube and YouTube Shorts sources default to `classic` (Standard) in the updated SSApp
 0.4.32 development checkout. Check `platforms[target].defaultConnectionMode`; see
 the unreleased entry in `references/version-log.md` for version compatibility.
 
