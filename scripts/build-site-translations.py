@@ -131,6 +131,8 @@ def public_pages(root):
     pages += [path.relative_to(root).as_posix() for path in sorted((root / "docs").glob("*.html"))]
     pages += [path.relative_to(root).as_posix() for path in sorted((root / "actions").glob("*-guide.html"))]
     pages += ["lite/guide.html", "streamdeck/index.html"]
+    # These small learning pages belong to the translated game-building guide.
+    pages += ["games/templates/coin-rocket.html", "games/templates/support-goal.html", "games/templates/event-garden.html"]
     return tuple(page for page in pages if (root / page).is_file())
 
 

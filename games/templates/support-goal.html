@@ -4,17 +4,17 @@
 <body><main><div class="host"><a href="../../docs/making-games.html">Build games and rewards</a><p id="connection" role="status"></p></div>
 <p class="eyebrow">Template 02 · Estimated USD</p><h1>Build a little moon base.</h1><p id="rules"></p>
 <section class="stage" aria-label="Support goal"><div id="base" class="art" aria-hidden="true">🌑</div><p id="score" class="score" aria-live="polite"></p>
-<progress id="progress" value="0" aria-label="Estimated support toward the moon base"></progress><p id="latest" role="status">Waiting for support.</p></section>
+<progress id="progress" value="0" aria-label="Estimated support toward the moon base"></progress><p id="latest" role="status" translate="no">Waiting for support.</p></section>
 <div class="host"><div id="demo-controls"><button id="superchat" type="button">Sample: $5 Super Chat</button><button id="bits" type="button">Sample: 100 Bits</button><button id="jewels" type="button">Sample: 200 Jewels</button><button id="zero" type="button">Sample: zero override</button><button id="streak" type="button">Sample: gift streak 1, 2, 3</button></div>
 <button id="reset" type="button">Reset run</button><details><summary>Last received payload</summary><pre id="payload">Use a sample button to inspect an event.</pre></details><p class="muted">This is an estimated support score. It is not your payout balance. Reload starts a new run.</p></div></main>
 <script src="../../currency.js"></script><script src="../../js/local-server-url.js"></script><script src="starter.js"></script><script>
 'use strict';
 // EDIT THIS RULE: the goal is an estimated USD value, never coins or gift count.
 var GOAL_USD = 25, total = 0, R = RewardStarter;
-R.text('rules', 'Chat builds the base together. Reach an estimated $' + GOAL_USD + ' of support from TikTok, Twitch, Facebook, or YouTube.');
+R.text('rules', 'Chat builds the base together. Reach an estimated ${0} of support from TikTok, Twitch, Facebook, or YouTube.', [GOAL_USD]);
 document.getElementById('progress').max = GOAL_USD;
 function render() {
-    R.text('score', '$' + total.toFixed(2) + ' / $' + GOAL_USD.toFixed(2) + ' estimated USD');
+    R.text('score', '${0} / ${1} estimated USD', [total.toFixed(2), GOAL_USD.toFixed(2)]);
     R.text('base', total >= GOAL_USD ? '🌕 🏠 🚀' : total >= GOAL_USD / 2 ? '🌗 🏗️' : '🌑');
     document.getElementById('progress').value = Math.min(total, GOAL_USD);
 }
@@ -26,10 +26,10 @@ function receive(data) {
     var added = R.increment(data, amount, 'USD');
     if (!added) { R.log('No new positive USD value on this event.'); return; }
     total += added;
-    R.log((data.chatname || 'A viewer') + ' added $' + added.toFixed(2) + ' estimated USD.' + (total >= GOAL_USD ? ' Base complete!' : ''));
+    R.log('{0} added ${1} estimated USD. {2}', [data.chatname || R.format('A viewer'), added.toFixed(2), total >= GOAL_USD ? R.format('Base complete!') : '']);
     render();
 }
-R.start(receive, function () { total = 0; render(); }, {
+R.start(receive, function () { total = 0; render(); R.log('Waiting for support.'); }, {
     superchat: function (id) { return { id: 'super-' + id, type: 'youtube', event: 'superchat', chatname: 'Sample viewer', hasDonation: '$5.00' }; },
     bits: function (id) { return { id: 'bits-' + id, type: 'twitch', event: 'cheer', chatname: 'Sample viewer', hasDonation: '100 bits', donoValue: 1 }; },
     jewels: function (id) { return { id: 'jewels-' + id, type: 'youtube', event: 'jeweldonation', chatname: 'Sample viewer', hasDonation: '200 Jewels' }; },

@@ -200,7 +200,7 @@ def token_variants(value):
 
 def trim_title(value):
     title = clean_text(value)
-    for suffix in (" - Social Stream Ninja", " | Social Stream Ninja"):
+    for suffix in (" - Social Stream Ninja", " | Social Stream Ninja", " — Social Stream Ninja", " – Social Stream Ninja"):
         if title.endswith(suffix):
             return title[: -len(suffix)].strip()
     return title
