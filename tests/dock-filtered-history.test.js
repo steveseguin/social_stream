@@ -95,4 +95,16 @@ assert.equal(superChatOverride({ event: "superchat", type: "youtube", hasDonatio
 assert.equal(superChatOverride({ event: "donation", type: "kick", hasDonation: "$5.00" }), false);
 assert.match(popup, /data-param1="autoqueuesuperchats"/, "Dock settings should expose the Super Chat-only queue toggle");
 
+const isBufferedLiveMessage = Function(
+	"historyMissedLiveBuffer",
+	[extractFunction(dock, "isBufferedLiveMessage"), "return isBufferedLiveMessage;"].join("\n")
+)([{ id: 101 }, { id: 102, mid: 202 }]);
+assert.equal(isBufferedLiveMessage(101), true);
+assert.equal(isBufferedLiveMessage("202"), true, "history rows match buffered rows by their original id");
+assert.equal(isBufferedLiveMessage(303), false);
+assert.equal(isBufferedLiveMessage(undefined), false);
+assert.match(extractFunction(dock, "flushMissedLiveBuffer"), /deferredLive: true/, "rows held back by history browsing must keep queue/pin capture");
+assert.match(dock, /if \(!suppressLiveSideEffects \|\| deferredLiveMessage\) \{/, "deferred live rows should reach the queue/pin block");
+
+
 console.log("dock filtered history tests passed");

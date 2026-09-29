@@ -7209,6 +7209,15 @@
 				}
 			}
 
+			function isBufferedLiveMessage(displayId) {
+				if (displayId === undefined || displayId === null) {
+					return false;
+				}
+				return historyMissedLiveBuffer.some(function(msg) {
+					return msg && String(msg.mid || msg.id) === String(displayId);
+				});
+			}
+
 			function flushMissedLiveBuffer() {
 				if (historyBrowsing || historyReturnSyncPending || !historyMissedLiveBuffer.length) {
 					return;
@@ -7218,7 +7227,7 @@
 				buffered.forEach(function(msg) {
 					var displayId = (msg && msg.mid) ? msg.mid : msg.id;
 					if (!displayId || !document.querySelector(dataAttributeSelector("data-mid", displayId))) {
-						processData({ contents: msg }, { reloaded: true, suppressLiveSideEffects: true, skipHistoryDeferral: true });
+						processData({ contents: msg }, { reloaded: true, suppressLiveSideEffects: true, skipHistoryDeferral: true, deferredLive: true });
 					}
 				});
 				jumptoBottom2();
@@ -8344,12 +8353,14 @@
 							var displayId = (msg && msg.mid) ? msg.mid : msg.id;
 							if (!displayId || !document.querySelector(dataAttributeSelector("data-mid", displayId))){
 								var normalizedMsg = (msg && msg.mid && msg.mid !== msg.id) ? Object.assign({}, msg, { id: msg.mid, dbid: msg.id }) : msg;
+								// Rows held back while browsing history can render here before the buffer flush skips them.
+								var deferredLive = isBufferedLiveMessage(displayId);
 								if (prependRecentHistory) {
 									prependMode = true;
-									processData({contents: normalizedMsg}, { reloaded: true, suppressLiveSideEffects: true, skipHistoryDeferral: true });
+									processData({contents: normalizedMsg}, { reloaded: true, suppressLiveSideEffects: true, skipHistoryDeferral: true, deferredLive: deferredLive });
 									prependMode = false;
 								} else {
-									processData({contents: normalizedMsg}, { reloaded: true, suppressLiveSideEffects: true, skipHistoryDeferral: true });
+									processData({contents: normalizedMsg}, { reloaded: true, suppressLiveSideEffects: true, skipHistoryDeferral: true, deferredLive: deferredLive });
 								}
 							}
 						});
@@ -11718,6 +11729,8 @@
 					var invisible = false;
 					var makeBlurred = false;
 					var suppressLiveSideEffects = prependMode === true || processDataOptions.suppressLiveSideEffects === true;
+					// Arrived live while history browsing held it back; keep queue/pin capture, skip late TTS and beeps.
+					var deferredLiveMessage = processDataOptions.deferredLive === true;
 
 					if (debug){
 						console.log(data);
@@ -12947,8 +12960,10 @@
 					
 					cleanUpOldNodes();
 
-					if (!suppressLiveSideEffects) {
-						applyBotActions(data); // Official actions
+					if (!suppressLiveSideEffects || deferredLiveMessage) {
+						if (!suppressLiveSideEffects) {
+							applyBotActions(data); // Official actions
+						}
                         if (window.SSNQuestionTracker) window.SSNQuestionTracker.add(node, data);
 
 						if (data.queueme) {
