@@ -63,8 +63,14 @@
         return Math.max(0, amount - previous);
     }
 
-    function text(id, value) { document.getElementById(id).textContent = value; }
-    function log(value) { text('latest', value); }
+    function format(value, values) {
+        if (window.SSNSiteTranslate) return window.SSNSiteTranslate(value, values);
+        return value.replace(/\{(\d+)\}/g, function (token, index) {
+            return values && index < values.length ? String(values[index]) : token;
+        });
+    }
+    function text(id, value, values) { document.getElementById(id).textContent = format(value, values); }
+    function log(value, values) { text('latest', value, values); }
 
     function start(onMessage, reset, samples) {
         var session = params.get('session');
@@ -80,7 +86,7 @@
             if (payload.content) { receive(payload.content); return; }
             if (payload.target && payload.target !== 'null' && payload.target !== 'dock') return;
             if (!demo) text('connection', 'Receiving events');
-            text('payload', JSON.stringify(payload, null, 2));
+            document.getElementById('payload').textContent = JSON.stringify(payload, null, 2);
             onMessage(payload);
         }
         Object.keys(samples).forEach(function (id) {
@@ -130,5 +136,5 @@
     }
 
     window.RewardStarter = { platform: platform, giftCount: giftCount, labelCount: labelCount,
-        coins: coins, isSupport: isSupport, increment: increment, text: text, log: log, start: start };
+        coins: coins, isSupport: isSupport, increment: increment, format: format, text: text, log: log, start: start };
 })();

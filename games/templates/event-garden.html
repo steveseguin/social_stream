@@ -3,7 +3,7 @@
 <meta name="robots" content="noindex"><title>Gift and event garden · SSN starter</title><link rel="stylesheet" href="starter.css"></head>
 <body><main><div class="host"><a href="../../docs/making-games.html">Build games and rewards</a><p id="connection" role="status"></p></div>
 <p class="eyebrow">Template 03 · Gift identity and free chat</p><h1>Grow something together.</h1><p id="rules"></p>
-<section class="stage" aria-label="Community garden"><div id="garden" class="art" aria-hidden="true">🌱</div><p id="score" class="score" aria-live="polite"></p><p id="latest" role="status">The garden is ready.</p></section>
+<section class="stage" aria-label="Community garden"><div id="garden" class="art" aria-hidden="true">🌱</div><p id="score" class="score" aria-live="polite"></p><p id="latest" role="status" translate="no">The garden is ready.</p></section>
 <div class="host"><div id="demo-controls"><button id="water" type="button">Sample: !water</button><button id="flower" type="button">Sample: matching gift</button><button id="follow" type="button">Sample: TikTok follow</button><button id="streak" type="button">Sample: matching streak 1, 2, 3</button><button id="other" type="button">Sample: another gift</button></div>
 <button id="reset" type="button">Reset run</button><details><summary>Last received payload</summary><pre id="payload">Use a sample button to inspect an event.</pre></details><p class="muted">Edit the gift rule in this HTML file using metadata from your own capture. Reload starts a new garden.</p></div></main>
 <script src="../../js/local-server-url.js"></script><script src="starter.js"></script><script>
@@ -12,9 +12,9 @@
 // captured name exactly. The demo name below is fictional, not a gift price list.
 var GIFT_ID = '', GIFT_NAME = 'Demo flower';
 var water = 0, flowers = 0, followers = 0, R = RewardStarter;
-R.text('rules', 'Type !water to add water. Each ' + (GIFT_ID ? 'gift with ID ' + GIFT_ID : GIFT_NAME + ' gift') + ' on TikTok adds a flower. A TikTok follow adds a tree.');
+R.text('rules', 'Type !water to add water. Each matching TikTok gift ({0}) adds a flower. A TikTok follow adds a tree.', [GIFT_ID || GIFT_NAME]);
 function render() {
-    R.text('score', water + ' water · ' + flowers + ' flowers · ' + followers + ' trees');
+    R.text('score', 'Water: {0} · Flowers: {1} · Trees: {2}', [water, flowers, followers]);
     R.text('garden', '🌱 ' + '🌸'.repeat(Math.min(flowers, 12)) + '🌳'.repeat(Math.min(followers, 6)) + (water ? ' 💧' : ''));
 }
 function receive(data) {
@@ -31,10 +31,11 @@ function receive(data) {
         added = R.increment(data, R.giftCount(data), 'gift-count'); flowers += added; action = 'flowers';
     }
     if (!added) { R.log('No new matching action on this event.'); return; }
-    R.log((data.chatname || 'A viewer') + ' added ' + added + ' ' + action + '.'); render();
+    var messages = { water: '{0} added water: {1}.', flowers: '{0} added flowers: {1}.', trees: '{0} added trees: {1}.' };
+    R.log(messages[action], [data.chatname || R.format('A viewer'), added]); render();
 }
 function flower(id, count) { return { id: id, type: 'tiktok', event: 'gift', chatname: 'Sample viewer', chatmessage: 'Sent Demo flower x' + count, meta: { giftName: GIFT_NAME, giftId: GIFT_ID || 'demo-flower', tiktokGiftCount: count } }; }
-R.start(receive, function () { water = 0; flowers = 0; followers = 0; render(); }, {
+R.start(receive, function () { water = 0; flowers = 0; followers = 0; render(); R.log('The garden is ready.'); }, {
     water: function (id) { return { id: 'water-' + id, type: 'youtube', chatname: 'Sample viewer', chatmessage: '!water', textonly: true }; },
     flower: function (id) { return flower('flower-' + id, 1); },
     follow: function (id) { return { id: 'follow-' + id, type: 'tiktok', event: 'followed', chatname: 'Sample viewer' }; },
