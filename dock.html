@@ -3969,10 +3969,33 @@
 			if (urlParams.has("autoqueuesuperchats") || urlParams.has("autoqueuesuperchat")) {
 				autoQueueSuperChats = true;
 			}
+			var autoQueueMemberships = false;
+			if (urlParams.has("autoqueuememberships") || urlParams.has("autoqueuemembership")) {
+				autoQueueMemberships = true;
+			}
+
+			function isAutoQueueMembershipEvent(data) {
+				// Gift recipients (giftredemption) are left out so one gifted bundle queues once.
+				switch (String(data.event || "").toLowerCase()) {
+					case "sponsorship":
+					case "membermilestone":
+					case "membershiprenewal":
+					case "resub":
+					case "giftpurchase":
+					case "new_subscriber":
+					case "subscription":
+					case "subscription_gift":
+						return true;
+				}
+				return false;
+			}
 
 			function shouldAutoQueueMessage(data) {
 				if (!data || typeof data !== "object") {
 					return false;
+				}
+				if (autoQueueMemberships && isAutoQueueMembershipEvent(data)) {
+					return true;
 				}
 				if (autoQueueSuperChats) {
 					return String(data.event || "").toLowerCase() === "superchat";
@@ -12983,7 +13006,7 @@
 							node.classList.add("queued");
 							updateQueueButton();
 						} else if (shouldAutoQueueMessage(data)) {
-							// Auto-queue donation messages or Super Chats when their matching option is set.
+							// Auto-queue donations, Super Chats, or memberships when their matching option is set.
 							selectedQueue.push(node);
 							node.children[0].dataset.qid = selectedQueue.length;
 							node.classList.add("queued");

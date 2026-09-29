@@ -1431,6 +1431,16 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Auto-queues donation cards"
           },
           {
+            "key": "autoqueuememberships",
+            "displayName": "autoqueuememberships or autoqueuemembership",
+            "aliases": [
+              "autoqueuememberships",
+              "autoqueuemembership"
+            ],
+            "values": "boolean",
+            "description": "Auto-queues new members/subscribers, renewals, milestones, and gifted memberships or subs (skips each gift recipient)"
+          },
+          {
             "key": "autoqueuequestions",
             "displayName": "autoqueuequestions or autoqueuequestion",
             "aliases": [

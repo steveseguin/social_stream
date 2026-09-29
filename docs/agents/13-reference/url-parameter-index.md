@@ -216,6 +216,7 @@ Entries: 33.
 | `autopindonations` | `autopindonations` | boolean | Auto-pins donation cards as they arrive |
 | `autopinquestions` | `autopinquestions`, `autopinquestion` | boolean | Auto-pins cards marked as questions |
 | `autoqueuedonations` | `autoqueuedonations`, `autoqueuedonation` | boolean | Auto-queues donation cards |
+| `autoqueuememberships` | `autoqueuememberships`, `autoqueuemembership` | boolean | Auto-queues new members/subscribers, renewals, milestones, and gifted memberships or subs (skips each gift recipient) |
 | `autoqueuequestions` | `autoqueuequestions`, `autoqueuequestion` | boolean | Auto-queues question cards |
 | `skipdonations` | `skipdonations` | boolean | Prevents donation cards from being auto-featured |
 | `selfqueue` | `selfqueue` | comma-separated strings | Viewer commands that add themselves to the queue (e.g., !queue) |
