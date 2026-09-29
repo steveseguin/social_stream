@@ -1,11 +1,11 @@
 # NinjaChatter audience connection preview
 
-The beta extension includes a private room connector and a fixed Cheer overlay preset. NinjaChatter must explicitly enable preview access; existing production rooms and the older chat relay continue to work without it.
+The beta extension and SSApp include a private room connector and a fixed Cheer overlay preset. NinjaChatter must explicitly enable preview access; existing production rooms and the older chat relay continue to work without it.
 
 ## Connect, share, and test
 
 1. Open **Audience Room · NinjaChatter** in the SSN popup. It is a dedicated section available in beginner mode as well as full mode.
-2. Choose **Open room settings**. Create or open your room in NinjaChatter and enable its audience connection (preview access is required).
+2. Choose **Open room settings**. In SSApp this opens your system browser for provider sign-in. Create or open your room in NinjaChatter and enable its audience connection (preview access is required).
 3. Choose **Connect a room** in SSN, then **Copy pairing code**. In the room dashboard, paste the code, review the request, and approve it. Keep SSN running; the popup can close after approval.
 4. Enter source names such as `youtube, twitch` and choose **Save connection options**. Only those ordinary public chat sources are published. Leave this field empty if you only want to receive audience chat.
 5. Choose **Copy public link** and share that URL with viewers. It contains only the NinjaChatter room ID. Keep SSN session/password links and connector credentials private.
@@ -23,7 +23,7 @@ Audience replies go to the SSN display feed and bypass platform replies, bots, A
 
 Pause persists across background restart. Saving source options preserves Pause. Closing the popup leaves the extension background in charge. Lost or expired actions are not replayed automatically; an uncertain effect may be lost. Disconnect locally to remove this installation's pairing, or revoke in the room dashboard to invalidate a compromised credential.
 
-The credential lives in extension-local `ncAudiencePrivate`, separately from exported settings; the popup receives only safe status and the public room ID. Audience pages never receive this credential. Only the packaged popup can operate pairing. Electron and other unqualified runtimes retain the existing relay and show a clear preview limitation.
+The credential lives in extension-local `ncAudiencePrivate`, or in SSApp's profile-local `ninjachatter-audience` store, separately from exported settings; the popup receives only safe status and the public room ID. Audience pages never receive this credential. Only the extension popup or SSApp's settings frame can operate pairing. SSApp reconnects after restart unless paused; disconnecting removes the saved pairing. Older SSApp builds need an update to use the connector.
 
 See [the event reference](event-reference.html#ninjachatter-audience-pilot) for display metadata. The real Actions page now has a loopback WebSocket rendering test, including single display and timed removal. Actual OBS scene visibility, prolonged browser suspension, sustained load and fleet recovery still need qualification before general availability. Local protocol, browser, actual extension and Redis rollback tests live in the NinjaChatter repository as `scripts/community_*_tests.js`.
 

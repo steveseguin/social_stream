@@ -6143,7 +6143,7 @@
 			}
 			
 			if (alignbottom || fadetop) {
-				const ro = new MutationObserver(mutations => {
+				const scrollOutputToBottom = () => {
 					if (reversed && !forceAutoscroll) {
 					} else {
 						var delta = 0;
@@ -6154,8 +6154,18 @@
 							jumptoBottom2()
 						}
 					}
-				});
+				};
+				const ro = new MutationObserver(scrollOutputToBottom);
 				ro.observe(getById("output"), { childList: true, attributes: false, subtree: false });
+				mainOutputWindow.addEventListener("load", function(event) {
+					if (event.target.tagName !== "IMG") return;
+					// Image loads do not add DOM children. Wait for attachment load handlers to reveal them.
+					requestAnimationFrame(function() {
+						if (!historyBrowsing && !historyReturnSyncPending) {
+							scrollOutputToBottom();
+						}
+					});
+				}, true);
 			} else {
 				const ro = new ResizeObserver(entries => {
 					if (reversed && !forceAutoscroll) {
