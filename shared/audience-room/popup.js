@@ -13,10 +13,12 @@
 			link = root.querySelector("[data-nc-link]");
 		var feedback = root.querySelector("[data-nc-feedback]"), publicUrl = root.querySelector("[data-nc-public-url]");
 		var current = {};
+		var electron = location.protocol !== "chrome-extension:";
 		var dirty = false,
 			busy = false;
 		var labels = { disconnected: "Not connected", connecting: "Connecting…", connected: "Connected", paused: "Paused", reconnecting: "Reconnecting…", unavailable: "Room unavailable; check room settings", authorization_required: "Connection revoked; pair again", awaiting_approval: "Approve this code in the NinjaChatter dashboard", pairing_expired: "Pairing expired; start again", storage_error: "Private storage unavailable", effect_error: "Cheer outcome unknown", publication_unknown: "Chat delivery unknown; message not retried", protocol_error: "Connection protocol error" };
 		function call(request) {
+			if (electron) return ipcRenderer.invoke("ninjachatter:audience-room", { op: "command", command: request });
 			return new Promise(function (resolve, reject) {
 				chrome.runtime.sendMessage({ ncAudience: request }, function (r) {
 					if (chrome.runtime.lastError || !r || r.error) return reject(Error("Audience room unavailable"));
@@ -27,7 +29,7 @@
 		function render(v) {
 			current = v;
 			if (v.unsupported) {
-				status.textContent = tr("unsupported", "Audience pilot requires the Chrome extension. Existing chat relay remains available below.");
+				status.textContent = tr("desktop-update", "Update SSApp to connect an audience room.");
 				root.querySelectorAll("[data-nc-op], [data-nc-overlay], [data-nc-copy]").forEach(function (b) {
 					b.disabled = true;
 				});
@@ -51,7 +53,7 @@
 				cheer.checked = !!v.cheer;
 			}
 		}
-		if (location.protocol !== "chrome-extension:") {
+		if (electron && (typeof ipcRenderer === "undefined" || !ipcRenderer.invoke)) {
 			render({ unsupported: true });
 			return;
 		}
@@ -121,7 +123,9 @@
 				try {
 					render(await call({ op: "status" }));
 				} catch (_) {
-					status.textContent = tr("start", "Start SSN to connect an audience room.");
+					status.textContent = electron
+						? tr("desktop-start", "Start SSN to connect an audience room. If unavailable, update SSApp.")
+						: tr("start", "Start SSN to connect an audience room.");
 				}
 			}
 			setTimeout(refresh, 4000);

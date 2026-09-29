@@ -3,6 +3,7 @@
 	var storageKey = "ncAudiencePrivate";
 	var electron = location.protocol !== "chrome-extension:";
 	function load() {
+		if (electron) return ipcRenderer.invoke("ninjachatter:audience-room", { op: "load" });
 		return new Promise(function (resolve, reject) {
 			chrome.storage.local.get([storageKey], function (result) {
 				if (chrome.runtime.lastError) return reject(Error("Private storage unavailable"));
@@ -11,9 +12,9 @@
 		});
 	}
 	function save(config) {
+		if (electron) return ipcRenderer.invoke("ninjachatter:audience-room", { op: "save", config: config });
 		return new Promise(function (resolve, reject) {
 			var data = Object.assign({}, config);
-			if (electron) delete data.credential;
 			var update = {};
 			update[storageKey] = data;
 			chrome.storage.local.set(update, function () {
@@ -52,10 +53,10 @@
 			});
 		},
 		handle: async function (request) {
-			if (electron && request.op !== "status") throw Error("Use the extension for the audience pilot");
+			if (electron) await ready;
 			switch (request.op) {
 				case "status":
-					return Object.assign(connector.status(), { unsupported: electron });
+					return connector.status();
 				case "test":
 					return Object.assign(connector.status(), { testSent: await testCheer() === true });
 				case "pair":
@@ -78,8 +79,8 @@
 			return connector.status();
 		}
 	};
-	if (!electron)
-		connector.init().catch(function () {
-			connector.notify("storage_error");
-		});
+	var ready = connector.init();
+	ready.catch(function () {
+		connector.notify("storage_error");
+	});
 })();
