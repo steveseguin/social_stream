@@ -33,7 +33,7 @@ function receive(data) {
     if (!amount) { R.log('No supported native-unit amount on this event.'); return; }
     var added = R.increment(data, amount, 'native-units');
     if (!added) return;
-    var key = JSON.stringify([type, data.userid || data.chatname || 'anonymous']);
+    var key = JSON.stringify([type, data.userid || (type === 'tiktok' && data.meta && data.meta.tiktokGiftSenderId) || data.chatname || 'anonymous']);
     var balance = (balances.get(key) || 0) + added;
     var awarded = Math.floor(balance / COST[type]);
     balances.set(key, balance % COST[type]);
