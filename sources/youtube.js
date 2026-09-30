@@ -1368,6 +1368,9 @@
 				console.error("Error processing gift redemption:", e);
 			  }
 			} else if (chatmessage) {
+				if (!eventType && ele.tagName === "YT-LIVE-CHAT-MEMBERSHIP-ITEM-RENDERER") {
+					eventType = "membermilestone";
+				}
 				//if (mod) {
 				//	hasMembership = chatmembership || getTranslation("moderator-chat", "MODERATOR");
 				//} else {

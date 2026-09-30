@@ -658,7 +658,12 @@ class PointsSystem {
                 recordStore.put({id:'migration',version:1,complete:true});
             };
             count.onsuccess=load;current.onsuccess=load;
-            tx.oncomplete=()=>{this.cache.clear();this.migrationComplete=true;resolve({success:true,users:data.users.length,sessions:Array.from(new Set(data.economyRecords.filter(r=>r.id.startsWith('giveaway:')).map(r=>r.session)))});};
+            tx.oncomplete=()=>{
+                this.cache.clear();
+                this.migrationComplete=true;
+                this.recoverPendingRedemptions().catch(error=>console.warn('Restored redemption recovery failed',error));
+                resolve({success:true,users:data.users.length,sessions:Array.from(new Set(data.economyRecords.filter(r=>r.id.startsWith('giveaway:')).map(r=>r.session)))});
+            };
             tx.onabort=()=>reject(failure||tx.error||new Error('Recovery aborted; nothing was changed.'));
         });
     }

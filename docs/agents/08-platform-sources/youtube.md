@@ -45,6 +45,7 @@ Tag → event map (`:1851-1885`):
 | paid-sticker | `supersticker` |
 | `yt-gift-message-view-model` | `jeweldonation` |
 | membership-item w/ `show-only-header`+`modern` | `membershiprenewal` (see ISSUE-017 — undocumented event leak) |
+| membership-item with chat text and no other identified event | `membermilestone` (a milestone message, not a purchase or gift) |
 | header-renderer | `sponsorship` |
 | gift redemption / purchase renderers | `giftredemption` / `giftpurchase` |
 | redirect banner | `redirect` (DOM-only; not in the Data API) |
@@ -175,7 +176,7 @@ Chat base (`:6128-6147`): `chatname, chatbadges, userid, nameColor, chatmessage,
 | `likes_update` | `:6701-6711` | absolute int meta, opt-in via `captureliketotals` or legacy `captureyoutubelikes`, 90 s heartbeat |
 | `live_chat_ended` | `:5716-5723` | `meta.streamTitle?` |
 
-DOM-only events: `membershiprenewal` (ISSUE-017), `thankyou`, `redirect`, legacy `donation`. WS/API-only: `membermilestone`, `new_follower`, `user_banned`, `live_chat_ended`, `likes_update`, `view_update`, `subscriber_update`.
+DOM-only events: `membershiprenewal` (ISSUE-017), `thankyou`, `redirect`, legacy `donation`. WS/API-only: `new_follower`, `user_banned`, `live_chat_ended`, `likes_update`, `view_update`, `subscriber_update`. Both capture paths emit `membermilestone` for milestone messages.
 
 Cross-platform: YouTube `sponsorship` ≈ Twitch/Kick `new_subscriber`; YouTube `giftpurchase`/`giftredemption` ≈ `subscription_gift`. Donation-value events signal via `hasDonation`; membership purchases are not donation-value events.
 
