@@ -7267,22 +7267,29 @@
 			}
 
 			function flushMissedLiveBuffer() {
-				if (historyBrowsing || historyReturnSyncPending || !historyMissedLiveBuffer.length) {
+				if (historyBrowsing || historyReturnSyncPending) {
 					return;
 				}
 				var buffered = historyMissedLiveBuffer.slice();
 				historyMissedLiveBuffer = [];
-				buffered.forEach(function(msg) {
-					var displayId = (msg && msg.mid) ? msg.mid : msg.id;
-					var node = displayId ? document.querySelector(dataAttributeSelector("data-mid", displayId)) : null;
-					if (!node) {
-						node = processData({ contents: msg }, { reloaded: true, suppressLiveSideEffects: true, skipHistoryDeferral: true });
-					}
-					// These arrived live while browsing history, even if recentHistory already rendered them.
-					if (node) {
-						queueMessageIfRequested(node, node.rawContents);
-					}
-				});
+				// Finish queueing the entire catch-up batch before any rows can be pruned.
+				historyReturnSyncPending = true;
+				try {
+					buffered.forEach(function(msg) {
+						var displayId = (msg && msg.mid) ? msg.mid : msg.id;
+						var node = displayId ? document.querySelector(dataAttributeSelector("data-mid", displayId)) : null;
+						if (!node) {
+							node = processData({ contents: msg }, { reloaded: true, suppressLiveSideEffects: true, skipHistoryDeferral: true });
+						}
+						// These arrived live while browsing history, even if recentHistory already rendered them.
+						if (node) {
+							queueMessageIfRequested(node, node.rawContents);
+						}
+					});
+				} finally {
+					historyReturnSyncPending = false;
+				}
+				cleanUpOldNodes();
 				jumptoBottom2();
 			}
 
@@ -8412,7 +8419,6 @@
 								}
 							}
 						});
-						cleanUpOldNodes();
 						console.log("Loaded from remote DB storage");
 						historyReturnSyncPending = false;
 						flushMissedLiveBuffer();
@@ -9051,8 +9057,9 @@
 							} else {
 								queue.push({ contents: content });
 								if (queue.length > 100) {
-									// keep the queue from exploding in size
-									queue.shift();
+									// Prefer queue candidates while keeping the paused buffer capped at 100.
+									var discardIndex = queue.findIndex(item => !isQueueRequested(item.contents));
+									queue.splice(discardIndex === -1 ? 0 : discardIndex, 1);
 								}
 							}
 							return true;
@@ -9165,8 +9172,9 @@
 					} else {
 						queue.push({ contents: data.content });
 						if (queue.length > 100) {
-							// keep the queue from exploding in size
-							queue.shift();
+							// Prefer queue candidates while keeping the paused buffer capped at 100.
+							var discardIndex = queue.findIndex(item => !isQueueRequested(item.contents));
+							queue.splice(discardIndex === -1 ? 0 : discardIndex, 1);
 						}
 					}
 					return true;
@@ -9213,8 +9221,9 @@
 					}
 					queue.push({ contents: data });
 					if (queue.length > 100) {
-						// keep the queue from exploding in size
-						queue.shift();
+						// Prefer queue candidates while keeping the paused buffer capped at 100.
+						var discardIndex = queue.findIndex(item => !isQueueRequested(item.contents));
+						queue.splice(discardIndex === -1 ? 0 : discardIndex, 1);
 					}
 					return true;
 				}
@@ -10511,7 +10520,7 @@
 			}
 
 			function cleanUpOldNodes() {
-				if (historyBrowsing) return;
+				if (historyBrowsing || historyReturnSyncPending) return;
 				if (horizontal) {
 					horizontalPruneMessages();
 					return;
