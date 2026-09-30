@@ -35,6 +35,18 @@ sources/groups retain their existing selection.
 
 ## Unreleased hosted and local overlay-control correction
 
+### Points leaderboard page synchronization
+
+Updated beta page sources add the read-only `ssnControlRequest: { target: "leaderboard" }`
+request on the leaderboard's existing WebSocket feed and WebRTC connection. The host
+answers with the existing `points_leaderboard` snapshot on that connection. The loyalty
+view and `!leaderboard` display total earned points. This requires the updated host and
+leaderboard page sources; it adds no Local AI `/api/v1` or MCP command. The development
+runtime used for verification is SSApp 0.4.32; no released minimum containing these page
+changes has been assigned.
+
+### Other overlay controls
+
 Minimum verified runtime: SSApp 0.4.28 with the updated Social Stream beta page sources containing `shared/overlay-control-transport.js`. No released minimum containing all changes has been assigned. Remote page revisions can change independently of the app version; do not assume a published 0.4.28 build contains this update. Existing API/MCP responses still expose the running SSApp version.
 
 Actions channel 6 now sends to enabled relay routes alongside connected WebRTC peers. Poll/Credits/Hype controls and snapshots use dedicated channel 7. `ssnControl` carries command IDs and feature targets for duplicate suppression and acknowledgements; `ssnControlRequest` only reads Poll/Hype state. Existing enabled receiver switches and session boundaries apply. A receipt confirms delivery, not OBS visibility or external action completion. Reconnect reads do not replay Credits starts or Poll resets.

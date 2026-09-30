@@ -10315,6 +10315,9 @@ function setupSocketDock() {
 		if (streamID !== joinedDockSession || socketserverDock !== joinedDockSocket) return;
 		conConDock = 0;
 		socketserverDock.send(JSON.stringify({ join: streamID, out: 4, in: 3 }));
+		if (typeof window.requestPointsLeaderboardBroadcast === "function") {
+			window.requestPointsLeaderboardBroadcast("connected", { immediate: true });
+		}
 	};
 	socketserverDock.addEventListener("message", async function (event) {
 		if (streamID !== joinedDockSession || socketserverDock !== joinedDockSocket) return;
@@ -13411,6 +13414,17 @@ function handleOverlayControlRequest(data, socket, replyChannel, allowSnapshot) 
 		if (pending && pending.session === streamID && pending.target === data.ssnControlAck.target) pending.resolve(true);
 		return true;
 	}
+	if (data.ssnControlRequest && data.ssnControlRequest.target === "leaderboard") {
+		if (allowSnapshot || settings.server3) {
+			const session = streamID;
+			broadcastPointsLeaderboard("connected", undefined, packet => {
+				if (session === streamID && isExtensionOn && !settings.disablehost && socket.readyState === 1) {
+					socket.send(JSON.stringify(packet));
+				}
+			});
+		}
+		return true;
+	}
 	if (!allowSnapshot) return true;
 	var request = data.ssnControlRequest, packet;
 	if (request.target === "poll") {
@@ -15327,6 +15341,12 @@ async function processIncomingRequest(request, UUID = false) {
 	if (settings.disablehost) {
 		return;
 	}
+	if (request && request.ssnControlRequest && request.ssnControlRequest.target === "leaderboard" && UUID) {
+		if (isExtensionOn) {
+			await broadcastPointsLeaderboard("connected", undefined, packet => sendDataP2P(packet, UUID));
+		}
+		return true;
+	}
 	if (await handleBridgeChunkRequest(request, UUID)) {
 		return;
 	}
@@ -17013,15 +17033,6 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 
 	const shouldCheckDynamicPerTab = antispam && settings["dynamictiming"];
 
-	if (!reverse && !overrideTimeout && data.tid) {
-		// we do this early to avoid the blue bar if not needed
-		if (data.tid in messageTimeout) {
-			if (now - messageTimeout[data.tid] < overrideTimeout) {
-				return;
-			}
-		}
-	}
-
 	lastAntiSpam = messageCounter;
 
 	if (settings.s10apikey && settings.s10) {
@@ -17063,6 +17074,10 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 
 		const processTab = async tab => {
 			processedAnyTab = true;
+			// Apply the configured delay to the resolved destination, including bot-account routing.
+			if (overrideTimeout > 0 && tab.id in messageTimeout && Date.now() - messageTimeout[tab.id] < overrideTimeout) {
+				return;
+			}
 			await dispatchRelayMessageToTab(tab, routingData, {
 				now: now,
 				overrideTimeout: overrideTimeout,
@@ -17113,12 +17128,6 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
 			return false;
 		}
 	}
-	if (reverse && !overrideTimeout && tab.id) {
-		if (tab.id in messageTimeout && now - messageTimeout[tab.id] < overrideTimeout) {
-			return false;
-		}
-	}
-
 	if (relayMode && relaytargets) {
 		if (!sourceType || !relaytargets.includes(sourceType)) {
 			return false;
@@ -17471,6 +17480,9 @@ function resolveThrottleProfile(tabId, throttleProfile, overrideTimeout) {
 			maxQueue: MAX_FAKE_CHAT_THROTTLE_QUEUE_DEFAULT
 		};
 	}
+	if (typeof overrideTimeout === "number" && overrideTimeout > 0) {
+		profile.minInterval = Math.max(profile.minInterval, overrideTimeout);
+	}
 
 	profile.maxQueue = Number.isFinite(profile.maxQueue) ? Math.max(0, profile.maxQueue) : MAX_FAKE_CHAT_THROTTLE_QUEUE_DEFAULT;
 
@@ -17486,7 +17498,7 @@ function ensureThrottleState(tabId) {
 	if (!state) {
 		state = {
 			queue: [],
-			lastSent: 0,
+			lastSent: messageTimeout[tabId] || 0,
 			processing: false,
 			timer: null
 		};

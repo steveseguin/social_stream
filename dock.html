@@ -3999,6 +3999,7 @@
 					selectedQueue.push(node);
 					node.children[0].dataset.qid = selectedQueue.length;
 					node.classList.add("queued");
+					applyHiddenState(node);
 					updateQueueButton();
 				}
 			}
@@ -7168,39 +7169,66 @@
 			
 			function deleteMessages(data, deleteOnlyLast=false) {
 				let selector = "";
+				let matchField = "";
+				const nativeId = data.delete.meta && data.delete.meta.messageId;
 				if (data.delete.meta && data.delete.meta.messageId) {
 					const sourceSelector = data.delete.type ? dataAttributeSelector("data-source-type", data.delete.type) : "";
-					document.querySelectorAll(".highlight-chat" + sourceSelector).forEach(ele => {
-						if (String(getNativeSourceControlMessageId(ele.rawContents || {})) === String(data.delete.meta.messageId)) ele.remove();
-					});
-					return;
-				}
-				if (data.delete.id) {
+					selector = ".highlight-chat" + sourceSelector;
+				} else if (data.delete.id) {
+					matchField = "id";
 					selector = dataAttributeSelector("data-mid", data.delete.id);
 					if (data.delete.type) selector += dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.userid && data.delete.type) {
+					matchField = "userid";
 					selector = dataAttributeSelector("data-userid", data.delete.userid) + dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.type === "twitch" && data.delete.meta && data.delete.meta.pluralmind && data.delete.username) {
+					matchField = "username";
 					selector = dataAttributeSelector("data-username", data.delete.username) + dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.chatname && data.delete.type) {
+					matchField = "chatname";
 					selector = dataAttributeSelector("data-chatname", data.delete.chatname) + dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.type) {
 					selector = dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.chatname) {
+					matchField = "chatname";
 					selector = dataAttributeSelector("data-chatname", data.delete.chatname);
 				}
 
-				if (deleteOnlyLast || data.delete.onlyLast) {
-					const elements = Array.from(document.querySelectorAll(selector));
-					if (elements.length) {
-						const newest = elements.reduce((a, b) => 
-							Number(a.dataset.mid) > Number(b.dataset.mid) ? a : b
-						);
-						newest.remove();
+				// Include queued rows already detached from the visible chat.
+				const nodes = new Set(Array.from(document.querySelectorAll(selector)));
+				selectedQueue.concat(autoShowQueue).forEach(node => {
+					if (node.matches(selector)) nodes.add(node);
+				});
+				let matches = Array.from(nodes).filter(node => !nativeId ||
+					String(getNativeSourceControlMessageId(node.rawContents || {})) === String(nativeId)
+				).map(node => ({ node, id: node.dataset.mid, type: node.dataset.sourceType }));
+				const pending = historyMissedLiveBuffer.concat(queue.map(item => item.contents), messageBuffer.map(item => item.contents));
+				pending.forEach(message => {
+					if (data.delete.type && String(message.type) !== String(data.delete.type)) return;
+					if (nativeId) {
+						if (String(getNativeSourceControlMessageId(message)) !== String(nativeId)) return;
+					} else if (matchField) {
+						const value = matchField === "id" ? (message.mid || message.id) : message[matchField];
+						if (String(value) !== String(data.delete[matchField])) return;
 					}
-				} else {
-					document.querySelectorAll(selector).forEach(ele => ele.remove());
+					matches.push({ message, id: message.mid || message.id, type: message.type });
+				});
+				// Native-message deletions already identify their target; onlyLast applies to the other selectors.
+				if (!nativeId && (deleteOnlyLast || data.delete.onlyLast) && matches.length) {
+					const newest = matches.reduce((a, b) => Number(a.id) > Number(b.id) ? a : b);
+					matches = matches.filter(item => item === newest || (newest.id &&
+						String(item.id) === String(newest.id) && item.type === newest.type));
 				}
+				const deletedNodes = new Set(matches.filter(item => item.node).map(item => item.node));
+				const deletedPending = new Set(matches.filter(item => item.message).map(item => item.message));
+				historyMissedLiveBuffer = historyMissedLiveBuffer.filter(message => !deletedPending.has(message));
+				queue = queue.filter(item => !deletedPending.has(item.contents));
+				messageBuffer = messageBuffer.filter(item => !deletedPending.has(item.contents));
+				const previousQueueLength = selectedQueue.length;
+				selectedQueue = selectedQueue.filter(node => !deletedNodes.has(node));
+				autoShowQueue = autoShowQueue.filter(node => !deletedNodes.has(node));
+				deletedNodes.forEach(node => node.remove());
+				if (selectedQueue.length !== previousQueueLength) updateQueueButton(true);
 			}
 			
 			function getUserHistory(element) {
@@ -8220,10 +8248,7 @@
 					// delete by message ID; likely another dock is syncing their delete with me
 					//if ((syncDocks || force)){
 					try {
-						var ele = document.querySelector(dataAttributeSelector("data-mid", data.deleteMessage));
-						if (ele) {
-							ele.remove();
-						}
+						deleteMessages({ delete: { id: data.deleteMessage } });
 						return true;
 					} catch (e) {}
 					//}
@@ -9932,6 +9957,11 @@
 					}
 				} catch (e) {
 					console.error(e);
+				}
+				if (element.dataset.mid) {
+					deleteMessages({ delete: { id: element.dataset.mid, type: element.dataset.sourceType } });
+				} else if (selectedQueue.includes(element)) {
+					removeQueue(element);
 				}
 				element.remove();
 			}
