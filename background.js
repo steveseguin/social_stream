@@ -10719,7 +10719,7 @@ async function sendStreamDeckDockRequestP2P(request, originUUID) {
 				continue;
 			}
 			try {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: request }, type: "pcs", UUID: UUID }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: request }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 				sent = true;
 			} catch (e) {}
 		}
@@ -11960,7 +11960,7 @@ function setupSocket() {
 function enableYouTube() {
 	// function to send data to the DOCk via the VDO.Ninja API
 	try {
-		iframe.contentWindow.postMessage({ enableYouTube: settings.youtubeapikey.textsetting }, "*"); // send only to 'viewers' of this stream
+		iframe.contentWindow.postMessage({ enableYouTube: settings.youtubeapikey.textsetting }, "https://vdo.socialstream.ninja"); // send only to 'viewers' of this stream
 	} catch (e) {
 		console.error(e);
 	}
@@ -12900,7 +12900,7 @@ function sendDataToStreamDeckPeersP2P(data) {
 				continue;
 			}
 			try {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 				sent = true;
 			} catch (e) {
 				console.error(e);
@@ -13002,7 +13002,7 @@ function sendDataP2P(data, UUID = false) {
 	if (iframe) {
 		if (UUID && connectedPeers) {
 			try {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 			} catch (e) {
 				console.error(e);
 			}
@@ -13013,14 +13013,14 @@ function sendDataP2P(data, UUID = false) {
 					UUID = keys[i];
 					var label = connectedPeers[UUID] || false;
 					if (!label || label === "dock" || label === "aioverlay" || label === "cohost" || label === "tipjar") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*"); // docks, AI pages, and overlay-style pages are VIEWERS, since backend is PUSH-only
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja"); // docks, AI pages, and overlay-style pages are VIEWERS, since backend is PUSH-only
 					}
 				} catch (e) {
 					console.error(e);
 				}
 			}
 		} else {
-			iframe.contentWindow.postMessage({ sendData: msg, type: "pcs" }, "*"); // send only to 'viewers' of this stream
+			iframe.contentWindow.postMessage({ sendData: msg, type: "pcs" }, "https://vdo.socialstream.ninja"); // send only to 'viewers' of this stream
 		}
 	}
 }
@@ -13230,14 +13230,14 @@ function sendHypeP2P(data, uid = null) {
 					var UUID = keys[i];
 					const peerLabel = connectedPeers[UUID];
 					if (peerLabel === "hype") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: packet }, type: "pcs", UUID: UUID }, "*");
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: packet }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 					}
 				} catch (e) {}
 			}
 		} else {
 			const peerLabel = connectedPeers[uid];
 			if (peerLabel === "hype") {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: packet }, type: "pcs", UUID: uid }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: packet }, type: "pcs", UUID: uid }, "https://vdo.socialstream.ninja");
 			}
 		}
 	}
@@ -13274,14 +13274,14 @@ function sendSpotifyOverlay(payload, uid = null) {
 					var UUID = keys[i];
 					const peerLabel = connectedPeers[UUID];
 					if (peerLabel === "spotify") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { spotify: payload } }, type: "pcs", UUID: UUID }, "*");
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { spotify: payload } }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 					}
 				} catch (e) {}
 			}
 		} else {
 			const peerLabel = connectedPeers[uid];
 			if (peerLabel === "spotify") {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { spotify: payload } }, type: "pcs", UUID: uid }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { spotify: payload } }, type: "pcs", UUID: uid }, "https://vdo.socialstream.ninja");
 			}
 		}
 	}
@@ -13501,7 +13501,7 @@ async function trySendTargetP2P(data, target) {
 				var UUID = keys[i];
 				var label = connectedPeers[UUID];
 				if (label === target) {
-					iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+					iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 					sent = true;
 				}
 			} catch (e) {}
@@ -13723,13 +13723,13 @@ function sendTimerP2P(payload, uid = null) {
 					var UUID = keys[i];
 					var label = connectedPeers[UUID];
 					if (label === "timer") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { timer: payload } }, type: "pcs", UUID: UUID }, "*");
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { timer: payload } }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 					}
 				} catch (e) {}
 			}
 		} else {
 			try {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { timer: payload } }, type: "pcs", UUID: uid }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { timer: payload } }, type: "pcs", UUID: uid }, "https://vdo.socialstream.ninja");
 			} catch (e) {}
 		}
 	}
@@ -14186,14 +14186,14 @@ function sendTickerP2P(data, uid = null) {
 					var UUID = keys[i];
 					var label = connectedPeers[UUID];
 					if (label === "ticker") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: UUID }, "*");
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 					}
 				} catch (e) {}
 			}
 		} else {
 			const peerLabel = connectedPeers[uid];
 			if (peerLabel === "ticker") {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: uid }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: uid }, "https://vdo.socialstream.ninja");
 			}
 		}
 	}
