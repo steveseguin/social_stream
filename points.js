@@ -712,12 +712,13 @@ class PointsSystem {
         return leaderboard.length === 0;
     }
 
-    async migrateFromMessageStore() {
+    async migrateFromMessageStore(initialMigrationNeeded = false) {
         if (this.migrationComplete || this.migrationInProgress || !this.messageStore) {
             return false;
         }
         
-        const migrationNeeded = await this.checkIfMigrationNeeded();
+        // Live awards may create a wallet after startup has already found an empty ledger.
+        const migrationNeeded = initialMigrationNeeded || await this.checkIfMigrationNeeded();
         if (!migrationNeeded) {
             this.migrationComplete = true;
             return false;
@@ -773,8 +774,8 @@ class PointsSystem {
                         totalPoints += this.pointsPerEngagement;
                         engagementHistory.push(timestamp);
                         
-                        if (timeSince <= this.streakBreakTime || lastEngagementTime === 0) {
-                            // Continue or start streak
+                        if (timeSince <= this.streakBreakTime) {
+                            // Continue a streak using the same rule as live engagement.
                             currentStreak++;
                             
                             // Calculate streak bonus
@@ -904,7 +905,7 @@ let pointsSystemInitPromise = null;
 let pointsLeaderboardBroadcastTimeout = null;
 let pendingLeaderboardReason = 'update';
 
-async function broadcastPointsLeaderboard(reason = 'update', limit = DEFAULT_POINTS_LEADERBOARD_LIMIT) {
+async function broadcastPointsLeaderboard(reason = 'update', limit = DEFAULT_POINTS_LEADERBOARD_LIMIT, sendSnapshot = null) {
     if (!isPointsSystemEnabled()) {
         return;
     }
@@ -929,11 +930,11 @@ async function broadcastPointsLeaderboard(reason = 'update', limit = DEFAULT_POI
             }))
         };
 
-        const transport = (typeof sendDataP2P === 'function')
+        const transport = sendSnapshot || ((typeof sendDataP2P === 'function')
             ? sendDataP2P
             : (typeof window !== 'undefined' && typeof window.sendDataP2P === 'function'
                 ? window.sendDataP2P
-                : null);
+                : null));
 
         if (transport) {
             transport(payload);
@@ -1006,7 +1007,10 @@ function ensurePointsSystemInitialized() {
             const migrationNeeded = await pointsSystem.checkIfMigrationNeeded();
             if (migrationNeeded) {
                 console.log('Migration needed, starting in background...');
-                setTimeout(() => pointsSystem.migrateFromMessageStore(), 3000);
+                setTimeout(() => {
+                    syncPointsSystemConfigFromSettings();
+                    pointsSystem.migrateFromMessageStore(true);
+                }, 3000);
             } else {
                 console.log('No migration needed, points system ready');
             }

@@ -368,9 +368,9 @@ class PointsActions {
         
         const leaderboard = await this.pointsSystem.getLeaderboard(validLimit, message.type);
         
-        let response = `Top ${validLimit} users by points:\n`;
+        let response = `Top ${validLimit} users by earned points:\n`;
         leaderboard.forEach((user, index) => {
-            response += `${index + 1}. ${user.username}: ${user.points - user.pointsSpent} points (${user.currentStreak}x streak)\n`;
+            response += `${index + 1}. ${user.username}: ${user.points} earned points (${user.currentStreak}x streak)\n`;
         });
         
         return {

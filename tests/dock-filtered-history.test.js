@@ -134,6 +134,7 @@ const runtime = {
 	historyBrowsing: true,
 	historyReturnSyncPending: false,
 	historyMissedLiveBuffer: [],
+	applyHiddenState() {},
 	updateQueueButton() {},
 	jumptoBottom2() {},
 	dataAttributeSelector: (attribute, id) => String(id),

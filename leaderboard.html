@@ -2002,7 +2002,7 @@
                     case 'messages':
                         return this.messageCount;
                     case 'loyalty':
-                        return this.loyaltyAvailable || 0;
+                        return this.loyaltyPoints || 0;
                     case 'combined':
                         // Combined engagement + donations score
                         const baseScore = this.messageCount * 1; // 1 point per message
@@ -2686,7 +2686,7 @@
                 case 'messages':
                     return 'messages';
                 case 'loyalty':
-                    return 'loyalty points';
+                    return 'earned points';
                 case 'combined':
                     return 'points';
                 default:
@@ -3464,6 +3464,10 @@
             const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
             eventer(messageEvent, function (e) {
                 if (e.source != iframe.contentWindow) return;
+                if (rankingType === 'loyalty' && e.data && e.data.UUID && e.data.value && e.data.value.label === 'SocialStream' &&
+                    (e.data.action === 'push-connection-info' || e.data.action === 'view-connection-info')) {
+                    iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ssnControlRequest: { target: 'leaderboard' } } }, type: 'rpcs', UUID: e.data.UUID }, '*');
+                }
                 if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
                     if ("overlayNinja" in e.data.dataReceived) {
                         processData(e.data.dataReceived.overlayNinja);
@@ -3485,6 +3489,9 @@
                     attempts = 1;
                     const session = (urlParams.get('session') || '').split(',')[0];
                     socket.send(JSON.stringify({ join: session, out: 3, in: 4 }));
+                    if (rankingType === 'loyalty') {
+                        socket.send(JSON.stringify({ ssnControlRequest: { target: 'leaderboard' } }));
+                    }
                 };
                 socket.onclose = function(){ setTimeout(connect, 100 * attempts++); };
                 socket.onerror = function(){ try { socket.close(); } catch(e){} };
