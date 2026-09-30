@@ -471,6 +471,11 @@
                                 <td><code>subtitle</code> captures new tier label; <code>membership</code> remains “MEMBERSHIP”.</td>
                             </tr>
                             <tr>
+                                <td class="membership-event"><code>membermilestone</code></td>
+                                <td>Membership milestone cards containing chat text, when no other event type has already been identified.</td>
+                                <td><code>chatmessage</code> contains the member's message; <code>membership</code> carries the membership label and <code>subtitle</code> includes tenure when detected. This marks a milestone message, not a new membership purchase or gift.</td>
+                            </tr>
+                            <tr>
                                 <td class="donation-event"><code>superchat</code>, <code>supersticker</code>, <code>jeweldonation</code></td>
                                 <td>Super Chats, Super Stickers, donation announcement cards, and YouTube Gifts powered by Jewels (<code>yt-gift-message-view-model</code>).</td>
                                 <td><code>hasDonation</code> carries the value; <code>event</code> identifies the YouTube paid item type. YouTube Gifts use <code>N Jewels</code> when present, or <code>1 YouTube Gift</code> when YouTube hides the count. Gift images use <code>contentimg</code>, gift labels use <code>subtitle</code>, and minimal gift details are mirrored under <code>meta.youtubeGift</code>.</td>

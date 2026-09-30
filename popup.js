@@ -13070,6 +13070,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		manageUserPointsBtn.addEventListener('click', async function() {
 			const username = await prompt("Enter username to manage points for:");
 			if (!username) return;
+			const platform = await prompt("Enter platform/source type (for example: youtube, twitch, or default):");
+			if (!platform || !platform.trim()) return;
+			const type = platform.trim();
 			
 			const action = await prompt("Enter action (add/subtract/set):");
 			if (!action || !['add', 'subtract', 'set'].includes(action.toLowerCase())) {
@@ -13084,17 +13087,18 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				return;
 			}
 			
-				if (confirm(`Are you sure you want to ${action} ${points} points ${action === 'subtract' ? 'from' : 'to'} ${username}?`)) {
+				if (confirm(`Are you sure you want to ${action} ${points} points ${action === 'subtract' ? 'from' : 'to'} ${username} (${type})?`)) {
 					chrome.runtime.sendMessage({
 						cmd: "manageUserPoints",
 						username: username,
+						type: type,
 						action: action.toLowerCase(),
 						points: points
 					}, function(response) {
 						if (response && response.success) {
 							const available = Number.isFinite(response?.available) ? response.available : undefined;
 							const total = Number.isFinite(response?.points) ? response.points : undefined;
-							let summary = `Successfully ${action === 'set' ? 'set' : action + 'ed'} ${points} points ${action === 'subtract' ? 'from' : 'for'} ${username}.`;
+							let summary = `Successfully ${action === 'set' ? 'set' : action + 'ed'} ${points} points ${action === 'subtract' ? 'from' : 'for'} ${username} (${type}).`;
 							if (available !== undefined) summary += ` Available: ${available}`;
 							if (total !== undefined) summary += ` | Total: ${total}`;
 							alert(summary);

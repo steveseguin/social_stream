@@ -17882,15 +17882,23 @@ async function performGeneralFakeChatSend(tabId, { message, middle = true, keypr
 			return;
 		}
 
+		if (settings.limitcharactersstate) {
+			const limit = settings.limitcharacters?.numbersetting || 200;
+			const originalMessage = sanitizeMessageForTracking(message, false);
+			message = limitString(message, limit);
+			const entries = messageStore[tabId] || [];
+			for (let i = entries.length - 1; i >= 0; i--) {
+				if (entries[i].message === originalMessage) {
+					entries[i].message = sanitizeMessageForTracking(message, false);
+					break;
+				}
+			}
+		}
+
 		lastSentMessage = message.replace(/<\/?[^>]+(>|$)/g, "").replace(/\s\s+/g, " ");
 		lastSentTimestamp = Date.now();
 		lastMessageCounter = 0;
 		messageTimeout[tabId] = Date.now();
-
-		if (settings.limitcharactersstate) {
-			const limit = settings.limitcharacters?.numbersetting || 200;
-			message = limitString(message, limit);
-		}
 
 		if (backspace) {
 			try {
