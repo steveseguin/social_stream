@@ -198,6 +198,60 @@ assert.ok(
   assert.strictEqual(loaded.functions.getLocalServerConnectionParams(), "&localserver");
 }
 
+// Exercise source validation through popup initialization, base selection, and both link paths.
+{
+  const initStart = popupSource.indexOf("var urlParams = new URLSearchParams(window.location.search);");
+  const initEnd = popupSource.indexOf("var ssapp = false;", initStart);
+  const baseStart = popupSource.indexOf("// First check if we're on a beta URL");
+  const baseEnd = popupSource.indexOf("function updateURL(", baseStart);
+  const directLink = popupSource.match(/^\s*obsControlDockUrl\.href = baseURL \+ [^\r\n]+/m);
+  assert.ok(initStart >= 0 && initEnd > initStart && baseStart >= 0 && baseEnd > baseStart && directLink);
+
+  function resolveSourceMode(query, popupUrl = "chrome-extension://fixture/popup.html") {
+    const location = new URL(popupUrl);
+    location.search = query;
+    const loaded = loadFunctions(["getSourceModeBase", "normalizeGeneratedLinkBase", "buildGeneratedUrl"], {
+      location, window: { location }, Beta: false, baseURL: "https://socialstream.ninja/",
+      response: { streamID: "room&one" }, obsControlDockUrl: {}, getLocalServerConnectionParams: () => "",
+    });
+    vm.runInContext(popupSource.slice(initStart, initEnd) + popupSource.slice(baseStart, baseEnd) + directLink[0], loaded.sandbox);
+    loaded.sandbox.generatedLink = loaded.functions.buildGeneratedUrl("obs-control-dock.html", "session=room%26one");
+    return loaded.sandbox;
+  }
+
+  for (const base of [
+    "https://socialstream.ninja/", "https://beta.socialstream.ninja/",
+    "https://selfhost.example.test/social_stream/", "http://localhost:8080/social_stream/",
+    "file:///C:/SSN/", "file:///C:/Social Stream/",
+    "chrome-extension://fixture/", "moz-extension://fixture/",
+  ]) {
+    const result = resolveSourceMode(new URLSearchParams({ sourcemode: base }).toString());
+    assert.strictEqual(result.sourcemode, base);
+    assert.strictEqual(result.baseURL, base);
+    const expected = new URL("obs-control-dock.html?session=room%26one", base).href;
+    assert.strictEqual(new URL(result.obsControlDockUrl.href).href, expected);
+    assert.strictEqual(result.generatedLink, expected);
+  }
+
+  for (const source of ["", "not a URL", "/relative/", "mailto:fixture", "data:text/plain,fixture", "about:blank", "custom-source://fixture/"]) {
+    const result = resolveSourceMode(new URLSearchParams({ sourcemode: source }).toString());
+    assert.strictEqual(result.sourcemode, false);
+    assert.strictEqual(result.baseURL, "https://socialstream.ninja/");
+    assert.strictEqual(result.obsControlDockUrl.href, "https://socialstream.ninja/obs-control-dock.html?session=room%26one");
+    assert.strictEqual(result.generatedLink, result.obsControlDockUrl.href);
+  }
+
+  assert.strictEqual(resolveSourceMode("").sourcemode, false);
+  for (const [popupUrl, query, expected] of [
+    ["https://beta.socialstream.ninja/popup.html", "", "https://beta.socialstream.ninja/"],
+    ["http://localhost:8080/popup.html", "", "http://localhost:8080/"],
+    ["file:///C:/SSN/popup.html", "&devmode", "file:///C:/SSN/"],
+    ["chrome-extension://fixture/popup.html", "&generatedlinkbase=https%3A%2F%2Fbeta.socialstream.ninja%2F", "https://beta.socialstream.ninja/"],
+  ]) {
+    assert.strictEqual(resolveSourceMode("sourcemode=mailto%3Afixture" + query, popupUrl).baseURL, expected);
+  }
+}
+
 {
   const { functions } = loadFunctions(["buildGeneratedUrl"], { baseURL: "https://socialstream.ninja/" });
   const generated = functions.buildGeneratedUrl(

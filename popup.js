@@ -164,7 +164,7 @@ window.addEventListener('message', function(event) {
 
 var urlParams = new URLSearchParams(window.location.search);
 const devmode = urlParams.has("devmode");
-var sourcemode = urlParams.get("sourcemode") || false;
+var sourcemode = getSourceModeBase(urlParams.get("sourcemode")) || false;
 var ssapp = false;
 
 if (urlParams.has("ssapp")) {
@@ -6233,6 +6233,17 @@ function scrollToSetting(targetSection, targetSetting) {
 
 
 var baseURL = "https://socialstream.ninja/";
+
+function getSourceModeBase(value) {
+	if (!value) return "";
+	try {
+		const parsed = new URL(value);
+		if (!["http:", "https:", "file:", "chrome-extension:", "moz-extension:"].includes(parsed.protocol)) return "";
+		return value;
+	} catch (e) {
+		return "";
+	}
+}
 
 function normalizeGeneratedLinkBase(value) {
 	if (!value || typeof value !== "string") return "";
