@@ -24,8 +24,12 @@ function render() {
 }
 function receive(data) {
     if (!R.isSupport(data)) return;
-    var type = R.platform(data), amount = type === 'tiktok' ? R.coins(data) :
-        type === 'twitch' ? R.labelCount(data, 'bit') : type === 'facebook' ? R.labelCount(data, 'star') : 0;
+    var type = R.platform(data);
+    // Twitch's display label can be translated; prefer its native Bits count.
+    var bits = type === 'twitch' ? Number((data.meta || {}).bits || data.bits) : 0;
+    var amount = type === 'tiktok' ? R.coins(data) : type === 'twitch' ?
+        (Number.isInteger(bits) && bits > 0 ? bits : R.labelCount(data, 'bit')) :
+        type === 'facebook' ? R.labelCount(data, 'star') : 0;
     if (!amount) { R.log('No supported native-unit amount on this event.'); return; }
     var added = R.increment(data, amount, 'native-units');
     if (!added) return;
