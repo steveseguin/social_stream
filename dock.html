@@ -11769,6 +11769,11 @@
 				if (data.contents) {
 					data = data.contents;
 
+					// Temporary Web Store ad-announcement workaround; remove on 2026-10-07 (one week).
+					if (data.type === "twitch" && ["ad_break", "adbreak", "ad_request", "ad_schedule"].includes(data.event)) {
+						return;
+					}
+
 					var shouldDeferForHistory = (historyBrowsing || historyReturnSyncPending) && !reloaded && !prependMode && !processDataOptions.skipHistoryDeferral;
 					if (shouldDeferForHistory) {
 						if (historyBrowsing) {
