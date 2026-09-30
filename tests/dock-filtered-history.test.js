@@ -136,6 +136,7 @@ const runtime = {
 	historyMissedLiveBuffer: [],
 	applyHiddenState() {},
 	updateQueueButton() {},
+	cleanUpOldNodes() {},
 	jumptoBottom2() {},
 	dataAttributeSelector: (attribute, id) => String(id),
 	document: { querySelector: id => rendered.get(id) || null },
