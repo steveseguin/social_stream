@@ -4,6 +4,18 @@
 	//var channelName = "";
 	var isExtensionOn = true;
 	var videoId = urlParams.get("v") || false;
+	var youtubeCaptureStatus = "";
+
+	function notifyYouTubeCaptureStatus(status, message) {
+		// Standard capture windows use the same app status bridge as WebSocket sources.
+		if (!window.ninjafy || youtubeCaptureStatus === status) return;
+		try {
+			chrome.runtime.sendMessage(chrome.runtime.id, {
+				wssStatus: { platform: "youtube", status: status, message: message }
+			}, function () {});
+			youtubeCaptureStatus = status;
+		} catch (e) {}
+	}
 	
 	var debugmode = urlParams.has("debug") || false;
 	try {
@@ -1356,6 +1368,9 @@
 				console.error("Error processing gift redemption:", e);
 			  }
 			} else if (chatmessage) {
+				if (!eventType && ele.tagName === "YT-LIVE-CHAT-MEMBERSHIP-ITEM-RENDERER") {
+					eventType = "membermilestone";
+				}
 				//if (mod) {
 				//	hasMembership = chatmembership || getTranslation("moderator-chat", "MODERATOR");
 				//} else {
@@ -2765,6 +2780,12 @@
 	  observeYouTubeSupplementalEffects();
 	  let ele = getYouTubeChatItemsElement();
 	  if (ele) {
+		// Older error rows can remain in the chat history after messages resume.
+		if (window.ninjafy && ele.lastElementChild && ele.lastElementChild.tagName === "YT-LIVE-CHAT-SERVER-ERROR-MESSAGE") {
+			notifyYouTubeCaptureStatus("error", "YouTube reports a chat connection error. Reveal the capture page or use Reload to reconnect.");
+		} else {
+			notifyYouTubeCaptureStatus("connected");
+		}
 		maybeRefreshYouTubeChatObserver(ele);
 		scheduleYouTubeChatAutoScroll(ele);
 		maybeReloadStaleYouTubeChat(ele);
@@ -2795,6 +2816,7 @@
 	  } else if (!ele){
 		 const message = document.querySelector("yt-live-chat-app yt-formatted-string.yt-live-chat-message-renderer");
 		if (message && !document.getElementById("videoIdInput")) {
+			notifyYouTubeCaptureStatus("error", "YouTube chat is unavailable. Reveal the capture page to check the video or sign in, or select another live stream.");
 			message.innerText = 
 				"It doesn't seem like we've been able to find any active live Youtube chat.\n\n" +
 				"➡️ Your Youtube stream must be already Live, active, and public for this option to work.\n\n" +

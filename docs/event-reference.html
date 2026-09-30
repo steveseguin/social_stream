@@ -119,7 +119,7 @@
                     <strong>Choose the capture method:</strong> For YouTube, Twitch, and Kick, <strong>WebSocket mode</strong> generally provides broader event coverage. Standard DOM capture reads the rows and cards actually rendered on the page. YouTube Super Chats, Super Stickers, and Jewel gifts have capture paths in both modes; other gift, tip, and membership events vary by source. See the platform tables for the supported paths and required settings.
                 </div>
                 <div class="alert-note alert-tip">
-                    <strong>Building Automations?</strong> Check out the <a href="../actions/event-flow-guide.html">Event Flow Guide</a> to learn how to use these event payloads in custom triggers, alerts, and workflows. The guide includes a <a href="../actions/event-flow-guide.html#template-variables">Template Variables Reference</a> for text formatting.
+                    <strong>Building Automations?</strong> Check out the <a href="../actions/event-flow-guide.html">Event Flow Guide</a> to learn how to use these event payloads in custom triggers, alerts, and workflows. The guide includes a <a href="../actions/event-flow-guide.html#template-variables">Template Variables Reference</a> for text formatting. For gift amounts, streak counting, and editable game examples, see <a href="making-games.html">Build games and rewards</a>.
                 </div>
                 <div class="alert-note alert-info">
                     <strong>Payload shape:</strong> Donation-style chat rows should use <code>hasDonation</code> and optional <code>donoValue</code>. Do not set <code>event: "donation"</code> just because a normal chat/tip row has value; use specific event names only for real platform actions or paid item types, such as <code>superchat</code>, <code>supersticker</code>, <code>gift</code>, or <code>jeweldonation</code>. Use <code>meta</code> only for additional structured data that consumers actually need and that existing fields do not already cover.
@@ -471,6 +471,11 @@
                                 <td><code>subtitle</code> captures new tier label; <code>membership</code> remains “MEMBERSHIP”.</td>
                             </tr>
                             <tr>
+                                <td class="membership-event"><code>membermilestone</code></td>
+                                <td>Membership milestone cards containing chat text, when no other event type has already been identified.</td>
+                                <td><code>chatmessage</code> contains the member's message; <code>membership</code> carries the membership label and <code>subtitle</code> includes tenure when detected. This marks a milestone message, not a new membership purchase or gift.</td>
+                            </tr>
+                            <tr>
                                 <td class="donation-event"><code>superchat</code>, <code>supersticker</code>, <code>jeweldonation</code></td>
                                 <td>Super Chats, Super Stickers, donation announcement cards, and YouTube Gifts powered by Jewels (<code>yt-gift-message-view-model</code>).</td>
                                 <td><code>hasDonation</code> carries the value; <code>event</code> identifies the YouTube paid item type. YouTube Gifts use <code>N Jewels</code> when present, or <code>1 YouTube Gift</code> when YouTube hides the count. Gift images use <code>contentimg</code>, gift labels use <code>subtitle</code>, and minimal gift details are mirrored under <code>meta.youtubeGift</code>.</td>
@@ -737,7 +742,7 @@
                         <tbody>
                             <tr>
                                 <td class="donation-event"><code>cheer</code></td>
-                                <td>Cheer notifications from EventSub <code>channel.bits.use</code>.</td>
+                                <td>Cheer notifications from IRC or EventSub <code>channel.bits.use</code>.</td>
                                 <td><code>hasDonation</code> “N bits”; <code>meta.bits</code> numeric; <code>chatmessage</code> preserves raw message; identified cheerers include <code>chatimg</code>.</td>
                             </tr>
                             <tr>
@@ -1651,9 +1656,12 @@
                 <article class="platform-card" id="shareplay">
                     <h3>SharePlay.tv</h3>
                     <p class="source-note">Implementation: <code>sources/shareplay.js</code></p>
+                    <p class="source-note">Desktop API implementation: <code>ssn_app/resources/shareplay-client.js</code>. The native SSApp source subscribes to the authorizing user's own channel using a staff-provisioned public OAuth client.</p>
                     <ul class="requirements">
                         <li>Relies on DOM scraping of the live chat drawer on SharePlay channel pages.</li>
                         <li>Only newly inserted chat rows and cards are emitted after the scraper attaches; the existing backlog is intentionally ignored.</li>
+                        <li>The desktop API source receives new EventSub events; disconnected messages are not replayed. Chat carries SharePlay's message ID in <code>id</code> and sender ID in <code>userid</code>, but no avatars or badges. Emotes respect <code>textonly</code>; replies populate the existing reply fields when the parent is in the 200-message session cache.</li>
+                        <li>The desktop API maps completed <code>channel.blitz</code> events to <code>raid</code>, chat shoutouts to <code>shoutout</code>, and <code>stream.viewers</code> to <code>viewer_update</code> when viewer counts or hype mode are enabled. API shoutouts contain the provided chat text without the DOM card's banner or button metadata. Synthetic chat/Blitz events preserve <code>meta.is_synthetic: true</code>; viewer updates retain integer <code>meta</code>.</li>
                     </ul>
                     <table class="event-table">
                         <thead>

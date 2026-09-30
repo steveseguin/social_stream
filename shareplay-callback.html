@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <link rel="icon" href="data:,">
+    <title>Connect SharePlay — Social Stream Ninja</title>
+    <style>
+        :root { color-scheme: light dark; }
+        body { margin: 0; font: 1rem/1.5 system-ui, sans-serif; }
+        main { max-width: 36rem; margin: 12vh auto; padding: 1.5rem; }
+        h1 { font-size: 1.5rem; }
+        a { color: #2266cc; }
+        a:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+        @media (prefers-color-scheme: dark) { a { color: #8ab4f8; } }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Connect SharePlay</h1>
+        <p id="status" role="status">Start SharePlay sign-in from the Social Stream Ninja app.</p>
+        <a id="return" hidden>Return to Social Stream Ninja</a>
+    </main>
+    <script>
+        (function () {
+            'use strict';
+            var params = new URLSearchParams(window.location.search);
+            var port = params.get('port');
+            var state = params.get('state');
+            var code = params.get('code');
+            var error = params.get('error');
+            window.history.replaceState(null, '', window.location.pathname);
+            if ((port !== '8181' && port !== '8080') || !state || (!code && !error)) return;
+
+            var callback = new URL('http://127.0.0.1:' + port + '/sources/websocket/shareplay.html');
+            callback.searchParams.set('state', state);
+            if (error) {
+                callback.searchParams.set('error', error);
+                if (params.get('error_description')) callback.searchParams.set('error_description', params.get('error_description'));
+            } else {
+                callback.searchParams.set('code', code);
+            }
+            document.getElementById('status').textContent = 'Returning to Social Stream Ninja. Keep the app open to finish signing in.';
+            var link = document.getElementById('return');
+            link.href = callback.href;
+            link.hidden = false;
+            window.location.replace(callback.href);
+        })();
+    </script>
+</body>
+</html>

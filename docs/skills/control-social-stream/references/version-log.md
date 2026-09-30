@@ -29,11 +29,23 @@ the YouTube default-mode change; no released minimum has been assigned. Check
 `platforms.youtubeshorts.defaultConnectionMode` rather than the app version alone.
 API/MCP responses continue to expose the running SSApp version.
 
-New YouTube and YouTube Shorts sources and channel groups default to `websocket`,
+New YouTube and YouTube Shorts sources and channel groups default to `classic` (Standard),
 including `addSource` requests that omit `connectionMode`. Explicit modes and saved
 sources/groups retain their existing selection.
 
 ## Unreleased hosted and local overlay-control correction
+
+### Points leaderboard page synchronization
+
+Updated beta page sources add the read-only `ssnControlRequest: { target: "leaderboard" }`
+request on the leaderboard's existing WebSocket feed and WebRTC connection. The host
+answers with the existing `points_leaderboard` snapshot on that connection. The loyalty
+view and `!leaderboard` display total earned points. This requires the updated host and
+leaderboard page sources; it adds no Local AI `/api/v1` or MCP command. The development
+runtime used for verification is SSApp 0.4.32; no released minimum containing these page
+changes has been assigned.
+
+### Other overlay controls
 
 Minimum verified runtime: SSApp 0.4.28 with the updated Social Stream beta page sources containing `shared/overlay-control-transport.js`. No released minimum containing all changes has been assigned. Remote page revisions can change independently of the app version; do not assume a published 0.4.28 build contains this update. Existing API/MCP responses still expose the running SSApp version.
 
@@ -67,8 +79,9 @@ Windows x64 voice commands in this unreleased preview use a pinned local whisper
 
 ### 2026-09-27
 
-- Documented the YouTube/Shorts WebSocket default and capability detection for the
-  updated 0.4.32 development checkout; see the unreleased compatibility entry above.
+- Restored the YouTube/Shorts Standard (`classic`) default for the updated 0.4.32
+  development checkout to reduce shared API quota demand. This supersedes the
+  earlier development WebSocket default; see the unreleased compatibility entry above.
 
 ### 2026-09-24
 

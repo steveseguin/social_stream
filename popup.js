@@ -164,7 +164,7 @@ window.addEventListener('message', function(event) {
 
 var urlParams = new URLSearchParams(window.location.search);
 const devmode = urlParams.has("devmode");
-var sourcemode = urlParams.get("sourcemode") || false;
+var sourcemode = getSourceModeBase(urlParams.get("sourcemode")) || false;
 var ssapp = false;
 
 if (urlParams.has("ssapp")) {
@@ -5265,6 +5265,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-param1="autoqueuequestions"]',
 		'[data-param1="autopindonations"]',
 		'[data-param1="autoqueuedonations"]',
+		'[data-param1="autoqueuememberships"]',
 		'[data-param1="sync"]',
 		'[data-param1="featuredmode"]',
 		'[data-param1="pinnedonly"]',
@@ -6232,6 +6233,17 @@ function scrollToSetting(targetSection, targetSetting) {
 
 
 var baseURL = "https://socialstream.ninja/";
+
+function getSourceModeBase(value) {
+	if (!value) return "";
+	try {
+		const parsed = new URL(value);
+		if (!["http:", "https:", "file:", "chrome-extension:", "moz-extension:"].includes(parsed.protocol)) return "";
+		return value;
+	} catch (e) {
+		return "";
+	}
+}
 
 function normalizeGeneratedLinkBase(value) {
 	if (!value || typeof value !== "string") return "";
@@ -13069,6 +13081,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		manageUserPointsBtn.addEventListener('click', async function() {
 			const username = await prompt("Enter username to manage points for:");
 			if (!username) return;
+			const platform = await prompt("Enter platform/source type (for example: youtube, twitch, or default):");
+			if (!platform || !platform.trim()) return;
+			const type = platform.trim();
 			
 			const action = await prompt("Enter action (add/subtract/set):");
 			if (!action || !['add', 'subtract', 'set'].includes(action.toLowerCase())) {
@@ -13083,17 +13098,18 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				return;
 			}
 			
-				if (confirm(`Are you sure you want to ${action} ${points} points ${action === 'subtract' ? 'from' : 'to'} ${username}?`)) {
+				if (confirm(`Are you sure you want to ${action} ${points} points ${action === 'subtract' ? 'from' : 'to'} ${username} (${type})?`)) {
 					chrome.runtime.sendMessage({
 						cmd: "manageUserPoints",
 						username: username,
+						type: type,
 						action: action.toLowerCase(),
 						points: points
 					}, function(response) {
 						if (response && response.success) {
 							const available = Number.isFinite(response?.available) ? response.available : undefined;
 							const total = Number.isFinite(response?.points) ? response.points : undefined;
-							let summary = `Successfully ${action === 'set' ? 'set' : action + 'ed'} ${points} points ${action === 'subtract' ? 'from' : 'for'} ${username}.`;
+							let summary = `Successfully ${action === 'set' ? 'set' : action + 'ed'} ${points} points ${action === 'subtract' ? 'from' : 'for'} ${username} (${type}).`;
 							if (available !== undefined) summary += ` Available: ${available}`;
 							if (total !== undefined) summary += ` | Total: ${total}`;
 							alert(summary);
