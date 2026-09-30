@@ -3969,15 +3969,38 @@
 			if (urlParams.has("autoqueuesuperchats") || urlParams.has("autoqueuesuperchat")) {
 				autoQueueSuperChats = true;
 			}
+			var autoQueueMemberships = urlParams.has("autoqueuememberships");
 
 			function shouldAutoQueueMessage(data) {
 				if (!data || typeof data !== "object") {
 					return false;
 				}
+				if (autoQueueMemberships && (data.type === "youtube" || data.type === "youtubeshorts") &&
+					["sponsorship", "resub", "membermilestone", "membershiprenewal", "giftpurchase", "giftredemption"].includes(String(data.event || "").toLowerCase())) {
+					return true;
+				}
 				if (autoQueueSuperChats) {
 					return String(data.event || "").toLowerCase() === "superchat";
 				}
 				return autoQueueDonations && !!(data.hasDonation || data.donation);
+			}
+
+			function isQueueRequested(data) {
+				return data.queueme ||
+					(selfQueue && data.chatmessage && selfQueue.some(item => data.chatmessage.split(" ").includes(item))) ||
+					(autoQueueQuestions && data.question) || shouldAutoQueueMessage(data);
+			}
+
+			function queueMessageIfRequested(node, data) {
+				if (!node || node.classList.contains("queued")) {
+					return;
+				}
+				if (isQueueRequested(data)) {
+					selectedQueue.push(node);
+					node.children[0].dataset.qid = selectedQueue.length;
+					node.classList.add("queued");
+					updateQueueButton();
+				}
 			}
 			if (urlParams.has("viewonly")) {
 				blockMessageSelecting = true;
@@ -7205,7 +7228,13 @@
 				}
 				historyMissedLiveBuffer.push(Object.assign({}, messageData));
 				if (historyMissedLiveBuffer.length > 500) {
-					historyMissedLiveBuffer.shift();
+					var discardIndex = historyMissedLiveBuffer.findIndex(function(message) {
+						return !isQueueRequested(message);
+					});
+					// Retain pending queue entries even when they alone exceed the history limit.
+					if (discardIndex !== -1) {
+						historyMissedLiveBuffer.splice(discardIndex, 1);
+					}
 				}
 			}
 
@@ -7217,8 +7246,13 @@
 				historyMissedLiveBuffer = [];
 				buffered.forEach(function(msg) {
 					var displayId = (msg && msg.mid) ? msg.mid : msg.id;
-					if (!displayId || !document.querySelector(dataAttributeSelector("data-mid", displayId))) {
-						processData({ contents: msg }, { reloaded: true, suppressLiveSideEffects: true, skipHistoryDeferral: true });
+					var node = displayId ? document.querySelector(dataAttributeSelector("data-mid", displayId)) : null;
+					if (!node) {
+						node = processData({ contents: msg }, { reloaded: true, suppressLiveSideEffects: true, skipHistoryDeferral: true });
+					}
+					// These arrived live while browsing history, even if recentHistory already rendered them.
+					if (node) {
+						queueMessageIfRequested(node, node.rawContents);
 					}
 				});
 				jumptoBottom2();
@@ -12951,29 +12985,7 @@
 						applyBotActions(data); // Official actions
                         if (window.SSNQuestionTracker) window.SSNQuestionTracker.add(node, data);
 
-						if (data.queueme) {
-							selectedQueue.push(node);
-							node.children[0].dataset.qid = selectedQueue.length;
-							node.classList.add("queued");
-							updateQueueButton();
-						} else if (selfQueue && data.chatmessage && (selfQueue.some(item => data.chatmessage.split(" ").includes(item)))) {
-							selectedQueue.push(node);
-							node.children[0].dataset.qid = selectedQueue.length;
-							node.classList.add("queued");
-							updateQueueButton(); 
-						} else if (autoQueueQuestions && data.question) {
-							// Auto-pin questions when autoQueueQuestions URL parameter is set
-							selectedQueue.push(node);
-							node.children[0].dataset.qid = selectedQueue.length;
-							node.classList.add("queued");
-							updateQueueButton();
-						} else if (shouldAutoQueueMessage(data)) {
-							// Auto-queue donation messages or Super Chats when their matching option is set.
-							selectedQueue.push(node);
-							node.children[0].dataset.qid = selectedQueue.length;
-							node.classList.add("queued");
-							updateQueueButton();
-						}
+						queueMessageIfRequested(node, data);
 						
 						if (autoPinQuestions && data.question) {
 							pinIt(node);

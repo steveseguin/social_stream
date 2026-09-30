@@ -81,6 +81,7 @@ Use these when one session has multiple operators, dashboards, or output pages.
 | `autopinquestions` | Pins question cards as they arrive. |
 | `autoqueuedonations` | Queues donation cards automatically. |
 | `autoqueuesuperchats` | Queues only messages with `event: "superchat"` automatically. |
+| `autoqueuememberships` | Queues YouTube new memberships, renewals, milestones, gift purchases, and gift recipient alerts. Can be combined with donation or Super Chat queueing. |
 | `autoqueuequestions` | Queues question cards automatically. |
 | `selfqueue` | Viewer command(s) that add a user/message to the queue. |
 | `random` | Randomizes which queued message is featured next. |

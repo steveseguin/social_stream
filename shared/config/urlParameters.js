@@ -1431,6 +1431,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Auto-queues donation cards"
           },
           {
+            "key": "autoqueuememberships",
+            "displayName": "autoqueuememberships",
+            "aliases": [
+              "autoqueuememberships"
+            ],
+            "values": "boolean",
+            "description": "Auto-queues YouTube membership alerts: new memberships, renewals, milestones, gift purchases, and gift recipients"
+          },
+          {
             "key": "autoqueuequestions",
             "displayName": "autoqueuequestions or autoqueuequestion",
             "aliases": [
