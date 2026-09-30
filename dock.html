@@ -3969,13 +3969,16 @@
 			if (urlParams.has("autoqueuesuperchats") || urlParams.has("autoqueuesuperchat")) {
 				autoQueueSuperChats = true;
 			}
-			var autoQueueMemberships = false;
-			if (urlParams.has("autoqueuememberships") || urlParams.has("autoqueuemembership")) {
-				autoQueueMemberships = true;
+			var membershipsAsDonations = false;
+			if (urlParams.has("membershipsasdonations") || urlParams.has("membersasdonations")) {
+				membershipsAsDonations = true;
 			}
 
-			function isAutoQueueMembershipEvent(data) {
-				// Gift recipients (giftredemption) are left out so one gifted bundle queues once.
+			function isMembershipDonation(data) {
+				// Dock-side only; no amount is added. Gift recipients (giftredemption) are left out so a gifted bundle counts once.
+				if (!membershipsAsDonations || !data) {
+					return false;
+				}
 				switch (String(data.event || "").toLowerCase()) {
 					case "sponsorship":
 					case "membermilestone":
@@ -3994,13 +3997,10 @@
 				if (!data || typeof data !== "object") {
 					return false;
 				}
-				if (autoQueueMemberships && isAutoQueueMembershipEvent(data)) {
-					return true;
-				}
 				if (autoQueueSuperChats) {
 					return String(data.event || "").toLowerCase() === "superchat";
 				}
-				return autoQueueDonations && !!(data.hasDonation || data.donation);
+				return autoQueueDonations && !!(data.hasDonation || data.donation || isMembershipDonation(data));
 			}
 			if (urlParams.has("viewonly")) {
 				blockMessageSelecting = true;
@@ -6351,7 +6351,7 @@
 					} else {
 						activeWordLength = post.contentLength;
 						if (post.rawContents) {
-							activeDonation = post.rawContents.hasDonation || false;
+							activeDonation = post.rawContents.hasDonation || isMembershipDonation(post.rawContents) || false;
 						} else {
 							activeDonation = false;
 						}
@@ -6370,7 +6370,7 @@
 				};
 
 				if (autoShowQueue.length > 10) {
-					while (autoShowQueue[0]?.rawContents && !autoShowQueue[0].rawContents.hasDonation && autoShowQueue.length > 4) {
+					while (autoShowQueue[0]?.rawContents && !autoShowQueue[0].rawContents.hasDonation && !isMembershipDonation(autoShowQueue[0].rawContents) && autoShowQueue.length > 4) {
 						autoShowQueue.shift(); // skip oldest, since too many are queued up
 					}
 					setNextTimeout(activeDonation ? 1 : 0.6);
@@ -11790,7 +11790,7 @@
 						}
 					}
 					
-					if (skipDonations && (data.hasDonation || data.donation)){
+					if (skipDonations && (data.hasDonation || data.donation || isMembershipDonation(data))){
 						return;
 					}
 					
@@ -11911,7 +11911,7 @@
 				}
 				
 				if (hardFilter) {
-					var hasDonation = !!(data.donation || data.hasDonation);
+					var hasDonation = !!(data.donation || data.hasDonation || isMembershipDonation(data));
 					var hasMembership = !!(data.membership || data.member || data.hasMembershp || data.hasMembership);
 					if (!passesSupporterFilters(hasDonation, hasMembership)) {
 						return;
@@ -12594,7 +12594,7 @@
 								}
 							}
 						}
-					} else {
+					} else if (!isMembershipDonation(data)) {
 						node.classList.add("noDono");
 					}
 
@@ -12873,7 +12873,7 @@
 						} else if (autoshow && !bot) {
 							if (doNotAutoshowFiltered && node.classList.contains("hide")) {
 								// pass auto show, since filtered out
-							} else if (!(autoshowdonos || autoshowmembers || autoshowcontentimages) || (autoshowdonos && data.hasDonation) || (autoshowmembers && data.membership) || (autoshowcontentimages && data.contentimg)) {
+							} else if (!(autoshowdonos || autoshowmembers || autoshowcontentimages) || (autoshowdonos && (data.hasDonation || isMembershipDonation(data))) || (autoshowmembers && data.membership) || (autoshowcontentimages && data.contentimg)) {
 								// dono or not to dono.
 								if (autoTimeoutEnabled) {
 									autoShowQueue.push(node);
@@ -13006,7 +13006,7 @@
 							node.classList.add("queued");
 							updateQueueButton();
 						} else if (shouldAutoQueueMessage(data)) {
-							// Auto-queue donations, Super Chats, or memberships when their matching option is set.
+							// Auto-queue donation messages or Super Chats when their matching option is set.
 							selectedQueue.push(node);
 							node.children[0].dataset.qid = selectedQueue.length;
 							node.classList.add("queued");
@@ -13017,7 +13017,7 @@
 							pinIt(node);
 						}
 						
-						if (autoPinDonations && data.hasDonation) {
+						if (autoPinDonations && (data.hasDonation || isMembershipDonation(data))) {
 							pinIt(node);
 						}
 

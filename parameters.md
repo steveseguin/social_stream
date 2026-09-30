@@ -203,7 +203,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `autopindonations` | boolean | Auto-pins donation cards as they arrive |
 | `autopinquestions` or `autopinquestion` | boolean | Auto-pins cards marked as questions |
 | `autoqueuedonations` or `autoqueuedonation` | boolean | Auto-queues donation cards |
-| `autoqueuememberships` or `autoqueuemembership` | boolean | Auto-queues new members/subscribers, renewals, milestones, and gifted memberships or subs (skips each gift recipient) |
+| `membershipsasdonations` or `membersasdonations` | boolean | Treats membership/sub events (new, renewal, milestone, gifted; not each gift recipient) as donations for the dock's auto-queue, auto-pin, auto-show, show-only-donations, and skip-donations options. No amount is added to the message. |
 | `autoqueuequestions` or `autoqueuequestion` | boolean | Auto-queues question cards |
 | `trackquestions` | boolean | Adds a pending-question filter and Answered/Dismiss controls to the host dock. Tracks visible question marks and identified questions. Keeps the latest 100 during normal vertical chat pruning; local to this dock and resets on reload. |
 | `skipdonations` | boolean | Prevents donation cards from being auto-featured |

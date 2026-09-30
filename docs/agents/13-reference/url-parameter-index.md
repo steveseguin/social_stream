@@ -216,7 +216,7 @@ Entries: 33.
 | `autopindonations` | `autopindonations` | boolean | Auto-pins donation cards as they arrive |
 | `autopinquestions` | `autopinquestions`, `autopinquestion` | boolean | Auto-pins cards marked as questions |
 | `autoqueuedonations` | `autoqueuedonations`, `autoqueuedonation` | boolean | Auto-queues donation cards |
-| `autoqueuememberships` | `autoqueuememberships`, `autoqueuemembership` | boolean | Auto-queues new members/subscribers, renewals, milestones, and gifted memberships or subs (skips each gift recipient) |
+| `membershipsasdonations` | `membershipsasdonations`, `membersasdonations` | boolean | Treats membership/sub events (new, renewal, milestone, gifted; not each gift recipient) as donations for the dock's auto-queue, auto-pin, auto-show, show-only-donations, and skip-donations options. No amount is added to the message. |
 | `autoqueuequestions` | `autoqueuequestions`, `autoqueuequestion` | boolean | Auto-queues question cards |
 | `skipdonations` | `skipdonations` | boolean | Prevents donation cards from being auto-featured |
 | `selfqueue` | `selfqueue` | comma-separated strings | Viewer commands that add themselves to the queue (e.g., !queue) |

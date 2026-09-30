@@ -67,17 +67,17 @@ assert.equal(shouldEnterHistoryBrowsing(true, -1, 0, false), true, "an upward wh
 assert.equal(shouldEnterHistoryBrowsing(false, -1, 50, true), false, "history should only activate near the top");
 
 const autoQueueSource = [
-	extractFunction(dock, "isAutoQueueMembershipEvent"),
+	extractFunction(dock, "isMembershipDonation"),
 	extractFunction(dock, "shouldAutoQueueMessage"),
 	"return shouldAutoQueueMessage;"
 ].join("\n");
-function createAutoQueueMatcher(autoQueueDonations, autoQueueSuperChats, autoQueueMemberships = false) {
+function createAutoQueueMatcher(autoQueueDonations, autoQueueSuperChats, membershipsAsDonations = false) {
 	return Function(
 		"autoQueueDonations",
 		"autoQueueSuperChats",
-		"autoQueueMemberships",
+		"membershipsAsDonations",
 		autoQueueSource
-	)(autoQueueDonations, autoQueueSuperChats, autoQueueMemberships);
+	)(autoQueueDonations, autoQueueSuperChats, membershipsAsDonations);
 }
 
 const superChatOnly = createAutoQueueMatcher(false, true);
@@ -97,26 +97,25 @@ assert.equal(superChatOverride({ event: "superchat", type: "youtube", hasDonatio
 assert.equal(superChatOverride({ event: "donation", type: "kick", hasDonation: "$5.00" }), false);
 assert.match(popup, /data-param1="autoqueuesuperchats"/, "Dock settings should expose the Super Chat-only queue toggle");
 
-const membershipsOnly = createAutoQueueMatcher(false, false, true);
-assert.equal(membershipsOnly({ event: "sponsorship", type: "youtube", membership: "MEMBERSHIP" }), true);
-assert.equal(membershipsOnly({ event: "giftpurchase", type: "youtube", membership: "gift_giver" }), true);
-assert.equal(membershipsOnly({ event: "membermilestone", type: "youtube", membership: "member_milestone" }), true);
-assert.equal(membershipsOnly({ event: "membershiprenewal", type: "youtube", membership: "MEMBERSHIP" }), true);
-assert.equal(membershipsOnly({ event: "resub", type: "twitch" }), true);
-assert.equal(membershipsOnly({ event: "new_subscriber", type: "kick" }), true);
-assert.equal(membershipsOnly({ event: "giftredemption", type: "youtube", membership: "gift_recipient" }), false, "gift recipients must not flood the queue");
-assert.equal(membershipsOnly({ type: "youtube", membership: "MEMBERSHIP", chatmessage: "hi" }), false, "member chat is not a membership event");
-assert.equal(membershipsOnly({ event: "superchat", type: "youtube", hasDonation: "$5.00" }), false);
-assert.equal(createAutoQueueMatcher(false, false, false)({ event: "sponsorship", type: "youtube" }), false);
-
-const donationsAndMemberships = createAutoQueueMatcher(true, false, true);
-assert.equal(donationsAndMemberships({ event: "superchat", type: "youtube", hasDonation: "$5.00" }), true);
-assert.equal(donationsAndMemberships({ event: "sponsorship", type: "youtube", membership: "MEMBERSHIP" }), true);
-
-const superChatsAndMemberships = createAutoQueueMatcher(false, true, true);
-assert.equal(superChatsAndMemberships({ event: "giftpurchase", type: "youtube", membership: "gift_giver" }), true);
-assert.equal(superChatsAndMemberships({ event: "supersticker", type: "youtube", hasDonation: "$2.00" }), false);
-assert.match(popup, /data-param1="autoqueuememberships"/, "Dock settings should expose the membership queue toggle");
+const membershipDonations = createAutoQueueMatcher(true, false, true);
+assert.equal(membershipDonations({ event: "sponsorship", type: "youtube", membership: "MEMBERSHIP" }), true);
+assert.equal(membershipDonations({ event: "giftpurchase", type: "youtube", membership: "gift_giver" }), true);
+assert.equal(membershipDonations({ event: "membermilestone", type: "youtube", membership: "member_milestone" }), true);
+assert.equal(membershipDonations({ event: "membershiprenewal", type: "youtube", membership: "MEMBERSHIP" }), true);
+assert.equal(membershipDonations({ event: "resub", type: "twitch" }), true);
+assert.equal(membershipDonations({ event: "new_subscriber", type: "kick" }), true);
+assert.equal(membershipDonations({ event: "superchat", type: "youtube", hasDonation: "$5.00" }), true);
+assert.equal(membershipDonations({ event: "giftredemption", type: "youtube", membership: "gift_recipient" }), false, "gift recipients must not count as donations");
+assert.equal(membershipDonations({ type: "youtube", membership: "MEMBERSHIP", chatmessage: "hi" }), false, "member chat is not a membership event");
+assert.equal(createAutoQueueMatcher(true, false, false)({ event: "sponsorship", type: "youtube" }), false, "memberships stay non-donations unless the option is on");
+assert.equal(createAutoQueueMatcher(false, false, true)({ event: "sponsorship", type: "youtube" }), false, "counting memberships does not turn on auto-queue by itself");
+assert.equal(createAutoQueueMatcher(false, true, true)({ event: "sponsorship", type: "youtube" }), false, "Super Chat-only queueing still means Super Chats only");
+assert.match(popup, /data-param1="membershipsasdonations"/, "Dock settings should expose the count-memberships-as-donations toggle");
+assert.match(dock, /skipDonations && \(data\.hasDonation \|\| data\.donation \|\| isMembershipDonation\(data\)\)/);
+assert.match(dock, /autoshowdonos && \(data\.hasDonation \|\| isMembershipDonation\(data\)\)/);
+assert.match(dock, /autoPinDonations && \(data\.hasDonation \|\| isMembershipDonation\(data\)\)/);
+assert.match(dock, /var hasDonation = !!\(data\.donation \|\| data\.hasDonation \|\| isMembershipDonation\(data\)\);/);
+assert.match(dock, /else if \(!isMembershipDonation\(data\)\) \{\s*node\.classList\.add\("noDono"\)/);
 
 const isBufferedLiveMessage = Function(
 	"historyMissedLiveBuffer",

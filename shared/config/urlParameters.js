@@ -1431,14 +1431,14 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Auto-queues donation cards"
           },
           {
-            "key": "autoqueuememberships",
-            "displayName": "autoqueuememberships or autoqueuemembership",
+            "key": "membershipsasdonations",
+            "displayName": "membershipsasdonations or membersasdonations",
             "aliases": [
-              "autoqueuememberships",
-              "autoqueuemembership"
+              "membershipsasdonations",
+              "membersasdonations"
             ],
             "values": "boolean",
-            "description": "Auto-queues new members/subscribers, renewals, milestones, and gifted memberships or subs (skips each gift recipient)"
+            "description": "Treats membership/sub events (new, renewal, milestone, gifted; not each gift recipient) as donations for the dock's auto-queue, auto-pin, auto-show, show-only-donations, and skip-donations options. No amount is added to the message."
           },
           {
             "key": "autoqueuequestions",

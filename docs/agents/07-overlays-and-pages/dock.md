@@ -81,7 +81,7 @@ Use these when one session has multiple operators, dashboards, or output pages.
 | `autopinquestions` | Pins question cards as they arrive. |
 | `autoqueuedonations` | Queues donation cards automatically. |
 | `autoqueuesuperchats` | Queues only messages with `event: "superchat"` automatically. |
-| `autoqueuememberships` | Queues membership/sub events (`sponsorship`, `membermilestone`, `membershiprenewal`, `resub`, `giftpurchase`, `new_subscriber`, `subscription`, `subscription_gift`); skips `giftredemption`. Combines with the donation or Super Chat queue options. |
+| `membershipsasdonations` | Dock-side only: treats `sponsorship`, `membermilestone`, `membershiprenewal`, `resub`, `giftpurchase`, `new_subscriber`, `subscription`, and `subscription_gift` events as donations for `autoqueuedonations`, `autopindonations`, `autoshowdonos`, `showonlydonos`, and `skipdonations`; skips `giftredemption`. Does not add `hasDonation`. |
 | `autoqueuequestions` | Queues question cards automatically. |
 | `selfqueue` | Viewer command(s) that add a user/message to the queue. |
 | `random` | Randomizes which queued message is featured next. |
