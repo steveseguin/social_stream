@@ -1349,7 +1349,7 @@
     }
 
     function fetchSseBatch(streamId, includeInit) {
-        if (extAvailable() && chrome.runtime && chrome.runtime.id) {
+        if (extAvailable() && chrome.runtime && chrome.runtime.id && !preferDirectFetch()) {
             return new Promise(function (resolve, reject) {
                 try {
                     chrome.runtime.sendMessage(chrome.runtime.id, {

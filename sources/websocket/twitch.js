@@ -3827,7 +3827,11 @@ async function ensureChatClientInstance() {
 			data.timestamp = normalizedPayload.timestamp;
 		}
 		data.hasDonation = hasDonation;
-		if (hasDonation) data.donoValue = Number(parsedMessage.tags.bits) / 100;
+		if (hasDonation) {
+			data.donoValue = Number(parsedMessage.tags.bits) / 100;
+			data.meta = data.meta || {};
+			data.meta.bits = Number(parsedMessage.tags.bits);
+		}
 		if (sourceInfo.image) {
 			data.sourceImg = sourceInfo.image;
 		}

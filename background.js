@@ -10315,6 +10315,9 @@ function setupSocketDock() {
 		if (streamID !== joinedDockSession || socketserverDock !== joinedDockSocket) return;
 		conConDock = 0;
 		socketserverDock.send(JSON.stringify({ join: streamID, out: 4, in: 3 }));
+		if (typeof window.requestPointsLeaderboardBroadcast === "function") {
+			window.requestPointsLeaderboardBroadcast("connected", { immediate: true });
+		}
 	};
 	socketserverDock.addEventListener("message", async function (event) {
 		if (streamID !== joinedDockSession || socketserverDock !== joinedDockSocket) return;
@@ -10716,7 +10719,7 @@ async function sendStreamDeckDockRequestP2P(request, originUUID) {
 				continue;
 			}
 			try {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: request }, type: "pcs", UUID: UUID }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: request }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 				sent = true;
 			} catch (e) {}
 		}
@@ -11957,7 +11960,7 @@ function setupSocket() {
 function enableYouTube() {
 	// function to send data to the DOCk via the VDO.Ninja API
 	try {
-		iframe.contentWindow.postMessage({ enableYouTube: settings.youtubeapikey.textsetting }, "*"); // send only to 'viewers' of this stream
+		iframe.contentWindow.postMessage({ enableYouTube: settings.youtubeapikey.textsetting }, "https://vdo.socialstream.ninja"); // send only to 'viewers' of this stream
 	} catch (e) {
 		console.error(e);
 	}
@@ -12897,7 +12900,7 @@ function sendDataToStreamDeckPeersP2P(data) {
 				continue;
 			}
 			try {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 				sent = true;
 			} catch (e) {
 				console.error(e);
@@ -12999,7 +13002,7 @@ function sendDataP2P(data, UUID = false) {
 	if (iframe) {
 		if (UUID && connectedPeers) {
 			try {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 			} catch (e) {
 				console.error(e);
 			}
@@ -13010,14 +13013,14 @@ function sendDataP2P(data, UUID = false) {
 					UUID = keys[i];
 					var label = connectedPeers[UUID] || false;
 					if (!label || label === "dock" || label === "aioverlay" || label === "cohost" || label === "tipjar") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*"); // docks, AI pages, and overlay-style pages are VIEWERS, since backend is PUSH-only
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja"); // docks, AI pages, and overlay-style pages are VIEWERS, since backend is PUSH-only
 					}
 				} catch (e) {
 					console.error(e);
 				}
 			}
 		} else {
-			iframe.contentWindow.postMessage({ sendData: msg, type: "pcs" }, "*"); // send only to 'viewers' of this stream
+			iframe.contentWindow.postMessage({ sendData: msg, type: "pcs" }, "https://vdo.socialstream.ninja"); // send only to 'viewers' of this stream
 		}
 	}
 }
@@ -13227,14 +13230,14 @@ function sendHypeP2P(data, uid = null) {
 					var UUID = keys[i];
 					const peerLabel = connectedPeers[UUID];
 					if (peerLabel === "hype") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: packet }, type: "pcs", UUID: UUID }, "*");
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: packet }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 					}
 				} catch (e) {}
 			}
 		} else {
 			const peerLabel = connectedPeers[uid];
 			if (peerLabel === "hype") {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: packet }, type: "pcs", UUID: uid }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: packet }, type: "pcs", UUID: uid }, "https://vdo.socialstream.ninja");
 			}
 		}
 	}
@@ -13271,14 +13274,14 @@ function sendSpotifyOverlay(payload, uid = null) {
 					var UUID = keys[i];
 					const peerLabel = connectedPeers[UUID];
 					if (peerLabel === "spotify") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { spotify: payload } }, type: "pcs", UUID: UUID }, "*");
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { spotify: payload } }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 					}
 				} catch (e) {}
 			}
 		} else {
 			const peerLabel = connectedPeers[uid];
 			if (peerLabel === "spotify") {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { spotify: payload } }, type: "pcs", UUID: uid }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { spotify: payload } }, type: "pcs", UUID: uid }, "https://vdo.socialstream.ninja");
 			}
 		}
 	}
@@ -13411,6 +13414,17 @@ function handleOverlayControlRequest(data, socket, replyChannel, allowSnapshot) 
 		if (pending && pending.session === streamID && pending.target === data.ssnControlAck.target) pending.resolve(true);
 		return true;
 	}
+	if (data.ssnControlRequest && data.ssnControlRequest.target === "leaderboard") {
+		if (allowSnapshot || settings.server3) {
+			const session = streamID;
+			broadcastPointsLeaderboard("connected", undefined, packet => {
+				if (session === streamID && isExtensionOn && !settings.disablehost && socket.readyState === 1) {
+					socket.send(JSON.stringify(packet));
+				}
+			});
+		}
+		return true;
+	}
 	if (!allowSnapshot) return true;
 	var request = data.ssnControlRequest, packet;
 	if (request.target === "poll") {
@@ -13487,7 +13501,7 @@ async function trySendTargetP2P(data, target) {
 				var UUID = keys[i];
 				var label = connectedPeers[UUID];
 				if (label === target) {
-					iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+					iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 					sent = true;
 				}
 			} catch (e) {}
@@ -13709,13 +13723,13 @@ function sendTimerP2P(payload, uid = null) {
 					var UUID = keys[i];
 					var label = connectedPeers[UUID];
 					if (label === "timer") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { timer: payload } }, type: "pcs", UUID: UUID }, "*");
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { timer: payload } }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 					}
 				} catch (e) {}
 			}
 		} else {
 			try {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { timer: payload } }, type: "pcs", UUID: uid }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { timer: payload } }, type: "pcs", UUID: uid }, "https://vdo.socialstream.ninja");
 			} catch (e) {}
 		}
 	}
@@ -14172,14 +14186,14 @@ function sendTickerP2P(data, uid = null) {
 					var UUID = keys[i];
 					var label = connectedPeers[UUID];
 					if (label === "ticker") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: UUID }, "*");
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 					}
 				} catch (e) {}
 			}
 		} else {
 			const peerLabel = connectedPeers[uid];
 			if (peerLabel === "ticker") {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: uid }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: uid }, "https://vdo.socialstream.ninja");
 			}
 		}
 	}
@@ -15326,6 +15340,12 @@ async function processIncomingRequest(request, UUID = false) {
 	}
 	if (settings.disablehost) {
 		return;
+	}
+	if (request && request.ssnControlRequest && request.ssnControlRequest.target === "leaderboard" && UUID) {
+		if (isExtensionOn) {
+			await broadcastPointsLeaderboard("connected", undefined, packet => sendDataP2P(packet, UUID));
+		}
+		return true;
 	}
 	if (await handleBridgeChunkRequest(request, UUID)) {
 		return;
@@ -17013,15 +17033,6 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 
 	const shouldCheckDynamicPerTab = antispam && settings["dynamictiming"];
 
-	if (!reverse && !overrideTimeout && data.tid) {
-		// we do this early to avoid the blue bar if not needed
-		if (data.tid in messageTimeout) {
-			if (now - messageTimeout[data.tid] < overrideTimeout) {
-				return;
-			}
-		}
-	}
-
 	lastAntiSpam = messageCounter;
 
 	if (settings.s10apikey && settings.s10) {
@@ -17063,6 +17074,10 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 
 		const processTab = async tab => {
 			processedAnyTab = true;
+			// Apply the configured delay to the resolved destination, including bot-account routing.
+			if (overrideTimeout > 0 && tab.id in messageTimeout && Date.now() - messageTimeout[tab.id] < overrideTimeout) {
+				return;
+			}
 			await dispatchRelayMessageToTab(tab, routingData, {
 				now: now,
 				overrideTimeout: overrideTimeout,
@@ -17113,12 +17128,6 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
 			return false;
 		}
 	}
-	if (reverse && !overrideTimeout && tab.id) {
-		if (tab.id in messageTimeout && now - messageTimeout[tab.id] < overrideTimeout) {
-			return false;
-		}
-	}
-
 	if (relayMode && relaytargets) {
 		if (!sourceType || !relaytargets.includes(sourceType)) {
 			return false;
@@ -17471,6 +17480,9 @@ function resolveThrottleProfile(tabId, throttleProfile, overrideTimeout) {
 			maxQueue: MAX_FAKE_CHAT_THROTTLE_QUEUE_DEFAULT
 		};
 	}
+	if (typeof overrideTimeout === "number" && overrideTimeout > 0) {
+		profile.minInterval = Math.max(profile.minInterval, overrideTimeout);
+	}
 
 	profile.maxQueue = Number.isFinite(profile.maxQueue) ? Math.max(0, profile.maxQueue) : MAX_FAKE_CHAT_THROTTLE_QUEUE_DEFAULT;
 
@@ -17486,7 +17498,7 @@ function ensureThrottleState(tabId) {
 	if (!state) {
 		state = {
 			queue: [],
-			lastSent: 0,
+			lastSent: messageTimeout[tabId] || 0,
 			processing: false,
 			timer: null
 		};
@@ -17882,15 +17894,23 @@ async function performGeneralFakeChatSend(tabId, { message, middle = true, keypr
 			return;
 		}
 
+		if (settings.limitcharactersstate) {
+			const limit = settings.limitcharacters?.numbersetting || 200;
+			const originalMessage = sanitizeMessageForTracking(message, false);
+			message = limitString(message, limit);
+			const entries = messageStore[tabId] || [];
+			for (let i = entries.length - 1; i >= 0; i--) {
+				if (entries[i].message === originalMessage) {
+					entries[i].message = sanitizeMessageForTracking(message, false);
+					break;
+				}
+			}
+		}
+
 		lastSentMessage = message.replace(/<\/?[^>]+(>|$)/g, "").replace(/\s\s+/g, " ");
 		lastSentTimestamp = Date.now();
 		lastMessageCounter = 0;
 		messageTimeout[tabId] = Date.now();
-
-		if (settings.limitcharactersstate) {
-			const limit = settings.limitcharacters?.numbersetting || 200;
-			message = limitString(message, limit);
-		}
 
 		if (backspace) {
 			try {
