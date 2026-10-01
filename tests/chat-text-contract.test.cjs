@@ -295,6 +295,8 @@ const metadataOverlays = [...new Set(['dock.html', 'featured.html', 'bot.html', 
             window.parseTwitchEmotes = helpers.parseTwitchEmotes;
           }, { mode, native, pixel });
           await page.addScriptTag({ content: [
+            section('sources/websocket/twitch.js', 'const twitchDisplayNameByLogin =', 'const WEBSOCKET_READY_STATE ='),
+            section('sources/websocket/twitch.js', '\tfunction normalizeTwitchLogin(', '\tfunction rememberTwitchDisplayName('),
             section('sources/websocket/twitch.js', '\t\tfunction convertChatPayloadToLegacyMessage(payload)', '\tfunction convertMembershipPayloadToUserNotice('),
             section('sources/websocket/twitch.js', '\tfunction replaceEmotesWithImages(', '\tlet globalBadges'),
             section('sources/websocket/twitch.js', '\tasync function processMessage(parsedMessage)', '\tfunction addEvent(description)')
