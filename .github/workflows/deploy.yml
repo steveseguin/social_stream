@@ -147,10 +147,12 @@ jobs:
           seo_script="${GITHUB_REF_NAME}-content/scripts/prepare-pages-seo.py"
           python3 "$seo_script" --root gh-pages-content
           python3 "$seo_script" --root gh-pages-content --check
-          # Each checkout opts into its own complete language editions. Stable
+          # Each checkout selects its own language editions. Stable
           # gains translations when its catalogs/config are promoted together.
+          # Use the triggering branch's builder for both editions so fallback
+          # support does not depend on the other branch being updated first.
+          translation_script="${GITHUB_REF_NAME}-content/scripts/build-site-translations.py"
           for edition in main beta; do
-            translation_script="$edition-content/scripts/build-site-translations.py"
             if [ ! -f "$translation_script" ]; then continue; fi
             destination="gh-pages-content"
             prefix=""
@@ -161,11 +163,11 @@ jobs:
               visibility=""
             fi
             if [ -f "$edition-content/translations/site/publish.json" ]; then
-              python3 "$translation_script" --root "$destination" --published --base-path "$prefix" $visibility
-              python3 "$translation_script" --root "$destination" --published --base-path "$prefix" $visibility --check
+              python3 "$translation_script" --root "$destination" --published --allow-english-fallback --base-path "$prefix" $visibility
+              python3 "$translation_script" --root "$destination" --published --allow-english-fallback --base-path "$prefix" $visibility --check
             elif [ "$edition" = beta ]; then
-              python3 "$translation_script" --root "$destination"
-              python3 "$translation_script" --root "$destination" --check
+              python3 "$translation_script" --root "$destination" --allow-english-fallback
+              python3 "$translation_script" --root "$destination" --allow-english-fallback --check
             fi
           done
           # Include stable translations in the sitemap; beta remains noindex.

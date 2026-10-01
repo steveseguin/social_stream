@@ -10,10 +10,9 @@ Supported catalogs are Spanish (`es`), Brazilian Portuguese (`pt-br`), Russian
 (`zh-cn`), Traditional Chinese (`zh-tw`), Italian (`it`), Polish (`pl`), Korean
 (`ko`), Ukrainian (`uk`), Arabic (`ar`), Turkish (`tr`), Czech (`cs`) and Thai
 (`th`). Arabic pages use right-to-left layout with left-to-right code examples.
-`publish.json` selects the complete
-editions to publish. A configured language must translate every required string;
-missing translations fail the build. Partial catalogs can be saved without
-adding their language to that list.
+`publish.json` selects the editions to publish. Deployment keeps available
+translations and temporarily uses English for missing or invalid entries.
+Strict authoring checks still require every string to be translated.
 
 Translations are authored by Codex and same-model parallel agents, stored in
 this repository, and served as static files. No online translation service runs
@@ -55,8 +54,8 @@ Run this against an assembled deployment tree, not the source checkout, because
 it also adds language menus to English pages:
 
 ```sh
-python scripts/build-site-translations.py --root PATH_TO_BETA_TREE --published --base-path /beta
-python scripts/build-site-translations.py --root PATH_TO_BETA_TREE --published --base-path /beta --check
+python scripts/build-site-translations.py --root PATH_TO_BETA_TREE --published --allow-english-fallback --base-path /beta
+python scripts/build-site-translations.py --root PATH_TO_BETA_TREE --published --allow-english-fallback --base-path /beta --check
 ```
 
 The Pages workflow reads each checkout's own `publish.json`. Beta editions live
@@ -66,6 +65,14 @@ For a production tree, use `--base-path "" --public`. Public editions receive
 self-canonical URLs, reciprocal `hreflang` links, and sitemap entries; beta stays
 out of the sitemap. The workflow explicitly stages generated language folders
 so copied ignore rules cannot omit them.
+
+The deployment workflow uses its triggering branch's builder for both editions.
+`--allow-english-fallback` reports missing translations, invalid placeholders,
+invalid translated Markdown, and stale source-review records as warnings.
+Missing or invalid text uses its English source. An unreadable or conflicting
+catalog falls back to English for that language; an invalid publication list
+publishes only English. These translation problems do not block app or English
+page updates. Omit the flag when checking translation completeness for review.
 
 Each generated documentation library has its own translated search index.
 Search retains Unicode letters, including Cyrillic and Japanese voiced kana,
