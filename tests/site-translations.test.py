@@ -6,6 +6,8 @@ import io
 import json
 import re
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -167,6 +169,12 @@ class ExpandedTests(unittest.TestCase):
         self.assertEqual(source.count('data-site-language-picker'),1)
         self.assertEqual(BUILD.relative_url('index.html?file=agents/test.md#example','docs/guide.html','es/docs/guide.html',True,self.pages), '../../docs/index.html?file=agents/test.md#example')
 
+    def test_complete_translations_are_identical_with_english_fallback_enabled(self):
+        self.build()
+        before = {page: (self.root / 'es' / page).read_bytes() for page in self.pages}
+        self.build(english_fallback=True, check=True)
+        self.assertEqual(before, {page: (self.root / 'es' / page).read_bytes() for page in self.pages})
+
     def test_language_menu_precedes_theme_control_outside_navigation(self):
         source = (self.root / 'docs/guide.html').read_text(encoding='utf-8').replace('</nav>',
             '</nav><div class="site-actions"><button class="site-theme"></button></div>')
@@ -230,6 +238,122 @@ class ExpandedTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'changed placeholders'):
             self.build()
 
+    def test_english_fallback_preserves_valid_copy_and_new_text_attributes_and_dynamic_text(self):
+        page = self.root / 'docs/guide.html'
+        source = page.read_text(encoding='utf-8').replace('</body>',
+            '<p title="New tooltip">New English instructions.</p></body>')
+        page.write_text(source, encoding='utf-8')
+        manifest = self.root / 'translations/site/runtime/docs--guide.html.json'
+        manifest.parent.mkdir(parents=True)
+        manifest.write_text(json.dumps({'strings': ['{0} new results']}), encoding='utf-8')
+        warnings = io.StringIO()
+        with contextlib.redirect_stderr(warnings):
+            self.build(english_fallback=True)
+            self.build(english_fallback=True, check=True)
+        output = (self.root / 'es/docs/guide.html').read_text(encoding='utf-8')
+        self.assertIn('<p title="New tooltip">New English instructions.</p>', output)
+        self.assertIn('<h1>Configuración</h1>', output)
+        config = json.loads(re.search(r'<script id="ssn-site-language" type="application/json">(.*?)</script>', output).group(1))
+        self.assertEqual(config['strings']['{0} new results'], '{0} new results')
+        self.assertEqual(page.read_text(encoding='utf-8'), source)
+        self.assertIn('Missing es translations', warnings.getvalue())
+
+    def test_english_fallback_warns_for_stale_sources_and_uses_valid_english_placeholders(self):
+        manifest = self.root / 'translations/site/runtime/docs--guide.html.json'
+        manifest.parent.mkdir(parents=True)
+        manifest.write_text(json.dumps({'strings': ['{0} results'],
+            'source_hashes': {'docs/guide.html': 'old-source-hash'}}), encoding='utf-8')
+        path = self.root / 'translations/site/es.json'
+        catalog = json.loads(path.read_text(encoding='utf-8'))
+        catalog['strings']['{0} results'] = 'resultados'
+        path.write_text(json.dumps(catalog), encoding='utf-8')
+        with self.assertRaisesRegex(ValueError, 'Review dynamic translations'):
+            self.build()
+        warnings = io.StringIO()
+        with contextlib.redirect_stderr(warnings):
+            self.build(english_fallback=True)
+            self.build(english_fallback=True, check=True)
+        output = (self.root / 'es/docs/guide.html').read_text(encoding='utf-8')
+        config = json.loads(re.search(r'<script id="ssn-site-language" type="application/json">(.*?)</script>', output).group(1))
+        self.assertEqual(config['strings']['{0} results'], '{0} results')
+        self.assertIn('Review dynamic translations', warnings.getvalue())
+        self.assertIn('Translation changed placeholders', warnings.getvalue())
+
+    def test_english_fallback_handles_broken_catalogs_without_changing_other_languages(self):
+        path = self.root / 'translations/site/es.json'
+        original = path.read_text(encoding='utf-8')
+        for broken in ('{invalid json', '{"strings": []}'):
+            with self.subTest(catalog=broken):
+                path.write_text(broken, encoding='utf-8')
+                with contextlib.redirect_stderr(io.StringIO()):
+                    self.build(english_fallback=True)
+                    self.build('ru', english_fallback=True)
+                output = (self.root / 'es/docs/guide.html').read_text(encoding='utf-8')
+                self.assertIn('<h1>Setup</h1>', output)
+                self.assertIn('href="../index.html"', output)
+                self.assertIn('<h1>Настройка</h1>', (self.root / 'ru/docs/guide.html').read_text(encoding='utf-8'))
+        path.write_text(original, encoding='utf-8')
+        part = self.root / 'translations/site/es-pages/conflict.json'
+        part.parent.mkdir(parents=True)
+        part.write_text(json.dumps({'strings': {'Setup': 'Conflicting copy'}}), encoding='utf-8')
+        with self.assertRaisesRegex(ValueError, 'Conflicting translation'):
+            self.build()
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.build(english_fallback=True)
+        self.assertIn('<h1>Setup</h1>', (self.root / 'es/docs/guide.html').read_text(encoding='utf-8'))
+
+    def test_english_fallback_handles_invalid_runtime_records(self):
+        manifest = self.root / 'translations/site/runtime/docs--guide.html.json'
+        manifest.parent.mkdir(parents=True)
+        for broken in ('{invalid json', '{"strings": [], "source_hashes": null}'):
+            with self.subTest(manifest=broken):
+                manifest.write_text(broken, encoding='utf-8')
+                with contextlib.redirect_stderr(io.StringIO()):
+                    self.build(english_fallback=True)
+                    self.build(english_fallback=True, check=True)
+                self.assertIn('<h1>Configuración</h1>', (self.root / 'es/docs/guide.html').read_text(encoding='utf-8'))
+
+    def test_deployment_cli_publishes_and_checks_incomplete_languages_at_both_url_layouts(self):
+        (self.root / 'translations/site/publish.json').write_text(json.dumps({'languages': ['es', 'ru']}), encoding='utf-8')
+        page = self.root / 'docs/guide.html'
+        page.write_text(page.read_text(encoding='utf-8').replace('</body>',
+            '<p>New English instructions.</p></body>'), encoding='utf-8')
+        manifest = self.root / 'translations/site/runtime/docs--guide.html.json'
+        manifest.parent.mkdir(parents=True)
+        manifest.write_text(json.dumps({'strings': ['{0} new results'],
+            'source_hashes': {'docs/guide.html': 'old-source-hash'}}), encoding='utf-8')
+        for prefix in ('/beta', ''):
+            command = [sys.executable, str(ROOT / 'scripts/build-site-translations.py'),
+                '--root', str(self.root), '--published', '--allow-english-fallback', '--base-path', prefix]
+            if not prefix:
+                command.append('--public')
+            for check in (False, True):
+                result = subprocess.run(command + (['--check'] if check else []), capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn('New English instructions.', result.stderr)
+            for language in ('es', 'ru'):
+                output = (self.root / language / 'docs/guide.html').read_text(encoding='utf-8')
+                self.assertIn('<p>New English instructions.</p>', output)
+                self.assertIn('https://socialstream.ninja' + prefix + '/' + language + '/docs/guide.html', output)
+
+    def test_invalid_publication_list_still_publishes_english(self):
+        path = self.root / 'translations/site/publish.json'
+        path.write_text('{invalid json', encoding='utf-8')
+        command = [sys.executable, str(ROOT / 'scripts/build-site-translations.py'),
+            '--root', str(self.root), '--published', '--allow-english-fallback', '--base-path', '', '--public']
+        for check in (False, True):
+            result = subprocess.run(command + (['--check'] if check else []), capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn('publishing English only', result.stderr)
+        output = (self.root / 'docs/guide.html').read_text(encoding='utf-8')
+        self.assertIn('<h1>Setup</h1>', output)
+        self.assertIn('hreflang="en"', output)
+
+    def test_fallback_does_not_hide_missing_english_source_files(self):
+        (self.root / 'docs/guide.html').unlink()
+        with self.assertRaises(FileNotFoundError):
+            self.build(english_fallback=True)
+
     def test_multiline_code_and_copied_markdown_keep_their_structure(self):
         path = self.root / 'docs/guide.html'
         code = '<div class="code-js">// Keep this comment\nreturn true;</div>'
@@ -246,6 +370,15 @@ class ExpandedTests(unittest.TestCase):
         self.assertIn(code,output)
         self.assertIn(shell,output)
         self.assertIn('## Contexto\n\n- Primera nota.\n\n  - Nota anidada.\n\n- Segunda nota.',output)
+        catalog['strings']['## Context - First note. - Nested note. - Second note.'] = 'Invalid translated bullet layout'
+        catalog_path.write_text(json.dumps(catalog), encoding='utf-8')
+        with self.assertRaisesRegex(ValueError, 'Preserve Markdown bullet layout'):
+            self.build()
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.build(english_fallback=True)
+            self.build(english_fallback=True, check=True)
+        output = (self.root / 'es/docs/guide.html').read_text(encoding='utf-8')
+        self.assertIn('## Context\n\n- First note.\n  - Nested note.\n- Second note.', output)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Build translated website editions from English HTML and saved catalogs.
 
-No network calls or third-party packages. Missing translations fail the build.
+No network calls or third-party packages. Deployment can fall back to English;
+the default authoring checks require complete, reviewed translations.
 The default retains the original three-page pilot. --all-pages builds the public
 website, localized search, navigation and metadata. Assets stay shared.
 """
@@ -12,6 +13,7 @@ import importlib.util
 import json
 import posixpath
 import re
+import sys
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import parse_qs, quote, urlsplit, urlunsplit
@@ -151,23 +153,42 @@ def load_catalog(root, language):
     return catalog
 
 
-def runtime_keys(root, page):
+def translation_problem(message, english_fallback=False):
+    if not english_fallback:
+        raise ValueError(message)
+    print('Warning: ' + message, file=sys.stderr)
+
+
+def runtime_keys(root, page, english_fallback=False):
     path = root / "translations/site/runtime" / (page.replace("/", "--") + ".json")
     if not path.exists():
         return set()
-    return set(json.loads(path.read_text(encoding="utf-8"))["strings"])
+    try:
+        return set(json.loads(path.read_text(encoding="utf-8"))["strings"])
+    except (ValueError, KeyError, TypeError) as error:
+        translation_problem(f'Invalid dynamic translation list {path}: {error}; dynamic text will use English.', english_fallback)
+        return set()
 
 
-def validate_runtime_sources(root, pages):
+def validate_runtime_sources(root, pages, english_fallback=False):
     for page in pages:
         path = root / "translations/site/runtime" / (page.replace("/", "--") + ".json")
         if not path.exists():
             continue
-        manifest = json.loads(path.read_text(encoding="utf-8"))
-        for source, expected in manifest.get("source_hashes", {}).items():
-            actual = runtime_source_hash(root, source)
+        try:
+            manifest = json.loads(path.read_text(encoding="utf-8"))
+            source_hashes = manifest.get("source_hashes", {}).items()
+        except (ValueError, TypeError, AttributeError) as error:
+            translation_problem(f'Invalid translation source record {path}: {error}', english_fallback)
+            continue
+        for source, expected in source_hashes:
+            try:
+                actual = runtime_source_hash(root, source)
+            except (OSError, TypeError) as error:
+                translation_problem(f'Translation source record needs review: {source}: {error}', english_fallback)
+                continue
             if actual != expected:
-                raise ValueError("Review dynamic translations after source change: " + source + " (" + str(path) + ")")
+                translation_problem("Review dynamic translations after source change: " + source + " (" + str(path) + ")", english_fallback)
 
 
 def runtime_source_hash(root, source):
@@ -257,7 +278,7 @@ def relative_url(value, source_page, localized_page, navigation=False, pages=PAG
     return urlunsplit(("", "", path, url.query, url.fragment))
 
 
-def render(source_page, document, catalog, language=LANGUAGE, pages=PAGES, expanded=False, base_path="/beta", public=False):
+def render(source_page, document, catalog, language=LANGUAGE, pages=PAGES, expanded=False, base_path="/beta", public=False, english_fallback=False):
     strings = catalog["strings"]
     localized_page = language + "/" + source_page
     english = posixpath.relpath(source_page, posixpath.dirname(localized_page))
@@ -275,7 +296,9 @@ def render(source_page, document, catalog, language=LANGUAGE, pages=PAGES, expan
         if start in document.markdown_texts and '\n' not in translated:
             indents = re.findall(r'(?m)^([ \t]*)- ', raw)
             if indents and translated.count(' - ') != len(indents):
-                raise ValueError('Preserve Markdown bullet layout in translation: ' + key)
+                translation_problem('Preserve Markdown bullet layout in translation: ' + key, english_fallback)
+                strings[key] = key
+                continue
             if indents:
                 pieces = translated.split(' - ')
                 translated = pieces[0] + ''.join('\n\n' + indent + '- ' + piece for indent, piece in zip(indents, pieces[1:]))
@@ -354,27 +377,35 @@ def render(source_page, document, catalog, language=LANGUAGE, pages=PAGES, expan
     return output
 
 
-def build(root, check=False, extract=False, language=LANGUAGE, pages=None, expanded=False, base_path="/beta", public=False, languages=None):
+def build(root, check=False, extract=False, language=LANGUAGE, pages=None, expanded=False, base_path="/beta", public=False, languages=None, english_fallback=False):
     pages = tuple(pages or PAGES)
-    catalog = load_catalog(root, language)
+    try:
+        catalog = load_catalog(root, language)
+        if not isinstance(catalog['strings'], dict) or not isinstance(catalog['ui'], dict):
+            raise ValueError('Catalog strings and ui must be objects')
+    except (ValueError, TypeError, AttributeError) as error:
+        translation_problem(f'Cannot load {language} translations: {error}; this edition will use English.', english_fallback)
+        catalog = {'ui': {}, 'strings': {}}
     documents = {page: Document(clean_source((root / page).read_text(encoding="utf-8"))) for page in pages}
     required = set().union(*(strings_for(document) for document in documents.values()))
     if expanded:
-        validate_runtime_sources(root, pages)
-        required.update(set().union(*(runtime_keys(root, page) for page in pages)))
+        validate_runtime_sources(root, pages, english_fallback)
+        required.update(set().union(*(runtime_keys(root, page, english_fallback) for page in pages)))
     missing = sorted(key for key in required if not isinstance(catalog["strings"].get(key), str) or not catalog["strings"][key])
     if extract:
         print(json.dumps({key: catalog["strings"].get(key) for key in sorted(required)}, ensure_ascii=False, indent=2))
         return
     if missing:
-        raise ValueError("Missing " + language + " translations (English text may have changed):\n" + "\n".join(missing))
+        translation_problem("Missing " + language + " translations (English text may have changed):\n" + "\n".join(missing), english_fallback)
+        catalog['strings'].update((key, key) for key in missing)
     for key in required:
         if set(re.findall(r'\{[A-Za-z_0-9]+\}', key)) != set(re.findall(r'\{[A-Za-z_0-9]+\}', catalog["strings"][key])):
-            raise ValueError("Translation changed placeholders: " + language + ": " + key)
+            translation_problem("Translation changed placeholders: " + language + ": " + key, english_fallback)
+            catalog['strings'][key] = key
     drift = []
     for page, document in documents.items():
-        catalog["runtime"] = runtime_keys(root, page)
-        output = render(page, document, catalog, language, pages, expanded, base_path, public)
+        catalog["runtime"] = runtime_keys(root, page, english_fallback)
+        output = render(page, document, catalog, language, pages, expanded, base_path, public, english_fallback)
         if expanded:
             output = language_links(output, page, language + "/" + page, languages or (language,), language, base_path)
         output = output.encode("utf-8")
@@ -426,6 +457,7 @@ if __name__ == "__main__":
     parser.add_argument("--languages", nargs="+", choices=LANGUAGES, help="Build and link several complete language editions.")
     parser.add_argument("--publish-links", action="store_true", help="Also generate language menus in the English deployment pages.")
     parser.add_argument("--published", action="store_true", help="Use the language list in translations/site/publish.json.")
+    parser.add_argument("--allow-english-fallback", action="store_true", help="Warn about translation gaps or stale review records and publish English text where needed.")
     parser.add_argument("--record-runtime-sources", action="store_true", help="Save reviewed source hashes after updating dynamic text manifests.")
     args = parser.parse_args()
     try:
@@ -436,12 +468,16 @@ if __name__ == "__main__":
         selected = public_pages(root) if args.all_pages else args.pages
         languages = args.languages or [args.language]
         if args.published:
-            languages = json.loads((root / 'translations/site/publish.json').read_text(encoding='utf-8'))['languages']
-            if not languages or any(language not in LANGUAGES for language in languages):
-                raise ValueError('Invalid published website language list')
+            try:
+                languages = json.loads((root / 'translations/site/publish.json').read_text(encoding='utf-8'))['languages']
+                if not languages or any(language not in LANGUAGES for language in languages):
+                    raise ValueError('Invalid published website language list')
+            except (ValueError, KeyError, TypeError) as error:
+                translation_problem(f'Cannot read published languages: {error}; publishing English only.', args.allow_english_fallback)
+                languages = []
             selected = public_pages(root)
         for language in languages:
-            build(root, args.check, args.extract, language, selected, bool(selected), args.base_path, args.public, languages)
+            build(root, args.check, args.extract, language, selected, bool(selected), args.base_path, args.public, languages, args.allow_english_fallback)
         if args.publish_links or args.published:
             publish_english_links(root, selected or PAGES, languages, args.base_path, args.check)
     except ValueError as error:
