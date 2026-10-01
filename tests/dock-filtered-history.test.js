@@ -125,6 +125,7 @@ assert.match(popup, /data-param1="autoqueuememberships"[^>]*aria-label="Auto-que
 const rendered = new Map();
 const replayOptions = [];
 const runtime = {
+	showDeleted: false,
 	autoQueueDonations: true,
 	autoQueueSuperChats: false,
 	autoQueueMemberships: true,

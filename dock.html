@@ -1120,6 +1120,24 @@
 				contain: paint;
 			}
 
+			.highlight-chat.deleted-message .hl-message {
+				opacity: 0.6;
+			}
+
+			.deleted-message-label {
+				display: inline-block;
+				align-self: center;
+				flex-shrink: 0;
+				margin: 0 0.4em;
+				padding: 0.1em 0.35em;
+				border: 1px solid currentColor;
+				border-radius: 3px;
+				font-size: 0.75em;
+				font-weight: bold;
+				line-height: 1.2;
+				white-space: nowrap;
+			}
+
 			#output.alignbottom > .highlight-chat {
 				flex-shrink: 0;
 			}
@@ -3925,6 +3943,8 @@
 			if (urlParams.has("deleteonlylast")) {
 				deleteOnlyLast = true;
 			}
+			var showDeleted = urlParams.has("showdeleted");
+			var deletedDockMessages = new WeakSet();
 			
 
 			var thisLabel = false;
@@ -3992,7 +4012,7 @@
 			}
 
 			function queueMessageIfRequested(node, data) {
-				if (!node || node.classList.contains("queued")) {
+				if (!node || node.classList.contains("queued") || node.classList.contains("deleted-message")) {
 					return;
 				}
 				if (isQueueRequested(data)) {
@@ -7167,6 +7187,22 @@
 				return suppliedColor;
 			}
 			
+			function markDeletedMessage(node) {
+				node.classList.add("deleted-message");
+				node.classList.remove("queued");
+				var queueBadge = node.querySelector(".queueid");
+				if (queueBadge) delete queueBadge.dataset.qid;
+				if (node.rawContents) deletedDockMessages.add(node.rawContents);
+				if (!node.querySelector(".deleted-message-label")) {
+					var label = document.createElement("span");
+					label.className = "deleted-message-label";
+					label.textContent = "Deleted";
+					var message = node.querySelector(".hl-message");
+					if (message) message.parentNode.insertBefore(label, message);
+					else node.appendChild(label);
+				}
+			}
+
 			function deleteMessages(data, deleteOnlyLast=false) {
 				let selector = "";
 				let matchField = "";
@@ -7221,13 +7257,17 @@
 				}
 				const deletedNodes = new Set(matches.filter(item => item.node).map(item => item.node));
 				const deletedPending = new Set(matches.filter(item => item.message).map(item => item.message));
-				historyMissedLiveBuffer = historyMissedLiveBuffer.filter(message => !deletedPending.has(message));
-				queue = queue.filter(item => !deletedPending.has(item.contents));
-				messageBuffer = messageBuffer.filter(item => !deletedPending.has(item.contents));
+				if (showDeleted) {
+					deletedPending.forEach(message => deletedDockMessages.add(message));
+				} else {
+					historyMissedLiveBuffer = historyMissedLiveBuffer.filter(message => !deletedPending.has(message));
+					queue = queue.filter(item => !deletedPending.has(item.contents));
+					messageBuffer = messageBuffer.filter(item => !deletedPending.has(item.contents));
+				}
 				const previousQueueLength = selectedQueue.length;
 				selectedQueue = selectedQueue.filter(node => !deletedNodes.has(node));
 				autoShowQueue = autoShowQueue.filter(node => !deletedNodes.has(node));
-				deletedNodes.forEach(node => node.remove());
+				deletedNodes.forEach(node => showDeleted ? markDeletedMessage(node) : node.remove());
 				if (selectedQueue.length !== previousQueueLength) updateQueueButton(true);
 			}
 			
@@ -7254,7 +7294,9 @@
 				if (!messageData || typeof messageData !== "object") {
 					return;
 				}
-				historyMissedLiveBuffer.push(Object.assign({}, messageData));
+				var bufferedMessage = Object.assign({}, messageData);
+				if (showDeleted && deletedDockMessages.has(messageData)) deletedDockMessages.add(bufferedMessage);
+				historyMissedLiveBuffer.push(bufferedMessage);
 				if (historyMissedLiveBuffer.length > 500) {
 					var discardIndex = historyMissedLiveBuffer.findIndex(function(message) {
 						return !isQueueRequested(message);
@@ -7283,6 +7325,7 @@
 						}
 						// These arrived live while browsing history, even if recentHistory already rendered them.
 						if (node) {
+							if (showDeleted && deletedDockMessages.has(msg)) markDeletedMessage(node);
 							queueMessageIfRequested(node, node.rawContents);
 						}
 					});
@@ -9972,7 +10015,8 @@
 				} else if (selectedQueue.includes(element)) {
 					removeQueue(element);
 				}
-				element.remove();
+				if (showDeleted) markDeletedMessage(element);
+				else element.remove();
 			}
 
 			var dockActionNoticeTimer = null;
@@ -11795,7 +11839,8 @@
 
 					var invisible = false;
 					var makeBlurred = false;
-					var suppressLiveSideEffects = prependMode === true || processDataOptions.suppressLiveSideEffects === true;
+					var isDeletedMessage = showDeleted && deletedDockMessages.has(data);
+					var suppressLiveSideEffects = prependMode === true || processDataOptions.suppressLiveSideEffects === true || isDeletedMessage;
 
 					if (debug){
 						console.log(data);
@@ -12892,6 +12937,7 @@
 					}
 
 					node.rawContents = data;
+					if (isDeletedMessage) markDeletedMessage(node);
 					
 					const metaFeatured = data.meta && data.meta.featured;
 					const metaPinnedTarget = data.meta && data.meta.pinnedTarget;
