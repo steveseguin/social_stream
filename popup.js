@@ -12660,8 +12660,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	function isPopupSearchExplicitlyHidden(element) {
 		var node = element;
 		var beginnerMode = document.body && document.body.classList.contains('beginner-mode');
-		var includeHidden = document.getElementById('searchHiddenSections').checked;
-		var panelSection = getPopupPanelSection(element);
 		while (node && node !== document.body) {
 			if ((node.classList && node.classList.contains('hidden')) ||
 				node.hidden ||
@@ -12669,10 +12667,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				(node.style && node.style.display === 'none')) {
 				return true;
 			}
-			if (!includeHidden && node.classList && node.classList.contains('popup-panel-hidden')) return true;
+			if (node.classList && node.classList.contains('popup-panel-hidden')) return true;
 			if (beginnerMode && node.classList &&
-				((node.classList.contains('beginner-advanced') && !node.classList.contains('popup-panel-selected') &&
-					!(includeHidden && panelSection && isPopupPanelBeginnerHidden(panelSection))) ||
+				((node.classList.contains('beginner-advanced') && !node.classList.contains('popup-panel-selected')) ||
 					node.classList.contains('beginner-advanced-option') ||
 					node.classList.contains('beginner-static-advanced-option'))) {
 				return true;
@@ -13045,7 +13042,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 	document.addEventListener('popup-beginner-mode-changed', refreshPopupSearchIndex);
 	document.addEventListener('popup-panel-visibility-changed', refreshPopupSearchIndex);
-	document.getElementById('searchHiddenSections').addEventListener('change', refreshPopupSearchIndex);
 
 	if (popupSearchInput) {
 		popupSearchInput.addEventListener('input', function() {
