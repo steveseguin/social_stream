@@ -1221,6 +1221,10 @@
 			//console.log(e);
 			chatimg = "";
 		}
+		if (ele.hasAttribute("is-deleted")) {
+			deleteThis(ele);
+			return 2;
+		}
 		
 		if (chatimg){
 			chatimg = chatimg.replace("=s32-", "=s64-"); 
