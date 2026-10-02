@@ -1260,6 +1260,14 @@ document.addEventListener('DOMContentLoaded', function() {
 			notes: 'Experimental: captures newly rendered chat, emotes, avatars, level badges, and optional viewer counts. The beta chat was stuck loading during validation; live capture and the production popup remain unverified.'
 		},
 		{
+			name: 'Vaughn Live',
+			icon: 'vaughn.png',
+			description: 'Live streaming platform with channel chat.',
+			type: 'standard',
+			instructions: `<ul><li>Open https://vaughn.live/USERNAME with chat visible.</li><li>In the desktop app, use Add other source and paste the channel URL.</li></ul>`,
+			notes: 'Captures individual messages in grouped and compact chat, avatars, name colors, badges, and emotes.'
+		},
+		{
 			name: 'Castyr',
 			icon: 'castyr.png',
 			description: 'Live streaming platform with standalone pop-out chat.',
