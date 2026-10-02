@@ -1,4 +1,24 @@
 /* Popup-wide control styles. Keep provider panels on these same tokens. */
+#popupSearchToolbar { flex-wrap:wrap; gap:4px; }
+.popup-panel-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:4px 8px; flex-basis:100%; }
+.popup-panel-search-option { display:flex; align-items:center; gap:4px; font-size:.85em; cursor:pointer; }
+body .popup-panel-hidden { display:none !important; }
+#panelPreviewNotice { flex-basis:100%; font-size:.85em; }
+#panelPreviewNotice[hidden] { display:none; }
+#panelEditor { box-sizing:border-box; width:calc(100% - 24px); max-width:440px; max-height:calc(100% - 24px); margin:auto; padding:16px; border:1px solid var(--collapsible-border-color); border-radius:8px; background:var(--body-background-color); color:var(--default-text-color); }
+#panelEditor[open] { display:flex; flex-direction:column; }
+#panelEditor::backdrop { background:rgba(0,0,0,.55); }
+#panelEditor h2 { margin:0; font-size:1.2em; }
+#panelEditor p { margin:8px 0; font-size:.9em; }
+#panelEditor .popup-panel-list-scroll { min-height:0; overflow-y:auto; margin:4px 0; }
+#panelEditor fieldset { min-width:0; padding:8px; border:1px solid var(--settings-control-border); }
+#panelEditor > h2, #panelEditor > p, #panelEditor > .popup-panel-actions { flex-shrink:0; }
+#panelEditor legend { padding:0 4px; }
+#panelSectionList .popup-toggle-row { flex-wrap:nowrap; padding:8px 0; }
+#panelEditorError:empty { display:none; }
+.popup-panel-actions { display:flex; flex-wrap:wrap; gap:8px; padding-top:8px; }
+#showAllPanelSections { margin-inline-end:auto; }
+
 :root { --settings-control-border:#718096; }
 @media (prefers-color-scheme: dark) { :root { --settings-control-border:#71869e; } }
 .popup-settings-panel input:not([type="checkbox"]):not([type="range"]),

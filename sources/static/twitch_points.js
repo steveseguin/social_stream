@@ -1,6 +1,7 @@
 (function () {
     var settings = {};
     var checkReady = null;
+    var updateAdAnnouncement = null;
     let videoEventListeners = new Map();
     let lastKnownVolume = 1.0; // Store the last known volume of the main video
     
@@ -23,6 +24,7 @@
                     if (typeof request === "object") {
                         if ("settings" in request) {
                             settings = request.settings;
+                            if (updateAdAnnouncement) updateAdAnnouncement();
                             sendResponse(true);
                             if (settings.collecttwitchpoints) {
                                 startCheck();
@@ -43,6 +45,7 @@
         chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response) {
             if (response && "settings" in response) {
                 settings = response.settings;
+                if (updateAdAnnouncement) updateAdAnnouncement();
                 if (settings.collecttwitchpoints) {
                     startCheck();
                 }
@@ -51,6 +54,27 @@
     }
     
     document.addEventListener('DOMContentLoaded', (ee) => {
+        var announcedAd = false;
+        updateAdAnnouncement = function () {
+            if (!settings.twichadannounce) {
+                announcedAd = false;
+                return;
+            }
+            // Twitch renders these only for ad playback. A video without an ID
+            // and ordinary play/abort events do not establish that an ad is running.
+            var adPlaying = !!document.querySelector('[data-a-target="video-ad-label"], [data-a-target="video-ad-countdown"]');
+            if (adPlaying === announcedAd) return;
+            announcedAd = adPlaying;
+            if (adPlaying) {
+                adCallbacks.onAdStart();
+            } else {
+                adCallbacks.onAdEnd();
+            }
+        };
+        var adObserver = new MutationObserver(updateAdAnnouncement);
+        adObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-a-target'] });
+        updateAdAnnouncement();
+
         document.body.addEventListener("play", (event) => {
             addVideoEventListeners();
         }, true);
@@ -85,11 +109,6 @@
                         if (eventType === "play") {
 							
                             if (!settings.twichadmute) {
-                                // Still trigger callbacks even if muting is disabled
-                                if (adVideo && adCallbacks.onAdStart) {
-                                    adCallbacks.onAdStart();
-                                }
-								
                                 return;
                             }
                             
@@ -101,11 +120,6 @@
                                         // Use stored volume instead of ad video's volume
                                         mainVideo.volume = lastKnownVolume;
                                         adVideo.muted = true;
-                                        
-                                        // Trigger ad start callback
-                                        if (adCallbacks.onAdStart) {
-                                            adCallbacks.onAdStart();
-                                        }
                                     }
                                     mainVideo.muted = false;
                                 }
@@ -113,10 +127,6 @@
                         } else if (eventType === 'abort') {
 							
                             if (!settings.twichadmute) {
-                                // Still trigger callbacks even if muting is disabled
-                                if (mainVideo && adCallbacks.onAdEnd) {
-                                    adCallbacks.onAdEnd();
-                                }
                                 return;
                             }
                             
@@ -124,11 +134,6 @@
                                 if (adVideo) {
                                     adVideo.muted = false;
                                     mainVideo.muted = true;
-                                }
-                                
-                                // Trigger ad end callback
-                                if (adCallbacks.onAdEnd) {
-                                    adCallbacks.onAdEnd();
                                 }
                             }
                         }

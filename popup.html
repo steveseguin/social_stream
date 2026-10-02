@@ -437,6 +437,7 @@ input[type="range"] {
 }
 
 #activeIcon,
+#customizePanel,
 #languageIcon {
     flex: none;
     margin-left: 8px;
@@ -717,7 +718,7 @@ body.extension-enabled {
     --body-background-color: var(--body-background-enabled);
     background-color: var(--body-background-enabled);
 }
-body.beginner-mode .beginner-advanced {
+body.beginner-mode .beginner-advanced:not(.popup-panel-selected) {
     display: none !important;
 }
 
@@ -2460,8 +2461,29 @@ input:checked + .slider:before {
         <div id="popupSearchToolbar">
             <input type="search" id="searchInput" placeholder="Search settings..." aria-label="Search all settings" />
             <button type="button" id="activeIcon" class="popup-icon-button showalways" aria-pressed="false" title="Show only enabled options" aria-label="Show only enabled options">🔰</button>
+            <button type="button" id="customizePanel" class="popup-icon-button showalways" aria-haspopup="dialog" title="Customize panel" aria-label="Customize panel"><span aria-hidden="true">🔧</span></button>
             <button type="button" id="languageIcon" class="popup-icon-button showalways" title="Select language" aria-label="Select language">🌐</button>
+            <div class="popup-panel-toolbar">
+                <label class="popup-panel-search-option"><input type="checkbox" id="searchHiddenSections" /> <span data-translate="include-hidden-sections">Include hidden sections</span></label>
+            </div>
+            <div id="panelPreviewNotice" hidden role="status"><span id="panelPreviewText"></span> <button type="button" id="hidePanelPreview" class="popup-secondary-button showalways" data-translate="hide-again">Hide again</button></div>
         </div>
+        <dialog id="panelEditor" class="popup-settings-panel" aria-labelledby="panelEditorTitle" aria-describedby="panelEditorDescription">
+            <h2 id="panelEditorTitle" data-translate="customize-panel">Customize panel</h2>
+            <p id="panelEditorDescription" data-translate="panel-editor-description">Choose the sections shown in your panel. Hiding a section only hides its controls.</p>
+            <div class="popup-panel-list-scroll">
+                <fieldset>
+                    <legend data-translate="show-in-panel">Show in panel</legend>
+                    <div id="panelSectionList"></div>
+                </fieldset>
+            </div>
+            <p id="panelEditorError" role="alert"></p>
+            <div class="popup-panel-actions">
+                <button type="button" id="showAllPanelSections" class="showalways" data-translate="show-all-sections">Show all sections</button>
+                <button type="button" id="cancelPanelEditor" class="showalways" data-translate="cancel">Cancel</button>
+                <button type="button" id="savePanelSections" class="showalways" data-translate="save">Save</button>
+            </div>
+        </dialog>
         <section id="captureSiteReminder" class="popup-settings-panel popup-subsection" hidden aria-label="Optional site capture">
             <p data-capture-message style="margin: 0 0 8px;" role="status"></p>
             <button type="button" data-capture-enable class="showalways">▶ Enable capture</button>
@@ -2507,7 +2529,8 @@ input:checked + .slider:before {
             </small>
         </div>
         <div class="container">
-            <div class="link beginner-basic" title="This link will display chat messages as a streaming list. Use as an overlay or as a control dock.">
+            <!-- Keep each feature's heading, links, and control groups on the same data-panel-section ID. -->
+            <div class="link beginner-basic" title="This link will display chat messages as a streaming list. Use as an overlay or as a control dock." data-panel-section="dock">
                 <h2 class="streaming_chat_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">💬</span><span data-translate="main-chat-overlay-control-dock">Main chat overlay &amp; control dock</span> </span>
 					<span class="heading-actions">
@@ -2538,9 +2561,9 @@ input:checked + .slider:before {
 				</div>
             </div>
 
-            <a href="" id="streaming-chat-options"></a>
+            <a href="" id="streaming-chat-options" data-panel-section="dock"></a>
 
-            <div class="wrapper beginner-basic">
+            <div class="wrapper beginner-basic" data-panel-section="dock">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-menu-options" />
                     <label class="collapsible-label" for="wrapper-chat-menu-options"><span data-translate="menu">🎚️ Bottom Dock Menu Bar</span></label>
@@ -2574,7 +2597,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper beginner-basic">
+            <div class="wrapper beginner-basic" data-panel-section="dock">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-overlay-options" />
                     <label class="collapsible-label" for="wrapper-chat-overlay-options"><span data-translate="overlay">🖼️ Overlay</span></label>
@@ -2723,7 +2746,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper beginner-basic">
+            <div class="wrapper beginner-basic" data-panel-section="dock">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-mechanics-options" />
                     <label class="collapsible-label" for="wrapper-chat-message-mechanics-options"><span data-translate="message---mechanics">💬 Message - ⚙️ Mechanics</span></label>
@@ -3139,7 +3162,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-			<div class="wrapper beginner-basic">
+			<div class="wrapper beginner-basic" data-panel-section="dock">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chat-message-tts-options" />
 					<label class="collapsible-label" for="wrapper-chat-message-tts-options">
@@ -3979,7 +4002,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper beginner-basic">
+            <div class="wrapper beginner-basic" data-panel-section="dock">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-name-color-options" />
                     <label class="collapsible-label" for="wrapper-chat-name-color-options"><span>💬 Username colors</span></label>
@@ -4020,7 +4043,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="dock">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-visibility-options" />
                     <label class="collapsible-label" for="wrapper-chat-message-visibility-options"><span data-translate="message---visibility">💬 Message - 👁️ Visibility</span></label>
@@ -4416,7 +4439,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper beginner-basic">
+            <div class="wrapper beginner-basic" data-panel-section="dock">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-styling-options" />
                     <label class="collapsible-label" for="wrapper-chat-message-styling-options"><span data-translate="message---styling">💬 Message - 🎨 Styling</span></label>
@@ -4739,7 +4762,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper beginner-basic">
+            <div class="wrapper beginner-basic" data-panel-section="dock">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-shading-options" />
                     <label class="collapsible-label" for="wrapper-chat-message-shading-options"><span data-translate="background-shading">💬 Message - 🖌️ Background Shading</span></label>
@@ -4877,7 +4900,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="dock">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-effects-options" />
                     <label class="collapsible-label" for="wrapper-chat-message-effects-options"><span data-translate="message---effects">💬 Message - ✨ Effects</span></label>
@@ -5076,7 +5099,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="dock">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-export-options" />
                     <label class="collapsible-label" for="wrapper-chat-message-export-options"><span data-translate="message---export">💬 Message - 📄 Export</span></label>
@@ -5119,7 +5142,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="dock">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-hostbot-options" />
                     <label class="collapsible-label" for="wrapper-hostbot-options"><span data-translate="identify-hosts-blocked">🦸 Identify hosts, mods, bots, VIPs, and blocked users</span></label>
@@ -5220,7 +5243,7 @@ input:checked + .slider:before {
 
             </div>
 
-            <div class="link beginner-basic" title="Ready-made OBS browser-source chat overlays.">
+            <div class="link beginner-basic" title="Ready-made OBS browser-source chat overlays." data-panel-section="chatoverlaytemplate">
                 <h2 class="chat_overlay_template_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🎨</span><span data-translate="pre-styled-chat-overlays">Pre-styled chat overlays</span> </span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -5278,13 +5301,13 @@ input:checked + .slider:before {
 				</div>
             </div>
 
-			<div class="chat-overlay-design-note beginner-basic" data-keywords="streamelements stream elements streamlabs custom chat skin theme pack import converter obs">
+			<div class="chat-overlay-design-note beginner-basic" data-keywords="streamelements stream elements streamlabs custom chat skin theme pack import converter obs" data-panel-section="chatoverlaytemplate">
 				Want to design your own? Check out our <a class="lightblue"  href="https://github.com/steveseguin/social_stream/tree/main/themes#custom-themes" target="_blank">AI-friendly starter templates</a>.
 				<br>
 				<a class="lightblue" id="streamelements_importer_link" href="./streamelements-importer.html" target="_blank" rel="noopener">Import StreamElements / Streamlabs chat skin</a>
 				· <a class="lightblue" href="https://socialstream.ninja/docs/streamelements-chat-guide.html" target="_blank" rel="noopener">Setup guide</a>
 			</div>
-            <div class="link beginner-basic" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
+            <div class="link beginner-basic" title="This link will only show selected messages, one at a time. Requires the dock to select messages." data-panel-section="overlay">
                 <h2 class="featured_chat_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🌟</span><span data-translate="featured-chat-overlay">Featured chat overlay </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -5361,9 +5384,9 @@ input:checked + .slider:before {
                     </span>
                 </div>
             </div>
-            <a href="" id="single-message-options"></a>
+            <a href="" id="single-message-options" data-panel-section="overlay"></a>
 
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="overlay">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-featured-overlay-options" />
                     <label class="collapsible-label" for="wrapper-featured-overlay-options"><span data-translate="overlay">🖼️ Overlay</span></label>
@@ -5423,7 +5446,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="overlay">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-featured-mechanics-options" />
                     <label class="collapsible-label" for="wrapper-featured-mechanics-options"><span data-translate="mechanics">⚙️ Mechanics</span></label>
@@ -5551,7 +5574,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="overlay">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-featured-tts-options" />
 					<label class="collapsible-label" for="wrapper-featured-tts-options">
@@ -6157,7 +6180,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="overlay">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-featured-visibility-options" />
                     <label class="collapsible-label" for="wrapper-featured-visibility-options"><span data-translate="visibility">👁️ Visibility</span></label>
@@ -6367,7 +6390,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="overlay">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-featured-styling-options" />
                     <label class="collapsible-label" for="wrapper-featured-styling-options"><span data-translate="styling">🎨 Styling</span></label>
@@ -6472,7 +6495,7 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="overlay">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-featured-effects-options" />
                     <label class="collapsible-label" for="wrapper-featured-effects-options"><span data-translate="effects">✨ Effects</span></label>
@@ -6493,7 +6516,7 @@ input:checked + .slider:before {
             </div>
 
 			<!-- Preset-specific configuration sections -->
-			<div id="preset-config-modern" class="preset-config-section" style="display: none;">
+			<div id="preset-config-modern" class="preset-config-section" style="display: none;" data-panel-section="overlay">
 				<div class="wrapper">
 					<div class="collapsible">
 						<input type="checkbox" class="collapsible-input" id="wrapper-preset-modern-options" />
@@ -6517,7 +6540,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div id="preset-config-animated" class="preset-config-section" style="display: none;">
+			<div id="preset-config-animated" class="preset-config-section" style="display: none;" data-panel-section="overlay">
 				<div class="wrapper">
 					<div class="collapsible">
 						<input type="checkbox" class="collapsible-input" id="wrapper-preset-animated-options" />
@@ -6550,7 +6573,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div id="preset-config-3d" class="preset-config-section" style="display: none;">
+			<div id="preset-config-3d" class="preset-config-section" style="display: none;" data-panel-section="overlay">
 				<div class="wrapper">
 					<div class="collapsible">
 						<input type="checkbox" class="collapsible-input" id="wrapper-preset-3d-options" />
@@ -6574,7 +6597,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div id="preset-config-particles" class="preset-config-section" style="display: none;">
+			<div id="preset-config-particles" class="preset-config-section" style="display: none;" data-panel-section="overlay">
 				<div class="wrapper">
 					<div class="collapsible">
 						<input type="checkbox" class="collapsible-input" id="wrapper-preset-particles-options" />
@@ -6598,7 +6621,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="link beginner-basic" title="Dedicated multi-stream alert overlay for follows, subscriptions, donations, cheers, and raids.">
+			<div class="link beginner-basic" title="Dedicated multi-stream alert overlay for follows, subscriptions, donations, cheers, and raids." data-panel-section="multialerts">
 				<h2 class="multi_alert_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">🚨</span><span>Multi-Stream Alert Box</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -6609,9 +6632,9 @@ input:checked + .slider:before {
 				<div id="multialerts-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 				<div class="help-tip" style="margin-top: 10px;">🎯 Choose alerts · 🧪 Preview · 📋 Copy OBS link</div>
 			</div>
-			<a href="" id="multi-alert-options"></a>
+			<a href="" id="multi-alert-options" data-panel-section="multialerts"></a>
 
-			<div class="wrapper beginner-basic">
+			<div class="wrapper beginner-basic" data-panel-section="multialerts">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-types-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-types-options"><span>🎯 Alert Types</span></label>
@@ -6688,7 +6711,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper beginner-basic">
+			<div class="wrapper beginner-basic" data-panel-section="multialerts">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-variants-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-variants-options"><span>🎨 Variants / Presets</span></label>
@@ -6925,7 +6948,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="multialerts">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-source-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-source-options"><span>🔎 Filter by Platform / Channel</span></label>
@@ -6955,7 +6978,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper beginner-basic">
+			<div class="wrapper beginner-basic" data-panel-section="multialerts">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-layout-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-layout-options"><span>🖼️ Layout & Visibility</span></label>
@@ -7114,7 +7137,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper beginner-basic">
+			<div class="wrapper beginner-basic" data-panel-section="multialerts">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-sound-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-sound-options"><span>🔊 Sound & Timing</span></label>
@@ -7219,7 +7242,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper beginner-basic">
+			<div class="wrapper beginner-basic" data-panel-section="multialerts">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-effect-options" />
                     <label class="collapsible-label" for="wrapper-multi-alert-effect-options"><span>✨ Event animations &amp; sound effects</span></label>
@@ -7356,7 +7379,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-			<div class="wrapper beginner-basic">
+			<div class="wrapper beginner-basic" data-panel-section="multialerts">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-preview-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-preview-options"><span>🧪 Preview & Test</span></label>
@@ -7393,16 +7416,16 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-            <div class="generic_category_title beginner-basic">
+            <div class="generic_category_title beginner-basic" data-panel-section="global">
                 <h2>
                     <span data-translate="global-settings-and-tools">🛠️ Global settings and tools </span>
                 </h2>
 				<small class="beginner-section-note">Global settings affect every overlay and source, including stream events, filters, highlights, and source behavior.</small>
                 <div id="globalsettings" class="global_settings"></div>
             </div>
-            <a href="" id="global-settings-and-tools-options"></a>
+            <a href="" id="global-settings-and-tools-options" data-panel-section="global"></a>
 
-			<div class="wrapper beginner-basic">
+			<div class="wrapper beginner-basic" data-panel-section="global">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-custom-translation-options" />
 					<label class="collapsible-label" for="wrapper-custom-translation-options">🌐 <span data-translate="custom-event-translations">Custom event translations</span></label>
@@ -7432,7 +7455,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="global">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-beta-sdk-options" />
                     <label class="collapsible-label" for="wrapper-beta-sdk-options">🧪 <span>Experimental Features</span></label>
@@ -7456,7 +7479,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper beginner-basic">
+            <div class="wrapper beginner-basic" data-panel-section="global">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-audience-room-options" />
                     <label class="collapsible-label" for="wrapper-audience-room-options" data-keywords="Ninja Chatter public audience chat room pairing Cheer relay"><span class="popup-control-icon" aria-hidden="true">&#128172;</span><span data-translate="nc-audience-title">Audience Room · NinjaChatter</span></label>
@@ -7532,7 +7555,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper beginner-basic">
+            <div class="wrapper beginner-basic" data-panel-section="global">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-additional-chat-services-options" />
                     <label class="collapsible-label" for="wrapper-additional-chat-services-options">
@@ -7826,7 +7849,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper beginner-basic">
+            <div class="wrapper beginner-basic" data-panel-section="global">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-global-mechanics-options" />
                     <label class="collapsible-label" for="wrapper-global-mechanics-options"><span><span data-translate="mechanics">⚙️ Mechanics</span> - Events &amp; Capture</span></label>
@@ -7987,7 +8010,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper beginner-basic">
+			<div class="wrapper beginner-basic" data-panel-section="global">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-global-message-processing-options" />
 					<label class="collapsible-label" for="wrapper-global-message-processing-options"><span><span data-translate="mechanics">⚙️ Mechanics</span> - Message Processing</span></label>
@@ -8078,7 +8101,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper beginner-basic">
+			<div class="wrapper beginner-basic" data-panel-section="global">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-global-connections-integrations-options" />
 					<label class="collapsible-label" for="wrapper-global-connections-integrations-options"><span><span data-translate="mechanics">⚙️ Mechanics</span> - Connections &amp; Integrations</span></label>
@@ -8357,7 +8380,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="global">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-global-points-options" />
                     <label class="collapsible-label" for="wrapper-global-points-options"><span data-translate="points-system">🏆 Points System</span></label>
@@ -8467,7 +8490,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="global">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-global-commands-options" />
                     <label class="collapsible-label" for="wrapper-global-commands-options"><span data-translate="commands">❗ Commands</span></label>
@@ -8825,7 +8848,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper beginner-basic">
+            <div class="wrapper beginner-basic" data-panel-section="global">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-global-message-visibility-options" />
                     <label class="collapsible-label" for="wrapper-global-message-visibility-options"><span data-translate="message---visibility">💬 Message - 👁️ Visibility</span></label>
@@ -8980,7 +9003,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper beginner-basic">
+            <div class="wrapper beginner-basic" data-panel-section="global">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-global-message-styling-options" />
                     <label class="collapsible-label" for="wrapper-global-message-styling-options"><span data-translate="message---styling">💬 Message - 🎨 Styling</span></label>
@@ -9074,7 +9097,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="global">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-privhostbot-options-ext" />
 					<label class="collapsible-label" for="wrapper-privhostbot-options-ext">
@@ -9228,7 +9251,7 @@ input:checked + .slider:before {
 					</div>
 				</div>
 			</div>
-            <div class="wrapper ssapp">
+            <div class="wrapper ssapp" data-panel-section="global">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-quick-open-chats-options" />
                     <label class="collapsible-label" for="wrapper-quick-open-chats-options"><span data-translate="quick-open-chat-pop-ups">📟 Quick-open chat pop-ups</span></label>
@@ -9588,7 +9611,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="global">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-profiles-options" />
 					<label class="collapsible-label" for="wrapper-profiles-options"><span data-translate="profiles">⚙️ Profiles</span></label>
@@ -9612,7 +9635,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-            <div class="wrapper beginner-basic">
+            <div class="wrapper beginner-basic" data-panel-section="global">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-export-options" />
                     <label class="collapsible-label" for="wrapper-export-options"><span data-translate="export--import">📄 Export / import</span></label>
@@ -9727,7 +9750,7 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="global">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-session-options" />
                     <label class="collapsible-label" for="wrapper-session-options"><span data-translate="session-options">🔑 Session Options</span></label>
@@ -9769,15 +9792,15 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="chatbot_category_title beginner-advanced">
+            <div class="chatbot_category_title beginner-advanced" data-panel-section="ai">
                 <h2 class="chatbot_wall_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🤖</span><span data-translate="chatbot-settings-and-tools">Chat Bots and AI services</span></span>
                 </h2>
                 <div id="chatbotsettings" class="chatbot_settings"></div>
             </div>
-            <a href="" id="chatbot-settings-and-tools-options"></a>
+            <a href="" id="chatbot-settings-and-tools-options" data-panel-section="ai"></a>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="ai">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-bots-options-ext" />
 					<label class="collapsible-label" for="wrapper-bots-options-ext">
@@ -10010,7 +10033,7 @@ input:checked + .slider:before {
 					</div>
 				</div>
 			</div>
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="ai">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-ai-auto-translate-options" />
 					<label class="collapsible-label" for="wrapper-ai-auto-translate-options">
@@ -10074,7 +10097,7 @@ input:checked + .slider:before {
 					</div>
 				</div>
 			</div>
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="ai">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-public-options" />
 					<label class="collapsible-label" for="wrapper-chatbot-public-options">
@@ -10251,7 +10274,7 @@ input:checked + .slider:before {
 					</div>
                 </div>
             </div>
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="ai">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-message-tts-options" />
 					<label class="collapsible-label" for="wrapper-chatbot-message-tts-options">
@@ -10924,7 +10947,7 @@ input:checked + .slider:before {
 					</div>
                 </div>
             </div>
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="ai">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-Censor-options" />
 					<label class="collapsible-label" for="wrapper-chatbot-Censor-options">
@@ -10961,7 +10984,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="ai">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-private-options" />
 					<label class="collapsible-label" for="wrapper-chatbot-private-options">
@@ -10995,7 +11018,7 @@ input:checked + .slider:before {
 					</div>
                 </div>
             </div>
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="ai">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-ai-prompt-options" />
 					<label class="collapsible-label" for="wrapper-chatbot-ai-prompt-options">
@@ -11016,7 +11039,7 @@ input:checked + .slider:before {
 					</div>
                 </div>
             </div>
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="ai">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-ai-event-options" />
                     <label class="collapsible-label" for="wrapper-chatbot-ai-event-options"><span>✨ AI Event Overlay</span></label>
@@ -11032,7 +11055,7 @@ input:checked + .slider:before {
                     </div></div></div>
                 </div>
             </div>
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="ai">
                 <div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-cohost-options" />
 					<label class="collapsible-label" for="wrapper-chatbot-cohost-options">
@@ -11097,7 +11120,7 @@ input:checked + .slider:before {
 					</div>
                 </div>
             </div>
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="ai">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-ai-overlay-options" />
 					<label class="collapsible-label" for="wrapper-chatbot-ai-overlay-options">
@@ -11164,7 +11187,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-			<div class="link" title="Monitor donation events and activity in real-time">
+			<div class="link" title="Monitor donation events and activity in real-time" data-panel-section="eventsdashboard">
 				<h2 class="events_dashboard_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">📊</span><span data-translate="eventsdashboard">Events Dashboard</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -11191,9 +11214,9 @@ input:checked + .slider:before {
 			<div id="eventsdashboard" data-raw="" class="eventsdashboard"><a href="" id="eventsdashboardlink"></a></div>
 				<div id="eventsdashboard-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
-			<a href="" id="eventsdashboard-options"></a>
+			<a href="" id="eventsdashboard-options" data-panel-section="eventsdashboard"></a>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="eventsdashboard">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-eventsdashboard-options" />
 					<label class="collapsible-label" for="wrapper-eventsdashboard-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
@@ -11353,7 +11376,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="link" title="Reaction-only overlay for floating hearts, thumbs, and similar live reactions.">
+			<div class="link" title="Reaction-only overlay for floating hearts, thumbs, and similar live reactions." data-panel-section="reactions">
 				<h2 class="reactions_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">💖</span><span>Reactions Overlay</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -11379,9 +11402,9 @@ input:checked + .slider:before {
 					</button>
 				</div>
 			</div>
-			<a href="" id="reactions-options"></a>
+			<a href="" id="reactions-options" data-panel-section="reactions"></a>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="reactions">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-reactions-options" />
 					<label class="collapsible-label" for="wrapper-reactions-options"><span>💖 Customize reactions overlay</span></label>
@@ -11497,7 +11520,7 @@ input:checked + .slider:before {
 			</div>
 
 
-            <div class="link" title="This link will only show the inbound emotes, bouncing them around the full page.">
+            <div class="link" title="This link will only show the inbound emotes, bouncing them around the full page." data-panel-section="emoteswall">
                 <h2 class="emotes_wall_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">😄</span><span data-translate="emotes-wall">Emotes wall </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -11519,9 +11542,9 @@ input:checked + .slider:before {
 					<div class="help-tip">💡 <strong>Tip:</strong> Add as a full-screen browser source in OBS for maximum impact during emote spam moments.</div>
 				</div>
             </div>
-            <a href="" id="emote-wall-options"></a>
+            <a href="" id="emote-wall-options" data-panel-section="emoteswall"></a>
 
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="emoteswall">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-emote-general-options" />
                     <label class="collapsible-label" for="wrapper-emote-general-options"><span data-translate="general">😀 General</span></label>
@@ -11638,7 +11661,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="link" title="This link shows a score for recent chat activity per chat source">
+            <div class="link" title="This link shows a score for recent chat activity per chat source" data-panel-section="hypemeter">
 				<h2 class="hype_mode_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">🔥</span><span data-translate="viewer-count-and-chat-activity-overlay">Viewer Count &amp; Chat Activity Overlay</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -11665,9 +11688,9 @@ input:checked + .slider:before {
                 <div id="hypemeter" data-raw="" class="hype_meter"></div>
 				<div id="hypemeter-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
-            <a href="" id="hype-meter"></a>
+            <a href="" id="hype-meter" data-panel-section="hypemeter"></a>
 
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="hypemeter">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-hype-general-options" />
                     <label class="collapsible-label" for="wrapper-hype-general-options"><span data-translate="viewer-overlay-customize">📊 Customize</span></label>
@@ -11848,7 +11871,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="meta">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-hypetrain-options" />
 					<label class="collapsible-label" for="wrapper-hypetrain-options"><span>🚂 Hype Train Top Bar</span></label>
@@ -11937,7 +11960,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="link" title="Meta data bar for auction, commerce, and giveaway-style status updates">
+			<div class="link" title="Meta data bar for auction, commerce, and giveaway-style status updates" data-panel-section="meta">
 				<h2 class="meta_mode_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">📦</span><span>Meta Data Bar</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -11982,8 +12005,8 @@ input:checked + .slider:before {
 						</button>
 					</div>
 				</div>
-			<a href="" id="meta-bar"></a>
-			<div class="wrapper">
+			<a href="" id="meta-bar" data-panel-section="meta"></a>
+			<div class="wrapper" data-panel-section="meta">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-meta-options" />
 					<label class="collapsible-label" for="wrapper-meta-options"><span>📊 Meta Overlay Options</span></label>
@@ -12193,7 +12216,7 @@ input:checked + .slider:before {
 			</div>
 
 
-			<div class="link" title="This link shows a tally of donations recieved">
+			<div class="link" title="This link shows a tally of donations recieved" data-panel-section="tipjar">
 				<h2 class="tipjar_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">💰</span><span data-translate="tipjar">Tip Jar and Goal Meter</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -12221,8 +12244,8 @@ input:checked + .slider:before {
                 <div id="tipjar" data-raw="" class="tipjar"></div>
 				<div id="tipjar-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
-            <a href="" id="tipjarhref"></a>
-            <div class="wrapper">
+            <a href="" id="tipjarhref" data-panel-section="tipjar"></a>
+            <div class="wrapper" data-panel-section="tipjar">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-tipjar-general-options" />
                     <label class="collapsible-label" for="wrapper-tipjar-general-options"><span>🧰 General Controls</span></label>
@@ -12276,7 +12299,7 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="tipjar">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-tipjar-hype-options" />
                     <label class="collapsible-label" for="wrapper-tipjar-hype-options"><span>🔥 Hype Cup Scoring</span></label>
@@ -12369,7 +12392,7 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="tipjar">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-tipjar-style-options" />
                     <label class="collapsible-label" for="wrapper-tipjar-style-options"><span>🎨 Style, Goal, and Filters</span></label>
@@ -12558,7 +12581,7 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="tipjar">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-tipjar-test-options" />
                     <label class="collapsible-label" for="wrapper-tipjar-test-options"><span>🧪 Test Donations</span></label>
@@ -12579,11 +12602,11 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
-			<div style="text-align: center; margin: 10px 0 22px;">
+			<div style="text-align: center; margin: 10px 0 22px;" data-panel-section="tipjar">
 				<small><a class="lightblue" target="_blank" href="https://socialstream.ninja/beta/docs/tip-jar-goal-meter.html">Tip Jar and Goal Meter guide</a></small>
 			</div>
 
-            <div class="link" title="This link shows a list of names representing users in a waiting list">
+            <div class="link" title="This link shows a list of names representing users in a waiting list" data-panel-section="waitlist">
                 <h2 class="waitlist_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🏆</span><span data-translate="wait-list">Wait List / Winner Draw</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -12612,8 +12635,8 @@ input:checked + .slider:before {
                 <div id="waitlist" data-raw="" class="waitlist"></div>
 				<div id="waitlist-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
-            <a href="" id="wait-list"></a>
-            <div class="wrapper hidden" id="waitlistbuttons">
+            <a href="" id="wait-list" data-panel-section="waitlist"></a>
+            <div class="wrapper hidden" id="waitlistbuttons" data-panel-section="waitlist">
                 <span id="drawmode" class="submenubuttons hidden">
                     <button class="glowingButton" data-action="stopentries" title="Stop new entries from being submitted"><span data-translate="trigger-stop-entries">🛑 Stop entries</span></button>
                     <button class="glowingButton" data-action="selectwinner"><span data-translate="trigger-new-selection">✅ Select winner</span></button>
@@ -12631,7 +12654,7 @@ input:checked + .slider:before {
                     <button class="glowingButton" data-action="downloadwaitlist" title="Download the queue list as a TSV file"><span data-translate="download-waitlist">⬇️ Download list</span></button>
                 </span>
             </div>
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="waitlist">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-waitlist-general-options" />
 
@@ -12866,7 +12889,7 @@ input:checked + .slider:before {
             </div>
 
 
-			<div class="link" title="Flow Actions Overlay Page">
+			<div class="link" title="Flow Actions Overlay Page" data-panel-section="flowactions">
                 <h2 class="flowactions_mode_title">
                     <span data-translate="flowactions">🔄 Flow actions</span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -12896,7 +12919,7 @@ input:checked + .slider:before {
 				<div id="flowactions-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="flowactions">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-flowactions-general-options" />
                     <label class="collapsible-label" for="wrapper-flowactions-general-options">⚙️ <span data-translate="flowactions-general-settings">General Settings</span></label>
@@ -12947,7 +12970,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="flowactions">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-flowactions-obs-options" />
                     <label class="collapsible-label" for="wrapper-flowactions-obs-options">🎬 <span data-translate="obs-websocket-settings">OBS WebSocket Settings</span></label>
@@ -12977,7 +13000,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="flowactions">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-flowactions-tts-options" />
                     <label class="collapsible-label" for="wrapper-flowactions-tts-options">🔊 <span data-translate="tts-settings">Text-to-Speech Settings</span></label>
@@ -13533,7 +13556,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-			<div class="link" title="Giveaway Tool">
+			<div class="link" title="Giveaway Tool" data-panel-section="giveaway">
                 <h2 class="giveaway_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🎁</span><span data-translate="giveaway">Giveaway Tool</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -13560,7 +13583,7 @@ input:checked + .slider:before {
                 <div id="giveaway" data-raw="" class="streaming_chat"><a href="" id="giveawaylink"></a></div>
 				<div id="giveaway-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="giveaway">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-giveaway-options" />
                     <label class="collapsible-label" for="wrapper-giveaway-options"><span>&#127873; Giveaway Options</span></label>
@@ -13626,7 +13649,7 @@ input:checked + .slider:before {
 
 
 
-			<div class="link" title="Polling system">
+			<div class="link" title="Polling system" data-panel-section="poll">
                 <h2 class="poll_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🗳️</span><span data-translate="pollmeter">Graphical Poll </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -13653,7 +13676,7 @@ input:checked + .slider:before {
 				<div id="poll" data-raw="" class="streaming_chat"><a href="" id="polllink"></a></div>
 				<div id="poll-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="poll">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-poll-options" />
 					<label class="collapsible-label" for="wrapper-poll-options"><span>📊 Poll Options</span></label>
@@ -13767,7 +13790,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="link" title="Mapping system">
+			<div class="link" title="Mapping system" data-panel-section="map">
                 <h2 class="map_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🗺️</span><span data-translate="mapmeter">User Map </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -13794,7 +13817,7 @@ input:checked + .slider:before {
 				<div id="map" data-raw="" class="streaming_chat"><a href="" id="maplink"></a></div>
 				<div id="map-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="map">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-map-options" />
 					<label class="collapsible-label" for="wrapper-map-options"><span>🗺️ Map Options</span></label>
@@ -13920,7 +13943,7 @@ input:checked + .slider:before {
 			</div>
 
 			<!-- Keyboard Shortcuts Reference -->
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="map">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-keyboard-shortcuts" />
 					<label class="collapsible-label" for="wrapper-keyboard-shortcuts"><span>⌨️ Keyboard Shortcuts</span></label>
@@ -13960,7 +13983,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="link" title="End credits roll">
+			<div class="link" title="End credits roll" data-panel-section="credits">
                 <h2 class="credits_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🎬</span><span data-translate="creditsmeter">Credits roll</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -13987,7 +14010,7 @@ input:checked + .slider:before {
 				<div id="credits" data-raw="" class="streaming_chat"><a href="" id="creditslink"></a></div>
 				<div id="credits-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="credits">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-credits-general-options" />
 					<label class="collapsible-label" for="wrapper-credits-general-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
@@ -14195,7 +14218,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="link" title="Interactive leaderboard display">
+			<div class="link" title="Interactive leaderboard display" data-panel-section="leaderboard">
                 <h2 class="leaderboard_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🏅</span><span data-translate="leaderboardmeter">Leaderboard</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -14223,7 +14246,7 @@ input:checked + .slider:before {
 				<div id="leaderboard" data-raw="" class="streaming_chat"><a href="" id="leaderboardlink"></a></div>
 				<div id="leaderboard-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="leaderboard">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-leaderboard-general-options" />
 					<label class="collapsible-label" for="wrapper-leaderboard-general-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
@@ -14421,7 +14444,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-                                <div class="link" title="Points system scoreboard display">
+                                <div class="link" title="Points system scoreboard display" data-panel-section="scoreboard">
 				<h2 class="scoreboard_mode_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">🧮</span><span data-translate="scoreboard">Scoreboard</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -14448,7 +14471,7 @@ input:checked + .slider:before {
 				<div id="scoreboard" data-raw="" class="streaming_chat"><a href="" id="scoreboardlink"></a></div>
 				<div id="scoreboard-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="scoreboard">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-scoreboard-general-options" />
 					<label class="collapsible-label" for="wrapper-scoreboard-general-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
@@ -14687,7 +14710,7 @@ input:checked + .slider:before {
 			</div>
 
 			<!-- OVERLAY THEME CONFIGURATION SECTIONS -->
-			<div class="wrapper beginner-basic chat-overlay-theme-options-wrapper" id="chatOverlayThemeOptionsWrapper" style="display: none;">
+			<div class="wrapper beginner-basic chat-overlay-theme-options-wrapper" id="chatOverlayThemeOptionsWrapper" style="display: none;" data-panel-section="chatoverlaytemplate">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-overlay-theme-options" />
 					<label class="collapsible-label" for="wrapper-overlay-theme-options">🎨 <span data-translate="overlay-theme-options">Overlay Theme Options</span></label>
@@ -15082,7 +15105,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-<div class="link" title="Monetization"><h2 class="monetization-title"><span>💵 <span data-translate="money-monetization">Monetization</span></span></h2>
+<div class="link" title="Monetization" data-panel-section="monetization"><h2 class="monetization-title"><span>💵 <span data-translate="money-monetization">Monetization</span></span></h2>
 <details id="monetization-settings" class="popup-settings-panel"><summary>🛍️ <span data-translate="money-platforms-products-tips">Platforms, products &amp; tips</span></summary>
 <div class="money-actions"><button id="money-save" type="button">💾 <span data-translate="money-save-setup">Save setup</span></button><a href="docs/monetization.html" target="_blank" rel="noopener">📖 <span data-translate="commerce-dock-guide">Setup guide</span></a></div>
 <p id="money-status" role="status"></p>
@@ -15190,7 +15213,7 @@ input:checked + .slider:before {
 </details>
 <div class="money-actions"><a id="money-overlay" target="_blank" rel="noopener noreferrer">↗ <span data-translate="money-open-overlay">Open overlay</span></a><button id="money-copy" type="button">📋 <span data-translate="money-copy-obs-link">Copy OBS link</span></button><a id="money-preview" href="monetization.html?demo" target="_blank" rel="noopener noreferrer">👁️ <span data-translate="money-preview">Preview</span></a></div><p><a href="docs/monetization.html" target="_blank" rel="noopener"><span data-translate="commerce-dock-guide">Setup guide</span></a></p></details></div>
 			<!-- GAMES SECTION -->
-			<div class="link" title="Interactive Games">
+			<div class="link" title="Interactive Games" data-panel-section="games">
 				<h2 class="games_mode_title">
 					<span data-translate="interactive-games">🎮 Interactive Games</span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -15265,7 +15288,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper" id="games-options-wrapper">
+			<div class="wrapper" id="games-options-wrapper" data-panel-section="games">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-games-general-options" />
 					<label class="collapsible-label" for="wrapper-games-general-options">🎮 <span data-translate="game-options">Game Options</span></label>
@@ -15565,7 +15588,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper" id="battle-options-wrapper" style="display: none;">
+			<div class="wrapper" id="battle-options-wrapper" style="display: none;" data-panel-section="games">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-battle-general-options" />
                     <label class="collapsible-label" for="wrapper-battle-general-options">⚔️ <span data-translate="options-and-actions">Options and actions</span></label>
@@ -15606,7 +15629,7 @@ input:checked + .slider:before {
 			</div>
 			<!-- END GAMES SECTION -->
 
-			<div class="link" title="Customizable ticker banner bar">
+			<div class="link" title="Customizable ticker banner bar" data-panel-section="ticker">
                 <h2 class="ticker_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">📰</span><span data-translate="tickermeter">Ticker </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -15633,7 +15656,7 @@ input:checked + .slider:before {
 				<div id="ticker" data-raw="" class="streaming_chat"><a href="" id="tickerlink"></a></div>
 				<div id="ticker-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="ticker">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-ticker-general-options" />
                     <label class="collapsible-label" for="wrapper-ticker-general-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
@@ -15790,7 +15813,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-			<div class="link" title="Word cloud overlay">
+			<div class="link" title="Word cloud overlay" data-panel-section="wordcloud">
                 <h2 class="wordcloud_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">☁️</span><span data-translate="wordcloudmeter">Word Cloud </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -15817,7 +15840,7 @@ input:checked + .slider:before {
 				<div id="wordcloud" data-raw="" class="streaming_chat"><a href="" id="wordcloudlink"></a></div>
 				<div id="wordcloud-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
-            <div class="wrapper">
+            <div class="wrapper" data-panel-section="wordcloud">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-wordcloud-general-options" />
                     <label class="collapsible-label" for="wrapper-wordcloud-general-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
@@ -15891,7 +15914,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-			<div class="link" title="Custom GIF Commands">
+			<div class="link" title="Custom GIF Commands" data-panel-section="custom-gif-commands">
                 <h2 class="custom_gif_commands_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🖼️</span><span data-translate="custom-gif-commands">Custom GIF Commands </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -15919,7 +15942,7 @@ input:checked + .slider:before {
 				<div id="custom-gif-commands-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="custom-gif-commands">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-custom-gif-commands-options" />
 					<label class="collapsible-label" for="wrapper-custom-gif-commands-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
@@ -15959,7 +15982,7 @@ input:checked + .slider:before {
 
 
 
-			<div class="link" title="Timer overlay">
+			<div class="link" title="Timer overlay" data-panel-section="timer">
 				<h2 class="timer_section_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">⏳</span>Timer</span>
 					<span class="options-link-group" style="float: right; display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center;">
@@ -15984,7 +16007,7 @@ input:checked + .slider:before {
 				<div id="timer-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="timer">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-timer-options" />
 					<label class="collapsible-label" for="wrapper-timer-options"><span>⏳ Timer Options</span></label>
@@ -16076,7 +16099,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="link" id="spotify-integration" title="Spotify Integration">
+			<div class="link" id="spotify-integration" title="Spotify Integration" data-panel-section="spotify">
 				<h2 class="spotify_section_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">🎵</span>Spotify Integration</span>
 					<span class="options-link-group" style="float: right; display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center;">
@@ -16103,7 +16126,7 @@ input:checked + .slider:before {
 				<div id="spotify-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="spotify">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-spotify-setup" />
                     <label class="collapsible-label" for="wrapper-spotify-setup"><span>🎵 Spotify Setup &amp; Configuration</span></label>
@@ -16157,7 +16180,7 @@ input:checked + .slider:before {
                 </div>
 			</div>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="spotify">
                 <div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-spotify-overlay-options" />
 					<label class="collapsible-label" for="wrapper-spotify-overlay-options"><span>📊 Spotify Overlay Options</span></label>
@@ -16252,7 +16275,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="spotify">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-spotify-announcements" />
                     <label class="collapsible-label" for="wrapper-spotify-announcements"><span>💬 Spotify Dock Announcements</span></label>
@@ -16292,7 +16315,7 @@ input:checked + .slider:before {
                 </div>
 			</div>
 
-			<div class="wrapper">
+			<div class="wrapper" data-panel-section="spotify">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-spotify-commands" />
                     <label class="collapsible-label" for="wrapper-spotify-commands"><span>🤖 Spotify Chat Commands</span></label>
@@ -16482,7 +16505,7 @@ input:checked + .slider:before {
 
 
 			<br>
-			<a class="options-link rounded_area beginner-advanced" href="#global-settings-and-tools-options" title="Jump to the global settings and tools.">
+			<a class="options-link rounded_area beginner-advanced" href="#global-settings-and-tools-options" title="Jump to the global settings and tools." data-panel-section="global">
 				👉 Looking for the Global settings? It was moved further up the page. Click here to JUMP to it.
 			</a>
 			<br><br><br>
