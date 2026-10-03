@@ -3490,6 +3490,8 @@ class EventFlowSystem {
 
     async executeAction(actionNode, message, flow = null, execution = null, pointRedemptions = null) {
         const { actionType, config } = actionNode;
+        const originalChatmessage = message && message.chatmessage;
+        const originalTextonly = message && message.textonly;
         //console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);
         let result = { modified: false, message, blocked: false };
         
@@ -5040,6 +5042,12 @@ class EventFlowSystem {
                 break;
         }
         
+        // Text caches belong to the exact message/format they were derived from.
+        // Capture the originals before running custom code, which may mutate in place.
+        if (result.message && (result.message.chatmessage !== originalChatmessage ||
+            result.message.textonly !== originalTextonly)) {
+            delete result.message.textContent;
+        }
         return result;
     }
 }
