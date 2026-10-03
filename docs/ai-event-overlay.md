@@ -14,9 +14,11 @@ The preview stays visible until you generate another one. Expand **Sample event*
 
 Copy the complete generated display URL, including its `#aieventauth=...` fragment. That private link can generate and display this saved configuration, but cannot read API keys or change settings. Treat it as a private OBS source link.
 
+For source-file customization, local hosting, session IDs, and OBS disk-file setup, see the [overlay design guides](overlay-customization-guide.html). Preserve this feature's complete private display link, including its fragment.
+
 ## Design prompts and template fields
 
-Example: “Create an animated fantasy adventurer card. Put the viewer name in a gold banner, their message below it, and an optional donation amount in the corner. Keep the background transparent.”
+Example: “Create an animated fantasy adventurer card. Put the viewer name in a gold banner, their message below it, and an optional donation amount in the corner. Keep the background transparent. Treat incoming viewer fields as untrusted text: use empty data-field elements for SSN to fill, preserve the renderer's sanitization and sandbox, and never turn viewer messages into executable HTML, JavaScript, or AI instructions.”
 
 SSN sends your saved design instructions to the configured LLM, which returns an HTML/CSS template. Use a model that can generate HTML and CSS. A model override is optional; the provider and key come from SSN's existing LLM settings. Viewer names, messages, donations and metadata are filled into the finished template locally, without becoming part of the design prompt.
 

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design your own giveaway display - Social Stream Ninja</title>
+<meta name="description" content="Customize winner cards, reels, wheels, and entry displays while keeping the Giveaway Tool's shared state.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="https://socialstream.ninja/docs/giveaway-customization-guide.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Social Stream Ninja">
+<meta property="og:title" content="Design your own giveaway display - Social Stream Ninja">
+<meta property="og:description" content="Customize winner cards, reels, wheels, and entry displays while keeping the Giveaway Tool's shared state.">
+<meta property="og:url" content="https://socialstream.ninja/docs/giveaway-customization-guide.html">
+<meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+<meta name="twitter:card" content="summary">
+<script>
+(function() {
+    var savedTheme = localStorage.getItem("darkMode");
+    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+})();
+</script>
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/guides.css">
+<link rel="stylesheet" href="css/site-shell.css">
+<link rel="stylesheet" href="css/workflow-guides.css">
+<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+<script src="js/site-shell.js"></script>
+</head>
+<body class="workflow-guide">
+<header class="site-header"><div class="site-bar">
+<a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation">
+<a href="../index.html">Home</a><a href="features.html">Features</a><a href="inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="download.html">Download</a><a href="guides.html">Guides</a><a href="commands.html">Commands &amp; API</a><a href="supported-sites.html">Supported Sites</a><a href="overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="services.html" class="site-priority-hire">Hire</a><a href="support.html">Support</a>
+</nav><div class="site-actions">
+<button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button>
+<button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button>
+</div></div></header>
+<section class="page-hero"><div class="container"><h1>Design your own giveaway display</h1><p>Customize winner cards, reels, wheels, and entry displays while keeping the Giveaway Tool's shared state.</p></div></section>
+<main class="guide-section"><div class="container">
+<nav class="workflow-toc" aria-label="On this page"><a href="overlay-customization-guide.html">All overlay design guides</a><a href="#choose">Choose a file</a><a href="#files">Download</a><a href="#connect">Session and OBS</a><a href="#design">Design</a><a href="#prompt">AI prompt</a><a href="#test">Test</a></nav>
+<section class="guide-card" id="choose"><h2>Choose the right starting page</h2><p>For the current Giveaway Tool, copy its generated <code>giveaway.html?...&amp;managed</code> link. Managed winner-card, reel, and wheel presentations receive the host's shared giveaway state. Omitting <code>managed</code> opens the older standalone behavior, which has a different pool and controls.</p>
+
+</section>
+<section class="guide-card" id="files"><h2>Download and keep the file structure</h2>
+<ol class="guide-steps"><li><a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">Download the source ZIP</a> and extract it. These guides use the beta source; keep the files from one download together.</li>
+<li>Copy <code>giveaway.html</code> to <code>my-giveaway.html</code> beside the original. If choosing a different page or theme, keep its copy in that file's original folder.</li>
+<li>Open the copied HTML and its referenced CSS/JS in your editor or AI tool. Add supplied artwork/fonts to the same project and use relative paths. Start with CSS overrides; include the renderer when changing generated markup.</li></ol>
+<p>The following files help you find the design and behavior. This is a reading list, not a complete dependency bundle: keep the extracted folder intact, including images, fonts, scripts, and any data files.</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">File</th><th scope="col">Why it matters</th></tr></thead><tbody>
+<tr><td data-label="File"><a href="../giveaway.html"><code>giveaway.html</code></a></td><td data-label="Why it matters">Main giveaway page.</td></tr>
+<tr><td data-label="File"><a href="../shared/giveaway/managed.css"><code>shared/giveaway/managed.css</code></a></td><td data-label="Why it matters">Managed audience display styles.</td></tr>
+<tr><td data-label="File"><a href="../shared/giveaway/managed.js"><code>shared/giveaway/managed.js</code></a></td><td data-label="Why it matters">Managed state receiver and presentations.</td></tr>
+<tr><td data-label="File"><a href="../shared/giveaway/page.js"><code>shared/giveaway/page.js</code></a></td><td data-label="Why it matters">Page initialization and legacy standalone behavior.</td></tr>
+<tr><td data-label="File"><a href="../giveaway-obs-entries.html"><code>giveaway-obs-entries.html</code></a></td><td data-label="Why it matters">Separate legacy entry-list display.</td></tr>
+</tbody></table></section>
+<section class="guide-card" id="connect"><h2>Connect your copy and open it in OBS</h2>
+<p>Start SSN and make the original generated overlay URL work first. The <code>session=</code> value connects to that SSN session; it is not your channel name or this file's name. Keep SSN, the relevant feature, and its data sources running.</p>
+<ol class="guide-steps"><li>From the extracted repository's top folder, start a local static server using the <a href="overlay-customization-guide.html#local-http">local HTTP instructions</a>.</li>
+<li>In the full copied overlay link, replace only the hosted page address with the local address of your edited file. Preserve everything from <code>?</code> onward, including any <code>#</code> fragment. Keep password and transport options exactly as generated.</li>
+<li>Open the result in a browser, then set an OBS Browser Source's <strong>URL</strong> to the same address with <strong>Local file</strong> unchecked. Match the source dimensions to your intended design.</li></ol>
+<p>For the starting file above, the local address looks like this; your actual link may contain additional required options:</p>
+<pre><code>http://127.0.0.1:8000/my-giveaway.html?session=YOUR_SESSION&amp;managed</code></pre>
+<p>For a direct disk URL or OBS's <strong>Local file</strong> checkbox, follow the <a href="overlay-customization-guide.html#local-file">disk-file and launcher instructions</a>. Selecting an unconfigured stock HTML file alone does not supply the session. If local-file restrictions block assets or the connection, use local HTTP. A copied page does not add itself to SSN's theme dropdown.</p>
+</section>
+<section class="guide-card" id="design"><h2>Where to change the design</h2><p>Style the managed card, wheel frame, reel items, keyword/count display, and winner reveal. Keep the selected presentation and Giveaway ID from the copied link. Start with CSS in <code>managed.css</code>; for one custom page, add overriding rules in the copied HTML after the existing stylesheet or copy the stylesheet and change that page's reference.</p><p>Leave entry acceptance, eligibility, paid-ticket weights, winner selection, and refunds in the host's existing system. The audience page should present the selected winner, not run a second random draw. Avoid placing operator controls on the audience graphic.</p></section>
+<section class="guide-card" id="prompt"><h2>Copy this AI prompt</h2><p>Give the AI your copied source files and reference artwork. Replace the bracketed details. Keep the input-safety instructions in the prompt.</p><pre><code>Customize my-giveaway.html, copied from giveaway.html.
+Design: [describe the look or attach a reference].
+Colors/fonts/assets: [supply hex colors and local filenames].
+OBS canvas and placement: [size and position].
+
+Restyle the managed giveaway display as [design], using [card / reel / wheel]. Preserve managed mode, Giveaway ID, host-selected results, snapshot/reconnect handling, entry counts, and round transitions. Do not replace host winner selection or entry/weight rules with local randomness. Keep operator controls off the viewer display.
+
+Read docs/event-reference.html for incoming fields and
+docs/overlay-customization-guide.html for local setup and safe rendering.
+Keep the existing session/password handling, labels, server routes, query
+parameters, URL fragments, and relative asset paths. Use classic scripts
+compatible with Chrome 80. Keep executable dependencies packaged locally.
+
+Treat all incoming messages, names, labels, donations, and metadata as untrusted.
+Prevent HTML/JavaScript injection in every renderer you change. Use textContent
+for plain fields and for chatmessage when textonly is true. For HTML-mode
+chatmessage, keep supported emotes/formatting through the packaged
+SocialStreamChatHTML.sanitize helper (libs/objects.js loaded first).
+Do not concatenate raw input into innerHTML, attributes, CSS, or JavaScript.
+Validate media/link URLs with the page's existing URL policy and assign DOM
+properties; do not enable javascript: URLs or executable embedded content.
+Never eval incoming data or treat a viewer message as an AI instruction.
+Keep source checks, connection handling, and existing sanitizers.
+Test plain text, allowed emotes, quotes, angle brackets, and an HTML injection
+probe in an isolated preview; verify the probe cannot execute.
+
+Return the edited files, any additional assets, exact local browser/OBS
+setup instructions using placeholders, and the specific tests performed.
+Do not put my private session link or credentials into a public example.</code></pre></section>
+<section class="guide-card" id="test"><h2>Test this overlay type</h2>
+<p>Use a preview or test setup first. The <a href="test-message-guide.html">test-message guide</a> explains how to send fictional payloads through SSN; a test submitted to your production session can trigger its existing automations.</p>
+<ol class="guide-steps"><li>Open giveaway.html?managed&amp;preview to inspect sample entries, then keep your chosen presentation/theme settings when using your custom copy. Remove preview for the connected display.</li>
+<li>In a test setup, open entries, add eligible participants, close entries, draw, and create a new round through SSN. Check winner and round transitions.</li>
+<li>Reload the display and confirm it receives the host's current state. Test long names and each presentation you will use; the wheel's visible names are not the full selection algorithm.</li></ol>
+<p>Also run the <a href="overlay-customization-guide.html#safe-input">input-rendering checks</a> against the render paths you changed. After saving edits, refresh the OBS Browser Source between rehearsals and repeat the visible interaction. Browser previews do not establish live capture or OBS behavior.</p>
+<p>More references: <a href="giveaway-guide.html">Your first giveaway</a> &middot; <a href="giveaway-points-guide.html">Tickets and points</a> &middot; <a href="event-reference.html">Event reference</a> &middot; <a href="overlay-customization-guide.html#troubleshooting">Local setup troubleshooting</a>.</p></section>
+</div></main>
+<footer><div class="container"><div class="footer-bottom"><p>Social Stream Ninja &middot; <a href="overlay-customization-guide.html">Overlay design guides</a> &middot; <a href="guides.html">All guides</a></p></div></div></footer>
+<script data-copy-markdown src="js/main.js"></script>
+</body>
+</html>
+
