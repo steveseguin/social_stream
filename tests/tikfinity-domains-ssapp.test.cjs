@@ -1,6 +1,8 @@
 'use strict';
 
-// Isolated SSApp profile and local relay. No live account or stream is used.
+// Isolated SSApp profile and local relay. Default cases use fixtures only.
+// SSAPP_TIKFINITY_FEED_URL opts into read-only capture from a connected account's
+// Activity Feed, including reload, Stop and restart. Never sends chat or gifts.
 const assert = require('assert');
 const fs = require('fs');
 const net = require('net');
@@ -66,6 +68,39 @@ async function run() {
 		await new Promise((resolve, reject) => { socket.once('open', resolve); socket.once('error', reject); });
 		socket.send(JSON.stringify({ join: room, out: 3, in: 4 }));
 		socket.on('message', raw => received.push(JSON.parse(raw.toString())));
+		if (process.env.SSAPP_TIKFINITY_FEED_URL) {
+			const url = new URL(process.env.SSAPP_TIKFINITY_FEED_URL);
+			assert.ok(['tikfinity.zerody.one', 'widgets.tikfinity.com'].includes(url.hostname));
+			const added = await command('addSource', { target: 'other', url: url.href, isVisible: false, isMuted: true });
+			assert.strictEqual(added.source.target, 'tikfinity');
+			await command('startSource', { sourceId: added.source.id });
+			const frame = await waitFor(() => app.windows().flatMap(p => p.frames()).find(f =>
+				f.url().includes(feedHost) || f.url().includes('/widget/vite/src/activity-feed/')), 'live Activity Feed iframe');
+			await frame.waitForFunction(() => window.__socialStreamTikfinityInjected === true);
+			await waitFor(() => received.some(m => m.type === 'tiktok' && !m.event && m.chatmessage), 'live Activity Feed chat');
+			const counts = () => received.filter(m => m.type === 'tiktok').reduce((all, m) => {
+				const kind = m.hasDonation ? 'gift' : m.event || 'chat';
+				all[kind] = (all[kind] || 0) + 1;
+				return all;
+			}, {});
+			await main.waitForTimeout(60000);
+			const beforeReload = received.length;
+			await frame.page().reload();
+			await waitFor(() => received.slice(beforeReload).some(m => m.type === 'tiktok' && !m.event && m.chatmessage), 'fresh feed chat after reload');
+			await command('stopSource', { sourceId: added.source.id });
+			await main.waitForTimeout(1000);
+			const stopped = received.length;
+			await main.waitForTimeout(5000);
+			assert.strictEqual(received.length, stopped, 'Activity Feed continued after Stop');
+			await command('startSource', { sourceId: added.source.id });
+			await waitFor(() => received.slice(stopped).some(m => m.type === 'tiktok' && !m.event && m.chatmessage), 'fresh feed chat after restart');
+			await command('stopSource', { sourceId: added.source.id });
+			const report = { complete: true, feedOrigin: new URL(frame.url()).origin, counts: counts(), reload: true, stop: true, restart: true };
+			fs.writeFileSync(path.join(profile, 'live-report.json'), JSON.stringify(report, null, 2));
+			console.log(JSON.stringify(report));
+			console.log('Evidence: ' + profile);
+			return;
+		}
 		for (const current of [false, true]) {
 			const url = current ? 'https://widgets.tikfinity.com/ssn-local-fixture'
 				: 'https://tikfinity.zerody.one/widget/activity-feed?cid=ssn-local-fixture&did=1';
