@@ -422,6 +422,9 @@
 		if (!canSendTikTokStandardStatus()) {
 			return;
 		}
+		if (getTikTokStandardBlockedReason()) {
+			return;
+		}
 		resetTikTokStandardPendingError();
 		tikTokStandardStatusState.lastConnectedAt = Date.now();
 		if (tikTokStandardStatusState.connectedSent) {
@@ -3563,6 +3566,16 @@
 
 		const elapsed = Date.now() - tikTokStandardStatusState.initAt;
 		const bodyText = (document.body?.innerText || "").replace(/\s+/g, " ").trim().toLowerCase();
+		const state = getTikTokStateObject();
+		const liveRoom = state?.LiveRoom?.liveRoomUserInfo?.liveRoom || null;
+		const currentRoom = state?.CurrentRoom || null;
+		// The generic Log in button remains on ended rooms. Prefer TikTok's
+		// room status or its visible end-of-stream heading over that button.
+		const endedHeading = Array.from(document.querySelectorAll('.H2-Medium.text-center')).some(element =>
+			element.textContent.trim() === "LIVE has ended" && element.getClientRects().length > 0);
+		if (elapsed > 6000 && (Number(liveRoom?.status ?? currentRoom?.status) === 4 || endedHeading)) {
+			return "TikTok LIVE has ended. Wait for the creator to go live again.";
+		}
 
 		if (bodyText) {
 			if (bodyText.includes("comments turned off") || bodyText.includes("comments are turned off")) {
@@ -3590,9 +3603,6 @@
 			return "TikTok is asking you to sign in before standard mode can see live chat.";
 		}
 
-		const state = getTikTokStateObject();
-		const liveRoom = state?.LiveRoom?.liveRoomUserInfo?.liveRoom || null;
-		const currentRoom = state?.CurrentRoom || null;
 		const showLiveChat = liveRoom?.showLiveChat ?? currentRoom?.showLiveChat;
 		const enableChat = liveRoom?.enableChat ?? currentRoom?.enableChat;
 
