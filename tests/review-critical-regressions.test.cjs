@@ -487,13 +487,17 @@ test('YouTube API Super Chat emits one paid row, with normal chat and backlog be
     const handlerEnd = source.indexOf('function normalizeYouTubeSignInTargetValue(', handlerStart);
     const paidStart = source.indexOf('function processSuperChat(');
     const paidEnd = source.indexOf('function processYouTubeGift(', paidStart);
+    const dedupeStart = source.indexOf('function shouldProcessLiveChatItem(');
+    const dedupeEnd = source.indexOf('function normalizeYouTubeBanType(', dedupeStart);
     assert.ok(handlerStart >= 0 && handlerEnd > handlerStart && paidStart >= 0 && paidEnd > paidStart);
+    assert.ok(dedupeStart >= 0 && dedupeEnd > dedupeStart);
     const queued = [], sent = [];
     const chatStatus = {};
     const context = vm.createContext({ console, Date,
         document: { getElementById: () => ({ setAttribute: (key, value) => { chatStatus[key] = value; } }) },
         youtubeRecommendedInterval: 5000, lastSuccessfulPollTime: 0, currentStream: null, videoId: null,
         initialBacklogProcessing: false, initialBacklogTimestamp: 0, lastMessageTime: null, nextPageToken: null,
+        seenLiveChatItems: new Set(), MAX_SEEN_LIVE_CHAT_ITEMS: 2000, deletedYouTubeMessageIds: new Set(),
         LIVE_CHAT_MAX_RESULTS: 200, consecutiveMaxMessages: 0, consecutiveEmptyPolls: 0, quickPollCount: 0,
         slowerPollingMode: false, isPageVisible: false, youtubeShorts: false, settings: {},
         normalizeLiveChatMessageItem: item => item, extractYouTubeGiftMetadata: () => null,
@@ -501,7 +505,7 @@ test('YouTube API Super Chat emits one paid row, with normal chat and backlog be
         applySourceIdentity: row => row, preserveKnownModerator: row => row,
         getTranslation: (key, fallback) => fallback, addEvent() {}
     });
-    vm.runInContext(source.slice(handlerStart, handlerEnd) + source.slice(paidStart, paidEnd), context);
+    vm.runInContext(source.slice(dedupeStart, dedupeEnd) + source.slice(handlerStart, handlerEnd) + source.slice(paidStart, paidEnd), context);
     const paid = { id: 'fixture-paid', authorDetails: { displayName: 'Fixture', channelId: 'fixture-user' },
         snippet: { type: 'superChatEvent', publishedAt: '2026-09-05T12:00:00Z', displayMessage: 'Thanks!',
             superChatDetails: { amountDisplayString: '$5.00', userComment: 'Thanks!', tier: 1 } } };
@@ -510,6 +514,7 @@ test('YouTube API Super Chat emits one paid row, with normal chat and backlog be
     assert.equal(queued.length, 0, 'Paid chat must not also enqueue a plain chat duplicate');
     assert.equal(sent.length, 1);
     assert.equal(sent[0].event, 'superchat');
+    assert.equal(sent[0].meta.messageId, 'fixture-paid');
     assert.equal(sent[0].hasDonation, '$5.00');
     assert.equal(sent[0].chatmessage, 'Thanks!');
     await context.processLiveChatResponseData({ items: [{ ...paid, id: 'fixture-chat', snippet: {
@@ -520,6 +525,7 @@ test('YouTube API Super Chat emits one paid row, with normal chat and backlog be
     context.initialBacklogProcessing = true;
     context.initialBacklogTimestamp = 0;
     context.lastMessageTime = null;
+    context.seenLiveChatItems.clear();
     await context.processLiveChatResponseData({ items: [paid] });
     assert.equal(sent.length, 1, 'Backlog must not replay old donations');
     assert.equal(queued.length, 1);

@@ -211,7 +211,7 @@ async function behavior(page, textonly) {
     for(const textonly of [false,true]) {
       await reset(candidate,textonly);
       await candidate.evaluate(async probe=>{
-        initialBacklogProcessing=false; initialBacklogTimestamp=0; lastMessageTime=null;
+        clearPolling(); initialBacklogProcessing=false; initialBacklogTimestamp=0;
         await __reviewProcessAPI({items:[{id:'api-probe',
           snippet:{type:'textMessageEvent',publishedAt:new Date().toISOString(),displayMessage:probe,textMessageDetails:{messageText:probe}},
           authorDetails:{displayName:'API Viewer',channelId:'api-author',profileImageUrl:'',isChatSponsor:false,isChatModerator:false,isChatOwner:false}

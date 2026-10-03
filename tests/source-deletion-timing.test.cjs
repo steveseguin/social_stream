@@ -185,7 +185,8 @@ function youtubeFixture(retry) {
     youtubeShorts: false, messageQueue: [], deletedYouTubeMessageIds: new Set(),
     pendingYouTubeMessages: new Set(), cancelledYouTubeMessages: new WeakSet(),
     isPageVisible: false, currentStream: null, videoId: null, currentSourceName: '', currentSourceImage: '',
-    youtubeRecommendedInterval: 5000, lastSuccessfulPollTime: 0, initialBacklogProcessing: false,
+    youtubeRecommendedInterval: 5000, lastSuccessfulPollTime: 0, initialBacklogProcessing: false, initialBacklogTimestamp: null,
+    seenLiveChatItems: new Set(), MAX_SEEN_LIVE_CHAT_ITEMS: 2000,
     lastMessageTime: null, nextPageToken: null, LIVE_CHAT_MAX_RESULTS: 500,
     consecutiveMaxMessages: 0, consecutiveEmptyPolls: 0, slowerPollingMode: false, quickPollCount: 0,
     document: { getElementById: () => ({ setAttribute() {} }) }, extractYouTubeGiftMetadata: () => null,
@@ -199,7 +200,7 @@ function youtubeFixture(retry) {
     CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options.detail; } },
     window: { dispatchEvent: event => events.push({ type: event.type, detail: event.detail }) }
   });
-  install(c, source, ['normalizeLiveChatType', 'normalizeLiveChatMessageItem', 'processLiveChatResponseData',
+  install(c, source, ['normalizeLiveChatType', 'normalizeLiveChatMessageItem', 'shouldProcessLiveChatItem', 'processLiveChatResponseData',
     'forwardYouTubeDelete', 'processYouTubeUserBanned', 'normalizeYouTubeBanType', 'normalizeYouTubeBanDurationSeconds',
     'queueMessage', 'messageDataNeedsRichBadgeResolution', 'queueMessageAfterRichBadgeRetry',
     'queueMessageAfterRichEmojiRetry', 'continueQueuedMessageAfterRichEmojiResolution',

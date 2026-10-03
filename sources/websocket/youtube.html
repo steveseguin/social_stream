@@ -586,6 +586,8 @@ try {
 	const VIEWER_COUNT_FALLBACK_ZERO_INTERVAL_MS = 10 * 60 * 1000;
 	const VIEWER_COUNT_FALLBACK_FAILURE_COOLDOWN_MS = 15 * 60 * 1000;
     var lastMessageTime = null;
+	const seenLiveChatItems = new Set();
+	const MAX_SEEN_LIVE_CHAT_ITEMS = 2000;
     var liveChatId = null;
     var nextPageToken = null;
     var userDetails = {};
@@ -4170,6 +4172,23 @@ function enableBackgroundKeepAlive() {
 		};
 	}
 
+	function shouldProcessLiveChatItem(item, publishedAt, giftMetadata) {
+		if (item.id === undefined || item.id === null || item.id === '') {
+			// Keep the timestamp fallback for responses without a native identity.
+			return !lastMessageTime || publishedAt > lastMessageTime;
+		}
+		if (deletedYouTubeMessageIds.has(String(item.id))) return false;
+		// Gift combos may update the same native ID and original publishedAt.
+		// Normalized metadata also deduplicates equivalent streaming/polling revisions.
+		const key = JSON.stringify([String(item.id), giftMetadata]);
+		if (seenLiveChatItems.has(key)) return false;
+		seenLiveChatItems.add(key);
+		if (seenLiveChatItems.size > MAX_SEEN_LIVE_CHAT_ITEMS) {
+			seenLiveChatItems.delete(seenLiveChatItems.values().next().value);
+		}
+		return true;
+	}
+
 	function normalizeYouTubeBanType(value) {
 		if (value === 1 || value === "1") {
 			return "permanent";
@@ -4315,9 +4334,10 @@ function enableBackgroundKeepAlive() {
 				const publishedAt = new Date(item.snippet.publishedAt);
 				const messageTime = publishedAt.getTime();
 				if (!Number.isFinite(messageTime)) return;
-				if (!lastMessageTime || publishedAt > lastMessageTime) {
-					const isBacklogMessage = initialBacklogProcessing && (messageTime <= initialBacklogTimestamp);
-					const giftMetadata = extractYouTubeGiftMetadata(item.snippet);
+				const giftMetadata = extractYouTubeGiftMetadata(item.snippet);
+				if (shouldProcessLiveChatItem(item, publishedAt, giftMetadata)) {
+					// Keep startup history suppressed after its native IDs age out of the cache.
+					const isBacklogMessage = initialBacklogTimestamp !== null && (messageTime <= initialBacklogTimestamp);
 					const isGiftEvent = item.snippet.type === 'giftEvent' || !!giftMetadata;
 					const isUserBannedEvent = item.snippet.type === 'userBannedEvent' || hasUserBannedDetails;
 					const isSpecialEvent = isGiftEvent ||
@@ -4431,6 +4451,7 @@ function enableBackgroundKeepAlive() {
 							if (item.authorDetails.isChatSponsor) stickerBadges.push({"type": "text", "text": "⭐"});
 
 							processSuperSticker({
+								messageId: item.id,
 								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								amount: stickerDetails.amountDisplayString,
 								stickerId: stickerDetails.superStickerMetadata?.stickerId,
@@ -4479,6 +4500,7 @@ function enableBackgroundKeepAlive() {
 							if (item.authorDetails.isChatSponsor) superChatBadges.push({"type": "text", "text": "⭐"});
 
 							processSuperChat({
+								messageId: item.id,
 								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								amount: item.snippet.superChatDetails.amountDisplayString,
 								message: item.snippet.superChatDetails.userComment,
@@ -4537,7 +4559,9 @@ function enableBackgroundKeepAlive() {
 						}
 					}
 
-					lastMessageTime = publishedAt;
+					if (!lastMessageTime || publishedAt > lastMessageTime) {
+						lastMessageTime = publishedAt;
+					}
 				}
 			});
 		}
@@ -6236,6 +6260,7 @@ function enableBackgroundKeepAlive() {
 		nextPageToken = null;
 		liveChatPollingFallbackActive = false;
 		lastMessageTime = null;
+		seenLiveChatItems.clear();
 		currentStream = null;
 		channelEmojiFetchToken++;
 		channelEmojiAssetsReady = true;
@@ -6794,7 +6819,7 @@ function enableBackgroundKeepAlive() {
 					}
 				}
 			}
-			pushMessage(applySourceIdentity(preserveKnownModerator({
+			const payload = preserveKnownModerator({
 				chatname: superChatData.authorName,
 				chatbadges: superChatData.badges || "", // Use any badges passed in
 				userid: superChatData.authorChannelId,
@@ -6808,7 +6833,9 @@ function enableBackgroundKeepAlive() {
 				event: "superchat",
 				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				textonly: settings.textonlymode || false
-			}, superChatData)));
+			}, superChatData);
+			if (superChatData.messageId) payload.meta = { messageId: String(superChatData.messageId) };
+			pushMessage(applySourceIdentity(payload));
 		} catch (e) {
 			console.error('Error processing super chat:', e);
 		}
@@ -6879,6 +6906,7 @@ function enableBackgroundKeepAlive() {
 			if (giftData.giftUrl) {
 				payload.contentimg = giftData.giftUrl;
 			}
+			if (giftData.messageId) payload.meta.messageId = String(giftData.messageId);
 			preserveKnownModerator(payload, giftData);
 			pushMessage(applySourceIdentity(payload));
 		} catch (e) {
@@ -7284,7 +7312,7 @@ function enableBackgroundKeepAlive() {
 			// In youtube.js, sticker images are captured from the rendered chat
 			const stickerMessage = actualMessage || stickerData.altText || getTranslation("super-sticker-text", "Super Sticker");
 			
-			pushMessage(applySourceIdentity(preserveKnownModerator({
+			const payload = preserveKnownModerator({
 				chatname: escapeHtml(stickerData.authorName),
 				chatbadges: stickerData.badges || "",
 				userid: stickerData.authorChannelId,
@@ -7299,7 +7327,9 @@ function enableBackgroundKeepAlive() {
 				event: "supersticker",
 				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				textonly: settings.textonlymode || false
-			}, stickerData)));
+			}, stickerData);
+			if (stickerData.messageId) payload.meta = { messageId: String(stickerData.messageId) };
+			pushMessage(applySourceIdentity(payload));
 		} catch (e) {
 			console.error('Error processing super sticker:', e);
 		}

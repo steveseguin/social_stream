@@ -608,7 +608,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Chat relays from the API use <code>meta.plainText</code> for the plain-text message alongside rich <code>chatmessage</code> content. It is text, not HTML, and can still contain Unicode emoji. Membership badges fall back to emoji (<code>⭐</code>, <code>💝</code>, <code>🏅</code>, etc.) to remain consistent with DOM capture. Regular chat payloads also include <code>meta.messageId</code> so dock-side delete actions can round-trip back to the YouTube moderation API.</p>
+                    <p class="field-highlights">Chat relays from the API use <code>meta.plainText</code> for the plain-text message alongside rich <code>chatmessage</code> content. It is text, not HTML, and can still contain Unicode emoji. Membership badges fall back to emoji (<code>⭐</code>, <code>💝</code>, <code>🏅</code>, etc.) to remain consistent with DOM capture. Regular chat, Super Chat, Super Sticker, and Jewels/Gifts payloads include <code>meta.messageId</code> when the API supplies a native ID, so source deletions can remove queued or rendered messages and dock-side delete actions can round-trip back to the YouTube moderation API.</p>
 
                     <div class="alert-note">
                         <strong>YouTube Subscriber Alerts (<code>new_follower</code>)</strong>
