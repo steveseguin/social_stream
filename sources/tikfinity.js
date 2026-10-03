@@ -2,7 +2,9 @@
 	if (window.__socialStreamTikfinityInjected) {
 		return;
 	}
-	if (window.location.pathname.indexOf("/widget/vite/src/activity-feed/") === -1) {
+	// Capture only the Activity Feed iframe, never its shell or another widget.
+	var isCurrentActivityFeed = window.location.hostname === "44d4d505-b6f1-46fe-94e3-8b61a456f875.tikfinity-browser-source.com";
+	if (!isCurrentActivityFeed && window.location.pathname.indexOf("/widget/vite/src/activity-feed/") === -1) {
 		return;
 	}
 	window.__socialStreamTikfinityInjected = true;
@@ -593,11 +595,63 @@
 		finalizeAndPush(data, meta, rawType !== "gift" ? payload.msgId : null);
 	}
 
+	function processStreamEvent(message) {
+		if (!message || !message.payload || typeof message.payload !== "object") {
+			return;
+		}
+		var body = message.payload;
+		var viewer = body.viewer || {};
+		var payload = {
+			uniqueId: String(viewer.tiktokUsername || ""),
+			nickname: String(viewer.tiktokNickname || viewer.tiktokUsername || ""),
+			profilePictureUrl: viewer.tiktokThumbnailUrl || ""
+		};
+		if (viewer.tiktokUserId !== undefined && viewer.tiktokUserId !== null) {
+			payload.userId = String(viewer.tiktokUserId);
+		}
+		if (message.type === "chat") {
+			payload.comment = body.content || "";
+			payload.emotes = [];
+			if (Array.isArray(body.emotes)) {
+				body.emotes.forEach(function (emote) {
+					if (emote && typeof emote.imageUrl === "string" && emote.imageUrl) {
+						payload.emotes.push({
+							emoteId: String(emote.emoteId || ""),
+							emoteImageUrl: emote.imageUrl,
+							placeInComment: 0
+						});
+					}
+				});
+			}
+		} else if (message.type === "gift") {
+			payload.giftId = String(body.giftId || "");
+			payload.giftName = body.giftName || "";
+			payload.giftPictureUrl = body.imageUrl || "";
+			// Match the completed-row gift representation used by the new Activity Feed.
+			payload.giftType = 2;
+			payload.repeatCount = Number(body.repeatCount) || 1;
+			payload.repeatEnd = true;
+			payload.diamondCount = Number(body.diamondCount) || 0;
+			payload.groupId = String(body.groupId || "");
+		} else if (message.type === "envelope") {
+			payload.coins = Number(body.diamondCount) || 0;
+			if (!payload.coins) return;
+			payload.canOpen = Number(body.peopleCount) || 0;
+		} else if (["follow", "share", "subscribe", "member"].indexOf(message.type) === -1) {
+			return;
+		}
+		processPayloadMessage(message.type, payload);
+	}
+
 	function handleWindowMessage(event) {
 		if (!event || !event.data || typeof event.data !== "object") {
 			return;
 		}
 		if (!event.data.type || !("payload" in event.data)) {
+			return;
+		}
+		if (isCurrentActivityFeed && event.data.type === "stream_event") {
+			processStreamEvent(event.data.payload);
 			return;
 		}
 		processPayloadMessage((event.data.type + "").toLowerCase(), event.data.payload);
