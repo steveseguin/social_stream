@@ -58,6 +58,18 @@
             </ul>
             <p><a href="#connect">1. Connect TikTok</a> &middot; <a href="#dock">2. Choose activity</a> &middot; <a href="#ssn">3. Add to SSN</a> &middot; <a href="#verify">4. Check capture</a> &middot; <a href="#troubleshooting">Troubleshooting</a></p>
         </section>
+        <section class="guide-card" id="desktop-api">
+            <h2>SSApp: direct TikFinity Desktop connection (beta)</h2>
+            <p>Development builds after SSApp 0.4.32 also offer <strong>TikFinity Desktop (Local API, Beta)</strong> in the existing TikTok Connection dropdown. If that choice is missing, use the Activity Feed instructions below.</p>
+            <ol class="guide-steps">
+                <li>Run <a href="https://tikfinity.zerody.one/app/">TikFinity Desktop</a> on the same computer as SSApp. Sign in to TikFinity and connect your LIVE stream there.</li>
+                <li>Check TikFinity's <a href="https://tikfinity.zerody.one/tiktok/dapi">Event API</a>. SSApp connects to its local endpoint automatically; no API key or dock URL is needed.</li>
+                <li>Stop your existing SSApp TikTok capture, choose <strong>TikFinity Desktop (Local API, Beta)</strong>, and activate it.</li>
+                <li>Wait for <strong>Receiving LIVE events from TikFinity Desktop</strong> and check a new message in the SSN dock. Hover over the connection status for recent activity information.</li>
+            </ol>
+            <p>This captures the stream selected in TikFinity, regardless of the username entered in SSApp. It is read-only. Use only one capture source for that stream to avoid duplicates. The local API can provide likes and viewer counts as well as chat and gifts; SSN's existing event filters still apply.</p>
+            <p><strong>Connected to TikFinity Desktop</strong> confirms the local connection only. If LIVE events stop, check TikFinity's dashboard and selected stream. SSApp reconnects when Desktop closes its local connection; it cannot repair TikFinity's upstream connection.</p>
+        </section>
         <section class="guide-card" id="connect">
             <h2>1. Enter the TikTok username in TikFinity</h2>
             <ol class="guide-steps">
