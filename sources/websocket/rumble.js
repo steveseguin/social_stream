@@ -23,6 +23,7 @@
     const RUMBLE_CHAT_API_BASE = 'https://web7.rumble.com/chat/api';
     const SSE_BATCH_TIMEOUT_MS = 25000;
     const SSE_BATCH_MAX_EVENTS = 25;
+    const EMOTE_CATALOG_RETRY_MS = 30000;
 
     const els = {};
     const state = {
@@ -53,6 +54,7 @@
         sseEmoteCatalogStreamId: '',
         sseEmoteCatalogPromise: null,
         sseEmoteCatalogFailedStreamId: '',
+        sseEmoteCatalogRetryAfter: 0,
         sseFailedStreamId: '',
         sseLoggedConnected: false,
         consecutiveErrors: 0
@@ -653,7 +655,7 @@
         if (state.sseEmoteCatalogPromise) {
             return state.sseEmoteCatalogPromise;
         }
-        if (state.sseEmoteCatalogFailedStreamId === normalized) {
+        if (state.sseEmoteCatalogFailedStreamId === normalized && Date.now() < state.sseEmoteCatalogRetryAfter) {
             return Promise.resolve(false);
         }
 
@@ -662,9 +664,13 @@
             if (state.sseStreamId && state.sseStreamId !== normalized) {
                 return false;
             }
+            if (!Object.keys(parsed).length) {
+                throw new Error('No Rumble emotes found in the chat page');
+            }
             state.sseEmotes = parsed;
             state.sseEmoteCatalogStreamId = normalized;
             state.sseEmoteCatalogFailedStreamId = '';
+            state.sseEmoteCatalogRetryAfter = 0;
             if (Object.keys(parsed).length) {
                 log('Loaded ' + Object.keys(parsed).length + ' Rumble emotes for chat rendering.', 'success');
             }
@@ -673,7 +679,9 @@
             state.sseEmotes = {};
             state.sseEmoteCatalogStreamId = '';
             state.sseEmoteCatalogFailedStreamId = normalized;
-            log('Rumble emote catalog unavailable; chat will use text shortcodes. ' + ((error && error.message) || error), 'warn');
+            // Existing chat polling/SSE batches retry after this cooldown.
+            state.sseEmoteCatalogRetryAfter = Date.now() + EMOTE_CATALOG_RETRY_MS;
+            log('Rumble emote catalog unavailable; chat will use text shortcodes. Retrying in 30 seconds. ' + ((error && error.message) || error), 'warn');
             return false;
         }).then(function (result) {
             state.sseEmoteCatalogPromise = null;
@@ -1534,6 +1542,7 @@
         state.sseEmoteCatalogStreamId = '';
         state.sseEmoteCatalogPromise = null;
         state.sseEmoteCatalogFailedStreamId = '';
+        state.sseEmoteCatalogRetryAfter = 0;
         state.sseLoggedConnected = false;
         if (state.sseTimer) {
             clearTimeout(state.sseTimer);
