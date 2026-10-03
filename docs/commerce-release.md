@@ -40,7 +40,7 @@ The initial requested push completed as `ba18e057` on beta. The extended audit b
 - `node scripts/commerce-obs-smoke.cjs`: native OBS Browser Source and control dock, selection, scene unload/reload and reconnect.
 - `node tests/all-translations.test.js` and `node tests/popup-search.test.js`: all 14 locale files and popup search pass.
 - Stream Deck: 43 registry/inspector/action tests pass in the separate plugin checkout; command callbacks and selected/hidden/scheduled state match the SSN API. The extension manifest exposes packaged monetization assets, and the public viewer builder includes versioned shared dependencies and locales.
-- Receiver performance and repeatable fuzz/soak commands, measurements and limitations are in [the receiver validation report](../monetization-server/VALIDATION-2026-09-08.md). The bounded soak passed 20,000 signed deliveries and 30,084 localhost HTTP operations, including restart recovery and lease/queue boundaries. No runaway retained heap was observed; this was not an overnight production soak.
+- Receiver performance and repeatable fuzz/soak commands, measurements and limitations are in the receiver validation report, which is not included in this public repository. The bounded soak passed 20,000 signed deliveries and 30,084 localhost HTTP operations, including restart recovery and lease/queue boundaries. No runaway retained heap was observed; this was not an overnight production soak.
 
 These SSApp/OBS checks are opt-in, not mandatory popup or push prerequisites. They use the application's runtime; they do not start real source channels.
 
