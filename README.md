@@ -1,3 +1,7 @@
+# Chrome Web Store edition
+
+This checkout and upload contain the Chrome Web Store extension. Bundled local AI/voice models, arbitrary JavaScript execution, and the widget importer are not included. System TTS, supported external services, Ollama, CSS customization, and built-in Event Flow actions remain available. Desktop-app and website guides describe separate products and may include additional features.
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
@@ -51,11 +55,11 @@ SSN is free to use. Some optional integrations, AI services, and voice providers
 
 - **💬 Combine and manage chat:** Read multiple platforms in one dock, filter messages, queue or pin them, and reply or relay messages where supported.
 - **⭐ Feature viewers:** Select a message for your on-stream overlay, or configure automatic featuring.
-- **🎨 Match your stream:** Choose chat templates and matching theme packs, customize CSS, or convert a StreamElements chat widget.
+- **🎨 Match your stream:** Choose chat templates and matching theme packs, and customize CSS.
 - **🎉 Celebrate events:** Show follow, membership, donation, bits, and other supported alerts with animations and sound effects.
-- **🔊 Give chat a voice:** Use system text-to-speech, local AI voices, or supported external voice providers.
+- **🔊 Give chat a voice:** Use system text-to-speech or supported external voice providers.
 - **⚡ Automate interactions:** Build Event Flow actions, bot commands, timers, and integrations with Stream Deck, MIDI, webhooks, and OBS.
-- **🤖 Connect AI and custom tools:** Use supported AI services, Ollama, APIs, and your own scripts for chat responses and workflows.
+- **🤖 Connect AI and custom tools:** Use supported AI services, Ollama, APIs, and built-in actions for chat responses and workflows.
 
 <a id="supported-sites"></a>
 ## 🌐 Supported platforms
@@ -102,8 +106,7 @@ Use the update instructions for your installed version on the [download page](ht
 
 Start with the menu’s built-in controls for colors, layout, filtering, and visibility. For a complete visual style, use the [templates page](https://socialstream.ninja/docs/templates.html) or [screenshot gallery](https://socialstream.ninja/docs/overlay-gallery.html). Matching packs cover consolidated chat, featured messages, and event alerts.
 
-- **Make your own:** The [template guide and copyable AI prompts](https://socialstream.ninja/docs/templates.html#make-your-own) cover CSS changes and custom overlays. Developers can use the [custom overlay guide](docs/customoverlays.md).
-- **Bring an existing widget:** The [StreamElements converter](https://socialstream.ninja/streamelements-importer.html) imports compatible widget files, previews them, and exports HTML for OBS.
+- **Make your own:** The [template guide and copyable AI prompts](https://socialstream.ninja/docs/templates.html#make-your-own) cover CSS changes and custom overlays. Developers can use the [custom overlay guide](https://socialstream.ninja/docs/customoverlays.md).
 - **Add event audio and animations:** Follow the [alert effects guide](https://socialstream.ninja/docs/alert-effects.html) for sound choices and event or donation-value rules.
 - **Fine-tune an overlay URL:** Use the [parameter reference](parameters.md) for additional layout and behavior options.
 
@@ -115,7 +118,7 @@ Choose a voice and test it in the SSN settings before adding it to your broadcas
 | Task | Guide |
 | --- | --- |
 | Set up voices and capture TTS audio | [TTS setup](https://socialstream.ninja/docs/tts-setup-guide.html) |
-| Use a local voice engine or custom endpoint | [Local AI TTS](https://socialstream.ninja/docs/local-tts.html) |
+| Use a separately installed TTS bridge or custom endpoint | [Local AI TTS](https://socialstream.ninja/docs/local-tts.html) |
 | Build triggers and actions visually | [Event Flow editor guide](https://socialstream.ninja/actions/event-flow-guide.html) |
 | Use bot commands, MIDI, Stream Deck, or webhooks | [Commands and integrations](https://socialstream.ninja/docs/commands.html) |
 | Connect AI tools to the desktop app | [AI control guide](https://socialstream.ninja/docs/llm-control-guide.html) |
@@ -145,7 +148,7 @@ This **social_stream** repository contains the shared web interface, browser ext
 | Platform capture | [sources/](sources/) and [sources/websocket/](sources/websocket/) |
 | Shared utilities | [shared/](shared/) |
 | Standalone web experience | [lite/](lite/) |
-| Custom overlays | [sampleoverlay.html](sampleoverlay.html), [themes/](themes/), and [developer guide](docs/customoverlays.md) |
+| Custom overlays | [sampleoverlay.html](sampleoverlay.html), [themes/](themes/), and [developer guide](https://socialstream.ninja/docs/customoverlays.md) |
 | Event payloads | [Canonical event reference](https://socialstream.ninja/docs/event-reference.html) |
 | Remote commands and APIs | [API documentation](https://socialstream.ninja/docs/commands.html#server-api) |
 

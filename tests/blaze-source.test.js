@@ -16,6 +16,7 @@ function waitForMessageCount(page, expected) {
 (async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
+  await page.route(/^https?:/, route => route.abort());
 
   await page.setContent('<div data-testid="virtuoso-item-list" id="chat"></div>');
   await page.addScriptTag({ content: `
@@ -110,8 +111,9 @@ function waitForMessageCount(page, expected) {
   ` });
 
   await page.evaluate(() => window.__addBlazeMessage(0, "Backlog", "Old message", false));
+  const attached = page.waitForEvent("console", { predicate: message => message.text() === "CONNECTED chat detected" });
   await page.addScriptTag({ content: source });
-  await page.waitForFunction(() => document.querySelector('[data-item-index="0"]').dataset.ssnBlazeMessageSignature);
+  await attached;
   assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 0, "initial backlog should not send");
 
   // Rows arriving while the freshly detected list is still hydrating are backlog.

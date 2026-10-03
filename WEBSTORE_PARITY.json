@@ -3,11 +3,11 @@
   "upstream_beta_commit": "693641140de3da8323a2c78de195020feb1b1245",
   "scope": "Reviewed beta baseline plus the recorded TikFinity fix backport and documented Web Store adaptations.",
   "summary": {
-    "exact-beta": 894,
-    "store-adapted": 75,
-    "legacy-store": 5,
-    "added_package_files": 0,
-    "updated_package_files": 2
+    "exact-beta": 891,
+    "store-adapted": 78,
+    "legacy-store": 7,
+    "added_package_files": 2,
+    "updated_package_files": 4
   },
   "files": [
     {
@@ -26,10 +26,13 @@
     },
     {
       "path": "README.md",
-      "disposition": "exact-beta",
-      "sha256": "087c3e3f6a2c978300b6ee47964d393ee1cf6629ddd7751ffee57196f5f4841b",
+      "disposition": "store-adapted",
+      "sha256": "f82d77d3803f7189a505b672fe917742ba897063cdc1a28bdfb140f7b7f120af",
       "beta_blob": "a0042aa10619514317518b3770555f3046c71158",
-      "beta_sha256": "087c3e3f6a2c978300b6ee47964d393ee1cf6629ddd7751ffee57196f5f4841b"
+      "beta_sha256": "087c3e3f6a2c978300b6ee47964d393ee1cf6629ddd7751ffee57196f5f4841b",
+      "reasons": [
+        "Describe this edition accurately: excluded bundled models, widget importer and arbitrary custom JavaScript are not advertised."
+      ]
     },
     {
       "path": "TOS.html",
@@ -821,11 +824,12 @@
     {
       "path": "featured.html",
       "disposition": "store-adapted",
-      "sha256": "baae416cb7a3e5ae53ca4cba3b9a47bc301f0ce5621e8188d82eafb94de28ee6",
+      "sha256": "e164e6d0c1b2347b4f7b6026bd92f5582c2ee164e8166f85c04929d4c70a1696",
       "beta_blob": "3bb1b61cbc8d815e02c92c3c5e55803876b97851",
       "beta_sha256": "f7091552b432ee954b004f7dc897ac0c80f1d75b46d30af22ddf6efca619d810",
       "reasons": [
-        "Excluded custom.js loader"
+        "Excluded custom.js loader",
+        "Remove an already-disabled commented remote JavaScript loader; executable behavior is unchanged."
       ]
     },
     {
@@ -2624,10 +2628,13 @@
     },
     {
       "path": "seo.md",
-      "disposition": "exact-beta",
-      "sha256": "3677b1f26d8b64a066f4985a5357779c584405e5941dae4fd5d13875b71b9067",
+      "disposition": "store-adapted",
+      "sha256": "ad01f0dbc61c02961dca771bc2dae006e6c58cf63bb03cf02e00d5220834a9a7",
       "beta_blob": "a01b7bcc99e5b218bde87d990a5dd8df3f4e17d7",
-      "beta_sha256": "3677b1f26d8b64a066f4985a5357779c584405e5941dae4fd5d13875b71b9067"
+      "beta_sha256": "3677b1f26d8b64a066f4985a5357779c584405e5941dae4fd5d13875b71b9067",
+      "reasons": [
+        "Remove the unsupported custom JavaScript URL option from packaged feature claims."
+      ]
     },
     {
       "path": "septapus.html",
@@ -3012,10 +3019,13 @@
     },
     {
       "path": "shared/monetization/popup.js",
-      "disposition": "exact-beta",
-      "sha256": "c55a9b4c8eadd1e8d7a4ae283cca2cdd813122086a0e9c7ad4adf3a97168188c",
+      "disposition": "store-adapted",
+      "sha256": "f27bcdef69fb7c6508db5f1c3f2fc73aaa231f994399c499b26fc80697012bbc",
       "beta_blob": "6a13f558b751f06e892ab1e00ec51ed1ff6f10ac",
-      "beta_sha256": "c55a9b4c8eadd1e8d7a4ae283cca2cdd813122086a0e9c7ad4adf3a97168188c"
+      "beta_sha256": "c55a9b4c8eadd1e8d7a4ae283cca2cdd813122086a0e9c7ad4adf3a97168188c",
+      "reasons": [
+        "Web Store provider help uses hosted documentation; non-Store URL behavior is preserved."
+      ]
     },
     {
       "path": "shared/monetization/shop.css",
@@ -6637,6 +6647,14 @@
       "beta_sha256": "6bbac1c275c08e42f685bc164471cd3d6c2b7540e9c33c91c3c6a65115fff187"
     },
     {
+      "path": "thirdparty/NotoColorEmoji.OFL.txt",
+      "disposition": "legacy-store",
+      "sha256": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2",
+      "reasons": [
+        "Reviewed local font licence included with the packaged fonts."
+      ]
+    },
+    {
       "path": "thirdparty/NotoColorEmoji.full.ttf",
       "disposition": "exact-beta",
       "sha256": "2eeac855a08803c6d209f8eb74ed5f798af46e128bc93dd3913e04de57523a7c",
@@ -6649,6 +6667,14 @@
       "sha256": "baebc01820e19687a12127ebf782ee4efe2a56ff2bd23bac8b0deb748486c114",
       "beta_blob": "ae0dd1b9ac015b1c268818d75debc2c6782ec34e",
       "beta_sha256": "baebc01820e19687a12127ebf782ee4efe2a56ff2bd23bac8b0deb748486c114"
+    },
+    {
+      "path": "thirdparty/Sora.OFL.txt",
+      "disposition": "legacy-store",
+      "sha256": "ba0b9729c9428ba79a0459ab8ec575791b51509dbec213e383d0316d37fec299",
+      "reasons": [
+        "Reviewed local font licence included with the packaged fonts."
+      ]
     },
     {
       "path": "thirdparty/StreamSaver.js",

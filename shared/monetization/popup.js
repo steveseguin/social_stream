@@ -189,7 +189,8 @@
     function providerLinks() {
         var provider = by('provider').value;
         by('provider-url').value = typeof lastResponse !== 'undefined' && lastResponse && lastResponse.streamID ? 'https://io.socialstream.ninja/' + encodeURIComponent(lastResponse.streamID) + '/' + provider : '';
-        by('provider-guide').href = 'docs/creator-store-setup.html#' + provider;
+        var guideRoot = typeof WEBSTORE_CONSERVATIVE_RELEASE !== 'undefined' && WEBSTORE_CONSERVATIVE_RELEASE ? 'https://socialstream.ninja/' : '';
+        by('provider-guide').href = guideRoot + 'docs/creator-store-setup.html#' + provider;
         var preview = new URL('monetization.html', location.href);
         preview.search = '?demo&mode=commerce&view=alerts&provider=' + provider;
         if (typeof getSelectedTranslationLinkParam === 'function') preview.search += getSelectedTranslationLinkParam();

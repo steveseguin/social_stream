@@ -6,6 +6,7 @@ const vm = require('node:vm');
 
 const root = path.resolve(process.env.SSN_EXTENSION_ROOT || path.join(__dirname, '..'));
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
+const release = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/webstore-release-baseline.json'), 'utf8'));
 const baseline = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/store-restrictions-baseline.json')));
 // A checkout also contains development files; an upload must match the
 // reviewed package inventory exactly, with no hidden staging dependency.
@@ -16,13 +17,15 @@ assert.deepEqual([...files].sort(), [...packageFiles].sort(), 'Upload files diff
 for (const file of packageFiles) assert.ok(fs.existsSync(path.join(root, file)), `Missing packaged file: ${file}`);
 
 for (const [file, digest] of Object.entries(baseline.licences)) {
+    assert.ok(files.includes(file), `Reviewed licence must ship in the ZIP: ${file}`);
     assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(root, file))).digest('hex'), digest, `Missing or changed reviewed licence: ${file}`);
 }
-for (const [file, digest] of Object.entries(baseline.sourceAndProviderHashes)) {
+for (const [file, digest] of Object.entries(release.sourceHashes)) {
     assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(root, file))).digest('hex'), digest, `Retained source/provider differs from the reviewed official file: ${file}`);
 }
 for (const file of files) {
-    assert.ok(!baseline.excludedFiles.includes(file), `Previously excluded package asset returned: ${file}`);
+    // The incoming release retains this data-only emoji font; both fonts' licences must ship.
+    assert.ok(file === 'thirdparty/NotoColorEmoji.full.ttf' || !baseline.excludedFiles.includes(file), `Previously excluded package asset returned: ${file}`);
     assert.ok(!baseline.excludedPrefixes.some(prefix => file.startsWith(prefix)), `Excluded package directory returned: ${file}`);
     if (file.startsWith('docs/')) assert.ok(baseline.packagedHelpFiles.includes(file), `Website documentation must use hosted help: ${file}`);
     if (!/\.(?:html|js|mjs|md|json)$/.test(file) || file.endsWith('emotes.json')) continue;
@@ -34,7 +37,9 @@ for (const file of files) {
     assert.ok(!/\bensureFunction\s*\(\s*["'][^"']+["']\s*,\s*["']https?:\/\/|\bloadScript\s*\(\s*["']https?:\/\//i.test(source), `Previously rejected remote loader returned: ${file}`);
     assert.ok(!/JSON\s*\.\s*parse\s*\(\s*atob\s*\(/.test(source), `Previously rejected encoded JSON list returned: ${file}`);
     assert.ok(!/stripchat|bongacams|chaturbate|fansly|camsoda|cherry\.tv|myfreecams|joystick\.tv|onlyfans/i.test(source), `Adult-provider reference returned: ${file}`);
-    const dynamic = source.match(/\bnew\s+Function\s*\(|\beval\s*\(|\bFunction\s*\(\s*["']/g) || [];
+    // Inspect executable scripts, not prose explaining why eval is disabled.
+    const executable = /\.html$/.test(file) ? Array.from(source.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi), match => match[1]).join('\n') : /\.(?:js|mjs)$/.test(file) ? source : '';
+    const dynamic = executable.match(/\bnew\s+Function\s*\(|\beval\s*\(|\bFunction\s*\(\s*["']/g) || [];
     if (dynamic.length) {
         assert.equal(file, 'shared/vendor/socket.io.min.js', `Unreviewed dynamic-code construction: ${file}`);
         assert.equal(dynamic.length, 1, 'Socket.IO acquired additional dynamic-code paths');
@@ -42,14 +47,14 @@ for (const file of files) {
     }
 }
 
-// Socket.IO is needed by Velora and Streamlabs. Its global-object fallback must
+// Socket.IO is needed by Streamlabs; Velora is deliberately excluded from this edition. Its global-object fallback must
 // not execute Function in a browser, even when dynamic code is forbidden.
 const browser = { setTimeout, clearTimeout, console };
 browser.self = browser;
 browser.window = browser;
 vm.runInNewContext(read('shared/vendor/socket.io.min.js'), browser, { contextCodeGeneration: { strings: false, wasm: false } });
 assert.equal(typeof browser.io, 'function');
-for (const source of ['velora', 'streamlabs']) {
+for (const source of ['streamlabs']) {
     assert.ok(read(`sources/websocket/${source}.html`).includes('../../shared/vendor/socket.io.min.js'), `${source} lost its local Socket.IO dependency`);
 }
 assert.deepEqual(JSON.parse(read('manifest.json')).permissions, ['notifications', 'storage', 'debugger', 'tabs', 'scripting', 'tabCapture', 'identity']);

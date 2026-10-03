@@ -52,7 +52,6 @@ You can adjust the appearance and behavior of the dock and overlay pages by modi
 - `&label=NAMEHERE`: Assign a unique target name to the dock for targeted API commands.
 - `&css=https://youdomain.com/style.css`: Load a custom CSS file for the dock.
 - `&b64css=YOUR_CSS_CODE_HERE`:  Load a custom CSS file for the dock in base64 encoded format.
-- `&js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js`: Load a custom JavaScript file for the dock (be cautious as this can be a security risk).
 
 **Overlay (featured.html):**
 

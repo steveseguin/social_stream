@@ -1508,3 +1508,84 @@ Current local ZIP: `C:\Users\steve\Code\webstore\social-stream-ninja-chrome-web-
 SHA-256: `4fcccefa97c5dcaac537a1849d2761213ae8d120c54106e49892177a8fd6ce0b`. All 974 entries match this checkout.
 Detailed results and the original incoming artifact provenance are in
 WEBSTORE_VERIFICATION.json.
+
+
+## 2026-10-03 Web Store packaging and help cleanup
+
+Scope: C:\Users\steve\Code\webstore\social_stream only. The official
+checkout, website and other delivery targets were not edited.
+
+Behavioral change: the Creator Store provider setup link now opens the hosted
+guide for Fourthwall, Ko-fi and Buy Me a Coffee instead of an excluded local
+file. The change is guarded by WEBSTORE_CONSERVATIVE_RELEASE; without that
+flag, the shared handler retains its existing relative link. The guide URL
+contains the provider fragment only, without session or password parameters.
+The hosted guide was checked at https://socialstream.ninja/docs/creator-store-setup.html.
+
+Packaging and descriptions:
+
+- Include the existing reviewed Noto Color Emoji and Sora licence files with
+  the bundled fonts. The upload inventory grows from 974 to 976 files.
+- Clarify the README's Web Store scope and retained capabilities, remove
+  claims for the excluded widget importer/bundled local voices/custom code,
+  and use hosted custom-overlay documentation.
+- Remove the unsupported custom-JavaScript option from seo.md and remove an
+  already-commented-out loader in featured.html. Neither was an active feature.
+- Keep version 3.50.25, the entire manifest, CSP, permissions, defaults, source
+  registrations, source code, capture behavior, message payloads and supported
+  service integrations unchanged. No additional features were disabled.
+
+Validation maintenance: preserve the old 3.50.12 fixtures as history and pin
+current source/manifest parity to the independently reviewed incoming release
+16cc170f. Test source hashes are taken from that release, not the working tree.
+Retain all source-routing assertions, require font licences inside the upload,
+and scan executable script bodies separately from documentation about disabled
+code. Current Blaze fixtures insert history before startup settles. OpenCode
+fixtures reflect the current free-model order/catalog lookup while preserving
+cooldown, cache and paid-model exclusion assertions. No Blaze or AI runtime
+code was changed to make tests pass.
+
+Reviewer walkthrough: open the extension popup, turn SSN on, open a supported
+chat popout, and open the generated Dock link. Select a captured message to
+show it in the Featured overlay. Source disable controls should affect only
+that service. System TTS uses the selected system voice; external APIs and
+OAuth integrations require the reviewer's own optional accounts/credentials.
+Creator Store setup help opens an ordinary hosted documentation page. Local
+browser model bundles and arbitrary JavaScript are intentionally unavailable.
+
+Policy references checked:
+https://developer.chrome.com/docs/webstore/program-policies/mv3-requirements
+https://developer.chrome.com/docs/webstore/program-policies/quality-guidelines
+
+Executable extension dependencies remain packaged. The seven existing API
+permissions still have direct use sites; no permission or host scope was added.
+Store listing/account declarations, authenticated provider sessions, and Web
+Store submission are not included in these local validation results.
+
+Validation complete: all 39 checkout suites and all 8 extracted-upload suites
+passed (47 runs), including actual extension routing, UI, Creator Store help,
+font licences, provider exclusions, packaged code checks and full manifest/
+source parity. The ZIP-parity PowerShell test also passed for all 976 files.
+Current ZIP: `C:\Users\steve\Code\webstore\social-stream-ninja-chrome-web-store-3.50.25.zip`.
+SHA-256: `4e13706acedcc019f6a2f519531d9a21c605e5111ebc7702d775ed6ebf286f4d`. Results are recorded in
+WEBSTORE_VERIFICATION.json under webstore_compatibility_validation.
+
+## 2026-10-03 public live capture check
+
+Loaded this checkout's actual extension and unchanged manifest in headed
+Chromium with a fresh signed-out profile, enabling capture through the popup.
+Native manifest injection captured public chat from YouTube (Lofi Girl,
+rFZHOHl-L8A), Twitch (yourragegaming), and Kick (gaules). No source scripts
+were manually injected and no chat messages were posted.
+
+Observed 97 YouTube, 83 Twitch, and 60 Kick named chat messages at the
+background output, preserving the original output function and transport.
+A 73.2-second observation interval added 80, 69, and 53 messages respectively.
+Opened the popup-generated hosted dock and visually verified messages and
+platform icons from all three services. Evidence is in
+tmp/live-webstore-20261003; structured results are in WEBSTORE_VERIFICATION.json.
+
+No application or manifest changes were required. Authenticated Studio/API
+modes and actual Twitch ad events were not exercised by this public test.
+Twitch's keyboard layout permission error did not prevent capture; a dock
+link-inspection error in the harness was handled by visual verification.

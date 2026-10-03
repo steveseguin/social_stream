@@ -1,0 +1,2232 @@
+{
+  "release_commit": "16cc170f93b9fd3321043639ddd02cf5cf0146a5",
+  "upstream_beta_commit": "693641140de3da8323a2c78de195020feb1b1245",
+  "review": "Incoming 3.50.25 Web Store release, retained during the reviewed rebase. No manifest or capture-source changes are authorized by the packaging/help cleanup.",
+  "manifest": {
+    "name": "Social Stream Ninja",
+    "description": "Capture live chat from 100+ supported sites and consolidate it into a single dashboard for live production workflows",
+    "manifest_version": 3,
+    "version": "3.50.25",
+    "homepage_url": "http://socialstream.ninja/",
+    "browser_specific_settings": {
+      "gecko": {
+        "id": "{c7714925-0286-4dea-abc0-bbeb11fb0bfb}",
+        "strict_min_version": "109.0"
+      }
+    },
+    "icons": {
+      "128": "icons/icon-128.png"
+    },
+    "background": {
+      "service_worker": "service_worker.js"
+    },
+    "content_security_policy": {
+      "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+    },
+    "permissions": [
+      "notifications",
+      "storage",
+      "debugger",
+      "tabs",
+      "scripting",
+      "tabCapture",
+      "identity"
+    ],
+    "web_accessible_resources": [
+      {
+        "resources": [
+          "providers/kick/core.js",
+          "shared/kickBadges.js",
+          "providers/twitch/chatClient.js",
+          "providers/youtube/liveChat.js",
+          "providers/youtube/contextResolver.js",
+          "shared/utils/scriptLoader.js",
+          "shared/utils/contentImage.js",
+          "shared/utils/chatBadges.js",
+          "shared/utils/chatBadges.css",
+          "shared/utils/chatHtml.js",
+          "libs/objects.js",
+          "shared/utils/compactSourceLayout.js",
+          "shared/compact-source-layout.css",
+          "shared/overlay-control-transport.js",
+          "shared/alerts/*",
+          "audio/alerts/*",
+          "shared/stickers/*",
+          "shared/monetization/*",
+          "shared/audience-room/*",
+          "shared/giveaway/*",
+          "media/stickers/*",
+          "shared/utils/html.js",
+          "shared/utils/twitchEmotes.js",
+          "shared/aiPrompt/overlayStore.js",
+          "shared/aiEventOverlay/*",
+          "shared/vendor/socket.io.min.js",
+          "shared/vendor/tmi.js",
+          "shared/vendor/tmi.module.js",
+          "shared/vendor/pluralmind.iife.js",
+          "shared/integrations/pluralmind.js"
+        ],
+        "matches": [
+          "<all_urls>"
+        ]
+      },
+      {
+        "resources": [
+          "sources/inject/streamelements-ws.js"
+        ],
+        "matches": [
+          "https://streamelements.com/*"
+        ]
+      }
+    ],
+    "host_permissions": [
+      "http://*/*",
+      "https://*/*",
+      "http://localhost:8080/*",
+      "http://localhost:8181/*",
+      "http://localhost:11434/api/generate",
+      "http://127.0.0.1:11434/api/generate",
+      "https://streamlabs.com/*",
+      "https://sockets.streamlabs.com/*",
+      "https://whop.com/*",
+      "https://zap.stream/*",
+      "https://www.bigo.tv/*",
+      "https://blaze.stream/*",
+      "https://claude.ai/*",
+      "https://lfg.tv/*",
+      "https://*.patreon.com/*",
+      "https://patreon.com/*",
+      "https://simps.com/app/*",
+      "https://studio.kwai.com/*",
+      "https://studio.favorited.com/popout/chat",
+      "https://*/*autoreloadwithsocialstream",
+      "https://*.webinargeek.com/webinar/*",
+      "https://www.ilmfix.de/programs/*",
+      "https://cloud.malte-schroeder.de/call/*",
+      "https://*.webinargeek.com/watch/*",
+      "https://*.online.church/*",
+      "https://beamstream.gg/*/chat",
+      "https://socialstream.ninja/*",
+      "https://*.socialstream.ninja/*",
+      "https://io.socialstream.ninja/*",
+      "https://socialstream.ninja/sources/websocket/*",
+      "https://socialstream.ninja/websocket/*",
+      "https://socialstream.ninja/beta/sources/websocket/*",
+      "https://socialstream.ninja/beta/websocket/*",
+      "https://beta.socialstream.ninja/sources/websocket/*",
+      "https://beta.socialstream.ninja/websocket/*",
+      "https://cozy.tv/*",
+      "https://kiwiirc.com/nextclient/*",
+      "https://webchat.quakenet.org/*",
+      "https://live.nicovideo.jp/watch/*",
+      "https://*.cbox.ws/box/*",
+      "https://cbox.ws/box/*",
+      "https://community.talkinghealthtech.com/live/*",
+      "https://community.insidethe.show/live/*",
+      "https://members.firstinfam.com/live/*",
+      "https://*.circle.so/*",
+      "https://tellonym.me/*",
+      "https://chat.wix.com/*",
+      "https://live.wix.com/*",
+      "https://stream.place/*",
+      "https://www.wix.com/*",
+      "https://wix.com/*",
+      "https://verticalpixelzone.com/*",
+      "https://vpzone.tv/*",
+      "https://www.vpzone.tv/*",
+      "https://*.vpzone.tv/*",
+      "https://www.ebay.com/ebaylive/events/*",
+      "https://www.ebay.co.uk/ebaylive/events/*",
+      "https://www.ebay.de/ebaylive/events/*",
+      "https://www.ebay.com.au/ebaylive/events/*",
+      "https://www.ebay.ca/ebaylive/events/*",
+      "https://cafr.ebay.ca/ebaylive/events/*",
+      "https://www.ebay.fr/ebaylive/events/*",
+      "https://www.ebay.it/ebaylive/events/*",
+      "https://www.ebay.es/ebaylive/events/*",
+      "https://www.ebay.nl/ebaylive/events/*",
+      "https://www.ebay.ie/ebaylive/events/*",
+      "https://www.ebay.at/ebaylive/events/*",
+      "https://www.ebay.ch/ebaylive/events/*",
+      "https://www.ebay.pl/ebaylive/events/*",
+      "https://www.ebay.be/ebaylive/events/*",
+      "https://befr.ebay.be/ebaylive/events/*",
+      "https://benl.ebay.be/ebaylive/events/*",
+      "https://www.ebay.com.hk/ebaylive/events/*",
+      "https://www.ebay.com.sg/ebaylive/events/*",
+      "https://www.ebay.com.my/ebaylive/events/*",
+      "https://www.ebay.ph/ebaylive/events/*",
+      "https://ir.ebaystatic.com/cr/ebaylivepubweb/liveassets/shoplive/*",
+      "https://rutube.ru/live/chat/*/",
+      "https://chat.castr.io/*",
+      "https://editor.wixapps.net/render/prod/modals/wix-vod-widget/*",
+      "https://www.x.com/*",
+      "https://parti.com/*",
+      "https://x.com/*",
+      "https://www.twitter.com/*",
+      "https://twitter.com/*",
+      "https://app.sli.do/event/*",
+      "https://wall.sli.do/event/*",
+      "https://admin.sli.do/event/*",
+      "https://music.gala.com/streaming/*",
+      "https://*.rokfin.com/popout/chat/*",
+      "https://rokfin.com/popout/chat/*",
+      "https://instafeed.me/*",
+      "https://meet.google.com/*",
+      "https://play.quickchannel.com/*",
+      "https://kick.com/*/chatroom",
+      "https://kick.com/*/*/chatroom",
+      "https://kick.com/popout/*/chat",
+      "https://kick.com/*/popout/*/chat",
+      "https://goodgame.ru/*/chat*",
+      "https://www.goodgame.ru/*/chat*",
+      "https://chatroll.com/embed/chat/*",
+      "https://www.nimo.tv/popout/chat/*",
+      "https://dashboard.nimo.tv/popout/chat/*",
+      "https://demo.openstreamingplatform.com/view/*chatOnly=True*",
+      "https://*.locals.com/*",
+      "https://locals.com/*",
+      "https://bilibili.tv/*/live/*",
+      "https://live.bilibili.com/*",
+      "https://*.minnit.chat/*/Main",
+      "https://*.bilibili.tv/*/live/*",
+      "https://app.clouthub.com/*",
+      "https://piczel.tv/chat/*",
+      "https://*.roll20.net/*",
+      "https://roll20.net/*",
+      "https://rumble.com/*",
+      "https://www.rumble.com/*",
+      "https://*.workplace.com/*",
+      "https://multichat.livepush.io/*",
+      "https://minnit.chat/*&popout",
+      "https://*.minnit.chat/*&popout",
+      "https://odysee.com/$/popout/*",
+      "https://picarto.tv/chatpopout/*",
+      "https://www.picarto.tv/chatpopout/*",
+      "https://dlive.tv/*",
+      "https://web.whatsapp.com/",
+      "https://www.amazon.com/live*",
+      "https://substack.com/*?liveStream=*",
+      "https://*.substack.com/live-stream/*",
+      "https://www.amazon.com/b/?node=*&broadcast=*",
+      "https://*.telegram.org/*",
+      "https://*.webex.com/*",
+      "https://webex.com/*",
+      "https://www.linkedin.com/*",
+      "https://linkedin.com/*",
+      "https://vdo.ninja/*",
+      "https://youtube.com/*",
+      "https://www.youtube.com/*",
+      "https://studio.youtube.com/*",
+      "https://*.twitch.tv/*",
+      "https://www.bitchute.com/video/*",
+      "https://www.bitchute.com/popChat/*",
+      "https://www.instagram.com/*",
+      "https://livecenter.tiktok.com/*",
+      "https://www.tiktok.com/*live*",
+      "https://tikfinity.zerody.one/*",
+      "https://chat.restream.io/*",
+      "https://facebook.com/*",
+      "https://business.facebook.com/*",
+      "https://web.facebook.com/*",
+      "https://www.facebook.com/*",
+      "https://graph.facebook.com/*",
+      "https://play.rozy.tv/*",
+      "https://www.crowdcast.io/e/*",
+      "https://*.zoom.us/*",
+      "https://zoom.us/*",
+      "https://*.zoom.com/*",
+      "https://zoom.com/*",
+      "https://watch.owncast.online/*",
+      "https://live.simontv.org/*",
+      "https://discord.com/*",
+      "https://discord.gg/*",
+      "https://discordapp.com/*",
+      "https://*.discordapp.com/*",
+      "https://www.mixcloud.com/live/*/chat/",
+      "https://vimeo.com/live*",
+      "https://www.vimeo.com/live*",
+      "https://vimeo.com/event/*",
+      "https://teams.live.com/*",
+      "https://teams.microsoft.com/*",
+      "https://teams.cloud.microsoft/*",
+      "https://livestream.com/accounts/*",
+      "https://joinpeertube.org/*/plugins/livechat/*router/webchat/room/*",
+      "https://joinpeertube.org/*/p/livechat/room?room=*",
+      "https://*/p/livechat/room?room=*",
+      "https://app.slack.com/client/*",
+      "https://*.rooter.gg/*",
+      "https://www.nonolive.com/*",
+      "https://www.tradingview.com/streams/*",
+      "https://app.chime.aws/meetings/*",
+      "https://*.loco.gg/*",
+      "https://loco.gg/*",
+      "https://*.loco.com/*",
+      "https://loco.com/*",
+      "https://www.buzzit.ca/event/*/chat",
+      "https://*.floatplane.com/popout/livechat",
+      "https://www.threads.net/*",
+      "https://*.bandlab.com/*",
+      "https://vkplay.live/*/only-chat?*",
+      "https://live.vkplay.ru/*/only-chat?*",
+      "https://live.vkvideo.ru/*/only-chat",
+      "https://vk.com/*",
+      "https://maestro-launcher.vercel.app/",
+      "https://arena.social/*",
+      "https://boltplus.tv/chatpopout/*",
+      "https://boltplus.tv/chatpopout?*",
+      "https://chat.openai.com/*",
+      "https://chatgpt.com/*",
+      "https://app.livestorm.co/*/live?*",
+      "https://steamcommunity.com/broadcast/chatonly/*",
+      "https://www.whatnot.com/live/*",
+      "https://whatnot.com/live/*",
+      "https://www.whatnot.com/dashboard/live/*",
+      "https://jaco.live/*",
+      "https://www.younow.com/*",
+      "https://chat.truffle.vip/chat/",
+      "https://studio.megaphonetv.com/*",
+      "https://apps.megaphonetv.com/*",
+      "https://app.sessions.us/*",
+      "https://www.shareplay.tv/*",
+      "https://shareplay.tv/*",
+      "https://pilled.net/*",
+      "https://*.mixlr.com/events/*",
+      "https://chzzk.naver.com/live/*/chat",
+      "https://chzzk.naver.com/iframe/live/*/chat",
+      "https://riverside.fm/studio/*",
+      "https://estrim.com/publications/view/*",
+      "https://wave.video/*",
+      "https://www.sooplive.com/chat/*",
+      "https://play.sooplive.com/*",
+      "https://play.sooplive.co.kr/*",
+      "https://dashboard.sooplive.com/popup.php?streamerId=*",
+      "https://www.flextv.co.kr/*",
+      "https://flextv.co.kr/*",
+      "https://*.on24.com/view/*",
+      "https://*.meetme.com/*",
+      "https://meetme.com/*",
+      "https://api.gateway.meetme-live.com/*",
+      "https://pump.fun/coin/*",
+      "https://retake.tv/*",
+      "https://portal.abs.xyz/stream/*",
+      "https://ci.me/*",
+      "https://www.ci.me/*",
+      "https://xpsync.com/*",
+      "https://www.xpsync.com/*"
+    ],
+    "content_scripts": [
+      {
+        "js": [
+          "./sources/inject/xpsync-viewer.js"
+        ],
+        "matches": [
+          "https://xpsync.com/*",
+          "https://www.xpsync.com/*"
+        ],
+        "run_at": "document_start",
+        "world": "MAIN"
+      },
+      {
+        "js": [
+          "./sources/xpsync.js"
+        ],
+        "matches": [
+          "https://xpsync.com/*",
+          "https://www.xpsync.com/*"
+        ],
+        "run_at": "document_start"
+      },
+      {
+        "js": [
+          "./sources/portal.js"
+        ],
+        "matches": [
+          "https://portal.abs.xyz/stream/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/generic.js"
+        ],
+        "matches": [
+          "https://versus.cam/?testchat"
+        ]
+      },
+      {
+        "js": [
+          "./sources/zapstream.js"
+        ],
+        "matches": [
+          "https://zap.stream/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/inject/meetme-ws.js"
+        ],
+        "matches": [
+          "https://api.gateway.meetme-live.com/web-live/*"
+        ],
+        "run_at": "document_start",
+        "world": "MAIN",
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/meetme.js"
+        ],
+        "matches": [
+          "https://*.meetme.com/*",
+          "https://meetme.com/*",
+          "https://api.gateway.meetme-live.com/web-live/*"
+        ],
+        "run_at": "document_start",
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/bigo.js"
+        ],
+        "matches": [
+          "https://www.bigo.tv/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/lfg.js"
+        ],
+        "matches": [
+          "https://lfg.tv/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/kwai.js"
+        ],
+        "matches": [
+          "https://studio.kwai.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/blaze.js"
+        ],
+        "matches": [
+          "https://blaze.stream/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/pumpfun.js"
+        ],
+        "matches": [
+          "https://pump.fun/coin/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/onlinechurch.js"
+        ],
+        "matches": [
+          "https://*.online.church/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/beamstream.js"
+        ],
+        "matches": [
+          "https://beamstream.gg/*/chat"
+        ]
+      },
+      {
+        "js": [
+          "./sources/worldswave.js"
+        ],
+        "matches": [
+          "https://worldswave.com/*",
+          "https://www.worldswave.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/sealteamsloth.js"
+        ],
+        "matches": [
+          "https://sealteamsloth.com/popout-chat/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/castyr.js"
+        ],
+        "matches": [
+          "https://castyr.live/homebeta/popout-chat/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/gosh.js"
+        ],
+        "matches": [
+          "https://gosh.com/*",
+          "https://www.gosh.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/livacha.js"
+        ],
+        "matches": [
+          "https://livacha.com/chat/*",
+          "https://www.livacha.com/chat/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/streamspace.js"
+        ],
+        "matches": [
+          "https://beta.stream.space/chat-popup.php*",
+          "https://stream.space/chat-popup.php*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/wtv.js"
+        ],
+        "matches": [
+          "https://w.tv/*/chat",
+          "https://w.tv/*/chat?*",
+          "https://w.tv/*/chat/"
+        ]
+      },
+      {
+        "js": [
+          "./sources/prime.js"
+        ],
+        "matches": [
+          "https://prime.gs/*?*chat_popout=1*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/chzzk.js"
+        ],
+        "matches": [
+          "https://chzzk.naver.com/live/*/chat",
+          "https://chzzk.naver.com/iframe/live/*/chat"
+        ],
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/flextv.js"
+        ],
+        "matches": [
+          "https://www.flextv.co.kr/channels/*/live*",
+          "https://flextv.co.kr/channels/*/live*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/parti.js"
+        ],
+        "matches": [
+          "https://parti.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/wavevideo.js"
+        ],
+        "matches": [
+          "https://wave.video/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/webinargeek.js"
+        ],
+        "matches": [
+          "https://*.webinargeek.com/webinar/*",
+          "https://*.webinargeek.com/watch/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/openstreamingplatform.js"
+        ],
+        "matches": [
+          "https://demo.openstreamingplatform.com/view/*chatOnly=True*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/streamplace.js"
+        ],
+        "matches": [
+          "https://stream.place/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/simps.js"
+        ],
+        "matches": [
+          "https://simps.com/app/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/retake.js"
+        ],
+        "matches": [
+          "https://retake.tv/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/truffle.js"
+        ],
+        "matches": [
+          "https://chat.truffle.vip/chat/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/riverside.js"
+        ],
+        "matches": [
+          "https://riverside.fm/studio/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/favorited.js"
+        ],
+        "matches": [
+          "https://studio.favorited.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/pilled.js"
+        ],
+        "matches": [
+          "https://pilled.net/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/whop.js"
+        ],
+        "matches": [
+          "https://whop.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/uscreen.js"
+        ],
+        "matches": [
+          "https://www.ilmfix.de/programs/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/nicovideo.js"
+        ],
+        "matches": [
+          "https://live.nicovideo.jp/watch/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/rutube.js"
+        ],
+        "matches": [
+          "https://rutube.ru/live/chat/*/"
+        ]
+      },
+      {
+        "js": [
+          "./sources/fc2.js"
+        ],
+        "matches": [
+          "https://live.fc2.com/*/"
+        ]
+      },
+      {
+        "js": [
+          "./sources/autoreload.js"
+        ],
+        "matches": [
+          "https://*/*autoreloadwithsocialstream"
+        ]
+      },
+      {
+        "js": [
+          "./sources/steam.js"
+        ],
+        "matches": [
+          "https://steamcommunity.com/broadcast/chatonly/*"
+        ],
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/megaphonetv.js"
+        ],
+        "matches": [
+          "https://apps.megaphonetv.com/socialharvest/live/*"
+        ],
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/verticalpixelzone.js"
+        ],
+        "matches": [
+          "https://verticalpixelzone.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/vpzone.js"
+        ],
+        "matches": [
+          "https://vpzone.tv/*",
+          "https://www.vpzone.tv/*",
+          "https://*.vpzone.tv/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/inject/vpzone-ws.js"
+        ],
+        "matches": [
+          "https://vpzone.tv/*",
+          "https://www.vpzone.tv/*",
+          "https://*.vpzone.tv/*"
+        ],
+        "run_at": "document_start",
+        "world": "MAIN"
+      },
+      {
+        "js": [
+          "./sources/mixlr.js"
+        ],
+        "matches": [
+          "https://*.mixlr.com/events/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/shareplay.js"
+        ],
+        "matches": [
+          "https://*.shareplay.tv/*",
+          "https://shareplay.tv/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/jaco.js"
+        ],
+        "matches": [
+          "https://jaco.live/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/cozy.js"
+        ],
+        "matches": [
+          "https://cozy.tv/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/gala.js"
+        ],
+        "matches": [
+          "https://music.gala.com/streaming/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/circle.js"
+        ],
+        "matches": [
+          "https://community.insidethe.show/*",
+          "https://community.talkinghealthtech.com/*",
+          "https://members.firstinfam.com/*",
+          "https://*.circle.so/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/patreon.js"
+        ],
+        "matches": [
+          "https://*.patreon.com/*",
+          "https://patreon.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/sessions.js"
+        ],
+        "matches": [
+          "https://app.sessions.us/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/inject/whatnot-ws.js"
+        ],
+        "matches": [
+          "https://www.whatnot.com/live/*",
+          "https://www.whatnot.com/dashboard/live/*"
+        ],
+        "run_at": "document_start",
+        "world": "MAIN"
+      },
+      {
+        "js": [
+          "./sources/whatnot.js"
+        ],
+        "matches": [
+          "https://www.whatnot.com/live/*",
+          "https://whatnot.com/live/*",
+          "https://www.whatnot.com/dashboard/live/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/younow.js"
+        ],
+        "matches": [
+          "https://www.younow.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/estrim.js"
+        ],
+        "matches": [
+          "https://estrim.com/publications/view/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/boltplus.js"
+        ],
+        "matches": [
+          "https://boltplus.tv/chatpopout/*",
+          "https://boltplus.tv/chatpopout?*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/livestorm.js"
+        ],
+        "matches": [
+          "https://app.livestorm.co/*/live?*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/openai.js"
+        ],
+        "matches": [
+          "https://chat.openai.com/*",
+          "https://chatgpt.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/sooplive.js"
+        ],
+        "matches": [
+          "https://www.sooplive.com/chat/*",
+          "https://play.sooplive.com/*",
+          "https://play.sooplive.co.kr/*",
+          "https://dashboard.sooplive.com/popup.php?streamerId=*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/bandlab.js"
+        ],
+        "matches": [
+          "https://*.bandlab.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/vercel.js"
+        ],
+        "matches": [
+          "https://maestro-launcher.vercel.app/"
+        ]
+      },
+      {
+        "js": [
+          "./sources/twitcasting.js"
+        ],
+        "matches": [
+          "https://*.twitcasting.tv/*",
+          "https://twitcasting.tv/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/cbox.js"
+        ],
+        "matches": [
+          "https://*.cbox.ws/box/*"
+        ],
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/nonolive.js"
+        ],
+        "matches": [
+          "https://www.nonolive.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/quakenet.js"
+        ],
+        "matches": [
+          "https://webchat.quakenet.org/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/kiwiirc.js"
+        ],
+        "matches": [
+          "https://kiwiirc.com/nextclient/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/loco.js"
+        ],
+        "matches": [
+          "https://*.loco.gg/*",
+          "https://loco.gg/streamers/*",
+          "https://*.loco.com/*",
+          "https://loco.com/streamers/*",
+          "https://loco.com/chat/streamers/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/rooter.js"
+        ],
+        "matches": [
+          "https://*.rooter.gg/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/static/claude.js"
+        ],
+        "matches": [
+          "https://claude.ai/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/x.js"
+        ],
+        "matches": [
+          "https://www.twitter.com/*",
+          "https://twitter.com/*",
+          "https://x.com/*/chat",
+          "https://x.com/*/live",
+          "https://x.com/*/livechat",
+          "https://www.x.com/*/chat",
+          "https://www.x.com/*/live",
+          "https://www.x.com/*/livechat",
+          "https://x.com/i/broadcasts/*"
+        ],
+        "exclude_matches": [
+          "https://x.com/i/chat*",
+          "https://www.x.com/i/chat*",
+          "https://twitter.com/i/chat*",
+          "https://www.twitter.com/i/chat*",
+          "https://x.com/messages*",
+          "https://www.x.com/messages*",
+          "https://twitter.com/messages*",
+          "https://www.twitter.com/messages*",
+          "https://x.com/notifications*",
+          "https://www.x.com/notifications*",
+          "https://twitter.com/notifications*",
+          "https://www.twitter.com/notifications*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/x-studio.js"
+        ],
+        "matches": [
+          "https://studio.x.com/live*"
+        ],
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/static/x.js"
+        ],
+        "matches": [
+          "https://www.x.com/*",
+          "https://x.com/*"
+        ],
+        "exclude_matches": [
+          "https://x.com/i/chat*",
+          "https://www.x.com/i/chat*",
+          "https://x.com/i/bookmarks*",
+          "https://www.x.com/i/bookmarks*",
+          "https://x.com/messages*",
+          "https://www.x.com/messages*",
+          "https://x.com/notifications*",
+          "https://www.x.com/notifications*",
+          "https://x.com/bookmarks*",
+          "https://www.x.com/bookmarks*",
+          "https://x.com/settings*",
+          "https://www.x.com/settings*",
+          "https://x.com/compose*",
+          "https://www.x.com/compose*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/static/threads.js"
+        ],
+        "matches": [
+          "https://www.threads.net/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/tellonym.js"
+        ],
+        "matches": [
+          "https://tellonym.me/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/floatplane.js"
+        ],
+        "matches": [
+          "https://*.floatplane.com/popout/livechat"
+        ]
+      },
+      {
+        "js": [
+          "./sources/castr.js"
+        ],
+        "matches": [
+          "https://chat.castr.io/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/tradingview.js"
+        ],
+        "matches": [
+          "https://www.tradingview.com/streams/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/nextcloud.js"
+        ],
+        "matches": [
+          "https://cloud.malte-schroeder.de/call/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/youtube.js"
+        ],
+        "matches": [
+          "https://www.youtube.com/watch?v=*&socialstream",
+          "https://youtube.com/live_chat*",
+          "https://www.youtube.com/live_chat*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/youtube.js"
+        ],
+        "matches": [
+          "https://studio.youtube.com/live_chat*"
+        ],
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/websocket/youtube.js"
+        ],
+        "matches": [
+          "https://socialstream.ninja/sources/websocket/youtube*",
+          "https://beta.socialstream.ninja/sources/websocket/youtube*",
+          "https://socialstream.ninja/beta/sources/websocket/youtube*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/static/youtube_static.js"
+        ],
+        "matches": [
+          "https://www.youtube.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/meets.js"
+        ],
+        "matches": [
+          "https://meet.google.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/rokfin.js"
+        ],
+        "matches": [
+          "https://*.rokfin.com/popout/chat/*",
+          "https://rokfin.com/popout/chat/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/slido.js"
+        ],
+        "matches": [
+          "https://app.sli.do/event/*",
+          "https://admin.sli.do/event/*",
+          "https://wall.sli.do/event/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/quickchannel.js"
+        ],
+        "matches": [
+          "https://play.quickchannel.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/locals.js"
+        ],
+        "matches": [
+          "https://*.locals.com/*",
+          "https://locals.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/wix2.js"
+        ],
+        "matches": [
+          "https://editor.wixapps.net/render/prod/modals/wix-vod-widget/*"
+        ],
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/wix.js"
+        ],
+        "matches": [
+          "https://*.wix.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/nimo.js"
+        ],
+        "matches": [
+          "https://www.nimo.tv/popout/chat/*",
+          "https://dashboard.nimo.tv/popout/chat/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/kick.js"
+        ],
+        "matches": [
+          "https://kick.com/*/chatroom",
+          "https://kick.com/*/*/chatroom",
+          "https://kick.com/popout/*/chat",
+          "https://kick.com/*/popout/*/chat"
+        ]
+      },
+      {
+        "js": [
+          "./sources/goodgame.js"
+        ],
+        "matches": [
+          "https://goodgame.ru/*/chat*",
+          "https://www.goodgame.ru/*/chat*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/static/kick_chatroom_scout.js"
+        ],
+        "matches": [
+          "https://kick.com/*"
+        ],
+        "run_at": "document_start"
+      },
+      {
+        "js": [
+          "./sources/cloudhub.js"
+        ],
+        "matches": [
+          "https://app.clouthub.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/websocket/bilibili.js"
+        ],
+        "matches": [
+          "https://socialstream.ninja/sources/websocket/bilibili*",
+          "https://socialstream.ninja/beta/sources/websocket/bilibili*",
+          "https://beta.socialstream.ninja/sources/websocket/bilibili*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/bilibili.js"
+        ],
+        "matches": [
+          "https://bilibili.tv/*/live/*",
+          "https://*.bilibili.tv/*/live/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/bilibilicom.js"
+        ],
+        "matches": [
+          "https://live.bilibili.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/bitchute.js"
+        ],
+        "matches": [
+          "https://www.bitchute.com/video/*",
+          "https://www.bitchute.com/popChat/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/piczel.js"
+        ],
+        "matches": [
+          "https://piczel.tv/chat/*",
+          "https://*.piczel.tv/chat/*",
+          "https://piczel.tv/watch/*",
+          "https://*.piczel.tv/watch/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/roll20.js"
+        ],
+        "matches": [
+          "https://*.roll20.net/*",
+          "https://roll20.net/*"
+        ]
+      },
+      {
+        "js": [
+          "./shared/vendor/pluralmind.iife.js",
+          "./shared/integrations/pluralmind.js",
+          "./sources/websocket/twitch.js"
+        ],
+        "matches": [
+          "https://socialstream.ninja/sources/websocket/twitch*",
+          "https://beta.socialstream.ninja/sources/websocket/twitch*",
+          "https://socialstream.ninja/beta/sources/websocket/twitch*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/websocket/kick.js"
+        ],
+        "matches": [
+          "https://socialstream.ninja/sources/websocket/kick*",
+          "https://beta.socialstream.ninja/sources/websocket/kick*",
+          "https://socialstream.ninja/beta/sources/websocket/kick*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/websocket/facebook.js"
+        ],
+        "matches": [
+          "https://socialstream.ninja/sources/websocket/facebook*",
+          "https://beta.socialstream.ninja/sources/websocket/facebook*",
+          "https://socialstream.ninja/beta/sources/websocket/facebook*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/websocket/rumble.js"
+        ],
+        "matches": [
+          "https://socialstream.ninja/sources/websocket/rumble*",
+          "https://beta.socialstream.ninja/sources/websocket/rumble*",
+          "https://socialstream.ninja/beta/sources/websocket/rumble*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/websocket/vpzone.js"
+        ],
+        "matches": [
+          "https://socialstream.ninja/sources/websocket/vpzone*",
+          "https://beta.socialstream.ninja/sources/websocket/vpzone*",
+          "https://socialstream.ninja/beta/sources/websocket/vpzone*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/websocket/whatnot.js"
+        ],
+        "matches": [
+          "https://socialstream.ninja/sources/websocket/whatnot*",
+          "https://beta.socialstream.ninja/sources/websocket/whatnot*",
+          "https://socialstream.ninja/beta/sources/websocket/whatnot*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/websocket/irc.js"
+        ],
+        "matches": [
+          "https://socialstream.ninja/sources/websocket/irc*",
+          "https://socialstream.ninja/beta/sources/websocket/irc*",
+          "https://beta.socialstream.ninja/sources/websocket/irc*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/websocket/testsource.js"
+        ],
+        "matches": [
+          "https://socialstream.ninja/sources/websocket/testsource*",
+          "https://socialstream.ninja/beta/sources/websocket/testsource*",
+          "https://beta.socialstream.ninja/sources/websocket/testsource*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/websocket/nostr.js"
+        ],
+        "matches": [
+          "https://socialstream.ninja/sources/websocket/nostr*",
+          "https://socialstream.ninja/beta/sources/websocket/nostr*",
+          "https://beta.socialstream.ninja/sources/websocket/nostr*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/minnit.js"
+        ],
+        "matches": [
+          "https://minnit.chat/*&popout",
+          "https://*.minnit.chat/*&popout",
+          "https://*.minnit.chat/*/Main"
+        ],
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/chatroll.js"
+        ],
+        "matches": [
+          "https://chatroll.com/embed/chat/*"
+        ],
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/odysee.js"
+        ],
+        "matches": [
+          "https://odysee.com/$/popout/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/picarto.js"
+        ],
+        "matches": [
+          "https://picarto.tv/chatpopout/*",
+          "https://www.picarto.tv/chatpopout/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/livepush.js"
+        ],
+        "matches": [
+          "https://multichat.livepush.io/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/dlive.js"
+        ],
+        "matches": [
+          "https://dlive.tv/c/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/instafeed.js"
+        ],
+        "matches": [
+          "https://instafeed.me/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/whatsapp.js"
+        ],
+        "matches": [
+          "https://web.whatsapp.com/"
+        ]
+      },
+      {
+        "js": [
+          "./shared/vendor/pluralmind.iife.js",
+          "./shared/integrations/pluralmind.js",
+          "./sources/twitch.js"
+        ],
+        "matches": [
+          "https://*.twitch.tv/popout/*"
+        ],
+        "run_at": "document_start"
+      },
+      {
+        "js": [
+          "./sources/static/twitch_points.js"
+        ],
+        "matches": [
+          "https://*.twitch.tv/*"
+        ],
+        "run_at": "document_start"
+      },
+      {
+        "js": [
+          "./sources/facebook.js"
+        ],
+        "matches": [
+          "https://facebook.com/*",
+          "https://web.facebook.com/*",
+          "https://www.facebook.com/*",
+          "https://business.facebook.com/*",
+          "https://*.workplace.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/ebay.js"
+        ],
+        "run_at": "document_start",
+        "matches": [
+          "https://www.ebay.com/ebaylive/events/*",
+          "https://www.ebay.co.uk/ebaylive/events/*",
+          "https://www.ebay.de/ebaylive/events/*",
+          "https://www.ebay.com.au/ebaylive/events/*",
+          "https://www.ebay.ca/ebaylive/events/*",
+          "https://cafr.ebay.ca/ebaylive/events/*",
+          "https://www.ebay.fr/ebaylive/events/*",
+          "https://www.ebay.it/ebaylive/events/*",
+          "https://www.ebay.es/ebaylive/events/*",
+          "https://www.ebay.nl/ebaylive/events/*",
+          "https://www.ebay.ie/ebaylive/events/*",
+          "https://www.ebay.at/ebaylive/events/*",
+          "https://www.ebay.ch/ebaylive/events/*",
+          "https://www.ebay.pl/ebaylive/events/*",
+          "https://www.ebay.be/ebaylive/events/*",
+          "https://befr.ebay.be/ebaylive/events/*",
+          "https://benl.ebay.be/ebaylive/events/*",
+          "https://www.ebay.com.hk/ebaylive/events/*",
+          "https://www.ebay.com.sg/ebaylive/events/*",
+          "https://www.ebay.com.my/ebaylive/events/*",
+          "https://www.ebay.ph/ebaylive/events/*",
+          "https://ir.ebaystatic.com/cr/ebaylivepubweb/liveassets/shoplive/*"
+        ],
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/inject/ebay-ws.js"
+        ],
+        "matches": [
+          "https://www.ebay.com/ebaylive/events/*",
+          "https://www.ebay.co.uk/ebaylive/events/*",
+          "https://www.ebay.de/ebaylive/events/*",
+          "https://www.ebay.com.au/ebaylive/events/*",
+          "https://www.ebay.ca/ebaylive/events/*",
+          "https://cafr.ebay.ca/ebaylive/events/*",
+          "https://www.ebay.fr/ebaylive/events/*",
+          "https://www.ebay.it/ebaylive/events/*",
+          "https://www.ebay.es/ebaylive/events/*",
+          "https://www.ebay.nl/ebaylive/events/*",
+          "https://www.ebay.ie/ebaylive/events/*",
+          "https://www.ebay.at/ebaylive/events/*",
+          "https://www.ebay.ch/ebaylive/events/*",
+          "https://www.ebay.pl/ebaylive/events/*",
+          "https://www.ebay.be/ebaylive/events/*",
+          "https://befr.ebay.be/ebaylive/events/*",
+          "https://benl.ebay.be/ebaylive/events/*",
+          "https://www.ebay.com.hk/ebaylive/events/*",
+          "https://www.ebay.com.sg/ebaylive/events/*",
+          "https://www.ebay.com.my/ebaylive/events/*",
+          "https://www.ebay.ph/ebaylive/events/*"
+        ],
+        "run_at": "document_start",
+        "world": "MAIN"
+      },
+      {
+        "js": [
+          "./sources/owncast.js"
+        ],
+        "matches": [
+          "https://watch.owncast.online/*",
+          "https://live.simontv.org/embed/chat/readwrite/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/zoom.js"
+        ],
+        "matches": [
+          "https://*.zoom.us/*",
+          "https://zoom.us/*",
+          "https://*.zoom.com/*",
+          "https://zoom.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/crowdcast.js"
+        ],
+        "matches": [
+          "https://www.crowdcast.io/e/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/discord.js"
+        ],
+        "matches": [
+          "https://discord.com/*",
+          "https://discord.gg/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/discordstreamkit.js"
+        ],
+        "matches": [
+          "https://streamkit.discord.com/overlay/chat/*"
+        ]
+      },
+      {
+        "js": [
+          "./thirdparty/vdoninja-sdk.js",
+          "./sources/capturevideo.js"
+        ],
+        "matches": [
+          "https://discord.com/channels/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/mixcloud.js"
+        ],
+        "matches": [
+          "https://www.mixcloud.com/live/*/chat/"
+        ]
+      },
+      {
+        "js": [
+          "./sources/vimeo.js"
+        ],
+        "matches": [
+          "https://www.vimeo.com/live*",
+          "https://vimeo.com/live*",
+          "https://vimeo.com/event/*"
+        ],
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/livestream.js"
+        ],
+        "matches": [
+          "https://livestream.com/accounts/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/on24.js"
+        ],
+        "matches": [
+          "https://*.on24.com/view/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/arenasocial.js"
+        ],
+        "matches": [
+          "https://arena.social/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/teams.js"
+        ],
+        "matches": [
+          "https://teams.live.com/*",
+          "https://teams.cloud.microsoft/*",
+          "https://teams.microsoft.com/*"
+        ],
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/peertube.js"
+        ],
+        "matches": [
+          "https://*/plugins/livechat/*router/webchat/room/*",
+          "https://*/p/livechat/room?room=*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/instagram.js"
+        ],
+        "matches": [
+          "https://www.instagram.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/substack.js"
+        ],
+        "matches": [
+          "https://substack.com/*",
+          "https://*.substack.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/inject/tiktok-gift.js"
+        ],
+        "matches": [
+          "https://www.tiktok.com/*live*",
+          "https://livecenter.tiktok.com/*"
+        ],
+        "world": "MAIN",
+        "run_at": "document_start"
+      },
+      {
+        "js": [
+          "./sources/tiktok.js"
+        ],
+        "matches": [
+          "https://www.tiktok.com/*live*",
+          "https://livecenter.tiktok.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/tikfinity.js"
+        ],
+        "matches": [
+          "https://tikfinity.zerody.one/widget/activity-feed*",
+          "https://tikfinity.zerody.one/widget/vite/src/activity-feed/*"
+        ],
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/vdoninja.js"
+        ],
+        "matches": [
+          "https://vdo.ninja/popout.html*",
+          "https://vdo.ninja/alpha/popout.html*",
+          "https://vdo.ninja/beta/popout.html*"
+        ],
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/linkedin.js"
+        ],
+        "matches": [
+          "https://www.linkedin.com/*",
+          "https://linkedin.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/webex.js"
+        ],
+        "matches": [
+          "https://*.webex.com/*",
+          "https://webex.com/*"
+        ],
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/telegram.js"
+        ],
+        "matches": [
+          "https://*.telegram.org/z/*",
+          "https://*.telegram.org/a/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/telegramk.js"
+        ],
+        "matches": [
+          "https://*.telegram.org/k/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/restream.js"
+        ],
+        "matches": [
+          "https://chat.restream.io/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/amazon.js"
+        ],
+        "matches": [
+          "https://www.amazon.com/live*",
+          "https://www.amazon.com/b/?node=*&broadcast=*"
+        ],
+        "run_at": "document_start"
+      },
+      {
+        "js": [
+          "./sources/rumble.js"
+        ],
+        "matches": [
+          "https://rumble.com/chat/popup/*",
+          "https://rumble.com/*/live",
+          "https://www.rumble.com/chat/popup/*",
+          "https://www.rumble.com/*/live"
+        ]
+      },
+      {
+        "js": [
+          "./sources/slack.js"
+        ],
+        "matches": [
+          "https://app.slack.com/client/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/chime.js"
+        ],
+        "matches": [
+          "https://app.chime.aws/meetings/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/cime.js"
+        ],
+        "matches": [
+          "https://ci.me/*",
+          "https://www.ci.me/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/buzzit.js"
+        ],
+        "matches": [
+          "https://www.buzzit.ca/event/*/chat"
+        ]
+      },
+      {
+        "js": [
+          "./sources/vklive.js"
+        ],
+        "matches": [
+          "https://vk.com/*"
+        ]
+      },
+      {
+        "js": [
+          "./sources/vkvideo.js"
+        ],
+        "matches": [
+          "https://live.vkplay.ru/*/only-chat?*",
+          "https://vkplay.live/*/only-chat?*",
+          "https://live.vkvideo.ru/*/only-chat"
+        ]
+      },
+      {
+        "js": [
+          "./sources/streamlabs.js"
+        ],
+        "matches": [
+          "https://streamlabs.com/alert-box/*",
+          "https://streamlabs.com/widgets/frame/alertbox/*"
+        ],
+        "all_frames": true
+      },
+      {
+        "js": [
+          "./sources/streamelements.js"
+        ],
+        "matches": [
+          "https://streamelements.com/overlay/*"
+        ],
+        "run_at": "document_start",
+        "all_frames": true
+      }
+    ],
+    "options_ui": {
+      "page": "settings/options.html"
+    },
+    "action": {
+      "default_popup": "popup.html"
+    }
+  },
+  "sourceHashes": {
+    "providers/kick/core.js": "78875fea8ba7e7b3e586ca17f0c2c7297610298744e5ec10da78ef0543560541",
+    "providers/twitch/chatClient.js": "80cc06fc14044d6c185bba7c9ef328e9d3cc0e02ceb403e8c2e63dc976274640",
+    "providers/youtube/contextResolver.js": "fce8eef0fcf0f4f86738cc5d72cb0ed4143bb246f82abd7e7b3dab43e1ab2943",
+    "providers/youtube/liveChat.js": "199dd76dfd42b6575a21dc0d1cdf8354297735518a3255597ff02e630ca3fb90",
+    "providers/youtube/proto/stream_list.proto": "e7322b3753dee30d71dd39b8d4857364b96ca1fb4389b700cf87364f43493488",
+    "shared/integrations/pluralmind.js": "8fa5ba76713dba83cc47bf169beb3b4a0fbc2c31755f6d67bedeb947a161aa09",
+    "shared/vendor/pluralmind.iife.js": "9e536a1e0b23b6f2373c62dc990aa417f43780ab2eb5b383d6815704bbd00676",
+    "sources/README.md": "b74171dde15d1ac60a7dc7842a1e12ff7001c620e3030271ac1021b827ab1b64",
+    "sources/amazon.js": "32a3e2db1615bcbe49951446271a2b9f9862e0b5787b156ebd0110cbbaec76fe",
+    "sources/arenasocial.js": "b4c07191e3b37175da5069add215e015473bac2f24af1b68b6618c74a474724f",
+    "sources/autoreload.js": "0d72a9c7745e54452971db3e2e5c6f6fd53120b7d128b61d5d8b680614e65586",
+    "sources/bandlab.js": "a173651d35bcff91700f8bf738afabe4fe18447e33b97e34fc640ced70d69e3f",
+    "sources/beamstream.js": "46730b7f5fd1a41d7ed97f009fa29e47c83dc6a2ad56ff381018abd143773351",
+    "sources/bigo.js": "d1fe1c4e8a596fe70ced352f00388fcd32641cc1d93501c4abc4943ef712344f",
+    "sources/bilibili.js": "e9625c1d151b0b9dac775448c8a6fa2860827886f7c85118f956e32c7acd336b",
+    "sources/bilibilicom.js": "7fe847e65f6b5daeec439afbb01e8b70863eddf0ea28147975ff130c6785f2f4",
+    "sources/bitchute.js": "d81da90c0b34faf14ebdb4b90454745b92b2753c97ff4ac046d6ee7d8965b267",
+    "sources/blaze.js": "9d38ced484056487115eb2437a51a6534e40ad1a55f654c8bb2d1a2d9ca6dd64",
+    "sources/boltplus.js": "ecc0f2e05ddd8862b40646666ca7036fa40a528f90559c20ac19eda8015fc086",
+    "sources/buzzit.js": "e24493e3176adbe65c42d18fbfcd71a4c725b368fb11caf8a8b2e0f9adadb7bf",
+    "sources/capturevideo.js": "f8a07ccce6ed43080cb8de0af4e5bc0f3df3237a099d3d9a566a4c2049a38e18",
+    "sources/castr.js": "dec5b1eb0260445f1b3821d3b4f19d4459c2f5bca747a9e82523a73fcf003ff6",
+    "sources/castyr.js": "ad2a9e685b5efecf2a70493d448c54c833c8bbccbd1e73a987e085e74909074d",
+    "sources/cbox.js": "31573a6bb418bbe3fdfd475583103d99410c51def6e067426ccbb5aebe0e2021",
+    "sources/chatroll.js": "417b502c0e221b540455929a8149f9e33e5f37f39caa36dfd4bc9f8aacab2306",
+    "sources/chime.js": "5cf55d6c3e647dceb478852741628899e98752b85bcb956ecf77d22ff8a4fab7",
+    "sources/chzzk.js": "d01d9a044e3b0dce82af1c73dd1e3c752c47244fc9e482ea434d59824484ea47",
+    "sources/cime.js": "01d7cb6bef16c631c9be2b1c403c25c15c720688227f723904c191ae9b592c45",
+    "sources/circle.js": "9ba2734b982424cc2ef7bcaad72e7d6f3ed4ca614705d2a893fb02fd9f19f2e8",
+    "sources/cloudhub.js": "30dad1c3d588bfec8352184e02c32ddf830e957ed21f250464bb859db13a5374",
+    "sources/cozy.js": "e112295430bfbe046f9ce5af980c11e16e73c27f0411c623614701a6d589fbfe",
+    "sources/crowdcast.js": "9b5ab944560d563aa1c559856e7056acdcfefa7dbbf3990eab337f247bfa734f",
+    "sources/discord.js": "8b36c8a155fa77208074efec27b842c8cdebad75499d4a74631f436a00c0fb3f",
+    "sources/discordstreamkit.js": "ad7b43ecf4ab0db43fcd859abc0d550eb6ed4c1ce4aeaa705ae0d75198797236",
+    "sources/dlive.js": "f7bff56f2e4cba6eaafb34be4fa1fc5c1daec1c451845f35aa36d26705c57d8e",
+    "sources/ebay.js": "fb3364855818f5b43a7d9bdca08a97982800258e2ad8f416df5171b12247c287",
+    "sources/estrim.js": "5d27be4066a0132b67a2825fd00ee7cba664a25105f1d194b2bfcc88e9baf9e2",
+    "sources/facebook.js": "809e7d42441ed20af66f3f7b96c9cadcab9f2568d544369ff41f2b2fe39b3248",
+    "sources/favorited.js": "b2136ae052d4103f225fef8452175b875a09169623b1405eb03aa959a06b0272",
+    "sources/fc2.js": "f6b8c5096d808aac8448865472e7874bc89a04b8996109a937666b496c60cf48",
+    "sources/flextv.js": "b00bce9312aab03046e6e2859f669d561045dad53609aba426ea8b1403eec2fd",
+    "sources/floatplane.js": "680c94219bcae30c6381ccb2e5a68d8fe0ed41c5b84d5fd67c314bb133892511",
+    "sources/gala.js": "704cd26d0567fa49fddb0ad4141898f7316b57e07e2b1dc796d676fa5e4e466f",
+    "sources/generic.js": "8f57a14d0875ae104d20f9deb44a35e3b86eced1a26857aa0af356adddbabe57",
+    "sources/goodgame.js": "125ba6fae035bbfe71eb3bfb68192720dd89791fb95daf968928ac62d0a4a0a7",
+    "sources/gosh.js": "9235aa85100c33d9316e0a733c6d9cb2f69c515e4f91acc36471b7e308b69a31",
+    "sources/grabvideo.js": "7ccaa42ec7a2b73c1de90c8d4ed16779fc9b2ed3e4353effdb425bb755a49cf6",
+    "sources/graveyard/afreecatv.js": "31bf163ccc3e9b786f1c2543f5fd0f97621c8e06f424ab833544b1a336fbfc59",
+    "sources/graveyard/afreecatv.png": "7837477292e96c575e228b872df42c7892271f057d9d2c2ffd13770a2a5fd528",
+    "sources/graveyard/arena-social.js": "cd92a3c6e072a64d13e07f3e026a532fa6b3bd45afa46d93c5334f2f027e4ffc",
+    "sources/graveyard/arena-social.png": "f2565c6057ab431a9dd76e5ba5509d72dc597af9d8c15525f37fbc5d80154fe6",
+    "sources/graveyard/arena.js": "4ed1520ab6a727ace658c527e9fd79b0c69d5d3138e907321f70c70a2aed4239",
+    "sources/graveyard/arena.png": "266d94c001501185ecb73a0526068206ed06bb02a8713c821b83f1589abf50e1",
+    "sources/graveyard/arenasocial.js": "cd92a3c6e072a64d13e07f3e026a532fa6b3bd45afa46d93c5334f2f027e4ffc",
+    "sources/graveyard/arenasocial.png": "f2565c6057ab431a9dd76e5ba5509d72dc597af9d8c15525f37fbc5d80154fe6",
+    "sources/graveyard/caffeine.js": "061e535f45a706eb1456b867ac14dee90bc5253a7e9b28b7cf30034453261843",
+    "sources/graveyard/caffeine.png": "186097d0c800790469aa92817c7c447565f376837719e5eaf0c86ac0602bd2ab",
+    "sources/graveyard/dlive.js": "f7bff56f2e4cba6eaafb34be4fa1fc5c1daec1c451845f35aa36d26705c57d8e",
+    "sources/graveyard/dlive.png": "8b48b7745cdb3348c12615a361495f8a6279801d2fbf06396591d59f55733c2d",
+    "sources/graveyard/glimesh.js": "fe1d0e644f210c22f0b00556169736107449a844ff39e99d015f5e70c5e24619",
+    "sources/graveyard/glimesh.png": "9ce85ac3d9081c664ed476c6ac3b3c1c2d5ba768d72ed27864af828bac6ee2d5",
+    "sources/graveyard/livespace.js": "dc3a7f368f0a8ca1f1ded2ddff379712673902ffd9f1d393cc7b3192a2a2dac9",
+    "sources/graveyard/livespace.png": "ce0fd3f8fb0cbf5e6d2478c5aa52a8fdf9e43404cc62fc690155a023d37975b5",
+    "sources/graveyard/mobcrush.js": "5508609e5ac0e80648096056204d15f3385bde112a0774d51b2d781c4f3d4dd4",
+    "sources/graveyard/moonbeam.js": "07d7fb4663f3375577ec3c76e9321191e80ddff8a534aad22c91e814a95712a1",
+    "sources/graveyard/moonbeam.png": "d0c2019063fb5271523b4e1e0e3f9e042641ab67e38361728dc6db92e78d29f5",
+    "sources/graveyard/noice.js": "4833f0a53351c469a2525597370cd6709284c0b74739984b83e075893b186f32",
+    "sources/graveyard/omlet.js": "4573fd7137b384506ee064ac2d0eb5414336fd558646fd196355be3a18ebb6d7",
+    "sources/graveyard/omlet.png": "b1f8f2b6fa3bba4eacbf9cfb4fd4b147d9825e8df1da42aeded041108b69ba5c",
+    "sources/graveyard/readme.md": "21bbc46294a3bcf2d04c9b30021b47555e1aac1e8533124dc3d33a0b3361e04f",
+    "sources/graveyard/soopliveco.js": "ea6f9b1e83079fec8d46286c4a245d1d61b89a48f253749fc7a994bb0f5f6374",
+    "sources/graveyard/soopliveco.png": "63c336e14607a97665751b5408572d9c2f6b45ea7bca987099e8df8283d08b35",
+    "sources/graveyard/soulbound.js": "565e0066daa0e485a03db9d64afbcba25180e4070099815187af7d548fa65333",
+    "sources/graveyard/soulbound.png": "c099400da337aa1a54586e3ef6767c33da0bd89057300a6b82d1653b612415a4",
+    "sources/graveyard/stageten.js": "8307e5aee315a59757f5c2fbeff39f53e70f4c1962a758a0658a85bae462c468",
+    "sources/graveyard/stageten.png": "3b8146648b5c38333edc4dce2a0b56a4f54cd31b89a75dbf057b7256673b25f2",
+    "sources/graveyard/theta.js": "cff03a12a2bb84e2dc47cad04081596845fbebcd08e4082ad9fe2b3ec3aaa1a2",
+    "sources/graveyard/theta.png": "954ba97303b5f56f681d4fa329044bf129e0b719164dedb0c4e96b537eef3b8a",
+    "sources/graveyard/trovo.js": "48ee93e3e609c2e6997674037344f62b9defb999f8b91253b120b19653c18ecd",
+    "sources/graveyard/trovo.png": "ad8f029fae6999d386e2929bbf7378e0d886ba7e2ec4bf305375be7b5e83987e",
+    "sources/graveyard/twitter.js": "3b75fa2d141bbe3a33f7fcc68952c4a06ef5c3f5a7a8490e3500fbf184ca4ea4",
+    "sources/graveyard/vimm.js": "a856ec0172cff36343c4f3377235d5ab20d264f28db964ecd789409486eb7cb3",
+    "sources/graveyard/vimm.png": "4d8d98912970280a7bd8445fe08aaa94f5a64ea3769c0ca76ce4ccf0adc614a3",
+    "sources/graveyard/vstream.js": "86bee0b0c1f1427be23575312732a5ee07b1ed4557020d2c45318237c7f63d39",
+    "sources/graveyard/vstream.png": "e693fd3473974fe87a92388e269b4eec5990a80e5fcda0f23659a7ddae78262a",
+    "sources/graveyard/ws/vimm.html": "c72811d4b9c07ee12f69bc576b12b4009310630f35098957b609c24ed45dac93",
+    "sources/graveyard/ws/vimm.js": "4f64c872cd9b00e7644258bba55e421a769e1fca485c88a977d974a6db551936",
+    "sources/graveyard/xeenon.js": "68cb3c9736c53041880528d4e2c5c958b053c82d2bc600df318c67649a786728",
+    "sources/graveyard/xeenon.png": "c45856f977f6242ccce3bf3462d2858bf100447a3a8903ebac515cfcc196c456",
+    "sources/images/242976_dNA4.png": "3eae9163705077fc9d004fdf269b614fdbfdf7eff2c1a2be5b06b392fba308fd",
+    "sources/images/amazon.png": "bec8fd93d8826a135e9607abdde0425895019760d493ec4a587c1ff5ccefd218",
+    "sources/images/arenasocial.png": "f2565c6057ab431a9dd76e5ba5509d72dc597af9d8c15525f37fbc5d80154fe6",
+    "sources/images/bandlab.png": "4e760d5d93142b7b6ba7041578fb85146568688420056bbb6a0e7f55ad290e21",
+    "sources/images/beamstream.png": "c66041f76ea72de1ca38231ae2b189fef8a602700fbd6d1d56b3e94fb5c06872",
+    "sources/images/bigo.png": "64337acade3efa501f6bbda219478b373e10ccc516eefd1f81b9607b78cf4bfa",
+    "sources/images/bilibili.png": "bbc8ec16bb395467743dcab17d92fb1f78252ea63c2b7271e9b6f9f431b9a7af",
+    "sources/images/bitchute.png": "f9226c41710b78804ab75c0c3e392eb4f8570fbb9895586253503574b3666f51",
+    "sources/images/blaze.png": "af09f1354f6d3ba666e7c92f0a0d1899c5cc33a6b8f1137ffb67b978955490f4",
+    "sources/images/bmac.png": "7a13d8f1c69e4bbfc26ec633e90af1feda393d0a38d9086c63da3ab92155ee8f",
+    "sources/images/boltplus.png": "6d16b8fa86e8683713f1d63cf04c7452dc10b8052a0bac89a78afaffb4b43ba2",
+    "sources/images/buzzit.png": "166624c4e2e684f2f49dd79c11e737a3efa24e54fc0982ab7dc51554f544ee78",
+    "sources/images/castr.png": "93d42b12550b257007a900bf39f13af249da4842d5951ec5b0ccf47a6d37c9e5",
+    "sources/images/castyr.png": "f4d9f12780c89e637a7728d3fd7a8313798b9ab39a493d06fec2bc916731f9fe",
+    "sources/images/cbox.png": "f0aa26fbf29295331ca6a3fb2a7d845229f68b241d655303b0e3fcdba1427285",
+    "sources/images/chatroll.png": "d1b32a1823898c8211c2327858936b7da18d9f728fed4813fe8f466947059e6a",
+    "sources/images/chime.png": "db5a56f5a5231e8e6b7503442c4bcb7a734633879ed7db0d41c7c9473d55edaa",
+    "sources/images/chzzk.png": "796d75f9d7e7aca1ab286972b7c9cb1b81a6ae5167451bc5e7da9d021e84915a",
+    "sources/images/cime.png": "446ef64a59dc2ba35c9dac961fe5242b153352b1dd970fd26c94784e24184997",
+    "sources/images/claude.png": "c7b5642f810adfba78781592d9dec18d7eb376c7ebf403c4d882fb9d39f65408",
+    "sources/images/cloudhub.png": "de28c3011bf5a2f8e83f340a934691f3823a0ba65ceb419404c8ef3ef31339b1",
+    "sources/images/cozy.png": "b98973e6d90313c6eca41b8347c0baaf4572d13f7e4b60dc83fa4c8be825aa04",
+    "sources/images/crowdcast.png": "be5ffa6a848e35a12791daa07291e21e04a24e37b392f2c6ea8e60df2e1a97f8",
+    "sources/images/default.png": "1e68afad225c99b997bd469188dfa181b58728869d8019ca54b1f4c3ff9fcddd",
+    "sources/images/discord.png": "181ab07370a707037de94f6a084f66cb9511e338d7c17de7a7dcfdc9670a538f",
+    "sources/images/dlive.png": "8b48b7745cdb3348c12615a361495f8a6279801d2fbf06396591d59f55733c2d",
+    "sources/images/ebay.png": "ade1a8985dea4cfb771e38270aa15c03faa6c7f11ab0039c6510b645bc2f6dca",
+    "sources/images/estrim.png": "c5781abdddc501c2841ae24d26e6e4da31cfa4d00069037129a407a5f0b677cb",
+    "sources/images/facebook.png": "ba4e865dd7c1ff1f14bdc1efec6984ee7c11edb950bc3a8d4ec1aafeefcfb01c",
+    "sources/images/favorited.png": "652a95ecad82e2e961d12339a3a2cb228f068fb932992212b30099f6ee323e15",
+    "sources/images/fc2.png": "15e64b6ede8b1968fda398535a198430c3224eb8806df73b627dd0896b1d3b40",
+    "sources/images/flextv.png": "3c697c6c6eb08585cf405f19f598ea6ed75a15ff5cea0e7bc92cda12fd2f9d0c",
+    "sources/images/floatplane.png": "ce1d539ac6e0e8d4bf4585ec63cfe1c07fd01cfe9baa75e6d3eabe98386311a1",
+    "sources/images/fourthwall.png": "f1a6212f6ef4df752d4dba6f9538a335fe06afe9f89ae4de0af29d7ee505501e",
+    "sources/images/gala.png": "4982e7a146cf169abba2f221ea1e6b1015e7570d5410d3939de3bf528ecbba04",
+    "sources/images/generic.png": "1e68afad225c99b997bd469188dfa181b58728869d8019ca54b1f4c3ff9fcddd",
+    "sources/images/global.png": "e269b261fb9217d0fb0402ea1da5ae6a5e76d23d89f4937fe6e7c2164ebe0539",
+    "sources/images/goodgame.png": "3eae9163705077fc9d004fdf269b614fdbfdf7eff2c1a2be5b06b392fba308fd",
+    "sources/images/google.png": "cd20451ab0d68a06f5b23254bf53b2f3de8983159e8f97a4730d687d0a9d5bf2",
+    "sources/images/gosh.png": "5bf67804dd6f17fd3808c5a2008cf125cf55445e067ad7dab8a0b8893f6a6442",
+    "sources/images/group.png": "1e68afad225c99b997bd469188dfa181b58728869d8019ca54b1f4c3ff9fcddd",
+    "sources/images/ilmfix.png": "dfcf65e66ea4072d5eeed09a00639dcaf50ec1a9a8692ed11c18a1ab49e6ca81",
+    "sources/images/instagram.png": "850376bad0db43929e7479900fb5ed099b83a3517a7f7ee6e42293b9d648b5a3",
+    "sources/images/instagramlive.png": "850376bad0db43929e7479900fb5ed099b83a3517a7f7ee6e42293b9d648b5a3",
+    "sources/images/irc.png": "1e68afad225c99b997bd469188dfa181b58728869d8019ca54b1f4c3ff9fcddd",
+    "sources/images/jaco.png": "21e831637e625bd0f4a5d5fe3500605845ec345d424a520a66a70fd76217b047",
+    "sources/images/kick.png": "e8779cc6d123f77d591cc23c8f91cd93d2775c69a2c9b7c7d56c9cdd5f14b680",
+    "sources/images/kick_new.png": "467c408e3f59b62490c47fcd5fd44702798602e5f08a76f490c9eea239eae03a",
+    "sources/images/kiwiirc.png": "9c4afab880439b888fede056c6f5874d8b3906279aa5a2bed9a7fbb67398ed27",
+    "sources/images/kofi.png": "2a406b8d82c2b77a0b051c90bdbe0a88c560f777976a4c1a8d98eff4e5991e11",
+    "sources/images/kwai.png": "ed2bd3b7d0c35246ac5b8b5a7862647b31d4d521b51b12b8a0601651a15666e5",
+    "sources/images/lfg.png": "927f9e8dcb10cd9d6d2ea22750d8bf9501b90bf0fe37b1fd7ad28c8d38caeabe",
+    "sources/images/license-197636205-6711451.pdf": "4bbee5238f4089d6c2ce0a3d3d94c11a8c14c107992b1366714364824b25e305",
+    "sources/images/linkedin.png": "a7a9ba1e6f99667503129339640881c2265d9ceeadc779f61781fc2187f5733b",
+    "sources/images/livacha.png": "987d72cf50e45cf202a314c32da2fa768da2e721e717d01329150ad96f6f6956",
+    "sources/images/livepush.png": "72000c424f588e9669a8d4e45c884e2965dac62e25434bb0df81703cc19c4355",
+    "sources/images/livestorm.png": "82995abc40f54bcbd061dcf92712b847c77ccabc69a716f6d1e6cd17df9dec39",
+    "sources/images/livestream.png": "04ef425aabd8a151ba4c34ff159aab9f87580c8cebb44916e70433946da1e393",
+    "sources/images/locals.png": "8f3c0af2829de4687192870bba77225e72549187130041d36358dd08297c1004",
+    "sources/images/loco.png": "b76881efe640a5135c8a7683ce8dd1ab12901628ed856e2332fa948f7c5db030",
+    "sources/images/meet.png": "3cc13507b14e461c433c22668593ac132a538d161f4f6c7412634e4279142f07",
+    "sources/images/meetme.png": "55886a4b5b396edd14d32c8383a3b0ef83b4be0a2ade2c6915a1222c3711ada9",
+    "sources/images/megaphonetv.png": "c7e14bfcc660643350e8b3de1117228f8dd26e77516f95fb9a12a4d47c52f327",
+    "sources/images/minnit.png": "cbbbcc060e65e84dce23dc2a6db3cef85f69e972750bc2450309f613e9315146",
+    "sources/images/mixcloud.png": "47f40d0331cb3973f3d0289c9a7f3839f3a15b121123f32834043d1edf526759",
+    "sources/images/mixlr.png": "0e07dce87df23b42c5fbe09a6d33ae97de1d4500e45af8c14184868ebef6a199",
+    "sources/images/nextcloud.png": "a95271935c3827ce14183ca418bc9cda79d6d38789c767afc475f0c929868e34",
+    "sources/images/nicovideo.png": "ac4579151eaa535c0f5cc52c852761361f83fb186fd6f3d08d4aa7162b0bed5d",
+    "sources/images/nimo.png": "43a36d4dbb76d0883e702d131a30db41d934990020c3c39340209905a147d46c",
+    "sources/images/ninjabacker.png": "838f3cca4d4b1d684903a61a048ed2ec4ccf1012c3a9a27540321aab2206c6bb",
+    "sources/images/noice.png": "11f533a38e450ba6dd390c293a3c2a81fee4ccd4f3eeb410b7b8dee74b18c902",
+    "sources/images/nonolive.png": "8f6d9f9d3e30628d21d557ac9495662e6f2eaa18ebaee18d6d2ad63f143b201d",
+    "sources/images/nostr.png": "0435a45fd53828ce1f7fe22147503a628aaf6496ccf4fec23f469362fbc91ceb",
+    "sources/images/odysee.png": "6583ac227654c9d67c8acfbd70e285f5be6aaf168922a0c4af229c948ea17932",
+    "sources/images/on24.png": "9b7afb34d2a5ea7e93a6e29b0c50f7b325cfedfd42e2fca9dc73ddcaba9e79d0",
+    "sources/images/onlinechurch.png": "9d579e41b3be654514d5f93319fe707d311e2730df4f4e54aa0a70779d174788",
+    "sources/images/openai.png": "1626a424dbbbc50174530fb97dfada7a62c71f303ffdb87ddac04f3cd3859e08",
+    "sources/images/openstreamingplatform.png": "7cb0e5cf6c162f84cbc2ec2acf62e3d1e22d9282b7be1af9db6eb43cd07fdfe8",
+    "sources/images/owncast.png": "8bae81dd48601cbb6294cdc1c38c2b564d9a4a95d3a018ec4d8367354360e81a",
+    "sources/images/parti.png": "84102305296c86ec0c98ea60f0506cb0106a00bea37f0df74aef3f2ca634ac93",
+    "sources/images/patreon.png": "af3738f080fe3174d2ae62cb110358b6db4f4cf1e5e8a93edc695845caa0ea96",
+    "sources/images/peertube.png": "9bb723d833929e5e32343f830c7d4222370d9886cba5666ec298bdbcf8f23af9",
+    "sources/images/picarto.png": "80db1a7679d81925db7a4c69d3070c3397f5e9e5dbdc513b47d4510c836c4244",
+    "sources/images/piczel.png": "356f456192ec19edddc680eb7fac88c62b11a5885b328c2c0fb8bfad0f98c01c",
+    "sources/images/pilled.png": "5ec4c9bc2498f510ebd226ed668ca851af99b15727d2d76486619d6140d44c99",
+    "sources/images/portal.png": "0c76893cdd6d26f9af05164e6d8bd8846f1764cf16d66efd44909b2f94a02c66",
+    "sources/images/prime.png": "fcdc2245ebadf181909c213f26a260045d90553c9daf777150c56db6ff3e2fb6",
+    "sources/images/pumpfun.png": "9a0c90cf94e05d59ceb3ddfba3142cce90820a0cb01376d73537273d2b686f86",
+    "sources/images/quickchannel.png": "fe199fe07008a80d8b63dc68dad585ec41f589c94654a8496de522919d723428",
+    "sources/images/readme.md": "5fc0b77a8e82a41a054d7ac8d62edb27f5110da6317ef21a6587bf1d7112762d",
+    "sources/images/restream.png": "d33947bd58497ce61fa19925b28838a7fe66d04678c213f746155efa7ae961af",
+    "sources/images/retake.png": "685055d018f8446f33dd9ee8e350ff2b45e6d9b8ca8bb79e4b689cbfe9a4cc08",
+    "sources/images/riverside.png": "9dfe43ecfec98613587108cf9af176d6f32ee354145b4b2b1e6bc80b89772aa0",
+    "sources/images/rokfin.png": "a1ef5f4f7ca93c50b99c44f23da8f1d8d979b46d9c68c9a61925d28165b621cd",
+    "sources/images/roll20.png": "d1cb1999dba05e4bf8d728e1b8fa1319d073bfd70c841f2297b6a0a6a996a6ac",
+    "sources/images/rooter.png": "9a35df287573068e97a2634336c1654ca715730b6b85eac29d2ce168fde75ed3",
+    "sources/images/rumble.png": "822c12264d006aa6bf3a5dc84d97738f465e5b91a552825ef7e026255e337b29",
+    "sources/images/rutube.png": "cf7ac6b2abb165add0cf9eb9b5d4dc941d9cb7c240ccde8e4b099e1b20ae0a1a",
+    "sources/images/sealteamsloth.png": "392c5928754f73e141f314de865987293677dd3b1b0c64b86b6475ce1a2c6642",
+    "sources/images/sessions.png": "f0d9f6eedc78f7aa8e780b2b8918aca3e5fa0263b2f122075bb4a6e1dcdd274a",
+    "sources/images/shareplay.png": "6556e60bc4cf55d34854992ed4e26f0750a1ac229c60fa4d07d0881c1aa10e07",
+    "sources/images/simps.png": "598cdd2e7ab10765f031885d5f769516dc3cafae99092d2ffd24b4617d1d7017",
+    "sources/images/slack.png": "970b1ad7d1df249e371918a5dd296bced8da4e77d67eb2bbfb7416a866aa6f0f",
+    "sources/images/slido.png": "333c6220e58e28eadbb630abaf1e05eeac3a9bc20f9a22884b673f5f657dc385",
+    "sources/images/socialstream.png": "60f6d760ae9e2931af8ae1f988a030e424066640546cd018843509dacab1fc48",
+    "sources/images/sooplive.png": "7317542c2c14a8b64f216871d94525e62a4b8f63d86fa8fe70d4cf775ff9139d",
+    "sources/images/spotify.png": "6089a3dfd7eaa923d2b81dbeb0c0e55180dde98c117d078946dab8163c168258",
+    "sources/images/steam.png": "57df95cc7a45db8c9e62306aaa1be8983a62c5b2260cee830a1329fe803172f1",
+    "sources/images/streamelements.png": "3a3b0395f6254c883824963e1ac94e3dca4fef2aaa34763d615ada4613980659",
+    "sources/images/streamerbot.png": "04e210e9a2aef402268e08eb8afff1e26a2d7ac75a52cf680c6dfdfd890c9aea",
+    "sources/images/streamlabs.png": "76dd7379762c244e27b481a162d0cda50b17f495dbbb4208b0bc2dfa030d72eb",
+    "sources/images/streamplace.png": "dc016e29d0503ab1d6a7256f26085f370bd013a01f6350947e6f83bb60d8c965",
+    "sources/images/streamspace.png": "ae779a5765e0b73d037e8824764cf63858167e236ee0eeb4750e2405152bd470",
+    "sources/images/stripe.png": "64ccd339d06ab9208583943f943ef3ea3ccb23ad28a57a01c5db49d45539c767",
+    "sources/images/substack.png": "8cc826fbd336ae3bc65f982bf94585a3ed7ebf4caf2ada53fcdd7982487129de",
+    "sources/images/teams.png": "a90b1df781e67cf454821fee362f87800ba43a99550e5ed6eee817a4e74e2287",
+    "sources/images/telegram.png": "61530f95d97fe34c59be69a07020ff3e61606e11089fa15724ecb67e4fd3ae51",
+    "sources/images/telegramk.png": "61530f95d97fe34c59be69a07020ff3e61606e11089fa15724ecb67e4fd3ae51",
+    "sources/images/threads.png": "124d90fef6f1a614e3da1f994d1d2991bc2b79a4f0d1aa5a3edb5931df376b95",
+    "sources/images/throne.png": "77f91580e033439ea4a0d38e0c7d246065ba818320a5007aa1ea6e076e085d4a",
+    "sources/images/tikfinity.png": "ee33e23078a22fcaf2f25d6add1a1e33d856c662346de1243cb8b3bf7ecc7096",
+    "sources/images/tiktok.png": "ee33e23078a22fcaf2f25d6add1a1e33d856c662346de1243cb8b3bf7ecc7096",
+    "sources/images/tradingview.png": "89f9b461d4f2af79f3abb1ab6cf23952c9f19cf85d282eff4878997aa9075f1d",
+    "sources/images/trovo.png": "ad8f029fae6999d386e2929bbf7378e0d886ba7e2ec4bf305375be7b5e83987e",
+    "sources/images/truffle.png": "95bc394b5fd7fbce50100e5ba32b052dae3528403d2e63181fa812217bba24ce",
+    "sources/images/twitcasting.png": "c4ef955a20e0d8c470e9b4270ced58975092c0dd0bb82a7708783e158a2c2584",
+    "sources/images/twitch.png": "cecd03059658038139838d155b475c42d6ba6ead3470f5f9cf1e92f73b0feafe",
+    "sources/images/twitter.png": "453b46da497d344121f50bd9b9bc4eb0664c1120d36377703fdbe23cb4515985",
+    "sources/images/unknown.png": "9d264d2914875868fc101e3bbc5416d675cbdfe67599ef79e8626d00f31bcebe",
+    "sources/images/uscreen.png": "be3d7c1cb2e7ca78851b6c686150979df58127c94aca0ce456859960f0b3a81c",
+    "sources/images/vdoninja.png": "8bcc6f875fd74ef958cd2f0334395bdc67785a3db98823543e47660888bed5ce",
+    "sources/images/view.png": "292141659646836fcad99cf7bbd91c89794c928f395ba31a8b385a3844ec64e9",
+    "sources/images/vimeo.png": "2411430252e407e1efea577861676c29c40fb54344890d5905ce752e3e6ff5dc",
+    "sources/images/vk.png": "343621f236ef934b3b0a16ef34b99ec0ec271a019e01455d434adabb18b8e2bd",
+    "sources/images/vkplay.png": "6f54e716aa809345e4fbe747d5dca8b8a1a9e1fee3762155d94e872ec956cca0",
+    "sources/images/vkvideo.png": "dde44ee9fa07769e143b0cee2185c04513d8da89cdf57ab014fa3d2a72b48bde",
+    "sources/images/vpzone.png": "587067053a45560b312054a6de78647aa58f10215032155db570b10325622a84",
+    "sources/images/wavevideo.png": "227f55957613c5a4468373c12d50b14e827e339c647197cce8e15ae49d851f42",
+    "sources/images/webex.png": "33bcaa049091ba00c9fa24c162a0a278c7120e304765462f9568dfcd58d2155b",
+    "sources/images/webinargeek.png": "388273e65d83d765324a936852e8cff258f0b091c8977bda0a0adc738399672f",
+    "sources/images/whatnot.png": "255b7b7f0277635999ba076d3689fba0a94e09c73661f3f194c108e1b252c762",
+    "sources/images/whatsapp.png": "65c8d45fd923f202ba9228b447b114e4d2fe9fabdcba7e64fe4f2f688074328e",
+    "sources/images/whop.png": "94220a3ceafdf0024ccef694a76a63ffac397901136ffededb110b2769110c4c",
+    "sources/images/wix.png": "cab6a0e77f4caebf5c69408dc4218f6c69d24eb65ca6c20ad8b798a68649bc20",
+    "sources/images/worldswave.png": "37fa9e60ad47e0ab21e291191754c7f6165c3bedbf42a8689c3b0138c03b7e9b",
+    "sources/images/wtv.png": "569c8c8eef5b8bc684abc31346bc4838c1fa7f2e9e42a44ab9935cd205178b25",
+    "sources/images/x.png": "a83542eb0563242949d7dbde720014fb7ab48ae14ed59f43eec34907cb90c477",
+    "sources/images/xeenon.png": "befeaab004fde1652d205bd9665c5c0255907df92cb5e43c1e2f7ec39c046508",
+    "sources/images/xpsync.png": "e81fb782c3f0f1bce0a3724c1b8f6b52649818f1ebad03e5612210dd6df064ce",
+    "sources/images/younow.png": "8b06a8acf14f06fab0342105a1184053b211c82d4b1815f7c76f009e87141797",
+    "sources/images/youtube.png": "d57ea21780a2ba6f991fce62469ff320667b33653ee135846c6921cd0c5ebe2b",
+    "sources/images/youtubeshorts.png": "5c0c0527d71512885c5620e24ee88a535a2276b20ff498bf126af3071b6a01db",
+    "sources/images/zapstream.png": "9ce78562e31ed6c850d92e359f0babcd18055ebc37451c552ec63ba17064c999",
+    "sources/images/zoom.png": "cb5d6fc51b544c5e2c009c6c7e5b6e912a5408465912f237ef72bb5a3f608bb4",
+    "sources/inject/ebay-ws.js": "9dcc55d906f4b540628b5023a3299201d24c26688804758a3f0be9f2f8b00972",
+    "sources/inject/meetme-ws.js": "98cd8c3715ab1b6fc4dc278ef6ed685664ebdb29ff4bc505b5fcff6003d92e34",
+    "sources/inject/streamelements-ws.js": "75e76c1b8966de9cfbb0c64c5a7a4f780e81231b80b01364af466b33a95ece1e",
+    "sources/inject/tiktok-gift.js": "05f7ccede44c954c41a85c367fc3f49171bb120a735da35759532edb9586ea67",
+    "sources/inject/vpzone-ws.js": "23dbc92d9a7844f4fd6a0561ca8bfd2ebd0b84a661152521f5f8449c07de7303",
+    "sources/inject/whatnot-ws.js": "ba75533f1a18276e784c9fd217bc0a09af930a566280c9f244998b8644a6bda0",
+    "sources/inject/xpsync-viewer.js": "5137773aa21b155edc87c4d9ca7d03b4d6c3441a7914f29f15524fd61e495ef5",
+    "sources/instafeed.js": "52a2603e04ae3c0234f450d404b309f4bb06f12d7036dc86c671d6dce3275ae6",
+    "sources/instagram.js": "183fb42a89ccc0fd6c9c1a849cd8232c85b4e11b7ce606868283a315fa08433d",
+    "sources/instagramlive.js": "183fb42a89ccc0fd6c9c1a849cd8232c85b4e11b7ce606868283a315fa08433d",
+    "sources/jaco.js": "441eaeb4f18bd8f50c1ae0fed83a37c3ea32878ce774000495a6207849004cb9",
+    "sources/kick.js": "e623c57a71ffa35d436c26cfc8c9ecac7df1795aba811cca0ecf389704913adb",
+    "sources/kick_new.js": "34a7aaba5ca7740eb3a1b46f983a43ec7380ca3bee64444c9f19c447280905bd",
+    "sources/kiwiirc.js": "b5bbc88f87f8540b16a218a01071a61b86c623f954bd1955fabb30921dca1850",
+    "sources/kwai.js": "8b90c37d2bd6f160e800dd0f4871d5138d6a7192e8476843a2bae66106e4d5b6",
+    "sources/lfg.js": "db7c2eefc81926a369c4697dfd20d45896f5d9285adb281fc0d9d7a16cf5e777",
+    "sources/linkedin.js": "4071b08b5cf0adc0f21066468a662b9fe123cdf569b95dfd45667634b897d0f0",
+    "sources/livacha.js": "d818dd96736846725b5683947b5530171c42d08245adf0e96cb8c6d5e9c71ce7",
+    "sources/livepush.js": "c4f2aa595d59b691eecefad430c3d39112aa10997aee0e6d4c021b99fb0439bd",
+    "sources/livestorm.js": "467bedf064e8d9831f9cda42c734334ea29ff3a96543bca06b98a3ca83e3bd4c",
+    "sources/livestream.js": "6509cfbda8937f474350b1a8312fb72b5c4accb8c046fd3423147c0aa0c20033",
+    "sources/locals.js": "1cbc6e46bb4a25f8fc56ca0acdecd3a92a3be3136c8fb35443f722925b4d0f8c",
+    "sources/loco.js": "d1f88949a08d8935ea32f795cab02ac91ebbe571e1c75c625ebc0b130b9184b7",
+    "sources/meetme.js": "1e5bdf5f81cce13052184b18789445fbee2220c067c767e5b2a4e996781e70d8",
+    "sources/meets.js": "90be10d812e43306c07afb21998097f975f3136c419e95a736b4455680850102",
+    "sources/megaphonetv.js": "700c937381d9f722bbe97f360f54216f5d772ffeda1290c71446426f57160881",
+    "sources/minnit.js": "edf6be5a620a535a4cde4e23e1017d70daa95485329ef372df5a94b0c02c61c2",
+    "sources/mixcloud.js": "0b6a2f767406c8a254698bcd3e358cce514f3dc15ca3693c792d35e4134bd92f",
+    "sources/mixlr.js": "f6c420c971c7abe50f58738a30cb4d06fd3386acd7c7514f14277335def7c993",
+    "sources/nextcloud.js": "f3eafe6fab42de18527cc6b37c36166700e50e1d4539466aed42e91f0b3f0b28",
+    "sources/nicovideo.js": "d723e191e1c41307df0ea973b51b8b78f1042ad9cf52ce952105deda74f42341",
+    "sources/nimo.js": "8a47f2208b4ec80032cf33a45dca777dcf13e0e7d7c2f22a6b3e382daec52dce",
+    "sources/nonolive.js": "6409dc9e30096b1aee6bef96667bde5058d3e3bd47fc4a53ea463d361b88cceb",
+    "sources/odysee.js": "0d25a08258260935b13d0526ad32babd6aa0e7e8d3670c36242ef2f9845c46f5",
+    "sources/on24.js": "bc56ec8a9f7ce4b6e4895fd194a15d629280266ac6ac6807a7e1c94a18a0e7a0",
+    "sources/onlinechurch.js": "cf1883ce320f9cafb0a0ed6e68bc6a32c1a5fd0bd67a4458a58cd022564d8cbb",
+    "sources/openai.js": "b8fa8785b9b45e0af12b38cd94e416d719a15b1aa2a259b3caa27c5ed456195a",
+    "sources/openstreamingplatform.js": "c7824762fe1d6deb8459af6cfd212ed212d872a86af2de833a14514e33973f96",
+    "sources/owncast.js": "24c77aab6c38bf3dae3d736e244e05265b21b1097121b8f9e9495c273b978271",
+    "sources/parti.js": "de49d1c61035bce3e3712c7e86adbefeb34eea95976cf2c58a9ab6c44b9ecd77",
+    "sources/patreon.js": "12818a29781fc77e7260cf72534b99e6abbff0cdd24e7ae1287283c04ddd3b32",
+    "sources/peertube.js": "48635f7ed3c1f032fed245085f44916de0e4627e8eaf52fda466285a09729ac4",
+    "sources/picarto.js": "da47246cb0de425f1051bcd87f02e6219b637a1cc946983631c621eb1ec24126",
+    "sources/piczel.js": "f7e77bc41f92324c2690f13f248d4427a8226c8349e5bdb93540ea3e6635f035",
+    "sources/pilled.js": "edc289a95ec1066c0cf6adf3de8936036af23cf981b810da2972e7f433fa16b0",
+    "sources/portal.js": "eb555e9664230e16f6fa28e75c52eaa40876198935d800597427279bc1c7178d",
+    "sources/prime.js": "b0f01679bf2d3bd55b4d66a10d4666a6cff9d9e4c5f8930672dff366223bbd62",
+    "sources/pumpfun.js": "3aae2841cd1d93bd47e5586a5cd0e963a43804cc68d2b9e3f697a91f23909db7",
+    "sources/quakenet.js": "fc28aecb5d08ac9204b7210f3cdd8e21743d2801c98538940dafc319cb8806bf",
+    "sources/quickchannel.js": "7e37383db83e97a53209fdb604dd07ff36957ede324beb9c52a84b44e815d48c",
+    "sources/restream.js": "802bd693c30e743c7383380ed376ca4fe2339be36d93a9031e1c15177ca9e510",
+    "sources/retake.js": "0a196f185287c81773558c5aace333bab50fb874646ba28da147d2b7b0a60100",
+    "sources/riverside.js": "daa6e20c3eae749609b34135860de60673fc69acac960b32a3033a748fefa28a",
+    "sources/rokfin.js": "beb3264f58d5a9590ad45cf2789d545f407bfb2bf3e2ac91eb1474c328884382",
+    "sources/roll20.js": "9e7abe6bf85595a8d8eea4b19b4b94a29587bb12174bae837fffde4825459782",
+    "sources/rooter.js": "ff9f390d7f0cf0fc3fe43f6b0b96a8faea7ef6fd7cbc89f08f9c1d314b1236ab",
+    "sources/rumble.js": "ff995df75ae3d4eaa18bffe8fcbb02a6437a3d2f60f9c302190fab0f2962aba1",
+    "sources/rutube.js": "e36e47fb157277696cef6f440c624d56df30329b7d91cbb8f87030270d8e31a5",
+    "sources/sealteamsloth.js": "afd12463082e1e7ce23ed38701c7e3acbeb9119fd21008dae719a2ad5306c77a",
+    "sources/sessions.js": "cc7274b3c68586cf8f20c36881e9ca5430695b18aea06d89f69e41388689de5e",
+    "sources/shareplay.js": "f59a6c6b24fdb5e675a07e1ee99c98bfbfec3865c2b183b2d0296148e55193ad",
+    "sources/simps.js": "e2cb3c62d0a45d2db1eb6144df9dc158c9052bab649611bf7870d846ea2ef68b",
+    "sources/slack.js": "fb65f6c02fa6e84fa853d567d96094ab45fc0c1736e6303630538136b12dcc31",
+    "sources/slido.js": "b01addd7fff9c6cd62d67366b37f8c3f023a078b22236bbbb4fc02631d0e26a4",
+    "sources/sooplive.js": "0014df392af76b9dbf4d70aab07cf5ebc96f6c638adaa0089a79febdaada8bc8",
+    "sources/soulbound.js": "565e0066daa0e485a03db9d64afbcba25180e4070099815187af7d548fa65333",
+    "sources/static/claude.js": "cd53c40df20fe3f025c632f42df4b1ed93e274bac8b5c4d56e30f645a1f7059e",
+    "sources/static/kick_chatroom_scout.js": "3b0f8523e66027817d10d061496800ebb43de8db91ab83423cd0f682775a034a",
+    "sources/static/threads.js": "01c727ba2c69cf7d9e5faea3a7f031ef9283da51579aacfdab8170ba5c3a0815",
+    "sources/static/twitch_points.js": "cc9325b672c554116503ca46c373c0a7a7947df5dd642d8e53d0994ef4fece19",
+    "sources/static/x.js": "b20ad7af2a2af4da6cdbb776aec7ee0e42e6adad44089b6fc511db2f1ad68a3d",
+    "sources/static/youtube_static.js": "a183bd75d84e6d025237abc92dd70be390a9ce126d05c022d0dfdbf8762a3302",
+    "sources/steam.js": "ed92b7da4297c70cd1eeec2f1825063b28785c1a7eaaea94f7696bf9f6996e80",
+    "sources/streamelements.js": "175af9481f6973d3c99b1941974bffb39fc8309def3b1c0e3ae869ce3fd4c6bd",
+    "sources/streamlabs.js": "cff910e88fbc1ad729c36284498525594bef3539527633a4764b68f68efdb5d6",
+    "sources/streamplace.js": "d7309d19744997eb2b312e4bf1d5794f361681939508adcc030a42965b96656b",
+    "sources/streamspace.js": "e38e29929fdd99c63fc4b8ccd87621dcba211289033919e00d72b7260afcb3d6",
+    "sources/substack.js": "2c7e179311553bea48bd13ed44a2729b59f3a790b7a47af2cd1e690dc5a8146e",
+    "sources/teams.js": "885a418a4b6aa1f4ce0ba8098a550c532caeba89d2432d69fbc9002043f6649c",
+    "sources/telegram.js": "3162a4fafe2e01b7b8fc236e5ed31a396d2445977561b26d616530214c3e4a6d",
+    "sources/telegramk.js": "b125535f10d802c7ad57ed23f9796570a3df5820ad75c9da9762ccf6f9cb38b6",
+    "sources/tellonym.js": "ba67368ef81e14896a3336391f0c1f89a73f6f24e4478e718ee488f268370bf6",
+    "sources/tikfinity.js": "e5827a9f5ad76fdb0054f720af6c0ae93391f11cd6b239e7077d5d11b7caf99f",
+    "sources/tiktok.js": "8004b0298f215563f527ada055e57231d93c4ce4d4e5bfe07c16a31e3d00f6f7",
+    "sources/tradingview.js": "4e0e07b23c987618c8997837af19b6534c4263a515274e30cd33839c0da0a717",
+    "sources/trovo.js": "9cc46ab9da841f29906f586957a92680053b346db5b0741f428c4137fc483ac3",
+    "sources/truffle.js": "f1ed3f78a60f3c9f21ba6fb45bdace682dfe9f40627aa0c15415696f95750343",
+    "sources/twitcasting.js": "c4500114713b610c37d0b50f3125d01a3d1ef383e347ed402bc3589907c3b3de",
+    "sources/twitch.js": "347e954c4f407d89ece38ae01bbd64e1d4427f0666447770827513b83574610b",
+    "sources/uscreen.js": "ddb387ed505a1a7933fd1f6419efc14b4d4d5d9b694f88b79e7be8c4a11b0fab",
+    "sources/vdoninja.js": "591334029b3601058e76bca10b10a0fa7803cb7a0a59556f4dd73b7dd05a4367",
+    "sources/vercel.js": "32a0a4ef92855d18fa85347c559274461eada127c85c9a0052f1389ce7f0a3c4",
+    "sources/verticalpixelzone.js": "e92967a7872e8f8f225b91e83bde5cc4744767f8c31cc14e40cec0089b7e8ee1",
+    "sources/vimeo.js": "9e4088f0682f7ae34be59f2b334fa16eb07df06b209c1ab43ffe92bc30daafbf",
+    "sources/vklive.js": "12c27628c62ebe18852d058763a8703df02929a8879454498aac5bfa56b52df3",
+    "sources/vkplay.js": "bbd099f2828b951805b976070370e8b1b4e4a76352f68b7f27291c05cced6e39",
+    "sources/vkvideo.js": "05ba444f65dcb449df9e98c977d040fd9dd836207dc68340d51465c9392ca377",
+    "sources/vpzone.js": "5a92cdeeb12fa06921b4df96bf08933064eb4c6e8fb4564364ed540981b37f3e",
+    "sources/wavevideo.js": "07c417aa92b3e32b9424c2095d0e8f2ebfd8bfbe0b174e1f70bc7df27b5efd8c",
+    "sources/webex.js": "3d88ab559c5f3c91659dc40e785f8fd9ce2ff42cdd00d08e20518140c0c361d2",
+    "sources/webinargeek.js": "7239c625aeb99264fb5e7634ae5827b80165a01edc7c505efcaee2e9ae5aba12",
+    "sources/websocket/bilibili.html": "d8bca561e7784046153388b139b9cd609143e120916fc6eb72ad99e54809b34b",
+    "sources/websocket/bilibili.js": "309e126f53610f486ad104c520689aa036211774780dc330987804049bb50683",
+    "sources/websocket/custom_emotes.json": "fe54c281efd8ef341b463fe21c5beb2f6d04df7d3b494dbc866a8c7aa9dbd0c8",
+    "sources/websocket/emotes.json": "264f997d7070494311d8d631c33bd6f105359a280b165690ebf4a6f297bf9595",
+    "sources/websocket/facebook.html": "43d7075df511d208875cdeecc34afe99825c4dbf5efdef37c475a3e05049d332",
+    "sources/websocket/facebook.js": "fcfe93671f15b5fa50bbdcfd1e4e3283e56d18635f972f6ff197ce9dfbbfb3b9",
+    "sources/websocket/irc.html": "1147916152407bb2f0e0af196df2fb9feb2d4a6dad474a901055a1dfe6898b52",
+    "sources/websocket/irc.js": "5bdcd79e4eacabcbb39640a3364655a3b47e84da47248eaa58acdadacf62bd71",
+    "sources/websocket/kick-layout.js": "b3fc857b37fdafdb16e03d38185e15be5bac79066fe5afd9aff052f19bbb029d",
+    "sources/websocket/kick.css": "cea885b134005e5d84276d85f6a2589ef1d8a5777bd2d30d2e80eb8ae5ed8a9a",
+    "sources/websocket/kick.html": "a09f77bfbcda8a7d59648760d70ef0e60cf42888625098a5fc914be663550d9b",
+    "sources/websocket/kick.js": "443e7fcebf8fe6f2f71462805e5071dc06ae889e30dc46885de4f5ce0694b4de",
+    "sources/websocket/nostr.html": "b682d7bca8c578fd18942d2910e8fd5469b1bf5d54d9807d9f6712fdb7bea91f",
+    "sources/websocket/nostr.js": "a4e563f641f7d9d7103dee549567c861a4f7b6846a30cb668399f64a9dbd781e",
+    "sources/websocket/rumble.html": "a64a16736d2bd6db1178b33a19821baac44d700bf7ffc9afbc1660e5eb6f602c",
+    "sources/websocket/rumble.js": "c399926396949d317ffcfb969d826c34ed21af5db5b0a9322d9c78b504d60854",
+    "sources/websocket/socialstreamchat.html": "c8d4c76ce97c8665c9219d97704992b84726fda44251d29c7adc82a78d85f813",
+    "sources/websocket/socialstreamchat.js": "579c25ad23d95ee1a3eb1aad50c0802f678752a1a8ac22c7d5f5e5b842c203eb",
+    "sources/websocket/stageten.html": "9a25e42d57100e1d4f92fd6c2f92e407ffc7dca2777a33ac21ddbbbf31140b1d",
+    "sources/websocket/stageten.js": "fa64819d2cc85a4bf3357eb010599cb67437bb6a5d4ffe20be7947b7705a8ba6",
+    "sources/websocket/streamlabs.html": "b49f089fc4f951241b9f983bcf4acb21c6eb6de2f88c21e83e3b90ad65d65a66",
+    "sources/websocket/streamlabs.js": "072590e6df717a70a398ade5f23bda62bc1bccfa649190bebd50a3569a396235",
+    "sources/websocket/testsource.html": "a59d9d94891d3518e27b391214732290f16e8fca55c55d93eaf3df8ab88356c2",
+    "sources/websocket/testsource.js": "2bdf6b52a15fa088fdcfc50a7dea9c56ee259ba093a49785e3495eb453c234fc",
+    "sources/websocket/twitch.html": "49f18da52a8b487080e3d07cf97acd8ab6f55291ded3940047bdb00fee44c929",
+    "sources/websocket/twitch.js": "2d74998bb12c730d0585c154bbc3d53257d79e388c002741bf39b73a1f10dbbc",
+    "sources/websocket/vpzone.html": "983f1cf81caf0fb012799dd627b9e30b806b545ecb77b8ecf0d368751cb318fb",
+    "sources/websocket/vpzone.js": "4867107b65a3fd683cc6ab543f0c78ed083b15e21080532c2edef3d5959a97c5",
+    "sources/websocket/websocket-responsive.css": "5b6ce650c72c704299d4e8b5f8e364e8a29573678e7c61c74e7dcb9b409c11fd",
+    "sources/websocket/whatnot.html": "219c993bc6c00961b30903070eac1c23dfbaced01bd305b97918fcd222f69c85",
+    "sources/websocket/whatnot.js": "3e6bfd79a4ee64ccb6345a06cd59b844ad4cad429c62a980b8d8aff93f15138f",
+    "sources/websocket/youtube.css": "9b5659f38aae099e266651841f60e4b89ca3375994755aa93e97ccd9036e5f56",
+    "sources/websocket/youtube.html": "bcc13b1db08b05591d436371abe4707340d23ca4f95a6e8764821773e6733d8e",
+    "sources/websocket/youtube.js": "9bfca90a8f1adaa39c810713f7666d0864d14abce739b4579025357f9eb9d4e2",
+    "sources/websocket/youtube_auth.html": "3bffb51587fe14c87f529fb4c866bdc4f1492fac1da0bd9494ac7ea5ab7aa7b7",
+    "sources/websocket/youtube_auth.js": "01793859f4d4eb2d4e9f71a37ae4b0300deab1a8a43b83bfcf023f43031bf59a",
+    "sources/whatnot.js": "25efa82481e9f54185887f54461e56a36d0da3fcbef7f10df02f11a6fedb00b7",
+    "sources/whatsapp.js": "94c8058b98affb8897b1c4125fef73b667dec58e4b3c56f8edb3c78bb4f91fd8",
+    "sources/whop.js": "9bc2083683d254b92cc6c90f29ca9d55583ffdf4d16a63eeeed705fda00a8f27",
+    "sources/wix.js": "55f6bca039b24c73abb48cb1545b159621d22ec4055e4e856ed39292d9299fd1",
+    "sources/wix2.js": "b37a38435aa7501a44cba6ff1e6c5afac5097e3c3339a6b7dac8a203da916508",
+    "sources/workplace.js": "c70ac081cf2ea940fb9724eb0cd2a4cfb0929c5be3e38dbc67782d2ab4c09d16",
+    "sources/worldswave.js": "8a23ecfdd60f860bb4e81bda22ed390e6905cbd07cd58e59c8b83d110d202b26",
+    "sources/wtv.js": "60790278038d0a6377aa5ed5159284b26399a4d1c6eb72c0007f01aaccbfd4ee",
+    "sources/x-studio.js": "3198e40ee398d4a2015b083aba10c0d5f6e128598916a6d2b568c0c5a08557a3",
+    "sources/x.js": "a1dbe477fb3bad8ca14241cffc58c6d0ef0ac5ff3f10a5a805d50df68b59a55f",
+    "sources/xeenon.js": "391f668d5d4f6497a3c50205f9d3568831a7edd96de33daf38f3909a1ac80d6e",
+    "sources/xpsync.js": "75f157eebcff198015389207c57c3933867fa2d108878a4a1ce5706152949193",
+    "sources/younow.js": "0b5b0fc4d0ed604df83a9e97e17226f5108f178fe506b2b9507a689d845cb9a9",
+    "sources/youtube.js": "6e409f2c7328a754f75d4d8d228ed8aea5955999f72bb8a7a1d4915a1a2c4452",
+    "sources/youtube_comments.js": "06fd6e4486f5cc46d4a438097b284797c533845064b208a8f5bcc5eb39be53e7",
+    "sources/youtube_static.js": "d404f658fefcfc03bf0e400bdb6abb485b815110cfdf7e6ee3183597ac8868a8",
+    "sources/zapstream.js": "7a6a058f7abc861d2b141bfcdb937b9ca566010036cff3f17a94cd5515f4639d",
+    "sources/zoom.js": "686078d94e5f5f7ee5204fb1a35e75050b47d9ddd0ed9ddf4460455b09bc8adb",
+    "thirdparty/vdoninja-sdk.js": "88f623ac8b6dcf2ab66b4bddc70b66f1a2d7d04198f143a6efe1b0d4c89c440c"
+  }
+}

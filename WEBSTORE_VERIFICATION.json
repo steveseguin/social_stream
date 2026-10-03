@@ -17,69 +17,320 @@
     }
   ],
   "previous_version": "3.50.24",
-  "scope": "TikFinity completed-gift-streak fix, regression test, and event documentation.",
+  "scope": "Web Store help, font licence packaging, and accurate feature descriptions. No capture, default, permission or source-routing changes.",
   "artifact": {
     "file": "social-stream-ninja-chrome-web-store-3.50.25.zip",
-    "sha256": "4fcccefa97c5dcaac537a1849d2761213ae8d120c54106e49892177a8fd6ce0b",
-    "files": 974,
+    "sha256": "4e13706acedcc019f6a2f519531d9a21c605e5111ebc7702d775ed6ebf286f4d",
+    "files": 976,
     "byte_parity": true
   },
   "manifest_comparison": {
-    "against_version": "3.50.24",
-    "changed_keys": [
-      "version"
-    ]
+    "against_version": "3.50.25",
+    "changed_keys": []
   },
   "changes": {
     "changed_package_files": [
-      "manifest.json",
-      "sources/tikfinity.js"
+      "README.md",
+      "featured.html",
+      "seo.md",
+      "shared/monetization/popup.js"
     ],
-    "manifest_version_only": true,
-    "backport": {
-      "commit": "8427009be74cdc1200e1e511d5bdc082e8a2938a",
-      "description": "Forward explicitly streakable TikFinity gifts only on completion.",
-      "package_paths": [
-        "sources/tikfinity.js"
-      ],
-      "supporting_paths": [
-        "tests/tikfinity-gift-streak.test.js"
-      ],
-      "partial_paths": [
-        "docs/event-reference.html"
-      ]
-    },
-    "counts": {
-      "exact-beta": 894,
-      "store-adapted": 75,
-      "legacy-store": 5,
-      "added_package_files": 0,
-      "updated_package_files": 2
-    }
+    "added_package_files": [
+      "thirdparty/NotoColorEmoji.OFL.txt",
+      "thirdparty/Sora.OFL.txt"
+    ],
+    "behavioral_change": "With the Web Store flag enabled, Creator Store help opens hosted documentation for the selected provider without session/password parameters. Non-Store relative help links remain unchanged.",
+    "manifest_changed": false,
+    "additional_features_disabled": false
   },
   "tests": [
     {
-      "file": "tikfinity-gift-streak.test.js",
+      "file": "webstore-source-manifest.test.js",
       "passed": true,
       "targets": [
-        "working tree",
-        "extracted upload ZIP"
+        "checkout",
+        "zip"
       ]
     },
     {
       "file": "webstore-selective-update.test.js",
-      "passed": true
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "webstore-package-integrity.test.js",
+      "passed": true,
+      "targets": [
+        "checkout",
+        "zip"
+      ]
+    },
+    {
+      "file": "webstore-upstream-parity.test.js",
+      "passed": true,
+      "targets": [
+        "checkout",
+        "zip"
+      ]
+    },
+    {
+      "file": "webstore-store-restrictions.test.js",
+      "passed": true,
+      "targets": [
+        "checkout",
+        "zip"
+      ]
+    },
+    {
+      "file": "popup-search.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "popup-link-generation.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "webstore-settings-compat.test.cjs",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "webstore-runtime-parity.test.cjs",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "webstore-featured-routing.test.cjs",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "webstore-ad-announcements.test.cjs",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "source-deletion-timing.test.cjs",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "tikfinity-gift-streak.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "eventflow-customjs.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "eventflow-workflow.test.cjs",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "eventflow-template-vars.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "eventflow-play-media-duration.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "eventflow-compare-property.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "dock-filtered-history.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "points-query-failures.test.cjs",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "points-import-validation.test.cjs",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "unlimited-db-retention.test.cjs",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "twitch-pending-moderation.test.cjs",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "twitch-watch-streak-dom.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "twitch-gif-message.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "twitch-chatClient-subgift.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "twitch-ad-announcements.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "moderation-regressions.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "profanity-filter.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "xss-sanitizer.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "opencode-zen-fallback.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "openai-source.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "vkvideo-source.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "blaze-source.test.js",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
+    },
+    {
+      "file": "generic-source.test.cjs",
+      "passed": true,
+      "targets": [
+        "checkout"
+      ]
     },
     {
       "file": "webstore-extension-smoke.test.js",
       "passed": true,
       "targets": [
-        "extracted upload ZIP"
+        "checkout",
+        "zip"
       ]
     },
     {
-      "command": "node --check sources/tikfinity.js",
-      "passed": true
+      "file": "webstore-ui-smoke.test.js",
+      "passed": true,
+      "targets": [
+        "checkout",
+        "zip"
+      ]
+    },
+    {
+      "file": "webstore-help-runtime.test.js",
+      "passed": true,
+      "targets": [
+        "checkout",
+        "zip"
+      ]
+    },
+    {
+      "file": "webstore-review-functionality.test.js",
+      "passed": true,
+      "targets": [
+        "checkout",
+        "zip"
+      ]
+    },
+    {
+      "file": "webstore-zip-parity.test.ps1",
+      "passed": true,
+      "targets": [
+        "exact release ZIP versus checkout"
+      ]
     }
   ],
   "gift_fixture_checks": [
@@ -245,6 +496,362 @@
     "limits": [
       "Offline extension fixtures and mocked transports; no authenticated live providers or Web Store submission.",
       "Older local 3.50.12 upstream/restriction baselines retained as history, not recertified against 3.50.25."
+    ]
+  },
+  "prior_local_artifact": {
+    "file": "social-stream-ninja-chrome-web-store-3.50.25.zip",
+    "sha256": "4fcccefa97c5dcaac537a1849d2761213ae8d120c54106e49892177a8fd6ce0b",
+    "files": 974,
+    "byte_parity": true
+  },
+  "prior_release_changes": {
+    "changed_package_files": [
+      "manifest.json",
+      "sources/tikfinity.js"
+    ],
+    "manifest_version_only": true,
+    "backport": {
+      "commit": "8427009be74cdc1200e1e511d5bdc082e8a2938a",
+      "description": "Forward explicitly streakable TikFinity gifts only on completion.",
+      "package_paths": [
+        "sources/tikfinity.js"
+      ],
+      "supporting_paths": [
+        "tests/tikfinity-gift-streak.test.js"
+      ],
+      "partial_paths": [
+        "docs/event-reference.html"
+      ]
+    },
+    "counts": {
+      "exact-beta": 894,
+      "store-adapted": 75,
+      "legacy-store": 5,
+      "added_package_files": 0,
+      "updated_package_files": 2
+    }
+  },
+  "public_live_capture_validation": {
+    "date": "2026-10-03",
+    "target": "C:\\Users\\steve\\Code\\webstore\\social_stream",
+    "runtime": "Headed Chromium, fresh signed-out profile, actual extension and unchanged manifest, enabled through popup",
+    "source_injection": "Native manifest only; no manual source injection",
+    "measurement": "Count named chat messages at sendDataP2P while preserving its original implementation and transport",
+    "channels": {
+      "youtube": { "channel": "Lofi Girl", "url": "https://www.youtube.com/live_chat?v=rFZHOHl-L8A&is_popout=1", "total_named_messages": 97 },
+      "twitch": { "channel": "yourragegaming", "url": "https://www.twitch.tv/popout/yourragegaming/chat", "total_named_messages": 83 },
+      "kick": { "channel": "gaules", "url": "https://kick.com/popout/gaules/chat", "total_named_messages": 60 }
+    },
+    "continued_capture": {
+      "observation_seconds": 73.2,
+      "new_named_messages": { "youtube": 80, "twitch": 69, "kick": 53 }
+    },
+    "dock": "Opened popup-generated hosted dock; visually verified rendered messages and platform icons from all three services",
+    "signed_in": false,
+    "messages_posted": false,
+    "application_changes": false,
+    "evidence_directory": "tmp/live-webstore-20261003",
+    "limits": [
+      "Public chat popouts only; authenticated Studio and YouTube Data API modes were not live-tested.",
+      "No Twitch ad event was observed; ad filtering remains covered by the separate background regression tests.",
+      "Twitch reported a getLayoutMap permission-policy error while capture continued. Dock link-inspection failed in the test harness; rendered delivery was verified visually instead."
+    ]
+  },
+  "webstore_compatibility_validation": {
+    "date": "2026-10-03",
+    "checkout": "C:\\Users\\steve\\Code\\webstore\\social_stream",
+    "baseline_commit": "9dc824ec",
+    "package_files": 976,
+    "sha256": "4e13706acedcc019f6a2f519531d9a21c605e5111ebc7702d775ed6ebf286f4d",
+    "results": [
+      {
+        "target": "checkout",
+        "test": "webstore-source-manifest.test.js",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "webstore-selective-update.test.js",
+        "exit_code": 0,
+        "seconds": 0.3
+      },
+      {
+        "target": "checkout",
+        "test": "webstore-package-integrity.test.js",
+        "exit_code": 0,
+        "seconds": 1.7
+      },
+      {
+        "target": "checkout",
+        "test": "webstore-upstream-parity.test.js",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "webstore-store-restrictions.test.js",
+        "exit_code": 0,
+        "seconds": 0.5
+      },
+      {
+        "target": "checkout",
+        "test": "popup-search.test.js",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "popup-link-generation.test.js",
+        "exit_code": 0,
+        "seconds": 0.2
+      },
+      {
+        "target": "checkout",
+        "test": "webstore-settings-compat.test.cjs",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "webstore-runtime-parity.test.cjs",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "webstore-featured-routing.test.cjs",
+        "exit_code": 0,
+        "seconds": 0.3
+      },
+      {
+        "target": "checkout",
+        "test": "webstore-ad-announcements.test.cjs",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "source-deletion-timing.test.cjs",
+        "exit_code": 0,
+        "seconds": 0.2
+      },
+      {
+        "target": "checkout",
+        "test": "tikfinity-gift-streak.test.js",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "eventflow-customjs.test.js",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "eventflow-workflow.test.cjs",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "eventflow-template-vars.test.js",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "eventflow-play-media-duration.test.js",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "eventflow-compare-property.test.js",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "dock-filtered-history.test.js",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "points-query-failures.test.cjs",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "points-import-validation.test.cjs",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "unlimited-db-retention.test.cjs",
+        "exit_code": 0,
+        "seconds": 9.5
+      },
+      {
+        "target": "checkout",
+        "test": "twitch-pending-moderation.test.cjs",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "twitch-watch-streak-dom.test.js",
+        "exit_code": 0,
+        "seconds": 8.7
+      },
+      {
+        "target": "checkout",
+        "test": "twitch-gif-message.test.js",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "twitch-chatClient-subgift.test.js",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "twitch-ad-announcements.test.js",
+        "exit_code": 0,
+        "seconds": 1.3
+      },
+      {
+        "target": "checkout",
+        "test": "moderation-regressions.test.js",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "profanity-filter.test.js",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "xss-sanitizer.test.js",
+        "exit_code": 0,
+        "seconds": 4.5
+      },
+      {
+        "target": "checkout",
+        "test": "opencode-zen-fallback.test.js",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "checkout",
+        "test": "openai-source.test.js",
+        "exit_code": 0,
+        "seconds": 14.9
+      },
+      {
+        "target": "checkout",
+        "test": "vkvideo-source.test.js",
+        "exit_code": 0,
+        "seconds": 5.5
+      },
+      {
+        "target": "checkout",
+        "test": "blaze-source.test.js",
+        "exit_code": 0,
+        "seconds": 7.2
+      },
+      {
+        "target": "checkout",
+        "test": "generic-source.test.cjs",
+        "exit_code": 0,
+        "seconds": 20.3
+      },
+      {
+        "target": "checkout",
+        "test": "webstore-extension-smoke.test.js",
+        "exit_code": 0,
+        "seconds": 22.5
+      },
+      {
+        "target": "checkout",
+        "test": "webstore-ui-smoke.test.js",
+        "exit_code": 0,
+        "seconds": 4.1
+      },
+      {
+        "target": "checkout",
+        "test": "webstore-help-runtime.test.js",
+        "exit_code": 0,
+        "seconds": 3.5
+      },
+      {
+        "target": "checkout",
+        "test": "webstore-review-functionality.test.js",
+        "exit_code": 0,
+        "seconds": 4.4
+      },
+      {
+        "target": "zip",
+        "test": "webstore-source-manifest.test.js",
+        "exit_code": 0,
+        "seconds": 0.1
+      },
+      {
+        "target": "zip",
+        "test": "webstore-upstream-parity.test.js",
+        "exit_code": 0,
+        "seconds": 0.2
+      },
+      {
+        "target": "zip",
+        "test": "webstore-store-restrictions.test.js",
+        "exit_code": 0,
+        "seconds": 0.6
+      },
+      {
+        "target": "zip",
+        "test": "webstore-package-integrity.test.js",
+        "exit_code": 0,
+        "seconds": 1.9
+      },
+      {
+        "target": "zip",
+        "test": "webstore-extension-smoke.test.js",
+        "exit_code": 0,
+        "seconds": 22.4
+      },
+      {
+        "target": "zip",
+        "test": "webstore-ui-smoke.test.js",
+        "exit_code": 0,
+        "seconds": 3.9
+      },
+      {
+        "target": "zip",
+        "test": "webstore-help-runtime.test.js",
+        "exit_code": 0,
+        "seconds": 3.5
+      },
+      {
+        "target": "zip",
+        "test": "webstore-review-functionality.test.js",
+        "exit_code": 0,
+        "seconds": 4.4
+      }
+    ],
+    "zip_parity_test_passed": true,
+    "store_and_nonstore_link_guards_tested": true,
+    "limits": [
+      "Offline extension fixtures; no authenticated live-provider sessions or audible speech verification.",
+      "No Web Store dashboard listing/privacy declaration review or submission."
     ]
   }
 }

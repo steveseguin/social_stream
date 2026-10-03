@@ -83,29 +83,29 @@ context.fetch = async function () {
     const firstResult = await requestOpenCodeZenWithFallback(llmSettings, async function (model) {
         firstTried.push(model);
         if (firstTried.length === 1) {
-            assert.strictEqual(fetchCalls, 0, 'Auto should start from the remembered built-in free list');
+            assert.strictEqual(fetchCalls, 1, 'Auto refreshes the catalog before choosing from current free models');
             throw rateLimitError(model);
         }
         return 'ok:' + model;
     });
 
-    assert.strictEqual(firstResult, 'ok:deepseek-v4-flash-free');
-    assert.deepStrictEqual(firstTried, ['big-pickle', 'deepseek-v4-flash-free']);
+    assert.strictEqual(firstResult, 'ok:big-pickle');
+    assert.deepStrictEqual(firstTried, ['mimo-v2.5-free', 'big-pickle']);
     assert.strictEqual(fetchCalls, 1, 'A retryable free-model failure should fetch the live list once');
 
     const secondTried = [];
     const secondResult = await requestOpenCodeZenWithFallback(llmSettings, async function (model) {
         secondTried.push(model);
-        assert.notStrictEqual(model, 'big-pickle', 'Cooling down free models should not be retried');
+        assert.notStrictEqual(model, 'mimo-v2.5-free', 'Cooling down free models should not be retried');
         assert.notStrictEqual(model, 'minimax-m2.7', 'Auto should not fall through to paid models');
-        if (model === 'deepseek-v4-flash-free') {
+        if (model === 'big-pickle') {
             throw rateLimitError(model);
         }
         return 'ok:' + model;
     });
 
-    assert.strictEqual(secondResult, 'ok:mimo-v2.5-free');
-    assert.deepStrictEqual(secondTried, ['deepseek-v4-flash-free', 'mimo-v2.5-free']);
+    assert.strictEqual(secondResult, 'ok:deepseek-v4-flash-free');
+    assert.deepStrictEqual(secondTried, ['big-pickle', 'deepseek-v4-flash-free']);
     assert.strictEqual(fetchCalls, 1, 'The model list endpoint should not be queried again inside the one-hour cache window');
 })().catch(error => {
     console.error(error);
