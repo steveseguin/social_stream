@@ -8225,9 +8225,11 @@
 				} else if ("queue" in data) {
 					if (data.queue && (syncDocks || force)) {
 						if (typeof data.queue == "object") {
+							// Reconcile row markers without mutating the queue or notifying auto-show mid-update.
 							selectedQueue.forEach(xx => {
 								if (xx.dataset.mid && !data.queue.includes(parseInt(xx.dataset.mid))) {
-									removeQueue(xx);
+									xx.classList.remove("queued");
+									delete xx.children[0].dataset.qid;
 								}
 							});
 							var sq = [];
