@@ -1184,3 +1184,327 @@ records the missing store UI to avoid mistaking helper execution for an
 exposed user workflow. Provider transport, browser APIs, DOM display and
 database operations were mocked; no live provider authentication was tested.
 This second review changes only these notes, not the application or ZIP.
+
+
+## Historical local checkout notes (superseded by 3.50.25)
+
+The following local 3.50.12 notes are retained as history, not current release claims.
+
+Release status: artifact checks are complete. A manual live VPZone capture test
+remains recommended before Web Store upload.
+
+### 2026-09-08 Existing-Package 3.50.9 Update
+
+- Source: the clean local `C:\Users\steve\Code\social_stream` checkout at
+  `833d92fa5989fb71ef2249a9aca4d8258a73c517`, version `3.50.9`.
+  The source checkout was read only and remains clean. No branch, commit,
+  push, deployment, or Web Store submission was made.
+- Used the verified `3.50.7` ZIP's 771-file inventory as the package boundary.
+  Updated 240 existing packaged files, retained the reduced README, and added
+  58 dependencies/assets needed by the updated files. No existing package
+  files were removed. This was a file-by-file three-way adaptation against
+  the common `6be013f4` source baseline, not a merge of the full application.
+- Added dependencies: popup bootstrap/style/capture reminder, dashboard
+  questions, local-server URL and transport deduplication helpers, Stream Deck
+  remote helper, Kick badges, page translations, sound library, sticker,
+  monetization and audience-room helpers, theme styles, and word-chain styles.
+  Added required sound/sticker/guide/celebration assets and Arabic/French
+  translations. New helper API fetches carry data, not executable code.
+- Preserved adult-provider exclusions, disabled Event Flow custom code,
+  disabled local model/TTS providers, and the working Web Store Spotify OAuth
+  callback and duplicate-flow guard. Removed incoming custom-JavaScript UI,
+  upload handlers, custom-code syntax execution, and desktop HTTPS script
+  download/execution. Removed the dormant popup Kokoro bundle imports because
+  those runtimes are excluded. Extended local-AI gating to `localqwen2b`.
+- Kept new documentation and preview links on the hosted site, matching the
+  existing reduced build. Fixed a missing closing brace in the adapted hype
+  overlay and retained extension-relative developer links.
+- Manifest: `3.50.9`; still 145 content-script groups. Updated match patterns
+  for existing source groups. API permissions and host permissions are
+  identical to `3.50.7`; no new provider groups were added. Exposed the packaged
+  `shared/kickBadges.js` helper for the existing Kick adapter.
+- Permission evidence remains: `storage` for settings/session state;
+  `notifications` for background startup/recovery notices; `tabs` for opening
+  and messaging source/background tabs; `scripting` for packaged source
+  injection (`service_worker.js`); `debugger` for chat input automation
+  (`background.js`); `tabCapture` for tab audio/video (`service_worker.js`,
+  `sources/capturevideo.js`); `identity` for Spotify OAuth (`spotify.js`).
+  Broad host access remains required by user-selected packaged source injection.
+
+Validation completed:
+
+- 114 changed/added JavaScript files pass syntax checks; inline JavaScript in
+  packaged HTML passes syntax checks; strict background lint and diff checks pass.
+- Selective Web Store regression tests, 26 disabled-custom-code assertions,
+  sanitizer corpus, Blaze, Twitch GIF/watch-streak/subgift, ChatGPT, and VK Video
+  source tests pass.
+- Clean Chromium extension smoke passes both against the working directory
+  and against the final extracted ZIP. Popup search works; all background
+  scripts load; real packaged YouTube and Twitch content scripts capture local
+  DOM fixtures through extension messaging and background processing; both
+  messages render in the packaged dashboard served at its normal web origin.
+  The test substitutes the network bridge and blocks external HTTP requests.
+- Twitch source-disable blocks subsequent fixture capture. All 17 sound-library
+  files fetch and decode. System TTS reaches the speech API with the selected
+  volume and respects mute; speech output is stubbed, not audibly verified.
+- Final ZIP: all 21 JSON files parse, all manifest and local script/style
+  references resolve inside the package, and every extracted file byte-matches
+  the working tree. No removed-provider or first-party remote/custom executable
+  code scan hits. Development files, tests, Git metadata, and preparation notes
+  are excluded.
+
+Upload artifact:
+
+- `C:\Users\steve\Code\webstore\social-stream-ninja-chrome-web-store-3.50.9-20260908-conservative-r1.zip`
+- 829 files; 37,116,929 bytes.
+- SHA-256: `8b6e0d92c342ec40660f2c35f40b7b9011c715cc31b183d134947e04ecd94b6b`
+
+Before submitting: perform an authenticated live-site capture check in Chrome,
+and confirm the actual listing/privacy declarations match the included features.
+The automated tests use fixtures and do not verify third-party authentication,
+paid API providers, audible speech, or Google approval. Reviewer instructions:
+open the extension, enable capture, open the Main Chat dashboard, then open a
+YouTube live-chat popout or Twitch chat popout and confirm a new message appears.
+Use source-disable and sound/TTS controls to verify the advertised behavior.
+
+### 2026-09-08 R2 Popup Width
+
+- Added `min-width: 450px` to the `body` CSS in both Web Store and normal
+  `popup.html` files, as requested. Neither checkout has a `main.css` file.
+- Chromium extension checks confirm a 450px minimum and expansion to 800px;
+  popup search still works.
+- Use `social-stream-ninja-chrome-web-store-3.50.9-20260908-conservative-r2.zip`.
+  Only `popup.html` differs from R1; all 829 entries pass ZIP integrity checks.
+- Size: 37,116,937 bytes. SHA-256:
+  `722870507fc43073a79145ac99ac9207b8dbced4b6f986f8b9fbe30bf8431b2b`.
+
+### 2026-09-08 R3 Popup Layout Sync
+
+- Synced the latest local normal-build `popup.html` and `popup-ui.css` edits:
+  standard Audience Room accordion, simplified audience control styling, and
+  games-selector overflow fix. Preserved 450px minimum width, Web Store feature
+  exclusions, and the hosted audience setup guide link. No new dependencies.
+- Chromium extension checks pass at 450px and 800px: audience panel opens,
+  fields do not overflow, game selector overflow is visible, search and Escape
+  work, removed controls remain absent, and no popup runtime errors occur.
+- Use `social-stream-ninja-chrome-web-store-3.50.9-20260908-conservative-r3.zip`.
+  Only `popup.html` and `popup-ui.css` differ from R2. All 829 entries byte-match
+  the working tree; ZIP integrity and popup dependency checks pass.
+- Size: 37,116,998 bytes. SHA-256:
+  `046f8ce36387a1913da473a34192f72e9b6cba087550123bfde7004d0ada1bee`.
+
+### 2026-09-08 R4 Final Package Review
+
+Use `social-stream-ninja-chrome-web-store-3.50.9-20260908-conservative-r4.zip`.
+The package is 28,185,529 bytes (28.2 MB; 26.9 MiB), 43,717,058 bytes unpacked,
+with 838 files. It is 24.1% smaller than R3 and well below Chrome's documented
+2 GB ZIP limit. SHA-256:
+`eac42822a58b385e9adc93b6c9966a6dfc51cddea1f6435612ab35bfa9839792`.
+
+Review fixes:
+
+- Omitted `thirdparty/NotoColorEmoji.full.ttf` from the ZIP: no packaged text,
+  script, style, or font loader references it. Kept the smaller referenced
+  `NotoColorEmoji.ttf` and all runtime files. The full font remains in the source
+  checkout; no file was deleted from either repository.
+- Added the eight WebP images referenced by `themes/featured-styles/artwork.css`.
+  Every image successfully decodes in Chromium.
+- Fixed seven unbundled help-document links across the Event Flow guides and
+  test-message page by pointing to the hosted documentation.
+- Removed the stale `&js=` example in `seo.md` and unused translation properties
+  advertising custom-JavaScript upload. Disabled Event Flow explanations remain.
+- Added upstream SIL Open Font License copies for the packaged Noto emoji and
+  Sora fonts. No font binaries were modified.
+- Added the required Google API Limited Use statement to packaged `privacy.html`
+  and updated its date. This local change has NOT been published to the website.
+
+Final artifact validation:
+
+- ZIP integrity passes; every entry byte-matches the reviewed working-tree file.
+  All 21 JSON files parse. All 397 JavaScript files/inline script blocks parse.
+- No missing manifest resources, static HTML script/style/media references,
+  CSS URL assets, or static local help links. One documentation example containing
+  an escaped placeholder image URL was excluded from the resource check.
+- No removed adult-provider, remote script-tag/import, or base64-JavaScript
+  loader scan hits. Reviewed dynamic loaders resolve packaged dependencies;
+  local-model paths remain excluded and disabled. Static Circle injection is
+  packaged code. VDO/StreamSaver/GitHub-button iframe paths are isolated web
+  contexts, not remote scripts executing with extension APIs.
+- No development folders, Git metadata, test suites, credentials files, ZIPs,
+  or model weights are shipped. Only the previously reviewed seven API
+  permissions remain; each has executable usage. Broad hosts and `debugger`
+  still need the existing clear reviewer justification.
+- Clean-profile Chromium tests against extracted R4 pass: initial extension
+  startup, popup on/off toggle, search, Audience Room accordion, options
+  save/reload, eight restored theme images, YouTube/Twitch DOM capture through
+  actual extension messaging/background processing, dashboard rendering,
+  Twitch source disable, all 17 sound files decoded, and system TTS volume/mute.
+  External HTTP traffic is blocked and chat/bridge fixtures are substituted;
+  speech API output is stubbed. No third-party channel was used.
+- Selective-update tests, 26 custom-code-disabled assertions, and the 29-case
+  sanitizer corpus pass. `git diff --check` passes. Source-specific regression
+  results from the earlier 3.50.9 review remain applicable; source code is unchanged.
+
+Outstanding before submission:
+
+- The public `https://socialstream.ninja/privacy.html` inspected on September 8
+  still lacks the affirmative Limited Use statement. Publish the prepared
+  statement from local `privacy.html` to the public privacy policy (or another
+  clearly linked extension-owned page). A statement inside the ZIP alone does
+  not meet the website disclosure requirement.
+- Verify the actual Store listing, screenshots, permission justifications, and
+  privacy fields. The Developer Dashboard was not accessed, and its declarations
+  cannot be certified from the ZIP. Run an authenticated live capture check;
+  paid API/OAuth flows and audible voice quality were not exercised.
+- No submission, website deployment, mainline edit, commit, or push was performed
+  during this final review. Passing these checks is not a guarantee of Google approval.
+
+Policy references checked:
+
+- https://developer.chrome.com/docs/webstore/publish/
+- https://developer.chrome.com/docs/webstore/program-policies/mv3-requirements/
+- https://developer.chrome.com/docs/webstore/program-policies/limited-use/
+- https://developer.chrome.com/docs/webstore/program-policies/permissions
+- https://developer.chrome.com/docs/webstore/cws-dashboard-privacy/
+
+Font license sources:
+
+- https://raw.githubusercontent.com/googlefonts/noto-emoji/main/fonts/LICENSE
+- https://raw.githubusercontent.com/google/fonts/main/ofl/sora/OFL.txt
+
+## Live capture follow-up (2026-09-08)
+
+- Loaded the extracted R4 ZIP in regular Chromium with a fresh isolated profile;
+  enabled the extension through its popup. Background dependency loading completed
+  with no failures. No package code was changed.
+- Read public live chats without signing in or posting. Used YouTube Lofi Girl's
+  current live video `rFZHOHl-L8A` and Twitch `yourragegaming`, selected from the
+  live directory. Never accessed the excluded CamCam66Gaming channel.
+- During a 60-second observation, actual packaged content scripts delivered 8
+  YouTube messages and 57 Twitch payloads to background `sendDataP2P`. All 8
+  YouTube messages had names and message content; 54 Twitch payloads had message
+  content and 55 had names (counts include non-message payloads).
+- Instrumentation counted payloads while calling the original sendDataP2P;
+  no fixture DOM, synthetic messages, or mocked platform responses were used.
+  This verifies live source-to-background capture, not remote dock delivery,
+  authenticated account flows, or paid interactions.
+- Initial headless YouTube attempt showed an unsupported-browser message;
+  regular Chromium with the current live video succeeded. An older video URL
+  had no active chat, and Monstercat produced no messages during observation.
+- R4 ZIP remains unchanged. Temporary validation output is outside the package
+  at `../.codex-tmp/live-capture-result.json`.
+
+## Current working release: 3.50.12 (2026-09-10)
+
+The authoritative build is now `C:\Users\steve\Code\webstore\social_stream`,
+the folder Steve loads in Chrome. The reviewed rebuild has been applied here.
+There is no separate newer staging build to load or maintain.
+
+Current ZIP: `C:\Users\steve\Code\webstore\social-stream-ninja-chrome-web-store-3.50.12.zip`.
+It was rebuilt directly from this checkout: 951 files, 28,907,917 bytes.
+SHA256: `7e701d3ae1f87ae2f4d3f61e862027bf53b416d74e994decf62b0ea0592f23b1`.
+The old `3.50.12-staged-review` filename was replaced, not retained as another
+release copy. Existing older release ZIPs remain; no new backup folder was made.
+
+The reviewed official baseline remains `1c7e0422b9f53143c9af56184c0b9774df1e442b`.
+The release version is explicitly 3.50.12. All 385 retained source/provider files
+and all 154 non-adult manifest registrations, including their complete ordered
+dependencies, match that baseline. Both distinct YouTube registrations and
+Parti's full `https://parti.com/*` scope are preserved.
+
+Applying the reviewed build copied 255 new/changed package files and removed
+171 previously excluded or superseded package files. This preserves the reviewed
+adult-provider exclusions, packaged executable dependencies, seven API permissions,
+custom-code blocks, disabled local AI/TTS/sentiment runtimes, Spotify OAuth fixes,
+font licenses and hosted-help changes. Repository instructions, tests, tooling and
+development notes remain outside the upload inventory. The official checkout at
+`C:\Users\steve\Code\social_stream` was not modified.
+
+The regression tests and their baseline fixtures now live in this repository's
+existing `tests/` and `tests/fixtures/` directories. They default to this checkout,
+with no dependency on hidden staging directories. Run from this folder:
+
+```powershell
+node tests/webstore-source-manifest.test.js
+node tests/webstore-upstream-parity.test.js
+node tests/webstore-store-restrictions.test.js
+node tests/webstore-package-integrity.test.js
+node tests/eventflow-customjs.test.js
+node tests/webstore-extension-smoke.test.js
+node tests/webstore-help-runtime.test.js
+node tests/webstore-review-functionality.test.js
+.\tests\webstore-zip-parity.test.ps1
+```
+
+All nine checks passed on this checkout/release. Actual Chromium extension
+fixtures cover YouTube regular/bare-domain popouts, Studio top-level and embedded
+chat, explicit opt-in watch capture, and absence of ordinary watch live/replay
+capture. YouTube, Twitch and Kick messages traverse the extension background and
+render in the dock through an offline transport fixture. Popup opt-out controls
+disable and re-enable each service without disabling another service. All 17
+packaged sounds decode; popup volume reaches dock audio at 25%, 0% and 75%; the
+source picker successfully injects packaged code using `scripting`. The remaining
+checks cover dependency order, custom-code restrictions, help navigation and
+credential isolation, and exact SHA256 equality of all 951 ZIP/checkout files.
+
+Known remaining limits and rejection risk:
+
+- The public privacy policy checked on September 10 includes the previously
+  missing collection/use/storage/sharing sections and Limited Use statement.
+  This supersedes the September 8 observation above. Store dashboard declarations,
+  listing claims, screenshots and permission justifications were not inspected.
+- The extension-linked public supported-sites catalog still contains adult-service
+  URLs; public event-reference help also mentions Joystick.tv. This remains a
+  Grey Lithium rejection risk. Resolve the Web Store help scope before submission;
+  no public website was changed as part of this sync.
+- Live end-to-end capture in Steve's Chrome/Streamlabs session remains unverified.
+  The browser tool blocked extension pages and Chrome's extension manager. The
+  actual loaded-folder confirmation and connected dock check are still pending.
+  Offline fixtures and stubbed speech do not prove authenticated live delivery,
+  audible output or every provider's account/API flow.
+- No submission, commit, push, branch change or Cloudflare action was performed.
+- Git's whitespace check still reports 65 formatting warnings after accounting
+  for CRLF line endings. Runtime files were kept byte-identical to the reviewed
+  build; no unrelated formatting cleanup was applied. The nine validation checks
+  above passed, but `git diff --check` is not clean.
+
+`AGENTS.md` now requires release updates to finish in this checkout, keeps current
+ZIP naming explicit, and requires the ZIP-parity test before reporting completion.
+
+Cleanup note: automatic approval review rejected deletion of the obsolete
+`.codex-tmp/official-rebuild-review` directory as "blocked by policy", without a
+more specific reason. That directory remains unused and is marked obsolete;
+the checkout, its tests, and the current release ZIP do not depend on it.
+
+
+## 2026-10-03 Rebase resolution
+
+Resolved local snapshot c94392d6 onto incoming Web Store release 16cc170f.
+The local snapshot was based on 3.50.7 and contained the September 3.50.12 build.
+Application files, including cleanly merged files, use the incoming coherent
+3.50.25 release so the older snapshot cannot partially downgrade runtime,
+translations, source helpers or capture fixes. The manifest is unchanged from
+16cc170f; both YouTube registrations and complete Twitch dependencies remain.
+Incoming exclusions of Velora and developer-only URL matches are retained.
+Local AGENTS.md instructions, local-only development files, historical fixtures
+and regression tests remain outside the release inventory. Both source-routing
+and incoming UI/OBS/OAuth smoke suites are retained as separate tests. The local
+package fixture now mirrors the incoming reviewed 974-file inventory.
+Older tests pinned to the 3.50.12 source/restriction baselines are historical
+and must not be interpreted as verification of 3.50.25.
+
+Package audit found one local exclusion worth preserving: the incoming popup
+retained an already-hidden link to the excluded StreamElements importer. Kept
+the local removal of that hidden design-note block. This changes popup.html
+only; it does not enable a feature or alter manifest/runtime permissions.
+The popup digest and disposition in WEBSTORE_PARITY.json record that exception.
+
+Verification: 16 focused checks passed, including package syntax/dependencies,
+source manifests, incoming runtime regressions, both browser smoke suites, and
+ZIP byte parity. Manifest/integrity/source/UI smoke also passed against the
+extracted ZIP. Browser checks used offline fixtures and the actual extension
+manifest; no authenticated live-provider or submission claims are made.
+Current local ZIP: `C:\Users\steve\Code\webstore\social-stream-ninja-chrome-web-store-3.50.25.zip`.
+SHA-256: `4fcccefa97c5dcaac537a1849d2761213ae8d120c54106e49892177a8fd6ce0b`. All 974 entries match this checkout.
+Detailed results and the original incoming artifact provenance are in
+WEBSTORE_VERIFICATION.json.

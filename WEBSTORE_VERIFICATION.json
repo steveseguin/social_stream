@@ -19,8 +19,8 @@
   "previous_version": "3.50.24",
   "scope": "TikFinity completed-gift-streak fix, regression test, and event documentation.",
   "artifact": {
-    "file": "social-stream-ninja-webstore-3.50.25.zip",
-    "sha256": "ce2e7b56676d4197a81e765bace53663c791cdb20e772b2760f1fd78f4d5e0ba",
+    "file": "social-stream-ninja-chrome-web-store-3.50.25.zip",
+    "sha256": "4fcccefa97c5dcaac537a1849d2761213ae8d120c54106e49892177a8fd6ce0b",
     "files": 974,
     "byte_parity": true
   },
@@ -105,7 +105,13 @@
     "OBS transport and clipboard calls are simulated.",
     "No live TikFinity session or Web Store submission."
   ],
-  "release_validation": {
+  "incoming_artifact": {
+    "file": "social-stream-ninja-webstore-3.50.25.zip",
+    "sha256": "ce2e7b56676d4197a81e765bace53663c791cdb20e772b2760f1fd78f4d5e0ba",
+    "files": 974,
+    "byte_parity": true
+  },
+  "incoming_release_validation": {
     "date": "2026-10-02",
     "artifact_sha256": "ce2e7b56676d4197a81e765bace53663c791cdb20e772b2760f1fd78f4d5e0ba",
     "files": 974,
@@ -198,6 +204,47 @@
       "Source regression tests use local fixtures and simulated transport/timing.",
       "Dock delivery uses a real isolated local WebSocket relay.",
       "No authenticated live-provider sessions or Web Store submission."
+    ]
+  },
+  "rebase_validation": {
+    "date": "2026-10-03",
+    "incoming_commit": "16cc170f93b9fd3321043639ddd02cf5cf0146a5",
+    "local_commit": "c94392d6f0331ff7d57ad2348cb4d28fdaadf2b4",
+    "resolved_conflict_paths": 234,
+    "application_resolution": "Incoming 3.50.25 release, preserving local removal of the already-hidden excluded StreamElements importer block in popup.html.",
+    "manifest_identical_to_incoming": true,
+    "package_files": 974,
+    "changed_package_files_from_incoming": [
+      "popup.html"
+    ],
+    "sha256": "4fcccefa97c5dcaac537a1849d2761213ae8d120c54106e49892177a8fd6ce0b",
+    "tests_passed": [
+      "webstore-source-manifest.test.js",
+      "webstore-selective-update.test.js",
+      "webstore-package-integrity.test.js",
+      "webstore-extension-smoke.test.js",
+      "webstore-ui-smoke.test.js",
+      "popup-search.test.js",
+      "popup-link-generation.test.js",
+      "webstore-settings-compat.test.cjs",
+      "webstore-runtime-parity.test.cjs",
+      "webstore-featured-routing.test.cjs",
+      "webstore-ad-announcements.test.cjs",
+      "source-deletion-timing.test.cjs",
+      "tikfinity-gift-streak.test.js",
+      "generic-source.test.cjs",
+      "eventflow-customjs.test.js",
+      "webstore-zip-parity.test.ps1"
+    ],
+    "extracted_zip_tests": [
+      "webstore-source-manifest.test.js",
+      "webstore-package-integrity.test.js",
+      "webstore-extension-smoke.test.js",
+      "webstore-ui-smoke.test.js"
+    ],
+    "limits": [
+      "Offline extension fixtures and mocked transports; no authenticated live providers or Web Store submission.",
+      "Older local 3.50.12 upstream/restriction baselines retained as history, not recertified against 3.50.25."
     ]
   }
 }

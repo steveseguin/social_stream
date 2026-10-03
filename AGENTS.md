@@ -149,6 +149,20 @@ Sample payloads based on the fake test data in [background.js](./background.js):
 - When replying to Steve, prefer plain, everyday language over jargon.
 - Keep explanations direct and practical; explain technical terms briefly when they matter.
 
+## Web Store Source Regression Checks
+
+- `C:\Users\steve\Code\webstore\social_stream` is the authoritative working build Steve loads in Chrome. Finish approved release updates here and build the release ZIP from these files. Do not leave the newer version only in hidden staging folders or ZIPs. Existing release ZIPs provide version history; do not create extra backup copies or folders unless Steve requests them.
+- Keep the current ZIP at `C:\Users\steve\Code\webstore\social-stream-ninja-chrome-web-store-<version>.zip`. Run `tests/webstore-zip-parity.test.ps1` to verify every packaged file matches this checkout before reporting a release update complete. Preserve repository instructions, tests, tooling, and development notes outside the upload inventory in `tests/fixtures/webstore-package-files.json`.
+- This checkout is `C:\Users\steve\Code\webstore\social_stream`, the Chrome Web Store version. The official checkout at `C:\Users\steve\Code\social_stream` is a separate repository: read it for comparison, but do not modify it as part of a Web Store task. Name the full checkout path when ambiguity could worry Steve.
+- YouTube intentionally has TWO manifest entries loading `sources/youtube.js`: regular popout/explicit opt-in watch URLs at the top frame, and `studio.youtube.com/live_chat*` with `all_frames: true`. Preserve both entries and their distinct URL/frame rules. Never key a manifest update solely by script filename or copy the first entry's matches onto another entry using the same script.
+- For a Web Store refresh, start a fresh staging copy from the current official extension files and apply only explicitly documented Web Store exceptions. Do not use an old ZIP inventory or old manifest as the baseline. Keep current non-adult source URLs (including Parti's `https://parti.com/*`), all registrations, and complete dependency lists. Do not silently drop newer non-adult sources.
+- Show Steve the complete manifest diff inline, with the comparison direction clearly labelled, before replacing the Web Store checkout when he requests review. Distinguish pre-existing differences from edits made in the current session; a link to a diff file is not a substitute for the requested inline diff.
+- Before adapting source manifest entries, compare every entry for that source with the official checkout, including `matches`, `exclude_matches`, `all_frames`, `run_at`, and the complete ordered `js` dependency list. Preserve documented Web Store exclusions; do not import unrelated providers or desktop-only behavior.
+- When updating existing source code from official, check newly required packaged helpers and their injection order. A script file existing in the ZIP does not prove Chrome loads its dependencies.
+- Run `node tests/webstore-source-manifest.test.js` and `node tests/webstore-extension-smoke.test.js` for source-routing or dependency changes, including against the extracted upload package when making a release. Keep tests for Studio top-level and embedded chat, regular YouTube popouts, absence of automatic capture from ordinary watch-page live/replay frames, and Twitch/Kick capture. A passing popout-only fixture does not verify these other surfaces.
+- Use the actual extension runtime and manifest in browser tests; do not manually inject the source script to bypass the routing being tested. Keep fixtures offline and do not post to live channels. Clearly distinguish fixture checks from authenticated live-platform verification.
+- Do not automatically rewrite test expectations to match changed manifest behavior. Review each changed scope against official and deliberate Web Store exceptions first. Report stale source fixes and untested features separately from proven Web Store regressions.
+
 ## Git Safety
 
 - VERY IMPORTANT: Never use `git restore`, `git revert`, or any revert/restore operation unless Steve explicitly asks for that exact action.
