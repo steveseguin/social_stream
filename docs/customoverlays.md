@@ -1,6 +1,6 @@
 # Building Custom Overlays for Social Stream Ninja
 
-For downloading existing overlays, session IDs, local HTTP, direct disk/OBS launchers, and a design guide for each overlay family, start with [Design your own Social Stream overlays](overlay-customization-guide.html).
+For downloading existing overlays, session IDs, opening files directly in OBS, and a design guide for each overlay family, start with [Design your own Social Stream overlays](overlay-customization-guide.html).
 
 Already have a StreamElements or Streamlabs custom chat skin? Follow the [chat widget import guide](streamelements-chat-guide.html) to preview it and download an OBS HTML file.
 

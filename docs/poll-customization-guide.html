@@ -190,36 +190,29 @@ Keep source checks, connection handling, and existing sanitizers.
 Test plain text, allowed emotes, quotes, angle brackets, and an HTML injection
 probe in an isolated preview; verify the probe cannot execute.
 
-Return the complete edited HTML and list any extra image/font files needed.</code></pre>
+Make the edited poll work directly from disk using a file:/// URL,
+without requiring a local web server. Return the complete edited HTML,
+list any extra image/font files needed, and include the file URL steps for OBS.</code></pre>
 <p>For the OBS CSS route, change the last instruction to: <strong>"Return only CSS for OBS Custom CSS, using the existing poll selectors and the Default theme; do not include HTML or script tags."</strong></p>
 <p>For manual edits, the main styling hooks are <code>#poll-container</code>, <code>.poll-title</code>, <code>.poll-option</code>, <code>.poll-bar</code>, <code>.option-number</code>, <code>.option-text</code>, <code>.option-percentage</code>, <code>.option-tally</code>, and <code>.poll-instruction</code>. A layout change may also need matching edits in both <code>updatePollOptions()</code> and <code>updatePollResults()</code>, which build the answer rows.</p>
 </section>
 
 <section class="guide-card" id="local-setup">
-<h2>4. Run your edited poll locally</h2>
-<p>Serving the folder over local HTTP gives OBS a URL with room for your session settings. The files stay on your computer; the poll still needs SSN running and access to its configured connections.</p>
+<h2>4. Open your edited poll in OBS</h2>
+<p>Open <code>my-poll.html</code> directly from your computer. There is no server to install or start.</p>
 <ol class="guide-steps">
-<li>With Python 3 installed, open a terminal in the extracted folder containing <code>my-poll.html</code>. On Windows, you can open that folder in File Explorer, type <code>powershell</code> in the address bar, and press Enter.</li>
-<li>Start the local web server with the command below and leave its terminal open while using the overlay.</li>
-</ol>
-<p>Windows:</p>
-<pre><code>py -m http.server 8000 --bind 127.0.0.1</code></pre>
-<p>macOS / Linux:</p>
-<pre><code>python3 -m http.server 8000 --bind 127.0.0.1</code></pre>
-<p>On Windows, if <code>py</code> does not find your installed Python, try <code>python -m http.server 8000 --bind 127.0.0.1</code>. If Python is not installed, install <a href="https://www.python.org/downloads/">Python 3</a>, or use an existing static web server to serve this same folder.</p>
-<ol class="guide-steps" start="3">
-<li>Take the full Graphical Poll link copied from SSN. Replace only the address up to the <code>?</code> with <code>http://127.0.0.1:8000/my-poll.html</code>. Keep the entire <code>?</code> and everything after it, including session, password, and any server or version settings.</li>
-<li>Open the resulting URL in a browser to check it. Then paste it into the OBS Browser Source's <strong>URL</strong> field with <strong>Local file</strong> unchecked. Set the intended width and height.</li>
-<li>After editing and saving the file, use <strong>Refresh cache of current page</strong> in the source properties to load the changes. Refresh between poll rounds and rehearse again before using it on air.</li>
+<li>Drag <code>my-poll.html</code> into Chrome or Edge. Copy the address from the address bar; it starts with <code>file:///</code>.</li>
+<li>Copy everything from <code>?</code> onward in your working Graphical Poll link from SSN. Add it to the end of the file address. This keeps your session, password, and other settings.</li>
+<li>Open that combined address in your browser to check it. Then paste it into the OBS Browser Source's <strong>URL</strong> field with <strong>Local file</strong> unchecked. Set the intended width and height.</li>
 </ol>
 <p>For example, this copied link:</p>
 <pre><code>https://socialstream.ninja/poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
 <p>becomes:</p>
-<pre><code>http://127.0.0.1:8000/my-poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<pre><code>file:///C:/SSN/social_stream-beta/my-poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
 <p>These are placeholders: use your actual copied link, including only the options it already has. Keep using SSN's <strong>Poll Options</strong> to set the question, vote matching, and poll controls.</p>
-<p><strong>Why not just select Local file in OBS?</strong> That mode selects a file instead of accepting a URL. The stock poll reads its session from the URL query string, so selecting the HTML alone does not supply the connection settings. The local HTTP steps above avoid editing those settings into the code.</p>
-<p>For the OBS file picker or a <code>file:///</code> URL, follow the <a href="overlay-customization-guide.html#local-file">direct disk and local launcher steps</a>. Give your AI <a href="event-reference.html">docs/event-reference.html</a> along with the poll file when editing how incoming messages are rendered.</p>
-<p>The <code>127.0.0.1</code> address works on the computer running the server. If OBS runs on another computer, host the poll and its supporting files at an address that OBS can reach, then append the same query string. Stop the local server with <code>Ctrl+C</code> when finished.</p>
+<p>The file address above is a Windows example. On macOS it starts with <code>file:///Users/...</code>. Copy your browser's actual address so the path and any spaces are handled for you.</p>
+<p><strong>Set this up once.</strong> OBS saves the address. Keep the downloaded folder in the same place and keep SSN and your chat source running when using the poll. After saving an edit, use <strong>Refresh cache of current page</strong> in the source properties.</p>
+<p><strong>Why leave Local file unchecked?</strong> Using the URL field includes the session settings after <code>?</code>. Selecting the HTML file alone does not. The <a href="overlay-customization-guide.html#local-file">shared guide</a> also covers an optional launcher for the file picker.</p>
 </section>
 
 <section class="guide-card" id="check">
@@ -232,7 +225,7 @@ Return the complete edited HTML and list any extra image/font files needed.</cod
 </ol>
 <ul class="guide-list">
 <li><strong>Blank overlay:</strong> check Enable Poll and the copied session settings. A free-form poll has no answer rows until votes arrive.</li>
-<li><strong>Local page does not open:</strong> keep the server terminal open, check it was started in the folder containing your HTML, and check the filename is not accidentally <code>my-poll.html.txt</code>.</li>
+<li><strong>Local page does not open:</strong> drag the file into your browser again and copy its current address. Check the filename is not accidentally <code>my-poll.html.txt</code>.</li>
 <li><strong>Stuck at "Loading poll":</strong> check the supporting scripts and their folder paths, SSN's running state, and the complete query string from the working hosted poll.</li>
 <li><strong>Votes do not count:</strong> confirm voting is open, the message matches the selected voting mode, and the test user has not already voted.</li>
 <li><strong>Looks different in OBS:</strong> check the Browser Source dimensions, any older Custom CSS overriding the file's design, and whether a refresh is needed.</li>

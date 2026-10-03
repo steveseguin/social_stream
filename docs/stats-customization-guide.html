@@ -58,12 +58,12 @@
 </tbody></table></section>
 <section class="guide-card" id="connect"><h2>Connect your copy and open it in OBS</h2>
 <p>Start SSN and make the original generated overlay URL work first. The <code>session=</code> value connects to that SSN session; it is not your channel name or this file's name. Keep SSN, the relevant feature, and its data sources running.</p>
-<ol class="guide-steps"><li>From the extracted repository's top folder, start a local static server using the <a href="overlay-customization-guide.html#local-http">local HTTP instructions</a>.</li>
-<li>In the full copied overlay link, replace only the hosted page address with the local address of your edited file. Preserve everything from <code>?</code> onward, including any <code>#</code> fragment. Keep password and transport options exactly as generated.</li>
+<ol class="guide-steps"><li>Drag your edited HTML file into Chrome or Edge. Copy its address from the address bar; it starts with <code>file:///</code>.</li>
+<li>Copy everything from <code>?</code> onward in your working SSN overlay link and add it to the end of that file address. Keep all settings, including the session, password, and any <code>#</code> ending.</li>
 <li>Open the result in a browser, then set an OBS Browser Source's <strong>URL</strong> to the same address with <strong>Local file</strong> unchecked. Match the source dimensions to your intended design.</li></ol>
 <p>For the starting file above, the local address looks like this; your actual link may contain additional required options:</p>
-<pre><code>http://127.0.0.1:8000/my-scoreboard.html?session=YOUR_SESSION</code></pre>
-<p>For a direct disk URL or OBS's <strong>Local file</strong> checkbox, follow the <a href="overlay-customization-guide.html#local-file">disk-file and launcher instructions</a>. Selecting an unconfigured stock HTML file alone does not supply the session. If local-file restrictions block assets or the connection, use local HTTP. A copied page does not add itself to SSN's theme dropdown.</p>
+<pre><code>file:///C:/SSN/social_stream-beta/my-scoreboard.html?session=YOUR_SESSION</code></pre>
+<p>Use the actual file address on your computer. OBS saves it with the source; keep the downloaded folder in the same place. After saving design changes, refresh the Browser Source. The <a href="overlay-customization-guide.html#local-file">shared setup guide</a> includes Mac examples and an optional launcher for the Local file checkbox.</p>
 </section>
 <section class="guide-card" id="design"><h2>Where to change the design</h2><p>Style rows, rank badges, platform icons, value columns, panel backgrounds, and rank-change animation. Keep stable user identity, ties, sorting, and the selected period/category. The source's actual counters and metadata should drive the values; ordinary text saying "100 viewers" is not a viewer update.</p><p>Check the target's empty state. Some views deliberately remain hidden until a snapshot or matching activity arrives. Use that page's own demo/preview options where available; a generic <code>?demo</code> is not supported by every counter.</p></section>
 <section class="guide-card" id="prompt"><h2>Copy this AI prompt</h2><p>Give the AI your copied source files and reference artwork. Replace the bracketed details. Keep the input-safety instructions in the prompt.</p><pre><code>Customize my-scoreboard.html, copied from scoreboard.html.
@@ -92,6 +92,8 @@ Keep source checks, connection handling, and existing sanitizers.
 Test plain text, allowed emotes, quotes, angle brackets, and an HTML injection
 probe in an isolated preview; verify the probe cannot execute.
 
+Make the edited overlay work directly from disk using a file:/// URL,
+without requiring a local web server.
 Return the edited files, any additional assets, exact local browser/OBS
 setup instructions using placeholders, and the specific tests performed.
 Do not put my private session link or credentials into a public example.</code></pre></section>
@@ -107,4 +109,3 @@ Do not put my private session link or credentials into a public example.</code><
 <script data-copy-markdown src="js/main.js"></script>
 </body>
 </html>
-

@@ -63,18 +63,18 @@
             <p>The default connection uses the same iframe bridge as SSN overlays. To use the hosted WebSocket captured-chat route, enable SSN's <strong>Send messages to Dock from Extension via server</strong> setting and append <code>&amp;server2</code>. See the <a href="local-websocket-server-guide.html">WebSocket guide</a> for local setup; these templates also accept <code>&amp;server2&amp;localserver</code> and <code>&amp;localserverport=3000</code>. <code>localserver</code> alone does not enable a route. The older <code>server</code> feed uses a different channel and may depend on a dock publishing to it.</p>
             <h3>Make your own copy</h3>
             <p><a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">Download the beta source ZIP</a> and extract it. Edit files under <code>games/templates/</code>, keeping the directory structure: the starters also load <code>js/local-server-url.js</code>, and the support goal loads <code>currency.js</code> from the repository root.</p>
-            <p>Serve the extracted folder with a local web server. If you already have Python, run this from that folder:</p>
-            <pre>python -m http.server 8080 --bind 127.0.0.1</pre>
-            <p>Then use <code>http://127.0.0.1:8080/games/templates/coin-rocket.html?session=YOUR_SESSION</code> in your browser or OBS. For hosting elsewhere, preserve the same relative file paths. No build step is needed.</p>
+            <p>Drag the starter HTML into Chrome or Edge and copy its <code>file:///</code> address. Add everything from <code>?</code> onward in your working SSN game link, including your session and any password. Open that address in your browser, then paste it into an OBS Browser Source's <strong>URL</strong> field with <strong>Local file</strong> unchecked. OBS saves this address for next time.</p>
+            <pre>file:///C:/SSN/social_stream-beta/games/templates/coin-rocket.html?session=YOUR_SESSION&amp;clean</pre>
+            <p>Use the actual path on your computer. Keep the extracted folder in the same place; there is no server to install or start. See the <a href="overlay-customization-guide.html#local-file">file setup guide</a> for more examples.</p>
         </section>
 <section class="guide-card" id="custom-design">
 <h2>Customize a game design and run it locally</h2>
 <p>Use the three starters above for a new game, or copy the exact page you use from <code>games/</code>. <code>games.html</code> and <code>battle.html</code> also have their own game behavior; the starters' rule constants are not a universal game API.</p>
 <p><a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">Download the source ZIP</a>, extract it, and duplicate the chosen HTML beside the original. For example, keep <code>my-rocket.html</code> in <code>games/templates/</code>, with <code>starter.js</code>, <code>starter.css</code>, root <code>js/</code> helpers, and any referenced images or audio in place. Give the AI those files and <a href="event-reference.html">docs/event-reference.html</a>.</p>
-<p>Follow the <a href="overlay-customization-guide.html#local-http">shared local HTTP setup</a>, serving the extracted repository root. The edited starter's address is:</p>
-<pre><code>http://127.0.0.1:8000/games/templates/my-rocket.html?session=YOUR_SESSION&amp;clean</code></pre>
+<p>Open your copy directly from disk using the <a href="overlay-customization-guide.html#local-file">file setup steps</a>. An example address for the edited starter is:</p>
+<pre><code>file:///C:/SSN/social_stream-beta/games/templates/my-rocket.html?session=YOUR_SESSION&amp;clean</code></pre>
 <p>Use your actual generated link's session, password, and transport options. Remove <code>demo</code> for live input; keep <code>clean</code> on these starters to hide the operator tools. The session is the SSN connection ID, not the game name. Keep SSN and capture running.</p>
-<p>In OBS use a Browser Source with Local file unchecked and the HTTP URL above. For direct disk URLs or the Local file picker, use the <a href="overlay-customization-guide.html#local-file">local launcher instructions</a>; selecting an unconfigured HTML file alone does not provide its session. Some games load assets/data that require HTTP.</p>
+<p>In OBS, leave <strong>Local file</strong> unchecked and paste your full file address into the Browser Source's <strong>URL</strong> field. After saving a design change, refresh the source to load it.</p>
 <h3>AI design prompt</h3>
 <pre><code>Customize [game file] to match [reference], at [canvas size].
 Include its existing CSS/JS and local artwork/audio. Preserve the game's
@@ -97,7 +97,9 @@ Keep source checks, connection handling, and existing sanitizers.
 Test plain text, allowed emotes, quotes, angle brackets, and an HTML injection
 probe in an isolated preview; verify the probe cannot execute.
 
-Return the edited files/assets, local and OBS setup steps, and tests using
+Make the edited game work directly from disk using a file:/// URL,
+without requiring a local web server.
+Return the edited files/assets, file URL and OBS setup steps, and tests using
 fictional data. Preserve image-only events and a valid donoValue of zero.
 Never treat chat text as proof of a payment.</code></pre>
 <p>Test in demo mode with the starter's buttons, including repeated streak updates and a zero-value override. Then test the actual event route with your session, and finally the OBS source at its intended size. Check both gameplay and <a href="overlay-customization-guide.html#safe-input">safe rendering</a>; a working animation alone does not verify the game rules.</p>

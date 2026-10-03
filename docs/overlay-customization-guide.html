@@ -39,7 +39,7 @@
 </div></div></header>
 <section class="page-hero"><div class="container"><h1>Design your own Social Stream overlays</h1><p>Download, customize, connect, and test local overlay designs in OBS, with guides for each overlay family.</p></div></section>
 <main class="guide-section"><div class="container">
-<nav class="workflow-toc" aria-label="On this page"><a href="#choose">Choose a type</a><a href="#download">Download</a><a href="#session">Session IDs</a><a href="#local-http">Local HTTP</a><a href="#local-file">Disk files in OBS</a><a href="#design">Design and AI</a><a href="#safe-input">Safe inputs</a><a href="#test">Testing</a><a href="#references">Files to give AI</a><a href="#troubleshooting">Troubleshooting</a></nav>
+<nav class="workflow-toc" aria-label="On this page"><a href="#choose">Choose a type</a><a href="#download">Download</a><a href="#session">Session IDs</a><a href="#local-file">Open in OBS</a><a href="#design">Design and AI</a><a href="#safe-input">Safe inputs</a><a href="#test">Testing</a><a href="#references">Files to give AI</a><a href="#troubleshooting">Troubleshooting</a></nav>
 <section class="guide-card" id="choose"><h2>Choose the overlay you want to redesign</h2>
 <p>You can change an existing page's colors, fonts, layout, artwork, and motion. The <strong>HTML file</strong> is the page; the <strong>OBS URL</strong> points to it and supplies session and display settings. For a small restyle, use OBS Custom CSS on the hosted page. For deeper changes, download the source and run your own copy.</p>
 <p>These guides cover overlay families, including their themes. Pick the receiver for the feature you use: a chat page, a selected-message page, and a poll do not all consume the same input.</p>
@@ -98,31 +98,20 @@
 <li><strong>Use placeholders in shared examples.</strong> Keep your real session link, password, and private display tokens out of public screenshots, repositories, and AI prompt examples.</li></ul>
 <p>When a copy stays blank, check the original generated link first. Some pages prompt for missing settings; others remain hidden or redirect. Supplying the correct session explicitly avoids relying on those page-specific defaults.</p>
 </section>
-<section class="guide-card" id="local-http"><h2>3. Run the files locally with a web server</h2>
-<p>This is the common setup for the guides. A small server on your computer serves your edited files, and OBS loads them by URL. No public hosting or build step is needed.</p>
-<ol class="guide-steps"><li>Install Python 3 if needed. Open a terminal in the extracted repository's top folder. On Windows, open the folder in File Explorer, type <code>powershell</code> in the address bar, and press Enter.</li>
-<li>Run the command for your system below. Leave the terminal open while the source is in use.</li></ol>
-<p>Windows:</p><pre><code>py -m http.server 8000 --bind 127.0.0.1</code></pre>
-<p>If your Python installation uses <code>python</code> instead of <code>py</code>:</p><pre><code>python -m http.server 8000 --bind 127.0.0.1</code></pre>
-<p>macOS / Linux:</p><pre><code>python3 -m http.server 8000 --bind 127.0.0.1</code></pre>
-<p>Use an existing static server if you prefer; serve the repository root. Python downloads: <a href="https://www.python.org/downloads/">python.org</a>.</p>
-<ol class="guide-steps" start="3"><li>Replace only the hosted page address in your copied SSN URL. Keep its query and fragment. For a root-level poll copy, the result is:</li></ol>
-<pre><code>http://127.0.0.1:8000/my-poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
-<p>For a nested theme copy:</p><pre><code>http://127.0.0.1:8000/themes/featured-styles/my-featured.html?session=YOUR_SESSION</code></pre>
-<ol class="guide-steps" start="4"><li>Open your full resulting URL in a browser and trigger the overlay's expected input.</li>
-<li>In OBS, add a <strong>Browser Source</strong>. Leave <strong>Local file</strong> unchecked, paste the local HTTP URL into <strong>URL</strong>, and set the width and height to your design canvas.</li>
-<li>After saving an edit, use <strong>Refresh cache of current page</strong> in source properties. Refresh between test rounds if the page holds in-memory data.</li></ol>
-<p><code>127.0.0.1</code> means the current computer. OBS must run on the computer serving these files. For another computer, use a web server address it can reach while preserving the same paths. Stop your local server with <code>Ctrl+C</code> when finished.</p>
-<p>This static server serves HTML/assets. It is separate from SSN's <a href="local-websocket-server-guide.html">Local WebSocket Server</a>, which transports messages. Running one does not configure the other. Local files may still use online fonts, media, or SSN connections.</p>
-</section>
-<section class="guide-card" id="local-file"><h2>4. Open a page directly from disk in OBS</h2>
-<p>You can try a direct file URL when the page's dependencies work from disk. Map data loaded with <code>fetch</code>, browser storage, and iframe connections can behave differently under <code>file:</code>. If a disk page fails to connect or load assets, use local HTTP above instead of removing its connection checks.</p>
-<h3>Use a file URL in the URL field</h3>
-<ol class="guide-steps"><li>Open your copied HTML in a normal browser to obtain its full <code>file:///</code> address.</li><li>Append the original generated link's query and fragment. Keep the slashes and any URL-encoded spaces.</li><li>Paste that complete address into the OBS Browser Source's <strong>URL</strong> field with <strong>Local file</strong> unchecked.</li></ol>
-<pre><code>file:///C:/SSN/social_stream-beta/my-poll.html?session=YOUR_SESSION
-file:///Users/yourname/SSN/social_stream-beta/my-poll.html?session=YOUR_SESSION</code></pre>
-<p>These paths are examples, not portable URLs. A Linux path usually begins <code>file:///home/...</code>. Copy the actual address on your computer.</p>
-<h3>Use the Local file checkbox with a launcher</h3>
+<section class="guide-card" id="local-file"><h2>3. Open your file in OBS</h2>
+<p>Open the edited HTML directly from your computer. There is no server to install or start.</p>
+<ol class="guide-steps"><li>Drag your copied HTML file into Chrome or Edge. Copy its full address from the address bar; it starts with <code>file:///</code>.</li>
+<li>Copy everything from <code>?</code> onward in your working SSN overlay link and add it to the end of that file address. This keeps your session, password, other settings, and any <code>#</code> ending.</li>
+<li>Open the combined address in your browser to test it.</li>
+<li>In OBS, add a <strong>Browser Source</strong>. Leave <strong>Local file</strong> unchecked and paste the full address into <strong>URL</strong>. Set the width and height for your design.</li></ol>
+<p>For example, this SSN link:</p>
+<pre><code>https://socialstream.ninja/poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>becomes this address for a downloaded poll copy on Windows:</p>
+<pre><code>file:///C:/SSN/social_stream-beta/my-poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>Use your actual file address and copied settings. On macOS the address starts with <code>file:///Users/...</code>; on Linux it usually starts with <code>file:///home/...</code>. Copying the browser address handles spaces and slashes for you.</p>
+<p><strong>Set this up once.</strong> OBS saves the address with the source. Keep the downloaded folder in the same place and keep SSN and your chat source running when using the overlay. After saving a design change, use <strong>Refresh cache of current page</strong> in the source properties.</p>
+<p><strong>Why leave Local file unchecked?</strong> The URL field lets you include <code>?session=...</code>. Selecting the HTML with the file picker alone does not add those settings.</p>
+<details><summary>Optional: use the Local file checkbox with a launcher</summary>
 <p>OBS's file picker chooses a file; it does not add your generated query settings. For an unmodified query-based receiver, a small local launcher can navigate to the edited page with the settings attached:</p>
 <ol class="guide-steps"><li>Save the following as <code>launch-my-poll.html</code> beside <code>my-poll.html</code>.</li>
 <li>Replace the placeholder hosted URL with your complete copied SSN link. Change <code>./my-poll.html</code> to your actual edited filename. Keep the link inside the quotes, with ordinary <code>&amp;</code> characters.</li>
@@ -140,10 +129,11 @@ localPage.hash = copiedLink.hash;
 window.location.replace(localPage.href);
 &lt;/script&gt;
 &lt;/html&gt;</code></pre>
-<p>For a nested theme, put the launcher beside that theme copy. Keep the launcher private because it contains your connection link. A downloaded self-contained export that already embeds its configuration follows its own export instructions instead. The launcher supplies configuration; it does not bypass a platform's local-file restrictions. Rehearse this method in your own OBS version.</p>
+<p>For a nested theme, put the launcher beside that theme copy. Keep the launcher private because it contains your connection link. A downloaded self-contained export that already embeds its configuration follows its own export instructions instead.</p>
+</details>
 <p>OBS documents its file/URL modes, dimensions, Custom CSS, and refresh controls in the <a href="https://obsproject.com/kb/browser-source">Browser Source reference</a>.</p>
 </section>
-<section class="guide-card" id="design"><h2>5. Change the design, or ask AI to do it</h2>
+<section class="guide-card" id="design"><h2>4. Change the design, or ask AI to do it</h2>
 <p>For a CSS-only change, keep the hosted link and use OBS's <strong>Custom CSS</strong> field. It applies only to that source, so a normal browser opening the same URL will not show those overrides. For an edited HTML file, append overrides after its existing styles, or link a local stylesheet after them. Supply your logo, font files, brand colors, canvas size, and a visual reference.</p>
 <p>Some pages support <code>&amp;css=</code> or <code>&amp;b64css=</code>; support is per page. <code>poll.html</code>, for example, reads neither. Check the page's parser before using URL options. A web page cannot generally load an arbitrary font or image from another computer's local disk.</p>
 <p>When changing markup, preserve IDs/classes referenced by scripts. If JavaScript rebuilds an element on each update, permanent artwork must live outside that element or be recreated by the renderer. Copy a shared stylesheet/script and change your page's reference if you want the edit to affect only your design.</p>
@@ -171,12 +161,14 @@ Keep source checks, connection handling, and existing sanitizers.
 Test plain text, allowed emotes, quotes, angle brackets, and an HTML injection
 probe in an isolated preview; verify the probe cannot execute.
 
-Return the edited files and assets, local HTTP and OBS setup steps, and tests
+Make the edited overlay work directly from disk using a file:/// URL,
+without requiring a local web server. Return the edited files and assets,
+file URL and OBS setup steps, and tests
 for this overlay's real trigger. Use session placeholders in shared examples.
 Explain any behavior changes separately from the design edits.</code></pre>
 <p>The type guides describe the real trigger to preserve. Do not accept a design that only works because it hard-codes sample messages. Keep a copy of the original file and compare the edited display using the same test inputs.</p>
 </section>
-<section class="guide-card" id="safe-input"><h2>6. Keep incoming chat from becoming code</h2>
+<section class="guide-card" id="safe-input"><h2>5. Keep incoming chat from becoming code</h2>
 <p>Messages, names, titles, amounts, metadata, and media links can originate with viewers or external services. Sanitize at the point where the custom renderer inserts them. A string received through SSN is not permission to execute it. Use plain DOM text for plain fields; use the packaged sanitizer for the message body's supported HTML. See <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html">OWASP's explanation of safe sinks and HTML sanitization</a>.</p>
 <p>In SSN, <code>textonly</code> applies only to <code>chatmessage</code>. When true, render that body as literal text. Otherwise it may contain emotes and allowed formatting. Render other normal fields as text; media fields such as <code>chatimg</code> and <code>contentimg</code> are URLs/data, not HTML snippets.</p>
 <pre><code id="safe-chat-render-example">&lt;!-- Example for a copied page at the repository root. --&gt;
@@ -202,7 +194,7 @@ function renderChatBody(element, data) {
 <li>Have the AI test a harmless probe such as <code>&lt;img src=x onerror="window.__ssnInjectionProbe=1"&gt;</code> in the changed renderer. It must not execute, set the marker, or leave executable event attributes. Test a script-scheme link as well. Run probes locally, not in public chat.</li></ul>
 <p>A passing probe only checks the paths exercised. Keep tests focused on the renderers and fields changed by the design.</p>
 </section>
-<section class="guide-card" id="test"><h2>7. Test layout, connection, and OBS separately</h2>
+<section class="guide-card" id="test"><h2>6. Test layout, connection, and OBS separately</h2>
 <ol class="guide-steps"><li><strong>Layout:</strong> use the page's documented preview/demo mode, where available, or fictional local samples. Test long names/messages, missing avatars, empty data, and the expected number of rows.</li>
 <li><strong>SSN delivery:</strong> keep SSN active and use <a href="test-message-guide.html">Create Test Message</a> with the same session. The usual Extension API ingest mode needs <strong>remote API control of extension</strong> enabled. Use an isolated test setup; submitted tests can trigger configured automations.</li>
 <li><strong>The actual trigger:</strong> feature a Dock message for a featured card, send a poll vote for a poll, select a winner for a giveaway, change ticker text for a ticker, or start a timer for a timer. Plain chat is not a universal test.</li>
@@ -224,14 +216,16 @@ function renderChatBody(element, data) {
 </section>
 <section class="guide-card" id="troubleshooting"><h2>When the copy does not work</h2>
 <table class="guide-table guide-table-stack"><thead><tr><th scope="col">Symptom</th><th scope="col">Check</th></tr></thead><tbody>
-<tr><td data-label="Symptom">404 or directory listing</td><td data-label="Check">Start the static server in the extracted root and use the correct relative path. Check the filename and .html extension.</td></tr>
-<tr><td data-label="Symptom">Missing script, font, image, or map</td><td data-label="Check">Keep relative folders intact. Check the browser Network panel for failed files. Use local HTTP for fetch-loaded data.</td></tr>
+<tr><td data-label="Symptom">File not found</td><td data-label="Check">Drag the HTML into your browser again and copy its current file address. Check that the filename ends in .html, not .html.txt.</td></tr>
+<tr><td data-label="Symptom">Missing script, font, or image</td><td data-label="Check">Keep the extracted folder structure intact, with the edited copy beside the original. Check that any added artwork and fonts are in the expected folders.</td></tr>
 <tr><td data-label="Symptom">Empty or “waiting” display</td><td data-label="Check">Check session, password, complete query/fragment, SSN's running state, enabled feature, and the matching input. Compare the original generated URL.</td></tr>
-<tr><td data-label="Symptom">Works by HTTP, not file</td><td data-label="Check">Use the HTTP URL in OBS. Do not remove iframe checks or substitute an unsupported server route to work around file restrictions.</td></tr>
 <tr><td data-label="Symptom">Works in browser, different in OBS</td><td data-label="Check">Check width/height, old Custom CSS, font availability, caching, and different browser storage. Refresh after saving.</td></tr>
 <tr><td data-label="Symptom">Logo vanishes on update</td><td data-label="Check">The renderer may replace its container. Place permanent decoration outside it or update the rendering template.</td></tr>
 <tr><td data-label="Symptom">State resets or actions fire twice</td><td data-label="Check">Check refresh/unload settings, duplicate output/control instances, and the page's existing deduplication/state behavior.</td></tr>
 </tbody></table>
+<details id="local-http"><summary>Special case: pages that read separate data files</summary>
+<p>The map reads local JSON files with <code>fetch()</code>, which a browser can block when opening from disk. For a simple map restyle, use its hosted link with OBS Custom CSS. For an edited HTML copy, ask your AI to include the required map data in the page so it opens directly from disk. Hosting is an advanced option for a page that specifically needs it, not a normal setup step for these overlays.</p>
+</details>
 <p>Stop at the smallest confirmed issue. A restyle should not require changing capture scripts or inventing new event fields. If sharing a public fork, include its supporting assets and keep private launchers out of that upload.</p>
 </section>
 </div></main>
